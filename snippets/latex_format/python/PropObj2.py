@@ -16,7 +16,7 @@ identifiant en argument.
 
 """
 from dataclasses import dataclass
-import analysis2 as analysis
+import analysis
 
 equal_sep = "¿= "
 
