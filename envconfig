@@ -33,7 +33,7 @@ fi
 # Install python env
 ENVPATH="$(pwd)/env"
 
-if [ ! -f $ENVPATH ] ; then
+if [ ! -d $ENVPATH ] ; then
     echo "Installing python env."
     virtualenv --python=python3 ${ENVPATH}
 
