@@ -3,11 +3,10 @@
 # Env config script #
 #####################
 
-# Frédéric le Roux, Florian Dupeyron, Antoine Hugounet
-# 
-#  June 2020
-# 
-# Copyright (c) 2020 Florian Dupeyron <florian.dupeyron@mugcat.fr>
+# Original Author : Florian Dupeyron <florian.dupeyron@mugcat.fr>
+# Date            : June 2020
+
+# Copyright (c) 2020 the dEAduction team.
 # 
 # This file is part of dEAduction.
 # 
@@ -24,6 +23,14 @@
 #     You should have received a copy of the GNU General Public License
 #     along with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 
+# Install git hooks
+if [ ! -f ".git/hooks/commit-msg" ] ; then
+    echo "Installing commit-msg git hook"
+    cp tools/git-hooks/commit-msg .git/hooks/
+    chmod +x .git/hooks/commit-msg
+fi
+
+# Install python env
 ENVPATH="$(pwd)/env"
 
 if [ ! -f $ENVPATH ] ; then
