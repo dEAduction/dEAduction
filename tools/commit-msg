@@ -1,0 +1,81 @@
+#####################################
+# Simple convenional commit checker #
+#####################################
+# Florian Dupeyron
+# June 2020
+
+msg=$(cat $1) # Hook paremeter is a path to a temoprary file containing the
+              # Commit msg
+
+##################################
+# Constants
+##################################
+regex='([a-zA-Z]+)(\(([a-zA-Z \t_\-]+)\))?\s*[:]\s*(.*)'
+# group 1 : task type
+# group 2 : scope (with parentheses)
+# group 3 : scope (without parentheses)
+# group 4 : message
+
+# Tasks types regex
+tasks="^(docs|feat|fix|perf|refactor|style|chore[s]?|snippet[s]?)$"
+
+show_help() {
+    echo "Please follow the following format :
+
+    task_type(optional scope): message
+
+    task_type can be one of :
+        - docs     : documentation only changes ;
+        - feat     : a new feature ;
+        - fix      : a bug fix ;
+        - perf     : a code change that improves performance ;
+        - refactor : a code change that neither fixes a bug nor adds a feature ;
+        - style    : changes that do not affect the meaning of the code
+                    (white-space, formatting, missing semi-colons, etc) ;
+        - test     : adding missing tests or correcting existing tests."
+}
+
+show_bad() {
+    echo ""
+    echo -e "\e[1;31m$1\e[0m"
+    echo ""
+}
+
+show_good() {
+    echo ""
+    echo -e "\e[1;32m$1\e[0m"
+    echo ""
+}
+
+##################################
+# Checking script
+##################################
+[[ -z $msg ]] && show_bad "Please give a message to check" && exit 1
+
+if [[ $msg =~ ${regex} ]] ; then
+    # Get infos
+    task_type=${BASH_REMATCH[1]}
+    scope=${BASH_REMATCH[3]}
+    msg=${BASH_REMATCH[4]}
+
+    echo "Analysis of commit message :
+    * Type of task : ${task_type}
+    * Scope        : ${scope}
+    * Message      : ${msg}"
+
+    # Check infos
+    if [[ ! ${task_type} =~ ${tasks} ]] ; then
+        show_bad "Uknown task type : $task_type"
+        show_help
+        exit 1
+    fi
+
+    # Confirmation
+    show_good "Message follows conventional commit standards !"
+    exit 0
+else
+    show_bad "Message doesn't respect the conventional commit format."
+
+    show_help
+    exit 1
+fi
