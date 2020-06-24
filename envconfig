@@ -1,0 +1,44 @@
+#!/bin/bash
+#####################
+# Env config script #
+#####################
+
+# Frédéric le Roux, Florian Dupeyron, Antoine Hugounet
+# 
+#  June 2020
+# 
+# Copyright (c) 2020 Florian Dupeyron <florian.dupeyron@mugcat.fr>
+# 
+# This file is part of dEAduction.
+# 
+#     dEAduction is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+# 
+#     dEAduction is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License
+#     along with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
+
+ENVPATH="$(pwd)/env"
+
+if [ ! -f $ENVPATH ] ; then
+    echo "Installing python env."
+    virtualenv --python=python3 ${ENVPATH}
+
+    source "$ENVPATH/bin/activate"
+    if [ -f "requirements.txt" ] ; then
+        echo "Installing package dependencies"
+        pip install -r "requirements.txt"
+    else
+        echo "No requirements.txt file !"
+    fi
+
+fi
+
+source "$ENVPATH/bin/activate"
+export PYTHONPATH=$PYTHONPATH:"$(pwd)/src"
