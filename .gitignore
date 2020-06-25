@@ -4,6 +4,7 @@
 
 # misc dev stuff
 env/
+.idea/	# PyCharm config folder
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
