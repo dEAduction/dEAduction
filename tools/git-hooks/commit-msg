@@ -10,7 +10,7 @@ msg=$(cat $1) # Hook paremeter is a path to a temoprary file containing the
 ##################################
 # Constants
 ##################################
-regex='([a-zA-Z]+)(\(([a-zA-Z \t_\-]+)\))?\s*[:]\s*(.*)'
+regex='([a-zA-Z]+)(\(([^()]+)\))?\s*[:]\s*(.*)'
 # group 1 : task type
 # group 2 : scope (with parentheses)
 # group 3 : scope (without parentheses)
