@@ -23,12 +23,8 @@
 #     You should have received a copy of the GNU General Public License
 #     along with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 
-# Install git hooks
-if [ ! -f ".git/hooks/commit-msg" ] ; then
-    echo "Installing commit-msg git hook"
-    cp tools/git-hooks/commit-msg .git/hooks/
-    chmod +x .git/hooks/commit-msg
-fi
+# Install/Update git hooks
+cp tools/git-hooks/commit-msg .git/hooks/
 
 # Install python env
 ENVPATH="$(pwd)/env"
