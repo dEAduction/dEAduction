@@ -35,15 +35,20 @@ show_help() {
         - test     : adding missing tests or correcting existing tests."
 }
 
+ESC_BOLD=$(tput bold)
+ESC_RED=$(tput setaf 1)
+ESC_GREEN=$(tput setaf 2)
+ESC_RESET=$(tput sgr0)
+
 show_bad() {
     echo ""
-    echo -e "\e[1;31m$1\e[0m"
+    echo $ESC_BOLD$ESC_RED$1$ESC_RESET
     echo ""
 }
 
 show_good() {
     echo ""
-    echo -e "\e[1;32m$1\e[0m"
+    echo $ESC_BOLD$ESC_GREEN$1$ESC_RESET
     echo ""
 }
 
