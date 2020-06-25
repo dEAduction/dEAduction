@@ -1,0 +1,3 @@
+[flake8]
+ignore=E221
+exlude=.git,__pycache__,snippets
