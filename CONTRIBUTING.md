@@ -19,7 +19,8 @@ The type of the commit **must** be one of the following:
 - **snippets**: adding or modifying code in `snippets/` ;
 - **style**: changes that do not affect the meaning of the code (white-space,
   formatting, missing semi-colons, etc) ;
-- **test**: adding missing tests or correcting existing tests.
+- **test**: adding missing tests or correcting existing tests ;
+- **tools**: tools only (e.g. git hooks) changes.
 
 ## Installing the development environment
 

@@ -17,7 +17,7 @@ regex='([a-zA-Z]+)(\(([^()]+)\))?\s*[:]\s*(.*)'
 # group 4 : message
 
 # Tasks types regex
-tasks="^(docs|feat|fix|perf|refactor|style|chore[s]?|snippet[s]?)$"
+tasks="^(docs|feat|fix|perf|refactor|style|snippet[s]?|test|tools)$"
 
 show_help() {
     echo "Please follow the following format :
@@ -25,14 +25,16 @@ show_help() {
     task_type(optional scope): message
 
     task_type can be one of :
-        - docs     : documentation only changes ;
-        - feat     : a new feature ;
-        - fix      : a bug fix ;
-        - perf     : a code change that improves performance ;
-        - refactor : a code change that neither fixes a bug nor adds a feature ;
-        - style    : changes that do not affect the meaning of the code
-                    (white-space, formatting, missing semi-colons, etc) ;
-        - test     : adding missing tests or correcting existing tests."
+        - docs		: documentation only changes ;
+        - feat		: a new feature ;
+        - fix		: a bug fix ;
+        - perf		: a code change that improves performance ;
+        - refactor	: a code change that neither fixes a bug nor adds a feature ;
+		- snippets	: add or modify code in snippets/ ;
+        - style		: changes that do not affect the meaning of the code
+						(white-space, formatting, missing semi-colons, etc) ;
+        - test		: adding missing tests or correcting existing tests ;
+		- tools		: tools only (e.g. git hooks) changes."
 }
 
 ESC_BOLD=$(tput bold)
