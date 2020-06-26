@@ -14,12 +14,12 @@ The type of the commit **must** be one of the following:
 - **docs**: documentation only changes ;
 - **feat**: a new feature ;
 - **fix**: a bug fix ;
-- **perf**: a code change that improves performance ;
+- **perf**: code changes that improve performance ;
 - **refactor**: a code change that neither fixes a bug nor adds a feature ;
-- **snippets**: adding or modifying code in `snippets/` ;
+- **snippets**: add or modify code in `snippets/` ;
 - **style**: changes that do not affect the meaning of the code (white-space,
   formatting, missing semi-colons, etc) ;
-- **test**: adding missing tests or correcting existing tests ;
+- **test**: add or modify tests ;
 - **tools**: tools only (e.g. git hooks) changes.
 
 ## Installing the development environment
