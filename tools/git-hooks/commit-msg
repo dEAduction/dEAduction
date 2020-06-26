@@ -18,7 +18,7 @@ regex_msg="^[a-z].*"
 # group 4 : message
 
 # Tasks types regex
-tasks="^(docs|feat|fix|perf|refactor|style|snippet[s]?|test|tools)$"
+tasks="^(docs|feat|fix|perf|refactor|style|snippet[s]?|test|tools|merge)$"
 
 show_help() {
     echo "Please follow the following format :
@@ -31,13 +31,13 @@ show_help() {
         - fix		: a bug fix ;
         - perf		: a code change that improves performance ;
         - refactor	: a code change that neither fixes a bug nor adds a feature ;
-        - snippets	: add or modify code in snippets/ ;
+        - snippets  : add or modify code in snippets/ ;
         - style		: changes that do not affect the meaning of the code
         (white-space, formatting, missing semi-colons, etc) ;
         - test		: adding missing tests or correcting existing tests ;
-        - tools		: tools only (e.g. git hooks) changes."
+        - tools		: tools only (e.g. git hooks) changes.
 
-        message must start with a low case verb in the imperative form.
+        message must start with a low case verb in the imperative form."
 }
 
 ESC_BOLD=$(tput bold)
