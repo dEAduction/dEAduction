@@ -1,2 +1,2 @@
-PySide2==5.15.0
-shiboken2==5.15.0
+PySide2>=5.15.0
+shiboken2>=5.15.0
