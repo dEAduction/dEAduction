@@ -11,6 +11,8 @@ The convention used here for `git commit` is heavily inspired from the
 
 The type of the commit **must** be one of the following:
 
+- **chores**: changes that do not affect the source-code nor the tools
+	(e.g. reorganize tree, rename files);
 - **docs**: documentation only changes ;
 - **feat**: a new feature ;
 - **fix**: a bug fix ;
@@ -18,7 +20,7 @@ The type of the commit **must** be one of the following:
 - **refactor**: a code change that neither fixes a bug nor adds a feature ;
 - **snippets**: add or modify code in `snippets/` ;
 - **style**: changes that do not affect the meaning of the code (white-space,
-  formatting, missing semi-colons, etc) ;
+  formatting, missing semi-colons) ;
 - **test**: add or modify tests ;
 - **tools**: tools only (e.g. git hooks) changes.
 

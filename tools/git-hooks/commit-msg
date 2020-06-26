@@ -18,7 +18,7 @@ regex_msg="^[a-z].*"
 # group 4 : message
 
 # Tasks types regex
-tasks="^(docs|feat|fix|perf|refactor|style|snippet[s]?|test|tools|merge)$"
+tasks="^(chores|docs|feat|fix|perf|refactor|style|snippet[s]?|test|tools|merge)$"
 
 show_help() {
     echo "Please follow the following format :
@@ -26,6 +26,8 @@ show_help() {
     task_type(optional scope): message
 
     task_type can be one of :
+		- chores	: changes that do not affect the source-code nor the tools
+	(e.g. reorganize tree, rename files);
         - docs		: documentation only changes ;
         - feat		: a new feature ;
         - fix		: a bug fix ;
@@ -33,7 +35,7 @@ show_help() {
         - refactor	: a code change that neither fixes a bug nor adds a feature ;
         - snippets  : add or modify code in snippets/ ;
         - style		: changes that do not affect the meaning of the code
-        (white-space, formatting, missing semi-colons, etc) ;
+        (white-space, formatting, missing semi-colons) ;
         - test		: adding missing tests or correcting existing tests ;
         - tools		: tools only (e.g. git hooks) changes.
 
