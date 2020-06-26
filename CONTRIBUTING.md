@@ -54,9 +54,14 @@ This project uses [flake8](https://flake8.pycqa.org/en/latest/) as linter ; we
 follow [PEP8](https://www.python.org/dev/peps/pep-0008/) as much as possible,
 but ignore the following points :
 
-- Multiple spaces around operators are allowed for alignment (E221)
+- E201 : whitespace after ‘(‘
+- E202 : whitespace before ‘)’
+- E203 : whitespace before ‘:’
+- E221 : multiple spaces before operator
 
-## Other code conventions ### Header docstrings
+## Other code conventions
+
+### Header docstrings
 
 ```python3 
 """
