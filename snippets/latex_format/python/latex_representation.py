@@ -16,7 +16,6 @@ from PropObj2 import process_context
 from latex_format_data import latex_structures, latex_formats, needs_paren
 
 
-# AFER : traitement des parenthèses
 def compute_latex(PO, debug = True):
     """
     Compute a structured "latex representation" of a PO. Valid latex rep are
@@ -35,18 +34,9 @@ def compute_latex(PO, debug = True):
         parentheses = needs_paren(PO, i)
         if parentheses:
             lr = ["(", lr, ")"]
-#        else:
-#            lr = [lr]
         a.append(lr)
     latex_symb, format_scheme =  latex_structures[nature]
     latex_rep = eval(latex_formats[format_scheme])
-#    try:
-#        latex_symb, format_scheme =  latex_structures[nature]
-#        latex_rep = eval("[" + latex_formats[format_scheme] + "]")    
-#    except:
-#        if debug:
-#            print(f"{PO.nature} pas codé")
-#        return(f"{PO.nature} pas codé")
     if debug:
         print(f"Je latex {PO.nature}: {latex_rep}")
     return(latex_rep)
