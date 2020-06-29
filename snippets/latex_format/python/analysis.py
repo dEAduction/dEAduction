@@ -38,19 +38,19 @@ class LeanExprVisitor(NodeVisitor):
         the parameters.
         """
         name, arguments = visited_children
-        output = {"name": name, "arguments": arguments}  # provisoire
+        output = {"node": name, "children": arguments}  # provisoire
         if name == "APPLICATION":
             child0 = arguments[0]
-            name_child0 = child0['name']
+            name_child0 = child0["node"]
 
             if name_child0 == "APPLICATION":
-                arguments_child0 = child0['arguments']
-                name = arguments_child0[0]['name']
-                arg1 = arguments_child0[0]['arguments']
-                new_arg1 = [({'name': name, 'arguments': arg1})] \
+                arguments_child0 = child0["children"]
+                name = arguments_child0[0]["node"]
+                arg1 = arguments_child0[0]["children"]
+                new_arg1 = [({"node": name, "children": arg1})] \
                            + arguments_child0[1:] \
                            + arguments[1:]
-                output = {"name": "APPLICATION", "arguments": new_arg1}
+                output = {"node": "APPLICATION", "children": new_arg1}
         return [output]
 
     def visit_name(self, node, visited_children):

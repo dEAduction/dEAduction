@@ -163,7 +163,7 @@ def create_psPO(prop_obj_str:str, debug = True):
 ##### extract nature and arguments from the tail
     tree = analysis.lean_expr_grammar.parse(tail)
     PO_str_list = analysis.LeanExprVisitor().visit(tree)  
-    nature, _ , compl = PO_str_list[0]["name"].partition("[")
+    nature, _ , compl = PO_str_list[0]["node"].partition("[")
     nature_compl = compl[0:-1]
     nature_subtree = pre_nature_sub(nature)
 ##### treatment of bound variables
@@ -175,7 +175,7 @@ def create_psPO(prop_obj_str:str, debug = True):
 #            print("list of bound variables:", bound_vars_list)
 # creation of children PO    
     args = []
-    for arg in PO_str_list[0]["arguments"]:
+    for arg in PO_str_list[0]["children"]:
         PO = create_anPO(arg, debug)
 #        PO = create_anPO(arg, bound_vars_list, debug)
         args.append(PO)  
@@ -219,7 +219,7 @@ def create_anPO(PO_dict: dict, debug):
     """
     latex_rep = ""  # latex representation is computed later (except for VAR)
     
-    nature, _, compl = PO_dict["name"].partition("[")
+    nature, _, compl = PO_dict["node"].partition("[")
     nature_compl = compl[:-1]
     ident = extract_identifier2(nature_compl)
     if ident in ProofStatePO.dict_:    # check if PO already exists
@@ -238,7 +238,7 @@ def create_anPO(PO_dict: dict, debug):
 #        if debug:
 #            print(f"VAR{De_Bruijn_index}: {latex_rep}")
 ####
-    arguments = PO_dict["arguments"]
+    arguments = PO_dict["children"]
 #### creation of children PO
     args = []
 #    if nature != "PROP_IMPLIES":
