@@ -1,4 +1,5 @@
 #!/usr/bin/python
+
 """
 ZetCode PyQt5 tutorial
 
