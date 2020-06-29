@@ -1,3 +1,4 @@
+#!/bin/bash
 #####################################
 # Simple convenional commit checker #
 #####################################
@@ -10,8 +11,8 @@ msg=$(cat $1) # Hook paremeter is a path to a temoprary file containing the
 ##################################
 # Constants
 ##################################
-regex='([a-zA-Z]+)(\(([^()]+)\))?\s*[:]\s*(.*)'
-regex_msg="^[a-z].*"
+regex='([a-zA-Z]+)(\(([^()]+)\))?[ ]*[:][ ]*(.*)'
+regex_msg='^[a-z].*'
 # group 1 : task type
 # group 2 : scope (with parentheses)
 # group 3 : scope (without parentheses)
