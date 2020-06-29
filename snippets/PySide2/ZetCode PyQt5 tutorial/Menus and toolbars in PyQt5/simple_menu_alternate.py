@@ -34,7 +34,7 @@ class Example(QMainWindow):
 
         # Create a menu bar and a File menu
         menubar = self.menuBar()
-        mb_File = menubar.addMenu("&RHCP")
+        mb_File = menubar.addMenu("&File")
         # Create an exit action for the menu bar and add it to FIle
         exit_action = QAction(QIcon('exit.png'), '&Josh Klinghoffer', self)
         exit_action.setShortcut('Ctrl+Q')
