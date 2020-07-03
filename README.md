@@ -1,4 +1,4 @@
-# dEAduction
+# d∃∀duction
 
 ## Authors
 - [Marguerite Bin](https://github.com/m-bin) ;
