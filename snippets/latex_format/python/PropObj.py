@@ -41,7 +41,6 @@ This file is part of dEAduction.
 
 """
 from dataclasses import dataclass
-#from latex_representation import LatexTree
 import analysis
 
 equal_sep = "¿= "
@@ -50,33 +49,6 @@ closed_bra = "¿]"
 
 
 @dataclass
-class LatexTree:
-    """latex expression structured into a tree
-    the tree is encoded as a list,
-    whose elements are either strings which corresponds to leaves of the tree,
-    or lists which corresponds to sub latex_tree
-    """
-    tree: list
-
-    def latex_join(self, debug=True):
-        """
-        turn a (structured) latex representation into a latex string
-        """
-        latex_str = ""
-        for lr in self.tree:
-            if type(lr) is list:
-                lr = LatexTree.latex_join(lr)
-            latex_str += lr
-        if debug:
-            print("string:", latex_str)
-        return latex_str
-
-
-
-
-
-
-@dataclass(frozen = True)
 class PropObj:
     """
     Python representation of mathematical entities,
@@ -87,7 +59,7 @@ class PropObj:
     """
     node: str
     children: list
-    latex_rep: LatexTree
+    latex_rep: list
     nodes_list = ["PROP_AND", "PROP_OR", "PROP_IFF", "PROP_NOT", "PROP_IMPLIES",
                   "QUANT_∀", "QUANT_∃", "PROP_∃",
                   "SET_INTER", "SET_UNION", "SET_INTER+", "SET_UNION+",
@@ -103,7 +75,7 @@ class PropObj:
                    "TYPE_NUMBER", "NUMBER", "VAR"]  # VAR should not be used any more
 
 
-@dataclass(frozen = True)
+@dataclass
 class AnonymousPO(PropObj):
     """
     Objects and Propositions not in the proof state, in practice they will be
@@ -134,7 +106,7 @@ class AnonymousPO(PropObj):
 
 #    __hash__ = PropObj.__hash__
 
-@dataclass(frozen = True)
+@dataclass
 class ProofStatePO(PropObj):
     """
     Objects and Propositions of the proof state and bound variables
@@ -149,7 +121,7 @@ class ProofStatePO(PropObj):
     math_types_instances = [] # list of ProofStatePO whose math_type equals the corresponding term of math_types_list
 
 
-@dataclass(frozen = True)
+@dataclass
 class BoundVarPO(ProofStatePO):
     """
     Variables that are bound by a quantifier
@@ -199,7 +171,7 @@ def create_pspo(prop_obj_str: str, debug: bool = True) -> ProofStatePO:
         ProofStatePO.math_types_list.append(math_type)
         ProofStatePO.math_types_instances.append([])
     # end
-    latex_rep = LatexTree([lean_data["name"]])  # useless if PROP
+    latex_rep = lean_data["name"]  # useless if PROP
     node = ""
     children = []
     prop_obj = ProofStatePO(node, children, latex_rep, lean_data, math_type)
@@ -216,7 +188,7 @@ def create_anonymous_prop_obj(prop_obj_dict: dict, debug):
     """
     create anonymous sub-objects and props, or refer to existing pfPO
     """
-    latex_rep = LatexTree([])  # latex representation is computed later
+    latex_rep = []  # latex representation is computed later
     node = prop_obj_dict["node"]
     #    ident = extract_identifier2(node)
     lean_data = extract_lean_data(node)
@@ -231,7 +203,7 @@ def create_anonymous_prop_obj(prop_obj_dict: dict, debug):
         children.append(arg_prop_obj)
     #### special cases
     if node.startswith("LOCAL_CONSTANT"):  # unidentified local constant = bound variable
-        latex_rep = LatexTree([lean_data["name"]])
+        latex_rep = lean_data["name"]
         math_type = children[0]
         prop_obj = BoundVarPO(node, [], latex_rep, lean_data, math_type)
         BoundVarPO.names_list.append(lean_data["name"])

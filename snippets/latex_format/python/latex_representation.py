@@ -12,7 +12,7 @@ using the latex formats specified in latex_format_data.
 structure encoded by lists
 - latex_join transforms this latex representation into a valid latex string
 """
-from PropObj import process_context, LatexTree
+from PropObj import process_context
 from latex_format_data import latex_structures, latex_formats, needs_paren
 from dataclasses import dataclass
 
@@ -37,7 +37,7 @@ def compute_latex(prop_obj, debug = True):
         if parentheses:
             lr = ["(", lr, ")"]
         a.append(lr)
-    latex_symb, format_scheme =  latex_structures[node]
+    latex_symb, format_scheme = latex_structures[node]
     latex_rep = format_scheme(latex_symb, a, prop_obj)
     if debug:
         print(f"Je latex {prop_obj.node}: {latex_rep}")
@@ -108,12 +108,12 @@ PROPERTY[METAVAR[_mlocal._fresh.1821.3074]/pp_type: A ∪ B ∩ C = (A ∪ B) �
     print(liste)
     print("")
     for pfprop_obj in liste:
-        pfprop_obj.math_type.latex_rep.tree = compute_latex(pfprop_obj.math_type, debug)
+        pfprop_obj.math_type.latex_rep = compute_latex(pfprop_obj.math_type, debug)
 #        pfprop_obj.latex_type_str = latex_join(pfprop_obj.latex_type, debug)
         print("-------")
     for pfprop_obj in liste:
         print(f"{pfprop_obj.latex_rep} : {pfprop_obj.math_type.latex_rep}")
-        print(f"assemblé :  {pfprop_obj.math_type.latex_rep.latex_join()}")
+        print(f"assemblé :  {latex_join(pfprop_obj.math_type.latex_rep)}")
     
           
        
