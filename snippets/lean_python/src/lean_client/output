@@ -1,0 +1,593 @@
+Tx : {"file_name": "template.lean", "content": "\n\nlemma bizadd (n : nat) : 0 + n = n :=\n\nbegin\n\n    sorry\n\nend\n\n", "seq_num": 0, "command": "sync"}
+Rx : {"is_running":false,"response":"current_tasks","tasks":[]}
+Rx : {"is_running":false,"response":"current_tasks","tasks":[]}
+Rx : {"message":"file invalidated","response":"ok","seq_num":0}
+Rx : {"is_running":true,"response":"current_tasks","tasks":[{"desc":"parsing at line 1","end_pos_col":1,"end_pos_line":11,"file_name":"template.lean","pos_col":0,"pos_line":1}]}
+Rx : {"msgs":[{"caption":"","file_name":"template.lean","pos_col":0,"pos_line":3,"severity":"warning","text":"declaration 'bizadd' uses sorry"}],"response":"all_messages"}
+Rx : {"is_running":false,"response":"current_tasks","tasks":[]}
+Tx : {"file_name": "template.lean", "line": 0, "column": 0, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 1, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 2, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 3, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 4, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 5, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 6, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 7, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 8, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 9, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 10, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 11, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 12, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 13, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 14, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 15, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 16, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 17, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 18, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 19, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 20, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 21, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 22, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 23, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 24, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 25, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 26, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 27, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 28, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 29, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 30, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 31, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 32, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 33, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 34, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 35, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 36, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 37, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 38, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 39, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 40, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 41, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 42, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 43, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 44, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 45, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 46, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 47, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 48, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 0, "column": 49, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 0, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 1, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 2, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 3, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 4, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 5, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 6, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 7, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 8, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 9, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 10, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 11, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 12, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 13, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 14, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 15, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 16, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 17, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 18, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 19, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 20, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 21, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 22, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 23, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 24, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 25, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 26, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 27, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 28, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 29, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 30, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 31, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 32, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 33, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 34, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 35, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 36, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 37, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 38, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 39, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 40, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 41, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 42, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 43, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 44, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 45, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 46, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 47, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 48, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 1, "column": 49, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 0, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 1, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 2, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 3, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 4, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 5, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 6, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 7, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 8, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 9, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 10, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 11, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 12, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 13, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 14, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 15, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 16, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 17, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 18, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 19, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 20, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 21, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 22, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 23, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 24, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 25, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 26, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 27, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 28, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 29, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 30, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 31, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 32, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 33, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 34, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 35, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 36, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 37, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 38, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 39, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 40, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 41, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 42, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 43, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 44, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 45, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 46, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 47, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 48, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 2, "column": 49, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 0, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 1, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 2, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 3, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 4, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 5, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 6, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 7, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 8, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 9, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 10, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 11, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 12, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 13, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 14, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 15, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 16, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 17, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 18, "seq_num": 4, "command": "info"}
+Rx : {"record":{"full-id":"nat","source":{"column":10,"file":"/usr/lib/lean/library/init/core.lean","line":293},"type":"Type"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 19, "seq_num": 4, "command": "info"}
+Rx : {"record":{"full-id":"nat","source":{"column":10,"file":"/usr/lib/lean/library/init/core.lean","line":293},"type":"Type"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 20, "seq_num": 4, "command": "info"}
+Rx : {"record":{"full-id":"nat","source":{"column":10,"file":"/usr/lib/lean/library/init/core.lean","line":293},"type":"Type"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 21, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 22, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 23, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 24, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 25, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 26, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 27, "seq_num": 4, "command": "info"}
+Rx : {"record":{"full-id":"has_add.add","source":{"column":6,"file":"/usr/lib/lean/library/init/core.lean","line":311},"type":"Π {α : Type} [c : has_add α], α → α → α"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 28, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 29, "seq_num": 4, "command": "info"}
+Rx : {"record":{"full-id":"n","type":"ℕ"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 30, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 31, "seq_num": 4, "command": "info"}
+Rx : {"record":{"full-id":"eq","source":{"column":10,"file":"/usr/lib/lean/library/init/core.lean","line":145},"type":"Π {α : Type}, α → α → Prop"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 32, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 33, "seq_num": 4, "command": "info"}
+Rx : {"record":{"full-id":"n","type":"ℕ"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 34, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 35, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 36, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 37, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 38, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 39, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 40, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 41, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 42, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 43, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 44, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 45, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 46, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 47, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 48, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 3, "column": 49, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 0, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 1, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 2, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 3, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 4, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 5, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 6, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 7, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 8, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 9, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 10, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 11, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 12, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 13, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 14, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 15, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 16, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 17, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 18, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 19, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 20, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 21, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 22, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 23, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 24, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 25, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 26, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 27, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 28, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 29, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 30, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 31, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 32, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 33, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 34, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 35, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 36, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 37, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 38, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 39, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 40, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 41, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 42, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 43, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 44, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 45, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 46, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 47, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 48, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 4, "column": 49, "seq_num": 4, "command": "info"}
+Rx : {"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 0, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 1, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 2, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 3, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 4, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 5, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 6, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 7, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 8, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 9, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 10, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 11, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 12, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 13, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 14, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 15, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 16, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 17, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 18, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 19, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 20, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 21, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 22, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 23, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 24, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 25, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 26, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 27, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 28, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 29, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 30, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 31, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 32, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 33, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 34, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 35, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 36, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 37, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 38, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 39, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 40, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 41, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
+Tx : {"file_name": "template.lean", "line": 5, "column": 42, "seq_num": 4, "command": "info"}
+Rx : {"record":{"state":"n : ℕ\n⊢ 0 + n = n"},"response":"ok","seq_num":4}
