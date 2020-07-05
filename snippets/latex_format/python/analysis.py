@@ -90,6 +90,10 @@ def pprint(essai: str):
         elif essai.startswith(","):
             print("  |" * inc + name + ",")
             essai = essai[2:]
+        else:
+            print("  |" * inc + name)
+            essai = essai[1:]
+
 
 
 # ESSAIS

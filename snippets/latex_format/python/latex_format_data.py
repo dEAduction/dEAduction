@@ -58,7 +58,8 @@ def format_app_inverse(latex_symb, a, PO):
 
 
 def format_quantifiers(latex_symb, a, PO):
-    return [latex_symb + ' ' + a[0] + ' \in ', a[1], ', ', a[2]]
+# mind that the variable a[1] comes AFTER the type a[0] in quantifiers
+    return [latex_symb + ' ' + a[1] + ' \in ', a[0], ', ', a[2]]
 
 
 def format_complement(latex_symb, a, PO):
@@ -66,7 +67,7 @@ def format_complement(latex_symb, a, PO):
 
 
 # dict nature -> (latex symbol, format name)
-latex_structures = {"PROP_AND": (r" \text{{ ET }} ", format_0n1),
+latex_structures = {"PROP_AND": (r" \text{{ ET }} ", format_0n1),   # logics
                     "PROP_OR": (r" \text{{ OU }} ", format_0n1),
                     "PROP_IFF": (r" \Leftrightarrow ", format_0n1),
                     "PROP_NOT": (r" \text{{NON }} ", format_n0),
@@ -74,7 +75,7 @@ latex_structures = {"PROP_AND": (r" \text{{ ET }} ", format_0n1),
                     "QUANT_∀": (r"\forall ", format_quantifiers),
                     "QUANT_∃": (r"\exists ", format_quantifiers),
                     "PROP_∃": ("", ""),
-                    "SET_INTER": (r" \cap ", format_0n1),
+                    "SET_INTER": (r" \cap ", format_0n1),       # set theory
                     "SET_UNION": (r" \cup ", format_0n1),
                     "SET_INTER+": ("", ""),
                     "SET_UNION+": ("", ""),
@@ -103,7 +104,8 @@ latex_structures = {"PROP_AND": (r" \text{{ ET }} ", format_0n1),
                     "FUNCTION": (r" \to ", format_0n1),
                     "SEQUENCE": ("", ""),
                     "SET_FAMILY": ("", ""),
-                    "TYPE_NUMBER": ("", ""),
+                    "TYPE_NUMBER[name:ℕ]": ("\mathbb{N}", format_constant),
+                    "TYPE_NUMBER[name:ℝ]": ("\mathbb{R}", format_constant),
                     "NUMBER": ("", "")
                     }
 

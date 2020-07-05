@@ -66,7 +66,7 @@ class PropObj:
     # de façon générale, APPLICATION, CONSTANT, LOCAL_CONSTANT
     
 
-    def pprint_PO(self, inc = 0):
+    def pprint_po(self, inc = 0):
         """representation as a tree - for debug"""
         if isinstance(self, ProofStatePO):
             name = self.name
@@ -75,7 +75,7 @@ class PropObj:
             print("|  " * inc + f"{self.nature}: {name}")
             inc +=1
             for arg in self.args:
-                PropObj.print_PO(arg,inc)
+                PropObj.print_po(arg,inc)
    
 
 
