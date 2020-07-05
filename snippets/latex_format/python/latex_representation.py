@@ -12,7 +12,7 @@ using the latex formats specified in latex_format_data.
 structure encoded by lists
 - latex_join transforms this latex representation into a valid latex string
 """
-from PropObj import process_context
+from PropObj import process_context, ProofStatePO
 from latex_format_data import latex_structures, latex_formats, needs_paren
 from dataclasses import dataclass
 
@@ -30,7 +30,7 @@ def compute_latex(prop_obj, debug = True):
     i = -1
     for arg in prop_obj.children:
         i += 1
-        if arg.latex_rep == "":
+        if arg.latex_rep == None:
             arg.latex_rep = compute_latex(arg, debug)
         lr = arg.latex_rep
         parentheses = needs_paren(prop_obj, i)
@@ -44,16 +44,18 @@ def compute_latex(prop_obj, debug = True):
     return latex_rep
 
 
-
-
-
-
-
-
-
-
-
-
+def latex_join(latex_rep, debug=True):
+    """
+    turn a (structured) latex representation into a latex string
+    """
+    latex_str = ""
+    for lr in latex_rep:
+        if type(lr) is list:
+            lr = latex_join(lr)
+        latex_str += lr
+#    if debug:
+#        print("string:", latex_str)
+    return (latex_str)
 
 
 #essai
@@ -114,6 +116,11 @@ PROPERTY[METAVAR[_mlocal._fresh.1821.3074]/pp_type: A ∪ B ∩ C = (A ∪ B) �
     for pfprop_obj in liste:
         print(f"{pfprop_obj.latex_rep} : {pfprop_obj.math_type.latex_rep}")
         print(f"assemblé :  {latex_join(pfprop_obj.math_type.latex_rep)}")
-    
-          
+    print("List of math types:")
+    i = 0
+    for mt in ProofStatePO.math_types_list:
+        print(f" {latex_join(mt.latex_rep)}: ",
+              f"{[latex_join(PO.latex_rep) for PO in ProofStatePO.math_types_instances[i]]}")
+        i += 1
+
        

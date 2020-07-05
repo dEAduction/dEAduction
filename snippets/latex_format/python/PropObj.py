@@ -74,6 +74,9 @@ class PropObj:
                    "FUNCTION", "SEQUENCE", "SET_FAMILY",
                    "TYPE_NUMBER", "NUMBER", "VAR"]  # VAR should not be used any more
 
+    def is_prop(self) -> bool:
+        return self.node.startswith("PROP") or self.node.startswith("QUANT")
+
 
 @dataclass
 class AnonymousPO(PropObj):
@@ -100,11 +103,6 @@ class AnonymousPO(PropObj):
                 return False
         return True
 
-#    def __hash__(self):
-#        return PropObj.__hash__(self)
-
-
-#    __hash__ = PropObj.__hash__
 
 @dataclass
 class ProofStatePO(PropObj):
@@ -118,7 +116,7 @@ class ProofStatePO(PropObj):
     context_dict = {}  # dictionary of instances in the current context (useful e.g. to baptize new variables)
     list_ = []  # list of all instances
     math_types_list = []  # list of AnonymousPO that occurs as math_type of some ProofStatePO,
-    math_types_instances = [] # list of ProofStatePO whose math_type equals the corresponding term of math_types_list
+    math_types_instances = []  # list of ProofStatePO whose math_type equals the corresponding term of math_types_list
 
 
 @dataclass
@@ -155,30 +153,33 @@ def create_pspo(prop_obj_str: str, debug: bool = True) -> ProofStatePO:
     tree = analysis.lean_expr_grammar.parse(tail)
     po_str_list = analysis.LeanExprVisitor().visit(tree)
     math_type = create_anonymous_prop_obj(po_str_list[0], debug)
-    # check if math_type = a previously defined math_type
-    exists_math_type = False
-    l = len(ProofStatePO.math_types_list)
-    for i in range(l):
-        mt = ProofStatePO.math_types_list[i]
-        if math_type == mt: # test if both Python objects represents the same math objects
-            del math_type  # is this useful ?
-            mt_number = i
-            math_type = mt
-            exists_math_type = True
-            break
-    if not exists_math_type:
-        mt_number = l
-        ProofStatePO.math_types_list.append(math_type)
-        ProofStatePO.math_types_instances.append([])
+    node = None
+    children = None
+    latex_rep = None
+    # treatment of objects (not prop): handling of math_types_list
+    if not math_type.is_prop():
+        exists_math_type = False
+        length = len(ProofStatePO.math_types_list)
+        for i in range(length):
+            mt = ProofStatePO.math_types_list[i]
+            if math_type == mt:  # test if both Python objects represents the same math objects
+                del math_type  # is this useful ?
+                mt_number = i
+                math_type = mt
+                exists_math_type = True
+                break
+        if not exists_math_type:
+            mt_number = length
+            ProofStatePO.math_types_list.append(math_type)
+            ProofStatePO.math_types_instances.append([])
+        latex_rep = lean_data["name"]
     # end
-    latex_rep = lean_data["name"]  # useless if PROP
-    node = ""
-    children = []
     prop_obj = ProofStatePO(node, children, latex_rep, lean_data, math_type)
     # Adjusting datas
     ProofStatePO.dict_[lean_data["id"]] = prop_obj
-    ProofStatePO.context_dict[lean_data["id"]] = prop_obj
-    ProofStatePO.math_types_instances[mt_number].append(prop_obj)
+    if not math_type.is_prop():
+        ProofStatePO.context_dict[lean_data["id"]] = prop_obj
+        ProofStatePO.math_types_instances[mt_number].append(prop_obj)
     if debug:
         print(f"j'ajoute {lean_data['name']} au dico, ident = {lean_data['id']}")
     return prop_obj
@@ -188,7 +189,7 @@ def create_anonymous_prop_obj(prop_obj_dict: dict, debug):
     """
     create anonymous sub-objects and props, or refer to existing pfPO
     """
-    latex_rep = []  # latex representation is computed later
+    latex_rep = None  # latex representation is computed later
     node = prop_obj_dict["node"]
     #    ident = extract_identifier2(node)
     lean_data = extract_lean_data(node)
