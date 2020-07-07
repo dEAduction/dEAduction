@@ -23,6 +23,15 @@ class Goal(QLineEdit):
         font = QFont('Fira Code', 20)
         self.setFont(font)
 
+class ToolsList(QListWidget):
+
+    def __init__(self):
+        super().__init__()
+        self._initUI()
+
+    def _initUI(self):
+        self.setAlternatingRowColors(True)
+
 
 class MainWindow(QWidget):
 
@@ -51,41 +60,26 @@ class MainWindow(QWidget):
 
             return buttons_grid
 
-        def _init_objects():
-            objects = QListWidget()
-            objects.setAlternatingRowColors(True)
-            objects.addItem('X : ensemble')
-            objects.addItem('Y : ensemble')
-            objects.addItem('f : X → Y')
-            objects.addItem('x ∈ X')
-            objects.addItem('A : partie de X')
-            objects.addItem('B : partie de X')
-
-            return objects
-
-        def _init_properties():
-            properties = QListWidget()
-            properties.setAlternatingRowColors(True)
-            properties.addItem('f est une fonction de remplissage')
-            properties.addItem("transitivité de l'union")
-
-            return properties
-
-        def _init_statements():
-            statements = QListWidget()
-            statements.setAlternatingRowColors(True)
-            statements.addItem("image")
-            statements.addItem("image réciproque")
-            statements.addItem("union")
-            statements.addItem("hypothèse de Riemann généralisée")
-
-            return statements
-
         # Create widgets
+        objects = ToolsList()
+        objects.addItem('X : ensemble')
+        objects.addItem('Y : ensemble')
+        objects.addItem('f : X → Y')
+        objects.addItem('x ∈ X')
+        objects.addItem('A : partie de X')
+        objects.addItem('B : partie de X')
+
+        properties = ToolsList()
+        properties.addItem('f est une fonction de remplissage')
+        properties.addItem("transitivité de l'union")
+
+        statements = ToolsList()
+        statements.addItem("image")
+        statements.addItem("image réciproque")
+        statements.addItem("union")
+        statements.addItem("hypothèse de Riemann généralisée")
+
         goal = Goal(GOAL)
-        objects = _init_objects()
-        properties = _init_properties()
-        statements = _init_statements()
 
         # Create layouts
         logic_buttons = _init_logic_buttons()   # already contains buttons
