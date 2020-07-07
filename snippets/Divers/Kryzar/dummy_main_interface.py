@@ -4,7 +4,7 @@ A dummy dEAduction main window interface.
 
 from PySide2.QtWidgets import QApplication, QMainWindow, QPushButton, \
                                 QHBoxLayout, QVBoxLayout, QGridLayout, \
-                                QLineEdit, QListWidget, QWidget
+                                QLineEdit, QListWidget, QWidget, QGroupBox
 from PySide2.QtCore import Qt
 from PySide2.QtGui import QFont
 import sys
@@ -83,25 +83,31 @@ class MainWindow(QWidget):
 
         # Create layouts
         logic_buttons = _init_logic_buttons()   # already contains buttons
-        main_VBox = QVBoxLayout()
-        workspace_HBox = QHBoxLayout()
-        propobj_VBox = QVBoxLayout()
-        statements_buttons_VBox = QVBoxLayout()
+        main_layout = QVBoxLayout()
+        workspace_layout = QHBoxLayout()
+        propobj_layout = QVBoxLayout()
+        tools_layout = QVBoxLayout()
 
-        # Put widgets in layouts
-        propobj_VBox.addWidget(objects)
-        propobj_VBox.addWidget(properties)
-        statements_buttons_VBox.addWidget(statements)
-        statements_buttons_VBox.addLayout(logic_buttons)
-        workspace_HBox.addLayout(propobj_VBox)
-        workspace_HBox.addLayout(statements_buttons_VBox)
-        main_VBox.addWidget(goal)
-        main_VBox.addLayout(workspace_HBox)
+        # Create QGroupBox to have titles
+        propobj_gb = QGroupBox('Properties and objects')
+        tools_gb = QGroupBox('Tools (affect goal and prop. / obj.)')
+
+        # Put widgets in layouts and group boxes
+        propobj_layout.addWidget(objects)
+        propobj_layout.addWidget(properties)
+        tools_layout.addWidget(statements)
+        tools_layout.addLayout(logic_buttons)
+        propobj_gb.setLayout(propobj_layout)
+        tools_gb.setLayout(tools_layout)
+        workspace_layout.addWidget(propobj_gb)
+        workspace_layout.addWidget(tools_gb)
 
         # Don't forget me
+        main_layout.addWidget(goal)
+        main_layout.addLayout(workspace_layout)
         self.setWindowTitle("L'union des images réciproque est l'image "\
                 "réciproque de l'union — d∃∀duction")
-        self.setLayout(main_VBox)
+        self.setLayout(main_layout)
         self.resize(1200, 800)
         self.show()
 
