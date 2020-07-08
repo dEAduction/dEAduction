@@ -12,22 +12,16 @@ import sys
 
 GOAL = "∀ x ∈ X, x ∈ (f⁻¹⟮B ∪ B'⟯) <=> x ∈ f⁻¹⟮B⟯ ∪ (f⁻¹⟮B'⟯)"
 
-class Goal(QPushButton):
-
+class Goal(QLabel):
     def __init__(self, goal):
         super().__init__()
         self.setText(goal)
         self._initUI()
 
     def _initUI(self):
-        self.setFont(QFont('Fira Code', 24))
-        self._resize_width()
-        self.setFlat(True)
-
-    def _resize_width(self):
+        self.setAlignment(Qt.AlignCenter)
+        self.setFont(QFont('Fira Code', 22))
         txt_width = self.fontMetrics().boundingRect(self.text()).width()
-        self.setFixedWidth(txt_width + 40)
-
 
 class ToolsList(QListWidget):
 
@@ -88,7 +82,6 @@ class MainWindow(QWidget):
         goal = Goal(GOAL)
 
         # Create layouts
-        goal_layout = QHBoxLayout()
         logic_buttons = _init_logic_buttons()   # already contains buttons
         main_layout = QVBoxLayout()
         workspace_layout = QHBoxLayout()
@@ -100,11 +93,6 @@ class MainWindow(QWidget):
         tools_gb = QGroupBox('Tools (affect goal, prop. and obj.)')
 
         # Put widgets in layouts and group boxes
-        goal_layout.addStretch()
-        goal_layout.addWidget(goal)
-        goal_layout.addStretch()
-        # Add space below goal
-        goal_layout.setContentsMargins(0, 10, 0, 30) #LTRB
         propobj_layout.addWidget(objects)
         propobj_layout.addWidget(properties)
         tools_layout.addLayout(logic_buttons)
@@ -115,7 +103,7 @@ class MainWindow(QWidget):
         workspace_layout.addWidget(tools_gb)
 
         # Don't forget me
-        main_layout.addLayout(goal_layout)
+        main_layout.addWidget(goal)
         main_layout.addLayout(workspace_layout)
         self.setWindowTitle("L'union des images réciproque est l'image "\
                 "réciproque de l'union — d∃∀duction")
