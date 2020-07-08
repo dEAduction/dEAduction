@@ -28,7 +28,6 @@ class Goal(QPushButton):
         txt_width = self.fontMetrics().boundingRect(self.text()).width()
         self.setFixedWidth(txt_width + 40)
 
-
 class ToolsList(QListWidget):
 
     def __init__(self):
@@ -41,42 +40,47 @@ class ToolsList(QListWidget):
 
 class ExerciseWindow(QWidget):
 
-    def __init__(self):
+    def __init__(self, tool_buttons):
         super().__init__()
+        self.tool_buttons = tool_buttons
         self._initUI()
 
     def _initUI(self):
 
-        def _init_logic_buttons():
-            buttons_grid = QGridLayout()
+        def _init_tool_buttons():
 
-            NO =                QPushButton('NO')
-            AND =               QPushButton('AND')
-            OR =                QPushButton('OR')
-            Implies =           QPushButton('→')
-            Equivalence =       QPushButton('↔')
-            Forall =            QPushButton('∀')
-            Exists =            QPushButton('∃')
-            P_contraposition =  QPushButton('Proof by contraposition')
-            P_absurd =          QPushButton('Proof by absurd')
-            P_induction =       QPushButton('Proof by induction')
+            # First logic buttons
+            logic_buttons_layout = QHBoxLayout()
 
-            buttons_positions = {
-                    NO: (1, 1),
-                    AND: (1, 2),
-                    OR: (1, 3),
-                    Implies: (1, 4),
-                    Equivalence: (1, 5),
-                    Forall: (1, 6),
-                    Exists: (1, 7),
-                    P_contraposition: (2, 1),
-                    P_absurd: (2, 2),
-                    P_induction: (2, 3)}
+            logic_buttons = [('NO', QPushButton('NO')),
+                                ('AND', QPushButton('AND')),
+                                ('OR', QPushButton('OR')),
+                                ('implies', QPushButton('→')),
+                                ('equivalence', QPushButton('↔')),
+                                ('forall', QPushButton('∀')),
+                                ('exists', QPushButton('∃'))]
 
-            for button, position in buttons_positions.items():
-                buttons_grid.addWidget(button, *position)
+            for name, button in logic_buttons:
+                if name in self.tool_buttons:
+                    logic_buttons_layout.addWidget(button)
 
-            return buttons_grid
+            # Then proof buttons
+            proof_buttons_layout = QHBoxLayout()
+            proof_buttons = [\
+                    ('p_contraposition', QPushButton('Proof by contraposition')),
+                    ('p_absurd', QPushButton('Proof by absurd')),
+                    ('p_induction', QPushButton('Proof by induction'))]
+
+            for name, button in proof_buttons:
+                if name in self.tool_buttons:
+                    proof_buttons_layout.addWidget(button)
+
+            # Put it all together
+            buttons_layout = QVBoxLayout()
+            buttons_layout.addLayout(logic_buttons_layout)
+            buttons_layout.addLayout(proof_buttons_layout)
+
+            return buttons_layout
 
         # Create widgets
         objects = ToolsList()
@@ -101,7 +105,7 @@ class ExerciseWindow(QWidget):
 
         # Create layouts
         goal_layout = QHBoxLayout()
-        logic_buttons = _init_logic_buttons()   # already contains buttons
+        logic_buttons = _init_tool_buttons()   # already contains buttons
         main_layout = QVBoxLayout()
         workspace_layout = QHBoxLayout()
         propobj_layout = QVBoxLayout()
@@ -138,8 +142,9 @@ class ExerciseWindow(QWidget):
 
 def main():
     app = QApplication()
-
-    main_window = ExerciseWindow()
+    tool_buttons = ['NO', 'AND', 'OR', 'implies', 'equivalence', 'forall', \
+            'exists', 'p_contraposition', 'p_absurd', 'p_induction']
+    main_window = ExerciseWindow(tool_buttons)
     sys.exit(app.exec_())
 
 if __name__ == '__main__':
