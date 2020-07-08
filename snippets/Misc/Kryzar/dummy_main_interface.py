@@ -39,7 +39,7 @@ class ToolsList(QListWidget):
         self.setAlternatingRowColors(True)
 
 
-class MainWindow(QWidget):
+class ExerciseWindow(QWidget):
 
     def __init__(self):
         super().__init__()
@@ -50,18 +50,30 @@ class MainWindow(QWidget):
         def _init_logic_buttons():
             buttons_grid = QGridLayout()
 
-            NO = QPushButton('NO')
-            OR = QPushButton('OR')
-            AND = QPushButton('AND')
-            FORALL = QPushButton('∀')
-            EXISTS = QPushButton('∃')
-            IMPLIES = QPushButton('→')
-            EQUIVALENCE = QPushButton('↔')
+            NO =                QPushButton('NO')
+            AND =               QPushButton('AND')
+            OR =                QPushButton('OR')
+            Implies =           QPushButton('→')
+            Equivalence =       QPushButton('↔')
+            Forall =            QPushButton('∀')
+            Exists =            QPushButton('∃')
+            P_contraposition =  QPushButton('Proof by contraposition')
+            P_absurd =          QPushButton('Proof by absurd')
+            P_induction =       QPushButton('Proof by induction')
 
-            buttons = [NO, OR, AND, FORALL, EXISTS, IMPLIES, EQUIVALENCE]
-            positions = [(i, j) for i in range(4) for j in range(3)]
+            buttons_positions = {
+                    NO: (1, 1),
+                    AND: (1, 2),
+                    OR: (1, 3),
+                    Implies: (1, 4),
+                    Equivalence: (1, 5),
+                    Forall: (1, 6),
+                    Exists: (1, 7),
+                    P_contraposition: (2, 1),
+                    P_absurd: (2, 2),
+                    P_induction: (2, 3)}
 
-            for position, button in zip(positions, buttons):
+            for button, position in buttons_positions.items():
                 buttons_grid.addWidget(button, *position)
 
             return buttons_grid
@@ -126,7 +138,8 @@ class MainWindow(QWidget):
 
 def main():
     app = QApplication()
-    main_window = MainWindow()
+
+    main_window = ExerciseWindow()
     sys.exit(app.exec_())
 
 if __name__ == '__main__':
