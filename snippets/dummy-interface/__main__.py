@@ -6,6 +6,7 @@ from PySide2.QtWidgets import QApplication, QMainWindow, QPushButton, \
                                 QHBoxLayout, QVBoxLayout, QGridLayout, \
                                 QLineEdit, QListWidget, QWidget, QGroupBox, \
                                 QLabel
+from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem, QTreeView                          
 from PySide2.QtCore import Qt
 from PySide2.QtGui import QFont
 import sys
@@ -28,7 +29,8 @@ class Goal(QPushButton):
         txt_width = self.fontMetrics().boundingRect(self.text()).width()
         self.setFixedWidth(txt_width + 40)
 
-class ToolsList(QListWidget):
+
+class PropobjList(QListWidget):
 
     def __init__(self):
         super().__init__()
@@ -83,7 +85,7 @@ class ExerciseWindow(QWidget):
             return buttons_layout
 
         # Create widgets
-        objects = ToolsList()
+        objects = PropobjList()
         objects.addItem('X : ensemble')
         objects.addItem('Y : ensemble')
         objects.addItem('f : X → Y')
@@ -91,15 +93,21 @@ class ExerciseWindow(QWidget):
         objects.addItem('A : partie de X')
         objects.addItem('B : partie de X')
 
-        properties = ToolsList()
+        properties = PropobjList()
         properties.addItem('f est une fonction de remplissage')
         properties.addItem("transitivité de l'union")
 
-        statements = ToolsList()
-        statements.addItem("image")
-        statements.addItem("image réciproque")
-        statements.addItem("union")
-        statements.addItem("hypothèse de Riemann généralisée")
+        statements = QTreeWidget()
+        statements.setAlternatingRowColors(True)
+        statements.setHeaderLabels(['Énoncé', 'Identifiant'])
+        anneaux_ideaux = QTreeWidgetItem(statements, ['Anneaux et idéaux', ''])
+        QTreeWidgetItem(anneaux_ideaux, ['Définition anneau', 'Définition 1.1'])
+        QTreeWidgetItem(anneaux_ideaux, ['Définition idéal', 'Définition 1.7'])
+        QTreeWidgetItem(anneaux_ideaux, ["Existence d'un idéal maximal", 'Théorème'])
+        noetherianite = QTreeWidgetItem(statements, ['Noetherianité'])
+        QTreeWidgetItem(noetherianite, ['Transfert de Noethérianité', 'Proposition 2.4'])
+        QTreeWidgetItem(noetherianite, ['Principal implique noethérien', 'Proposition 2.3'])
+
 
         goal = Goal(GOAL)
 
