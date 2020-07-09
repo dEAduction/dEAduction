@@ -5,6 +5,10 @@
 <
 :*
 
+# gettext files
+*.mo
+*.gmo
+
 # misc dev stuff
 env/
 .idea/	# PyCharm config folder
