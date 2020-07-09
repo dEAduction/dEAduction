@@ -42,17 +42,24 @@ class Statement(QTreeWidgetItem):
         # Note: align the second column on the right is ugly, see
         # self.setTextAlignment(1, Qt.AlignmentFlag.AlignRight)
 
+    def setUnselectable(self):
+        # Thanks Florian
+        # There is no method for this so we use a QFlag
+        flags = self.flags()
+        new_flags = flags & ~Qt.ItemIsSelectable
+        self.setFlags(new_flags)
+
 
 class StatementNode(Statement):
 
     def __init__(self, parent, title):
         super().__init__(parent, [title])
         self._set_icon()
+        self.setUnselectable()
 
     def _set_icon(self):
         icon = QIcon('icon.png')
         self.setIcon(0, icon)
-
 
 class PropobjList(QListWidget):
 
