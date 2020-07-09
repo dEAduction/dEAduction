@@ -1,6 +1,9 @@
 ##########################################
 # Python Related rules
 ##########################################
+# vim dumb things
+<
+:*
 
 # misc dev stuff
 env/
