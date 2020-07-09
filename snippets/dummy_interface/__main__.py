@@ -8,7 +8,7 @@ from PySide2.QtWidgets import QApplication, QMainWindow, QPushButton, \
                                 QLabel, QDesktopWidget
 from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem, QTreeView                          
 from PySide2.QtCore import Qt
-from PySide2.QtGui import QFont, QColor, QBrush
+from PySide2.QtGui import QFont, QColor, QBrush, QIcon
 import sys
 
 GOAL = "∀ x ∈ X, x ∈ (f⁻¹⟮B ∪ B'⟯) <=> x ∈ f⁻¹⟮B⟯ ∪ (f⁻¹⟮B'⟯)"
@@ -41,6 +41,17 @@ class Statement(QTreeWidgetItem):
         self.setForeground(1, QBrush(QColor('gray')))
         # Note: align the second column on the right is ugly, see
         # self.setTextAlignment(1, Qt.AlignmentFlag.AlignRight)
+
+
+class StatementNode(Statement):
+
+    def __init__(self, parent, title):
+        super().__init__(parent, [title])
+        self._set_icon()
+
+    def _set_icon(self):
+        icon = QIcon('icon.png')
+        self.setIcon(0, icon)
 
 
 class PropobjList(QListWidget):
@@ -113,11 +124,11 @@ class ExerciseWindow(QWidget):
         statements = QTreeWidget()
         statements.setAlternatingRowColors(True)
         statements.setHeaderLabels(['Énoncé', 'Identifiant'])
-        anneaux_ideaux = Statement(statements, ['Anneaux et idéaux', ''])
+        anneaux_ideaux = StatementNode(statements, 'Anneaux et idéaux')
         Statement(anneaux_ideaux, ['Définition anneau', 'Définition 1.1'])
         Statement(anneaux_ideaux, ['Définition idéal', 'Définition 1.7'])
         Statement(anneaux_ideaux, ["Existence d'un idéal maximal", 'Théorème'])
-        noetherianite = Statement(statements, ['Noetherianité'])
+        noetherianite = StatementNode(statements, 'Noetherianité')
         Statement(noetherianite, ['Transfert de Noethérianité', ''])
         Statement(noetherianite, ['Principal implique noethérien', 'Proposition 2.3'])
         statements.resizeColumnToContents(0)
