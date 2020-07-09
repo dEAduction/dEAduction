@@ -5,10 +5,10 @@ A dummy dEAduction main window interface.
 from PySide2.QtWidgets import QApplication, QMainWindow, QPushButton, \
                                 QHBoxLayout, QVBoxLayout, QGridLayout, \
                                 QLineEdit, QListWidget, QWidget, QGroupBox, \
-                                QLabel
+                                QLabel, QDesktopWidget
 from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem, QTreeView                          
 from PySide2.QtCore import Qt
-from PySide2.QtGui import QFont
+from PySide2.QtGui import QFont, QColor, QBrush
 import sys
 
 GOAL = "∀ x ∈ X, x ∈ (f⁻¹⟮B ∪ B'⟯) <=> x ∈ f⁻¹⟮B⟯ ∪ (f⁻¹⟮B'⟯)"
@@ -28,6 +28,17 @@ class Goal(QPushButton):
     def _resize_width(self):
         txt_width = self.fontMetrics().boundingRect(self.text()).width()
         self.setFixedWidth(txt_width + 40)
+
+
+class Statement(QTreeWidgetItem):
+
+    def __init__(self, parent, titles):
+        super().__init__(parent, titles)
+        self._initUI()
+
+    def _initUI(self):
+        self.setExpanded(True)
+        self.setForeground(1, QBrush(QColor('gray')))
 
 
 class PropobjList(QListWidget):
@@ -100,13 +111,13 @@ class ExerciseWindow(QWidget):
         statements = QTreeWidget()
         statements.setAlternatingRowColors(True)
         statements.setHeaderLabels(['Énoncé', 'Identifiant'])
-        anneaux_ideaux = QTreeWidgetItem(statements, ['Anneaux et idéaux', ''])
-        QTreeWidgetItem(anneaux_ideaux, ['Définition anneau', 'Définition 1.1'])
-        QTreeWidgetItem(anneaux_ideaux, ['Définition idéal', 'Définition 1.7'])
-        QTreeWidgetItem(anneaux_ideaux, ["Existence d'un idéal maximal", 'Théorème'])
-        noetherianite = QTreeWidgetItem(statements, ['Noetherianité'])
-        QTreeWidgetItem(noetherianite, ['Transfert de Noethérianité', 'Proposition 2.4'])
-        QTreeWidgetItem(noetherianite, ['Principal implique noethérien', 'Proposition 2.3'])
+        anneaux_ideaux = Statement(statements, ['Anneaux et idéaux', ''])
+        Statement(anneaux_ideaux, ['Définition anneau', 'Définition 1.1'])
+        Statement(anneaux_ideaux, ['Définition idéal', 'Définition 1.7'])
+        Statement(anneaux_ideaux, ["Existence d'un idéal maximal", 'Théorème'])
+        noetherianite = Statement(statements, ['Noetherianité'])
+        Statement(noetherianite, ['Transfert de Noethérianité', 'Proposition 2.4'])
+        Statement(noetherianite, ['Principal implique noethérien', 'Proposition 2.3'])
 
 
         goal = Goal(GOAL)
@@ -144,7 +155,6 @@ class ExerciseWindow(QWidget):
         self.setWindowTitle("L'union des images réciproque est l'image "\
                 "réciproque de l'union — d∃∀duction")
         self.setLayout(main_layout)
-        self.resize(1200, 800)
         self.show()
 
 
