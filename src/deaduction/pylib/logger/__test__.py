@@ -4,7 +4,7 @@ import logging
 import re
 
 def test_basic(capsys):
-    # date/time information is masked with regex numbers
+    # Date/time information is masked with regex numbers
     RESP = re.compile( r"\d{4}-\d+-\d+ \d+:\d+:\d+,\d+ DEBUG    : This is debug\n"   \
                        r"\d{4}-\d+-\d+ \d+:\d+:\d+,\d+ INFO     : This is info\n"    \
                        r"\d{4}-\d+-\d+ \d+:\d+:\d+,\d+ WARNING  : This is warning\n" \
