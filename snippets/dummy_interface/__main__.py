@@ -39,6 +39,8 @@ class Statement(QTreeWidgetItem):
     def _initUI(self):
         self.setExpanded(True)
         self.setForeground(1, QBrush(QColor('gray')))
+        # Note: align the second column on the right is ugly, see
+        # self.setTextAlignment(1, Qt.AlignmentFlag.AlignRight)
 
 
 class PropobjList(QListWidget):
@@ -116,8 +118,9 @@ class ExerciseWindow(QWidget):
         Statement(anneaux_ideaux, ['Définition idéal', 'Définition 1.7'])
         Statement(anneaux_ideaux, ["Existence d'un idéal maximal", 'Théorème'])
         noetherianite = Statement(statements, ['Noetherianité'])
-        Statement(noetherianite, ['Transfert de Noethérianité', 'Proposition 2.4'])
+        Statement(noetherianite, ['Transfert de Noethérianité', ''])
         Statement(noetherianite, ['Principal implique noethérien', 'Proposition 2.3'])
+        statements.resizeColumnToContents(0)
 
 
         goal = Goal(GOAL)
