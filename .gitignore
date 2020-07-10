@@ -5,6 +5,10 @@
 <
 :*
 
+# gettext files
+*.mo
+*.gmo
+
 # misc dev stuff
 env/
 .idea/	# PyCharm config folder
@@ -63,8 +67,8 @@ coverage.xml
 cover/
 
 # Translations
-*.mo
-*.pot
+#*.mo
+#*.po
 
 # Django stuff:
 *.log
