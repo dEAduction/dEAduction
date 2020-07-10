@@ -31,7 +31,7 @@ ENVPATH="$(pwd)/env"
 
 if [ ! -d $ENVPATH ] ; then
     echo "Installing python env."
-    virtualenv --python=python3 ${ENVPATH}
+	python3 -m venv ${ENVPATH}
 
     source "$ENVPATH/bin/activate"
     if [ -f "requirements.txt" ] ; then
