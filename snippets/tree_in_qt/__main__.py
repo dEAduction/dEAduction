@@ -9,12 +9,12 @@ from PySide2.QtCore     import Qt
 from PySide2.QtGui      import QColor, QBrush, QIcon
 from sys import exit
 
-BLAZES = ['Echtelion', 'Eugenie', 'Meige', 'Monheim', 'Princesse']
-ROLES = ['Sous-chef', 'Ktarchiduc', 'Sous-chef', 'Some dude']
-ARBRE = ['algebre.anneaux.definition',
-            'algebre.anneaux.theoreme_factorisation',
-            'algebre.noetherianite.transfert',
-            'algebre.noetherianite.principal_implique_noetherien']
+ARBRE = ['groups.definitions.sub_group',
+            'groups.definitions.quotient',
+            'groups.finite_groups.lagrange_theorem',
+            'groups.finite_groups.Cauchy_theorem',
+            'rings.definitions.sub_ring',
+            'rings.definitions.ideal']
 
 
 class Statement(QTreeWidgetItem):
@@ -48,7 +48,7 @@ class StatementsNode(QTreeWidgetItem):
         self.setFlags(new_flags)
 
 
-class Buisson(QTreeWidget):
+class StatementsTree(QTreeWidget):
 
     def __init__(self, data):
         super().__init__()
@@ -57,50 +57,63 @@ class Buisson(QTreeWidget):
 
     def _initUI(self):
         self.setAlternatingRowColors(True)
-        self.setWindowTitle('Buisson')
-        self.show()
+        self.setWindowTitle('StatementsTree')
 
     def addChild(self, item):
         self.addTopLevelItem(item)
 
-    def initiate_branch(self, node, path, parent=None):
+    def initiate_branch(self, extg_tree, branch, parent=None):
         """
-        En gros l'idée est d'avoir un dico qui à un niveau de la hiérarchie
-        associe un tuple contenant l'instance du QTreeViewWidget
-        correspondante, puis un autre dico contenant le prochain niveau sur le
-        même principe (clé/tuple)
+        Add a branch to self.tree (defined in self.initiate_tree). This
+        item.tree is representend by a dict which to any node (str ID)
+        associates a tuple containing :
+        1.  its instance of QTreeWidgetItem (more specifically, StatementsNode
+            or Statement) ;
+        2.  the next level of the branch as a dict with tuples
+            (QTreeWidgetItem, dict) on the same principle.
+        The function is recursive. The tree will always have < 100 leaves so
+        performances will not be an issue.
 
-        toplevel = QTreeViewItem("toplevel")
-        process_items(items, txt.split("."),parent=toplevel)
-
-        :path: 
+        :extg_tree: Existing tree in which we wish to add our branch. A
+                    dictionnary that looks like this:
+                    {'groups': (QTreeWidgetItem(None, 'groups'),
+                        {'sub_groups': (QTreeWidgetItem(None, 'sub_groups'),
+                            {'def': (QTreeWidgetItem(None, 'def'),
+                                dict()
+                            )}
+                        )}
+                    )}
+        :branch: A tree branch, e.g. ['rings', 'ideals', 'def'].
+        :parent: A QTreeWidgetItem (more specifically an instance of Statement
+                 or StatementsNode) to which we will add a child / children.
         """
 
-        if not path:
+        if not branch:
             return
 
-        root = path[0]
-        remain = path[1:]
+        root = branch[0]    # 'rings'
+        remain = branch[1:] # ['ideals', 'def']
 
-        if not root in node:
+        if not root in extg_tree: 
             cls = StatementsNode if remain else Statement
-            node[root] = (cls(None, [root]), dict())
+            extg_tree[root] = (cls(None, [root]), dict())
             if parent:
-                parent.addChild(node[root][0])
+                parent.addChild(extg_tree[root][0])
         
-        self.initiate_branch(node[root][1], remain, node[root][0])
+        self.initiate_branch(extg_tree[root][1], remain, extg_tree[root][0])
 
     def initiate_tree(self, data):
-        self.items = dict()
+        self.tree = dict()
         for branch in data:
-            self.initiate_branch(self.items, branch.split('.'), self)
+            self.initiate_branch(self.tree, branch.split('.'), self)
 
 
 def main():
     app = QApplication()
     
-    buisson = Buisson(ARBRE)
+    buisson = StatementsTree(ARBRE)
     buisson.resizeColumnToContents(0)
+    buisson.show()
 
     exit(app.exec_())
 
