@@ -89,6 +89,7 @@ def configure( debug: bool = True ):
 
     # Creating basic handler and format
     ft = Color_Formatter('%(asctime)-15s %(levelname)-9s: %(message)s')
+    ft._use_color = True
     sh = logging.StreamHandler()
     sh.setFormatter(ft)
 
