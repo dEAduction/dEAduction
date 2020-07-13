@@ -1,8 +1,9 @@
 """
-# init_course.py : extract exercises from a lean file
+# init_course.py: extract exercises from a lean file
     
     This files provides the two classes Course and Exercise,
-    and an instantiation method for Course object by getting informations from a lean file
+    and an instantiation method for Course object
+    by getting informations from a lean file
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -32,25 +33,28 @@ from pathlib import Path
 import deaduction.pylib.logger as logger
 import logging
 
-log = logging.getLogger("my logger")
 
 
 @dataclass
 class Exercise:
-    lean_name: str
-    lean_statement: str
-    line_number: int
-    title: str
-    description: str
-    logic: list
-    definitions: list
-    theorems: list
-    magic: list
-    expected_number_var: dict  # expected number of variables of each mathematical type
-    # e.g expected_number_var["X"] = 2
+    active_definitions:     list  # ['inclusion', 'union', intersection']
+    active_logic: list  # ['∀', '∃', '→', '↔', 'AND', 'OR',
+    # 'NOT', 'Absurd', 'Contrapose', 'Choice']
+    active_magic: list  # []
+    active_theorems: list  # ['double_inclusion', 'Riemann_hypothesis']
+    description: str  # "L'union est distributive par rapport à l'intersection"
+    expected_number_var: dict  # {'X': 3, 'A': 1, 'B': 1}
+    Lean_line_number: int
+    lean_name: str  # 'exercise.inter_distributive_union'
+    lean_statement: str  # 'A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C)'
+    lean_variables: str  # '(X : Type) (A : set X)'
+    section: str  # "set_theory.Unions_and_intersections
+    title: str  # 'Union d'intersections'
 
-    logic_buttons_complete_list = ["∀", "∃", "→", "↔", "ET", "OU", "NON",
-                                   "Preuve par l'absurde", "Preuve par contraposée", "Preuve par cas", "Choix"]
+    logic_buttons_complete_list = ["forall", "exists", "implies", "iff",
+                                   "AND", "OR", "NOT",
+                                   "p_absurd", "p_contrapose",
+                                   "p_cases", "p_choice"]
 
     # magic_buttons_complete_list = TODO
 
@@ -59,21 +63,25 @@ class Exercise:
         """
         Create an Exercise from the raw data obtained by the parser
 
-        :param data: a dictionary whose keys = fields parsed by the course_from_lean_file function
+        :param data: a dictionary whose keys =
+        fields parsed by the course_from_lean_file function
         """
-        data["lean_statement"] = data["lean_statement"][:-2].strip()  # removing the final " :="
+        log = logging.getLogger("Course initialisation")
         expected_variables = {}
+        whole_namespace = ".".join(data["current_namespaces"])
         for equality in data["ExpectedVariables"].split(", "):
             key, _, value = equality.partition("=")
             expected_variables[key] = int(value)
         if "Title" in data.keys():
             title = data["Title"]
         else:
-            title = data["lean_statement"].replace("_", " ")  # automatic title if not provided
+            title = data["lean_statement"].replace("_", " ")
+            # automatic title if not provided
 
         # treatment of Macros and variables
         post_data = {}
-        for field in ["Tools->Logic", "Tools->Definitions", "Tools->Theorems", "Tools->Magic"]:
+        for field in ["Tools->Logic", "Tools->Definitions",
+                      "Tools->Theorems", "Tools->Magic"]:
             log.debug(f"processing data in {field}, {data[field]}")
             if data[field] == None:
                 post_data[field] = None
@@ -112,18 +120,25 @@ class Exercise:
             if item not in Exercise.logic_buttons_complete_list:
                 log.warning(f"unknown logic button {item}")
 
-        return cls(data["lean_name"], data["lean_statement"], data["line_number"], title, data["Description"],
-                   post_data["Tools->Logic"], post_data["Tools->Definitions"], post_data["Tools->Theorems"],
-                   post_data["Tools->Magic"],
-                   expected_variables)
+        return cls(post_data["Tools->Definitions"], post_data["Tools->Logic"],
+                   post_data["Tools->Magic"], post_data["Tools->Theorems"],
+                   data["Description"], expected_variables,
+                   data["line_number"], data["lean_name"],
+                   data["lean_statement"], data["lean_variables"],
+                   whole_namespace, title)
 
 
 @dataclass
 class Course:
     exercises_list: list
+    sections_dict: dict  # keys = lean namespaces,
+    # values = corresponding plain language namespace
+    # e. g. section_dict["set_theory.unions_and_intersections"] =
+    # "Unions and intersections"
+    sections_list: list  # successive whole namespaces
 
     @classmethod
-    def course_from_lean_file(cls, course_path, exercises_file):
+    def from_lean_file(cls, course_path, exercises_file):
         """
         instantiate a Course object by parsing lean files
 
@@ -131,118 +146,133 @@ class Course:
         :param exercises_file: name of file
         """
         # TODO: enable multiple exercises files ?
-        macros_dict = {}
+        log = logging.getLogger("Course initialisation")
         exercises_list = []
-        sections_dict = {}  # keys = lean namespaces, values = corresponding plain language namespace
-        sections_list = []  # successive whole namespaces
+        sections_dict = {}
+        sections_list = []
         exercises_path = course_path / 'exercises' / exercises_file
 
         file_content = exercises_path.read_text()
         lines = file_content.splitlines()
-        namespace_parsing = False
-        statement_parsing = False
-        exercise_parsing = False
-        field_name_parsing = False
-        data_parsing = False
-        current_field = None
-        current_namespaces = []  # the whole hierarchy of namespaces
+        global_parsing = ""
+        # possible values = "namespace", "statement", "exercise"
+        data_parsing = ""
+        # possible values = "", "field name", "<field name>"
         line_counter = 0
-        data = {"Section": None, "Tools->Logic": None, "Tools->Definitions": None, "Tools->Theorems": None,
-                "Tools->Magic": None, "ExpectedVariables": None}
+        data = {"Section": None, "Tools->Logic": None,
+                "Tools->Definitions": None, "Tools->Theorems": None,
+                "Tools->Magic": None, "ExpectedVariables": None,
+                "current_namespaces": []}
         log.info(f"Parsing file {exercises_file}")
         for line in lines:
             line_counter += 1
             log.debug(f"Parsing line {line_counter}")
 
-            # filling data, data_parsing starts after a field_name_parsing and goes on till the indentation stops
+            # filling data, data_parsing starts after a field_name_parsing
+            # and goes on till the indentation stops
             if line.startswith("/- dEAduction"):
-                statement_parsing = False
-                field_name_parsing = True  # next line will be a field name, and field_name_parsing will end
+                data_parsing = "field name"  # next line will be a field name,
                 continue
-            if data_parsing:
-                if line.startswith(" " * 4):
-                    if line.startswith(" " * 5):
-                        log.warning("indentation error")
-                    else:  # good indentation
-                        if data[current_field] != "":
-                            data[current_field] += " "
-                        data[current_field] += line.strip()
-                else:  # end of parsing this field
-                    if line.startswith(" "):  # more than 1 but less than 4
-                        log.warning("indentation error")
-                    else:
-                        if data[current_field].endswith("-/"):
-                            data[current_field] = data[current_field][:-2]
-                        log.info(f"Field content: {data[current_field]}")
-                        current_field = None
-                        data_parsing = False
-                        # this line is a field name, to be caught by next test, except if closing docstring
-                        field_name_parsing = True
-
-            # getting field name (keep this AFTER filling data: end of data_parsing = beginning of field_parsing)
-            if field_name_parsing:
-                if line.endswith("-/"):
-                    field_name_parsing = False
-                else:  # get new field name
-                    current_field = line.strip()
-                    log.info(f"get field name {current_field}")
-                    data[current_field] = ""
-                    field_name_parsing = False
-                    data_parsing = True
+            if data_parsing not in ["", "field name"]:
+                data_parsing, global_parsing = data_parse(line, data,
+                            data_parsing, global_parsing, sections_dict)
+                log.debug(f"data: {[(key, data[key]) for key in data.keys()]}")
+            # note that previous lines may result in data_parsing="field name"
+            # next line IS NOT elif
+            if data_parsing == "field name":
+                data_parsing = line.strip()
+                log.info(f"get field name {data_parsing}")
+                data[data_parsing] = ""
                 continue
-            #
             # treatment of namespaces
-            # namespace_parsing starts at "namespace", ends at first "-/" or "lemma exercise."
+            # namespace_parsing starts at "namespace",
+            # ends at first "-/" or "lemma exercise."
             if line.startswith("namespace"):
-                namespace_parsing = True
+                global_parsing = "namespace"
                 namespace = line.split()[1]
-                current_namespaces.append(namespace)
-                whole_namespace = ".".join(current_namespaces)
+                data["current_namespaces"].append(namespace)
+                whole_namespace = ".".join(data["current_namespaces"])
                 log.info(f"Parsing namespace {whole_namespace}")
                 sections_list.append(whole_namespace)
                 continue
-            if line.startswith("end") and len(line.split()) > 1:
-                if line.split()[1] == current_namespaces[-1]:  # closing namespace
-                    current_namespaces.pop()
+            elif line.startswith("end") and len(line.split()) > 1:
+                if line.split()[1] == data["current_namespaces"][-1]:
+                    # closing namespace
+                    data["current_namespaces"].pop()
                 continue
-            if namespace_parsing:
-                if line.endswith("-/"):
-                    if data["Section"] == None:  # compute plain name from Lean name
-                        data["Section"] = current_namespaces[-1].replace("_", " ")
-                    sections_dict[".".join(current_namespaces)] = data["Section"]
-                    data["section"] = None
-                    log.info(f"got namespace {'.'.join(current_namespaces)} plain text: {data['Section']}")
-                    # e. g. section_dict["set_theory.unions_and_intersections"] = "Unions and Intersections"
-                    namespace_parsing = False
 
             # treatment of exercises
-            # exercise_parsing starts at "lemma exercise.", end at "Begin"
+            # statement_parsing starts at "lemma exercise.", ends at ":="
+            # then exercise_parsing starts, and it ends at "begin"
             if line.startswith("lemma exercise."):
                 log.info(f"Parsing exercise n°{len(exercises_list)}")
-                statement_parsing = True  # ends at first "/- dEAduction"
-                namespace_parsing = False
+                global_parsing = "statement"
                 words = line.split()
                 data["lean_name"] = words[1]
-                data["lean_statement"] = " ".join(words[2:])
-                exercise_parsing = True
+                line = " ".join(words[2:]) # suppress the lemma declaration
+                data["lean_variables"], _, line = line.rpartition(" : ")
+                # todo: not very robust, to be improved
+                data["lean_statement"] = ""
                 data["Title"] = None
                 data["Description"] = None
                 # By default the other fields are as for the previous exercise
-                continue
-            if statement_parsing:
+            if global_parsing == "statement":
                 data["lean_statement"] += line.strip()
-                continue
-            if exercise_parsing:
-                if line.startswith("begin"):
-                    exercise_parsing = False
-                    # creation of an exercise
-                    data["line_number"] = line_counter
-                    log.info(f"creating exercise from data {data}")
-                    exercise = Exercise.from_parser_data(data)
-                    exercises_list.append(exercise)
+                if line.strip().endswith(":="):
+                    log.info("parsing exercise data")
+                    data["lean_statement"] = data["lean_statement"][:-2]
+                    global_parsing = "exercise"
+            elif global_parsing == "exercise" and line.startswith("begin"):
+                global_parsing = ""
+                # creation of an exercise
+                data["line_number"] = line_counter
+                log.info(f"creating exercise from data {data}")
+                exercise = Exercise.from_parser_data(data)
+                exercises_list.append(exercise)
 
         # Creating the course
-        return cls(exercises_list)
+        return cls(exercises_list, sections_dict, sections_list)
+
+
+def data_parse(line, data, data_parsing, global_parsing, sections_dict):
+    """
+    """
+    log = logging.getLogger("Course initialisation")
+    ind = indent(line)
+    if ind != 0 and indent(line) != 4:
+        log.warning("indentation error")
+    if ind != 0:  # fill the field
+        if data[data_parsing] != "":
+            data[data_parsing] += " "
+        data[data_parsing] += line.strip()
+        if data[data_parsing].endswith("-/"):
+            data[data_parsing] = data[data_parsing][:-2]
+    if line.endswith("-/"):  # end of data_parsing
+        log.info(f"Field content: {data[data_parsing]}")
+        data_parsing = ""
+        if global_parsing == "namespace":
+            if data["Section"] == None:  # compute plain name from Lean name
+                data["Section"] = \
+                    data["current_namespaces"][-1].replace("_", " ")
+            whole_namespace = ".".join(data["current_namespaces"])
+            sections_dict[whole_namespace] = data["Section"]
+            log.info(f"Namespace {whole_namespace},text: {data['Section']}")
+            data["Section"] = None
+    elif ind == 0:  # end of field, search for next field
+        log.info(f"Field content: {data[data_parsing]}")
+        data_parsing = "field name"
+    log.debug(f"data: {[(key, data[key]) for key in data.keys()]}")
+    return data_parsing, global_parsing
+
+
+def indent(line: str) -> int:
+    """
+    Compute the number of space at the beginning of line
+    """
+    i = 0
+    while line[i] == " ":
+        i += 1
+    return i
 
 
 if __name__ == "__main__":
@@ -250,9 +280,13 @@ if __name__ == "__main__":
 
     path = Path('/Users/leroux/Documents/PROGRAMMATION/LEAN/LEAN_TRAVAIL/dEAduction-lean/src/snippets')
     ex_file = 'exercises_test.lean'
-    my_course = Course.course_from_lean_file(path, ex_file)
+    my_course = Course.from_lean_file(path, ex_file)
     print("My course:")
+    print("List of exercises:")
     for exo in my_course.exercises_list:
         print(f"Exercice {exo.title}")
         for key in exo.__dict__.keys():
             print(f"    {key}: {exo.__dict__[key]}")
+    print('Sections:')
+    for key in my_course.sections_dict.keys():
+        print(f"    {key}: {my_course.sections_dict[key]}")
