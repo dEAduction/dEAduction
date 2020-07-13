@@ -1,5 +1,6 @@
 import deaduction.pylib.logger as logger
 import logging
+import pytest
 
 import re
 
@@ -22,4 +23,5 @@ def test_basic(capsys):
     log.critical ("This is broken" )
 
     captured = capsys.readouterr()
+    print(captured.err)
     assert RESP.match(captured.err)
