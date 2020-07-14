@@ -101,7 +101,8 @@ class ExerciseWindow(QWidget):
             proof_buttons_layout = QHBoxLayout()
             proof_buttons = [\
                     ('p_contraposition', QPushButton('Proof by contraposition')),
-                    ('p_absurd', QPushButton('Proof by absurd')),
+                    ('p_absurd', QPushButton('Proof by contradicton')),
+                    ('p_cases', QPushButton('Cases disjunction')),
                     ('p_induction', QPushButton('Proof by induction'))]
 
             for name, button in proof_buttons:
@@ -182,7 +183,7 @@ class ExerciseWindow(QWidget):
 def main():
     app = QApplication()
     tool_buttons = ['NO', 'AND', 'OR', 'implies', 'equivalence', 'forall', \
-            'exists', 'p_contraposition', 'p_absurd', 'p_induction']
+            'exists', 'p_contraposition', 'p_absurd', 'p_cases', 'p_induction']
     main_window = ExerciseWindow(tool_buttons)
     sys.exit(app.exec_())
 
