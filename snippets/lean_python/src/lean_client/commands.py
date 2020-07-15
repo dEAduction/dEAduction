@@ -74,7 +74,6 @@ class Task:
     end_pos_col  : int
     desc         : str
 
-
 @dataclass
 class CurrentTasksResponse(Response):
     response = 'current_tasks'
@@ -120,7 +119,6 @@ class CompleteRequest(Request):
     column: int
     skip_completions: bool = False
 
-
 @dataclass
 class CompletionCandidate:
     type_: Optional[str]
@@ -151,13 +149,11 @@ class InfoRequest(Request):
     line: int
     column: int
 
-
 @dataclass
 class InfoSource:
     line: int
     column: int
     file: Optional[str]
-
 
 GoalState = NewType('GoalState', str)
 
@@ -182,7 +178,6 @@ class InfoRecord:
             dic['source'] = InfoSource(**dic.pop('source'))
         return cls(**dic)
 
-
 @dataclass
 class InfoResponse(CommandResponse):
     record: Optional[InfoRecord]
@@ -192,12 +187,10 @@ class InfoResponse(CommandResponse):
         dic['record'] = InfoRecord.from_dict(dic.pop('record'))
         return cls(**dic)
 
-
 @dataclass
 class SearchRequest(Request):
     command = 'search'
     query: str
-
 
 @dataclass
 class SearchItem:
@@ -222,14 +215,12 @@ class SearchResponse(CommandResponse):
                           for si in dic.pop('results')]
         return cls(**dic)
 
-
 @dataclass
 class HoleCommandsRequest(Request):
     command = 'hole_commands'
     file_name: str
     line: int
     column: int
-
 
 @dataclass
 class HoleCommandAction:
@@ -254,17 +245,14 @@ class HoleCommands:
                           for hc in dic.pop('results')]
         return cls(**dic)
 
-
 @dataclass
 class HoleCommandsResponse(CommandResponse, HoleCommands):
     pass
-
 
 @dataclass
 class AllHoleCommandsRequest(Request):
     command = 'all_hole_commands'
     file_name: str
-
 
 @dataclass
 class AllHoleCommandsResponse(CommandResponse):
@@ -275,7 +263,6 @@ class AllHoleCommandsResponse(CommandResponse):
         dic['holes'] = [HoleCommands.from_dict(hole)
                           for hole in dic.pop('holes')]
         return cls(**dic)
-
 
 @dataclass
 class HoleRequest(Request):
@@ -290,7 +277,6 @@ class HoleReplacementAlternative:
     code: str
     description: str
 
-
 @dataclass
 class HoleReplacements:
     file_name: str
@@ -304,8 +290,6 @@ class HoleReplacements:
                                for alt in dic.pop('alternatives')]
         return cls(**dic)
 
-
-
 @dataclass
 class HoleResponse(CommandResponse):
     replacements: Optional[HoleReplacements]
@@ -318,7 +302,6 @@ class HoleResponse(CommandResponse):
                     dic.pop('replacements'))
         return cls(**dic)
 
-
 CheckingMode = Enum('CheckingMode',
     'nothing visible-lines visible-lines-and-above visible-files open-files')
 
@@ -326,7 +309,6 @@ CheckingMode = Enum('CheckingMode',
 class RoiRange:
     begin_line: int
     end_line: int
-
 
 @dataclass
 class FileRoi:
@@ -355,13 +337,13 @@ class RoiRequest(Request):
 class SleepRequest(Request):
     command = 'sleep'
 
-
 @dataclass
 class LongSleepRequest(Request):
     command = 'long_sleep'
 
-def parse_response(data: str) -> Response:
-    dic = json.loads(data)
+def parse_response(data: dict) -> Response:
+    #dic = json.loads(data)
+    dic = data
     response = dic.pop('response')
     if response == 'ok':
         if 'completions' in dic:
@@ -383,5 +365,3 @@ def parse_response(data: str) -> Response:
         if response == cls.response: # type: ignore
             return cls.from_dict(dic) # type: ignore
     raise ValueError("Couldn't parse response string.")
-
-
