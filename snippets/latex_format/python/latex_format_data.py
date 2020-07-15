@@ -9,7 +9,9 @@ DESCRIPTION
 Contain the data for processing PropObj into a latex representation
 
 """
-from PropObj2 import PropObj, ProofStatePO
+from PropObj import PropObj, ProofStatePO
+import gettext
+_ = gettext.gettext
 
 nature_leaves_list = ["PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                       "FUNCTION", "SEQUENCE", "SET_FAMILY",
@@ -67,7 +69,8 @@ def format_complement(latex_symb, a, PO):
 
 
 # dict nature -> (latex symbol, format name)
-latex_structures = {"PROP_AND": (r" \text{{ ET }} ", format_0n1),   # logics
+latex_structures = {"PROP_AND": (r" \text{{ " + _("AND") + " }} ",   # logics
+                                 format_0n1),
                     "PROP_OR": (r" \text{{ OU }} ", format_0n1),
                     "PROP_IFF": (r" \Leftrightarrow ", format_0n1),
                     "PROP_NOT": (r" \text{{NON }} ", format_n0),

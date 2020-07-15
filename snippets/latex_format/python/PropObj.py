@@ -42,6 +42,10 @@ This file is part of dEAduction.
 """
 from dataclasses import dataclass
 import analysis
+import deaduction.pylib.logger as logger
+import logging
+
+
 
 equal_sep = "¿= "
 open_bra = "¿["
@@ -57,9 +61,9 @@ class PropObj:
     !! No instance should be deleted until the exercise is over
     !! Once created, a field can be added but no field should be modified
     """
-    node: str
-    children: list
-    latex_rep: list
+    node:       str
+    children:   list
+    latex_rep:  list
     nodes_list = ["PROP_AND", "PROP_OR", "PROP_IFF", "PROP_NOT", "PROP_IMPLIES",
                   "QUANT_∀", "QUANT_∃", "PROP_∃",
                   "SET_INTER", "SET_UNION", "SET_INTER+", "SET_UNION+",
@@ -72,7 +76,8 @@ class PropObj:
     # APPLICATION ?
     leaves_list = ["PROP", "TYPE", "SET", "ELEMENT",
                    "FUNCTION", "SEQUENCE", "SET_FAMILY",
-                   "TYPE_NUMBER", "NUMBER", "VAR"]  # VAR should not be used any more
+                   "TYPE_NUMBER", "NUMBER", "VAR"]
+                    # VAR should not be used any more
 
     def is_prop(self) -> bool:
         return self.node.startswith("PROP") or self.node.startswith("QUANT")
@@ -112,11 +117,16 @@ class ProofStatePO(PropObj):
     lean_data: dict  # the Lean data ; keys = "id", "name", "pptype"
     math_type: PropObj
     # list_of_terms: only when the object is the math_type of some other object
-    dict_ = {}  # dictionary of all instances of ProofStatePO with identifiers as keys
-    context_dict = {}  # dictionary of instances in the current context (useful e.g. to baptize new variables)
+    dict_ = {}  # dictionary of all instances of ProofStatePO
+    # with identifiers as keys
+    context_dict = {}  # dictionary of instances in the current context
+    # including bound variables
+    # (useful e.g. to baptize new variables)
     list_ = []  # list of all instances
-    math_types_list = []  # list of AnonymousPO that occurs as math_type of some ProofStatePO,
-    math_types_instances = []  # list of ProofStatePO whose math_type equals the corresponding term of math_types_list
+    math_types_list = []  # list of AnonymousPO
+    # that occurs as math_type of some ProofStatePO,
+    math_types_instances = []  # list of ProofStatePO
+    # whose math_type equals the corresponding term of math_types_list
 
 
 @dataclass
@@ -127,9 +137,8 @@ class BoundVarPO(ProofStatePO):
     names_list = []
 
 
-def create_pspo(prop_obj_str: str, debug: bool = True) -> ProofStatePO:
+def create_pspo(prop_obj_str: str) -> ProofStatePO:
     """
-
     Take a string from context_analysis or goals_analysis and turn it into a
     an instance of the class ProofStatePO.
     Makes use of
@@ -139,9 +148,9 @@ def create_pspo(prop_obj_str: str, debug: bool = True) -> ProofStatePO:
     `%%head ¿= %%tail` where ¿= is defined in equal_sep
 
     :param prop_obj_str: aa string from Lean that describes the object
-    :param debug:
     :return: the new object
     """
+    log = logging.getLogger("PropObj")
     head, _, tail = prop_obj_str.partition(equal_sep)
     # extract lean_data from the head : name, id, pptype (if prop)
     lean_data = extract_lean_data(head)
@@ -152,17 +161,19 @@ def create_pspo(prop_obj_str: str, debug: bool = True) -> ProofStatePO:
     # extract math_type from the tail
     tree = analysis.lean_expr_grammar.parse(tail)
     po_str_list = analysis.LeanExprVisitor().visit(tree)
-    math_type = create_anonymous_prop_obj(po_str_list[0], debug)
+    math_type = create_anonymous_prop_obj(po_str_list[0])
     node = None
     children = None
     latex_rep = None
     # treatment of objects (not prop): handling of math_types_list
+    # todo: use a list method that appends iff not in
     if not math_type.is_prop():
         exists_math_type = False
         length = len(ProofStatePO.math_types_list)
         for i in range(length):
             mt = ProofStatePO.math_types_list[i]
-            if math_type == mt:  # test if both Python objects represents the same math objects
+            if math_type == mt:  # test if both Python objects
+                                 # represents the same math objects
                 del math_type  # is this useful ?
                 mt_number = i
                 math_type = mt
@@ -180,30 +191,34 @@ def create_pspo(prop_obj_str: str, debug: bool = True) -> ProofStatePO:
     if not math_type.is_prop():
         ProofStatePO.context_dict[lean_data["id"]] = prop_obj
         ProofStatePO.math_types_instances[mt_number].append(prop_obj)
-    if debug:
-        print(f"j'ajoute {lean_data['name']} au dico, ident = {lean_data['id']}")
+    log.info(f"adding {lean_data['name']} to the dictionnary, ident ="
+             f" {lean_data['id']}")
     return prop_obj
 
 
-def create_anonymous_prop_obj(prop_obj_dict: dict, debug):
+def create_anonymous_prop_obj(prop_obj_dict: dict):
     """
     create anonymous sub-objects and props, or refer to existing pfPO
+    :param prop_obj_dict: dictionary provided by analysis.LeanExprVisitor
+    :return: an instance of AnonymousPO
     """
     latex_rep = None  # latex representation is computed later
     node = prop_obj_dict["node"]
     #    ident = extract_identifier2(node)
     lean_data = extract_lean_data(node)
-    if lean_data["id"] in ProofStatePO.dict_:  # check if PO already exists (= ProofStatePO or BoundVarPO)
+    if lean_data["id"] in ProofStatePO.dict_:  # check if PO already exists
+                                               # (= ProofStatePO or BoundVarPO)
         prop_obj = ProofStatePO.dict_[lean_data["id"]]
         return prop_obj
     #### creation of children PO
     arguments = prop_obj_dict["children"]
     children = []
     for arg in arguments:
-        arg_prop_obj = create_anonymous_prop_obj(arg, debug)
+        arg_prop_obj = create_anonymous_prop_obj(arg)
         children.append(arg_prop_obj)
     #### special cases
-    if node.startswith("LOCAL_CONSTANT"):  # unidentified local constant = bound variable
+    if node.startswith("LOCAL_CONSTANT"):
+        # unidentified local constant = bound variable
         latex_rep = lean_data["name"]
         math_type = children[0]
         prop_obj = BoundVarPO(node, [], latex_rep, lean_data, math_type)
@@ -283,14 +298,14 @@ def extract(string: str, str1: str, str2=""):
     return (str_extr)
 
 
-def process_context(lean_analysis: str, debug=True) -> list:
+def process_context(lean_analysis: str) -> list:
     """
     Process the strings provided by Lean's context_analysis and goals_analysis
     and create the corresponding ProofStatePO instances by calling create_psPO
     (will probably not be used at the end)
 
-    :param analysis: a string which is the result of Lean's hypo_analysis or goals_analysis tactics
-    :param debug:
+    :param lean_analysis: a string which is the result of Lean's hypo_analysis
+    or goals_analysis tactics
     :return: a list of ProofStatePO's
     """
     list_ = lean_analysis.splitlines()
@@ -304,7 +319,7 @@ def process_context(lean_analysis: str, debug=True) -> list:
             pass
         #                is_goal = True
         else:
-            prop_obj = create_pspo(prop_obj_string, debug)
+            prop_obj = create_pspo(prop_obj_string)
             #           PO.is_goal = is_goal
             prop_obj_list.append(prop_obj)
     return prop_obj_list
@@ -312,4 +327,4 @@ def process_context(lean_analysis: str, debug=True) -> list:
 
 # essai
 if __name__ == '__main__':
-    debug = True
+    logger.configure()

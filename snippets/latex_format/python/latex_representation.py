@@ -16,22 +16,25 @@ from PropObj import process_context, ProofStatePO
 from latex_format_data import latex_structures, latex_formats, needs_paren
 from dataclasses import dataclass
 
+import deaduction.pylib.logger as logger
+import logging
 
 
-def compute_latex(prop_obj, debug = True):
+def compute_latex(prop_obj):
     """
     Compute a structured "latex representation" of a prop_obj. Valid latex rep are
     recursively defined as:
     - lists of strings (in latex format)
     - lists of latex rep
     """
-    a = []   # will be the list of the latex rep of the arguments
+    log = logging.getLogger("Latex representation")
+    a = []   # will be the list of the latex rep of the children
     node = prop_obj.node
     i = -1
     for arg in prop_obj.children:
         i += 1
         if arg.latex_rep == None:
-            arg.latex_rep = compute_latex(arg, debug)
+            arg.latex_rep = compute_latex(arg)
         lr = arg.latex_rep
         parentheses = needs_paren(prop_obj, i)
         if parentheses:
@@ -39,12 +42,11 @@ def compute_latex(prop_obj, debug = True):
         a.append(lr)
     latex_symb, format_scheme = latex_structures[node]
     latex_rep = format_scheme(latex_symb, a, prop_obj)
-    if debug:
-        print(f"Je latex {prop_obj.node}: {latex_rep}")
+    log.info(f"Je latex {prop_obj.node}: {latex_rep}")
     return latex_rep
 
 
-def latex_join(latex_rep, debug=True):
+def latex_join(latex_rep):
     """
     turn a (structured) latex representation into a latex string
     """
@@ -53,14 +55,14 @@ def latex_join(latex_rep, debug=True):
         if type(lr) is list:
             lr = latex_join(lr)
         latex_str += lr
-#    if debug:
-#        print("string:", latex_str)
+#    log.debug("string:", latex_str)
     return (latex_str)
 
 
 #essai
 if __name__ == '__main__':
-# Ne marche pas : SUBSET est OK pour un ProofStatePO mais pas dans un anPO.
+
+    # Ne marche pas : SUBSET est OK pour un ProofStatePO mais pas dans un anPO.
 # FUNCTION(I, SUBSET(X)) qui signifie fonction de I dans les 
 # sous-ensembles de X, nécessitera un traitement spécial pour obtenir
 # la notation usuelle "E indice i"
@@ -104,14 +106,13 @@ OBJECT[LOCAL_CONSTANT¿[name:C/identifier:0._fresh.1822.3871¿]] ¿= SET¿(LOCAL
 goals:
 PROPERTY[METAVAR[_mlocal._fresh.1821.3074]/pp_type: A ∪ B ∩ C = (A ∪ B) ∩ (A ∪ C)] ¿= PROP_EQUAL¿(SET_UNION¿(LOCAL_CONSTANT¿[name:A/identifier:0._fresh.1822.3865¿]¿, SET_INTER¿(LOCAL_CONSTANT¿[name:B/identifier:0._fresh.1822.3868¿]¿, LOCAL_CONSTANT¿[name:C/identifier:0._fresh.1822.3871¿]¿)¿)¿, SET_INTER¿(SET_UNION¿(LOCAL_CONSTANT¿[name:A/identifier:0._fresh.1822.3865¿]¿, LOCAL_CONSTANT¿[name:B/identifier:0._fresh.1822.3868¿]¿)¿, SET_UNION¿(LOCAL_CONSTANT¿[name:A/identifier:0._fresh.1822.3865¿]¿, LOCAL_CONSTANT¿[name:C/identifier:0._fresh.1822.3871¿]¿)¿)¿)
 """
-    debug = True
     essai = essai_reciproque_union
-    liste = process_context(essai, debug)
+    liste = process_context(essai)
     print(liste)
     print("")
     for pfprop_obj in liste:
-        pfprop_obj.math_type.latex_rep = compute_latex(pfprop_obj.math_type, debug)
-#        pfprop_obj.latex_type_str = latex_join(pfprop_obj.latex_type, debug)
+        pfprop_obj.math_type.latex_rep = compute_latex(pfprop_obj.math_type)
+#        pfprop_obj.latex_type_str = latex_join(pfprop_obj.latex_type)
         print("-------")
     for pfprop_obj in liste:
         print(f"{pfprop_obj.latex_rep} : {pfprop_obj.math_type.latex_rep}")
