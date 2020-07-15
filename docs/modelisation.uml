@@ -1,0 +1,230 @@
+@startuml
+namespace pylib {
+    namespace exceptions {
+        class InvalidActionError {
+            == TODO ==
+        }
+    }
+
+    namespace lean {
+        namespace response {
+            class Response {
+                {field} response: str
+            }
+        }
+
+        namespace request {
+            class Request {
+                {field} +command: str
+                {field} +seq_num: int
+            }
+        }
+
+        class RequestStore {
+            {method} +constructor(max_nums:int)
+            {method} +open()
+
+            {method} +set(num:int, result:any)
+            {method} +release(num:int)
+            {method} +store() : (int,trio.Event)
+        }
+
+        class RunningMonitor {
+            {method} +constructor(max_listeners:int)
+
+            {method} +open()
+            {method} +wait_ready()
+            {method} +wait_active()
+
+            == Callbacks ==
+            {field}  +on_state_change: function(new_state:bool)
+        }
+
+        class LeanServer {
+            {method} +constructor(nursery,max_reqs:int)
+
+            == Utilities ==
+            {method} #check_process()
+            {method} #process_response(data_str:str)
+
+            == Receive task ==
+            {method} +start()
+            {method} #receiver()
+
+            == Send ==
+            {method} +send(req, timeout:int=10000)
+
+
+            {field} -request_store  : RequestStore
+            {field} +running_monitor: RunningMonitor
+        }
+
+        note top of LeanServer : Florian
+
+        pylib.lean.RequestStore      -* pylib.lean.LeanServer
+        pylib.lean.RunningMonitor    -* pylib.lean.LeanServer
+
+        pylib.lean.response.Response -> pylib.lean.LeanServer
+        pylib.lean.request.Request   -> pylib.lean.LeanServer
+    }
+
+    namespace editing {
+        class VirtualFile {
+        }
+    }
+
+    namespace mathobj {
+        class PropObj {
+            +format_as_latex(): str
+            +format_as_utf8(): str
+        }
+
+        class AnonymousPO
+        class BoundVarPO
+        'class ProofStatePO
+
+        class Goal {
+            context: List[PropObj]
+            target: PropObj
+        }
+
+        class ProofState {
+            goals : List[Goal]
+        }
+            
+
+        AnonymousPO  <|- PropObj
+        BoundVarPO   <|- PropObj
+        
+        'ProofStatePO <|- PropObj
+    }
+
+    namespace coursedata {
+        class Statement {
+            lean_name: str
+            +pretty_name(): str <<property>>
+        }
+
+        class Theorem {
+            description:str
+            section: str  
+        }
+
+        class Exercise {
+            active_defitions: List[str]
+            active_logic: List[str]
+            active_theorems: List[str]
+
+            expected_number_var: dict  
+
+            Lean_line_number: int
+            lean_name: str  
+            lean_statement: str  
+            lean_variables: str  
+        }
+
+        class Definition
+
+        Statement <|- Definition
+        Statement <|- Theorem
+        Theorem   <|- Exercise
+
+        class Course {
+            +from_file(path:str)
+        }
+
+        Exercise --* Course
+    }
+
+    namespace actions {
+        namespace logic {
+            class Functions {
+
+            }
+
+            hide Functions circle
+            hide Functions members
+            show Functions methods
+        }
+
+        namespace magic {
+            class Functions {
+
+            }
+
+            hide Functions circle
+            hide Functions members
+            show Functions methods
+        }
+
+        namespace generic {
+            class Functions {
+                +apply_definition(TODO)
+            }
+
+            hide Functions circle
+            hide Functions members
+            show Functions methods
+        }
+    }
+
+    namespace server {
+        class ServerInterface {
+            -current_exercise: Exercise
+            -current_goals   : List[ProofStatePO]
+            -current_context : List[PropObj]
+
+            +setCurrentExercise(ex: Exercise)
+
+            == Callback impl ==
+            #on_lean_message()
+
+            == Qt signals ==
+            running_state_change(s:bool)
+            goal_change(g:ProofStatePO)
+            goal_resolved(g:ProofStatePO)
+            operators_change(ll:List[Operator])
+            objlist_change()
+            proplist_change()
+        }
+    }
+
+    pylib.mathinfo.Course      --o pylib.server.ServerInterface
+
+    pylib.editing.VirtualFile  --> pylib.server.ServerInterface
+    pylib.lean.LeanServer      --* pylib.server.ServerInterface
+}
+
+namespace dui {
+    namespace widgets {
+        class StatementItem
+        class StatementsNodeItem
+        class TargetWidget
+    }
+
+    namespace windows {
+        class MainWindow {
+            .. TODO ..
+        }
+    }
+
+    namespace server {
+        class Variables {
+            +server: pylib.server.ServerInterface
+        }
+
+        pylib.server.ServerInterface --* Variables
+
+        hide Variables circle
+        hide Variables methods
+        show Variables members
+    }
+
+    dui.widgets.StatementItem     --* dui.windows.MainWindow
+    dui.widgets.StatementsNodeItem --* dui.windows.MainWindow
+
+    dui.server.Variables     --> dui.windows.MainWindow
+
+    note left of dui.windows.MainWindow : Kryzar
+}
+@enduml
