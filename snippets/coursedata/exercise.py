@@ -29,6 +29,7 @@ This file is part of dEAduction.
 """
 
 from dataclasses import dataclass
+from collections import OrderedDict
 from typing import List, Dict
 import deaduction.pylib.logger as logger
 import logging
@@ -41,7 +42,7 @@ import logging
 class Statement:
     description: str  # "L'union est distributive par rapport à
     # l'intersection"
-    lean_name: str  # 'exercise.inter_distributive_union'
+    lean_name: str  # 'set_theory.unions_and_intersections.exercise.union_distributive_inter'
     lean_statement: str  # 'A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C)'
     lean_variables: str  # '(X : Type) (A : set X)'
     pretty_name: str  # 'Union d'intersections'
@@ -90,12 +91,10 @@ class Theorem(Statement):
 
 @dataclass
 class Exercise(Theorem):
-    available_definitions: List[Definition]
     available_logic: list  # todo: List[Action]
     available_magic: list  # List[Action]  # []
     available_proof_techniques: list  # List[Action]
-    available_theorems: List[Theorem]  # to be filled only when
-    # beginning the proof of the exercise
+    available_statement: List[Statement]
     expected_vars_number: Dict[str, int]  # {'X': 3, 'A': 1, 'B': 1}
     lean_line_number: int
 
@@ -177,3 +176,17 @@ class Exercise(Theorem):
                    post_data["Tools->Theorems"],
                    expected_vars_number,
                    data["lean_line_number"])
+
+    def current_name_space(self):
+        current_name_space, _, end = self.lean_name.partition(".exercise.")
+        return current_name_space
+
+    def all_statements_until(self, statements: List[str]) -> List[str]:
+        """
+        provide the list of all statements in outline until the namespace
+        containing self
+        :param outline: outline of the course, as described in the Course class
+        """
+        name = self.lean_name
+        index = statements.index(name)
+        return statements[:index]

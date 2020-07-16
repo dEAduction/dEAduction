@@ -31,26 +31,35 @@ This file is part of dEAduction.
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Dict
 from collections import OrderedDict
+from typing import List
 import deaduction.pylib.logger as logger
 import logging
 
-from exercise import Exercise, Definition, Theorem
+from exercise import Exercise, Definition, Theorem, Statement
 
 
 # from deaduction.pylib.actions import Action todo: uncomment
 
 @dataclass
 class Course:
-    definitions: List[Definition]
-    exercises: List[Exercise]
+    statements: List[Statement] # ORDERED list of all Statements,
+    # including Exercise
+#    exercises: List[Exercise]
     outline: OrderedDict  # todo: typing OrderedDict
     # keys = lean complete namespaces,
     # values = corresponding plain language namespace
     # e. g. section_dict["set_theory.unions_and_intersections"] =
     # "Unions and intersections"
-    theorems: List[Theorem]
+
+    def extract_exercise(self):
+        """
+        extract all the exercises from the statements list
+        """
+        statements = self.statements
+        exercises_list = [item for item in statements if isinstance(item,
+                                                                    Exercise)]
+        return exercises_list
 
     @classmethod
     def from_directory(cls, course_dir_path: Path):
