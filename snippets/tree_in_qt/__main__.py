@@ -86,7 +86,7 @@ class StatementsTree(QTreeWidget):
     def addChild(self, item):
         self.addTopLevelItem(item)
 
-    def init_branch(self, extg_tree, statement, rmg_branch, parent=None):
+    def init_branch_statement(self, extg_tree, statement, rmg_branch, parent=None):
         """
         Add a rmg_branch to self.tree (defined in self.init_tree). This
         item.tree is representend by a dict which to any node (str ID)
@@ -113,28 +113,25 @@ class StatementsTree(QTreeWidget):
         """
 
         if not rmg_branch:
-            return
+            item = StatementsTreeItem.from_Statement(statement)
+            parent.addChild(item)
+            return 
 
         root = rmg_branch[0]        # 'rings'
         rmg_branch = rmg_branch[1:] # ['ideals', 'def']
 
         if not root in extg_tree: 
-            if rmg_branch:
-                extg_tree[root] = (StatementsTreeNode(None, [root]), dict())
-                parent.addChild(extg_tree[root][0])
-            else:
-                item = StatementsTreeItem.from_Statement(statement)
-                extg_tree[root] = (item, dict())
-                parent.addChild(item)
+            extg_tree[root] = (StatementsTreeNode(None, [root]), dict())
+            parent.addChild(extg_tree[root][0])
         
-        self.init_branch(extg_tree[root][1], statement, rmg_branch, extg_tree[root][0])
+        self.init_branch_statement(extg_tree[root][1], statement, rmg_branch, extg_tree[root][0])
 
     def init_tree(self, statements, outline):
         self.tree = dict()
 
         for statement in statements:
             rmg_branch = statement.pretty_hierarchy(outline)
-            self.init_branch(self.tree, statement, rmg_branch, self)
+            self.init_branch_statement(self.tree, statement, rmg_branch, self)
 
 
 ARBRE = [   'groups.definitions.sub_group',
