@@ -9,15 +9,7 @@ from PySide2.QtCore     import Qt
 from PySide2.QtGui      import QColor, QBrush, QIcon
 from sys import exit
 
-ARBRE = ['groups.definitions.sub_group',
-            'groups.definitions.quotient',
-            'groups.finite_groups.lagrange_theorem',
-            'groups.finite_groups.Cauchy_theorem',
-            'rings.definitions.sub_ring',
-            'rings.definitions.ideal']
-
-
-class Statement(QTreeWidgetItem):
+class StatementsTreeItem(QTreeWidgetItem):
 
     def __init__(self, parent, titles):
         super().__init__(parent, titles)
@@ -29,7 +21,7 @@ class Statement(QTreeWidgetItem):
         self.setForeground(1, QBrush(QColor('gray')))
 
 
-class StatementsNode(QTreeWidgetItem):
+class StatementsTreeNode(QTreeWidgetItem):
 
     def __init__(self, parent, titles):
         super().__init__(parent, titles)
@@ -67,8 +59,8 @@ class StatementsTree(QTreeWidget):
         Add a branch to self.tree (defined in self.initiate_tree). This
         item.tree is representend by a dict which to any node (str ID)
         associates a tuple containing :
-        1.  its instance of QTreeWidgetItem (more specifically, StatementsNode
-            or Statement) ;
+        1.  its instance of QTreeWidgetItem (more specifically, StatementsTreeNode
+            or StatementsTreeItem) ;
         2.  the next level of the branch as a dict with tuples
             (QTreeWidgetItem, dict) on the same principle.
         The function is recursive. The tree will always have < 100 leaves so
@@ -84,8 +76,8 @@ class StatementsTree(QTreeWidget):
                         )}
                     )}
         :branch: A tree branch, e.g. ['rings', 'ideals', 'def'].
-        :parent: A QTreeWidgetItem (more specifically an instance of Statement
-                 or StatementsNode) to which we will add a child / children.
+        :parent: A QTreeWidgetItem (more specifically an instance of StatementsTreeItem
+                 or StatementsTreeNode) to which we will add a child / children.
         """
 
         if not branch:
@@ -95,10 +87,9 @@ class StatementsTree(QTreeWidget):
         remain = branch[1:] # ['ideals', 'def']
 
         if not root in extg_tree: 
-            cls = StatementsNode if remain else Statement
+            cls = StatementsTreeNode if remain else StatementsTreeItem
             extg_tree[root] = (cls(None, [root]), dict())
-            if parent:
-                parent.addChild(extg_tree[root][0])
+            parent.addChild(extg_tree[root][0])
         
         self.initiate_branch(extg_tree[root][1], remain, extg_tree[root][0])
 
@@ -109,6 +100,14 @@ class StatementsTree(QTreeWidget):
 
 
 def main():
+    arbre = [   'groups.definitions.sub_group',
+                'groups.definitions.quotient',
+                'groups.finite_groups.lagrange_theorem',
+                'groups.finite_groups.Cauchy_theorem',
+                'rings.definitions.sub_ring',
+                'rings.definitions.ideal']
+
+
     app = QApplication()
     
     buisson = StatementsTree(ARBRE)
