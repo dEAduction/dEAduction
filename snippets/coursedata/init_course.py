@@ -30,31 +30,51 @@ This file is part of dEAduction.
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import List, Dict
+from collections import OrderedDict
 import deaduction.pylib.logger as logger
 import logging
 
+#from deaduction.pylib.actions import Action todo: uncomment
 
 
 @dataclass
-class Exercise:
-    active_definitions:     list  # ['inclusion', 'union', intersection']
-    active_logic: list  # ['∀', '∃', '→', '↔', 'AND', 'OR',
-    # 'NOT', 'Absurd', 'Contrapose', 'Choice']
-    active_magic: list  # []
-    active_theorems: list  # ['double_inclusion', 'Riemann_hypothesis']
-    description: str  # "L'union est distributive par rapport à l'intersection"
-    expected_number_var: dict  # {'X': 3, 'A': 1, 'B': 1}
-    Lean_line_number: int
-    lean_name: str  # 'exercise.inter_distributive_union'
-    lean_statement: str  # 'A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C)'
-    lean_variables: str  # '(X : Type) (A : set X)'
-    section: str  # "set_theory.Unions_and_intersections
-    title: str  # 'Union d'intersections'
+class Statement:
+    description:    str # "L'union est distributive par rapport à
+                        # l'intersection"
+    # todo en faire une property pour le cas où non rempli
+    lean_name:              str  # 'exercise.inter_distributive_union'
+    lean_statement:         str  # 'A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C)'
+    lean_variables:         str  # '(X : Type) (A : set X)'
+    pretty_name:            str  # 'Union d'intersections'
+    text_book_identifier:   str
 
-    logic_buttons_complete_list = ["forall", "exists", "implies", "iff",
-                                   "AND", "OR", "NOT",
-                                   "p_absurd", "p_contrapose",
-                                   "p_cases", "p_choice"]
+
+@dataclass
+class Definition(Statement):
+    pass
+
+
+@dataclass
+class Theorem(Statement):
+    pass
+
+
+@dataclass
+class Exercise(Theorem):
+    available_definitions:      List[Definition]
+    available_logic:            list # todo: List[Action]
+    available_magic:            list #List[Action]  # []
+    available_proof_techniques: list #List[Action]
+    available_theorems:         List[Theorem] # to be filled only when
+    # beginning the proof of the exercise
+    expected_vars_number:       Dict[str, int]  # {'X': 3, 'A': 1, 'B': 1}
+    lean_line_number:           int
+
+#    logic_buttons_complete_list = ["forall", "exists", "implies", "iff",
+#                                   "AND", "OR", "NOT",
+#                                   "p_absurd", "p_contrapose",
+#                                   "p_cases", "p_choice"]
 
     # magic_buttons_complete_list = TODO
 
@@ -67,16 +87,15 @@ class Exercise:
         fields parsed by the course_from_lean_file function
         """
         log = logging.getLogger("Course initialisation")
-        expected_variables = {}
+        expected_vars_number = {}
         whole_namespace = ".".join(data["current_namespaces"])
-        for equality in data["ExpectedVariables"].split(", "):
+        data["lean_name"] = whole_namespace + "." + data["lean_name"]
+        for equality in data["ExpectedVarsNumber"].split(", "):
             key, _, value = equality.partition("=")
-            expected_variables[key] = int(value)
-        if "Title" in data.keys():
-            title = data["Title"]
-        else:
-            title = data["lean_statement"].replace("_", " ")
-            # automatic title if not provided
+            expected_vars_number[key] = int(value)
+        if "PrettyName" not in data.keys():
+            data["PrettyName"] = data["lean_statement"].replace("_", " ")
+            # automatic pretty_name if not provided
 
         # treatment of Macros and variables
         post_data = {}
@@ -115,35 +134,33 @@ class Exercise:
                 list_3.append(item)
             log.debug(f"list 3: {list_3}")
             post_data[field] = list_3
-        # logic check
-        for item in post_data["Tools->Logic"]:
-            if item not in Exercise.logic_buttons_complete_list:
-                log.warning(f"unknown logic button {item}")
+        # todo: logic check
+#        for item in post_data["Tools->Logic"]:
+#            if item not in :
+#                log.warning(f"unknown logic button {item}")
 
-        return cls(post_data["Tools->Definitions"], post_data["Tools->Logic"],
-                   post_data["Tools->Magic"], post_data["Tools->Theorems"],
-                   data["Description"], expected_variables,
-                   data["line_number"], data["lean_name"],
-                   data["lean_statement"], data["lean_variables"],
-                   whole_namespace, title)
+        return cls(data["Description"] , data["lean_name"], data["lean_statement"],
+                   data["lean_variables"], data["PrettyName"],
+                   post_data["Tools->Definitions"], post_data["Tools->Logic"],
+                   post_data["Tools->Magic"], [], post_data["Tools->Theorems"],
+                   expected_vars_number,
+                   data["lean_line_number"])
 
 
 @dataclass
 class Course:
-    exercises_list: list
-    sections_dict: dict  # keys = lean namespaces,
+    exercises:  List[Exercise]
+    outline:    OrderedDict  # keys = lean complete namespaces,
     # values = corresponding plain language namespace
     # e. g. section_dict["set_theory.unions_and_intersections"] =
     # "Unions and intersections"
-    sections_list: list  # successive whole namespaces
 
     @classmethod
-    def from_lean_file(cls, course_path, exercises_file):
+    def from_directory(cls, course_dir_path: Path):
         """
         instantiate a Course object by parsing lean files
 
-        :param course_path: name of directory
-        :param exercises_file: name of file
+        :param course_dir_path: name of directory
         """
         # TODO: enable multiple exercises files ?
         log = logging.getLogger("Course initialisation")
@@ -161,7 +178,7 @@ class Course:
         line_counter = 0
         data = {"Section": None, "Tools->Logic": None,
                 "Tools->Definitions": None, "Tools->Theorems": None,
-                "Tools->Magic": None, "ExpectedVariables": None,
+                "Tools->Magic": None, "ExpectedVarsNumber": None,
                 "current_namespaces": []}
         log.info(f"Parsing file {exercises_file}")
         for line in lines:
@@ -175,7 +192,9 @@ class Course:
                 continue
             if data_parsing not in ["", "field name"]:
                 data_parsing, global_parsing = data_parse(line, data,
-                            data_parsing, global_parsing, sections_dict)
+                                                          data_parsing,
+                                                          global_parsing,
+                                                          sections_dict)
                 log.debug(f"data: {[(key, data[key]) for key in data.keys()]}")
             # note that previous lines may result in data_parsing="field name"
             # next line IS NOT elif
@@ -209,11 +228,11 @@ class Course:
                 global_parsing = "statement"
                 words = line.split()
                 data["lean_name"] = words[1]
-                line = " ".join(words[2:]) # suppress the lemma declaration
+                line = " ".join(words[2:])  # suppress the lemma declaration
                 data["lean_variables"], _, line = line.rpartition(" : ")
                 # todo: not very robust, to be improved
                 data["lean_statement"] = ""
-                data["Title"] = None
+                data["PrettyName"] = None
                 data["Description"] = None
                 # By default the other fields are as for the previous exercise
             if global_parsing == "statement":
@@ -225,7 +244,7 @@ class Course:
             elif global_parsing == "exercise" and line.startswith("begin"):
                 global_parsing = ""
                 # creation of an exercise
-                data["line_number"] = line_counter
+                data["lean_line_number"] = line_counter
                 log.info(f"creating exercise from data {data}")
                 exercise = Exercise.from_parser_data(data)
                 exercises_list.append(exercise)
@@ -278,13 +297,14 @@ def indent(line: str) -> int:
 if __name__ == "__main__":
     logger.configure()
 
-    path = Path('/Users/leroux/Documents/PROGRAMMATION/LEAN/LEAN_TRAVAIL/dEAduction-lean/src/snippets')
+    path = Path(
+        '/Users/leroux/Documents/PROGRAMMATION/LEAN/LEAN_TRAVAIL/dEAduction-lean/src/snippets')
     ex_file = 'exercises_test.lean'
     my_course = Course.from_lean_file(path, ex_file)
     print("My course:")
     print("List of exercises:")
     for exo in my_course.exercises_list:
-        print(f"Exercice {exo.title}")
+        print(f"Exercice {exo.pretty_name}")
         for key in exo.__dict__.keys():
             print(f"    {key}: {exo.__dict__[key]}")
     print('Sections:')
