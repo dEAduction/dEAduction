@@ -7,7 +7,14 @@ from PySide2.QtWidgets  import QApplication, QWidget
 from PySide2.QtWidgets  import QTreeWidget, QTreeWidgetItem
 from PySide2.QtCore     import Qt
 from PySide2.QtGui      import QColor, QBrush, QIcon
-from sys import exit
+from dataclasses import dataclass
+import sys
+
+
+class Statement:
+    lean_name:      str
+    pretty_name:    str
+
 
 class StatementsTreeItem(QTreeWidgetItem):
 
@@ -100,6 +107,7 @@ class StatementsTree(QTreeWidget):
 
 
 def main():
+
     arbre = [   'groups.definitions.sub_group',
                 'groups.definitions.quotient',
                 'groups.finite_groups.lagrange_theorem',
@@ -107,14 +115,32 @@ def main():
                 'rings.definitions.sub_ring',
                 'rings.definitions.ideal']
 
+    statements = [  Statement('groups.definitions.sub_group',
+                                'Définition sous-groupe'),
+                    Statement('groups.definitions.quotient',
+                                'Définition quotient'),
+                    Statement('groups.finite_groups.lagrange_theorem',
+                                'Théorème de Lagrange'),
+                    Statement('groups.finite_groups.Cauchy_theorem',
+                                'Théorème de Cauchy'),
+                    Statement('rings.definitions.sub_ring',
+                                'Définition sous-anneau'),
+                    Statement('rings.definitions.ideal',
+                                'Définition idéal')]
 
-    app = QApplication()
+    sections_names = {  'groups': 'Groupes',
+                        'groups.definitions': 'Définitions',
+                        'groups.finite_groups': 'Groupes finis',
+                        'rings': 'Anneaux',
+                        'rings.definitions': 'Définitions'}
+
+    app = QApplication(sys.argv)
     
     buisson = StatementsTree(ARBRE)
     buisson.resizeColumnToContents(0)
     buisson.show()
 
-    exit(app.exec_())
+    sys.exit(app.exec_())
 
 
 if __name__ == '__main__':
