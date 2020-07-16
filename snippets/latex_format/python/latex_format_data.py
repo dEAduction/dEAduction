@@ -9,7 +9,7 @@ DESCRIPTION
 Contain the data for processing PropObj into a latex representation
 
 """
-from PropObj import PropObj, ProofStatePO
+#from PropObj import PropObj, ProofStatePO
 import gettext
 _ = gettext.gettext
 
@@ -113,7 +113,7 @@ latex_structures = {"PROP_AND": (r" \text{{ " + _("AND") + " }} ",   # logics
                     }
 
 
-# A traiter : R, N ; NUMBER ; emptyset ; PROP_∃ ; SET_INTER+ ; SEQUENCE ;
+# TODO A traiter : R, N ; NUMBER ; emptyset ; PROP_∃ ; SET_INTER+ ; SEQUENCE ;
 # MINUS (n0 ou 0n1 selon le nb d'arguments)
 # NB : two notations for complement :
 # COMPLEMENT:
@@ -122,28 +122,28 @@ latex_structures = {"PROP_AND": (r" \text{{ " + _("AND") + " }} ",   # logics
 # avoid notation - A
 
 
-# AJOUTER : tenir compte de la profondeur des parenthèses, 
-# et utiliser \Biggl(\biggl(\Bigl(\bigl((x)\bigr)\Bigr)\biggr)\Biggr)
-############# AFER
-def needs_paren(parent: PropObj, child_number: int):
-    """
-    Decides if parentheses are needed around the child
-    """
-    b = True
-    child_prop_obj = parent.children[child_number]
-    p_node = parent.node
-    if isinstance(child_prop_obj, ProofStatePO):
-        return False
-    if not child_prop_obj.children:
-        return False
-    c_node = child_prop_obj.node
-    if c_node in nature_leaves_list + \
-            ["SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
-             "PROP_INCLUDED"]:
-        b = False
-    elif p_node in ["SET_IMAGE", "SET_INVERSE", "APPLICATION_FUNCTION",
-                    "PROP_EQUAL", "PROP_INCLUDED", "PROP_BELONGS"]:
-        b = False
-    elif c_node == "SET_COMPLEMENT" and p_node != "SET_COMPLEMENT":
-        b = False
-    return b
+# # TODO : tenir compte de la profondeur des parenthèses,
+# # et utiliser \Biggl(\biggl(\Bigl(\bigl((x)\bigr)\Bigr)\biggr)\Biggr)
+# ############# AFER
+# def needs_paren(parent: PropObj, child_number: int):
+#     """
+#     Decides if parentheses are needed around the child
+#     """
+#     b = True
+#     child_prop_obj = parent.children[child_number]
+#     p_node = parent.node
+#     if isinstance(child_prop_obj, ProofStatePO):
+#         return False
+#     if not child_prop_obj.children:
+#         return False
+#     c_node = child_prop_obj.node
+#     if c_node in nature_leaves_list + \
+#             ["SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
+#              "PROP_INCLUDED"]:
+#         b = False
+#     elif p_node in ["SET_IMAGE", "SET_INVERSE", "APPLICATION_FUNCTION",
+#                     "PROP_EQUAL", "PROP_INCLUDED", "PROP_BELONGS"]:
+#         b = False
+#     elif c_node == "SET_COMPLEMENT" and p_node != "SET_COMPLEMENT":
+#         b = False
+#     return b
