@@ -11,7 +11,7 @@ msg=$(cat $1) # Hook paremeter is a path to a temoprary file containing the
 ##################################
 # Constants
 ##################################
-regex='([a-zA-Z]+)(\(([^()]+)\))?[ ]*[:][ ]*(.*)'
+regex='([a-zA-Z]+)(\(([^()]+)\))?[:][ ]*(.*)'
 regex_msg='^[a-z].*'
 
 regex_merge='(([a-zA-Z0-9]+\/)+[a-zA-Z0-9]+) -> (([a-zA-Z0-9]+\/)+[a-zA-Z0-9]+)'
@@ -22,6 +22,11 @@ regex_merge='(([a-zA-Z0-9]+\/)+[a-zA-Z0-9]+) -> (([a-zA-Z0-9]+\/)+[a-zA-Z0-9]+)'
 
 # Tasks types regex
 tasks="^(chores|docs|feat|fix|perf|refactor|style|snippet[s]?|test|tools|merge)$"
+
+ESC_BOLD=$(tput bold)
+ESC_RED=$(tput setaf 1)
+ESC_GREEN=$(tput setaf 2)
+ESC_RESET=$(tput sgr0)
 
 show_help() {
     echo "Please follow the following format :
@@ -42,13 +47,12 @@ show_help() {
         - test		: adding missing tests or correcting existing tests ;
         - tools		: tools only (e.g. git hooks) changes.
 
-        message must start with a low case verb in the imperative form."
+        message must start with a low case verb in the imperative form.
+        
+        ${ESC_BOLD}There is no space before : after the task_type !${ESC_RESET}
+"
 }
 
-ESC_BOLD=$(tput bold)
-ESC_RED=$(tput setaf 1)
-ESC_GREEN=$(tput setaf 2)
-ESC_RESET=$(tput sgr0)
 
 show_bad() {
     echo ""
