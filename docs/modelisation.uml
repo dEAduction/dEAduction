@@ -101,12 +101,12 @@ namespace pylib {
 
     namespace coursedata {
         class Statement {
-            description:            str
-            lean_name:              str  
-            lean_statement:         str  
-            lean_variables:         str  
-            pretty_name:         str 
-            text_book_identifier:   str    
+            description: str
+            lean_name: str  
+            lean_statement: str  
+            lean_variables: str  
+            pretty_name: str 
+            text_book_identifier: str    
             +from_parser_data(cls, data: dict):
         }
 
@@ -114,12 +114,12 @@ namespace pylib {
         }
 
         class Exercise {
-            available_logic:            List[Action]
-            available_magic:            List[Action]  
+            available_logic: List[Action]
+            available_magic: List[Action]  
             available_proof_techniques: List[Action]
-            available_statements:       List[Statements]
-            expected_vars_number:       Dict[str, int]
-            lean_line_number:           int
+            available_statements: List[Statements]
+            expected_vars_number: Dict[str, int]
+            lean_line_number: int
         }
 
         class Definition
