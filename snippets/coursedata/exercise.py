@@ -34,8 +34,7 @@ from typing import List, Dict
 import deaduction.pylib.logger as logger
 import logging
 
-
-# from deaduction.pylib.actions import Action todo: uncomment
+from deaduction.pylib.actions.actiondef import Action
 
 
 @dataclass
@@ -57,11 +56,13 @@ class Statement:
         fields parsed by the from_directory function
         """
         log = logging.getLogger("Course initialisation")
+        if "PrettyName" not in data.keys() or data["PrettyName"] == None:
+            last_name = data["lean_name"].split(".")[-1]
+            data["PrettyName"] = last_name.replace("_", " ")
+            # automatic pretty_name if not provided
         whole_namespace = ".".join(data["current_namespaces"])
         data["lean_name"] = whole_namespace + "." + data["lean_name"]
-        if "PrettyName" not in data.keys():
-            data["PrettyName"] = data["lean_statement"].replace("_", " ")
-            # automatic pretty_name if not provided
+
         return cls(data["Description"], data["lean_name"],
                    data["lean_statement"],
                    data["lean_variables"], data["PrettyName"],
@@ -94,21 +95,25 @@ class Exercise(Theorem):
     available_logic: list  # todo: List[Action]
     available_magic: list  # List[Action]  # []
     available_proof_techniques: list  # List[Action]
-    available_statement: List[Statement]
+    available_statements: List[Statement]
     expected_vars_number: Dict[str, int]  # {'X': 3, 'A': 1, 'B': 1}
     lean_line_number: int
 
-    # logic_buttons_complete_list = TODO
+    # TODO: get from Action class
+    logic_buttons_complete_list = []
 
     @classmethod
-    def from_parser_data(cls, data: dict):
+    def from_parser_data(cls, data: dict, statements: list):
         """
         Create an Exercise from the raw data obtained by the parser
 
+        :param statements: list of all Statement instances until the current
+        exercise
         :param data: a dictionary whose keys =
         fields parsed by the from_directory function
         TODO: change definitions into Definitions object
         """
+        max_statement = 15
         log = logging.getLogger("Course initialisation")
         whole_namespace = ".".join(data["current_namespaces"])
         data["lean_name"] = whole_namespace + "." + data["lean_name"]
@@ -119,10 +124,87 @@ class Exercise(Theorem):
         for equality in data["ExpectedVarsNumber"].split(", "):
             key, _, value = equality.partition("=")
             expected_vars_number[key] = int(value)
-        # treatment of Macros and variables
+        ###########################
+        # treatment of statements #
+        ###########################
+        annotated_statements = [(item, False) for item in statements]
+        # annotated_statements and statements must always have the same length
+        prefixe = {"Tools->Definitions": "definition", "Tools->Theorems":
+            "theorem", "Tools->Exercises": "exercise",
+                   'Tools->Statements': ""}
+        class_dict = {"Tools->Definitions": Definition, "Tools->Theorems":
+            Theorem, "Tools->Exercises": Exercise,
+                      'Tools->Statements': Statement}
+        for field in ["Tools->Definitions", "Tools->Theorems",
+                      "Tools->Exercises", "Tools->Statements"]:
+            if data[field] is None:
+                continue
+            log.debug(f"processing data in {field}, {data[field]}")
+            class_ = class_dict[field]
+            list_1 = data[field].split()
+            list_2 = []
+            # first step, replace macros, get a list of strings
+            # predefined macros:
+            # $UNTIL_NOW
+            # todo: implement $AS_PREVIOUSLY
+            for item in list_1:
+                item = item.strip()
+                if item in ["ALL", "$ALL"]:
+                    log.warning("$ALL macro not implemented, try '$UNTIL_NOW'")
+                    continue
+                elif item in ["UNTIL_NOW", "$UNTIL_NOW"]:
+                    list_2.append(item)
+                    continue
+                elif item.startswith("$"):
+                    macro_list = data[item].split(", ")
+                    list_2.extend(macro_list)
+                    continue
+                elif item.endswith(","):
+                    item = item[:-1]
+                if item.startswith("+"):
+                    item = item[1:]
+                list_2.append(item)
+            # second step, annotate statements
+            for item in list_2:
+                item = item.strip()  # remove spaces
+                if item in ["UNTIL_NOW", "$UNTIL_NOW"]:
+                    # turn all instances of the good class to True
+                    for i in range(len(statements)):
+                        item = statements[i]
+                        if isinstance(item, class_):
+                            new_item = (item, True)
+                            annotated_statements[i] = new_item
+                elif item.startswith("-"):
+                    # find item in statements and change annotation to False
+                    item = prefixe[field] + "." + item[1:]
+                    index, nb = findsuffix(item,
+                                           [item.lean_name for item in
+                                            statements])
+                    if nb > 0:
+                        new_item = (statements[index], False)
+                        annotated_statements[index] = new_item
+                    else:
+                        log.warning(
+                            f"Cannot remove item {item} from statements")
+                else:
+                    # find item in statement and change annotation to True
+                    item = prefixe[field] + "." + item
+                    index, nb = findsuffix(item, [item.lean_name for item in
+                                                  statements])
+                    if nb > 0:
+                        new_item = (statements[index], True)
+                        annotated_statements[index] = new_item
+                    else:
+                        log.warning(f"Cannot find item {item} in statements")
+        # last step, extract the good list
+        available_statements = [item for (item, bool) in annotated_statements
+                                if bool]
+        ##############################
+        # treatment of logic buttons #
+        ##############################
         post_data = {}
-        for field in ["Tools->Logic", "Tools->Definitions",
-                      "Tools->ProofTechniques", "Tools->Theorems",
+        for field in ["Tools->Logic",
+                      "Tools->ProofTechniques",
                       "Tools->Magic"]:
             log.debug(f"processing data in {field}, {data[field]}")
             if data[field] == None:
@@ -131,12 +213,12 @@ class Exercise(Theorem):
             list_1 = data[field].split()
             list_2 = []
             # first step, replace macros
+            # prefefined macros:
+            # $ALL
             for item in list_1:
-                if item in ["LOGIC_COMPLETE", "$LOGIC_COMPLETE"]:
-                    list_2 = Exercise.logic_buttons_complete_list + list_2
-                    continue
+                item = item.strip()
                 if item in ["ALL", "$ALL"]:
-                    list_2.insert(0, "ALL")
+                    list_2 = Exercise.logic_buttons_complete_list + list_2
                     continue
                 if item.startswith("$"):
                     macro_list = data[item].split(", ")
@@ -151,6 +233,7 @@ class Exercise(Theorem):
             log.debug(f"list 2: {list_2}")
             list_3 = []
             for item in list_2:
+                item = item.strip()
                 if item.startswith("-"):
                     item = item[1:]
                     if item in list_3:
@@ -165,15 +248,14 @@ class Exercise(Theorem):
         #        for item in post_data["Tools->Logic"]:
         #            if item not in ???:
         #                log.warning(f"unknown logic button {item}")
-
         return cls(data["Description"], data["lean_name"],
                    data["lean_statement"],
                    data["lean_variables"], data["PrettyName"],
                    data["text_book_identifier"],
-                   post_data["Tools->Definitions"], post_data["Tools->Logic"],
+                   post_data["Tools->Logic"],
                    post_data["Tools->Magic"],
                    post_data["Tools->ProofTechniques"],
-                   post_data["Tools->Theorems"],
+                   available_statements,
                    expected_vars_number,
                    data["lean_line_number"])
 
@@ -186,7 +268,25 @@ class Exercise(Theorem):
         provide the list of all statements in outline until the namespace
         containing self
         :param outline: outline of the course, as described in the Course class
+        TODO: turn this into a @property to be accessed by
+        exercise.all_statements_until
         """
         name = self.lean_name
         index = statements.index(name)
         return statements[:index]
+
+
+def findsuffix(string, list):
+    """
+    return the number of items in a list of strings that ends with the given,
+    and the index of the first matching item
+    :param string:
+    :param list:
+    :return:
+    """
+    total = [item for item in list if item.endswith(string)]
+    nb = len(total)
+    index = -1
+    if nb > 0:
+        index = list.index(total[0])
+    return index, nb

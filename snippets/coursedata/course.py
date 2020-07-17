@@ -39,18 +39,17 @@ import logging
 from exercise import Exercise, Definition, Theorem, Statement
 
 
-# from deaduction.pylib.actions import Action todo: uncomment
+from deaduction.pylib.actions.actiondef import Action
 
 @dataclass
 class Course:
-    statements: List[Statement] # ORDERED list of all Statements,
-    # including Exercise
-#    exercises: List[Exercise]
     outline: OrderedDict  # todo: typing OrderedDict
     # keys = lean complete namespaces,
     # values = corresponding plain language namespace
     # e. g. section_dict["set_theory.unions_and_intersections"] =
     # "Unions and intersections"
+    statements: List[Statement]  # ORDERED list of all Statements,
+    # including exercises
 
     def extract_exercise(self):
         """
@@ -73,100 +72,129 @@ class Course:
         """
         # TODO: enable multiple exercises files ?
         log = logging.getLogger("Course initialisation")
-        exercises = []
-        definitions = []
-        theorems = []
+        statements = []
+        #        definitions = []
+        #        theorems = []
         outline = {}
-        # parse every file in directory
-        for file in course_dir_path.iterdir():
-            file_content = file.read_text()
-            lines = file_content.splitlines()
-            global_parsing = ""
-            # possible values = "namespace", "statement", "exercise"
-            data_parsing = ""
-            # possible values = "", "field name", "<field name>"
-            line_counter = 0
-            data = {"Section": None, "Tools->Logic": None,
-                    "Tools->Definitions": None, "Tools->Theorems": None,
-                    "Tools->Magic": None, "Tools->ProofTechniques": None,
-                    "ExpectedVarsNumber": None, "text_book_identifier": None,
-                    "current_namespaces": []}
-            log.info(f"Parsing file {file}")
-            for line in lines:
-                line_counter += 1
-                log.debug(f"Parsing line {line_counter}")
-                log.debug(f"global_parsing: {global_parsing}, data_parsing: "
-                          f"{data_parsing}")
-                # data_parsing starts after a field_name_parsing
-                # and goes on till the indentation stops
-                if line.startswith("/- dEAduction"):
-                    data_parsing = "field name"
-                    # next line will be a field name
-                    continue
-                elif data_parsing not in ["", "field name"]:
-                    data_parsing= data_parse(line, data, data_parsing)
-                    log.debug(
-                        f"data: {[(key, data[key]) for key in data.keys()]}")
-                # note that previous lines may result in data_parsing="field name"
-                # next line IS NOT elif
-                if data_parsing == "field name":
-                    data_parsing = line.strip()
-                    log.info(f"get field name {data_parsing}")
-                    data[data_parsing] = ""
-                    continue
-                elif line.endswith("-/"):
-                    # end of data_parsing
-                    log.info(f"Field content: {data[data_parsing]}")
-                    data_parsing = ""
-                    if global_parsing != "":
-                        end_global_parsing(data, definitions, exercises,
-                                           global_parsing, line_counter,
-                                           outline, theorems)
-                        global_parsing = ""
-                    continue
-                else:
-                    # treatment of namespaces
-                    global_parsing = namespace_parse(data, definitions,
-                                    exercises, global_parsing, line,
-                                    line_counter, outline, theorems)
-                    # treatment of exercises
-                    global_parsing = statement_parse(data, definitions,
-                                    exercises, global_parsing, line,
-                                    line_counter, outline, theorems)
+        # parse first exercise file in directory
+        files = [file for file in course_dir_path.iterdir()]
+        exo_files = [file for file in course_dir_path.iterdir() if \
+                     str(file.name).startswith("exercise")]
+        if len(exo_files) >= 1:
+            file = exo_files[0]
+            if len(exo_files) > 1:
+                log.warning("Found more than one exercises files, parse one")
+        else:
+            file = files[0]
+            if len(files) > 1:
+                log.warning("Found more than one files, parse only one")
+
+        log.info(f"Parsing file {file}")
+        file_content = file.read_text()
+        lines = file_content.splitlines()
+        global_parsing = ""
+        # possible values = "namespace", "statement", "exercise"
+        data_parsing = ""
+        # possible values = "", "field name", "<field name>"
+        line_counter = 0
+        indent = 0
+        data = {"Section": None, "Tools->Logic": None,
+                "Tools->Definitions": None, "Tools->Theorems": None,
+                "Tools->Exercises": None, "Tools->Statements": None,
+                "Tools->Magic": None, "Tools->ProofTechniques": None,
+                "ExpectedVarsNumber": None, "text_book_identifier": None,
+                "current_namespaces": []}
+        for line in lines:
+            line_counter += 1
+            log.debug(f"Parsing line {line_counter}")
+            log.debug(f"global_parsing: {global_parsing}, data_parsing: "
+                      f"{data_parsing}")
+            # data_parsing starts after a field_name_parsing
+            # and goes on till the indentation stops
+            if line.startswith("/- dEAduction"):
+                data_parsing = "field name"
+                # next line will be a field name
+                continue
+            elif data_parsing not in ["", "field name"]:
+                data_parsing, indent = data_parse(data, data_parsing, indent,
+                                                  line)
+                log.debug(
+                    f"data: {[(key, data[key]) for key in data.keys()]}")
+            # note that previous lines may result in data_parsing="field name"
+            # next line IS NOT elif
+            if data_parsing == "field name":
+                data_parsing = line.strip()
+                log.info(f"get field name {data_parsing}")
+                data[data_parsing] = ""
+                continue
+            elif line.endswith("-/"):
+                # end of data_parsing
+                log.info(f"Field content: {data[data_parsing]}")
+                data_parsing = ""
+                if global_parsing != "":
+                    end_global_parsing(data,
+                                       global_parsing, line_counter,
+                                       outline, statements)
+                    global_parsing = ""
+                continue
+            else:
+                # treatment of namespaces
+                global_parsing = namespace_parse(data, global_parsing, line,
+                                                 line_counter, outline,
+                                                 statements)
+                # treatment of exercises
+                global_parsing = statement_parse(data, global_parsing, line,
+                                                 line_counter, outline,
+                                                 statements)
         # Creating the course
-        return cls(definitions, exercises, outline, theorems)
+        return cls(outline, statements)
 
 
-def data_parse(line, data, data_parsing):
+def data_parse(data, data_parsing, indent, line):
     """
     """
     log = logging.getLogger("Course initialisation")
-    ind = indent(line)
-    if ind != 0 and indent(line) != 4:
+    new_indent = indentation(line)
+    if new_indent != 0 and indent != 0 and new_indent != indent:
         log.warning("indentation error")
-    if ind != 0:  # fill the field
+    if new_indent != 0:  # fill the field
         if data[data_parsing] != "":
             data[data_parsing] += " "
         data[data_parsing] += line.strip()
         if data[data_parsing].endswith("-/"):
             data[data_parsing] = data[data_parsing][:-2]
-    elif ind == 0 and not line.endswith("-/"):
+    elif new_indent == 0 and not line.endswith("-/"):
         # end of field, search for next field
         log.info(f"Field content: {data[data_parsing]}")
         data_parsing = "field name"
     log.debug(f"data: {[(key, data[key]) for key in data.keys()]}")
-    return data_parsing
+    return data_parsing, new_indent
 
-def end_global_parsing(data, definitions, exercises, global_parsing,
-                       line_counter, outline, theorems):
+
+def end_global_parsing(data, global_parsing,
+                       line_counter, outline, statements):
+    """
+    This function is called whenever global_parsing is muted from something
+    to nothing or something else. This is where statements are created,
+    and added to the statements list,
+    and namespaces are added to the outline of the course
+
+    :param data:
+    :param global_parsing:
+    :param line_counter:
+    :param outline:
+    :param statements:
+    :return:
+    """
     log = logging.getLogger("Course initialisation")
     if global_parsing == "namespace":
         whole_namespace = ".".join(data["current_namespaces"])
         if whole_namespace not in outline.keys():
-            if data["Section"] == None:
+            if data["Section"] is None:
                 # compute plain name from Lean name
                 data["Section"] = \
-                data["current_namespaces"][-1].replace("_", " ").capitalize()
+                    data["current_namespaces"][-1].replace("_",
+                                                           " ").capitalize()
         if data["Section"] is not None:
             outline[whole_namespace] = data["Section"]
         log.info(f"Namespace {whole_namespace},text: {data['Section']}")
@@ -178,33 +206,32 @@ def end_global_parsing(data, definitions, exercises, global_parsing,
         if data["lean_name"].startswith("exercise"):
             data["lean_line_number"] = line_counter
             log.info(f"creating exercise from data {data}")
-            exercise = Exercise.from_parser_data(data)
-            exercises.append(exercise)
+            exercise = Exercise.from_parser_data(data, statements)
+            statements.append(exercise)
         elif data["lean_name"].startswith("definition"):
             log.info(f"creating definition from data {data}")
             definition = Definition.from_parser_data(data)
-            definitions.append(definition)
+            statements.append(definition)
         elif data["lean_name"].startswith("theorem"):
             log.info(f"creating theorem from data {data}")
             theorem = Theorem.from_parser_data(data)
-            theorems.append(theorem)
+            statements.append(theorem)
 
 
-def namespace_parse(data, definitions, exercises, global_parsing, line,
-                    line_counter, outline, theorems):
+def namespace_parse(data, global_parsing, line,
+                    line_counter, outline, statements):
     # namespace_parsing starts at "namespace",
     # ends at first "-/" or "lemma exercise."
     log = logging.getLogger("Course initialisation")
     if line.startswith("namespace"):
-        end_global_parsing(data, definitions, exercises,
+        end_global_parsing(data,
                            global_parsing, line_counter,
-                           outline, theorems)
+                           outline, statements)
         global_parsing = "namespace"
         namespace = line.split()[1]
         data["current_namespaces"].append(namespace)
         whole_namespace = ".".join(data["current_namespaces"])
         log.info(f"Parsing namespace {whole_namespace}")
-        #outline[whole_namespace] = ""
     elif line.startswith("end") and len(line.split()) > 1:
         if line.split()[1] == data["current_namespaces"][-1]:
             # closing namespace
@@ -212,8 +239,8 @@ def namespace_parse(data, definitions, exercises, global_parsing, line,
     return global_parsing
 
 
-def statement_parse(data, definitions, exercises, global_parsing, line,
-                    line_counter, outline, theorems):
+def statement_parse(data, global_parsing, line,
+                    line_counter, outline, statements):
     # statement_parsing starts at "lemma exercise.", ends at ":="
     # then exercise_parsing starts, and it ends at "-/"
     log = logging.getLogger("Course initialisation")
@@ -221,9 +248,9 @@ def statement_parse(data, definitions, exercises, global_parsing, line,
             or line.startswith("lemma definition.") \
             or line.startswith("lemma theorem."):
         if global_parsing != "":
-            end_global_parsing(data, definitions, exercises,
+            end_global_parsing(data,
                                global_parsing, line_counter,
-                               outline, theorems)
+                               outline, statements)
         global_parsing = "statement"
         words = line.split()
         data["lean_name"] = words[1]
@@ -234,6 +261,13 @@ def statement_parse(data, definitions, exercises, global_parsing, line,
         data["lean_statement"] = ""
         data["PrettyName"] = None
         data["Description"] = None
+        data["Tools->Logic"] =  None
+        data["Tools->Magic"] =  None
+        data["Tools->ProofTechniques"] = None
+        data["Tools->Definitions"] =  None
+        data["Tools->Theorems"] =  None
+        data["Tools->Exercises"] =  None
+        data["Tools->Statements"] = None
         # By default the other fields are as for the previous exercise
     if global_parsing == "statement":
         data["lean_statement"] += line.strip()
@@ -244,7 +278,7 @@ def statement_parse(data, definitions, exercises, global_parsing, line,
     return global_parsing
 
 
-def indent(line: str) -> int:
+def indentation(line: str) -> int:
     """
     Compute the number of space at the beginning of line
     """
@@ -263,11 +297,25 @@ if __name__ == "__main__":
     #    ex_file = 'exercises_test.lean'
     my_course = Course.from_directory(course_dir_path)
     print("My course:")
-    print("List of exercises:")
-    for exo in my_course.exercises:
-        print(f"Exercice {exo.pretty_name}")
-        for key in exo.__dict__.keys():
-            print(f"    {key}: {exo.__dict__[key]}")
+    print("List of statements:")
+    for statement in my_course.statements:
+        if isinstance(statement, Exercise):
+            print(f"Exercice {statement.pretty_name}")
+        elif isinstance(statement, Definition):
+            print(f"Definition {statement.pretty_name}")
+        elif isinstance(statement, Theorem):
+            print(f"Theorem {statement.pretty_name}")
+        for key in statement.__dict__.keys():
+            print(f"    {key}: {statement.__dict__[key]}")
     print('Sections:')
     for key in my_course.outline.keys():
         print(f"    {key}: {my_course.outline[key]}")
+    print("Statements list :")
+    for item in my_course.statements:
+        print(item.lean_name)
+    print("Exercises list with statements :")
+    for item in my_course.statements:
+        if isinstance(item, Exercise):
+            print(item.lean_name)
+            for st in item.available_statements:
+                print("    " + st.lean_name)
