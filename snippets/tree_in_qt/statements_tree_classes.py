@@ -12,7 +12,7 @@ import sys
 
 
 @dataclass
-class Statement:
+class _StatementTEST:
     lean_name:      str
     pretty_name:    str
     identifier = 'Theorem 3.4'
@@ -171,7 +171,7 @@ def test_pretty_hierarchy():
     outline = { 'groups': 'Groupes',
                 'groups.finite_groups': 'Groupes finis'}
 
-    statement = Statement('groups.finite_groups.lagrange_theorem',
+    statement = _StatementTEST('groups.finite_groups.lagrange_theorem',
                     'Théorème de Lagrange') 
 
     assert statement.pretty_hierarchy(outline) == ['Groupes', 'Groupes finis']
@@ -186,17 +186,17 @@ def test_launch_StatementsTree():
                 'rings.definitions.sub_ring',
                 'rings.definitions.ideal']
 
-    statements = [  Statement('groups.definitions.sub_group',
+    statements = [  _StatementTEST('groups.definitions.sub_group',
                                 'Définition sous-groupe'),
-                    Statement('groups.definitions.quotient',
+                    _StatementTEST('groups.definitions.quotient',
                                 'Définition quotient'),
-                    Statement('groups.finite_groups.lagrange_theorem',
+                    _StatementTEST('groups.finite_groups.lagrange_theorem',
                                 'Théorème de Lagrange'),
-                    Statement('groups.finite_groups.Cauchy_theorem',
+                    _StatementTEST('groups.finite_groups.Cauchy_theorem',
                                 'Théorème de Cauchy'),
-                    Statement('rings.definitions.sub_ring',
+                    _StatementTEST('rings.definitions.sub_ring',
                                 'Définition sous-anneau'),
-                    Statement('rings.definitions.ideal',
+                    _StatementTEST('rings.definitions.ideal',
                                 'Définition idéal')]
 
     outline = { 'groups': 'Groupes',
