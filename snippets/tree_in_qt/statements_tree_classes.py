@@ -166,49 +166,49 @@ class StatementsTree(QTreeWidget):
             branch = statement.pretty_hierarchy(outline)
             self.init_branch_statement(self.tree, statement, branch, self)
 
+def test_pretty_hierarchy():
 
-ARBRE = [   'groups.definitions.sub_group',
-            'groups.definitions.quotient',
-            'groups.finite_groups.lagrange_theorem',
-            'groups.finite_groups.Cauchy_theorem',
-            'rings.definitions.sub_ring',
-            'rings.definitions.ideal']
+    outline = { 'groups': 'Groupes',
+                'groups.finite_groups': 'Groupes finis'}
 
-STATEMENTS = [  Statement('groups.definitions.sub_group',
-                            'Définition sous-groupe'),
-                Statement('groups.definitions.quotient',
-                            'Définition quotient'),
-                Statement('groups.finite_groups.lagrange_theorem',
-                            'Théorème de Lagrange'),
-                Statement('groups.finite_groups.Cauchy_theorem',
-                            'Théorème de Cauchy'),
-                Statement('rings.definitions.sub_ring',
-                            'Définition sous-anneau'),
-                Statement('rings.definitions.ideal',
-                            'Définition idéal')]
+    statement = Statement('groups.finite_groups.lagrange_theorem',
+                    'Théorème de Lagrange') 
 
-OUTLINE = { 'groups': 'Groupes',
-            'groups.definitions': 'Définitions',
-            'groups.finite_groups': 'Groupes finis',
-            'rings': 'Anneaux',
-            'rings.definitions': 'Définitions'}
+    assert statement.pretty_hierarchy(outline) == ['Groupes', 'Groupes finis']
+ 
 
-def main():
+def test_launch_StatementsTree():
+
+    arbre = [   'groups.definitions.sub_group',
+                'groups.definitions.quotient',
+                'groups.finite_groups.lagrange_theorem',
+                'groups.finite_groups.Cauchy_theorem',
+                'rings.definitions.sub_ring',
+                'rings.definitions.ideal']
+
+    statements = [  Statement('groups.definitions.sub_group',
+                                'Définition sous-groupe'),
+                    Statement('groups.definitions.quotient',
+                                'Définition quotient'),
+                    Statement('groups.finite_groups.lagrange_theorem',
+                                'Théorème de Lagrange'),
+                    Statement('groups.finite_groups.Cauchy_theorem',
+                                'Théorème de Cauchy'),
+                    Statement('rings.definitions.sub_ring',
+                                'Définition sous-anneau'),
+                    Statement('rings.definitions.ideal',
+                                'Définition idéal')]
+
+    outline = { 'groups': 'Groupes',
+                'groups.definitions': 'Définitions',
+                'groups.finite_groups': 'Groupes finis',
+                'rings': 'Anneaux',
+                'rings.definitions': 'Définitions'}
 
     app = QApplication(sys.argv)
     
-    buisson = StatementsTree(STATEMENTS, OUTLINE)
-    buisson.resizeColumnToContents(0)
-    buisson.show()
+    bush = StatementsTree(statements, outline)
+    bush.resizeColumnToContents(0)
+    bush.show()
 
     sys.exit(app.exec_())
-
-def tests():
-    s = Statement('groups.finite_groups.lagrange_theorem',
-                    'Théorème de Lagrange') 
-
-    assert s.pretty_hierarchy(OUTLINE) == ['Groupes', 'Groupes finis']
-
-if __name__ == '__main__':
-    tests()
-    main()
