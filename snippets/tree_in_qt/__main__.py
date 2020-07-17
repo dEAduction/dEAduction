@@ -18,6 +18,19 @@ class Statement:
     identifier = 'Theorem 3.4'
 
     def pretty_hierarchy(self, outline):
+        """
+        Return the ordered (chapter > section > …) list of sections pretty
+        names corresponding to where self is in the lean file. If the
+        self.lean_name is 'rings_and_ideals.first_definitions.the_statement',
+        return ['Rings and ideals', 'First definitions']. Most of the time
+        outline will be present_course.outline, where present_course is the
+        instance of Course which initiated self.
+
+        :outline:   A dictionnary in which keys are hierarchy levels (e.g. 
+                    'rings_and_ideals') and values are their pretty names
+                    (e.g. 'Rings and ideals').
+        :return:    The list of sections pretty names.
+        """
         pretty_hierarchy = []
 
         def fkt(rmg_hierarchy):
