@@ -84,6 +84,12 @@ class StatementsTree(QTreeWidget):
         self.setWindowTitle('StatementsTree')
 
     def addChild(self, item):
+        """
+        Usefull in self.init_branch_statement, do not delete!
+        Usefull not to have to make a difference between self.addTopLevelItem
+        when we add an item to the tree itself or parent.addChild when we add
+        an item to a parent which is a tree item.
+        """
         self.addTopLevelItem(item)
 
     def init_branch_statement(self, extg_tree, statement, branch, parent=None):
@@ -126,6 +132,21 @@ class StatementsTree(QTreeWidget):
                                     branch, extg_tree[root][0])
 
     def init_tree(self, statements, outline):
+        """
+        Initiate the tree of StatementsTree (derives from QTreeWidget) given an
+        ordered list of instances of Statement. The branch where a statement
+        must be put is already encoded in its lean_name attribute, e.g.
+        'chapter.section.sub_section.statement'. But we do not want to print
+        ugly lean_names for sections (e.g. 'rings_and_ideals'), what we want is
+        instead pretty names (e.g. 'Rings and ideals'). Therefore we have
+        outline, a dictionnary which to any level of hierarchy (e.g. chapter)
+        associates its pretty name.
+
+        :statements:    An ordered list of instances of the Statement class.
+        :outline:       A dictionnary in which keys are hierarchy levels (e.g. 
+                        'rings_and_ideals') and values are their pretty names
+                        (e.g. 'Rings and ideals').
+        """
         self.tree = dict()
 
         for statement in statements:
