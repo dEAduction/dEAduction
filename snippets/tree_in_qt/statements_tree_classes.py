@@ -98,14 +98,14 @@ class StatementsTree(QTreeWidget):
 
     def addChild(self, item):
         """
-        Usefull in self.init_branch_statement, do not delete!
+        Usefull in self._init_branch_statement, do not delete!
         Usefull not to have to make a difference between self.addTopLevelItem
         when we add an item to the tree itself or parent.addChild when we add
         an item to a parent which is a tree item.
         """
         self.addTopLevelItem(item)
 
-    def init_branch_statement(self, extg_tree, statement, branch, parent=None):
+    def _init_branch_statement(self, extg_tree, statement, branch, parent=None):
         """
         Add a branch to extg_tree and statement at the end of this branch.
 
@@ -141,7 +141,7 @@ class StatementsTree(QTreeWidget):
             extg_tree[root] = (StatementsTreeNode([root]), dict())
             parent.addChild(extg_tree[root][0])
         
-        self.init_branch_statement(extg_tree[root][1], statement,
+        self._init_branch_statement(extg_tree[root][1], statement,
                                     branch, extg_tree[root][0])
 
     def init_tree(self, statements, outline):
@@ -164,7 +164,7 @@ class StatementsTree(QTreeWidget):
 
         for statement in statements:
             branch = statement.pretty_hierarchy(outline)
-            self.init_branch_statement(self.tree, statement, branch, self)
+            self._init_branch_statement(self.tree, statement, branch, self)
 
 def test_pretty_hierarchy():
 
