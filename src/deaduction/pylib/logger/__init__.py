@@ -27,6 +27,7 @@ This file is part of d∃∀duction.
 
 import logging
 import sys
+import os
 
 import deaduction.pylib.utils.ansiterm as ansiterm
 
@@ -85,11 +86,13 @@ def configure( debug: bool = True ):
     :param debug: enable debug messages
     """
 
-    root = logging.getLogger("") # Get the root logger
+    root          = logging.getLogger("") # Get the root logger
+    force_color   = bool(os.getenv("DEADUCTION_USE_COLOR",False))
 
     # Creating basic handler and format
-    ft = Color_Formatter('%(asctime)-15s %(levelname)-9s: %(message)s')
-    ft._use_color = True
+    ft            = Color_Formatter('%(asctime)-15s %(levelname)-9s: %(message)s')
+    ft._use_color = ft._use_color or force_color
+
     sh = logging.StreamHandler()
     sh.setFormatter(ft)
 
