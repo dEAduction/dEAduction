@@ -1,4 +1,4 @@
-from actiondef import action
+from deaduction.pylib.actions.actiondef import action
 
 from dataclasses import dataclass
 

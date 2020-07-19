@@ -35,6 +35,9 @@ import deaduction.pylib.logger as logger
 import logging
 
 from deaduction.pylib.actions.actiondef import Action
+import deaduction.pylib.actions.logic
+import deaduction.pylib.actions.proofs
+import deaduction.pylib.actions.magic
 
 
 @dataclass
@@ -203,13 +206,24 @@ class Exercise(Theorem):
         # treatment of logic buttons #
         ##############################
         post_data = {}
-        for field in ["Tools->Logic",
-                      "Tools->ProofTechniques",
-                      "Tools->Magic"]:
+        labels = {"Tools->Logic": "logic", "Tools->ProofTechniques": "proofs",
+                 "Tools->Magic": "magic"}
+        dicts = {"Tools->Logic": deaduction.pylib.actions.logic.__actions__,
+                 "Tools->ProofTechniques":
+                     deaduction.pylib.actions.proofs.__actions__,
+                 "Tools->Magic": deaduction.pylib.actions.magic.__actions__}
+        for field in labels.keys():
             log.debug(f"processing data in {field}, {data[field]}")
             if data[field] == None:
                 post_data[field] = None
                 continue
+            action_dict = dicts[field]
+            action_names = [item for (_1, _2, item) in
+                            [t.partition("action_") for t in
+                             action_dict.keys()]]
+            # action_names = list of labels for buttons,
+            # action_dict = keys = labels, values = action functions
+            log.debug(f"found {labels[field]} names {action_names}")
             list_1 = data[field].split()
             list_2 = []
             # first step, replace macros
@@ -218,7 +232,7 @@ class Exercise(Theorem):
             for item in list_1:
                 item = item.strip()
                 if item in ["ALL", "$ALL"]:
-                    list_2 = Exercise.logic_buttons_complete_list + list_2
+                    list_2 = action_names + list_2
                     continue
                 if item.startswith("$"):
                     macro_list = data[item].split(", ")
@@ -243,7 +257,12 @@ class Exercise(Theorem):
                     continue
                 list_3.append(item)
             log.debug(f"list 3: {list_3}")
-            post_data[field] = list_3
+            post_data[field] = []
+            for item in list_3:
+                if item not in action_names:
+                    log.warning(f"label {item} not in {labels[field]}  lists")
+                else:
+                    post_data[field].append(action_dict["action_" + item])
         # todo: check logic buttons exists from Action
         #        for item in post_data["Tools->Logic"]:
         #            if item not in ???:
@@ -290,3 +309,9 @@ def findsuffix(string, list):
     if nb > 0:
         index = list.index(total[0])
     return index, nb
+
+
+if __name__ == "__main__":
+    print(deaduction.pylib.actions.logic.__actions__.keys())
+    print(deaduction.pylib.actions.proofs.__actions__.keys())
+    print(deaduction.pylib.actions.magic.__actions__.keys())

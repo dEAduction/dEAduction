@@ -298,9 +298,11 @@ if __name__ == "__main__":
     my_course = Course.from_directory(course_dir_path)
     print("My course:")
     print("List of statements:")
+    count_ex= 0
     for statement in my_course.statements:
         if isinstance(statement, Exercise):
-            print(f"Exercice {statement.pretty_name}")
+            count_ex += 1
+            print(f"Exercise n°{count_ex}: {statement.pretty_name}")
         elif isinstance(statement, Definition):
             print(f"Definition {statement.pretty_name}")
         elif isinstance(statement, Theorem):
