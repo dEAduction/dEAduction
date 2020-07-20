@@ -44,7 +44,7 @@ from dataclasses import dataclass
 import deaduction.pylib.logger as logger
 import logging
 
-import analysis
+import lean_analysis
 from latex_format_data import latex_structures, latex_formats
 
 
@@ -93,22 +93,34 @@ class PropObj:
         - lists of latex rep
         """
         log = logging.getLogger("Latex representation")
+        if self.latex_rep != None: # should be useless
+            return
         a = []  # will be the list of the latex rep of the children
         node = self.node
         i = -1
         for arg in self.children:
             i += 1
             if arg.latex_rep == None:
-                arg.latex_rep = compute_latex(arg)
+                PropObj.compute_latex(arg) # = compute_latex
             lr = arg.latex_rep
             parentheses = needs_paren(self, i)
             if parentheses:
                 lr = ["(", lr, ")"]
             a.append(lr)
+        log.debug(f"Node: {node}")
         latex_symb, format_scheme = latex_structures[node]
-        latex_rep = format_scheme(latex_symb, a, self)
-        log.info(f"Latexifying {self.node}: {latex_rep}")
-        return latex_rep
+        self.latex_rep = format_scheme(latex_symb, a, self)
+        log.info(f"Latexifying {self.node}: {self.latex_rep}")
+        return
+
+    def print_latex(self):
+        PropObj.compute_latex(self)
+        lr = self.latex_rep
+        if not isinstance(lr, list):
+            return lr
+        else:
+            return latex_join(lr)
+
 
 
 def latex_join(latex_rep):
@@ -125,7 +137,11 @@ def latex_join(latex_rep):
 
 # TODO : tenir compte de la profondeur des parenthèses,
 # et utiliser \Biggl(\biggl(\Bigl(\bigl((x)\bigr)\Bigr)\biggr)\Biggr)
-############# AFER
+
+nature_leaves_list = ["PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
+                      "FUNCTION", "SEQUENCE", "SET_FAMILY",
+                      "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY"]
+
 def needs_paren(parent: PropObj, child_number: int):
     """
     Decides if parentheses are needed around the child
@@ -196,6 +212,8 @@ class ProofStatePO(PropObj):
     # whose math_type equals the corresponding term of math_types_list
 
 
+
+
 @dataclass
 class BoundVarPO(ProofStatePO):
     """
@@ -214,10 +232,14 @@ def create_pspo(prop_obj_str: str) -> ProofStatePO:
     prop_obj_str is assumed to have format
     `%%head ¿= %%tail` where ¿= is defined in equal_sep
 
-    :param prop_obj_str: aa string from Lean that describes the object
+    This function also creates all the intermediate AnonymousPO's that are
+    needed to describe the mathematical entity.
+
+    :param prop_obj_str: a string from Lean that describes the object
     :return: the new object
     """
     log = logging.getLogger("PropObj")
+    log.debug(f"processing to create ProofStatePO from {prop_obj_str}")
     head, _, tail = prop_obj_str.partition(equal_sep)
     # extract lean_data from the head : name, id, pptype (if prop)
     lean_data = extract_lean_data(head)
@@ -226,12 +248,13 @@ def create_pspo(prop_obj_str: str) -> ProofStatePO:
         ProofStatePO.context_dict[lean_data["id"]] = prop_obj
         return prop_obj
     # extract math_type from the tail
-    tree = analysis.lean_expr_grammar.parse(tail)
-    po_str_list = analysis.LeanExprVisitor().visit(tree)
+    tree = lean_analysis.lean_expr_grammar.parse(tail)
+    po_str_list = lean_analysis.LeanExprVisitor().visit(tree)
     math_type = create_anonymous_prop_obj(po_str_list[0])
+    log.debug(f"math type: {math_type}")
     node = None
     children = None
-    latex_rep = None
+    latex_rep = lean_data["name"]  # equals "" if is_prop == True
     # treatment of objects (not prop): handling of math_types_list
     # todo: use a list method that appends iff not in
     if not math_type.is_prop():
@@ -250,15 +273,15 @@ def create_pspo(prop_obj_str: str) -> ProofStatePO:
             mt_number = length
             ProofStatePO.math_types_list.append(math_type)
             ProofStatePO.math_types_instances.append([])
-        latex_rep = lean_data["name"]
     # end
     prop_obj = ProofStatePO(node, children, latex_rep, lean_data, math_type)
     # Adjusting datas
-    ProofStatePO.dict_[lean_data["id"]] = prop_obj
+    if lean_data["id"] != "":
+        ProofStatePO.dict_[lean_data["id"]] = prop_obj # probably useless
     if not math_type.is_prop():
         ProofStatePO.context_dict[lean_data["id"]] = prop_obj
         ProofStatePO.math_types_instances[mt_number].append(prop_obj)
-    log.info(f"adding {lean_data['name']} to the dictionnary, ident ="
+        log.info(f"adding {lean_data['name']} to the dictionnary, ident ="
              f" {lean_data['id']}")
     return prop_obj
 
@@ -396,26 +419,27 @@ def process_context(lean_analysis: str) -> list:
 if __name__ == '__main__':
     logger.configure()
     essai_reciproque_union = """context:
-    OBJECT[LOCAL_CONSTANT¿[name:X/identifier:0._fresh.1112.20255¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= TYPE
-    OBJECT[LOCAL_CONSTANT¿[name:Y/identifier:0._fresh.1112.20257¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= TYPE
-    OBJECT[LOCAL_CONSTANT¿[name:f/identifier:0._fresh.1112.20260¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= FUNCTION¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.1112.20255¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:Y/identifier:0._fresh.1112.20257¿]¿(CONSTANT¿[name:1/1¿]¿)¿)
-    OBJECT[LOCAL_CONSTANT¿[name:B/identifier:0._fresh.1112.20262¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= SET¿(LOCAL_CONSTANT¿[name:Y/identifier:0._fresh.1112.20257¿]¿(CONSTANT¿[name:1/1¿]¿)¿)
-    OBJECT[LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.1112.20265¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= SET¿(LOCAL_CONSTANT¿[name:Y/identifier:0._fresh.1112.20257¿]¿(CONSTANT¿[name:1/1¿]¿)¿)
-    goals:
-    PROPERTY[METAVAR[_mlocal._fresh.1217.17744]/pp_type: ∀ ⦃x : X⦄, x ∈ (f⁻¹⟮B ∪ B'⟯) → x ∈ f⁻¹⟮B⟯ ∪ (f⁻¹⟮B'⟯)] ¿= QUANT_∀¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.1215.9868¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:x/identifier:_fresh.1217.17768¿]¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.1215.9868¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, PROP_IMPLIES¿(PROP_BELONGS¿(LOCAL_CONSTANT¿[name:x/identifier:_fresh.1217.17768¿]¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.1215.9868¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.1215.9873¿]¿(CONSTANT¿[name:1/1¿]¿)¿, SET_UNION¿(LOCAL_CONSTANT¿[name:B/identifier:0._fresh.1215.9875¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.1215.9878¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿)¿, PROP_BELONGS¿(LOCAL_CONSTANT¿[name:x/identifier:_fresh.1217.17768¿]¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.1215.9868¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, SET_UNION¿(SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.1215.9873¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B/identifier:0._fresh.1215.9875¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.1215.9873¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.1215.9878¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿)¿)¿)
-    PROPERTY[METAVAR[_mlocal._fresh.1217.17729]/pp_type: f⁻¹⟮B⟯ ∪ (f⁻¹⟮B'⟯) ⊆ (f⁻¹⟮B ∪ B'⟯)] ¿= PROP_INCLUDED¿(SET_UNION¿(SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.1215.9873¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B/identifier:0._fresh.1215.9875¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.1215.9873¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.1215.9878¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿, SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.1215.9873¿]¿(CONSTANT¿[name:1/1¿]¿)¿, SET_UNION¿(LOCAL_CONSTANT¿[name:B/identifier:0._fresh.1215.9875¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.1215.9878¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿)"""
+OBJECT[LOCAL_CONSTANT¿[name:X/identifier:0._fresh.1112.20255¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= TYPE
+OBJECT[LOCAL_CONSTANT¿[name:Y/identifier:0._fresh.1112.20257¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= TYPE
+OBJECT[LOCAL_CONSTANT¿[name:f/identifier:0._fresh.1112.20260¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= FUNCTION¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.1112.20255¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:Y/identifier:0._fresh.1112.20257¿]¿(CONSTANT¿[name:1/1¿]¿)¿)
+OBJECT[LOCAL_CONSTANT¿[name:B/identifier:0._fresh.1112.20262¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= SET¿(LOCAL_CONSTANT¿[name:Y/identifier:0._fresh.1112.20257¿]¿(CONSTANT¿[name:1/1¿]¿)¿)
+OBJECT[LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.1112.20265¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= SET¿(LOCAL_CONSTANT¿[name:Y/identifier:0._fresh.1112.20257¿]¿(CONSTANT¿[name:1/1¿]¿)¿)
+goals:
+PROPERTY[METAVAR[_mlocal._fresh.1217.17744]/pp_type: ∀ ⦃x : X⦄, x ∈ (f⁻¹⟮B ∪ B'⟯) → x ∈ f⁻¹⟮B⟯ ∪ (f⁻¹⟮B'⟯)] ¿= QUANT_∀¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.1215.9868¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:x/identifier:_fresh.1217.17768¿]¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.1215.9868¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, PROP_IMPLIES¿(PROP_BELONGS¿(LOCAL_CONSTANT¿[name:x/identifier:_fresh.1217.17768¿]¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.1215.9868¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.1215.9873¿]¿(CONSTANT¿[name:1/1¿]¿)¿, SET_UNION¿(LOCAL_CONSTANT¿[name:B/identifier:0._fresh.1215.9875¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.1215.9878¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿)¿, PROP_BELONGS¿(LOCAL_CONSTANT¿[name:x/identifier:_fresh.1217.17768¿]¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.1215.9868¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, SET_UNION¿(SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.1215.9873¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B/identifier:0._fresh.1215.9875¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.1215.9873¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.1215.9878¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿)¿)¿)
+PROPERTY[METAVAR[_mlocal._fresh.1217.17729]/pp_type: f⁻¹⟮B⟯ ∪ (f⁻¹⟮B'⟯) ⊆ (f⁻¹⟮B ∪ B'⟯)] ¿= PROP_INCLUDED¿(SET_UNION¿(SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.1215.9873¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B/identifier:0._fresh.1215.9875¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.1215.9873¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.1215.9878¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿, SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.1215.9873¿]¿(CONSTANT¿[name:1/1¿]¿)¿, SET_UNION¿(LOCAL_CONSTANT¿[name:B/identifier:0._fresh.1215.9875¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.1215.9878¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿)"""
 
     essai = essai_reciproque_union
     liste = process_context(essai)
     print(liste)
     print("")
-    for pfprop_obj in liste:
-        pfprop_obj.math_type.latex_rep = pfprop_obj.math_type.compute_latex()
+#    for pfprop_obj in liste:
+#        pfprop_obj.math_type.latex_rep = pfprop_obj.math_type.compute_latex()
 #        pfprop_obj.latex_type_str = latex_join(pfprop_obj.latex_type)
-        print("-------")
+#        print("-------")
     for pfprop_obj in liste:
-        print(f"{pfprop_obj.latex_rep} : {pfprop_obj.math_type.latex_rep}")
-        print(f"assemblé :  {latex_join(pfprop_obj.math_type.latex_rep)}")
+        print(f"{pfprop_obj.print_latex()} : "
+              f"{pfprop_obj.math_type.print_latex()}")
+#        print(f"assemblé :  {latex_join(pfprop_obj.math_type.latex_rep)}")
     print("List of math types:")
     i = 0
     for mt in ProofStatePO.math_types_list:
