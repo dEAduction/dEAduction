@@ -211,7 +211,7 @@ namespace dui {
 			<i>derives from QTreeWidgetItem</i>
 			--
 			--
-			+__init__(titles: List[str])
+			+__init__(statements: List[Statement])
 			+@classmethod from_Statement(statement: Statement)
 		}
         class StatementsTreeNode {
