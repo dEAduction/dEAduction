@@ -36,6 +36,11 @@ from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem
 class StatementsTreeItem(QTreeWidgetItem):
 
     def __init__(self, titles):
+        """
+
+        :parem titles: A list of column titles. It must not be a str.
+        """
+
         super().__init__(None, titles)
         self._initUI()
 
@@ -46,6 +51,11 @@ class StatementsTreeItem(QTreeWidgetItem):
 
     @classmethod
     def from_Statement(cls, statement):
+        """
+
+        :param statement: An instance of the Statement class.
+        """
+
         titles = [statement.pretty_name, statement.identifier]
         instance = cls(titles)
 
@@ -55,6 +65,11 @@ class StatementsTreeItem(QTreeWidgetItem):
 class StatementsTreeNode(QTreeWidgetItem):
 
     def __init__(self, titles):
+        """
+
+        :parem titles: A list of column titles. It must not be a str.
+        """
+
         super().__init__(None, titles)
         self._initUI()
         self.setUnselectable()
@@ -74,6 +89,13 @@ class StatementsTreeNode(QTreeWidgetItem):
 class StatementsTree(QTreeWidget):
 
     def __init__(self, statements, outline):
+        """
+
+        :param statements: An ordered list of instances of the Statement class.
+        :param outline: A dictionnary in which keys are hierarchy levels (e.g.
+                'rings_and_ideals') and values are their pretty names
+                (e.g. 'Rings and ideals').
+        """
         super().__init__()
         self._initUI()
         self.init_tree(statements, outline)
@@ -88,7 +110,10 @@ class StatementsTree(QTreeWidget):
         Usefull not to have to make a difference between self.addTopLevelItem
         when we add an item to the tree itself or parent.addChild when we add
         an item to a parent which is a tree item.
+
+        :param item: Either a StatementsTreeItem or a StatementsTreeNode.
         """
+
         self.addTopLevelItem(item)
 
     def _init_statement(self, extg_tree, statement, branch, parent=None):
@@ -96,13 +121,13 @@ class StatementsTree(QTreeWidget):
         Add a branch to extg_tree and statement at the end of this branch.
 
         :param extg_tree: A dictionnary that looks like this:
-                    {'Groups': (StatementsTreeNode('Groups'),
-                        {'Finite groups': (StatementsTreeNode(None, 'Finite
-                                                                groups'),
-                            {statement.text(0): (statement, dict()
-                            )}
+                {'Groups': (StatementsTreeNode('Groups'),
+                    {'Finite groups': (StatementsTreeNode(None, 
+                                                          'Finite groups'),
+                        {statement.text(0): (statement, dict()
                         )}
                     )}
+                )}
         :param statement: An instance of StatementsTreeItem.
         :param branch: A branch (new or already existing) as a list of str,
                 e.g.  ['Chapter', 'Section', 'Sub-section'].
@@ -147,8 +172,8 @@ class StatementsTree(QTreeWidget):
                 (e.g. 'Rings and ideals').
         """
 
-        self.tree = dict()
+        self._tree = dict()
 
         for statement in statements:
             branch = statement.pretty_hierarchy(outline)
-            self._init_statement(self.tree, statement, branch, self)
+            self._init_statement(self._tree, statement, branch, self)
