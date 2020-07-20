@@ -45,7 +45,7 @@ import deaduction.pylib.logger as logger
 import logging
 
 import lean_analysis
-from latex_format_data import latex_structures, latex_formats
+from latex_format_data import latex_structures, utf8_structures
 
 
 equal_sep = "¿= "
@@ -65,6 +65,7 @@ class PropObj:
     node: str
     children: list
     latex_rep: list
+    utf8_rep: list
     nodes_list = ["PROP_AND", "PROP_OR", "PROP_IFF", "PROP_NOT",
                   "PROP_IMPLIES",
                   "QUANT_∀", "QUANT_∃", "PROP_∃",
@@ -85,7 +86,7 @@ class PropObj:
     def is_prop(self) -> bool:
         return self.node.startswith("PROP") or self.node.startswith("QUANT")
 
-    def compute_latex(self):
+    def structured_format(self, format = "latex"):
         """
         Compute a structured "latex representation" of a prop_obj.
         Valid latex rep are recursively defined as:
@@ -93,47 +94,64 @@ class PropObj:
         - lists of latex rep
         """
         log = logging.getLogger("Latex representation")
-        if self.latex_rep != None: # should be useless
+        if format == "latex":
+            log.info(f"computing latex representation of {self}")
+            field = "latex_rep"
+        else:
+            log.info(f"computing utf8 representation of {self}")
+            field = "utf8_rep"
+        if eval("self." + field) != None: # should be useless
             return
         a = []  # will be the list of the latex rep of the children
         node = self.node
         i = -1
         for arg in self.children:
             i += 1
-            if arg.latex_rep == None:
-                PropObj.compute_latex(arg) # = compute_latex
-            lr = arg.latex_rep
+            if eval("arg." + field) == None:
+                PropObj.structured_format(arg, format) # = compute_latex
+            lr = eval("arg." + field)
             parentheses = needs_paren(self, i)
             if parentheses:
                 lr = ["(", lr, ")"]
             a.append(lr)
         log.debug(f"Node: {node}")
-        latex_symb, format_scheme = latex_structures[node]
-        self.latex_rep = format_scheme(latex_symb, a, self)
-        log.info(f"Latexifying {self.node}: {self.latex_rep}")
+        if format == "latex":
+            symbol, format_scheme = latex_structures[node]
+            self.latex_rep = format_scheme(symbol, a, self, format="latex")
+        else:
+            symbol, format_scheme = utf8_structures[node]
+            self.utf8_rep = format_scheme(symbol, a, self, format="utf8")
+        log.info(f"--> {self.latex_rep}")
         return
 
-    def print_latex(self):
-        PropObj.compute_latex(self)
+    def format_as_latex(self):
+        PropObj.structured_format(self, format="latex")
         lr = self.latex_rep
         if not isinstance(lr, list):
             return lr
         else:
-            return latex_join(lr)
+            return list_string_join(lr)
+
+    def format_as_utf8(self):
+        PropObj.structured_format(self, format="utf8")
+        lr = self.utf8_rep
+        if not isinstance(lr, list):
+            return lr
+        else:
+            return list_string_join(lr)
 
 
-
-def latex_join(latex_rep):
+def list_string_join(latex_or_utf8__rep):
     """
     turn a (structured) latex representation into a latex string
     """
-    latex_str = ""
-    for lr in latex_rep:
+    string = ""
+    for lr in latex_or_utf8__rep:
         if type(lr) is list:
-            lr = latex_join(lr)
-        latex_str += lr
+            lr = list_string_join(lr)
+        string += lr
     #    log.debug("string:", latex_str)
-    return (latex_str)
+    return string
 
 # TODO : tenir compte de la profondeur des parenthèses,
 # et utiliser \Biggl(\biggl(\Bigl(\bigl((x)\bigr)\Bigr)\biggr)\Biggr)
@@ -255,6 +273,7 @@ def create_pspo(prop_obj_str: str) -> ProofStatePO:
     node = None
     children = None
     latex_rep = lean_data["name"]  # equals "" if is_prop == True
+    utf8_rep = lean_data["name"]
     # treatment of objects (not prop): handling of math_types_list
     # todo: use a list method that appends iff not in
     if not math_type.is_prop():
@@ -274,7 +293,8 @@ def create_pspo(prop_obj_str: str) -> ProofStatePO:
             ProofStatePO.math_types_list.append(math_type)
             ProofStatePO.math_types_instances.append([])
     # end
-    prop_obj = ProofStatePO(node, children, latex_rep, lean_data, math_type)
+    prop_obj = ProofStatePO(node, children, latex_rep, utf8_rep, lean_data,
+                            math_type)
     # Adjusting datas
     if lean_data["id"] != "":
         ProofStatePO.dict_[lean_data["id"]] = prop_obj # probably useless
@@ -293,6 +313,7 @@ def create_anonymous_prop_obj(prop_obj_dict: dict):
     :return: an instance of AnonymousPO
     """
     latex_rep = None  # latex representation is computed later
+    utf8_rep = None
     node = prop_obj_dict["node"]
     #    ident = extract_identifier2(node)
     lean_data = extract_lean_data(node)
@@ -310,13 +331,15 @@ def create_anonymous_prop_obj(prop_obj_dict: dict):
     if node.startswith("LOCAL_CONSTANT"):
         # unidentified local constant = bound variable
         latex_rep = lean_data["name"]
+        utf8_rep = lean_data["name"]
         math_type = children[0]
-        prop_obj = BoundVarPO(node, [], latex_rep, lean_data, math_type)
+        prop_obj = BoundVarPO(node, [], latex_rep, utf8_rep, lean_data,
+                              math_type)
         BoundVarPO.names_list.append(lean_data["name"])
         return prop_obj
     if node == "APPLICATION" and children[0].node == "FUNCTION":
         node = "APPLICATION_FUNCTION"
-    prop_obj = AnonymousPO(node, children, latex_rep)
+    prop_obj = AnonymousPO(node, children, latex_rep, utf8_rep)
     return prop_obj
 
 
@@ -436,13 +459,15 @@ PROPERTY[METAVAR[_mlocal._fresh.1217.17729]/pp_type: f⁻¹⟮B⟯ ∪ (f⁻¹�
 #        pfprop_obj.math_type.latex_rep = pfprop_obj.math_type.compute_latex()
 #        pfprop_obj.latex_type_str = latex_join(pfprop_obj.latex_type)
 #        print("-------")
+    format = "utf8"
+
     for pfprop_obj in liste:
-        print(f"{pfprop_obj.print_latex()} : "
-              f"{pfprop_obj.math_type.print_latex()}")
+        print(f"{eval('pfprop_obj.format_as_' + format +'()' )} : "
+              f"{eval('pfprop_obj.math_type.format_as_' + format + '()')}")
 #        print(f"assemblé :  {latex_join(pfprop_obj.math_type.latex_rep)}")
     print("List of math types:")
     i = 0
     for mt in ProofStatePO.math_types_list:
-        print(f" {latex_join(mt.latex_rep)}: ",
-              f"{[latex_join(PO.latex_rep) for PO in ProofStatePO.math_types_instances[i]]}")
+        print(f" {mt.format_as_utf8()}: ",
+    f"{[PO.format_as_utf8() for PO in ProofStatePO.math_types_instances[i]]}")
         i += 1
