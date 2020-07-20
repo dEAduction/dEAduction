@@ -3,6 +3,9 @@
 # statements_classes.py : provide classes for the statements widget #
 #####################################################################
 
+    This file provides StatementsTreeItem, StatementsTreeNode and 
+    StatementsTree.
+
 Author(s)      : Kryzar <antoine@hugounet.com>
 Maintainers(s) : Kryzar <antoine@hugounet.com>
 Date           : July 2020
@@ -25,9 +28,9 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import sys
-from PySide2.QtCore import QBrush, QColor, QIcon, Qt
-from PySide2.QtWidgets import QApplication, QTreeWidget, QTreeWidgetItem
+from PySide2.QtGui import QBrush, QColor, QIcon
+from PySide2.QtCore import Qt
+from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem
 
 
 class StatementsTreeItem(QTreeWidgetItem):
@@ -92,7 +95,7 @@ class StatementsTree(QTreeWidget):
         """
         Add a branch to extg_tree and statement at the end of this branch.
 
-        :extg_tree: A dictionnary that looks like this:
+        :param extg_tree: A dictionnary that looks like this:
                     {'Groups': (StatementsTreeNode('Groups'),
                         {'Finite groups': (StatementsTreeNode(None, 'Finite
                                                                 groups'),
@@ -100,12 +103,12 @@ class StatementsTree(QTreeWidget):
                             )}
                         )}
                     )}
-        :statement: An instance of StatementsTreeItem.
-        :branch:    A branch (new or already existing) as a list of str, e.g.
-                    ['Chapter', 'Section', 'Sub-section']. 
-        :parent:    A StatementsTreeNode or extg_tree itself (at the first call
-                    of the function). Either branch or statement is added as a
-                    child of parent.
+        :param statement: An instance of StatementsTreeItem.
+        :param branch: A branch (new or already existing) as a list of str,
+                e.g.  ['Chapter', 'Section', 'Sub-section'].
+        :param parent: A StatementsTreeNode or extg_tree itself (at the first
+                call of the function). Either branch or statement is added as
+                a child of parent.
         """
 
         # If branch is empty, put statement at the end
@@ -138,61 +141,14 @@ class StatementsTree(QTreeWidget):
         outline, a dictionnary which to any level of hierarchy (e.g. chapter)
         associates its pretty name.
 
-        :statements:    An ordered list of instances of the Statement class.
-        :outline:       A dictionnary in which keys are hierarchy levels (e.g. 
-                        'rings_and_ideals') and values are their pretty names
-                        (e.g. 'Rings and ideals').
+        :param statements: An ordered list of instances of the Statement class.
+        :param outline: A dictionnary in which keys are hierarchy levels (e.g.
+                'rings_and_ideals') and values are their pretty names
+                (e.g. 'Rings and ideals').
         """
+
         self.tree = dict()
 
         for statement in statements:
             branch = statement.pretty_hierarchy(outline)
             self._init_statement(self.tree, statement, branch, self)
-
-
-def test_pretty_hierarchy():
-
-    outline = { 'groups': 'Groupes',
-                'groups.finite_groups': 'Groupes finis'}
-
-    statement = _StatementTEST('groups.finite_groups.lagrange_theorem',
-                               'Théorème de Lagrange')
-
-    assert statement.pretty_hierarchy(outline) == ['Groupes', 'Groupes finis']
- 
-
-def test_launch_StatementsTree():
-
-    arbre = [   'groups.definitions.sub_group',
-                'groups.definitions.quotient',
-                'groups.finite_groups.lagrange_theorem',
-                'groups.finite_groups.Cauchy_theorem',
-                'rings.definitions.sub_ring',
-                'rings.definitions.ideal']
-
-    statements = [  _StatementTEST('groups.definitions.sub_group',
-                                'Définition sous-groupe'),
-                    _StatementTEST('groups.definitions.quotient',
-                                'Définition quotient'),
-                    _StatementTEST('groups.finite_groups.lagrange_theorem',
-                                'Théorème de Lagrange'),
-                    _StatementTEST('groups.finite_groups.Cauchy_theorem',
-                                'Théorème de Cauchy'),
-                    _StatementTEST('rings.definitions.sub_ring',
-                                'Définition sous-anneau'),
-                    _StatementTEST('rings.definitions.ideal',
-                                'Définition idéal')]
-
-    outline = { 'groups': 'Groupes',
-                'groups.definitions': 'Définitions',
-                'groups.finite_groups': 'Groupes finis',
-                'rings': 'Anneaux',
-                'rings.definitions': 'Définitions'}
-
-    app = QApplication(sys.argv)
-
-    bush = StatementsTree(statements, outline)
-    bush.resizeColumnToContents(0)
-    bush.show()
-
-    sys.exit(app.exec_())
