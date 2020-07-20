@@ -26,7 +26,8 @@ latex_formats = {"const": "[latex_symb]",
                  "name": "[PO.lean_name]",
                  "app_function": "[a[0],  '(', a[1], ')']",
                  "app_inverse": "[a[0],  '^{-1}(', a[1],  ')']",
-                 "quantifiers": "[latex_symb + ' ' + a[0] + ' \in ', a[1], ', ', a[2]]",
+                 "quantifiers": "[latex_symb + ' ' + a[0] "
+                                "+ ' \in ', a[1], ', ', a[2]]",
                  "var": "[PO.nature_compl]",  # OUT OF DATE
                  "complement": "[a[0], '^c']"}
 
