@@ -71,16 +71,38 @@ class Statement:
                    data["lean_variables"], data["PrettyName"],
                    data["text_book_identifier"])
 
-    def pretty_hierarchy(self, outline) -> List[str]:
-        """
-        given an Exercise, this method provides the list of pretty names
-        corresponding to the namespace containing Exercise
-        ex: if exo.lean_name = "set_theory.unions_and_intersections.exercise.union_distributive_inter",
-        pretty_hierarchy(exo) = ["Théorie des ensembles", "Union et intersection"]
 
-        :param outline: OrderDict[str, str] as in the Course class
+    def pretty_hierarchy(self, outline):
         """
-        pass
+        Return the ordered (chapter > section > …) list of sections pretty
+        names corresponding to where self is in the lean file. If the
+        self.lean_name is 'rings_and_ideals.first_definitions.the_statement',
+        return ['Rings and ideals', 'First definitions']. Most of the time
+        outline will be present_course.outline, where present_course is the
+        instance of Course which initiated self.
+
+        :param outline: A dictionnary in which keys are hierarchy levels (e.g. 
+                'rings_and_ideals') and values are their pretty names
+                (e.g. 'Rings and ideals').
+        :return: The list of sections pretty names.
+        """
+
+        pretty_hierarchy = []
+
+        def fkt(rmg_hierarchy):
+            if not rmg_hierarchy:
+                return
+            else:
+                pretty_hierarchy.insert(0, outline[rmg_hierarchy])
+                # 'a.b.c.d' -> 'a.b.c'
+                rmg_hierarchy = '.'.join(rmg_hierarchy.split('.')[:-1])
+                fkt(rmg_hierarchy)
+
+        name = '.'.join(self.lean_name.split('.')[:-1])
+        fkt(name)
+
+        return pretty_hierarchy
+
 
 
 @dataclass
