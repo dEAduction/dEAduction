@@ -198,8 +198,29 @@ namespace pylib {
 
 namespace dui {
     namespace widgets {
-        class StatementItem
-        class StatementsNodeItem
+		class StatementsTree {
+			<i>derives from QTreeWidget</i>
+			--
+			#self._tree
+			--
+			+__init__(statements: List[Statement], outline: Dict[str, str])
+			#_init_statement(extg_tree, statement, branch, parent=None)
+			+init_tree(statements: List[Statement], outline: Dict[str, str])
+		}
+        class StatementsTreeItem {
+			<i>derives from QTreeWidgetItem</i>
+			--
+			--
+			+__init__(titles: List[str])
+			+@classmethod from_Statement(statement: Statement)
+		}
+        class StatementsTreeNode {
+			<i>derives from QTreeWidgetItem</i>
+			--
+			--
+			+__init__(titles)
+			+setUnselectable(self)
+		}
         class TargetWidget
     }
 
@@ -221,8 +242,10 @@ namespace dui {
         show Variables members
     }
 
-    dui.widgets.StatementItem     --* dui.windows.MainWindow
-    dui.widgets.StatementsNodeItem --* dui.windows.MainWindow
+    dui.widgets.StatementsTreeItem  --* dui.windows.MainWindow
+    dui.widgets.StatementsTreeItem	--* dui.widgets.StatementsTree
+    dui.widgets.StatementsTreeNode	--* dui.windows.MainWindow
+    dui.widgets.StatementsTreeNode	--* dui.widgets.StatementsTree
 
     dui.server.Variables     --> dui.windows.MainWindow
 
