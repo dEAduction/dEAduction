@@ -71,7 +71,7 @@ class PropobjList(QListWidget):
         self.setAlternatingRowColors(True)
 
 
-class ExerciseWindow(QWidget):
+class ExerciseWindow(QMainWindow):
 
     def __init__(self, tool_buttons):
         super().__init__()
@@ -176,7 +176,7 @@ class ExerciseWindow(QWidget):
         main_layout.addLayout(workspace_layout)
         self.setWindowTitle("L'union des images réciproque est l'image "\
                 "réciproque de l'union — d∃∀duction")
-        self.setLayout(main_layout)
+        self.setCentralWidget(main_layout)
         self.show()
 
 
