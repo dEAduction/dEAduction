@@ -4,16 +4,31 @@ import sys
 
 class LeanFile:
     def __init__( self ):
-        self.history     = []
+        self.history      = []
 
-        self.idx         = 0  # Current position in history
-        self.target_idx  = 0  # Targeted position in history
+        self.idx          = 0  # Current position in history
+        self.target_idx   = 0  # Targeted position in history
 
-        self.txt         = "" # Text at current position in history
+        self.txt          = "" # Text at current position in history
+
+        # Virtual cursor managment
+        self.current_pos  = 0
 
     ################################
-    # Add actions and stuff
+    # Actions
     ################################
+    def cursor_move(self, pos):
+        # Set pos clamped to text size
+        self.current_pos = min(max(pos,len(self.txt)-1), 0)
+
+    def insert( self, lbl, add_txt, misc_info=dict() ):
+        next_txt = self.txt[:self.current_pos+1]   \
+                   + add_txt                       \
+                   + self.txt[self.current_pos+1:]
+
+        self.state_add(lbl,next_txt,misc_info)
+        self.current_pos += len(add_txt)
+
     def state_add(self, lbl, next_txt, misc_info=dict()):
         # Compute forward diff
         forward_diff  = dmp.patch_make(self.txt, next_txt)
@@ -77,20 +92,38 @@ class LeanFile:
 
         return self.txt
 
+    ################################
+    # Other properties
+    ################################
+    @property
+    def linecol(self):
+        line = 0
+        col  = 0
+        idx  = 0
+
+        while (idx <= self.current_pos) and (idx < len(self.txt)):
+            if self.txt[idx] == "\n":
+                col   = 0
+                line += 1
+            else:
+                col += 1
+            idx += 1
+        
+        return (line,col,)
+
 if __name__=="__main__":
     txt_a = """This is first text
     """
 
-    txt_b = """Thsi is first text,
-    With second line !
-    """
-
     ff = LeanFile()
     ff.state_add("First line" , txt_a)
+    ff.current_pos = len(ff.txt)-1
+    print(ff.current_pos)
+
     print("First state\n----------------")
     print(ff.contents)
 
-    ff.state_add("Second line", txt_b)
+    ff.insert("Second line", "This is second line\n")
 
     print("Second state\n----------------")
     print(ff.contents)
