@@ -1,5 +1,7 @@
+from pathlib import Path
 import sys
-from PySide2.QtWidgets import QApplication, QGridLayout, QLabel
+from PySide2.QtGui import QPixmap
+from PySide2.QtWidgets import QApplication, QGridLayout, QLabel, QWidget
 
 
 class ProofStatePOLayout(QGridLayout):
@@ -12,7 +14,7 @@ class ProofStatePOLayout(QGridLayout):
     #    (0, 0)                 (0, 1)                    (0, 2)
 
     def __init__(self, tag: str, proofstatepo, comment):
-        super().__init__(self)
+        super().__init__()
         self.tag = tag
         self.proofstatepo = proofstatepo
         self.comment = comment
@@ -28,8 +30,15 @@ class ProofStatePOLayout(QGridLayout):
         if tag not in ['modified', 'new']:
             raise ValueError("ProofStatePOLayout.tag must be one of "
                              f"'modified' or 'new'. Tag: {tag}.")
+        elif tag == 'new':
+            icon_path = Path('icon_new.png')
+        elif tag == 'modified':
+            icon_path = Path('icon_modified.png')
 
-        # TODO
+        icon_path_abs = str(icon_path.resolve())
+        icon_widget = QLabel()
+        icon_widget.setPixmap(QPixmap(icon_path_abs))
+        self.addWidget(icon_widget, 0, 0)
 
     # Set the central caption
     @property
@@ -52,8 +61,22 @@ class ProofStatePOLayout(QGridLayout):
         self.addWidget(comment_widget, 0, 2)
 
 
+class _ProofStatePOTEST:
+    def __init__(self, caption):
+        self.caption = caption
+
+
 def main():
     app = QApplication([])
+
+    tag = 'new'
+    pspo = _ProofStatePOTEST('x: X')
+    comment = 'dépend de f'
+    pspolyt = ProofStatePOLayout(tag, pspo, comment)
+
+    wdw = QWidget()
+    wdw.setLayout(pspolyt)
+    wdw.show()
 
     sys.exit(app.exec_())
 
