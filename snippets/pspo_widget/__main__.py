@@ -35,9 +35,10 @@ class ProofStatePOLayout(QGridLayout):
         elif tag == 'modified':
             icon_path = Path('icon_modified.png')
 
-        icon_path_abs = str(icon_path.resolve())
         icon_widget = QLabel()
-        icon_widget.setPixmap(QPixmap(icon_path_abs))
+        icon_pixmap = QPixmap(str(icon_path.resolve()))
+        icon_pixmap = icon_pixmap.scaledToWidth(10)
+        icon_widget.setPixmap(icon_pixmap)
         self.addWidget(icon_widget, 0, 0)
 
     # Set the central caption
