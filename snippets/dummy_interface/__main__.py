@@ -5,7 +5,7 @@ A dummy dEAduction main window interface.
 from PySide2.QtWidgets import QApplication, QMainWindow, QPushButton, \
                                 QHBoxLayout, QVBoxLayout, QGridLayout, \
                                 QLineEdit, QListWidget, QWidget, QGroupBox, \
-                                QLabel, QDesktopWidget
+                                QLabel, QDesktopWidget, QListWidgetItem
 from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem, QTreeView                          
 from PySide2.QtCore import Qt
 from PySide2.QtGui import QFont, QColor, QBrush, QIcon
@@ -71,7 +71,7 @@ class PropobjList(QListWidget):
         self.setAlternatingRowColors(True)
 
 
-class ExerciseWindow(QMainWindow):
+class ExerciseWindow(QWidget):
 
     def __init__(self, tool_buttons):
         super().__init__()
@@ -123,7 +123,9 @@ class ExerciseWindow(QMainWindow):
         objects.addItem('f : X → Y')
         objects.addItem('x ∈ X')
         objects.addItem('A : partie de X')
-        objects.addItem('B : partie de X')
+        icon_item = QListWidgetItem('B partie de X')
+        icon_item.setIcon(QIcon('icon_blue.png'))
+        objects.addItem(icon_item)
 
         properties = PropobjList()
         properties.addItem('f est une fonction de remplissage')
@@ -176,7 +178,7 @@ class ExerciseWindow(QMainWindow):
         main_layout.addLayout(workspace_layout)
         self.setWindowTitle("L'union des images réciproque est l'image "\
                 "réciproque de l'union — d∃∀duction")
-        self.setCentralWidget(main_layout)
+        self.setLayout(main_layout)
         self.show()
 
 
