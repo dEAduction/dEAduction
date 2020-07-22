@@ -84,7 +84,8 @@ namespace pylib {
         'class ProofStatePO
 
         class Goal {
-            context: List[PropObj]
+            context_obj: List[PropObj]
+            context_prop: List[PropObj]
             target: PropObj
         }
 
