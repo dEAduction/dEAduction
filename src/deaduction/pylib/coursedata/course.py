@@ -146,7 +146,7 @@ class Course:
                                                  line_counter, outline,
                                                  statements)
         # Creating the course
-        return cls(outline, statements)
+        return cls(outline, statements, '')
 
 
 def data_parse(data, data_parsing, indent, line):
