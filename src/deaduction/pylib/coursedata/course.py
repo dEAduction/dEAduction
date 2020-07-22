@@ -48,6 +48,7 @@ class Course:
     # "Unions and intersections"
     statements: List[Statement]  # ORDERED list of all Statements,
     # including exercises
+    file_content: str
 
     def extract_exercise(self):
         """
