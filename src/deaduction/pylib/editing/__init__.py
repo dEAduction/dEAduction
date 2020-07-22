@@ -18,15 +18,21 @@ class HistoryEntry:
     misc_info:      Dict[str,any]
 
 class LeanFile:
-    def __init__( self, file_name="memory" ):
+    def __init__( self, file_name="memory", init_txt="" ):
 
         self.file_name    = file_name
-        self.history      = [] # List[HistoryEntry]
+        self.history      = [
+            HistoryEntry( label          = "init",
+                          patch_backward = None,
+                          patch_forward  = None,
+                          cursor_pos     = init_cursor_pos
+                          misc_info      = dict )
+        ] # List[HistoryEntry]
 
         self.idx          = 0  # Current position in history
         self.target_idx   = 0  # Targeted position in history
 
-        self.txt          = "" # Text at current position in history
+        self.txt          = init_txt # Text at current position in history
 
         # Virtual cursor managment
         # /!\ IMPORTANT NOTE /!\
@@ -37,7 +43,7 @@ class LeanFile:
         #     ...
         # in fact, retrieving current_pos calls a property function that
         # updates the cache state according to position in history.
-        self.current_pos  = 0
+        self.current_pos  = init_cursor_pos
 
     ################################
     # Apply history modifications
@@ -94,6 +100,22 @@ class LeanFile:
 
         self.current_pos = idx
 
+    def cursor_move_to(self, lineno):
+        txt = self.contents
+        pos = 0
+
+        for i in range(lineno-1):
+            pos_add = contents[pos:].find("\n")
+
+            if pos_add < 0: # No more newlines
+                pos = len(contents)-1
+                break
+            else:
+                pos += pos_add+1
+        self.current_pos = pos
+
+    def cursor_save(self): self.history[-1].cursor_pos = self.current_pos
+
     ################################
     # Actions
     ################################
@@ -126,15 +148,6 @@ class LeanFile:
         # Remove elements of history after index
         if self.target_idx < len(self.history):
             del self.history[self.target_idx+1:]
-
-        elif self.target_idx == len(self.history):
-            self.history.append(
-                HistoryEntry( label          = None,
-                              patch_backward = None,
-                              patch_forward  = None,
-                              cursor_pos     = 0,
-                              misc_info      = dict() )
-            )
 
         # Get current element of history and modify forward patch
         hist_entry = self.history[self.target_idx]
