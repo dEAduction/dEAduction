@@ -90,7 +90,7 @@ def configure( debug: bool = True ):
     force_color   = bool(os.getenv("DEADUCTION_USE_COLOR",False))
 
     # Creating basic handler and format
-    ft            = Color_Formatter('%(asctime)-15s %(levelname)-9s: %(message)s')
+    ft            = Color_Formatter('%(levelname)-9s %(name)-15s: %(message)s')
     ft._use_color = ft._use_color or force_color
 
     sh = logging.StreamHandler()
