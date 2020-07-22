@@ -2,13 +2,26 @@ from diff_match_patch import diff_match_patch
 dmp = diff_match_patch()
 import sys
 
+from dataclasses import dataclass
+
 from deaduction.pylib.utils import ansiterm as aterm
+
+from typing import Dict, List
+
+@dataclass
+class HistoryEntry:
+    label: str
+    patch_backward: List[str]
+    patch_forward:  List[str]
+    cursor_pos:     int
+
+    misc_info:      Dict[str,any]
 
 class LeanFile:
     def __init__( self, file_name="memory" ):
 
         self.file_name    = file_name
-        self.history      = []
+        self.history      = [] # List[HistoryEntry]
 
         self.idx          = 0  # Current position in history
         self.target_idx   = 0  # Targeted position in history
@@ -39,12 +52,12 @@ class LeanFile:
 
         # Update cursor position
         if self.target_idx != self.idx:
-            self.__current_pos = self.history[self.target_idx][3]
+            self.__current_pos = self.history[self.target_idx].cursor_pos
 
         # Apply patches to text
         while self.target_idx != self.idx:
-            lbl, patch_backward, patch_forward, cursor_pos, misc_info = self.history[self.idx]
-            patch = patch_backward if ddir < 0 else patch_forward
+            hist_entry = self.history[self.idx]
+            patch = hist_entry.patch_backward if ddir < 0 else hist_entry.patch_forward
 
             # Apply patch
             self.txt,_ = dmp.patch_apply(patch, self.txt)
@@ -84,7 +97,7 @@ class LeanFile:
     ################################
     # Actions
     ################################
-    def insert( self, lbl, add_txt, misc_info=dict(), move_cursor=True ):
+    def insert( self, lbl, add_txt, move_cursor=True ):
         """
         Inserts text at cursor position, and update cursor position.
 
@@ -100,9 +113,9 @@ class LeanFile:
 
         if move_cursor: current_pos += len(add_txt)
 
-        self.state_add(lbl, next_txt, current_pos, misc_info)
+        self.state_add(lbl, next_txt, current_pos)
 
-    def state_add(self, lbl, next_txt, current_pos=None, misc_info=dict()):
+    def state_add(self, lbl, next_txt, current_pos=None):
         # Compute forward diff
         forward_diff  = dmp.patch_make(self.txt, next_txt)
         backward_diff = dmp.patch_make(next_txt, self.txt)
@@ -115,17 +128,24 @@ class LeanFile:
             del self.history[self.target_idx+1:]
 
         elif self.target_idx == len(self.history):
-            self.history.append(("init",None,None,0,dict(),)) # Init element
+            self.history.append(
+                HistoryEntry( label          = None,
+                              patch_backward = None,
+                              patch_forward  = None,
+                              cursor_pos     = 0,
+                              misc_info      = dict() )
+            )
 
-        # Get current element of history
-        cur_lbl,cur_bdiff,cur_fwdiff,cur_pos,cur_misc = self.history[self.target_idx]
-
-        # Modify current element of history
-        self.history[self.target_idx] = (cur_lbl, cur_bdiff, forward_diff,
-                                         cur_pos,cur_misc)
+        # Get current element of history and modify forward patch
+        hist_entry = self.history[self.target_idx]
+        hist_entry.patch_forward = forward_diff
 
         # Add new state element in history
-        self.history.append( (lbl, backward_diff, None, current_pos, misc_info) )
+        self.history.append( HistoryEntry( label          = lbl,
+                                           patch_backward = backward_diff,
+                                           patch_forward  = None,
+                                           cursor_pos     = current_pos,
+                                           misc_info      = dict() ))
 
         # Modify history indexes, text buffer, and cursor position
         self.target_idx  = len(self.history)-1
@@ -133,6 +153,11 @@ class LeanFile:
         self.txt         = next_txt
 
         self.current_pos = current_pos
+
+    def state_info_attach(self, **kwargs):
+        self.__update()
+        entry = self.history[self.idx]
+        entry.misc_info.update(kwargs)
 
     ################################
     # History control
@@ -148,7 +173,7 @@ class LeanFile:
             self.target_idx = len(self.history)-1
 
     def history_lbl(self):
-        return map(lambda x:x[0], self.history)
+        return map(lambda x:x.label, self.history)
 
     ################################
     # Get file contents
