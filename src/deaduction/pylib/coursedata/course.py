@@ -29,17 +29,15 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from dataclasses import dataclass
-from pathlib import Path
 from collections import OrderedDict
+from dataclasses import dataclass
+import logging
+from pathlib import Path
 from typing import List
 import deaduction.pylib.logger as logger
-import logging
-
-from exercise import Exercise, Definition, Theorem, Statement
-
-
 from deaduction.pylib.actions.actiondef import Action
+from deaduction.pylib.coursedata.exercise import (Exercise, Definition,
+                                                  Theorem, Statement)
 
 @dataclass
 class Course:
