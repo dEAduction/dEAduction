@@ -14,36 +14,10 @@ import gettext
 
 _ = gettext.gettext
 
+# the following is useful for the function needs_paren
 nature_leaves_list = ["PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                       "FUNCTION", "SEQUENCE", "SET_FAMILY",
                       "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY"]
-
-
-# dict format name -> format scheme
-
-# latex_formats = {"const": "[latex_symb]",
-#                  "arg0": "[a[0]]",
-#                  "n0": "[latex_symb, a[0]]",
-#                  "0n1": "[a[0], latex_symb, a[1]]",
-#                  "name": "[PO.lean_name]",
-#                  "app_function": "[a[0],  '(', a[1], ')']",
-#                  "app_inverse": "[a[0],  '^{-1}(', a[1],  ')']",
-#                  "quantifiers": "[latex_symb + ' ' + a[0] "
-#                                 "+ ' \in ', a[1], ', ', a[2]]",
-#                  "var": "[PO.nature_compl]",  # OUT OF DATE
-#                  "complement": "[a[0], '^c']"}
-#
-# utf8_formats = {"const": "[latex_symb]",
-#                  "arg0": "[a[0]]",
-#                  "n0": "[latex_symb, a[0]]",
-#                  "0n1": "[a[0], latex_symb, a[1]]",
-#                  "name": "[PO.lean_name]",
-#                  "app_function": "[a[0],  '(', a[1], ')']",
-#                  "app_inverse": "[a[0],  '⁻¹(', a[1],  ')']",
-#                  "quantifiers": "[latex_symb + ' ' + a[0] "
-#                                 "+ ' ∈ ', a[1], ', ', a[2]]",
-#                  "var": "[PO.nature_compl]",  # OUT OF DATE
-#                  "complement": "[a[0], 'ᶜ']"}
 
 
 def format_constant(latex_symb, a, PO, format="latex"):
@@ -95,9 +69,9 @@ def format_complement(latex_symb, a, PO, format="latex"):
 # dict nature -> (latex symbol, format name)
 latex_structures = {"PROP_AND": (r" \text{{ " + _("AND") + " }} ",  # logics
                                  format_0n1),
-                    "PROP_OR": (r" \text{{ OU }} ", format_0n1),
+                    "PROP_OR": (r" \text{{ " + _("OR") + " }} ", format_0n1),
                     "PROP_IFF": (r" \Leftrightarrow ", format_0n1),
-                    "PROP_NOT": (r" \text{{NON }} ", format_n0),
+                    "PROP_NOT": (r" \text{{" + _("NOT") + " }} ", format_n0),
                     "PROP_IMPLIES": (r" \Rightarrow ", format_0n1),
                     "QUANT_∀": (r"\forall ", format_quantifiers),
                     "QUANT_∃": (r"\exists ", format_quantifiers),
@@ -124,10 +98,14 @@ latex_structures = {"PROP_AND": (r" \text{{ " + _("AND") + " }} ",  # logics
                     "+": ("+", format_0n1),
                     "APPLICATION_FUNCTION": ("", format_app_function),
                     "VAR": ("", "var"),
-                    "PROP": (r"\text{{ une proposition}", format_constant),
-                    "TYPE": (r" \text{ un ensemble} ", format_constant),
-                    "SET": (r" \text{ un sous-ensemble de } ", format_n0),
-                    "ELEMENT": (r" \{{ un élément de }} ", format_n0),
+                    "PROP": (r"\text{{ " + _("a proposition") + "}",
+                            format_constant),
+                    "TYPE": (r" \text{ " + _("a set") + "} ",
+                            format_constant),
+                    "SET": (r" \text{ " + _("a subset of") + " } ",
+                            format_n0),
+                    "ELEMENT": (r" \{{ " + _("an element of") + " }} ",
+                                format_n0),
                     "FUNCTION": (r" \to ", format_0n1),
                     "SEQUENCE": ("", ""),
                     "SET_FAMILY": ("", ""),
@@ -166,10 +144,10 @@ utf8_structures = {"PROP_AND": (" " + _("AND") + " ", format_0n1),  # logic
                    "+": ("+", format_0n1),
                    "APPLICATION_FUNCTION": ("", format_app_function),
                    "VAR": ("", "var"),
-                   "PROP": (" une proposition", format_constant),
-                   "TYPE": ("  un ensemble", format_constant),
-                   "SET": (" un sous-ensemble de ", format_n0),
-                   "ELEMENT": (" un élément de ", format_n0),
+                   "PROP": (_(" a proposition"), format_constant),
+                   "TYPE": (_(" a set"), format_constant),
+                   "SET": (_(" a subset of "), format_n0),
+                   "ELEMENT": (_(" an element of "), format_n0),
                    "FUNCTION": (" → ", format_0n1),
                    "SEQUENCE": ("", ""),
                    "SET_FAMILY": ("", ""),
@@ -185,30 +163,3 @@ utf8_structures = {"PROP_AND": (" " + _("AND") + " ", format_0n1),  # logic
 # A^c (lean) -> A^c
 # set.univ \ A (lean) -> X \ A
 # avoid notation - A
-
-
-# # TODO : tenir compte de la profondeur des parenthèses,
-# # et utiliser \Biggl(\biggl(\Bigl(\bigl((x)\bigr)\Bigr)\biggr)\Biggr)
-# ############# AFER
-# def needs_paren(parent: PropObj, child_number: int):
-#     """
-#     Decides if parentheses are needed around the child
-#     """
-#     b = True
-#     child_prop_obj = parent.children[child_number]
-#     p_node = parent.node
-#     if isinstance(child_prop_obj, ProofStatePO):
-#         return False
-#     if not child_prop_obj.children:
-#         return False
-#     c_node = child_prop_obj.node
-#     if c_node in nature_leaves_list + \
-#             ["SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
-#              "PROP_INCLUDED"]:
-#         b = False
-#     elif p_node in ["SET_IMAGE", "SET_INVERSE", "APPLICATION_FUNCTION",
-#                     "PROP_EQUAL", "PROP_INCLUDED", "PROP_BELONGS"]:
-#         b = False
-#     elif c_node == "SET_COMPLEMENT" and p_node != "SET_COMPLEMENT":
-#         b = False
-#     return b
