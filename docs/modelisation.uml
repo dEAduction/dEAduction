@@ -69,8 +69,47 @@ namespace pylib {
     }
 
     namespace editing {
-        class VirtualFile {
+        class HistoryEntry <<dataclass>> {
+            +label: str
+            +patch_forward: any
+            +patch_backward: any
+            +cursor_pos: int
+            +misc_info: Dict[str,any]
         }
+
+        class LeanFile {
+            +file_name: str
+            -history: List[HistoryEntry]
+
+            -idx: int
+            -target_idx: int
+
+            -txt: str
+
+            == Cache update ==
+            -update()
+
+            == Virtual cursor ==
+            +current_pos():int <<property>>
+            +current_pos.setter(pos:int) <<property>>
+
+            +cursor_move_up(nlines:int)
+            +cursor_move_down(nlines:int)
+
+            == Actions ==
+            +state_add(lbl: str, next_txt: str, cursor_pos: Optional[int] )
+            +state_info_attach(**kwargs)
+
+            == History navigation ==
+            +undo()
+            +redo()
+
+            == Various properties ==
+            +contents(): str <<property>>
+            +linecol(): Tuple[int,int] <<property>>
+        }
+
+        HistoryEntry --* LeanFile
     }
 
     namespace mathobj {
@@ -191,10 +230,10 @@ namespace pylib {
         }
     }
 
-    pylib.mathinfo.Course      --o pylib.server.ServerInterface
+    pylib.coursedata.Course   --o pylib.server.ServerInterface
 
-    pylib.editing.VirtualFile  --> pylib.server.ServerInterface
-    pylib.lean.LeanServer      --* pylib.server.ServerInterface
+    pylib.editing.LeanFile  --> pylib.server.ServerInterface
+    pylib.lean.LeanServer   --* pylib.server.ServerInterface
 }
 
 namespace dui {
