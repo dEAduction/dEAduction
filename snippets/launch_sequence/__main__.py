@@ -1,58 +1,61 @@
+from gettext import gettext as _
 import logging
 from pathlib import Path
 import sys
 
-from PySide2.QtWidgets import QApplication, QFileDialog, QLabel
-from PySide2.QtWidgets import QListWidget, QListWidgetItem, QWidget
+from PySide2.QtWidgets import QApplication, QFileDialog, QInputDialog
 
 import deaduction.pylib.logger as logger
 from deaduction.pylib.coursedata.course import Course
 
-
 log = logging.getLogger(__name__)
 
-class SelectExercise(QWidget):
 
-    def _init_list(self, exercises_list):
-        self.exercises_list_widget = QListWidget
-        for exercise in exercises_list:
-            self.exercises_list_widget.addItem([exercise.pretty_name])
+def select_course():
+    """
+    Open a file dialog to choose a course lean file.
 
-    def _init_caption(self):
-        self.caption = QLabel(_('Please select an exercise.'))
+    :return: An instance of the Course class corresponding to the 
+        user-selected course.
+    """
 
-    def __init__(self, exercises_list):
-        super().__init__()
-        self._init_list(exercises_list)
-        self._init_caption()
-        lyt = QVBoxLayout
-        lyt.addWidget(self.caption)
-        lyt.addWidget(self.exercises_list_widget)
-        self.setLayout(lyt)
+    course_path = Path(QFileDialog.getOpenFileName()[0])
+    log.info(f'Selected course (from dialog): {str(course_path.resolve())}')
+    course = Course.from_file(course_path)
+
+    return course
 
 
-def select_course_dir() -> Path:
-    course_file = Path(QFileDialog.getOpenFileName()[0])
-    log.info(f'Selected course (from dialog): {str(course_file.resolve())}')
+def select_exercise(course: Course):
+    """
+    Open a combo box to choose an exercise and launch the exercise 
+    window.
 
-    return course_file
+    :param course: An instance of the Course class, user-selected in
+        select_course.
+    :return: An instance of the Exercise class corresponding to the
+        user-selected exercise from course.
+    """
 
+    exercises_list = course.exercises_list()
+    exercise_from_id = {ex.pretty_name: ex for ex in exercises_list}
 
-def launch_dEAduction():
-    course_dir_path = select_course_dir()
-    course = Course.from_directory(course_dir_path)
-    exercises_list = course.extract_exercise()
-    select_exercise = SelectExercise(exercises_list)
-    select_exercise.show()
+    # See the example in the link below for the syntax:
+    # https://doc.qt.io/qtforpython/PySide2/QtWidgets/QInputDialog.html#
+    # PySide2.QtWidgets.PySide2.QtWidgets.QInputDialog.getItem
+    ex_name, ok = QInputDialog().getItem(None, 'Please select an exercise',
+            'Selected exercise:', list(exercise_from_id.keys()), 0, False)
+
+    if ok:
+        # TODO: launch exercise
+        pass
 
 
 if __name__ == '__main__':
     logger.configure()
-
     app = QApplication([])
-    course_dir_path = Path('../../tests/lean_files/short_course/')
-    course = Course.from_directory(course_dir_path)
-    # select_exercise = SelectExercise(course.extract_exercise())
-    # select_exercise.show()
+
+    course = select_course()
+    select_exercise(course)
 
     sys.exit(app.exec_())
