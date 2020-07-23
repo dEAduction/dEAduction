@@ -154,7 +154,9 @@ class Exercise(Theorem):
         ###########################
         annotated_statements = [(item, False) for item in statements]
         # annotated_statements and statements must always have the same length
-        prefixe = {"Tools->Definitions": "definition", "Tools->Theorems":
+        # the list of available statements will be those item for which
+        # (item, True) is in annotated_statements
+        prefix = {"Tools->Definitions": "definition", "Tools->Theorems":
             "theorem", "Tools->Exercises": "exercise",
                    'Tools->Statements': ""}
         class_dict = {"Tools->Definitions": Definition, "Tools->Theorems":
@@ -201,7 +203,7 @@ class Exercise(Theorem):
                             annotated_statements[i] = new_item
                 elif item.startswith("-"):
                     # find item in statements and change annotation to False
-                    item = prefixe[field] + "." + item[1:]
+                    item = prefix[field] + "." + item[1:]
                     index, nb = findsuffix(item,
                                            [item.lean_name for item in
                                             statements])
@@ -213,12 +215,14 @@ class Exercise(Theorem):
                             f"Cannot remove item {item} from statements")
                 else:
                     # find item in statement and change annotation to True
-                    item = prefixe[field] + "." + item
+                    item = prefix[field] + "." + item
                     index, nb = findsuffix(item, [item.lean_name for item in
                                                   statements])
                     if nb > 0:
                         new_item = (statements[index], True)
                         annotated_statements[index] = new_item
+                        if nb > 1:
+                            log.warning(f"Found >1 item {item} in statements")
                     else:
                         log.warning(f"Cannot find item {item} in statements")
         # last step, extract the good list

@@ -3,7 +3,7 @@
     
     Provide the class Course,
     and an instantiation method for Course object
-    by getting informations from a lean file
+    by parsing a lean file
 
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -50,17 +50,17 @@ class Course:
     # including exercises
     file_content: str
 
-    def extract_exercise(self):
+    def extract_exercises(self):
         """
         extract all the exercises from the statements list
         """
         statements = self.statements
-        exercises_list = [item for item in statements if isinstance(item,
-                                                                    Exercise)]
-        return exercises_list
+        exercises = [item for item in statements
+                     if isinstance(item, Exercise)]
+        return exercises
 
     @classmethod
-    def from_directory(cls, course_dir_path: Path):
+    def from_file(cls, course_dir_file: Path):
         """
         instantiate a Course object by parsing every lean files
         in course_dir_path
@@ -69,25 +69,11 @@ class Course:
 
         :param course_dir_path: name of directory
         """
-        # TODO: enable multiple exercises files ?
         log = logging.getLogger("Course initialisation")
         statements = []
-        #        definitions = []
-        #        theorems = []
         outline = {}
-        # parse first exercise file in directory
-        files = [file for file in course_dir_path.iterdir()]
-        exo_files = [file for file in course_dir_path.iterdir() if \
-                     str(file.name).startswith("exercise")]
-        if len(exo_files) >= 1:
-            file = exo_files[0]
-            if len(exo_files) > 1:
-                log.warning("Found more than one exercises files, parse one")
-        else:
-            file = files[0]
-            if len(files) > 1:
-                log.warning("Found more than one files, parse only one")
 
+        file = course_dir_file
         log.info(f"Parsing file {file}")
         file_content = file.read_text()
         lines = file_content.splitlines()
@@ -108,8 +94,10 @@ class Course:
             log.debug(f"Parsing line {line_counter}")
             log.debug(f"global_parsing: {global_parsing}, data_parsing: "
                       f"{data_parsing}")
-            # data_parsing starts after a field_name_parsing
-            # and goes on till the indentation stops
+            #################################################
+            # data_parsing starts after a field_name_parsing#
+            # and goes on till the indentation stops        #
+            #################################################
             if line.startswith("/- dEAduction"):
                 data_parsing = "field name"
                 # next line will be a field name
@@ -131,26 +119,36 @@ class Course:
                 log.info(f"Field content: {data[data_parsing]}")
                 data_parsing = ""
                 if global_parsing != "":
-                    end_global_parsing(data,
-                                       global_parsing, line_counter,
+                    end_global_parsing(data, global_parsing, line_counter,
                                        outline, statements)
                     global_parsing = ""
                 continue
             else:
-                # treatment of namespaces
+                ##########################
+                # treatment of namespaces#
+                ##########################
                 global_parsing = namespace_parse(data, global_parsing, line,
                                                  line_counter, outline,
                                                  statements)
-                # treatment of exercises
+                #########################
+                # treatment of statements#
+                #########################
                 global_parsing = statement_parse(data, global_parsing, line,
                                                  line_counter, outline,
                                                  statements)
         # Creating the course
-        return cls(outline, statements, '')
+        return cls(outline, statements, file_content)
 
 
-def data_parse(data, data_parsing, indent, line):
+def data_parse(data: dict, data_parsing: str, indent: int, line: str):
     """
+    search for data in line according to data_parsing
+    :param data: dict where the data will be stored
+    :param data_parsing: type of data being parse
+    (will serve as key for the data dict)
+    :param indent: indentation value for the previous line
+    :param line: content of the current line, to be parsed
+    :return: new data_parsing and new_indent
     """
     log = logging.getLogger("Course initialisation")
     new_indent = indentation(line)
@@ -175,15 +173,8 @@ def end_global_parsing(data, global_parsing,
     """
     This function is called whenever global_parsing is muted from something
     to nothing or something else. This is where statements are created,
-    and added to the statements list,
-    and namespaces are added to the outline of the course
-
-    :param data:
-    :param global_parsing:
-    :param line_counter:
-    :param outline:
-    :param statements:
-    :return:
+    and added to the statements list, and namespaces are added to the
+    outline of the course
     """
     log = logging.getLogger("Course initialisation")
     if global_parsing == "namespace":
@@ -260,14 +251,14 @@ def statement_parse(data, global_parsing, line,
         data["lean_statement"] = ""
         data["PrettyName"] = None
         data["Description"] = None
-        data["Tools->Logic"] =  None
-        data["Tools->Magic"] =  None
+        data["Tools->Logic"] = None
+        data["Tools->Magic"] = None
         data["Tools->ProofTechniques"] = None
-        data["Tools->Definitions"] =  None
-        data["Tools->Theorems"] =  None
-        data["Tools->Exercises"] =  None
+        data["Tools->Definitions"] = None
+        data["Tools->Theorems"] = None
+        data["Tools->Exercises"] = None
         data["Tools->Statements"] = None
-        # By default the other fields are as for the previous exercise
+        # (By default the other fields are as for the previous exercise)
     if global_parsing == "statement":
         data["lean_statement"] += line.strip()
         if line.strip().endswith(":="):
@@ -289,12 +280,9 @@ def indentation(line: str) -> int:
 
 if __name__ == "__main__":
     logger.configure()
+    course_file_path = Path('../../../../tests/lean_files/short_course/exercises.lean')
 
-    course_dir_path = Path(
-        '/Users/leroux/Documents/PROGRAMMATION/LEAN/LEAN_TRAVAIL/dEAduction'
-        '-lean/src/snippets/test')
-    #    ex_file = 'exercises_test.lean'
-    my_course = Course.from_directory(course_dir_path)
+    my_course = Course.from_file(course_file_path)
     print("My course:")
     print("List of statements:")
     count_ex= 0
