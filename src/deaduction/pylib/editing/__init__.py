@@ -25,7 +25,7 @@ class LeanFile:
             HistoryEntry( label          = "init",
                           patch_backward = None,
                           patch_forward  = None,
-                          cursor_pos     = init_cursor_pos
+                          cursor_pos     = 0,
                           misc_info      = dict )
         ] # List[HistoryEntry]
 
@@ -43,7 +43,7 @@ class LeanFile:
         #     ...
         # in fact, retrieving current_pos calls a property function that
         # updates the cache state according to position in history.
-        self.current_pos  = init_cursor_pos
+        self.current_pos  = 0
 
     ################################
     # Apply history modifications
