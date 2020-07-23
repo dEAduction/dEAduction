@@ -73,7 +73,7 @@ class Course:
         statements = []
         outline = {}
 
-        log.info(f"Parsing file {file}")
+        log.info(f"Parsing file {str(course_path.resolve())}")
         file_content = course_path.read_text()
         lines = file_content.splitlines()
         global_parsing = ""
