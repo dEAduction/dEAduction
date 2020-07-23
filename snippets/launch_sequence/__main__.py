@@ -46,16 +46,26 @@ def select_exercise(course: Course):
     ex_name, ok = QInputDialog().getItem(None, 'Please select an exercise',
             'Selected exercise:', list(exercise_from_id.keys()), 0, False)
 
-    if ok:
+    if ok:  # Ok is pressed
         # TODO: launch exercise
         pass
+    else:   # Cancel is pressed, chose another course
+        select_course()
+
+def select_course_and_exercise():
+    """
+    Open a file dialog to chose a course, then a dialog to chose an 
+    exercise from this course and launch it.
+    """
+
+    course = select_course()
+    select_exercise(course)
 
 
 if __name__ == '__main__':
     logger.configure()
     app = QApplication([])
 
-    course = select_course()
-    select_exercise(course)
+    select_course_and_exercise()
 
     sys.exit(app.exec_())
