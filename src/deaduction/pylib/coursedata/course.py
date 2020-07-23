@@ -36,7 +36,7 @@ from pathlib import Path
 from typing import List
 import deaduction.pylib.logger as logger
 from deaduction.pylib.actions.actiondef import Action
-from deaduction.pylib.coursedata.exercise import (Exercise, Definition,
+from deaduction.pylib.coursedata.exercise_classes import (Exercise, Definition,
                                                   Theorem, Statement)
 
 @dataclass
