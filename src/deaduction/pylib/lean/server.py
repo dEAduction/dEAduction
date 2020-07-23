@@ -151,6 +151,8 @@ class LeanServer:
 
         self.on_message_callback       = lambda x: None
 
+        self.exited                    = trio.Event()
+
         self.tasks:List[response.Task] = []
 
     ############################################
@@ -182,7 +184,8 @@ class LeanServer:
 
         elif isinstance(parsed_msg, response.AllMessagesResponse):
             for msg in parsed_msg.msgs:
-                self.log.info(f"{msg.severity} at {msg.file_name}:{msg.pos_line}:{msg.pos_col} : {msg.text}")
+                #self.log.info(f"{msg.severity} at {msg.file_name}
+                # :{msg.pos_line}:{msg.pos_col} : {msg.text}")
                 self.on_message_callback(msg)
         else:
             self.log.warning(f"Ignored message : {msg}")
@@ -223,6 +226,7 @@ class LeanServer:
                     self.log.error(traceback.format_exc())
 
                 idx = self.buffer.find("\n")
+        self.exited.set()
 
     ############################################
     # Send utilities
