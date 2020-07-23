@@ -60,7 +60,7 @@ class Course:
         return exercises
 
     @classmethod
-    def from_file(cls, course_dir_file: Path):
+    def from_file(cls, course_path: Path):
         """
         instantiate a Course object by parsing every lean files
         in course_dir_path
@@ -73,9 +73,8 @@ class Course:
         statements = []
         outline = {}
 
-        file = course_dir_file
         log.info(f"Parsing file {file}")
-        file_content = file.read_text()
+        file_content = course_path.read_text()
         lines = file_content.splitlines()
         global_parsing = ""
         # possible values = "namespace", "statement", "exercise"
