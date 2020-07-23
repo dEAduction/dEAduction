@@ -50,7 +50,7 @@ class Course:
     # including exercises
     file_content: str
 
-    def extract_exercises(self):
+    def exercises_list(self):
         """
         extract all the exercises from the statements list
         """
