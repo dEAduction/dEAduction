@@ -25,6 +25,7 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from pathlib import Path
 from PySide2.QtGui import QBrush, QColor, QIcon
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem
@@ -81,7 +82,8 @@ class StatementsTreeWidgetNode(QTreeWidgetItem):
 
     def _initUI(self):
         self.setExpanded(True)
-        icon = QIcon('icon.png')
+        icon_path = Path('../graphical_resources/')
+        icon = QIcon(str(icon_path.resolve()))
         self.setIcon(0, icon)
 
     def setUnselectable(self):
@@ -128,7 +130,7 @@ class StatementsTreeWidget(QTreeWidget):
 
         :param extg_tree: A dictionnary that looks like this:
                 {'Groups': (StatementsTreeWidgetNode('Groups'),
-                    {'Finite groups': (StatementsTreeWidgetNode(None, 
+                    {'Finite groups': (StatementsTreeWidgetNode(None,
                                                           'Finite groups'),
                         {statement.text(0): (statement, dict()
                         )}
@@ -137,7 +139,7 @@ class StatementsTreeWidget(QTreeWidget):
         :param statement: An instance of StatementsTreeWidgetItem.
         :param branch: A branch (new or already existing) as a list of str,
                 e.g.  ['Chapter', 'Section', 'Sub-section'].
-        :param parent: A StatementsTreeWidgetNode or extg_tree itself (at 
+        :param parent: A StatementsTreeWidgetNode or extg_tree itself (at
                 the first call of the function). Either branch or statement
                 is added as a child of parent.
         """
@@ -163,14 +165,14 @@ class StatementsTreeWidget(QTreeWidget):
 
     def init_tree(self, statements, outline):
         """
-        Initiate the tree of StatementsTreeWidget (derives from QTreeWidget) given an
-        ordered list of instances of Statement. The branch where a statement
-        must be put is already encoded in its lean_name attribute, e.g.
-        'chapter.section.sub_section.statement'. But we do not want to print
-        ugly lean_names for sections (e.g. 'rings_and_ideals'), what we want is
-        instead pretty names (e.g. 'Rings and ideals'). Therefore we have
-        outline, a dictionnary which to any level of hierarchy (e.g. chapter)
-        associates its pretty name.
+        Initiate the tree of StatementsTreeWidget (derives from
+        QTreeWidget)given an ordered list of instances of Statement. The branch
+        where a statement must be put is already encoded in its lean_name
+        attribute, e.g.  'chapter.section.sub_section.statement'. But we do not
+        want to print ugly lean_names for sections (e.g. 'rings_and_ideals'),
+        what we want is instead pretty names (e.g. 'Rings and ideals').
+        Therefore we have outline, a dictionnary which to any level of
+        hierarchy (e.g. chapter) associates its pretty name.
 
         :param statements: An ordered list of instances of the Statement class.
         :param outline: A dictionnary in which keys are hierarchy levels (e.g.
@@ -196,10 +198,10 @@ class TargetWidget(QPushButton):
         """
         Set cosmetics.
         """
-    
+
         self.resize_width()
         self.setFlat(True)
-        self.setStyleSheet('font-size: 24px;')        
+        self.setStyleSheet('font-size: 24px;')
 
         # Resize the button to be about the size of the displayed text.
         text_width = self.fontMetrics().boundingRect(self.text()).width()
@@ -210,9 +212,9 @@ class TargetWidget(QPushButton):
         super().__init__()
         self.target = target
 
-        # Display 
+        # Display
         #   ∀ x ∈ X, ∃ ε, …
-        # and not 
+        # and not
         #   H : ∀ x ∈ X, ∃ ε, …
         # where H might be the lean name of the target. That's what
         # the .math_type is for.
