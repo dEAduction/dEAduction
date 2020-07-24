@@ -27,7 +27,20 @@ This file is part of d∃∀duction.
 
 from PySide2.QtGui import QBrush, QColor, QIcon
 from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem
+from PySide2.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem
+
+
+######################
+# ActionButton class #
+######################
+
+
+class ActionButton(QPushButton):
+
+    def __init__(self, action: Action):
+        super().__init__()
+        self.setText(action.caption)
+        self.action = action
 
     
 ##############################
@@ -37,12 +50,14 @@ from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem
 
 class StatementsTreeWidgetItem(QTreeWidgetItem):
 
-    def __init__(self, titles):
+    def __init__(self, statement: Statement):
         """
 
-        :parem titles: A list of column titles. It must not be a str.
+        :parem statement: An instance of the Statement class.
         """
 
+        self.statement = statement
+        titles = [statement.pretty_name, statement.identifier]
         super().__init__(None, titles)
         self._initUI()
 
@@ -50,18 +65,6 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         self.setExpanded(True)
         # Print second col. in gray
         self.setForeground(1, QBrush(QColor('gray')))
-
-    @classmethod
-    def from_Statement(cls, statement):
-        """
-
-        :param statement: An instance of the Statement class.
-        """
-
-        titles = [statement.pretty_name, statement.identifier]
-        instance = cls(titles)
-
-        return instance
 
 
 class StatementsTreeWidgetNode(QTreeWidgetItem):
