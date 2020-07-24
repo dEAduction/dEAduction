@@ -29,9 +29,10 @@ This file is part of dEAduction.
 from dataclasses import dataclass
 import deaduction.pylib.logger as logger
 import logging
-from typing import List, Dict
-from PropObj import ProofStatePO, create_pspo, extract_identifier1
+from typing import List
+from deaduction.pylib.mathobj.PropObj import ProofStatePO, extract_identifier1
 
+log = logging.getLogger(__name__)
 
 @dataclass
 class Goal:
@@ -39,40 +40,114 @@ class Goal:
     target: ProofStatePO
     variables_names: List[str]
 
-    def update(self, updated_hypo_analysis):
-        """
-        search for the new identifiers in updated_old_hypo_analysis,
-        and substitute them in the ProofStatePO's of the context
-        :param updated_old_hypo_analysis: string from the lean tactic
-        hypo_analysis corresponding to the previous step)
-        """
-        log = logging.getLogger("proof_state")
-        log.info("updating old context with new identifiers")
-        identifiers = []
-        context = self.context
-        counter = 0
-        for line in updated_hypo_analysis.splitlines():
-            ident = extract_identifier1(line)
-            pfpo = context[counter]
-            pfpo.lean_data["id"] = ident
-            counter += 1
+    # def update(self, updated_hypo_analysis):
+    #     """
+    #     UNUSED
+    #     search for the new identifiers in updated_old_hypo_analysis,
+    #     and substitute them in the ProofStatePO's of the context
+    #     :param updated_old_hypo_analysis: string from the lean tactic
+    #     hypo_analysis corresponding to the previous step)
+    #     """
+    #     log = logging.getLogger("proof_state")
+    #     log.info("updating old context with new identifiers")
+    #     identifiers = []
+    #     context = self.context
+    #     counter = 0
+    #     for line in updated_hypo_analysis.splitlines():
+    #         ident = extract_identifier1(line)
+    #         pfpo = context[counter]
+    #         pfpo.lean_data["id"] = ident
+    #         counter += 1
 
-    def compare(new_goal, old_goal):
+    def compare(new_goal, old_goal, goal_is_new):
         """
         Compare the new goal to the old one, and tag the target and the element
         of both new and old context accordingly. tag is one of the following:
         "+" (in new tag) means present in the new goal, absent in the old goal
-        "-" (in old tag) means absent in the new goal, present in the old goal
+        "+" (in old tag) means absent in the new goal, present in the old goal
         "=" (in both) means present in both and identical
         "≠" (in both) means present in both and different
 
+        In the tests, two pfPO's are equal if they have the same name and
+        the same math_type, and they are modified versions of each other if
+        they have the same name and different math_types.
+        If goal_is_new == True then all objects will be tagged as new.
+
         :param new_goal: new goal
         :param old_goal: old goal
+        :param goal_is_new: True if previous goal has been solved
         :return:
             - two lists old_goal_diff, new_goal_diff of tags
             - two more tags old_goal_diff, new_goal_diff
         """
-        pass
+        log.info("comparing and tagging old goal and new goal")
+        new_context = new_goal.context.copy()
+        old_context = old_goal.context.copy()
+        if goal_is_new:
+            tags_new_context = ["+" for PO in new_context]
+            tags_old_context = ["+" for PO in old_context]
+            tag_new_target = "+"
+            tag_old_target = "+"
+        else:
+            ##################################
+            # tag objects in the new context #
+            ##################################
+            tags_new_context = [""] * len(new_context)
+            tags_old_context = [""] * len(old_context)
+            new_index = -1
+            old_names = [pfPO_old.lean_data["name"] for pfPO_old in
+                         old_context]
+            for pfPO in new_context:
+                name = pfPO.lean_data["name"]
+                try:
+                    old_index = old_names.index(name)
+                except ValueError:
+                    tag = "+"
+                else:
+                    if old_context[old_index].math_type == pfPO.math_type:
+                        tag = "="
+                    else:
+                        tag = "≠"
+                tags_new_context[new_index] = tag
+                tags_old_context[old_index] = tag
+                new_context[new_index] = None  # will not be considered anymore
+                old_context[old_index] = None  # will not be considered anymore
+                new_index += 1
+            ############################################
+            # tag the remaining objects in old context #
+            ############################################
+            new_names = [pfPO_new.lean_data["name"] for pfPO_new in
+                         new_context if pfPO_new is not None]
+            for pfPO in old_context:
+                if pfPO is None:
+                    continue
+                name = pfPO.lean_data["name"]
+                try:
+                    new_index = new_names.index(name)
+                except ValueError:
+                    tag = "+"
+                else:
+                    if new_context[new_index].math_type == pfPO.math_type:
+                        tag = "="
+                    else:
+                        tag = "≠"
+                tags_new_context[new_index] = tag
+                tags_old_context[old_index] = tag
+                new_context[new_index] = ""  # will not be considered anymore
+                old_index += 1
+            ###################
+            # tag the targets #
+            ###################
+            # if goal is not new then the target is either modified ("≠")
+            # or unchanged ("=")
+            new_target = new_goal.target.math_type
+            old_target = old_goal.target.math_type
+            if new_target == old_target:
+                tag_new_target, tag_old_target = "=", "="
+            else:
+                tag_new_target, tag_old_target = "≠", "≠"
+        new_goal.future_tags = (tags_new_context, tag_new_target)
+        old_goal.past_tags_old_context = (tags_old_context, tag_old_target)
 
     def extract_var_names(self) -> List[str]:
         """
@@ -81,18 +156,18 @@ class Goal:
         ProofStatePO's instances
         :return: list of strings (variables names)
         """
+        log.info("extracting the list of variables's names")
         context = self.context
-        goal = self.target
+        target = self.target
         names = []
         for pfpo in context:
             name = pfpo.lean_data["name"]
             if name != '':
                 names.append(name)
             names.extend(pfpo.bound_vars)
-        names.extend(goal.bound_vars)
+        names.extend(target.bound_vars)
         self.variables_names = names
         return names
-
 
     @classmethod
     def from_lean_data(cls, hypo_analysis: str, goal_analysis: str):
@@ -102,31 +177,57 @@ class Goal:
         (only one target)
         :return: a Goal
         """
+        log.info("creating new Goal from lean strings")
         list_ = hypo_analysis.splitlines()
-        #    is_goal = None
         context = []
+        # clearing ProofStatePO.math_types and instances
+        ProofStatePO.math_types = []
+        ProofStatePO.math_types_instances = []
+        # computing new pfPO's
         for prop_obj_string in list_:
-            prop_obj = create_pspo(prop_obj_string)
-            #           PO.is_goal = is_goal
+            prop_obj = ProofStatePO.from_string(prop_obj_string)
             context.append(prop_obj)
-        target = create_pspo(goal_analysis)
+        target = ProofStatePO.from_string(goal_analysis)
         variables_names = []  # todo
         return cls(context, target, variables_names)
 
-    def context_obj(self):
+    def tag_and_split_propositions_objects(self):
         """
-        provide the sublist of self.context containing all the math objects
-        (as opposed to propositions)
+        :return:
+        - a list of tuples (po, tag), where po is an object in the context
+        and tag is the tag of po
+        - a list of tuples (po, tag), where po is a proposition in the context
+        and tag is the tag of po
         """
-        return [o for o in self.context if not o.math_type.is_prop()]
+        log.info("split objects and propositions of the context")
+        context = self.context
+        tags = self.future_tags[0]  # tags of the context
+        objects = []
+        propositions = []
+        for (po, tag) in zip(context, tags):
+            if po.is_prop():
+                propositions.append((po,tag))
+            else:
+                objects.append((po,tag))
+        return objects, propositions
 
-    def context_prop(self):
-        """
-        provide the sublist of self.context containing all the math
-        propositions
-        (as opposed to objects)
-        """
-        return [o for o in self.context if o.math_type.is_prop()]
+    # def context_obj(self):
+    #     """
+    #     UNUSED
+    #     provide the sublist of self.context containing all the math objects
+    #     (as opposed to propositions)
+    #     """
+    #
+    #     return [o for o in self.context if not o.math_type.is_prop()]
+    #
+    # def context_prop(self):
+    #     """
+    #     UNUSED
+    #     provide the sublist of self.context containing all the math
+    #     propositions
+    #     (as opposed to objects)
+    #     """
+    #     return [o for o in self.context if o.math_type.is_prop()]
 
 
 @dataclass
@@ -141,6 +242,7 @@ class ProofState:
         (with one line per target)
         :return: a ProofState
         """
+        log.info("creating new ProofState from lean strings")
         list_goals = goals_analysis.splitlines()
         main_goal = Goal.from_lean_data(hypo_analysis, list_goals[0])
         goals = [main_goal]
@@ -169,10 +271,10 @@ if __name__ == '__main__':
     goal_analysis = """PROPERTY[METAVAR[_mlocal._fresh.679.4460]/pp_type: ∀ ⦃x : X⦄, x ∈ (f⁻¹⟮B ∪ B'⟯) → x ∈ f⁻¹⟮B⟯ ∪ (f⁻¹⟮B'⟯)] ¿= QUANT_∀¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.680.5802¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:x/identifier:_fresh.679.4484¿]¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.680.5802¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, PROP_IMPLIES¿(PROP_BELONGS¿(LOCAL_CONSTANT¿[name:x/identifier:_fresh.679.4484¿]¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.680.5802¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.680.5807¿]¿(CONSTANT¿[name:1/1¿]¿)¿, SET_UNION¿(LOCAL_CONSTANT¿[name:B/identifier:0._fresh.680.5809¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.680.5812¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿)¿, PROP_BELONGS¿(LOCAL_CONSTANT¿[name:x/identifier:_fresh.679.4484¿]¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.680.5802¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, SET_UNION¿(SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.680.5807¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B/identifier:0._fresh.680.5809¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.680.5807¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.680.5812¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿)¿)¿)"""
 
     goal = Goal.from_lean_data(hypo_analysis_old, goal_analysis)
+    print("context:")
     pprint(goal.context)
-    goal.update(hypo_analysis_new)
-    print("New context: ")
-    pprint(goal.context)
+    print(("target:"))
+    pprint(goal.target)
 
     print("variables: ")
     pprint(goal.extract_var_names())
