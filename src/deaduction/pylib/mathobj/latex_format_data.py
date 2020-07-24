@@ -9,12 +9,12 @@ DESCRIPTION
 Contain the data for processing PropObj into a latex representation
 
 """
-# from PropObj import PropObj, ProofStatePO
 import gettext
-
 _ = gettext.gettext
 
-# the following is useful for the function needs_paren
+########################################################
+# the following is useful for the function needs_paren #
+########################################################
 nature_leaves_list = ["PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                       "FUNCTION", "SEQUENCE", "SET_FAMILY",
                       "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY"]
@@ -67,8 +67,10 @@ def format_complement(latex_symb, a, PO, format="latex"):
 
 
 # dict nature -> (latex symbol, format name)
-latex_structures = {"PROP_AND": (r" \text{{ " + _("AND") + " }} ",  # logics
-                                 format_0n1),
+##########
+# LOGIC: #
+##########
+latex_structures = {"PROP_AND": (r" \text{{ " + _("AND") + " }} ", format_0n1),
                     "PROP_OR": (r" \text{{ " + _("OR") + " }} ", format_0n1),
                     "PROP_IFF": (r" \Leftrightarrow ", format_0n1),
                     "PROP_NOT": (r" \text{{" + _("NOT") + " }} ", format_n0),
@@ -76,6 +78,9 @@ latex_structures = {"PROP_AND": (r" \text{{ " + _("AND") + " }} ",  # logics
                     "QUANT_∀": (r"\forall ", format_quantifiers),
                     "QUANT_∃": (r"\exists ", format_quantifiers),
                     "PROP_∃": ("", ""),
+                    ###############
+                    # SET THEORY: #
+                    ###############
                     "SET_INTER": (r" \cap ", format_0n1),  # set theory
                     "SET_UNION": (r" \cup ", format_0n1),
                     "SET_INTER+": ("", ""),
@@ -88,6 +93,9 @@ latex_structures = {"PROP_AND": (r" \text{{ " + _("AND") + " }} ",  # logics
                     "SET_EMPTY": (r" \emptyset ", format_constant),
                     "SET_IMAGE": ("", format_app_function),
                     "SET_INVERSE": ("", format_app_inverse),
+                    ############
+                    # NUMBERS: #
+                    ############
                     "PROP_EQUAL": (" = ", format_0n1),
                     "PROP_EQUAL_NOT": ("", ""),
                     "PROP_<": ("<", format_0n1),
@@ -98,6 +106,9 @@ latex_structures = {"PROP_AND": (r" \text{{ " + _("AND") + " }} ",  # logics
                     "+": ("+", format_0n1),
                     "APPLICATION_FUNCTION": ("", format_app_function),
                     "VAR": ("", "var"),
+                    ##################
+                    # GENERAL TYPES: #
+                    ##################
                     "PROP": (r"\text{{ " + _("a proposition") + "}",
                             format_constant),
                     "TYPE": (r" \text{ " + _("a set") + "} ",

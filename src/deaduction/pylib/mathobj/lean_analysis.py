@@ -1,13 +1,35 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Tue Jun  2 10:55:21 2020
+#####################################################################
+# PropObj.py : Take the result of Lean's tactic "Context_analysis", #
+# and process it to extract the mathematical content.               #
+#####################################################################
 
-@author: leroux
+This module transforms a string produced by Lean's tactic "hypo_analysis"
+or "goals_analysis" into a tree encoded by a list. See examples at the end.
 
-transform a string produced by Lean's tactic "analysis" into a tree encoded by
-a list. See examples at the end.
+Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
+Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
+Created       : 06 2020 (creation)
+Repo          : https://github.com/dEAduction/dEAduction
+
+Copyright (c) 2020 the dEAduction team
+
+This file is part of dEAduction.
+
+    dEAduction is free software: you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free
+    Software Foundation, either version 3 of the License, or (at your option)
+    any later version.
+
+    dEAduction is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+    more details.
+
+    You should have received a copy of the GNU General Public License along
+    with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
+
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 
@@ -60,7 +82,7 @@ class LeanExprVisitor(NodeVisitor):
     def generic_visit(self, node, visited_children):
         """ The generic visit method.
         Return the concatenated children to compress the huge Tree
-        into a more reasonnable one
+        into a more reasonable one
         """
         concatenated_children = []
         for elem in visited_children:

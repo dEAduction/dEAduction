@@ -34,14 +34,14 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 from dataclasses import dataclass
-from collections import OrderedDict
-from typing import List
-import deaduction.pylib.logger as logger
 import logging
 
-import snippets.mathobj.lean_analysis as lean_analysis
-from snippets.mathobj.latex_format_data import latex_structures, \
+import deaduction.pylib.logger as logger
+import deaduction.pylib.mathobj.lean_analysis as lean_analysis
+from deaduction.pylib.mathobj.latex_format_data import latex_structures, \
     utf8_structures
+
+log = logging.getLogger(__name__)
 
 equal_sep = "¿= "
 open_bra = "¿["
@@ -102,7 +102,7 @@ class PropObj:
         - lists of strings (in latex format)
         - lists of latex rep
         """
-        log = logging.getLogger("PropObj")
+#        log = logging.getLogger("PropObj")
         if format == "latex":
             log.info(f"computing latex representation of {self}")
             field = "latex_rep"
@@ -216,16 +216,70 @@ class AnonymousPO(PropObj):
         elif len(self.children) != len(other.children):
             return False
         else:
-            for i in range(len(self.children)):
-                if not self.children[i] == other.children[i]:
+            for index in range(len(self.children)):
+                if not self.children[index] == other.children[index]:
                     return False
         return True
+
+    @classmethod
+    def from_tree(cls, prop_obj_dict: dict, bound_vars):
+        """
+        create anonymous sub-objects and props, or refer to existing pfPO
+        :param prop_obj_dict: dictionary provided by analysis.LeanExprVisitor
+        :param bound_vars: list of bounded variables (BoundVarPO),
+        to be updated
+        :return: an instance of AnonymousPO
+        """
+#        log = logging.getLogger("PropObj")
+        latex_rep = None  # latex representation is computed later
+        utf8_rep = None
+        node = prop_obj_dict["node"]
+        lean_data = extract_lean_data(node)
+        ##############################
+        # check if PO already exists #
+        ##############################
+        if lean_data["id"] in ProofStatePO.dict_:
+            prop_obj = ProofStatePO.dict_[lean_data["id"]]
+            return prop_obj, bound_vars
+        ###########################
+        # creation of children AnonymousPO #
+        ###########################
+        arguments = prop_obj_dict["children"]
+        children = []
+        for arg in arguments:
+            arg_prop_obj, bound_vars = AnonymousPO.from_tree(arg, bound_vars)
+            children.append(arg_prop_obj)
+        ###################
+        # Bound variables #
+        ###################
+        if node.startswith("LOCAL_CONSTANT"):
+            # unidentified local constant = bound variable
+            latex_rep = lean_data["name"]
+            utf8_rep = lean_data["name"]
+            math_type = children[0]
+            prop_obj = BoundVarPO(node, [], latex_rep, utf8_rep, [],
+                                  lean_data, math_type)
+            var_name = lean_data["name"]
+            log.debug(f"adding {var_name} to the bound vars names list")
+            if var_name not in bound_vars:
+                bound_vars.append(var_name)
+            return prop_obj, bound_vars
+        #############################
+        # Application of a function #
+        #############################
+        if node == "APPLICATION" and children[0].node == "FUNCTION":
+            node = "APPLICATION_FUNCTION"
+        #################
+        # Instantiation #
+        #################
+        prop_obj = cls(node, children, latex_rep, utf8_rep)
+        return prop_obj, bound_vars
 
 
 @dataclass
 class ProofStatePO(PropObj):
     """
-    Objects and Propositions of the proof state and bound variables
+    Objects and Propositions of the proof state (and bound variables)
     """
     bound_vars: list  # list of bound variables specific to self
     # (useful for keeping track of names)
@@ -237,10 +291,64 @@ class ProofStatePO(PropObj):
     # uniqueness of ProofStatePO's instances
     # including bound variables
     # (useful e.g. to provide name to new variables)
-    math_types = [] #list of PropObj
+    math_types = []  # list of the PropObj's
     # that occurs as math_type of some ProofStatePO,
-    math_types_instances =[]  # list of ProofStatePO
+    math_types_instances = []  # list of ProofStatePO
     # whose math_type equals the term having the same index in math_types_list
+
+    @classmethod
+    def from_string(cls, prop_obj_str: str):
+        """
+        Take a string from context_analysis or goals_analysis and turn it into
+        an instance of the class ProofStatePO.
+        Makes use of
+            - analysis.lean_expr_grammar.parse
+            - AnonymousPO.from_tree
+        prop_obj_str is assumed to have format
+        `%%head ¿= %%tail` where ¿= is defined in equal_sep
+
+        This function also calls the creation of all the intermediate
+        AnonymousPO's that are needed to describe the mathematical entity.
+
+        :param prop_obj_str: a string from Lean that describes the object
+        :return: the new object
+        """
+        log.debug(f"processing to create ProofStatePO from {prop_obj_str}")
+        head, _, tail = prop_obj_str.partition(equal_sep)
+        # extract lean_data from the head : name, id, pptype (if prop)
+        lean_data = extract_lean_data(head)
+        if lean_data["id"] in ProofStatePO.dict_:  # object already exists
+            prop_obj = ProofStatePO.dict_[lean_data["id"]]
+            #        ProofStatePO.context_dict[lean_data["id"]] = prop_obj
+            return prop_obj
+        ###################################################################
+        # extract math_type from the tail and calls AnonymousPO.from_tree #
+        ###################################################################
+        tree = lean_analysis.lean_expr_grammar.parse(tail)
+        po_str_list = lean_analysis.LeanExprVisitor().visit(tree)
+        bound_vars = []
+        math_type, bound_vars = \
+                            AnonymousPO.from_tree(po_str_list[0], bound_vars)
+        log.debug(f"math type: {math_type}")
+        node = None
+        children = None
+        latex_rep = lean_data["name"]  # equals empty string if is_prop == True
+        utf8_rep = lean_data["name"]
+        #################
+        # Instanciation #
+        #################
+        prop_obj = cls(node, children, latex_rep, utf8_rep, bound_vars,
+                       lean_data, math_type)
+        ######################################
+        # Adjusting data : dict_, math_types #
+        ######################################
+        if lean_data["id"] != "":
+            ProofStatePO.dict_[lean_data["id"]] = prop_obj
+            log.info(f"adding {lean_data['name']} to the dictionnary, ident ="
+                     f" {lean_data['id']}")
+        if not math_type.is_prop():
+            math_type_store(prop_obj, math_type)
+        return prop_obj
 
 
 @dataclass
@@ -249,114 +357,29 @@ class BoundVarPO(ProofStatePO):
     Variables that are bound by a quantifier
     """
 
-    @property
-    def names(self):
-        return self._names
-
-
-def create_pspo(prop_obj_str: str) -> ProofStatePO:
+def math_type_store(prop_obj: ProofStatePO, math_type: PropObj):
     """
-    Take a string from context_analysis or goals_analysis and turn it into a
-    an instance of the class ProofStatePO.
-    Makes use of
-        - analysis.lean_expr_grammar.parse
-        - create_anPO.
-    prop_obj_str is assumed to have format
-    `%%head ¿= %%tail` where ¿= is defined in equal_sep
+    Store PropObj in the ProofStatePO.math_types_instances list,
+    after adding math_type in math_types if needed
 
-    This function also creates all the intermediate AnonymousPO's that are
-    needed to describe the mathematical entity.
-
-    :param prop_obj_str: a string from Lean that describes the object
-    :return: the new object
+    :param prop_obj: instance of ProofStatePO to be stored
+    :param math_type: math_type of PropObj
     """
-    log = logging.getLogger("PropObj")
-    log.debug(f"processing to create ProofStatePO from {prop_obj_str}")
-    head, _, tail = prop_obj_str.partition(equal_sep)
-    # extract lean_data from the head : name, id, pptype (if prop)
-    lean_data = extract_lean_data(head)
-    if lean_data["id"] in ProofStatePO.dict_:  # object already exists
-        prop_obj = ProofStatePO.dict_[lean_data["id"]]
-        #        ProofStatePO.context_dict[lean_data["id"]] = prop_obj
-        return prop_obj
-    # extract math_type from the tail
-    tree = lean_analysis.lean_expr_grammar.parse(tail)
-    po_str_list = lean_analysis.LeanExprVisitor().visit(tree)
-    bound_vars = []
-    math_type, bound_vars = create_anonymous_prop_obj(po_str_list[0],
-                                                      bound_vars)
-    log.debug(f"math type: {math_type}")
-    node = None
-    children = None
-    latex_rep = lean_data["name"]  # equals "" if is_prop == True
-    utf8_rep = lean_data["name"]
-    # end of treatment
-    prop_obj = ProofStatePO(node, children, latex_rep, utf8_rep, bound_vars,
-                            lean_data, math_type)
-    # Adjusting data
-    if lean_data["id"] != "":
-        ProofStatePO.dict_[lean_data["id"]] = prop_obj
-        log.info(f"adding {lean_data['name']} to the dictionnary, ident ="
-             f" {lean_data['id']}")
-    if not math_type.is_prop():
-        # store the pfPO in the math_types_instances list
-        log.debug(f"storing {utf8_rep} in math_types_instances of {math_type}")
-        index = 0
-        for item in ProofStatePO.math_types:
-            if item == math_type:
-                break
-            index += 1
-        if index == len(ProofStatePO.math_types):
-            # create the instance list if this is the first instance of
-            # math_type
-            # NB : math_types_instances is a list of lists
-            ProofStatePO.math_types.append(math_type)
-            ProofStatePO.math_types_instances.append([])
-        # add math_type to math_types_instances
-        ProofStatePO.math_types_instances[index].append(prop_obj)
-    return prop_obj
-
-
-def create_anonymous_prop_obj(prop_obj_dict: dict,
-                              bound_vars: List[BoundVarPO]):
-    """
-    create anonymous sub-objects and props, or refer to existing pfPO
-    :param prop_obj_dict: dictionary provided by analysis.LeanExprVisitor
-    :param bound_vars: list of bounded variables, to be updated
-    :return: an instance of AnonymousPO
-    """
-    log = logging.getLogger("PropObj")
-    latex_rep = None  # latex representation is computed later
-    utf8_rep = None
-    node = prop_obj_dict["node"]
-    lean_data = extract_lean_data(node)
-    if lean_data["id"] in ProofStatePO.dict_:  # check if PO already exists
-        # (= ProofStatePO or BoundVarPO)
-        prop_obj = ProofStatePO.dict_[lean_data["id"]]
-        return prop_obj, bound_vars
-    #### creation of children PO
-    arguments = prop_obj_dict["children"]
-    children = []
-    for arg in arguments:
-        arg_prop_obj, bound_vars = create_anonymous_prop_obj(arg, bound_vars)
-        children.append(arg_prop_obj)
-    #### special cases
-    if node.startswith("LOCAL_CONSTANT"):
-        # unidentified local constant = bound variable
-        latex_rep = lean_data["name"]
-        utf8_rep = lean_data["name"]
-        math_type = children[0]
-        prop_obj = BoundVarPO(node, [], latex_rep, utf8_rep, [], lean_data,
-                              math_type)
-        log.debug(f"adding {utf8_rep} to the bound vars names list")
-        var_name = lean_data["name"]
-        if var_name not in bound_vars:
-            bound_vars.append(var_name)
-        return prop_obj, bound_vars
-    if node == "APPLICATION" and children[0].node == "FUNCTION":
-        node = "APPLICATION_FUNCTION"
-    prop_obj = AnonymousPO(node, children, latex_rep, utf8_rep)
-    return prop_obj, bound_vars
+    log.debug(f"storing {prop_obj.utf8_rep} in math_types_instances of"
+              f" {math_type}")
+    index = 0
+    for item in ProofStatePO.math_types:
+        if item == math_type:
+            break
+        index += 1
+    if index == len(ProofStatePO.math_types):
+        # create the instance list if this is the first instance of
+        # math_type
+        # NB : math_types_instances is a list of lists
+        ProofStatePO.math_types.append(math_type)
+        ProofStatePO.math_types_instances.append([])
+    # add math_type to math_types_instances
+    ProofStatePO.math_types_instances[index].append(prop_obj)
 
 
 def extract_lean_data(local_constant: str) -> dict:
@@ -371,11 +394,6 @@ def extract_lean_data(local_constant: str) -> dict:
 ###########################
 # String extraction tools #
 ###########################
-
-# def extract_nature_compl(string: str):
-#    str1 = "["
-#    str2 = "]"
-#    return(extract(string, str1, str2))
 
 def extract_nature_subtree(string: str):
     return (extract(string, "", "_"))
@@ -427,34 +445,9 @@ def extract(string: str, str1: str, str2=""):
     return (str_extr)
 
 
-def process_context(lean_analysis: str) -> list:  # useless
-    """
-    Process the strings provided by Lean's context_analysis and goals_analysis
-    and create the corresponding ProofStatePO instances by calling create_psPO
-    (will probably not be used at the end)
-
-    :param lean_analysis: a string which is the result of Lean's hypo_analysis
-    or goals_analysis tactics
-    :return: a list of ProofStatePO's
-    """
-    list_ = lean_analysis.splitlines()
-    #    is_goal = None
-    prop_obj_list = []
-    for prop_obj_string in list_:
-        if prop_obj_string.startswith("context"):
-            pass
-        #            is_goal = False
-        elif prop_obj_string.startswith("goals"):
-            pass
-        #                is_goal = True
-        else:
-            prop_obj = create_pspo(prop_obj_string)
-            #           PO.is_goal = is_goal
-            prop_obj_list.append(prop_obj)
-    return prop_obj_list
-
-
-# essai
+##########
+# essais #
+##########
 if __name__ == '__main__':
     logger.configure()
     essai_reciproque_union = """OBJECT[LOCAL_CONSTANT¿[name:X/identifier:0._fresh.680.5802¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= TYPE
@@ -470,8 +463,36 @@ OBJECT[LOCAL_CONSTANT¿[name:B/identifier:0._fresh.436.13265¿]¿(CONSTANT¿[nam
 OBJECT[LOCAL_CONSTANT¿[name:C/identifier:0._fresh.436.13268¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= SET¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.436.13260¿]¿(CONSTANT¿[name:1/1¿]¿)¿)
 OBJECT[LOCAL_CONSTANT¿[name:a/identifier:0._fresh.437.4734¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= LOCAL_CONSTANT¿[name:X/identifier:0._fresh.436.13260¿]¿(CONSTANT¿[name:1/1¿]¿)
 PROPERTY[LOCAL_CONSTANT¿[name:H/identifier:0._fresh.437.4736¿]¿(CONSTANT¿[name:1/1¿]¿)/pp_type: a ∈ A ∩ (B ∪ C)] ¿= PROP_BELONGS¿(LOCAL_CONSTANT¿[name:a/identifier:0._fresh.437.4734¿]¿(CONSTANT¿[name:1/1¿]¿)¿, SET_INTER¿(LOCAL_CONSTANT¿[name:A/identifier:0._fresh.436.13262¿]¿(CONSTANT¿[name:1/1¿]¿)¿, SET_UNION¿(LOCAL_CONSTANT¿[name:B/identifier:0._fresh.436.13265¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:C/identifier:0._fresh.436.13268¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿)"""
+    essai = essai_context_union
 
-    essai = essai_reciproque_union
+
+    def process_context(lean_analysis: str) -> list:  # useless
+        """
+        Process the strings provided by Lean's context_analysis and goals_analysis
+        and create the corresponding ProofStatePO instances by calling create_psPO
+        (will probably not be used at the end)
+
+        :param lean_analysis: a string which is the result of Lean's hypo_analysis
+        or goals_analysis tactics
+        :return: a list of ProofStatePO's
+        """
+        list_ = lean_analysis.splitlines()
+        #    is_goal = None
+        prop_obj_list = []
+        for prop_obj_string in list_:
+            if prop_obj_string.startswith("context"):
+                pass
+            #            is_goal = False
+            elif prop_obj_string.startswith("goals"):
+                pass
+            #                is_goal = True
+            else:
+                prop_obj = ProofStatePO.from_string(prop_obj_string)
+                #           PO.is_goal = is_goal
+                prop_obj_list.append(prop_obj)
+        return prop_obj_list
+
+
     liste = process_context(essai)
     print(liste)
     print("")
