@@ -24,3 +24,22 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
+
+from pathlib import Path
+from PySide2.QtWidgets import QHBoxLayout, QPushButton, QLabel
+
+class ProofStatePOLayout(QHBoxLayout):
+
+    def __init__(self, proofstatepo: ProofStatePO, tag: str):
+        super().__init__()
+
+    @property
+    def tag(self):
+        return self._tag
+
+    @tag.setter
+    def tag(self, tag):
+        icons_folder = Path('../graphical_resources/')
+
+        if tag not in ['+', '≠', '=']:
+            raise ValueError('ProofStatePOLayout.tag must be one of "+", "="'
