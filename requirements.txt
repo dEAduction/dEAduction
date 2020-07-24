@@ -4,3 +4,4 @@ pytest>=5.4.3
 pytest-cov>=2.10.0
 qtrio>=0.1.0
 diff-match-patch>=20200713
+parsimonious>=0.8.1
