@@ -26,6 +26,7 @@ This file is part of d∃∀duction.
 """
 
 from pathlib import Path
+from typing import List
 from PySide2.QtGui import QPixmap
 from PySide2.QtWidgets import QHBoxLayout, QPushButton, QLabel
 
@@ -65,7 +66,7 @@ class _ProofStatePOButton(QPushButton):
         self.setText(caption)
 
 
-class ProofStatePOLayout(QHBoxLayout):
+class ProofStatePOItem(QHBoxLayout):
 
     def __init__(self, proofstatepo: ProofStatePO, tag: str):
         super().__init__()
@@ -74,3 +75,11 @@ class ProofStatePOLayout(QHBoxLayout):
 
         self.addWidget(self.tag_icon)
         self.addWidget(self.pspo_button)
+
+
+class ProofStatePOLayout(QVBoxLayout):
+
+    def __init__(self, proofstatepos: List[ProofStatePO]):
+        super().__init__()
+        for proofstatepo in proofstatepos:
+            self.addLayout(ProofStatePOItem(proofstatepo))
