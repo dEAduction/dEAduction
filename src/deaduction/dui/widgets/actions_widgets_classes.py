@@ -196,39 +196,3 @@ class StatementsTreeWidget(QTreeWidget):
         for statement in statements:
             branch = statement.pretty_hierarchy(outline)
             self._init_statement(self._tree, statement, branch, self)
-
-
-#######################
-# Target widget class #
-#######################
-
-
-class TargetWidget(QPushButton):
-
-    def _initUI(self):
-        """
-        Set cosmetics.
-        """
-
-        self.resize_width()
-        self.setFlat(True)
-        self.setStyleSheet('font-size: 24px;')
-
-        # Resize the button to be about the size of the displayed text.
-        text_width = self.fontMetrics().boundingRect(self.text()).width()
-        self.setFixedWidth(text_width + 40)
-
-
-    def __init__(self, target: ProofStatePO):
-        super().__init__()
-        self.target = target
-
-        # Display
-        #   ∀ x ∈ X, ∃ ε, …
-        # and not
-        #   H : ∀ x ∈ X, ∃ ε, …
-        # where H might be the lean name of the target. That's what
-        # the .math_type is for.
-        self.setText(target.math_type.format_as_utf8())
-
-        self._initUI()
