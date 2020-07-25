@@ -24,13 +24,11 @@ This file is part of dEAduction.
 
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
-
-    todo: change statements from string to Action instances
 """
 
 from dataclasses import dataclass
 from collections import OrderedDict
-from typing import List, Dict
+from typing import List, Dict, Any
 import deaduction.pylib.logger as logger
 import logging
 
@@ -42,12 +40,14 @@ import deaduction.pylib.actions.magic
 
 @dataclass
 class Statement:
-    description: str  # "L'union est distributive par rapport à
-    # l'intersection"
-    lean_name: str  # 'set_theory.unions_and_intersections.exercise.union_distributive_inter'
+    description: str     # "L'union est distributive par rapport à
+                         # l'intersection"
+    lean_line : int      # line number of the lemma declaration in Lean file
+    lean_name: str       # 'set_theory.unions_and_intersections.exercise
+                         # .union_distributive_inter'
     lean_statement: str  # 'A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C)'
     lean_variables: str  # '(X : Type) (A : set X)'
-    pretty_name: str  # 'Union d'intersections'
+    pretty_name: str     # 'Union d'intersections'
     text_book_identifier: str
 
     @classmethod
@@ -66,10 +66,9 @@ class Statement:
         whole_namespace = ".".join(data["current_namespaces"])
         data["lean_name"] = whole_namespace + "." + data["lean_name"]
 
-        return cls(data["Description"], data["lean_name"],
-                   data["lean_statement"],
-                   data["lean_variables"], data["PrettyName"],
-                   data["text_book_identifier"])
+        return cls(data["Description"], data["lean_line"], data["lean_name"],
+                   data["lean_statement"], data["lean_variables"],
+                   data["PrettyName"], data["text_book_identifier"])
 
 
     def pretty_hierarchy(self, outline):
@@ -117,15 +116,16 @@ class Theorem(Statement):
 
 @dataclass
 class Exercise(Theorem):
-    available_logic: list  # todo: List[Action]
-    available_magic: list  # List[Action]  # []
-    available_proof_techniques: list  # List[Action]
+    available_logic: List[Action]
+    available_magic: List[Action]
+    available_proof_techniques: List[Action]
     available_statements: List[Statement]
     expected_vars_number: Dict[str, int]  # {'X': 3, 'A': 1, 'B': 1}
-    lean_line_number: int
+    lean_begin_line_number: int           # proof starts here...
+    lean_end_line_number: int             # ...and ends here
 
-    # TODO: get from Action class
-    logic_buttons_complete_list = []
+    course: Any = None                    # the parent course
+
 
     @classmethod
     def from_parser_data(cls, data: dict, statements: list):
@@ -149,6 +149,8 @@ class Exercise(Theorem):
         for equality in data["ExpectedVarsNumber"].split(", "):
             key, _, value = equality.partition("=")
             expected_vars_number[key] = int(value)
+        lean_begin_line_number = data["begin"]
+        lean_end_line_number = data["end"]
         ###########################
         # treatment of statements #
         ###########################
@@ -269,7 +271,8 @@ class Exercise(Theorem):
                 if item.startswith("+"):
                     item = item[1:]
                 list_2.append(item)
-            # second step, remove the minus
+            #################################
+            # second step, remove the minus #
             log.debug(f"list 2: {list_2}")
             list_3 = []
             for item in list_2:
@@ -283,17 +286,17 @@ class Exercise(Theorem):
                     continue
                 list_3.append(item)
             log.debug(f"list 3: {list_3}")
+            #################################
+            # end: get logic Actions
             post_data[field] = []
             for item in list_3:
                 if item not in action_names:
                     log.warning(f"label {item} not in {labels[field]}  lists")
                 else:
                     post_data[field].append(action_dict["action_" + item])
-        # todo: check logic buttons exists from Action
-        #        for item in post_data["Tools->Logic"]:
-        #            if item not in ???:
-        #                log.warning(f"unknown logic button {item}")
-        return cls(data["Description"], data["lean_name"],
+        return cls(data["Description"],
+                   data["lean_line"],
+                   data["lean_name"],
                    data["lean_statement"],
                    data["lean_variables"], data["PrettyName"],
                    data["text_book_identifier"],
@@ -302,7 +305,9 @@ class Exercise(Theorem):
                    post_data["Tools->ProofTechniques"],
                    available_statements,
                    expected_vars_number,
-                   data["lean_line_number"])
+                   lean_begin_line_number,
+                   lean_end_line_number,
+                   )
 
     def current_name_space(self):
         current_name_space, _, end = self.lean_name.partition(".exercise.")
