@@ -26,8 +26,14 @@ This file is part of d∃∀duction.
 """
 
 from pathlib import Path
-from PySide2.QtGui import QPixMap
+from PySide2.QtGui import QPixmap
 from PySide2.QtWidgets import QHBoxLayout, QPushButton, QLabel
+
+
+##############################
+# ProofStatePOLayout classes #
+##############################
+
 
 
 class _TagIcon(QLabel):
@@ -35,7 +41,7 @@ class _TagIcon(QLabel):
     def __init__(self, tag: str):
         super().__init__()
         icons_folder = Path('../graphical_resources/')
-            
+
         if tag not in ['=', '+', '≠']:
             raise ValueError('tag must be one of "=", "+", "≠". tag: {tag}.')
         elif tag == '=':
@@ -50,7 +56,21 @@ class _TagIcon(QLabel):
         self.setPixmap(icon_pixmap)
 
 
+class _ProofStatePOButton(QPushButton):
+
+    def __init__(self, proofstatepo: ProofStatePO):
+        super().__init__()
+        caption = f'{proofstatepo.format_as_utf8()} : ' \
+                  f'{proofstatepo.math_type.format_as_utf8()}'
+        self.setText(caption)
+
+
 class ProofStatePOLayout(QHBoxLayout):
 
     def __init__(self, proofstatepo: ProofStatePO, tag: str):
         super().__init__()
+        self.tag_icon = _TagIcon(tag)
+        self.pspo_button = _ProofStatePOButton(proofstatepo)
+
+        self.addWidget(self.tag_icon)
+        self.addWidget(self.pspo_button)
