@@ -25,15 +25,15 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PySide2.QtWidgets import QHBoxLayout, QVBoxLayout
+from PySide2.QtWidgets import QGroupBox, QHBoxLayout, QVBoxLayout
 from PySide2.QtWidgets import QWidget
 
 
 class ExerciseWidget(QWidget):
 
-    def _init_layouts(self):
+    def _init_boxes_layouts(self):
         """
-        Initiate > all < the layouts in the windows.
+        Initiate all the layouts and groupboxes in the windows.
         TODO: draw the damn thing.
         """
 
@@ -44,6 +44,11 @@ class ExerciseWidget(QWidget):
         self._actions_layout =          QVBoxLayout()
         self._logic_buttons_layout =    QHBoxLayout()
         self._proof_buttons_layout =    QHBoxLayout()
+
+        self._context_groupbox = QGroupBox()
+        self._context_groupbox.setTitle(_('Context (objects and properties)'))
+        self._actions_groupbox = QGroupBox()
+        self._actions_groupbox.setTitle(_('Actions (on target and context)'))
 
     def _init_actions(self):
         """
@@ -56,5 +61,5 @@ class ExerciseWidget(QWidget):
         super().__init__()
         # Appeler server_interface.exercise_set(self)
         self.exercise = exercise
-        _init_layouts()
+        _init_boxes_layouts()
         _init_actions()
