@@ -291,7 +291,7 @@ class ProofStatePO(PropObj):
     # uniqueness of ProofStatePO's instances
     # including bound variables
     # (useful e.g. to provide name to new variables)
-    math_types = []  # list of the PropObj's
+    math_types = []  # list of the PropObj's objects (not propositions)
     # that occurs as math_type of some ProofStatePO,
     math_types_instances = []  # list of ProofStatePO
     # whose math_type equals the term having the same index in math_types_list
