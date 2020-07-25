@@ -27,62 +27,52 @@ This file is part of d∃∀duction.
 
 from pathlib import Path
 from typing import List
-from PySide2.QtGui import QPixmap
-from PySide2.QtWidgets import QHBoxLayout, QPushButton, QLabel
+from PySide2.QtGui import QIcon
+from PySide2.QtWidgets import QPushButton
+from PySide2.QtWidgets import QListWidget, QListWidgetItem
 
 
-##############################
-# ProofStatePOLayout classes #
-##############################
+###############################
+# ProofStatePO widget classes #
+###############################
 
 
-
-class _TagIcon(QLabel):
+class _TagIcon(QIcon):
 
     def __init__(self, tag: str):
-        super().__init__()
         icons_folder = Path('../graphical_resources/')
 
         if tag not in ['=', '+', '≠']:
             raise ValueError('tag must be one of "=", "+", "≠". tag: {tag}.')
         elif tag == '=':
+            super().__init__('')  # No icon, empty icon trick
             return None
         elif tag == '+':
             icon_path = icons_folder / 'icon_tag_plus.png'
         elif tag == '≠':
             icon_path = icons_folder / 'icon_tag_different.png'
 
-        icon_pixmap = QPixmap(str(icon_path.resolve()))
-        icon_pixmap = icon_pixmap.scaledToWidth(10)
-        self.setPixmap(icon_pixmap)
+        super().__init__(str(icon_path.resolve()))
 
 
-class _ProofStatePOButton(QPushButton):
+class ProofStatePOItem(QListWidgetItem):
 
-    def __init__(self, proofstatepo: ProofStatePO):
+    def __init__(self, proofstatepo: ProofStatePO, tag: str):
         super().__init__()
+        # Set icon
+        self.setIcon(_TagIcon(tag))
+        # Set text
         caption = f'{proofstatepo.format_as_utf8()} : ' \
                   f'{proofstatepo.math_type.format_as_utf8()}'
         self.setText(caption)
 
 
-class ProofStatePOItem(QHBoxLayout):
-
-    def __init__(self, proofstatepo: ProofStatePO, tag: str):
-        super().__init__()
-        self.tag_icon = _TagIcon(tag)
-        self.pspo_button = _ProofStatePOButton(proofstatepo)
-
-        self.addWidget(self.tag_icon)
-        self.addWidget(self.pspo_button)
-
-
-class ProofStatePOLayout(QVBoxLayout):
+class ProofStatePOWidget(QListWidget):
 
     def __init__(self, proofstatepos: List[ProofStatePO]):
         super().__init__()
         for proofstatepo in proofstatepos:
-            self.addLayout(ProofStatePOItem(proofstatepo))
+            self.addItem(ProofStatePOItem(proofstatepo))
 
 
 #######################
