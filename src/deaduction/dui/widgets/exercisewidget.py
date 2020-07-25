@@ -31,35 +31,4 @@ from PySide2.QtWidgets import QWidget
 
 class ExerciseWidget(QWidget):
 
-    def _init_boxes_layouts(self):
-        """
-        Initiate all the layouts and groupboxes in the windows.
-        TODO: draw the damn thing.
-        """
-
-        self._main_layout =             QVBoxLayout()
-        self._target_layout =           QHBoxLayout()
-        self._context_actions_layout =  QHBoxLayout()
-        self._context_layout =          QVBoxLayout() 
-        self._actions_layout =          QVBoxLayout()
-        self._logic_buttons_layout =    QHBoxLayout()
-        self._proof_buttons_layout =    QHBoxLayout()
-
-        self._context_groupbox = QGroupBox()
-        self._context_groupbox.setTitle(_('Context (objects and properties)'))
-        self._actions_groupbox = QGroupBox()
-        self._actions_groupbox.setTitle(_('Actions (on target and context)'))
-
-    def _init_actions(self):
-        """
-        Init the 'Actions' part of the interface, that is logic
-        buttons, proof techniques buttons and available statements.
-        Those will never change during the life of the exercise.
-        """
-
-    def __init__(self, exercise: Exercise):
-        super().__init__()
-        # Appeler server_interface.exercise_set(self)
-        self.exercise = exercise
-        _init_boxes_layouts()
-        _init_actions()
+    pass
