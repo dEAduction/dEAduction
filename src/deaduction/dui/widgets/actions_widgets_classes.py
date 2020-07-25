@@ -26,9 +26,12 @@ This file is part of d∃∀duction.
 """
 
 from pathlib import Path
+from typing import List
 from PySide2.QtGui import QBrush, QColor, QIcon
 from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem
+from PySide2.QtWidgets import QHBoxLayout
+from PySide2.QtWidgets import QPushButton
+from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem
 
 
 ######################
@@ -42,6 +45,14 @@ class ActionButton(QPushButton):
         super().__init__()
         self.setText(action.caption)
         self.action = action
+
+
+class ActionButtonsLayout(QHBoxLayout):
+
+    def __init__(self, actions: List[Action]):
+        super().__init__()
+        for action in actions:
+            self.addWidget(ActionButton(action))
 
     
 ##############################
