@@ -6,30 +6,25 @@ import logics
 import structures
 import definitions
 
--- import definitions_test
 
+lemma definition.iff {P Q : Prop} : ( P ↔ Q ) ↔ (P → Q) ∧ (Q → P) :=
+iff_def
 
-----------------------------------------------
 namespace set_theory -- Course title
 /- dEAduction
 Section
-    Set Theory
+    Set theory
 -/
-
 
 variables {X : Type} {Y : Type}
 
-
-
-lemma definition.inclusion (A B : set X) : A ⊆ B ↔ ∀ {{x:X}}, x ∈ A → x ∈ B := 
+lemma definition.inclusion (A B : set X) : A ⊆ B ↔ ∀ {{x:X}}, x ∈ A → x ∈ B :=
 iff.rfl
 
-
-
-lemma definition.egalite_ensembles {A A' : set X} : (A = A') ↔ ( ∀ x, x ∈ A ↔ x ∈ A' ) :=
+lemma definition.equality_two_sets {A A' : set X} : (A = A') ↔ ( ∀ x, x ∈ A ↔ x ∈ A' ) :=
 /- dEAduction
 PrettyName
-    Egalité d'ensembles    
+    Equality of two sets
 -/
 by exact set.ext_iff
 
@@ -39,57 +34,48 @@ begin
 end
 
 
-----------------------------------------------
-namespace unions_and_intersections -- section 1
--- pretty name for dEAduction will be computed from lean name
+namespace unions_and_intersections -- Section 1
 
 
-lemma definition.intersection_deux  (A B : set X) (x : X) :  x ∈ A ∩ B ↔ ( x ∈ A ∧ x ∈ B) := 
+lemma definition.intersection_two_sets (A B : set X) (x : X) :  x ∈ A ∩ B ↔ ( x ∈ A ∧ x ∈ B) :=
 iff.rfl
 /- dEAduction
 PrettyName
-    Intersection de deux ensembles
+    Intersection of two sets
 -/
 
-lemma theorem.intersection_ensemble  (A B C : set X) : C ⊆ A ∩ B ↔ C ⊆ A ∧ C ⊆ B := 
+lemma theorem.included_in_intersection_iff  (A B C : set X) : C ⊆ A ∩ B ↔ C ⊆ A ∧ C ⊆ B :=
 begin
     exact ball_and_distrib
 end
 
-lemma definition.intersection_quelconque (I : Type) (O : I → set X)  (x : X) : (x ∈ set.Inter O) ↔ (∀ i:I, x ∈ O i) :=
+lemma definition.intersection_arbitrary_sets (I : Type) (O : I → set X)  (x : X) : (x ∈ set.Inter O) ↔ (∀ i:I, x ∈ O i) :=
 set.mem_Inter
 /- dEAduction
 PrettyName
-    Intersection quelconque    
+    Intersection of an arbitrary family of sets
 -/
 
--- Les deux lemmes suivants seront à regroupé au sein d'une même tactique : essayer le premier, 
--- en cas d'échec essayer le second. Un seul bouton dans l'interface graphique
-lemma definition.union  (A : set X) (B : set X) (x : X) :  x ∈ A ∪ B ↔ ( x ∈ A ∨ x ∈ B) := 
+lemma definition.union_two_sets  (A : set X) (B : set X) (x : X) :  x ∈ A ∪ B ↔ ( x ∈ A ∨ x ∈ B) :=
 iff.rfl
 /- dEAduction
 PrettyName
-    Union de deux ensembles
+    Union of two sets
 -/
 
-lemma definition.union_quelconque (I : Type) (O : I → set X)  (x : X) : (x ∈ set.Union O) ↔ (∃ i:I, x ∈ O i) :=
+lemma definition.union_arbitrary_sets (I : Type) (O : I → set X)  (x : X) : (x ∈ set.Union O) ↔ (∃ i:I, x ∈ O i) :=
 set.mem_Union
 /- dEAduction
 PrettyName
-    Union quelconque
+    Union of an arbitrary family of sets
 -/
 
-
-
-
-
-lemma exercise.union_distributive_inter (X : Type) (A B C : set X) : A ∩ (B ∪ C)  = (A ∩ B) ∪ (A ∩ C) := 
+lemma exercise.intersection_dist_over_union (X : Type) (A B C : set X) : A ∩ (B ∪ C)  = (A ∩ B) ∪ (A ∩ C) :=
 /- dEAduction
-PrettyName  
-    Intersection d'unions
-Description 
-    L'intersection est distributive par rapport à l'union
-    et ça continue sur la ligne suivante
+PrettyName
+    Intersection distributes over union
+Description
+    The intersection of sets distributes over the union of sets.
 Tools->Logic
     $ALL -implicate -negate
 Tools->ProofTechniques
@@ -97,25 +83,23 @@ Tools->ProofTechniques
 Tools->Definitions
     $UNTIL_NOW
 Tools->Theorems
-    double_inclusion, Riemann_hypothesis
-ExpectedVarsNumber 
+    double_inclusion
+ExpectedVarsNumber
     X=3, A=1, B=1
 -/
 begin
-    hypo_analysis,
-    goals_analysis,
+    sorry
 end
-
 
 variables {A B C : set X}
 
-lemma exercise.inter_distributive_union : A ∪ (B ∩ C)  = (A ∪ B) ∩ (A ∪ C) := 
+lemma exercise.union_dist_over_union : A ∪ (B ∩ C)  = (A ∪ B) ∩ (A ∪ C) :=
 /- dEAduction
-PrettyName 
-    Union d'intersections
-Description 
-    L'union est distributive par rapport à l'intersection 
-Tools->Logic 
+PrettyName
+    Union distributes over intersection
+Description
+    The union of sets distributes over the intersection of sets.
+Tools->Logic
     $ALL
 Tools->ProofTechniques
     $ALL -choice
@@ -128,36 +112,33 @@ end
 
 end unions_and_intersections
 
------------------------------------------
+
 namespace complements -- section 2
 /- dEAduction
 Section
-    Complementaires
+    Complements
 -/
 
 
-
-lemma definition.complement {A : set X} {x : X} : x ∈ set.univ \ A ↔ x ∉ A := 
+lemma definition.complement {A : set X} {x : X} : x ∈ set.univ \ A ↔ x ∉ A :=
 by finish
 
-lemma definition.complement_1 {A : set X} {x : X} : x ∈ set.compl A ↔ x ∉ A := 
+lemma definition.complement_1 {A : set X} {x : X} : x ∈ set.compl A ↔ x ∉ A :=
 by finish
 
 lemma definition.complement_2 {A B : set X} {x : X} : x ∈ B \ A ↔ (x ∈ B ∧ x ∉ A) :=
 iff.rfl
 
-lemma exercise.complement_complement {A : set X} : - - A = A :=
+lemma exercise.complement_of_complement {A : set X} : - - A = A :=
 /- dEAduction
-PrettyName 
-    Complémentaire du complémentaire
-Description 
-    Tout ensemble est égal au complémentaire de son complémentaire 
-    et réciproquement.
+PrettyName
+    Complement of complement
+Description
+    Every set equals the complement of its complement.
 -/
 begin
     sorry
 end
 
 end complements
-
 end set_theory

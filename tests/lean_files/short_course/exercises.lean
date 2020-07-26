@@ -7,6 +7,9 @@ import structures
 import definitions
 
 
+lemma definition.iff {P Q : Prop} : ( P ↔ Q ) ↔ (P → Q) ∧ (Q → P) :=
+iff_def
+
 namespace set_theory -- Course title
 /- dEAduction
 Section
