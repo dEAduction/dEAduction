@@ -52,6 +52,11 @@ async def main():
         my_server.log = logging.getLogger("ServerInterface")
 
         await my_server.start()
+
+        my_server.new_code = False
+        my_server.new_hypo = False
+        my_server.new_targets = False
+
         ##########
         # course #
         ##########
@@ -74,9 +79,6 @@ async def main():
         my_exercise = my_course.statements[num_ex]
         begin_line = my_exercise.lean_begin_line_number
         end_line =  my_exercise.lean_end_line_number
-        my_server.hypo_counter = 0
-        my_server.goals_counter = 0
-
         file_content = my_course.file_content
         lines = file_content.splitlines()
 
@@ -112,7 +114,7 @@ async def main():
         # next instruction #
         ####################
         code = ""
-        while code != "sorry":
+        while code != "sorry\n":
             code = input("Lean next instruction?")
             code += f"\n"
             print("Sending to Lean server")

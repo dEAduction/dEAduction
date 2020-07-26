@@ -107,37 +107,39 @@ class ServerInterface(QObject):
         :param code:
         :return:
         """
+        self.new_code = True
         self.lean_file.insert(lbl=label, add_txt=code)
         await self.__update()
 
     #####################
     # process Lean info #
     #####################
+
     def __process_lean_context(self, txt):
         """
         Processes the data received from the hypo_analysis tactic
         """
-        self.hypo_counter += 1
-        if self.hypo_counter != self.goals_counter:
-            self.hypo_analysis = txt
-        else:
-            hypo_analysis = txt
-            goals_analysis = self.goals_analysis
-            self.proof_state = ProofState.from_lean_data(hypo_analysis,
-                                                         goals_analysis)
+        self.new_hypo = True
+        self.hypo_analysis = txt
+        if self.new_targets:
+            self.proof_state = ProofState.from_lean_data(self.hypo_analysis,
+                                                         self.targets_analysis)
+            self.new_hypo = False
+            self.new_targets = False
+            self.new_code = False
 
     def __process_lean_goals(self, txt):
         """
         Process the data received from the goals_analysis tactic.
         """
-        self.goals_counter += 1
-        if self.hypo_counter != self.goals_counter:
-            self.goals_analysis = txt
-        else:
-            goals_analysis = txt
-            hypo_analysis = self.hypo_analysis
-            self.proof_state = ProofState.from_lean_data(hypo_analysis,
-                                                         goals_analysis)
+        self.new_targets = True
+        self.targets_analysis = txt
+        if self.new_hypo:
+            self.proof_state = ProofState.from_lean_data(self.hypo_analysis,
+                                                         self.targets_analysis)
+            self.new_hypo = False
+            self.new_targets = False
+            self.new_code = False
 
     def __on_lean_message(self, msg: Message):
         txt = msg.text
