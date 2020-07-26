@@ -43,8 +43,8 @@ class Workshop(QWidget):
         :param new_label: Label to replace old_label.
         """
         
-        old_label.deleteLater()
         self.main_layout.replaceWidget(old_label, new_label)
+        old_label.deleteLater()
 
     @Slot()
     def change_label(self):
