@@ -46,11 +46,23 @@ class Workshop(QWidget):
         old_label.deleteLater()
         self.main_layout.replaceWidget(old_label, new_label)
 
-
     @Slot()
     def change_label(self):
         new_label = QLabel(str(self.n + 1))
         self.replace_label(self.lbl, new_label)
+        self.n += 1
+        self.lbl = new_label
+
+    @Slot()
+    def change_label_USELESS(self):
+        """
+        By using this fuction around line 21 in:
+        self.btn.clicked.connect(self.change_label_useless)
+        we see that simply setting self.lbl = new_label does not
+        change it in the interface.
+        """
+
+        new_label = QLabel(str(self.n + 1))
         self.n += 1
         self.lbl = new_label
 
