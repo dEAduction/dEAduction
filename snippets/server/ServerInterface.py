@@ -89,11 +89,14 @@ class ServerInterface(QObject):
     ###########
     # history #
     ###########
-    def history_undo(self):
-        pass
+    async def history_undo(self):
+        self.lean_file.undo()
+        await self.__update()
 
-    def history_redo(self):
-        pass
+    async def history_redo(self):
+        self.lean_file.redo()
+        await self.__update()
+
 
     #####################
     # Lean instructions #
@@ -122,36 +125,41 @@ class ServerInterface(QObject):
         self.new_hypo = True
         self.hypo_analysis = txt
         if self.new_targets:
-            self.proof_state = ProofState.from_lean_data(self.hypo_analysis,
-                                                         self.targets_analysis)
-            self.new_hypo = False
-            self.new_targets = False
-            self.new_code = False
+            self.__process_lean_goal()
 
-    def __process_lean_goals(self, txt):
+    def __process_lean_targets(self, txt):
         """
-        Process the data received from the goals_analysis tactic.
+        Process the data received from the targets_analysis tactic.
         """
         self.new_targets = True
         self.targets_analysis = txt
         if self.new_hypo:
-            self.proof_state = ProofState.from_lean_data(self.hypo_analysis,
-                                                         self.targets_analysis)
-            self.new_hypo = False
-            self.new_targets = False
-            self.new_code = False
+            self.__process_lean_goal()
+
+    def __process_lean_goal(self):
+        """
+        process the data when both context_analysis and targets_analysis
+        have been received
+        """
+        self.log.info("Processing new goal from Lean analysis")
+        self.proof_state = ProofState.from_lean_data(self.hypo_analysis,
+                                                     self.targets_analysis)
+        self.new_hypo = False
+        self.new_targets = False
+        self.new_code = False
 
     def __on_lean_message(self, msg: Message):
         txt = msg.text
         severity = msg.severity
-        if txt.startswith("context:"):
+        if severity == "error":
+        # TODO: does not work
+            self.log.warning(f"Lean error: {txt}")
+        elif txt.startswith("context:"):
             self.log.info("Got new context")
             self.__process_lean_context(txt)
-        elif txt.startswith("goals:"):
-            self.log.info("Got new goals")
-            self.__process_lean_goals(txt)
-        elif severity == "error":
-            self.log.warning(f"Lean error: {txt}")
+        elif txt.startswith("targets:"):
+            self.log.info("Got new targets")
+            self.__process_lean_targets(txt)
 
     def __on_lean_state_change(self, is_running: bool):
         self.log.info(f"New lean state: {is_running}")

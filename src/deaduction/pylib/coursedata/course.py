@@ -150,8 +150,9 @@ class Course:
                 global_parsing = statement_parse(data, global_parsing, line,
                                                  line_counter, outline,
                                                  statements)
-            if line.find("hypo_analysis") or line.find("goals_analysis"):
-                log.warning("Found 'hypo_analysis' or 'goals_analysis' in "
+            if line.find("hypo_analysis") != -1 \
+                    or line.find("targets_analysis") != -1:
+                log.warning("Found 'hypo_analysis' or 'targets_analysis' in "
                             "file, weird behaviour expected")
         # Creating the course
         course = cls(outline, statements, file_content)
