@@ -1,5 +1,16 @@
+"""
+Good info on signals and slots:
+    - https://wiki.qt.io/Qt_for_Python_Signals_and_Slots ;
+    - https://doc.qt.io/qt-5/signalsandslots.html.
+"""
+
+from functools import partial
+import logging
 import sys
-from PySide2.QtCore import Slot
+from PySide2.QtCore import (
+        Signal,
+        Slot,
+        QObject)
 from PySide2.QtWidgets import (
         QApplication,
         QListWidget,
@@ -8,9 +19,34 @@ from PySide2.QtWidgets import (
         QHBoxLayout,
         QVBoxLayout,
         QWidget)
+import deaduction.pylib.logger as logger
 
+
+class WetButton(QPushButton):
+
+    def __init__(self, text):
+        super().__init__(text)
+
+    @Slot()
+    def freeze(self):
+        log.debug('WetButton received signal')
+        self.setEnabled(False)
+
+    @Slot()
+    def unfreeze(self):
+        log.debug('WetButton received signal')
+        self.setEnabled(True)
 
 class WetSand(QWidget):
+
+    def _connect_signals_slots(self):
+        # Freeze interface
+        for btn in self.btns:
+            self.freeze_btn.clicked.connect(btn.freeze)
+
+        # Unfreeze interface
+        for btn in self.btns:
+            self.unfreeze_btn.clicked.connect(btn.unfreeze)
 
     def __init__(self):
         super().__init__()
@@ -21,11 +57,11 @@ class WetSand(QWidget):
         self.list.addItem(QListWidgetItem("You don't form at all"))
 
         # Init buttons
-        self.johs =  QPushButton('johs')
-        self.jon =   QPushButton('jon')
-        self.feel =  QPushButton('feel')
-        self.chat =  QPushButton('chat')
-        self.tony =  QPushButton('tony')
+        self.btns = [WetButton('johs'),
+                WetButton('jon'),
+                WetButton('feel'),
+                WetButton('chat'),
+                WetButton('tony')]
 
         # Freeze and unfreeze buttons
         self.freeze_btn =    QPushButton('Freeze me')
@@ -33,7 +69,7 @@ class WetSand(QWidget):
 
         # Layout stuff
         self.btn_lyt = QVBoxLayout()
-        for btn in [self.johs, self.jon, self.feel, self.chat, self.tony]:
+        for btn in self.btns:
             self.btn_lyt.addWidget(btn)
 
         self.top_lyt = QHBoxLayout()
@@ -48,24 +84,18 @@ class WetSand(QWidget):
         self.main_lyt.addLayout(self.top_lyt)
         self.main_lyt.addLayout(self.bottom_lyt)
 
-        # Connect actions to buttons
-        self.freeze_btn.clicked.connect(self.freeze)
-        self.unfreeze_btn.clicked.connect(self.unfreeze)
+        # Signals and slots
+        self._connect_signals_slots()
 
         # Don't forget me
         self.setLayout(self.main_lyt)
         self.show()
 
-    @Slot()
-    def freeze(self):
-        pass
-
-    @Slot()
-    def unfreeze(self):
-        pass
-
 
 if __name__ == '__main__':
+    logger.configure()
+    log = logging.getLogger(__name__)
+
     app = QApplication([])
 
     youdontformatall = WetSand()
