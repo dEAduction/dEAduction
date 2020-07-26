@@ -102,7 +102,7 @@ class PropObj:
         - lists of strings (in latex format)
         - lists of latex rep
         """
-#        log = logging.getLogger("PropObj")
+        #        log = logging.getLogger("PropObj")
         if format == "latex":
             log.info(f"computing latex representation of {self}")
             field = "latex_rep"
@@ -230,7 +230,7 @@ class AnonymousPO(PropObj):
         to be updated
         :return: an instance of AnonymousPO
         """
-#        log = logging.getLogger("PropObj")
+        #        log = logging.getLogger("PropObj")
         latex_rep = None  # latex representation is computed later
         utf8_rep = None
         node = prop_obj_dict["node"]
@@ -294,6 +294,7 @@ class ProofStatePO(PropObj):
     math_types = []  # list of the PropObj's objects (not propositions)
     # that occurs as math_type of some ProofStatePO,
     math_types_instances = []  # list of ProofStatePO
+
     # whose math_type equals the term having the same index in math_types_list
 
     @classmethod
@@ -328,7 +329,7 @@ class ProofStatePO(PropObj):
         po_str_list = lean_analysis.LeanExprVisitor().visit(tree)
         bound_vars = []
         math_type, bound_vars = \
-                            AnonymousPO.from_tree(po_str_list[0], bound_vars)
+            AnonymousPO.from_tree(po_str_list[0], bound_vars)
         log.debug(f"math type: {math_type}")
         node = None
         children = None
@@ -346,8 +347,8 @@ class ProofStatePO(PropObj):
             ProofStatePO.dict_[lean_data["id"]] = prop_obj
             log.info(f"adding {lean_data['name']} to the dictionnary, ident ="
                      f" {lean_data['id']}")
-        if not math_type.is_prop():
-            math_type_store(prop_obj, math_type)
+        #        if not math_type.is_prop():
+        #            math_type_store(prop_obj, math_type)
         return prop_obj
 
 
@@ -357,7 +358,9 @@ class BoundVarPO(ProofStatePO):
     Variables that are bound by a quantifier
     """
 
-def math_type_store(prop_obj: ProofStatePO, math_type: PropObj):
+
+def math_type_store(math_types: list, math_types_instances: list, prop_obj:
+ProofStatePO, math_type: PropObj):
     """
     Store PropObj in the ProofStatePO.math_types_instances list,
     after adding math_type in math_types if needed
@@ -368,18 +371,18 @@ def math_type_store(prop_obj: ProofStatePO, math_type: PropObj):
     log.debug(f"storing {prop_obj.utf8_rep} in math_types_instances of"
               f" {math_type}")
     index = 0
-    for item in ProofStatePO.math_types:
+    for item in math_types:
         if item == math_type:
             break
         index += 1
-    if index == len(ProofStatePO.math_types):
+    if index == len(math_types):
         # create the instance list if this is the first instance of
         # math_type
         # NB : math_types_instances is a list of lists
-        ProofStatePO.math_types.append(math_type)
-        ProofStatePO.math_types_instances.append([])
+        math_types.append(math_type)
+        math_types_instances.append([])
     # add math_type to math_types_instances
-    ProofStatePO.math_types_instances[index].append(prop_obj)
+    math_types_instances[index].append(prop_obj)
 
 
 def extract_lean_data(local_constant: str) -> dict:
