@@ -28,33 +28,52 @@ class WetButton(QPushButton):
         super().__init__(text)
 
     @Slot()
-    def freeze(self):
+    def set_clickable(self):
         log.debug('WetButton received signal')
         self.setEnabled(False)
 
     @Slot()
-    def unfreeze(self):
+    def set_unclickable(self):
         log.debug('WetButton received signal')
         self.setEnabled(True)
+
+
+class WetListItem(QListWidgetItem):
+
+    def __init__(self, text):
+        super().__init__(text)
+
+    @Slot()
+    def set_unselectable(self):
+        flags = self.flags()
+        new_flags = flags & ~Qt.ItemIsSelectable
+        self.setFlags(new_flags)
+
+    @Slot()
+    def set_selectable(self):
+        flags = self.flags()
+        new_flags = flags & Qt.ItemIsSelectable
+        self.setFlags(new_flags)
+
 
 class WetSand(QWidget):
 
     def _connect_signals_slots(self):
         # Freeze interface
         for btn in self.btns:
-            self.freeze_btn.clicked.connect(btn.freeze)
+            self.freeze_btn.clicked.connect(btn.set_clickable)
 
         # Unfreeze interface
         for btn in self.btns:
-            self.unfreeze_btn.clicked.connect(btn.unfreeze)
+            self.unfreeze_btn.clicked.connect(btn.set_unclickable)
 
     def __init__(self):
         super().__init__()
 
         # Init list
         self.list = QListWidget()
-        self.list.addItem(QListWidgetItem("You don't form in the wet sand"))
-        self.list.addItem(QListWidgetItem("You don't form at all"))
+        self.list.addItem(WetListItem("You don't form in the wet sand"))
+        self.list.addItem(WetListItem("You don't form at all"))
 
         # Init buttons
         self.btns = [WetButton('johs'),
