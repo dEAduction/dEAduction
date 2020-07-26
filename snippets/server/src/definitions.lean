@@ -25,7 +25,7 @@ dans le sens direct, puis dans le sens réciproque -/
 meta def defi (name : parse ident) (at_hypo : parse (optional (tk "at" *> ident)))
                             : tactic unit :=
 do
-    let name := "definitions" <.> to_string name, 
+    -- let name := "definitions" <.> to_string name,
     trace ("J'appelle le lemme " ++ to_string name ++ ","),
     expr ← mk_const name,
     -- expr ← get_local name,
