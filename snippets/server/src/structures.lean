@@ -181,9 +181,9 @@ do liste_expr ← local_context,
 
 /- Affiche la liste des buts, même format que analyse_contexte
 (excepté qu'il n'y a que des PROPRIETES) -/ 
-meta def goals_analysis : tactic unit :=
+meta def targets_analysis : tactic unit :=
 do liste_expr ← get_goals,
-    trace "goals:", 
+    trace "targets:",
     liste_expr.mmap (λ h, analyse_expr h >>= trace),
     return ()
 
