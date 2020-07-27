@@ -47,12 +47,16 @@ class ActionButton(QPushButton):
         self.action = action
 
 
-class ActionButtonsLayout(QHBoxLayout):
+class ActionButtonsWidget(QWidget):
 
     def __init__(self, actions: List[Action]):
         super().__init__()
+        self.main_layout = QHBoxLayout()
+
         for action in actions:
-            self.addWidget(ActionButton(action))
+            self.main_layout.addWidget(ActionButton(action))
+
+        self.setLayout(self.main_layout)
 
     
 ##############################
