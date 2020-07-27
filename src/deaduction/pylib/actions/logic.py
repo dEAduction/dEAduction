@@ -38,7 +38,7 @@ from gettext import gettext as _
 import logging
 import deaduction.pylib.actions.utils as utils
 from deaduction.pylib.actions.actiondef import action
-from deaduction.pylib.mathobj.PropObj import PropObj # ne marche que si on rajoute snippets dans pythonpath, une fois que FLR aura rajouté les bons fichiers dans src ça marchera
+from deaduction.pylib.mathobj.PropObj import PropObj
 import deaduction.pylib.mathobj.PropObj as PO # useless for now
 from deaduction.pylib.mathobj.proof_state import Goal
 
@@ -75,14 +75,14 @@ def construct_implicate(goal : Goal):
 def apply_implicate(goal : Goal, l : [PropObj]):
     if l[0].math_type.node != "PROP_IMPLIES":
         return "" #TODO : gestion erreur raise usererror
-    if not l[0].math_type.children[1] == goal.target.math_type:
+    if not l[0].math_type.children[1].__eq__(goal.target.math_type):
         return "" #TODO : gestion erreur raise usererror
-    return "apply {0}".format(l[0].lean_data["name"])
+    return "apply {0},".format(l[0].lean_data["name"])
 
 def apply_implicate_to_hyp(goal : Goal, l : [PropObj]):
     if l[0].math_type.node != "PROP_IMPLIES":
         return "" #TODO : gestion erreur raise usererror
-    if not l[0].math_type.children[0] == l[1].math_type:
+    if not l[0].math_type.children[0].__eq__(l[1].math_type):
         return "" #TODO : gestion erreur raise usererror
     h = l[0].lean_data["name"]
     x = l[1].lean_data["name"]
@@ -240,50 +240,4 @@ def action_exists(goal : Goal, l : [PropObj]) -> str:
         return construct_exists(goal, x)
     return ""
 
-## ASSUMPTION ##
 
-@action(_("Assumption"))
-def action_assumption(goal : Goal, l : [PropObj]) -> str:
-    """
-    Translate into string of lean code corresponding to the action
-    
-    :param l: list of PropObj arguments preselected by the user
-    :return: string of lean code
-    """
-    if len(l) == 0: # TODO : ptet verifier si on a bien une hypothèse pareil que le goal ?
-        return "assumption, "
-    else:
-        return "" # TODO : gestion erreur ex raise user_error
-
-## REDUCTIO AD ABSURDUM ##
-
-@action(_("Reductio ad absurdum"))
-def action_absurdum(goal : Goal, l : [PropObj]) -> str:
-    """
-    Translate into string of lean code corresponding to the action
-    
-    :param l: list of PropObj arguments preselected by the user
-    :return: string of lean code
-    """
-    if len(l) == 0:
-        return "by_contradiction, "
-    else:
-        return "" # TODO : gestion erreur ex raise user_error
-
-## CASE-BASED REASONING ##
-
-@action(_("Case-based reasoning"))
-def action_cbr(goal : Goal, l : [PropObj]) -> str:
-    """
-    Translate into string of lean code corresponding to the action
-    
-    :param l: list of PropObj arguments preselected by the user
-    :return: string of lean code
-    """
-    if len(l) == 0:
-        h1 = utils.get_new_hyp()
-        h2 = utils.get_new_hyp()
-        case = "0 = 0" # TODO : pop-up qui demande sur quelle propriété on veut faire une disjonction de cas
-        return "cases (em {0}) with {1} {2}".format(case, h1, h2)
-    else:
-        return "" # TODO : gestion erreur ex raise user_error
