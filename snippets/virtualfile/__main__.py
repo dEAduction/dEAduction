@@ -66,7 +66,7 @@ class LeanFile:
             self.idx += ddir
 
     ################################
-    # Virtual cursor managment
+    # Virtual cursor management
     ################################
     @property
     def current_pos(self):

@@ -174,7 +174,7 @@ class Goal:
         return names
 
     @classmethod
-    def from_lean_data(cls, hypo_analysis: str, goal_analysis: str):
+    def from_lean_data(cls, hypo_analysis: str, target_analysis: str):
         """
         :param hypo_analysis: string from the lean tactic hypo_analysis
         :param goal_analysis: first string from the lean tactic goals_analysis
@@ -198,7 +198,7 @@ class Goal:
                 math_type_store(math_types, math_types_instances, prop_obj,
                                 prop_obj.math_type)
                 context.append(prop_obj)
-        target = ProofStatePO.from_string(goal_analysis)
+        target = ProofStatePO.from_string(target_analysis)
         variables_names = []  # todo
         return cls(context, target, math_types, math_types_instances,
                    variables_names)
@@ -256,7 +256,7 @@ class ProofState:
         """
         log.info("creating new ProofState from lean strings")
         goals = goals_analysis.splitlines()
-        if goals[0].startswith("goals:"):
+        if goals[0].startswith("targets:"):
             goals.pop(0)
         main_goal = Goal.from_lean_data(hypo_analysis, goals[0])
         goals = [main_goal]

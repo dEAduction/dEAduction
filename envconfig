@@ -23,6 +23,12 @@
 #     You should have received a copy of the GNU General Public License
 #     along with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 
+# Add dependency
+add_dependency() {
+    pip freeze | grep "^$1" | sed 's/==/>=/g' >> requirements.txt
+    echo "Ok"
+}
+
 # Install/Update git hooks
 cp tools/git-hooks/commit-msg .git/hooks/
 
@@ -34,13 +40,13 @@ if [ ! -d $ENVPATH ] ; then
 	python3 -m venv ${ENVPATH}
 
     source "$ENVPATH/bin/activate"
-    if [ -f "requirements.txt" ] ; then
-        echo "Installing package dependencies"
-        pip install -r "requirements.txt"
-    else
-        echo "No requirements.txt file !"
-    fi
+fi
 
+if [ -f "requirements.txt" ] ; then
+    echo "Installing package dependencies"
+    pip install -r "requirements.txt"
+else
+    echo "No requirements.txt file !"
 fi
 
 source "$ENVPATH/bin/activate"

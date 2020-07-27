@@ -67,15 +67,16 @@ async def main():
         counter = 0
         for statement in my_course.statements:
             print(f"Statement n°{counter}: "
-                  f"({isinstance(statement, Exercise)}) "
-                  f"{statement.pretty_name}")
+                  f"(exercise: {isinstance(statement, Exercise)}) "
+                  f"{statement.lean_name}"
+                  f" ({statement.pretty_name})")
             counter += 1
 
         ############
         # exercise #
         ############
         # num_ex = input("exercise n° ?")
-        num_ex = 8
+        num_ex = 9
         my_exercise = my_course.statements[num_ex]
         begin_line = my_exercise.lean_begin_line_number
         end_line =  my_exercise.lean_end_line_number
@@ -84,10 +85,10 @@ async def main():
 
         virtual_file_preamble = "\n".join(lines[:begin_line]) + "\n"
 #        virtual_file_afterword = "  hypo_analysis,\n" \
-#                                 + "  goals_analysis,\n" \
+#                                 + "  targets_analysis,\n" \
 #                                 + "end"
         virtual_file_afterword = "  hypo_analysis,\n" \
-                                 + "  goals_analysis,\n" \
+                                 + "  targets_analysis,\n" \
                                  + "\n".join(lines[end_line-1:])
         txt = virtual_file_preamble + virtual_file_afterword
         my_server.log.debug("Sending file:" + txt)
@@ -116,9 +117,16 @@ async def main():
         code = ""
         while code != "sorry\n":
             code = input("Lean next instruction?")
-            code += f"\n"
-            print("Sending to Lean server")
-            await my_server.code_insert(label=f"step n°{counter}", code=code)
+            if code == "undo":
+                await my_server.history_undo()
+            elif code == "redo":
+                await my_server.history_redo()
+            else:
+                if not code.endswith(','):
+                    code += ','
+                code += f"\n"
+                print(f"Sending code {code} to Lean server")
+                await my_server.code_insert(label=f"step n°{counter}", code=code)
             ins = ""
             while ins not in ["stop", "quit", "exit"]:
                 ins = input("waiting for Lean, hit ENTER")

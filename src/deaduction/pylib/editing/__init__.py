@@ -105,10 +105,10 @@ class LeanFile:
         pos = 0
 
         for i in range(lineno-1):
-            pos_add = contents[pos:].find("\n")
+            pos_add = txt[pos:].find("\n")
 
             if pos_add < 0: # No more newlines
-                pos = len(contents)-1
+                pos = len(txt)-1
                 break
             else:
                 pos += pos_add+1
