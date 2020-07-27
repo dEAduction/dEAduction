@@ -31,7 +31,7 @@ from PySide2.QtWidgets import QMainWindow, QWidget
 
 class ExerciseCentralWidget(QWidget):
 
-    def _init_layout_boxes(self):
+    def _init_all_layout_boxes(self):
         # TODO: draw the damn thing
 
         # Layouts
@@ -56,27 +56,29 @@ class ExerciseCentralWidget(QWidget):
                 StatementsTreeWidget(self.exercise.available_statements,
                                      self.exercise.course.outline) 
 
-    def _init_goal(new_goal: Goal):
-        self.goal = new_goal
+    def _init_goal(first_goal: Goal):
+        self.current_goal = first_goal
 
         # Get objects and properties as two list of (ProofStatePO, 
         # str), the str being the tag of the prop. or obj.
-        tagged_goal_pspos = self.goal.tag_and_split_propositions_objects()
-        tagged_goal_objects = goal_actions_pspos[0]
-        tagged_actions_prop = goal_actions_pspos[1]
+        goal_tagged_pspo = self.current_goal.tag_and_split_propositions_objects()
+        goal_tagged_objects = goal_tagged_pspo[0]
+        goal_tagged_prop = goal_tagged_pspo[1]
 
         # Create the widgets
-        self.tagged_goal_objects = ProofStatePOWidget(tagged_goal_objects)
-        self.tagged_goal_prop = ProofStatePOWidget(tagged_goal_prop)
+        self.goal_tagged_objects = ProofStatePOWidget(goal_tagged_objects)
+        self.goal_tagged_prop = ProofStatePOWidget(goal_tagged_prop)
 
-        # Put them in layouts
+    def _init_put_widgets_in_layouts(self):
+        pass
 
     def __init__(self, exercise: Exercise, first_goal: Goal):
         super().__init__()
         self.exercise = exercise
 
-        self._init_layout_boxes()
+        self._init_all_layout_boxes()
         self._init_actions()
+        self._init_goal()
 
 
 class ExerciseMainWindow(QMainWindow):
