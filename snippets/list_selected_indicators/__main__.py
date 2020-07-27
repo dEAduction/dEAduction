@@ -16,6 +16,9 @@ class ListItem(QListWidgetItem):
         super().__init__(text)
         self.is_selected = False
 
+    def __eq__(self, other):
+        return self is other
+
     def mark_selected(self, yes=True):
         if yes:
             brush = QBrush(QColor('limegreen'))
