@@ -79,6 +79,37 @@ class PropObj:
 
     # VAR should not be used any more
 
+
+    def __eq__(self, other):
+        """
+        test if the two prop_obj code for the same mathematical objects,
+        by recursively testing nodes.
+        This is used for instance to guarantee uniqueness of those AnonymousPO
+        objects that appears as math_types
+
+        :param self: AnonymousPO
+        :param other: AnonymousPO
+        :return: bool
+        """
+        # TODO: do we have to test for lean_data["name"] ?
+        # (does make sense only if not isinstance(AnonymousPO) )
+        if self.node != other.node:
+            return False
+#        elif self.children is not None and other.children is not None:
+        if len(self.children) != len(other.children):
+            return False
+        else:
+            for index in range(len(self.children)):
+                if not PropObj.__eq__(self.children[index],
+                                      other.children[index]):
+                    return False
+#        elif self.children is not None and other.children is None:
+#            return False
+#        elif self.children is None and other.children is not None:
+#            return False
+        return True
+
+
     def is_prop(self) -> bool:
         """
         Test if self represents a mathematical Proposition
@@ -86,7 +117,7 @@ class PropObj:
         ! MIND ! that for ProofStatePO's, only the math_type attribute
         should be tested !
         """
-        if self.node is None:
+        if self.node is "":
             return False
         else:
             return self.node.startswith("PROP") \
@@ -194,32 +225,12 @@ def needs_paren(parent: PropObj, child_number: int):
     return b
 
 
-@dataclass
+@dataclass(eq = False)  # will inherit the __eq__ method from PropObj
 class AnonymousPO(PropObj):
     """
     Objects and Propositions not in the proof state, in practice they will be
     sub-objects of the ProofStatePO instances
     """
-
-    def __eq__(self, other):
-        """
-        test if the two prop_obj code for the same mathematical objects.
-        This is used for instance to guarantee uniqueness of those AnonymousPO
-        objects that appears as math_types
-
-        :param self: AnonymousPO
-        :param other: AnonymousPO
-        :return: bool
-        """
-        if self.node != other.node:
-            return False
-        elif len(self.children) != len(other.children):
-            return False
-        else:
-            for index in range(len(self.children)):
-                if not self.children[index] == other.children[index]:
-                    return False
-        return True
 
     @classmethod
     def from_tree(cls, prop_obj_dict: dict, bound_vars):
@@ -276,7 +287,7 @@ class AnonymousPO(PropObj):
         return prop_obj, bound_vars
 
 
-@dataclass
+@dataclass(eq = False)
 class ProofStatePO(PropObj):
     """
     Objects and Propositions of the proof state (and bound variables)
@@ -331,8 +342,8 @@ class ProofStatePO(PropObj):
         math_type, bound_vars = \
             AnonymousPO.from_tree(po_str_list[0], bound_vars)
         log.debug(f"math type: {math_type}")
-        node = None
-        children = None
+        node = ""
+        children = []
         latex_rep = lean_data["name"]  # equals empty string if is_prop == True
         utf8_rep = lean_data["name"]
         #################
@@ -352,7 +363,7 @@ class ProofStatePO(PropObj):
         return prop_obj
 
 
-@dataclass
+@dataclass(eq = False)
 class BoundVarPO(ProofStatePO):
     """
     Variables that are bound by a quantifier
