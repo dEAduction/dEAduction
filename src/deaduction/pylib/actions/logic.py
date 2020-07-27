@@ -84,10 +84,10 @@ def apply_implicate_to_hyp(goal : Goal, l : [PropObj]):
         return "" #TODO : gestion erreur raise usererror
     if not l[0].math_type.children[0].__eq__(l[1].math_type):
         return "" #TODO : gestion erreur raise usererror
-    h = l[0].lean_data["name"]
-    x = l[1].lean_data["name"]
-    h2 = utils.get_new_hyp()
-    return "have {0} := {1} {2}, ".format(h2, h, x)
+    h_selected = l[0].lean_data["name"]
+    x_selected = l[1].lean_data["name"]
+    h = utils.get_new_hyp()
+    return "have {0} := {1} {2}, ".format(h, h_selected, x_selected)
 
 @action(_("Implication"))
 def action_implicate(goal : Goal, l : [PropObj]) -> str:
@@ -117,10 +117,10 @@ def construct_and(goal):
 def apply_and(l):
     if l[0].math_type.node != "PROP_AND":
         return "" #TODO : gestion erreur raise usererror
-    h = l[0].lean_data["name"]
+    h_selected = l[0].lean_data["name"]
     h1 = utils.get_new_hyp()
     h2 = utils.get_new_hyp()
-    return "cases {0} with {1} {2}, ".format(h, h1, h2)
+    return "cases {0} with {1} {2}, ".format(h_selected, h1, h2)
 
 @action(_("And"))
 def action_and(goal : Goal, l : [PropObj]) -> str:
@@ -148,10 +148,10 @@ def construct_or(goal : Goal) -> str:
 def apply_or(l : [PropObj]) -> str:
     if l[0].math_type.node != "PROP_OR":
         return "" #TODO : gestion erreur raise usererror
-    h = l[0].lean_data["name"]
+    h_selected = l[0].lean_data["name"]
     h1 = utils.get_new_hyp()
     h2 = utils.get_new_hyp()
-    return "cases {0} with {1} {2}, ".format(h, h1, h2)
+    return "cases {0} with {1} {2}, ".format(h_selected, h1, h2)
 
 @action(_("Or"))
 def action_or(goal : Goal, l : [PropObj]) -> str:
@@ -211,33 +211,33 @@ def construct_exists(goal, x : str):
 def apply_exists(l : [PropObj]) -> str:
     if l[0].math_type.node != "QUANT_∃":
         return "" # TODO : gestion erreur ex raise user_error
-    h = l[0].lean_data["name"]
+    h_selected = l[0].lean_data["name"]
     x = utils.get_new_var()
     hx = utils.get_new_hyp()
-    #log.debug(l[0].math_type.children[0], "\n")
-    #log.debug(l[0].math_type.children[1], "\n")
-    #log.debug(l[0].math_type.children[2], "\n")
     if l[0].math_type.children[2].node == "PROP_∃":
-        return "rcases {0} with ⟨ {1}, ⟨ {2}, {0} ⟩ ⟩, ".format(h, x, hx)
+        return "rcases {0} with ⟨ {1}, ⟨ {2}, {0} ⟩ ⟩, ".format(h_selected, x, hx)
     else :
         return "cases {0} with {1} {2}, ".format(h, x, hx)
 
 @action(_("Exists"))
-def action_exists(goal : Goal, l : [PropObj]) -> str:
+def action_exists(goal : Goal, l : [PropObj], user_input = None : str) -> str:
     """
     Translate into string of lean code corresponding to the action
     
     :param l: list of PropObj arguments preselected by the user
     :return: string of lean code
     """
-    if len(l) == 1:
+    if len(l) == 1 and user_input is None:
         if l[0].math_type.is_prop():
             return apply_exists(l)
         else:
             return construct_exists(goal, l[0].lean_data["name"])
-    if len(l) == 0: # TODO : pop-up à demander
-        x = "0" # TODO : x = dui.GET_USER_EXPR() appeler fonction graphique()
-        return construct_exists(goal, x)
+    if len(l) == 0:
+        if user_input is None:
+            x = "0"
+            return construct_exists(goal, x) # raise MissingStrInput ?
+        else:
+            return construct_exists(goal, user_input)
     return ""
 
 
