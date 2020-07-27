@@ -36,7 +36,7 @@ from deaduction.pylib.mathobj.PropObj import ProofStatePO
 
 
 
-def  print_goal(goal):
+def  print_goal_by_type(goal):
     i = 0
     print("Current context:")
     for mt in goal.math_types:
@@ -45,8 +45,24 @@ def  print_goal(goal):
     print("Current goal:")
     print(goal.target.math_type.format_as_utf8())
 
+def print_objects_and_proposition(objects, propositions):
+    """
+    :param objects: list of tuples (pfPO, tag)
+    :param propositions: list of tuples (pfPO, tag)
+    where tag = "=", "≠", "+"
+    """
+    print("Current context")
+    print("  Objects:")
+    for (pfPO, tag) in objects:
+        print(f"{tag} {pfPO.format_as_utf8()} : "
+              f"{pfPO.math_type.format_as_utf8()}")
+    print("  Propositions:")
+    for (pfPO, tag) in propositions:
+        print(f"{tag} {pfPO.format_as_utf8()} : "
+              f"{pfPO.math_type.format_as_utf8()}")
+
 async def main():
-    logger.configure()
+#    logger.configure()
     async with trio.open_nursery() as nursery:
         my_server = ServerInterface(nursery)
         my_server.log = logging.getLogger("ServerInterface")
@@ -105,21 +121,21 @@ async def main():
         while ins not in ["stop", "quit", "exit"]:
             ins = input("waiting for Lean, hit ENTER")
             try:
-                goal = my_server.proof_state.goals[0]
+                new_goal = my_server.proof_state.goals[0]
                 break
             except AttributeError:
                 my_server.log.warning("AttributeError")
-        print_goal(goal)
+        print_goal_by_type(new_goal)
 
         ####################
         # next instruction #
         ####################
         code = ""
-        while code != "sorry\n":
+        while code != "sorry,\n":
             code = input("Lean next instruction?")
-            if code == "undo":
+            if code.startswith("undo"):
                 await my_server.history_undo()
-            elif code == "redo":
+            elif code.startswith("redo"):
                 await my_server.history_redo()
             else:
                 if not code.endswith(','):
@@ -135,11 +151,14 @@ async def main():
             #         break
             #     except AttributeError:
             #         my_server.log.warning("AttributeError")
-            goal = my_server.proof_state.goals[0]
-            print_goal(goal)
+            old_goal = new_goal
             print("New Proof State:")
-            goal = my_server.proof_state.goals[0]
-            print_goal(goal)
+            new_goal = my_server.proof_state.goals[0]
+            new_goal.compare(old_goal, goal_is_new=False)
+            objects, propositions = new_goal.tag_and_split_propositions_objects()
+            print_objects_and_proposition(objects,propositions)
+            print("Current target:")
+            print(new_goal.target.math_type.format_as_utf8())
         my_server.stop()
         await my_server.lean_server.exited.wait()
 
