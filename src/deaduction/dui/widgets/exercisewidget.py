@@ -43,9 +43,24 @@ class ExerciseCentralWidget(QWidget):
                 StatementsTreeWidget(self.exercise.available_statements,
                                      self.exercise.course.outline) 
 
+    def _init_layout_boxes(self):
+        # TODO: draw the damn thing
+
+        # Layouts
+        self._main_layout = QVBoxLayout()
+        self._context_actions_layout = QHBoxLayout()
+        self._context_layout = QVBoxLayout()
+        self._actions_layout = QVBoxLayout()
+
+        # Group boxes
+        self.context_gb = QGroupBox(_('Context (properties and objects)'))
+        self.actions_gb = QGroupBox(_('Actions (transform context)'))
+
     def __init__(self, exercise: Exercise, first_goal: Goal):
         super().__init__()
         self.exercise = exercise
+
+        self._init_layout_boxes()
         self._init_actions()
 
 
