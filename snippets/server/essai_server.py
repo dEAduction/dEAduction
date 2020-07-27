@@ -128,13 +128,14 @@ async def main():
                 print(f"Sending code {code} to Lean server")
                 await my_server.code_insert(label=f"step n°{counter}", code=code)
             ins = ""
-            while ins not in ["stop", "quit", "exit"]:
-                ins = input("waiting for Lean, hit ENTER")
-                try:
-                    goal = my_server.proof_state.goals[0]
-                    break
-                except AttributeError:
-                    my_server.log.warning("AttributeError")
+            # while ins not in ["stop", "quit", "exit"]:
+            #     ins = input("waiting for Lean, hit ENTER")
+            #     try:
+            #         goal = my_server.proof_state.goals[0]
+            #         break
+            #     except AttributeError:
+            #         my_server.log.warning("AttributeError")
+            goal = my_server.proof_state.goals[0]
             print_goal(goal)
             print("New Proof State:")
             goal = my_server.proof_state.goals[0]
