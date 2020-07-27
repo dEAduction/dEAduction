@@ -80,7 +80,7 @@ class ProofStatePOWidget(QListWidget):
 #######################
 
 
-class TargetWidget(QPushButton):
+class _TargetButton(QPushButton):
 
     def _initUI(self):
         """
@@ -109,3 +109,16 @@ class TargetWidget(QPushButton):
         self.setText(target.math_type.format_as_utf8())
 
         self._initUI()
+
+
+class TargetWidget(QWidget):
+
+    def __init__(self, target: ProofStatePO):
+        super().__init__()
+        self.target = target
+        self.button = _TargetButton(target)
+
+        self.main_layout.addStretch()
+        self.main_layout.addWidget(self.button)
+        self.main_layout.addStretch()
+        self.setLayout(self.main_layout)
