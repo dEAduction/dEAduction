@@ -1,11 +1,7 @@
-from pprint import pprint
 from deaduction.pylib.actions.logic import *
 from deaduction.pylib.mathobj.proof_state import Goal
 
 if __name__ == "__main__":
-    #logger.configure()
-    #log = logging.getLogger("test action logiques")
-    
     hypo_analysis = ""
     goal_analysis = """PROPERTY[METAVAR[_mlocal._fresh.1754.49417]/pp_type: ¬¬A] ¿= PROP_NOT¿(PROP_NOT¿(LOCAL_CONSTANT¿[name:A/identifier:0._fresh.1754.49396¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)"""
     goal = Goal.from_lean_data(hypo_analysis, goal_analysis)
@@ -124,13 +120,13 @@ PROPERTY[LOCAL_CONSTANT¿[name:Hx/identifier:0._fresh.1691.4405¿]¿(CONSTANT¿[
     assert action_exists(goal,[]) == ""
     assert action_forall(goal,[]) == ""
     
-    hypo_analysis= """OBJECT[LOCAL_CONSTANT¿[name:A/identifier:0._fresh.1979.53339¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= TYPE
-OBJECT[LOCAL_CONSTANT¿[name:B/identifier:0._fresh.1979.53341¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= TYPE
-PROPERTY[LOCAL_CONSTANT¿[name:H/identifier:0._fresh.1980.55522¿]¿(CONSTANT¿[name:1/1¿]¿)/pp_type: A → B] ¿= PROP_IMPLIES¿(LOCAL_CONSTANT¿[name:A/identifier:0._fresh.1979.53339¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B/identifier:0._fresh.1979.53341¿]¿(CONSTANT¿[name:1/1¿]¿)¿)
-PROPERTY[LOCAL_CONSTANT¿[name:a/identifier:0._fresh.1980.55524¿]¿(CONSTANT¿[name:1/1¿]¿)/pp_type: A] ¿= LOCAL_CONSTANT¿[name:A/identifier:0._fresh.1979.53339¿]¿(CONSTANT¿[name:1/1¿]¿)"""
-    goal_analysis = """PROPERTY[METAVAR[_mlocal._fresh.1984.12632]/pp_type: B] ¿= LOCAL_CONSTANT¿[name:B/identifier:0._fresh.1983.5124¿]¿(CONSTANT¿[name:1/1¿]¿)"""
+    hypo_analysis= """OBJECT[LOCAL_CONSTANT¿[name:A/identifier:0._fresh.46.103600¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= TYPE
+OBJECT[LOCAL_CONSTANT¿[name:B/identifier:0._fresh.46.103602¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= TYPE
+PROPERTY[LOCAL_CONSTANT¿[name:H/identifier:0._fresh.47.104533¿]¿(CONSTANT¿[name:1/1¿]¿)/pp_type: A → B] ¿= PROP_IMPLIES¿(LOCAL_CONSTANT¿[name:A/identifier:0._fresh.46.103600¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B/identifier:0._fresh.46.103602¿]¿(CONSTANT¿[name:1/1¿]¿)¿)
+PROPERTY[LOCAL_CONSTANT¿[name:a/identifier:0._fresh.47.104535¿]¿(CONSTANT¿[name:1/1¿]¿)/pp_type: A] ¿= LOCAL_CONSTANT¿[name:A/identifier:0._fresh.46.103600¿]¿(CONSTANT¿[name:1/1¿]¿)"""
+    goal_analysis = """PROPERTY[METAVAR[_mlocal._fresh.47.104536]/pp_type: B] ¿= LOCAL_CONSTANT¿[name:B/identifier:0._fresh.46.103602¿]¿(CONSTANT¿[name:1/1¿]¿)"""
     goal = Goal.from_lean_data(hypo_analysis, goal_analysis)
-    print("------------- TEST APPLY IMPLICATION -------------")
+    print("------------- TEST APPLY IMPLICATION ON GOAL -------------")
     print("retour de action_implicate : ", action_implicate(goal,[goal.context[2]]))
     assert action_and(goal,[goal.context[2]]) == ""
     assert action_exists(goal,[goal.context[2]]) == ""
@@ -142,21 +138,9 @@ PROPERTY[LOCAL_CONSTANT¿[name:H/identifier:0._fresh.2031.31966¿]¿(CONSTANT¿[
 PROPERTY[LOCAL_CONSTANT¿[name:H2/identifier:0._fresh.2031.31968¿]¿(CONSTANT¿[name:1/1¿]¿)/pp_type: a = 0] ¿= PROP_EQUAL¿(LOCAL_CONSTANT¿[name:a/identifier:0._fresh.2030.33679¿]¿(CONSTANT¿[name:1/1¿]¿)¿, NUMBER¿[0¿]¿)"""
     goal_analysis = """PROPERTY[METAVAR[_mlocal._fresh.1984.12632]/pp_type: B] ¿= LOCAL_CONSTANT¿[name:B/identifier:0._fresh.1983.5124¿]¿(CONSTANT¿[name:1/1¿]¿)"""
     goal = Goal.from_lean_data(hypo_analysis, goal_analysis)
-    print("------------- TEST APPLY IMPLICATION -------------")
+    print("------------- TEST APPLY IMPLICATION ON HYPOTHESIS-------------")
     print("retour de action_implicate : ", action_implicate(goal,[goal.context[2], goal.context[3]]))
     assert action_and(goal,[goal.context[2]]) == ""
     assert action_exists(goal,[goal.context[2],]) == ""
     assert action_forall(goal,[goal.context[2],]) == ""
-    
-## TRASH
-
-def test_format_with_type_as_utf8():
-    hypo_analysis= """PROPERTY[LOCAL_CONSTANT¿[name:H/identifier:0._fresh.1851.36428¿]¿(CONSTANT¿[name:1/1¿]¿)/pp_type: ∃ (n : ℕ), n = 2] ¿= QUANT_∃¿(TYPE_NUMBER¿[name:ℕ¿]¿, LOCAL_CONSTANT¿[name:n/identifier:_fresh.1851.36430¿]¿(TYPE_NUMBER¿[name:ℕ¿]¿)¿, PROP_EQUAL¿(LOCAL_CONSTANT¿[name:n/identifier:_fresh.1851.36430¿]¿(TYPE_NUMBER¿[name:ℕ¿]¿)¿, NUMBER¿[2¿]¿)¿)"""
-    
-    goal_analysis = """PROPERTY[METAVAR[_mlocal._fresh.282.38692]/pp_type: 5 = 5 ∨ 6 = 0] ¿= PROP_OR¿(PROP_EQUAL¿(NUMBER¿[5¿]¿, NUMBER¿[5¿]¿)¿, PROP_EQUAL¿(NUMBER¿[6¿]¿, NUMBER¿[0¿]¿)¿)"""
-    goal = Goal.from_lean_data(hypo_analysis, goal_analysis)
-    #print("affichage : ", goal.target.format_with_type_as_utf8())
-    for hyp in goal.context:
-       print(hyp.format_with_type_as_utf8())
-    
     
