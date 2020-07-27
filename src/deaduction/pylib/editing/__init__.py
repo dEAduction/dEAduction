@@ -129,9 +129,9 @@ class LeanFile:
         :param move_cursor: Move cursor after inserted text.
         """
         current_pos = self.current_pos
-        next_txt = self.txt[:current_pos+1]   \
-                   + add_txt                  \
-                   + self.txt[current_pos+1:]
+        next_txt = self.txt[:current_pos] \
+                   + add_txt              \
+                   + self.txt[current_pos:]
 
         if move_cursor: current_pos += len(add_txt)
 
