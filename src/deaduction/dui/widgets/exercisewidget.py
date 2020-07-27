@@ -41,15 +41,15 @@ class ExerciseCentralWidget(QWidget):
         self._actions_layout = QVBoxLayout()
 
         # Group boxes
-        self.context_gb = QGroupBox(_('Context (properties and objects)'))
-        self.actions_gb = QGroupBox(_('Actions (transform context)'))
+        self._actions_gb = QGroupBox(_('Actions (transform context)'))
+        self._context_gb = QGroupBox(_('Context (properties and objects)'))
 
     def _init_actions(self):
         # Init tool buttons
-        self.tool_buttons = \
+        self.logic_buttons = \
                 ActionButtonsWidget(self.exercise.available_logic)
         # Init proof techniques buttons
-        self.proof_buttons = \
+        self.proof_techniques_buttons = \
                 ActionButtonsWidget(self.exercise.available_proof_techniques)
         # Init statements tree
         self.statements_tree = \
@@ -63,22 +63,40 @@ class ExerciseCentralWidget(QWidget):
         # str), the str being the tag of the prop. or obj.
         goal_tagged_pspo = self.current_goal.tag_and_split_propositions_objects()
         goal_tagged_objects = goal_tagged_pspo[0]
-        goal_tagged_prop = goal_tagged_pspo[1]
-
-        # Create the widgets
+        goal_tagged_props = goal_tagged_pspo[1]
+        # And create the widgets
         self.goal_tagged_objects = ProofStatePOWidget(goal_tagged_objects)
-        self.goal_tagged_prop = ProofStatePOWidget(goal_tagged_prop)
+        self.goal_tagged_props = ProofStatePOWidget(goal_tagged_props)
+
+        # Finally the target
+        self.goal_target = TargetWidget(self.current_goal.target)
 
     def _init_put_widgets_in_layouts(self):
-        pass
+        # Actions
+        self._actions_layout.addWidget(self.logic_buttons)
+        self._actions_layout.addWidget(self.proof_techniques_buttons)
+        self._actions_layout.addWidget(self.statements_tree)
+        self._actions_gb.setLayout(self._actions_layout)
+
+        # Context
+        self._context_layout.addWidget(self.goal_tagged_objects)
+        self._context_layout.addWidget(self.goal_tagged_props)
+        self._context_gb.setLayout(self._context_layout)
+
+        # https://i.kym-cdn.com/photos/images/original/001/561/446/27d.jpg
+        self._context_actions_layout.addWidget(self._actions_gb)
+        self._context_actions_layout.addWidget(self._context_gb)
+        self._main_layout.addWidget(self.goal_target)
+        self._main_layout.addLayout(self._context_actions_layout)
 
     def __init__(self, exercise: Exercise, first_goal: Goal):
         super().__init__()
         self.exercise = exercise
-
         self._init_all_layout_boxes()
         self._init_actions()
         self._init_goal()
+        self._init_put_widgets_in_layouts()
+        self.setLayout(self._main_layout)
 
 
 class ExerciseMainWindow(QMainWindow):
