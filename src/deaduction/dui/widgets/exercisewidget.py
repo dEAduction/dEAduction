@@ -3,8 +3,8 @@
 # exercisewidget.py : provide the ExerciseWidget class #
 ########################################################
 
-Author(s)      : Kryzar antoine@hugounet.com
-Maintainers(s) : Kryzar antoine@hugounet.com
+Author(s)      : Kryzar <antoine@hugounet.com>
+Maintainers(s) : Kryzar <antoine@hugounet.com>
 Date           : July 2020
 
 Copyright (c) 2020 the dEAduction team
@@ -25,9 +25,14 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QGroupBox, QHBoxLayout, QVBoxLayout
 from PySide2.QtWidgets import QMainWindow, QWidget
 
+def _replace_widget_in_layout(layout: QLayout, old: QWidget, new: QWidget,
+        flag=Qt.FindChildrenRecursively):
+    layout.replaceWidget(old, new, flag)
+    old.deleteLater()
 
 class ExerciseCentralWidget(QWidget):
 
@@ -97,6 +102,35 @@ class ExerciseCentralWidget(QWidget):
         self._init_goal()
         self._init_put_widgets_in_layouts()
         self.setLayout(self._main_layout)
+
+    def update_goal(self, new_goal: Goal):
+
+        # Get new objects
+        new_goal_tagged_pspo = new_goal.tag_and_split_propositions_objects()
+        new_goal_tagged_objects = goal_tagged_pspo[0]
+        new_goal_tagged_props = goal_tagged_pspo[1]
+
+        new_goal_tagged_objects = ProofStatePOWidget(new_goal_tagged_objects)
+        new_goal_tagged_props = ProofStatePOWidget(new_goal_tagged_props)
+
+        new_goal_target = TargetWidget(self.current_goal.target)
+
+        # Replace in the layouts
+        _replace_widget_in_layout(self._context_layout,
+                                  self.goal_tagged_objects,
+                                  new_goal_tagged_objects)
+        _replace_widget_in_layout(self._context_layout,
+                                  self.goal_tagged_props,
+                                  new_goal_tagged_props)
+        _replace_widget_in_layout(self._main_layout,
+                                  self.goal_target,
+                                  new_goal_target,
+                                  ~Qt.FindChildrenRecursively)
+
+        # Set the attributes to the new values
+        self._context_layout = new_goal_tagged_objects
+        self._context_layout = new_goal_tagged_props
+        self.current_goal = new_goal        
 
 
 class ExerciseMainWindow(QMainWindow):
