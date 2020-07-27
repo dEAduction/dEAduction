@@ -4,6 +4,10 @@
 # translate actions into lean code                         #
 ############################################################
     
+Every function action_* takes 2 arguments,
+- goal (of class Goal)
+- a list of ProofStatePO precedently selected by the user
+and returns lean code as a string
 
 Author(s)     : - Marguerite Bin <bin.marguerite@gmail.com>
 Maintainer(s) : - Marguerite Bin <bin.marguerite@gmail.com>
@@ -28,49 +32,258 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from deaduction.pylib.actions.actiondef import action
 
 from dataclasses import dataclass
-
-import gettext
-_ = gettext.gettext
-
-import deaduction.pylib.logger as logger
+from gettext import gettext as _
 import logging
+import deaduction.pylib.actions.utils as utils
+from deaduction.pylib.actions.actiondef import action
+from deaduction.pylib.mathobj.PropObj import PropObj # ne marche que si on rajoute snippets dans pythonpath, une fois que FLR aura rajouté les bons fichiers dans src ça marchera
+import deaduction.pylib.mathobj.PropObj as PO # useless for now
+from deaduction.pylib.mathobj.proof_state import Goal
 
 
-##
-# Squelette actions logiques
-##
+log = logging.getLogger("logic")
 
 @action(_("Negation"))
-def action_negate(goal,):
-    return ""
+def action_negate(goal : Goal, l : [PropObj]) -> str:
+    """
+    Translate into string of lean code corresponding to the action
+    
+    :param l: list of PropObj arguments preselected by the user
+    :return: string of lean code
+    """
+    if len(l) == 0:
+        if goal.target.math_type.node != "PROP_NOT":
+            return "" #TODO : gestion erreur raise usererror
+        return "push_neg, "
+    elif len(l) == 1:
+        if l[0].math_type.node != "PROP_NOT":
+            return "" #TODO : gestion erreur raise usererror
+        return "push_neg at {0}, ".format(l[0].lean_data["name"])
+    else:
+        return ""
+
+## IMPLICATION ##
+
+def construct_implicate(goal : Goal):
+    if goal.target.math_type.node != "PROP_IMPLIES":
+        return "" #TODO : gestion erreur raise usererror
+    h = utils.get_new_hyp()
+    return "intro {0}, ".format(h)
+
+def apply_implicate(goal : Goal, l : [PropObj]):
+    if l[0].math_type.node != "PROP_IMPLIES":
+        return "" #TODO : gestion erreur raise usererror
+    if not l[0].math_type.children[1] == goal.target.math_type:
+        return "" #TODO : gestion erreur raise usererror
+    return "apply {0}".format(l[0].lean_data["name"])
+
+def apply_implicate_to_hyp(goal : Goal, l : [PropObj]):
+    if l[0].math_type.node != "PROP_IMPLIES":
+        return "" #TODO : gestion erreur raise usererror
+    if not l[0].math_type.children[0] == l[1].math_type:
+        return "" #TODO : gestion erreur raise usererror
+    h = l[0].lean_data["name"]
+    x = l[1].lean_data["name"]
+    h2 = utils.get_new_hyp()
+    return "have {0} := {1} {2}, ".format(h2, h, x)
 
 @action(_("Implication"))
-def action_implicate(a):
+def action_implicate(goal : Goal, l : [PropObj]) -> str:
+    """
+    Translate into string of lean code corresponding to the action
+    
+    :param l: list of PropObj arguments preselected by the user
+    :return: string of lean code
+    """
+    if len(l) == 0:
+        return construct_implicate(goal)
+    elif len(l) == 1:
+        return apply_implicate(goal, l)
+    elif len(l) == 2:
+        return apply_implicate_to_hyp(goal,l)
     return ""
+
+## AND ##
+
+def construct_and(goal):
+    log.debug(goal.target.math_type.node)
+    if goal.target.math_type.node != "PROP_AND":        
+        log.debug("noeud de goal pas and")
+        return "" #TODO : gestion erreur raise usererror
+    return "split, "
+
+def apply_and(l):
+    if l[0].math_type.node != "PROP_AND":
+        return "" #TODO : gestion erreur raise usererror
+    h = l[0].lean_data["name"]
+    h1 = utils.get_new_hyp()
+    h2 = utils.get_new_hyp()
+    return "cases {0} with {1} {2}, ".format(h, h1, h2)
 
 @action(_("And"))
-def action_and(a):
-    return ""
+def action_and(goal : Goal, l : [PropObj]) -> str:
+    """
+    Translate into string of lean code corresponding to the action
+    
+    :param l: list of PropObj arguments preselected by the user
+    :return: string of lean code
+    """
+    if len(l) == 0:
+        return construct_and(goal)
+    elif len(l) == 1:
+        return apply_and(l)
+    else :
+        return "" # TODO : gestion erreur raise usererror
+
+## OR ##
+
+def construct_or(goal : Goal) -> str:
+    if goal.target.math_type.node != "PROP_OR":
+        return "" # TODO : gestion erreur ex raise user_error 
+    return "left, " # TODO : coder tactic lean permettant de
+                    # trouver le bon left / right et remplacer dans ce code
+
+def apply_or(l : [PropObj]) -> str:
+    if l[0].math_type.node != "PROP_OR":
+        return "" #TODO : gestion erreur raise usererror
+    h = l[0].lean_data["name"]
+    h1 = utils.get_new_hyp()
+    h2 = utils.get_new_hyp()
+    return "cases {0} with {1} {2}, ".format(h, h1, h2)
 
 @action(_("Or"))
-def action_or(a):
-    return ""
+def action_or(goal : Goal, l : [PropObj]) -> str:
+    """
+    Translate into string of lean code corresponding to the action
+    
+    :param l: list of PropObj arguments preselected by the user
+    :return: string of lean code
+    """
+    if len(l) == 0:
+        return construct_or(goal)
+    elif len(l) == 1:
+        return apply_or(l)
+    else :
+        return "" # TODO : gestion erreur ex raise user_error
+
+## IFF ##
 
 @action(_("If and only if"))
-def action_iff(a):
+def action_iff(goal : Goal, l : [PropObj]) -> str:
+    """
+    Translate into string of lean code corresponding to the action
+    
+    :param l: list of PropObj arguments preselected by the user
+    :return: string of lean code
+    """
     return ""
+
+## FOR ALL ##
+
+def construct_forall(goal):
+    if goal.target.math_type.node != "QUANT_∀":
+        return "" # TODO : gestion erreur ex raise user_error 
+    x = utils.get_new_var()
+    return "intro {0}, ".format(x)
 
 @action(_("For all"))
-def action_forall(a):
-    return ""
+def action_forall(goal : Goal, l : [PropObj]) -> str:
+    """
+    Translate into string of lean code corresponding to the action
+    
+    :param l: list of PropObj arguments preselected by the user
+    :return: string of lean code
+    """
+    if len(l) == 0:
+        return construct_forall(goal)
+    else :
+        return "" # TODO : gestion erreur ex raise user_error
+
+## EXISTS ##
+
+def construct_exists(goal, x : str):
+    if goal.target.math_type.node != "QUANT_∃":
+        return "" # TODO : gestion erreur ex raise user_error
+    return "use {0},".format(x)
+
+def apply_exists(l : [PropObj]) -> str:
+    if l[0].math_type.node != "QUANT_∃":
+        return "" # TODO : gestion erreur ex raise user_error
+    h = l[0].lean_data["name"]
+    x = utils.get_new_var()
+    hx = utils.get_new_hyp()
+    #log.debug(l[0].math_type.children[0], "\n")
+    #log.debug(l[0].math_type.children[1], "\n")
+    #log.debug(l[0].math_type.children[2], "\n")
+    if l[0].math_type.children[2].node == "PROP_∃":
+        return "rcases {0} with ⟨ {1}, ⟨ {2}, {0} ⟩ ⟩, ".format(h, x, hx)
+    else :
+        return "cases {0} with {1} {2}, ".format(h, x, hx)
 
 @action(_("Exists"))
-def action_exists(a):
+def action_exists(goal : Goal, l : [PropObj]) -> str:
+    """
+    Translate into string of lean code corresponding to the action
+    
+    :param l: list of PropObj arguments preselected by the user
+    :return: string of lean code
+    """
+    if len(l) == 1:
+        if l[0].math_type.is_prop():
+            return apply_exists(l)
+        else:
+            return construct_exists(goal, l[0].lean_data["name"])
+    if len(l) == 0: # TODO : pop-up à demander
+        x = "0" # TODO : x = dui.GET_USER_EXPR() appeler fonction graphique()
+        return construct_exists(goal, x)
     return ""
 
-if __name__ == "__main__":
-    logger.configure()
+## ASSUMPTION ##
 
+@action(_("Assumption"))
+def action_assumption(goal : Goal, l : [PropObj]) -> str:
+    """
+    Translate into string of lean code corresponding to the action
+    
+    :param l: list of PropObj arguments preselected by the user
+    :return: string of lean code
+    """
+    if len(l) == 0: # TODO : ptet verifier si on a bien une hypothèse pareil que le goal ?
+        return "assumption, "
+    else:
+        return "" # TODO : gestion erreur ex raise user_error
+
+## REDUCTIO AD ABSURDUM ##
+
+@action(_("Reductio ad absurdum"))
+def action_absurdum(goal : Goal, l : [PropObj]) -> str:
+    """
+    Translate into string of lean code corresponding to the action
+    
+    :param l: list of PropObj arguments preselected by the user
+    :return: string of lean code
+    """
+    if len(l) == 0:
+        return "by_contradiction, "
+    else:
+        return "" # TODO : gestion erreur ex raise user_error
+
+## CASE-BASED REASONING ##
+
+@action(_("Case-based reasoning"))
+def action_cbr(goal : Goal, l : [PropObj]) -> str:
+    """
+    Translate into string of lean code corresponding to the action
+    
+    :param l: list of PropObj arguments preselected by the user
+    :return: string of lean code
+    """
+    if len(l) == 0:
+        h1 = utils.get_new_hyp()
+        h2 = utils.get_new_hyp()
+        case = "0 = 0" # TODO : pop-up qui demande sur quelle propriété on veut faire une disjonction de cas
+        return "cases (em {0}) with {1} {2}".format(case, h1, h2)
+    else:
+        return "" # TODO : gestion erreur ex raise user_error

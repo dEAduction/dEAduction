@@ -14,7 +14,9 @@ msg=$(cat $1) # Hook paremeter is a path to a temoprary file containing the
 regex='([a-zA-Z]+)(\(([^()]+)\))?[:][ ]*(.*)'
 regex_msg='^[a-z].*'
 
-regex_merge='(([a-zA-Z0-9]+\/)+[a-zA-Z0-9]+) -> (([a-zA-Z0-9]+\/)+[a-zA-Z0-9]+)'
+word_reg='[a-zA-Z0-9_-]+'
+regex_merge="((${word_reg}/)+${word_reg}+) -> ((${word_reg}/)+${word_reg}+)"
+
 # group 1 : task type
 # group 2 : scope (with parentheses)
 # group 3 : scope (without parentheses)
