@@ -18,7 +18,7 @@ class ListItem(QListWidgetItem):
 
     def mark_selected(self, yes=True):
         if yes:
-            brush = QBrush(QColor('chartreuse'))
+            brush = QBrush(QColor('limegreen'))
         else:
             brush = QBrush()
 
@@ -41,16 +41,31 @@ class List(QListWidget):
         # Signals
         self.itemDoubleClicked.connect(self.record_selection)
 
+    def print_current_selection(self):
+
+        print('Current selection: ',
+                [item.text() for item in self.current_selection])
+
     @Slot()
     def record_selection(self):
-        selected_item = self.selectedItems()[0]
-        selected_item.mark_selected()
-        self.current_selection.append(selected_item)
+        item = self.selectedItems()[0]
+
+        if (not item.is_selected) and (not item in self.current_selection):
+            item.mark_selected(True)
+            self.current_selection.append(item)
+        elif item.is_selected:
+            item.mark_selected(False)
+            self.current_selection.remove(item)
+
+        self.print_current_selection()
 
     @Slot()
     def clear_selection(self):
         for item in self.current_selection:
             item.mark_selected(False)
+
+        self.current_selection = []
+        self.print_current_selection()
 
 
 class Container(QWidget):
