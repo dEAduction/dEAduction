@@ -25,14 +25,17 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from gettext import gettext as _
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QGroupBox, QHBoxLayout, QVBoxLayout
 from PySide2.QtWidgets import QMainWindow, QWidget
 
-def _replace_widget_in_layout(layout: QLayout, old: QWidget, new: QWidget,
-        flag=Qt.FindChildrenRecursively):
+
+def _replace_widget_in_layout(layout, old, new,
+                              flag=Qt.FindChildrenRecursively):
     layout.replaceWidget(old, new, flag)
     old.deleteLater()
+
 
 class ExerciseCentralWidget(QWidget):
 
@@ -61,10 +64,10 @@ class ExerciseCentralWidget(QWidget):
                 StatementsTreeWidget(self.exercise.available_statements,
                                      self.exercise.course.outline) 
 
-    def _init_goal(first_goal: Goal):
+    def _init_goal(self, first_goal: Goal):
         self.current_goal = first_goal
 
-        # Get objects and properties as two list of (ProofStatePO, 
+        # Get objects and properties as two list of (ProofStatePO,
         # str), the str being the tag of the prop. or obj.
         context = self.current_goal.tag_and_split_propositions_objects()
         self.objects_wgt = ProofStatePOWidget(context[0])
