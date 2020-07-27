@@ -1,7 +1,7 @@
 """
 # __init__.py : #ShortDescription #
     
-    (#optionalLongDescription)
+    https://en.meming.world/images/en/8/8e/All_Right_Then%2C_Keep_Your_Secrets.jpg
 
 Author(s)     : Marguerite Bin bin.marguerite@gmail.com
 Maintainer(s) : Marguerite Bin bin.marguerite@gmail.com
