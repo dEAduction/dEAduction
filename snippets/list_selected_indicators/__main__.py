@@ -49,6 +49,7 @@ class List(QListWidget):
     @Slot()
     def record_selection(self):
         item = self.selectedItems()[0]
+        item.setSelected(False)
 
         if (not item.is_selected) and (not item in self.current_selection):
             item.mark_selected(True)
