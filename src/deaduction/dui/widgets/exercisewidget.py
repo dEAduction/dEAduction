@@ -40,10 +40,10 @@ class ExerciseCentralWidget(QWidget):
         # TODO: draw the damn thing
 
         # Layouts
-        self._main_layout = QVBoxLayout()
-        self._context_actions_layout = QHBoxLayout()
-        self._context_layout = QVBoxLayout()
-        self._actions_layout = QVBoxLayout()
+        self._main_lyt = QVBoxLayout()
+        self._context_actions_lyt = QHBoxLayout()
+        self._context_lyt = QVBoxLayout()
+        self._actions_lyt = QVBoxLayout()
 
         # Group boxes
         self._actions_gb = QGroupBox(_('Actions (transform context)'))
@@ -51,10 +51,10 @@ class ExerciseCentralWidget(QWidget):
 
     def _init_actions(self):
         # Init tool buttons
-        self.logic_buttons = \
+        self.logic_btns = \
                 ActionButtonsWidget(self.exercise.available_logic)
         # Init proof techniques buttons
-        self.proof_techniques_buttons = \
+        self.proof_techniques_btns = \
                 ActionButtonsWidget(self.exercise.available_proof_techniques)
         # Init statements tree
         self.statements_tree = \
@@ -66,33 +66,29 @@ class ExerciseCentralWidget(QWidget):
 
         # Get objects and properties as two list of (ProofStatePO, 
         # str), the str being the tag of the prop. or obj.
-        goal_tagged_pspo = self.current_goal.tag_and_split_propositions_objects()
-        goal_tagged_objects = goal_tagged_pspo[0]
-        goal_tagged_props = goal_tagged_pspo[1]
-        # And create the widgets
-        self.goal_tagged_objects = ProofStatePOWidget(goal_tagged_objects)
-        self.goal_tagged_props = ProofStatePOWidget(goal_tagged_props)
-
+        context = self.current_goal.tag_and_split_propositions_objects()
+        self.objects_wgt = ProofStatePOWidget(context[0])
+        self.props_wgt = ProofStatePOWidget(context[1])
         # Finally the target
-        self.goal_target = TargetWidget(self.current_goal.target)
+        self.target_wgt = TargetWidget(self.current_goal.target)
 
     def _init_put_widgets_in_layouts(self):
         # Actions
-        self._actions_layout.addWidget(self.logic_buttons)
-        self._actions_layout.addWidget(self.proof_techniques_buttons)
-        self._actions_layout.addWidget(self.statements_tree)
-        self._actions_gb.setLayout(self._actions_layout)
+        self._actions_lyt.addWidget(self.logic_btns)
+        self._actions_lyt.addWidget(self.proof_techniques_btns)
+        self._actions_lyt.addWidget(self.statements_tree)
+        self._actions_gb.setLayout(self._actions_lyt)
 
         # Context
-        self._context_layout.addWidget(self.goal_tagged_objects)
-        self._context_layout.addWidget(self.goal_tagged_props)
-        self._context_gb.setLayout(self._context_layout)
+        self._context_lyt.addWidget(self.objects_wgt)
+        self._context_lyt.addWidget(self.props_wgt)
+        self._context_gb.setLayout(self._context_lyt)
 
         # https://i.kym-cdn.com/photos/images/original/001/561/446/27d.jpg
-        self._context_actions_layout.addWidget(self._actions_gb)
-        self._context_actions_layout.addWidget(self._context_gb)
-        self._main_layout.addWidget(self.goal_target)
-        self._main_layout.addLayout(self._context_actions_layout)
+        self._context_actions_lyt.addWidget(self._actions_gb)
+        self._context_actions_lyt.addWidget(self._context_gb)
+        self._main_lyt.addWidget(self.target_wgt)
+        self._main_lyt.addLayout(self._context_actions_lyt)
 
     def __init__(self, exercise: Exercise, first_goal: Goal):
         super().__init__()
@@ -101,35 +97,29 @@ class ExerciseCentralWidget(QWidget):
         self._init_actions()
         self._init_goal()
         self._init_put_widgets_in_layouts()
-        self.setLayout(self._main_layout)
+        self.setLayout(self._main_lyt)
 
     def update_goal(self, new_goal: Goal):
 
         # Get new objects
-        new_goal_tagged_pspo = new_goal.tag_and_split_propositions_objects()
-        new_goal_tagged_objects = goal_tagged_pspo[0]
-        new_goal_tagged_props = goal_tagged_pspo[1]
-
-        new_goal_tagged_objects = ProofStatePOWidget(new_goal_tagged_objects)
-        new_goal_tagged_props = ProofStatePOWidget(new_goal_tagged_props)
-
-        new_goal_target = TargetWidget(self.current_goal.target)
+        new_context = new_goal.tag_and_split_propositions_objects()
+        new_objects_wgt = ProofStatePOWidget(new_context[0])
+        new_props_wgt = ProofStatePOWidget(new_context[1])
+        new_target_wgt = TargetWidget(self.current_goal.target)
 
         # Replace in the layouts
-        _replace_widget_in_layout(self._context_layout,
-                                  self.goal_tagged_objects,
-                                  new_goal_tagged_objects)
-        _replace_widget_in_layout(self._context_layout,
-                                  self.goal_tagged_props,
-                                  new_goal_tagged_props)
-        _replace_widget_in_layout(self._main_layout,
-                                  self.goal_target,
-                                  new_goal_target,
+        _replace_widget_in_lyt(self._context_lyt,
+                               self.objects_wgt, new_objects_wgt)
+        _replace_widget_in_layout(self._context_lyt,
+                                  self.props_wgt, new_props_wgt)
+        _replace_widget_in_layout(self._main_lyt,
+                                  self.target_wgt, new_target_wgt,
                                   ~Qt.FindChildrenRecursively)
 
         # Set the attributes to the new values
-        self._context_layout = new_goal_tagged_objects
-        self._context_layout = new_goal_tagged_props
+        self.objects_wgt = new_objects_wgt
+        self.props_wgt = new_props_wgt
+        self.target_wgt = new_target_wgt
         self.current_goal = new_goal        
 
 
