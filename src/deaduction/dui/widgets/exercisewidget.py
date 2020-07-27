@@ -31,18 +31,6 @@ from PySide2.QtWidgets import QMainWindow, QWidget
 
 class ExerciseCentralWidget(QWidget):
 
-    def _init_actions(self):
-        # Init tool buttons
-        self.tool_buttons = \
-                ActionButtonsWidget(self.exercise.available_logic)
-        # Init proof techniques buttons
-        self.proof_buttons = \
-                ActionButtonsWidget(self.exercise.available_proof_techniques)
-        # Init statements tree
-        self.statements_tree = \
-                StatementsTreeWidget(self.exercise.available_statements,
-                                     self.exercise.course.outline) 
-
     def _init_layout_boxes(self):
         # TODO: draw the damn thing
 
@@ -56,14 +44,19 @@ class ExerciseCentralWidget(QWidget):
         self.context_gb = QGroupBox(_('Context (properties and objects)'))
         self.actions_gb = QGroupBox(_('Actions (transform context)'))
 
-    def __init__(self, exercise: Exercise, first_goal: Goal):
-        super().__init__()
-        self.exercise = exercise
+    def _init_actions(self):
+        # Init tool buttons
+        self.tool_buttons = \
+                ActionButtonsWidget(self.exercise.available_logic)
+        # Init proof techniques buttons
+        self.proof_buttons = \
+                ActionButtonsWidget(self.exercise.available_proof_techniques)
+        # Init statements tree
+        self.statements_tree = \
+                StatementsTreeWidget(self.exercise.available_statements,
+                                     self.exercise.course.outline) 
 
-        self._init_layout_boxes()
-        self._init_actions()
-
-    def update_goal(new_goal: Goal):
+    def _init_goal(new_goal: Goal):
         self.goal = new_goal
 
         # Get objects and properties as two list of (ProofStatePO, 
@@ -77,6 +70,13 @@ class ExerciseCentralWidget(QWidget):
         self.tagged_goal_prop = ProofStatePOWidget(tagged_goal_prop)
 
         # Put them in layouts
+
+    def __init__(self, exercise: Exercise, first_goal: Goal):
+        super().__init__()
+        self.exercise = exercise
+
+        self._init_layout_boxes()
+        self._init_actions()
 
 
 class ExerciseMainWindow(QMainWindow):
