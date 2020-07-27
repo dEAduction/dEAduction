@@ -26,9 +26,33 @@ This file is part of d∃∀duction.
 """
 
 from PySide2.QtWidgets import QGroupBox, QHBoxLayout, QVBoxLayout
-from PySide2.QtWidgets import QWidget
+from PySide2.QtWidgets import QMainWindow, QWidget
 
 
-class ExerciseWidget(QWidget):
+class ExerciseCentralWidget(QWidget):
+
+    def _init_actions(self):
+        # Init tool buttons
+        self.tool_buttons = \
+                ActionButtonsWidget(self.exercise.available_logic)
+        # Init proof techniques buttons
+        self.proof_buttons = \
+                ActionButtonsWidget(self.exercise.available_proof_techniques)
+        # Init statements tree
+        self.statements_tree = \
+                StatementsTreeWidget(self.exercise.available_statements,
+                                     self.exercise.course.outline) 
+
+    def __init__(self, exercise: Exercise, first_goal: Goal):
+        super().__init__()
+        self.exercise = exercise
+        self._init_actions()
+
+
+    def update_goal(new_goal: Goal):
+        pass
+
+
+class ExerciseMainWindow(QMainWindow):
 
     pass
