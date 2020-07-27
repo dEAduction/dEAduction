@@ -29,9 +29,10 @@ from pathlib import Path
 from typing import List
 from PySide2.QtGui import QBrush, QColor, QIcon
 from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QHBoxLayout
-from PySide2.QtWidgets import QPushButton
+from PySide2.QtWidgets import QHBoxLayout, QPushButton, QWidget
 from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem
+from deaduction.pylib.actions import Action
+from deaduction.pylib.coursedata import Statement
 
 
 ######################
@@ -58,7 +59,6 @@ class ActionButtonsWidget(QWidget):
 
         self.setLayout(self.main_layout)
 
-    
 ##############################
 # Statements widgets classes #
 ##############################

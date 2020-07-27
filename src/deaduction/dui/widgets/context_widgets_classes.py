@@ -28,8 +28,9 @@ This file is part of d∃∀duction.
 from pathlib import Path
 from typing import List, Tuple
 from PySide2.QtGui import QIcon
-from PySide2.QtWidgets import QPushButton
+from PySide2.QtWidgets import QPushButton, QWidget
 from PySide2.QtWidgets import QListWidget, QListWidgetItem
+from deaduction.pylib.mathobj import ProofStatePO
 
 
 ###############################
@@ -94,7 +95,6 @@ class _TargetButton(QPushButton):
         # Resize the button to be about the size of the displayed text.
         text_width = self.fontMetrics().boundingRect(self.text()).width()
         self.setFixedWidth(text_width + 40)
-
 
     def __init__(self, target: ProofStatePO):
         super().__init__()

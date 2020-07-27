@@ -29,6 +29,13 @@ from gettext import gettext as _
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QGroupBox, QHBoxLayout, QVBoxLayout
 from PySide2.QtWidgets import QMainWindow, QWidget
+from deaduction.dui.widgets import (
+        ActionButtonsWidget,
+        StatementsTreeWidget,
+        ProofStatePOWidget,
+        TargetWidget)
+from deaduction.pylib.coursedata import Exercise
+from deaduction.pylib.mathobj import Goal
 
 
 def _replace_widget_in_layout(layout, old, new,
@@ -111,7 +118,7 @@ class ExerciseCentralWidget(QWidget):
         new_target_wgt = TargetWidget(self.current_goal.target)
 
         # Replace in the layouts
-        _replace_widget_in_lyt(self._context_lyt,
+        _replace_widget_in_layout(self._context_lyt,
                                self.objects_wgt, new_objects_wgt)
         _replace_widget_in_layout(self._context_lyt,
                                   self.props_wgt, new_props_wgt)
@@ -123,7 +130,7 @@ class ExerciseCentralWidget(QWidget):
         self.objects_wgt = new_objects_wgt
         self.props_wgt = new_props_wgt
         self.target_wgt = new_target_wgt
-        self.current_goal = new_goal        
+        self.current_goal = new_goal
 
 
 class ExerciseMainWindow(QMainWindow):
