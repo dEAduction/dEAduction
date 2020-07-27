@@ -90,6 +90,20 @@ def action_contrapose(goal : Goal, l : [PropObj]):
             return "contrapose, "
     return "" # TODO : gestion erreur ex raise user_error
 
+@action(_("Contradiction"))
+def action_contradiction(goal : Goal, l : [PropObj]):
+    """
+    Translate into string of lean code corresponding to the action
+    
+    :param l: list of PropObj arguments preselected by the user
+    :return: string of lean code
+    """
+    return "contradiction, "
+
+@action(_("Proof by induction"))
+def action_induction(goal : Goal, l : [PropObj]):
+    return ""
+
 @action(_("Use axiom of choice"))
 def action_choice(goal):
     return ""
