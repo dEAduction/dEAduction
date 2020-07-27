@@ -101,4 +101,7 @@ class ExerciseCentralWidget(QWidget):
 
 class ExerciseMainWindow(QMainWindow):
 
-    pass
+    def __init__(self, exercise: Exercise):
+        super().__init__()
+        self.exercise = exercise
+        self.setCentralWidget(ExerciseCentralWidget(exercise))
