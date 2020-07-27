@@ -63,9 +63,20 @@ class ExerciseCentralWidget(QWidget):
         self._init_layout_boxes()
         self._init_actions()
 
-
     def update_goal(new_goal: Goal):
-        pass
+        self.goal = new_goal
+
+        # Get objects and properties as two list of (ProofStatePO, 
+        # str), the str being the tag of the prop. or obj.
+        tagged_goal_pspos = self.goal.tag_and_split_propositions_objects()
+        tagged_goal_objects = goal_actions_pspos[0]
+        tagged_actions_prop = goal_actions_pspos[1]
+
+        # Create the widgets
+        self.tagged_goal_objects = ProofStatePOWidget(tagged_goal_objects)
+        self.tagged_goal_prop = ProofStatePOWidget(tagged_goal_prop)
+
+        # Put them in layouts
 
 
 class ExerciseMainWindow(QMainWindow):
