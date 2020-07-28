@@ -25,23 +25,30 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
+import logging
 from gettext import gettext as _
-from PySide2.QtCore import Qt
+from PySide2.QtCore import Slot, Qt
 from PySide2.QtWidgets import QGroupBox, QHBoxLayout, QVBoxLayout
 from PySide2.QtWidgets import QMainWindow, QWidget
-from deaduction.dui.widgets import (
-        ActionButtonsWidget,
-        StatementsTreeWidget,
-        ProofStatePOWidget,
-        TargetWidget)
+from deaduction.dui.widgets import (ActionButtonsWidget,
+                                    StatementsTreeWidget,
+                                    ProofStatePOWidget,
+                                    ProofStatePOWidgetItem,
+                                    TargetWidget)
 from deaduction.pylib.coursedata import Exercise
 from deaduction.pylib.mathobj import Goal
 
+log = logging.getLogger(__name__)
 
-def _replace_widget_in_layout(layout, old, new,
-                              flag=Qt.FindChildrenRecursively):
+
+def replace_delete_widget(layout, old, new, flag=Qt.FindChildrenRecursively):
     layout.replaceWidget(old, new, flag)
     old.deleteLater()
+
+
+###########
+# Widgets #
+###########
 
 
 class ExerciseCentralWidget(QWidget):
@@ -61,15 +68,14 @@ class ExerciseCentralWidget(QWidget):
 
     def _init_actions(self):
         # Init tool buttons
-        self.logic_btns = \
-                ActionButtonsWidget(self.exercise.available_logic)
+        self.logic_btns = ActionButtonsWidget(self.exercise.available_logic)
         # Init proof techniques buttons
-        self.proof_techniques_btns = \
-                ActionButtonsWidget(self.exercise.available_proof_techniques)
+        self.proof_techniques_btns = ActionButtonsWidget(
+                self.exercise.available_proof_techniques)
         # Init statements tree
-        self.statements_tree = \
-                StatementsTreeWidget(self.exercise.available_statements,
-                                     self.exercise.course.outline) 
+        statements = self.exercise.available_statements
+        outline = self.exercise.course.outline
+        self.statements_tree = StatementsTreeWidget(statements, outline)
 
     def _init_goal(self, first_goal: Goal):
         self.current_goal = first_goal
@@ -77,12 +83,12 @@ class ExerciseCentralWidget(QWidget):
         # Init context (objects and properties). Get them as two list of
         # (ProofStatePO, str), the str being the tag of the prop. or obj.
         context = self.current_goal.tag_and_split_propositions_objects()
-        self.objects_wgt = ProofStatePOWidget(context[0]) self.props_wgt =
-        ProofStatePOWidget(context[1])
+        self.objects_wgt = ProofStatePOWidget(context[0])
+        self.props_wgt = ProofStatePOWidget(context[1])
 
         # Init the target
-        target_tag = self.current_goal.future_tags[1]
         target = self.current_goal.target
+        target_tag = self.current_goal.future_tags[1]
         self.target_wgt = TargetWidget(target, target_tag)
 
     def _init_put_widgets_in_layouts(self):
@@ -118,16 +124,18 @@ class ExerciseCentralWidget(QWidget):
         new_context = new_goal.tag_and_split_propositions_objects()
         new_objects_wgt = ProofStatePOWidget(new_context[0])
         new_props_wgt = ProofStatePOWidget(new_context[1])
-        new_target_wgt = TargetWidget(new_goal.target, new_goal.future_tags[1])
+        new_target = new_goal.target
+        new_target_tag = new_target.future_tags[1]
+        new_target_wgt = TargetWidget(new_target, new_target_tag)
 
         # Replace in the layouts
-        _replace_widget_in_layout(self._context_lyt,
-                               self.objects_wgt, new_objects_wgt)
-        _replace_widget_in_layout(self._context_lyt,
-                                  self.props_wgt, new_props_wgt)
-        _replace_widget_in_layout(self._main_lyt,
-                                  self.target_wgt, new_target_wgt,
-                                  ~Qt.FindChildrenRecursively)
+        replace_delete_widget(self._context_lyt,
+                              self.objects_wgt, new_objects_wgt)
+        replace_delete_widget(self._context_lyt,
+                              self.props_wgt, new_props_wgt)
+        replace_delete_widget(self._main_lyt,
+                              self.target_wgt, new_target_wgt,
+                              ~Qt.FindChildrenRecursively)
 
         # Set the attributes to the new values
         self.objects_wgt = new_objects_wgt
@@ -136,9 +144,51 @@ class ExerciseCentralWidget(QWidget):
         self.current_goal = new_goal
 
 
+###############
+# Main window #
+###############
+
+
 class ExerciseMainWindow(QMainWindow):
+
+    def _init_signals_slots(self):
+        self.exercise_cw.objects_wgt.clicked.connect(self.process_context_click)
+        self.exercise_cw.props_wgt.clicked.connect(self.process_context_click)
 
     def __init__(self, exercise: Exercise):
         super().__init__()
         self.exercise = exercise
-        self.setCentralWidget(ExerciseCentralWidget(exercise))
+        self.exercise_cw = ExerciseCentralWidget(self.exercise)
+        self.current_context_selection = []
+        self.setCentralWidget(self.exercise_cw)
+        self._init_signals_slots()
+
+    def pretty_user_selection(self):
+        msg = 'Current user selection: '
+        msg += ([item.text() for item in self.current_context_selection])
+
+        return msg
+
+    @Slot(ProofStatePOWidgetItem)
+    def process_context_click(self, item: ProofStatePOWidgetItem):
+        log.debug('Recording user selection')
+        item.setSelected(False)
+
+        if not item.is_user_selected:
+            if item not in self.current_context_selection:
+                item.mark_selected(True)
+                self.current_context_selection.append(item)
+        elif item.is_user_selected:
+            item.mark_selected(False)
+            self.current_context_selection.remove(item)
+
+        log.debug(self.pretty_user_selection())
+
+    @Slot()
+    def clear_user_selection(self):
+        log.debug('Clearing user selection')
+        for item in self.current_context_selection:
+            item.mark_user_selected(False)
+
+        self.current_context_selection = []
+        log.debug(self.pretty_user_selection())

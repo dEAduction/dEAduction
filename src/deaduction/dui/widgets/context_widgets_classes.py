@@ -27,9 +27,11 @@ This file is part of d∃∀duction.
 
 from pathlib import Path
 from typing import List, Tuple
-from PySide2.QtGui import QIcon
-from PySide2.QtWidgets import QPushButton, QWidget
-from PySide2.QtWidgets import QListWidget, QListWidgetItem
+from PySide2.QtGui import QBrush, QColor, QIcon
+from PySide2.QtWidgets import (QLabel,
+                               QWidget,
+                               QListWidget,
+                               QListWidgetItem)
 from deaduction.pylib.mathobj import ProofStatePO
 
 #############
@@ -97,7 +99,6 @@ class ProofStatePOWidget(QListWidget):
         super().__init__()
         for proofstatepo, tag in tagged_proofstatepos:
             self.addItem(ProofStatePOItem(proofstatepo, tag))
-
 
 #######################
 # Target widget class #
