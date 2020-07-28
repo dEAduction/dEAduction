@@ -42,7 +42,7 @@ class List(QListWidget):
         self.addItem(ListItem('John'))
 
         # Signals
-        self.itemDoubleClicked.connect(self.record_selection)
+        self.itemClicked.connect(self.record_selection)
 
     def print_current_selection(self):
 
