@@ -29,7 +29,7 @@ This file is part of dEAduction.
 from dataclasses import dataclass
 import deaduction.pylib.logger as logger
 import logging
-from typing import List
+from typing import List, Tuple
 from deaduction.pylib.mathobj.PropObj import PropObj, ProofStatePO, \
     math_type_store
 
@@ -40,28 +40,8 @@ log = logging.getLogger(__name__)
 class Goal:
     context: List[ProofStatePO]
     target: ProofStatePO
-    math_types: List[PropObj]
-    math_types_instances: List[ProofStatePO]
+    math_types: List[Tuple[PropObj, List[ProofStatePO]]]
     variables_names: List[str]
-
-    # def update(self, updated_hypo_analysis):
-    #     """
-    #     UNUSED
-    #     search for the new identifiers in updated_old_hypo_analysis,
-    #     and substitute them in the ProofStatePO's of the context
-    #     :param updated_old_hypo_analysis: string from the lean tactic
-    #     hypo_analysis corresponding to the previous step)
-    #     """
-    #     log = logging.getLogger("proof_state")
-    #     log.info("updating old context with new identifiers")
-    #     identifiers = []
-    #     context = self.context
-    #     counter = 0
-    #     for line in updated_hypo_analysis.splitlines():
-    #         ident = extract_identifier1(line)
-    #         pfpo = context[counter]
-    #         pfpo.lean_data["id"] = ident
-    #         counter += 1
 
     def compare(self, old_goal, goal_is_new):
         """
@@ -177,24 +157,20 @@ class Goal:
         log.info("creating new Goal from lean strings")
         lines = hypo_analysis.splitlines()
         context = []
-        #        # clearing ProofStatePO.math_types and instances
-        #        ProofStatePO.math_types = []
-        #        ProofStatePO.math_types_instances = []
-        math_types = []
-        math_types_instances = []
+        math_types = []  # this is a list of tuples
+        # (math_type, math_type_instances)
+        # where math_type_instances is a list of instances of math_type
         # computing new pfPO's
         for prop_obj_string in lines:
             if prop_obj_string.startswith("context:"):
                 continue
             else:
                 prop_obj = ProofStatePO.from_string(prop_obj_string)
-                math_type_store(math_types, math_types_instances, prop_obj,
-                                prop_obj.math_type)
+                math_type_store(math_types, prop_obj, prop_obj.math_type)
                 context.append(prop_obj)
         target = ProofStatePO.from_string(target_analysis)
         variables_names = []  # todo
-        return cls(context, target, math_types, math_types_instances,
-                   variables_names)
+        return cls(context, target, math_types, variables_names)
 
     def tag_and_split_propositions_objects(self):
         """
@@ -298,11 +274,9 @@ OBJECT[LOCAL_CONSTANT¿[name:x/identifier:0._fresh.726.4018¿]¿(CONSTANT¿[name
 PROPERTY[LOCAL_CONSTANT¿[name:H/identifier:0._fresh.726.4020¿]¿(CONSTANT¿[name:1/1¿]¿)/pp_type: x ∈ (f⁻¹⟮B ∪ B'⟯)] ¿= PROP_BELONGS¿(LOCAL_CONSTANT¿[name:x/identifier:0._fresh.726.4018¿]¿(CONSTANT¿[name:1/1¿]¿)¿, SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.725.7042¿]¿(CONSTANT¿[name:1/1¿]¿)¿, SET_UNION¿(LOCAL_CONSTANT¿[name:B/identifier:0._fresh.725.7044¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.725.7047¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿)"""
 
     def print_proof_state(goal):
-        i = 0
-        for mt in goal.math_types:
-            print(
-                f"{[PO.format_as_utf8() for PO in goal.math_types_instances[i]]} : {mt.format_as_utf8()}")
-            i += 1
+        for mt, mt_list in goal.math_types:
+            print(f"{[PO.format_as_utf8() for PO in mt_list]} :"
+                  f" {mt.format_as_utf8()}")
 
     goal = Goal.from_lean_data(hypo_essai, "")
     print_proof_state(goal)

@@ -34,6 +34,7 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 from dataclasses import dataclass
+from typing import Tuple, List, Dict
 import logging
 
 import deaduction.pylib.logger as logger
@@ -59,8 +60,7 @@ class PropObj:
     """
     node: str
     children: list
-    latex_rep: list
-    utf8_rep: list
+    representation: Dict[str, list]  # keys = 'latex, 'utf8'
     # The following are here just to help reading the code
     # See structures.lean for more accurate lists
     nodes_list = ["PROP_AND", "PROP_OR", "PROP_IFF", "PROP_NOT",
@@ -79,7 +79,6 @@ class PropObj:
 
     # VAR should not be used any more
 
-
     def __eq__(self, other):
         """
         test if the two prop_obj code for the same mathematical objects,
@@ -91,24 +90,24 @@ class PropObj:
         :param other: AnonymousPO
         :return: bool
         """
-        # TODO: do we have to test for lean_data["name"] ?
-        # (does make sense only if not isinstance(AnonymousPO) )
+        # First test if nodes are the same
         if self.node != other.node:
             return False
-#        elif self.children is not None and other.children is not None:
-        if len(self.children) != len(other.children):
+        # then test for class, and then for lean names
+        elif self.__class__.__name__ != other.__class__.__name__:
+            return False
+        elif self.__class__.__name__ in ['ProofStatePO', 'BoundVarPO']:
+            if self.lean_data['name'] != other.lean_data['name']:
+                return False
+        # now test equality of children
+        elif len(self.children) != len(other.children):
             return False
         else:
             for index in range(len(self.children)):
                 if not PropObj.__eq__(self.children[index],
                                       other.children[index]):
                     return False
-#        elif self.children is not None and other.children is None:
-#            return False
-#        elif self.children is None and other.children is not None:
-#            return False
         return True
-
 
     def is_prop(self) -> bool:
         """
@@ -123,7 +122,7 @@ class PropObj:
             return self.node.startswith("PROP") \
                    or self.node.startswith("QUANT")
 
-    def structured_format(self, format="latex"):
+    def structured_format(self, format_="latex"):
         """
         Compute a structured latex or utf-8 "representation" of a prop_obj.
         Representations are structured into trees represented by lists,
@@ -134,64 +133,63 @@ class PropObj:
         - lists of latex rep
         """
         #        log = logging.getLogger("PropObj")
-        if format == "latex":
+        if format_ == "latex":
             log.info(f"computing latex representation of {self}")
-            field = "latex_rep"
         else:
-            log.info(f"computing utf8 representation of {self}")
-            field = "utf8_rep"
-        if eval("self." + field) is not None:  # should be useless
+            log.info(f"computing utf-8 representation of {self}")
+            format_ = "utf8"
+        if self.representation[format_] is not None:
             return
-        a = []  # will be the list of the latex rep of the children
+        children_rep = []
         node = self.node
         i = -1
         for arg in self.children:
             i += 1
-            if eval("arg." + field) is None:
-                PropObj.structured_format(arg, format)  # = compute_latex
-            lr = eval("arg." + field)
+            if arg.representation[format_] is None:
+                PropObj.structured_format(arg, format_)  # = compute_latex
+            lr = arg.representation[format_]
+            # the following line computes if parentheses are needed
+            # around child n° i
             parentheses = needs_paren(self, i)
             if parentheses:
                 lr = ["(", lr, ")"]
-            a.append(lr)
-        log.debug(f"Node: {node}")
-        if format == "latex":
+            children_rep.append(lr)
+        #        log.debug(f"Node: {node}")
+        if format_ == "latex":
             symbol, format_scheme = latex_structures[node]
-            self.latex_rep = format_scheme(symbol, a, self, format="latex")
+            self.representation["latex"] = format_scheme(symbol, children_rep,
+                                                         self, format="latex")
         else:
             symbol, format_scheme = utf8_structures[node]
-            self.utf8_rep = format_scheme(symbol, a, self, format="utf8")
-        log.info(f"--> {self.latex_rep}")
+            self.representation["utf8"] = format_scheme(symbol, children_rep,
+                                                        self, format="utf8")
         return
 
     def format_as_latex(self):
-        PropObj.structured_format(self, format="latex")
-        lr = self.latex_rep
-        if not isinstance(lr, list):
-            return lr
-        else:
-            return list_string_join(lr)
+        PropObj.structured_format(self, format_="latex")
+        lr = self.representation["latex"]
+        return list_string_join(lr)
 
     def format_as_utf8(self):
-        PropObj.structured_format(self, format="utf8")
-        lr = self.utf8_rep
-        if not isinstance(lr, list):
-            return lr
-        else:
-            return list_string_join(lr)
+        PropObj.structured_format(self, format_="utf8")
+        lr = self.representation["utf8"]
+        return list_string_join(lr)
 
 
 def list_string_join(latex_or_utf8_rep):
     """
     turn a (structured) latex or utf-8 representation into a latex string
     """
-    string = ""
-    for lr in latex_or_utf8_rep:
-        if type(lr) is list:
-            lr = list_string_join(lr)
-        string += lr
-    #    log.debug("string:", latex_str)
-    return string
+    if not isinstance(latex_or_utf8_rep, list):
+        return latex_or_utf8_rep
+    else:
+        string = ""
+        for lr in latex_or_utf8_rep:
+            if type(lr) is list:
+                lr = list_string_join(lr)
+            string += lr
+        #    log.debug("string:", latex_str)
+        return string
 
 
 # TODO : tenir compte de la profondeur des parenthèses,
@@ -225,7 +223,7 @@ def needs_paren(parent: PropObj, child_number: int):
     return b
 
 
-@dataclass(eq = False)  # will inherit the __eq__ method from PropObj
+@dataclass(eq=False)  # will inherit the __eq__ method from PropObj
 class AnonymousPO(PropObj):
     """
     Objects and Propositions not in the proof state, in practice they will be
@@ -242,8 +240,8 @@ class AnonymousPO(PropObj):
         :return: an instance of AnonymousPO
         """
         #        log = logging.getLogger("PropObj")
-        latex_rep = None  # latex representation is computed later
-        utf8_rep = None
+        representation = {'latex': None, 'utf8': None}
+        # latex representation is computed later
         node = prop_obj_dict["node"]
         lean_data = extract_lean_data(node)
         ##############################
@@ -265,10 +263,10 @@ class AnonymousPO(PropObj):
         ###################
         if node.startswith("LOCAL_CONSTANT"):
             # unidentified local constant = bound variable
-            latex_rep = lean_data["name"]
-            utf8_rep = lean_data["name"]
+            representation = {"latex": lean_data["name"],
+                              "utf8": lean_data["name"]}
             math_type = children[0]
-            prop_obj = BoundVarPO(node, [], latex_rep, utf8_rep, [],
+            prop_obj = BoundVarPO(node, [], representation, [],
                                   lean_data, math_type)
             var_name = lean_data["name"]
             log.debug(f"adding {var_name} to the bound vars names list")
@@ -283,11 +281,11 @@ class AnonymousPO(PropObj):
         #################
         # Instantiation #
         #################
-        prop_obj = cls(node, children, latex_rep, utf8_rep)
+        prop_obj = cls(node, children, representation)
         return prop_obj, bound_vars
 
 
-@dataclass(eq = False)
+@dataclass(eq=False)
 class ProofStatePO(PropObj):
     """
     Objects and Propositions of the proof state (and bound variables)
@@ -298,15 +296,11 @@ class ProofStatePO(PropObj):
     math_type: PropObj
 
     dict_ = {}  # dictionary of all instances of ProofStatePO
+
     # with identifiers as keys. This is used to guarantee
     # uniqueness of ProofStatePO's instances
     # including bound variables
     # (useful e.g. to provide name to new variables)
-    math_types = []  # list of the PropObj's objects (not propositions)
-    # that occurs as math_type of some ProofStatePO,
-    math_types_instances = []  # list of ProofStatePO
-
-    # whose math_type equals the term having the same index in math_types_list
 
     @classmethod
     def from_string(cls, prop_obj_str: str):
@@ -344,12 +338,12 @@ class ProofStatePO(PropObj):
         log.debug(f"math type: {math_type}")
         node = ""
         children = []
-        latex_rep = lean_data["name"]  # equals empty string if is_prop == True
-        utf8_rep = lean_data["name"]
+        representation = {"latex": lean_data["name"],
+                          "utf8": lean_data["name"]}
         #################
         # Instanciation #
         #################
-        prop_obj = cls(node, children, latex_rep, utf8_rep, bound_vars,
+        prop_obj = cls(node, children, representation, bound_vars,
                        lean_data, math_type)
         ######################################
         # Adjusting data : dict_, math_types #
@@ -363,37 +357,38 @@ class ProofStatePO(PropObj):
         return prop_obj
 
 
-@dataclass(eq = False)
+@dataclass(eq=False)
 class BoundVarPO(ProofStatePO):
     """
     Variables that are bound by a quantifier
     """
 
 
-def math_type_store(math_types: list, math_types_instances: list, prop_obj:
-ProofStatePO, math_type: PropObj):
+def math_type_store(math_types: List[Tuple[PropObj, List[ProofStatePO]]],
+                    prop_obj: ProofStatePO, math_type: PropObj):
     """
     Store PropObj in the ProofStatePO.math_types_instances list,
     after adding math_type in math_types if needed
 
     :param prop_obj: instance of ProofStatePO to be stored
     :param math_type: math_type of PropObj
+    :param math_types: list of tuples (math_type, math_type_instances)
+    where math_type_instances is a list of instances of math_type
     """
-    log.debug(f"storing {prop_obj.utf8_rep} in math_types_instances of"
-              f" {math_type}")
+    log.debug(f"storing {prop_obj.representation['utf8']} in"
+              f"math_types_instances of {math_type}")
     index = 0
-    for item in math_types:
+    for item, item_list in math_types:
         if item == math_type:
             break
         index += 1
     if index == len(math_types):
-        # create the instance list if this is the first instance of
-        # math_type
-        # NB : math_types_instances is a list of lists
-        math_types.append(math_type)
-        math_types_instances.append([])
-    # add math_type to math_types_instances
-    math_types_instances[index].append(prop_obj)
+        # this is the first instance of math_type
+        math_types.append((math_type, []))
+    # add prop_obj to the instances of path_type
+    # NB: math_types[index][1] is the list of instances
+    # of math_types[index][0]
+    math_types[index][1].append(prop_obj)
 
 
 def extract_lean_data(local_constant: str) -> dict:
@@ -468,8 +463,7 @@ if __name__ == '__main__':
 OBJECT[LOCAL_CONSTANT¿[name:Y/identifier:0._fresh.680.5804¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= TYPE
 OBJECT[LOCAL_CONSTANT¿[name:f/identifier:0._fresh.680.5807¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= FUNCTION¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.680.5802¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:Y/identifier:0._fresh.680.5804¿]¿(CONSTANT¿[name:1/1¿]¿)¿)
 OBJECT[LOCAL_CONSTANT¿[name:B/identifier:0._fresh.680.5809¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= SET¿(LOCAL_CONSTANT¿[name:Y/identifier:0._fresh.680.5804¿]¿(CONSTANT¿[name:1/1¿]¿)¿)
-OBJECT[LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.680.5812¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= SET¿(LOCAL_CONSTANT¿[name:Y/identifier:0._fresh.680.5804¿]¿(CONSTANT¿[name:1/1¿]¿)¿)
-PROPERTY[METAVAR[_mlocal._fresh.679.4460]/pp_type: ∀ ⦃x : X⦄, x ∈ (f⁻¹⟮B ∪ B'⟯) → x ∈ f⁻¹⟮B⟯ ∪ (f⁻¹⟮B'⟯)] ¿= QUANT_∀¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.680.5802¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:x/identifier:_fresh.679.4484¿]¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.680.5802¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, PROP_IMPLIES¿(PROP_BELONGS¿(LOCAL_CONSTANT¿[name:x/identifier:_fresh.679.4484¿]¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.680.5802¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.680.5807¿]¿(CONSTANT¿[name:1/1¿]¿)¿, SET_UNION¿(LOCAL_CONSTANT¿[name:B/identifier:0._fresh.680.5809¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.680.5812¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿)¿, PROP_BELONGS¿(LOCAL_CONSTANT¿[name:x/identifier:_fresh.679.4484¿]¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.680.5802¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, SET_UNION¿(SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.680.5807¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B/identifier:0._fresh.680.5809¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.680.5807¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.680.5812¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿)¿)¿)"""
+OBJECT[LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.680.5812¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= SET¿(LOCAL_CONSTANT¿[name:Y/identifier:0._fresh.680.5804¿]¿(CONSTANT¿[name:1/1¿]¿)¿)"""
     essai_context_union = """context:
 OBJECT[LOCAL_CONSTANT¿[name:X/identifier:0._fresh.436.13260¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= TYPE
 OBJECT[LOCAL_CONSTANT¿[name:A/identifier:0._fresh.436.13262¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= SET¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.436.13260¿]¿(CONSTANT¿[name:1/1¿]¿)¿)
@@ -520,9 +514,9 @@ PROPERTY[LOCAL_CONSTANT¿[name:H/identifier:0._fresh.437.4736¿]¿(CONSTANT¿[na
         print(f"{eval('pfprop_obj.format_as_' + format + '()')} : "
               f"{eval('pfprop_obj.math_type.format_as_' + format + '()')}")
     #        print(f"assemblé :  {latex_join(pfprop_obj.math_type.latex_rep)}")
-    print("List of math types:")
-    i = 0
-    for mt in ProofStatePO.math_types:
-        print(f" {mt.format_as_utf8()}: ",
-              f"{[PO.format_as_utf8() for PO in ProofStatePO.math_types_instances[i]]}")
-        i += 1
+    # print("List of math types:")
+    # i = 0
+    # for mt in ProofStatePO.math_types:
+    #     print(f" {mt.format_as_utf8()}: ",
+    #           f"{[PO.format_as_utf8() for PO in ProofStatePO.math_types_instances[i]]}")
+    #     i += 1
