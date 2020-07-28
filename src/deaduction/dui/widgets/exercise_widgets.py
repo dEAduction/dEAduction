@@ -30,6 +30,7 @@ from gettext import gettext as _
 from PySide2.QtCore import Slot, Qt
 from PySide2.QtWidgets import QGroupBox, QHBoxLayout, QVBoxLayout
 from PySide2.QtWidgets import QMainWindow, QWidget
+from deaduction.dui.utils import replace_delete_widget
 from deaduction.dui.widgets import (ActionButtonsWidget,
                                     StatementsTreeWidget,
                                     ProofStatePOWidget,
@@ -39,11 +40,6 @@ from deaduction.pylib.coursedata import Exercise
 from deaduction.pylib.mathobj import Goal
 
 log = logging.getLogger(__name__)
-
-
-def replace_delete_widget(layout, old, new, flag=Qt.FindChildrenRecursively):
-    layout.replaceWidget(old, new, flag)
-    old.deleteLater()
 
 
 ###########
