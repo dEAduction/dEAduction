@@ -1,6 +1,6 @@
 
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Optional
 from diff_match_patch import diff_match_patch
 
 dmp = diff_match_patch()
@@ -27,7 +27,10 @@ class LeanFile:
     history managment.
     """
 
-    def __init__( self, file_name="memory", init_txt="" ):
+    def __init__(self,
+                 file_name="memory", init_txt="",
+                 preamble=""       , afterword=""):
+
         self.file_name    = file_name
         self.history      = [
             HistoryEntry( label="init",
@@ -37,10 +40,13 @@ class LeanFile:
                           misc_info=dict )
         ]  # List[HistoryEntry]
 
-        self.idx          = 0  # Current position in history
-        self.target_idx   = 0  # Targeted position in history
+        self.idx          = 0         # Current position in history
+        self.target_idx   = 0         # Targeted position in history
 
-        self.txt          = init_txt  # Text at current position in history
+        self.__txt          = init_txt  # Text at current position in history
+
+        self.preamble     = ""        # Text inserted before content
+        self.afterword    = ""        # Text inserted after content
 
         # Virtual cursor managment
         # /!\ IMPORTANT NOTE /!\
@@ -76,7 +82,7 @@ class LeanFile:
                 else hist_entry.patch_forward
 
             # Apply patch
-            self.txt, _ = dmp.patch_apply(patch, self.txt)
+            self.__txt, _ = dmp.patch_apply(patch, self.__txt)
 
             # Update index and cursor position
             self.idx += ddir
@@ -101,7 +107,7 @@ class LeanFile:
         """
 
         self.__update()
-        self.__current_pos = max(min(x, len(self.txt) - 1), 0)
+        self.__current_pos = max(min(x, len(self.__txt) - 1), 0)
 
     def cursor_move_up(self, nlines: int):
         """
@@ -113,7 +119,7 @@ class LeanFile:
         idx    = self.current_pos
         while (idx > 0) and nlines >= 0:
             idx -= 1
-            if self.txt[idx] == "\n":
+            if self.__txt[idx] == "\n":
                 nlines -= 1
 
         if idx > 0 :
@@ -128,10 +134,10 @@ class LeanFile:
         """
 
         idx    = self.current_pos
-        leng   = len(self.txt)
+        leng   = len(self.__txt)
         while (idx < leng) and nlines >= 0:
             idx += 1
-            if self.txt[idx] == "\n":
+            if self.__txt[idx] == "\n":
                 nlines -= 1
 
         self.current_pos = idx
@@ -178,16 +184,18 @@ class LeanFile:
         """
 
         current_pos = self.current_pos
-        next_txt = self.txt[:current_pos + 1]   \
+        next_txt = self.__txt[:current_pos + 1]   \
             + add_txt                  \
-            + self.txt[current_pos + 1:]
+            + self.__txt[current_pos + 1:]
 
         if move_cursor:
             current_pos += len(add_txt)
 
         self.state_add(lbl, next_txt, current_pos)
 
-    def state_add(self, label: str, next_txt: str, current_pos: Optional[int] = None):
+    def state_add(self,
+                  label: str, next_txt: str,
+                  current_pos: Optional[int] = None):
         """
         Adds a new state/entry in the history for the text.
 
@@ -197,8 +205,8 @@ class LeanFile:
         """
 
         # Compute forward diff
-        forward_diff  = dmp.patch_make(self.txt, next_txt)
-        backward_diff = dmp.patch_make(next_txt, self.txt)
+        forward_diff  = dmp.patch_make(self.__txt, next_txt)
+        backward_diff = dmp.patch_make(next_txt, self.__txt)
 
         # Compute cursor position
         current_pos = self.current_pos if current_pos is None else current_pos
@@ -212,16 +220,16 @@ class LeanFile:
         hist_entry.patch_forward = forward_diff
 
         # Add new state element in history
-        self.history.append( HistoryEntry( label=lbl,
-                                           patch_backward=backward_diff,
-                                           patch_forward=None,
-                                           cursor_pos=current_pos,
-                                           misc_info=dict() ))
+        self.history.append( HistoryEntry(label=label,
+                                          patch_backward=backward_diff,
+                                          patch_forward=None,
+                                          cursor_pos=current_pos,
+                                          misc_info=dict()))
 
         # Modify history indexes, text buffer, and cursor position
         self.target_idx  = len(self.history) - 1
         self.idx         = self.target_idx
-        self.txt         = next_txt
+        self.__txt       = next_txt
 
         self.current_pos = current_pos
 
@@ -264,7 +272,7 @@ class LeanFile:
         Generator to retrieve the list of history labels.
         """
 
-        #FIXME(florian): Find another generator to explore history ?
+        # FIXME(florian): Find another generator to explore history ?
         return map(lambda x: x.label, self.history)
 
     ################################
@@ -277,7 +285,15 @@ class LeanFile:
         """
         self.__update()
 
-        return self.txt
+        return self.preamble + self.__txt + self.afterword
+
+    @property
+    def inner_text(self):
+        """
+        Retrieve the inner text
+        """
+        self.__update()
+        return self.__txt
 
     ################################
     # Other properties
@@ -296,8 +312,8 @@ class LeanFile:
         col  = 0
         idx  = 0
 
-        while (idx <= current_pos) and (idx < len(self.txt)):
-            if self.txt[idx] == "\n":
+        while (idx <= current_pos) and (idx < len(self.__txt)):
+            if self.__txt[idx] == "\n":
                 col   = 0
                 line += 1
             else:
