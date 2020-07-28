@@ -42,7 +42,7 @@ from deaduction.pylib.mathobj import ProofStatePO
 class _TagIcon(QIcon):
 
     def __init__(self, tag: str):
-        icons_folder = Path('../graphical_resources/')
+        icons_folder = Path('graphical_resources/icons/')
 
         if tag not in ['=', '+', '≠']:
             raise ValueError('tag must be one of "=", "+", "≠". tag: {tag}.')
@@ -50,9 +50,9 @@ class _TagIcon(QIcon):
             super().__init__('')  # No icon, empty icon trick
             return None
         elif tag == '+':
-            icon_path = icons_folder / 'icon_tag_plus.png'
+            icon_path = icons_folder / 'tag_plus.png'
         elif tag == '≠':
-            icon_path = icons_folder / 'icon_tag_different.png'
+            icon_path = icons_folder / 'tag_different.png'
 
         super().__init__(str(icon_path.resolve()))
 

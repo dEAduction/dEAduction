@@ -97,7 +97,7 @@ class StatementsTreeWidgetNode(QTreeWidgetItem):
 
     def _initUI(self):
         self.setExpanded(True)
-        icon_path = Path('../graphical_resources/')
+        icon_path = Path('graphical_resources/icons/folder.png')
         icon = QIcon(str(icon_path.resolve()))
         self.setIcon(0, icon)
 
