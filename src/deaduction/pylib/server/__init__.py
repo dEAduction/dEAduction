@@ -52,12 +52,17 @@ class ServerInterface(QObject):
     ############################################
     # Qt Signals
     ############################################
-    proof_state_change = Signal()
+    proof_state_change = Signal(ProofState)
+
+    update_started     = Signal()
+    update_ended       = Signal()
 
     ############################################
     # Init, and state control
     ############################################
     def __init__(self, nursery):
+        super().__init__()
+
         self.log = logging.getLogger("ServerInterface")
 
         # Lean attributes
@@ -90,12 +95,15 @@ class ServerInterface(QObject):
     # Callbacks from lean server
     ############################################
     def __on_lean_message(self, msg: Message):
-        print("ON LEAN MESSAGE")
         txt      = msg.text
         severity = msg.severity
 
-        if severity == "error":
+        print(f"ON LEAN MESSAGE {severity}")
+
+        if severity == Message.Severity.error:
             self.log.error(f"Lean error at line {msg.pos_line}: {txt}")
+        elif severity == Message.Severity.warning:
+            self.log.warning(f"Lean warning at line {msg.pos_line}: {txt}")
 
         elif txt.startswith("context:"):
             self.log.info("Got new context")
@@ -114,6 +122,8 @@ class ServerInterface(QObject):
     # Update
     ############################################
     async def __update(self):
+        if hasattr(self.update_started, "emit"): self.update_started.emit()
+
         req = SyncRequest(file_name=self.lean_file.file_name,
                           content=self.lean_file.contents)
 
@@ -122,14 +132,13 @@ class ServerInterface(QObject):
 
         # Construct new proof state from temp strings
         if not self.__proof_state_valid.is_set():
-            print(f"tmp_hypo_analysis: {self.__tmp_hypo_analysis}",
-                  f"tmp_targets_analysis: {self.__tmp_targets_analysis}")
             self.proof_state = ProofState.from_lean_data(self.__tmp_hypo_analysis, self.__tmp_targets_analysis)
-
             self.__proof_state_valid.set()
 
             # Emit signal only if from qt context (avoid AttributeError)
             if hasattr(self.proof_state_change, "emit"): self.proof_state_change.emit(self.proof_state)
+
+        if hasattr(self.update_ended, "emit"): self.update_ended.emit()
 
     ############################################
     # Exercise initialisation
