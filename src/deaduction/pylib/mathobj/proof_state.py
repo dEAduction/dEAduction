@@ -1,5 +1,5 @@
 """
-# proof_state.py : provides the class ProofState and Goals
+# proof_state.py : provides the class ProofState and Goal
     
     (#optionalLongDescription)
 
@@ -150,7 +150,8 @@ class Goal:
     def from_lean_data(cls, hypo_analysis: str, target_analysis: str):
         """
         :param hypo_analysis: string from the lean tactic hypo_analysis
-        :param goal_analysis: first string from the lean tactic goals_analysis
+        :param target_analysis: first string from the lean tactic
+        targets_analysis
         (only one target)
         :return: a Goal
         """
@@ -219,23 +220,23 @@ class ProofState:
     goals: List[Goal]
 
     @classmethod
-    def from_lean_data(cls, hypo_analysis: str, goals_analysis: str):
+    def from_lean_data(cls, hypo_analysis: str, targets_analysis: str):
         """
         :param hypo_analysis: string from the lean tactic hypo_analysis
-        :param goals_analysis: string from the lean tactic goals_analysis
+        :param targets_analysis: string from the lean tactic targets_analysis
         (with one line per target)
         :return: a ProofState
         """
         log.info("creating new ProofState from lean strings")
-        goals = goals_analysis.splitlines()
-        if goals[0].startswith("targets:"):
-            goals.pop(0)
-        main_goal = Goal.from_lean_data(hypo_analysis, goals[0])
-        goals = [main_goal]
-        for other_string_goal in goals[1:]:
+        targets = targets_analysis.splitlines()
+        if targets[0].startswith("targets:"):
+            targets.pop(0)
+        main_goal = Goal.from_lean_data(hypo_analysis, targets[0])
+        targets = [main_goal]
+        for other_string_goal in targets[1:]:
             other_goal = Goal.from_lean_data("", other_string_goal)
-            goals.append(other_goal)
-        return cls(goals)
+            targets.append(other_goal)
+        return cls(targets)
 
 
 if __name__ == '__main__':
