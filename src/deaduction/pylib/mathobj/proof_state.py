@@ -63,7 +63,7 @@ class Goal:
     #         pfpo.lean_data["id"] = ident
     #         counter += 1
 
-    def compare(new_goal, old_goal, goal_is_new):
+    def compare(self, old_goal, goal_is_new):
         """
         Compare the new goal to the old one, and tag the target and the element
         of both new and old context accordingly. tag is one of the following:
@@ -85,8 +85,11 @@ class Goal:
             - two more tags old_goal_diff, new_goal_diff
         """
         log.info("comparing and tagging old goal and new goal")
+        new_goal = self
         new_context = new_goal.context.copy()
         old_context = old_goal.context.copy()
+        log.debug(old_context)
+        log.debug(new_context)
         if goal_is_new:
             tags_new_context = ["+" for PO in new_context]
             tags_old_context = ["+" for PO in old_context]
@@ -98,47 +101,37 @@ class Goal:
             ##################################
             tags_new_context = [""] * len(new_context)
             tags_old_context = [""] * len(old_context)
-            new_index = -1
+            new_index = 0
             old_names = [pfPO_old.lean_data["name"] for pfPO_old in
                          old_context]
             for pfPO in new_context:
                 name = pfPO.lean_data["name"]
+                log.debug(f"pfPO: {name}")
                 try:
                     old_index = old_names.index(name)
                 except ValueError:
+                    # log.debug("the name does not exist in old_context")
                     tag = "+"
                 else:
+                    # next test uses PropObj.__eq__, which is redefined
+                    # in PropObj (recursively test nodes)
                     if old_context[old_index].math_type == pfPO.math_type:
                         tag = "="
                     else:
                         tag = "≠"
                 tags_new_context[new_index] = tag
                 tags_old_context[old_index] = tag
-                new_context[new_index] = None  # will not be considered anymore
-                old_context[old_index] = None  # will not be considered anymore
+                new_context[new_index] = None  # will not be considered
+                                               # anymore
+                old_context[old_index] = None  # will not be considered
+                                               # anymore
                 new_index += 1
-            ############################################
-            # tag the remaining objects in old context #
-            ############################################
-            new_names = [pfPO_new.lean_data["name"] for pfPO_new in
-                         new_context if pfPO_new is not None]
+
+            # Tag the remaining objects in old_context as new ("+")
+            old_index = 0
             for pfPO in old_context:
-                if pfPO is None:
-                    continue
-                name = pfPO.lean_data["name"]
-                try:
-                    new_index = new_names.index(name)
-                except ValueError:
-                    tag = "+"
-                else:
-                    if new_context[new_index].math_type == pfPO.math_type:
-                        tag = "="
-                    else:
-                        tag = "≠"
-                tags_new_context[new_index] = tag
-                tags_old_context[old_index] = tag
-                new_context[new_index] = ""  # will not be considered anymore
-                old_index += 1
+                if pfPO is not None:
+                    tags_old_context[old_index] = "+"
             ###################
             # tag the targets #
             ###################
@@ -213,11 +206,14 @@ class Goal:
         """
         log.info("split objects and propositions of the context")
         context = self.context
-        tags = self.future_tags[0]  # tags of the context
+        try:
+            tags = self.future_tags[0]  # tags of the context
+        except AttributeError:  # if tags have not been computed
+            tags = ["="] * len(context)
         objects = []
         propositions = []
         for (po, tag) in zip(context, tags):
-            if po.is_prop():
+            if po.math_type.is_prop():
                 propositions.append((po, tag))
             else:
                 objects.append((po, tag))
