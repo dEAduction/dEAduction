@@ -58,19 +58,19 @@ log = logging.getLogger(__name__)
 
 
 class ExerciseToolbar(QToolBar):
-    
+
     def __init__(self):
         super().__init__(_('Toolbar'))
 
         icons_dir = Path('graphical_resources/icons/')
         self.undo_action = QAction(
-            str((icons_dir / 'undo_action.png').resolve()),
+            QIcon(str((icons_dir / 'undo_action.png').resolve()),
             _('Undo action'), self)
         self.undo_action = QAction(
-            str((icons_dir / 'redo_action.png').resolve()),
+            QIcon(str((icons_dir / 'redo_action.png').resolve()),
             _('Redo action'), self)
         self.undo_action = QAction(
-            str((icons_dir / 'clear_selection.png').resolve()),
+            QIcon(str((icons_dir / 'clear_selection.png').resolve()),
            _('Undo action'), self)
 
 
@@ -175,8 +175,10 @@ class ExerciseCentralWidget(QWidget):
 class ExerciseMainWindow(QMainWindow):
 
     def _init_signals_slots(self):
-        self.exercise_cw.objects_wgt.clicked.connect(self.process_context_click)
-        self.exercise_cw.props_wgt.clicked.connect(self.process_context_click)
+        self.exercise_cw.objects_wgt.clicked.connect(
+                self.process_context_click)
+        self.exercise_cw.props_wgt.clicked.connect(
+                self.process_context_click)
 
     def __init__(self, exercise: Exercise):
         super().__init__()
@@ -195,6 +197,22 @@ class ExerciseMainWindow(QMainWindow):
 
         return msg
 
+    @Slot()
+    def clear_user_selection(self):
+        log.debug('Clearing user selection')
+        for item in self.current_context_selection:
+            item.mark_user_selected(False)
+
+        self.current_context_selection = []
+        log.debug(self.pretty_user_selection())
+
+    @Slot()
+    def freeze(yes=True):
+        if yes:
+            self.setEnabled(False)
+        else:
+            self.setEnabled(True)
+
     @Slot(ProofStatePOWidgetItem)
     def process_context_click(self, item: ProofStatePOWidgetItem):
         log.debug('Recording user selection')
@@ -208,13 +226,4 @@ class ExerciseMainWindow(QMainWindow):
             item.mark_selected(False)
             self.current_context_selection.remove(item)
 
-        log.debug(self.pretty_user_selection())
-
-    @Slot()
-    def clear_user_selection(self):
-        log.debug('Clearing user selection')
-        for item in self.current_context_selection:
-            item.mark_user_selected(False)
-
-        self.current_context_selection = []
         log.debug(self.pretty_user_selection())
