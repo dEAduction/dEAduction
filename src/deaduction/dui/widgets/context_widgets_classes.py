@@ -71,6 +71,25 @@ class ProofStatePOItem(QListWidgetItem):
                   f'{proofstatepo.math_type.format_as_utf8()}'
         self.setText(caption)
 
+        # User cannot have selected it before the init
+        self.is_user_selected = False
+
+    def __eq__(self, other):
+        """
+        Do not delete! Useful for 'for pspoitem in list:' stuff, used
+        to check if an item is in the current user selection.
+        """
+        return self is other
+
+    def mark_user_selected(self, yes=True):
+        if yes:
+            brush = QBrush(QColor('limegreen'))
+        else:
+            brush = QBrush()
+
+        self.is_user_selected = yes
+        self.setBackground(brush)
+
 
 class ProofStatePOWidget(QListWidget):
 
