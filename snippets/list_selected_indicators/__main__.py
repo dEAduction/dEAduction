@@ -1,5 +1,8 @@
-from functools import partial
+import logging
+from functools import partialmethod
 import sys
+from typing import List
+import deaduction.pylib.logger as logger
 from PySide2.QtCore import Slot
 from PySide2.QtGui import QBrush, QColor
 from PySide2.QtWidgets import (QApplication,
@@ -31,27 +34,43 @@ class ListItem(QListWidgetItem):
 
 class List(QListWidget):
 
+    def __init__(self, suffixe):
+        super().__init__()
+
+        # Two lists widget
+        self.addItem(ListItem('Anthony' + suffixe))
+        self.addItem(ListItem('Chad' + suffixe))
+        self.addItem(ListItem('Flea' + suffixe))
+        self.addItem(ListItem('John' + suffixe))
+
+
+class Container(QWidget):
+
     def __init__(self):
         super().__init__()
         self.current_selection = []
-
-        # Two lists widget
-        self.addItem(ListItem('Anthony'))
-        self.addItem(ListItem('Chad'))
-        self.addItem(ListItem('Flea'))
-        self.addItem(ListItem('John'))
+        self.list1 = List(' 1')
+        self.list2 = List(' 2')
+        self.clear_btn = QPushButton('Clear selection')
+        
+        self.lyt = QHBoxLayout()
+        self.lyt.addWidget(self.list1)
+        self.lyt.addWidget(self.list2)
+        self.lyt.addWidget(self.clear_btn)
+        self.setLayout(self.lyt)
 
         # Signals
-        self.itemDoubleClicked.connect(self.record_selection)
+        self.list1.itemClicked.connect(self.record_selection)
+        self.list2.itemClicked.connect(self.record_selection)
+        self.clear_btn.clicked.connect(self.clear_selection)
 
-    def print_current_selection(self):
+    def pretty_selection(self):
 
-        print('Current selection: ',
-                [item.text() for item in self.current_selection])
+        return str([item.text() for item in self.current_selection])
 
-    @Slot()
-    def record_selection(self):
-        item = self.selectedItems()[0]
+    @Slot(ListItem)
+    def record_selection(self, item: ListItem):
+        log.debug('Recording selection')
         item.setSelected(False)
 
         if (not item.is_selected) and (not item in self.current_selection):
@@ -61,7 +80,7 @@ class List(QListWidget):
             item.mark_selected(False)
             self.current_selection.remove(item)
 
-        self.print_current_selection()
+        log.debug(self.pretty_selection())
 
     @Slot()
     def clear_selection(self):
@@ -69,25 +88,14 @@ class List(QListWidget):
             item.mark_selected(False)
 
         self.current_selection = []
-        self.print_current_selection()
 
-
-class Container(QWidget):
-
-    def __init__(self):
-        super().__init__()
-        self.list = List()
-        self.clear_btn = QPushButton('Clear selection')
-        
-        self.clear_btn.clicked.connect(self.list.clear_selection)
-
-        self.lyt = QHBoxLayout()
-        self.lyt.addWidget(self.list)
-        self.lyt.addWidget(self.clear_btn)
-        self.setLayout(self.lyt)
+        log.debug(self.pretty_selection())
 
 
 if __name__ == '__main__':
+    logger.configure()
+    log = logging.getLogger(__name__)
+
     app = QApplication()
 
     c = Container()
