@@ -19,10 +19,11 @@ import trio
 import qtrio
 import logging
 
-from deaduction.pylib                     import logger as logger
-from deaduction.pylib.server              import ServerInterface
-from deaduction.pylib.coursedata.course   import Course
-from deaduction.pylib.mathobj.proof_state import ProofState
+from deaduction.pylib                             import logger as logger
+from deaduction.pylib.server                      import ServerInterface
+from deaduction.pylib.coursedata.course           import Course
+from deaduction.pylib.mathobj.proof_state         import ProofState
+from deaduction.pylib.coursedata.exercise_classes import Exercise
 
 class Goal(QPushButton):
     def __init__(self, goal):
@@ -93,13 +94,9 @@ class ExerciseWindow(QWidget):
     async def go_send(self):
         self.log.info("Send file to lean")
         self.freeze(True)
-        cmd = self.insert.text()
-        if not cmd.endswith(","):
-            cmd = cmd + ","
 
-        await self.server.code_insert(f"{cmd}",cmd)
-        self.last_item = QListWidgetItem(self.server.lean_file.history[-1].label)
-        self.history.addItem(self.last_item)
+        txt = self.edit.toPlainText()
+        await self.server.code_set("add", txt)
 
         self.freeze(False)
 
@@ -107,8 +104,7 @@ class ExerciseWindow(QWidget):
         self.log.info("Undo")
         self.freeze(True)
         await self.server.history_undo()
-        if self.last_item:
-            self.history.takeItem(self.history.row(self.last_item))
+        self.edit.setPlainText(self.server.lean_file.inner_contents)
         self.freeze(False)
 
     def closeEvent(self, ev):
@@ -122,11 +118,7 @@ class ExerciseWindow(QWidget):
 
         self.goal = Goal("TODO")
 
-        self.history = QListWidget()
-        self.history.setAlternatingRowColors(True)
-        self.insert  = QLineEdit()
-        self.insert.setPlaceholderText("Lean command")
-
+        self.edit = QPlainTextEdit()
         self.send = QPushButton("Send to lean")
         self.undo = QPushButton("Undo"        )
 
@@ -159,9 +151,7 @@ class ExerciseWindow(QWidget):
         btns_layout.addWidget(self.send)
         btns_layout.addWidget(self.undo)
 
-        tools_layout.addWidget(self.history)
-        tools_layout.addWidget(self.insert)
-
+        tools_layout.addWidget(self.edit)
         tools_layout.addLayout(btns_layout)
 
         self.tools_gb.setLayout(tools_layout)
@@ -173,8 +163,7 @@ class ExerciseWindow(QWidget):
         # Don't forget me
         main_layout.addLayout(goal_layout)
         main_layout.addLayout(workspace_layout)
-        self.setWindowTitle("L'union des images réciproque est l'image "\
-                            "réciproque de l'union — d∃∀duction")
+        self.setWindowTitle("d∃∀duction")
         self.setLayout(main_layout)
         self.show()
 
@@ -204,11 +193,17 @@ async def main():
     async with trio.open_nursery() as nursery:
         logger.configure()
 
-        course       = Course.from_file(Path("../../tests/lean_files/short_course/exercises.lean"))
-        statement_id = 11
+        course = Course.from_file(Path("../../tests/lean_files/short_course/exercises.lean"))
+        for counter, statement in enumerate(course.statements):
+            print(f"Statement n°{counter:2d}: "
+                  f"(exercise: {isinstance(statement, Exercise)}) "
+                  f"{statement.lean_name}"
+                  f" ({statement.pretty_name})")
+
+        statement_id = int(input("Exercice n° ? "))
         exercise     = course.statements[statement_id]
 
-        win = ExerciseWindow(nursery, exercise)
+        win          = ExerciseWindow(nursery, exercise)
 
         async with qtrio.enter_emissions_channel(signals=[win.closed]) as emissions:
             win.show()

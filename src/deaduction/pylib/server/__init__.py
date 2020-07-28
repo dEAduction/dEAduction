@@ -30,20 +30,17 @@ This file is part of d∃∀duction.
 """
 
 import trio
-from dataclasses import dataclass
-from pathlib import Path
 import logging
 
-import sys
-
 from deaduction.pylib.coursedata.exercise_classes import Exercise
-from deaduction.pylib.mathobj.proof_state         import ProofState
-from deaduction.pylib.lean.response               import Message
-from deaduction.pylib.editing                     import LeanFile
-from deaduction.pylib.lean.request                import SyncRequest
-from deaduction.pylib.lean.server                 import LeanServer
+from deaduction.pylib.mathobj.proof_state import ProofState
+from deaduction.pylib.lean.response import Message
+from deaduction.pylib.editing import LeanFile
+from deaduction.pylib.lean.request import SyncRequest
+from deaduction.pylib.lean.server import LeanServer
 
 from PySide2.QtCore import Signal, QObject
+
 
 class ServerInterface(QObject):
     """
@@ -66,14 +63,14 @@ class ServerInterface(QObject):
         self.log = logging.getLogger("ServerInterface")
 
         # Lean attributes
-        self.lean_file: Lean_File    = None
+        self.lean_file: LeanFile    = None
         self.lean_server: LeanServer = LeanServer(nursery)
         self.nursery: trio.Nursery   = nursery
-    
+
         # Set server callbacks
         self.lean_server.on_message_callback = self.__on_lean_message
         self.lean_server.running_monitor.on_state_change_callback = \
-                self.__on_lean_state_change
+            self.__on_lean_state_change
 
         # Current exercise
         self.exercise_current        = None
@@ -122,23 +119,28 @@ class ServerInterface(QObject):
     # Update
     ############################################
     async def __update(self):
-        if hasattr(self.update_started, "emit"): self.update_started.emit()
+        if hasattr(self.update_started, "emit"):
+            self.update_started.emit()
 
         req = SyncRequest(file_name=self.lean_file.file_name,
                           content=self.lean_file.contents)
 
-        await self.lean_server.send(req)
-        await self.lean_server.running_monitor.wait_ready()
+        resp = await self.lean_server.send(req)
+        if resp.message == "file invalidated":
+            await self.lean_server.running_monitor.wait_ready()
 
-        # Construct new proof state from temp strings
-        if not self.__proof_state_valid.is_set():
-            self.proof_state = ProofState.from_lean_data(self.__tmp_hypo_analysis, self.__tmp_targets_analysis)
-            self.__proof_state_valid.set()
+            # Construct new proof state from temp strings
+            if not self.__proof_state_valid.is_set():
+                self.proof_state = ProofState.from_lean_data(
+                    self.__tmp_hypo_analysis, self.__tmp_targets_analysis)
+                self.__proof_state_valid.set()
 
-            # Emit signal only if from qt context (avoid AttributeError)
-            if hasattr(self.proof_state_change, "emit"): self.proof_state_change.emit(self.proof_state)
+                # Emit signal only if from qt context (avoid AttributeError)
+                if hasattr(self.proof_state_change, "emit"):
+                    self.proof_state_change.emit(self.proof_state)
 
-        if hasattr(self.update_ended, "emit"): self.update_ended.emit()
+            if hasattr(self.update_ended, "emit"):
+                self.update_ended.emit()
 
     ############################################
     # Exercise initialisation
@@ -153,12 +155,13 @@ class ServerInterface(QObject):
         virtual_file_preamble = "\n".join(lines[:begin_line]) + "\n"
         virtual_file_afterword = "hypo_analysis,\n"  \
                                  "targets_analysis,\n" \
-                                 + "\n".join(lines[(end_line-1):])
+                                 + "\n".join(lines[(end_line - 1):])
 
-        txt = virtual_file_preamble + virtual_file_afterword
+        virtual_file = LeanFile(file_name=exercise.lean_name,
+                                preamble=virtual_file_preamble,
+                                afterword=virtual_file_afterword)
 
-        virtual_file = LeanFile(file_name=exercise.lean_name, init_txt=txt)
-        virtual_file.cursor_move_to(begin_line+1)
+        virtual_file.cursor_move_to(0)
         virtual_file.cursor_save()
 
         return virtual_file
@@ -170,7 +173,8 @@ class ServerInterface(QObject):
         :return:virtual_file
         """
 
-        self.log.info(f"Set exercise to : {exercise.lean_name} -> {exercise.pretty_name}")
+        self.log.info( f"Set exercise to: "
+                       f"{exercise.lean_name} -> {exercise.pretty_name}")
 
         self.exercise_current = exercise
         vf = self.__file_from_exercise(self.exercise_current)
@@ -197,6 +201,14 @@ class ServerInterface(QObject):
         """
         Inserts code in the lean virtual file.
         """
-    
-        self.lean_file.insert(lbl = label, add_txt = code)
+
+        self.lean_file.insert(label=label, add_txt=code)
+        await self.__update()
+
+    async def code_set(self, label: str, code: str ):
+        """
+        Sets the code for the current exercise
+        """
+
+        self.lean_file.state_add(label, code)
         await self.__update()
