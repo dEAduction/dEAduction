@@ -2,10 +2,10 @@
 A dummy dEAduction main window interface, but with server !
 """
 from PySide2.QtWidgets import QApplication, QMainWindow, QPushButton, \
-                                QHBoxLayout, QVBoxLayout, QGridLayout, \
-                                QLineEdit, QListWidget, QWidget, QGroupBox, \
-                                QLabel, QDesktopWidget, QListWidgetItem, \
-                                QPlainTextEdit
+                              QHBoxLayout, QVBoxLayout, QGridLayout, \
+                              QLineEdit, QListWidget, QWidget, QGroupBox, \
+                              QLabel, QDesktopWidget, QListWidgetItem, \
+                              QPlainTextEdit
 
 from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem, QTreeView, QListWidget
 from PySide2.QtCore import Qt, Signal, Slot
@@ -69,27 +69,28 @@ class ExerciseWindow(QWidget):
         self.server.proof_state_change.connect(self.proof_state_update)
 
         # Start waiter task
-        self.server.nursery.start_soon(self.wait_send_task)
-
+        self.server.nursery.start_soon(self.server_task)
 
         # Update initial proof state
         #self.proof_state_update(self.server.proof_state)
 
-    async def wait_send_task(self):
+    async def server_task(self):
         await self.server.start()
         await self.server.exercise_set(self.exercise)
-
         async with qtrio.enter_emissions_channel(signals=[
-            self.closed, self.send.clicked, self.undo.clicked
+            self.closed,
+            self.send.clicked,
+            self.undo.clicked
         ]) as emissions:
             async for emission in emissions.channel:
-                if   emission.is_from(self.closed) :
-                    self.server.stop()
+                if emission.is_from(self.closed):
                     break
                 elif emission.is_from(self.send.clicked):
-                    self.server.nursery.start_soon(self.go_send)
+                    await self.go_send()
                 elif emission.is_from(self.undo.clicked):
-                    self.server.nursery.start_soon(self.go_undo)
+                    await self.go_undo()
+
+        await self.server.stop()
 
     async def go_send(self):
         self.log.info("Send file to lean")
