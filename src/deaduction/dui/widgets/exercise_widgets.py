@@ -27,17 +27,27 @@ This file is part of d∃∀duction.
 
 import logging
 from gettext import gettext as _
-from PySide2.QtCore import Slot, Qt
-from PySide2.QtWidgets import QGroupBox, QHBoxLayout, QVBoxLayout
-from PySide2.QtWidgets import QMainWindow, QWidget
-from deaduction.dui.utils import replace_delete_widget
-from deaduction.dui.widgets import (ActionButtonsWidget,
-                                    StatementsTreeWidget,
-                                    ProofStatePOWidget,
-                                    ProofStatePOWidgetItem,
-                                    TargetWidget)
+from pathlib import Path
+
+from PySide2.QtCore import (    Slot,
+                                Qt)
+from PySide2.QtGui import       QIcon
+from PySide2.QtWidgets import ( QAction,
+                                QGroupBox,
+                                QHBoxLayout,
+                                QMainWindow,
+                                QToolBar,
+                                QVBoxLayout,
+                                QWidget)
+
+from deaduction.dui.utils import        replace_delete_widget
+from deaduction.dui.widgets import (    ActionButtonsWidget,
+                                        StatementsTreeWidget,
+                                        ProofStatePOWidget,
+                                        ProofStatePOWidgetItem,
+                                        TargetWidget)
 from deaduction.pylib.coursedata import Exercise
-from deaduction.pylib.mathobj import Goal
+from deaduction.pylib.mathobj import    Goal
 
 log = logging.getLogger(__name__)
 
@@ -45,6 +55,23 @@ log = logging.getLogger(__name__)
 ###########
 # Widgets #
 ###########
+
+
+class ExerciseToolbar(QToolBar):
+    
+    def __init__(self):
+        super().__init__(_('Toolbar'))
+
+        icons_dir = Path('graphical_resources/icons/')
+        self.undo_action = QAction(
+            str((icons_dir / 'undo_action.png').resolve()),
+            _('Undo action'), self)
+        self.undo_action = QAction(
+            str((icons_dir / 'redo_action.png').resolve()),
+            _('Redo action'), self)
+        self.undo_action = QAction(
+            str((icons_dir / 'clear_selection.png').resolve()),
+           _('Undo action'), self)
 
 
 class ExerciseCentralWidget(QWidget):
@@ -156,7 +183,10 @@ class ExerciseMainWindow(QMainWindow):
         self.exercise = exercise
         self.exercise_cw = ExerciseCentralWidget(self.exercise)
         self.current_context_selection = []
+        self.toolbar = ExerciseToolBar()
+
         self.setCentralWidget(self.exercise_cw)
+        self.addToolBar(self.toolbar)
         self._init_signals_slots()
 
     def pretty_user_selection(self):
