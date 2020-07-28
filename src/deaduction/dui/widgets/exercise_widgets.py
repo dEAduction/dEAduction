@@ -74,13 +74,16 @@ class ExerciseCentralWidget(QWidget):
     def _init_goal(self, first_goal: Goal):
         self.current_goal = first_goal
 
-        # Get objects and properties as two list of (ProofStatePO,
-        # str), the str being the tag of the prop. or obj.
+        # Init context (objects and properties). Get them as two list of
+        # (ProofStatePO, str), the str being the tag of the prop. or obj.
         context = self.current_goal.tag_and_split_propositions_objects()
-        self.objects_wgt = ProofStatePOWidget(context[0])
-        self.props_wgt = ProofStatePOWidget(context[1])
-        # Finally the target
-        self.target_wgt = TargetWidget(self.current_goal.target)
+        self.objects_wgt = ProofStatePOWidget(context[0]) self.props_wgt =
+        ProofStatePOWidget(context[1])
+
+        # Init the target
+        target_tag = self.current_goal.future_tags[1]
+        target = self.current_goal.target
+        self.target_wgt = TargetWidget(target, target_tag)
 
     def _init_put_widgets_in_layouts(self):
         # Actions
@@ -115,7 +118,7 @@ class ExerciseCentralWidget(QWidget):
         new_context = new_goal.tag_and_split_propositions_objects()
         new_objects_wgt = ProofStatePOWidget(new_context[0])
         new_props_wgt = ProofStatePOWidget(new_context[1])
-        new_target_wgt = TargetWidget(self.current_goal.target)
+        new_target_wgt = TargetWidget(new_goal.target, new_goal.future_tags[1])
 
         # Replace in the layouts
         _replace_widget_in_layout(self._context_lyt,

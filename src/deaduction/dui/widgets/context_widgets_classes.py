@@ -32,10 +32,9 @@ from PySide2.QtWidgets import QPushButton, QWidget
 from PySide2.QtWidgets import QListWidget, QListWidgetItem
 from deaduction.pylib.mathobj import ProofStatePO
 
-
-###############################
-# ProofStatePO widget classes #
-###############################
+#############
+# Utilities #
+#############
 
 
 class _TagIcon(QIcon):
@@ -54,6 +53,11 @@ class _TagIcon(QIcon):
             icon_path = icons_folder / 'icon_tag_different.png'
 
         super().__init__(str(icon_path.resolve()))
+
+
+###############################
+# ProofStatePO widget classes #
+###############################
 
 
 class ProofStatePOItem(QListWidgetItem):
@@ -81,25 +85,10 @@ class ProofStatePOWidget(QListWidget):
 #######################
 
 
-class _TargetButton(QPushButton):
+class TargetLabel(QLabel):
 
-    def _initUI(self):
-        """
-        Set cosmetics.
-        """
-
-        self.resize_width()
-        self.setFlat(True)
-        self.setStyleSheet('font-size: 24px;')
-
-        # Resize the button to be about the size of the displayed text.
-        text_width = self.fontMetrics().boundingRect(self.text()).width()
-        self.setFixedWidth(text_width + 40)
-
-    def __init__(self, target: ProofStatePO):
+    def __init__(self, target: ProofStatePO, tag: str):
         super().__init__()
-        self.target = target
-
         # Display
         #   ∀ x ∈ X, ∃ ε, …
         # and not
@@ -107,18 +96,21 @@ class _TargetButton(QPushButton):
         # where H might be the lean name of the target. That's what
         # the .math_type is for.
         self.setText(target.math_type.format_as_utf8())
+        self.setIcon(_TagIcon(tag))
 
-        self._initUI()
+        # Cosmetics
+        self.setStyleSheet('font-size: 24px;')
 
 
 class TargetWidget(QWidget):
 
-    def __init__(self, target: ProofStatePO):
+    def __init__(self, target: ProofStatePO, tag: str):
         super().__init__()
         self.target = target
-        self.button = _TargetButton(target)
+        self.tag = tag
 
+        self.target_label = TargetLabel(self.target, self.tag)
         self.main_layout.addStretch()
-        self.main_layout.addWidget(self.button)
+        self.main_layout.addWidget(self.target_label)
         self.main_layout.addStretch()
         self.setLayout(self.main_layout)

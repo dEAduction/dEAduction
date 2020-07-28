@@ -35,6 +35,7 @@ from .actions_widgets_classes import (
 from .context_widgets_classes import (
         ProofStatePOItem,
         ProofStatePOWidget,
+        TargetLabel,
         TargetWidget)
 
 from .exercise_widgets import (
