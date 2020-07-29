@@ -116,7 +116,7 @@ class PropObj:
         ! MIND ! that for ProofStatePO's, only the math_type attribute
         should be tested !
         """
-        if self.node is "":
+        if self.node == "":
             return False
         else:
             return self.node.startswith("PROP") \
