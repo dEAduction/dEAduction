@@ -59,11 +59,11 @@ class ExerciseWindow(QWidget):
         self.log = logging.getLogger("Test qt lean")
 
         self.server = ServerInterface(nursery)
-        self._initUI()
         
-        self.exercise = exercise
+        self.exercise   = exercise
+        self.statements = self.exercise.course.statements
 
-        self.last_item = None
+        self._initUI()
 
         # Link signals
         self.server.proof_state_change.connect(self.proof_state_update)
@@ -114,14 +114,23 @@ class ExerciseWindow(QWidget):
 
     def _initUI(self):
         # Create widgets
-        self.objects    = PropobjList()
-        self.properties = PropobjList()
+        self.objects     = PropobjList()
+        self.properties  = PropobjList()
 
-        self.goal = Goal("TODO")
+        self.goal        = Goal("TODO")
 
-        self.edit = QPlainTextEdit()
-        self.send = QPushButton("Send to lean")
-        self.undo = QPushButton("Undo"        )
+        self.edit        = QPlainTextEdit()
+        self.send        = QPushButton("Send to lean")
+        self.undo        = QPushButton("Undo"        )
+
+        self.deflist     = QListWidget()
+
+        # --> Build deflist
+        for st in self.statements:
+            self.deflist.addItem(st.pretty_name)
+
+        # --> Link signal
+        self.deflist.itemClicked.connect(self.add_statement_name)
 
         # Create layouts
         goal_layout      = QHBoxLayout()
@@ -152,6 +161,7 @@ class ExerciseWindow(QWidget):
         btns_layout.addWidget(self.send)
         btns_layout.addWidget(self.undo)
 
+        tools_layout.addWidget(self.deflist)
         tools_layout.addWidget(self.edit)
         tools_layout.addLayout(btns_layout)
 
@@ -170,6 +180,11 @@ class ExerciseWindow(QWidget):
 
     def freeze(self,state:bool):
         self.tools_gb.setEnabled(not state)
+
+    @Slot(QListWidgetItem)
+    def add_statement_name(self, item):
+        st = self.statements[self.deflist.row(item)]
+        self.edit.insertPlainText(st.lean_name)
 
     @Slot(ProofState)
     def proof_state_update(self, po:ProofState):
