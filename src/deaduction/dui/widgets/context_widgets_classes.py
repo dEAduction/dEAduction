@@ -95,10 +95,12 @@ class ProofStatePOItem(QListWidgetItem):
 
 class ProofStatePOWidget(QListWidget):
 
-    def __init__(self, tagged_proofstatepos: List[Tuple[ProofStatePO, str]]):
+    def __init__(self,
+            tagged_proofstatepos: List[Tuple[ProofStatePO, str]]=[]):
         super().__init__()
         for proofstatepo, tag in tagged_proofstatepos:
             self.addItem(ProofStatePOItem(proofstatepo, tag))
+
 
 #######################
 # Target widget class #
@@ -107,7 +109,7 @@ class ProofStatePOWidget(QListWidget):
 
 class TargetLabel(QLabel):
 
-    def __init__(self, target: ProofStatePO, tag: str):
+    def __init__(self, target: ProofStatePO=None, tag: str=None):
         super().__init__()
         # Display
         #   ∀ x ∈ X, ∃ ε, …
@@ -115,8 +117,9 @@ class TargetLabel(QLabel):
         #   H : ∀ x ∈ X, ∃ ε, …
         # where H might be the lean name of the target. That's what
         # the .math_type is for.
-        self.setText(target.math_type.format_as_utf8())
-        self.setIcon(_TagIcon(tag))
+        self.setText(target.math_type.format_as_utf8() if target else '…')
+        if tag:
+            self.setIcon(_TagIcon(tag))
 
         # Cosmetics
         self.setStyleSheet('font-size: 24px;')
@@ -124,7 +127,7 @@ class TargetLabel(QLabel):
 
 class TargetWidget(QWidget):
 
-    def __init__(self, target: ProofStatePO, tag: str):
+    def __init__(self, target: ProofStatePO=None, tag: str=None):
         super().__init__()
         self.target = target
         self.tag = tag
