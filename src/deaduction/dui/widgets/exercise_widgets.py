@@ -51,7 +51,7 @@ from deaduction.dui.widgets import (    ActionButtonsWidget,
                                         TargetWidget)
 from deaduction.pylib.coursedata import Exercise
 from deaduction.pylib.mathobj import    Goal
-from deaduction.pylub.server import     ServerInterface
+from deaduction.pylib.server import     ServerInterface
 
 log = logging.getLogger(__name__)
 
@@ -184,7 +184,7 @@ class ExerciseMainWindow(QMainWindow):
         self.exercise_cw.props_wgt.clicked.connect(
                 self.process_context_click)
 
-    def __init__(self, exercise: Exercise, servint: ServerInteface):
+    def __init__(self, exercise: Exercise, servint: ServerInterface):
         super().__init__()
         self.exercise = exercise
         self.exercise_cw = ExerciseCentralWidget(self.exercise)
