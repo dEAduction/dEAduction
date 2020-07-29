@@ -220,7 +220,7 @@ def apply_exists(l : [PropObj]) -> str:
         return "cases {0} with {1} {2}, ".format(h, x, hx)
 
 @action(_("Exists"))
-def action_exists(goal : Goal, l : [PropObj], user_input = None : str) -> str:
+def action_exists(goal : Goal, l : [PropObj], user_input : str = None) -> str:
     """
     Translate into string of lean code corresponding to the action
     
