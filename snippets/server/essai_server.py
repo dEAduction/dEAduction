@@ -28,12 +28,17 @@ This file is part of dEAduction.
 
 import trio
 import logging
+import sys
 
-from snippets.server.ServerInterface import *
+from pathlib import Path
+
+#from snippets.server.ServerInterface import *
 import deaduction.pylib.logger as logger
 from deaduction.pylib.coursedata.course import Course
+from deaduction.pylib.coursedata.exercise_classes import Exercise
 from deaduction.pylib.mathobj.PropObj import ProofStatePO
 
+from deaduction.pylib.server import ServerInterface
 
 
 def  print_goal_by_type(goal):
@@ -69,10 +74,6 @@ async def main():
 
         await my_server.start()
 
-        my_server.new_code = False
-        my_server.new_hypo = False
-        my_server.new_targets = False
-
         ##########
         # course #
         ##########
@@ -82,7 +83,7 @@ async def main():
         my_course = Course.from_file(course_file_path)
         counter = 0
         for statement in my_course.statements:
-            print(f"Statement n°{counter}: "
+            print(f"Statement n°{counter:2d}: "
                   f"(exercise: {isinstance(statement, Exercise)}) "
                   f"{statement.lean_name}"
                   f" ({statement.pretty_name})")
@@ -91,32 +92,51 @@ async def main():
         ############
         # exercise #
         ############
-        # num_ex = input("exercise n° ?")
-        num_ex = 9
+        num_ex = int(input("exercise n° ?"))
+        #num_ex = 10
         my_exercise = my_course.statements[num_ex]
-        begin_line = my_exercise.lean_begin_line_number
-        end_line =  my_exercise.lean_end_line_number
-        file_content = my_course.file_content
-        lines = file_content.splitlines()
+        begin_line  = my_exercise.lean_begin_line_number
+        end_line    =  my_exercise.lean_end_line_number
 
-        virtual_file_preamble = "\n".join(lines[:begin_line]) + "\n"
-#        virtual_file_afterword = "  hypo_analysis,\n" \
-#                                 + "  targets_analysis,\n" \
-#                                 + "end"
-        virtual_file_afterword = "  hypo_analysis,\n" \
-                                 + "  targets_analysis,\n" \
-                                 + "\n".join(lines[end_line-1:])
-        txt = virtual_file_preamble + virtual_file_afterword
-        my_server.log.debug("Sending file:" + txt)
-        line = begin_line + 1
-        my_server.lean_file = LeanFile(file_name='lean file', init_txt=txt)
-        my_server.lean_file.cursor_move_to(line)
-        my_server.lean_file.cursor_save()
-        await my_server.__update()
+        print(f"begin_line={begin_line} ; end_line={end_line}")
+        #file_content = my_course.file_content
+        #lines = file_content.splitlines()
+
+        #virtual_file_preamble = "\n".join(lines[:begin_line]) + "\n"
+#       # virtual_file_afterword = "  hypo_analysis,\n" \
+#       #                          + "  targets_analysis,\n" \
+#       #                          + "end"
+        #virtual_file_afterword = "  hypo_analysis,\n" \
+        #                         + "  targets_analysis,\n" \
+        #                         + "\n".join(lines[end_line-1:])
+        #txt = virtual_file_preamble + virtual_file_afterword
+        #my_server.log.debug("Sending file:" + txt)
+        #line = begin_line + 1
+        #my_server.lean_file = LeanFile(file_name='lean file', init_txt=txt)
+        #my_server.lean_file.cursor_move_to(line)
+        #my_server.lean_file.cursor_save()
+
+        #await my_server.__update()
+
+        await my_server.exercise_set(my_exercise)
+
         #####################
         # print proof state #
         #####################
         print("Proof State:")
+<<<<<<< HEAD
+        #ins = ""
+        #while ins not in ["stop", "quit", "exit"]:
+        #    ins = input("waiting for Lean, hit ENTER")
+        #    try:
+        #        goal = my_server.proof_state.goals[0]
+        #        break
+        #    except AttributeError:
+        #        my_server.log.warning("AttributeError")
+
+        goal = my_server.proof_state.goals[0]
+        print_goal(goal)
+=======
         ins = ""
         while ins not in ["stop", "quit", "exit"]:
             ins = input("waiting for Lean, hit ENTER")
@@ -126,17 +146,26 @@ async def main():
             except AttributeError:
                 my_server.log.warning("AttributeError")
         print_goal_by_type(new_goal)
+>>>>>>> 418ab4428cbc3483a5cc7da2bc3a69d46e9076e6
 
         ####################
         # next instruction #
         ####################
         code = ""
+<<<<<<< HEAD
+        while code != "sorry\n":
+            code = input("Lean next instruction ?")
+            if code == "undo":
+=======
         while code != "sorry,\n":
             code = input("Lean next instruction?")
             if code.startswith("undo"):
+>>>>>>> 418ab4428cbc3483a5cc7da2bc3a69d46e9076e6
                 await my_server.history_undo()
             elif code.startswith("redo"):
                 await my_server.history_redo()
+            elif code == "contents":
+                print(my_server.lean_file.contents)
             else:
                 if not code.endswith(','):
                     code += ','
@@ -161,6 +190,5 @@ async def main():
             print(new_goal.target.math_type.format_as_utf8())
         my_server.stop()
         await my_server.lean_server.exited.wait()
-
 
 trio.run(main)

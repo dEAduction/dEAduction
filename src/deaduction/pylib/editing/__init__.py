@@ -45,8 +45,8 @@ class LeanFile:
 
         self.__txt          = init_txt  # Text at current position in history
 
-        self.preamble     = ""        # Text inserted before content
-        self.afterword    = ""        # Text inserted after content
+        self.preamble     = preamble  # Text inserted before content
+        self.afterword    = afterword # Text inserted after content
 
         # Virtual cursor managment
         # /!\ IMPORTANT NOTE /!\
@@ -173,7 +173,7 @@ class LeanFile:
     ################################
     # Actions
     ################################
-    def insert( self, lbl, add_txt, move_cursor=True ):
+    def insert( self, label, add_txt, move_cursor=True ):
         """
         Inserts text at cursor position, and update cursor position.
 
@@ -184,14 +184,13 @@ class LeanFile:
         """
 
         current_pos = self.current_pos
-        next_txt = self.__txt[:current_pos + 1]   \
-            + add_txt                  \
-            + self.__txt[current_pos + 1:]
+        next_txt = self.__txt[:current_pos] \
+                   + add_txt              \
 
         if move_cursor:
             current_pos += len(add_txt)
 
-        self.state_add(lbl, next_txt, current_pos)
+        self.state_add(label, next_txt, current_pos)
 
     def state_add(self,
                   label: str, next_txt: str,
@@ -288,7 +287,7 @@ class LeanFile:
         return self.preamble + self.__txt + self.afterword
 
     @property
-    def inner_text(self):
+    def inner_contents(self):
         """
         Retrieve the inner text
         """

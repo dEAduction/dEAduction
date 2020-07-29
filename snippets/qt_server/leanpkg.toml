@@ -1,0 +1,8 @@
+[package]
+name = "dEAduction-lean"
+version = "0.1"
+lean_version = "leanprover-community/lean:3.16.5"
+path = "src"
+
+[dependencies]
+mathlib = {git = "https://github.com/leanprover-community/mathlib", rev = "158e84ae35cbed47282545f318fb33c0ed483761"}

@@ -184,3 +184,8 @@ Temporary Items
 /snippets/latex_format/python/essai.py
 
 htmlcov/
+
+#Lean files
+_target/
+*.olean
+leanpkg.path

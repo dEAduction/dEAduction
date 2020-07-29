@@ -45,7 +45,7 @@ class LeanServer:
     ############################################
     # Utilities
     ############################################
-    class Request_Store:
+    class RequestStore:
         """
         Utility class used to store requests
         """
@@ -57,12 +57,26 @@ class LeanServer:
             self.results        = [None] * max_nums
 
         def set( self, num, result ):
+            """
+            Sets the result for the pending request with seq_num = num
+
+            :param num: the seq_num of the request
+            :param result: result for the request
+            """
+
             done = self.pending_reqs[num]
             if done is None: raise RuntimeError(f"No pending req for seq_num = {num}")
             self.results[num] = result
             done.set()
 
         async def release(self, num):
+            """
+            Sets the seq_num num as available
+
+            :param num: the seq_num to set as available
+            :return: the stored result for the request
+            """
+
             await self.send.send(num)
 
             r = self.results[num]
@@ -76,6 +90,8 @@ class LeanServer:
             """
             Intialize a trio event and picks a seq_number. Returns
             a tuple of both objects
+
+            :return: a tuple containing the seq_num, and the wait event object.
             """
             seq_num                    = await self.recv.receive()
             done_event                 = trio.Event()
@@ -85,6 +101,9 @@ class LeanServer:
             return seq_num, done_event
 
         async def open(self):
+            """
+            Initializes the memory channels
+            """
             self.send,self.recv = trio.open_memory_channel(
                 max_buffer_size = self.max_nums
             )
@@ -92,12 +111,16 @@ class LeanServer:
             # Init available numbers
             for i in range(self.max_nums): await self.release(i)
 
-    class Running_Monitor:
+    class RunningMonitor:
         """
         Class used to monitor lean server runnig state
         """
 
         def __init__( self, max_listeners=4, log=None ):
+            """
+            :param max_listeners: the max number of parallel listeners
+            :param log: log object to be used.
+            """
             self.max_listeners = max_listeners
 
             self.ready_send,self.ready_recv = trio.open_memory_channel(
@@ -115,16 +138,27 @@ class LeanServer:
         async def open(self): pass
 
         async def wait_ready(self):
+            """
+            Waits for lean to be ready (is_running goes to False)
+            """
             event = trio.Event()
             await self.ready_send.send(event)
             await event.wait()
 
         async def wait_active(self):
+            """
+            Waits for lean to be active (is_running goes to True)
+            """
             event = trio.Event()
             await self.active_send.send(event)
             await event.wait()
 
         def update(self, is_running: bool):
+            """
+            Called from LeanServer. Updates the Lean state
+
+            :param is_running: new lean running state
+            """
             self.log.debug(f"Updating lean running state : {is_running}")
             self.on_state_change_callback(is_running)
 
@@ -146,8 +180,8 @@ class LeanServer:
         self.process                   = None
         self.buffer                    = ""
 
-        self.pending_reqs              = LeanServer.Request_Store  (max_reqs    )
-        self.running_monitor           = LeanServer.Running_Monitor(log=self.log)
+        self.pending_reqs              = LeanServer.RequestStore  (max_reqs    )
+        self.running_monitor           = LeanServer.RunningMonitor(log=self.log)
 
         self.on_message_callback       = lambda x: None
 
@@ -159,12 +193,21 @@ class LeanServer:
     # Protected utilities
     ############################################
     def _check_process(self):
+        """
+        Utility to check if lean process is launched
+        """
         if not self.process : raise RuntimeError("Lean server not active")
 
     ############################################
     # Response process utilities
     ############################################
     def _process_response(self, data_str:str):
+        """
+        Processes a JSON response from lean. Calls various callbacks
+        and set request events.
+
+        :param data_str: The string containing the lean response as JSON data.
+        """
         data       = json.loads(data_str)
         resp       = data["response"]
         parsed_msg = response.from_dict(data)
@@ -179,8 +222,8 @@ class LeanServer:
             self.running_monitor.update(parsed_msg.is_running)
             self.tasks = parsed_msg.tasks
 
-            for tsk in self.tasks:
-                self.log.info(f"Lean Task: {tsk.file_name} at line {tsk.pos_line} and col {tsk.pos_col} : {tsk.desc}")
+            #for tsk in self.tasks:
+            #    self.log.info(f"Lean Task: {tsk.file_name} at line {tsk.pos_line} and col {tsk.pos_col} : {tsk.desc}")
 
         elif isinstance(parsed_msg, response.AllMessagesResponse):
             for msg in parsed_msg.msgs:
@@ -194,6 +237,9 @@ class LeanServer:
     # Start / receiver tasks
     ############################################
     async def start(self):
+        """
+        Starts the server
+        """
         await self.running_monitor.open()
         await self.pending_reqs.open()
 
@@ -208,6 +254,10 @@ class LeanServer:
         if self.process: self.process.terminate()
 
     async def receiver(self):
+        """
+        Receiver task to process data coming from
+        lean on its stdout.
+        """
         self._check_process()
 
         async for data in self.process.stdout:
@@ -231,7 +281,14 @@ class LeanServer:
     ############################################
     # Send utilities
     ############################################
-    async def send(self, req, timeout=10000):
+    async def send(self, req: request.Request, timeout: int=10000):
+        """
+        Send a request to the lean server, with optional timeout.
+
+        :param req: The request to send to the server
+        :param timeout: Optional timeout (in ms). Raises trio.Cancelled
+        """
+
         self._check_process()
         seq_num,ev  = await self.pending_reqs.store()
         req.seq_num  = seq_num
@@ -247,4 +304,4 @@ class LeanServer:
                 return await self.pending_reqs.release(seq_num)
 
         except trio.Cancelled as exc:
-            raise RuntimeError(f"Timeout while sending message {rq}")
+            raise trio.Cancelled(f"Timeout while sending message {rq}")
