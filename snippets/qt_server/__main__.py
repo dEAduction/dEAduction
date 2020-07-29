@@ -90,7 +90,7 @@ class ExerciseWindow(QWidget):
                 elif emission.is_from(self.undo.clicked):
                     await self.go_undo()
 
-        await self.server.stop()
+        self.server.stop()
 
     async def go_send(self):
         self.log.info("Send file to lean")
@@ -197,10 +197,10 @@ class ExerciseWindow(QWidget):
         # Update properties and objects
         self.properties.clear()
         self.objects.clear()
-        for i, type_ in enumerate(goal.math_types):
+        for type_, instances in goal.math_types:
             utf8 = type_.format_as_utf8()
 
-            for obj in goal.math_types_instances[i]:
+            for obj in instances:
                 txt = f"{obj.format_as_utf8()} : {utf8}"
                 if obj.is_prop(): self.properties.addItem(txt)
                 else            : self.objects.addItem(txt)
