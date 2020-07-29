@@ -62,7 +62,7 @@ class _TagIcon(QIcon):
 ###############################
 
 
-class ProofStatePOItem(QListWidgetItem):
+class ProofStatePOWidgetItem(QListWidgetItem):
 
     def __init__(self, proofstatepo: ProofStatePO, tag: str):
         super().__init__()
@@ -99,7 +99,7 @@ class ProofStatePOWidget(QListWidget):
             tagged_proofstatepos: List[Tuple[ProofStatePO, str]]=[]):
         super().__init__()
         for proofstatepo, tag in tagged_proofstatepos:
-            self.addItem(ProofStatePOItem(proofstatepo, tag))
+            self.addItem(ProofStatePOWidgetItem(proofstatepo, tag))
 
 
 #######################
