@@ -61,12 +61,15 @@ class ActionButtonsWidget(QWidget):
 
     def __init__(self, actions: List[Action]):
         super().__init__()
-        self.main_layout = QHBoxLayout()
+        self.action_buttons = []
+        self._main_layout = QHBoxLayout()
 
         for action in actions:
-            self.main_layout.addWidget(ActionButton(action))
+            action_button = ActionButton(action)
+            self._main_layout.addWidget(action_button)
+            self.action_buttons.append(action_button)
 
-        self.setLayout(self.main_layout)
+        self.setLayout(self._main_layout)
 
 ##############################
 # Statements widgets classes #

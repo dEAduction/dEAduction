@@ -46,7 +46,8 @@ from PySide2.QtWidgets import ( QAction,
                                 QWidget)
 
 from deaduction.dui.utils import        replace_delete_widget
-from deaduction.dui.widgets import (    ActionButtonsWidget,
+from deaduction.dui.widgets import (    ActionButton,
+                                        ActionButtonsWidget,
                                         StatementsTreeWidget,
                                         ProofStatePOWidget,
                                         ProofStatePOWidgetItem,
@@ -108,7 +109,7 @@ class ExerciseCentralWidget(QWidget):
         # Init tool buttons
         self.logic_btns = ActionButtonsWidget(self.exercise.available_logic)
         # Init proof techniques buttons
-        self.proof_techniques_btns = ActionButtonsWidget(
+        self.proof_btns = ActionButtonsWidget(
                 self.exercise.available_proof_techniques)
         # Init statements tree
         statements = self.exercise.available_statements
@@ -125,7 +126,7 @@ class ExerciseCentralWidget(QWidget):
     def _init_put_widgets_in_layouts(self):
         # Actions
         self._actions_lyt.addWidget(self.logic_btns)
-        self._actions_lyt.addWidget(self.proof_techniques_btns)
+        self._actions_lyt.addWidget(self.proof_btns)
         self._actions_lyt.addWidget(self.statements_tree)
         self._actions_gb.setLayout(self._actions_lyt)
 
@@ -173,7 +174,9 @@ class ExerciseMainWindow(QMainWindow):
 
         self.setCentralWidget(self.exercise_cw)
         self.addToolBar(self.toolbar)
-        self.connect_signals_slots()
+
+        self.connect_signals_slots_actions()
+        self.connect_signals_slots_context()
 
         # Start server task
         self.servint.nursery.start_soon(self.server_task)
@@ -182,11 +185,23 @@ class ExerciseMainWindow(QMainWindow):
     # Other methods #
     #################
     
-    def connect_signals_slots(self):
+    def connect_signals_slots_actions(self):
+
+        # Actions buttons
+        for logic_btn in self.exercise_cw.logic_btns.action_buttons:
+            logic_btn.clicked.connect(self.call_logic_action)
+
+        for proof_btn in self.exercise_cw.proof_btns.action_buttons:
+            proof_btn.clicked.connect(self.call_proof_action)
+
+    def connect_signals_slots_context(self):
+        # Objects and properties lists
         self.exercise_cw.objects_wgt.itemClicked.connect(
                 self.process_context_click)
         self.exercise_cw.props_wgt.itemClicked.connect(
                 self.process_context_click)
+
+        # Proofstate (=> goal) change
         self.servint.proof_state_change.connect(self.update_proof_state)
 
     def closeEvent(self, event):
@@ -227,7 +242,7 @@ class ExerciseMainWindow(QMainWindow):
         self.exercise_cw.current_goal = new_goal
 
         # Reconnect signals and slots
-        self.connect_signals_slots()
+        self.connect_signals_slots_context()
 
     ###############
     # Async tasks #
@@ -247,6 +262,14 @@ class ExerciseMainWindow(QMainWindow):
     # Slots #
     #########
 
+    @Slot(ActionButton)
+    def call_logic_action(self, action_button: ActionButton):
+        pass
+
+    @Slot(ActionButton)
+    def call_proof_action(self, action_button: ActionButton):
+        pass
+
     @Slot()
     def clear_user_selection(self):
         log.debug('Clearing user selection')
@@ -262,7 +285,6 @@ class ExerciseMainWindow(QMainWindow):
 
     @Slot(ProofStatePOWidgetItem)
     def process_context_click(self, item: ProofStatePOWidgetItem):
-        print("BBBBBB")
         log.debug('Recording user selection')
         item.setSelected(False)
 

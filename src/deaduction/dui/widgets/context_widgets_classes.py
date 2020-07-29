@@ -90,7 +90,6 @@ class ProofStatePOWidgetItem(QListWidgetItem):
     def mark_user_selected(self, yes=True):
         brush = QBrush(QColor('limegreen')) if yes else QBrush()
         self.setBackground(brush)
-        print('AAAAAA')
 
 
 class ProofStatePOWidget(QListWidget):
