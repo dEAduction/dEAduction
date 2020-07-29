@@ -81,7 +81,7 @@ def select_exercise(course: Course):
     return exercise_ids[exercise_id] if ok else None
 
 
-def select_course_and_exercise():
+def select_course_exercise():
     """
     Open a file dialog to chose a course, then a dialog to chose an 
     exercise from this course and launch it.
