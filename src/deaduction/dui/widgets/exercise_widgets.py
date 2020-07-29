@@ -3,8 +3,10 @@
 # exercisewidget.py : provide the ExerciseWidget class #
 ########################################################
 
-Author(s)      : Kryzar <antoine@hugounet.com>
-Maintainers(s) : Kryzar <antoine@hugounet.com>
+Author(s)      : - Kryzar <antoine@hugounet.com>
+                 - Florian Dupeyron <florian.dupeyron@mugcat.fr>
+Maintainers(s) : - Kryzar <antoine@hugounet.com>
+                 - Florian Dupeyron <florian.dupeyron@mugcat.fr>
 Date           : July 2020
 
 Copyright (c) 2020 the dEAduction team
@@ -29,7 +31,8 @@ import logging
 from gettext import gettext as _
 from pathlib import Path
 
-from PySide2.QtCore import (    Slot,
+from PySide2.QtCore import (    Signal,
+                                Slot,
                                 Qt)
 from PySide2.QtGui import       QIcon
 from PySide2.QtWidgets import ( QAction,
@@ -48,6 +51,7 @@ from deaduction.dui.widgets import (    ActionButtonsWidget,
                                         TargetWidget)
 from deaduction.pylib.coursedata import Exercise
 from deaduction.pylib.mathobj import    Goal
+from deaduction.pylub.server import     ServerInterface
 
 log = logging.getLogger(__name__)
 
@@ -168,28 +172,61 @@ class ExerciseCentralWidget(QWidget):
 
 class ExerciseMainWindow(QMainWindow):
 
+    window_closed = Signal()
+
+    ################
+    # Init methods #
+    ################
+
     def _init_signals_slots(self):
         self.exercise_cw.objects_wgt.clicked.connect(
                 self.process_context_click)
         self.exercise_cw.props_wgt.clicked.connect(
                 self.process_context_click)
 
-    def __init__(self, exercise: Exercise):
+    def __init__(self, exercise: Exercise, servint: ServerInteface):
         super().__init__()
         self.exercise = exercise
         self.exercise_cw = ExerciseCentralWidget(self.exercise)
         self.current_context_selection = []
+        self.servint = servint
         self.toolbar = ExerciseToolBar()
 
         self.setCentralWidget(self.exercise_cw)
         self.addToolBar(self.toolbar)
         self._init_signals_slots()
+        # Start server task
+        self.servint.nursery.start_soon(self.server_task)
+
+    ###########
+    # Methods #
+    ###########
+    
+    def closeEvent(self, event):
+        super().closeEvent(event)
+        self.window_closed.emit()
 
     def pretty_user_selection(self):
         msg = 'Current user selection: '
-        msg += ([item.text() for item in self.current_context_selection])
+        msg += str([item.text() for item in self.current_context_selection])
 
         return msg
+
+    ###############
+    # Async tasks #
+    ###############
+   
+    async def server_task(self):
+        await self.servint.exercise_set(self.exercise)
+        async with qtio.enter_emissions_channel(
+                signals=[self.window_closed]) as emissions:
+            async for emission in emissions.channel:
+                if emission.is_from(self.window_closed):
+                    break
+
+    #########
+    # Slots #
+    #########
 
     @Slot()
     def clear_user_selection(self):
@@ -202,10 +239,7 @@ class ExerciseMainWindow(QMainWindow):
 
     @Slot()
     def freeze(yes=True):
-        if yes:
-            self.setEnabled(False)
-        else:
-            self.setEnabled(True)
+        self.setEnabled(not yes)
 
     @Slot(ProofStatePOWidgetItem)
     def process_context_click(self, item: ProofStatePOWidgetItem):
