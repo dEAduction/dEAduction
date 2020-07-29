@@ -6,9 +6,21 @@ import logics
 import structures
 import definitions
 
+namespace elementary_logic
+/- dEAduction
+Section
+    Elementary logic
+-/
 
 lemma definition.iff {P Q : Prop} : ( P ↔ Q ) ↔ (P → Q) ∧ (Q → P) :=
 iff_def
+/- dEAduction
+PrettyName
+    If and only if defition
+-/
+
+end elementary_logic
+
 
 namespace set_theory -- Course title
 /- dEAduction
@@ -20,6 +32,10 @@ variables {X : Type} {Y : Type}
 
 lemma definition.inclusion (A B : set X) : A ⊆ B ↔ ∀ {{x:X}}, x ∈ A → x ∈ B := 
 iff.rfl
+/- dEAduction
+PrettyName
+    Inclusion of two sets
+-/
 
 lemma definition.equality_two_sets {A A' : set X} : (A = A') ↔ ( ∀ x, x ∈ A ↔ x ∈ A' ) :=
 /- dEAduction
@@ -29,6 +45,10 @@ PrettyName
 by exact set.ext_iff
 
 lemma theorem.double_inclusion {A A' : set X} : (A = A') ↔ (A ⊆ A' ∧ A' ⊆ A) :=
+/- dEAduction
+PrettyName
+    Double inclusion
+-/
 begin
     exact le_antisymm_iff
 end
@@ -45,6 +65,10 @@ PrettyName
 -/
 
 lemma theorem.included_in_intersection_iff  (A B C : set X) : C ⊆ A ∩ B ↔ C ⊆ A ∧ C ⊆ B := 
+/- dEAduction
+PrettyName
+    Included in intersection iff
+-/
 begin
     exact ball_and_distrib
 end
@@ -122,12 +146,24 @@ Section
 
 lemma definition.complement {A : set X} {x : X} : x ∈ set.univ \ A ↔ x ∉ A := 
 by finish
+/- dEAduction
+PrettyName
+    Complement
+-/
 
 lemma definition.complement_1 {A : set X} {x : X} : x ∈ set.compl A ↔ x ∉ A := 
 by finish
+/- dEAduction
+PrettyName
+    Complement 1
+-/
 
 lemma definition.complement_2 {A B : set X} {x : X} : x ∈ B \ A ↔ (x ∈ B ∧ x ∉ A) :=
 iff.rfl
+/- dEAduction
+PrettyName
+    Complement 2
+-/
 
 lemma exercise.complement_of_complement {A : set X} : - - A = A :=
 /- dEAduction

@@ -161,7 +161,7 @@ class StatementsTreeWidget(QTreeWidget):
 
         # If branch is empty, put statement at the end
         if not branch:
-            item = StatementsTreeWidgetItem.from_Statement(statement)
+            item = StatementsTreeWidgetItem(statement)
             root = item.text(0)
             extg_tree[root] = (item, dict())
             parent.addChild(item)

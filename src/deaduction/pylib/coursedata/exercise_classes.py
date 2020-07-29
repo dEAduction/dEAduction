@@ -90,14 +90,14 @@ class Statement:
 
         def fkt(rmg_hierarchy):
             if not rmg_hierarchy:
-                return
+                return None
             else:
                 pretty_hierarchy.insert(0, outline[rmg_hierarchy])
                 # 'a.b.c.d' -> 'a.b.c'
                 rmg_hierarchy = '.'.join(rmg_hierarchy.split('.')[:-1])
                 fkt(rmg_hierarchy)
 
-        name = '.'.join(self.lean_name.split('.')[:-1])
+        name = '.'.join(self.lean_name.split('.')[:-2])
         fkt(name)
 
         return pretty_hierarchy

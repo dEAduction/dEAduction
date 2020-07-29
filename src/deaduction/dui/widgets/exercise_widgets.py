@@ -80,6 +80,10 @@ class ExerciseToolbar(QToolBar):
 
 class ExerciseCentralWidget(QWidget):
 
+    ################
+    # Init methods #
+    ################
+    
     def _init_all_layout_boxes(self):
         # TODO: draw the damn thing
 
@@ -137,6 +141,10 @@ class ExerciseCentralWidget(QWidget):
         self._init_goal()
         self._init_put_widgets_in_layouts()
         self.setLayout(self._main_lyt)
+
+    #################
+    # Other methods #
+    #################
 
     def update_goal(self, new_goal: Goal):
 
@@ -198,9 +206,9 @@ class ExerciseMainWindow(QMainWindow):
         # Start server task
         self.servint.nursery.start_soon(self.server_task)
 
-    ###########
-    # Methods #
-    ###########
+    #################
+    # Other methods #
+    #################
     
     def closeEvent(self, event):
         super().closeEvent(event)
