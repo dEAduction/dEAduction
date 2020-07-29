@@ -100,19 +100,12 @@ class ExerciseCentralWidget(QWidget):
         outline = self.exercise.course.outline
         self.statements_tree = StatementsTreeWidget(statements, outline)
 
-    def _init_goal(self, first_goal: Goal):
-        self.current_goal = first_goal
-
-        # Init context (objects and properties). Get them as two list of
-        # (ProofStatePO, str), the str being the tag of the prop. or obj.
-        context = self.current_goal.tag_and_split_propositions_objects()
-        self.objects_wgt = ProofStatePOWidget(context[0])
-        self.props_wgt = ProofStatePOWidget(context[1])
-
-        # Init the target
-        target = self.current_goal.target
-        target_tag = self.current_goal.future_tags[1]
-        self.target_wgt = TargetWidget(target, target_tag)
+    def _init_goal(self):
+        # Create empty widgets while waiting for Lean
+        self.current_goal = None
+        self.objects_wgt = ProofStatePOWidget()
+        self.props_wgt = ProofStatePOWidget()
+        self.target_wgt = TargetWidget()
 
     def _init_put_widgets_in_layouts(self):
         # Actions
@@ -132,7 +125,7 @@ class ExerciseCentralWidget(QWidget):
         self._main_lyt.addWidget(self.target_wgt)
         self._main_lyt.addLayout(self._context_actions_lyt)
 
-    def __init__(self, exercise: Exercise, first_goal: Goal):
+    def __init__(self, exercise: Exercise):
         super().__init__()
         self.exercise = exercise
         self._init_all_layout_boxes()
@@ -143,7 +136,8 @@ class ExerciseCentralWidget(QWidget):
 
     def update_goal(self, new_goal: Goal):
 
-        # Get new objects
+        # Init context (objects and properties). Get them as two list of
+        # (ProofStatePO, str), the str being the tag of the prop. or obj.
         new_context = new_goal.tag_and_split_propositions_objects()
         new_objects_wgt = ProofStatePOWidget(new_context[0])
         new_props_wgt = ProofStatePOWidget(new_context[1])
