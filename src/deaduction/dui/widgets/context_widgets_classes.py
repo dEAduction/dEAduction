@@ -80,9 +80,6 @@ class ProofStatePOWidgetItem(QListWidgetItem):
                   f'{proofstatepo.math_type.format_as_utf8()}'
         self.setText(caption)
 
-        # User cannot have selected it before the init
-        self.is_user_selected = False
-
     def __eq__(self, other):
         """
         Do not delete! Useful for 'for pspoitem in list:' stuff, used
@@ -91,13 +88,9 @@ class ProofStatePOWidgetItem(QListWidgetItem):
         return self is other
 
     def mark_user_selected(self, yes=True):
-        if yes:
-            brush = QBrush(QColor('limegreen'))
-        else:
-            brush = QBrush()
-
-        self.is_user_selected = yes
+        brush = QBrush(QColor('limegreen')) if yes else QBrush()
         self.setBackground(brush)
+        print('AAAAAA')
 
 
 class ProofStatePOWidget(QListWidget):
@@ -125,8 +118,9 @@ class TargetLabel(QLabel):
         # where H might be the lean name of the target. That's what
         # the .math_type is for.
         self.setText(target.math_type.format_as_utf8() if target else '…')
-        if tag:
-            self.setIcon(_TagIcon(tag))
+        # TODO: add tag
+#        if tag:
+#            self.setIcon(_TagIcon(tag))
 
         # Cosmetics
         self.setStyleSheet('font-size: 24px;')

@@ -52,7 +52,8 @@ from deaduction.dui.widgets import (    ActionButtonsWidget,
                                         ProofStatePOWidgetItem,
                                         TargetWidget)
 from deaduction.pylib.coursedata import Exercise
-from deaduction.pylib.mathobj import    Goal
+from deaduction.pylib.mathobj import    (Goal,
+                                         ProofState)
 from deaduction.pylib.server import     ServerInterface
 
 log = logging.getLogger(__name__)
@@ -148,36 +149,6 @@ class ExerciseCentralWidget(QWidget):
         self._init_put_widgets_in_layouts()
         self.setLayout(self._main_lyt)
 
-    #################
-    # Other methods #
-    #################
-
-    def update_goal(self, new_goal: Goal):
-
-        # Init context (objects and properties). Get them as two list of
-        # (ProofStatePO, str), the str being the tag of the prop. or obj.
-        new_context = new_goal.tag_and_split_propositions_objects()
-        new_objects_wgt = ProofStatePOWidget(new_context[0])
-        new_props_wgt = ProofStatePOWidget(new_context[1])
-        new_target = new_goal.target
-        new_target_tag = new_target.future_tags[1]
-        new_target_wgt = TargetWidget(new_target, new_target_tag)
-
-        # Replace in the layouts
-        replace_delete_widget(self._context_lyt,
-                              self.objects_wgt, new_objects_wgt)
-        replace_delete_widget(self._context_lyt,
-                              self.props_wgt, new_props_wgt)
-        replace_delete_widget(self._main_lyt,
-                              self.target_wgt, new_target_wgt,
-                              ~Qt.FindChildrenRecursively)
-
-        # Set the attributes to the new values
-        self.objects_wgt = new_objects_wgt
-        self.props_wgt = new_props_wgt
-        self.target_wgt = new_target_wgt
-        self.current_goal = new_goal
-
 
 ###############
 # Main window #
@@ -192,12 +163,6 @@ class ExerciseMainWindow(QMainWindow):
     # Init methods #
     ################
 
-    def _init_signals_slots(self):
-        self.exercise_cw.objects_wgt.itemClicked.connect(
-                self.process_context_click)
-        self.exercise_cw.props_wgt.itemClicked.connect(
-                self.process_context_click)
-
     def __init__(self, exercise: Exercise, servint: ServerInterface):
         super().__init__()
         self.exercise = exercise
@@ -208,7 +173,8 @@ class ExerciseMainWindow(QMainWindow):
 
         self.setCentralWidget(self.exercise_cw)
         self.addToolBar(self.toolbar)
-        self._init_signals_slots()
+        self.connect_signals_slots()
+
         # Start server task
         self.servint.nursery.start_soon(self.server_task)
 
@@ -216,6 +182,13 @@ class ExerciseMainWindow(QMainWindow):
     # Other methods #
     #################
     
+    def connect_signals_slots(self):
+        self.exercise_cw.objects_wgt.itemClicked.connect(
+                self.process_context_click)
+        self.exercise_cw.props_wgt.itemClicked.connect(
+                self.process_context_click)
+        self.servint.proof_state_change.connect(self.update_proof_state)
+
     def closeEvent(self, event):
         super().closeEvent(event)
         self.window_closed.emit()
@@ -225,6 +198,36 @@ class ExerciseMainWindow(QMainWindow):
         msg += str([item.text() for item in self.current_context_selection])
 
         return msg
+
+    def update_goal(self, new_goal: Goal):
+
+        # Init context (objects and properties). Get them as two list of
+        # (ProofStatePO, str), the str being the tag of the prop. or obj.
+        new_context = new_goal.tag_and_split_propositions_objects()
+        new_objects_wgt = ProofStatePOWidget(new_context[0])
+        new_props_wgt = ProofStatePOWidget(new_context[1])
+        new_target = new_goal.target
+        # TODO: set real tag value
+        new_target_tag = '=' # new_target.future_tags[1]
+        new_target_wgt = TargetWidget(new_target, new_target_tag)
+
+        # Replace in the layouts
+        replace_delete_widget(self.exercise_cw._context_lyt,
+                              self.exercise_cw.objects_wgt, new_objects_wgt)
+        replace_delete_widget(self.exercise_cw._context_lyt,
+                              self.exercise_cw.props_wgt, new_props_wgt)
+        replace_delete_widget(self.exercise_cw._main_lyt,
+                              self.exercise_cw.target_wgt, new_target_wgt,
+                              ~Qt.FindChildrenRecursively)
+
+        # Set the attributes to the new values
+        self.exercise_cw.objects_wgt = new_objects_wgt
+        self.exercise_cw.props_wgt = new_props_wgt
+        self.exercise_cw.target_wgt = new_target_wgt
+        self.exercise_cw.current_goal = new_goal
+
+        # Reconnect signals and slots
+        self.connect_signals_slots()
 
     ###############
     # Async tasks #
@@ -259,16 +262,19 @@ class ExerciseMainWindow(QMainWindow):
 
     @Slot(ProofStatePOWidgetItem)
     def process_context_click(self, item: ProofStatePOWidgetItem):
-        print("AAAAAAAA")
+        print("BBBBBB")
         log.debug('Recording user selection')
         item.setSelected(False)
 
-        if not item.is_user_selected:
-            if item not in self.current_context_selection:
-                item.mark_selected(True)
-                self.current_context_selection.append(item)
-        elif item.is_user_selected:
-            item.mark_selected(False)
+        if item not in self.current_context_selection:
+            item.mark_user_selected(True)
+            self.current_context_selection.append(item)
+        else:
+            item.mark_user_selected(False)
             self.current_context_selection.remove(item)
 
         log.debug(self.pretty_user_selection())
+
+    @Slot(ProofState)
+    def update_proof_state(self, proofstate: ProofState):
+        self.update_goal(proofstate.goals[0])
