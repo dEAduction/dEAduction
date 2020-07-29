@@ -71,6 +71,7 @@ class ActionButtonsWidget(QWidget):
 
         self.setLayout(self._main_layout)
 
+
 ##############################
 # Statements widgets classes #
 ##############################

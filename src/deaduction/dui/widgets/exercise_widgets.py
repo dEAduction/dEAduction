@@ -53,8 +53,8 @@ from deaduction.dui.widgets import (    ActionButton,
                                         ProofStatePOWidgetItem,
                                         TargetWidget)
 from deaduction.pylib.coursedata import Exercise
-from deaduction.pylib.mathobj import    (Goal,
-                                         ProofState)
+from deaduction.pylib.mathobj import (  Goal,
+                                        ProofState)
 from deaduction.pylib.server import     ServerInterface
 
 log = logging.getLogger(__name__)
@@ -118,7 +118,6 @@ class ExerciseCentralWidget(QWidget):
 
     def _init_goal(self):
         # Create empty widgets while waiting for Lean
-        self.current_goal = None
         self.objects_wgt = ProofStatePOWidget()
         self.props_wgt = ProofStatePOWidget()
         self.target_wgt = TargetWidget()
@@ -167,6 +166,7 @@ class ExerciseMainWindow(QMainWindow):
     def __init__(self, exercise: Exercise, servint: ServerInterface):
         super().__init__()
         self.exercise = exercise
+        self.current_goal = None
         self.exercise_cw = ExerciseCentralWidget(self.exercise)
         self.current_context_selection = []
         self.servint = servint
@@ -175,7 +175,7 @@ class ExerciseMainWindow(QMainWindow):
         self.setCentralWidget(self.exercise_cw)
         self.addToolBar(self.toolbar)
 
-        self.connect_signals_slots_actions()
+        self.init_signals_slots_actions()
         self.connect_signals_slots_context()
 
         # Start server task
@@ -185,14 +185,22 @@ class ExerciseMainWindow(QMainWindow):
     # Other methods #
     #################
     
-    def connect_signals_slots_actions(self):
-
+    def init_signals_slots_actions(self):
         # Actions buttons
         for logic_btn in self.exercise_cw.logic_btns.action_buttons:
-            logic_btn.clicked.connect(self.call_logic_action)
 
-        for proof_btn in self.exercise_cw.proof_btns.action_buttons:
-            proof_btn.clicked.connect(self.call_proof_action)
+            def f(btn):
+                @Slot()
+                def g():
+                    string = btn.action.run(self.current_goal,
+                            self.current_context_selection)
+                    print(string)
+                return g
+
+            logic_btn.clicked.connect(f(logic_btn))
+
+        # for proof_btn in self.exercise_cw.proof_btns.action_buttons:
+        #    proof_btn.clicked.connect(self.call_proof_action(proof_btn))
 
     def connect_signals_slots_context(self):
         # Objects and properties lists
@@ -239,7 +247,7 @@ class ExerciseMainWindow(QMainWindow):
         self.exercise_cw.objects_wgt = new_objects_wgt
         self.exercise_cw.props_wgt = new_props_wgt
         self.exercise_cw.target_wgt = new_target_wgt
-        self.exercise_cw.current_goal = new_goal
+        self.current_goal = new_goal
 
         # Reconnect signals and slots
         self.connect_signals_slots_context()
@@ -262,12 +270,12 @@ class ExerciseMainWindow(QMainWindow):
     # Slots #
     #########
 
-    @Slot(ActionButton)
-    def call_logic_action(self, action_button: ActionButton):
+    @Slot()
+    def call_logic_action(self, btn):
         pass
 
-    @Slot(ActionButton)
-    def call_proof_action(self, action_button: ActionButton):
+    @Slot()
+    def call_proof_action(self, btn):
         pass
 
     @Slot()
