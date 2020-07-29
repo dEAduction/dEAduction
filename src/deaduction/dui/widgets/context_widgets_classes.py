@@ -27,12 +27,18 @@ This file is part of d∃∀duction.
 
 from pathlib import Path
 from typing import List, Tuple
-from PySide2.QtGui import QBrush, QColor, QIcon
-from PySide2.QtWidgets import (QLabel,
-                               QWidget,
-                               QListWidget,
-                               QListWidgetItem)
+
+from PySide2.QtGui import (     QBrush,
+                                QColor,
+                                QIcon)
+from PySide2.QtWidgets import ( QHBoxLayout,
+                                QLabel,
+                                QWidget,
+                                QListWidget,
+                                QListWidgetItem)
+
 from deaduction.pylib.mathobj import ProofStatePO
+
 
 #############
 # Utilities #
@@ -131,9 +137,10 @@ class TargetWidget(QWidget):
         super().__init__()
         self.target = target
         self.tag = tag
+        self._main_layout = QHBoxLayout()
 
         self.target_label = TargetLabel(self.target, self.tag)
-        self.main_layout.addStretch()
-        self.main_layout.addWidget(self.target_label)
-        self.main_layout.addStretch()
-        self.setLayout(self.main_layout)
+        self._main_layout.addStretch()
+        self._main_layout.addWidget(self.target_label)
+        self._main_layout.addStretch()
+        self.setLayout(self._main_layout)

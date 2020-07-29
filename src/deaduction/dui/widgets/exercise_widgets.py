@@ -30,6 +30,8 @@ This file is part of d∃∀duction.
 import logging
 from gettext import gettext as _
 from pathlib import Path
+import trio
+import qtrio
 
 from PySide2.QtCore import (    Signal,
                                 Slot,
@@ -70,12 +72,16 @@ class ExerciseToolbar(QToolBar):
         self.undo_action = QAction(
                 QIcon(str((icons_dir / 'undo_action.png').resolve())),
                 _('Undo action'), self)
-        self.undo_action = QAction(
+        self.redo_action = QAction(
                 QIcon(str((icons_dir / 'redo_action.png').resolve())),
                 _('Redo action'), self)
-        self.undo_action = QAction(
+        self.clear_selection_action = QAction(
                 QIcon(str((icons_dir / 'clear_selection.png').resolve())),
-               _('Undo action'), self)
+               _('Clear selection'), self)
+
+        self.addAction(self.undo_action)
+        self.addAction(self.redo_action)
+        self.addAction(self.clear_selection_action)
 
 
 class ExerciseCentralWidget(QWidget):
@@ -128,8 +134,8 @@ class ExerciseCentralWidget(QWidget):
         self._context_gb.setLayout(self._context_lyt)
 
         # https://i.kym-cdn.com/photos/images/original/001/561/446/27d.jpg
-        self._context_actions_lyt.addWidget(self._actions_gb)
         self._context_actions_lyt.addWidget(self._context_gb)
+        self._context_actions_lyt.addWidget(self._actions_gb)
         self._main_lyt.addWidget(self.target_wgt)
         self._main_lyt.addLayout(self._context_actions_lyt)
 
@@ -187,9 +193,9 @@ class ExerciseMainWindow(QMainWindow):
     ################
 
     def _init_signals_slots(self):
-        self.exercise_cw.objects_wgt.clicked.connect(
+        self.exercise_cw.objects_wgt.itemClicked.connect(
                 self.process_context_click)
-        self.exercise_cw.props_wgt.clicked.connect(
+        self.exercise_cw.props_wgt.itemClicked.connect(
                 self.process_context_click)
 
     def __init__(self, exercise: Exercise, servint: ServerInterface):
@@ -198,7 +204,7 @@ class ExerciseMainWindow(QMainWindow):
         self.exercise_cw = ExerciseCentralWidget(self.exercise)
         self.current_context_selection = []
         self.servint = servint
-        self.toolbar = ExerciseToolBar()
+        self.toolbar = ExerciseToolbar()
 
         self.setCentralWidget(self.exercise_cw)
         self.addToolBar(self.toolbar)
@@ -225,8 +231,10 @@ class ExerciseMainWindow(QMainWindow):
     ###############
    
     async def server_task(self):
+        self.freeze()
         await self.servint.exercise_set(self.exercise)
-        async with qtio.enter_emissions_channel(
+        self.freeze(False)
+        async with qtrio.enter_emissions_channel(
                 signals=[self.window_closed]) as emissions:
             async for emission in emissions.channel:
                 if emission.is_from(self.window_closed):
@@ -246,11 +254,12 @@ class ExerciseMainWindow(QMainWindow):
         log.debug(self.pretty_user_selection())
 
     @Slot()
-    def freeze(yes=True):
+    def freeze(self, yes=True):
         self.setEnabled(not yes)
 
     @Slot(ProofStatePOWidgetItem)
     def process_context_click(self, item: ProofStatePOWidgetItem):
+        print("AAAAAAAA")
         log.debug('Recording user selection')
         item.setSelected(False)
 

@@ -25,15 +25,19 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
+import logging
 from pathlib import Path
 from typing import List
+
 from PySide2.QtGui import QBrush, QColor, QIcon
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QHBoxLayout, QPushButton, QWidget
 from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem
+
 from deaduction.pylib.actions import Action
 from deaduction.pylib.coursedata import Statement
 
+log = logging.getLogger(__name__)
 
 ######################
 # ActionButton class #
@@ -73,7 +77,7 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         """
 
         self.statement = statement
-        titles = [statement.pretty_name, statement.identifier]
+        titles = [statement.pretty_name, statement.lean_name]
         super().__init__(None, titles)
         self._initUI()
 
@@ -97,7 +101,7 @@ class StatementsTreeWidgetNode(QTreeWidgetItem):
 
     def _initUI(self):
         self.setExpanded(True)
-        icon_path = Path('share/graphical_resources/icons/')
+        icon_path = Path('share/graphical_resources/icons/folder.png')
         icon = QIcon(str(icon_path.resolve()))
         self.setIcon(0, icon)
 
