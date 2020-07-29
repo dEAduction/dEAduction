@@ -27,7 +27,7 @@ This file is part of d∃∀duction.
 
 from .actions_widgets_classes import (
         ActionButton,
-        ActionButtonWidget,
+        ActionButtonsWidget,
         StatementsTreeWidgetItem,
         StatementsTreeWidgetNode,
         StatementsTreeWidget)

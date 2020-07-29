@@ -66,16 +66,16 @@ class ExerciseToolbar(QToolBar):
     def __init__(self):
         super().__init__(_('Toolbar'))
 
-        icons_dir = Path('graphical_resources/icons/')
+        icons_dir = Path('share/graphical_resources/icons/')
         self.undo_action = QAction(
-            QIcon(str((icons_dir / 'undo_action.png').resolve()),
-            _('Undo action'), self)
+                QIcon(str((icons_dir / 'undo_action.png').resolve())),
+                _('Undo action'), self)
         self.undo_action = QAction(
-            QIcon(str((icons_dir / 'redo_action.png').resolve()),
-            _('Redo action'), self)
+                QIcon(str((icons_dir / 'redo_action.png').resolve())),
+                _('Redo action'), self)
         self.undo_action = QAction(
-            QIcon(str((icons_dir / 'clear_selection.png').resolve()),
-           _('Undo action'), self)
+                QIcon(str((icons_dir / 'clear_selection.png').resolve())),
+               _('Undo action'), self)
 
 
 class ExerciseCentralWidget(QWidget):
