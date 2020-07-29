@@ -25,8 +25,9 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pathlib import Path
-from typing import List, Tuple
+from pathlib import     Path
+from typing import (    List,
+                        Tuple)
 
 from PySide2.QtGui import (     QBrush,
                                 QColor,

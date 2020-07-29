@@ -25,16 +25,21 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import logging
+import              logging
 from pathlib import Path
-from typing import List
+from typing import  List
 
-from PySide2.QtGui import QBrush, QColor, QIcon
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QHBoxLayout, QPushButton, QWidget
-from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem
+from PySide2.QtGui import (     QBrush,
+                                QColor,
+                                QIcon)
+from PySide2.QtCore import      Qt
+from PySide2.QtWidgets import ( QHBoxLayout,
+                                QPushButton,
+                                QWidget)
+from PySide2.QtWidgets import ( QTreeWidget,
+                                QTreeWidgetItem)
 
-from deaduction.pylib.actions import Action
+from deaduction.pylib.actions import    Action
 from deaduction.pylib.coursedata import Statement
 
 log = logging.getLogger(__name__)
