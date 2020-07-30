@@ -194,7 +194,7 @@ class ExerciseMainWindow(QMainWindow):
         # Signals and slots
         self.connect_actions_signals_slots()
         self.servint.proof_state_change.connect(self.update_proof_state)
-        self.servint.lean_file_changed.connect(self.lean_editor.code_set)
+        self.servint.lean_file_changed.connect(self._update_lean_editor)
 
         # Start server task
         self.servint.nursery.start_soon(self.server_task)
@@ -284,7 +284,8 @@ class ExerciseMainWindow(QMainWindow):
             signals=[self.window_closed,
                      self.__action_triggered,
                      self.toolbar.undo_action.triggered,
-                     self.toolbar.redo_action.triggered]
+                     self.toolbar.redo_action.triggered,
+                     self.lean_editor.editor_send_lean]
         ) as emissions:
             async for emission in emissions.channel:
                 if emission.is_from(self.window_closed):
@@ -302,6 +303,9 @@ class ExerciseMainWindow(QMainWindow):
                     await self.process_async_signal(self.servint.history_undo)
                 elif emission.is_from(self.toolbar.redo_action.triggered):
                     await self.process_async_signal(self.servint.history_redo)
+                elif emission.is_from(self.lean_editor.editor_send_lean):
+                    await self.process_async_signal(
+                            self._server_send_editor_lean)
 
     ##################
     # Server methods #
@@ -324,6 +328,10 @@ class ExerciseMainWindow(QMainWindow):
         code = action.run(self.current_goal,
                           self.current_context_selection_as_pspos)
         await self.servint.code_insert(action.caption, code)
+
+    async def _server_send_editor_lean(self):
+        await self.servint.code_set(_('Code from editor'),
+                self.lean_editor.code_get())
 
     #########
     # Slots #
@@ -363,6 +371,10 @@ class ExerciseMainWindow(QMainWindow):
             self.current_context_selection.remove(item)
 
         log.debug(self.pretty_user_selection())
+
+    @Slot()
+    def _update_lean_editor(self):
+        self.lean_editor.code_set(self.servint.lean_file.inner_contents)
 
     @Slot(ProofState)
     def update_proof_state(self, proofstate: ProofState):

@@ -66,6 +66,9 @@ class LeanEditor(QWidget):
         event.accept()
         self.hide()
 
+    def code_get(self):
+        return self.editor.toPlainText()
+
     #########
     # Slots #
     #########
