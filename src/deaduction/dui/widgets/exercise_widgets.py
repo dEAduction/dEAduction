@@ -198,6 +198,10 @@ class ExerciseMainWindow(QMainWindow):
         for proof_btn in self.cw.proof_btns.action_buttons:
             proof_btn.action_triggered.connect(self.__action_triggered)
 
+        # Toolbar
+        self.toolbar.clear_selection_action.triggered.connect(
+                self.clear_user_selection)
+
     def connect_context_signals_slots(self):
         # Objects and properties lists
         self.cw.objects_wgt.itemClicked.connect(
@@ -258,7 +262,9 @@ class ExerciseMainWindow(QMainWindow):
         self.freeze(False)
         async with qtrio.enter_emissions_channel(
             signals=[self.window_closed,
-                     self.__action_triggered]
+                     self.__action_triggered,
+                     self.toolbar.undo_action.triggered,
+                     self.toolbar.redo_action.triggered]
         ) as emissions:
             async for emission in emissions.channel:
                 if emission.is_from(self.window_closed):
@@ -270,6 +276,23 @@ class ExerciseMainWindow(QMainWindow):
                         action_btn, = emission.args
                         await self.__call_action(action_btn)
 
+                    finally:
+                        self.freeze(False)
+                elif emission.is_from(self.toolbar.undo_action.triggered):
+                    self.freeze(True)
+                    try:
+                        # No need to call self.update_goal, this block
+                        # emits the signal proof_state_change of which
+                        # self.update_goal is a slot, see 
+                        # self.connect_context_signals_slots.
+                        await self.servint.history_undo()
+                    finally:
+                        self.freeze(False)
+                elif emission.is_from(self.toolbar.redo_action.triggered):
+                    self.freeze(True)
+                    try:
+                        # See above comment.
+                        await self.servint.history_redo()
                     finally:
                         self.freeze(False)
 
