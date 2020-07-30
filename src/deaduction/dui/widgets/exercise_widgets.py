@@ -51,6 +51,7 @@ from PySide2.QtWidgets import ( QAction,
 from deaduction.dui.utils import        replace_delete_widget
 from deaduction.dui.widgets import (    ActionButton,
                                         ActionButtonsWidget,
+                                        LeanEditor,
                                         StatementsTreeWidget,
                                         ProofStatePOWidget,
                                         ProofStatePOWidgetItem,
@@ -85,9 +86,14 @@ class ExerciseToolbar(QToolBar):
                 QIcon(str((icons_dir / 'clear_selection.png').resolve())),
                _('Clear selection'), self)
 
+        self.toggle_lean_editor_action = QAction(
+                QIcon(),  # TODO: Add icon
+                _('Toggle L∃∀N'), self)
+
         self.addAction(self.undo_action)
         self.addAction(self.redo_action)
         self.addAction(self.clear_selection_action)
+        self.addAction(self.toggle_lean_editor_action)
 
 
 class ExerciseCentralWidget(QWidget):
@@ -174,6 +180,7 @@ class ExerciseMainWindow(QMainWindow):
         self.current_goal = None
         self.cw = ExerciseCentralWidget(self.exercise)
         self.current_context_selection = []
+        self.lean_editor = LeanEditor()
         self.servint = servint
         self.toolbar = ExerciseToolbar()
 
@@ -187,6 +194,7 @@ class ExerciseMainWindow(QMainWindow):
         # Signals and slots
         self.connect_actions_signals_slots()
         self.servint.proof_state_change.connect(self.update_proof_state)
+        self.servint.lean_file_changed.connect(self.lean_editor.code_set)
 
         # Start server task
         self.servint.nursery.start_soon(self.server_task)
@@ -207,6 +215,8 @@ class ExerciseMainWindow(QMainWindow):
         # Toolbar
         self.toolbar.clear_selection_action.triggered.connect(
                 self.clear_user_selection)
+        self.toolbar.toggle_lean_editor_action.triggered.connect(
+                self.lean_editor.toggle)
 
     def connect_context_signals_slots(self):
         # Objects and properties lists

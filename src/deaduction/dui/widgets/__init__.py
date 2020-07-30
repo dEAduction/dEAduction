@@ -38,6 +38,9 @@ from .context_widgets_classes import (
         TargetLabel,
         TargetWidget)
 
+from .lean_editor import (
+        LeanEditor)
+
 from .exercise_widgets import (
         ExerciseCentralWidget,
         ExerciseMainWindow)
