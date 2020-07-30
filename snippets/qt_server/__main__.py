@@ -5,7 +5,7 @@ from PySide2.QtWidgets import QApplication, QMainWindow, QPushButton, \
                               QHBoxLayout, QVBoxLayout, QGridLayout, \
                               QLineEdit, QListWidget, QWidget, QGroupBox, \
                               QLabel, QDesktopWidget, QListWidgetItem, \
-                              QPlainTextEdit
+                              QPlainTextEdit, QMessageBox
 
 from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem, QTreeView, QListWidget
 from PySide2.QtCore import Qt, Signal, Slot
@@ -20,10 +20,12 @@ import qtrio
 import logging
 
 from deaduction.pylib                             import logger as logger
-from deaduction.pylib.server                      import ServerInterface
+from deaduction.pylib.server                      import (ServerInterface,
+                                                          exceptions)
 from deaduction.pylib.coursedata.course           import Course
 from deaduction.pylib.mathobj.proof_state         import ProofState
 from deaduction.pylib.coursedata.exercise_classes import Exercise
+
 
 class Goal(QPushButton):
     def __init__(self, goal):
@@ -97,7 +99,21 @@ class ExerciseWindow(QWidget):
         self.freeze(True)
 
         txt = self.edit.toPlainText()
-        await self.server.code_set("add", txt)
+        try:
+            await self.server.code_set("add", txt)
+        except exceptions.FailedRequestError as ex:
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Failed lean request")
+            msg.setText("I am broken :'(")
+
+            detailed = ""
+            for err in ex.errors:
+                detailed += f"* at {err.pos_line} : {err.text}\n"
+
+            msg.setDetailedText(detailed)
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.exec_()
 
         self.freeze(False)
 

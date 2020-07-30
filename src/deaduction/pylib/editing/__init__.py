@@ -45,8 +45,8 @@ class LeanFile:
 
         self.__txt          = init_txt  # Text at current position in history
 
-        self.preamble     = preamble  # Text inserted before content
-        self.afterword    = afterword # Text inserted after content
+        self.preamble     = preamble   # Text inserted before content
+        self.afterword    = afterword  # Text inserted after content
 
         # Virtual cursor managment
         # /!\ IMPORTANT NOTE /!\
@@ -185,7 +185,7 @@ class LeanFile:
 
         current_pos = self.current_pos
         next_txt = self.__txt[:current_pos] \
-                   + add_txt              \
+            + add_txt              \
 
         if move_cursor:
             current_pos += len(add_txt)
@@ -274,9 +274,17 @@ class LeanFile:
         # FIXME(florian): Find another generator to explore history ?
         return map(lambda x: x.label, self.history)
 
+    @property
+    def history_at_beginning(self):
+        return self.target_idx == 0
+
+    def history_at_end(self):
+        return self.target_idx == (len(self.history) - 1)
+
     ################################
     # Get file contents
     ################################
+
     @property
     def contents(self):
         """
