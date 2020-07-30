@@ -132,11 +132,11 @@ class PropObj:
         - lists of strings (in latex format)
         - lists of latex rep
         """
-        #        log = logging.getLogger("PropObj")
         if format_ == "latex":
-            log.info(f"computing latex representation of {self}")
+            pass
+            #log.info(f"computing latex representation of {self}")
         else:
-            log.info(f"computing utf-8 representation of {self}")
+            #log.info(f"computing utf-8 representation of {self}")
             format_ = "utf8"
         if self.representation[format_] is not None:
             return
@@ -188,7 +188,6 @@ def list_string_join(latex_or_utf8_rep):
             if type(lr) is list:
                 lr = list_string_join(lr)
             string += lr
-        #    log.debug("string:", latex_str)
         return string
 
 
@@ -236,7 +235,7 @@ class AnonymousPO(PropObj):
         create anonymous sub-objects and props, or refer to existing pfPO
         :param prop_obj_dict: dictionary provided by analysis.LeanExprVisitor
         :param bound_vars: list of bounded variables (BoundVarPO),
-        to be updated
+        to be updated if the AnonymousPO is actually a BounVarPO
         :return: an instance of AnonymousPO
         """
         #        log = logging.getLogger("PropObj")
@@ -258,11 +257,10 @@ class AnonymousPO(PropObj):
         for arg in arguments:
             arg_prop_obj, bound_vars = AnonymousPO.from_tree(arg, bound_vars)
             children.append(arg_prop_obj)
-        ###################
-        # Bound variables #
-        ###################
+        #################################################
+        # Bound variables (unidentified local constant) #
+        #################################################
         if node.startswith("LOCAL_CONSTANT"):
-            # unidentified local constant = bound variable
             representation = {"latex": lean_data["name"],
                               "utf8": lean_data["name"]}
             math_type = children[0]
@@ -273,11 +271,11 @@ class AnonymousPO(PropObj):
             if var_name not in bound_vars:
                 bound_vars.append(var_name)
             return prop_obj, bound_vars
-        #############################
-        # Application of a function #
-        #############################
-        if node == "APPLICATION" and children[0].node == "FUNCTION":
-            node = "APPLICATION_FUNCTION"
+        ###########################################################
+        # Application of a function (or a sequence or set family) #
+        ###########################################################
+        if node == "APPLICATION":
+            node += "_OF_" + children[0].math_type.node
         #################
         # Instantiation #
         #################
