@@ -27,10 +27,12 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from functools import           partial
 import logging
-from gettext import gettext as _
+from gettext import gettext as  _
 from pathlib import Path
 import trio
+from typing import              Callable
 import qtrio
 
 from PySide2.QtCore import (    Signal,
@@ -178,6 +180,10 @@ class ExerciseMainWindow(QMainWindow):
         self.setCentralWidget(self.cw)
         self.addToolBar(self.toolbar)
 
+        # There is no history at the beginning
+        self.toolbar.redo_action.setEnabled(False)
+        self.toolbar.undo_action.setEnabled(False)
+
         # Signals and slots
         self.connect_actions_signals_slots()
         self.servint.proof_state_change.connect(self.update_proof_state)
@@ -270,33 +276,36 @@ class ExerciseMainWindow(QMainWindow):
                 if emission.is_from(self.window_closed):
                     break
                 elif emission.is_from(self.__action_triggered):
-                    self.freeze(True)
-                    try:
-                        # /!\ emission.args is a 1-element tuple
-                        action_btn, = emission.args
-                        await self.__call_action(action_btn)
-
-                    finally:
-                        self.freeze(False)
+                    await self.process_async_signal(
+                            partial(self._server_call_action,
+                                    emission.args[0])
+                    )
                 elif emission.is_from(self.toolbar.undo_action.triggered):
-                    self.freeze(True)
-                    try:
-                        # No need to call self.update_goal, this block
-                        # emits the signal proof_state_change of which
-                        # self.update_goal is a slot, see 
-                        # self.connect_context_signals_slots.
-                        await self.servint.history_undo()
-                    finally:
-                        self.freeze(False)
+                    # No need to call self.update_goal, this block
+                    # emits the signal proof_state_change of which
+                    # self.update_goal is a slot, see 
+                    # self.connect_context_signals_slots.
+                    await self.process_async_signal(self.servint.history_undo)
                 elif emission.is_from(self.toolbar.redo_action.triggered):
-                    self.freeze(True)
-                    try:
-                        # See above comment.
-                        await self.servint.history_redo()
-                    finally:
-                        self.freeze(False)
+                    await self.process_async_signal(self.servint.history_redo)
 
-    async def __call_action(self, action_btn: ActionButton):
+    ##################
+    # Server methods #
+    ##################
+
+    async def process_async_signal(self, process_function: Callable):
+        self.freeze(True)
+        try:
+            await process_function()
+        finally:
+            self.freeze(False)
+            # Required for the history is always changed with signals
+            self.toolbar.undo_action.setEnabled(not
+                    self.servint.lean_file.history_at_beginning)
+            self.toolbar.redo_action.setEnabled(not
+                    self.servint.lean_file.history_at_end)
+
+    async def _server_call_action(self, action_btn: ActionButton):
         action = action_btn.action
         code = action.run(self.current_goal, self.current_context_selection)
         await self.servint.code_insert(action.caption, code)
