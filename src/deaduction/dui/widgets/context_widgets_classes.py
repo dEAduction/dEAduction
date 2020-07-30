@@ -73,9 +73,8 @@ class ProofStatePOWidgetItem(QListWidgetItem):
 
     def __init__(self, proofstatepo: ProofStatePO, tag: str):
         super().__init__()
-        # Set icon
+        self.proofstatepo = proofstatepo
         self.setIcon(_TagIcon(tag))
-        # Set text
         caption = f'{proofstatepo.format_as_utf8()} : ' \
                   f'{proofstatepo.math_type.format_as_utf8()}'
         self.setText(caption)
@@ -97,8 +96,12 @@ class ProofStatePOWidget(QListWidget):
     def __init__(self,
             tagged_proofstatepos: List[Tuple[ProofStatePO, str]]=[]):
         super().__init__()
+        self.items = []
+
         for proofstatepo, tag in tagged_proofstatepos:
-            self.addItem(ProofStatePOWidgetItem(proofstatepo, tag))
+            item = ProofStatePOWidgetItem(proofstatepo, tag)
+            self.addItem(item)
+            self.items.append(item)
 
 
 #######################

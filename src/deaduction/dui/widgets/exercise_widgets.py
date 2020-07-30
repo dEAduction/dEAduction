@@ -197,11 +197,11 @@ class ExerciseMainWindow(QMainWindow):
 
     def connect_actions_signals_slots(self):
         # Actions buttons
-        for logic_btn in self.cw.logic_btns.action_buttons:
+        for logic_btn in self.cw.logic_btns.buttons:
             logic_btn.action_triggered.connect(self.__action_triggered)
 
         # Proof buttons
-        for proof_btn in self.cw.proof_btns.action_buttons:
+        for proof_btn in self.cw.proof_btns.buttons:
             proof_btn.action_triggered.connect(self.__action_triggered)
 
         # Toolbar
