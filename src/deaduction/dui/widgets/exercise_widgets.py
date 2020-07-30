@@ -291,7 +291,12 @@ class ExerciseMainWindow(QMainWindow):
 
     @Slot()
     def freeze(self, yes=True):
-        self.setEnabled(not yes)
+        self.toolbar.setEnabled(not yes)
+        self.cw.objects_wgt.setEnabled(not yes)
+        self.cw.props_wgt.setEnabled(not yes)
+        self.cw.logic_btns.setEnabled(not yes)
+        self.cw.proof_btns.setEnabled(not yes)
+        self.cw.statements_tree.setEnabled(not yes)
 
     @Slot(ProofStatePOWidgetItem)
     def process_context_click(self, item: ProofStatePOWidgetItem):
