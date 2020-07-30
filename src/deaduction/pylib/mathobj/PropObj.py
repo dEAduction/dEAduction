@@ -158,11 +158,11 @@ class PropObj:
         if format_ == "latex":
             symbol, format_scheme = latex_structures[node]
             self.representation["latex"] = format_scheme(symbol, children_rep,
-                                                         self, format="latex")
+                                                         self, format_="latex")
         else:
             symbol, format_scheme = utf8_structures[node]
             self.representation["utf8"] = format_scheme(symbol, children_rep,
-                                                        self, format="utf8")
+                                                        self, format_="utf8")
         return
 
     def format_as_latex(self):

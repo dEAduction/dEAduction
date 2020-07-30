@@ -196,25 +196,6 @@ class Goal:
                 objects.append((po, tag))
         return objects, propositions
 
-    # def context_obj(self):
-    #     """
-    #     UNUSED
-    #     provide the sublist of self.context containing all the math objects
-    #     (as opposed to propositions)
-    #     """
-    #
-    #     return [o for o in self.context if not o.math_type.is_prop()]
-    #
-    # def context_prop(self):
-    #     """
-    #     UNUSED
-    #     provide the sublist of self.context containing all the math
-    #     propositions
-    #     (as opposed to objects)
-    #     """
-    #     return [o for o in self.context if o.math_type.is_prop()]
-
-
 @dataclass
 class ProofState:
     goals: List[Goal]
