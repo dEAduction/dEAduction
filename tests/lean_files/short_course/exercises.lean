@@ -94,6 +94,27 @@ PrettyName
     Union of an arbitrary family of sets
 -/
 
+lemma exercise.ta_race (A B : Prop) : A → A ∨ B :=
+/- dEAduction
+PrettyName
+    Ta race
+Description
+    Fuck it
+Tools->Logic
+    $ALL
+Tools->ProofTechniques
+    $ALL
+Tools->Definitions
+    $UNTIL_NOW
+Tools->Theorems
+    double_inclusion
+ExpectedVarsNumber
+    X=3, A=1, B=1
+-/
+begin
+    sorry
+end
+
 lemma exercise.intersection_dist_over_union (X : Type) (A B C : set X) : A ∩ (B ∪ C)  = (A ∩ B) ∪ (A ∩ C) := 
 /- dEAduction
 PrettyName

@@ -32,7 +32,9 @@ from typing import  List
 from PySide2.QtGui import (     QBrush,
                                 QColor,
                                 QIcon)
-from PySide2.QtCore import      Qt
+from PySide2.QtCore import (    Signal,
+                                Slot,
+                                Qt)
 from PySide2.QtWidgets import ( QHBoxLayout,
                                 QPushButton,
                                 QWidget)
@@ -51,10 +53,17 @@ log = logging.getLogger(__name__)
 
 class ActionButton(QPushButton):
 
+    action_triggered = Signal(Action)
+
     def __init__(self, action: Action):
         super().__init__()
         self.setText(action.caption)
         self.action = action
+        self.clicked.connect(self._emit_action)
+
+    @Slot()
+    def _emit_action(self):
+        self.action_triggered.emit(self.action)
 
 
 class ActionButtonsWidget(QWidget):
