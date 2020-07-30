@@ -66,6 +66,8 @@ class ServerInterface(QObject):
 
     proof_no_goals     = Signal()
 
+    lean_file_changed  = Signal()
+
     ############################################
     # Init, and state control
     ############################################
@@ -157,6 +159,8 @@ class ServerInterface(QObject):
 
         resp = await self.lean_server.send(req)
         if resp.message == "file invalidated":
+            self.lean_file_changed.emit()
+
             await self.lean_server.running_monitor.wait_ready()
 
             # Construct new proof state from temp strings
