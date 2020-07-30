@@ -222,6 +222,10 @@ class ExerciseMainWindow(QMainWindow):
         super().closeEvent(event)
         self.window_closed.emit()
 
+    @property
+    def current_context_selection_as_pspos(self):
+        return [item.proofstatepo for item in self.current_context_selection]
+
     def pretty_user_selection(self):
         msg = 'Current user selection: '
         msg += str([item.text() for item in self.current_context_selection])
@@ -307,7 +311,8 @@ class ExerciseMainWindow(QMainWindow):
 
     async def _server_call_action(self, action_btn: ActionButton):
         action = action_btn.action
-        code = action.run(self.current_goal, self.current_context_selection)
+        code = action.run(self.current_goal,
+                          self.current_context_selection_as_pspos)
         await self.servint.code_insert(action.caption, code)
 
     #########
