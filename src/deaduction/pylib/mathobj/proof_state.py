@@ -32,7 +32,7 @@ import logging
 from typing import List, Tuple
 from deaduction.pylib.mathobj import PropObj, ProofStatePO, \
     math_type_store
-from snippets.mathobj.give_name import give_name0, instantiate_bound_var
+from deaduction.pylib.mathobj.give_name import give_name0, instantiate_bound_var
 
 log = logging.getLogger(__name__)
 
@@ -134,8 +134,6 @@ class Goal:
         ProofStatePO's instances
         :return: list of strings (variables names)
         """
-        if self.variables_names:
-            return self.variables_names
         log.info("extracting the list of variables's names")
         context = self.context
         target = self.target
@@ -183,9 +181,16 @@ class Goal:
             math_type = pfpo.math_type
             if math_type.node in ["SET_FAMILY", "SEQUENCE"]:  # TODO : mettre ça dans latex_format
                 pfpo.node += "INSTANCE_OF_" + math_type.node
+                # a new representation will be computed
+                pfpo.representation = {'latex': None, 'utf8': None}
                 bound_var_type = math_type.children[0]
+                # search for a fresh name
                 name = give_name0(goal, bound_var_type)
+                # create the bound var
                 bound_var = instantiate_bound_var(math_type, name)
+                # update bound_vars list
+                pfpo.bound_vars.append(name)  # TODO : save the pfpo instead
+                # of mere string
                 pfpo.children = [bound_var]
         return goal
 
@@ -258,7 +263,7 @@ if __name__ == '__main__':
     print("context:")
     pprint(goal.context)
     print(("target:"))
-    pprint(goal.target)
+    pprint(goal.target.math_type)
 
     print("variables: ")
     pprint(goal.extract_var_names())
@@ -285,6 +290,9 @@ PROPERTY[LOCAL_CONSTANT¿[name:H/identifier:0._fresh.212.24016¿]¿(CONSTANT¿[n
             print(f"{[PO.format_as_utf8() for PO in mt_list]} :"
                   f" {mt.format_as_utf8()}")
         print("Target:")
+        print(goal.target.math_type.format_as_utf8())
 
     goal = Goal.from_lean_data(essai_set_family_hypo, essai_set_family_target)
     print_proof_state(goal)
+
+    print(f"variable names {goal.extract_var_names()}")

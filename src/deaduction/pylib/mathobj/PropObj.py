@@ -267,8 +267,8 @@ class AnonymousPO(PropObj):
             prop_obj = BoundVarPO(node, [], representation, [],
                                   lean_data, math_type)
             var_name = lean_data["name"]
-            log.debug(f"adding {var_name} to the bound vars names list")
             if var_name not in bound_vars:
+                log.debug(f"adding {var_name} to the bound vars names list")
                 bound_vars.append(var_name)
             return prop_obj, bound_vars
         ###########################################################
@@ -373,7 +373,7 @@ def math_type_store(math_types: List[Tuple[PropObj, List[ProofStatePO]]],
     :param math_types: list of tuples (math_type, math_type_instances)
     where math_type_instances is a list of instances of math_type
     """
-    log.debug(f"storing {prop_obj.representation['utf8']} in"
+    log.debug(f"storing {prop_obj.representation['utf8']} in "
               f"math_types_instances of {math_type}")
     index = 0
     for item, item_list in math_types:

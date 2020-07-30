@@ -10,7 +10,6 @@ Contain the data for processing PropObj into a latex representation
 
 """
 import gettext
-
 _ = gettext.gettext
 
 #from deaduction.pylib.mathobj import PropObj, ProofStatePO
@@ -21,6 +20,12 @@ _ = gettext.gettext
 nature_leaves_list = ["PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                       "FUNCTION", "SEQUENCE", "SET_FAMILY",
                       "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY"]
+
+def subscript(string):
+    subscript = str.maketrans("0123456789" + "aeijoruvx", "₀₁₂₃₄₅₆₇₈₉" +
+                              "ₐₑᵢⱼₒᵣᵤᵥₓ")
+
+    return string.translate(subscript)
 
 
 def format_constant(latex_symb, a, PO, format_="latex"):
@@ -75,22 +80,23 @@ def format_complement(latex_symb, a, PO, format_="latex"):
 def format_instance_set_family(latex_symb, children_rep, PO, format_="latex"):
     name = PO.lean_data["name"]
     index_rep = children_rep[0]
-    index_subscript_rep = index_rep  # TODO : mettre en indice
+    index_subscript_rep = subscript(index_rep)
     index_set_rep = PO.math_type.children[0].representation[format_]
     if format_ == "latex":
-        string = r"\bigcup" + "\{" + name + "_{" + index_rep + "}, " \
-                 + index_rep + "\in " + index_set_rep + "\}"
+        string = r"\{" + name + r"_{" + index_rep + r"}, " \
+                 + index_rep + r"\in " + index_set_rep + r"\}"
     elif format_ == "utf8":
-        string = ["∪{" + name + index_subscript_rep + ", " \
+        string = ["{" + name + index_subscript_rep + ", " \
                   + index_rep + "∈" + index_set_rep + "}"]
     return string
 
-def format_0_index_1(latex_symb, a, PO, format_="latex"):
+def format_name_index_1(latex_symb, a, PO, format_="latex"):
+    name = PO.children[0].lean_data["name"]
     if format_ == "latex":
-        return [a[0], '_', a[1]]
+        return [name, '_', a[1]]
     if format_ == "utf8":
         # TODO : put a[1] in subscript format
-        return [a[0], '_', a[1]]
+        return [name, '_', a[1]]
 
 # dict nature -> (latex symbol, format name)
 ##########
@@ -122,7 +128,7 @@ latex_structures = {"PROP_AND": (r" \text{ " + _("AND") + " } ", format_0n1),
                     "SET_FAMILY": (r"\text{ " + _("a family of subsets of") +
                                    " }", format_n1),
                     "INSTANCE_OF_SET_FAMILY": ("", format_instance_set_family),
-                    "APPLICATION_OF_SET_FAMILY": ("", format_0_index_1),
+                    "APPLICATION_OF_SET_FAMILY": ("", format_name_index_1),
                     ############
                     # NUMBERS: #
                     ############
@@ -180,7 +186,7 @@ utf8_structures = {"PROP_AND": (" " + _("AND") + " ", format_0n1),  # logic
                    "SET_FAMILY": (" " + _("a family of subsets of") + " ",
                                   format_n1),
                    "INSTANCE_OF_SET_FAMILY": ("", format_instance_set_family),
-                   "APPLICATION_OF_SET_FAMILY": ("", format_0_index_1),
+                   "APPLICATION_OF_SET_FAMILY": ("", format_name_index_1),
                    ############
                    # NUMBERS: #
                    ############
@@ -197,10 +203,10 @@ utf8_structures = {"PROP_AND": (" " + _("AND") + " ", format_0n1),  # logic
                    ##################
                    # GENERAL TYPES: #
                    ##################
-                   "PROP": (_(" a proposition"), format_constant),
-                   "TYPE": (_(" a set"), format_constant),
-                   "SET": (_(" a subset of "), format_n0),
-                   "ELEMENT": (_(" an element of "), format_n0),
+                   "PROP": (" " + _("a proposition"), format_constant),
+                   "TYPE": (" " + _("a set"), format_constant),
+                   "SET": (" " + _("a subset of "), format_n0),
+                   "ELEMENT": (" " + _("an element of "), format_n0),
                    "FUNCTION": (" → ", format_0n1),
                    "SEQUENCE": ("", ""),
                    "TYPE_NUMBER[name:ℕ]": ("ℕ", format_constant),

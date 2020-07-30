@@ -45,7 +45,7 @@ def give_name0(goal, math_type: PropObj, hints: List[str] = []) -> str:
     :return: a name for the new variable
     """
     log.info(f"giving name for {math_type}")
-    names = goal.extract_var_names()
+    names = goal.extract_var_names()  # up-to-date variable names list
     if isinstance(math_type, ProofStatePO):
         type_name = math_type.lean_data["name"]
         if len(type_name) == 1 and type_name.isupper():
@@ -63,7 +63,7 @@ def give_name0(goal, math_type: PropObj, hints: List[str] = []) -> str:
     potential_name = hints[0]
     counter = 0
     while potential_name in names and counter < 26:
-        potential_name = next(potential_name)
+        potential_name = next_letter(potential_name)
         counter += 1
     if counter != 26:
         return potential_name
@@ -133,20 +133,20 @@ def give_name(goal, math_type: PropObj, hints: List[str] = []) -> str:
     # Second trial: hints with alphabetical order
     for name in hints:
         if name in mti_names:
-            potential_name = next(name)
+            potential_name = next_letter(name)
     # TODO : uncomplete
 
     new_name = ""
     return new_name
 
 
-def next(letter: str) -> str:
+def next_letter(letter: str) -> str:
     """
     given a letter, return the next letter in the alphabet
     """
     lower_list = "abcdefghijklmnopqrstuvwxyz"
     upper_list = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    utf8_subscript_digits = "₀₁₂₃₄"  # TODO
+    utf8_subscript_digits = "₀₁₂₃₄₅₆₇₈₉"
     if letter in lower_list:
         return next_in_list(letter, lower_list)
     elif letter in upper_list:
@@ -165,6 +165,7 @@ def next_in_list(letter: str, letters: List[str]):
         return letters[index]
     else:
         return letters[0]
+
 
 
 def name_prolongate(names: List[str]) -> str:
