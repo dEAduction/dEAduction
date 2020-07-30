@@ -255,10 +255,16 @@ OBJECT[LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.725.7047¿]¿(CONSTANT¿[nam
 OBJECT[LOCAL_CONSTANT¿[name:x/identifier:0._fresh.726.4018¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= LOCAL_CONSTANT¿[name:X/identifier:0._fresh.725.7037¿]¿(CONSTANT¿[name:1/1¿]¿)
 PROPERTY[LOCAL_CONSTANT¿[name:H/identifier:0._fresh.726.4020¿]¿(CONSTANT¿[name:1/1¿]¿)/pp_type: x ∈ (f⁻¹⟮B ∪ B'⟯)] ¿= PROP_BELONGS¿(LOCAL_CONSTANT¿[name:x/identifier:0._fresh.726.4018¿]¿(CONSTANT¿[name:1/1¿]¿)¿, SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.725.7042¿]¿(CONSTANT¿[name:1/1¿]¿)¿, SET_UNION¿(LOCAL_CONSTANT¿[name:B/identifier:0._fresh.725.7044¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.725.7047¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿)"""
 
+    essai_forall_hypo = """OBJECT[LOCAL_CONSTANT¿[name:X/identifier:0._fresh.244.37205¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= TYPE
+OBJECT[LOCAL_CONSTANT¿[name:A/identifier:0._fresh.244.37209¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= SET¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.244.37205¿]¿(CONSTANT¿[name:1/1¿]¿)¿)
+OBJECT[LOCAL_CONSTANT¿[name:A'/identifier:0._fresh.244.37214¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= SET¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.244.37205¿]¿(CONSTANT¿[name:1/1¿]¿)¿)"""
+    essai_forall_target = """PROPERTY[METAVAR[_mlocal._fresh.243.37151]/pp_type: A = A' ↔ ∀ (x : X), x ∈ A ↔ x ∈ A'] ¿= PROP_IFF¿(PROP_EQUAL¿(LOCAL_CONSTANT¿[name:A/identifier:0._fresh.244.37209¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:A'/identifier:0._fresh.244.37214¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, QUANT_∀¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.244.37205¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:x/identifier:_fresh.243.37478¿]¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.244.37205¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, PROP_IFF¿(PROP_BELONGS¿(LOCAL_CONSTANT¿[name:x/identifier:_fresh.243.37478¿]¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.244.37205¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, LOCAL_CONSTANT¿[name:A/identifier:0._fresh.244.37209¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, PROP_BELONGS¿(LOCAL_CONSTANT¿[name:x/identifier:_fresh.243.37478¿]¿(LOCAL_CONSTANT¿[name:X/identifier:0._fresh.244.37205¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, LOCAL_CONSTANT¿[name:A'/identifier:0._fresh.244.37214¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿)¿)"""
     def print_proof_state(goal):
+        print("Context:")
         for mt, mt_list in goal.math_types:
             print(f"{[PO.format_as_utf8() for PO in mt_list]} :"
                   f" {mt.format_as_utf8()}")
-
-    goal = Goal.from_lean_data(hypo_essai, "")
+        print("Target:")
+        print(goal.target.math_type.format_as_utf8())
+    goal = Goal.from_lean_data(essai_forall_hypo,essai_forall_target)
     print_proof_state(goal)

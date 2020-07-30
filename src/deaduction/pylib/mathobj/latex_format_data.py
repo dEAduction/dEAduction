@@ -10,7 +10,11 @@ Contain the data for processing PropObj into a latex representation
 
 """
 import gettext
+
 _ = gettext.gettext
+import logging
+
+log = logging.getLogger(__name__)
 
 ########################################################
 # the following is useful for the function needs_paren #
@@ -35,6 +39,7 @@ def format_n0(latex_symb, a, PO, format_="latex"):
 def format_0n1(latex_symb, a, PO, format_="latex"):
     return [a[0], latex_symb, a[1]]
 
+
 def format_name(latex_symb, a, PO, format_="latex"):
     return [PO.lean_data["name"]]
 
@@ -44,24 +49,23 @@ def format_app_function(latex_symb, a, PO, format_="latex"):
 
 
 def format_app_inverse(latex_symb, a, PO, format_="latex"):
-    if format == "latex":
+    if format_ == "latex":
         return [a[0], '^{-1}(', a[1], ')']
-    elif format == "utf8":
+    elif format_ == "utf8":
         return [a[0], '⁻¹(', a[1], ')']
 
 
 def format_quantifiers(latex_symb, a, PO, format_="latex"):
     # mind that the variable a[1] comes AFTER the type a[0] in quantifiers
-    if format == "latex":
+    if format_ == "latex":
         return [latex_symb + ' ' + a[1] + ' \in ', a[0], ', ', a[2]]
-    elif format == "utf8":
-        return [latex_symb  + a[1] + ' ∈ ', a[0], ', ', a[2]]
-
+    elif format_ == "utf8":
+        return [latex_symb + a[1] + ' ∈ ', a[0], ', ', a[2]]
 
 def format_complement(latex_symb, a, PO, format_="latex"):
-    if format == "latex":
+    if format_ == "latex":
         return [a[0], '^c']
-    elif format == "utf8":
+    elif format_ == "utf8":
         return [a[0], 'ᶜ']
 
 
@@ -82,7 +86,7 @@ latex_structures = {"PROP_AND": (r" \text{ " + _("AND") + " } ", format_0n1),
                     ###############
                     "SET_INTER": (r" \cap ", format_0n1),
                     "SET_UNION": (r" \cup ", format_0n1),
-                    "SET_INTER+": (r"\bigcap", format_n0), # TODO: improve
+                    "SET_INTER+": (r"\bigcap", format_n0),  # TODO: improve
                     "SET_UNION+": (r"\bigcup", format_n0),
                     "PROP_INCLUDED": (r" \subset ", format_0n1),
                     "PROP_BELONGS": (r" \in ", format_0n1),
@@ -111,9 +115,9 @@ latex_structures = {"PROP_AND": (r" \text{ " + _("AND") + " } ", format_0n1),
                     # GENERAL TYPES: #
                     ##################
                     "PROP": (r"\text{ " + _("a proposition") + "}",
-                            format_constant),
+                             format_constant),
                     "TYPE": (r" \text{ " + _("a set") + "} ",
-                            format_constant),
+                             format_constant),
                     "SET": (r" \text{ " + _("a subset of") + " }",
                             format_n0),
                     "ELEMENT": (r" \text{ " + _("an element of") + " }",
