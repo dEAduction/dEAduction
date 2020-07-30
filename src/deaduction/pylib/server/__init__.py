@@ -39,9 +39,19 @@ from deaduction.pylib.editing import LeanFile
 from deaduction.pylib.lean.request import SyncRequest
 from deaduction.pylib.lean.server import LeanServer
 
+from deaduction.pylib.server import exceptions
+
 from PySide2.QtCore import Signal, QObject
 
+############################################
+# Lean magic messages
+############################################
+__LEAN_UNRESOLVED_TEXT = "tactic failed, there are unsolved goals"
 
+
+############################################
+# ServerInterface class
+############################################
 class ServerInterface(QObject):
     """
     High level interface to lean server.
@@ -82,6 +92,10 @@ class ServerInterface(QObject):
 
         self.proof_state             = None
 
+        # Errors memory channels
+        self.error_recv, self.error_send = \
+            trio.open_memory_channel(max_buffer_size=1024)
+
     async def start(self):
         await self.lean_server.start()
 
@@ -95,10 +109,10 @@ class ServerInterface(QObject):
         txt      = msg.text
         severity = msg.severity
 
-        print(f"ON LEAN MESSAGE {severity}")
-
         if severity == Message.Severity.error:
             self.log.error(f"Lean error at line {msg.pos_line}: {txt}")
+            self.__filter_error(msg)  # Record error ?
+
         elif severity == Message.Severity.warning:
             self.log.warning(f"Lean warning at line {msg.pos_line}: {txt}")
 
@@ -114,6 +128,14 @@ class ServerInterface(QObject):
 
     def __on_lean_state_change(self, is_running: bool):
         self.log.info(f"New lean state: {is_running}")
+
+    ############################################
+    # Message filtering
+    ############################################
+    def __filter_error(self, msg: Message):
+        # Filter message text, record if not ignored message
+        if not msg.startswith(__LEAN_UNRESOLVED_TEXT):
+            self.error_send.send(msg)
 
     ############################################
     # Update
@@ -141,6 +163,17 @@ class ServerInterface(QObject):
 
             if hasattr(self.update_ended, "emit"):
                 self.update_ended.emit()
+
+        # Emit exceptions ?
+        errlist = []
+        try:
+            while True:
+                errlist.append(self.error_recv.receive_nowait())
+        except trio.WouldBlock:
+            pass
+
+        if errlist:
+            raise exceptions.FailedRequestEerror(errlist)
 
     ############################################
     # Exercise initialisation
