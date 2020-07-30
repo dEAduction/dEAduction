@@ -142,7 +142,7 @@ class ServerInterface(QObject):
         elif msg.text.startswith(LEAN_UNRESOLVED_TEXT):
             pass
 
-        else msg.text.startswith(LEAN_UNRESOLVED_TEXT):
+        else:
             self.error_send.send_nowait(msg)
 
     ############################################
