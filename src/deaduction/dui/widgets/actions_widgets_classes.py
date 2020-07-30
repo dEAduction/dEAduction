@@ -25,6 +25,7 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from gettext import gettext as _
 import              logging
 from pathlib import Path
 from typing import  List
@@ -53,8 +54,6 @@ log = logging.getLogger(__name__)
 
 class ActionButton(QPushButton):
 
-    action_triggered = Signal(Action)
-
     def __init__(self, action: Action):
         super().__init__()
         self.setText(action.caption)
@@ -63,8 +62,10 @@ class ActionButton(QPushButton):
 
     @Slot()
     def _emit_action(self):
-        self.action_triggered.emit(self.action)
+        self.action_triggered.emit(self)
 
+# Required to have an ActionButton as an argument in an ActionButton
+ActionButton.action_triggered = Signal(ActionButton)
 
 class ActionButtonsWidget(QWidget):
 
@@ -146,6 +147,7 @@ class StatementsTreeWidget(QTreeWidget):
 
     def _initUI(self):
         self.setAlternatingRowColors(True)
+        self.setHeaderLabels([_('Statements')])
         self.setWindowTitle('StatementsTreeWidget')
 
     def addChild(self, item):

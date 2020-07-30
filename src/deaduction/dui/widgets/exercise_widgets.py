@@ -38,6 +38,7 @@ from PySide2.QtCore import (    Signal,
                                 Qt)
 from PySide2.QtGui import       QIcon
 from PySide2.QtWidgets import ( QAction,
+                                QDesktopWidget,
                                 QGroupBox,
                                 QHBoxLayout,
                                 QMainWindow,
@@ -159,7 +160,7 @@ class ExerciseCentralWidget(QWidget):
 class ExerciseMainWindow(QMainWindow):
 
     window_closed = Signal()
-    __action_triggered = Signal(Action)
+    __action_triggered = Signal(ActionButton)
 
     ################
     # Init methods #
@@ -187,7 +188,7 @@ class ExerciseMainWindow(QMainWindow):
     #################
     # Other methods #
     #################
-    
+
     def connect_actions_signals_slots(self):
         # Actions buttons
         for logic_btn in self.cw.logic_btns.action_buttons:
@@ -266,13 +267,14 @@ class ExerciseMainWindow(QMainWindow):
                     self.freeze(True)
                     try:
                         # /!\ emission.args is a 1-element tuple
-                        action, = emission.args
-                        await self.__call_action(action)
+                        action_btn, = emission.args
+                        await self.__call_action(action_btn)
 
                     finally:
                         self.freeze(False)
 
-    async def __call_action(self, action: Action):
+    async def __call_action(self, action_btn: ActionButton):
+        action = action_btn.action
         code = action.run(self.current_goal, self.current_context_selection)
         await self.servint.code_insert(action.caption, code)
 
@@ -291,12 +293,15 @@ class ExerciseMainWindow(QMainWindow):
 
     @Slot()
     def freeze(self, yes=True):
-        self.toolbar.setEnabled(not yes)
-        self.cw.objects_wgt.setEnabled(not yes)
-        self.cw.props_wgt.setEnabled(not yes)
-        self.cw.logic_btns.setEnabled(not yes)
-        self.cw.proof_btns.setEnabled(not yes)
-        self.cw.statements_tree.setEnabled(not yes)
+        to_freeze = [self.toolbar,
+                     self.cw.objects_wgt,
+                     self.cw.props_wgt,
+                     self.cw.logic_btns,
+                     self.cw.proof_btns,
+                     self.cw.statements_tree]
+
+        for widget in to_freeze:
+            widget.setEnabled(not yes)
 
     @Slot(ProofStatePOWidgetItem)
     def process_context_click(self, item: ProofStatePOWidgetItem):
