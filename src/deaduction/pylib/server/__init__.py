@@ -247,6 +247,9 @@ class ServerInterface(QObject):
         Inserts code in the lean virtual file.
         """
 
+        if not code.endswith(","):  code += ","
+        if not code.endswith("\n"): code += "\n"
+
         self.lean_file.insert(label=label, add_txt=code)
         await self.__update()
 
