@@ -4,7 +4,6 @@ import tactic
 -- dEAduction imports
 import logics
 import definitions
-import definitions_theorie_des_ensembles
 import structures
 
 
@@ -100,8 +99,7 @@ begin
     sorry
 end
 
-set_option pp.all
-lemma exercise.inter_distributive_union : A ∪ (B ∩ C)  = (A ∪ B) ∩ (A ∪ C) := 
+lemma exercise.inter_distributive_union : A ∪ (B ∩ C)  = (A ∪ B) ∩ (A ∪ C) :=
 /- dEAduction
 PrettyName
     
@@ -147,7 +145,7 @@ PrettyName
 iff.rfl
 
 
-lemma complement_complement : (set.compl (set.compl A)) =A :=
+lemma exercise.complement_complement : (set.compl (set.compl A)) =A :=
 /- dEAduction
 PrettyName
     Complémentaire du complémentaire    
@@ -163,12 +161,12 @@ Tools->Theorems
     $ALL   
 -/
 begin
-    hypo_analysis,
+
     targets_analysis,
     sorry
 end
 
-lemma complement_union_deux : set.compl (A ∪ B) = (set.compl A) ∩ (set.compl B) :=
+lemma exercise.complement_union_deux : set.compl (A ∪ B) = (set.compl A) ∩ (set.compl B) :=
 /- dEAduction
 PrettyName
     Complémentaire d'union I
@@ -251,23 +249,7 @@ Tools->Theorems
 -/
 
 begin
-    defi double_implication,
-        ET, 
-        implique,
-        defi inclusion, qqs a, implique, 
-        defi complement,
-        by_contradiction,
-        -- alternative : defi inclusion at H, qqselim H a, impliqueelim H_2 a_1,
-        applique H a_1,
-        -- alternative : tautology, -- le contexte contient P et non P
-        applique H_1 H_2, assumption,
-    implique,
-    defi inclusion, qqs a, implique,
-    by_contradiction,
-    applique H a_1,
-    applique H_2 H_1, assumption,
-    -- alternative :  defi inclusion at H, qqselim H a, impliqueelim H_3 H_2,
-    -- tautology -- a remplacer : trop puissant !
+    sorry
 end
 
 
@@ -323,9 +305,7 @@ Tools->Theorems
     $ALL   
 -/
 begin
-    hypo_analysis,
-    goals_analysis,
-    sorry
+  sorry
 end
 
 lemma exercise.reciproque_de_image : A ⊆ f ⁻¹' (f '' A) :=
@@ -383,36 +363,6 @@ Tools->Theorems
     $ALL   
 -/
 begin
-    defi double_inclusion,
-    ET,
-        defi inclusion,
-        hypo_analysis,
-        goals_analysis,
-        qqs x,
-        assumption,
-        implique,
-        hypo_analysis,
-        goals_analysis,
-        defi image_reciproque at H,
-        hypo_analysis,
-        defi union,
-        defi union at H,
-        OU H,
-        defi image_reciproque at HA,
-        OUd HA (f x ∈ B),
-            OU gauche, assumption,
-        OU droite, assumption, 
--- ici assumption en fait un peu trop, 
--- on voudrait obliger à avoir appliqué la def de l'image réciproque avant
-    defi inclusion, 
-    qqs x,
-    implique,
-    defi image_reciproque,
-    defi union,
-    defi union at H,
-    OU H,
-        OU gauche, assumption,
-    OU droite, assumption,
 end
 
 
@@ -434,26 +384,6 @@ Tools->Theorems
     $ALL   
 -/
 begin
-    hypo_analysis,
-    targets_analysis,
-    defi double_inclusion, ET,
-    {defi inclusion, qqs x,
-    implique,
-    defi image_reciproque at H_1,
-    defi intersection_quelconque at H_1,
-    defi intersection_quelconque,
-    qqs i,
-    applique H_1 i,
-    defi image_reciproque at H_2,
-    applique H i,
-    rw ← H_3 at H_2,
-    assumption},
-    {
-
-
-
-
-    }
 end
 
 
@@ -475,22 +405,6 @@ Tools->Theorems
     $ALL   
 -/
 begin
-    -- Soit b un élément de  f(A'∩A)
-    defi inclusion,
-    qqsintro b,
-    impliqueintro,
-    -- ligne non indispensable :
-    defi image at H,
-    hypo_analysis,
-    goals_analysis,
-    existeelim a H, ET H,
-    defi intersection_deux at HA, ET HA,
-    defi intersection_deux, ET,
-    defi image,
-    existeintro a, ET,
-    assumption, assumption,
-    existeintro a, ET,
-    assumption, assumption,
 end
 
 
