@@ -29,7 +29,8 @@ This file is part of d∃∀duction.
 
 from gettext import gettext as  _
 
-from PySide2.QtCore import (    Signal,
+from PySide2.QtCore import (    Qt,
+                                Signal,
                                 Slot)
 from PySide2.QtWidgets import ( QHBoxLayout,
                                 QPlainTextEdit,
@@ -48,6 +49,7 @@ class LeanEditor(QWidget):
         self.send_btn = QPushButton(_('Send to L∃∀N'))
 
         self.send_btn.clicked.connect(self.editor_send_lean)
+        self.setWindowFlag(Qt.WindowStaysOnTopHint)
 
         # Layouts
         main_layout = QVBoxLayout()

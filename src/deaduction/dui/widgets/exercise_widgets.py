@@ -87,7 +87,7 @@ class ExerciseToolbar(QToolBar):
                _('Clear selection'), self)
 
         self.toggle_lean_editor_action = QAction(
-                QIcon(),  # TODO: Add icon
+                QIcon(str((icons_dir / 'lean_editor.png').resolve())),
                 _('Toggle L∃∀N'), self)
 
         self.addAction(self.undo_action)
