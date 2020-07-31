@@ -36,6 +36,7 @@ from typing import (
 
 from enum import Enum
 
+
 @dataclass
 class Response:
     response: ClassVar[str]
@@ -43,10 +44,12 @@ class Response:
     @classmethod
     def from_dict(cls, dic):
         return cls(**dic)
-            
+
 ############################################
 # Messages and tasks
 ############################################
+
+
 @dataclass
 class Message:
     Severity = Enum("Severity", "information warning error")
@@ -66,6 +69,7 @@ class Message:
         dic["severity"] = getattr(Message.Severity, dic["severity"])
         return cls(**dic)
 
+
 @dataclass
 class AllMessagesResponse(Response):
     response = "all_messages"
@@ -74,6 +78,7 @@ class AllMessagesResponse(Response):
     @classmethod
     def from_dict(cls, dic):
         return cls([Message.from_dict(msg) for msg in dic["msgs"]])
+
 
 @dataclass
 class Task:
@@ -85,6 +90,7 @@ class Task:
 
     end_pos_line: Optional[int] = None
     end_pos_col : Optional[int] = None
+
 
 @dataclass
 class CurrentTasksResponse(Response):
@@ -102,6 +108,8 @@ class CurrentTasksResponse(Response):
 ############################################
 # Command responses
 ############################################
+
+
 @dataclass
 class CommandResponse(Response):
     response = "ok"
@@ -110,9 +118,11 @@ class CommandResponse(Response):
     message: Optional[str]
 
     @classmethod
-    def from_dict(cls,dic):
-        if not "message" in dic: dic["message"]=""
+    def from_dict(cls, dic):
+        if "message" not in dic:
+            dic["message"] = ""
         return super().from_dict(dic)
+
 
 @dataclass
 class ErrorResponse(Response):
@@ -123,6 +133,8 @@ class ErrorResponse(Response):
 ############################################
 # Completion
 ############################################
+
+
 @dataclass
 class CompletionCandidate:
     type_        : Optional[str]
@@ -135,6 +147,7 @@ class CompletionCandidate:
         dic["type_"] = dic.pop("type")
         return cls(**dic)
 
+
 @dataclass
 class CompleteResponse(CommandResponse):
     prefix     : str
@@ -142,16 +155,19 @@ class CompleteResponse(CommandResponse):
 
     @classmethod
     def from_dict(cls, dic):
-        if not "message" in dic: dic["message"] = ""
+        if "message" not in dic:
+            dic["message"] = ""
 
         dic["completions"] = [CompletionCandidate.from_dict(cdt)
                               for cdt in dic.pop("completions")]
         return cls(**dic)
 
+
 ############################################
 # Info response
 ############################################
 GoalState = NewType('GoalState', str)
+
 
 @dataclass
 class InfoSource:
@@ -159,11 +175,13 @@ class InfoSource:
     column: int
     file  : Optional[str]
 
+
 @dataclass
 class WidgetInfo:
     line: int
     column: int
     id: int
+
 
 @dataclass
 class InfoRecord:
@@ -190,19 +208,23 @@ class InfoRecord:
 
         return cls(**dic)
 
+
 @dataclass
 class InfoResponse(CommandResponse):
     record: Optional[InfoRecord]
 
     @classmethod
     def from_dict(cls, dic):
-        if not 'message' in dic: dic["message"] = ""
+        if 'message' not in dic:
+            dic["message"] = ""
         dic['record'] = InfoRecord.from_dict(dic.pop('record'))
         return cls(**dic)
 
 ############################################
 # Search response
 ############################################
+
+
 @dataclass
 class SearchItem:
     source: Optional[InfoSource]
@@ -215,13 +237,15 @@ class SearchItem:
         dic['type_'] = dic.pop('type')
         return cls(**dic)
 
+
 @dataclass
 class SearchResponse(CommandResponse):
     results: List[SearchItem]
 
     @classmethod
     def from_dict(cls, dic):
-        if not "message" in dic: dic["message"] = ""
+        if "message" not in dic:
+            dic["message"] = ""
 
         dic['results'] = [SearchItem.from_dict(si)
                           for si in dic.pop('results')]
@@ -230,15 +254,19 @@ class SearchResponse(CommandResponse):
 ############################################
 # Hole commands
 ############################################
+
+
 @dataclass
 class HoleCommandAction:
     name       : str
     description: str
 
+
 @dataclass
 class Position:
     line  : int
     column: int
+
 
 @dataclass
 class HoleCommands:
@@ -253,12 +281,15 @@ class HoleCommands:
                           for hc in dic.pop('results')]
         return cls(**dic)
 
+
 @dataclass
 class HoleCommandsResponse(CommandResponse, HoleCommands):
     @classmethod
-    def from_dict(cls,dic):
-        if not "message" in dic: dic["message"]=""
+    def from_dict(cls, dic):
+        if "message" not in dic:
+            dic["message"] = ""
         return super().from_dict(dic)
+
 
 @dataclass
 class AllHoleCommandsResponse(CommandResponse):
@@ -266,16 +297,19 @@ class AllHoleCommandsResponse(CommandResponse):
 
     @classmethod
     def from_dict(cls, dic):
-        if not "message" in dic: dic["message"]=""
+        if "message" not in dic:
+            dic["message"] = ""
 
         dic['holes'] = [HoleCommands.from_dict(hole)
-                          for hole in dic.pop('holes')]
+                        for hole in dic.pop('holes')]
         return cls(**dic)
+
 
 @dataclass
 class HoleReplacementAlternative:
     code       : str
     description: str
+
 
 @dataclass
 class HoleReplacements:
@@ -290,6 +324,7 @@ class HoleReplacements:
                                for alt in dic.pop('alternatives')]
         return cls(**dic)
 
+
 @dataclass
 class HoleResponse(CommandResponse):
     replacements: Optional[HoleReplacements]
@@ -297,16 +332,19 @@ class HoleResponse(CommandResponse):
 
     @classmethod
     def from_dict(cls, dic):
-        if not "message" in dic: dic["message"] = ""
+        if "message" not in dic:
+            dic["message"] = ""
 
         if 'replacements' in dic:
             dic['replacements'] = HoleReplacements.from_dict(
-                    dic.pop('replacements'))
+                dic.pop('replacements'))
         return cls(**dic)
 
 ############################################
 # Response object factory
 ############################################
+
+
 def from_dict(dic: dict) -> Response:
     response = dic.pop('response')
     if response == 'ok':
@@ -325,7 +363,7 @@ def from_dict(dic: dict) -> Response:
 
     # Now try classes for messages that do have a helpful response field
     for cls in [AllMessagesResponse, CurrentTasksResponse, CommandResponse,
-            ErrorResponse]:
-        if response == cls.response: # type: ignore
-            return cls.from_dict(dic) # type: ignore
+                ErrorResponse]:
+        if response == cls.response:  # type: ignore
+            return cls.from_dict(dic)  # type: ignore
     raise ValueError("Couldn't parse response string.")

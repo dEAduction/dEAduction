@@ -30,13 +30,13 @@ from dataclasses import dataclass
 from typing import (
     Optional,
     List,
-    NewType,
     ClassVar
 )
 
 import json
 
 from enum import Enum
+
 
 @dataclass
 class Request:
@@ -49,6 +49,7 @@ class Request:
         dic = self.__dict__.copy()
         dic['command'] = self.command
         return json.dumps(dic)
+
 
 @dataclass
 class SyncRequest(Request):
@@ -63,6 +64,7 @@ class SyncRequest(Request):
             dic.pop('content')
         return json.dumps(dic)
 
+
 @dataclass
 class CompleteRequest(Request):
     command = 'complete'
@@ -71,6 +73,7 @@ class CompleteRequest(Request):
     column: int
     skip_completions: bool = False
 
+
 @dataclass
 class InfoRequest(Request):
     command = 'info'
@@ -78,10 +81,12 @@ class InfoRequest(Request):
     line: int
     column: int
 
+
 @dataclass
 class SearchRequest(Request):
     command = 'search'
     query: str
+
 
 @dataclass
 class HoleCommandsRequest(Request):
@@ -90,10 +95,12 @@ class HoleCommandsRequest(Request):
     line: int
     column: int
 
+
 @dataclass
 class AllHoleCommandsRequest(Request):
     command = 'all_hole_commands'
     file_name: str
+
 
 @dataclass
 class HoleRequest(Request):
@@ -103,10 +110,12 @@ class HoleRequest(Request):
     column: int
     action: str
 
+
 @dataclass
 class RoiRange:
     begin_line: int
     end_line: int
+
 
 @dataclass
 class FileRoi:
@@ -117,8 +126,15 @@ class FileRoi:
         return {'file_name': self.file_name,
                 'ranges': [rr.__dict__ for rr in self.ranges] }
 
+
 CheckingMode = Enum('CheckingMode',
-    'nothing visible-lines visible-lines-and-above visible-files open-files')
+                    'nothing',
+                    'visible-lines',
+                    'visible-lines-and-above',
+                    'visible-files',
+                    'open-files')
+
+
 @dataclass
 class RoiRequest(Request):
     command = 'roi'
@@ -133,9 +149,11 @@ class RoiRequest(Request):
 
         return json.dumps(dic)
 
+
 @dataclass
 class SleepRequest(Request):
     command = 'sleep'
+
 
 @dataclass
 class LongSleepRequest(Request):
