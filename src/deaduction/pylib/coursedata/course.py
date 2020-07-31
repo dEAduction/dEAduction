@@ -33,7 +33,7 @@ from collections import OrderedDict
 from dataclasses import dataclass
 import logging
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 import deaduction.pylib.logger as logger
 from deaduction.pylib.coursedata.exercise_classes import (Exercise, Definition,
                                                           Theorem, Statement)
@@ -92,7 +92,7 @@ class Course:
             line_counter += 1
             log.debug(f"Parsing line {line_counter}")
             log.debug(f"global_parsing: {global_parsing}, data_parsing: "
-                      f"{data_parsing}")
+                      f"{data_parsing}/")
             ##################################################
             # data_parsing starts after a field_name_parsing #
             # and goes on till the indentation stops         #
@@ -117,7 +117,8 @@ class Course:
                 #######################
                 # end of data_parsing #
                 #######################
-                log.info(f"Field content: {data[data_parsing]}")
+                if data_parsing != "":
+                    log.info(f"Field content: {data[data_parsing]}")
                 data_parsing = ""
                 if global_parsing != "":
                     global_parsing = end_global_parsing(data, global_parsing,
@@ -173,7 +174,7 @@ def data_parse(data: dict, data_parsing: str, indent: int, line: str):
     :return: new data_parsing and new_indent
     """
     log = logging.getLogger("Course initialisation")
-    new_indent = indentation(line)
+    there_is_data, new_indent = indentation(line)
     if new_indent != 0 and indent != 0 and new_indent != indent:
         log.warning("indentation error")
     if new_indent != 0:  # fill the field
@@ -288,20 +289,27 @@ def statement_parse(data, global_parsing, line,
     return global_parsing
 
 
-def indentation(line: str) -> int:
+def indentation(line: str) -> Tuple:
     """
     Compute the number of space at the beginning of line
+    :return: tuple (bool, int)
+    chere bool = True if there is some data, i.e. the line contains some
+    non-space letters
     """
     i = 0
+    if line.isspace() or line == "":
+        return False, len(line)
     while line[i] == " ":
         i += 1
-    return i
+    return True, i
 
 
 if __name__ == "__main__":
     logger.configure()
+#    course_file_path = Path(
+#        '../../../../tests/lean_files/short_course/exercises.lean')
     course_file_path = Path(
-        '../../../../tests/lean_files/short_course/exercises.lean')
+        '../../../../tests/lean_files/exercises_theorie_des_ensembles.lean')
 
     my_course = Course.from_file(course_file_path)
     print("My course:")
