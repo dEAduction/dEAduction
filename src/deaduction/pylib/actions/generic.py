@@ -44,8 +44,9 @@ def action_definition(goal : Goal, selected_objects : [PropObj], definition : St
         defi = definition.lean_name
         return "defi {0}".format(defi)
     elif len(selected_objects) == 1:
-        defi = selected_objects[0].lean_data["name"]
-        return "defi {0} at {1}".format(selected_objects[1].lean_data["name"], defi)
+        defi = definition.lean_name
+        return "defi {0} at {1}".format(defi,
+                                        selected_objects[0].lean_data["name"])
     else:
         raise WrongUserInput()
 

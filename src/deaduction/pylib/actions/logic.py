@@ -123,18 +123,18 @@ def apply_and(l):
     return "cases {0} with {1} {2}, ".format(h_selected, h1, h2)
 
 @action(_("And"))
-def action_and(goal : Goal, l : [PropObj]) -> str:
+def action_and(goal : Goal, selected_objects: [PropObj]) -> str:
     """
     Translate into string of lean code corresponding to the action
     
     :param l: list of PropObj arguments preselected by the user
     :return: string of lean code
     """
-    if len(l) == 0:
+    if len(selected_objects) == 0:
         return construct_and(goal)
-    elif len(l) == 1:
-        return apply_and(l)
-    else :
+    elif len(selected_objects) == 1:
+        return apply_and(selected_objects)
+    else:
         raise WrongUserInput
 
 ## OR ##
