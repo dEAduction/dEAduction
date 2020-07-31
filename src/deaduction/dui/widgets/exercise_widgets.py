@@ -43,6 +43,7 @@ from PySide2.QtWidgets import ( QAction,
                                 QDesktopWidget,
                                 QGroupBox,
                                 QHBoxLayout,
+                                QInputDialog,
                                 QMainWindow,
                                 QMessageBox,
                                 QToolBar,
@@ -58,7 +59,10 @@ from deaduction.dui.widgets import (    ActionButton,
                                         ProofStatePOWidget,
                                         ProofStatePOWidgetItem,
                                         TargetWidget)
-from deaduction.pylib.actions import    Action
+from deaduction.pylib.actions import (  Action,
+                                        InputType,
+                                        MissingParametersError,
+                                        WroungUserInput)
 import deaduction.pylib.actions.generic as generic
 from deaduction.pylib.coursedata import (   Definition,
                                             Exercise,
@@ -368,6 +372,7 @@ class ExerciseMainWindow(QMainWindow):
         action = action_btn.action
         code = action.run(self.current_goal,
                           self.current_context_selection_as_pspos)
+
         await self.servint.code_insert(action.caption, code)
 
     async def _server_call_statement(self, item: StatementsTreeWidgetItem):
