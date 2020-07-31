@@ -128,10 +128,10 @@ class FileRoi:
 
 
 CheckingMode = Enum('CheckingMode',
-                    'nothing',
-                    'visible-lines',
-                    'visible-lines-and-above',
-                    'visible-files',
+                    'nothing'
+                    'visible-lines'
+                    'visible-lines-and-above'
+                    'visible-files'
                     'open-files')
 
 
