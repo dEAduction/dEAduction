@@ -31,7 +31,6 @@ This file is part of d∃∀duction.
 
 import trio
 import logging
-import re
 
 from deaduction.pylib.coursedata.exercise_classes import Exercise
 from deaduction.pylib.mathobj.proof_state import ProofState
@@ -49,6 +48,7 @@ from PySide2.QtCore import Signal, QObject
 ############################################
 LEAN_UNRESOLVED_TEXT = "tactic failed, there are unsolved goals"
 LEAN_NOGOALS_TEXT    = "tactic failed, there are no goals to be solved"
+
 
 ############################################
 # ServerInterface class
@@ -140,7 +140,7 @@ class ServerInterface(QObject):
     def __filter_error(self, msg: Message):
         # Filter message text, record if not ignored message
         if msg.text.startswith(LEAN_NOGOALS_TEXT):
-            if hasattr(self.proof_no_goals, emit):
+            if hasattr(self.proof_no_goals, "emit"):
                 self.proof_no_goals.emit()
         elif msg.text.startswith(LEAN_UNRESOLVED_TEXT):
             pass
@@ -250,8 +250,11 @@ class ServerInterface(QObject):
 
         code = code.strip()
 
-        if not code.endswith(","):  code += ","
-        if not code.endswith("\n"): code += "\n"
+        if not code.endswith(","):
+            code += ","
+
+        if not code.endswith("\n"):
+            code += "\n"
 
         self.lean_file.insert(label=label, add_txt=code)
         await self.__update()
