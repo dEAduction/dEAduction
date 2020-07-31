@@ -89,6 +89,10 @@ class ActionButtonsWidget(QWidget):
 
 class StatementsTreeWidgetItem(QTreeWidgetItem):
 
+    def _initUI(self):
+        # Print second col. in gray
+        self.setForeground(1, QBrush(QColor('gray')))
+
     def __init__(self, statement: Statement):
         """
 
@@ -100,13 +104,14 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         super().__init__(None, titles)
         self._initUI()
 
-    def _initUI(self):
-        self.setExpanded(True)
-        # Print second col. in gray
-        self.setForeground(1, QBrush(QColor('gray')))
-
 
 class StatementsTreeWidgetNode(QTreeWidgetItem):
+
+    def _initUI(self):
+        self.setExpanded(True)
+        icon_path = Path('share/graphical_resources/icons/folder.png')
+        icon = QIcon(str(icon_path.resolve()))
+        self.setIcon(0, icon)
 
     def __init__(self, titles):
         """
@@ -117,12 +122,6 @@ class StatementsTreeWidgetNode(QTreeWidgetItem):
         super().__init__(None, titles)
         self._initUI()
         self.setUnselectable()
-
-    def _initUI(self):
-        self.setExpanded(True)
-        icon_path = Path('share/graphical_resources/icons/folder.png')
-        icon = QIcon(str(icon_path.resolve()))
-        self.setIcon(0, icon)
 
     def setUnselectable(self):
         # Thanks Florian, there is no method for this so we use a QFlag
@@ -196,8 +195,10 @@ class StatementsTreeWidget(QTreeWidget):
         branch = branch[1:]     # ['ideals', 'def']
 
         if root not in extg_tree:
-            extg_tree[root] = (StatementsTreeWidgetNode([root]), dict())
-            parent.addChild(extg_tree[root][0])
+            node = StatementsTreeWidgetNode([root])
+            extg_tree[root] = (node, dict())
+            parent.addChild(node)
+            node.setExpanded(True)  # Must be done AFTER node added
 
         self._init_statement(extg_tree[root][1], statement,
                              branch, extg_tree[root][0])
