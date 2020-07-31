@@ -62,7 +62,7 @@ from deaduction.dui.widgets import (    ActionButton,
 from deaduction.pylib.actions import (  Action,
                                         InputType,
                                         MissingParametersError,
-                                        WroungUserInput)
+                                        WrongUserInput)
 import deaduction.pylib.actions.generic as generic
 from deaduction.pylib.coursedata import (   Definition,
                                             Exercise,
@@ -370,10 +370,37 @@ class ExerciseMainWindow(QMainWindow):
     # Specific functions to be called as process_function in the above
     async def _server_call_action(self, action_btn: ActionButton):
         action = action_btn.action
-        code = action.run(self.current_goal,
-                          self.current_context_selection_as_pspos)
+        user_input = []
 
-        await self.servint.code_insert(action.caption, code)
+        # Send action and catch exception when user needs to:
+        #   - choose A or B when having to prove (A OR B) ;
+        #   - enter an element when clicking on 'exists' button.
+        while True:
+            try:
+                if user_input == []:
+                    code = action.run(self.current_goal,
+                                      self.current_context_selection_as_pspos)
+                else:
+                    code = action_btn.action.run(self.current_goal,
+                            self.current_context_selection, user_input)
+            except MissingParametersError as e:
+                if e.input_type == InputType.Text:
+                    text, ok = QInputDialog.getText(action_btn,
+                            _('Input element'), _('Input element:'))
+                elif e.input_type == InputType.Choice:
+                    text, ok = QInputDialog.getItem(action_btn,
+                            _("Choose element"), "", e.list_of_choices,
+                            0, False)
+                if ok:
+                    user_input.append(text)
+                else:
+                    break
+            except WrongUserInput:
+                self.clear_user_selection()
+                break
+            else:
+                await self.servint.code_insert(action.caption, code)
+                break
 
     async def _server_call_statement(self, item: StatementsTreeWidgetItem):
         # Do nothing is user clicks on a node
