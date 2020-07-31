@@ -54,11 +54,15 @@ from deaduction.dui.widgets import (    ActionButton,
                                         ActionButtonsWidget,
                                         LeanEditor,
                                         StatementsTreeWidget,
+                                        StatementsTreeWidgetItem,
                                         ProofStatePOWidget,
                                         ProofStatePOWidgetItem,
                                         TargetWidget)
 from deaduction.pylib.actions import    Action
-from deaduction.pylib.coursedata import Exercise
+import deaduction.pylib.actions.generic as generic
+from deaduction.pylib.coursedata import (   Definition,
+                                            Exercise,
+                                            Theorem)
 from deaduction.pylib.server.exceptions import FailedRequestError
 from deaduction.pylib.mathobj import (  Goal,
                                         ProofState)
@@ -171,6 +175,7 @@ class ExerciseMainWindow(QMainWindow):
 
     window_closed = Signal()
     __action_triggered = Signal(ActionButton)
+    __statement_triggered = Signal(StatementsTreeWidgetItem)
 
     ################
     # Init methods #
@@ -213,6 +218,10 @@ class ExerciseMainWindow(QMainWindow):
         # Proof buttons
         for proof_btn in self.cw.proof_btns.buttons:
             proof_btn.action_triggered.connect(self.__action_triggered)
+
+        # Statements tree
+        self.cw.statements_tree.itemClicked.connect(
+                self.__statement_triggered)
 
         # Toolbar
         self.toolbar.clear_selection_action.triggered.connect(
@@ -285,6 +294,7 @@ class ExerciseMainWindow(QMainWindow):
         async with qtrio.enter_emissions_channel(
             signals=[self.window_closed,
                      self.__action_triggered,
+                     self.__statement_triggered,
                      self.toolbar.undo_action.triggered,
                      self.toolbar.redo_action.triggered,
                      self.lean_editor.editor_send_lean]
@@ -296,6 +306,11 @@ class ExerciseMainWindow(QMainWindow):
                     await self.process_async_signal(
                             partial(self._server_call_action,
                                     emission.args[0])
+                    )
+                elif emission.is_from(self.__statement_triggered):
+                    await self.process_async_signal(
+                            partial(self._server_call_statement,
+                                emission.args[0])
                     )
                 elif emission.is_from(self.toolbar.undo_action.triggered):
                     # No need to call self.update_goal, this block
@@ -353,6 +368,19 @@ class ExerciseMainWindow(QMainWindow):
         code = action.run(self.current_goal,
                           self.current_context_selection_as_pspos)
         await self.servint.code_insert(action.caption, code)
+
+    async def _server_call_statement(self, item: StatementsTreeWidgetItem):
+        item.setSelected(False)
+        statement = item.statement
+
+        if isinstance(statement, Definition):
+            code = generic.action_definition(self.current_goal,
+                    self.current_context_selection_as_pspos, statement)
+        elif isinstance(statement, Theorem):
+            code = generic.action_theorem(self.current_goal,
+                    self.current_context_selection_as_pspos, statement)
+
+        await self.servint.code_insert(statement.pretty_name, code)
 
     async def _server_send_editor_lean(self):
         await self.servint.code_set(_('Code from editor'),

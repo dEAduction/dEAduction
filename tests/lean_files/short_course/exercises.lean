@@ -122,7 +122,7 @@ PrettyName
 Description 
     The intersection of sets distributes over the union of sets.
 Tools->Logic
-    $ALL -implicate -negate
+    $ALL -negate
 Tools->ProofTechniques
     $ALL -contradiction
 Tools->Definitions
