@@ -45,7 +45,7 @@ from deaduction.pylib.actions.exceptions import (InputType, MissingParametersErr
 
 log = logging.getLogger("logic")
 
-@action(_("Negation"))
+@action(_("Negation"), _("NOT"))
 def action_negate(goal : Goal, l : [PropObj]) -> str:
     """
     Translate into string of lean code corresponding to the action
@@ -89,7 +89,7 @@ def apply_implicate_to_hyp(goal : Goal, l : [PropObj]):
     h = utils.get_new_hyp()
     return "have {0} := {1} {2}, ".format(h, h_selected, x_selected)
 
-@action(_("Implication"))
+@action(_("Implication"), "⇒")
 def action_implicate(goal : Goal, l : [PropObj]) -> str:
     """
     Translate into string of lean code corresponding to the action
@@ -166,7 +166,7 @@ def apply_or(l : [PropObj]) -> str:
     h2 = utils.get_new_hyp()
     return "cases {0} with {1} {2}, ".format(h_selected, h1, h2)
 
-@action(_("Or"))
+@action(_("Or"), _("OR"))
 def action_or(goal : Goal, l : [PropObj], user_input = []) -> str:
     """
     Translate into string of lean code corresponding to the action
@@ -187,7 +187,8 @@ def construct_iff(goal : Goal):
     if goal.target.math_type.node != "PROP_IFF":
         raise WrongUserInput
     return "split, "
-@action(_("If and only if"))
+
+@action(_("If and only if"), "⇔")
 def action_iff(goal : Goal, l : [PropObj]) -> str:
     """
     Translate into string of lean code corresponding to the action
@@ -195,7 +196,10 @@ def action_iff(goal : Goal, l : [PropObj]) -> str:
     :param l: list of PropObj arguments preselected by the user
     :return: string of lean code
     """
-    raise WrongUserInput
+    if len(l) == 0:
+        return construct_iff(goal)
+    else:
+        raise WrongUserInput
 
 ## FOR ALL ##
 
@@ -205,7 +209,7 @@ def construct_forall(goal):
     x = utils.get_new_var()
     return "intro {0}, ".format(x)
 
-@action(_("For all"))
+@action(_("For all"), "∀")
 def action_forall(goal : Goal, l : [PropObj]) -> str:
     """
     Translate into string of lean code corresponding to the action
@@ -236,7 +240,7 @@ def apply_exists(l : [PropObj]) -> str:
     else :
         return "cases {0} with {1} {2}, ".format(h, x, hx)
 
-@action(_("Exists"))
+@action(_("Exists"), "∃")
 def action_exists(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
     """
     Translate into string of lean code corresponding to the action

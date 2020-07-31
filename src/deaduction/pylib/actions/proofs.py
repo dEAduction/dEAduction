@@ -35,7 +35,7 @@ from deaduction.pylib.actions.actiondef import action
 from deaduction.pylib.mathobj.PropObj import PropObj
 from deaduction.pylib.mathobj.proof_state import Goal
 
-@action(_("Assumption"))
+@action(_("Assumption"), "¯\_(ツ)_/¯")
 def action_assumption(goal : Goal, l : [PropObj]) -> str:
     """
     Translate into string of lean code corresponding to the action
@@ -57,11 +57,11 @@ def action_absurdum(goal : Goal, l : [PropObj]) -> str:
     :return: string of lean code
     """
     if len(l) == 0:
-        return "by_contradiction {0}, ".format(utils.get_new_hyp()) 
+        return "contradiction <|> by_contradiction {0}, ".format(utils.get_new_hyp()) 
     else:
         raise WrongUserInput
 
-@action(_("Case-based reasoning")) # TODO : dire à Florian de rajouter open classical et local attribute [instance] classical.prop_decidable dans le fichier lean
+@action(_("Case-based reasoning"), _("CASES")) # TODO : dire à Florian de rajouter open classical et local attribute [instance] classical.prop_decidable dans le fichier lean
 def action_cbr(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
     """
     Translate into string of lean code corresponding to the action
@@ -79,7 +79,7 @@ def action_cbr(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
     else:
         raise WrongUserInput
 
-@action(_("Proof by contrapositive"))
+@action(_("Proof by contrapositive"), "¬P ⇒ ¬Q")
 def action_contrapose(goal : Goal, l : [PropObj]):
     """
     Translate into string of lean code corresponding to the action
@@ -92,21 +92,11 @@ def action_contrapose(goal : Goal, l : [PropObj]):
             return "contrapose, "
     raise WrongUserInput
 
-@action(_("Contradiction"))
-def action_contradiction(goal : Goal, l : [PropObj]):
-    """
-    Translate into string of lean code corresponding to the action
-    
-    :param l: list of PropObj arguments preselected by the user
-    :return: string of lean code
-    """
-    return "contradiction, "
+#@action(_("Proof by induction"))
+#def action_induction(goal : Goal, l : [PropObj]):
+#    raise WrongUserInput
 
-@action(_("Proof by induction"))
-def action_induction(goal : Goal, l : [PropObj]):
-    raise WrongUserInput
-
-@action(_("Use axiom of choice"))
-def action_choice(goal):
-    raise WrongUserInput
+#@action(_("Use axiom of choice"))
+#def action_choice(goal):
+#    raise WrongUserInput
 
