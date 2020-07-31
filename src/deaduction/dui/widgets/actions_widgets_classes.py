@@ -56,7 +56,8 @@ class ActionButton(QPushButton):
 
     def __init__(self, action: Action):
         super().__init__()
-        self.setText(action.caption)
+        self.setText(action.symbol)
+        self.setToolTip(action.caption)
         self.action = action
         self.clicked.connect(self._emit_action)
 

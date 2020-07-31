@@ -39,9 +39,10 @@ class Action:
     Associates data to a specific action function.
     """
     caption:str
+    symbol: str
     run:any
 
-def action(caption: str):
+def action(caption: str, symbol: str):
     """
     Decorator used to reference the function as an available action,
     plus creating the Action object containing the metadata.
@@ -52,7 +53,7 @@ def action(caption: str):
     mod = inspect.getmodule(frm[0])
 
     def wrap_action(func):
-        act = Action(caption,func)
+        act = Action(caption, symbol, func)
         
         # Init the __actions__ object in the corresponding module if not
         # existing, then add the function object. Identifier is taken from
