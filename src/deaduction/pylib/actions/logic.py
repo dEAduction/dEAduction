@@ -45,6 +45,99 @@ from deaduction.pylib.actions.exceptions import (InputType, MissingParametersErr
 
 log = logging.getLogger("logic")
 
+
+
+## AND ##
+
+def construct_and(goal):
+    log.debug(goal.target.math_type.node)
+    if goal.target.math_type.node != "PROP_AND":        
+        log.debug("noeud de goal pas and")
+        raise WrongUserInput
+    return "split, "
+
+def apply_and(l):
+    if l[0].math_type.node != "PROP_AND":
+        raise WrongUserInput
+    h_selected = l[0].lean_data["name"]
+    h1 = utils.get_new_hyp()
+    h2 = utils.get_new_hyp()
+    return "cases {0} with {1} {2}, ".format(h_selected, h1, h2)
+
+def construct_and_hyp(selected_objects : [PropObj]):
+    h1 = selected_objects[0].lean_data["name"]
+    h2 = selected_objects[1].lean_data["name"]
+    print(h1,h2)
+    print()
+    h = utils.get_new_hyp()
+    #TODO : comprendre pourquoi c'est pas bien parsé pcq metavariable
+    raise WrongUserInput
+    #return "have {0}, from and.intro {1} {2}, ".format(h, h1, h2)
+
+@action(_("And"), _('AND'))
+def action_and(goal : Goal, selected_objects: [PropObj]) -> str:
+    """
+    Translate into string of lean code corresponding to the action
+    
+    :param l: list of PropObj arguments preselected by the user
+    :return: string of lean code
+    """
+    if len(selected_objects) == 0:
+        return construct_and(goal)
+    elif len(selected_objects) == 1:
+        return apply_and(selected_objects)
+    elif len(selected_objects) == 2:
+        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADDD")
+        return construct_and_hyp(selected_objects)
+    else:
+        raise WrongUserInput
+
+## OR ##
+
+def construct_or(goal : Goal, user_input : [str]) -> str:
+    if goal.target.math_type.node != "PROP_OR":
+        raise WrongUserInput
+    if len(user_input) == 1:
+        left = goal.target.math_type.children[0].format_as_utf8()
+        right = goal.target.math_type.children[1].format_as_utf8()
+        if user_input[0] in [left, right]:
+            i = [left, right].index(user_input[0])
+            code = ["left","right"][i]
+            return "{0}, ".format(code)
+        else:
+            raise WrongUserInput
+    else:
+        left = goal.target.math_type.children[0].format_as_utf8()
+        right = goal.target.math_type.children[1].format_as_utf8()
+        print(left)
+        print(right)
+        raise MissingParametersError(InputType.Choice, [left,right])
+
+def apply_or(l : [PropObj]) -> str:
+    if l[0].math_type.node != "PROP_OR":
+        raise WrongUserInput
+    h_selected = l[0].lean_data["name"]
+    h1 = utils.get_new_hyp()
+    h2 = utils.get_new_hyp()
+    return "cases {0} with {1} {2}, ".format(h_selected, h1, h2)
+
+@action(_("Or"), _("OR"))
+def action_or(goal : Goal, l : [PropObj], user_input = []) -> str:
+    """
+    Translate into string of lean code corresponding to the action
+    
+    :param l: list of PropObj arguments preselected by the user
+    :return: string of lean code
+    """
+    if len(l) == 0:
+        return construct_or(goal, user_input)
+    elif len(l) == 1:
+        return apply_or(l)
+    else :
+        raise WrongUserInput
+
+## NOT ##
+
 @action(_("Negation"), _("NOT"))
 def action_negate(goal : Goal, l : [PropObj]) -> str:
     """
@@ -106,81 +199,6 @@ def action_implicate(goal : Goal, l : [PropObj]) -> str:
         return apply_implicate_to_hyp(goal,l)
     raise WrongUserInput
 
-## AND ##
-
-def construct_and(goal):
-    log.debug(goal.target.math_type.node)
-    if goal.target.math_type.node != "PROP_AND":        
-        log.debug("noeud de goal pas and")
-        raise WrongUserInput
-    return "split, "
-
-def apply_and(l):
-    if l[0].math_type.node != "PROP_AND":
-        raise WrongUserInput
-    h_selected = l[0].lean_data["name"]
-    h1 = utils.get_new_hyp()
-    h2 = utils.get_new_hyp()
-    return "cases {0} with {1} {2}, ".format(h_selected, h1, h2)
-
-@action(_("And"), _('AND'))
-def action_and(goal : Goal, selected_objects: [PropObj]) -> str:
-    """
-    Translate into string of lean code corresponding to the action
-    
-    :param l: list of PropObj arguments preselected by the user
-    :return: string of lean code
-    """
-    if len(selected_objects) == 0:
-        return construct_and(goal)
-    elif len(selected_objects) == 1:
-        return apply_and(selected_objects)
-    else:
-        raise WrongUserInput
-
-## OR ##
-
-def construct_or(goal : Goal, user_input : [str]) -> str:
-    if goal.target.math_type.node != "PROP_OR":
-        raise WrongUserInput
-    if len(user_input) == 1:
-        left = goal.target.math_type.children[0].format_as_utf8()
-        right = goal.target.math_type.children[1].format_as_utf8()
-        if user_input[0] in [left, right]:
-            i = [left, right].index(user_input[0])
-            code = ["left","right"][i]
-            return "{0}, ".format(code)
-        else:
-            raise WrongUserInput
-    else:
-        left = goal.target.math_type.children[0].format_as_utf8()
-        right = goal.target.math_type.children[1].format_as_utf8()
-        print(left)
-        print(right)
-        raise MissingParametersError(InputType.Choice, [left,right])
-
-def apply_or(l : [PropObj]) -> str:
-    if l[0].math_type.node != "PROP_OR":
-        raise WrongUserInput
-    h_selected = l[0].lean_data["name"]
-    h1 = utils.get_new_hyp()
-    h2 = utils.get_new_hyp()
-    return "cases {0} with {1} {2}, ".format(h_selected, h1, h2)
-
-@action(_("Or"), _("OR"))
-def action_or(goal : Goal, l : [PropObj], user_input = []) -> str:
-    """
-    Translate into string of lean code corresponding to the action
-    
-    :param l: list of PropObj arguments preselected by the user
-    :return: string of lean code
-    """
-    if len(l) == 0:
-        return construct_or(goal, user_input)
-    elif len(l) == 1:
-        return apply_or(l)
-    else :
-        raise WrongUserInput
 
 ## IFF ##
 
