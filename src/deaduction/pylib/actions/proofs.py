@@ -30,9 +30,9 @@ from dataclasses import dataclass
 from gettext import gettext as _
 import logging
 import deaduction.pylib.actions.utils as utils
+from deaduction.pylib.actions.exceptions import InputType, MissingParametersError, WrongUserInput
 from deaduction.pylib.actions.actiondef import action
 from deaduction.pylib.mathobj.PropObj import PropObj
-import deaduction.pylib.mathobj.PropObj as PO # useless for now
 from deaduction.pylib.mathobj.proof_state import Goal
 
 @action(_("Assumption"))
@@ -46,7 +46,7 @@ def action_assumption(goal : Goal, l : [PropObj]) -> str:
     if len(l) == 0:
         return "assumption, "
     else:
-        return "" # TODO : gestion erreur ex raise user_error
+        raise WrongUserInput
 
 @action(_("Reductio ad absurdum"))
 def action_absurdum(goal : Goal, l : [PropObj]) -> str:
@@ -59,10 +59,10 @@ def action_absurdum(goal : Goal, l : [PropObj]) -> str:
     if len(l) == 0:
         return "by_contradiction {0}, ".format(utils.get_new_hyp()) 
     else:
-        return "" # TODO : gestion erreur ex raise user_error
+        raise WrongUserInput
 
-@action(_("Case-based reasoning"))
-def action_cbr(goal : Goal, l : [PropObj]) -> str:
+@action(_("Case-based reasoning")) # TODO : dire à Florian de rajouter open classical et local attribute [instance] classical.prop_decidable dans le fichier lean
+def action_cbr(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
     """
     Translate into string of lean code corresponding to the action
     
@@ -70,12 +70,14 @@ def action_cbr(goal : Goal, l : [PropObj]) -> str:
     :return: string of lean code
     """
     if len(l) == 0:
-        h1 = utils.get_new_hyp()
-        h2 = utils.get_new_hyp()
-        case = "0 = 0" # TODO : pop-up qui demande sur quelle propriété on veut faire une disjonction de cas
-        return "cases (em ({0})) with {1} {2}".format(case, h1, h2)
+        if user_input == []:
+            raise MissingParametersError(InputType.Text)
+        else:
+            h1 = utils.get_new_hyp()
+            h2 = utils.get_new_hyp()
+        return "cases (em ({0})) with {1} {2}".format(user_input[0], h1, h2)
     else:
-        return "" # TODO : gestion erreur ex raise user_error
+        raise WrongUserInput
 
 @action(_("Proof by contrapositive"))
 def action_contrapose(goal : Goal, l : [PropObj]):
@@ -88,7 +90,7 @@ def action_contrapose(goal : Goal, l : [PropObj]):
     if len(l) == 0:
         if goal.target.math_type.node == "PROP_IMPLIES":
             return "contrapose, "
-    return "" # TODO : gestion erreur ex raise user_error
+    raise WrongUserInput
 
 @action(_("Contradiction"))
 def action_contradiction(goal : Goal, l : [PropObj]):
@@ -102,9 +104,9 @@ def action_contradiction(goal : Goal, l : [PropObj]):
 
 @action(_("Proof by induction"))
 def action_induction(goal : Goal, l : [PropObj]):
-    return ""
+    raise WrongUserInput
 
 @action(_("Use axiom of choice"))
 def action_choice(goal):
-    return ""
+    raise WrongUserInput
 

@@ -30,24 +30,29 @@ This file is part of dEAduction.
 from deaduction.pylib.actions.actiondef import action
 
 from dataclasses import dataclass
-import gettext
-_ = gettext.gettext
-
-import deaduction.pylib.logger as logger
+from gettext import gettext as _
 import logging
-
-
-##
-# Squelette actions type de preuves
-##
+from deaduction.pylib.actions import (  WrongUserInput,
+                                        utils)
 
 @action(_("Apply Definition"))
 def action_apply_definition(goal : Goal, selected_objects : [PropObj]):
-    defi = selected_objects[1].lean_data["name"]
     if len(selected_objects) == 1:
+        defi = selected_objects[0].lean_data["name"]
         return "defi {0}".format(defi)
     elif len(selected_objects) == 2:
+        defi = selected_objects[1].lean_data["name"]
         return "defi {0} at {1}".format(selected_objects[1].lean_data["name"], defi)
     else:
-        return "" #TODO : gestion erreur raise usererror
+        raise WrongUserInput
 
+@action(_("Theorem"))
+def action_theorem(goal : Goal, selected_objects : [PropObj]):
+    theorem = selected_objects[0].lean_data["name"]
+    if len(selected_objects) == 1:
+        h = utils.get_new_hyp()
+        return "apply {1} <|> have {0} := @{1},".format(h, theorem)
+    elif len(selected_objects) == 2:
+        arguments = " ".join(selected_objects[1].lean_data["name"])
+        h = utils.get_new_hyp()
+        return "apply {1} {2} <|> apply @{1} {2} <|> have {0} := {1} {2} <|> have {0} := @{1} {2},".format(h, theorem, argument)

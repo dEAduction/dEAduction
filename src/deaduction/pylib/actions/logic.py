@@ -41,7 +41,7 @@ from deaduction.pylib.actions.actiondef import action
 from deaduction.pylib.mathobj.PropObj import PropObj
 import deaduction.pylib.mathobj.PropObj as PO # useless for now
 from deaduction.pylib.mathobj.proof_state import Goal
-
+from deaduction.pylib.actions.exceptions import (InputType, MissingParametersError, WrongUserInput) 
 
 log = logging.getLogger("logic")
 
@@ -55,35 +55,35 @@ def action_negate(goal : Goal, l : [PropObj]) -> str:
     """
     if len(l) == 0:
         if goal.target.math_type.node != "PROP_NOT":
-            return "" #TODO : gestion erreur raise usererror
+            raise WrongUserInput
         return "push_neg, "
     elif len(l) == 1:
         if l[0].math_type.node != "PROP_NOT":
-            return "" #TODO : gestion erreur raise usererror
+            raise WrongUserInput
         return "push_neg at {0}, ".format(l[0].lean_data["name"])
     else:
-        return ""
+        raise WrongUserInput
 
 ## IMPLICATION ##
 
 def construct_implicate(goal : Goal):
     if goal.target.math_type.node != "PROP_IMPLIES":
-        return "" #TODO : gestion erreur raise usererror
+        raise WrongUserInput
     h = utils.get_new_hyp()
     return "intro {0}, ".format(h)
 
 def apply_implicate(goal : Goal, l : [PropObj]):
     if l[0].math_type.node != "PROP_IMPLIES":
-        return "" #TODO : gestion erreur raise usererror
+        raise WrongUserInput
     if not l[0].math_type.children[1].__eq__(goal.target.math_type):
-        return "" #TODO : gestion erreur raise usererror
+        raise WrongUserInput
     return "apply {0},".format(l[0].lean_data["name"])
 
 def apply_implicate_to_hyp(goal : Goal, l : [PropObj]):
     if l[0].math_type.node != "PROP_IMPLIES":
-        return "" #TODO : gestion erreur raise usererror
+        raise WrongUserInput
     if not l[0].math_type.children[0].__eq__(l[1].math_type):
-        return "" #TODO : gestion erreur raise usererror
+        raise WrongUserInput
     h_selected = l[0].lean_data["name"]
     x_selected = l[1].lean_data["name"]
     h = utils.get_new_hyp()
@@ -103,7 +103,7 @@ def action_implicate(goal : Goal, l : [PropObj]) -> str:
         return apply_implicate(goal, l)
     elif len(l) == 2:
         return apply_implicate_to_hyp(goal,l)
-    return ""
+    raise WrongUserInput
 
 ## AND ##
 
@@ -111,12 +111,12 @@ def construct_and(goal):
     log.debug(goal.target.math_type.node)
     if goal.target.math_type.node != "PROP_AND":        
         log.debug("noeud de goal pas and")
-        return "" #TODO : gestion erreur raise usererror
+        raise WrongUserInput
     return "split, "
 
 def apply_and(l):
     if l[0].math_type.node != "PROP_AND":
-        return "" #TODO : gestion erreur raise usererror
+        raise WrongUserInput
     h_selected = l[0].lean_data["name"]
     h1 = utils.get_new_hyp()
     h2 = utils.get_new_hyp()
@@ -135,26 +135,39 @@ def action_and(goal : Goal, l : [PropObj]) -> str:
     elif len(l) == 1:
         return apply_and(l)
     else :
-        return "" # TODO : gestion erreur raise usererror
+        raise WrongUserInput
 
 ## OR ##
 
-def construct_or(goal : Goal) -> str:
+def construct_or(goal : Goal, user_input : [str]) -> str:
     if goal.target.math_type.node != "PROP_OR":
-        return "" # TODO : gestion erreur ex raise user_error 
-    return "left, " # TODO : coder tactic lean permettant de
-                    # trouver le bon left / right et remplacer dans ce code
+        raise WrongUserInput
+    if len(user_input) == 1:
+        left = goal.target.math_type.children[0].format_as_utf8()
+        right = goal.target.math_type.children[1].format_as_utf8()
+        if user_input[0] in [left, right]:
+            i = [left, right].index(user_input[0])
+            code = ["left","right"][i]
+            return "{0}, ".format(code)
+        else:
+            raise WrongUserInput
+    else:
+        left = goal.target.math_type.children[0].format_as_utf8()
+        right = goal.target.math_type.children[1].format_as_utf8()
+        print(left)
+        print(right)
+        raise MissingParametersError(InputType.Choice, [left,right])
 
 def apply_or(l : [PropObj]) -> str:
     if l[0].math_type.node != "PROP_OR":
-        return "" #TODO : gestion erreur raise usererror
+        raise WrongUserInput
     h_selected = l[0].lean_data["name"]
     h1 = utils.get_new_hyp()
     h2 = utils.get_new_hyp()
     return "cases {0} with {1} {2}, ".format(h_selected, h1, h2)
 
 @action(_("Or"))
-def action_or(goal : Goal, l : [PropObj]) -> str:
+def action_or(goal : Goal, l : [PropObj], user_input = []) -> str:
     """
     Translate into string of lean code corresponding to the action
     
@@ -162,14 +175,18 @@ def action_or(goal : Goal, l : [PropObj]) -> str:
     :return: string of lean code
     """
     if len(l) == 0:
-        return construct_or(goal)
+        return construct_or(goal, user_input)
     elif len(l) == 1:
         return apply_or(l)
     else :
-        return "" # TODO : gestion erreur ex raise user_error
+        raise WrongUserInput
 
 ## IFF ##
 
+def construct_iff(goal : Goal):
+    if goal.target.math_type.node != "PROP_IFF":
+        raise WrongUserInput
+    return "split, "
 @action(_("If and only if"))
 def action_iff(goal : Goal, l : [PropObj]) -> str:
     """
@@ -178,13 +195,13 @@ def action_iff(goal : Goal, l : [PropObj]) -> str:
     :param l: list of PropObj arguments preselected by the user
     :return: string of lean code
     """
-    return ""
+    raise WrongUserInput
 
 ## FOR ALL ##
 
 def construct_forall(goal):
     if goal.target.math_type.node != "QUANT_∀":
-        return "" # TODO : gestion erreur ex raise user_error 
+        raise WrongUserInput 
     x = utils.get_new_var()
     return "intro {0}, ".format(x)
 
@@ -199,18 +216,18 @@ def action_forall(goal : Goal, l : [PropObj]) -> str:
     if len(l) == 0:
         return construct_forall(goal)
     else :
-        return "" # TODO : gestion erreur ex raise user_error
+        raise WrongUserInput
 
 ## EXISTS ##
 
 def construct_exists(goal, x : str):
     if goal.target.math_type.node != "QUANT_∃":
-        return "" # TODO : gestion erreur ex raise user_error
+        raise WrongUserInput
     return "use {0},".format(x)
 
 def apply_exists(l : [PropObj]) -> str:
     if l[0].math_type.node != "QUANT_∃":
-        return "" # TODO : gestion erreur ex raise user_error
+        raise WrongUserInput
     h_selected = l[0].lean_data["name"]
     x = utils.get_new_var()
     hx = utils.get_new_hyp()
@@ -220,24 +237,24 @@ def apply_exists(l : [PropObj]) -> str:
         return "cases {0} with {1} {2}, ".format(h, x, hx)
 
 @action(_("Exists"))
-def action_exists(goal : Goal, l : [PropObj], user_input : str = None) -> str:
+def action_exists(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
     """
     Translate into string of lean code corresponding to the action
     
     :param l: list of PropObj arguments preselected by the user
     :return: string of lean code
     """
-    if len(l) == 1 and user_input is None:
+    if len(l) == 1 and user_input == []:
         if l[0].math_type.is_prop():
             return apply_exists(l)
         else:
             return construct_exists(goal, l[0].lean_data["name"])
     if len(l) == 0:
-        if user_input is None:
-            x = "0"
-            return construct_exists(goal, x) # raise MissingStrInput ?
+        if len(user_input) != 1:
+            raise MissingParametersError(InputType.Text)
         else:
-            return construct_exists(goal, user_input)
-    return ""
+            return construct_exists(goal, user_input[0])
+    raise WrongUserInput
+
 
 
