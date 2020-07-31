@@ -254,6 +254,8 @@ class ExerciseMainWindow(QMainWindow):
         return msg
 
     def update_goal(self, new_goal: Goal):
+        # Reset current context selection
+        self.clear_user_selection()
 
         # Init context (objects and properties). Get them as two list of
         # (ProofStatePO, str), the str being the tag of the prop. or obj.
