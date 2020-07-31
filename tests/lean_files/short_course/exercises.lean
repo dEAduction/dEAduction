@@ -115,6 +115,27 @@ begin
     sorry
 end
 
+lemma exercise.test_exist {A B : set X} : (∃ {{x : X}}, x ∈ A) → ∃ {{x : X}}, x ∈ A :=
+/- dEAduction
+PrettyName
+    test_exist
+Description
+    test_exist
+Tools->Logic
+    $ALL
+Tools->ProofTechniques
+    $ALL
+Tools->Definitions
+    $UNTIL_NOW
+Tools->Theorems
+    double_inclusion
+ExpectedVarsNumber
+    X=3, A=1, B=1
+-/
+begin
+    sorry
+end
+
 lemma exercise.intersection_dist_over_union (X : Type) (A B C : set X) : A ∩ (B ∪ C)  = (A ∩ B) ∪ (A ∩ C) := 
 /- dEAduction
 PrettyName

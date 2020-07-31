@@ -239,7 +239,7 @@ def apply_exists(l : [PropObj]) -> str:
     if l[0].math_type.children[2].node == "PROP_∃":
         return "rcases {0} with ⟨ {1}, ⟨ {2}, {0} ⟩ ⟩, ".format(h_selected, x, hx)
     else :
-        return "cases {0} with {1} {2}, ".format(h, x, hx)
+        return "cases {0} with {1} {2}, ".format(h_selected, x, hx)
 
 @action(_("Exists"), "∃")
 def action_exists(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
