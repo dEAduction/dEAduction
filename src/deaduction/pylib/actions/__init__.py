@@ -44,3 +44,6 @@ from .proofs import (       action_assumption,
                             action_cbr,
                             action_contrapose, 
                             action_contradiction)
+
+from .utils import (        get_new_var,
+                            get_new_hyp)  

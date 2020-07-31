@@ -33,7 +33,7 @@ from dataclasses import dataclass
 from gettext import gettext as _
 import logging
 from deaduction.pylib.actions import (  WrongUserInput,
-                                        utils)
+                                        get_new_hyp)
 
 @action(_("Apply Definition"))
 def action_apply_definition(goal : Goal, selected_objects : [PropObj], definition : Statement):
@@ -50,9 +50,9 @@ def action_apply_definition(goal : Goal, selected_objects : [PropObj], definitio
 def action_theorem(goal : Goal, selected_objects : [PropObj], theorem : Statement):
     th = theorem.lean_name
     if len(selected_objects) == 1:
-        h = utils.get_new_hyp()
+        h = get_new_hyp()
         return "apply {1} <|> have {0} := @{1},".format(h, th)
     elif len(selected_objects) == 2:
         arguments = " ".join(selected_objects[1].lean_data["name"])
-        h = utils.get_new_hyp()
+        h = get_new_hyp()
         return "apply {1} {2} <|> apply @{1} {2} <|> have {0} := {1} {2} <|> have {0} := @{1} {2},".format(h, th, argument)
