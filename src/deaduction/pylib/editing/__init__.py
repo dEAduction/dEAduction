@@ -107,7 +107,7 @@ class LeanFile:
         """
 
         self.__update()
-        self.__current_pos = max(min(x, len(self.__txt) - 1), 0)
+        self.__current_pos = max(min(x, len(self.__txt)), 0)
 
     def cursor_move_up(self, nlines: int):
         """
