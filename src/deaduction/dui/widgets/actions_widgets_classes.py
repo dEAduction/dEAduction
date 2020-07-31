@@ -121,14 +121,14 @@ class StatementsTreeWidgetNode(QTreeWidgetItem):
 
         super().__init__(None, titles)
         self._initUI()
-        self.setSelectable(False)
+        self.set_selectable(False)
 
-    def setSelectable(self, yes=True):
+    def set_selectable(self, yes=True):
         # Thanks Florian, there is no method for this so we use a QFlag
         if yes:
-            new_flags = self.flags & Qt.ItemIsSelectable
+            new_flags = self.flags() & Qt.ItemIsSelectable
         else:
-            new_flags = self.flags & ~Qt.ItemIsSelectable
+            new_flags = self.flags() & ~Qt.ItemIsSelectable
 
         self.setFlags(new_flags)
 
