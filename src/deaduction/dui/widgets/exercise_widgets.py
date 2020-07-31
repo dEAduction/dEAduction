@@ -123,7 +123,7 @@ class ExerciseCentralWidget(QWidget):
 
         # Group boxes
         self._actions_gb = QGroupBox(_('Actions (transform context and target)'))
-        self._context_gb = QGroupBox(_('Context (properties and objects)'))
+        self._context_gb = QGroupBox(_('Context (objects and properties)'))
 
     def _init_actions(self):
         # Init tool buttons

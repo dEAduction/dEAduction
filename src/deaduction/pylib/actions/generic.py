@@ -27,8 +27,6 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from deaduction.pylib.actions.actiondef import action
-
 from dataclasses import dataclass
 from gettext import gettext as _
 import logging
@@ -38,7 +36,6 @@ from deaduction.pylib.coursedata import Statement
 from deaduction.pylib.mathobj import (  Goal,
                                         PropObj)
 
-@action(_("Apply Definition"))
 def action_definition(goal : Goal, selected_objects : [PropObj], definition : Statement):
     if len(selected_objects) == 0:
         defi = definition.lean_name
@@ -50,7 +47,6 @@ def action_definition(goal : Goal, selected_objects : [PropObj], definition : St
     else:
         raise WrongUserInput()
 
-@action(_("Theorem"))
 def action_theorem(goal : Goal, selected_objects : [PropObj], theorem : Statement):
     th = theorem.lean_name
     if len(selected_objects) == 0:

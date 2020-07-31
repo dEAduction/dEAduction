@@ -42,8 +42,7 @@ from .logic import (        action_negate,
 from .proofs import (       action_assumption,
                             action_absurdum,
                             action_cbr,
-                            action_contrapose, 
-                            action_contradiction)
+                            action_contrapose)
 
 from .utils import (        get_new_var,
                             get_new_hyp)  

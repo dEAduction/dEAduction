@@ -43,7 +43,10 @@ from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem)
 
 from deaduction.pylib.actions import    Action
-from deaduction.pylib.coursedata import Statement
+from deaduction.pylib.coursedata import (   Definition,
+                                            Exercise,
+                                            Statement,
+                                            Theorem)
 
 log = logging.getLogger(__name__)
 
@@ -104,6 +107,16 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         titles = [statement.pretty_name, statement.lean_name]
         super().__init__(None, titles)
         self._initUI()
+
+        icon_path = Path('share/graphical_resources/icons/letters')
+        if isinstance(statement, Definition):
+            path = icon_path / 'd.png'
+        elif isinstance(statement, Exercise):
+            path = icon_path / 'e.png'
+        elif isinstance(statement, Theorem):
+            path = icon_path / 't.png'
+
+        self.setIcon(0, QIcon(str(path.resolve())))
 
 
 class StatementsTreeWidgetNode(QTreeWidgetItem):

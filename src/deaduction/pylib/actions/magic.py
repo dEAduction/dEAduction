@@ -40,7 +40,7 @@ import logging
 # Squelette actions type de preuves
 ##
 
-@action(_("Computation"))
+@action(_("Computation"), _('Computation'))
 def action_compute(goal):
-    return ""
+     return ""
 

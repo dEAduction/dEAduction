@@ -89,6 +89,7 @@ def apply_implicate_to_hyp(goal : Goal, l : [PropObj]):
     h = utils.get_new_hyp()
     return "have {0} := {1} {2}, ".format(h, h_selected, x_selected)
 
+# TODO: see if we can put bigger arrows, same for iff
 @action(_("Implication"), "⇒")
 def action_implicate(goal : Goal, l : [PropObj]) -> str:
     """
@@ -122,7 +123,7 @@ def apply_and(l):
     h2 = utils.get_new_hyp()
     return "cases {0} with {1} {2}, ".format(h_selected, h1, h2)
 
-@action(_("And"))
+@action(_("And"), _('AND'))
 def action_and(goal : Goal, selected_objects: [PropObj]) -> str:
     """
     Translate into string of lean code corresponding to the action

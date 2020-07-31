@@ -48,7 +48,7 @@ def action_assumption(goal : Goal, l : [PropObj]) -> str:
     else:
         raise WrongUserInput
 
-@action(_("Reductio ad absurdum"))
+@action(_("Reductio ad absurdum"), _('0=1'))
 def action_absurdum(goal : Goal, l : [PropObj]) -> str:
     """
     Translate into string of lean code corresponding to the action
