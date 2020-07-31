@@ -125,7 +125,7 @@ class TargetLabel(QLabel):
 #            self.setIcon(_TagIcon(tag))
 
         # Cosmetics
-        self.setStyleSheet('font-size: 24px;')
+        self.setStyleSheet('font-size: 32pt;')
 
 
 class TargetWidget(QWidget):

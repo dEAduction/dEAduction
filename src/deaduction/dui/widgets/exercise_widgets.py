@@ -44,6 +44,7 @@ from PySide2.QtWidgets import ( QAction,
                                 QGroupBox,
                                 QHBoxLayout,
                                 QMainWindow,
+                                QMessageBox,
                                 QToolBar,
                                 QVBoxLayout,
                                 QWidget)
@@ -58,6 +59,7 @@ from deaduction.dui.widgets import (    ActionButton,
                                         TargetWidget)
 from deaduction.pylib.actions import    Action
 from deaduction.pylib.coursedata import Exercise
+from deaduction.pylib.server.exceptions import FailedRequestError
 from deaduction.pylib.mathobj import (  Goal,
                                         ProofState)
 from deaduction.pylib.server import     ServerInterface
@@ -311,10 +313,32 @@ class ExerciseMainWindow(QMainWindow):
     # Server methods #
     ##################
 
+    # Template function
     async def process_async_signal(self, process_function: Callable):
         self.freeze(True)
         try:
             await process_function()
+        except FailedRequestError as e:
+            # Display an error message
+            msg_box = QMessageBox(self)
+            msg_box.setIcon(QMessageBox.Critical)
+            msg_box.setWindowTitle(_('Failed L∃∀N request'))
+            msg_box.setText(_('L∃∀N responded to last request with '
+                              'error(s). Going back to last goal.'))
+
+            detailed = ""
+            for err in e.errors:
+                rel_line_number = err.pos_line \
+                        - self.exercise.lean_begin_line_number
+                detailed += f'* at {rel_line_number}: {err.text}\n'
+
+            msg_box.setDetailedText(detailed)
+            msg_box.setStandardButtons(QMessageBox.Ok)
+            msg_box.exec_()
+
+            # Abort and go back to last goal
+            await self.servint.history_undo()
+
         finally:
             self.freeze(False)
             # Required for the history is always changed with signals
@@ -323,6 +347,7 @@ class ExerciseMainWindow(QMainWindow):
             self.toolbar.redo_action.setEnabled(not
                     self.servint.lean_file.history_at_end)
 
+    # Specific functions to be called as process_function in the above
     async def _server_call_action(self, action_btn: ActionButton):
         action = action_btn.action
         code = action.run(self.current_goal,
