@@ -207,6 +207,9 @@ class ExerciseMainWindow(QMainWindow):
         self.servint.proof_state_change.connect(self.update_proof_state)
         self.servint.lean_file_changed.connect(self._update_lean_editor)
 
+        # No more goal
+        self.servint.proof_no_goals.connect(self.fireworks)
+
         # Start server task
         self.servint.nursery.start_soon(self.server_task)
 
@@ -239,9 +242,6 @@ class ExerciseMainWindow(QMainWindow):
                 self.process_context_click)
         self.cw.props_wgt.itemClicked.connect(
                 self.process_context_click)
-
-        # Proofstate (=> goal) change
-        self.servint.proof_state_change.connect(self.update_proof_state)
 
     def closeEvent(self, event):
         super().closeEvent(event)
@@ -445,6 +445,11 @@ class ExerciseMainWindow(QMainWindow):
 
         for widget in to_freeze:
             widget.setEnabled(not yes)
+
+    @Slot()
+    def fireworks(self):
+        QMessageBox.information(self, _('Target solved'), _('Target solved!'),
+                QMessageBox.Ok)
 
     @Slot(ProofStatePOWidgetItem)
     def process_context_click(self, item: ProofStatePOWidgetItem):
