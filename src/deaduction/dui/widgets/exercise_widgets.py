@@ -118,7 +118,7 @@ class ExerciseCentralWidget(QWidget):
         self._actions_lyt = QVBoxLayout()
 
         # Group boxes
-        self._actions_gb = QGroupBox(_('Actions (transform context)'))
+        self._actions_gb = QGroupBox(_('Actions (transform context and target)'))
         self._context_gb = QGroupBox(_('Context (properties and objects)'))
 
     def _init_actions(self):
@@ -339,9 +339,8 @@ class ExerciseMainWindow(QMainWindow):
             # Display an error message
             msg_box = QMessageBox(self)
             msg_box.setIcon(QMessageBox.Critical)
-            msg_box.setWindowTitle(_('Failed L∃∀N request'))
-            msg_box.setText(_('L∃∀N responded to last request with '
-                              'error(s). Going back to last goal.'))
+            msg_box.setWindowTitle(_('Action not understood'))
+            msg_box.setText(_('Action not understood'))
 
             detailed = ""
             for err in e.errors:
@@ -372,17 +371,19 @@ class ExerciseMainWindow(QMainWindow):
         await self.servint.code_insert(action.caption, code)
 
     async def _server_call_statement(self, item: StatementsTreeWidgetItem):
-        item.setSelected(False)
-        statement = item.statement
+        # Do nothing is user clicks on a node
+        if isinstance(item, StatementsTreeWidgetItem):
+            item.setSelected(False)
+            statement = item.statement
 
-        if isinstance(statement, Definition):
-            code = generic.action_definition(self.current_goal,
-                    self.current_context_selection_as_pspos, statement)
-        elif isinstance(statement, Theorem):
-            code = generic.action_theorem(self.current_goal,
-                    self.current_context_selection_as_pspos, statement)
+            if isinstance(statement, Definition):
+                code = generic.action_definition(self.current_goal,
+                        self.current_context_selection_as_pspos, statement)
+            elif isinstance(statement, Theorem):
+                code = generic.action_theorem(self.current_goal,
+                        self.current_context_selection_as_pspos, statement)
 
-        await self.servint.code_insert(statement.pretty_name, code)
+            await self.servint.code_insert(statement.pretty_name, code)
 
     async def _server_send_editor_lean(self):
         await self.servint.code_set(_('Code from editor'),
