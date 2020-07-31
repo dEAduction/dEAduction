@@ -31,6 +31,7 @@ This file is part of d∃∀duction.
 
 import trio
 import logging
+import re
 
 from deaduction.pylib.coursedata.exercise_classes import Exercise
 from deaduction.pylib.mathobj.proof_state import ProofState
@@ -246,6 +247,8 @@ class ServerInterface(QObject):
         """
         Inserts code in the lean virtual file.
         """
+
+        code = code.strip()
 
         if not code.endswith(","):  code += ","
         if not code.endswith("\n"): code += "\n"
