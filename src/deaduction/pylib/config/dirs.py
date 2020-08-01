@@ -47,11 +47,6 @@ local    = (home / ".deaduction").resolve()
 ############################################
 # Utilities
 ############################################
-def check_dir(pp):
-    log.info(_("Checking path: ") + str(pp))
-    if not pp.is_dir():
-        log.warning(_(f"Path {str(pp)} doesn't exists, creating"))
-        pp.mkdir()
 
 def init():
     check_dir(local)
