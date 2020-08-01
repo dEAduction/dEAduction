@@ -276,7 +276,7 @@ class AnonymousPO(PropObj):
         #############################
         # Application of a function #
         #############################
-        if node == "APPLICATION" and children[0].node == "FUNCTION":
+        if node == "APPLICATION" and children[0].math_type.node == "FUNCTION":
             node = "APPLICATION_FUNCTION"
         #################
         # Instantiation #
