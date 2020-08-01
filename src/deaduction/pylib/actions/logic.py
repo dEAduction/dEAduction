@@ -67,8 +67,6 @@ def apply_and(l):
 def construct_and_hyp(selected_objects : [PropObj]):
     h1 = selected_objects[0].lean_data["name"]
     h2 = selected_objects[1].lean_data["name"]
-    print(h1,h2)
-    print()
     h = utils.get_new_hyp()
     #TODO : comprendre pourquoi c'est pas bien parsé pcq metavariable
     raise WrongUserInput
@@ -87,7 +85,6 @@ def action_and(goal : Goal, selected_objects: [PropObj]) -> str:
     elif len(selected_objects) == 1:
         return apply_and(selected_objects)
     elif len(selected_objects) == 2:
-        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADDD")
         return construct_and_hyp(selected_objects)
     else:
         raise WrongUserInput
@@ -109,8 +106,6 @@ def construct_or(goal : Goal, user_input : [str]) -> str:
     else:
         left = goal.target.math_type.children[0].format_as_utf8()
         right = goal.target.math_type.children[1].format_as_utf8()
-        print(left)
-        print(right)
         raise MissingParametersError(InputType.Choice, [left,right])
 
 def apply_or(l : [PropObj]) -> str:
@@ -279,5 +274,22 @@ def action_exists(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
             return construct_exists(goal, user_input[0])
     raise WrongUserInput
 
+## SUBSTITUTION
 
+@action(_("Substitution"), "t[x:=u]") #TODO : symbole à changer
+def action_substitution(goal : Goal, l : [PropObj]):
+    """
+    Translate into string of lean code corresponding to the action
+    
+    :param l: list of PropObj arguments preselected by the user
+    :return: string of lean code
+    """
+    print("Ohla")
+    if len(l) == 1:
+        return "rw {0} <|> rw <- {0},".format(l[0].lean_data["name"])
+    elif len(l) == 2:
+        print("yaaaay")
+        return "rw <- {0} at {1} <|> rw {0} at {1} <|> rw <- {1} at {0} <|> rw {1} at {0},".format(l[1].lean_data["name"],l[0].lean_data["name"])
+    else:
+        raise WrongUserInput    
 
