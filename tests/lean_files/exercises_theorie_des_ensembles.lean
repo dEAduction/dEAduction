@@ -88,7 +88,7 @@ Tools->Logic
 Tools->ProofTechniques
     $ALL -contradiction
 Tools->Definitions
-    $UNTIL_NOW
+    $UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles
 Tools->Theorems
     double_inclusion
 ExpectedVarsNumber
@@ -128,7 +128,7 @@ section complementaire -- sous-section 2
 -----------------------------------------
 variables  {A B : set X}
 variables {I : Type} {E F : I → set X}
-notation A`ᶜ` := set.compl A 
+notation `∁`A := set.compl A
 
 lemma definition.complement {A : set X} {x : X} : x ∈ set.compl A ↔ x ∉ A := 
 /- dEAduction
@@ -137,10 +137,12 @@ PrettyName
 -/
 by finish
 
-lemma definition.difference_symetrique {A B : set X} {x : X} : x ∈ B \ A ↔ (x ∈ B ∧ x ∉ A) :=
+lemma definition.difference_d_ensembles {A B : set X} {x : X} : x ∈ B \ A ↔ (x
+∈
+ B ∧ x ∉ A) :=
 /- dEAduction
 PrettyName
-    Différence symétrique
+    Différence d'ensembles
 -/
 iff.rfl
 
@@ -161,8 +163,6 @@ Tools->Theorems
     $ALL   
 -/
 begin
-
-    targets_analysis,
     sorry
 end
 
@@ -208,7 +208,8 @@ begin
     sorry
 end
 
-lemma complement_intersection_quelconque  (H : ∀ i, F i = set.compl (E i)) : set.compl (Inter E) = Union F :=
+lemma exercise.complement_intersection_quelconque  (H : ∀ i, F i = set.compl (E
+ i)) : set.compl (Inter E) = Union F :=
 /- dEAduction
 PrettyName
     
@@ -232,7 +233,8 @@ end
 
 
 
-lemma inclus_ssi_complement_contient : A ⊆ B ↔ set.compl B ⊆ set.compl A :=
+lemma exercise.inclus_ssi_complement_contient : A ⊆ B ↔ set.compl B ⊆ set.compl
+ A :=
 /- dEAduction
 PrettyName
     
@@ -285,9 +287,21 @@ section applications  -- sous-section 5
 notation f `⟮` A `⟯` := f '' A
 notation f `⁻¹⟮` A `⟯` := f  ⁻¹' A
 
-variables  (A A': set X) 
-variables {Y: Type} {f: X → Y} (B B': set Y)
+variables  {A A': set X}
+variables {Y: Type} {f: X → Y} {B B': set Y}
 variables {I : Type} {E : I → set X} {F : I → set Y}
+
+lemma definition.image_directe (y : Y) : y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y :=
+begin
+    unfold set.image,
+    sorry
+end
+
+lemma definition.image_reciproque (x:X) : x ∈ f  ⁻¹' B ↔ f(x) ∈ B :=
+begin
+    sorry
+end
+
 
 lemma exercise.image_de_reciproque : f '' (f ⁻¹' B)  ⊆ B :=
 /- dEAduction
@@ -347,7 +361,8 @@ begin
 end
 
 
-lemma  image_reciproque_union  : f ⁻¹' (B ∪ B') = f ⁻¹' B ∪ f ⁻¹' B'  :=
+lemma  exercise.image_reciproque_union  : f ⁻¹' (B ∪ B') = f ⁻¹' B ∪ f ⁻¹' B'
+:=
 /- dEAduction
 PrettyName
     
@@ -368,7 +383,8 @@ end
 
 /- Idem union, intersection quelconques -/
 
-lemma image_reciproque_inter_quelconque  (H : ∀ i:I,  (E i = f ⁻¹' (F i))) :  (f ⁻¹'  (set.Inter F)) = set.Inter E :=
+lemma exercise.image_reciproque_inter_quelconque  (H : ∀ i:I,  (E i = f ⁻¹' (F
+i))) :  (f ⁻¹'  (set.Inter F)) = set.Inter E :=
 /- dEAduction
 PrettyName
     
@@ -388,7 +404,7 @@ end
 
 
 
-lemma image_inter_inclus_inter_images   :  
+lemma exercise.image_inter_inclus_inter_images   :
         f '' (A∩A') ⊆ f '' (A) ∩ f '' (A') :=
 /- dEAduction
 PrettyName
@@ -419,4 +435,18 @@ end applications
 
 
 end theorie_des_ensembles
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
