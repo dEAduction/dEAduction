@@ -37,22 +37,17 @@ from dataclasses import dataclass
 from gettext import gettext as _
 import logging
 import deaduction.pylib.actions.utils as utils
-from deaduction.pylib.actions.actiondef import action
-from deaduction.pylib.mathobj.PropObj import PropObj
-import deaduction.pylib.mathobj.PropObj as PO # useless for now
-from deaduction.pylib.mathobj.proof_state import Goal
-from deaduction.pylib.actions.exceptions import (InputType, MissingParametersError, WrongUserInput) 
-
-log = logging.getLogger("logic")
-
-
+from deaduction.pylib.actions import (  action,
+                                        InputType,
+                                        MissingParametersError,
+                                        WrongUserInput) 
+from deaduction.pylib.mathobj import (  PropObj,
+                                        Goal)
 
 ## AND ##
 
 def construct_and(goal):
-    log.debug(goal.target.math_type.node)
-    if goal.target.math_type.node != "PROP_AND":        
-        log.debug("noeud de goal pas and")
+    if goal.target.math_type.node != "PROP_AND":
         raise WrongUserInput
     return "split, "
 
@@ -77,8 +72,8 @@ def action_and(goal : Goal, selected_objects: [PropObj]) -> str:
     """
     Translate into string of lean code corresponding to the action
     
-    :param l: list of PropObj arguments preselected by the user
-    :return: string of lean code
+    :param l:   list of PropObj arguments preselected by the user
+    :return:    string of lean code
     """
     if len(selected_objects) == 0:
         return construct_and(goal)
@@ -121,8 +116,8 @@ def action_or(goal : Goal, l : [PropObj], user_input = []) -> str:
     """
     Translate into string of lean code corresponding to the action
     
-    :param l: list of PropObj arguments preselected by the user
-    :return: string of lean code
+    :param l:   list of PropObj arguments preselected by the user
+    :return:    string of lean code
     """
     if len(l) == 0:
         return construct_or(goal, user_input)
@@ -138,8 +133,8 @@ def action_negate(goal : Goal, l : [PropObj]) -> str:
     """
     Translate into string of lean code corresponding to the action
     
-    :param l: list of PropObj arguments preselected by the user
-    :return: string of lean code
+    :param l:   list of PropObj arguments preselected by the user
+    :return:    string of lean code
     """
     if len(l) == 0:
         if goal.target.math_type.node != "PROP_NOT":
@@ -168,10 +163,9 @@ def apply_implicate(goal : Goal, l : [PropObj]):
     return "apply {0},".format(l[0].lean_data["name"])
 
 def apply_implicate_to_hyp(goal : Goal, l : [PropObj]):
-    if l[0].math_type.node != "PROP_IMPLIES":
-        raise WrongUserInput
-    if not l[0].math_type.children[0].__eq__(l[1].math_type):
-        raise WrongUserInput
+    if l[0].math_type.node != "QUANT_∀":
+        if not (l[0].math_type.node == "PROP_IMPLIES" and l[0].math_type.children[0] == l[1].math_type):
+            raise WrongUserInput
     h_selected = l[0].lean_data["name"]
     x_selected = l[1].lean_data["name"]
     h = utils.get_new_hyp()
@@ -183,8 +177,8 @@ def action_implicate(goal : Goal, l : [PropObj]) -> str:
     """
     Translate into string of lean code corresponding to the action
     
-    :param l: list of PropObj arguments preselected by the user
-    :return: string of lean code
+    :param l:   list of PropObj arguments preselected by the user
+    :return:    string of lean code
     """
     if len(l) == 0:
         return construct_implicate(goal)
@@ -207,8 +201,8 @@ def action_iff(goal : Goal, l : [PropObj]) -> str:
     """
     Translate into string of lean code corresponding to the action
     
-    :param l: list of PropObj arguments preselected by the user
-    :return: string of lean code
+    :param l:   list of PropObj arguments preselected by the user
+    :return:    string of lean code
     """
     if len(l) == 0:
         return construct_iff(goal)
@@ -228,8 +222,8 @@ def action_forall(goal : Goal, l : [PropObj]) -> str:
     """
     Translate into string of lean code corresponding to the action
     
-    :param l: list of PropObj arguments preselected by the user
-    :return: string of lean code
+    :param l:   list of PropObj arguments preselected by the user
+    :return:    string of lean code
     """
     if len(l) == 0:
         return construct_forall(goal)
@@ -259,8 +253,8 @@ def action_exists(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
     """
     Translate into string of lean code corresponding to the action
     
-    :param l: list of PropObj arguments preselected by the user
-    :return: string of lean code
+    :param l:   list of PropObj arguments preselected by the user
+    :return:    string of lean code
     """
     if len(l) == 1 and user_input == []:
         if l[0].math_type.is_prop():
@@ -281,13 +275,13 @@ def action_substitution(goal : Goal, l : [PropObj]):
     """
     Translate into string of lean code corresponding to the action
     
-    :param l: list of PropObj arguments preselected by the user
-    :return: string of lean code
+    :param l:   list of PropObj arguments preselected by the user
+    :return:    string of lean code
     """
     if len(l) == 1:
         return "rw {0} <|> rw <- {0},".format(l[0].lean_data["name"])
     elif len(l) == 2:
-        return "rw <- {0} at {1} <|> rw {0} at {1} <|> rw <- {1} at {0} <|> rw {1} at {0},".format(l[1].lean_data["name"],l[0   ].lean_data["name"])
+        return "rw <- {0} at {1} <|> rw {0} at {1} <|> rw <- {1} at {0} <|> rw {1} at {0},".format(l[1].lean_data["name"],l[0].lean_data["name"])
     else:
         raise WrongUserInput    
 

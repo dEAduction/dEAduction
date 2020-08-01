@@ -26,7 +26,8 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .actiondef import      Action
+from .actiondef import (    Action,
+                            action)
 
 from .exceptions import (   InputType,
                             MissingParametersError,
