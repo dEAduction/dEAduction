@@ -11,8 +11,7 @@ local attribute [instance] classical.prop_decidable
 
 
 
-lemma definition.iff {P Q : Prop} : ( P ↔ Q ) ↔ (P → Q) ∧ (Q → P) := 
-iff_def
+-- lemma definition.iff {P Q : Prop} : ( P ↔ Q ) ↔ (P → Q) ∧ (Q → P) := iff_def
 
 namespace theorie_des_ensembles
 
