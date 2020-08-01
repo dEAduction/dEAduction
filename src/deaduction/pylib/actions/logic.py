@@ -284,12 +284,10 @@ def action_substitution(goal : Goal, l : [PropObj]):
     :param l: list of PropObj arguments preselected by the user
     :return: string of lean code
     """
-    print("Ohla")
     if len(l) == 1:
         return "rw {0} <|> rw <- {0},".format(l[0].lean_data["name"])
     elif len(l) == 2:
-        print("yaaaay")
-        return "rw <- {0} at {1} <|> rw {0} at {1} <|> rw <- {1} at {0} <|> rw {1} at {0},".format(l[1].lean_data["name"],l[0].lean_data["name"])
+        return "rw <- {0} at {1} <|> rw {0} at {1} <|> rw <- {1} at {0} <|> rw {1} at {0},".format(l[1].lean_data["name"],l[0   ].lean_data["name"])
     else:
         raise WrongUserInput    
 
