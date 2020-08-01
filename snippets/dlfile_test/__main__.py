@@ -8,6 +8,7 @@ import logging
 from tempfile import TemporaryFile
 
 URL        = "https://oleanstorage.azureedge.net/mathlib/158e84ae35cbed47282545f318fb33c0ed483761.tar.xz"
+CHECKSUM   = "a6dcc73a42db7340dcf47c1050c1d9803a279b51"
 
 DESTDIR    = Path("/tmp/mathlib")
 
@@ -21,7 +22,11 @@ if __name__ == "__main__":
     with TemporaryFile() as fhandle:
 
         log.info("Download file")
-        fs.download(URL, fhandle)
+        checksum = fs.download(URL, fhandle)
+
+        print(checksum, CHECKSUM)
+        assert checksum == CHECKSUM
+
         fhandle.seek(0)
 
         log.info(f"Extract file to {str(DESTDIR)}")

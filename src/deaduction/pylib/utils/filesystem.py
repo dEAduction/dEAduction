@@ -31,6 +31,7 @@ import logging
 from gettext import gettext as _
 from typing import Callable
 import requests
+import hashlib
 
 from tempfile import TemporaryFile
 
@@ -71,11 +72,14 @@ def download(url: str, fhandle: BufferedWriter, on_progress: Callable = None):
     :param path: File path on local filesystem
     :param on_progress: callback(idx,count, progress)
                         to monitor download progress.
+    :return: the sha1 checksum of the downloaded file
     """
 
     # TODO(florian): better error handling ?
     # -> ConnectionError raised by requests.get
     # -> HTTPError raised by raise_for_status
+
+    sha1 = hashlib.sha1()
 
     response = requests.get(url, stream=True)
     response.raise_for_status()  # Raise HTTPError if any
@@ -84,6 +88,7 @@ def download(url: str, fhandle: BufferedWriter, on_progress: Callable = None):
 
     if not tot_len:
         fhandle.write(response.content)
+        sha1.update(response.content)
     else:
         dl_size  = 0
         tot_len  = int(tot_len)
@@ -91,6 +96,7 @@ def download(url: str, fhandle: BufferedWriter, on_progress: Callable = None):
         for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
             dl_size += len(chunk)
             fhandle.write(chunk)
+            sha1.update(chunk)
 
             progress = (100 * (dl_size / tot_len))
             log.info(_("Progress : {:03d}%").format(int(progress)))
@@ -98,6 +104,7 @@ def download(url: str, fhandle: BufferedWriter, on_progress: Callable = None):
             if on_progress is not None:
                 on_progress(dl_size, tot_len, progress)
 
+    return sha1.hexdigest()
 
 def download_to_file(url: str, dest: Path, on_progress: Callable = None):
     dest = Path(dest).resolve()
@@ -105,4 +112,4 @@ def download_to_file(url: str, dest: Path, on_progress: Callable = None):
     log.info(_("Download from {} to {}").format(url, str(dest)))
 
     with open(str(dest), "wb") as fhandle:
-        download(url, fhandle, on_progress)
+        return download(url, fhandle, on_progress)
