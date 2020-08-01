@@ -24,8 +24,6 @@ nature_leaves_list = ["PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                       "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY"]
 
 
-def format_constant(latex_symb, a, PO, format_="latex"):
-    return [latex_symb]
 
 
 def format_arg0(latex_symb, a, PO, format_="latex"):
@@ -66,7 +64,10 @@ def format_complement(latex_symb, a, PO, format_="latex"):
     if format_ == "latex":
         return [a[0], '^c']
     elif format_ == "utf8":
-        return [a[0], 'ᶜ']
+        return ['∁', a[0]]
+
+def format_constant(latex_symb, a, PO, format_="latex"):
+        return [latex_symb]
 
 
 # dict nature -> (latex symbol, format name)
@@ -75,6 +76,8 @@ def format_complement(latex_symb, a, PO, format_="latex"):
 ##########
 latex_structures = {"PROP_AND": (r" \text{ " + _("AND") + " } ", format_0n1),
                     "PROP_OR": (r" \text{ " + _("OR") + " } ", format_0n1),
+                    "PROP_FALSE": (r"\textsc{" +_("Contradiction") + "}",
+                                                            format_constant),
                     "PROP_IFF": (r" \Leftrightarrow ", format_0n1),
                     "PROP_NOT": (r" \text{" + _("NOT") + " } ", format_n0),
                     "PROP_IMPLIES": (r" \Rightarrow ", format_0n1),
@@ -90,7 +93,7 @@ latex_structures = {"PROP_AND": (r" \text{ " + _("AND") + " } ", format_0n1),
                     "SET_UNION+": (r"\bigcup", format_n0),
                     "PROP_INCLUDED": (r" \subset ", format_0n1),
                     "PROP_BELONGS": (r" \in ", format_0n1),
-                    "SET_SYM_DIFF": (r" \backslash ", format_0n1),
+                    "SET_DIFF": (r" \backslash ", format_0n1),
                     "SET_COMPLEMENT": (r"", format_complement),
                     "SET_UNIVERSE": ("", format_arg0),
                     "SET_EMPTY": (r" \emptyset ", format_constant),
@@ -129,8 +132,11 @@ latex_structures = {"PROP_AND": (r" \text{ " + _("AND") + " } ", format_0n1),
                     "NUMBER": ("", "")
                     }
 
-utf8_structures = {"PROP_AND": (" " + _("AND") + " ", format_0n1),  # logic
+utf8_structures = {"PROP_AND": (" " + _(r"AND") + " ",
+                                format_0n1),
+                   # logic
                    "PROP_OR": (" " + _("OR") + " ", format_0n1),
+                   "PROP_FALSE": (_("Contradiction"), format_constant),
                    "PROP_IFF": (" ⇔ ", format_0n1),
                    "PROP_NOT": (" " + _("NOT") + " ", format_n0),
                    "PROP_IMPLIES": (" ⇒ ", format_0n1),
@@ -143,7 +149,7 @@ utf8_structures = {"PROP_AND": (" " + _("AND") + " ", format_0n1),  # logic
                    "SET_UNION+": (" ∪", format_n0),
                    "PROP_INCLUDED": (" ⊂ ", format_0n1),
                    "PROP_BELONGS": (r" ∈ ", format_0n1),
-                   "SET_SYM_DIFF": (r" \\ ", format_0n1),
+                   "SET_DIFF": (r" \\ ", format_0n1),
                    "SET_COMPLEMENT": (r"", format_complement),
                    "SET_UNIVERSE": ("", format_arg0),
                    "SET_EMPTY": (r" ∅ ", format_constant),
