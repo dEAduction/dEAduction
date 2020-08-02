@@ -39,13 +39,13 @@ from deaduction.pylib.mathobj import (  Goal,
 def action_definition(goal : Goal, selected_objects : [PropObj], definition : Statement):
     if len(selected_objects) == 0:
         defi = definition.lean_name
-        return "defi {0}".format(defi)
+        return "defi {0} <|> simp_rw {0} <|> simp_rw <- {0}".format(defi)
     elif len(selected_objects) == 1:
         defi = definition.lean_name
-        return "defi {0} at {1}".format(defi,
+        return "defi {0} at {1} <|> simp_rw {0} at {1} <|> simp_rw <- {0} at {1}".format(defi,
                                         selected_objects[0].lean_data["name"])
     else:
-        raise WrongUserInput()
+        raise WrongUserInput
 
 def action_theorem(goal : Goal, selected_objects : [PropObj], theorem : Statement):
     th = theorem.lean_name

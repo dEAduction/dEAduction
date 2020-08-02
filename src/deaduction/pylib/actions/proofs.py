@@ -89,7 +89,7 @@ def action_assumption(goal : Goal, l : [PropObj]) -> str:
     :return: string of lean code
     """
     if len(l) == 0:
-        return "assumption, "
+        return "assumption <|> refl, "
     else:
         raise WrongUserInput
 #@action(_("Proof by induction"))
