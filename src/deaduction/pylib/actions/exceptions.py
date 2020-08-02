@@ -42,9 +42,11 @@ class InputType(IntEnum):
     Choice = 1
 
 class MissingParametersError(Exception):
-    def __init__(self, input_type, list_of_choices = None):
+    def __init__(self, input_type, list_of_choices = None, title = None, output = None):
         self.input_type = input_type
         self.list_of_choices = list_of_choices
+        self.title = title
+        self.output = output
 
 class WrongUserInput(Exception):
     pass

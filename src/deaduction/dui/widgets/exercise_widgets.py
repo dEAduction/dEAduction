@@ -386,7 +386,7 @@ class ExerciseMainWindow(QMainWindow):
             except MissingParametersError as e:
                 if e.input_type == InputType.Text:
                     text, ok = QInputDialog.getText(action_btn,
-                            _('Input element'), _('Input element:'))
+                            e.title, e.output)
                 elif e.input_type == InputType.Choice:
                     text, ok = QInputDialog.getItem(action_btn,
                             _("Choose element"), "", e.list_of_choices,

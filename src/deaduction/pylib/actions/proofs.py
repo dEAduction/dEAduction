@@ -45,7 +45,7 @@ def action_cbr(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
     """
     if len(l) == 0:
         if user_input == []:
-            raise MissingParametersError(InputType.Text)
+            raise MissingParametersError(InputType.Text, title = _("cases"), output = _("Enter the case you want to discriminate on:")) #TODO : apprendre l'anglais
         else:
             h1 = utils.get_new_hyp()
             h2 = utils.get_new_hyp()
@@ -80,6 +80,20 @@ def action_absurdum(goal : Goal, l : [PropObj]) -> str:
         return "contradiction, "
 
 
+@action(_("Introduce new object"), "+")
+def action_new_object(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
+    """
+    Translate into string of lean code corresponding to the action
+    
+    :param l: list of PropObj arguments preselected by the user
+    :return: string of lean code
+    """
+    if len(user_input) == 0:
+        raise MissingParametersError(InputType.Text, title = "+", output = _("Introduce new object:"))
+    else:
+        x = utils.get_new_var()
+        return "let {0} := {1}, ".format(x, user_input[0])
+
 @action(_("Assumption"), "¯\_(ツ)_/¯")
 def action_assumption(goal : Goal, l : [PropObj]) -> str:
     """
@@ -92,6 +106,7 @@ def action_assumption(goal : Goal, l : [PropObj]) -> str:
         return "assumption <|> refl, "
     else:
         raise WrongUserInput
+
         
 #@action(_("Proof by induction"))
 #def action_induction(goal : Goal, l : [PropObj]):

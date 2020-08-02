@@ -235,6 +235,8 @@ def action_forall(goal : Goal, l : [PropObj]) -> str:
 def construct_exists(goal, x : str):
     if goal.target.math_type.node != "QUANT_∃":
         raise WrongUserInput
+    if len(user_input) != 1:
+        raise MissingParametersError(InputType.Text, title = _("Exist"), output = _("Enter element you want to use:"))
     return "use {0},".format(x)
 
 def apply_exists(l : [PropObj]) -> str:
@@ -262,10 +264,7 @@ def action_exists(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
         else:
             return construct_exists(goal, l[0].lean_data["name"])
     if len(l) == 0:
-        if len(user_input) != 1:
-            raise MissingParametersError(InputType.Text)
-        else:
-            return construct_exists(goal, user_input[0])
+        return construct_exists(goal, user_input[0])
     raise WrongUserInput
 
 ## SUBSTITUTION
@@ -279,9 +278,9 @@ def action_substitution(goal : Goal, l : [PropObj]):
     :return:    string of lean code
     """
     if len(l) == 1:
-        return "rw {0} <|> rw <- {0},".format(l[0].lean_data["name"])
+        return "rw {0} <|> rw <- {0}, ".format(l[0].lean_data["name"])
     elif len(l) == 2:
-        return "rw <- {0} at {1} <|> rw {0} at {1} <|> rw <- {1} at {0} <|> rw {1} at {0},".format(l[1].lean_data["name"],l[0].lean_data["name"])
+        return "rw <- {0} at {1} <|> rw {0} at {1} <|> rw <- {1} at {0} <|> rw {1} at {0}, ".format(l[1].lean_data["name"],l[0].lean_data["name"])
     else:
         raise WrongUserInput    
 
