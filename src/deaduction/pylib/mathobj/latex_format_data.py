@@ -24,8 +24,6 @@ nature_leaves_list = ["PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                       "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY"]
 
 
-
-
 def format_arg0(latex_symb, a, PO, format_="latex"):
     return [a[0]]
 
@@ -43,7 +41,7 @@ def format_name(latex_symb, a, PO, format_="latex"):
 
 
 def format_app_function(latex_symb, a, PO, format_="latex"):
-    return [a[0], '(', a[1], ')']
+    return [a[0], '(', a[1], ')']  # !! not used anymore !!
 
 
 def format_app_inverse(latex_symb, a, PO, format_="latex"):
@@ -60,14 +58,55 @@ def format_quantifiers(latex_symb, a, PO, format_="latex"):
     elif format_ == "utf8":
         return [latex_symb + a[1] + ' ∈ ', a[0], ', ', a[2]]
 
+
 def format_complement(latex_symb, a, PO, format_="latex"):
     if format_ == "latex":
         return [a[0], '^c']
     elif format_ == "utf8":
         return ['∁', a[0]]
 
-def format_constant(latex_symb, a, PO, format_="latex"):
-        return [latex_symb]
+
+def format_constant1(latex_symb, a, PO, format_="latex"):
+    return [latex_symb]
+
+
+def format_constant2(latex_symb, a, PO, format_="latex"):
+    if "info" in PO.representation.keys():
+        name = _(PO.representation["info"])
+        return [latex_text(name)]
+    else:
+        return [latex_text(PO.node)]
+
+
+# the following includes for instance:
+# "f(x)" (application of a function)
+# "gf"   (composition of functions)
+# "f is injective"
+def general_format_application(latex_symb, a, PO, format_="latex"):
+    if hasattr(PO.children[0], "math_type"):
+        if PO.children[0].math_type.node == "FUNCTION":
+            return [a[0], '(', a[1], ')']
+    key = PO.children[0].representation['info']
+    if key == 'composition':  # composition of functions
+        log.debug(f"composition of {a[-2]} and {a[-1]}")
+        if format_ == 'latex':
+            return [a[-2], r" \circ ", a[-1]]
+        elif format_ == 'utf8':
+            return [a[-2], '∘', a[-1]]
+    elif key in ["injective", "surjective"]:  # adjective with one subject
+        noun = a[-1]
+        adjective = key
+        if format_ == "latex":
+            return [r"\text{" + noun + "" + " " + _("is") + " " + adjective +
+                    r"}"]
+        elif format_ == "utf8":
+            return [noun + "" + " " + _("is") + " " + adjective]
+
+
+def latex_text(string: str, format_="latex"):
+    if format_ == "latex":
+        string = r"\textsc{" + string + r"}"
+    return string
 
 
 # dict nature -> (latex symbol, format name)
@@ -76,8 +115,8 @@ def format_constant(latex_symb, a, PO, format_="latex"):
 ##########
 latex_structures = {"PROP_AND": (r" \text{ " + _("AND") + " } ", format_0n1),
                     "PROP_OR": (r" \text{ " + _("OR") + " } ", format_0n1),
-                    "PROP_FALSE": (r"\textsc{" +_("Contradiction") + "}",
-                                                            format_constant),
+                    "PROP_FALSE": (r"\textsc{" + _("Contradiction") + "}",
+                                   format_constant1),
                     "PROP_IFF": (r" \Leftrightarrow ", format_0n1),
                     "PROP_NOT": (r" \text{" + _("NOT") + " } ", format_n0),
                     "PROP_IMPLIES": (r" \Rightarrow ", format_0n1),
@@ -96,7 +135,7 @@ latex_structures = {"PROP_AND": (r" \text{ " + _("AND") + " } ", format_0n1),
                     "SET_DIFF": (r" \backslash ", format_0n1),
                     "SET_COMPLEMENT": (r"", format_complement),
                     "SET_UNIVERSE": ("", format_arg0),
-                    "SET_EMPTY": (r" \emptyset ", format_constant),
+                    "SET_EMPTY": (r" \emptyset ", format_constant1),
                     "SET_IMAGE": ("", format_app_function),
                     "SET_INVERSE": ("", format_app_inverse),
                     "SET_FAMILY": (r"\text{ " + _("a family of subsets of") +
@@ -117,32 +156,35 @@ latex_structures = {"PROP_AND": (r" \text{ " + _("AND") + " } ", format_0n1),
                     ##################
                     # GENERAL TYPES: #
                     ##################
+                    "APPLICATION": ("", general_format_application),
                     "PROP": (r"\text{ " + _("a proposition") + "}",
-                             format_constant),
+                             format_constant1),
                     "TYPE": (r" \text{ " + _("a set") + "} ",
-                             format_constant),
+                             format_constant1),
                     "SET": (r" \text{ " + _("a subset of") + " }",
                             format_n0),
                     "ELEMENT": (r" \text{ " + _("an element of") + " }",
                                 format_n0),
                     "FUNCTION": (r" \to ", format_0n1),
                     "SEQUENCE": ("", ""),
-                    "TYPE_NUMBER[name:ℕ]": ("\mathbb{N}", format_constant),
-                    "TYPE_NUMBER[name:ℝ]": ("\mathbb{R}", format_constant),
-                    "NUMBER": ("", "")
+                    "TYPE_NUMBER[name:ℕ]": ("\mathbb{N}", format_constant1),
+                    "TYPE_NUMBER[name:ℝ]": ("\mathbb{R}", format_constant1),
+                    "NUMBER": ("", ""),
+                    "CONSTANT": ("", format_constant2)
                     }
 
 utf8_structures = {"PROP_AND": (" " + _(r"AND") + " ",
                                 format_0n1),
                    # logic
                    "PROP_OR": (" " + _("OR") + " ", format_0n1),
-                   "PROP_FALSE": (_("Contradiction"), format_constant),
+                   "PROP_FALSE": (_("Contradiction"), format_constant1),
                    "PROP_IFF": (" ⇔ ", format_0n1),
                    "PROP_NOT": (" " + _("NOT") + " ", format_n0),
                    "PROP_IMPLIES": (" ⇒ ", format_0n1),
                    "QUANT_∀": ("∀ ", format_quantifiers),
                    "QUANT_∃": ("∃ ", format_quantifiers),
                    "PROP_∃": ("", ""),
+                   # set theory
                    "SET_INTER": (r" ∩ ", format_0n1),  # set theory
                    "SET_UNION": (r" ∪ ", format_0n1),
                    "SET_INTER+": (" ∩", format_n0),
@@ -152,11 +194,12 @@ utf8_structures = {"PROP_AND": (" " + _(r"AND") + " ",
                    "SET_DIFF": (r" \\ ", format_0n1),
                    "SET_COMPLEMENT": (r"", format_complement),
                    "SET_UNIVERSE": ("", format_arg0),
-                   "SET_EMPTY": (r" ∅ ", format_constant),
+                   "SET_EMPTY": (r" ∅ ", format_constant1),
                    "SET_IMAGE": ("", format_app_function),
                    "SET_INVERSE": ("", format_app_inverse),
                    "SET_FAMILY": (" " + _("a family of subsets of") + " ",
                                   format_n0),
+                   # numbers
                    "PROP_EQUAL": (" = ", format_0n1),
                    "PROP_EQUAL_NOT": ("", ""),
                    "PROP_<": ("<", format_0n1),
@@ -167,15 +210,18 @@ utf8_structures = {"PROP_AND": (" " + _(r"AND") + " ",
                    "+": ("+", format_0n1),
                    "APPLICATION_FUNCTION": ("", format_app_function),
                    "VAR": ("", "var"),
-                   "PROP": (_(" a proposition"), format_constant),
-                   "TYPE": (_(" a set"), format_constant),
+                   # general types
+                   "APPLICATION": ("", general_format_application),
+                   "PROP": (_(" a proposition"), format_constant1),
+                   "TYPE": (_(" a set"), format_constant1),
                    "SET": (_(" a subset of "), format_n0),
                    "ELEMENT": (_(" an element of "), format_n0),
                    "FUNCTION": (" → ", format_0n1),
                    "SEQUENCE": ("", ""),
-                   "TYPE_NUMBER[name:ℕ]": ("ℕ", format_constant),
-                   "TYPE_NUMBER[name:ℝ]": ("ℝ", format_constant),
-                   "NUMBER": ("", "")
+                   "TYPE_NUMBER[name:ℕ]": ("ℕ", format_constant1),
+                   "TYPE_NUMBER[name:ℝ]": ("ℝ", format_constant1),
+                   "NUMBER": ("", ""),
+                   "CONSTANT": ("", format_constant2)
                    }
 
 # TODO A traiter : R, N ; NUMBER ; emptyset ; PROP_∃ ; SET_INTER+ ; SEQUENCE ;

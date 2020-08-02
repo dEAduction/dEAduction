@@ -155,14 +155,20 @@ class PropObj:
                 lr = ["(", lr, ")"]
             children_rep.append(lr)
         #        log.debug(f"Node: {node}")
-        if format_ == "latex":
-            symbol, format_scheme = latex_structures[node]
-            self.representation["latex"] = format_scheme(symbol, children_rep,
-                                                         self, format_="latex")
-        else:
-            symbol, format_scheme = utf8_structures[node]
-            self.representation["utf8"] = format_scheme(symbol, children_rep,
-                                                        self, format_="utf8")
+        if node in latex_structures.keys():
+            if format_ == "latex":
+                symbol, format_scheme = latex_structures[node]
+                self.representation["latex"] = format_scheme(symbol, children_rep,
+                                                             self, format_="latex")
+            else:
+                symbol, format_scheme = utf8_structures[node]
+                self.representation["utf8"] = format_scheme(symbol, children_rep,
+                                                            self, format_="utf8")
+        else:  # node not implemented
+            log.warning(f"display of {node} not implemented")
+            self.representation['latex'] = '???'
+            self.representation['utf8'] = '???'
+        log.debug(f"---> utf8 rep: {self.representation['utf8']}")
         return
 
     def format_as_latex(self):
@@ -240,7 +246,7 @@ class AnonymousPO(PropObj):
         :return: an instance of AnonymousPO
         """
         #        log = logging.getLogger("PropObj")
-        representation = {'latex': None, 'utf8': None}
+        representation = {'latex': None, 'utf8': None, 'info': None}
         # latex representation is computed later
         node = prop_obj_dict["node"]
         lean_data = extract_lean_data(node)
@@ -276,8 +282,19 @@ class AnonymousPO(PropObj):
         #############################
         # Application of a function #
         #############################
-        if node == "APPLICATION" and children[0].math_type.node == "FUNCTION":
-            node = "APPLICATION_FUNCTION"
+#        if node == "APPLICATION":
+            # if hasattr(children[0],"math_type"):
+            #     if children[0].math_type.node == "FUNCTION":
+            #         node = "APPLICATION_FUNCTION"
+        #############
+        # CONSTANTS #
+        #############
+        lean_data = None
+        if node.startswith("CONSTANT"):
+            info = extract_name(node)
+            representation['info'] = info
+            node = "CONSTANT"
+            log.debug(f"creating CONSTANT {info}")
         #################
         # Instantiation #
         #################
@@ -428,7 +445,7 @@ def extract_pp_type(string: str):
 
 def extract_name(string: str):
     str1 = "name:"
-    str2 = "/ident"
+    str2 = "/"
     return (extract(string, str1, str2))
 
 

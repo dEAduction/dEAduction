@@ -82,17 +82,40 @@ class Course:
         # possible values = "", "field name", "<field name>"
         line_counter = 0
         indent = 0
-        data = {"Section": None, "Tools->Logic": None,
+        data = {"Tools->Logic": None,
                 "Tools->Definitions": None, "Tools->Theorems": None,
                 "Tools->Exercises": None, "Tools->Statements": None,
                 "Tools->Magic": None, "Tools->ProofTechniques": None,
                 "ExpectedVarsNumber": None, "text_book_identifier": None,
+                "Namespace": None,
                 "current_namespaces": []}
         for line in lines:
             line_counter += 1
             log.debug(f"Parsing line {line_counter}")
             log.debug(f"global_parsing: {global_parsing}, data_parsing: "
-                      f"{data_parsing}/")
+                      f"{data_parsing}")
+
+            #########################################################
+            # first check for begin/end after an exercise statement #
+            #########################################################
+            # (maybe no metadata)
+            if global_parsing in ["StatementMetadata","proof begin...end"]\
+                    and data["lean_name"].startswith("exercise"):
+                ######################################################
+                # search for lines between begin/end for an exercise #
+                ######################################################
+                if line.strip() == "begin":
+                    data["begin"] = line_counter
+                    global_parsing = "...end"
+                    continue
+            elif global_parsing == "...end":
+                if line.strip() == "end":
+                    global_parsing = ""
+                    data["end"] = line_counter
+                    log.info(f"creating exercise from data {data}")
+                    exercise = Exercise.from_parser_data(data, statements)
+                    statements.append(exercise)
+                    continue
             ##################################################
             # data_parsing starts after a field_name_parsing #
             # and goes on till the indentation stops         #
@@ -124,20 +147,6 @@ class Course:
                     global_parsing = end_global_parsing(data, global_parsing,
                                                         outline, statements)
                 continue
-            elif global_parsing == "proof begin...end":
-                ######################################################
-                # search for lines between begin/end for an exercise #
-                ######################################################
-                if line.strip() == "begin":
-                    data["begin"] = line_counter
-                    global_parsing = "...end"
-            elif global_parsing == "...end":
-                if line.strip() == "end":
-                    global_parsing = ""
-                    data["end"] = line_counter
-                    log.info(f"creating exercise from data {data}")
-                    exercise = Exercise.from_parser_data(data, statements)
-                    statements.append(exercise)
             else:
                 ###########################
                 # treatment of namespaces #
@@ -204,15 +213,15 @@ def end_global_parsing(data, global_parsing, outline, statements):
     if global_parsing == "namespace":
         whole_namespace = ".".join(data["current_namespaces"])
         if whole_namespace not in outline.keys():
-            if data["Section"] is None:
+            if data["Namespace"] is None:
                 # compute plain name from Lean name
-                data["Section"] = \
+                data["Namespace"] = \
                     data["current_namespaces"][-1].replace("_",
                                                            " ").capitalize()
-        if data["Section"] is not None:
-            outline[whole_namespace] = data["Section"]
-        log.info(f"Namespace {whole_namespace},text: {data['Section']}")
-        data["Section"] = None
+        if data["Namespace"] is not None:
+            outline[whole_namespace] = data["Namespace"]
+        log.info(f"Namespace {whole_namespace},text: {data['Namespace']}")
+        data["Namespace"] = None
     elif global_parsing == "statement":
         log.warning("unable to detect end of statement (':=')")
     elif global_parsing == "StatementMetadata":
@@ -302,6 +311,10 @@ def indentation(line: str) -> Tuple:
     while line[i] == " ":
         i += 1
     return True, i
+
+#def clear_data(data):
+    # just keep data["current_namespaces"]
+#    data = {"current_namespaces": data["current_namespaces"]}
 
 
 if __name__ == "__main__":

@@ -135,14 +135,14 @@ class Exercise(Theorem):
         :param statements: list of all Statement instances until the current
         exercise
         :param data: a dictionary whose keys =
-        fields parsed by the from_directory function
+        fields parsed by the Course.from_file method
         TODO: change definitions into Definitions object
         """
         max_statement = 15
         log = logging.getLogger("Course initialisation")
         whole_namespace = ".".join(data["current_namespaces"])
         data["lean_name"] = whole_namespace + "." + data["lean_name"]
-        if "PrettyName" not in data.keys():
+        if not data["PrettyName"]:
             data["PrettyName"] = data["lean_statement"].replace("_", " ")
             # automatic pretty_name if not provided
         expected_vars_number = {}
@@ -167,7 +167,7 @@ class Exercise(Theorem):
         for field in ["Tools->Definitions", "Tools->Theorems",
                       "Tools->Exercises", "Tools->Statements"]:
             if data[field] is None:
-                continue
+                data[field] = "$UNTIL_NOW"  # default value
             log.debug(f"processing data in {field}, {data[field]}")
             class_ = class_dict[field]
             list_1 = data[field].split()
@@ -243,8 +243,7 @@ class Exercise(Theorem):
         for field in labels.keys():
             log.debug(f"processing data in {field}, {data[field]}")
             if data[field] == None:
-                post_data[field] = None
-                continue
+                data[field] = "$ALL"
             action_dict = dicts[field]
             action_names = [item for (_1, _2, item) in
                             [t.partition("action_") for t in
