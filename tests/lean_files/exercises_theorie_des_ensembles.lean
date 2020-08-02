@@ -10,13 +10,16 @@ import structures
 local attribute [instance] classical.prop_decidable
 
 
-
--- lemma definition.iff {P Q : Prop} : ( P ↔ Q ) ↔ (P → Q) ∧ (Q → P) := iff_def
-
+------------------
+-- COURSE TITLE --
+------------------
 namespace theorie_des_ensembles
-
+-- global variable --
 variable {X : Type}
 
+------------------------
+-- COURSE DEFINITIONS --
+------------------------
 lemma definition.inclusion (A B : set X) : A ⊆ B ↔ ∀ {{x:X}}, x ∈ A → x ∈ B :=
 iff.rfl
 
@@ -37,15 +40,20 @@ begin
 end
 
 
------------------------------------------
---------------- section 1 ---------------
-namespace unions_et_intersections
------------------------------------------
------------------------------------------
 
+
+
+
+---------------
+-- SECTION 1 --
+---------------
+namespace unions_et_intersections
+-- variables unions_et_intersections --
 variables {A B C : set X}
 
-
+-----------------
+-- DEFINITIONS --
+-----------------
 lemma definition.intersection_deux_ensembles (A B : set X) (x : X) :  x ∈ A ∩ B ↔ ( x ∈ A ∧ x ∈ B) :=
 iff.rfl
 /- dEAduction
@@ -75,8 +83,10 @@ PrettyName
 -/
 
 
-
-lemma exercise.union_distributive_inter : A ∩ (B ∪ C)  = (A ∩ B) ∪ (A ∩ C) := 
+---------------
+-- EXERCICES --
+---------------
+lemma exercise.union_distributive_inter : A ∩ (B ∪ C)  = (A ∩ B) ∪ (A ∩ C) :=
 /- dEAduction
 PrettyName
     Intersection d'une union
@@ -101,17 +111,9 @@ end
 lemma exercise.inter_distributive_union : A ∪ (B ∩ C)  = (A ∪ B) ∩ (A ∪ C) :=
 /- dEAduction
 PrettyName
-    
+
 Description
-    
-Tools->Logic
-    $ALL
-Tools->ProofTechniques
-    $ALL
-Tools->Definitions
-    $UNTIL_NOW
-Tools->Theorems
-    $ALL   
+
 -/
 
 begin
@@ -120,46 +122,43 @@ end
 
 end unions_et_intersections
 
------------------------------------------
------------------------------------------
-section complementaire -- sous-section 2
------------------------------------------
------------------------------------------
+
+
+
+
+
+---------------
+-- SECTION 2 --
+---------------
+namespace complementaire
+-- variables complementaire --
 variables  {A B : set X}
 variables {I : Type} {E F : I → set X}
 notation `∁`A := set.compl A
 
-lemma definition.complement {A : set X} {x : X} : x ∈ set.compl A ↔ x ∉ A := 
+-----------------
+-- DEFINITIONS --
+-----------------
+lemma definition.complement {A : set X} {x : X} : x ∈ set.compl A ↔ x ∉ A :=
 /- dEAduction
 PrettyName
     Complémentaire
 -/
 by finish
 
-lemma definition.difference_d_ensembles {A B : set X} {x : X} : x ∈ B \ A ↔ (x
-∈
- B ∧ x ∉ A) :=
-/- dEAduction
-PrettyName
-    Différence d'ensembles
--/
-iff.rfl
+--lemma definition.difference_d_ensembles {A B : set X} {x : X} : x ∈ B \ A ↔ (x ∈ B ∧ x ∉ A) :=
+-- iff.rfl
 
 
+---------------
+-- EXERCICES --
+---------------
 lemma exercise.complement_complement : (set.compl (set.compl A)) =A :=
 /- dEAduction
 PrettyName
-    Complémentaire du complémentaire    
+    Complémentaire du complémentaire
 Description
-    Tout ensemble est égal au complémentaire de son complémentaire    
-Tools->Logic
-    $ALL
-Tools->ProofTechniques
-    $ALL
-Tools->Definitions
-    $UNTIL_NOW
-Tools->Theorems
-    $ALL   
+    Tout ensemble est égal au complémentaire de son complémentaire
 -/
 begin
     sorry
@@ -170,38 +169,19 @@ lemma exercise.complement_union_deux : set.compl (A ∪ B) = (set.compl A) ∩ (
 PrettyName
     Complémentaire d'union I
 Description
-    Le complémentaire de l'union de deux ensembles égale l'intersection des complémentaires 
-Tools->Logic
-    $ALL
-Tools->ProofTechniques
-    $ALL
-Tools->Definitions
-    $UNTIL_NOW
-Tools->Theorems
-    $ALL   
+    Le complémentaire de l'union de deux ensembles égale l'intersection des complémentaires
 -/
-begin    
+begin
     sorry
 end
 
-
-
-open set
 -- set_option pp.all true
 lemma exercise.complement_union_quelconque  (H : ∀ i, F i = set.compl (E i)) : set.compl (Union E) = Inter F :=
 /- dEAduction
 PrettyName
-    Complémentaire d'union II    
+    Complémentaire d'union II
 Description
-    Le complémentaire d'une réunion quelconque égale l'intersection des complémentaires     
-Tools->Logic
-    $ALL
-Tools->ProofTechniques
-    $ALL
-Tools->Definitions
-    $UNTIL_NOW
-Tools->Theorems
-    $ALL   
+    Le complémentaire d'une réunion quelconque égale l'intersection des complémentaires
 -/
 begin
     sorry
@@ -211,63 +191,28 @@ lemma exercise.complement_intersection_quelconque  (H : ∀ i, F i = set.compl (
  i)) : set.compl (Inter E) = Union F :=
 /- dEAduction
 PrettyName
-    
+
 Description
-    Le complémentaire d'une intersection quelconque égale l'union des complémentaires    
-Tools->Logic
-    $ALL
-Tools->ProofTechniques
-    $ALL
-Tools->Definitions
-    $UNTIL_NOW
-Tools->Theorems
-    $ALL   
+    Le complémentaire d'une intersection quelconque égale l'union des complémentaires
 -/
-begin   
+begin
     sorry
 end
 
-
-/- Le complémentaire du vide est X ??? -/ 
-
-
-
-lemma exercise.inclus_ssi_complement_contient : A ⊆ B ↔ set.compl B ⊆ set.compl
+lemma exercise.inclusion_complement : A ⊆ B → set.compl B ⊆ set.compl
  A :=
 /- dEAduction
 PrettyName
-    
+    Le passage au complémentaire renverse les inclusions
 Description
-    A est inclus dans B ssi le complémentaire de A contient le complémentaire de B    
-Tools->Logic
-    $ALL
-Tools->ProofTechniques
-    $ALL
-Tools->Definitions
-    $UNTIL_NOW
-Tools->Theorems
-    $ALL   
+    Si A est inclus dans B, alors le complémentaire de A contient le complémentaire de B
 -/
 
 begin
     sorry
 end
 
-
-/- -/
-example : A ⊆ B ↔ B \ A = ∅ :=
-begin
-    split,
-    intro H,
-
-end
-
--- Comment manipuler l'ensemble vide dans un type ?
-
-/- Autres : différence symétrique-/
-
-
-
+/- Autres : différence-/
 
 end complementaire
 
@@ -278,11 +223,11 @@ end complementaire
 
 
 
------------------------------------------
------------------------------------------
-section applications  -- sous-section 5
------------------------------------------
------------------------------------------
+---------------
+-- SECTION 3 --
+---------------
+namespace applications
+-- variables applications --
 notation f `⟮` A `⟯` := f '' A
 notation f `⁻¹⟮` A `⟯` := f  ⁻¹' A
 
@@ -290,6 +235,14 @@ variables  {A A': set X}
 variables {Y: Type} {f: X → Y} {B B': set Y}
 variables {I : Type} {E : I → set X} {F : I → set Y}
 
+-- a-t-on besoin de ceci ?
+-- lemma theorem.egalite_fonctions : f = f' ↔ ∀ x : X, f(x) = f'(x) :=
+--  function.funext_iff
+
+
+-----------------
+-- DEFINITIONS --
+-----------------
 lemma definition.image_directe (y : Y) : y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y :=
 begin
     unfold set.image,
@@ -302,150 +255,129 @@ begin
 end
 
 
+---------------
+-- EXERCICES --
+---------------
 lemma exercise.image_de_reciproque : f '' (f ⁻¹' B)  ⊆ B :=
-/- dEAduction
-PrettyName
-    
-Description
-    
-Tools->Logic
-    $ALL
-Tools->ProofTechniques
-    $ALL
-Tools->Definitions
-    $UNTIL_NOW
-Tools->Theorems
-    $ALL   
--/
 begin
   sorry
 end
 
 lemma exercise.reciproque_de_image : A ⊆ f ⁻¹' (f '' A) :=
-/- dEAduction
-PrettyName
-    
-Description
-    
-Tools->Logic
-    $ALL
-Tools->ProofTechniques
-    $ALL
-Tools->Definitions
-    $UNTIL_NOW
-Tools->Theorems
-    $ALL   
--/
 begin
     intros x H,
 end
 
 lemma exercise.image_reciproque_inter :  f ⁻¹'  (B∩B') = f ⁻¹'  (B) ∩ f ⁻¹'  (B') :=
-/- dEAduction
-PrettyName
-    
-Description
-    
-Tools->Logic
-    $ALL
-Tools->ProofTechniques
-    $ALL
-Tools->Definitions
-    $UNTIL_NOW
-Tools->Theorems
-    $ALL   
--/
+begin
+    sorry
+end
+
+lemma  exercise.image_reciproque_union  : f ⁻¹' (B ∪ B') = f ⁻¹' B ∪ f ⁻¹' B'
+:=
+begin
+    sorry
+end
+
+lemma exercise.image_reciproque_inter_quelconque (H : ∀ i:I,  (E i = f ⁻¹' (F i))) :
+(f ⁻¹'  (set.Inter F)) = set.Inter E
+:=
+begin
+    sorry
+end
+
+/- Idem union quelconques -/
+
+lemma exercise.image_inter_inclus_inter_images :
+f '' (A∩A') ⊆ f '' (A) ∩ f '' (A')
+:=
+begin
+    sorry
+end
+
+lemma exercise.reciproque_complementaire :
+f ⁻¹' (set.compl B) = set.compl (f ⁻¹' B)
+:=
 begin
     sorry
 end
 
 
-lemma  exercise.image_reciproque_union  : f ⁻¹' (B ∪ B') = f ⁻¹' B ∪ f ⁻¹' B'
+----------------
+-- SUBSECTION --
+----------------
+namespace injections_surjections
+-- variables injections_usrjections --
+variables {Z : Type} {g : Y → Z} {h : X → Z}
+def injective (f₀ : X → Y) := ∀ x y : X, (f₀ x = f₀ y → x = y)
+def surjective (f₀ : X → Y) := ∀ y : Y, ∃ x : X, f₀ x = y
+def composition (g₀ : Y → Z) (f₀ : X → Y) := λx:X, g₀ (f₀ x)
+#print injective
+
+-----------------
+-- DEFINITIONS --
+-----------------
+lemma definition.injective :
+injective f ↔ ∀ x y : X, (f x = f y → x = y)
 :=
-/- dEAduction
-PrettyName
-    
-Description
-    
-Tools->Logic
-    $ALL
-Tools->ProofTechniques
-    $ALL
-Tools->Definitions
-    $UNTIL_NOW
-Tools->Theorems
-    $ALL   
--/
 begin
+    unfold injective,
+end
+
+lemma definition.surjective :
+surjective f ↔ ∀ y : Y, ∃ x : X, f x = y
+:=
+begin
+    unfold surjective,
+end
+
+lemma definition.composition :
+h = composition g f ↔ ∀ x : X, h x = g (f x)
+:=
+begin
+    unfold composition,
+    sorry
 end
 
 
-/- Idem union, intersection quelconques -/
-
-lemma exercise.image_reciproque_inter_quelconque  (H : ∀ i:I,  (E i = f ⁻¹' (F
-i))) :  (f ⁻¹'  (set.Inter F)) = set.Inter E :=
-/- dEAduction
-PrettyName
-    
-Description
-    
-Tools->Logic
-    $ALL
-Tools->ProofTechniques
-    $ALL
-Tools->Definitions
-    $UNTIL_NOW
-Tools->Theorems
-    $ALL   
--/
+---------------
+-- EXERCICES --
+---------------
+lemma exercise.composition_injections (H0 : h = composition g f)
+(H1 : injective f) (H2 : injective g) :
+injective h
+:=
 begin
+    sorry
+end
+
+lemma exercise.composition_surjections (H0 : h = composition g f)
+(H1 : surjective f) (H2 : surjective g) :
+surjective h
+:=
+begin
+    sorry
+end
+
+lemma exercise.injective_si_coompo_injective (H0 : h = composition g f)
+(H1 : injective h) :
+injective f
+:=
+begin
+    sorry
+end
+
+lemma exercise.surjective_si_coompo_surjective (H0 : h = composition g f)
+(H1 : injective h) :
+surjective g
+:=
+begin
+    sorry
 end
 
 
-
-lemma exercise.image_inter_inclus_inter_images   :
-        f '' (A∩A') ⊆ f '' (A) ∩ f '' (A') :=
-/- dEAduction
-PrettyName
-    
-Description
-    
-Tools->Logic
-    $ALL
-Tools->ProofTechniques
-    $ALL
-Tools->Definitions
-    $UNTIL_NOW
-Tools->Theorems
-    $ALL   
--/
-begin
-end
-
-
-/- L'image réciproque du complémentaire 
-égale le complémentaire de l'image réciprqque-/
-
+end injections_surjections
 
 end applications
 
-
-
-
-
 end theorie_des_ensembles
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
