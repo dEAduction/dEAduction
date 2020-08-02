@@ -169,7 +169,7 @@ def apply_implicate_to_hyp(goal : Goal, l : [PropObj]):
     h_selected = l[0].lean_data["name"]
     x_selected = l[1].lean_data["name"]
     h = utils.get_new_hyp()
-    return "have {0} := {1} {2} <|> have {0} := {1} {2},".format(h, h_selected, x_selected)
+    return "have {0} := {1} {2}, ".format(h, h_selected, x_selected)
 
 # TODO: see if we can put bigger arrows, same for iff
 @action(_("Implication"), "⇒")

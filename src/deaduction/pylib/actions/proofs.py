@@ -77,7 +77,7 @@ def action_absurdum(goal : Goal, l : [PropObj]) -> str:
     if len(l) == 0:
         return "contradiction <|> by_contradiction {0}, ".format(utils.get_new_hyp()) 
     else:
-        raise WrongUserInput
+        return "contradiction, "
 
 
 @action(_("Assumption"), "¯\_(ツ)_/¯")
@@ -92,6 +92,7 @@ def action_assumption(goal : Goal, l : [PropObj]) -> str:
         return "assumption <|> refl, "
     else:
         raise WrongUserInput
+        
 #@action(_("Proof by induction"))
 #def action_induction(goal : Goal, l : [PropObj]):
 #    raise WrongUserInput
