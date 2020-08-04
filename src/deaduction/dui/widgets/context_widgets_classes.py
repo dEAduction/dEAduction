@@ -25,11 +25,11 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pathlib import     Path
-from typing import (    List,
-                        Tuple)
+from pathlib import   Path
+from typing  import ( List,
+                      Tuple)
 
-from PySide2.QtGui import (     QBrush,
+from PySide2.QtGui     import ( QBrush,
                                 QColor,
                                 QIcon)
 from PySide2.QtWidgets import ( QHBoxLayout,
@@ -52,6 +52,7 @@ class _TagIcon(QIcon):
         icons_folder = Path('share/graphical_resources/icons/')
 
         if tag not in ['=', '+', '≠']:
+            # TODO: catch the exception below
             raise ValueError('tag must be one of "=", "+", "≠". tag: {tag}.')
         elif tag == '=':
             super().__init__('')  # No icon, empty icon trick
@@ -64,16 +65,40 @@ class _TagIcon(QIcon):
         super().__init__(str(icon_path.resolve()))
 
 
-###############################
-# ProofStatePO widget classes #
-###############################
+################################
+# ProofStatePO widgets classes #
+################################
 
+# Classes for the two main widgets in 'Context' part of the exercise
+# window. Class ProofStatePOWidget is a parent widget containing
+# a list of ProofStatePOWidgetItem. Both 'Objects' and 'Properties'
+# widgets use those same two classes.
 
 class ProofStatePOWidgetItem(QListWidgetItem):
+    """
+    Objects (e.g. f:X->Y a function) and properties (e.g. f is
+    continuous) are coded as instances of the class ProofStatePO.
+    The class ProofStatePOWidgetItem is 'just' the widget in charge of
+    containing an instance of the class ProofStatePO and displaying it.
+
+    :atribute proofstatepo (ProofStatePo): The instance of the class
+        ProofStatePO self is initiated with.
+    """
 
     def __init__(self, proofstatepo: ProofStatePO, tag: str):
+        """
+        One creates a ProofStatePOWidgetItem with a ProofStatePO and
+        a tag (see _TagIcon). The tag is not an attribute or method
+        of the ProofStatePO, it varies at each new goal and is given
+        by TODO.
+
+        :param proofstatepo: The ProofStatePO one wants to display.
+        :param tag: The tag of proofstatepo.
+        :return: An instance of the class ProofStatePOWidgetItem.
+        """
+
         super().__init__()
-        self.proofstatepo = proofstatepo
+        self.proofstatepo = proofstatepo  # Keep the pspo as attribute.
         self.setIcon(_TagIcon(tag))
         caption = f'{proofstatepo.format_as_utf8()} : ' \
                   f'{proofstatepo.math_type.format_as_utf8()}'
@@ -81,20 +106,34 @@ class ProofStatePOWidgetItem(QListWidgetItem):
 
     def __eq__(self, other):
         """
-        Do not delete! Useful for 'for pspoitem in list:' stuff, used
-        to check if an item is in the current user selection.
-        """
-        return self is other
+        Define the operator == for the class ProofStatePOWidgetItem.
+        Do not delete! It is usefull to check if a given instance of
+        the class ProofStatePOWidgetItem is in a list of instances of
+        this class (the 'for item in pspo_list:' test).
 
-    def mark_user_selected(self, yes=True):
-        brush = QBrush(QColor('limegreen')) if yes else QBrush()
-        self.setBackground(brush)
+        :param other: An instance of the class ProofStatePOWidgetItem.
+        :return: A boolean.
+        """
+
+        return self is other  # Brutal but that is what we need.
+
+    def mark_user_selected(self, yes: bool=True):
+        """
+        Change self's background to green if yes or to normal color
+        (e.g. white in light mode) if not yes. Note that this method
+        does nothing else ; in particular, it does not add / remove
+        self to / from ExerciseMainWindow.current_selection.
+
+        :param yes: Change self's background to green if yes or to
+            normal color (e.g. white in light mode) if not yes.
+        """
+
+        self.setBackground(QBrush(QColor('limegreen')) if yes else QBrush())
 
 
 class ProofStatePOWidget(QListWidget):
 
-    def __init__(self,
-            tagged_proofstatepos: List[Tuple[ProofStatePO, str]]=[]):
+    def __init__(self, tagged_proofstatepos: [Tuple[ProofStatePO, str]]=[]):
         super().__init__()
         self.items = []
 
@@ -104,9 +143,9 @@ class ProofStatePOWidget(QListWidget):
             self.items.append(item)
 
 
-#######################
-# Target widget class #
-#######################
+##########################
+# Target widgets classes #
+##########################
 
 
 class TargetLabel(QLabel):
