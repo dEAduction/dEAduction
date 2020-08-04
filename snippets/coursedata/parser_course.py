@@ -48,6 +48,12 @@ from parsimonious.nodes import NodeVisitor
 # exercises
 # metadata field names starts with $ or an uppercase letter
 
+import logging
+
+import deaduction.pylib.logger as logger
+
+log = logging.getLogger(__name__)
+
 course_rules = """course = 
             (something_else? 
              space_or_eol*   (namespace_open_or_close / statement))+
@@ -168,14 +174,21 @@ class LeanCourseVisitor(NodeVisitor):
         if "exercise_name" in data.keys():
             event_name = "exercise"
             lean_name = data.pop("exercise_name")
-        if "definition_name" in data.keys():
+        elif "definition_name" in data.keys():
             event_name = "definition"
             lean_name = data.pop("definition_name")
         elif "theorem_name" in data.keys():
             event_name = "theorem"
             lean_name = data.pop("theorem_name")
+        else:
+            log.warning(f"no name found for statement with data "
+                        f"{data} and metadata {metadata}")
         metadata["lean_name"] = lean_name
         metadata["lean_statement"] = data.pop("lean_statement")
+        short_name = lean_name.split(".")[1]
+        automatic_pretty_name = short_name.replace("_", " ").capitalize()
+        metadata.setdefault("PrettyName", automatic_pretty_name)
+
         event = event_name, metadata
         course_history.append(event)
         return course_history, data

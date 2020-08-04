@@ -29,9 +29,9 @@ This file is part of dEAduction.
 from dataclasses import dataclass
 from collections import OrderedDict
 from typing import List, Dict, Any
-import deaduction.pylib.logger as logger
 import logging
 
+import deaduction.pylib.logger as logger
 from deaduction.pylib.actions.actiondef import Action
 import deaduction.pylib.actions.logic
 import deaduction.pylib.actions.proofs
@@ -59,7 +59,9 @@ class Statement:
         fields parsed by the from_directory function
         """
         log = logging.getLogger("Course initialisation")
-        data["text_book_identifier"] = "NOT IMPLEMENTED"
+        data.setdefault("text_book_identifier", "NOT IMPLEMENTED")
+        data.setdefault("lean_variables", "NOT IMPLEMENTED")
+        data.setdefault("Description", "NOT PROVIDED")
         return cls(data["Description"], data["lean_line"], data["lean_name"],
                    data["lean_statement"], data["lean_variables"],
                    data["PrettyName"], data["text_book_identifier"])
@@ -134,17 +136,23 @@ class Exercise(Theorem):
         """
         max_statement = 15
         log = logging.getLogger("Course initialisation")
-        whole_namespace = ".".join(data["current_namespaces"])
-        data["lean_name"] = whole_namespace + "." + data["lean_name"]
-        if "PrettyName" not in data.keys():
-            data["PrettyName"] = data["lean_statement"].replace("_", " ")
-            # automatic pretty_name if not provided
+
+        ########################
+        # expected_vars_number #
+        ########################
         expected_vars_number = {}
-        for equality in data["ExpectedVarsNumber"].split(", "):
-            key, _, value = equality.partition("=")
-            expected_vars_number[key] = int(value)
-        lean_begin_line_number = data["begin"]
-        lean_end_line_number = data["end"]
+        if "ExpectedVarsNumber" in data.keys():
+            try:
+                for equality in data["ExpectedVarsNumber"].split(", "):
+                    key, _, value = equality.partition("=")
+                    expected_vars_number[key] = int(value)
+            except AttributeError:
+                log.error(f"wrong format for ExpectedVarsNumber in exercise "
+                          f"{data['lean_name']}")
+            except ValueError:
+                log.error(f"wrong format for ExpectedVarsNumber in exercise "
+                          f"{data['lean_name']}")
+
         ###########################
         # treatment of statements #
         ###########################
@@ -299,8 +307,8 @@ class Exercise(Theorem):
                    post_data["Tools->ProofTechniques"],
                    available_statements,
                    expected_vars_number,
-                   lean_begin_line_number,
-                   lean_end_line_number,
+                   lean_begin_line_number=0,  # will be set up soon
+                   lean_end_line_number=0,
                    )
 
     def current_name_space(self):
