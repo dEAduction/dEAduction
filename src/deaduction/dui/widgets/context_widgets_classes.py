@@ -25,9 +25,8 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pathlib import   Path
-from typing  import ( List,
-                      Tuple)
+from pathlib import Path
+from typing  import Tuple
 
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
@@ -183,10 +182,9 @@ class _TargetLabel(QLabel):
 
     def __init__(self, target: ProofStatePO=None, tag: str=None):
         """
-        Create a widget displaying the current tag (e.g. '+', '='
-        or '≠', see _TagIcon) on the left and the target on the
-        right. If those are None, simply display an empty tag and '…'
-        for the target.
+        Init self with a target on the right and a tag (e.g. '+', '='
+        or '≠', see _TagIcon) on the left. If those are None, display
+        an empty tag and '…' in place of the target.
 
         :param target: The target to be displayed.
         :param tag: The tag associated to target.
@@ -207,8 +205,28 @@ class _TargetLabel(QLabel):
 
 
 class TargetWidget(QWidget):
+    """
+    A class to display a tagged target and store both the target
+    and the tag ass attributes. To display a target in
+    ExerciseCentralWidget, use this class and not _TargetLabel, for
+    it also sets layouts and keeps the target and its current tag as
+    attributes.
+
+    :attribute target: The target one wants to display.
+    :attribute tag: The tag associated to target.
+    """
 
     def __init__(self, target: ProofStatePO=None, tag: str=None):
+        """"
+        Init self with a target on the right and a tag (e.g. '+', '='
+        or '≠', see _TagIcon) on the left. If those are None, display
+        an empty tag and '…' in place of the target. Not the same as
+        _TargetLabel.
+
+        :param target: The target to be displayed.
+        :param tag: The tag associated to target.
+        """
+
         super().__init__()
 
         self.target = target
