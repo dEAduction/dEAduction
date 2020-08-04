@@ -38,11 +38,11 @@ namespace unions_and_intersections -- Section 1
 
 
 lemma definition.intersection_two_sets (A B : set X) (x : X) :  x ∈ A ∩ B ↔ ( x ∈ A ∧ x ∈ B) := 
-iff.rfl
 /- dEAduction
 PrettyName
     Intersection of two sets
 -/
+iff.rfl
 
 lemma theorem.included_in_intersection_iff  (A B C : set X) : C ⊆ A ∩ B ↔ C ⊆ A ∧ C ⊆ B := 
 begin
@@ -50,25 +50,25 @@ begin
 end
 
 lemma definition.intersection_arbitrary_sets (I : Type) (O : I → set X)  (x : X) : (x ∈ set.Inter O) ↔ (∀ i:I, x ∈ O i) :=
-set.mem_Inter
 /- dEAduction
 PrettyName
     Intersection of an arbitrary family of sets
 -/
+set.mem_Inter
 
 lemma definition.union_two_sets  (A : set X) (B : set X) (x : X) :  x ∈ A ∪ B ↔ ( x ∈ A ∨ x ∈ B) := 
-iff.rfl
 /- dEAduction
 PrettyName
     Union of two sets
 -/
+iff.rfl
 
 lemma definition.union_arbitrary_sets (I : Type) (O : I → set X)  (x : X) : (x ∈ set.Union O) ↔ (∃ i:I, x ∈ O i) :=
-set.mem_Union
 /- dEAduction
 PrettyName
     Union of an arbitrary family of sets
 -/
+set.mem_Union
 
 lemma exercise.intersection_dist_over_union (X : Type) (A B C : set X) : A ∩ (B ∪ C)  = (A ∩ B) ∪ (A ∩ C) := 
 /- dEAduction

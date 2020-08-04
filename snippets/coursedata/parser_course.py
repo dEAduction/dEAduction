@@ -30,8 +30,6 @@ from typing import List
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 
-# metadata = starts with /- dEAduction,
-#           must end with a line starting with "-/".
 # statement = starts with "lemma" + "definition." / "theorem." / "exercise." ;
 #           lean_statement includes variables definition,
 #           must end with ":=".
@@ -41,12 +39,17 @@ from parsimonious.nodes import NodeVisitor
 
 # Does not support proof-like 'begin ... end' string in a comment between
 # statement and proof
+# nor "lemma exercise." in a docstring comment
 
+# metadata = starts with /- dEAduction,
+#           must end with a line starting with "-/".
 # metadata are optional but must come immediately after statement or
 # namespace declaration (before the proof)
 # begin/end environment must come immediately after metadata or statement for
 # exercises
-# metadata field names starts with $ or an uppercase letter
+# metadata field names are made of anything but spaces
+# metadata field content are indented, and on one line
+# if the format is not met then the statement will not appear in the list
 
 import logging
 
@@ -62,14 +65,15 @@ course_rules = """course =
 
 something_else_rules = """
 something_else = (line_comment / 
-((!namespace_open_or_close !statement any_char_but_eol)* end_of_line)  )*
+((non_coding any_char_but_eol)* end_of_line)  )*
+non_coding = !namespace_open_or_close !statement
 """
 
 namespace_rules = """
 namespace_open_or_close = open_namespace / close_namespace
 
 open_namespace = "namespace" space+ namespace_identifier
-                (space_or_eol+ namespace_metadata)?
+                (space_or_eol+ metadata)?
 
 close_namespace = "end" space+ namespace_identifier
 """
@@ -102,8 +106,9 @@ definition_or_theorem = "lemma" space_or_eol+
 proof_rules = """
 proof = begin_proof core_proof end_proof
     begin_proof = "begin" space_or_eol+
-    end_proof = space_or_eol+ "end" space_or_eol+
-    core_proof = (!begin_proof !end_proof any_char_but_eol*)
+    core_proof = (!begin_proof !end_proof any_char_but_eol*) space_or_eol+
+    end_proof = "end" space_or_eol+
+
 """
 
 interlude_rules = """
@@ -121,12 +126,10 @@ metadata = open_metadata
                 (metadata_field_name  end_of_line
                 space+ metadata_field_content  end_of_line)*
             close_metadata
-    metadata_field_name = ~r"[A-Z]$" identifier_rest* space*
+    metadata_field_name = (!space any_char_but_eol)* space*
     metadata_field_content = any_char_but_eol*
-    open_metadata = "/- dEAduction" space_or_eol+
+    open_metadata = "/-" space+ "dEAduction" space_or_eol+
     close_metadata = "-/"
-    
-namespace_metadata = metadata
 """
 identifier_rules = """
 identifier           = identifier_start (identifier_rest)*
@@ -190,19 +193,19 @@ class LeanCourseVisitor(NodeVisitor):
         metadata.setdefault("PrettyName", automatic_pretty_name)
 
         event = event_name, metadata
-        course_history.append(event)
+        course_history.insert(0, event)
         return course_history, data
 
     def visit_begin_proof(self, node, visited_children):
         course_history, data = get_info(visited_children)
         event = "begin_proof", None
-        course_history.append(event)
+        course_history.insert(0,event)
         return course_history, data
 
     def visit_end_proof(self, node, visited_children):
         course_history, data = get_info(visited_children)
         event = "end_proof", None
-        course_history.append(event)
+        course_history.insert(0,event)
         return course_history, data
 
     ############
@@ -226,11 +229,11 @@ class LeanCourseVisitor(NodeVisitor):
         name = data.pop("namespace_identifier")
         if "metadata" in data.keys():
             metadata = data.pop("metadata")
-            pretty_name = metadata["field_content"]
+            pretty_name = metadata["metadata_field_content"]
         else:
             pretty_name = name.replace("_", " ").capitalize()
         event = "open_namespace", {"name": name, "pretty_name": pretty_name}
-        course_history.append(event)
+        course_history.insert(0,event)
         return course_history, data
 
     def visit_close_namespace(self, node, visited_children):
@@ -310,7 +313,7 @@ if __name__ == "__main__":
     course_file1 = Path('../../tests/lean_files/short_course/exercises.lean')
     course_file2 = Path(
         '../../tests/lean_files/exercises/exercises_theorie_des_ensembles.lean')
-    file_content = course_file1.read_text()
+    file_content = course_file2.read_text()
     end_of_line = """
 """
 #    extract1 = end_of_line.join(file_content.splitlines()[:145])

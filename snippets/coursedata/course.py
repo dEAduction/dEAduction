@@ -78,9 +78,9 @@ class Course:
 
         log.info(f"Parsing file {str(course_path.resolve())}")
         file_content = course_path.read_text()
-        #######################
+        ########################
         # Parsimonious's magic #
-        #######################
+        ########################
         course_tree = parser_course.lean_course_grammar.parse(file_content)
         visitor = parser_course.LeanCourseVisitor()
         course_history, _ = visitor.visit(course_tree)
@@ -99,7 +99,9 @@ class Course:
             elif event_name == "open_namespace":
                 namespace.append(event_content["name"])
                 outline[whole(namespace)] = event_content["pretty_name"]
+                log.debug(f"namespace {whole(namespace)}")
             elif event_name == "close_namespace":
+                log.debug("closing namespace")
                 namespace.pop()
 
             ##############
@@ -114,16 +116,16 @@ class Course:
                 ###############################
                 # optional or not implemented #
                 ###############################
-                metadata.setdefault("text_book_identifier", "NOT IMPLEMENTED")
-                metadata.setdefault("lean_variables", "NOT IMPLEMENTED")
+                not_implemented = ["text_book_identifier", "lean_variables"]
+                default_to_none = ["Tools->Logic",
+                                   "Tools->Magic", "Tools->ProofTechniques",
+                                   "Tools->Definitions", "Tools->Theorems",
+                                   "Tools->Exercises", "Tools->Statements"]
                 metadata.setdefault("Description", "NOT PROVIDED")
-                metadata.setdefault("Tools->Logic", None)
-                metadata.setdefault("Tools->Magic", None)
-                metadata.setdefault("Tools->ProofTechniques", None)
-                metadata.setdefault("Tools->Definitions", None)
-                metadata.setdefault("Tools->Theorems", None)
-                metadata.setdefault("Tools->Exercises", None)
-                metadata.setdefault("Tools->Statements", None)
+                for item in not_implemented:
+                    metadata.setdefault(item, "NOT IMPLEMENTED")
+                for item in default_to_none:
+                    metadata.setdefault(item, None)
 
             if event_name == "exercise":
                 log.info(f"creating exercise from data {metadata}")
@@ -151,7 +153,8 @@ class Course:
         course = cls(outline, statements, file_content)
         for exo in statements:  # add reference to the course in Exercises
             if isinstance(exo, Exercise):
-                exo.course = course
+                #exo.course = course
+                pass
         return course
 
 
@@ -162,13 +165,13 @@ def whole(namespace_list: List[str]):
 
 if __name__ == "__main__":
     logger.configure()
-    course_file_path = Path(
+    course_file_path1 = Path(
         '../../tests/lean_files/short_course/exercises.lean')
 
-    course_file_path = Path("../../tests/lean_files/exercises/\
+    course_file_path2 = Path("../../tests/lean_files/exercises/\
 exercises_theorie_des_ensembles.lean")
 
-    my_course = Course.from_file(course_file_path)
+    my_course = Course.from_file(course_file_path2)
     print("My course:")
     print("List of statements:")
     count_ex = 0
@@ -180,17 +183,17 @@ exercises_theorie_des_ensembles.lean")
             print(f"Definition {statement.pretty_name}")
         elif isinstance(statement, Theorem):
             print(f"Theorem {statement.pretty_name}")
-        for key in statement.__dict__.keys():
-            print(f"    {key}: {statement.__dict__[key]}")
+        #for key in statement.__dict__.keys():
+        #    print(f"    {key}: {statement.__dict__[key]}")
     print('Sections:')
     for key in my_course.outline.keys():
         print(f"    {key}: {my_course.outline[key]}")
-    print("Statements list :")
-    for item in my_course.statements:
-        print(item.lean_name)
-    print("Exercises list with statements :")
-    for item in my_course.statements:
-        if isinstance(item, Exercise):
-            print(item.lean_name)
-            for st in item.available_statements:
-                print("    " + st.lean_name)
+    #print("Statements list :")
+    #for item in my_course.statements:
+    #    print(item.lean_name)
+    # print("Exercises list with statements :")
+    # for item in my_course.statements:
+    #     if isinstance(item, Exercise):
+    #         print(item.lean_name)
+    #         for st in item.available_statements:
+    #             print("    " + st.lean_name)
