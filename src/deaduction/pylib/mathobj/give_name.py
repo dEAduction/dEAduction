@@ -51,7 +51,7 @@ def give_name0(goal, math_type: PropObj, hints: List[str] = []) -> str:
         if len(type_name) == 1 and type_name.isupper():
             hint = type_name.lower()
             hints.append(hint)
-    if hints == []:
+    if not hints:
         hints = ['x']
     log.debug(f"hints: {hints}")
     # first trial

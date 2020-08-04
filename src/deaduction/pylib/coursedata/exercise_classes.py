@@ -59,13 +59,7 @@ class Statement:
         fields parsed by the from_directory function
         """
         log = logging.getLogger("Course initialisation")
-        if "PrettyName" not in data.keys() or data["PrettyName"] == None:
-            last_name = data["lean_name"].split(".")[-1]
-            data["PrettyName"] = last_name.replace("_", " ")
-            # automatic pretty_name if not provided
-        whole_namespace = ".".join(data["current_namespaces"])
-        data["lean_name"] = whole_namespace + "." + data["lean_name"]
-
+        data["text_book_identifier"] = "NOT IMPLEMENTED"
         return cls(data["Description"], data["lean_line"], data["lean_name"],
                    data["lean_statement"], data["lean_variables"],
                    data["PrettyName"], data["text_book_identifier"])
