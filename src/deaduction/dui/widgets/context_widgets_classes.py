@@ -1,10 +1,10 @@
 """
-###################################################################
-# context_widgets_classes.py : context widgets for ExerciseWidget #
-###################################################################
+#########################################################
+# context_widgets_classes.py : exercise context widgets #
+#########################################################
 
-Author(s)      : Kryzar antoine@hugounet.com
-Maintainers(s) : Kryzar antoine@hugounet.com
+Author(s)      : Kryzar <antoine@hugounet.com>
+Maintainers(s) : Kryzar <antoine@hugounet.com>
 Date           : July 2020
 
 Copyright (c) 2020 the dEAduction team
@@ -48,12 +48,24 @@ from deaduction.pylib.mathobj import ProofStatePO
 
 
 class _TagIcon(QIcon):
+    """
+    A class which creates a QIcon (self) depending on the tag (one of
+    '+', '=', '≠') given as an argument of self.__init__. It
+    automatically associates the right icon to the right tag and raises
+    an exception if the tag given as an argument of self.__init__ is
+    invalid.
+    """
 
     def __init__(self, tag: str):
+        """
+        Init self with a tag given as a str.
+
+        :param tag: One of '+', '=', '≠'.
+        """
         icons_folder = Path('share/graphical_resources/icons/')
 
         if tag not in ['=', '+', '≠']:
-            # TODO: catch the exception below
+            # TODO: catch the exception below?
             raise ValueError('tag must be one of "=", "+", "≠". tag: {tag}.')
         elif tag == '=':
             super().__init__('')  # No icon, empty icon trick
