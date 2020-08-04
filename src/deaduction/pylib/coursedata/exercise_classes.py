@@ -64,7 +64,8 @@ class Statement:
             data["PrettyName"] = last_name.replace("_", " ")
             # automatic pretty_name if not provided
         whole_namespace = ".".join(data["current_namespaces"])
-        data["lean_name"] = whole_namespace + "." + data["lean_name"]
+        if whole_namespace:
+            data["lean_name"] = whole_namespace + "." + data["lean_name"]
 
         return cls(data["Description"], data["lean_line"], data["lean_name"],
                    data["lean_statement"], data["lean_variables"],
