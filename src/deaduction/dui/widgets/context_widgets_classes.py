@@ -78,19 +78,23 @@ class ProofStatePOWidgetItem(QListWidgetItem):
     """
     Objects (e.g. f:X->Y a function) and properties (e.g. f is
     continuous) are coded as instances of the class ProofStatePO.
-    The class ProofStatePOWidgetItem is 'just' the widget in charge of
+    The class ProofStatePOWidgetItem is the widget in charge of
     containing an instance of the class ProofStatePO and displaying it.
 
-    :atribute proofstatepo (ProofStatePo): The instance of the class
+    :attribute proofstatepo (ProofStatePo): The instance of the class
         ProofStatePO self is initiated with.
+    :attribute tag (str): The current tag (e.g. '+', '=' or '≠', see
+        _TagIcon) of self.proofstatepo.
     """
 
     def __init__(self, proofstatepo: ProofStatePO, tag: str):
         """
         One creates a ProofStatePOWidgetItem with a ProofStatePO and
-        a tag (see _TagIcon). The tag is not an attribute or method
-        of the ProofStatePO, it varies at each new goal and is given
-        by TODO.
+        a tag (e.g. '+', '=' or '≠', see _TagIcon). The tag is not an
+        attribute or method of the ProofStatePO, it varies at each
+        new goal and is given by the function compare in
+        mathobj/proof_state. However, we keep both proofstatepo and
+        tag as class attributes.
 
         :param proofstatepo: The ProofStatePO one wants to display.
         :param tag: The tag of proofstatepo.
@@ -98,10 +102,13 @@ class ProofStatePOWidgetItem(QListWidgetItem):
         """
 
         super().__init__()
-        self.proofstatepo = proofstatepo  # Keep the pspo as attribute.
+
+        self.proofstatepo = proofstatepo
+        self.tag          = tag
+
         self.setIcon(_TagIcon(tag))
-        caption = f'{proofstatepo.format_as_utf8()} : ' \
-                  f'{proofstatepo.math_type.format_as_utf8()}'
+        caption =    f'{proofstatepo.format_as_utf8()} : ' \
+                     f'{proofstatepo.math_type.format_as_utf8()}'
         self.setText(caption)
 
     def __eq__(self, other):
@@ -124,17 +131,35 @@ class ProofStatePOWidgetItem(QListWidgetItem):
         does nothing else ; in particular, it does not add / remove
         self to / from ExerciseMainWindow.current_selection.
 
-        :param yes: Change self's background to green if yes or to
-            normal color (e.g. white in light mode) if not yes.
+        :param yes: See paragraph above.
         """
 
         self.setBackground(QBrush(QColor('limegreen')) if yes else QBrush())
 
 
 class ProofStatePOWidget(QListWidget):
+    """
+    A container class to display an ordered list of ProofStatePO. 
+
+    :attribute items ([ProofStatePOWidgetItem]): The list of instances
+        of the class ProofStatePOWidgetItem created in self.__init__.
+        This attribute makes accessing them painless.
+    """
 
     def __init__(self, tagged_proofstatepos: [Tuple[ProofStatePO, str]]=[]):
+        """
+        Given a list of tagged ProofStatePO (hence the tuple), create
+        an orderred list of instances of the class
+        ProofStatePOWidgetItem and display it.
+
+        :param tagged_proofstatepos: A list of instances of the class
+            ProofStatePO with their current tags (e.g. '+', '=' or
+            '≠', see _TagIcon).
+        :return: An instance of the class ProofStatePOWidget.
+        """
+
         super().__init__()
+
         self.items = []
 
         for proofstatepo, tag in tagged_proofstatepos:
