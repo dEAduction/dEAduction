@@ -273,7 +273,7 @@ def statement_parse(data, global_parsing, line,
         global_parsing = "statement"
         data["lean_line"] = line_counter
         words = line.split()
-        data["lean_name"] = words[1]
+        data["lean_name"] = words[1]  # lean nam WITHOUT namespaces
         log.info(f"Parsing statement {data['lean_name']}")
         line = " ".join(words[2:])  # suppress the lemma declaration
         data["lean_variables"], _, line = line.rpartition(" : ")
