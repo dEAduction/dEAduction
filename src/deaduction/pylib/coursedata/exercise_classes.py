@@ -169,7 +169,7 @@ class Exercise(Theorem):
         for field in ["Tools->Definitions", "Tools->Theorems",
                       "Tools->Exercises", "Tools->Statements"]:
             if data[field] is None:
-                continue
+                data[field] = "$UNTIL_NOW"  # default value
             log.debug(f"processing data in {field}, {data[field]}")
             class_ = class_dict[field]
             list_1 = data[field].split()
@@ -245,8 +245,7 @@ class Exercise(Theorem):
         for field in labels.keys():
             log.debug(f"processing data in {field}, {data[field]}")
             if data[field] == None:
-                post_data[field] = None
-                continue
+                data[field] = "$ALL"
             action_dict = dicts[field]
             action_names = [item for (_1, _2, item) in
                             [t.partition("action_") for t in
@@ -296,6 +295,8 @@ class Exercise(Theorem):
                     log.warning(f"label {item} not in {labels[field]}  lists")
                 else:
                     post_data[field].append(action_dict["action_" + item])
+
+
         return cls(data["Description"],
                    data["lean_line"],
                    data["lean_name"],

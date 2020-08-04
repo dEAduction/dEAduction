@@ -122,7 +122,7 @@ metadata = open_metadata
                 space+ metadata_field_content  end_of_line)*
             close_metadata
     metadata_field_name = ~r"[A-Z]$" identifier_rest* space*
-    metadata_field_content = any_char_but_eol 
+    metadata_field_content = any_char_but_eol*
     open_metadata = "/- dEAduction" space_or_eol+
     close_metadata = "-/"
     
@@ -310,7 +310,7 @@ if __name__ == "__main__":
     course_file1 = Path('../../tests/lean_files/short_course/exercises.lean')
     course_file2 = Path(
         '../../tests/lean_files/exercises/exercises_theorie_des_ensembles.lean')
-    file_content = course_file2.read_text()
+    file_content = course_file1.read_text()
     end_of_line = """
 """
 #    extract1 = end_of_line.join(file_content.splitlines()[:145])
