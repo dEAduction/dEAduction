@@ -41,9 +41,11 @@ from PySide2.QtWidgets import ( QHBoxLayout,
 from deaduction.pylib.mathobj import ProofStatePO
 
 
-#############
-# Utilities #
-#############
+################################
+# ProofStatePO widgets classes #
+################################
+
+# A usefull class.
 
 
 class _TagIcon(QIcon):
@@ -65,14 +67,11 @@ class _TagIcon(QIcon):
         super().__init__(str(icon_path.resolve()))
 
 
-################################
-# ProofStatePO widgets classes #
-################################
-
 # Classes for the two main widgets in 'Context' part of the exercise
 # window. Class ProofStatePOWidget is a parent widget containing
 # a list of ProofStatePOWidgetItem. Both 'Objects' and 'Properties'
 # widgets use those same two classes.
+
 
 class ProofStatePOWidgetItem(QListWidgetItem):
     """
@@ -172,11 +171,28 @@ class ProofStatePOWidget(QListWidget):
 # Target widgets classes #
 ##########################
 
+# Classes to display the target in the main exercise window.
 
-class TargetLabel(QLabel):
+
+class _TargetLabel(QLabel):
+    """
+    This class should not be used outside of this module. It is just
+    a QWidget displaying both the tag and the target. The role of
+    TargetWidget will just be to arrange this _TargetLabel in layouts.
+    """
 
     def __init__(self, target: ProofStatePO=None, tag: str=None):
+        """
+        Create a widget displaying the current tag (e.g. '+', '='
+        or '≠', see _TagIcon) on the left and the target on the
+        right. If those are None, simply display an empty tag and '…'
+        for the target.
+
+        :param target: The target to be displayed.
+        :param tag: The tag associated to target.
+        """
         super().__init__()
+
         # Display
         #   ∀ x ∈ X, ∃ ε, …
         # and not
@@ -184,11 +200,9 @@ class TargetLabel(QLabel):
         # where H might be the lean name of the target. That's what
         # the .math_type is for.
         self.setText(target.math_type.format_as_utf8() if target else '…')
-        # TODO: add tag
-#        if tag:
-#            self.setIcon(_TagIcon(tag))
 
-        # Cosmetics
+        # TODO: add tag, using _TagIcon will work
+
         self.setStyleSheet('font-size: 32pt;')
 
 
@@ -196,12 +210,12 @@ class TargetWidget(QWidget):
 
     def __init__(self, target: ProofStatePO=None, tag: str=None):
         super().__init__()
-        self.target = target
-        self.tag = tag
-        self._main_layout = QHBoxLayout()
 
-        self.target_label = TargetLabel(self.target, self.tag)
-        self._main_layout.addStretch()
-        self._main_layout.addWidget(self.target_label)
-        self._main_layout.addStretch()
-        self.setLayout(self._main_layout)
+        self.target = target
+        self.tag =    tag
+
+        main_layout = QHBoxLayout()
+        main_layout.addStretch()
+        main_layout.addWidget(_TargetLabel(self.target, self.tag))
+        main_layout.addStretch()
+        self.setLayout(main_layout)

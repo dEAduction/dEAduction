@@ -35,7 +35,6 @@ from .actions_widgets_classes import (
 from .context_widgets_classes import (
         ProofStatePOWidgetItem,
         ProofStatePOWidget,
-        TargetLabel,
         TargetWidget)
 
 from .lean_editor import (
