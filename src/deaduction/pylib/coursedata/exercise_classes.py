@@ -29,9 +29,9 @@ This file is part of dEAduction.
 from dataclasses import dataclass
 from collections import OrderedDict
 from typing import List, Dict, Any
-import deaduction.pylib.logger as logger
 import logging
 
+import deaduction.pylib.logger as logger
 from deaduction.pylib.actions.actiondef import Action
 import deaduction.pylib.actions.logic
 import deaduction.pylib.actions.proofs
@@ -59,14 +59,9 @@ class Statement:
         fields parsed by the from_directory function
         """
         log = logging.getLogger("Course initialisation")
-        if "PrettyName" not in data.keys() or data["PrettyName"] == None:
-            last_name = data["lean_name"].split(".")[-1]
-            data["PrettyName"] = last_name.replace("_", " ")
-            # automatic pretty_name if not provided
-        whole_namespace = ".".join(data["current_namespaces"])
-        if whole_namespace:
-            data["lean_name"] = whole_namespace + "." + data["lean_name"]
-
+        data.setdefault("text_book_identifier", "NOT IMPLEMENTED")
+        data.setdefault("lean_variables", "NOT IMPLEMENTED")
+        data.setdefault("Description", "NOT PROVIDED")
         return cls(data["Description"], data["lean_line"], data["lean_name"],
                    data["lean_statement"], data["lean_variables"],
                    data["PrettyName"], data["text_book_identifier"])
@@ -91,14 +86,14 @@ class Statement:
 
         def fkt(rmg_hierarchy):
             if not rmg_hierarchy:
-                return None
+                return
             else:
                 pretty_hierarchy.insert(0, outline[rmg_hierarchy])
                 # 'a.b.c.d' -> 'a.b.c'
                 rmg_hierarchy = '.'.join(rmg_hierarchy.split('.')[:-1])
                 fkt(rmg_hierarchy)
 
-        name = '.'.join(self.lean_name.split('.')[:-2])
+        name = '.'.join(self.lean_name.split('.')[:-1])
         fkt(name)
 
         return pretty_hierarchy
@@ -136,22 +131,27 @@ class Exercise(Theorem):
         :param statements: list of all Statement instances until the current
         exercise
         :param data: a dictionary whose keys =
-        fields parsed by the Course.from_file method
+        fields parsed by the from_directory function
         TODO: change definitions into Definitions object
         """
-        max_statement = 15
         log = logging.getLogger("Course initialisation")
-        whole_namespace = ".".join(data["current_namespaces"])
-        data["lean_name"] = whole_namespace + "." + data["lean_name"]
-        if not data["PrettyName"]:
-            data["PrettyName"] = data["lean_statement"].replace("_", " ")
-            # automatic pretty_name if not provided
+
+        ########################
+        # expected_vars_number #
+        ########################
         expected_vars_number = {}
-        for equality in data["ExpectedVarsNumber"].split(", "):
-            key, _, value = equality.partition("=")
-            expected_vars_number[key] = int(value)
-        lean_begin_line_number = data["begin"]
-        lean_end_line_number = data["end"]
+        if "ExpectedVarsNumber" in data.keys():
+            try:
+                for equality in data["ExpectedVarsNumber"].split(", "):
+                    key, _, value = equality.partition("=")
+                    expected_vars_number[key] = int(value)
+            except AttributeError:
+                log.error(f"wrong format for ExpectedVarsNumber in exercise "
+                          f"{data['lean_name']}")
+            except ValueError:
+                log.error(f"wrong format for ExpectedVarsNumber in exercise "
+                          f"{data['lean_name']}")
+
         ###########################
         # treatment of statements #
         ###########################
@@ -294,6 +294,8 @@ class Exercise(Theorem):
                     log.warning(f"label {item} not in {labels[field]}  lists")
                 else:
                     post_data[field].append(action_dict["action_" + item])
+
+
         return cls(data["Description"],
                    data["lean_line"],
                    data["lean_name"],
@@ -305,8 +307,8 @@ class Exercise(Theorem):
                    post_data["Tools->ProofTechniques"],
                    available_statements,
                    expected_vars_number,
-                   lean_begin_line_number,
-                   lean_end_line_number,
+                   lean_begin_line_number=0,  # will be set up soon
+                   lean_end_line_number=0,
                    )
 
     def current_name_space(self):
