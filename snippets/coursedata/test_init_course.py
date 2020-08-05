@@ -1,5 +1,5 @@
-from snippets.coursedata import parser_course
-from pathlib import Path
+from deaduction.pylib.coursedata import parser_course
+
 
 def test_lean_course_grammar_statement():
     test_definition1 = """lemma definition.inclusion (A B : set X) : A ⊆ B ↔ ∀ {{x:X}}, x ∈ A → x ∈ B :="""

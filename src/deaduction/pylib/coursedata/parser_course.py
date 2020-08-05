@@ -28,9 +28,13 @@ This file is part of dEAduction.
 
 from pathlib import Path
 from typing import List
-
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
+import logging
+
+import deaduction.pylib.logger as logger
+
+log = logging.getLogger(__name__)
 
 # statement = starts with "lemma" + "definition." / "theorem." / "exercise." ;
 #           lean_statement includes variables definition,
@@ -63,6 +67,7 @@ import deaduction.pylib.logger as logger
 log = logging.getLogger(__name__)
 
 course_rules = """course = 
+            (something_else metadata)?
             (something_else? 
              space_or_eol*   (namespace_open_or_close / statement))+
             (something_else space_or_eol*)?
@@ -71,7 +76,7 @@ course_rules = """course =
 something_else_rules = """
 something_else = (line_comment / 
 ((non_coding any_char_but_eol)* end_of_line)  )*
-non_coding = !namespace_open_or_close !statement
+non_coding = !namespace_open_or_close !statement !metadata
 """
 
 namespace_rules = """
@@ -116,19 +121,22 @@ proof = begin_proof core_proof end_proof
 """
 
 metadata_rules = """
-metadata = open_metadata
-                (metadata_field_name  end_of_line
-                (space+ metadata_field_content  end_of_line)+)*
+metadata =  open_metadata
+            metadata_field+
             close_metadata
-    metadata_field_name = (!space any_char_but_eol)* space*
-    metadata_field_content = any_char_but_eol*
+            
+    metadata_field = metadata_field_name  end_of_line
+                    (space+ metadata_field_content  end_of_line)+
+        
+        metadata_field_name = (!space any_char_but_eol)+ space*
+        metadata_field_content = any_char_but_eol*
     open_metadata = "/-" space+ "dEAduction" space_or_eol+
     close_metadata = "-/"
 """
 
 interlude_rules = """
 interlude_defi = ((!metadata !"lemma" !"namespace" any_char_but_eol)* 
-space_or_eol*)*
+                    space_or_eol*)*
 """
 # NB : interlude does NOT end with a space_or_eol
 
@@ -164,17 +172,17 @@ lean_course_grammar = Grammar(rules)
 class LeanCourseVisitor(NodeVisitor):
     def visit_course(self, node, visited_children) -> Tuple[List[str], dict]:
         course_history, data = get_info(visited_children)
-        return course_history, data
+        data.setdefault("metadata", {})
+        metadata = data.pop("metadata")
+        return course_history, metadata
 
     #############
     # statements #
     #############
     def visit_statement(self, node, visited_children):
         course_history, data = get_info(visited_children)
-        if "metadata" in data.keys():
-            metadata = data.pop("metadata")
-        else:
-            metadata = {}
+        data.setdefault("metadata", {})
+        metadata = data.pop("metadata")
         if "exercise_name" in data.keys():
             event_name = "exercise"
             lean_name = data.pop("exercise_name")
@@ -189,6 +197,7 @@ class LeanCourseVisitor(NodeVisitor):
                         f"{data} and metadata {metadata}")
         metadata["lean_name"] = lean_name
         metadata["lean_statement"] = data.pop("lean_statement")
+        # compute automatic PrettyName if not found by parser
         short_name = lean_name.split(".")[1]
         automatic_pretty_name = short_name.replace("_", " ").capitalize()
         metadata.setdefault("PrettyName", automatic_pretty_name)
@@ -212,14 +221,36 @@ class LeanCourseVisitor(NodeVisitor):
     ############
     # metadata #
     ############
+
     def visit_metadata(self, node, visited_children):
         # return the joined data of all children
-        course_history, data = get_info(visited_children)
-        # the following line clear the dictionary data
-        # and replace it by a single key = "metadata",
-        # value = previous data dictionary
-        data = {"metadata": data}
+        course_history, metadata = get_info(visited_children)
+        data = {"metadata": metadata}
+        log.debug(f"got metadata {data}")
         return course_history, data
+
+    def visit_metadata_field(self, node, visited_children):
+        # return the joined data of all children
+        course_history, data = get_info(visited_children)
+        # the following collect the metadata in the corresponding field
+        # this is the only info from children,
+        # so it is passed as data
+        metadata = {data["metadata_field_name"]:
+                    data["metadata_field_content"]}
+        return course_history, metadata
+
+    def visit_metadata_field_name(self, node, visited_children):
+        course_history, data = get_info(visited_children)
+        data["metadata_field_name"] = node.text
+        return course_history, data
+
+    def visit_metadata_field_content(self, node, visited_children):
+        course_history, data = get_info(visited_children)
+        data.setdefault("metadata_field_content", "")
+        data["metadata_field_content"] += " " + node.text.strip()
+        # field content may spread on several lines
+        return course_history, data
+
 
     ##############
     # namespaces #
@@ -227,10 +258,10 @@ class LeanCourseVisitor(NodeVisitor):
     def visit_open_namespace(self, node, visited_children):
         course_history, data = get_info(visited_children)
         name = data.pop("namespace_identifier")
-        if "metadata" in data.keys():
+        try:
             metadata = data.pop("metadata")
-            pretty_name = metadata["metadata_field_content"]
-        else:
+            pretty_name = metadata["PrettyName"]
+        except KeyError:
             pretty_name = name.replace("_", " ").capitalize()
         event = "open_namespace", {"name": name, "pretty_name": pretty_name}
         course_history.insert(0, event)
@@ -268,18 +299,6 @@ class LeanCourseVisitor(NodeVisitor):
         data["exercise_name"] = node.text
         return course_history, data
 
-    def visit_metadata_field_name(self, node, visited_children):
-        course_history, data = get_info(visited_children)
-        data["metadata_field_name"] = node.text
-        return course_history, data
-
-    def visit_metadata_field_content(self, node, visited_children):
-        course_history, data = get_info(visited_children)
-        data.setdefault("metadata_field_content", "")
-        data["metadata_field_content"] += " " + node.text.strip()
-        # field content may spread on several lines
-        return course_history, data
-
     def visit_lean_statement(self, node, visited_children):
         course_history, data = get_info(visited_children)
         data["lean_statement"] = node.text
@@ -310,6 +329,7 @@ def get_info(children: List[dict]):
 
 
 if __name__ == "__main__":
+    logger.configure()
     course_file1 = Path('../../tests/lean_files/short_course/exercises.lean')
     course_file2 = Path(
         '../../tests/lean_files/exercises/exercises_theorie_des_ensembles.lean')
@@ -318,7 +338,7 @@ if __name__ == "__main__":
 """
     #    extract1 = end_of_line.join(file_content.splitlines()[:145])
     course_tree = lean_course_grammar.parse(file_content)
-    print(course_tree)
+    #print(course_tree)
     visitor = LeanCourseVisitor()
     course_history, _ = visitor.visit(course_tree)
     print(f"course history: {course_history}")

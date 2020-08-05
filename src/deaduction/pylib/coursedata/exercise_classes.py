@@ -134,7 +134,6 @@ class Exercise(Theorem):
         fields parsed by the from_directory function
         TODO: change definitions into Definitions object
         """
-        max_statement = 15
         log = logging.getLogger("Course initialisation")
 
         ########################
