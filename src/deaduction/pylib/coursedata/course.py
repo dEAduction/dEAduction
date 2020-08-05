@@ -32,7 +32,7 @@ This file is part of dEAduction.
 from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import List, Dict
 import logging
 
 import deaduction.pylib.logger as logger
@@ -43,14 +43,20 @@ import deaduction.pylib.coursedata.parser_course as parser_course
 
 @dataclass
 class Course:
-    outline: OrderedDict  # todo: typing OrderedDict
-    # keys = lean complete namespaces,
-    # values = corresponding plain language namespace
-    # e. g. section_dict["set_theory.unions_and_intersections"] =
-    # "Unions and intersections"
-    statements: List[Statement]  # ORDERED list of all Statements,
-    # including exercises
     file_content: str
+    metadata: Dict[str, str]
+    outline: OrderedDict
+    statements: List[Statement]
+    # outline description:
+    #   keys = lean complete namespaces,
+    #   values = corresponding plain language namespace
+    #   e. g. section_dict["set_theory.unions_and_intersections"] =
+    #   "Unions and intersections"
+    # statements is a list of all Statements, including exercises
+
+    def print_metadata(self):
+        for field_name, field_content in self.metadata.items():
+            print(f"{field_name}: {field_content}")
 
     def exercises_list(self):
         """
@@ -149,8 +155,7 @@ class Course:
             continue
 
         # Creating the course
-        course = cls(outline, statements, file_content)
-        course.metadata = course_metadata
+        course = cls(file_content, course_metadata, outline, statements)
         counter_exercises = 0
         for exo in statements:  # add reference to the course in Exercises
             if isinstance(exo, Exercise):
