@@ -32,8 +32,9 @@ from gettext import gettext as _
 from typing import Callable
 import requests
 import hashlib
+import gzip
 
-from tempfile import TemporaryFile
+from typing import List, Tuple
 
 log = logging.getLogger(__name__)
 
@@ -44,7 +45,17 @@ CHUNK_SIZE = 4096
 
 
 ############################################
-# Utilities
+# Hashing
+############################################
+def file_hash(fp: Path):
+    hh = hashlib.sha1()
+    hh.update(fp.read_bytes())
+
+    return hh.hexdigest()
+
+
+############################################
+# Checking utilities
 ############################################
 def check_dir(path: Path):
     """
@@ -63,6 +74,69 @@ def check_dir(path: Path):
         path.mkdir()
 
 
+def hashlist_from_path(path: Path):
+    """
+    Computes hash list for a given path into output
+    gzipped file
+    """
+    path   = Path(path).resolve()
+    r      = []
+
+    for fp in path.rglob("*"):
+        if fp.is_file():
+            hh = file_hash(fp)
+
+            r.append((fp, hh,))
+
+    return r
+
+
+def hashlist_to_file(hlist: List[Tuple[Path, str]], path: Path):
+    path = Path(path).resolve()
+
+    with gzip.open(str(path), "wb") as fhandle:
+        for pp, hh in hlist:
+            line = f"{str(pp)} {str(hh)}\n".encode("utf8")
+            fhandle.write(line)
+
+
+def hashlist_from_file(hh_file: Path):
+    """
+    Loads an hashlist from the given gzipped file
+    """
+    hh_file = Path(hh_file).resolve()
+
+    buff    = ""  # Line buffer
+    line    = ""
+
+    r       = []
+
+    with gzip.open(str(hh_file), "rb") as fhandle:
+        eof = False
+        while not eof:
+            chunk = fhandle.read(CHUNK_SIZE)
+            buff += chunk.decode("utf8")
+
+            eof   = len(chunk) < CHUNK_SIZE
+
+            while buff.find("\n") >= 0:
+                idx   = buff.find("\n")
+                buff  = buff[(idx + 1):]  # idx + 1 = discard \n
+
+                line  = buff[:idx]
+                info  = line.split(" ")
+
+                path  = Path(info[0])
+                hash_ = info[1]
+
+                r.append(path, hash_)
+
+    return r
+
+
+############################################
+# Download utilities
+############################################
 def download(url: str, fhandle: BufferedWriter, on_progress: Callable = None):
     """
     Download a file to a specific target. Inspired from
@@ -105,6 +179,7 @@ def download(url: str, fhandle: BufferedWriter, on_progress: Callable = None):
                 on_progress(dl_size, tot_len, progress)
 
     return sha1.hexdigest()
+
 
 def download_to_file(url: str, dest: Path, on_progress: Callable = None):
     dest = Path(dest).resolve()
