@@ -151,10 +151,16 @@ class Course:
 
         # Creating the course
         course = cls(outline, statements, file_content)
+        counter_exercises = 0
         for exo in statements:  # add reference to the course in Exercises
             if isinstance(exo, Exercise):
-                #exo.course = course
-                pass
+                counter_exercises += 1
+                exo.course = course  # this makes printing raw exercises slow
+        log.info(f"{counter_exercises} exercises found by parser")
+        counter_lemma_exercises = file_content.count("lemma exercise.")
+        if counter_exercises < counter_lemma_exercises:
+            log.warning("Some 'lemma exercise.' have not been parsed, "
+                        "wrong format?")
         return course
 
 

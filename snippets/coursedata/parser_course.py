@@ -1,6 +1,8 @@
 """
 # parser_course.py : Parse lean course to extract pertinent data
 
+
+
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Created       : 08 2020 (creation)
@@ -43,14 +45,17 @@ from parsimonious.nodes import NodeVisitor
 
 # metadata = starts with /- dEAduction,
 #           must end with a line starting with "-/".
-# metadata are optional but must come immediately after statement or
-# namespace declaration (before the proof)
-# begin/end environment must come immediately after metadata or statement for
-# exercises
+# metadata are optional. The proof of a definition can be before or after
+# the metadata but the interlude between statement and metadata cannot
+# contain the words "lemma" nor "namespace"
+# for exercises, the optional metadata must come immediately after the
+# statement, and the begin/end environment must come immediately after
+# metadata or statement
 # metadata field names are made of anything but spaces
-# metadata field content are indented, and on one line
+# metadata field contents are indented, and at least one line (maybe empty)
 # if the format is not met then the statement will not appear in the list
 
+from typing import List, Tuple
 import logging
 
 import deaduction.pylib.logger as logger
@@ -92,7 +97,7 @@ definition_or_theorem = "lemma" space_or_eol+
                     (definition_name / theorem_name) space_or_eol+
                     lean_statement
                 separator_equal_def
-                    (space_or_eol+ metadata)?
+                    (interlude_defi metadata)?
                     
     definition_name = "definition." identifier 
     theorem_name = "theorem." identifier
@@ -108,36 +113,37 @@ proof = begin_proof core_proof end_proof
     begin_proof = "begin" space_or_eol+
     core_proof = (!begin_proof !end_proof any_char_but_eol*) space_or_eol+
     end_proof = "end" space_or_eol+
-
-"""
-
-interlude_rules = """
-interlude = (!proof !metadata !space_or_eol any_char_but_eol)* space_or_eol*
-"""
-# NB : interlude does NOT end with a space_or_eol
-# (not used anymore)
-
-line_comment_rules = """
-line_comment = "--" any_char_but_eol* end_of_line
 """
 
 metadata_rules = """
 metadata = open_metadata
                 (metadata_field_name  end_of_line
-                space+ metadata_field_content  end_of_line)*
+                (space+ metadata_field_content  end_of_line)+)*
             close_metadata
     metadata_field_name = (!space any_char_but_eol)* space*
     metadata_field_content = any_char_but_eol*
     open_metadata = "/-" space+ "dEAduction" space_or_eol+
     close_metadata = "-/"
 """
+
+interlude_rules = """
+interlude_defi = ((!metadata !"lemma" !"namespace" any_char_but_eol)* 
+space_or_eol*)*
+"""
+# NB : interlude does NOT end with a space_or_eol
+
+line_comment_rules = """
+line_comment = "--" any_char_but_eol* end_of_line
+"""
+
 identifier_rules = """
 identifier           = identifier_start (identifier_rest)*
 namespace_identifier = identifier_start (identifier_rest)*
     identifier_start = letter / "_"
     identifier_rest = identifier_start / digits
 """
-common_rules = """
+
+basic_rules = """
 any_char_but_eol = ~r"."
 letter = ~r"[a-zA-Z]"
 digits = ~r"[0-9']"
@@ -148,22 +154,17 @@ end_of_line = "\\n"
 
 rules = course_rules + something_else_rules \
         + namespace_rules \
-        + statement_rules + proof_rules \
+        + statement_rules + proof_rules + interlude_rules \
         + metadata_rules \
         + line_comment_rules \
-        + identifier_rules + common_rules
+        + identifier_rules + basic_rules
 lean_course_grammar = Grammar(rules)
 
 
 class LeanCourseVisitor(NodeVisitor):
-    def visit_course(self, node, visited_children):
+    def visit_course(self, node, visited_children) -> Tuple[List[str], dict]:
         course_history, data = get_info(visited_children)
         return course_history, data
-
-    # def visit_exercise(self, node, visited_children):
-    #     pass
-    #
-
 
     #############
     # statements #
@@ -199,13 +200,13 @@ class LeanCourseVisitor(NodeVisitor):
     def visit_begin_proof(self, node, visited_children):
         course_history, data = get_info(visited_children)
         event = "begin_proof", None
-        course_history.insert(0,event)
+        course_history.insert(0, event)
         return course_history, data
 
     def visit_end_proof(self, node, visited_children):
         course_history, data = get_info(visited_children)
         event = "end_proof", None
-        course_history.insert(0,event)
+        course_history.insert(0, event)
         return course_history, data
 
     ############
@@ -220,7 +221,6 @@ class LeanCourseVisitor(NodeVisitor):
         data = {"metadata": data}
         return course_history, data
 
-
     ##############
     # namespaces #
     ##############
@@ -233,7 +233,7 @@ class LeanCourseVisitor(NodeVisitor):
         else:
             pretty_name = name.replace("_", " ").capitalize()
         event = "open_namespace", {"name": name, "pretty_name": pretty_name}
-        course_history.insert(0,event)
+        course_history.insert(0, event)
         return course_history, data
 
     def visit_close_namespace(self, node, visited_children):
@@ -269,14 +269,17 @@ class LeanCourseVisitor(NodeVisitor):
         return course_history, data
 
     def visit_metadata_field_name(self, node, visited_children):
-         course_history, data = get_info(visited_children)
-         data["metadata_field_name"] = node.text
-         return course_history, data
+        course_history, data = get_info(visited_children)
+        data["metadata_field_name"] = node.text
+        return course_history, data
 
     def visit_metadata_field_content(self, node, visited_children):
-         course_history, data = get_info(visited_children)
-         data["metadata_field_content"] = node.text
-         return course_history, data
+        course_history, data = get_info(visited_children)
+        data.setdefault("metadata_field_content", "")
+        data["metadata_field_content"] += " " + node.text.strip()
+        # field content may spread on several lines
+        return course_history, data
+
     def visit_lean_statement(self, node, visited_children):
         course_history, data = get_info(visited_children)
         data["lean_statement"] = node.text
@@ -286,7 +289,6 @@ class LeanCourseVisitor(NodeVisitor):
         course_history, data = get_info(visited_children)
         data["namespace_identifier"] = node.text
         return course_history, data
-
 
     #################
     # generic visit #
@@ -307,8 +309,6 @@ def get_info(children: List[dict]):
     return course_history, data
 
 
-
-
 if __name__ == "__main__":
     course_file1 = Path('../../tests/lean_files/short_course/exercises.lean')
     course_file2 = Path(
@@ -316,7 +316,7 @@ if __name__ == "__main__":
     file_content = course_file2.read_text()
     end_of_line = """
 """
-#    extract1 = end_of_line.join(file_content.splitlines()[:145])
+    #    extract1 = end_of_line.join(file_content.splitlines()[:145])
     course_tree = lean_course_grammar.parse(file_content)
     print(course_tree)
     visitor = LeanCourseVisitor()
