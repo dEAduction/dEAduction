@@ -25,11 +25,10 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from gettext import   gettext as _
-import                logging
-from pathlib import   Path
-from typing import  ( Dict,
-                      List)
+from gettext import gettext as _
+import              logging
+from pathlib import Path
+from typing import  Dict,
 
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
@@ -286,7 +285,7 @@ class StatementsTreeWidget(QTreeWidget):
         """
         Init self with a list of statements and an outline, see
         self.__doc__ above. This method automatically calls
-        self.init_tree, which itself instanciates all the nodes and
+        self._init_tree, which itself instanciates all the nodes and
         items in self.init_branch.
 
         :param statements: An ordered list of instances of the Statement
@@ -297,7 +296,7 @@ class StatementsTreeWidget(QTreeWidget):
         """
 
         super().__init__()
-        self.init_tree(statements, outline)
+        self._init_tree(statements, outline)
 
         # Cosmetics
         self.setAlternatingRowColors(True)
@@ -308,10 +307,10 @@ class StatementsTreeWidget(QTreeWidget):
 
     def addChild(self, item):
         """
-        Called in self._init_statement, do not delete!  Usefull not to
-        have to make a difference between self.addTopLevelItem when we
-        add an item to the tree itself or parent.addChild when we add an
-        item to a parent which is a tree item.
+        Called in self._init_branch_statement, do not delete!  Usefull
+        not to have to make a difference between self.addTopLevelItem
+        when we add an item to the tree itself or parent.addChild when
+        we add an item to a parent which is a tree item.
 
         :param item: Either a StatementsTreeWidgetItem or a
             StatementsTreeWidgetNode.
@@ -319,22 +318,14 @@ class StatementsTreeWidget(QTreeWidget):
 
         self.addTopLevelItem(item)
 
-    def _init_statement(self, extg_tree, branch: List[str],
-                        statement: Statement, parent):
+    def _init_branch_statement(self, extg_tree, branch: [str],
+                               statement: Statement, parent):
         """
         Add branch to extg_tree and statement at the end of branch. This
         function is recursive.
 
         :param extg_tree: A tree implemented as a reccursive
-            dictionnary, see self.init_tree.__doc__.
-        A dictionnary that looks like this:
-            {'Groups': (StatementsTreeWidgetNode('Groups'),
-                {'Finite groups': (StatementsTreeWidgetNode(None,
-                                                      'Finite groups'),
-                    {statement.text(0): (statement, dict()
-                    )}
-                )}
-            )}
+            dictionnary, see self._init_tree.__doc__.
         :param branch: A tree branch (new or already existing), e.g.
             ['Chapter', 'Section', 'Sub-section'].
         :param statement: The instance of the
@@ -365,28 +356,40 @@ class StatementsTreeWidget(QTreeWidget):
             parent.addChild(node)
             node.setExpanded(True)  # Must be done AFTER node is added
 
-        self._init_statement(extg_tree[root][1], branch,
-                             statement, extg_tree[root][0])
+        self._init_branch_statement(extg_tree[root][1], branch,
+                                    statement, extg_tree[root][0])
 
-    def init_tree(self, statements, outline):
+    def _init_tree(self, statements: [Statement], outline: Dict[str, str]):
         """
-        Initiate the tree of StatementsTreeWidget (derives from
-        QTreeWidget)given an ordered list of instances of Statement. The branch
-        where a statement must be put is already encoded in its lean_name
-        attribute, e.g.  'chapter.section.sub_section.statement'. But we do not
-        want to print ugly lean_names for sections (e.g. 'rings_and_ideals'),
-        what we want is instead pretty names (e.g. 'Rings and ideals').
-        Therefore we have outline, a dictionnary which to any level of
-        hierarchy (e.g. chapter) associates its pretty name.
 
-        :param statements: An ordered list of instances of the Statement class.
-        :param outline: A dictionnary in which keys are hierarchy levels (e.g.
-                'rings_and_ideals') and values are their pretty names
-                (e.g. 'Rings and ideals').
+        Initiate the tree part of self (which derives from QTreeWidget)
+        given an ordered list of instances of the class Statement and
+        the so-called outline (see self.__doc__). All the work is done
+        by calling self._init_branch_statement for each statement with
+        the right arguments.
+
+        All the tree (structure, nodes, items, titles, etc) is encoded
+        as a reccursive dictionnary. Keys are titles to be displayed and
+        values are tuple t, where:
+            - t[0] is either an instance of the class
+              StatementsTreeWidgetNode or StatementsTreeWidgetItem;
+            - t[1] is a dictionnary on the same principle.
+        Here is an example:
+
+        {'Groups': (StatementsTreeWidgetNode('Groups'),
+            {'Subgroups': (StatementsTreeWidgetNode(None, 'Subgroups'),
+                {statement.text(0): (statement, dict())})})}
+
+        :param statements: An ordered list of instances of the Statement
+            class.
+        :param outline: A dictionnary in which keys are
+            hierarchy levels (e.g.  'rings_and_ideals') and values are
+            their pretty names (e.g. 'Rings and ideals'), see
+            self.__doc__.
         """
 
         self._tree = dict()
 
         for statement in statements:
             branch = statement.pretty_hierarchy(outline)
-            self._init_statement(self._tree, branch, statement, self)
+            self._init_branch_statement(self._tree, branch, statement, self)
