@@ -86,7 +86,7 @@ class _TagIcon(QIcon):
         super().__init__(str(icon_path.resolve()))
 
 
-# Classes for the two main widgets in 'Context' part of the exercise
+# Classes for the two main widgets in 'Context' area of the exercise
 # window. Class ProofStatePOWidget is a parent widget containing
 # a list of ProofStatePOWidgetItem. Both 'Objects' and 'Properties'
 # widgets use those same two classes.

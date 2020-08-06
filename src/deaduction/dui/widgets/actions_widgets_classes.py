@@ -28,12 +28,11 @@ This file is part of d∃∀duction.
 from gettext import gettext as _
 import              logging
 from pathlib import Path
-from typing import  List
 
-from PySide2.QtGui import (     QBrush,
+from PySide2.QtGui     import ( QBrush,
                                 QColor,
                                 QIcon)
-from PySide2.QtCore import (    Signal,
+from PySide2.QtCore    import ( Signal,
                                 Slot,
                                 Qt)
 from PySide2.QtWidgets import ( QHBoxLayout,
@@ -42,48 +41,88 @@ from PySide2.QtWidgets import ( QHBoxLayout,
 from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem)
 
-from deaduction.pylib.actions import    Action
-from deaduction.pylib.coursedata import (   Definition,
-                                            Exercise,
-                                            Statement,
-                                            Theorem)
+from deaduction.pylib.actions    import   Action
+from deaduction.pylib.coursedata import ( Definition,
+                                          Exercise,
+                                          Statement,
+                                          Theorem)
 
 log = logging.getLogger(__name__)
 
-######################
-# ActionButton class #
-######################
+#################################
+# Action button widgets classes #
+#################################
 
+# Classes for the two rows of buttons (e.g. ∀ button) in the 'Actions'
+# area of the exercise window. Each button is coded as an instance of
+# the class ActionButton and and each row essentially is a container of
+# instances of ActionButton coded as an instance of ActionButtonsWidget.
 
 class ActionButton(QPushButton):
+    """
+    ActionButton is the class for so-called 'action buttons' (e.g. ∀
+    button). It inherits from the class QPushButton. This class contains
+    all relevant information that L∃∀N needs to 'understand' the button
+    in its atribute self.action. Since each instance of the class Action
+    also has a symbol and a caption as attributes, one just needs an
+    instance of the class Action to instanciate a ActionButton.
+
+    :attribute action (Action): The instance of the Action class that self was
+        instanciated with.
+    :attribute action_triggered (Signal(ActionButton)): A Signal with
+        self as an argument, emited when self is clicked on.
+    """
 
     def __init__(self, action: Action):
+        """
+        Instanciate an ActionButton with an instance of the class
+        Action. Set text, tooltip and keep the given action as an
+        attribute. When self is clicked on, emit the signal
+        self.action_triggered.
+
+        :param action: An instance of the class Action.
+        """
+
         super().__init__()
+
+        self.action = action
+
         self.setText(action.symbol)
         self.setToolTip(action.caption)
-        self.action = action
         self.clicked.connect(self._emit_action)
 
     @Slot()
     def _emit_action(self):
+        """
+        Emit the signal self.action_triggered with self as an argument.
+        One can see in ActionButton.__init__ that this slot is connected
+        to ActionButton.clicked signal, and is therefore when self is
+        pressed on.
+        """
         self.action_triggered.emit(self)
 
-# Required to have an ActionButton as an argument in an ActionButton
+
+# Required to have an ActionButton as an argument in an ActionButton.
+# Defining 
+# self.action_triggered = Signal(ActionButton)
+# in ActionButton.__init__ will raise an exception.
 ActionButton.action_triggered = Signal(ActionButton)
+
 
 class ActionButtonsWidget(QWidget):
 
-    def __init__(self, actions: List[Action]):
+    def __init__(self, actions: [Action]):
         super().__init__()
-        self.buttons = []
-        self._main_layout = QHBoxLayout()
 
+        self.buttons = []
+
+        main_layout = QHBoxLayout()
         for action in actions:
             action_button = ActionButton(action)
-            self._main_layout.addWidget(action_button)
+            main_layout.addWidget(action_button)
             self.buttons.append(action_button)
 
-        self.setLayout(self._main_layout)
+        self.setLayout(main_layout)
 
 
 ##############################
