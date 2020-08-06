@@ -32,8 +32,9 @@ def subscript(structured_string):
     or the structured string unchanged if not,
     and a boolean is_subscriptable
     """
-    normal_list = "0123456789" + "aeijoruvx"
-    subscript_list = "₀₁₂₃₄₅₆₇₈₉" + "ₐₑᵢⱼₒᵣᵤᵥₓ"
+    normal_list = "0123456789" + "aeioruv"
+    subscript_list = "₀₁₂₃₄₅₆₇₈₉" + "ₐₑᵢₒᵣᵤᵥ"
+    #subscript_list = "₀₁₂₃₄₅₆₇₈₉" + "ₐₑᵢⱼₒᵣᵤᵥₓ"
     is_subscriptable = True
     if isinstance(structured_string, list):
         sub_list = []
@@ -106,8 +107,6 @@ def format_quantifiers(latex_symb, a, PO, format_="latex"):
 def format_complement(latex_symb, a, PO, format_="latex"):
     if format_ == "latex":
         return [a[0], '^c']
-    elif format_ == "utf8":
-        return [a[0], 'ᶜ']
     elif format_ == "utf8":
         return ['∁', a[0]]
 
