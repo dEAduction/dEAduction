@@ -80,7 +80,7 @@ class ActionButton(QPushButton):
         attribute. When self is clicked on, emit the signal
         self.action_triggered.
 
-        :param action: An instance of the class Action.
+        :param action Action: An instance of the class Action.
         """
 
         super().__init__()
@@ -103,15 +103,31 @@ class ActionButton(QPushButton):
 
 
 # Required to have an ActionButton as an argument in an ActionButton.
-# Defining 
+# Writting 
 # self.action_triggered = Signal(ActionButton)
 # in ActionButton.__init__ will raise an exception.
 ActionButton.action_triggered = Signal(ActionButton)
 
 
 class ActionButtonsWidget(QWidget):
+    """
+    A container class to create and display an ordered row of instances
+    of the class ActionButton given a list of instances of the class
+    ActionButton.
+
+    :param buttons [ActionButton]: The list of instances of the class
+    ActionButton created and displayed in self.__init__. This attribute
+    makes accessing them painless.
+    """
 
     def __init__(self, actions: [Action]):
+        """
+        Init self with an ordered list of instances the class Action.
+
+        :param actions: The list of instances of the class Action one
+            wants to create buttons from.
+        """
+
         super().__init__()
 
         self.buttons = []
@@ -121,7 +137,6 @@ class ActionButtonsWidget(QWidget):
             action_button = ActionButton(action)
             main_layout.addWidget(action_button)
             self.buttons.append(action_button)
-
         self.setLayout(main_layout)
 
 

@@ -99,9 +99,9 @@ class ProofStatePOWidgetItem(QListWidgetItem):
     The class ProofStatePOWidgetItem is the widget in charge of
     containing an instance of the class ProofStatePO and displaying it.
 
-    :attribute proofstatepo (ProofStatePo): The instance of the class
+    :attribute proofstatepo ProofStatePo): The instance of the class
         ProofStatePO self is initiated with.
-    :attribute tag (str): The current tag (e.g. '+', '=' or '≠', see
+    :attribute tag str: The current tag (e.g. '+', '=' or '≠', see
         _TagIcon) of self.proofstatepo.
     """
 
@@ -124,10 +124,11 @@ class ProofStatePOWidgetItem(QListWidgetItem):
         self.proofstatepo = proofstatepo
         self.tag          = tag
 
-        self.setIcon(_TagIcon(tag))
-        caption =    f'{proofstatepo.format_as_utf8()} : ' \
-                     f'{proofstatepo.math_type.format_as_utf8()}'
+        lean_name = proofstatepo.format_as_utf8()
+        math_expr = proofstatepo.math_type.format_as_utf8()
+        caption   = f'{lean_name} : {math_expr}'
         self.setText(caption)
+        self.setIcon(_TagIcon(tag))
 
     def __eq__(self, other):
         """
@@ -157,11 +158,13 @@ class ProofStatePOWidgetItem(QListWidgetItem):
 
 class ProofStatePOWidget(QListWidget):
     """
-    A container class to display an ordered list of ProofStatePO. 
+    A container class to create and display an ordered row of instances
+    of the class ProofStatePOWidgetItem given a list of instances of the
+    class ProofStatePO.
 
-    :attribute items ([ProofStatePOWidgetItem]): The list of instances
-        of the class ProofStatePOWidgetItem created in self.__init__.
-        This attribute makes accessing them painless.
+    :attribute items [ProofStatePOWidgetItem]: The list of instances
+        of the class ProofStatePOWidgetItem created and displayed in
+        self.__init__. This attribute makes accessing them painless.
     """
 
     def __init__(self, tagged_proofstatepos: [Tuple[ProofStatePO, str]]=[]):
@@ -179,7 +182,6 @@ class ProofStatePOWidget(QListWidget):
         super().__init__()
 
         self.items = []
-
         for proofstatepo, tag in tagged_proofstatepos:
             item = ProofStatePOWidgetItem(proofstatepo, tag)
             self.addItem(item)
@@ -232,8 +234,8 @@ class TargetWidget(QWidget):
     it also sets layouts and keeps the target and its current tag as
     attributes.
 
-    :attribute target: The target one wants to display.
-    :attribute tag: The tag associated to target.
+    :attribute target ProofStatePO: The target one wants to display.
+    :attribute tag str: The tag associated to target.
     """
 
     def __init__(self, target: ProofStatePO=None, tag: str=None):
