@@ -3,11 +3,11 @@
 # context_widgets_classes.py : exercise context widgets #
 #########################################################
 
-    Provide widgets classes for an exercise's context, that is its
+    Provide widgets classes for an exercise's context area, that is its
     target, objects (e.g. f:X->Y a function) and properties (e.g. f is
     continuous). Those widgets will be instanciated in
-    ExerciseCentralWidget, which is itself instanciated as an attribute
-    of ExerciseMainWindow. Provided classes:
+    ExerciseCentralWidget, which itself will be instanciated as an
+    attribute of ExerciseMainWindow. Provided classes:
         - ProofStatePOWidget;
         - ProofStatePOWidgetItem;
         - TargetWidget.

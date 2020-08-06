@@ -1,7 +1,20 @@
 """
-###################################################################
-# actions_widgets_classes.py : actions widgets for ExerciseWidget #
-###################################################################
+#########################################################
+# actions_widgets_classes.py : exercise actions widgets #
+#########################################################
+
+    Provide widgets classes for an exercise's actions area, that is the
+    two rows of action buttons (logic buttons and proof techniques
+    buttons) and the so-called statements tree : course definitions,
+    theorems and exercises used as theorems displayed in a tree of which
+    structure is that of the course. Those widgets will be instanciated
+    in ExerciseCentralWidget, which itself will be instanciated as an
+    attribute of ExerciseMainWindow. Provided classes:
+        - ActionButton;
+        - ActionButtonsWidget;
+        - StatementsTreeWidgetNode;
+        - StatementsTreeWidgetItem;
+        - StatementsTreeWidget.
 
 Author(s)      : Kryzar <antoine@hugounet.com>
 Maintainers(s) : Kryzar <antoine@hugounet.com>
@@ -28,7 +41,7 @@ This file is part of d∃∀duction.
 from gettext import gettext as _
 import              logging
 from pathlib import Path
-from typing import  Dict,
+from typing import  Dict
 
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
