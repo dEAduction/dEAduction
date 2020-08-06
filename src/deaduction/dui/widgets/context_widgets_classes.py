@@ -221,7 +221,7 @@ class _TargetLabel(QLabel):
         # the .math_type is for.
         self.setText(target.math_type.format_as_utf8() if target else '…')
 
-        # TODO: add tag, using _TagIcon will work
+        # TODO: add tag, using _TagIcon will not work
 
         self.setStyleSheet('font-size: 32pt;')
 

@@ -25,9 +25,11 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from gettext import gettext as _
-import              logging
-from pathlib import Path
+from gettext import   gettext as _
+import                logging
+from pathlib import   Path
+from typing import  ( Dict,
+                      List)
 
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
@@ -222,13 +224,10 @@ class StatementsTreeWidgetNode(QTreeWidgetItem):
         super().__init__(None, [title])
 
         # Cosmetics
-        qicon_path = Path('share/graphical_resources/icons/folder.png')
-        qicon      = QIcon(str(qicon_path.resolve()))
-        self.setIcon(0, qicon)  # 0 is the column
         self.setExpanded(True)
         self.set_selectable(False)
 
-    def set_selectable(self, yes=True):
+    def set_selectable(self, yes: bool=True):
         """
         Make self to be selectable if yes or unselectable otherwise.
         There is no built-in method for this so we use flags as if we
@@ -238,88 +237,136 @@ class StatementsTreeWidgetNode(QTreeWidgetItem):
         """
 
         if yes:
-            new_flags = self.flags() & Qt.ItemIsSelectable
+            new_flags = self.flags() &  Qt.ItemIsSelectable
         else:
             new_flags = self.flags() & ~Qt.ItemIsSelectable
-
         self.setFlags(new_flags)
 
 
 class StatementsTreeWidget(QTreeWidget):
+    """
+    This class renders an ordered list of instances of the class
+    Statement as a tree (inherits from QTreeWidget). The nodes
+    correspond to hierarchical elements (e.g. sections) and the leaves
+    to statements in this hierarchy. This class is instanciated with a
+    list of instances of the class Statement and what we called an
+    outline, which is just a dictionnary (most of the time
+    Exercise.outline attribute) of which keys are hierarchy levels and
+    values are pretty names for display. Furthermore, all relevant
+    information that L∃∀N needs to use those statements is stored in
+    them and one does not need anything else appart from the outline to
+    create the so-called statements tree.
 
-    def __init__(self, statements, outline):
+    Here is an example, if we give ourselves an ordered list of three
+    statements with the following lean names:
+        groups.first_definitions.definition.group,
+        groups.first_definitions.theorem.Lagrange,
+        rings.introduction.definition.ring;
+    and the following outline:
+        { 'groups': 'Groups',
+          'groups.first_definitions': 'First definitions',
+          'rings': 'Rings'
+          'rings.introduction': 'Introduction'},
+    we end up with the following tree:
+        Groups (StatementsTreeWidgetNode)
+        └─  First definitions (StatementsTreeWidgetNode)
+            └─  (D) Definition (StatementsTreeWidgetItem)
+            └─  (T) Lagrange's theorem (StatementsTreeWidgetItem)
+        Rings (StatementsTreeWidgetNode)
+        └─  Introduction (StatementsTreeWidgetNode)
+            └─  (D) Definition (StatementsTreeWidgetItem)
+    (D) and (T) are icons which enable to differenciate definitions,
+    theorems and exercises. Note that statements pretty names (which
+    enable to display 'Lagranges's theorem instead of 'lagrange') are
+    not in the outline, they are already coded in the instances of the
+    class Statement themselves with the attribute pretty_name.
+    """
+
+    def __init__(self, statements: [Statement], outline: Dict[str, str]):
+        """
+        Init self with a list of statements and an outline, see
+        self.__doc__ above. This method automatically calls
+        self.init_tree, which itself instanciates all the nodes and
+        items in self.init_branch.
+
+        :param statements: An ordered list of instances of the Statement
+            class.
+        :param outline: A dictionnary in which keys are
+            hierarchy levels (e.g.  'rings_and_ideals') and values are
+            their pretty names (e.g. 'Rings and ideals'). 
         """
 
-        :param statements: An ordered list of instances of the Statement class.
-        :param outline: A dictionnary in which keys are hierarchy levels (e.g.
-                'rings_and_ideals') and values are their pretty names
-                (e.g. 'Rings and ideals').
-        """
         super().__init__()
-        self._initUI()
         self.init_tree(statements, outline)
 
-        self.resizeColumnToContents(0)
-        self.resizeColumnToContents(1)
-
-    def _initUI(self):
+        # Cosmetics
         self.setAlternatingRowColors(True)
         self.setHeaderLabels([_('Statement'), _('L∃∀N name')])
         self.setWindowTitle('StatementsTreeWidget')
+        self.resizeColumnToContents(0)
+        self.resizeColumnToContents(1)
 
     def addChild(self, item):
         """
-        Usefull in self._init_statement, do not delete!
-        Usefull not to have to make a difference between self.addTopLevelItem
-        when we add an item to the tree itself or parent.addChild when we add
-        an item to a parent which is a tree item.
+        Called in self._init_statement, do not delete!  Usefull not to
+        have to make a difference between self.addTopLevelItem when we
+        add an item to the tree itself or parent.addChild when we add an
+        item to a parent which is a tree item.
 
         :param item: Either a StatementsTreeWidgetItem or a
-                StatementsTreeWidgetNode.
+            StatementsTreeWidgetNode.
         """
 
         self.addTopLevelItem(item)
 
-    def _init_statement(self, extg_tree, statement, branch, parent=None):
+    def _init_statement(self, extg_tree, branch: List[str],
+                        statement: Statement, parent):
         """
-        Add a branch to extg_tree and statement at the end of this branch.
+        Add branch to extg_tree and statement at the end of branch. This
+        function is recursive.
 
-        :param extg_tree: A dictionnary that looks like this:
-                {'Groups': (StatementsTreeWidgetNode('Groups'),
-                    {'Finite groups': (StatementsTreeWidgetNode(None,
-                                                          'Finite groups'),
-                        {statement.text(0): (statement, dict()
-                        )}
+        :param extg_tree: A tree implemented as a reccursive
+            dictionnary, see self.init_tree.__doc__.
+        A dictionnary that looks like this:
+            {'Groups': (StatementsTreeWidgetNode('Groups'),
+                {'Finite groups': (StatementsTreeWidgetNode(None,
+                                                      'Finite groups'),
+                    {statement.text(0): (statement, dict()
                     )}
                 )}
-        :param statement: An instance of StatementsTreeWidgetItem.
-        :param branch: A branch (new or already existing) as a list of str,
-                e.g.  ['Chapter', 'Section', 'Sub-section'].
-        :param parent: A StatementsTreeWidgetNode or extg_tree itself (at
-                the first call of the function). Either branch or statement
-                is added as a child of parent.
+            )}
+        :param branch: A tree branch (new or already existing), e.g.
+            ['Chapter', 'Section', 'Sub-section'].
+        :param statement: The instance of the
+            classStatementsTreeWidgetItem to be added at the end of
+            branch.
+        :param parent: Either extg_tree itself or one of its nodes
+            (StatementsTreeWidgetNode). At the first call of the method,
+            it should be self. The recursion takes care of the rest.
         """
 
-        # If branch is empty, put statement at the end
+        # If branch is empty, put statement at the end. This occurs when
+        # the branch is already created.
         if not branch:
-            item = StatementsTreeWidgetItem(statement)
-            root = item.text(0)
+            item            = StatementsTreeWidgetItem(statement)
+            root            = item.text(0)
             extg_tree[root] = (item, dict())
             parent.addChild(item)
             return None
 
-        # Else go through the already existing branch or create the nodes
-        root = branch[0]        # 'rings'
-        branch = branch[1:]     # ['ideals', 'def']
+        # Else go through the already existing branch and create
+        # children nodes if necessary.
+        root   = branch[0]   # 'rings'
+        branch = branch[1:]  # ['ideals', 'def']
 
         if root not in extg_tree:
-            node = StatementsTreeWidgetNode(root)
+            node            = StatementsTreeWidgetNode(root)
             extg_tree[root] = (node, dict())
             parent.addChild(node)
             node.setExpanded(True)  # Must be done AFTER node is added
 
-        self._init_statement(extg_tree[root][1], statement,
-                             branch, extg_tree[root][0])
+        self._init_statement(extg_tree[root][1], branch,
+                             statement, extg_tree[root][0])
 
     def init_tree(self, statements, outline):
         """
@@ -342,4 +389,4 @@ class StatementsTreeWidget(QTreeWidget):
 
         for statement in statements:
             branch = statement.pretty_hierarchy(outline)
-            self._init_statement(self._tree, statement, branch, self)
+            self._init_statement(self._tree, branch, statement, self)
