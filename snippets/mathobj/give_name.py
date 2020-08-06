@@ -28,7 +28,7 @@ from deaduction.pylib.mathobj import Goal, ProofStatePO, PropObj
 
 
 def give_name(goal: Goal, math_type: PropObj, hints: List[str] = [],
-               format_ = utf8) -> str:
+              format_='utf8') -> str:
     """
     Provide a name for a new variable. Baby version.
     The list of names of all current variables is extracted from goal
@@ -40,6 +40,7 @@ def give_name(goal: Goal, math_type: PropObj, hints: List[str] = [],
     :param math_type: type of new variable
     :param hints: a hint for the future name
     :return: a name for the new variable
+    :param format_: utf or latex. No difference for the moment.
     """
     names = goal.extract_var_names()
     if isinstance(math_type, ProofStatePO):
