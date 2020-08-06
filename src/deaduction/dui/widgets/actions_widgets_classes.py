@@ -58,14 +58,16 @@ log = logging.getLogger(__name__)
 # the class ActionButton and and each row essentially is a container of
 # instances of ActionButton coded as an instance of ActionButtonsWidget.
 
+
 class ActionButton(QPushButton):
     """
     ActionButton is the class for so-called 'action buttons' (e.g. ∀
-    button). It inherits from the class QPushButton. This class contains
-    all relevant information that L∃∀N needs to 'understand' the button
-    in its atribute self.action. Since each instance of the class Action
-    also has a symbol and a caption as attributes, one just needs an
-    instance of the class Action to instanciate a ActionButton.
+    button): it takes an instance of the Action class and associates it
+    to a button. It contains all relevant information that L∃∀N needs to
+    use this action in its atribute self.action. Since each instance of
+    the class Action also has a symbol and a caption as attributes, one
+    just needs an instance of the class Action to instanciate a
+    ActionButton.
 
     :attribute action (Action): The instance of the Action class that self was
         instanciated with.
@@ -99,6 +101,7 @@ class ActionButton(QPushButton):
         to ActionButton.clicked signal, and is therefore when self is
         pressed on.
         """
+
         self.action_triggered.emit(self)
 
 
@@ -144,55 +147,96 @@ class ActionButtonsWidget(QWidget):
 # Statements widgets classes #
 ##############################
 
+# Statements (definition, theorem, exercise (the class Exercise inherits
+# from the class Theorem)) to be called while solving an exercise are
+# coded in the following classes. Those statements are represented in a
+# tree (StatementsTreeWidget) preserving the course structure:
+#   - each node (StatementsTreeWidgetNode) corresponds to a section;
+#   - each leaf (StatementsTreeWidgetItem) corresponds to a statement.
+# Even though StatementsTreeWidgetItem and StatementsTreeWidgetNode are
+# not protected nor private, they should not be instanciated outside
+# this module. Furthermore the so-called 'statements tree' is
+# automatically created by StatementsTreeWidget.__init__ given an
+# ordered list of instances of the Statement class and it is this
+# method which instanciates the items and nodes.
+
 
 class StatementsTreeWidgetItem(QTreeWidgetItem):
+    """
+    This class is a tree item (inherits from QTreeWidgetItem) in charge
+    of displaying an instance of the class Statement (or child class).
+    It contains all relevant information that L∃∀N needs to use this
+    statement in its atribute self.statement. Since this statement also
+    contains data to be displayed (e.g. a title), one only needs an
+    instance of the class Statement to instanciate a
+    StatementsTreeWidgetItem.
 
-    def _initUI(self):
-        # Print second col. in gray
-        self.setForeground(1, QBrush(QColor('gray')))
+    :attribute statement Statement: The instance of the class Statement
+        associated to self.
+    """
 
     def __init__(self, statement: Statement):
         """
+        Init self with an instance of the Statement class.
 
         :parem statement: An instance of the Statement class.
         """
 
+        super().__init__(None, [statement.pretty_name, statement.lean_name])
+
         self.statement = statement
-        titles = [statement.pretty_name, statement.lean_name]
-        super().__init__(None, titles)
-        self._initUI()
 
-        icon_path = Path('share/graphical_resources/icons/letters')
+        # Print second col. in gray
+        self.setForeground(1, QBrush(QColor('gray')))
+
+        # Print icon (D for definition, T for theorem, etc)
+        icons_path = Path('share/graphical_resources/icons/letters')
         if isinstance(statement, Definition):
-            path = icon_path / 'd.png'
+            path = icons_path / 'd.png'
         elif isinstance(statement, Exercise):
-            path = icon_path / 'e.png'
+            path = icons_path / 'e.png'
         elif isinstance(statement, Theorem):
-            path = icon_path / 't.png'
-
+            path = icons_path / 't.png'
         self.setIcon(0, QIcon(str(path.resolve())))
 
 
 class StatementsTreeWidgetNode(QTreeWidgetItem):
+    """
+    This class renders a hierarchical element of the course (e.g. a
+    section) as an unclickable node in the statements tree. Statements
+    (StatementsTreeWidgetItem) are children of those nodes. For example,
+    given the section name 'Finite groups', self is a node with title
+    'Finite groups'.
+    """
 
-    def _initUI(self):
+    def __init__(self, title: str):
+        """
+        Init self with a title.
+
+        :parem title: The title to be displayed.
+        """
+
+        # QTreeWidget objects use columns to display titles. So if one
+        # wants to display a unique title, it needs to be in a 1-element
+        # list.
+        super().__init__(None, [title])
+
+        # Cosmetics
+        qicon_path = Path('share/graphical_resources/icons/folder.png')
+        qicon      = QIcon(str(qicon_path.resolve()))
+        self.setIcon(0, qicon)  # 0 is the column
         self.setExpanded(True)
-        icon_path = Path('share/graphical_resources/icons/folder.png')
-        icon = QIcon(str(icon_path.resolve()))
-        self.setIcon(0, icon)
-
-    def __init__(self, titles):
-        """
-
-        :parem titles: A list of column titles. It must not be a str.
-        """
-
-        super().__init__(None, titles)
-        self._initUI()
         self.set_selectable(False)
 
     def set_selectable(self, yes=True):
-        # Thanks Florian, there is no method for this so we use a QFlag
+        """
+        Make self to be selectable if yes or unselectable otherwise.
+        There is no built-in method for this so we use flags as if we
+        are in 1980 (thanks Florian).
+
+        :param yes: See above.
+        """
+
         if yes:
             new_flags = self.flags() & Qt.ItemIsSelectable
         else:
@@ -215,9 +259,12 @@ class StatementsTreeWidget(QTreeWidget):
         self._initUI()
         self.init_tree(statements, outline)
 
+        self.resizeColumnToContents(0)
+        self.resizeColumnToContents(1)
+
     def _initUI(self):
         self.setAlternatingRowColors(True)
-        self.setHeaderLabels([_('Statements')])
+        self.setHeaderLabels([_('Statement'), _('L∃∀N name')])
         self.setWindowTitle('StatementsTreeWidget')
 
     def addChild(self, item):
@@ -266,10 +313,10 @@ class StatementsTreeWidget(QTreeWidget):
         branch = branch[1:]     # ['ideals', 'def']
 
         if root not in extg_tree:
-            node = StatementsTreeWidgetNode([root])
+            node = StatementsTreeWidgetNode(root)
             extg_tree[root] = (node, dict())
             parent.addChild(node)
-            node.setExpanded(True)  # Must be done AFTER node added
+            node.setExpanded(True)  # Must be done AFTER node is added
 
         self._init_statement(extg_tree[root][1], statement,
                              branch, extg_tree[root][0])
