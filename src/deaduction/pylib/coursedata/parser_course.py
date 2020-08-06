@@ -83,7 +83,7 @@ namespace_rules = """
 namespace_open_or_close = open_namespace / close_namespace
 
 open_namespace = "namespace" space+ namespace_identifier
-                (space_or_eol+ metadata)?
+                (interlude metadata)?
 
 close_namespace = "end" space+ namespace_identifier
 """
@@ -102,7 +102,7 @@ definition_or_theorem = "lemma" space_or_eol+
                     (definition_name / theorem_name) space_or_eol+
                     lean_statement
                 separator_equal_def
-                    (interlude_defi metadata)?
+                    (interlude metadata)?
                     
     definition_name = "definition." identifier 
     theorem_name = "theorem." identifier
@@ -135,10 +135,10 @@ metadata =  open_metadata
 """
 
 interlude_rules = """
-interlude_defi = ((!metadata !"lemma" !"namespace" any_char_but_eol)* 
+interlude = ((!metadata !"lemma" !"namespace" any_char_but_eol)* 
                     space_or_eol*)*
 """
-# NB : interlude does NOT end with a space_or_eol
+# may be empty
 
 line_comment_rules = """
 line_comment = "--" any_char_but_eol* end_of_line
@@ -330,10 +330,12 @@ def get_info(children: List[dict]):
 
 if __name__ == "__main__":
     logger.configure()
-    course_file1 = Path('../../tests/lean_files/short_course/exercises.lean')
+    course_file1 = Path('../../../../tests/lean_files/short_course/exercises'
+                        '.lean')
     course_file2 = Path(
-        '../../tests/lean_files/exercises/exercises_theorie_des_ensembles.lean')
-    file_content = course_file2.read_text()
+        '../../../../tests/lean_files/courses'
+        '/exercises_theorie_des_ensembles.lean')
+    file_content = course_file1.read_text()
     end_of_line = """
 """
     #    extract1 = end_of_line.join(file_content.splitlines()[:145])

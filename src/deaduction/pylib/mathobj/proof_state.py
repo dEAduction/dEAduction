@@ -27,12 +27,16 @@ This file is part of dEAduction.
 """
 
 from dataclasses import dataclass
-import deaduction.pylib.logger as logger
 import logging
 from typing import List, Tuple
-from deaduction.pylib.mathobj import PropObj, ProofStatePO, \
-    math_type_store
+
+import deaduction.pylib.logger as logger
+
+from deaduction.pylib.mathobj import PropObj, ProofStatePO, math_type_store
 from deaduction.pylib.mathobj.give_name import give_name, instantiate_bound_var
+
+
+node_needing_bounds_var = ["SET_FAMILY", "SEQUENCE"]
 
 log = logging.getLogger(__name__)
 
@@ -177,15 +181,16 @@ class Goal:
         for pfpo in goal.context:
             ############################################################
             # special format that needs supplementary bounds variables #
+            # e.g. "SET_FAMILY", "SEQUENCE"                            #
             ############################################################
             math_type = pfpo.math_type
-            if math_type.node in ["SET_FAMILY", "SEQUENCE"]:  # TODO : mettre ça dans latex_format
+            if math_type.node in node_needing_bounds_var:
                 pfpo.node += "INSTANCE_OF_" + math_type.node
                 # a new representation will be computed
                 pfpo.representation = {'latex': None, 'utf8': None}
                 bound_var_type = math_type.children[0]
                 # search for a fresh name
-                name = give_name0(goal, bound_var_type)
+                name = give_name(goal, bound_var_type)
                 # create the bound var
                 bound_var = instantiate_bound_var(math_type, name)
                 # update bound_vars list
@@ -291,7 +296,7 @@ PROPERTY[LOCAL_CONSTANT¿[name:H/identifier:0._fresh.212.24016¿]¿(CONSTANT¿[n
                   f" {mt.format_as_utf8()}")
         print("Target:")
         print(goal.target.math_type.format_as_utf8())
-    goal = Goal.from_lean_data(essai_forall_hypo,essai_forall_target)
+    goal = Goal.from_lean_data(essai_set_family_hypo,essai_set_family_target)
     print_proof_state(goal)
 
     print(f"variable names {goal.extract_var_names()}")

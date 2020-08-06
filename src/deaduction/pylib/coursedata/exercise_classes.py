@@ -76,7 +76,7 @@ class Statement:
         outline will be present_course.outline, where present_course is the
         instance of Course which initiated self.
 
-        :param outline: A dictionnary in which keys are hierarchy levels (e.g. 
+        :param outline: A dictionary in which keys are hierarchy levels (e.g.
                 'rings_and_ideals') and values are their pretty names
                 (e.g. 'Rings and ideals').
         :return: The list of sections pretty names.
@@ -93,7 +93,7 @@ class Statement:
                 rmg_hierarchy = '.'.join(rmg_hierarchy.split('.')[:-1])
                 fkt(rmg_hierarchy)
 
-        name = '.'.join(self.lean_name.split('.')[:-1])
+        name = '.'.join(self.lean_name.split('.')[:-2])
         fkt(name)
 
         return pretty_hierarchy

@@ -24,10 +24,11 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List
-from deaduction.pylib.mathobj import Goal, ProofStatePO, PropObj
+from deaduction.pylib.mathobj import ProofStatePO, PropObj, BoundVarPO
 
 
-def give_name(goal: Goal, math_type: PropObj, hints: List[str] = [],
+
+def give_name(goal, math_type: PropObj, hints: List[str] = [],
               format_='utf8') -> str:
     """
     Provide a name for a new variable. Baby version.
@@ -74,8 +75,24 @@ def give_name(goal: Goal, math_type: PropObj, hints: List[str] = [],
         counter += 1
 
 
+def instantiate_bound_var(math_type: PropObj, name: str) -> BoundVarPO:
+    """
+    create a BoundVarPOof with a given math_type and name
+    :param math_type:
+    :param name:
+    :return:
+    """
+    representation = {"latex": [name], "utf8": [name]}
+    lean_data = {"name": '', "id": ''}
+    prop_obj = BoundVarPO('BOUND_VAR_DEADUCTION', [], representation, [],
+                          lean_data, math_type)
+    return prop_obj
+
+
+
+
 # TODO: implement the following more sophisticated version
-def give_name_v2(goal: Goal, math_type: PropObj, hints: List[str] = []) -> str:
+def give_name_v2(goal, math_type: PropObj, hints: List[str] = []) -> str:
     """
     Provide a name for a new variable. UNFINISHED VERSION.
     The list of names of all current variables is extracted from goal
@@ -157,7 +174,7 @@ def next_in_list(letter: str, letters: List[str]):
     """
     index = letters.index(letter) + 1
     if index < len(letters):
-        return letters(index)
+        return letters[index]
     else:
         return letters[0]
 
@@ -171,7 +188,7 @@ def name_prolongate(names: List[str]) -> str:
     pass
 
 
-def pre_give_names(goal: Goal, math_types: List[PropObj]) -> List[List[str]]:
+def pre_give_names(goal, math_types: List[PropObj]) -> List[List[str]]:
     """
     compute lists of possible names for each element of math_types,
     with empty pairwise intersection

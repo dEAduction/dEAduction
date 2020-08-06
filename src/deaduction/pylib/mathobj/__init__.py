@@ -26,6 +26,9 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .PropObj import AnonymousPO, BoundVarPO, ProofStatePO, PropObj,\
-                    math_type_store
+from .PropObj import AnonymousPO, BoundVarPO, ProofStatePO, PropObj, \
+    math_type_store
 from .proof_state import Goal, ProofState
+
+
+#from .latex_format_data import node_needing_bounds_var

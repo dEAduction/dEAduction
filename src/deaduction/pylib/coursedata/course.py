@@ -178,12 +178,12 @@ def whole(namespace_list: List[str]):
 if __name__ == "__main__":
     logger.configure()
     course_file_path1 = Path(
-        '../../tests/lean_files/short_course/exercises.lean')
+        '../../../../tests/lean_files/short_course/exercises.lean')
 
-    course_file_path2 = Path("../../tests/lean_files/exercises/\
+    course_file_path2 = Path("../../../../tests/lean_files/exercises/\
 exercises_theorie_des_ensembles.lean")
 
-    my_course = Course.from_file(course_file_path2)
+    my_course = Course.from_file(course_file_path1)
     print("My course:")
     print("List of statements:")
     count_ex = 0

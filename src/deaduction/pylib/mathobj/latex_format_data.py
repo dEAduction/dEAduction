@@ -9,10 +9,10 @@ DESCRIPTION
 Contain the data for processing PropObj into a latex representation
 
 """
+import logging
 import gettext
 
 _ = gettext.gettext
-import logging
 
 log = logging.getLogger(__name__)
 
@@ -23,11 +23,47 @@ nature_leaves_list = ["PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                       "FUNCTION", "SEQUENCE", "SET_FAMILY",
                       "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY"]
 
-def subscript(string):
-    subscript = str.maketrans("0123456789" + "aeijoruvx", "₀₁₂₃₄₅₆₇₈₉" +
-                              "ₐₑᵢⱼₒᵣᵤᵥₓ")
 
-    return string.translate(subscript)
+def subscript(structured_string):
+    """
+    recursive version, for strings to be displayed use global_subscript instead
+    :param structured_string: list of sturctured string
+    :return: the structured string in a subscript version if available,
+    or the structured string unchanged if not,
+    and a boolean is_subscriptable
+    """
+    normal_list = "0123456789" + "aeijoruvx"
+    subscript_list = "₀₁₂₃₄₅₆₇₈₉" + "ₐₑᵢⱼₒᵣᵤᵥₓ"
+    is_subscriptable = True
+    if isinstance(structured_string, list):
+        sub_list = []
+        for item in structured_string:
+            sub, bool = subscript(item)
+            if not bool:  # not subscriptable
+                return structured_string, False
+            else:
+                sub_list.append(sub)
+        return sub_list, True
+
+    # from now on structured_string is assumed to be a string
+    for letter in structured_string:
+        if letter not in normal_list:
+            is_subscriptable = False
+    if is_subscriptable:
+        subscript_string = ""
+        for l in structured_string:
+            subscript_string += subscript_list[normal_list.index(l)]
+    else:
+        subscript_string = structured_string
+    return subscript_string, is_subscriptable
+
+def global_subscript(structured_string):
+    sub, is_subscriptable = subscript(structured_string)
+    if is_subscriptable:
+        return sub
+    else:
+        return ['_'] + [sub]
+        # [sub] necessary in case sub is an (unstructured) string
 
 
 def format_arg0(latex_symb, a, PO, format_="latex"):
@@ -96,6 +132,9 @@ def general_format_application(latex_symb, a, PO, format_="latex"):
     if hasattr(PO.children[0], "math_type"):
         if PO.children[0].math_type.node == "FUNCTION":
             return [a[0], '(', a[1], ')']
+        if PO.children[0].math_type.node in ["SET_FAMILY", "SEQUENCE"]:
+            index = global_subscript([a[1]])
+            return [PO.children[0].lean_data['name']] + index
     key = PO.children[0].representation['info']
     if key == 'composition':  # composition of functions
         log.debug(f"composition of {a[-2]} and {a[-1]}")
@@ -120,17 +159,22 @@ def latex_text(string: str, format_="latex"):
 
 
 def format_instance_set_family(latex_symb, children_rep, PO, format_="latex"):
+    """
+    :param children_rep: list or str, structured format of children
+    :param PO: PropObj
+    :return: None
+    """
     name = PO.lean_data["name"]
     index_rep = children_rep[0]
-    index_subscript_rep = subscript(index_rep)
+    index_subscript_rep = global_subscript(index_rep)
     index_set_rep = PO.math_type.children[0].representation[format_]
     if format_ == "latex":
-        string = r"\{" + name + r"_{" + index_rep + r"}, " \
-                 + index_rep + r"\in " + index_set_rep + r"\}"
+        rep = [r"\{", name,  r"_{", index_rep, r"}, ",
+               index_rep, r"\in ", index_set_rep, r"\}"]
     elif format_ == "utf8":
-        string = ["{" + name + index_subscript_rep + ", " \
-                  + index_rep + "∈" + index_set_rep + "}"]
-    return string
+        rep = ["{", name, index_subscript_rep, ", ",
+               index_rep, "∈", index_set_rep, "}"]
+    return rep
 
 def format_name_index_1(latex_symb, a, PO, format_="latex"):
     name = PO.children[0].lean_data["name"]
@@ -200,7 +244,7 @@ latex_structures = {"PROP_AND": (r" \text{ " + _("AND") + " } ", format_0n1),
                     "ELEMENT": (r" \text{ " + _("an element of") + " }",
                                 format_n0),
                     "FUNCTION": (r" \to ", format_0n1),
-                    "SEQUENCE": ("", ""),
+                    "SEQUENCE": ("", ""),  # TODO: and also INSTANCE_OF_SEQ
                     "TYPE_NUMBER[name:ℕ]": ("\mathbb{N}", format_constant1),
                     "TYPE_NUMBER[name:ℝ]": ("\mathbb{R}", format_constant1),
                     "NUMBER": ("", ""),
