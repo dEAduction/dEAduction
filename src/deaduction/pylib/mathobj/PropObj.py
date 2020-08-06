@@ -60,7 +60,9 @@ class PropObj:
     """
     node: str
     children: list
-    representation: Dict[str, list]  # keys = 'latex, 'utf8'
+    representation: Dict[str, list]  # keys = 'latex, 'utf8', 'info'
+    # 'info' value store are used when node = 'CONSTANT' to store CONSTANT name
+    # (e.g. "false")
     # The following are here just to help reading the code
     # See structures.lean for more accurate lists
     nodes_list = ["PROP_AND", "PROP_OR", "PROP_IFF", "PROP_NOT",
@@ -115,6 +117,7 @@ class PropObj:
         (as opposed to object).
         ! MIND ! that for ProofStatePO's, only the math_type attribute
         should be tested !
+        For ProofSatetPO's, this function is redefined by testing the math_type
         """
         if self.node == "":
             return False
@@ -158,12 +161,16 @@ class PropObj:
         if node in latex_structures.keys():
             if format_ == "latex":
                 symbol, format_scheme = latex_structures[node]
-                self.representation["latex"] = format_scheme(symbol, children_rep,
-                                                             self, format_="latex")
+                self.representation["latex"] = format_scheme(symbol,
+                                                             children_rep,
+                                                             self,
+                                                             format_="latex")
             else:
                 symbol, format_scheme = utf8_structures[node]
-                self.representation["utf8"] = format_scheme(symbol, children_rep,
-                                                            self, format_="utf8")
+                self.representation["utf8"] = format_scheme(symbol,
+                                                            children_rep,
+                                                            self,
+                                                            format_="utf8")
         else:  # node not implemented
             log.warning(f"display of {node} not implemented")
             self.representation['latex'] = '???'
@@ -242,10 +249,9 @@ class AnonymousPO(PropObj):
         create anonymous sub-objects and props, or refer to existing pfPO
         :param prop_obj_dict: dictionary provided by analysis.LeanExprVisitor
         :param bound_vars: list of bounded variables (BoundVarPO),
-        to be updated
+        to be updated if the AnonymousPO is actually a BounVarPO
         :return: an instance of AnonymousPO
         """
-        #        log = logging.getLogger("PropObj")
         representation = {'latex': None, 'utf8': None, 'info': None}
         # latex representation is computed later
         node = prop_obj_dict["node"]
@@ -282,10 +288,10 @@ class AnonymousPO(PropObj):
         #############################
         # Application of a function #
         #############################
-#        if node == "APPLICATION":
-            # if hasattr(children[0],"math_type"):
-            #     if children[0].math_type.node == "FUNCTION":
-            #         node = "APPLICATION_FUNCTION"
+        #        if node == "APPLICATION":
+        # if hasattr(children[0],"math_type"):
+        #     if children[0].math_type.node == "FUNCTION":
+        #         node = "APPLICATION_FUNCTION"
         #############
         # CONSTANTS #
         #############
@@ -372,6 +378,17 @@ class ProofStatePO(PropObj):
         #        if not math_type.is_prop():
         #            math_type_store(prop_obj, math_type)
         return prop_obj
+
+    def is_prop_math_type(self) -> bool:
+        """
+        tells if the math_type of self is a Proposition
+        NB: for ProofStatePO's (but not for all PropObj),
+        if self.math_type.node = 'APPLICATION' then self
+        is the term of a Proposition
+        (e.g 'injective' vs 'composition')
+        """
+        return self.math_type.is_prop() \
+               or self.math_type.node == 'APPLICATION'
 
 
 @dataclass(eq=False)

@@ -32,7 +32,7 @@ import logging
 from typing import List, Tuple
 from deaduction.pylib.mathobj import PropObj, ProofStatePO, \
     math_type_store
-from deaduction.pylib.mathobj.give_name import give_name0, instantiate_bound_var
+from deaduction.pylib.mathobj.give_name import give_name, instantiate_bound_var
 
 log = logging.getLogger(__name__)
 
@@ -211,7 +211,7 @@ class Goal:
         objects = []
         propositions = []
         for (po, tag) in zip(context, tags):
-            if po.math_type.is_prop():
+            if po.is_prop_math_type():
                 propositions.append((po, tag))
             else:
                 objects.append((po, tag))
