@@ -170,7 +170,7 @@ class Exercise(Theorem):
             if data[field] is None:
                 data[field] = "$UNTIL_NOW"  # default value
             log.debug(f"processing data in {field}, {data[field]}")
-            class_ = class_dict[field]
+            current_class = class_dict[field]
             list_1 = data[field].split()
             list_2 = []
             # first step, replace macros, get a list of strings
@@ -201,7 +201,7 @@ class Exercise(Theorem):
                     # turn all instances of the good class to True
                     for i in range(len(statements)):
                         item = statements[i]
-                        if isinstance(item, class_):
+                        if isinstance(item, current_class):
                             new_item = (item, True)
                             annotated_statements[i] = new_item
                 elif item.startswith("-"):
