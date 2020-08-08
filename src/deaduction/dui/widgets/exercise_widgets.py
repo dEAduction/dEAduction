@@ -158,12 +158,47 @@ class ExerciseCentralWidget(QWidget):
 
     def __init__(self, exercise: Exercise):
         super().__init__()
+
         self.exercise = exercise
+        
         self._init_all_layout_boxes()
         self._init_actions()
         self._init_goal()
         self._init_put_widgets_in_layouts()
         self.setLayout(self._main_lyt)
+
+    def update_goal(self, new_goal: Goal):
+        """
+        Update goal, that is target, objects and properties.
+        """
+
+        # Init context (objects and properties). Get them as two list of
+        # (ProofStatePO, str), the str being the tag of the prop. or obj.
+        # FIXME: tags
+        new_context    = new_goal.tag_and_split_propositions_objects()
+        new_target     = new_goal.target
+        new_target_tag = '=' # new_target.future_tags[1]
+        new_objects    = new_context[0]
+        new_props      = new_context[1]
+
+        new_objects_wgt = ProofStatePOWidget(new_objects)
+        new_props_wgt   = ProofStatePOWidget(new_props)
+        new_target_wgt  = TargetWidget(new_target, new_target_tag)
+
+        # Replace in the layouts
+        replace_delete_widget(self._context_lyt,
+                              self.objects_wgt, new_objects_wgt)
+        replace_delete_widget(self._context_lyt,
+                              self.props_wgt, new_props_wgt)
+        replace_delete_widget(self._main_lyt,
+                              self.target_wgt, new_target_wgt,
+                              ~Qt.FindChildrenRecursively)
+
+        # Set the attributes to the new values
+        self.objects_wgt = new_objects_wgt
+        self.props_wgt = new_props_wgt
+        self.target_wgt = new_target_wgt
+        self.current_goal = new_goal
 
 
 ###############
@@ -254,33 +289,8 @@ class ExerciseMainWindow(QMainWindow):
     def update_goal(self, new_goal: Goal):
         # Reset current context selection
         self.clear_user_selection()
-
-        # Init context (objects and properties). Get them as two list of
-        # (ProofStatePO, str), the str being the tag of the prop. or obj.
-        # FIXME: obj. and prop. tags
-        new_context = new_goal.tag_and_split_propositions_objects()
-        new_objects_wgt = ProofStatePOWidget(new_context[0])
-        new_props_wgt = ProofStatePOWidget(new_context[1])
-        new_target = new_goal.target
-        # FIXME: target tag
-        new_target_tag = '=' # new_target.future_tags[1]
-        new_target_wgt = TargetWidget(new_target, new_target_tag)
-
-        # Replace in the layouts
-        replace_delete_widget(self.cw._context_lyt,
-                              self.cw.objects_wgt, new_objects_wgt)
-        replace_delete_widget(self.cw._context_lyt,
-                              self.cw.props_wgt, new_props_wgt)
-        replace_delete_widget(self.cw._main_lyt,
-                              self.cw.target_wgt, new_target_wgt,
-                              ~Qt.FindChildrenRecursively)
-
-        # Set the attributes to the new values
-        self.cw.objects_wgt = new_objects_wgt
-        self.cw.props_wgt = new_props_wgt
-        self.cw.target_wgt = new_target_wgt
+        self.cw.update_goal(new_goal)
         self.current_goal = new_goal
-
         # Reconnect signals and slots
         self.connect_context_signals_slots()
 
