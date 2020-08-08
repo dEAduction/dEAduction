@@ -24,10 +24,12 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List
-from deaduction.pylib.mathobj import Goal, ProofStatePO, PropObj
+from deaduction.pylib.mathobj import ProofStatePO, PropObj, BoundVarPO
 
 
-def give_name0(goal: Goal, math_type: PropObj, hints: List[str] = []) -> str:
+
+def give_name(goal, math_type: PropObj, hints: List[str] = [],
+              format_='utf8') -> str:
     """
     Provide a name for a new variable. Baby version.
     The list of names of all current variables is extracted from goal
@@ -39,6 +41,7 @@ def give_name0(goal: Goal, math_type: PropObj, hints: List[str] = []) -> str:
     :param math_type: type of new variable
     :param hints: a hint for the future name
     :return: a name for the new variable
+    :param format_: utf or latex. No difference for the moment.
     """
     names = goal.extract_var_names()
     if isinstance(math_type, ProofStatePO):
@@ -51,20 +54,45 @@ def give_name0(goal: Goal, math_type: PropObj, hints: List[str] = []) -> str:
         if potential_name not in names:
             new_name = potential_name
             return new_name
-    # second trial
-    potential_name = hint[0]
+    # second trial: use alphabetical order
+    if hints:
+        starting_name = hints[0]
+    else:
+        starting_name = 'x'
     counter = 0
-    while potential_name in names and counter < 26:
-        potential_name = next(potential_name)
+    potential_name = starting_name
+    max_letters = 3  # NB : must be ≤ 26 !
+    while potential_name in names and counter < max_letters:
+        potential_name = next_(potential_name)
         counter += 1
     if counter != 26:
         return potential_name
-    # third trial
-    # TODO: try potential_name[0] + indice
-    # but beware that latex and utf-8 must be treated differently.
+    # last trial: starting_name + subscript
+    # TODO: use index in utf8
+    potential_name = starting_name
+    counter = 0
+    while potential_name + '_' + str(counter) in names:
+        counter += 1
 
 
-def give_name(goal: Goal, math_type: PropObj, hints: List[str] = []) -> str:
+def instantiate_bound_var(math_type: PropObj, name: str) -> BoundVarPO:
+    """
+    create a BoundVarPOof with a given math_type and name
+    :param math_type:
+    :param name:
+    :return:
+    """
+    representation = {"latex": [name], "utf8": [name]}
+    lean_data = {"name": '', "id": ''}
+    prop_obj = BoundVarPO('BOUND_VAR_DEADUCTION', [], representation, [],
+                          lean_data, math_type)
+    return prop_obj
+
+
+
+
+# TODO: implement the following more sophisticated version
+def give_name_v2(goal, math_type: PropObj, hints: List[str] = []) -> str:
     """
     Provide a name for a new variable. UNFINISHED VERSION.
     The list of names of all current variables is extracted from goal
@@ -117,14 +145,14 @@ def give_name(goal: Goal, math_type: PropObj, hints: List[str] = []) -> str:
     # Second trial: hints with alphabetical order
     for name in hints:
         if name in mti_names:
-            potential_name = next(name)
+            potential_name = next_(name)
     # TODO : uncomplete
 
     new_name = ""
     return new_name
 
 
-def next(letter: str) -> str:
+def next_(letter: str) -> str:
     """
     given a letter, return the next letter in the alphabet
     """
@@ -146,7 +174,7 @@ def next_in_list(letter: str, letters: List[str]):
     """
     index = letters.index(letter) + 1
     if index < len(letters):
-        return letters(index)
+        return letters[index]
     else:
         return letters[0]
 
@@ -160,7 +188,7 @@ def name_prolongate(names: List[str]) -> str:
     pass
 
 
-def pre_give_names(goal: Goal, math_types: List[PropObj]) -> List[List[str]]:
+def pre_give_names(goal, math_types: List[PropObj]) -> List[List[str]]:
     """
     compute lists of possible names for each element of math_types,
     with empty pairwise intersection

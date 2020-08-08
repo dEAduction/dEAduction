@@ -31,24 +31,32 @@ This file is part of dEAduction.
 
 from collections import OrderedDict
 from dataclasses import dataclass
-import logging
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Dict
+import logging
+
 import deaduction.pylib.logger as logger
 from deaduction.pylib.coursedata.exercise_classes import (Exercise, Definition,
                                                           Theorem, Statement)
+import deaduction.pylib.coursedata.parser_course as parser_course
 
 
 @dataclass
 class Course:
-    outline: OrderedDict  # todo: typing OrderedDict
-    # keys = lean complete namespaces,
-    # values = corresponding plain language namespace
-    # e. g. section_dict["set_theory.unions_and_intersections"] =
-    # "Unions and intersections"
-    statements: List[Statement]  # ORDERED list of all Statements,
-    # including exercises
     file_content: str
+    metadata: Dict[str, str]
+    outline: OrderedDict
+    statements: List[Statement]
+    # outline description:
+    #   keys = lean complete namespaces,
+    #   values = corresponding plain language namespace
+    #   e. g. section_dict["set_theory.unions_and_intersections"] =
+    #   "Unions and intersections"
+    # statements is a list of all Statements, including exercises
+
+    def print_metadata(self):
+        for field_name, field_content in self.metadata.items():
+            print(f"{field_name}: {field_content}")
 
     def exercises_list(self):
         """
@@ -75,256 +83,107 @@ class Course:
 
         log.info(f"Parsing file {str(course_path.resolve())}")
         file_content = course_path.read_text()
-        lines = file_content.splitlines()
-        global_parsing = ""
-        # possible values = "namespace", "statement", "exercise"
-        data_parsing = ""
-        # possible values = "", "field name", "<field name>"
-        line_counter = 0
-        indent = 0
-        data = {"Tools->Logic": None,
-                "Tools->Definitions": None, "Tools->Theorems": None,
-                "Tools->Exercises": None, "Tools->Statements": None,
-                "Tools->Magic": None, "Tools->ProofTechniques": None,
-                "ExpectedVarsNumber": None, "text_book_identifier": None,
-                "Namespace": None,
-                "current_namespaces": []}
-        for line in lines:
-            line_counter += 1
-            log.debug(f"Parsing line {line_counter}")
-            log.debug(f"global_parsing: {global_parsing}, data_parsing: "
-                      f"{data_parsing}")
+        ########################
+        # Parsimonious's magic #
+        ########################
+        course_tree = parser_course.lean_course_grammar.parse(file_content)
+        visitor = parser_course.LeanCourseVisitor()
+        course_history, course_metadata = visitor.visit(course_tree)
+        log.debug(f"course history: {course_history}")
 
-            #########################################################
-            # first check for begin/end after an exercise statement #
-            #########################################################
-            # (maybe no metadata)
-            if global_parsing in ["StatementMetadata","proof begin...end"]\
-                    and data["lean_name"].startswith("exercise"):
-                ######################################################
-                # search for lines between begin/end for an exercise #
-                ######################################################
-                if line.strip() == "begin":
-                    data["begin"] = line_counter
-                    global_parsing = "...end"
-                    continue
-            elif global_parsing == "...end":
-                if line.strip() == "end":
-                    global_parsing = ""
-                    data["end"] = line_counter
-                    log.info(f"creating exercise from data {data}")
-                    exercise = Exercise.from_parser_data(data, statements)
-                    statements.append(exercise)
-                    continue
-            ##################################################
-            # data_parsing starts after a field_name_parsing #
-            # and goes on till the indentation stops         #
-            ##################################################
-            if line.startswith("/- dEAduction"):
-                data_parsing = "field name"
-                # next line will be a field name
-                continue
-            elif data_parsing not in ["", "field name"]:
-                data_parsing, indent = data_parse(data, data_parsing, indent,
-                                                  line)
-                log.debug(
-                    f"data: {[(key, data[key]) for key in data.keys()]}")
-            # note that previous lines may result in data_parsing="field name"
-            # next line IS NOT elif
-            if data_parsing == "field name":
-                data_parsing = line.strip()
-                log.info(f"get field name {data_parsing}")
-                data[data_parsing] = ""
-                continue
-            elif line.endswith("-/"):
-                #######################
-                # end of data_parsing #
-                #######################
-                if data_parsing != "":
-                    log.info(f"Field content: {data[data_parsing]}")
-                data_parsing = ""
-                if global_parsing != "":
-                    global_parsing = end_global_parsing(data, global_parsing,
-                                                        outline, statements)
-                continue
-            else:
-                ###########################
-                # treatment of namespaces #
-                ###########################
-                global_parsing = namespace_parse(data, global_parsing, line,
-                                                 line_counter, outline,
-                                                 statements)
-                ###########################
-                # treatment of statements #
-                ###########################
-                global_parsing = statement_parse(data, global_parsing, line,
-                                                 line_counter, outline,
-                                                 statements)
-            if line.find("hypo_analysis") != -1 \
-                    or line.find("targets_analysis") != -1:
-                log.warning("Found 'hypo_analysis' or 'targets_analysis' in "
-                            "file, weird behaviour expected")
+        ##########################
+        # parsing course_history #
+        ##########################
+        line_counter = 1
+        namespace = []
+        for event_name, event_content in course_history:
+            if event_name == "end_of_line":
+                line_counter += 1
+                log.debug(f"Parsing line {line_counter}")
+
+            elif event_name == "open_namespace":
+                namespace.append(event_content["name"])
+                outline[whole(namespace)] = event_content["pretty_name"]
+                log.debug(f"namespace {whole(namespace)}")
+            elif event_name == "close_namespace":
+                log.debug("closing namespace")
+                namespace.pop()
+
+            ##############
+            # statements #
+            ##############
+            elif event_name in ["exercise", "definition", "theorem"]:
+                metadata = event_content
+                metadata["lean_line"] = line_counter
+                if namespace:
+                    metadata["lean_name"] = whole(namespace) + "." \
+                                            + metadata["lean_name"]
+                ###############################
+                # optional or not implemented #
+                ###############################
+                not_implemented = ["text_book_identifier", "lean_variables"]
+                default_to_none = ["Tools->Logic",
+                                   "Tools->Magic", "Tools->ProofTechniques",
+                                   "Tools->Definitions", "Tools->Theorems",
+                                   "Tools->Exercises", "Tools->Statements"]
+                metadata.setdefault("Description", "NOT PROVIDED")
+                for item in not_implemented:
+                    metadata.setdefault(item, "NOT IMPLEMENTED")
+                for item in default_to_none:
+                    metadata.setdefault(item, None)
+
+            if event_name == "exercise":
+                log.info(f"creating exercise from data {metadata}")
+                exercise = Exercise.from_parser_data(metadata, statements)
+                statements.append(exercise)
+            elif event_name == "definition":
+                log.info(f"creating definition from data {metadata}")
+                definition = Definition.from_parser_data(metadata)
+                statements.append(definition)
+            elif event_name == "theorem":
+                log.info(f"creating theorem from data {metadata}")
+                theorem = Theorem.from_parser_data(metadata)
+                statements.append(theorem)
+
+            elif event_name == "begin_proof":
+                exercise = statements[-1]
+                exercise.lean_begin_line_number = line_counter
+            elif event_name == "end_proof":
+                exercise = statements[-1]
+                exercise.lean_end_line_number = line_counter
+
+            continue
+
         # Creating the course
-        course = cls(outline, statements, file_content)
+        course = cls(file_content, course_metadata, outline, statements)
+        counter_exercises = 0
         for exo in statements:  # add reference to the course in Exercises
             if isinstance(exo, Exercise):
-                exo.course = course
+                counter_exercises += 1
+                exo.course = course  # this makes printing raw exercises slow
+        log.info(f"{len(statements)} statements, including"
+                 f" {counter_exercises} exercises found by parser")
+        counter_lemma_exercises = file_content.count("lemma exercise.")
+        if counter_exercises < counter_lemma_exercises:
+            log.warning("Some 'lemma exercise.' have not been parsed, "
+                        "wrong format?")
         return course
 
 
-def data_parse(data: dict, data_parsing: str, indent: int, line: str):
-    """
-    search for data in line according to data_parsing
-    :param data: dict where the data will be stored
-    :param data_parsing: type of data being parse
-    (will serve as key for the data dict)
-    :param indent: indentation value for the previous line
-    :param line: content of the current line, to be parsed
-    :return: new data_parsing and new_indent
-    """
-    log = logging.getLogger("Course initialisation")
-    there_is_data, new_indent = indentation(line)
-    if new_indent != 0 and indent != 0 and new_indent != indent:
-        log.warning("indentation error")
-    if new_indent != 0:  # fill the field
-        if data[data_parsing] != "":
-            data[data_parsing] += " "
-        data[data_parsing] += line.strip()
-        if data[data_parsing].endswith("-/"):
-            data[data_parsing] = data[data_parsing][:-2]
-    elif new_indent == 0 and not line.endswith("-/"):
-        # end of field, search for next field
-        log.info(f"Field content: {data[data_parsing]}")
-        data_parsing = "field name"
-    log.debug(f"data: {[(key, data[key]) for key in data.keys()]}")
-    return data_parsing, new_indent
-
-
-def end_global_parsing(data, global_parsing, outline, statements):
-    """
-    This function is called whenever global_parsing is muted from something
-    to nothing or something else, and especially when the parser encounters
-    "-/". This is where all statements except Exercise are created,
-    and added to the statements list, and namespaces are added to the
-    outline of the course. Exercises needs a special treatment because the
-    parser will search for the next begin/end pattern before instantiation.
-    """
-    log = logging.getLogger("Course initialisation")
-    if global_parsing == "namespace":
-        whole_namespace = ".".join(data["current_namespaces"])
-        if whole_namespace not in outline.keys():
-            if data["Namespace"] is None:
-                # compute plain name from Lean name
-                data["Namespace"] = \
-                    data["current_namespaces"][-1].replace("_",
-                                                           " ").capitalize()
-        if data["Namespace"] is not None:
-            outline[whole_namespace] = data["Namespace"]
-        log.info(f"Namespace {whole_namespace},text: {data['Namespace']}")
-        data["Namespace"] = None
-    elif global_parsing == "statement":
-        log.warning("unable to detect end of statement (':=')")
-    elif global_parsing == "StatementMetadata":
-        if data["lean_name"].startswith("exercise"):
-            # parser will search for begin/end before creating the exercise
-            global_parsing = "proof begin...end"
-            return global_parsing
-            # creation of the Statement for definitions and theorems
-        elif data["lean_name"].startswith("definition"):
-            log.info(f"creating definition from data {data}")
-            definition = Definition.from_parser_data(data)
-            statements.append(definition)
-        elif data["lean_name"].startswith("theorem"):
-            log.info(f"creating theorem from data {data}")
-            theorem = Theorem.from_parser_data(data)
-            statements.append(theorem)
-    return ""  # global_parsing = "" if not "proof begin...end"
-
-
-def namespace_parse(data, global_parsing, line,
-                    line_counter, outline, statements):
-    # namespace_parsing starts at "namespace",
-    # ends at first "-/" or "lemma exercise."
-    log = logging.getLogger("Course initialisation")
-    if line.startswith("namespace"):
-        end_global_parsing(data, global_parsing, outline, statements)
-        global_parsing = "namespace"
-        namespace = line.split()[1]
-        data["current_namespaces"].append(namespace)
-        whole_namespace = ".".join(data["current_namespaces"])
-        log.info(f"Parsing namespace {whole_namespace}")
-    elif line.startswith("end") and len(line.split()) > 1:
-        if line.split()[1] == data["current_namespaces"][-1]:
-            # closing namespace
-            data["current_namespaces"].pop()
-    return global_parsing
-
-
-def statement_parse(data, global_parsing, line,
-                    line_counter, outline, statements):
-    # statement_parsing starts at "lemma exercise.", ends at ":="
-    # then exercise_parsing starts, and it ends at "-/"
-    log = logging.getLogger("Course initialisation")
-    if line.startswith("lemma exercise.") \
-            or line.startswith("lemma definition.") \
-            or line.startswith("lemma theorem."):
-        if global_parsing != "":
-            end_global_parsing(data, global_parsing, outline, statements)
-        global_parsing = "statement"
-        data["lean_line"] = line_counter
-        words = line.split()
-        data["lean_name"] = words[1]  # lean nam WITHOUT namespaces
-        log.info(f"Parsing statement {data['lean_name']}")
-        line = " ".join(words[2:])  # suppress the lemma declaration
-        data["lean_variables"], _, line = line.rpartition(" : ")
-        # todo: not very robust, to be improved
-        data["lean_statement"] = ""
-        data["PrettyName"] = None
-        data["Description"] = None
-        data["Tools->Logic"] = None
-        data["Tools->Magic"] = None
-        data["Tools->ProofTechniques"] = None
-        data["Tools->Definitions"] = None
-        data["Tools->Theorems"] = None
-        data["Tools->Exercises"] = None
-        data["Tools->Statements"] = None
-        # (By default the other fields are as for the previous exercise)
-    if global_parsing == "statement":
-        data["lean_statement"] += line.strip()
-        if line.strip().endswith(":="):
-            log.info("parsing statement data")
-            data["lean_statement"] = data["lean_statement"][:-2]
-            global_parsing = "StatementMetadata"
-    return global_parsing
-
-
-def indentation(line: str) -> Tuple:
-    """
-    Compute the number of space at the beginning of line
-    :return: tuple (bool, int)
-    chere bool = True if there is some data, i.e. the line contains some
-    non-space letters
-    """
-    i = 0
-    if line.isspace() or line == "":
-        return False, len(line)
-    while line[i] == " ":
-        i += 1
-    return True, i
-
-#def clear_data(data):
-    # just keep data["current_namespaces"]
-#    data = {"current_namespaces": data["current_namespaces"]}
+def whole(namespace_list: List[str]):
+    whole_namespace = ".".join(namespace_list)
+    return whole_namespace
 
 
 if __name__ == "__main__":
     logger.configure()
-#    course_file_path = Path(
-#        '../../../../tests/lean_files/short_course/exercises.lean')
-    course_file_path = Path(
-        '../../../../tests/lean_files/exercises_theorie_des_ensembles.lean')
+    course_file_path1 = Path(
+        '../../../../tests/lean_files/short_course/exercises.lean')
 
-    my_course = Course.from_file(course_file_path)
+    course_file_path2 = Path("../../../../tests/lean_files/exercises/\
+exercises_theorie_des_ensembles.lean")
+
+    my_course = Course.from_file(course_file_path1)
     print("My course:")
     print("List of statements:")
     count_ex = 0
@@ -336,17 +195,17 @@ if __name__ == "__main__":
             print(f"Definition {statement.pretty_name}")
         elif isinstance(statement, Theorem):
             print(f"Theorem {statement.pretty_name}")
-        for key in statement.__dict__.keys():
-            print(f"    {key}: {statement.__dict__[key]}")
+        #for key in statement.__dict__.keys():
+        #    print(f"    {key}: {statement.__dict__[key]}")
     print('Sections:')
     for key in my_course.outline.keys():
         print(f"    {key}: {my_course.outline[key]}")
-    print("Statements list :")
-    for item in my_course.statements:
-        print(item.lean_name)
-    print("Exercises list with statements :")
-    for item in my_course.statements:
-        if isinstance(item, Exercise):
-            print(item.lean_name)
-            for st in item.available_statements:
-                print("    " + st.lean_name)
+    #print("Statements list :")
+    #for item in my_course.statements:
+    #    print(item.lean_name)
+    # print("Exercises list with statements :")
+    # for item in my_course.statements:
+    #     if isinstance(item, Exercise):
+    #         print(item.lean_name)
+    #         for st in item.available_statements:
+    #             print("    " + st.lean_name)

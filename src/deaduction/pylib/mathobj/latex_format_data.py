@@ -9,10 +9,10 @@ DESCRIPTION
 Contain the data for processing PropObj into a latex representation
 
 """
+import logging
 import gettext
 
 _ = gettext.gettext
-import logging
 
 log = logging.getLogger(__name__)
 
@@ -24,6 +24,49 @@ nature_leaves_list = ["PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                       "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY"]
 
 
+def subscript(structured_string):
+    """
+    recursive version, for strings to be displayed use global_subscript instead
+    :param structured_string: list of sturctured string
+    :return: the structured string in a subscript version if available,
+    or the structured string unchanged if not,
+    and a boolean is_subscriptable
+    """
+    normal_list = "0123456789" + "aeioruv"
+    subscript_list = "₀₁₂₃₄₅₆₇₈₉" + "ₐₑᵢₒᵣᵤᵥ"
+    #subscript_list = "₀₁₂₃₄₅₆₇₈₉" + "ₐₑᵢⱼₒᵣᵤᵥₓ"
+    is_subscriptable = True
+    if isinstance(structured_string, list):
+        sub_list = []
+        for item in structured_string:
+            sub, bool = subscript(item)
+            if not bool:  # not subscriptable
+                return structured_string, False
+            else:
+                sub_list.append(sub)
+        return sub_list, True
+
+    # from now on structured_string is assumed to be a string
+    for letter in structured_string:
+        if letter not in normal_list:
+            is_subscriptable = False
+    if is_subscriptable:
+        subscript_string = ""
+        for l in structured_string:
+            subscript_string += subscript_list[normal_list.index(l)]
+    else:
+        subscript_string = structured_string
+    return subscript_string, is_subscriptable
+
+def global_subscript(structured_string):
+    sub, is_subscriptable = subscript(structured_string)
+    if is_subscriptable:
+        return sub
+    else:
+        return ['_'] + [sub]
+        # [sub] necessary in case sub is an (unstructured) string
+
+
 def format_arg0(latex_symb, a, PO, format_="latex"):
     return [a[0]]
 
@@ -31,10 +74,12 @@ def format_arg0(latex_symb, a, PO, format_="latex"):
 def format_n0(latex_symb, a, PO, format_="latex"):
     return [latex_symb, a[0]]
 
+def format_n1(latex_symb, a, PO, format_="latex"):
+    return [latex_symb, a[1]]
+
 
 def format_0n1(latex_symb, a, PO, format_="latex"):
     return [a[0], latex_symb, a[1]]
-
 
 def format_name(latex_symb, a, PO, format_="latex"):
     return [PO.lean_data["name"]]
@@ -86,6 +131,9 @@ def general_format_application(latex_symb, a, PO, format_="latex"):
     if hasattr(PO.children[0], "math_type"):
         if PO.children[0].math_type.node == "FUNCTION":
             return [a[0], '(', a[1], ')']
+        if PO.children[0].math_type.node in ["SET_FAMILY", "SEQUENCE"]:
+            index = global_subscript([a[1]])
+            return [PO.children[0].lean_data['name']] + index
     key = PO.children[0].representation['info']
     if key == 'composition':  # composition of functions
         log.debug(f"composition of {a[-2]} and {a[-1]}")
@@ -108,6 +156,32 @@ def latex_text(string: str, format_="latex"):
         string = r"\textsc{" + string + r"}"
     return string
 
+
+def format_instance_set_family(latex_symb, children_rep, PO, format_="latex"):
+    """
+    :param children_rep: list or str, structured format of children
+    :param PO: PropObj
+    :return: None
+    """
+    name = PO.lean_data["name"]
+    index_rep = children_rep[0]
+    index_subscript_rep = global_subscript(index_rep)
+    index_set_rep = PO.math_type.children[0].representation[format_]
+    if format_ == "latex":
+        rep = [r"\{", name,  r"_{", index_rep, r"}, ",
+               index_rep, r"\in ", index_set_rep, r"\}"]
+    elif format_ == "utf8":
+        rep = ["{", name, index_subscript_rep, ", ",
+               index_rep, "∈", index_set_rep, "}"]
+    return rep
+
+def format_name_index_1(latex_symb, a, PO, format_="latex"):
+    name = PO.children[0].lean_data["name"]
+    if format_ == "latex":
+        return [name, '_', a[1]]
+    if format_ == "utf8":
+        # TODO : put a[1] in subscript format
+        return [name, '_', a[1]]
 
 # dict nature -> (latex symbol, format name)
 ##########
@@ -133,13 +207,16 @@ latex_structures = {"PROP_AND": (r" \text{ " + _("AND") + " } ", format_0n1),
                     "PROP_INCLUDED": (r" \subset ", format_0n1),
                     "PROP_BELONGS": (r" \in ", format_0n1),
                     "SET_DIFF": (r" \backslash ", format_0n1),
+                    "SET_SYM_DIFF": (r" \backslash ", format_0n1),
                     "SET_COMPLEMENT": (r"", format_complement),
                     "SET_UNIVERSE": ("", format_arg0),
                     "SET_EMPTY": (r" \emptyset ", format_constant1),
                     "SET_IMAGE": ("", format_app_function),
                     "SET_INVERSE": ("", format_app_inverse),
                     "SET_FAMILY": (r"\text{ " + _("a family of subsets of") +
-                                   " }", format_n0),
+                                   " }", format_n1),
+                    "INSTANCE_OF_SET_FAMILY": ("", format_instance_set_family),
+                    "APPLICATION_OF_SET_FAMILY": ("", format_name_index_1),
                     ############
                     # NUMBERS: #
                     ############
@@ -166,16 +243,14 @@ latex_structures = {"PROP_AND": (r" \text{ " + _("AND") + " } ", format_0n1),
                     "ELEMENT": (r" \text{ " + _("an element of") + " }",
                                 format_n0),
                     "FUNCTION": (r" \to ", format_0n1),
-                    "SEQUENCE": ("", ""),
+                    "SEQUENCE": ("", ""),  # TODO: and also INSTANCE_OF_SEQ
                     "TYPE_NUMBER[name:ℕ]": ("\mathbb{N}", format_constant1),
                     "TYPE_NUMBER[name:ℝ]": ("\mathbb{R}", format_constant1),
                     "NUMBER": ("", ""),
                     "CONSTANT": ("", format_constant2)
                     }
 
-utf8_structures = {"PROP_AND": (" " + _(r"AND") + " ",
-                                format_0n1),
-                   # logic
+utf8_structures = {"PROP_AND": (" " + _("AND") + " ", format_0n1),  # logic
                    "PROP_OR": (" " + _("OR") + " ", format_0n1),
                    "PROP_FALSE": (_("Contradiction"), format_constant1),
                    "PROP_IFF": (" ⇔ ", format_0n1),
@@ -184,13 +259,15 @@ utf8_structures = {"PROP_AND": (" " + _(r"AND") + " ",
                    "QUANT_∀": ("∀ ", format_quantifiers),
                    "QUANT_∃": ("∃ ", format_quantifiers),
                    "PROP_∃": ("", ""),
-                   # set theory
+                   ###############
+                   # SET THEORY: #
+                   ###############
+                   "PROP_INCLUDED": (" ⊂ ", format_0n1),
+                   "PROP_BELONGS": (r" ∈ ", format_0n1),
                    "SET_INTER": (r" ∩ ", format_0n1),  # set theory
                    "SET_UNION": (r" ∪ ", format_0n1),
                    "SET_INTER+": (" ∩", format_n0),
                    "SET_UNION+": (" ∪", format_n0),
-                   "PROP_INCLUDED": (" ⊂ ", format_0n1),
-                   "PROP_BELONGS": (r" ∈ ", format_0n1),
                    "SET_DIFF": (r" \\ ", format_0n1),
                    "SET_COMPLEMENT": (r"", format_complement),
                    "SET_UNIVERSE": ("", format_arg0),
@@ -198,8 +275,12 @@ utf8_structures = {"PROP_AND": (" " + _(r"AND") + " ",
                    "SET_IMAGE": ("", format_app_function),
                    "SET_INVERSE": ("", format_app_inverse),
                    "SET_FAMILY": (" " + _("a family of subsets of") + " ",
-                                  format_n0),
-                   # numbers
+                                  format_n1),
+                   "INSTANCE_OF_SET_FAMILY": ("", format_instance_set_family),
+                   "APPLICATION_OF_SET_FAMILY": ("", format_name_index_1),
+                   ############
+                   # NUMBERS: #
+                   ############
                    "PROP_EQUAL": (" = ", format_0n1),
                    "PROP_EQUAL_NOT": ("", ""),
                    "PROP_<": ("<", format_0n1),
@@ -208,14 +289,15 @@ utf8_structures = {"PROP_AND": (" " + _(r"AND") + " ",
                    "PROP_≥": ("≥", format_0n1),
                    "MINUS": ("-", format_n0),
                    "+": ("+", format_0n1),
-                   "APPLICATION_FUNCTION": ("", format_app_function),
                    "VAR": ("", "var"),
-                   # general types
                    "APPLICATION": ("", general_format_application),
-                   "PROP": (_(" a proposition"), format_constant1),
-                   "TYPE": (_(" a set"), format_constant1),
-                   "SET": (_(" a subset of "), format_n0),
-                   "ELEMENT": (_(" an element of "), format_n0),
+                   ##################
+                   # GENERAL TYPES: #
+                   ##################
+                   "PROP": (" " + _("a proposition"), format_constant1),
+                   "TYPE": (" " + _("a set"), format_constant1),
+                   "SET": (" " + _("a subset of "), format_n0),
+                   "ELEMENT": (" " + _("an element of "), format_n0),
                    "FUNCTION": (" → ", format_0n1),
                    "SEQUENCE": ("", ""),
                    "TYPE_NUMBER[name:ℕ]": ("ℕ", format_constant1),
@@ -223,6 +305,7 @@ utf8_structures = {"PROP_AND": (" " + _(r"AND") + " ",
                    "NUMBER": ("", ""),
                    "CONSTANT": ("", format_constant2)
                    }
+
 
 # TODO A traiter : R, N ; NUMBER ; emptyset ; PROP_∃ ; SET_INTER+ ; SEQUENCE ;
 # MINUS (n0 ou 0n1 selon le nb d'arguments)

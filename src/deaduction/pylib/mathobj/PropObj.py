@@ -60,7 +60,9 @@ class PropObj:
     """
     node: str
     children: list
-    representation: Dict[str, list]  # keys = 'latex, 'utf8'
+    representation: Dict[str, list]  # keys = 'latex, 'utf8', 'info'
+    # 'info' value store are used when node = 'CONSTANT' to store CONSTANT name
+    # (e.g. "false")
     # The following are here just to help reading the code
     # See structures.lean for more accurate lists
     nodes_list = ["PROP_AND", "PROP_OR", "PROP_IFF", "PROP_NOT",
@@ -115,6 +117,7 @@ class PropObj:
         (as opposed to object).
         ! MIND ! that for ProofStatePO's, only the math_type attribute
         should be tested !
+        For ProofSatetPO's, this function is redefined by testing the math_type
         """
         if self.node == "":
             return False
@@ -158,12 +161,16 @@ class PropObj:
         if node in latex_structures.keys():
             if format_ == "latex":
                 symbol, format_scheme = latex_structures[node]
-                self.representation["latex"] = format_scheme(symbol, children_rep,
-                                                             self, format_="latex")
+                self.representation["latex"] = format_scheme(symbol,
+                                                             children_rep,
+                                                             self,
+                                                             format_="latex")
             else:
                 symbol, format_scheme = utf8_structures[node]
-                self.representation["utf8"] = format_scheme(symbol, children_rep,
-                                                            self, format_="utf8")
+                self.representation["utf8"] = format_scheme(symbol,
+                                                            children_rep,
+                                                            self,
+                                                            format_="utf8")
         else:  # node not implemented
             log.warning(f"display of {node} not implemented")
             self.representation['latex'] = '???'
@@ -242,10 +249,9 @@ class AnonymousPO(PropObj):
         create anonymous sub-objects and props, or refer to existing pfPO
         :param prop_obj_dict: dictionary provided by analysis.LeanExprVisitor
         :param bound_vars: list of bounded variables (BoundVarPO),
-        to be updated
+        to be updated if the AnonymousPO is actually a BounVarPO
         :return: an instance of AnonymousPO
         """
-        #        log = logging.getLogger("PropObj")
         representation = {'latex': None, 'utf8': None, 'info': None}
         # latex representation is computed later
         node = prop_obj_dict["node"]
@@ -282,10 +288,10 @@ class AnonymousPO(PropObj):
         #############################
         # Application of a function #
         #############################
-#        if node == "APPLICATION":
-            # if hasattr(children[0],"math_type"):
-            #     if children[0].math_type.node == "FUNCTION":
-            #         node = "APPLICATION_FUNCTION"
+        #        if node == "APPLICATION":
+        # if hasattr(children[0],"math_type"):
+        #     if children[0].math_type.node == "FUNCTION":
+        #         node = "APPLICATION_FUNCTION"
         #############
         # CONSTANTS #
         #############
@@ -372,6 +378,19 @@ class ProofStatePO(PropObj):
         #        if not math_type.is_prop():
         #            math_type_store(prop_obj, math_type)
         return prop_obj
+
+    def is_prop_math_type(self) -> bool:
+        """
+        tells if the math_type of self is a Proposition
+        NB: for ProofStatePO's (but not for all PropObj),
+        if self.math_type.node = 'APPLICATION' then self
+        is the term of a Proposition
+        (e.g 'injective' vs 'composition')
+        """
+        return self.math_type.is_prop() \
+               or self.math_type.node == 'APPLICATION' \
+               or (hasattr(self.math_type, "math_type") \
+               and self.math_type.math_type.node == 'PROP')
 
 
 @dataclass(eq=False)
@@ -489,51 +508,3 @@ OBJECT[LOCAL_CONSTANT¿[name:C/identifier:0._fresh.436.13268¿]¿(CONSTANT¿[nam
 OBJECT[LOCAL_CONSTANT¿[name:a/identifier:0._fresh.437.4734¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= LOCAL_CONSTANT¿[name:X/identifier:0._fresh.436.13260¿]¿(CONSTANT¿[name:1/1¿]¿)
 PROPERTY[LOCAL_CONSTANT¿[name:H/identifier:0._fresh.437.4736¿]¿(CONSTANT¿[name:1/1¿]¿)/pp_type: a ∈ A ∩ (B ∪ C)] ¿= PROP_BELONGS¿(LOCAL_CONSTANT¿[name:a/identifier:0._fresh.437.4734¿]¿(CONSTANT¿[name:1/1¿]¿)¿, SET_INTER¿(LOCAL_CONSTANT¿[name:A/identifier:0._fresh.436.13262¿]¿(CONSTANT¿[name:1/1¿]¿)¿, SET_UNION¿(LOCAL_CONSTANT¿[name:B/identifier:0._fresh.436.13265¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:C/identifier:0._fresh.436.13268¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿)"""
     essai = essai_context_union
-
-
-    def process_context(lean_analysis: str) -> list:  # useless
-        """
-        Process the strings provided by Lean's context_analysis and goals_analysis
-        and create the corresponding ProofStatePO instances by calling create_psPO
-        (will probably not be used at the end)
-
-        :param lean_analysis: a string which is the result of Lean's hypo_analysis
-        or goals_analysis tactics
-        :return: a list of ProofStatePO's
-        """
-        list_ = lean_analysis.splitlines()
-        #    is_goal = None
-        prop_obj_list = []
-        for prop_obj_string in list_:
-            if prop_obj_string.startswith("context"):
-                pass
-            #            is_goal = False
-            elif prop_obj_string.startswith("goals"):
-                pass
-            #                is_goal = True
-            else:
-                prop_obj = ProofStatePO.from_string(prop_obj_string)
-                #           PO.is_goal = is_goal
-                prop_obj_list.append(prop_obj)
-        return prop_obj_list
-
-
-    liste = process_context(essai)
-    print(liste)
-    print("")
-    #    for pfprop_obj in liste:
-    #        pfprop_obj.math_type.latex_rep = pfprop_obj.math_type.compute_latex()
-    #        pfprop_obj.latex_type_str = latex_join(pfprop_obj.latex_type)
-    #        print("-------")
-    format = "utf8"
-
-    for pfprop_obj in liste:
-        print(f"{eval('pfprop_obj.format_as_' + format + '()')} : "
-              f"{eval('pfprop_obj.math_type.format_as_' + format + '()')}")
-    #        print(f"assemblé :  {latex_join(pfprop_obj.math_type.latex_rep)}")
-    # print("List of math types:")
-    # i = 0
-    # for mt in ProofStatePO.math_types:
-    #     print(f" {mt.format_as_utf8()}: ",
-    #           f"{[PO.format_as_utf8() for PO in ProofStatePO.math_types_instances[i]]}")
-    #     i += 1
