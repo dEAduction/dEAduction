@@ -103,69 +103,64 @@ class ExerciseToolbar(QToolBar):
 
 
 class ExerciseCentralWidget(QWidget):
+    """
 
-    ################
-    # Init methods #
-    ################
-    
-    def _init_all_layout_boxes(self):
-        # TODO: draw the damn thing
-
-        # Layouts
-        self._main_lyt = QVBoxLayout()
-        self._context_actions_lyt = QHBoxLayout()
-        self._context_lyt = QVBoxLayout()
-        self._actions_lyt = QVBoxLayout()
-
-        # Group boxes
-        self._actions_gb = QGroupBox(_('Actions (transform context and target)'))
-        self._context_gb = QGroupBox(_('Context (objects and properties)'))
-
-    def _init_actions(self):
-        # Init tool buttons
-        self.logic_btns = ActionButtonsWidget(self.exercise.available_logic)
-        # Init proof techniques buttons
-        self.proof_btns = ActionButtonsWidget(
-                self.exercise.available_proof_techniques)
-        # Init statements tree
-        statements = self.exercise.available_statements
-        outline = self.exercise.course.outline
-        self.statements_tree = StatementsTreeWidget(statements, outline)
-
-    def _init_goal(self):
-        # Create empty widgets while waiting for Lean
-        self.objects_wgt = ProofStatePOWidget()
-        self.props_wgt = ProofStatePOWidget()
-        self.target_wgt = TargetWidget()
-
-    def _init_put_widgets_in_layouts(self):
-        # Actions
-        self._actions_lyt.addWidget(self.logic_btns)
-        self._actions_lyt.addWidget(self.proof_btns)
-        self._actions_lyt.addWidget(self.statements_tree)
-        self._actions_gb.setLayout(self._actions_lyt)
-
-        # Context
-        self._context_lyt.addWidget(self.objects_wgt)
-        self._context_lyt.addWidget(self.props_wgt)
-        self._context_gb.setLayout(self._context_lyt)
-
-        # https://i.kym-cdn.com/photos/images/original/001/561/446/27d.jpg
-        self._context_actions_lyt.addWidget(self._context_gb)
-        self._context_actions_lyt.addWidget(self._actions_gb)
-        self._main_lyt.addWidget(self.target_wgt)
-        self._main_lyt.addLayout(self._context_actions_lyt)
+    exercise and goal not stored as attributes
+    """
 
     def __init__(self, exercise: Exercise):
         super().__init__()
 
-        self.exercise = exercise
+        # ───────────── init layouts and boxes ───────────── #
+        # I wish none of these were class atributes, but we need at
+        # least self.__main_lyt and self.__context_lyt in
+        # self.update_goal.
+
+        self.__main_lyt     = QVBoxLayout()
+        self.__context_lyt  = QVBoxLayout()
+        context_actions_lyt = QHBoxLayout()
+        actions_lyt         = QVBoxLayout()
+
+        actions_gb = QGroupBox(_('Actions (transform context and target)'))
+        context_gb = QGroupBox(_('Context (objects and properties)'))
+
+        # ──────────────── init Actions area ─────────────── #
         
-        self._init_all_layout_boxes()
-        self._init_actions()
-        self._init_goal()
-        self._init_put_widgets_in_layouts()
-        self.setLayout(self._main_lyt)
+        self.logic_btns = ActionButtonsWidget(exercise.available_logic)
+        self.proof_btns = ActionButtonsWidget(
+                exercise.available_proof_techniques)
+
+        statements           = exercise.available_statements
+        outline              = exercise.course.outline
+        self.statements_tree = StatementsTreeWidget(statements, outline)
+
+        # ─────── init goal (Context area and target) ────── #
+
+        self.objects_wgt = ProofStatePOWidget()
+        self.props_wgt   = ProofStatePOWidget()
+        self.target_wgt  = TargetWidget()
+
+        # ───────────── put widgets in layouts ───────────── #
+
+        # Actions
+        actions_lyt.addWidget(self.logic_btns)
+        actions_lyt.addWidget(self.proof_btns)
+        actions_lyt.addWidget(self.statements_tree)
+        actions_gb.setLayout(actions_lyt)
+
+        # Context
+        self.__context_lyt.addWidget(self.objects_wgt)
+        self.__context_lyt.addWidget(self.props_wgt)
+        context_gb.setLayout(self.__context_lyt)
+
+        # https://i.kym-cdn.com/photos/images/original/001/561/446/27d.jpg
+        context_actions_lyt.addWidget(context_gb)
+        context_actions_lyt.addWidget(actions_gb)
+        self.__main_lyt.addWidget(self.target_wgt)
+        self.__main_lyt.addLayout(context_actions_lyt)
+
+        self.setLayout(self.__main_lyt)
+        
 
     def update_goal(self, new_goal: Goal):
         """
@@ -186,18 +181,18 @@ class ExerciseCentralWidget(QWidget):
         new_target_wgt  = TargetWidget(new_target, new_target_tag)
 
         # Replace in the layouts
-        replace_delete_widget(self._context_lyt,
+        replace_delete_widget(self.__context_lyt,
                               self.objects_wgt, new_objects_wgt)
-        replace_delete_widget(self._context_lyt,
+        replace_delete_widget(self.__context_lyt,
                               self.props_wgt, new_props_wgt)
-        replace_delete_widget(self._main_lyt,
+        replace_delete_widget(self.__main_lyt,
                               self.target_wgt, new_target_wgt,
                               ~Qt.FindChildrenRecursively)
 
         # Set the attributes to the new values
-        self.objects_wgt = new_objects_wgt
-        self.props_wgt = new_props_wgt
-        self.target_wgt = new_target_wgt
+        self.objects_wgt  = new_objects_wgt
+        self.props_wgt    = new_props_wgt
+        self.target_wgt   = new_target_wgt
         self.current_goal = new_goal
 
 
