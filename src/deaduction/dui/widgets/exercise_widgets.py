@@ -92,9 +92,6 @@ class ExerciseToolbar(QToolBar):
         self.redo_action = QAction(
                 QIcon(str((icons_dir / 'redo_action.png').resolve())),
                 _('Redo action'), self)
-        self.clear_selection_action = QAction(
-                QIcon(str((icons_dir / 'clear_selection.png').resolve())),
-               _('Clear selection'), self)
 
         self.toggle_lean_editor_action = QAction(
                 QIcon(str((icons_dir / 'lean_editor.png').resolve())),
@@ -102,7 +99,6 @@ class ExerciseToolbar(QToolBar):
 
         self.addAction(self.undo_action)
         self.addAction(self.redo_action)
-        self.addAction(self.clear_selection_action)
         self.addAction(self.toggle_lean_editor_action)
 
 
@@ -231,8 +227,6 @@ class ExerciseMainWindow(QMainWindow):
                 self.__statement_triggered)
 
         # Toolbar
-        self.toolbar.clear_selection_action.triggered.connect(
-                self.clear_user_selection)
         self.toolbar.toggle_lean_editor_action.triggered.connect(
                 self.lean_editor.toggle)
 
