@@ -101,7 +101,6 @@ class _TagIcon(QIcon):
 
 class ProofStatePOWidgetItem(QListWidgetItem):
     """
-
     Widget in charge of containing an instance of the class ProofStatePO
     as an attribute and displaying it in a list (ProofStatePOWidget)
     other such instances. Objects (e.g. f:X->Y a function) and

@@ -314,10 +314,11 @@ class ExerciseMainWindow(QMainWindow):
                             partial(self._server_call_action,
                                     emission.args[0])
                     )
+                # TODO: comment, what is emission.args[0]?
                 elif emission.is_from(self.__statement_triggered):
                     await self.process_async_signal(
                             partial(self._server_call_statement,
-                                emission.args[0])
+                                    emission.args[0])
                     )
                 elif emission.is_from(self.toolbar.undo_action.triggered):
                     # No need to call self.update_goal, this block
