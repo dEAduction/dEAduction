@@ -113,7 +113,7 @@ class ExerciseCentralWidget(QWidget):
 
         # ───────────── init layouts and boxes ───────────── #
         # I wish none of these were class atributes, but we need at
-        # least self.__main_lyt and self.__context_lyt in
+        # least self.__main_lyt and self.__context_lyt in the method
         # self.update_goal.
 
         self.__main_lyt     = QVBoxLayout()
@@ -216,13 +216,9 @@ class ExerciseCentralWidget(QWidget):
 
 class ExerciseMainWindow(QMainWindow):
 
-    window_closed = Signal()
-    __action_triggered = Signal(ActionButton)
+    window_closed         = Signal()
+    __action_triggered    = Signal(ActionButton)
     __statement_triggered = Signal(StatementsTreeWidgetItem)
-
-    ################
-    # Init methods #
-    ################
 
     def __init__(self, exercise: Exercise, servint: ServerInterface):
         super().__init__()
@@ -252,9 +248,9 @@ class ExerciseMainWindow(QMainWindow):
         # Start server task
         self.servint.nursery.start_soon(self.server_task)
 
-    #################
-    # Other methods #
-    #################
+    ###########
+    # Methods #
+    ###########
 
     def connect_actions_signals_slots(self):
         # Actions buttons
