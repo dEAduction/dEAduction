@@ -160,6 +160,19 @@ class ExerciseCentralWidget(QWidget):
         self.__main_lyt.addLayout(context_actions_lyt)
 
         self.setLayout(self.__main_lyt)
+
+    def freeze(self, yes=True):
+        """
+        Freeze interface.
+        """
+
+        to_freeze = [self.objects_wgt,
+                     self.props_wgt,
+                     self.logic_btns,
+                     self.proof_btns,
+                     self.statements_tree]
+        for widget in to_freeze:
+            widget.setEnabled(not yes)
         
 
     def update_goal(self, new_goal: Goal):
@@ -437,15 +450,8 @@ class ExerciseMainWindow(QMainWindow):
 
     @Slot()
     def freeze(self, yes=True):
-        to_freeze = [self.toolbar,
-                     self.cw.objects_wgt,
-                     self.cw.props_wgt,
-                     self.cw.logic_btns,
-                     self.cw.proof_btns,
-                     self.cw.statements_tree]
-
-        for widget in to_freeze:
-            widget.setEnabled(not yes)
+        self.cw.freeze(yes)
+        self.toolbar.setEnabled(not yes)
 
     @Slot()
     def fireworks(self):
