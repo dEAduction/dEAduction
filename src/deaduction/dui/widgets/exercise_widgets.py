@@ -125,7 +125,6 @@ class ExerciseCentralWidget(QWidget):
         context_gb = QGroupBox(_('Context (objects and properties)'))
 
         # ──────────────── init Actions area ─────────────── #
-        
         self.logic_btns = ActionButtonsWidget(exercise.available_logic)
         self.proof_btns = ActionButtonsWidget(
                 exercise.available_proof_techniques)
@@ -135,13 +134,11 @@ class ExerciseCentralWidget(QWidget):
         self.statements_tree = StatementsTreeWidget(statements, outline)
 
         # ─────── init goal (Context area and target) ────── #
-
         self.objects_wgt = ProofStatePOWidget()
         self.props_wgt   = ProofStatePOWidget()
         self.target_wgt  = TargetWidget()
 
         # ───────────── put widgets in layouts ───────────── #
-
         # Actions
         actions_lyt.addWidget(self.logic_btns)
         actions_lyt.addWidget(self.proof_btns)
@@ -160,6 +157,11 @@ class ExerciseCentralWidget(QWidget):
         self.__main_lyt.addLayout(context_actions_lyt)
 
         self.setLayout(self.__main_lyt)
+
+    @property
+    def actions_buttons(self):
+
+        return self.logic_btns.buttons + self.proof_btns.buttons 
 
     def freeze(self, yes=True):
         """
@@ -223,52 +225,40 @@ class ExerciseMainWindow(QMainWindow):
     def __init__(self, exercise: Exercise, servint: ServerInterface):
         super().__init__()
 
-        self.exercise = exercise
-        self.current_goal = None
-        self.cw = ExerciseCentralWidget(self.exercise)
+        # ─────────────────── Attributes ─────────────────── #
+        self.exercise          = exercise
+        self.current_goal      = None
         self.current_selection = []
-        self.lean_editor = LeanEditor()
-        self.servint = servint
-        self.toolbar = ExerciseToolbar()
+        self.cw                = ExerciseCentralWidget(exercise)
+        self.lean_editor       = LeanEditor()
+        self.servint           = servint
+        self.toolbar           = ExerciseToolbar()
 
+        # ─────────────────────── UI ─────────────────────── #
         self.setCentralWidget(self.cw)
         self.addToolBar(self.toolbar)
+        self.toolbar.redo_action.setEnabled(False)  # No history at beginning
+        self.toolbar.undo_action.setEnabled(False)  # same
 
-        # There is no history at the beginning
-        self.toolbar.redo_action.setEnabled(False)
-        self.toolbar.undo_action.setEnabled(False)
+        # ──────────────── Signals and slots ─────────────── #
+        # Actions area
+        for action_button in self.cw.actions_buttons:
+            action_button.action_triggered.connect(self.__action_triggered)
+        self.cw.statements_tree.itemClicked.connect(self.__statement_triggered)
 
-        # Signals and slots
-        self.connect_actions_signals_slots()
+        # UI
+        self.toolbar.toggle_lean_editor_action.triggered.connect(
+                self.lean_editor.toggle)
+
+        # Server communication
         self.servint.proof_state_change.connect(self.update_proof_state)
         self.servint.lean_file_changed.connect(self._update_lean_editor)
-
-        # No more goal
         self.servint.proof_no_goals.connect(self.fireworks)
-
-        # Start server task
-        self.servint.nursery.start_soon(self.server_task)
+        self.servint.nursery.start_soon(self.server_task)  # Start server task
 
     ###########
     # Methods #
     ###########
-
-    def connect_actions_signals_slots(self):
-        # Actions buttons
-        for logic_btn in self.cw.logic_btns.buttons:
-            logic_btn.action_triggered.connect(self.__action_triggered)
-
-        # Proof buttons
-        for proof_btn in self.cw.proof_btns.buttons:
-            proof_btn.action_triggered.connect(self.__action_triggered)
-
-        # Statements tree
-        self.cw.statements_tree.itemClicked.connect(
-                self.__statement_triggered)
-
-        # Toolbar
-        self.toolbar.toggle_lean_editor_action.triggered.connect(
-                self.lean_editor.toggle)
 
     def connect_context_signals_slots(self):
         # Objects and properties lists
@@ -453,7 +443,7 @@ class ExerciseMainWindow(QMainWindow):
     @Slot()
     def fireworks(self):
         QMessageBox.information(self, _('Target solved'), _('Target solved!'),
-                QMessageBox.Ok)
+                                QMessageBox.Ok)
 
     @Slot(ProofStatePOWidgetItem)
     def process_context_click(self, item: ProofStatePOWidgetItem):
