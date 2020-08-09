@@ -25,8 +25,6 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from . import exceptions
-
 from pathlib import Path
 from io import BufferedWriter
 import logging
@@ -35,6 +33,8 @@ from typing import Callable
 import requests
 import hashlib
 import gzip
+
+import re
 
 from dictdiffer import diff as ddiff  # ddiff for "dict diff"
 
@@ -45,6 +45,7 @@ log = logging.getLogger(__name__)
 # Some configuration variables
 ############################################
 CHUNK_SIZE = 4096
+HASH_REGEX = re.compile(r"^((?:.+)\/(?:[^\/]+)) ([a-zA-Z0-9]+)$")
 
 
 ############################################
@@ -109,7 +110,7 @@ class HashList:
         """
         path   = Path(path).resolve()
         r      = dict()
-        
+
         log.info(_("Generate hashlist from directory at {}").format(str(path)))
         for fp in path.rglob("*"):  # File path
             if fp.is_file():
@@ -144,16 +145,23 @@ class HashList:
                 eof   = len(chunk) < CHUNK_SIZE
 
                 while buff.find("\n") >= 0:
+                    # Find new line and update buffer
                     idx   = buff.find("\n")
-                    buff  = buff[(idx + 1):]  # idx + 1 = discard \n
 
                     line  = buff[:idx]
-                    info  = line.split(" ")
+                    buff  = buff[(idx + 1):]  # idx + 1 = discard \n
 
-                    path  = Path(info[0])
-                    hash_ = info[1]
+                    # Get info from found line and register
+                    mt    = HASH_REGEX.match(line)
+                    if mt:
+                        path  = Path(mt.group(1))
+                        hash_ = mt.group(2)
 
-                    r[path] = hash_
+                        r[path] = hash_
+
+                    else:
+                        log.warning(_("Cannot parse line: {}")
+                                    .format(repr(line)))
 
         return cls(base_path=None, files=r)
 
