@@ -1,5 +1,4 @@
-"""
-#########################################
+""" #########################################
 # filesystem.py : File system utilities #
 #########################################
 
@@ -33,8 +32,6 @@ from typing import Callable
 import requests
 import hashlib
 import gzip
-
-from typing import List, Tuple
 
 log = logging.getLogger(__name__)
 
@@ -74,64 +71,78 @@ def check_dir(path: Path):
         path.mkdir()
 
 
-def hashlist_from_path(path: Path):
+############################################
+# Hashlist class
+############################################
+class HashList:
     """
-    Computes hash list for a given path into output
-    gzipped file
+    An hashlist is a dictionary with relative file path
+    as key, and sha1 checksum as value.
     """
-    path   = Path(path).resolve()
-    r      = []
+    def __init__(self, files=None, base_path=None):
+        self.base_path = base_path        # Base path if any
+        self.files     = files or dict()
 
-    for fp in path.rglob("*"):
-        if fp.is_file():
-            hh = file_hash(fp)
+    def to_file(self, path: Path):
+        path = Path(path).resolve()
 
-            r.append((fp, hh,))
+        with gzip.open(str(path), "wb") as fhandle:
+            for pp, hh in self.files.items():
+                line = f"{str(pp)} {str(hh)}\n".encode("utf8")
+                fhandle.write(line)
 
-    return r
+    # ───────────── Constructors ───────────── #
+    @classmethod
+    def from_path(cls, path: Path):
+        """
+        Computes hash list for a given path into output
+        gzipped file
+        """
+        path   = Path(path).resolve()
+        r      = dict()
 
+        for fp in path.rglob("*"):  # File path
+            if fp.is_file():
+                hh     = file_hash(fp)
 
-def hashlist_to_file(hlist: List[Tuple[Path, str]], path: Path):
-    path = Path(path).resolve()
+                fpr    = fp.relative_to(path)  # File Path Relative
+                r[fpr] = hh
 
-    with gzip.open(str(path), "wb") as fhandle:
-        for pp, hh in hlist:
-            line = f"{str(pp)} {str(hh)}\n".encode("utf8")
-            fhandle.write(line)
+        return cls(base_path=path, files=r)
 
+    @classmethod
+    def from_file(cls, hh_file: Path):
+        """
+        Loads an hashlist from the given gzipped file
+        """
+        hh_file = Path(hh_file).resolve()
 
-def hashlist_from_file(hh_file: Path):
-    """
-    Loads an hashlist from the given gzipped file
-    """
-    hh_file = Path(hh_file).resolve()
+        buff    = ""   # Line buffer
+        line    = ""
 
-    buff    = ""  # Line buffer
-    line    = ""
+        r       = dict()
 
-    r       = []
+        with gzip.open(str(hh_file), "rb") as fhandle:
+            eof = False
+            while not eof:
+                chunk = fhandle.read(CHUNK_SIZE)
+                buff += chunk.decode("utf8")
 
-    with gzip.open(str(hh_file), "rb") as fhandle:
-        eof = False
-        while not eof:
-            chunk = fhandle.read(CHUNK_SIZE)
-            buff += chunk.decode("utf8")
+                eof   = len(chunk) < CHUNK_SIZE
 
-            eof   = len(chunk) < CHUNK_SIZE
+                while buff.find("\n") >= 0:
+                    idx   = buff.find("\n")
+                    buff  = buff[(idx + 1):]  # idx + 1 = discard \n
 
-            while buff.find("\n") >= 0:
-                idx   = buff.find("\n")
-                buff  = buff[(idx + 1):]  # idx + 1 = discard \n
+                    line  = buff[:idx]
+                    info  = line.split(" ")
 
-                line  = buff[:idx]
-                info  = line.split(" ")
+                    path  = Path(info[0])
+                    hash_ = info[1]
 
-                path  = Path(info[0])
-                hash_ = info[1]
+                    r[path] = hash_
 
-                r.append(path, hash_)
-
-    return r
+        return cls(base_path=None, files=r)
 
 
 ############################################
@@ -164,17 +175,23 @@ def download(url: str, fhandle: BufferedWriter, on_progress: Callable = None):
         fhandle.write(response.content)
         sha1.update(response.content)
     else:
-        dl_size  = 0
-        tot_len  = int(tot_len)
+        dl_size       = 0
+        tot_len       = int(tot_len)
+        progress      = 0
+        progress_prev = 0
 
         for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
             dl_size += len(chunk)
             fhandle.write(chunk)
             sha1.update(chunk)
 
-            progress = (100 * (dl_size / tot_len))
-            log.info(_("Progress : {:03d}%").format(int(progress)))
+            # Compute and display progress if /10
+            progress_prev = progress
+            progress      = (100 * (dl_size / tot_len))
+            if int(progress) % 10 == 0 and int(progress) != int(progress_prev):
+                log.info(_("Progress : {:03d}%").format(int(progress)))
 
+            # Trigger progress callback
             if on_progress is not None:
                 on_progress(dl_size, tot_len, progress)
 
