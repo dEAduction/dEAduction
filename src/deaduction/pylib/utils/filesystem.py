@@ -1,4 +1,5 @@
-""" #########################################
+"""
+#########################################
 # filesystem.py : File system utilities #
 #########################################
 
@@ -24,6 +25,8 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from . import exceptions
+
 from pathlib import Path
 from io import BufferedWriter
 import logging
@@ -32,6 +35,9 @@ from typing import Callable
 import requests
 import hashlib
 import gzip
+
+from dictdiffer import diff as ddiff  # ddiff for "dict diff"
+
 
 log = logging.getLogger(__name__)
 
@@ -91,6 +97,9 @@ class HashList:
                 line = f"{str(pp)} {str(hh)}\n".encode("utf8")
                 fhandle.write(line)
 
+    def diff(self, other):
+        return ddiff(self.files, other.files)
+
     # ───────────── Constructors ───────────── #
     @classmethod
     def from_path(cls, path: Path):
@@ -100,13 +109,16 @@ class HashList:
         """
         path   = Path(path).resolve()
         r      = dict()
-
+        
+        log.info(_("Generate hashlist from directory at {}").format(str(path)))
         for fp in path.rglob("*"):  # File path
             if fp.is_file():
                 hh     = file_hash(fp)
 
                 fpr    = fp.relative_to(path)  # File Path Relative
                 r[fpr] = hh
+            elif not fp.is_dir():
+                log.warning(_("Ignoring non regular file {}").format(str(fp)))
 
         return cls(base_path=path, files=r)
 
@@ -122,6 +134,7 @@ class HashList:
 
         r       = dict()
 
+        log.info(_("Load hashlist from path {}").format(str(hh_file)))
         with gzip.open(str(hh_file), "rb") as fhandle:
             eof = False
             while not eof:
