@@ -175,7 +175,6 @@ class ExerciseCentralWidget(QWidget):
                      self.statements_tree]
         for widget in to_freeze:
             widget.setEnabled(not yes)
-        
 
     def update_goal(self, new_goal: Goal):
         """
@@ -187,7 +186,7 @@ class ExerciseCentralWidget(QWidget):
         # FIXME: tags
         new_context    = new_goal.tag_and_split_propositions_objects()
         new_target     = new_goal.target
-        new_target_tag = '=' # new_target.future_tags[1]
+        new_target_tag = '='  # new_target.future_tags[1]
         new_objects    = new_context[0]
         new_props      = new_context[1]
 
@@ -283,7 +282,7 @@ class ExerciseMainWindow(QMainWindow):
 
     def update_goal(self, new_goal: Goal):
         # Reset current context selection
-        self.clear_user_selection()
+        self.clear_current_selection()
 
         # Update UI and attributes
         self.cw.update_goal(new_goal)
@@ -340,6 +339,7 @@ class ExerciseMainWindow(QMainWindow):
     
     async def process_async_signal(self, process_function: Callable):
         self.freeze(True)
+
         try:
             await process_function()
         except FailedRequestError as e:
@@ -350,10 +350,10 @@ class ExerciseMainWindow(QMainWindow):
             msg_box.setText(_('Action not understood'))
 
             detailed = ""
-            for err in e.errors:
-                rel_line_number = err.pos_line \
+            for error in e.errors:
+                rel_line_number = error.pos_line \
                         - self.exercise.lean_begin_line_number
-                detailed += f'* at {rel_line_number}: {err.text}\n'
+                detailed += f'* at {rel_line_number}: {error.text}\n'
 
             msg_box.setDetailedText(detailed)
             msg_box.setStandardButtons(QMessageBox.Ok)
@@ -365,10 +365,10 @@ class ExerciseMainWindow(QMainWindow):
         finally:
             self.freeze(False)
             # Required for the history is always changed with signals
-            self.toolbar.undo_action.setEnabled(not
-                    self.servint.lean_file.history_at_beginning)
-            self.toolbar.redo_action.setEnabled(not
-                    self.servint.lean_file.history_at_end)
+            self.toolbar.undo_action.setEnabled(
+                    not self.servint.lean_file.history_at_beginning)
+            self.toolbar.redo_action.setEnabled(
+                    not self.servint.lean_file.history_at_end)
 
     # ─────────────── Specific functions ─────────────── #
     # To be called as process_function in the above
@@ -401,7 +401,7 @@ class ExerciseMainWindow(QMainWindow):
                 else:
                     break
             except WrongUserInput:
-                self.clear_user_selection()
+                self.clear_current_selection()
                 break
             else:
                 await self.servint.code_insert(action.caption, code)
@@ -431,7 +431,7 @@ class ExerciseMainWindow(QMainWindow):
     #########
 
     @Slot()
-    def clear_user_selection(self):
+    def clear_current_selection(self):
         log.debug('Clearing user selection')
         for item in self.current_selection:
             item.mark_user_selected(False)
