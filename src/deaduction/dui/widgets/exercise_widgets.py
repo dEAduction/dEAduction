@@ -260,13 +260,6 @@ class ExerciseMainWindow(QMainWindow):
     # Methods #
     ###########
 
-    def connect_context_signals_slots(self):
-        # Objects and properties lists
-        self.cw.objects_wgt.itemClicked.connect(
-                self.process_context_click)
-        self.cw.props_wgt.itemClicked.connect(
-                self.process_context_click)
-
     def closeEvent(self, event):
         super().closeEvent(event)
         self.window_closed.emit()
@@ -284,10 +277,14 @@ class ExerciseMainWindow(QMainWindow):
     def update_goal(self, new_goal: Goal):
         # Reset current context selection
         self.clear_user_selection()
+
+        # Update UI and attributes
         self.cw.update_goal(new_goal)
         self.current_goal = new_goal
-        # Reconnect signals and slots
-        self.connect_context_signals_slots()
+
+        # Reconnect Context area signals and slots
+        self.cw.objects_wgt.itemClicked.connect(self.process_context_click)
+        self.cw.props_wgt.itemClicked.connect(self.process_context_click)
 
     ###############
     # Async tasks #
@@ -322,8 +319,7 @@ class ExerciseMainWindow(QMainWindow):
                 elif emission.is_from(self.toolbar.undo_action.triggered):
                     # No need to call self.update_goal, this block
                     # emits the signal proof_state_change of which
-                    # self.update_goal is a slot, see 
-                    # self.connect_context_signals_slots.
+                    # self.update_goal is a slot
                     await self.process_async_signal(self.servint.history_undo)
                 elif emission.is_from(self.toolbar.redo_action.triggered):
                     await self.process_async_signal(self.servint.history_redo)
