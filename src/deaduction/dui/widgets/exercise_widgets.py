@@ -226,6 +226,7 @@ class ExerciseMainWindow(QMainWindow):
         super().__init__()
 
         # ─────────────────── Attributes ─────────────────── #
+
         self.exercise          = exercise
         self.current_goal      = None
         self.current_selection = []
@@ -235,12 +236,14 @@ class ExerciseMainWindow(QMainWindow):
         self.toolbar           = ExerciseToolbar()
 
         # ─────────────────────── UI ─────────────────────── #
+
         self.setCentralWidget(self.cw)
         self.addToolBar(self.toolbar)
         self.toolbar.redo_action.setEnabled(False)  # No history at beginning
         self.toolbar.undo_action.setEnabled(False)  # same
 
         # ──────────────── Signals and slots ─────────────── #
+
         # Actions area
         for action_button in self.cw.actions_buttons:
             action_button.action_triggered.connect(self.__action_triggered)
@@ -266,9 +269,13 @@ class ExerciseMainWindow(QMainWindow):
 
     @property
     def current_selection_as_pspos(self):
+        """
+        Do not delete! Used many times.
+        """
+
         return [item.proofstatepo for item in self.current_selection]
 
-    def pretty_user_selection(self):
+    def pretty_current_selection(self):
         msg = 'Current user selection: '
         msg += str([item.text() for item in self.current_selection])
 
@@ -331,7 +338,8 @@ class ExerciseMainWindow(QMainWindow):
     # Server methods #
     ##################
 
-    # Template function
+    # ──────────────── Template function ─────────────── #
+    
     async def process_async_signal(self, process_function: Callable):
         self.freeze(True)
         try:
@@ -364,7 +372,9 @@ class ExerciseMainWindow(QMainWindow):
             self.toolbar.redo_action.setEnabled(not
                     self.servint.lean_file.history_at_end)
 
-    # Specific functions to be called as process_function in the above
+    # ─────────────── Specific functions ─────────────── #
+    # To be called as process_function in the above
+
     async def _server_call_action(self, action_btn: ActionButton):
         action = action_btn.action
         user_input = []
@@ -429,7 +439,7 @@ class ExerciseMainWindow(QMainWindow):
             item.mark_user_selected(False)
 
         self.current_selection = []
-        log.debug(self.pretty_user_selection())
+        log.debug(self.pretty_current_selection())
 
     @Slot()
     def freeze(self, yes=True):
@@ -453,7 +463,7 @@ class ExerciseMainWindow(QMainWindow):
             item.mark_user_selected(False)
             self.current_selection.remove(item)
 
-        log.debug(self.pretty_user_selection())
+        log.debug(self.pretty_current_selection())
 
     @Slot()
     def _update_lean_editor(self):
