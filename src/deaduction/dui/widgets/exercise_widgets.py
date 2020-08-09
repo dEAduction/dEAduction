@@ -222,10 +222,11 @@ class ExerciseMainWindow(QMainWindow):
 
     def __init__(self, exercise: Exercise, servint: ServerInterface):
         super().__init__()
+
         self.exercise = exercise
         self.current_goal = None
         self.cw = ExerciseCentralWidget(self.exercise)
-        self.current_context_selection = []
+        self.current_selection = []
         self.lean_editor = LeanEditor()
         self.servint = servint
         self.toolbar = ExerciseToolbar()
@@ -281,12 +282,12 @@ class ExerciseMainWindow(QMainWindow):
         self.window_closed.emit()
 
     @property
-    def current_context_selection_as_pspos(self):
-        return [item.proofstatepo for item in self.current_context_selection]
+    def current_selection_as_pspos(self):
+        return [item.proofstatepo for item in self.current_selection]
 
     def pretty_user_selection(self):
         msg = 'Current user selection: '
-        msg += str([item.text() for item in self.current_context_selection])
+        msg += str([item.text() for item in self.current_selection])
 
         return msg
 
@@ -389,10 +390,10 @@ class ExerciseMainWindow(QMainWindow):
             try:
                 if user_input == []:
                     code = action.run(self.current_goal,
-                                      self.current_context_selection_as_pspos)
+                                      self.current_selection_as_pspos)
                 else:
                     code = action_btn.action.run(self.current_goal,
-                            self.current_context_selection, user_input)
+                            self.current_selection, user_input)
             except MissingParametersError as e:
                 if e.input_type == InputType.Text:
                     text, ok = QInputDialog.getText(action_btn,
@@ -420,10 +421,10 @@ class ExerciseMainWindow(QMainWindow):
 
             if isinstance(statement, Definition):
                 code = generic.action_definition(self.current_goal,
-                        self.current_context_selection_as_pspos, statement)
+                        self.current_selection_as_pspos, statement)
             elif isinstance(statement, Theorem):
                 code = generic.action_theorem(self.current_goal,
-                        self.current_context_selection_as_pspos, statement)
+                        self.current_selection_as_pspos, statement)
 
             await self.servint.code_insert(statement.pretty_name, code)
 
@@ -438,10 +439,10 @@ class ExerciseMainWindow(QMainWindow):
     @Slot()
     def clear_user_selection(self):
         log.debug('Clearing user selection')
-        for item in self.current_context_selection:
+        for item in self.current_selection:
             item.mark_user_selected(False)
 
-        self.current_context_selection = []
+        self.current_selection = []
         log.debug(self.pretty_user_selection())
 
     @Slot()
@@ -459,12 +460,12 @@ class ExerciseMainWindow(QMainWindow):
         log.debug('Recording user selection')
         item.setSelected(False)
 
-        if item not in self.current_context_selection:
+        if item not in self.current_selection:
             item.mark_user_selected(True)
-            self.current_context_selection.append(item)
+            self.current_selection.append(item)
         else:
             item.mark_user_selected(False)
-            self.current_context_selection.remove(item)
+            self.current_selection.remove(item)
 
         log.debug(self.pretty_user_selection())
 
