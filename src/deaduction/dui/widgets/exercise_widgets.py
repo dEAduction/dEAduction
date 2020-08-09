@@ -293,50 +293,48 @@ class ExerciseMainWindow(QMainWindow):
         self.cw.objects_wgt.itemClicked.connect(self.process_context_click)
         self.cw.props_wgt.itemClicked.connect(self.process_context_click)
 
-    ###############
-    # Async tasks #
-    ###############
-   
+    ##################################
+    # Async tasks and server methods #
+    ##################################
+    
+    # ─────────────────── Server task ────────────────── #
+     
     async def server_task(self):
         self.freeze()
         await self.servint.exercise_set(self.exercise)
         self.freeze(False)
-        async with qtrio.enter_emissions_channel(
-            signals=[self.window_closed,
-                     self.__action_triggered,
-                     self.__statement_triggered,
-                     self.toolbar.undo_action.triggered,
-                     self.toolbar.redo_action.triggered,
-                     self.lean_editor.editor_send_lean]
-        ) as emissions:
-            async for emission in emissions.channel:
-                if emission.is_from(self.window_closed):
-                    break
-                elif emission.is_from(self.__action_triggered):
-                    await self.process_async_signal(
-                            partial(self._server_call_action,
-                                    emission.args[0])
-                    )
-                # TODO: comment, what is emission.args[0]?
-                elif emission.is_from(self.__statement_triggered):
-                    await self.process_async_signal(
-                            partial(self._server_call_statement,
-                                    emission.args[0])
-                    )
-                elif emission.is_from(self.toolbar.undo_action.triggered):
-                    # No need to call self.update_goal, this block
-                    # emits the signal proof_state_change of which
-                    # self.update_goal is a slot
-                    await self.process_async_signal(self.servint.history_undo)
-                elif emission.is_from(self.toolbar.redo_action.triggered):
-                    await self.process_async_signal(self.servint.history_redo)
-                elif emission.is_from(self.lean_editor.editor_send_lean):
-                    await self.process_async_signal(
-                            self._server_send_editor_lean)
 
-    ##################
-    # Server methods #
-    ##################
+        async with qtrio.enter_emissions_channel(
+                signals=[self.lean_editor.editor_send_lean,
+                         self.toolbar.redo_action.triggered,
+                         self.window_closed,
+                         self.toolbar.undo_action.triggered,
+                         self.__action_triggered,
+                         self.__statement_triggered]) as emissions:
+            async for emission in emissions.channel:
+                if emission.is_from(self.lean_editor.editor_send_lean):
+                    await self.process_async_signal(self._server_send_editor_lean)
+
+                elif emission.is_from(self.toolbar.redo_action.triggered):
+                    # No need to call self.update_goal, this emits the
+                    # signal proof_state_change of which
+                    # self.update_goal is a slot
+                    await self.process_async_signal(self.servint.history_redo)
+
+                elif emission.is_from(self.toolbar.undo_action.triggered):
+                    await self.process_async_signal(self.servint.history_undo)
+
+                elif emission.is_from(self.window_closed):
+                    break
+
+                elif emission.is_from(self.__action_triggered):
+                    # TODO: comment, what is emission.args[0]?
+                    await self.process_async_signal(partial(self._server_call_action,
+                                                            emission.args[0]))
+
+                elif emission.is_from(self.__statement_triggered):
+                    await self.process_async_signal(partial(self._server_call_statement,
+                                                            emission.args[0]))
 
     # ──────────────── Template function ─────────────── #
     
