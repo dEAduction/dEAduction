@@ -263,11 +263,12 @@ class ExerciseMainWindow(QMainWindow):
 
         # Init context (objects and properties). Get them as two list of
         # (ProofStatePO, str), the str being the tag of the prop. or obj.
+        # FIXME: obj. and prop. tags
         new_context = new_goal.tag_and_split_propositions_objects()
         new_objects_wgt = ProofStatePOWidget(new_context[0])
         new_props_wgt = ProofStatePOWidget(new_context[1])
         new_target = new_goal.target
-        # TODO: set real tag value
+        # FIXME: target tag
         new_target_tag = '=' # new_target.future_tags[1]
         new_target_wgt = TargetWidget(new_target, new_target_tag)
 
@@ -313,10 +314,11 @@ class ExerciseMainWindow(QMainWindow):
                             partial(self._server_call_action,
                                     emission.args[0])
                     )
+                # TODO: comment, what is emission.args[0]?
                 elif emission.is_from(self.__statement_triggered):
                     await self.process_async_signal(
                             partial(self._server_call_statement,
-                                emission.args[0])
+                                    emission.args[0])
                     )
                 elif emission.is_from(self.toolbar.undo_action.triggered):
                     # No need to call self.update_goal, this block
