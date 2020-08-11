@@ -45,6 +45,8 @@ from deaduction.pylib.mathobj import (  PropObj,
                                         Goal,
                                         give_name)
 
+log = logging.getLogger("logic")
+
 ## AND ##
 
 def construct_and(goal):
@@ -157,20 +159,15 @@ def construct_implicate(goal : Goal):
     return "intro {0}, ".format(h)
 
 def apply_implicate(goal : Goal, l : [PropObj]):
-    if l[0].math_type.node != "PROP_IMPLIES":
-        raise WrongUserInput
     if not l[0].math_type.children[1].__eq__(goal.target.math_type):
         raise WrongUserInput
     return "apply {0},".format(l[0].lean_data["name"])
 
 def apply_implicate_to_hyp(goal : Goal, l : [PropObj]):
-    #if l[0].math_type.node != "QUANT_∀":
-    #    if not (l[0].math_type.node == "PROP_IMPLIES" and l[0].math_type.children[0] == l[1].math_type):
-    #        raise WrongUserInput
-    h_selected = l[0].lean_data["name"]
-    x_selected = l[1].lean_data["name"]
+    h_selected = l[1].lean_data["name"]
+    x_selected = l[0].lean_data["name"]
     h = utils.get_new_hyp()
-    return "have {0} := {1} {2} <|> have {0} := {1} _ {2} <|> have {0} := {1} _ _ {2}, ".format(h, h_selected, x_selected)
+    return "have {0} := {1} {2} <|> have {0} := {1} {2} <|> have {0} := {1} _ {2} <|> have {0} := {1} _ _ {2} <|> have {0} := {1} _ _ _ {2} <|> have {0} := {1} _ _ _ {2} <|> have {0} := @{1} {2} <|> have {0} := @{1} _ {2} <|> have {0} := @{1} _ _ {2} <|> have {0} := @{1} _ _ _ {2} <|> have {0} := @{1} _ _ _ {2}, ".format(h, h_selected, x_selected)
 
 # TODO: see if we can put bigger arrows, same for iff
 @action(_("Implication"), "⇒")
@@ -268,9 +265,9 @@ def action_exists(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
         return construct_exists(goal, user_input)
     raise WrongUserInput
 
-## SUBSTITUTION
+## APPLY
 
-@action(_("Substitution"), "t[x:=u]") #TODO : symbole à changer
+@action(_("Apply"), _("APPLY")) #TODO : symbole à changer
 def action_substitution(goal : Goal, l : [PropObj]):
     """
     Translate into string of lean code corresponding to the action
@@ -278,10 +275,20 @@ def action_substitution(goal : Goal, l : [PropObj]):
     :param l:   list of PropObj arguments preselected by the user
     :return:    string of lean code
     """
-    if len(l) == 1:
-        return "rw {0} <|> rw <- {0}, ".format(l[0].lean_data["name"])
-    elif len(l) == 2:
-        return "rw <- {0} at {1} <|> rw {0} at {1} <|> rw <- {1} at {0} <|> rw {1} at {0}, ".format(l[1].lean_data["name"],l[0].lean_data["name"])
-    else:
-        raise WrongUserInput    
+    if len(l) == 0:
+        return WrongUserInput #n'apparaîtra plus quand ce sera un double-clic
+    
+    if l[-1].math_type.node == "QUANT_∀" or l[-1].math_type.node == "PROP_IMPLIES":
+        if len(l) == 1:
+            return apply_implicate(goal, l)
+        if len(l) == 2:
+            return apply_implicate_to_hyp(goal,l)
+    
+    if l[-1].math_type.node == "PROP_EQUAL":
+        if len(l) == 1:
+            return "rw {0} <|> rw <- {0}, ".format(l[0].lean_data["name"])
+        elif len(l) == 2:
+            return "rw <- {0} at {1} <|> rw {0} at {1} <|> rw <- {1} at {0} <|> rw {1} at {0}, ".format(l[1].lean_data["name"],l[0].lean_data["name"])
+    
+    raise WrongUserInput    
 
