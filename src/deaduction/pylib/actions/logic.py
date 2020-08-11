@@ -42,7 +42,8 @@ from deaduction.pylib.actions import (  action,
                                         MissingParametersError,
                                         WrongUserInput) 
 from deaduction.pylib.mathobj import (  PropObj,
-                                        Goal)
+                                        Goal,
+                                        give_name)
 
 ## AND ##
 
@@ -169,7 +170,7 @@ def apply_implicate_to_hyp(goal : Goal, l : [PropObj]):
     h_selected = l[0].lean_data["name"]
     x_selected = l[1].lean_data["name"]
     h = utils.get_new_hyp()
-    return "have {0} := {1} {2}, ".format(h, h_selected, x_selected)
+    return "have {0} := {1} {2} <|> have {0} := {1} _ {2} <|> have {0} := {1} _ _ {2}, ".format(h, h_selected, x_selected)
 
 # TODO: see if we can put bigger arrows, same for iff
 @action(_("Implication"), "⇒")
@@ -214,7 +215,7 @@ def action_iff(goal : Goal, l : [PropObj]) -> str:
 def construct_forall(goal):
     if goal.target.math_type.node != "QUANT_∀":
         raise WrongUserInput 
-    x = utils.get_new_var()
+    x = give_name(goal, goal.target.math_type.children[0])
     return "intro {0}, ".format(x)
 
 @action(_("For all"), "∀")
@@ -232,18 +233,18 @@ def action_forall(goal : Goal, l : [PropObj]) -> str:
 
 ## EXISTS ##
 
-def construct_exists(goal, x : str):
+def construct_exists(goal, user_input : [str]):
     if goal.target.math_type.node != "QUANT_∃":
         raise WrongUserInput
     if len(user_input) != 1:
         raise MissingParametersError(InputType.Text, title = _("Exist"), output = _("Enter element you want to use:"))
-    return "use {0},".format(x)
+    return "use {0},".format(user_input[0])
 
-def apply_exists(l : [PropObj]) -> str:
+def apply_exists(goal : Goal, l : [PropObj]) -> str:
     if l[0].math_type.node != "QUANT_∃":
         raise WrongUserInput
     h_selected = l[0].lean_data["name"]
-    x = utils.get_new_var()
+    x = give_name(goal, l[0].math_type.children[0])
     hx = utils.get_new_hyp()
     if l[0].math_type.children[2].node == "PROP_∃":
         return "rcases {0} with ⟨ {1}, ⟨ {2}, {0} ⟩ ⟩, ".format(h_selected, x, hx)
@@ -260,11 +261,11 @@ def action_exists(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
     """
     if len(l) == 1 and user_input == []:
         if l[0].math_type.is_prop():
-            return apply_exists(l)
+            return apply_exists(goal, l)
         else:
             return construct_exists(goal, l[0].lean_data["name"])
     if len(l) == 0:
-        return construct_exists(goal, user_input[0])
+        return construct_exists(goal, user_input)
     raise WrongUserInput
 
 ## SUBSTITUTION
