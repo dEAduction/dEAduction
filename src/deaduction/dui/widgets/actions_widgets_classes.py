@@ -231,6 +231,7 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
 
         # Print second col. in gray
         self.setForeground(1, QBrush(QColor('gray')))
+        # TODO: use mono font for lean name column (column 1)
 
         # Print icon (D for definition, T for theorem, etc)
         icons_path = Path('share/graphical_resources/icons/letters')

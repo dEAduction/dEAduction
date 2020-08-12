@@ -125,6 +125,7 @@ class ExerciseCentralWidget(QWidget):
         context_gb = QGroupBox(_('Context (objects and properties)'))
 
         # ──────────────── init Actions area ─────────────── #
+
         self.logic_btns = ActionButtonsWidget(exercise.available_logic)
         self.proof_btns = ActionButtonsWidget(
                 exercise.available_proof_techniques)
@@ -134,11 +135,13 @@ class ExerciseCentralWidget(QWidget):
         self.statements_tree = StatementsTreeWidget(statements, outline)
 
         # ─────── init goal (Context area and target) ────── #
+
         self.objects_wgt = ProofStatePOWidget()
         self.props_wgt   = ProofStatePOWidget()
         self.target_wgt  = TargetWidget()
 
         # ───────────── put widgets in layouts ───────────── #
+
         # Actions
         actions_lyt.addWidget(self.logic_btns)
         actions_lyt.addWidget(self.proof_btns)
@@ -312,7 +315,7 @@ class ExerciseMainWindow(QMainWindow):
                          self.__statement_triggered]) as emissions:
             async for emission in emissions.channel:
                 if emission.is_from(self.lean_editor.editor_send_lean):
-                    await self.process_async_signal(self._server_send_editor_lean)
+                    await self.process_async_signal(self.__server_send_editor_lean)
 
                 elif emission.is_from(self.toolbar.redo_action.triggered):
                     # No need to call self.update_goal, this emits the
@@ -328,11 +331,11 @@ class ExerciseMainWindow(QMainWindow):
 
                 elif emission.is_from(self.__action_triggered):
                     # TODO: comment, what is emission.args[0]?
-                    await self.process_async_signal(partial(self._server_call_action,
+                    await self.process_async_signal(partial(self.__server_call_action,
                                                             emission.args[0]))
 
                 elif emission.is_from(self.__statement_triggered):
-                    await self.process_async_signal(partial(self._server_call_statement,
+                    await self.process_async_signal(partial(self.__server_call_statement,
                                                             emission.args[0]))
 
     # ──────────────── Template function ─────────────── #
@@ -344,10 +347,11 @@ class ExerciseMainWindow(QMainWindow):
             await process_function()
         except FailedRequestError as e:
             # Display an error message
-            msg_box = QMessageBox(self)
-            msg_box.setIcon(QMessageBox.Critical)
-            msg_box.setWindowTitle(_('Action not understood'))
-            msg_box.setText(_('Action not understood'))
+            # TODO: make it a separate class
+            message_box = QMessageBox(self)
+            message_box.setIcon(QMessageBox.Critical)
+            message_box.setWindowTitle(_('Action not understood'))
+            message_box.setText(_('Action not understood'))
 
             detailed = ""
             for error in e.errors:
@@ -355,16 +359,16 @@ class ExerciseMainWindow(QMainWindow):
                         - self.exercise.lean_begin_line_number
                 detailed += f'* at {rel_line_number}: {error.text}\n'
 
-            msg_box.setDetailedText(detailed)
-            msg_box.setStandardButtons(QMessageBox.Ok)
-            msg_box.exec_()
+            message_box.setDetailedText(detailed)
+            message_box.setStandardButtons(QMessageBox.Ok)
+            message_box.exec_()
 
             # Abort and go back to last goal
             await self.servint.history_undo()
 
         finally:
             self.freeze(False)
-            # Required for the history is always changed with signals
+            # Required because history is always changed with signals
             self.toolbar.undo_action.setEnabled(
                     not self.servint.lean_file.history_at_beginning)
             self.toolbar.redo_action.setEnabled(
@@ -373,7 +377,7 @@ class ExerciseMainWindow(QMainWindow):
     # ─────────────── Specific functions ─────────────── #
     # To be called as process_function in the above
 
-    async def _server_call_action(self, action_btn: ActionButton):
+    async def __server_call_action(self, action_btn: ActionButton):
         action = action_btn.action
         user_input = []
 
@@ -407,7 +411,7 @@ class ExerciseMainWindow(QMainWindow):
                 await self.servint.code_insert(action.caption, code)
                 break
 
-    async def _server_call_statement(self, item: StatementsTreeWidgetItem):
+    async def __server_call_statement(self, item: StatementsTreeWidgetItem):
         # Do nothing is user clicks on a node
         if isinstance(item, StatementsTreeWidgetItem):
             item.setSelected(False)
@@ -422,7 +426,7 @@ class ExerciseMainWindow(QMainWindow):
 
             await self.servint.code_insert(statement.pretty_name, code)
 
-    async def _server_send_editor_lean(self):
+    async def __server_send_editor_lean(self):
         await self.servint.code_set(_('Code from editor'),
                 self.lean_editor.code_get())
 
@@ -432,12 +436,9 @@ class ExerciseMainWindow(QMainWindow):
 
     @Slot()
     def clear_current_selection(self):
-        log.debug('Clearing user selection')
         for item in self.current_selection:
             item.mark_user_selected(False)
-
         self.current_selection = []
-        log.debug(self.pretty_current_selection())
 
     @Slot()
     def freeze(self, yes=True):
@@ -446,12 +447,15 @@ class ExerciseMainWindow(QMainWindow):
 
     @Slot()
     def fireworks(self):
+        # TODO: make it a separate class
         QMessageBox.information(self, _('Target solved'), _('Target solved!'),
                                 QMessageBox.Ok)
 
     @Slot(ProofStatePOWidgetItem)
     def process_context_click(self, item: ProofStatePOWidgetItem):
-        log.debug('Recording user selection')
+
+        # One clicked, one does not want the item to remain visually
+        # selected
         item.setSelected(False)
 
         if item not in self.current_selection:
@@ -460,8 +464,6 @@ class ExerciseMainWindow(QMainWindow):
         else:
             item.mark_user_selected(False)
             self.current_selection.remove(item)
-
-        log.debug(self.pretty_current_selection())
 
     @Slot()
     def _update_lean_editor(self):
