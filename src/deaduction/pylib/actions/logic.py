@@ -9,6 +9,9 @@ Every function action_* takes 2 arguments,
 - a list of ProofStatePO precedently selected by the user
 and returns lean code as a string
 
+Some take an optional argument:
+- user_input, a list of 
+
 Author(s)     : - Marguerite Bin <bin.marguerite@gmail.com>
 Maintainer(s) : - Marguerite Bin <bin.marguerite@gmail.com>
 Created       : July 2020 (creation)
@@ -32,17 +35,19 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-
-from dataclasses import dataclass
-from gettext import gettext as _
 import logging
-import deaduction.pylib.actions.utils as utils
-from deaduction.pylib.actions import (  action,
-                                        InputType,
-                                        MissingParametersError,
-                                        WrongUserInput) 
-from deaduction.pylib.mathobj import (  PropObj,
-                                        Goal)
+from dataclasses                import      dataclass
+from gettext                    import      gettext as _
+from deaduction.pylib.actions   import (    action,
+                                            InputType,
+                                            MissingParametersError,
+                                            WrongUserInput,
+                                            get_new_hyp) 
+from deaduction.pylib.mathobj   import (    PropObj,
+                                            Goal,
+                                            give_name)
+
+# log = logging.getLogger("logic") # uncomment to use
 
 ## AND ##
 
@@ -55,17 +60,15 @@ def apply_and(l):
     if l[0].math_type.node != "PROP_AND":
         raise WrongUserInput
     h_selected = l[0].lean_data["name"]
-    h1 = utils.get_new_hyp()
-    h2 = utils.get_new_hyp()
+    h1 = get_new_hyp()
+    h2 = get_new_hyp()
     return "cases {0} with {1} {2}, ".format(h_selected, h1, h2)
 
 def construct_and_hyp(selected_objects : [PropObj]):
     h1 = selected_objects[0].lean_data["name"]
     h2 = selected_objects[1].lean_data["name"]
-    h = utils.get_new_hyp()
-    #TODO : comprendre pourquoi c'est pas bien parsé pcq metavariable
-    raise WrongUserInput
-    #return "have {0}, from and.intro {1} {2}, ".format(h, h1, h2)
+    h = get_new_hyp()
+    return "have {0} := and.intro {1} {2}, ".format(h, h1, h2)
 
 @action(_("And"), _('AND'))
 def action_and(goal : Goal, selected_objects: [PropObj]) -> str:
@@ -77,12 +80,11 @@ def action_and(goal : Goal, selected_objects: [PropObj]) -> str:
     """
     if len(selected_objects) == 0:
         return construct_and(goal)
-    elif len(selected_objects) == 1:
+    if len(selected_objects) == 1:
         return apply_and(selected_objects)
-    elif len(selected_objects) == 2:
+    if len(selected_objects) == 2:
         return construct_and_hyp(selected_objects)
-    else:
-        raise WrongUserInput
+    raise WrongUserInput
 
 ## OR ##
 
@@ -107,8 +109,8 @@ def apply_or(l : [PropObj]) -> str:
     if l[0].math_type.node != "PROP_OR":
         raise WrongUserInput
     h_selected = l[0].lean_data["name"]
-    h1 = utils.get_new_hyp()
-    h2 = utils.get_new_hyp()
+    h1 = get_new_hyp()
+    h2 = get_new_hyp()
     return "cases {0} with {1} {2}, ".format(h_selected, h1, h2)
 
 @action(_("Or"), _("OR"))
@@ -121,10 +123,10 @@ def action_or(goal : Goal, l : [PropObj], user_input = []) -> str:
     """
     if len(l) == 0:
         return construct_or(goal, user_input)
-    elif len(l) == 1:
+    if len(l) == 1:
         return apply_or(l)
-    else :
-        raise WrongUserInput
+    
+    raise WrongUserInput
 
 ## NOT ##
 
@@ -140,38 +142,31 @@ def action_negate(goal : Goal, l : [PropObj]) -> str:
         if goal.target.math_type.node != "PROP_NOT":
             raise WrongUserInput
         return "push_neg, "
-    elif len(l) == 1:
+    if len(l) == 1:
         if l[0].math_type.node != "PROP_NOT":
             raise WrongUserInput
         return "push_neg at {0}, ".format(l[0].lean_data["name"])
-    else:
-        raise WrongUserInput
+    raise WrongUserInput
 
 ## IMPLICATION ##
 
 def construct_implicate(goal : Goal):
     if goal.target.math_type.node != "PROP_IMPLIES":
         raise WrongUserInput
-    h = utils.get_new_hyp()
+    h = get_new_hyp()
     return "intro {0}, ".format(h)
 
 def apply_implicate(goal : Goal, l : [PropObj]):
-    if l[0].math_type.node != "PROP_IMPLIES":
-        raise WrongUserInput
     if not l[0].math_type.children[1].__eq__(goal.target.math_type):
         raise WrongUserInput
     return "apply {0},".format(l[0].lean_data["name"])
 
 def apply_implicate_to_hyp(goal : Goal, l : [PropObj]):
-    #if l[0].math_type.node != "QUANT_∀":
-    #    if not (l[0].math_type.node == "PROP_IMPLIES" and l[0].math_type.children[0] == l[1].math_type):
-    #        raise WrongUserInput
-    h_selected = l[0].lean_data["name"]
-    x_selected = l[1].lean_data["name"]
-    h = utils.get_new_hyp()
-    return "have {0} := {1} {2}, ".format(h, h_selected, x_selected)
+    h_selected = l[1].lean_data["name"]
+    x_selected = l[0].lean_data["name"]
+    h = get_new_hyp()
+    return "have {0} := {1} {2} <|> have {0} := {1} _ {2} <|> have {0} := {1} _ _ {2} <|> have {0} := {1} _ _ _ {2} <|> have {0} := {1} _ _ _ _ {2} <|> have {0} := @{1} {2} <|> have {0} := @{1} _ {2} <|> have {0} := @{1} _ _ {2} <|> have {0} := @{1} _ _ _ {2} <|> have {0} := @{1} _ _ _ _ {2}, ".format(h, h_selected, x_selected)
 
-# TODO: see if we can put bigger arrows, same for iff
 @action(_("Implication"), "⇒")
 def action_implicate(goal : Goal, l : [PropObj]) -> str:
     """
@@ -182,9 +177,9 @@ def action_implicate(goal : Goal, l : [PropObj]) -> str:
     """
     if len(l) == 0:
         return construct_implicate(goal)
-    elif len(l) == 1:
+    if len(l) == 1:
         return apply_implicate(goal, l)
-    elif len(l) == 2:
+    if len(l) == 2:
         return apply_implicate_to_hyp(goal,l)
     raise WrongUserInput
 
@@ -206,15 +201,14 @@ def action_iff(goal : Goal, l : [PropObj]) -> str:
     """
     if len(l) == 0:
         return construct_iff(goal)
-    else:
-        raise WrongUserInput
+    raise WrongUserInput
 
 ## FOR ALL ##
 
 def construct_forall(goal):
     if goal.target.math_type.node != "QUANT_∀":
-        raise WrongUserInput 
-    x = utils.get_new_var()
+        raise WrongUserInput
+    x = give_name(goal, goal.target.math_type.children[0])
     return "intro {0}, ".format(x)
 
 @action(_("For all"), "∀")
@@ -232,20 +226,21 @@ def action_forall(goal : Goal, l : [PropObj]) -> str:
 
 ## EXISTS ##
 
-def construct_exists(goal, x : str):
+def construct_exists(goal, user_input : [str]):
     if goal.target.math_type.node != "QUANT_∃":
         raise WrongUserInput
     if len(user_input) != 1:
         raise MissingParametersError(InputType.Text, title = _("Exist"), output = _("Enter element you want to use:"))
-    return "use {0},".format(x)
+    return "use {0},".format(user_input[0])
 
-def apply_exists(l : [PropObj]) -> str:
-    if l[0].math_type.node != "QUANT_∃":
+def apply_exists(goal : Goal, l : [PropObj]) -> str:
+    l[0].math_type = h_selected
+    if h_selected.node != "QUANT_∃":
         raise WrongUserInput
-    h_selected = l[0].lean_data["name"]
-    x = utils.get_new_var()
-    hx = utils.get_new_hyp()
-    if l[0].math_type.children[2].node == "PROP_∃":
+    h_name = l[0].lean_data["name"]
+    x = give_name(goal, h_selected.children[0])
+    hx = get_new_hyp()
+    if h_selected.children[2].node == "PROP_∃":
         return "rcases {0} with ⟨ {1}, ⟨ {2}, {0} ⟩ ⟩, ".format(h_selected, x, hx)
     else :
         return "cases {0} with {1} {2}, ".format(h_selected, x, hx)
@@ -260,27 +255,46 @@ def action_exists(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
     """
     if len(l) == 1 and user_input == []:
         if l[0].math_type.is_prop():
-            return apply_exists(l)
+            return apply_exists(goal, l)
         else:
             return construct_exists(goal, l[0].lean_data["name"])
     if len(l) == 0:
-        return construct_exists(goal, user_input[0])
+        return construct_exists(goal, user_input)
     raise WrongUserInput
 
-## SUBSTITUTION
+## APPLY
 
-@action(_("Substitution"), "t[x:=u]") #TODO : symbole à changer
-def action_substitution(goal : Goal, l : [PropObj]):
+def apply_substitute(goal : Goal, l: [PropObj]):
+    if len(l) == 1:
+        return "rw {0} <|> rw <- {0}, ".format(l[0].lean_data["name"])
+    if len(l) == 2:
+        return "rw <- {0} at {1} <|> rw {0} at {1} <|> rw <- {1} at {0} <|> rw {1} at {0}".format(l[1].lean_data["name"],l[0].lean_data["name"])
+    raise WrongUserInput
+    
+@action(_("Apply"), _("APPLY")) # TODO : changer en gestion du double-clic
+def action_apply(goal : Goal, l : [PropObj]):
     """
     Translate into string of lean code corresponding to the action
     
     :param l:   list of PropObj arguments preselected by the user
     :return:    string of lean code
     """
-    if len(l) == 1:
-        return "rw {0} <|> rw <- {0}, ".format(l[0].lean_data["name"])
-    elif len(l) == 2:
-        return "rw <- {0} at {1} <|> rw {0} at {1} <|> rw <- {1} at {0} <|> rw {1} at {0}, ".format(l[1].lean_data["name"],l[0].lean_data["name"])
+    if len(l) == 0:
+        return WrongUserInput # n'apparaîtra plus quand ce sera un double-clic
+    
+    quantifier = l[-1].math_type.node
+    if quantifier == "PROP_EQUAL" or quantifier == "PROP_IFF":
+        return apply_substitute(goal, l) + ", "
+    
+    if quantifier == "QUANT_∀":
+        code = apply_substitute(goal, l) + " <|> "
     else:
-        raise WrongUserInput    
+        code = ""
+    if quantifier == "PROP_IMPLIES" or quantifier == "QUANT_∀":
+        if len(l) == 1:
+            return code + apply_implicate(goal, l)
+        if len(l) == 2:
+            return code + apply_implicate_to_hyp(goal,l)
+    
+    raise WrongUserInput    
 

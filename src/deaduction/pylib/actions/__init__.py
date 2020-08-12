@@ -32,7 +32,10 @@ from .actiondef import (    Action,
 from .exceptions import (   InputType,
                             MissingParametersError,
                             WrongUserInput)
-                            
+
+from .utils import (        get_new_hyp,
+                            get_new_var)
+
 from .logic import (        action_negate,
                             action_implicate,
                             action_and,
@@ -44,6 +47,3 @@ from .proofs import (       action_assumption,
                             action_absurdum,
                             action_cbr,
                             action_contrapose)
-
-from .utils import (        get_new_var,
-                            get_new_hyp)  
