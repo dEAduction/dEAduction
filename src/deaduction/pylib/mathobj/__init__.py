@@ -29,6 +29,7 @@ This file is part of dEAduction.
 from .PropObj import AnonymousPO, BoundVarPO, ProofStatePO, PropObj, \
     math_type_store
 from .proof_state import Goal, ProofState
+from .give_name import give_name
 
 
 #from .latex_format_data import node_needing_bounds_var
