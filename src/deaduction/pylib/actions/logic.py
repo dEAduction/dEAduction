@@ -67,10 +67,8 @@ def apply_and(l):
 def construct_and_hyp(selected_objects : [PropObj]):
     h1 = selected_objects[0].lean_data["name"]
     h2 = selected_objects[1].lean_data["name"]
-    #h = get_new_hyp()
-    #TODO : rajouter lemme dans un fichier pour l'appliquer
-    raise WrongUserInput
-    #return "have {0}, from and.intro {1} {2}, ".format(h, h1, h2)
+    h = get_new_hyp()
+    return "have {0} := and.intro {1} {2}, ".format(h, h1, h2)
 
 @action(_("And"), _('AND'))
 def action_and(goal : Goal, selected_objects: [PropObj]) -> str:
