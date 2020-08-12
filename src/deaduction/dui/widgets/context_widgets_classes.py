@@ -189,6 +189,7 @@ class ProofStatePOWidget(QListWidget):
 
         super().__init__()
 
+        # TODO: make self.items a property?
         self.items = []
         for proofstatepo, tag in tagged_proofstatepos:
             item = ProofStatePOWidgetItem(proofstatepo, tag)

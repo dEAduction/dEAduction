@@ -162,6 +162,7 @@ class ActionButtonsWidget(QWidget):
 
         super().__init__()
 
+        # TODO: make self.buttons a property?
         self.buttons = []
 
         main_layout = QHBoxLayout()

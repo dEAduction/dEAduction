@@ -104,14 +104,66 @@ class ExerciseToolbar(QToolBar):
 
 class ExerciseCentralWidget(QWidget):
     """
+    Main, central and biggest widget in the exercise window. This
+    widgets contains many crucial children widgets:
+        - the target widget (self.target_wgt);
+        - the Context area widgets:
+            * the objects widget (self.objects_wgt);
+            * the properies widget (self.props_wgt);
+        - the Action area widgets:
+            * the logic buttons (self.logic_btns);
+            * the proof techniques buttons (self.proof_btns);
+            * the statements tree (self.statements_tree, see
+              StatementsTreeWidget.__doc__).
+    All of these are instanciated in self.__init__ thanks to widget
+    classes defined elsewhere (mainly actions_widgets_classes.py and
+    context_widgets_classes.py) and properly arranged in layouts.
 
-    exercise and goal not stored as attributes
+    Self is instantiated with only an instance of the class Exercise.
+    However, when this happens, it does not have a context nor a target
+    (L∃∀N has not yet been called, see ExerciseMainWindow.__init__!):
+    empty widgets are displayed for Context elements. Once L∃∀N has been
+    successfully called and sent back a goal (an instance of the class
+    Goal contains a target, objects and properties, see
+    deaduction.pylib.mathobj.Goal), Context elements widgets are changed
+    with the method update_goal.
+
+    Note that nor the exercise (used in self.__init__) or the goal are
+    kept as class attributes.
+
+    :attribute logic_btns ActionButtonsWidget: Logic buttons available
+        for this exercise.
+    :attribute objects_wgt ProofStatePOWidget: Widget for context
+        objects (e.g. f:X->Y a function).
+    :attribute proof_btns ActionButtonsWidget: Proof technique buttons
+        available for this exercise.
+    :attribute props_wgt ProofStatePOWidget: Widget for context
+        properties (e.g. f is continuous).
+    :attribute statements_tree StatementsTreeWidget: Tree widget for
+        statements (theorems, definitions, past exercises) available to
+        this exercise.
+    :attribute target_wgt TargetWidget: Widget to display the context
+        target.
+
+    :property actions_buttons [ActionButtons]: A list of all objects
+        and properties (instances of the class ProofStatePoWidgetItem).
+    :property context_items [ProofStatePOWidgetItems]: A list of all
+        objects and properties (instances of the class
+        ProofStatePoWidgetItem).
     """
 
     def __init__(self, exercise: Exercise):
+        """
+        Init self with an instance of the class Exercise. See
+        self.__doc__.
+
+        :param exercise: The instance of the Exercise class representing
+            an exercise to be solved by the user.
+        """
+
         super().__init__()
 
-        # ───────────── init layouts and boxes ───────────── #
+        # ───────────── Init layouts and boxes ───────────── #
         # I wish none of these were class atributes, but we need at
         # least self.__main_lyt and self.__context_lyt in the method
         # self.update_goal.
@@ -124,7 +176,7 @@ class ExerciseCentralWidget(QWidget):
         actions_gb = QGroupBox(_('Actions (transform context and target)'))
         context_gb = QGroupBox(_('Context (objects and properties)'))
 
-        # ──────────────── init Actions area ─────────────── #
+        # ──────────────── Init Actions area ─────────────── #
 
         self.logic_btns = ActionButtonsWidget(exercise.available_logic)
         self.proof_btns = ActionButtonsWidget(
@@ -134,13 +186,13 @@ class ExerciseCentralWidget(QWidget):
         outline              = exercise.course.outline
         self.statements_tree = StatementsTreeWidget(statements, outline)
 
-        # ─────── init goal (Context area and target) ────── #
+        # ─────── Init goal (Context area and target) ────── #
 
         self.objects_wgt = ProofStatePOWidget()
         self.props_wgt   = ProofStatePOWidget()
         self.target_wgt  = TargetWidget()
 
-        # ───────────── put widgets in layouts ───────────── #
+        # ───────────── Put widgets in layouts ───────────── #
 
         # Actions
         actions_lyt.addWidget(self.logic_btns)
@@ -161,14 +213,32 @@ class ExerciseCentralWidget(QWidget):
 
         self.setLayout(self.__main_lyt)
 
+    ##############
+    # Properties #
+    ##############
+
     @property
-    def actions_buttons(self):
+    def actions_buttons(self) -> [ActionButton]:
+        """
+        Do not delete! A list of all logic buttons and proof technique
+        buttons (instances of the class ActionButton).
+        """
 
         return self.logic_btns.buttons + self.proof_btns.buttons 
+    
+    ###########
+    # Methods #
+    ###########
+    
 
     def freeze(self, yes=True):
         """
-        Freeze interface.
+        Freeze interface if yes: 
+            - disable objects and properties;
+            - disable all buttons;
+        unfreeze it otherwise.
+
+        :param yes: See above.
         """
 
         to_freeze = [self.objects_wgt,
@@ -181,7 +251,10 @@ class ExerciseCentralWidget(QWidget):
 
     def update_goal(self, new_goal: Goal):
         """
-        Update goal, that is target, objects and properties.
+        Change goal widgets (self.objects_wgts, self.props_wgt and
+        self.target_wgt) to new widgets, corresponding to new_goal.
+
+        :param new_goal: The goal to update self to.
         """
 
         # Init context (objects and properties). Get them as two list of
