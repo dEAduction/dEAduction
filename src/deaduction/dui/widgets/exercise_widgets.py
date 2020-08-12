@@ -401,6 +401,7 @@ class ExerciseMainWindow(QMainWindow):
                 self.clear_user_selection()
                 break
             else:
+                log.debug("Code sent to lean: " + code)
                 await self.servint.code_insert(action.caption, code)
                 break
 

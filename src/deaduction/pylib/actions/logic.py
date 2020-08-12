@@ -266,7 +266,7 @@ def action_exists(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
 
 def apply_substitute(goal : Goal, l: [PropObj]):
     if len(l) == 1:
-        return "rw {0} <|> rw <- {0}, ".format(l[0].lean_data["name"])
+        return "rw {0} <|> rw <- {0}".format(l[0].lean_data["name"])
     if len(l) == 2:
         return "rw <- {0} at {1} <|> rw {0} at {1} <|> rw <- {1} at {0} <|> rw {1} at {0}".format(l[1].lean_data["name"], l[0].lean_data["name"])
     raise WrongUserInput
