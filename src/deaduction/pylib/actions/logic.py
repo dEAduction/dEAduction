@@ -280,7 +280,7 @@ def action_apply(goal : Goal, l : [PropObj]):
     :return:    string of lean code
     """
     if len(l) == 0:
-        return WrongUserInput # n'apparaîtra plus quand ce sera un double-clic
+        raise WrongUserInput # n'apparaîtra plus quand ce sera un double-clic
     
     quantifier = l[-1].math_type.node
     if quantifier == "PROP_EQUAL" or quantifier == "PROP_IFF":
