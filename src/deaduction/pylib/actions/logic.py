@@ -42,7 +42,8 @@ from deaduction.pylib.actions   import (    action,
                                             InputType,
                                             MissingParametersError,
                                             WrongUserInput,
-                                            get_new_hyp) 
+                                            get_new_hyp,
+                                            get_new_var) 
 from deaduction.pylib.mathobj   import (    PropObj,
                                             Goal,
                                             give_name)
@@ -208,7 +209,7 @@ def action_iff(goal : Goal, l : [PropObj]) -> str:
 def construct_forall(goal):
     if goal.target.math_type.node != "QUANT_∀":
         raise WrongUserInput
-    x = give_name(goal, goal.target.math_type.children[0])
+    x = give_name(goal, goal.target.math_type.children[0], [goal.target.math_type.children[1].format_as_utf8(), goal.target.math_type.children[0].format_as_utf8().lower()])
     return "intro {0}, ".format(x)
 
 @action(_("For all"), "∀")
@@ -238,7 +239,7 @@ def apply_exists(goal : Goal, l : [PropObj]) -> str:
     if h_selected.node != "QUANT_∃":
         raise WrongUserInput
     h_name = l[0].lean_data["name"]
-    x = give_name(goal, h_selected.children[0])
+    x = give_name(goal, h_selected.children[0], [h_selected.children[1].format_as_utf8(), h_selected.children[0].format_as_utf8().lower()])
     hx = get_new_hyp()
     if h_selected.children[2].node == "PROP_∃":
         return "rcases {0} with ⟨ {1}, ⟨ {2}, {0} ⟩ ⟩, ".format(h_name, x, hx)
@@ -270,6 +271,38 @@ def apply_substitute(goal : Goal, l: [PropObj]):
     if len(l) == 2:
         return "rw <- {0} at {1} <|> rw {0} at {1} <|> rw <- {1} at {0} <|> rw {1} at {0}".format(l[1].lean_data["name"], l[0].lean_data["name"])
     raise WrongUserInput
+
+def apply_function(goal : Goal, l : [PropObj]):
+    if len(l) == 1:
+        raise WrongUserInput
+    code = ""
+    f = l[-1].lean_data["name"]
+    print("A")
+    print("A")
+    print("A")
+    print("A")
+    print("A")
+    print("A")
+    print("A")
+    print("A")
+    print("A")
+    print("A")
+    print("A")
+    print("A")
+    print("A")
+    print("A")
+    Y = l[-1].math_type.children[1]
+    while (len(l) != 1):
+        new_h = get_new_hyp()
+        if l[0].math_type.is_prop():
+            h = l[0].lean_data["name"]
+            code = code + f'have {new_h} := congr_arg {f} {h}, '
+        else:
+            x = l[0].lean_data["name"]
+            y = give_name(goal, Y, [Y.lean_data["name"].lower()])
+            code = code + f'set {y} := {f} {x} with {new_h}, '
+        del l[0]
+    return code    
     
 @action(_("Apply"), _("APPLY")) # TODO : changer en gestion du double-clic
 def action_apply(goal : Goal, l : [PropObj]):
@@ -282,6 +315,8 @@ def action_apply(goal : Goal, l : [PropObj]):
     if len(l) == 0:
         raise WrongUserInput # n'apparaîtra plus quand ce sera un double-clic
     
+    if not l[-1].math_type.is_prop():
+        return apply_function(goal, l)
     quantifier = l[-1].math_type.node
     if quantifier == "PROP_EQUAL" or quantifier == "PROP_IFF":
         return apply_substitute(goal, l) + ", "
