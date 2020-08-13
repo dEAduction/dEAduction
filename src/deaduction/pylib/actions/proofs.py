@@ -49,7 +49,7 @@ def action_cbr(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
         else:
             h1 = utils.get_new_hyp()
             h2 = utils.get_new_hyp()
-        return "cases (em ({0})) with {1} {2}".format(user_input[0], h1, h2)
+        return "cases (em ({0})) with {1} {2}, ".format(user_input[0], h1, h2)
     else:
         raise WrongUserInput
 

@@ -160,7 +160,7 @@ def construct_implicate(goal : Goal):
 def apply_implicate(goal : Goal, l : [PropObj]):
     if not l[0].math_type.children[1].__eq__(goal.target.math_type):
         raise WrongUserInput
-    return "apply {0},".format(l[0].lean_data["name"])
+    return "apply {0}, ".format(l[0].lean_data["name"])
 
 def apply_implicate_to_hyp(goal : Goal, l : [PropObj]):
     h_selected = l[1].lean_data["name"]
@@ -266,6 +266,7 @@ def action_exists(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
 ## APPLY
 
 def apply_substitute(goal : Goal, l: [PropObj]):
+    #missing comma on purpose
     if len(l) == 1:
         return "rw {0} <|> rw <- {0}".format(l[0].lean_data["name"])
     if len(l) == 2:
