@@ -71,7 +71,7 @@ def construct_and_hyp(selected_objects : [PropObj]):
     h = get_new_hyp()
     return "have {0} := and.intro {1} {2}, ".format(h, h1, h2)
 
-@action(_("And"), _('AND'))
+@action(_("If the target is of the form P AND Q: transform the current goal into two subgoals, P, then Q.\nIf a hypothesis of the form P AND Q has been previously selected: creates two new hypothesis P, and Q.\n If two hypothesis P, then Q, have been previously selected: add the new hypothesis P AND Q to the properties."), _('AND'))
 def action_and(goal : Goal, selected_objects: [PropObj]) -> str:
     """
     Translate into string of lean code corresponding to the action
@@ -114,7 +114,7 @@ def apply_or(l : [PropObj]) -> str:
     h2 = get_new_hyp()
     return "cases {0} with {1} {2}, ".format(h_selected, h1, h2)
 
-@action(_("Or"), _("OR"))
+@action(_("If the target is of the form P OR Q: tranform the target in P (or Q) accordingly to the user's choice.\nIf a hypothesis of the form P OR Q has been previously selected: transform the current goal into two subgoals, one with P as a hypothesis, and another with Q as a hypothesis."), _("OR"))
 def action_or(goal : Goal, l : [PropObj], user_input = []) -> str:
     """
     Translate into string of lean code corresponding to the action
@@ -131,7 +131,7 @@ def action_or(goal : Goal, l : [PropObj], user_input = []) -> str:
 
 ## NOT ##
 
-@action(_("Negation"), _("NOT"))
+@action(_("If no hypothesis has been previously selected: transform the target in an equivalent one which has its negations 'pushed'.\nIf a hypothesis has been previously selected: do the same to the hypothesis."), _("NOT"))
 def action_negate(goal : Goal, l : [PropObj]) -> str:
     """
     Translate into string of lean code corresponding to the action
@@ -168,7 +168,7 @@ def apply_implicate_to_hyp(goal : Goal, l : [PropObj]):
     h = get_new_hyp()
     return "have {0} := {1} {2} <|> have {0} := {1} _ {2} <|> have {0} := {1} _ _ {2} <|> have {0} := {1} _ _ _ {2} <|> have {0} := {1} _ _ _ _ {2} <|> have {0} := @{1} {2} <|> have {0} := @{1} _ {2} <|> have {0} := @{1} _ _ {2} <|> have {0} := @{1} _ _ _ {2} <|> have {0} := @{1} _ _ _ _ {2}, ".format(h, h_selected, x_selected)
 
-@action(_("Implication"), "⇒")
+@action(_("If the target is of the form P ⇒ Q: introduce the hypothesis P in the properties and transform the target into Q."), "⇒")
 def action_implicate(goal : Goal, l : [PropObj]) -> str:
     """
     Translate into string of lean code corresponding to the action
@@ -192,7 +192,7 @@ def construct_iff(goal : Goal):
         raise WrongUserInput
     return "split, "
 
-@action(_("If and only if"), "⇔")
+@action(_("If the target is of the form P ⇔ Q: transform the target into (P =>Q AND Q =>P) by definition"), "⇔")
 def action_iff(goal : Goal, l : [PropObj]) -> str:
     """
     Translate into string of lean code corresponding to the action
@@ -212,7 +212,7 @@ def construct_forall(goal):
     x = give_name(goal, goal.target.math_type.children[0], [goal.target.math_type.children[1].format_as_utf8(), goal.target.math_type.children[0].format_as_utf8().lower()])
     return "intro {0}, ".format(x)
 
-@action(_("For all"), "∀")
+@action(_("If the target is of the form ∀ x, P(x): introduce x and transform the target into P(x)"), "∀")
 def action_forall(goal : Goal, l : [PropObj]) -> str:
     """
     Translate into string of lean code corresponding to the action
@@ -246,7 +246,7 @@ def apply_exists(goal : Goal, l : [PropObj]) -> str:
     else :
         return "cases {0} with {1} {2}, ".format(h_name, x, hx)
 
-@action(_("Exists"), "∃")
+@action(_("If target is of form ∃ x, P(x): ask the user to enter a specific x and transform the target into P(x). \nIf a hypothesis of form ∃ x, P(x) has been previously selected: introduce a new x and add P(x) to the properties"), "∃")
 def action_exists(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
     """
     Translate into string of lean code corresponding to the action
@@ -277,26 +277,14 @@ def apply_function(goal : Goal, l : [PropObj]):
         raise WrongUserInput
     code = ""
     f = l[-1].lean_data["name"]
-    print("A")
-    print("A")
-    print("A")
-    print("A")
-    print("A")
-    print("A")
-    print("A")
-    print("A")
-    print("A")
-    print("A")
-    print("A")
-    print("A")
-    print("A")
-    print("A")
     Y = l[-1].math_type.children[1]
     while (len(l) != 1):
         new_h = get_new_hyp()
+        # if function applied to equality
         if l[0].math_type.is_prop():
             h = l[0].lean_data["name"]
             code = code + f'have {new_h} := congr_arg {f} {h}, '
+        # if function applied to element x
         else:
             x = l[0].lean_data["name"]
             y = give_name(goal, Y, [Y.lean_data["name"].lower()])
@@ -304,7 +292,7 @@ def apply_function(goal : Goal, l : [PropObj]):
         del l[0]
     return code    
     
-@action(_("Apply"), _("APPLY")) # TODO : changer en gestion du double-clic
+@action(_("Apply last selected item on previous ones"), _("APPLY"))
 def action_apply(goal : Goal, l : [PropObj]):
     """
     Translate into string of lean code corresponding to the action
@@ -315,8 +303,11 @@ def action_apply(goal : Goal, l : [PropObj]):
     if len(l) == 0:
         raise WrongUserInput # n'apparaîtra plus quand ce sera un double-clic
     
+    # if user wants to apply a function
     if not l[-1].math_type.is_prop():
         return apply_function(goal, l)
+    
+    # determines which kind of property the user wants to apply
     quantifier = l[-1].math_type.node
     if quantifier == "PROP_EQUAL" or quantifier == "PROP_IFF":
         return apply_substitute(goal, l) + ", "
