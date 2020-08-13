@@ -234,16 +234,16 @@ def construct_exists(goal, user_input : [str]):
     return "use {0},".format(user_input[0])
 
 def apply_exists(goal : Goal, l : [PropObj]) -> str:
-    l[0].math_type = h_selected
+    h_selected = l[0].math_type
     if h_selected.node != "QUANT_∃":
         raise WrongUserInput
     h_name = l[0].lean_data["name"]
     x = give_name(goal, h_selected.children[0])
     hx = get_new_hyp()
     if h_selected.children[2].node == "PROP_∃":
-        return "rcases {0} with ⟨ {1}, ⟨ {2}, {0} ⟩ ⟩, ".format(h_selected, x, hx)
+        return "rcases {0} with ⟨ {1}, ⟨ {2}, {0} ⟩ ⟩, ".format(h_name, x, hx)
     else :
-        return "cases {0} with {1} {2}, ".format(h_selected, x, hx)
+        return "cases {0} with {1} {2}, ".format(h_name, x, hx)
 
 @action(_("Exists"), "∃")
 def action_exists(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
@@ -266,9 +266,9 @@ def action_exists(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
 
 def apply_substitute(goal : Goal, l: [PropObj]):
     if len(l) == 1:
-        return "rw {0} <|> rw <- {0}, ".format(l[0].lean_data["name"])
+        return "rw {0} <|> rw <- {0}".format(l[0].lean_data["name"])
     if len(l) == 2:
-        return "rw <- {0} at {1} <|> rw {0} at {1} <|> rw <- {1} at {0} <|> rw {1} at {0}".format(l[1].lean_data["name"],l[0].lean_data["name"])
+        return "rw <- {0} at {1} <|> rw {0} at {1} <|> rw <- {1} at {0} <|> rw {1} at {0}".format(l[1].lean_data["name"], l[0].lean_data["name"])
     raise WrongUserInput
     
 @action(_("Apply"), _("APPLY")) # TODO : changer en gestion du double-clic
@@ -280,7 +280,7 @@ def action_apply(goal : Goal, l : [PropObj]):
     :return:    string of lean code
     """
     if len(l) == 0:
-        return WrongUserInput # n'apparaîtra plus quand ce sera un double-clic
+        raise WrongUserInput # n'apparaîtra plus quand ce sera un double-clic
     
     quantifier = l[-1].math_type.node
     if quantifier == "PROP_EQUAL" or quantifier == "PROP_IFF":
