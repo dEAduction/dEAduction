@@ -84,120 +84,98 @@ import deaduction.pylib.logger as logger
 
 log = logging.getLogger(__name__)
 
-##############################
-# Description of the grammar #
-##############################
-course_rules = """
-course = 
-        (something_else METADATA)?
-        (something_else? space_or_eol* (NAMESPACE_open_or_close / STATEMENT))+
-        (something_else space_or_eol*)?
+course_rules = """course = 
+            (something_else metadata)?
+            (something_else? 
+             space_or_eol*   (namespace_open_or_close / statement))+
+            (something_else space_or_eol*)?
 """
 
 something_else_rules = """
-something_else = 
-        (line_comment / ((non_coding any_char_but_eol)* end_of_line)  )*
-        
-                non_coding = 
-                        !NAMESPACE_open_or_close !STATEMENT !METADATA
+something_else = (line_comment / 
+((non_coding any_char_but_eol)* end_of_line)  )*
+non_coding = !namespace_open_or_close !statement !metadata
 """
 
 namespace_rules = """
-NAMESPACE_open_or_close = 
-        open_namespace / close_namespace 
-        
-                open_namespace = 
-                        "namespace" space+ namespace_identifier
-                        (interlude METADATA)?
-                close_namespace = 
-                        "end" space+ namespace_identifier
+namespace_open_or_close = open_namespace / close_namespace
+
+open_namespace = "namespace" space+ namespace_identifier
+                (interlude metadata)?
+
+close_namespace = "end" space+ namespace_identifier
 """
 
 statement_rules = """
-STATEMENT = 
-        (exercise / definition_or_theorem)
+statement = (exercise / definition_or_theorem)
 
-                exercise = 
-                        "lemma" space_or_eol+ exercise_name space_or_eol+
-                        lean_statement separator_equal_def
-                        (space_or_eol+ METADATA)?
-                        space_or_eol+ proof
+exercise  = "lemma" space_or_eol+
+                    exercise_name space_or_eol+
+                    lean_statement
+                separator_equal_def
+                    (space_or_eol+ metadata)?
+                    space_or_eol+ proof
 
-                definition_or_theorem = 
-                        "lemma" space_or_eol+
-                        (definition_name / theorem_name) space_or_eol+
-                        lean_statement
-                        separator_equal_def
-                        (interlude METADATA)?
+definition_or_theorem = "lemma" space_or_eol+
+                    (definition_name / theorem_name) space_or_eol+
+                    lean_statement
+                separator_equal_def
+                    (interlude metadata)?
                     
-definition_name = "definition." identifier 
-theorem_name = "theorem." identifier
-exercise_name = "exercise." identifier
-lean_statement = ((!separator_equal_def any_char_but_eol)* end_of_line*)+    
-separator_equal_def = ":="
+    definition_name = "definition." identifier 
+    theorem_name = "theorem." identifier
+    exercise_name = "exercise." identifier
+    
+    lean_statement = ((!separator_equal_def any_char_but_eol)* end_of_line*)+
+    
+    separator_equal_def = ":="
 """
 
 proof_rules = """
-proof = 
-        begin_proof core_proof end_proof
-        
-                begin_proof = 
-                        "begin" space_or_eol+
-                core_proof = 
-                        (!begin_proof !end_proof any_char_but_eol*) 
-                        space_or_eol+
-                end_proof = 
-                        "end" space_or_eol+
+proof = begin_proof core_proof end_proof
+    begin_proof = "begin" space_or_eol 
+    core_proof = ((!begin_proof !end_proof any_char_but_eol*) end_of_line)*
+    end_proof = "end" space_or_eol
 """
 
 metadata_rules = """
-METADATA =  
-        open_metadata
-        metadata_field+
-        close_metadata
+metadata =  open_metadata
+            metadata_field+
+            close_metadata
             
-                metadata_field = 
-                        metadata_field_name  end_of_line
-                        (space+ metadata_field_content  end_of_line)+
+    metadata_field = metadata_field_name  end_of_line
+                    ((space+ metadata_field_content end_of_line) /end_of_line)+
         
-metadata_field_name = (!space any_char_but_eol)+ space*
-metadata_field_content = any_char_but_eol*
-open_metadata = "/-" space+ ("dEAduction"/"d∃∀duction") space_or_eol+
-close_metadata = "-/"
+        metadata_field_name = (!space !close_metadata any_char_but_eol)+ space*
+        metadata_field_content = !close_metadata any_char_but_eol*
+    open_metadata = "/-" space+ "dEAduction" space_or_eol+
+    close_metadata = "-/"
 """
 
 interlude_rules = """
-interlude = 
-        ((!METADATA !"lemma" !"namespace" any_char_but_eol)* 
-        space_or_eol*)*
+interlude = ((!metadata !"lemma" !"namespace" any_char_but_eol)* 
+                    space_or_eol*)*
 """
 # may be empty
 
 line_comment_rules = """
-line_comment = 
-        "--" any_char_but_eol* end_of_line
+line_comment = "--" any_char_but_eol* end_of_line
 """
 
 identifier_rules = """
-identifier = 
-        identifier_start (identifier_rest)*
-        
-namespace_identifier = 
-        identifier_start (identifier_rest)*
-        
-                identifier_start = 
-                        letter / "_"
-                identifier_rest = 
-                        identifier_start / digits
+identifier           = identifier_start (identifier_rest)*
+namespace_identifier = identifier_start (identifier_rest)*
+    identifier_start = letter / "_"
+    identifier_rest = identifier_start / digits
 """
 
 basic_rules = """
-any_char_but_eol    = ~r"."
-letter              = ~r"[a-zA-Z]"
-digits              = ~r"[0-9']"
-space_or_eol        = end_of_line / ~r"\s"
-space               = !end_of_line ~r"\s"
-end_of_line         = "\\n"
+any_char_but_eol = ~r"."
+letter = ~r"[a-zA-Z]"
+digits = ~r"[0-9']"
+space_or_eol = end_of_line / ~r"\s"
+space = !end_of_line ~r"\s"
+end_of_line = "\\n"
 """
 
 rules = course_rules + something_else_rules \
@@ -287,8 +265,10 @@ class LeanCourseVisitor(NodeVisitor):
         # the following collect the metadata in the corresponding field
         # this is the only info from children,
         # so it is passed as data
-        metadata = {data["metadata_field_name"]:
-                    data["metadata_field_content"]}
+        metadata = {}
+        if "metadata_field_content" in data.keys():
+            metadata[data["metadata_field_name"]] = \
+                                                data["metadata_field_content"]
         return course_history, metadata
 
     def visit_metadata_field_name(self, node, visited_children):
@@ -387,12 +367,54 @@ if __name__ == "__main__":
     course_file2 = Path(
         '../../../../tests/lean_files/courses'
         '/exercises_theorie_des_ensembles.lean')
-    file_content = course_file1.read_text()
-    end_of_line = """
+    file_content1 = course_file1.read_text()
+    file_content2 = """
+lemma exercise.image_reciproque_inter_quelconque  (H : ∀ i:I,  (E i = f ⁻¹' (F
+i))) :  (f ⁻¹'  (set.Inter F)) = set.Inter E :=
+/- dEAduction
+Description
+
+-/
+begin
+end
+
 """
-    #    extract1 = end_of_line.join(file_content.splitlines()[:145])
-    course_tree = lean_course_grammar.parse(file_content)
+    file_content3 = """
+lemma exercise.union_distributive_inter : A ∩ (B ∪ C)  = (A ∩ B) ∪ (A ∩ C) := 
+/- dEAduction
+PrettyName
+    Intersection d'une union
+-/
+begin
+    sorry
+end
+"""
+    file_content4 = """
+lemma exercise.union toto := 
+
+/- dEAduction
+PrettyName
+    Intersection d'une union
+-/
+
+begin
+    sorry
+end
+"""
+    file_content5 = """
+lemma exercise.union_distributive_inter : A ∩ (B ∪ C)  = (A ∩ B) ∪ (A ∩ C) := 
+
+
+begin
+    
+end
+"""
+    course_tree1 = lean_course_grammar.parse(file_content1)
+#    course_tree2 = lean_course_grammar.parse(file_content2)
+#    course_tree3 = lean_course_grammar.parse(file_content3)
+    course_tree4 = lean_course_grammar.parse(file_content4)
+#    course_tree5 = lean_course_grammar.parse(file_content5)
     #print(course_tree)
     visitor = LeanCourseVisitor()
-    course_history, _ = visitor.visit(course_tree)
+    course_history, _ = visitor.visit(course_tree4)
     print(f"course history: {course_history}")
