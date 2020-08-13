@@ -3,6 +3,7 @@ import tactic
 
 -- dEAduction imports
 import structures
+import definitions
 
 -- General principles :
 -- Type should be defined as parameters, in order to be implicit everywhere
