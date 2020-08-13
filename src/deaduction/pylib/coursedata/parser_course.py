@@ -301,8 +301,9 @@ class LeanCourseVisitor(NodeVisitor):
 
     def visit_close_namespace(self, node, visited_children):
         course_history, data = get_info(visited_children)
-        event = "close_namespace", None
-        course_history.append(event)
+        name = data.pop("namespace_identifier")
+        event = "close_namespace", {"name": name}
+        course_history.insert(0, event)
         return course_history, data
 
     ###############
@@ -362,9 +363,9 @@ def get_info(children: List[dict]):
 
 if __name__ == "__main__":
     logger.configure()
-    course_file1 = Path('../../../../tests/lean_files/short_course/exercises'
+    course_file = Path('../../../../tests/lean_files/short_course/exercises'
                         '.lean')
-    course_file2 = Path(
+    course_file1 = Path(
         '../../../../tests/lean_files/courses'
         '/exercises_theorie_des_ensembles.lean')
     file_content1 = course_file1.read_text()

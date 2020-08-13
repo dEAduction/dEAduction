@@ -106,8 +106,12 @@ class Course:
                 outline[whole(namespace)] = event_content["pretty_name"]
                 log.debug(f"namespace {whole(namespace)}")
             elif event_name == "close_namespace":
-                log.debug("closing namespace")
-                namespace.pop()
+                name = event_content["name"]
+                if namespace and name == namespace[-1]:
+                    log.debug(f"closing namespace {name}")
+                    namespace.pop()
+                else:
+                    log.debug(f"(just closing section(?) {name})")
 
             ##############
             # statements #
@@ -165,8 +169,8 @@ class Course:
                  f" {counter_exercises} exercises found by parser")
         counter_lemma_exercises = file_content.count("lemma exercise.")
         if counter_exercises < counter_lemma_exercises:
-            log.warning("Some 'lemma exercise.' have not been parsed, "
-                        "wrong format?")
+            log.warning(f"{counter_lemma_exercises - counter_exercises}"
+                        f" exercises have not been parsed, wrong format?")
         return course
 
 
@@ -180,10 +184,10 @@ if __name__ == "__main__":
     course_file_path1 = Path(
         '../../../../tests/lean_files/short_course/exercises.lean')
 
-    course_file_path2 = Path("../../../../tests/lean_files/exercises/\
+    course_file_path2 = Path("../../../../tests/lean_files/courses/\
 exercises_theorie_des_ensembles.lean")
 
-    my_course = Course.from_file(course_file_path1)
+    my_course = Course.from_file(course_file_path2)
     print("My course:")
     print("List of statements:")
     count_ex = 0
