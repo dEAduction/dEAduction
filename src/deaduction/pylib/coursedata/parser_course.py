@@ -1,21 +1,24 @@
 """
 # parser_course.py : Parse lean course to extract pertinent data
 
-1) A lean file is parsed according to the grammar described in the "rules"
+1) A Lean file is parsed according to the grammar described in the "rules"
 string below.
 2) Parsimonious.grammar computes a tree description of the file
 according to this grammar.
 3) Then the tree is visited and information is collected at each pertinent
 node through the methods below. The information is stored in
-course_history, a list that contains all pertinents events:
-- end_of_line,
+course_history. This is some sort of idealized version of the file,
+retaining only the dEAduction-pertinent information. Specifically, it is a
+list that contains the following type of events:
+- course metadata
+- end_of_line (indispensable to specify positions of proofs),
 - opening and closing of namespaces (and their metadata),
 - statements (definitions, theorems, exercises) and their metadata.
 The variable 'data' is a dictionary which is used locally to collect
 information that will be stored with each event: an event is a couple
 (type_of_event: str, data). For instance for statements, the data is a
 dictionary that contains all the metadata associated to the statement.
-The course_history is processed by course.py.
+Then course_history is processed by course.py.
 
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -59,7 +62,7 @@ log = logging.getLogger(__name__)
 #           must end with ":=".
 
 # test somewhere else that core_proof does not contain "hypo_analysis"
-# it is important that all ends of line are detected by the end_of_line node
+# it is important that ALL ends of lines are detected by the end_of_line node
 
 # Does not support proof-like 'begin ... end' string in a comment between
 # statement and proof
@@ -75,7 +78,10 @@ log = logging.getLogger(__name__)
 # metadata or statement
 # metadata field names are made of anything but spaces
 # metadata field contents are indented, and at least one line (maybe empty)
-# if the format is not met then the statement will not appear in the list
+# if the format is not met then the statement will not appear in the list,
+# and a log.warning will be issued (in course.py)
+# identifiers (lemma and namespace's names between '.') can contain only
+# letters, digits and '_'
 
 from typing import List, Tuple
 import logging
@@ -187,6 +193,7 @@ rules = course_rules + something_else_rules \
 
 lean_course_grammar = Grammar(rules)
 
+
 #############################################
 # visiting methods for each pertinent nodes #
 #############################################
@@ -220,7 +227,7 @@ class LeanCourseVisitor(NodeVisitor):
         elif "theorem_name" in data.keys():
             event_name = "theorem"
             lean_name = data.pop("theorem_name")
-        else:
+        else: # this should not happen
             log.warning(f"no name found for statement with data "
                         f"{data} and metadata {metadata}")
         metadata["lean_name"] = lean_name
@@ -268,7 +275,7 @@ class LeanCourseVisitor(NodeVisitor):
         metadata = {}
         if "metadata_field_content" in data.keys():
             metadata[data["metadata_field_name"]] = \
-                                                data["metadata_field_content"]
+                data["metadata_field_content"]
         return course_history, metadata
 
     def visit_metadata_field_name(self, node, visited_children):
@@ -283,13 +290,13 @@ class LeanCourseVisitor(NodeVisitor):
         # field content may spread on several lines
         return course_history, data
 
-
     ##############
     # namespaces #
     ##############
     def visit_open_namespace(self, node, visited_children):
         course_history, data = get_info(visited_children)
         name = data.pop("namespace_identifier")
+        # get PrettyName or compute it if absent
         try:
             metadata = data.pop("metadata")
             pretty_name = metadata["PrettyName"]
@@ -300,6 +307,7 @@ class LeanCourseVisitor(NodeVisitor):
         return course_history, data
 
     def visit_close_namespace(self, node, visited_children):
+        # this can actually be the closing of a section
         course_history, data = get_info(visited_children)
         name = data.pop("namespace_identifier")
         event = "close_namespace", {"name": name}
@@ -311,12 +319,11 @@ class LeanCourseVisitor(NodeVisitor):
     ###############
     def visit_end_of_line(self, node, visited_children):
         event = "end_of_line", None
-        return [event], {}
+        return [event], {} # no data
 
-    ###################
-    # collecting data #
-    ###################
-
+    ####################
+    # collecting names #
+    ####################
     def visit_definition_name(self, node, visited_children):
         course_history, data = get_info(visited_children)
         data["definition_name"] = node.text
@@ -346,7 +353,7 @@ class LeanCourseVisitor(NodeVisitor):
     # generic visit #
     #################
     def generic_visit(self, node, visited_children):
-        # return the joined data of all children
+        # just return the joined data of all children
         course_history, data = get_info(visited_children)
         return course_history, data
 
@@ -361,10 +368,14 @@ def get_info(children: List[dict]):
     return course_history, data
 
 
+#########
+# tests #
+#########
+
 if __name__ == "__main__":
     logger.configure()
     course_file = Path('../../../../tests/lean_files/short_course/exercises'
-                        '.lean')
+                       '.lean')
     course_file1 = Path(
         '../../../../tests/lean_files/courses'
         '/exercises_theorie_des_ensembles.lean')
@@ -411,11 +422,11 @@ begin
 end
 """
     course_tree1 = lean_course_grammar.parse(file_content1)
-#    course_tree2 = lean_course_grammar.parse(file_content2)
-#    course_tree3 = lean_course_grammar.parse(file_content3)
+    #    course_tree2 = lean_course_grammar.parse(file_content2)
+    #    course_tree3 = lean_course_grammar.parse(file_content3)
     course_tree4 = lean_course_grammar.parse(file_content4)
-#    course_tree5 = lean_course_grammar.parse(file_content5)
-    #print(course_tree)
+    #    course_tree5 = lean_course_grammar.parse(file_content5)
+    # print(course_tree)
     visitor = LeanCourseVisitor()
     course_history, _ = visitor.visit(course_tree4)
     print(f"course history: {course_history}")
