@@ -78,8 +78,7 @@ class ActionButton(QPushButton):
     """
     Class for so-called 'action buttons' (e.g. ∀ button). Each
     instance of this class is associated to an instance of the class
-    Action (self.action), which itself contains L∃∀N-understandable
-    data. The instance of the class Action self is initialized with
+    Action (self.action). This instance contains
     all information required by L∃∀N. Furthermore, each
     such instance also contains all required cosmetic information
     for the graphical interface, that is a symbol and a caption.
@@ -90,14 +89,16 @@ class ActionButton(QPushButton):
     of which self is a child. When self is clicked on:
         1. the signal self.__statement_triggered is emitted;
         2. this signal is received in exercisemainwindow.server_task;
-        3. exercisemainwindow._server_call_action is called and the
-           current goal, the user selection (obj. and prop.) and self
-           are sent to L∃∀N for processing and eventually updating the
-           interface to a new goal.
+        3. exercisemainwindow.__server_call_action is called and from
+           there on the current goal, optional current selection (user
+           selected objects and properties) and self are pre-processed.
+           If everything is ok, everything is sent to L∃∀N. Otherwise,
+           additional info may be asked to the user, such as missing
+           parameters.
     Behavior is analogous to StatementsTreeWidgetItem's.
 
-    :attribute action (Action): The instance of the Action class self
-        was instantiated with.
+    :attribute action Action: The instance of the Action class self was
+        instantiated with.
     :attribute action_triggered (Signal(ActionButton)): A Signal with
         self as an argument, emitted when self is clicked on.
     """
@@ -108,7 +109,7 @@ class ActionButton(QPushButton):
         tooltip and keep the given action as an attribute. When self is
         clicked on, emit the signal self.action_triggered.
 
-        :param action Action: The instance of the class Action one wants
+        :param action: The instance of the class Action one wants
             self to be associated with.
         """
 
@@ -131,10 +132,12 @@ class ActionButton(QPushButton):
         self.action_triggered.emit(self)
 
 
-# Required to have an ActionButton as an argument in an ActionButton.
-# Writing
-# self.action_triggered = Signal(ActionButton)
-# in ActionButton.__init__ will raise an exception.
+# We wish to have an ActionButton class attribute called
+# action_triggered and defined as Signal(ActionButotn). At first, one
+# may define it in ActionButton.__init__. However, doing this will raise
+# an exception because in ActionButton.__init__, the class ActionButton
+# is not *yet* defined. The workaround is to define this class attribute
+# outside of the class definition, as followed.
 ActionButton.action_triggered = Signal(ActionButton)
 
 
@@ -207,10 +210,14 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         1. the signal exercisemainwindow.__statement_triggered is
            emitted;
         2. this signal is received in exercisemainwindow.server_task;
-        3. exercisemainwindow._server_call_statement is called and the
+        3. exercisemainwindow.__server_call_statement is called and the
            current goal, the user selection (obj. and prop.) and self
            are sent to L∃∀N for processing and eventually updating the
            interface to a new goal.
+        3. exercisemainwindow.__server_call_statement is called and from
+           there on the current goal, optional current selection (user
+           selected objects and properties) and self are pre-processed.
+           If everything is ok, everything is sent to L∃∀N.
     Behavior is analogous to ActionButton's.
 
     :attribute statement Statement: The instance of the class (or child

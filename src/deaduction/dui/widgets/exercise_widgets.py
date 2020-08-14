@@ -292,6 +292,45 @@ class ExerciseCentralWidget(QWidget):
 
 
 class ExerciseMainWindow(QMainWindow):
+    """
+    This class is reponsible for both managing the whole interface for
+    exercises and communicating with a so-called server interface
+    (self.servint, not instanciated in this class, self.servint is an
+    alias to an already existing instance): a middle man between the
+    interface and L∃∀N. For the interface, it instanciates (see
+    self.__init__) ExerciseCentralWidget, a toolbar, and probably more
+    things in the future (a status bar and a menu bar among others). For
+    the communication with self.servint, it is this class which:
+        1. store user selection of math. objects or properties
+           (self.current_selection);
+        2. detects when an action button (in self.cw.logic_btns or
+           in self.cw.proof_btns) or a statement (in
+           self.cw.statements_tree) is clicked on;
+        3. sends {the current goal, current selection} and {clicked
+           action button (with self.__server_call_action)} xor {clicked
+           statement (with self.__server_call_statement)} to the server
+           interface;
+        4. waits for some response (e.g. a new goal, an exception asking
+           for new user parameters).
+
+    The communication with the server interface to *send* data (e.g.
+    undo button clicked or goal, current selection and action button
+    clicked) is achieved in the method self.server_task with signals and
+    slots. User interface, server interface and L∃∀N server are
+    different entities which remeain separated by design, that is (among
+    other things) why signals are used. It is the method
+    self.server_task which is in charge of receiving signals and calling
+    functions / methods accordingly (although not using Qt's mechanism
+    of slots).
+
+    The communication with the server interface to *receive* data (e.g.
+    a goal change) is also achieved with signals and slots. Such signals
+    are simply connected to Qt Slots in self.__init__; this is much
+    simpler than sending data.
+
+    Finally, all of this uses asynchronous processes (keywords async and
+    await) using trio and qtrio.
+    """
 
     window_closed         = Signal()
     __action_triggered    = Signal(ActionButton)
@@ -330,7 +369,7 @@ class ExerciseMainWindow(QMainWindow):
 
         # Server communication
         self.servint.proof_state_change.connect(self.update_proof_state)
-        self.servint.lean_file_changed.connect(self._update_lean_editor)
+        self.servint.lean_file_changed.connect(self.__update_lean_editor)
         self.servint.proof_no_goals.connect(self.fireworks)
         self.servint.nursery.start_soon(self.server_task)  # Start server task
 
@@ -539,9 +578,11 @@ class ExerciseMainWindow(QMainWindow):
             self.current_selection.remove(item)
 
     @Slot()
-    def _update_lean_editor(self):
+    def __update_lean_editor(self):
         self.lean_editor.code_set(self.servint.lean_file.inner_contents)
 
     @Slot(ProofState)
     def update_proof_state(self, proofstate: ProofState):
+        # Weird that this methods only does this.
+        # TODO: maybe delete it to only have self.update_goal?
         self.update_goal(proofstate.goals[0])
