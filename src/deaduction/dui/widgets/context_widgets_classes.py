@@ -214,7 +214,7 @@ class _TargetLabel(QLabel):
 
     def __init__(self, target: ProofStatePO=None, tag: str=None):
         """
-        Init self with an target (an instance of the class ProofStatePO)
+        Init self with a target (an instance of the class ProofStatePO)
         and a tag.  If those are None, display an empty tag and '…' in
         place of the target.
 
