@@ -239,7 +239,9 @@ def apply_exists(goal : Goal, l : [PropObj]) -> str:
     if h_selected.node != "QUANT_∃":
         raise WrongUserInput
     h_name = l[0].lean_data["name"]
-    x = give_name(goal, h_selected.children[0], [h_selected.children[1].format_as_utf8(), h_selected.children[0].format_as_utf8().lower()])
+    x = give_name(goal, math_type=h_selected.children[0],
+                  authorized_names=h_selected.children[0].lean_data["name"],
+                  hints=[h_selected.children[1].format_as_utf8()])
     hx = get_new_hyp()
     if h_selected.children[2].node == "PROP_∃":
         return "rcases {0} with ⟨ {1}, ⟨ {2}, {0} ⟩ ⟩, ".format(h_name, x, hx)

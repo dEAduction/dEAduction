@@ -77,7 +77,6 @@ class LeanExprVisitor(NodeVisitor):
 
     def visit_name(self, node, visited_children):
         return node.text
-        return node.text
 
     def generic_visit(self, node, visited_children):
         """ The generic visit method.

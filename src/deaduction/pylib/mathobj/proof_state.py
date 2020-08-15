@@ -190,7 +190,7 @@ class Goal:
                 pfpo.representation = {'latex': None, 'utf8': None}
                 bound_var_type = math_type.children[0]
                 # search for a fresh name
-                name = give_name(goal, bound_var_type)
+                name = give_name(goal, math_type=bound_var_type)
                 # create the bound var
                 bound_var = instantiate_bound_var(math_type, name)
                 # update bound_vars list
