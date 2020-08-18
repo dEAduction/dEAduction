@@ -29,6 +29,7 @@ This file is part of dEAduction.
 """
 
 _VAR_NB = 0
+_FUN_NB = 0
 
 def get_new_var():
     global _VAR_NB
@@ -36,9 +37,9 @@ def get_new_var():
     return "x{0}".format(_VAR_NB)
 
 def get_new_fun():
-    global _VAR_NB
-    _VAR_NB += 1
-    return "f{0}".format(_VAR_NB)
+    global _FUN_NB
+    _FUN_NB += 1
+    return "f{0}".format(_FUN_NB)
 def get_new_hyp():
     global _VAR_NB
     _VAR_NB += 1

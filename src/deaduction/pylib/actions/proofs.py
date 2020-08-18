@@ -51,7 +51,7 @@ def action_cbr(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
         else:
             h1 = utils.get_new_hyp()
             h2 = utils.get_new_hyp()
-        return "cases (em ({0})) with {1} {2}, ".format(user_input[0], h1, h2)
+            return "cases (classical.em ({0})) with {1} {2}, ".format(user_input[0], h1, h2)
     else:
         raise WrongUserInput
 
@@ -82,22 +82,7 @@ def action_absurdum(goal : Goal, l : [PropObj]) -> str:
         return "contradiction, "
 
 
-@action(_("Introduce new object"), "+")
-def action_new_object(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
-    """
-    Translate into string of lean code corresponding to the action
-    
-    :param l: list of PropObj arguments preselected by the user
-    :return: string of lean code
-    """
-    if len(user_input) == 0:
-        raise MissingParametersError(InputType.Text, title = "+", output = _("Introduce new object:"))
-    else:
-        x = utils.get_new_var()
-        return "let {0} := {1}, ".format(x, user_input[0])
-
-
-@action(_("If a hypothesis of form ∀ a ∈ A, ∃ b ∈ B, P(a,b) has been previously selected, introduce a new function f : A → B and add ∀ a ∈ A, P(a, f(a)) to the properties"), _("CREATE FUNCTION"))
+@action(_("If a hypothesis of form ∀ a ∈ A, ∃ b ∈ B, P(a,b) has been previously selected, introduce a new function f : A → B and add ∀ a ∈ A, P(a, f(a)) to the properties"), _("CREATE FUN"))
 def action_choice(goal : Goal, l : [PropObj]) -> str:
     """
     Translate into string of lean code corresponding to the action
@@ -113,6 +98,32 @@ def action_choice(goal : Goal, l : [PropObj]) -> str:
         # TODO : demander à FLR une façon plus jolie avec tactic choice par exemple plutôt que faire dsimp après
     else:
         raise WrongUserInput
+        
+        
+@action(_("Introduce new object\nIntroduce new subgoal: transform the current target into the input target and add this to the properties of the future goal."), "+")
+def action_new_object(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
+    """
+    Translate into string of lean code corresponding to the action
+    
+    :param l: list of PropObj arguments preselected by the user
+    :return: string of lean code
+    """
+    if len(user_input) == 0:
+        raise MissingParametersError(InputType.Choice, [_("new object"), _("subgoal")], title = "+", output = _("Choose what you want to introduce:"))
+    if user_input[0] == _("new object"):
+        if len(user_input) == 1:
+            raise MissingParametersError(InputType.Text, title = "+", output = _("Introduce new object:"))
+        else:
+            x = utils.get_new_var()
+            return "let {0} := {1}, ".format(x, user_input[1])
+    if user_input[0] == _("subgoal"):
+        if len(user_input) == 1:
+            raise MissingParametersError(InputType.Text, title = "+", output = _("Introduce new subgoal:"))
+        else:
+            h = utils.get_new_hyp()
+            return "have {0} : ({1}), ".format(h, user_input[1])
+
+
 
 
 @action(_("Assumption"), "¯\_(ツ)_/¯")

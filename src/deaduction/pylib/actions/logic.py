@@ -294,7 +294,7 @@ def action_exists(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
         if l[0].math_type.is_prop():
             return apply_exists(goal, l)
         else:
-            return construct_exists(goal, l[0].lean_data["name"])
+            return construct_exists(goal, [l[0].lean_data["name"]])
     if len(l) == 0:
         return construct_exists(goal, user_input)
     raise WrongUserInput
