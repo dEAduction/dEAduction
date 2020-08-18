@@ -408,17 +408,20 @@ class ExerciseMainWindow(QMainWindow):
     async def _server_call_statement(self, item: StatementsTreeWidgetItem):
         # Do nothing is user clicks on a node
         if isinstance(item, StatementsTreeWidgetItem):
-            item.setSelected(False)
-            statement = item.statement
+            try: 
+                item.setSelected(False)
+                statement = item.statement
 
-            if isinstance(statement, Definition):
-                code = generic.action_definition(self.current_goal,
-                        self.current_context_selection_as_pspos, statement)
-            elif isinstance(statement, Theorem):
-                code = generic.action_theorem(self.current_goal,
-                        self.current_context_selection_as_pspos, statement)
+                if isinstance(statement, Definition):
+                    code = generic.action_definition(self.current_goal,
+                            self.current_context_selection_as_pspos, statement)
+                elif isinstance(statement, Theorem):
+                    code = generic.action_theorem(self.current_goal,
+                            self.current_context_selection_as_pspos, statement)
 
-            await self.servint.code_insert(statement.pretty_name, code)
+                await self.servint.code_insert(statement.pretty_name, code)
+            except WrongUserInput:
+                pass
 
     async def _server_send_editor_lean(self):
         await self.servint.code_set(_('Code from editor'),
