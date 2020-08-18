@@ -391,7 +391,7 @@ class ExerciseMainWindow(QMainWindow):
                             e.title, e.output)
                 elif e.input_type == InputType.Choice:
                     text, ok = QInputDialog.getItem(action_btn,
-                            _("Choose element"), "", e.list_of_choices,
+                            e.title, e.output, e.list_of_choices,
                             0, False)
                 if ok:
                     user_input.append(text)

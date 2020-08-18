@@ -223,7 +223,6 @@ def construct_iff(goal : Goal, user_input : [str]):
         else:
             raise WrongUserInput
     raise WrongUserInput
-    return "split, "
 
 @action(_("If the target is of the form P ⇔ Q: transform the target into (P =>Q AND Q =>P) by definition"), "⇔")
 def action_iff(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
