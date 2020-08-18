@@ -117,6 +117,7 @@ def pprint(essai: str):
 
 
 
+
 # ESSAIS
 if __name__ == '__main__':
     essai11 = "QUELQUESOIT[x]¿(LOCAL_CONSTANT[name:X/identifier:0._fresh.1093.30647]¿, IMPLIQUE¿(<¿(APPLICATION¿(APPLICATION¿(APPLICATION¿(APPLICATION¿(CONSTANT[name:dist'/dist']¿, LOCAL_CONSTANT[name:X/identifier:0._fresh.1093.30647]¿)¿, LOCAL_CONSTANT[name:_inst_1/identifier:0._fresh.1093.30651]¿)¿, LOCAL_CONSTANT[name:x/identifier:0._fresh.1096.43506]¿)¿, VAR[0]¿)¿, LOCAL_CONSTANT[name:δ/identifier:0._fresh.1096.43703]¿)¿, <¿(APPLICATION¿(APPLICATION¿(APPLICATION¿(APPLICATION¿(CONSTANT[name:dist'/dist']¿, LOCAL_CONSTANT[name:Y/identifier:0._fresh.1093.30649]¿)¿, LOCAL_CONSTANT[name:_inst_2/identifier:0._fresh.1093.30653]¿)¿, APPLICATION¿(LOCAL_CONSTANT[name:f/identifier:0._fresh.1093.30659]¿, LOCAL_CONSTANT[name:x/identifier:0._fresh.1096.43506]¿)¿)¿, APPLICATION¿(LOCAL_CONSTANT[name:f/identifier:0._fresh.1093.30659]¿, VAR[1]¿)¿)¿, LOCAL_CONSTANT[name:ε/identifier:0._fresh.1096.43629]¿)¿)¿)"

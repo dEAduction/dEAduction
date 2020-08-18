@@ -146,7 +146,7 @@ class PropObj:
         try:
             name = self.lean_data["name"]
             return [self]
-        except [AttributeError,KeyError]:
+        except [AttributeError, KeyError]:
             local_vars = []
             for child in self.children:
                 local_vars.extend(child.extract_local_vars())
@@ -178,14 +178,14 @@ class PropObj:
         else:
             log.info(f"computing utf-8 representation of {self}")
             format_ = "utf8"
-        if self.representation[format_] is not "??":
+        if self.representation[format_] != "??":
             return
         children_rep = []
         node = self.node
         i = -1
         for arg in self.children:
             i += 1
-            if arg.representation[format_] is "??":
+            if arg.representation[format_] == "??":
                 PropObj.structured_format(arg, format_)  # = compute_latex
             lr = arg.representation[format_]
             # the following line computes if parentheses are needed

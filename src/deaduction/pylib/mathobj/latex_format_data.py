@@ -98,10 +98,14 @@ def format_app_inverse(latex_symb, a, PO, format_="latex"):
 
 def format_quantifiers(latex_symb, a, PO, format_="latex"):
     # mind that the variable a[1] comes AFTER the type a[0] in quantifiers
-    if format_ == "latex":
-        return [latex_symb + ' ' + a[1] + ' \in ', a[0], ', ', a[2]]
-    elif format_ == "utf8":
-        return [latex_symb + a[1] + ' ∈ ', a[0], ', ', a[2]]
+    if PO.children[0].node == "FUNCTION":  # the bound var is a function
+        separator = ' : '
+    else:
+        if format_ == "latex":
+            separator = '\in'
+        elif format_ == "utf8":
+            separator = ' ∈ '
+    return [latex_symb + ' ' + a[1] + separator, a[0], ', ', a[2]]
 
 
 def format_complement(latex_symb, a, PO, format_="latex"):
@@ -118,7 +122,7 @@ def format_constant1(latex_symb, a, PO, format_="latex"):
 def format_constant2(latex_symb, a, PO, format_="latex"):
     if "info" in PO.representation.keys():
         name = _(PO.representation["info"])
-        return [latex_text(name)]
+        return [latex_text(name, format_)]
     else:
         return [latex_text(PO.node)]
 
@@ -141,15 +145,31 @@ def general_format_application(latex_symb, a, PO, format_="latex"):
             return [a[-2], r" \circ ", a[-1]]
         elif format_ == 'utf8':
             return [a[-2], '∘', a[-1]]
-    elif key in ["injective", "surjective"]:  # adjective with one subject
-        noun = a[-1]
-        adjective = key
-        if format_ == "latex":
-            return [r"\text{" + noun + "" + " " + _("is") + " " + adjective +
-                    r"}"]
-        elif format_ == "utf8":
-            return [noun + "" + " " + _("is") + " " + adjective]
-
+    else:
+        # select children that are not Types
+        pertinent_children = []
+        pertinent_children_rep = []
+        counter = 0  # the first child is always pertinent, we leave it aside
+        for child in PO.children[1:]:
+            counter +=1
+            if hasattr(child, "math_type"):
+                if child.math_type.node == 'TYPE':
+                    continue
+            pertinent_children.append(child)
+            pertinent_children_rep.append(a[counter])
+        log.debug(f"pertinent children: {pertinent_children_rep}")
+        # discriminate according of number of pertinent children
+        if len(pertinent_children) == 0:  # CONSTANT, e.g. 'Identité'
+            return a[0]
+        if len(pertinent_children) == 1:  # ADJECTIVE, e.g. 'f is injective'
+            adjective = a[0]
+            noun = pertinent_children_rep[0]
+            if format_ == "latex":
+                return [r"\text{", noun, " " + _("is") + " ", adjective, r"}"]
+            elif format_ == "utf8":
+                return [noun, " " + _("is") + " ", adjective]
+        else:
+            return "??"
 
 def latex_text(string: str, format_="latex"):
     if format_ == "latex":

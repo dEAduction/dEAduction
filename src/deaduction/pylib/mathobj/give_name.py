@@ -24,11 +24,16 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List
+import logging
+
+import deaduction.pylib.logger as logger
 from deaduction.pylib.mathobj import ProofStatePO, PropObj, BoundVarPO
+
+log = logging.getLogger(__name__)
 
 
 def give_name(goal, math_type: PropObj,
-              authorized_names=[], hints: [str] = [], po=None,
+              authorized_names: [str] = [], hints: [str] = [], po=None,
               format_='utf8') -> str:
     """
     Provide a name for a new variable. Baby version.
@@ -57,6 +62,7 @@ def give_name(goal, math_type: PropObj,
             forbidden_names.remove(name)
         except ValueError:
             pass
+    log.debug(f"forbidden names: {forbidden_names}")
     if isinstance(math_type, ProofStatePO):
         type_name = math_type.lean_data["name"]
         if len(type_name) == 1 and type_name.isupper():

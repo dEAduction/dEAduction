@@ -183,14 +183,16 @@ class Goal:
             # special format that needs supplementary bounds variables #
             # e.g. "SET_FAMILY", "SEQUENCE"                            #
             ############################################################
+            # todo: this can be moved to a more appropriate place,
+            # since the naming use only the pfpo and NOT the whole context
             math_type = pfpo.math_type
             if math_type.node in node_needing_bounds_var:
                 pfpo.node += "INSTANCE_OF_" + math_type.node
                 # a new representation will be computed
-                pfpo.representation = {'latex': None, 'utf8': None}
+                pfpo.representation = {'latex': '??', 'utf8': '??'}
                 bound_var_type = math_type.children[0]
-                # search for a fresh name
-                name = give_name(goal, math_type=bound_var_type)
+                # search for a fresh name valid inside pfpo
+                name = give_name(goal, math_type=bound_var_type, po=pfpo)
                 # create the bound var
                 bound_var = instantiate_bound_var(math_type, name)
                 # update bound_vars list
