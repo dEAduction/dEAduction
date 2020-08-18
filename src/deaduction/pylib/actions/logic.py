@@ -52,10 +52,25 @@ from deaduction.pylib.mathobj   import (    PropObj,
 
 ## AND ##
 
-def construct_and(goal):
+def construct_and(goal : Goal, user_input : [str]):
     if goal.target.math_type.node != "PROP_AND":
         raise WrongUserInput
-    return "split, "
+    left = goal.target.math_type.children[0].format_as_utf8()
+    right = goal.target.math_type.children[1].format_as_utf8()
+    choices = [left, right]
+    if user_input == []:
+        raise MissingParametersError(InputType.Choice, choices, title = "Choose element", output = "Choose which subgoal you want to prove first")
+    if len(user_input) == 1:
+        if user_input[0] in choices:
+            i = choices.index(user_input[0])
+            if i == 1:
+                code = "rw and.comm, "
+            else:
+                code = ""
+            return "{0}split, ".format(code)
+        else:
+            raise WrongUserInput
+    raise WrongUserInput
 
 def apply_and(l):
     if l[0].math_type.node != "PROP_AND":
@@ -72,7 +87,7 @@ def construct_and_hyp(selected_objects : [PropObj]):
     return "have {0} := and.intro {1} {2}, ".format(h, h1, h2)
 
 @action(_("If the target is of the form P AND Q: transform the current goal into two subgoals, P, then Q.\nIf a hypothesis of the form P AND Q has been previously selected: creates two new hypothesis P, and Q.\n If two hypothesis P, then Q, have been previously selected: add the new hypothesis P AND Q to the properties."), _('AND'))
-def action_and(goal : Goal, selected_objects: [PropObj]) -> str:
+def action_and(goal : Goal, selected_objects: [PropObj], user_input : [str] = [] ) -> str:
     """
     Translate into string of lean code corresponding to the action
     
@@ -80,7 +95,7 @@ def action_and(goal : Goal, selected_objects: [PropObj]) -> str:
     :return:    string of lean code
     """
     if len(selected_objects) == 0:
-        return construct_and(goal)
+        return construct_and(goal, user_input)
     if len(selected_objects) == 1:
         return apply_and(selected_objects)
     if len(selected_objects) == 2:
@@ -104,7 +119,7 @@ def construct_or(goal : Goal, user_input : [str]) -> str:
     else:
         left = goal.target.math_type.children[0].format_as_utf8()
         right = goal.target.math_type.children[1].format_as_utf8()
-        raise MissingParametersError(InputType.Choice, [left,right])
+        raise MissingParametersError(InputType.Choice, [left,right], title = "Choose element")
 
 def apply_or(l : [PropObj]) -> str:
     if l[0].math_type.node != "PROP_OR":
@@ -187,13 +202,31 @@ def action_implicate(goal : Goal, l : [PropObj]) -> str:
 
 ## IFF ##
 
-def construct_iff(goal : Goal):
+def construct_iff(goal : Goal, user_input : [str]):
     if goal.target.math_type.node != "PROP_IFF":
         raise WrongUserInput
+    left = goal.target.math_type.children[0].format_as_utf8()
+    right = goal.target.math_type.children[1].format_as_utf8()
+    choices = [f'({left}) ⇒ ({right})', f'({right}) ⇒ ({left})']
+    if user_input == []:
+        raise MissingParametersError(InputType.Choice, choices, title = "Choose element", output = "Choose which subgoal you want to prove first")
+    if len(user_input) == 1:
+        left = goal.target.math_type.children[0].format_as_utf8()
+        right = goal.target.math_type.children[1].format_as_utf8()
+        if user_input[0] in choices:
+            i = choices.index(user_input[0])
+            if i == 1:
+                code = "rw iff.comm, "
+            else:
+                code = ""
+            return "{0}split, ".format(code)
+        else:
+            raise WrongUserInput
+    raise WrongUserInput
     return "split, "
 
 @action(_("If the target is of the form P ⇔ Q: transform the target into (P =>Q AND Q =>P) by definition"), "⇔")
-def action_iff(goal : Goal, l : [PropObj]) -> str:
+def action_iff(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
     """
     Translate into string of lean code corresponding to the action
     
@@ -201,7 +234,7 @@ def action_iff(goal : Goal, l : [PropObj]) -> str:
     :return:    string of lean code
     """
     if len(l) == 0:
-        return construct_iff(goal)
+        return construct_iff(goal, user_input)
     raise WrongUserInput
 
 ## FOR ALL ##
