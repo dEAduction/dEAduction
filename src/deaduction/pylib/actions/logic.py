@@ -240,7 +240,7 @@ def apply_exists(goal : Goal, l : [PropObj]) -> str:
         raise WrongUserInput
     h_name = l[0].lean_data["name"]
     x = give_name(goal, math_type=h_selected.children[0],
-                  authorized_names=h_selected.children[0].lean_data["name"],
+                  authorized_names=h_selected.children[1].lean_data["name"],
                   hints=[h_selected.children[1].format_as_utf8()])
     hx = get_new_hyp()
     if h_selected.children[2].node == "PROP_∃":

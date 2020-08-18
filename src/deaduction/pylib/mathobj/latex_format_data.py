@@ -171,6 +171,34 @@ def general_format_application(latex_symb, a, PO, format_="latex"):
         else:
             return "??"
 
+
+def format_lambda(latex_symb, a, PO, format_="latex"):
+    """
+    format for lambda expression,
+    i.e. set families with explicit bound variable
+    (lambda (i:I), E i)
+    """
+    ################
+    # set families #
+    ################
+    # format LAMBDA(i, I, APPLICATION(E, i)) -> {E_i,i in I}
+    # where E : SET_FAMILY
+    [type_rep, var_rep, body_rep] = a
+    [type_, var_, body] = PO.children
+    if body.node == "APPLICATION":
+        E = body.children[0]
+        if E.node == "INSTANCE_OF_SET_FAMILY":
+            # the bound var has already
+            # been given a name in dEAduction
+            var_name = E.children[0].representation[format_]
+            return format_instance_set_family("", [var_name],
+                                              E, format_)
+        elif hasattr(E, "math_type"):
+            if E.math_type.node == "SET_FAMILY":
+                return format_instance_set_family("", [var_rep],
+                                                  E, format_)
+
+
 def latex_text(string: str, format_="latex"):
     if format_ == "latex":
         string = r"\textsc{" + string + r"}"
@@ -254,6 +282,7 @@ latex_structures = {"PROP_AND": (r" \text{ " + _("AND") + " } ", format_0n1),
                     # GENERAL TYPES: #
                     ##################
                     "APPLICATION": ("", general_format_application),
+                    "LAMBDA": ("", format_lambda),
                     "PROP": (r"\text{ " + _("a proposition") + "}",
                              format_constant1),
                     "TYPE": (r" \text{ " + _("a set") + "} ",
@@ -311,6 +340,7 @@ utf8_structures = {"PROP_AND": (" " + _("AND") + " ", format_0n1),  # logic
                    "+": ("+", format_0n1),
                    "VAR": ("", "var"),
                    "APPLICATION": ("", general_format_application),
+                   "LAMBDA": ("", format_lambda),
                    ##################
                    # GENERAL TYPES: #
                    ##################
