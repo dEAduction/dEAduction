@@ -30,10 +30,12 @@ from dataclasses import dataclass
 from gettext import gettext as _
 import logging
 import deaduction.pylib.actions.utils as utils
-from deaduction.pylib.actions.exceptions import InputType, MissingParametersError, WrongUserInput
-from deaduction.pylib.actions.actiondef import action
-from deaduction.pylib.mathobj.PropObj import PropObj
-from deaduction.pylib.mathobj.proof_state import Goal
+from deaduction.pylib.actions   import (    InputType,
+                                            MissingParametersError,
+                                            WrongUserInput,
+                                            action)
+from deaduction.pylib.mathobj   import (    PropObj,
+                                            Goal)
 
 @action(_("Case-based reasoning"), _("CASES")) # TODO : dire à Florian de rajouter open classical et local attribute [instance] classical.prop_decidable dans le fichier lean
 def action_cbr(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
@@ -94,6 +96,25 @@ def action_new_object(goal : Goal, l : [PropObj], user_input : [str] = []) -> st
         x = utils.get_new_var()
         return "let {0} := {1}, ".format(x, user_input[0])
 
+
+@action(_("If a hypothesis of form ∀ a ∈ A, ∃ b ∈ B, P(a,b) has been previously selected, introduce a new function f : A → B and add ∀ a ∈ A, P(a, f(a)) to the properties"), _("CREATE FUNCTION"))
+def action_choice(goal : Goal, l : [PropObj]) -> str:
+    """
+    Translate into string of lean code corresponding to the action
+    
+    :param l: list of PropObj arguments preselected by the user
+    :return: string of lean code
+    """
+    if len(l) == 1:
+        h = l[0].lean_data["name"]
+        hf = utils.get_new_hyp()
+        f = utils.get_new_fun()
+        return f'cases classical.axiom_of_choice {h} with {f} {hf}, simp at {hf}, dsimp at {f}, '
+        # TODO : demander à FLR une façon plus jolie avec tactic choice par exemple plutôt que faire dsimp après
+    else:
+        raise WrongUserInput
+
+
 @action(_("Assumption"), "¯\_(ツ)_/¯")
 def action_assumption(goal : Goal, l : [PropObj]) -> str:
     """
@@ -110,9 +131,5 @@ def action_assumption(goal : Goal, l : [PropObj]) -> str:
         
 #@action(_("Proof by induction"))
 #def action_induction(goal : Goal, l : [PropObj]):
-#    raise WrongUserInput
-
-#@action(_("Use axiom of choice"))
-#def action_choice(goal):
 #    raise WrongUserInput
 

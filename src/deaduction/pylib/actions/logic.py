@@ -209,7 +209,9 @@ def construct_iff(goal : Goal, user_input : [str]):
     right = goal.target.math_type.children[1].format_as_utf8()
     choices = [f'({left}) ⇒ ({right})', f'({right}) ⇒ ({left})']
     if user_input == []:
-        raise MissingParametersError(InputType.Choice, choices, title = "Choose element", output = "Choose which subgoal you want to prove first")
+        raise MissingParametersError(InputType.Choice, choices,
+            title = _("Choose element"),
+            output = _("Choose which subgoal you want to prove first"))
     if len(user_input) == 1:
         left = goal.target.math_type.children[0].format_as_utf8()
         right = goal.target.math_type.children[1].format_as_utf8()
@@ -224,7 +226,7 @@ def construct_iff(goal : Goal, user_input : [str]):
             raise WrongUserInput
     raise WrongUserInput
 
-@action(_("If the target is of the form P ⇔ Q: transform the target into (P =>Q AND Q =>P) by definition"), "⇔")
+@action(_("If the target is of the form P ⇔ Q: introduce two subgoals, P⇒Q, and Q⇒P."), "⇔")
 def action_iff(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
     """
     Translate into string of lean code corresponding to the action

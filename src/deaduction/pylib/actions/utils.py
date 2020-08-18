@@ -35,6 +35,10 @@ def get_new_var():
     _VAR_NB += 1
     return "x{0}".format(_VAR_NB)
 
+def get_new_fun():
+    global _VAR_NB
+    _VAR_NB += 1
+    return "f{0}".format(_VAR_NB)
 def get_new_hyp():
     global _VAR_NB
     _VAR_NB += 1
