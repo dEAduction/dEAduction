@@ -51,6 +51,7 @@ def action_theorem(goal : Goal, selected_objects : [PropObj], theorem : Statemen
     th = theorem.lean_name
     if len(selected_objects) == 0:
         h = get_new_hyp()
+        
         return "apply {1} <|> have {0} := @{1},".format(h, th)
     else:
         arguments = " ".join([selected_objects[0].lean_data["name"]])

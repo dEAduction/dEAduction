@@ -273,7 +273,8 @@ def needs_paren(parent: PropObj, child_number: int) -> bool:
             ["SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
              "PROP_INCLUDED"]:
         b = False
-    elif p_node in ["SET_IMAGE", "SET_INVERSE", "APPLICATION_FUNCTION",
+    elif p_node in ["SET_IMAGE", "SET_INVERSE",
+                    "SET_UNION+", "SET_INTER+", "APPLICATION_FUNCTION",
                     "PROP_EQUAL", "PROP_INCLUDED", "PROP_BELONGS"]:
         b = False
     elif c_node == "SET_COMPLEMENT" and p_node != "SET_COMPLEMENT":
