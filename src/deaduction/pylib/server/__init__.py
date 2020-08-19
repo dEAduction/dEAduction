@@ -170,6 +170,9 @@ class ServerInterface(QObject):
                     self.__tmp_hypo_analysis, self.__tmp_targets_analysis)
                 self.__proof_state_valid.set()
 
+                # store proof_state
+                self.lean_file.state_info_attach(ProofState=self.proof_state)
+
                 # Emit signal only if from qt context (avoid AttributeError)
                 if hasattr(self.proof_state_change, "emit"):
                     self.proof_state_change.emit(self.proof_state)

@@ -61,6 +61,9 @@ class Goal:
         the same math_type, and they are modified versions of each other if
         they have the same name and different math_types.
         If goal_is_new == True then all objects will be tagged as new.
+        That's bad: probably in that case objects should be compared with
+        objects of the goal that is logically (and not chronologically) just
+        before the present context
 
         :param new_goal: new goal
         :param old_goal: old goal
@@ -130,6 +133,8 @@ class Goal:
                 tag_new_target, tag_old_target = "≠", "≠"
         new_goal.future_tags = (tags_new_context, tag_new_target)
         old_goal.past_tags_old_context = (tags_old_context, tag_old_target)
+        log.debug(f"Old goal old tags: {old_goal.past_tags_old_context}")
+        log.debug(f"New goal future tags: {new_goal.future_tags}")
 
     def extract_var_names(self) -> List[str]:
         """
@@ -246,6 +251,14 @@ class ProofState:
             other_goal = Goal.from_lean_data("", other_string_goal)
             goals.append(other_goal)
         return cls(goals)
+
+def print_proof_state(goal):
+    print("Context:")
+    for mt, mt_list in goal.math_types:
+        print(f"{[PO.format_as_utf8() for PO in mt_list]} :"
+              f" {mt.format_as_utf8()}")
+    print("Target:")
+    print(goal.target.math_type.format_as_utf8())
 
 
 if __name__ == '__main__':
