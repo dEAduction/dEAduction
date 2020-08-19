@@ -94,7 +94,7 @@ def action_choice(goal : Goal, l : [PropObj]) -> str:
         h = l[0].lean_data["name"]
         hf = utils.get_new_hyp()
         f = utils.get_new_fun()
-        return f'cases classical.axiom_of_choice {h} with {f} {hf}, simp at {hf}, dsimp at {f}, '
+        return f'cases classical.axiom_of_choice {h} with {f} {hf}, dsimp at {hf}, dsimp at {f}, '
         # TODO : demander à FLR une façon plus jolie avec tactic choice par exemple plutôt que faire dsimp après
     else:
         raise WrongUserInput
@@ -115,7 +115,8 @@ def action_new_object(goal : Goal, l : [PropObj], user_input : [str] = []) -> st
             raise MissingParametersError(InputType.Text, title = "+", output = _("Introduce new object:"))
         else:
             x = utils.get_new_var()
-            return "let {0} := {1}, ".format(x, user_input[1])
+            h = utils.get_new_hyp()
+            return "let {0} := {1}, have {2} : {0} = {1}, refl, ".format(x, user_input[1], h)
     if user_input[0] == _("subgoal"):
         if len(user_input) == 1:
             raise MissingParametersError(InputType.Text, title = "+", output = _("Introduce new subgoal:"))
