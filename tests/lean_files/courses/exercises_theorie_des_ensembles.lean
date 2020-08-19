@@ -381,11 +381,10 @@ begin
     unfold surjective,
 end
 
-lemma definition.composition :
-h = composition g f ↔ ∀ x : X, h x = g (f x)
+lemma definition.composition : ∀ {x : X}, (composition g f) x = g (f x)
 :=
 begin
-    apply function.funext_iff,
+    sorry
 end
 
 lemma definition.egalite_fonctions (f' : X → Y) :
@@ -395,10 +394,9 @@ begin
 end
 
 
-lemma definition.Identite (f₀: X → X) :
-f₀ = Identite ↔ ∀ x, f₀ x = x :=
+lemma definition.Identite : ∀ {x : X}, Identite x = x :=
 begin
-    apply definition.egalite_fonctions,
+    sorry
 end
 
 end definitions
@@ -412,7 +410,7 @@ end definitions
 namespace inverses
 open applications_II.definitions
 
-lemma exercise.injective_ssi_inverse_gauche : (injective f) ↔
+lemma exercise.injective_ssi_inverse_gauche (x0 : X) : (injective f) ↔
 ∃ F: Y → X, (composition F f) = Identite :=
 begin
     sorry
