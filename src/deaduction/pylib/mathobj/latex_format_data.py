@@ -102,9 +102,9 @@ def format_quantifiers(latex_symb, a, PO, format_="latex"):
         separator = ' : '
     else:
         if format_ == "latex":
-            separator = '\in'
+            separator = r'\in'
         elif format_ == "utf8":
-            separator = ' ∈ '
+            separator = '∈'
     return [latex_symb + ' ' + a[1] + separator, a[0], ', ', a[2]]
 
 
@@ -185,18 +185,26 @@ def format_lambda(latex_symb, a, PO, format_="latex"):
     # where E : SET_FAMILY
     [type_rep, var_rep, body_rep] = a
     [type_, var_, body] = PO.children
-    if body.node == "APPLICATION":
-        E = body.children[0]
-        if E.node == "INSTANCE_OF_SET_FAMILY":
-            # the bound var has already
-            # been given a name in dEAduction
-            var_name = E.children[0].representation[format_]
-            return format_instance_set_family("", [var_name],
-                                              E, format_)
-        elif hasattr(E, "math_type"):
-            if E.math_type.node == "SET_FAMILY":
-                return format_instance_set_family("", [var_rep],
-                                                  E, format_)
+    # if body.node == "APPLICATION":
+    #     E = body.children[0]
+    #     if E.node == "INSTANCE_OF_SET_FAMILY":
+    #         # the bound var has already
+    #         # been given a name in dEAduction
+    #         var_name = E.children[0].representation[format_]
+    #         return format_instance_set_family("", [var_name],
+    #                                           E, format_)
+    #     elif hasattr(E, "math_type"):
+    #         if E.math_type.node == "SET_FAMILY":
+    #             return format_instance_set_family("", [var_rep],
+    #                                               E, format_)
+
+    # TODO: adapt for functions and sequences
+    # this is only for set families
+    if format_ == "latex":
+        return [r'\{', body_rep, ', ', var_rep, r' \in ', type_rep, r'\}']
+    elif format_ == "utf8":
+        return ['{', body_rep, ', ', var_rep, '∈', type_rep, '}']
+
 
 
 def latex_text(string: str, format_="latex"):
@@ -312,7 +320,7 @@ utf8_structures = {"PROP_AND": (" " + _("AND") + " ", format_0n1),  # logic
                    # SET THEORY: #
                    ###############
                    "PROP_INCLUDED": (" ⊂ ", format_0n1),
-                   "PROP_BELONGS": (r" ∈ ", format_0n1),
+                   "PROP_BELONGS": (r" ∈", format_0n1),
                    "SET_INTER": (r" ∩ ", format_0n1),  # set theory
                    "SET_UNION": (r" ∪ ", format_0n1),
                    "SET_INTER+": (" ∩", format_n0),
