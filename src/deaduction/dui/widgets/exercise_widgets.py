@@ -533,10 +533,10 @@ class ExerciseMainWindow(QMainWindow):
 
                 if isinstance(statement, Definition):
                     code = generic.action_definition(self.current_goal,
-                            self.current_context_selection_as_pspos, statement)
+                            self.current_selection_as_pspos, statement)
                 elif isinstance(statement, Theorem):
                     code = generic.action_theorem(self.current_goal,
-                            self.current_context_selection_as_pspos, statement)
+                            self.current_selection_as_pspos, statement)
 
                 await self.servint.code_insert(statement.pretty_name, code)
             except WrongUserInput:
