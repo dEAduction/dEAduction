@@ -49,6 +49,10 @@ open_bra = "¿["
 closed_bra = "¿]"
 
 
+##########################################
+# PropObj: general mathematical entities #
+##########################################
+
 @dataclass
 class PropObj:
     """
@@ -56,13 +60,16 @@ class PropObj:
     both objects (sets, elements, functions, ...)
     and properties ("a belongs to A", ...)
     !! No instance should be deleted until the exercise is over
-    !! Once created, a field can be added but no field should be modified
     """
-    node: str
+    node: str  # e.g.
     children: list
-    representation: Dict[str, list]  # keys = 'latex, 'utf8', 'info'
-    # 'info' value store are used when node = 'CONSTANT' to store CONSTANT name
+    representation: Dict[str, list]
+    # features of representation:
+    # keys = 'latex, 'utf8', 'info'
+    # 'info' value is used when node = 'CONSTANT' to store CONSTANT name
     # (e.g. "false")
+    # default value = "??"
+
     # The following are here just to help reading the code
     # See structures.lean for more accurate lists
     nodes_list = ["PROP_AND", "PROP_OR", "PROP_IFF", "PROP_NOT",
@@ -79,7 +86,8 @@ class PropObj:
                    "FUNCTION", "SEQUENCE", "SET_FAMILY",
                    "TYPE_NUMBER", "NUMBER", "VAR"]
 
-    # VAR should not be used any more
+    # VAR should not be used any more (they should be instantiated in Lean's
+    # structure tactic)
 
     def __eq__(self, other):
         """
@@ -125,6 +133,35 @@ class PropObj:
             return self.node.startswith("PROP") \
                    or self.node.startswith("QUANT")
 
+    ###############################
+    # collect the local variables #
+    ###############################
+    def extract_local_vars(self) -> list:
+        """
+        recursively collect the list of variables used in the definition of
+        self (leaves of the tree). Here by definition, being a variable
+        means having a len_data["name"]
+        :return: list of PropObj
+        """
+        try:
+            name = self.lean_data["name"]
+            return [self]
+        except [AttributeError, KeyError]:
+            local_vars = []
+            for child in self.children:
+                local_vars.extend(child.extract_local_vars())
+            return local_vars
+
+    def extract_local_vars_names(self) -> List[str]:
+        """
+        collect the list of names of variables used in the definition of self
+        (leaves of the tree)
+        """
+        return [po.lean_data["name"] for po in self.extract_local_vars()]
+
+    ######################################################
+    # Computation of latex and utf-8 display for PropObj #
+    ######################################################
     def structured_format(self, format_="latex"):
         """
         Compute a structured latex or utf-8 "representation" of a prop_obj.
@@ -132,7 +169,7 @@ class PropObj:
         they can be turned into usual strings by using the list_string_join
         function below.
         Valid representations are recursively defined as:
-        - lists of strings (in latex format)
+        - lists of strings (in latex or utf-8 format)
         - lists of latex rep
         """
         #        log = logging.getLogger("PropObj")
@@ -141,14 +178,14 @@ class PropObj:
         else:
             log.info(f"computing utf-8 representation of {self}")
             format_ = "utf8"
-        if self.representation[format_] is not None:
+        if self.representation[format_] != "??":
             return
         children_rep = []
         node = self.node
         i = -1
         for arg in self.children:
             i += 1
-            if arg.representation[format_] is None:
+            if arg.representation[format_] == "??":
                 PropObj.structured_format(arg, format_)  # = compute_latex
             lr = arg.representation[format_]
             # the following line computes if parentheses are needed
@@ -189,20 +226,24 @@ class PropObj:
         return list_string_join(lr)
 
 
-def list_string_join(latex_or_utf8_rep):
+def list_string_join(latex_or_utf8_rep) -> str:
     """
     turn a (structured) latex or utf-8 representation into a latex string
+
+    :param latex_or_utf8_rep: type is recursively defined as str or list of
+    latex_or_utf8_rep
     """
-    if not isinstance(latex_or_utf8_rep, list):
+    if isinstance(latex_or_utf8_rep, str):
         return latex_or_utf8_rep
-    else:
+    elif isinstance(latex_or_utf8_rep, list):
         string = ""
         for lr in latex_or_utf8_rep:
-            if type(lr) is list:
-                lr = list_string_join(lr)
+            lr = list_string_join(lr)
             string += lr
         #    log.debug("string:", latex_str)
         return string
+    else:
+        return "?"
 
 
 # TODO : tenir compte de la profondeur des parenthèses,
@@ -212,9 +253,13 @@ nature_leaves_list = ["PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                       "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY"]
 
 
-def needs_paren(parent: PropObj, child_number: int):
+def needs_paren(parent: PropObj, child_number: int) -> bool:
     """
     Decides if parentheses are needed around the child
+    e.g. if PropObj.node = PROP.IFF then
+    needs_paren(PropObj,i) will be set to True for i = 0, 1
+    so that the display will be
+    ( ... ) <=> ( ... )
     """
     b = True
     child_prop_obj = parent.children[child_number]
@@ -228,7 +273,8 @@ def needs_paren(parent: PropObj, child_number: int):
             ["SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
              "PROP_INCLUDED"]:
         b = False
-    elif p_node in ["SET_IMAGE", "SET_INVERSE", "APPLICATION_FUNCTION",
+    elif p_node in ["SET_IMAGE", "SET_INVERSE",
+                    "SET_UNION+", "SET_INTER+", "APPLICATION_FUNCTION",
                     "PROP_EQUAL", "PROP_INCLUDED", "PROP_BELONGS"]:
         b = False
     elif c_node == "SET_COMPLEMENT" and p_node != "SET_COMPLEMENT":
@@ -236,11 +282,15 @@ def needs_paren(parent: PropObj, child_number: int):
     return b
 
 
+###########################################################
+# AnonymousPO: math bricks for ProofStatePO's math_type's #
+###########################################################
+
 @dataclass(eq=False)  # will inherit the __eq__ method from PropObj
 class AnonymousPO(PropObj):
     """
     Objects and Propositions not in the proof state, in practice they will be
-    sub-objects of the ProofStatePO instances
+    sub-objects of the math_types of ProofStatePO instances
     """
 
     @classmethod
@@ -252,7 +302,7 @@ class AnonymousPO(PropObj):
         to be updated if the AnonymousPO is actually a BounVarPO
         :return: an instance of AnonymousPO
         """
-        representation = {'latex': None, 'utf8': None, 'info': None}
+        representation = {'latex': "??", 'utf8': "??", 'info': "??"}
         # latex representation is computed later
         node = prop_obj_dict["node"]
         lean_data = extract_lean_data(node)
@@ -262,9 +312,9 @@ class AnonymousPO(PropObj):
         if lean_data["id"] in ProofStatePO.dict_:
             prop_obj = ProofStatePO.dict_[lean_data["id"]]
             return prop_obj, bound_vars
-        ###########################
+        ####################################
         # creation of children AnonymousPO #
-        ###########################
+        ####################################
         arguments = prop_obj_dict["children"]
         children = []
         for arg in arguments:
@@ -350,9 +400,9 @@ class ProofStatePO(PropObj):
             prop_obj = ProofStatePO.dict_[lean_data["id"]]
             #        ProofStatePO.context_dict[lean_data["id"]] = prop_obj
             return prop_obj
-        ###################################################################
-        # extract math_type from the tail and calls AnonymousPO.from_tree #
-        ###################################################################
+        ##################################################################
+        # extract math_type from the tail and call AnonymousPO.from_tree #
+        ##################################################################
         tree = lean_analysis.lean_expr_grammar.parse(tail)
         po_str_list = lean_analysis.LeanExprVisitor().visit(tree)
         bound_vars = []
@@ -364,7 +414,7 @@ class ProofStatePO(PropObj):
         representation = {"latex": lean_data["name"],
                           "utf8": lean_data["name"]}
         #################
-        # Instanciation #
+        # Instantiation #
         #################
         prop_obj = cls(node, children, representation, bound_vars,
                        lean_data, math_type)
@@ -373,7 +423,7 @@ class ProofStatePO(PropObj):
         ######################################
         if lean_data["id"] != "":
             ProofStatePO.dict_[lean_data["id"]] = prop_obj
-            log.info(f"adding {lean_data['name']} to the dictionnary, ident ="
+            log.info(f"adding {lean_data['name']} to the dictionary, ident ="
                      f" {lean_data['id']}")
         #        if not math_type.is_prop():
         #            math_type_store(prop_obj, math_type)
@@ -390,7 +440,7 @@ class ProofStatePO(PropObj):
         return self.math_type.is_prop() \
                or self.math_type.node == 'APPLICATION' \
                or (hasattr(self.math_type, "math_type") \
-               and self.math_type.math_type.node == 'PROP')
+                   and self.math_type.math_type.node == 'PROP')
 
 
 @dataclass(eq=False)

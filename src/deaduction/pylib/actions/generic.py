@@ -39,10 +39,10 @@ from deaduction.pylib.mathobj import (  Goal,
 def action_definition(goal : Goal, selected_objects : [PropObj], definition : Statement):
     if len(selected_objects) == 0:
         defi = definition.lean_name
-        return "defi {0} <|> simp_rw {0} <|> simp_rw <- {0}".format(defi)
+        return "defi {0} <|> simp_rw {0} <|> simp_rw <- {0}, ".format(defi)
     elif len(selected_objects) == 1:
         defi = definition.lean_name
-        return "defi {0} at {1} <|> simp_rw {0} at {1} <|> simp_rw <- {0} at {1}".format(defi,
+        return "defi {0} at {1} <|> simp_rw {0} at {1} <|> simp_rw <- {0} at {1}, ".format(defi,
                                         selected_objects[0].lean_data["name"])
     else:
         raise WrongUserInput
@@ -51,6 +51,7 @@ def action_theorem(goal : Goal, selected_objects : [PropObj], theorem : Statemen
     th = theorem.lean_name
     if len(selected_objects) == 0:
         h = get_new_hyp()
+        
         return "apply {1} <|> have {0} := @{1},".format(h, th)
     else:
         arguments = " ".join([selected_objects[0].lean_data["name"]])

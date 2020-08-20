@@ -24,11 +24,16 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List
+import logging
+
+import deaduction.pylib.logger as logger
 from deaduction.pylib.mathobj import ProofStatePO, PropObj, BoundVarPO
 
+log = logging.getLogger(__name__)
 
 
-def give_name(goal, math_type: PropObj, hints: List[str] = [],
+def give_name(goal, math_type: PropObj,
+              authorized_names: [str] = [], hints: [str] = [], po=None,
               format_='utf8') -> str:
     """
     Provide a name for a new variable. Baby version.
@@ -39,11 +44,25 @@ def give_name(goal, math_type: PropObj, hints: List[str] = [],
 
     :param goal: current_goal
     :param math_type: type of new variable
+    :param authorized_names: list of names which can be used even in forbidden
+    list
+    (useful for applying an existence statement)
     :param hints: a hint for the future name
-    :return: a name for the new variable
+    :param po: a PropObj inside which the new name will serve for a bound
+    variable
     :param format_: utf or latex. No difference for the moment.
+    :return: a name for the new variable
     """
-    names = goal.extract_var_names()
+    if po:
+        forbidden_names = po.extract_local_vars_names()
+    else:
+        forbidden_names = goal.extract_var_names()
+    for name in authorized_names:
+        try:
+            forbidden_names.remove(name)
+        except ValueError:
+            pass
+    log.debug(f"forbidden names: {forbidden_names}")
     if isinstance(math_type, ProofStatePO):
         type_name = math_type.lean_data["name"]
         if len(type_name) == 1 and type_name.isupper():
@@ -51,7 +70,7 @@ def give_name(goal, math_type: PropObj, hints: List[str] = [],
             hints.append(hint)
     # first trial
     for potential_name in hints:
-        if potential_name not in names:
+        if potential_name not in forbidden_names:
             new_name = potential_name
             return new_name
     # second trial: use alphabetical order
@@ -62,7 +81,7 @@ def give_name(goal, math_type: PropObj, hints: List[str] = [],
     counter = 0
     potential_name = starting_name
     max_letters = 3  # NB : must be ≤ 26 !
-    while potential_name in names and counter < max_letters:
+    while potential_name in forbidden_names and counter < max_letters:
         potential_name = next_(potential_name)
         counter += 1
     if counter != 26:
@@ -71,7 +90,7 @@ def give_name(goal, math_type: PropObj, hints: List[str] = [],
     # TODO: use index in utf8
     potential_name = starting_name
     counter = 0
-    while potential_name + '_' + str(counter) in names:
+    while potential_name + '_' + str(counter) in forbidden_names:
         counter += 1
 
 
@@ -89,8 +108,6 @@ def instantiate_bound_var(math_type: PropObj, name: str) -> BoundVarPO:
     return prop_obj
 
 
-
-
 # TODO: implement the following more sophisticated version
 def give_name_v2(goal, math_type: PropObj, hints: List[str] = []) -> str:
     """
@@ -105,7 +122,7 @@ def give_name_v2(goal, math_type: PropObj, hints: List[str] = []) -> str:
     :param hints: a hint for the future name
     :return: a name for the new variable
     """
-    names = goal.extract_var_names()
+    forbidden_names = goal.extract_var_names()
     mt_index = [mt for mt, mti in goal.math_types].index(math_type)
     mt_instances = goal.math_types[mt_index][1]
     mti_names = [pfpo.lean_data["name"] for pfpo in
@@ -139,7 +156,7 @@ def give_name_v2(goal, math_type: PropObj, hints: List[str] = []) -> str:
     ###############################
     # First trial: raw hints
     for potential_name in hints:
-        if potential_name not in names:
+        if potential_name not in forbidden_names:
             new_name = potential_name
             return new_name
     # Second trial: hints with alphabetical order

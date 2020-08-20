@@ -98,10 +98,14 @@ def format_app_inverse(latex_symb, a, PO, format_="latex"):
 
 def format_quantifiers(latex_symb, a, PO, format_="latex"):
     # mind that the variable a[1] comes AFTER the type a[0] in quantifiers
-    if format_ == "latex":
-        return [latex_symb + ' ' + a[1] + ' \in ', a[0], ', ', a[2]]
-    elif format_ == "utf8":
-        return [latex_symb + a[1] + ' ∈ ', a[0], ', ', a[2]]
+    if PO.children[0].node == "FUNCTION":  # the bound var is a function
+        separator = ' : '
+    else:
+        if format_ == "latex":
+            separator = r'\in'
+        elif format_ == "utf8":
+            separator = '∈'
+    return [latex_symb + ' ' + a[1] + separator, a[0], ', ', a[2]]
 
 
 def format_complement(latex_symb, a, PO, format_="latex"):
@@ -118,7 +122,7 @@ def format_constant1(latex_symb, a, PO, format_="latex"):
 def format_constant2(latex_symb, a, PO, format_="latex"):
     if "info" in PO.representation.keys():
         name = _(PO.representation["info"])
-        return [latex_text(name)]
+        return [latex_text(name, format_)]
     else:
         return [latex_text(PO.node)]
 
@@ -141,14 +145,66 @@ def general_format_application(latex_symb, a, PO, format_="latex"):
             return [a[-2], r" \circ ", a[-1]]
         elif format_ == 'utf8':
             return [a[-2], '∘', a[-1]]
-    elif key in ["injective", "surjective"]:  # adjective with one subject
-        noun = a[-1]
-        adjective = key
-        if format_ == "latex":
-            return [r"\text{" + noun + "" + " " + _("is") + " " + adjective +
-                    r"}"]
-        elif format_ == "utf8":
-            return [noun + "" + " " + _("is") + " " + adjective]
+    else:
+        # select children that are not Types
+        pertinent_children = []
+        pertinent_children_rep = []
+        counter = 0  # the first child is always pertinent, we leave it aside
+        for child in PO.children[1:]:
+            counter +=1
+            if hasattr(child, "math_type"):
+                if child.math_type.node == 'TYPE':
+                    continue
+            pertinent_children.append(child)
+            pertinent_children_rep.append(a[counter])
+        log.debug(f"pertinent children: {pertinent_children_rep}")
+        # discriminate according of number of pertinent children
+        if len(pertinent_children) == 0:  # CONSTANT, e.g. 'Identité'
+            return a[0]
+        if len(pertinent_children) == 1:  # ADJECTIVE, e.g. 'f is injective'
+            adjective = a[0]
+            noun = pertinent_children_rep[0]
+            if format_ == "latex":
+                return [r"\text{", noun, " " + _("is") + " ", adjective, r"}"]
+            elif format_ == "utf8":
+                return [noun, " " + _("is") + " ", adjective]
+        else:
+            return "??"
+
+
+def format_lambda(latex_symb, a, PO, format_="latex"):
+    """
+    format for lambda expression,
+    i.e. set families with explicit bound variable
+    (lambda (i:I), E i)
+    """
+    ################
+    # set families #
+    ################
+    # format LAMBDA(i, I, APPLICATION(E, i)) -> {E_i,i in I}
+    # where E : SET_FAMILY
+    [type_rep, var_rep, body_rep] = a
+    [type_, var_, body] = PO.children
+    # if body.node == "APPLICATION":
+    #     E = body.children[0]
+    #     if E.node == "INSTANCE_OF_SET_FAMILY":
+    #         # the bound var has already
+    #         # been given a name in dEAduction
+    #         var_name = E.children[0].representation[format_]
+    #         return format_instance_set_family("", [var_name],
+    #                                           E, format_)
+    #     elif hasattr(E, "math_type"):
+    #         if E.math_type.node == "SET_FAMILY":
+    #             return format_instance_set_family("", [var_rep],
+    #                                               E, format_)
+
+    # TODO: adapt for functions and sequences
+    # this is only for set families
+    if format_ == "latex":
+        return [r'\{', body_rep, ', ', var_rep, r' \in ', type_rep, r'\}']
+    elif format_ == "utf8":
+        return ['{', body_rep, ', ', var_rep, '∈', type_rep, '}']
+
 
 
 def latex_text(string: str, format_="latex"):
@@ -234,6 +290,7 @@ latex_structures = {"PROP_AND": (r" \text{ " + _("AND") + " } ", format_0n1),
                     # GENERAL TYPES: #
                     ##################
                     "APPLICATION": ("", general_format_application),
+                    "LAMBDA": ("", format_lambda),
                     "PROP": (r"\text{ " + _("a proposition") + "}",
                              format_constant1),
                     "TYPE": (r" \text{ " + _("a set") + "} ",
@@ -263,7 +320,7 @@ utf8_structures = {"PROP_AND": (" " + _("AND") + " ", format_0n1),  # logic
                    # SET THEORY: #
                    ###############
                    "PROP_INCLUDED": (" ⊂ ", format_0n1),
-                   "PROP_BELONGS": (r" ∈ ", format_0n1),
+                   "PROP_BELONGS": (r" ∈", format_0n1),
                    "SET_INTER": (r" ∩ ", format_0n1),  # set theory
                    "SET_UNION": (r" ∪ ", format_0n1),
                    "SET_INTER+": (" ∩", format_n0),
@@ -291,6 +348,7 @@ utf8_structures = {"PROP_AND": (" " + _("AND") + " ", format_0n1),  # logic
                    "+": ("+", format_0n1),
                    "VAR": ("", "var"),
                    "APPLICATION": ("", general_format_application),
+                   "LAMBDA": ("", format_lambda),
                    ##################
                    # GENERAL TYPES: #
                    ##################

@@ -30,12 +30,14 @@ from dataclasses import dataclass
 from gettext import gettext as _
 import logging
 import deaduction.pylib.actions.utils as utils
-from deaduction.pylib.actions.exceptions import InputType, MissingParametersError, WrongUserInput
-from deaduction.pylib.actions.actiondef import action
-from deaduction.pylib.mathobj.PropObj import PropObj
-from deaduction.pylib.mathobj.proof_state import Goal
+from deaduction.pylib.actions   import (    InputType,
+                                            MissingParametersError,
+                                            WrongUserInput,
+                                            action)
+from deaduction.pylib.mathobj   import (    PropObj,
+                                            Goal)
 
-@action(_("Case-based reasoning"), _("CASES")) # TODO : dire à Florian de rajouter open classical et local attribute [instance] classical.prop_decidable dans le fichier lean
+@action(_("Case-based reasoning"), _("CASES"))
 def action_cbr(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
     """
     Translate into string of lean code corresponding to the action
@@ -49,7 +51,7 @@ def action_cbr(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
         else:
             h1 = utils.get_new_hyp()
             h2 = utils.get_new_hyp()
-        return "cases (em ({0})) with {1} {2}".format(user_input[0], h1, h2)
+            return "cases (classical.em ({0})) with {1} {2}, ".format(user_input[0], h1, h2)
     else:
         raise WrongUserInput
 
@@ -80,7 +82,24 @@ def action_absurdum(goal : Goal, l : [PropObj]) -> str:
         return "contradiction, "
 
 
-@action(_("Introduce new object"), "+")
+@action(_("If a hypothesis of form ∀ a ∈ A, ∃ b ∈ B, P(a,b) has been previously selected: use the axiom of choice to introduce a new function f : A → B and add ∀ a ∈ A, P(a, f(a)) to the properties"), _("CREATE FUN"))
+def action_choice(goal : Goal, l : [PropObj]) -> str:
+    """
+    Translate into string of lean code corresponding to the action
+    
+    :param l: list of PropObj arguments preselected by the user
+    :return: string of lean code
+    """
+    if len(l) == 1:
+        h = l[0].lean_data["name"]
+        hf = utils.get_new_hyp()
+        f = utils.get_new_fun()
+        return f'cases classical.axiom_of_choice {h} with {f} {hf}, dsimp at {hf}, dsimp at {f}, '
+    else:
+        raise WrongUserInput
+        
+        
+@action(_("Introduce new object\nIntroduce new subgoal: transform the current target into the input target and add this to the properties of the future goal."), "+")
 def action_new_object(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
     """
     Translate into string of lean code corresponding to the action
@@ -89,10 +108,20 @@ def action_new_object(goal : Goal, l : [PropObj], user_input : [str] = []) -> st
     :return: string of lean code
     """
     if len(user_input) == 0:
-        raise MissingParametersError(InputType.Text, title = "+", output = _("Introduce new object:"))
-    else:
-        x = utils.get_new_var()
-        return "let {0} := {1}, ".format(x, user_input[0])
+        raise MissingParametersError(InputType.Choice, [_("new object"), _("subgoal")], title = "+", output = _("Choose what you want to introduce:"))
+    if user_input[0] == _("new object"):
+        if len(user_input) == 1:
+            raise MissingParametersError(InputType.Text, title = "+", output = _("Introduce new object:"))
+        else:
+            x = utils.get_new_var()
+            h = utils.get_new_hyp()
+            return "let {0} := {1}, have {2} : {0} = {1}, refl, ".format(x, user_input[1], h)
+    if user_input[0] == _("subgoal"):
+        if len(user_input) == 1:
+            raise MissingParametersError(InputType.Text, title = "+", output = _("Introduce new subgoal:"))
+        else:
+            h = utils.get_new_hyp()
+            return "have {0} : ({1}), ".format(h, user_input[1])    
 
 @action(_("Assumption"), "¯\_(ツ)_/¯")
 def action_assumption(goal : Goal, l : [PropObj]) -> str:
@@ -110,9 +139,5 @@ def action_assumption(goal : Goal, l : [PropObj]) -> str:
         
 #@action(_("Proof by induction"))
 #def action_induction(goal : Goal, l : [PropObj]):
-#    raise WrongUserInput
-
-#@action(_("Use axiom of choice"))
-#def action_choice(goal):
 #    raise WrongUserInput
 
