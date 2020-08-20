@@ -104,32 +104,35 @@ class ExerciseToolbar(QToolBar):
 
 class ExerciseCentralWidget(QWidget):
     """
-    Main, central and biggest widget in the exercise window. This
-    widgets contains many crucial children widgets:
+    Main / central / biggest widget in the exercise window. Self is to
+    be instanciated as the central widget of d∃∀duction, more
+    specifically as ExerciseMainWindow.centralWidget(). This widgets
+    contains many crucial children widgets:
         - the target widget (self.target_wgt);
-        - the Context area widgets:
-            * the objects widget (self.objects_wgt);
-            * the properies widget (self.props_wgt);
-        - the Action area widgets:
-            * the logic buttons (self.logic_btns);
-            * the proof techniques buttons (self.proof_btns);
-            * the statements tree (self.statements_tree, see
+        - the 'context area' widgets:
+            - the objects widget (self.objects_wgt) for math objects
+              (e.g. f:X->Y a function);
+            - the properies widget (self.props_wgt) for math
+              properties (e.g. f is continuous);
+        - the 'action area' widgets:
+            - the logic buttons (self.logic_btns);
+            - the proof techniques buttons (self.proof_btns);
+            - the statements tree (self.statements_tree, see
               StatementsTreeWidget.__doc__).
-    All of these are instanciated in self.__init__ thanks to widget
-    classes defined elsewhere (mainly actions_widgets_classes.py and
+
+    All of these are instanciated in self.__init__ as widget classes
+    defined elsewhere (mainly actions_widgets_classes.py and
     context_widgets_classes.py) and properly arranged in layouts.
 
     Self is instantiated with only an instance of the class Exercise.
     However, when this happens, it does not have a context nor a target
     (L∃∀N has not yet been called, see ExerciseMainWindow.__init__!):
-    empty widgets are displayed for Context elements. Once L∃∀N has been
+    empty widgets are displayed for context elements. Once L∃∀N has been
     successfully called and sent back a goal (an instance of the class
     Goal contains a target, objects and properties, see
-    deaduction.pylib.mathobj.Goal), Context elements widgets are changed
-    with the method update_goal.
-
-    Note that nor the exercise (used in self.__init__) or the goal are
-    kept as class attributes.
+    deaduction.pylib.mathobj.Goal), context elements widgets are changed
+    with the method update_goal. Note that nor the exercise (used in
+    self.__init__) or the goal are kept as class attributes!
 
     :attribute logic_btns ActionButtonsWidget: Logic buttons available
         for this exercise.
@@ -233,7 +236,8 @@ class ExerciseCentralWidget(QWidget):
 
     def freeze(self, yes=True):
         """
-        Freeze interface if yes: 
+        Freeze interface (inactive widgets, gray appearance, etc) if
+        yes: 
             - disable objects and properties;
             - disable all buttons;
         unfreeze it otherwise.
@@ -293,11 +297,11 @@ class ExerciseCentralWidget(QWidget):
 
 class ExerciseMainWindow(QMainWindow):
     """
-    This class is reponsible for both managing the whole interface for
+    This class is responsible for both managing the whole interface for
     exercises and communicating with a so-called server interface
-    (self.servint, not instanciated in this class, self.servint is an
+    (self.servint, not instantiated in this class, self.servint is an
     alias to an already existing instance): a middle man between the
-    interface and L∃∀N. For the interface, it instanciates (see
+    interface and L∃∀N. For the interface, it instantiates (see
     self.__init__) ExerciseCentralWidget, a toolbar, and probably more
     things in the future (a status bar and a menu bar among others). For
     the communication with self.servint, it is this class which:
@@ -317,7 +321,7 @@ class ExerciseMainWindow(QMainWindow):
     undo button clicked or goal, current selection and action button
     clicked) is achieved in the method self.server_task with signals and
     slots. User interface, server interface and L∃∀N server are
-    different entities which remeain separated by design, that is (among
+    different entities which remain separated by design, that is (among
     other things) why signals are used. It is the method
     self.server_task which is in charge of receiving signals and calling
     functions / methods accordingly (although not using Qt's mechanism
