@@ -161,7 +161,7 @@ class ExerciseCentralWidget(QWidget):
         self.__doc__.
 
         :param exercise: The instance of the Exercise class representing
-            an exercise to be solved by the user.
+            the exercise to be solved by the user.
         """
 
         super().__init__()
@@ -310,9 +310,9 @@ class ExerciseMainWindow(QMainWindow):
     communication with self.servint, it is this class which:
         1. stores user selection of math. objects or properties
            (self.current_selection);
-        2. detects when an action button (in self.cw.logic_btns or
-           in self.cw.proof_btns) or a statement (in
-           self.cw.statements_tree) is clicked on;
+        2. detects when an action button (in self.ecw.logic_btns or
+           in self.ecw.proof_btns) or a statement (in
+           self.ecw.statements_tree) is clicked on;
         3. sends (the current goal, current selection) and ((clicked
            action button (with self.__server_call_action)) xor (clicked
            statement (with self.__server_call_statement))) to the server
@@ -334,6 +334,22 @@ class ExerciseMainWindow(QMainWindow):
 
     Finally, all of this uses asynchronous processes (keywords async and
     await) using trio and qtrio.
+
+    :attribute exercise Exercise: The instance of the Exercise class
+        representing the exercise to be solved by the user, instantiated
+        in deaduction.dui.__main__.py.
+    :attribute current_goal Goal: The current goal, which contains the
+        tagged target, tagged math. objects and tagged math. properties.
+    :attribute current_selection [ProofStatePOWidgetItem]: The ordered
+        of currently selected math. objects and properties by the user. 
+    :attribute ecw ExerciseCentralWidget: The instance of
+        ExerciseCentralWidget instantiated in self.__init__, see
+        ExerciseCentraiWidget.__doc__.
+    :attribute lean_editor LeanEditor: A text editor to live-edit lean
+        code.
+    :attribute servint ServerInterface: The instance of ServerInterface
+        for the session, instantiated in deaduction.dui.__main__.py.
+    :attribute toolbar QToolBar: The toolbar.
     """
 
     window_closed         = Signal()
@@ -341,21 +357,32 @@ class ExerciseMainWindow(QMainWindow):
     __statement_triggered = Signal(StatementsTreeWidgetItem)
 
     def __init__(self, exercise: Exercise, servint: ServerInterface):
+        """
+        Init self with an instance of the exercise class and an instance of the
+        class ServerInterface. Both those instances are created in
+        deaduction.dui.__main__.py. See self.__doc__.
+
+        :param exercise: The instance of the Exercise class representing
+            the exercise to be solved by the user.
+        :param servint: The instance of the ServerInterface class in charge of
+            communicating with vim.
+        """
+
         super().__init__()
 
         # ─────────────────── Attributes ─────────────────── #
 
-        self.exercise          = exercise
-        self.current_goal      = None
-        self.current_selection = []
-        self.cw                = ExerciseCentralWidget(exercise)
-        self.lean_editor       = LeanEditor()
-        self.servint           = servint
-        self.toolbar           = ExerciseToolbar()
+        self.exercise           = exercise
+        self.current_goal       = None
+        self.current_selection  = []
+        self.ecw                = ExerciseCentralWidget(exercise)
+        self.lean_editor        = LeanEditor()
+        self.servint            = servint
+        self.toolbar            = ExerciseToolbar()
 
         # ─────────────────────── UI ─────────────────────── #
 
-        self.setCentralWidget(self.cw)
+        self.setCentralWidget(self.ecw)
         self.addToolBar(self.toolbar)
         self.toolbar.redo_action.setEnabled(False)  # No history at beginning
         self.toolbar.undo_action.setEnabled(False)  # same
@@ -363,9 +390,9 @@ class ExerciseMainWindow(QMainWindow):
         # ──────────────── Signals and slots ─────────────── #
 
         # Actions area
-        for action_button in self.cw.actions_buttons:
+        for action_button in self.ecw.actions_buttons:
             action_button.action_triggered.connect(self.__action_triggered)
-        self.cw.statements_tree.itemClicked.connect(self.__statement_triggered)
+        self.ecw.statements_tree.itemClicked.connect(self.__statement_triggered)
 
         # UI
         self.toolbar.toggle_lean_editor_action.triggered.connect(
@@ -404,12 +431,12 @@ class ExerciseMainWindow(QMainWindow):
         self.clear_current_selection()
 
         # Update UI and attributes
-        self.cw.update_goal(new_goal)
+        self.ecw.update_goal(new_goal)
         self.current_goal = new_goal
 
         # Reconnect Context area signals and slots
-        self.cw.objects_wgt.itemClicked.connect(self.process_context_click)
-        self.cw.props_wgt.itemClicked.connect(self.process_context_click)
+        self.ecw.objects_wgt.itemClicked.connect(self.process_context_click)
+        self.ecw.props_wgt.itemClicked.connect(self.process_context_click)
 
     ##################################
     # Async tasks and server methods #
@@ -562,7 +589,7 @@ class ExerciseMainWindow(QMainWindow):
 
     @Slot()
     def freeze(self, yes=True):
-        self.cw.freeze(yes)
+        self.ecw.freeze(yes)
         self.toolbar.setEnabled(not yes)
 
     @Slot()
