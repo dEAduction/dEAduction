@@ -37,6 +37,7 @@ import qtrio
 
 from PySide2.QtCore import (    Signal,
                                 Slot,
+                                QEvent,
                                 Qt)
 from PySide2.QtGui import       QIcon
 from PySide2.QtWidgets import ( QAction,
@@ -69,7 +70,8 @@ from deaduction.pylib.coursedata import (   Definition,
                                             Theorem)
 from deaduction.pylib.server.exceptions import FailedRequestError
 from deaduction.pylib.mathobj import (  Goal,
-                                        ProofState)
+                                        ProofState,
+                                        ProofStatePO)
 from deaduction.pylib.server import     ServerInterface
 
 log = logging.getLogger(__name__)
@@ -408,25 +410,47 @@ class ExerciseMainWindow(QMainWindow):
     # Methods #
     ###########
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: QEvent):
+        """
+        Overload native Qt closeEvent method — which is called when self
+        is closed — to send self.window_closed signal.
+    
+        :param event: Some Qt mandatory thing.
+        """
         super().closeEvent(event)
         self.window_closed.emit()
 
     @property
-    def current_selection_as_pspos(self):
+    def current_selection_as_pspos(self) -> [ProofStatePO]:
         """
-        Do not delete! Used many times.
+        Do not delete, used many times! Return the current selection as
+        an ordered list of instances of the class ProofStatePO directly.
+
+        :return: See above.
         """
 
         return [item.proofstatepo for item in self.current_selection]
 
-    def pretty_current_selection(self):
+    def pretty_current_selection(self) -> str:
+        """
+        Return the current selection as a string, for display.
+
+        :return: See above.
+        """
+
         msg = 'Current user selection: '
         msg += str([item.text() for item in self.current_selection])
 
         return msg
 
     def update_goal(self, new_goal: Goal):
+        """
+        Change widgets (target, math. objects and properties) to
+        new_goal and update internal mechanics accordingly.
+
+        :param new_goal: The new goal to update / set the interface to.
+        """
+
         # Reset current context selection
         self.clear_current_selection()
 
