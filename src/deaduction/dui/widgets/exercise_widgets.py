@@ -466,10 +466,28 @@ class ExerciseMainWindow(QMainWindow):
     ##################################
     # Async tasks and server methods #
     ##################################
+
+    # Most important methods for communication with the server interface
+    # (self.servint) are defined here:
+    #   - server_task is the director which listens to signals and calls
+    #     other methods;
+    #   - process_async_signal is a wrapper method which allows
+    #     specific methods to be properly called in server_task by
+    #     putting them in try… except… blocks, etc;
+    #   - other methods are specific methods with a specific task,
+    #     called when a particular signal is received in server_task.
     
     # ─────────────────── Server task ────────────────── #
      
     async def server_task(self):
+        """
+        This method handles sending user data and actions to the server
+        interface (self.servint). It listens to signals and calls
+        specific methods for those signals accordingly. Async / await
+        processes are used in accordance to what is done in the server
+        interface. This method is called in self.__init__.
+        """
+
         self.freeze()
         await self.servint.exercise_set(self.exercise)
         self.freeze(False)
@@ -509,6 +527,17 @@ class ExerciseMainWindow(QMainWindow):
     # ──────────────── Template function ─────────────── #
     
     async def process_async_signal(self, process_function: Callable):
+        """
+        This methods wraps specific methods to be called when a specific
+        signal is received in server_task. First, try to call
+        process_function and waits for a response. An exception may be
+        risen to ask user for additional info (e.g. an math object).
+        Note that the current goal is modified from elsewhere in the
+        program (signal self.servint.proof_state_change.connect), not
+        here! This is done before the finally bloc. And finally, update
+        the last interface elements to be updated.
+        """
+
         self.freeze(True)
 
         try:
@@ -524,7 +553,7 @@ class ExerciseMainWindow(QMainWindow):
             detailed = ""
             for error in e.errors:
                 rel_line_number = error.pos_line \
-                        - self.exercise.lean_begin_line_number
+                                  - self.exercise.lean_begin_line_number
                 detailed += f'* at {rel_line_number}: {error.text}\n'
 
             message_box.setDetailedText(detailed)
