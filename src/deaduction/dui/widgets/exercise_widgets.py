@@ -575,6 +575,8 @@ class ExerciseMainWindow(QMainWindow):
     # To be called as process_function in the above
 
     async def __server_call_action(self, action_btn: ActionButton):
+        # TODO: docstring me
+
         action = action_btn.action
         user_input = []
 
@@ -610,6 +612,8 @@ class ExerciseMainWindow(QMainWindow):
                 break
 
     async def __server_call_statement(self, item: StatementsTreeWidgetItem):
+        # TODO: docstring me
+
         # Do nothing is user clicks on a node
         if isinstance(item, StatementsTreeWidgetItem):
             try: 
@@ -628,8 +632,13 @@ class ExerciseMainWindow(QMainWindow):
                 pass
 
     async def __server_send_editor_lean(self):
+        """
+        Send the L∃∀N code written in the L∃∀N editor widget to the
+        server interface.
+        """
+
         await self.servint.code_set(_('Code from editor'),
-                self.lean_editor.code_get())
+                                    self.lean_editor.code_get())
 
     #########
     # Slots #
@@ -637,23 +646,49 @@ class ExerciseMainWindow(QMainWindow):
 
     @Slot()
     def clear_current_selection(self):
+        """
+        Clear current (user) selection of math. objects and properties.
+        """
+
         for item in self.current_selection:
             item.mark_user_selected(False)
         self.current_selection = []
 
     @Slot()
     def freeze(self, yes=True):
+        """
+        Freeze interface (inactive widgets, gray appearance, etc) if
+        yes: 
+            - disable objects and properties;
+            - disable all buttons;
+        unfreeze it otherwise.
+
+        :param yes: See above.
+        """
+
         self.ecw.freeze(yes)
         self.toolbar.setEnabled(not yes)
 
     @Slot()
     def fireworks(self):
+        """
+        As of now, display a dialog when the target is successfully
+        solved.
+        """
+
         # TODO: make it a separate class
         QMessageBox.information(self, _('Target solved'), _('Target solved!'),
                                 QMessageBox.Ok)
 
     @Slot(ProofStatePOWidgetItem)
     def process_context_click(self, item: ProofStatePOWidgetItem):
+        """
+        Add or remove item (item represents a math. object or property)
+        from the current selection, depending on whether it was already
+        selected or note.
+
+        :item: The math. object or property user just clicked on.
+        """
 
         # One clicked, one does not want the item to remain visually
         # selected
@@ -668,10 +703,22 @@ class ExerciseMainWindow(QMainWindow):
 
     @Slot()
     def __update_lean_editor(self):
+        """
+        Update the L∃∀N editor widget to that of the current virtual
+        file L∃∀N code.
+        """
+
         self.lean_editor.code_set(self.servint.lean_file.inner_contents)
 
     @Slot(ProofState)
     def update_proof_state(self, proofstate: ProofState):
+        """
+        Update self (attributes, interface) to the new proof state,
+        which includes the new goal.
+
+        :proofstate: The proofstate one wants to update self to.
+        """
+
         # Weird that this methods only does this.
         # TODO: maybe delete it to only have self.update_goal?
         self.update_goal(proofstate.goals[0])
