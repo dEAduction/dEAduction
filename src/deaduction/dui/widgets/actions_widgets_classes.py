@@ -276,6 +276,18 @@ class StatementsTreeWidgetNode(QTreeWidgetItem):
         self.setExpanded(True)
         self.set_selectable(False)
 
+    def add_child(self, child: QTreeWidgetItem):
+        """
+        Do not delete, used in StatementsTreeWidget._init_tree_branch! This
+        method exists to uniformize notations in
+        StatementsTreeWidget._init_tree_branch.
+
+        :param child: Either an instance of StatementsTreeWidgetNode or
+            StatementsTreeWidgetItem; to ba added as a child of self.
+        """
+
+        self.addChild(child)
+
     def set_selectable(self, yes: bool=True):
         """
         Make self to be selectable if yes or unselectable otherwise.
@@ -356,7 +368,7 @@ class StatementsTreeWidget(QTreeWidget):
             item            = StatementsTreeWidgetItem(statement)
             root            = item.text(0)
             extg_tree[root] = (item, dict())
-            parent.addChild(item)
+            parent.add_child(item)
             return None
 
         # Else go through the already existing branch and create
@@ -367,7 +379,7 @@ class StatementsTreeWidget(QTreeWidget):
         if root not in extg_tree:
             node            = StatementsTreeWidgetNode(root)
             extg_tree[root] = (node, dict())
-            parent.addChild(node)
+            parent.add_child(node)
             node.setExpanded(True)  # Must be done AFTER node is added
 
         self._init_tree_branch(extg_tree[root][1], branch,
@@ -431,12 +443,12 @@ class StatementsTreeWidget(QTreeWidget):
         self.resizeColumnToContents(0)
         self.resizeColumnToContents(1)
 
-    def addChild(self, item):
+    def add_child(self, item):
         """
         Called in self._init_tree_branch, do not delete!  Useful not to
         have to make a difference between self.addTopLevelItem when we
-        add an item to the tree itself or parent.addChild when we add an
-        item to a parent which is a tree item.
+        add an item to the tree itself or parent.add_child when we add
+        an item to a parent which is a tree item.
 
         :param item: Either a StatementsTreeWidgetItem or a
             StatementsTreeWidgetNode.
