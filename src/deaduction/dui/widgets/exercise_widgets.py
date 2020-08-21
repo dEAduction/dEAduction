@@ -300,16 +300,17 @@ class ExerciseCentralWidget(QWidget):
 class ExerciseMainWindow(QMainWindow):
     # TODO: explain better communication and who talks to who?
     """
-    This class is responsible for both managing the whole interface for
-    exercises and communicating with a so-called server interface
-    (self.servint, not instantiated in this class): a middle man between
-    the interface and L∃∀N. User interface, server interface and L∃∀N
-    server are different entities which remain separated by design, that
-    is; Qt signals and slots are used for communication between them.
-    For the interface, it instantiates (see self.__init__)
-    ExerciseCentralWidget, a toolbar, and probably more things in the
-    future (a status bar and a menu bar among others). For the
-    communication with self.servint, it is this class which:
+    This class is responsible for both:
+        - managing the whole interface for exercises;
+        - communicating with a so-called server interface (self.servint, not
+          instantiated in this class): a middle man between the interface and
+          L∃∀N.
+
+    User interface, server interface and L∃∀N server are different entities
+    which remain separated by design; Qt signals and slots are used for
+    communication between them. For the interface, self instantiates
+    ExerciseCentralWidget, a toolbar, and probably more things in the future.
+    For the communication with self.servint, self:
         1. stores user selection of math. objects or properties
            (self.current_selection);
         2. detects when an action button (in self.ecw.logic_btns or
@@ -321,7 +322,6 @@ class ExerciseMainWindow(QMainWindow):
            interface;
         4. waits for some response (e.g. a new goal, an exception asking
            for new user parameters).
-
     As said, this class both sends and receives data to / from a server
     interface.
         - Sending data to the server inteface (self.servint) is achieved
@@ -413,10 +413,11 @@ class ExerciseMainWindow(QMainWindow):
     def closeEvent(self, event: QEvent):
         """
         Overload native Qt closeEvent method — which is called when self
-        is closed — to send self.window_closed signal.
+        is closed — to send the signal self.window_closed.
     
         :param event: Some Qt mandatory thing.
         """
+
         super().closeEvent(event)
         self.window_closed.emit()
 
