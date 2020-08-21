@@ -437,7 +437,6 @@ class StatementsTreeWidget(QTreeWidget):
         self._init_tree(statements, outline)
 
         # Cosmetics
-        self.setAlternatingRowColors(True)
         self.setHeaderLabels([_('Statement'), _('L∃∀N name')])
         self.setWindowTitle('StatementsTreeWidget')
         self.resizeColumnToContents(0)
