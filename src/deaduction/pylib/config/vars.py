@@ -45,10 +45,11 @@ dict_ = dict() # Contains loaded configuration
 log = logging.getLogger(__name__)
 
 def load():
-    log.info(_("Loading configuration file"))
+    log.info(_("Loading configuration files"))
 
     # Load configuration file
-    dict_ = toml.load(str(CONFIG_FILE_PATH))
+    dict_ = toml.load(str(FACTORY_CONFIG_FILE_PATH))
+    dict_.update(toml.load(str(USER_CONFIG_FILE_PATH)))
 
 def save():
     log.info(_("Saving configuration file"))

@@ -66,16 +66,17 @@ def check_dir(path: Path):
     Checks that the directory pointed by path exists.
     Creates the folder if not existing.
     """
-    log.info(_("Checking path: {}").format(str(path)))
+    log.debug(_("Checking path: {}").format(str(path)))
 
     if path.is_file():
         raise RuntimeError(_("Path {} is a file").format(str(path)))
 
-    elif not path.is_dir():
-        log.warning(
+    elif not path.is_dir() or not path.exists():
+        path.mkdir()
+        raise RuntimeError(
             _("Directory {} doesn't exists, creating").format(str(path))
         )
-        path.mkdir()
+
 
 
 ############################################
