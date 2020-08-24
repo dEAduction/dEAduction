@@ -174,9 +174,10 @@ class PropObj:
         """
         #        log = logging.getLogger("PropObj")
         if format_ == "latex":
-            log.info(f"computing latex representation of {self}")
+            pass
+            #log.info(f"computing latex representation of {self}")
         else:
-            log.info(f"computing utf-8 representation of {self}")
+            #log.info(f"computing utf-8 representation of {self}")
             format_ = "utf8"
         if self.representation[format_] != "??":
             return
@@ -212,7 +213,7 @@ class PropObj:
             log.warning(f"display of {node} not implemented")
             self.representation['latex'] = '???'
             self.representation['utf8'] = '???'
-        log.debug(f"---> utf8 rep: {self.representation['utf8']}")
+        #log.debug(f"---> utf8 rep: {self.representation['utf8']}")
         return
 
     def format_as_latex(self):
@@ -323,6 +324,7 @@ class AnonymousPO(PropObj):
         ###################
         # Bound variables #
         ###################
+        # todo: suppress ?
         if node.startswith("LOCAL_CONSTANT"):
             # unidentified local constant = bound variable
             representation = {"latex": lean_data["name"],
@@ -331,7 +333,7 @@ class AnonymousPO(PropObj):
             prop_obj = BoundVarPO(node, [], representation, [],
                                   lean_data, math_type)
             var_name = lean_data["name"]
-            log.debug(f"adding {var_name} to the bound vars names list")
+            #log.debug(f"adding {var_name} to the bound vars names list")
             if var_name not in bound_vars:
                 bound_vars.append(var_name)
             return prop_obj, bound_vars
@@ -350,7 +352,7 @@ class AnonymousPO(PropObj):
             info = extract_name(node)
             representation['info'] = info
             node = "CONSTANT"
-            log.debug(f"creating CONSTANT {info}")
+            #log.debug(f"creating CONSTANT {info}")
         #################
         # Instantiation #
         #################
@@ -392,7 +394,7 @@ class ProofStatePO(PropObj):
         :param prop_obj_str: a string from Lean that describes the object
         :return: the new object
         """
-        log.debug(f"processing to create ProofStatePO from {prop_obj_str}")
+        #log.debug(f"processing to create ProofStatePO from {prop_obj_str}")
         head, _, tail = prop_obj_str.partition(equal_sep)
         # extract lean_data from the head : name, id, pptype (if prop)
         lean_data = extract_lean_data(head)
@@ -408,7 +410,7 @@ class ProofStatePO(PropObj):
         bound_vars = []
         math_type, bound_vars = \
             AnonymousPO.from_tree(po_str_list[0], bound_vars)
-        log.debug(f"math type: {math_type}")
+        #log.debug(f"math type: {math_type}")
         node = ""
         children = []
         representation = {"latex": lean_data["name"],
@@ -423,8 +425,8 @@ class ProofStatePO(PropObj):
         ######################################
         if lean_data["id"] != "":
             ProofStatePO.dict_[lean_data["id"]] = prop_obj
-            log.info(f"adding {lean_data['name']} to the dictionary, ident ="
-                     f" {lean_data['id']}")
+            #log.info(f"adding {lean_data['name']} to the dictionary, ident ="
+            #         f" {lean_data['id']}")
         #        if not math_type.is_prop():
         #            math_type_store(prop_obj, math_type)
         return prop_obj
@@ -461,8 +463,8 @@ def math_type_store(math_types: List[Tuple[PropObj, List[ProofStatePO]]],
     :param math_types: list of tuples (math_type, math_type_instances)
     where math_type_instances is a list of instances of math_type
     """
-    log.debug(f"storing {prop_obj.representation['utf8']} in"
-              f"math_types_instances of {math_type}")
+    #log.debug(f"storing {prop_obj.representation['utf8']} in"
+    #          f"math_types_instances of {math_type}")
     index = 0
     for item, item_list in math_types:
         if item == math_type:

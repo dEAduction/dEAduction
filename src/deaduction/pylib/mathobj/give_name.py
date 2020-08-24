@@ -62,7 +62,7 @@ def give_name(goal, math_type: PropObj,
             forbidden_names.remove(name)
         except ValueError:
             pass
-    log.debug(f"forbidden names: {forbidden_names}")
+    #log.debug(f"forbidden names: {forbidden_names}")
     if isinstance(math_type, ProofStatePO):
         type_name = math_type.lean_data["name"]
         if len(type_name) == 1 and type_name.isupper():

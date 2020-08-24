@@ -68,6 +68,7 @@ class Goal:
         :param new_goal: new goal
         :param old_goal: old goal
         :param goal_is_new: True if previous goal has been solved
+        THIS IS NOT USED for the moment
         :return:
             - two lists old_goal_diff, new_goal_diff of tags
             - two more tags old_goal_diff, new_goal_diff
@@ -76,8 +77,8 @@ class Goal:
         new_goal = self
         new_context = new_goal.context.copy()
         old_context = old_goal.context.copy()
-        log.debug(old_context)
-        log.debug(new_context)
+        #log.debug(old_context)
+        #log.debug(new_context)
         if goal_is_new:
             tags_new_context = ["+" for PO in new_context]
             tags_old_context = ["+" for PO in old_context]
@@ -94,7 +95,7 @@ class Goal:
                          old_context]
             for pfPO in new_context:
                 name = pfPO.lean_data["name"]
-                log.debug(f"pfPO: {name}")
+                #log.debug(f"pfPO: {name}")
                 try:
                     old_index = old_names.index(name)
                 except ValueError:
@@ -133,8 +134,8 @@ class Goal:
                 tag_new_target, tag_old_target = "≠", "≠"
         new_goal.future_tags = (tags_new_context, tag_new_target)
         old_goal.past_tags_old_context = (tags_old_context, tag_old_target)
-        log.debug(f"Old goal old tags: {old_goal.past_tags_old_context}")
-        log.debug(f"New goal future tags: {new_goal.future_tags}")
+        #log.debug(f"Old goal old tags: {old_goal.past_tags_old_context}")
+        #log.debug(f"New goal future tags: {new_goal.future_tags}")
 
     def extract_var_names(self) -> List[str]:
         """

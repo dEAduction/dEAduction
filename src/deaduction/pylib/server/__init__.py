@@ -119,7 +119,8 @@ class ServerInterface(QObject):
             self.__filter_error(msg)  # Record error ?
 
         elif severity == Message.Severity.warning:
-            self.log.warning(f"Lean warning at line {msg.pos_line}: {txt}")
+            if not txt.endswith("uses sorry"):
+                self.log.warning(f"Lean warning at line {msg.pos_line}: {txt}")
 
         elif txt.startswith("context:"):
             self.log.info("Got new context")
