@@ -360,7 +360,7 @@ class AnonymousPO(PropObj):
         # but may be inadequate
         if node.startswith("QUANT") or node == "LAMBDA":
             bound_var_type, bound_var, local_context = children
-            log.debug(f"Processing bound var in {node, children}")
+            #log.debug(f"Processing bound var in {node, children}")
             # changing lean_data["name"]
             # so that it will not be on the forbidden list
             hint = bound_var.lean_data["name"]
@@ -379,7 +379,7 @@ class AnonymousPO(PropObj):
             # update bound_vars list
             bound_vars.append(name)  # TODO : save the pfpo instead
                                      # of mere string
-            log.debug(f"Give name {name} to bound var {bound_var} in {node}")
+            #log.debug(f"Give name {name} to bound var {bound_var} in {node}")
 
         #############
         # CONSTANTS #

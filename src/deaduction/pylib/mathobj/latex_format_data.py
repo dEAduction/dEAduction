@@ -140,7 +140,7 @@ def general_format_application(latex_symb, a, PO, format_="latex"):
             return [PO.children[0].lean_data['name']] + index
     key = PO.children[0].representation['info']
     if key == 'composition':  # composition of functions
-        log.debug(f"composition of {a[-2]} and {a[-1]}")
+        #log.debug(f"composition of {a[-2]} and {a[-1]}")
         if format_ == 'latex':
             return [a[-2], r" \circ ", a[-1]]
         elif format_ == 'utf8':

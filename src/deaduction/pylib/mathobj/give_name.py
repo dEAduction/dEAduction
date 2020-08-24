@@ -64,8 +64,8 @@ def give_name(goal,
         #         pass
     else:
         forbidden_names = goal.extract_var_names()
-    log.debug(f"giving name to bound var, type={math_type}, hints={hints}")
-    log.debug(f"forbidden names: {forbidden_names}")
+    #log.debug(f"giving name to bound var, type={math_type}, hints={hints}")
+    #log.debug(f"forbidden names: {forbidden_names}")
     if hasattr(math_type, "lean_data"):
         type_name = math_type.lean_data["name"]
         if len(type_name) == 1 and type_name.isupper():
