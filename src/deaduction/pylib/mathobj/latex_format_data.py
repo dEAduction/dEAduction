@@ -157,7 +157,7 @@ def general_format_application(latex_symb, a, PO, format_="latex"):
                     continue
             pertinent_children.append(child)
             pertinent_children_rep.append(a[counter])
-        log.debug(f"pertinent children: {pertinent_children_rep}")
+        # log.debug(f"pertinent children: {pertinent_children_rep}")
         # discriminate according of number of pertinent children
         if len(pertinent_children) == 0:  # CONSTANT, e.g. 'Identité'
             return a[0]
@@ -184,7 +184,7 @@ def format_lambda(latex_symb, a, PO, format_="latex"):
     # format LAMBDA(i, I, APPLICATION(E, i)) -> {E_i,i in I}
     # where E : SET_FAMILY
     [type_rep, var_rep, body_rep] = a
-    [type_, var_, body] = PO.children
+    # [type_, var_, body] = PO.children
     # if body.node == "APPLICATION":
     #     E = body.children[0]
     #     if E.node == "INSTANCE_OF_SET_FAMILY":

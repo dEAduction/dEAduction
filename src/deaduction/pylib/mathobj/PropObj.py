@@ -39,8 +39,8 @@ import logging
 
 import deaduction.pylib.logger as logger
 import deaduction.pylib.mathobj.lean_analysis as lean_analysis
-from deaduction.pylib.mathobj.latex_format_data import latex_structures, \
-    utf8_structures
+import deaduction.pylib.mathobj.latex_format_data as latex_format_data
+import deaduction.pylib.mathobj.give_name as give_name
 
 log = logging.getLogger(__name__)
 
@@ -143,14 +143,14 @@ class PropObj:
         means having a len_data["name"]
         :return: list of PropObj
         """
-        try:
-            name = self.lean_data["name"]
-            return [self]
-        except [AttributeError, KeyError]:
-            local_vars = []
-            for child in self.children:
-                local_vars.extend(child.extract_local_vars())
-            return local_vars
+        if hasattr(self, "lean_data"):
+            if "name" in self.lean_data.keys():
+                name = self.lean_data["name"]
+                return [self]
+        local_vars = []
+        for child in self.children:
+            local_vars.extend(child.extract_local_vars())
+        return local_vars
 
     def extract_local_vars_names(self) -> List[str]:
         """
@@ -195,15 +195,16 @@ class PropObj:
                 lr = ["(", lr, ")"]
             children_rep.append(lr)
         #        log.debug(f"Node: {node}")
-        if node in latex_structures.keys():
+        if node in latex_format_data.latex_structures.keys():
             if format_ == "latex":
-                symbol, format_scheme = latex_structures[node]
+                symbol, format_scheme = latex_format_data.latex_structures[
+                                                                        node]
                 self.representation["latex"] = format_scheme(symbol,
                                                              children_rep,
                                                              self,
                                                              format_="latex")
             else:
-                symbol, format_scheme = utf8_structures[node]
+                symbol, format_scheme = latex_format_data.utf8_structures[node]
                 self.representation["utf8"] = format_scheme(symbol,
                                                             children_rep,
                                                             self,
@@ -320,31 +321,59 @@ class AnonymousPO(PropObj):
         for arg in arguments:
             arg_prop_obj, bound_vars = AnonymousPO.from_tree(arg, bound_vars)
             children.append(arg_prop_obj)
+
         ###################
         # Bound variables #
         ###################
         if node.startswith("LOCAL_CONSTANT"):
             # unidentified local constant = bound variable
-            representation = {"latex": lean_data["name"],
-                              "utf8": lean_data["name"]}
+            # NB: will be given a name when dealing with quantifier or lambda
+            # lean_data["name"] must be kept untouched here
+            # since it will serve as hint for good name
+            representation = {"latex": "??",
+                              "utf8": "??"}
             math_type = children[0]
             prop_obj = BoundVarPO(node, [], representation, [],
                                   lean_data, math_type)
-            var_name = lean_data["name"]
-            log.debug(f"adding {var_name} to the bound vars names list")
-            if var_name not in bound_vars:
-                bound_vars.append(var_name)
+            ProofStatePO.dict_[lean_data["id"]] = prop_obj
+            log.info(
+                f"adding {lean_data['name']} to the dictionary, ident ="
+                f" {lean_data['id']}")
+
             return prop_obj, bound_vars
-        #############################
-        # Application of a function #
-        #############################
-        #        if node == "APPLICATION":
-        # if hasattr(children[0],"math_type"):
-        #     if children[0].math_type.node == "FUNCTION":
-        #         node = "APPLICATION_FUNCTION"
+
+        #############################################################
+        # Quantifiers & lambdas: give a good name to bound variable #
+        #############################################################
+        # NB: lean_data["name"] is given by structures.lean,
+        # but may be inadequate
+        if node.startswith("QUANT") or node == "LAMBDA":
+            bound_var_type, bound_var, local_context = children
+            log.debug(f"Processing bound var in {node, children}")
+            # changing lean_data["name"]
+            # so that it will not be on the forbidden list
+            hint = bound_var.lean_data["name"]
+            bound_var.lean_data["name"] = "processing name..."
+            # search for a fresh name valid inside pfpo
+            name = give_name.give_name(goal=None,
+                             math_type=bound_var_type,
+                             hints = [hint],
+                             po=local_context)
+            # store the new name for representation
+            bound_var.representation = {"latex": name,
+                                        "utf8": name}
+            # store the new name for list of variables'names
+            # BEWARE: original lean nam is changed
+            bound_var.lean_data["name"] = name
+            # update bound_vars list
+            bound_vars.append(name)  # TODO : save the pfpo instead
+                                     # of mere string
+            log.debug(f"Give name {name} to bound var {bound_var} in {node}")
+
         #############
         # CONSTANTS #
         #############
+        # todo: suppress
         lean_data = None
         if node.startswith("CONSTANT"):
             info = extract_name(node)

@@ -32,8 +32,11 @@ from typing import List, Tuple
 
 import deaduction.pylib.logger as logger
 
-from deaduction.pylib.mathobj import PropObj, ProofStatePO, math_type_store
-from deaduction.pylib.mathobj.give_name import give_name, instantiate_bound_var
+from deaduction.pylib.mathobj import    PropObj, \
+                                        ProofStatePO, \
+                                        math_type_store, \
+                                        BoundVarPO
+from deaduction.pylib.mathobj.give_name import  give_name
 
 
 node_needing_bounds_var = ["SET_FAMILY", "SEQUENCE"]
@@ -138,17 +141,15 @@ class Goal:
         ProofStatePO's instances
         :return: list of strings (variables names)
         """
-        log.info("extracting the list of variables's names")
-        context = self.context
-        target = self.target
+        #log.info("extracting the list of variables's names")
         names = []
-        for pfpo in context:
+        for pfpo in self.context:
             name = pfpo.lean_data["name"]
-            if name != '':
+            if name != '' and not pfpo.is_prop() and not (name in names):
                 names.append(name)
-            names.extend(pfpo.bound_vars)
-        names.extend(target.bound_vars)
-        self.variables_names = names
+        #    names.extend(pfpo.bound_vars)
+        #names.extend(target.bound_vars)
+        #self.variables_names = names
         return names
 
     @classmethod
@@ -192,12 +193,12 @@ class Goal:
                 pfpo.representation = {'latex': '??', 'utf8': '??'}
                 bound_var_type = math_type.children[0]
                 # search for a fresh name valid inside pfpo
-                name = give_name(goal, math_type=bound_var_type, po=pfpo)
+                name = give_name(goal=None, math_type=bound_var_type, po=pfpo)
                 # create the bound var
                 bound_var = instantiate_bound_var(math_type, name)
                 # update bound_vars list
                 pfpo.bound_vars.append(name)  # TODO : save the pfpo instead
-                # of mere string
+                                              # of mere string
                 pfpo.children = [bound_var]
         return goal
 
@@ -223,6 +224,23 @@ class Goal:
             else:
                 objects.append((po, tag))
         return objects, propositions
+
+
+
+def instantiate_bound_var(math_type, name: str):
+    """
+    create a BoundVarPOof with a given math_type and name
+    :param math_type: PropObj
+    :param name:
+    :return: BoundVarPO
+    """
+    representation = {"latex": [name], "utf8": [name]}
+    lean_data = {"name": '', "id": ''}
+    prop_obj = BoundVarPO('BOUND_VAR_DEADUCTION', [], representation, [],
+                          lean_data, math_type)
+    return prop_obj
+
+
 
 @dataclass
 class ProofState:

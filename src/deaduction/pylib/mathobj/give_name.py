@@ -27,13 +27,15 @@ from typing import List
 import logging
 
 import deaduction.pylib.logger as logger
-from deaduction.pylib.mathobj import ProofStatePO, PropObj, BoundVarPO
 
 log = logging.getLogger(__name__)
 
 
-def give_name(goal, math_type: PropObj,
-              authorized_names: [str] = [], hints: [str] = [], po=None,
+def give_name(goal,
+              math_type,
+              authorized_names: [str] = [],
+              hints: [str] = [],
+              po=None,     # todo : change name : local_context
               format_='utf8') -> str:
     """
     Provide a name for a new variable. Baby version.
@@ -43,7 +45,7 @@ def give_name(goal, math_type: PropObj,
     math_type could be A.
 
     :param goal: current_goal
-    :param math_type: type of new variable
+    :param math_type: PropObj type of new variable
     :param authorized_names: list of names which can be used even in forbidden
     list
     (useful for applying an existence statement)
@@ -55,19 +57,20 @@ def give_name(goal, math_type: PropObj,
     """
     if po:
         forbidden_names = po.extract_local_vars_names()
+        # for name in authorized_names:
+        #     try:
+        #         forbidden_names.remove(name)
+        #     except ValueError:
+        #         pass
     else:
         forbidden_names = goal.extract_var_names()
-    for name in authorized_names:
-        try:
-            forbidden_names.remove(name)
-        except ValueError:
-            pass
+    log.debug(f"giving name to bound var, type={math_type}, hints={hints}")
     log.debug(f"forbidden names: {forbidden_names}")
-    if isinstance(math_type, ProofStatePO):
+    if hasattr(math_type, "lean_data"):
         type_name = math_type.lean_data["name"]
         if len(type_name) == 1 and type_name.isupper():
             hint = type_name.lower()
-            hints.append(hint)
+            hints.insert(0, hint)
     # first trial
     for potential_name in hints:
         if potential_name not in forbidden_names:
@@ -94,22 +97,8 @@ def give_name(goal, math_type: PropObj,
         counter += 1
 
 
-def instantiate_bound_var(math_type: PropObj, name: str) -> BoundVarPO:
-    """
-    create a BoundVarPOof with a given math_type and name
-    :param math_type:
-    :param name:
-    :return:
-    """
-    representation = {"latex": [name], "utf8": [name]}
-    lean_data = {"name": '', "id": ''}
-    prop_obj = BoundVarPO('BOUND_VAR_DEADUCTION', [], representation, [],
-                          lean_data, math_type)
-    return prop_obj
-
-
 # TODO: implement the following more sophisticated version
-def give_name_v2(goal, math_type: PropObj, hints: List[str] = []) -> str:
+def give_name_v2(goal, math_type, hints: List[str] = []) -> str:
     """
     Provide a name for a new variable. UNFINISHED VERSION.
     The list of names of all current variables is extracted from goal
@@ -118,7 +107,7 @@ def give_name_v2(goal, math_type: PropObj, hints: List[str] = []) -> str:
     math_type could be A.
 
     :param goal: current_goal
-    :param math_type: type of new variable
+    :param math_type: PropObj, type of new variable
     :param hints: a hint for the future name
     :return: a name for the new variable
     """
@@ -142,7 +131,7 @@ def give_name_v2(goal, math_type: PropObj, hints: List[str] = []) -> str:
         hint = mti_names[0]
         hints.insert(0, hint)
     # then look at the name of math_type
-    if isinstance(math_type, ProofStatePO):
+    if hasattr(math_type, "lean_data"):
         type_name = math_type.lean_data["name"]
         if len(type_name) == 1 and type_name.isupper():
             hint = type_name.lower()
@@ -205,7 +194,7 @@ def name_prolongate(names: List[str]) -> str:
     pass
 
 
-def pre_give_names(goal, math_types: List[PropObj]) -> List[List[str]]:
+def pre_give_names(goal, math_types: list) -> List[List[str]]:
     """
     compute lists of possible names for each element of math_types,
     with empty pairwise intersection
