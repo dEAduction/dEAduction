@@ -287,6 +287,12 @@ def apply_exists(goal : Goal, l : [PropObj]) -> str:
     else :
         return "cases {0} with {1} {2}, ".format(h_name, x, hx)
 
+def construct_exists_on_hyp(goal : Goal, l : [PropObj]):
+    x = l[0].lean_data["name"]
+    hx = l[1].lean_data["name"]
+    new_h = get_new_hyp()
+    return "have {0} := exists.intro {1} {2} <|> have {0} := exists.intro {2} {1}, ".format(new_h, x, hx)
+    
 @action(_("If target is of form ∃ x, P(x): ask the user to enter a specific x and transform the target into P(x). \nIf a hypothesis of form ∃ x, P(x) has been previously selected: introduce a new x and add P(x) to the properties"), "∃")
 def action_exists(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
     """
@@ -302,6 +308,8 @@ def action_exists(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
             return construct_exists(goal, [l[0].lean_data["name"]])
     if len(l) == 0:
         return construct_exists(goal, user_input)
+    if len(l) == 2:
+        return construct_exists_on_hyp(goal, l)
     raise WrongUserInput
 
 ## APPLY
