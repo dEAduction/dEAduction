@@ -525,6 +525,48 @@ begin
     sorry
 end
 
+lemma exercise.test_proof_by_contradiction (A : Prop ) (H : ¬ A → false) : A :=
+/- dEAduction
+PrettyName
+    test_apply_target
+Description
+    test_exist
+Tools->Logic
+    $ALL
+Tools->ProofTechniques
+    $ALL
+Tools->Definitions
+    $UNTIL_NOW
+Tools->Theorems
+    double_inclusion
+ExpectedVarsNumber
+    X=3, A=1, B=1
+-/
+begin
+    sorry
+end
+
+
+lemma exercise.test_proof_by_contraposee (A B : Prop ) (H : ¬ B → ¬ A) : A → B :=
+/- dEAduction
+PrettyName
+    test_apply_target
+Description
+    test_exist
+Tools->Logic
+    $ALL
+Tools->ProofTechniques
+    $ALL
+Tools->Definitions
+    $UNTIL_NOW
+Tools->Theorems
+    double_inclusion
+ExpectedVarsNumber
+    X=3, A=1, B=1
+-/
+begin
+    sorry
+end
 
 
 end theorie_des_ensembles
