@@ -123,6 +123,8 @@ def construct_or(goal : Goal, user_input : [str]) -> str:
         right = goal.target.math_type.children[1].format_as_utf8()
         raise MissingParametersError(InputType.Choice, [left,right], title = "Choose element")
 
+def construct_or_hyp(goal : Goal, l : [PropObj], ):
+
 def apply_or(l : [PropObj]) -> str:
     if l[0].math_type.node != "PROP_OR":
         raise WrongUserInput
@@ -226,6 +228,14 @@ def construct_iff(goal : Goal, user_input : [str]):
             raise WrongUserInput
     raise WrongUserInput
 
+def construct_iff_on_hyp(goal : Goal, l : PropObj):
+    if not (l[0].math_type.is_prop() and l[1].math_type.is_prop()):
+        raise WrongUserInput
+    h = get_new_hyp()
+    h1 = l[0].lean_data["name"]
+    h2 = l[1].lean_data["name"]
+    return f'have {h} := iff.intro {h1} {h2}'
+
 @action(_("If the target is of the form P ⇔ Q: introduce two subgoals, P⇒Q, and Q⇒P."), "⇔")
 def action_iff(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
     """
@@ -236,6 +246,8 @@ def action_iff(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
     """
     if len(l) == 0:
         return construct_iff(goal, user_input)
+    if len(l) == 2:
+        return construct_iff_on_hyp(goal, l)
     raise WrongUserInput
 
 ## FOR ALL ##
