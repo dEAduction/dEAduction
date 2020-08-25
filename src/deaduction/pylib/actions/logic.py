@@ -48,7 +48,7 @@ from deaduction.pylib.mathobj   import (    PropObj,
                                             Goal,
                                             give_name)
 
-# log = logging.getLogger("logic") # uncomment to use
+log = logging.getLogger("logic") # uncomment to use
 
 ## AND ##
 
@@ -175,8 +175,6 @@ def construct_implicate(goal : Goal):
     return "intro {0}, ".format(h)
 
 def apply_implicate(goal : Goal, l : [PropObj]):
-    if not l[0].math_type.children[1].__eq__(goal.target.math_type):
-        raise WrongUserInput
     return "apply {0}, ".format(l[0].lean_data["name"])
 
 def apply_implicate_to_hyp(goal : Goal, l : [PropObj]):
@@ -354,6 +352,7 @@ def action_apply(goal : Goal, l : [PropObj]):
     
     # determines which kind of property the user wants to apply
     quantifier = l[-1].math_type.node
+    log.info(quantifier)
     if quantifier == "PROP_EQUAL" or quantifier == "PROP_IFF":
         return apply_substitute(goal, l) + ", "
     
@@ -362,6 +361,7 @@ def action_apply(goal : Goal, l : [PropObj]):
     else:
         code = ""
     if quantifier == "PROP_IMPLIES" or quantifier == "QUANT_∀":
+        log.debug(len(l))
         if len(l) == 1:
             return code + apply_implicate(goal, l)
         if len(l) == 2:
