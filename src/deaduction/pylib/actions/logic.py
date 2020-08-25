@@ -58,8 +58,10 @@ def construct_and(goal : Goal, user_input : [str]):
     left = goal.target.math_type.children[0].format_as_utf8()
     right = goal.target.math_type.children[1].format_as_utf8()
     choices = [left, right]
+    
     if user_input == []:
         raise MissingParametersError(InputType.Choice, choices, title = "Choose element", output = "Choose which subgoal you want to prove first")
+        
     if len(user_input) == 1:
         if user_input[0] in choices:
             i = choices.index(user_input[0])
@@ -243,7 +245,7 @@ def action_iff(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
 def construct_forall(goal):
     if goal.target.math_type.node != "QUANT_∀":
         raise WrongUserInput
-    x = give_name(goal, goal.target.math_type.children[0], [goal.target.math_type.children[1].format_as_utf8(), goal.target.math_type.children[0].format_as_utf8().lower()])
+    x = give_name(goal, goal.target.math_type.children[0], [goal.target.math_type.children[1].format_as_utf8()])
     return "intro {0}, ".format(x)
 
 @action(_("If the target is of the form ∀ x, P(x): introduce x and transform the target into P(x)"), "∀")
