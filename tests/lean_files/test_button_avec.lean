@@ -16,7 +16,7 @@ local attribute [instance] classical.prop_decidable
 namespace theorie_des_ensembles
 -- global variable --
 variable {X : Type}
-
+variable {Y : Type}
 
 lemma exercise.test_destruct_exist (A B : set X) (h : ∃ {{x : X}}, x ∈ A) : ∃ {{x : X}}, x ∈ A :=
 /- dEAduction
@@ -406,6 +406,143 @@ ExpectedVarsNumber
 begin
     sorry
 end
+
+lemma exercise.test_apply_fun (x y : X) (f : X → X) (h : x = y) : (f x = f y) :=
+/- dEAduction
+PrettyName
+    test_apply_target
+Description
+    test_exist
+Tools->Logic
+    $ALL
+Tools->ProofTechniques
+    $ALL
+Tools->Definitions
+    $UNTIL_NOW
+Tools->Theorems
+    double_inclusion
+ExpectedVarsNumber
+    X=3, A=1, B=1
+-/
+begin
+    sorry
+end
+
+
+
+lemma exercise.test_apply_quant_forall (x : X) (P : X → Prop) (h : ∀ t:X, P t) : P x :=
+/- dEAduction
+PrettyName
+    test_apply_target
+Description
+    test_exist
+Tools->Logic
+    $ALL
+Tools->ProofTechniques
+    $ALL
+Tools->Definitions
+    $UNTIL_NOW
+Tools->Theorems
+    double_inclusion
+ExpectedVarsNumber
+    X=3, A=1, B=1
+-/
+begin
+    sorry
+end
+
+
+
+
+lemma exercise.test_apply_imply (P Q : Prop) (h : P) (h : P → Q ) : P :=
+/- dEAduction
+PrettyName
+    test_apply_target
+Description
+    test_exist
+Tools->Logic
+    $ALL
+Tools->ProofTechniques
+    $ALL
+Tools->Definitions
+    $UNTIL_NOW
+Tools->Theorems
+    double_inclusion
+ExpectedVarsNumber
+    X=3, A=1, B=1
+-/
+begin
+    sorry
+end
+
+
+lemma exercise.test_apply_imply_with_quant (x : X) (P Q : X → Prop) (h : ∀ {t:X}, P t → Q t) (h2 : P x) : Q x :=
+/- dEAduction
+PrettyName
+    test_apply_target
+Description
+    test_exist
+Tools->Logic
+    $ALL
+Tools->ProofTechniques
+    $ALL
+Tools->Definitions
+    $UNTIL_NOW
+Tools->Theorems
+    double_inclusion
+ExpectedVarsNumber
+    X=3, A=1, B=1
+-/
+begin
+    sorry
+end
+
+
+
+lemma exercise.test_apply_sub_with_quant (x : X) (u v : X → X) (h1 : ∀ {{t: X}}, u t = v t) (h2 : u x = x): v x = x :=
+/- dEAduction
+PrettyName
+    test_apply_target
+Description
+    test_exist
+Tools->Logic
+    $ALL
+Tools->ProofTechniques
+    $ALL
+Tools->Definitions
+    $UNTIL_NOW
+Tools->Theorems
+    double_inclusion
+ExpectedVarsNumber
+    X=3, A=1, B=1
+-/
+begin
+    sorry
+end
+
+
+
+lemma exercise.test_apply_sub_iff_with_quant (x : X) (P Q : X → Prop) (h1 : ∀ {{t: X}}, P t ↔ Q t) (h2 : P x) : Q x :=
+/- dEAduction
+PrettyName
+    test_apply_target
+Description
+    test_exist
+Tools->Logic
+    $ALL
+Tools->ProofTechniques
+    $ALL
+Tools->Definitions
+    $UNTIL_NOW
+Tools->Theorems
+    double_inclusion
+ExpectedVarsNumber
+    X=3, A=1, B=1
+-/
+begin
+    sorry
+end
+
 
 
 
