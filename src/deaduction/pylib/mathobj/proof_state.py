@@ -36,7 +36,7 @@ from deaduction.pylib.mathobj import    PropObj, \
                                         ProofStatePO, \
                                         math_type_store, \
                                         BoundVarPO
-from deaduction.pylib.mathobj.give_name import  give_name
+from deaduction.pylib.mathobj.give_name import  give_local_name
 
 
 node_needing_bounds_var = ["SET_FAMILY", "SEQUENCE"]
@@ -143,8 +143,7 @@ class Goal:
     def extract_var_names(self) -> List[str]:
         """
         provides the list of names of all variables in the context,
-        including bound variables as listed in the bound_vars field of
-        ProofStatePO's instances
+        (but NOT bound variables, nor names of hypotheses)
         :return: list of strings (variables names)
         """
         #log.info("extracting the list of variables's names")
@@ -199,12 +198,10 @@ class Goal:
                 pfpo.representation = {'latex': '??', 'utf8': '??'}
                 bound_var_type = math_type.children[0]
                 # search for a fresh name valid inside pfpo
-                name = give_name(goal=None, math_type=bound_var_type, po=pfpo)
+                name = give_local_name(math_type=bound_var_type,
+                                 body=pfpo)
                 # create the bound var
                 bound_var = instantiate_bound_var(math_type, name)
-                # update bound_vars list
-                pfpo.bound_vars.append(name)  # TODO : save the pfpo instead
-                                              # of mere string
                 pfpo.children = [bound_var]
         return goal
 
@@ -242,7 +239,7 @@ def instantiate_bound_var(math_type, name: str):
     """
     representation = {"latex": [name], "utf8": [name]}
     lean_data = {"name": '', "id": ''}
-    prop_obj = BoundVarPO('BOUND_VAR_DEADUCTION', [], representation, [],
+    prop_obj = BoundVarPO('BOUND_VAR_DEADUCTION', [], representation,
                           lean_data, math_type)
     return prop_obj
 

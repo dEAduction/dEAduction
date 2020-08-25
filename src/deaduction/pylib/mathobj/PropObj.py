@@ -181,7 +181,6 @@ class PropObj:
         - lists of strings (in latex or utf-8 format)
         - lists of latex rep
         """
-        #        log = logging.getLogger("PropObj")
         if format_ == "latex":
             pass
             #log.info(f"computing latex representation of {self}")
@@ -197,13 +196,13 @@ class PropObj:
             i += 1
             if arg.representation[format_] == "??":
                 PropObj.structured_format(arg, format_)  # = compute_latex
-            lr = arg.representation[format_]
+            rep = arg.representation[format_]
             # the following line computes if parentheses are needed
             # around child n° i
             parentheses = needs_paren(self, i)
             if parentheses:
-                lr = ["(", lr, ")"]
-            children_rep.append(lr)
+                rep = ["(", rep, ")"]
+            children_rep.append(rep)
         #        log.debug(f"Node: {node}")
         if node in latex_format_data.latex_structures.keys():
             if format_ == "latex":
@@ -305,12 +304,10 @@ class AnonymousPO(PropObj):
     """
 
     @classmethod
-    def from_tree(cls, prop_obj_dict: dict, bound_vars):
+    def from_tree(cls, prop_obj_dict: dict):
         """
         create anonymous sub-objects and props, or refer to existing pfPO
         :param prop_obj_dict: dictionary provided by analysis.LeanExprVisitor
-        :param bound_vars: list of bounded variables (BoundVarPO),
-        to be updated if the AnonymousPO is actually a BounVarPO
         :return: an instance of AnonymousPO
         """
         representation = {'latex': "??", 'utf8': "??", 'info': "??"}
@@ -322,20 +319,19 @@ class AnonymousPO(PropObj):
         ##############################
         if lean_data["id"] in ProofStatePO.dict_:
             prop_obj = ProofStatePO.dict_[lean_data["id"]]
-            return prop_obj, bound_vars
+            return prop_obj
         ####################################
         # creation of children AnonymousPO #
         ####################################
         arguments = prop_obj_dict["children"]
         children = []
         for arg in arguments:
-            arg_prop_obj, bound_vars = AnonymousPO.from_tree(arg, bound_vars)
+            arg_prop_obj = AnonymousPO.from_tree(arg)
             children.append(arg_prop_obj)
 
         ###################
         # Bound variables #
         ###################
-        # todo: suppress ?
         if node.startswith("LOCAL_CONSTANT"):
             # unidentified local constant = bound variable
             # NB: will be given a name when dealing with quantifier or lambda
@@ -344,20 +340,26 @@ class AnonymousPO(PropObj):
             representation = {"latex": "??",
                               "utf8": "??"}
             math_type = children[0]
-            prop_obj = BoundVarPO(node, [], representation, [],
-                                  lean_data, math_type)
+            prop_obj = BoundVarPO(node, [], representation, lean_data,
+                                  math_type)
             ProofStatePO.dict_[lean_data["id"]] = prop_obj
             #log.info(
             #    f"adding {lean_data['name']} to the dictionary, ident ="
             #    f" {lean_data['id']}")
 
-            return prop_obj, bound_vars
+            return prop_obj
 
         #############################################################
         # Quantifiers & lambdas: give a good name to bound variable #
         #############################################################
         # NB: lean_data["name"] is given by structures.lean,
-        # but may be inadequate
+        # but may be inadequate (e.g. two distinct variables sharing the
+        # same name)
+        # For an expression like ∀ x: X, P(x)
+        # the logical constraints are: the name of the bound variable (
+        # which is going to replace `x`)  must be distinct from all names of
+        # variables appearing in the body `P(x)`, whether free or bound
+
         if node.startswith("QUANT") or node == "LAMBDA":
             bound_var_type, bound_var, local_context = children
             #log.debug(f"Processing bound var in {node, children}")
@@ -366,18 +368,15 @@ class AnonymousPO(PropObj):
             hint = bound_var.lean_data["name"]
             bound_var.lean_data["name"] = "processing name..."
             # search for a fresh name valid inside pfpo
-            name = give_name.give_name(goal=None,
-                             math_type=bound_var_type,
-                             hints = [hint],
-                             po=local_context)
+            name = give_name.give_local_name(math_type=bound_var_type,
+                                             hints=[hint],
+                                             body=local_context)
             # store the new name for representation
             bound_var.representation = {"latex": name,
                                         "utf8": name}
             # store the new name for list of variables'names
             # BEWARE: original lean nam is changed
             bound_var.lean_data["name"] = name
-            # update bound_vars list
-            bound_vars.append(name)  # TODO : save the pfpo instead
                                      # of mere string
             #log.debug(f"Give name {name} to bound var {bound_var} in {node}")
 
@@ -395,7 +394,7 @@ class AnonymousPO(PropObj):
         # Instantiation #
         #################
         prop_obj = cls(node, children, representation)
-        return prop_obj, bound_vars
+        return prop_obj
 
 
 @dataclass(eq=False)
@@ -403,8 +402,6 @@ class ProofStatePO(PropObj):
     """
     Objects and Propositions of the proof state (and bound variables)
     """
-    bound_vars: list  # list of bound variables specific to self
-    # (useful for keeping track of names)
     lean_data: dict  # the Lean data ; keys = "id", "name", "pptype"
     math_type: PropObj
 
@@ -445,9 +442,7 @@ class ProofStatePO(PropObj):
         ##################################################################
         tree = lean_analysis.lean_expr_grammar.parse(tail)
         po_str_list = lean_analysis.LeanExprVisitor().visit(tree)
-        bound_vars = []
-        math_type, bound_vars = \
-            AnonymousPO.from_tree(po_str_list[0], bound_vars)
+        math_type = AnonymousPO.from_tree(po_str_list[0])
         #log.debug(f"math type: {math_type}")
         node = ""
         children = []
@@ -456,8 +451,7 @@ class ProofStatePO(PropObj):
         #################
         # Instantiation #
         #################
-        prop_obj = cls(node, children, representation, bound_vars,
-                       lean_data, math_type)
+        prop_obj = cls(node, children, representation, lean_data, math_type)
         ######################################
         # Adjusting data : dict_, math_types #
         ######################################

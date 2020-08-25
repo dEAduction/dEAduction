@@ -46,7 +46,7 @@ from deaduction.pylib.actions   import (    action,
                                             get_new_var) 
 from deaduction.pylib.mathobj   import (    PropObj,
                                             Goal,
-                                            give_name)
+                                            give_global_name)
 
 # log = logging.getLogger("logic") # uncomment to use
 
@@ -243,7 +243,8 @@ def action_iff(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
 def construct_forall(goal):
     if goal.target.math_type.node != "QUANT_∀":
         raise WrongUserInput
-    x = give_name(goal, math_type=goal.target.math_type.children[0],
+    x = give_global_name(goal=goal,
+                         math_type=goal.target.math_type.children[0],
                   hints=[goal.target.math_type.children[1].format_as_utf8(),
                     goal.target.math_type.children[0].format_as_utf8().lower()])
     return "intro {0}, ".format(x)
@@ -275,8 +276,7 @@ def apply_exists(goal : Goal, l : [PropObj]) -> str:
     if h_selected.node != "QUANT_∃":
         raise WrongUserInput
     h_name = l[0].lean_data["name"]
-    x = give_name(goal, math_type=h_selected.children[0],
-                  authorized_names=h_selected.children[1].lean_data["name"],
+    x = give_global_name(goal=goal, math_type=h_selected.children[0],
                   hints=[h_selected.children[1].format_as_utf8()])
     hx = get_new_hyp()
     if h_selected.children[2].node == "PROP_∃":
@@ -326,7 +326,7 @@ def apply_function(goal : Goal, l : [PropObj]):
         # if function applied to element x
         else:
             x = l[0].lean_data["name"]
-            y = give_name(goal, math_type=Y, hints=[Y.lean_data[
+            y = give_global_name(goal=goal, math_type=Y, hints=[Y.lean_data[
                 "name"].lower()])
             code = code + f'set {y} := {f} {x} with {new_h}, '
         del l[0]
