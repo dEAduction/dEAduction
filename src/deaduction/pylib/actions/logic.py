@@ -270,7 +270,10 @@ def construct_exists(goal, user_input : [str]):
         raise WrongUserInput
     if len(user_input) != 1:
         raise MissingParametersError(InputType.Text, title = _("Exist"), output = _("Enter element you want to use:"))
-    return "use {0},".format(user_input[0])
+    # TODO : demander à FLR différence entre use et existsi. Un prend en compte le type et pas l'autre ?... la doc dit :
+    # "Similar to existsi, use l will use entries in l to instantiate existential obligations at the beginning of a target. Unlike existsi, the pexprs in l are elaborated with respect to the expected type."
+    
+    return "existsi {0},".format(user_input[0])
 
 def apply_exists(goal : Goal, l : [PropObj]) -> str:
     h_selected = l[0].math_type
