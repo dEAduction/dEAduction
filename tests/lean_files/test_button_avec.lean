@@ -299,114 +299,6 @@ begin
 end
 
 
-lemma exercise.test_apply_target {A B : Prop} (h : A ↔ B) : A → B :=
-/- dEAduction
-PrettyName
-    test_apply_target
-Description
-    test_exist
-Tools->Logic
-    $ALL
-Tools->ProofTechniques
-    $ALL
-Tools->Definitions
-    $UNTIL_NOW
-Tools->Theorems
-    double_inclusion
-ExpectedVarsNumber
-    X=3, A=1, B=1
--/
-begin
-    sorry
-end
-
-lemma exercise.test_apply_sub_eg_sans_ambiguite (x y : X) (h : x = y) (P : X → Prop) (h2 : P x) : P y :=
-/- dEAduction
-PrettyName
-    test_apply_target
-Description
-    test_exist
-Tools->Logic
-    $ALL
-Tools->ProofTechniques
-    $ALL
-Tools->Definitions
-    $UNTIL_NOW
-Tools->Theorems
-    double_inclusion
-ExpectedVarsNumber
-    X=3, A=1, B=1
--/
-begin
-    sorry
-end
-
-
-lemma exercise.test_apply_sub_iff_sans_ambiguite (A B : Prop) (h : A ↔  B) (P : Prop → Prop) (h2 : P A) : P B :=
-/- dEAduction
-PrettyName
-    test_apply_target
-Description
-    test_exist
-Tools->Logic
-    $ALL
-Tools->ProofTechniques
-    $ALL
-Tools->Definitions
-    $UNTIL_NOW
-Tools->Theorems
-    double_inclusion
-ExpectedVarsNumber
-    X=3, A=1, B=1
--/
-begin
-    sorry
-end
-
-
-lemma exercise.test_apply_sub_eg_avec_ambiguite (x y : X) (h : x = y) (P : X → X → Prop) (h2 : P x y) : P y x :=
-/- dEAduction
-PrettyName
-    test_apply_target
-Description
-    test_exist
-Tools->Logic
-    $ALL
-Tools->ProofTechniques
-    $ALL
-Tools->Definitions
-    $UNTIL_NOW
-Tools->Theorems
-    double_inclusion
-ExpectedVarsNumber
-    X=3, A=1, B=1
--/
-begin
-    sorry
-end
-
-
-lemma exercise.test_apply_sub_iff_avec_ambiguite (A B : Prop) (h : A ↔  B) (P : Prop → Prop → Prop) (h2 : P A B) : P B A :=
-/- dEAduction
-PrettyName
-    test_apply_target
-Description
-    test_exist
-Tools->Logic
-    $ALL
-Tools->ProofTechniques
-    $ALL
-Tools->Definitions
-    $UNTIL_NOW
-Tools->Theorems
-    double_inclusion
-ExpectedVarsNumber
-    X=3, A=1, B=1
--/
-begin
-    sorry
-end
-
 lemma exercise.test_apply_fun (x y : X) (f : X → X) (h : x = y) : (f x = f y) :=
 /- dEAduction
 PrettyName
@@ -418,11 +310,11 @@ Tools->Logic
 Tools->ProofTechniques
     $ALL
 Tools->Definitions
-    $UNTIL_NOW
+
 Tools->Theorems
-    double_inclusion
+
 ExpectedVarsNumber
-    X=3, A=1, B=1
+
 -/
 begin
     sorry
@@ -454,7 +346,7 @@ end
 
 
 
-lemma exercise.test_apply_imply (P Q : Prop) (h : P) (h : P → Q ) : P :=
+lemma exercise.test_apply_imply (P Q : Prop) (h : P) (h2 : P → Q ) : Q :=
 /- dEAduction
 PrettyName
     test_apply_target
@@ -546,6 +438,92 @@ end
 
 
 
+lemma exercise.test_apply_sub_eg_sans_ambiguite (x y : X) (h : x = y) (P : X → Prop) (h2 : P x) : P y :=
+/- dEAduction
+PrettyName
+    test_apply_target
+Description
+    test_exist
+Tools->Logic
+    $ALL
+Tools->ProofTechniques
+    $ALL
+Tools->Definitions
+    $UNTIL_NOW
+Tools->Theorems
+    double_inclusion
+ExpectedVarsNumber
+    X=3, A=1, B=1
+-/
+begin
+    sorry
+end
+
+
+lemma exercise.test_apply_sub_iff_sans_ambiguite (A B : Prop) (h : A ↔  B) (P : Prop → Prop) (h2 : P A) : P B :=
+/- dEAduction
+PrettyName
+    test_apply_target
+Description
+    test_exist
+Tools->Logic
+    $ALL
+Tools->ProofTechniques
+    $ALL
+Tools->Definitions
+    $UNTIL_NOW
+Tools->Theorems
+    double_inclusion
+ExpectedVarsNumber
+    X=3, A=1, B=1
+-/
+begin
+    sorry
+end
+
+
+lemma exercise.test_apply_sub_eg_avec_ambiguite (x y : X) (h : x = y) (P : X → X → Prop) (h2 : P x y) : P y x :=
+/- dEAduction
+PrettyName
+    test_apply_target
+Description
+    test_exist
+Tools->Logic
+    $ALL
+Tools->ProofTechniques
+    $ALL
+Tools->Definitions
+    $UNTIL_NOW
+Tools->Theorems
+    double_inclusion
+ExpectedVarsNumber
+    X=3, A=1, B=1
+-/
+begin
+    sorry
+end
+
+
+lemma exercise.test_apply_sub_iff_avec_ambiguite (A B : Prop) (h : A ↔  B) (P : Prop → Prop → Prop) (h2 : P A B) : P B A :=
+/- dEAduction
+PrettyName
+    test_apply_target
+Description
+    test_exist
+Tools->Logic
+    $ALL
+Tools->ProofTechniques
+    $ALL
+Tools->Definitions
+    $UNTIL_NOW
+Tools->Theorems
+    double_inclusion
+ExpectedVarsNumber
+    X=3, A=1, B=1
+-/
+begin
+    sorry
+end
 
 
 
