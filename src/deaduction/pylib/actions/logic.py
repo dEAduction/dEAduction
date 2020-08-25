@@ -245,7 +245,9 @@ def action_iff(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
 def construct_forall(goal):
     if goal.target.math_type.node != "QUANT_∀":
         raise WrongUserInput
-    x = give_name(goal, goal.target.math_type.children[0], [goal.target.math_type.children[1].format_as_utf8()])
+    x = give_name(goal, goal.target.math_type.children[0], 
+        authorized_names=goal.target.math_type.children[1].lean_data["name"],
+        hints = [goal.target.math_type.children[1].format_as_utf8()])
     return "intro {0}, ".format(x)
 
 @action(_("If the target is of the form ∀ x, P(x): introduce x and transform the target into P(x)"), "∀")
@@ -316,7 +318,8 @@ def apply_function(goal : Goal, l : [PropObj]):
         raise WrongUserInput
     code = ""
     f = l[-1].lean_data["name"]
-    Y = l[-1].math_type.children[1]
+    if len(l[-1].math_type.children) >= 2:
+        Y = l[-1].math_type.children[1]
     while (len(l) != 1):
         new_h = get_new_hyp()
         # if function applied to equality
