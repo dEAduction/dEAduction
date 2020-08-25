@@ -123,8 +123,6 @@ def construct_or(goal : Goal, user_input : [str]) -> str:
         right = goal.target.math_type.children[1].format_as_utf8()
         raise MissingParametersError(InputType.Choice, [left,right], title = "Choose element")
 
-def construct_or_hyp(goal : Goal, l : [PropObj], ):
-
 def apply_or(l : [PropObj]) -> str:
     if l[0].math_type.node != "PROP_OR":
         raise WrongUserInput
@@ -145,7 +143,6 @@ def action_or(goal : Goal, l : [PropObj], user_input = []) -> str:
         return construct_or(goal, user_input)
     if len(l) == 1:
         return apply_or(l)
-    
     raise WrongUserInput
 
 ## NOT ##
