@@ -217,7 +217,7 @@ def format_local_constant(**kwargs):
         if po.math_type.node == "TYPE":
             name = po.representation[format_]
             return [latex_text(_("an element of") + " ", format_), name]
-    if po.math_type == "SET_FAMILY":
+    if po.math_type.node == "SET_FAMILY":
         return instance_set_family(po, format_)
     elif po.math_type == "SEQUENCE":
         return "??"  # todo
@@ -242,6 +242,7 @@ def instance_set_family(po, format_="latex"):
     :return: None
     """
     # first find a name for the bound var
+    #log.debug("instance of set family")
     bound_var_type = po.math_type.children[0]
     index_name = give_local_name(math_type=bound_var_type,
                                  body=po)
@@ -358,8 +359,8 @@ utf8_structures = {"PROP_AND": (" " + _("AND") + " ", format_0n1),  # logic
                    "PROP_BELONGS": (r" ∈", format_0n1),
                    "SET_INTER": (r" ∩ ", format_0n1),  # set theory
                    "SET_UNION": (r" ∪ ", format_0n1),
-                   "SET_INTER+": (" ∩", format_n0),
-                   "SET_UNION+": (" ∪", format_n0),
+                   "SET_INTER+": ("∩", format_n0),
+                   "SET_UNION+": ("∪", format_n0),
                    "SET_DIFF": (r" \\ ", format_0n1),
                    "SET_COMPLEMENT": (r"", format_complement),
                    "SET_UNIVERSE": ("", format_arg0),
