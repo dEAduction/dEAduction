@@ -220,11 +220,12 @@ def format_local_constant(**kwargs):
     if po.math_type.node == "SET_FAMILY":
         return instance_set_family(po, format_)
     elif po.math_type == "SEQUENCE":
-        return "??"  # todo
+        return "**"  # todo
     elif not hasattr(po, "representation") \
             or format_ not in po.representation.keys():
-        return "??"
-    return po.representation[format_]
+        return "***"
+    representation = po.lean_data["name"]
+    return representation
 
 
 # the following is not called directly, but via format_local_constant
@@ -303,7 +304,7 @@ latex_structures = {"PROP_AND": (r" \text{ " + _("AND") + " } ", format_0n1),
                     "SET_EMPTY": (r" \emptyset ", format_constant1),
                     "SET_IMAGE": ("", format_app_function),
                     "SET_INVERSE": ("", format_app_inverse),
-                    "SET_FAMILY": (r"\text{ " + _("a family of subsets of") +
+                    "SET_FAMILY": (r"\text{" + _("a family of subsets of") +
                                    " }", format_n1),
                     #                    "INSTANCE_OF_SET_FAMILY": ("",
                     #                    format_instance_set_family),
@@ -367,7 +368,7 @@ utf8_structures = {"PROP_AND": (" " + _("AND") + " ", format_0n1),  # logic
                    "SET_EMPTY": (r" ∅ ", format_constant1),
                    "SET_IMAGE": ("", format_app_function),
                    "SET_INVERSE": ("", format_app_inverse),
-                   "SET_FAMILY": (" " + _("a family of subsets of") + " ",
+                   "SET_FAMILY": (_("a family of subsets of") + " ",
                                   format_n1),
                    # "INSTANCE_OF_SET_FAMILY": ("", format_instance_set_family),
                    # "APPLICATION_OF_SET_FAMILY": ("", format_name_index_1),
