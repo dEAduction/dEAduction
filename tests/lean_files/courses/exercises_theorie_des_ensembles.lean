@@ -186,7 +186,6 @@ begin
     sorry
 end
 
--- set_option pp.all true
 lemma exercise.complement_union_quelconque :
 set.compl (set.Union (λ i, E i)) = set.Inter (λ i, set.compl (E i)) :=
 /- dEAduction
@@ -213,7 +212,7 @@ begin
     sorry
 end
 
-lemma exercise.inclusion_complement_II (Φ: set X → set X) (H: Φ = λ A : set X, set.compl A):
+lemma exercise.inclusion_complement_II :
 A ⊆ B ↔ set.compl B ⊆ set.compl A
 :=
 /- dEAduction
@@ -266,7 +265,6 @@ variables {I : Type} {E : I → set X} {F : I → set Y}
 lemma definition.image_directe (y : Y) : y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y :=
 /- dEAduction -/
 begin
-    unfold set.image,
     sorry
 end
 
@@ -282,7 +280,7 @@ end
 ---------------
 lemma exercise.image_de_reciproque : f '' (f ⁻¹' B)  ⊆ B :=
 begin
-  sorry
+    sorry
 end
 
 lemma exercise.reciproque_de_image : A ⊆ f ⁻¹' (f '' A) :=
@@ -301,6 +299,7 @@ begin
     sorry
 end
 
+set_option pp.width 100
 lemma exercise.image_reciproque_inter_quelconque :
 (f ⁻¹'  (set.Inter (λ i, F i))) = set.Inter (λ i, f ⁻¹' (F i))
 :=
@@ -367,6 +366,9 @@ def surjective {X Y : Type} (f₀ : X → Y) := ∀ y : Y, ∃ x : X, f₀ x = y
 def composition {X Y Z : Type} (g₀ : Y → Z) (f₀ : X → Y) := λx:X, g₀ (f₀ x)
 def Identite {X : Type} := λ x:X, x
 
+notation g `∘` f := composition g f
+
+
 lemma definition.injectivite :
 injective f ↔ ∀ x y : X, (f x = f y → x = y)
 :=
@@ -381,7 +383,8 @@ begin
     unfold surjective,
 end
 
-lemma definition.composition : ∀ {x : X}, (composition g f) x = g (f x)
+lemma definition.composition :
+∀ x:X, composition g f x = g (f x)
 :=
 begin
     sorry
@@ -394,13 +397,19 @@ begin
 end
 
 
-lemma definition.Identite : ∀ {x : X}, Identite x = x :=
+lemma definition.Identite (f₀: X → X) :
+f₀ = Identite ↔ ∀ x, f₀ x = x :=
 begin
-    sorry
+    apply definition.egalite_fonctions,
 end
 
 end definitions
 
+
+example (x:X) : definitions.composition g f x = g (f x) :=
+begin
+    rw definitions.definition.composition,
+end
 
 ---------------
 -- EXERCICES --
@@ -410,7 +419,7 @@ end definitions
 namespace inverses
 open applications_II.definitions
 
-lemma exercise.injective_ssi_inverse_gauche (x0 : X) : (injective f) ↔
+lemma exercise.injective_ssi_inverse_gauche : (injective f) ↔
 ∃ F: Y → X, (composition F f) = Identite :=
 begin
     sorry
@@ -429,32 +438,32 @@ end inverses
 namespace composition
 open applications_II.definitions
 
-lemma exercise.composition_injections (H0 : h = composition g f)
+lemma exercise.composition_injections
 (H1 : injective f) (H2 : injective g) :
-injective h
+injective (composition g f)
 :=
 begin
     sorry
 end
 
-lemma exercise.composition_surjections (H0 : h = composition g f)
+lemma exercise.composition_surjections
 (H1 : surjective f) (H2 : surjective g) :
-surjective h
+surjective (composition g f)
 :=
 begin
     sorry
 end
 
-lemma exercise.injective_si_coompo_injective (H0 : h = composition g f)
-(H1 : injective h) :
+lemma exercise.injective_si_coompo_injective
+(H1 : injective (composition g f)) :
 injective f
 :=
 begin
     sorry
 end
 
-lemma exercise.surjective_si_coompo_surjective (H0 : h = composition g f)
-(H1 : surjective h) :
+lemma exercise.surjective_si_coompo_surjective
+(H1 : surjective (composition g f)) :
 surjective g
 :=
 begin

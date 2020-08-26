@@ -11,6 +11,7 @@ Contain the data for processing PropObj into a latex representation
 """
 import logging
 import gettext
+from deaduction.pylib.mathobj.give_name import give_local_name
 
 _ = gettext.gettext
 
@@ -24,220 +25,253 @@ nature_leaves_list = ["PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                       "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY"]
 
 
-def subscript(structured_string):
-    """
-    recursive version, for strings to be displayed use global_subscript instead
-    :param structured_string: list of sturctured string
-    :return: the structured string in a subscript version if available,
-    or the structured string unchanged if not,
-    and a boolean is_subscriptable
-    """
-    normal_list = "0123456789" + "aeioruv"
-    subscript_list = "₀₁₂₃₄₅₆₇₈₉" + "ₐₑᵢₒᵣᵤᵥ"
-    #subscript_list = "₀₁₂₃₄₅₆₇₈₉" + "ₐₑᵢⱼₒᵣᵤᵥₓ"
-    is_subscriptable = True
-    if isinstance(structured_string, list):
-        sub_list = []
-        for item in structured_string:
-            sub, bool = subscript(item)
-            if not bool:  # not subscriptable
-                return structured_string, False
-            else:
-                sub_list.append(sub)
-        return sub_list, True
-
-    # from now on structured_string is assumed to be a string
-    for letter in structured_string:
-        if letter not in normal_list:
-            is_subscriptable = False
-    if is_subscriptable:
-        subscript_string = ""
-        for l in structured_string:
-            subscript_string += subscript_list[normal_list.index(l)]
-    else:
-        subscript_string = structured_string
-    return subscript_string, is_subscriptable
-
-def global_subscript(structured_string):
-    sub, is_subscriptable = subscript(structured_string)
-    if is_subscriptable:
-        return sub
-    else:
-        return ['_'] + [sub]
-        # [sub] necessary in case sub is an (unstructured) string
-
-
-def format_arg0(latex_symb, a, PO, format_="latex"):
+def format_arg0(**kwargs):
+    a = kwargs["children_rep"]
     return [a[0]]
 
 
-def format_n0(latex_symb, a, PO, format_="latex"):
-    return [latex_symb, a[0]]
-
-def format_n1(latex_symb, a, PO, format_="latex"):
-    return [latex_symb, a[1]]
-
-
-def format_0n1(latex_symb, a, PO, format_="latex"):
-    return [a[0], latex_symb, a[1]]
-
-def format_name(latex_symb, a, PO, format_="latex"):
-    return [PO.lean_data["name"]]
+def format_n0(**kwargs):
+    symbol = kwargs["symbol"]
+    a = kwargs["children_rep"]
+    return [symbol, a[0]]
 
 
-def format_app_function(latex_symb, a, PO, format_="latex"):
-    return [a[0], '(', a[1], ')']  # !! not used anymore !!
+def format_n1(**kwargs):
+    symbol = kwargs["symbol"]
+    a = kwargs["children_rep"]
+    return [symbol, a[1]]
 
 
-def format_app_inverse(latex_symb, a, PO, format_="latex"):
+def format_0n1(**kwargs):
+    symbol = kwargs["symbol"]
+    a = kwargs["children_rep"]
+    return [a[0], symbol, a[1]]
+
+
+def format_name(**kwargs):
+    po = kwargs["po"]
+    return [po.lean_data["name"]]
+
+
+def format_app_function(**kwargs):
+    """Used for the image of a set under a function"""
+    a = kwargs["children_rep"]
+    return [a[0], '(', a[1], ')']
+
+
+def format_app_inverse(**kwargs):
+    format_ = kwargs["format_"]
+    a = kwargs["children_rep"]
     if format_ == "latex":
         return [a[0], '^{-1}(', a[1], ')']
     elif format_ == "utf8":
         return [a[0], '⁻¹(', a[1], ')']
 
 
-def format_quantifiers(latex_symb, a, PO, format_="latex"):
+def format_quantifiers(**kwargs):
+    symbol = kwargs["symbol"]
+    format_ = kwargs["format_"]
+    a = kwargs["children_rep"]
+    po = kwargs["po"]
     # mind that the variable a[1] comes AFTER the type a[0] in quantifiers
-    if PO.children[0].node == "FUNCTION":  # the bound var is a function
+    if po.children[0].node == "FUNCTION":  # the bound var is a function
         separator = ' : '
     else:
         if format_ == "latex":
             separator = r'\in'
         elif format_ == "utf8":
             separator = '∈'
-    return [latex_symb + ' ' + a[1] + separator, a[0], ', ', a[2]]
+    return [symbol + ' ' + a[1] + separator, a[0], ', ', a[2]]
 
 
-def format_complement(latex_symb, a, PO, format_="latex"):
+def format_complement(**kwargs):
+    """TODO: use type to find universe and use notation X \ E
+    (type is not implemented yet when E is AnonymousPO)"""
+    format_ = kwargs["format_"]
+    a = kwargs["children_rep"]
+    po = kwargs["po"]
     if format_ == "latex":
         return [a[0], '^c']
     elif format_ == "utf8":
         return ['∁', a[0]]
 
 
-def format_constant1(latex_symb, a, PO, format_="latex"):
-    return [latex_symb]
+def format_constant1(**kwargs):
+    symbol = kwargs["symbol"]
+    return [symbol]
 
 
-def format_constant2(latex_symb, a, PO, format_="latex"):
-    if "info" in PO.representation.keys():
-        name = _(PO.representation["info"])
+def format_constant2(**kwargs):
+    format_ = kwargs["format_"]
+    po = kwargs["po"]
+    if "info" in po.representation.keys():
+        name = _(po.representation["info"])
         return [latex_text(name, format_)]
     else:
-        return [latex_text(PO.node)]
+        return [latex_text(po.node)]
 
 
 # the following includes for instance:
 # "f(x)" (application of a function)
 # "gf"   (composition of functions)
 # "f is injective"
-def general_format_application(latex_symb, a, PO, format_="latex"):
-    if hasattr(PO.children[0], "math_type"):
-        if PO.children[0].math_type.node == "FUNCTION":
-            return [a[0], '(', a[1], ')']
-        if PO.children[0].math_type.node in ["SET_FAMILY", "SEQUENCE"]:
-            index = global_subscript([a[1]])
-            return [PO.children[0].lean_data['name']] + index
-    key = PO.children[0].representation['info']
-    if key == 'composition':  # composition of functions
-        log.debug(f"composition of {a[-2]} and {a[-1]}")
-        if format_ == 'latex':
-            return [a[-2], r" \circ ", a[-1]]
-        elif format_ == 'utf8':
-            return [a[-2], '∘', a[-1]]
+def general_format_application(**kwargs):
+    format_ = kwargs["format_"]
+    children_rep = kwargs["children_rep"]
+    po = kwargs["po"]
+    #####################################################
+    # 1st case: application of a function to a variable #
+    #####################################################
+    # e.g. f(x), {E_i, i in I}, u_n
+    if hasattr(po.children[0], "math_type"):
+        if po.children[0].math_type.node == "FUNCTION":
+            return [children_rep[0], '(', children_rep[1], ')']
+        if po.children[0].math_type.node in ["SET_FAMILY", "SEQUENCE"]:
+            index = global_subscript([children_rep[1]])
+            return [po.children[0].lean_data['name']] + index
+    ######################################
+    # 2nd case: composition of functions #
+    ######################################
+    if hasattr(po.children[0], "representation"):
+        if "info" in po.children[0].representation.keys():
+            key = po.children[0].representation['info']
+            if key == 'composition':  # composition of functions
+                # log.debug(f"composition of {a[-2]} and {a[-1]}")
+                if format_ == 'latex':
+                    return [children_rep[-2], r" \circ ", children_rep[-1]]
+                elif format_ == 'utf8':
+                    return [children_rep[-2], '∘', children_rep[-1]]
+    ###############
+    # other cases #
+    ###############
+    # first find the pertinent children
+    # select children that are not Types
+    pertinent_children = []
+    pertinent_children_rep = []
+    counter = 0  # the first child is always pertinent, we leave it aside
+    for child in po.children[1:]:
+        counter += 1
+        if hasattr(child, "math_type"):
+            if child.math_type.node == 'TYPE':
+                continue
+        pertinent_children.append(child)
+        pertinent_children_rep.append(children_rep[counter])
+    # log.debug(f"pertinent children: {pertinent_children_rep}")
+    ##########################################################################
+    # discriminate according of number of pertinent (i.e. not Type) children #
+    ##########################################################################
+    # no pertinent argument
+    if len(pertinent_children) == 0:  # CONSTANT, e.g. 'Identité'
+        return children_rep[0]
+    # 1 pertinent argument
+    if len(pertinent_children) == 1:  # ADJECTIVE, e.g. 'f is injective'
+        adjective = children_rep[0]
+        noun = pertinent_children_rep[0]
+        if format_ == "latex":
+            return [r"\text{", noun, " " + _("is") + " ", adjective, r"}"]
+        elif format_ == "utf8":
+            return [noun, " " + _("is") + " ", adjective]
+    ###################################################
+    # more than 1 pertinent argument: not implemented #
+    ###################################################
     else:
-        # select children that are not Types
-        pertinent_children = []
-        pertinent_children_rep = []
-        counter = 0  # the first child is always pertinent, we leave it aside
-        for child in PO.children[1:]:
-            counter +=1
-            if hasattr(child, "math_type"):
-                if child.math_type.node == 'TYPE':
-                    continue
-            pertinent_children.append(child)
-            pertinent_children_rep.append(a[counter])
-        log.debug(f"pertinent children: {pertinent_children_rep}")
-        # discriminate according of number of pertinent children
-        if len(pertinent_children) == 0:  # CONSTANT, e.g. 'Identité'
-            return a[0]
-        if len(pertinent_children) == 1:  # ADJECTIVE, e.g. 'f is injective'
-            adjective = a[0]
-            noun = pertinent_children_rep[0]
-            if format_ == "latex":
-                return [r"\text{", noun, " " + _("is") + " ", adjective, r"}"]
-            elif format_ == "utf8":
-                return [noun, " " + _("is") + " ", adjective]
-        else:
-            return "??"
+        return "**"
 
 
-def format_lambda(latex_symb, a, PO, format_="latex"):
+def format_lambda(**kwargs):
     """
     format for lambda expression,
     i.e. set families with explicit bound variable
     (lambda (i:I), E i)
-    """
-    ################
-    # set families #
-    ################
-    # format LAMBDA(i, I, APPLICATION(E, i)) -> {E_i,i in I}
-    # where E : SET_FAMILY
-    [type_rep, var_rep, body_rep] = a
-    [type_, var_, body] = PO.children
-    # if body.node == "APPLICATION":
-    #     E = body.children[0]
-    #     if E.node == "INSTANCE_OF_SET_FAMILY":
-    #         # the bound var has already
-    #         # been given a name in dEAduction
-    #         var_name = E.children[0].representation[format_]
-    #         return format_instance_set_family("", [var_name],
-    #                                           E, format_)
-    #     elif hasattr(E, "math_type"):
-    #         if E.math_type.node == "SET_FAMILY":
-    #             return format_instance_set_family("", [var_rep],
-    #                                               E, format_)
 
-    # TODO: adapt for functions and sequences
-    # this is only for set families
+    TODO: adapt for functions and sequences
+    this is only for set families
+    """
+    format_ = kwargs["format_"]
+    children_rep = kwargs["children_rep"]
+
+    [type_rep, var_rep, body_rep] = children_rep
     if format_ == "latex":
         return [r'\{', body_rep, ', ', var_rep, r' \in ', type_rep, r'\}']
     elif format_ == "utf8":
         return ['{', body_rep, ', ', var_rep, '∈', type_rep, '}']
 
 
-
-def latex_text(string: str, format_="latex"):
+def format_name_index_1(**kwargs):
+    format_ = kwargs["format_"]
+    children_rep = kwargs["children_rep"]
+    po = kwargs["po"]
+    name = po.children[0].lean_data["name"]
     if format_ == "latex":
-        string = r"\textsc{" + string + r"}"
-    return string
+        return [name, '_', children_rep[1]]
+    if format_ == "utf8":
+        # TODO : put a[1] in subscript format
+        return [name, '_', children_rep[1]]
 
 
-def format_instance_set_family(latex_symb, children_rep, PO, format_="latex"):
+def format_local_constant(**kwargs):
+    format_ = kwargs["format_"]
+    po = kwargs["po"]
+    is_type_of_pfpo = kwargs["is_type_of_pfpo"]
+    if is_type_of_pfpo:
+        if po.math_type.node == "TYPE":
+            name = po.representation[format_]
+            return [latex_text(_("an element of") + " ", format_), name]
+    if po.math_type == "SET_FAMILY":
+        return instance_set_family(po, format_)
+    elif po.math_type == "SEQUENCE":
+        return "??"  # todo
+    elif not hasattr(po, "representation") \
+            or format_ not in po.representation.keys():
+        return "??"
+    return po.representation[format_]
+
+
+# the following is not called directly, but via format_local_constant
+def instance_set_family(po, format_="latex"):
     """
-    :param children_rep: list or str, structured format of children
-    :param PO: PropObj
+    e.g. if E: I -> set X,
+    then compute a good name for an index in I (e.g. 'i'),
+    and display "{E_i, i in I}"
+
+    WARNING: this bound variable is not referenced anywhere, in particular
+    it will not appear in extract_local_vars.
+
+    :param children_rep:
+    :param po: PropObj
     :return: None
     """
-    name = PO.lean_data["name"]
-    index_rep = children_rep[0]
+    # first find a name for the bound var
+    bound_var_type = po.math_type.children[0]
+    index_name = give_local_name(math_type=bound_var_type,
+                                 body=po)
+    index_rep = index_name
     index_subscript_rep = global_subscript(index_rep)
-    index_set_rep = PO.math_type.children[0].representation[format_]
+    index_set_rep = po.math_type.children[0].representation[format_]
+    name = po.lean_data["name"]
     if format_ == "latex":
-        rep = [r"\{", name,  r"_{", index_rep, r"}, ",
+        rep = [r"\{", name, r"_{", index_rep, r"}, ",
                index_rep, r"\in ", index_set_rep, r"\}"]
-    elif format_ == "utf8":
+    else:
         rep = ["{", name, index_subscript_rep, ", ",
                index_rep, "∈", index_set_rep, "}"]
     return rep
 
-def format_name_index_1(latex_symb, a, PO, format_="latex"):
-    name = PO.children[0].lean_data["name"]
-    if format_ == "latex":
-        return [name, '_', a[1]]
-    if format_ == "utf8":
-        # TODO : put a[1] in subscript format
-        return [name, '_', a[1]]
+
+def format_set(**kwargs):
+    format_ = kwargs["format_"]
+    children_rep = kwargs["children_rep"]
+    is_type_of_pfpo = kwargs["is_type_of_pfpo"]
+    if is_type_of_pfpo:
+        text = latex_text(_("a subset of") + " ", format_)
+        kwargs["symbol"] = text
+        return format_n0(**kwargs)
+    else:
+        if format_ == "latex":
+            return r"\cP(" + children_rep[0] + ")"
+        else:
+            return "P(" + children_rep[0] + ")"
+
 
 # dict nature -> (latex symbol, format name)
 ##########
@@ -263,7 +297,6 @@ latex_structures = {"PROP_AND": (r" \text{ " + _("AND") + " } ", format_0n1),
                     "PROP_INCLUDED": (r" \subset ", format_0n1),
                     "PROP_BELONGS": (r" \in ", format_0n1),
                     "SET_DIFF": (r" \backslash ", format_0n1),
-                    "SET_SYM_DIFF": (r" \backslash ", format_0n1),
                     "SET_COMPLEMENT": (r"", format_complement),
                     "SET_UNIVERSE": ("", format_arg0),
                     "SET_EMPTY": (r" \emptyset ", format_constant1),
@@ -271,8 +304,9 @@ latex_structures = {"PROP_AND": (r" \text{ " + _("AND") + " } ", format_0n1),
                     "SET_INVERSE": ("", format_app_inverse),
                     "SET_FAMILY": (r"\text{ " + _("a family of subsets of") +
                                    " }", format_n1),
-                    "INSTANCE_OF_SET_FAMILY": ("", format_instance_set_family),
-                    "APPLICATION_OF_SET_FAMILY": ("", format_name_index_1),
+                    #                    "INSTANCE_OF_SET_FAMILY": ("",
+                    #                    format_instance_set_family),
+                    #                    "APPLICATION_OF_SET_FAMILY": ("", format_name_index_1),
                     ############
                     # NUMBERS: #
                     ############
@@ -284,23 +318,24 @@ latex_structures = {"PROP_AND": (r" \text{ " + _("AND") + " } ", format_0n1),
                     "PROP_≥": ("≥", format_0n1),
                     "MINUS": ("-", format_n0),
                     "+": ("+", format_0n1),
-                    "APPLICATION_FUNCTION": ("", format_app_function),
                     "VAR": ("", "var"),
                     ##################
                     # GENERAL TYPES: #
                     ##################
+                    "LOCAL_CONSTANT": ("", format_local_constant),
                     "APPLICATION": ("", general_format_application),
                     "LAMBDA": ("", format_lambda),
                     "PROP": (r"\text{ " + _("a proposition") + "}",
                              format_constant1),
                     "TYPE": (r" \text{ " + _("a set") + "} ",
                              format_constant1),
-                    "SET": (r" \text{ " + _("a subset of") + " }",
-                            format_n0),
-                    "ELEMENT": (r" \text{ " + _("an element of") + " }",
-                                format_n0),
+                    "SET": ("", format_set),
+                    # "SET": (r" \text{ " + _("a subset of") + " }",
+                    #         format_n0),
+#                    "ELEMENT": (r" \text{ " + _("an element of") + " }",
+#                                format_n0),
                     "FUNCTION": (r" \to ", format_0n1),
-                    "SEQUENCE": ("", ""),  # TODO: and also INSTANCE_OF_SEQ
+                    "SEQUENCE": ("", ""),  # TODO: and also instance of SEQ
                     "TYPE_NUMBER[name:ℕ]": ("\mathbb{N}", format_constant1),
                     "TYPE_NUMBER[name:ℝ]": ("\mathbb{R}", format_constant1),
                     "NUMBER": ("", ""),
@@ -333,8 +368,8 @@ utf8_structures = {"PROP_AND": (" " + _("AND") + " ", format_0n1),  # logic
                    "SET_INVERSE": ("", format_app_inverse),
                    "SET_FAMILY": (" " + _("a family of subsets of") + " ",
                                   format_n1),
-                   "INSTANCE_OF_SET_FAMILY": ("", format_instance_set_family),
-                   "APPLICATION_OF_SET_FAMILY": ("", format_name_index_1),
+                   # "INSTANCE_OF_SET_FAMILY": ("", format_instance_set_family),
+                   # "APPLICATION_OF_SET_FAMILY": ("", format_name_index_1),
                    ############
                    # NUMBERS: #
                    ############
@@ -347,15 +382,17 @@ utf8_structures = {"PROP_AND": (" " + _("AND") + " ", format_0n1),  # logic
                    "MINUS": ("-", format_n0),
                    "+": ("+", format_0n1),
                    "VAR": ("", "var"),
-                   "APPLICATION": ("", general_format_application),
-                   "LAMBDA": ("", format_lambda),
                    ##################
                    # GENERAL TYPES: #
                    ##################
+                   "LOCAL_CONSTANT": ("", format_local_constant),
+                   "APPLICATION": ("", general_format_application),
+                   "LAMBDA": ("", format_lambda),
                    "PROP": (" " + _("a proposition"), format_constant1),
                    "TYPE": (" " + _("a set"), format_constant1),
-                   "SET": (" " + _("a subset of "), format_n0),
-                   "ELEMENT": (" " + _("an element of "), format_n0),
+                   "SET": ("", format_set),
+#                   (" " + _("a subset of "), format_n0),
+#                   "ELEMENT": (" " + _("an element of") + " ", format_n0),
                    "FUNCTION": (" → ", format_0n1),
                    "SEQUENCE": ("", ""),
                    "TYPE_NUMBER[name:ℕ]": ("ℕ", format_constant1),
@@ -364,6 +401,55 @@ utf8_structures = {"PROP_AND": (" " + _("AND") + " ", format_0n1),  # logic
                    "CONSTANT": ("", format_constant2)
                    }
 
+
+def latex_text(string: str, format_="latex"):
+    if format_ == "latex":
+        string = r"\textsc{" + string + r"}"
+    return string
+
+
+def subscript(structured_string):
+    """
+    recursive version, for strings to be displayed use global_subscript instead
+    :param structured_string: list of sturctured string
+    :return: the structured string in a subscript version if available,
+    or the structured string unchanged if not,
+    and a boolean is_subscriptable
+    """
+    normal_list = "0123456789" + "aeioruv"
+    subscript_list = "₀₁₂₃₄₅₆₇₈₉" + "ₐₑᵢₒᵣᵤᵥ"
+    # subscript_list = "₀₁₂₃₄₅₆₇₈₉" + "ₐₑᵢⱼₒᵣᵤᵥₓ"
+    is_subscriptable = True
+    if isinstance(structured_string, list):
+        sub_list = []
+        for item in structured_string:
+            sub, bool = subscript(item)
+            if not bool:  # not subscriptable
+                return structured_string, False
+            else:
+                sub_list.append(sub)
+        return sub_list, True
+
+    # from now on structured_string is assumed to be a string
+    for letter in structured_string:
+        if letter not in normal_list:
+            is_subscriptable = False
+    if is_subscriptable:
+        subscript_string = ""
+        for l in structured_string:
+            subscript_string += subscript_list[normal_list.index(l)]
+    else:
+        subscript_string = structured_string
+    return subscript_string, is_subscriptable
+
+
+def global_subscript(structured_string):
+    sub, is_subscriptable = subscript(structured_string)
+    if is_subscriptable:
+        return sub
+    else:
+        return ['_'] + [sub]
+        # [sub] necessary in case sub is an (unstructured) string
 
 # TODO A traiter : R, N ; NUMBER ; emptyset ; PROP_∃ ; SET_INTER+ ; SEQUENCE ;
 # MINUS (n0 ou 0n1 selon le nb d'arguments)

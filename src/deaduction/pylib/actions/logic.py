@@ -46,7 +46,7 @@ from deaduction.pylib.actions   import (    action,
                                             get_new_var) 
 from deaduction.pylib.mathobj   import (    PropObj,
                                             Goal,
-                                            give_name)
+                                            give_global_name)
 
 log = logging.getLogger("logic") # uncomment to use
 
@@ -58,10 +58,10 @@ def construct_and(goal : Goal, user_input : [str]):
     left = goal.target.math_type.children[0].format_as_utf8()
     right = goal.target.math_type.children[1].format_as_utf8()
     choices = [left, right]
-    
+
     if user_input == []:
         raise MissingParametersError(InputType.Choice, choices, title = "Choose element", output = "Choose which subgoal you want to prove first")
-        
+
     if len(user_input) == 1:
         if user_input[0] in choices:
             i = choices.index(user_input[0])
@@ -243,9 +243,10 @@ def action_iff(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
 def construct_forall(goal):
     if goal.target.math_type.node != "QUANT_∀":
         raise WrongUserInput
-    x = give_name(goal, goal.target.math_type.children[0], 
-        authorized_names=goal.target.math_type.children[1].lean_data["name"],
-        hints = [goal.target.math_type.children[1].format_as_utf8()])
+    x = give_global_name(goal=goal,
+                         math_type=goal.target.math_type.children[0],
+                  hints=[goal.target.math_type.children[1].format_as_utf8(),
+                    goal.target.math_type.children[0].format_as_utf8().lower()])
     return "intro {0}, ".format(x)
 
 @action(_("If the target is of the form ∀ x, P(x): introduce x and transform the target into P(x)"), "∀")
@@ -270,7 +271,7 @@ def construct_exists(goal, user_input : [str]):
         raise MissingParametersError(InputType.Text, title = _("Exist"), output = _("Enter element you want to use:"))
     # TODO : demander à FLR différence entre use et existsi. Un prend en compte le type et pas l'autre ?... la doc dit :
     # "Similar to existsi, use l will use entries in l to instantiate existential obligations at the beginning of a target. Unlike existsi, the pexprs in l are elaborated with respect to the expected type."
-    
+
     return "existsi {0},".format(user_input[0])
 
 def apply_exists(goal : Goal, l : [PropObj]) -> str:
@@ -278,8 +279,7 @@ def apply_exists(goal : Goal, l : [PropObj]) -> str:
     if h_selected.node != "QUANT_∃":
         raise WrongUserInput
     h_name = l[0].lean_data["name"]
-    x = give_name(goal, math_type=h_selected.children[0],
-                  authorized_names=h_selected.children[1].lean_data["name"],
+    x = give_global_name(goal=goal, math_type=h_selected.children[0],
                   hints=[h_selected.children[1].format_as_utf8()])
     hx = get_new_hyp()
     if h_selected.children[2].node == "PROP_∃":
@@ -330,7 +330,8 @@ def apply_function(goal : Goal, l : [PropObj]):
         # if function applied to element x
         else:
             x = l[0].lean_data["name"]
-            y = give_name(goal, Y, [Y.lean_data["name"].lower()])
+            y = give_global_name(goal=goal, math_type=Y, hints=[Y.lean_data[
+                "name"].lower()])
             code = code + f'set {y} := {f} {x} with {new_h}, '
         del l[0]
     return code    

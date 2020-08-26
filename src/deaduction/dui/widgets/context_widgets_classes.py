@@ -133,7 +133,7 @@ class ProofStatePOWidgetItem(QListWidgetItem):
         self.tag          = tag
 
         lean_name = proofstatepo.format_as_utf8()
-        math_expr = proofstatepo.math_type.format_as_utf8()
+        math_expr = proofstatepo.math_type.format_as_utf8(is_type_of_pfpo=True)
         caption   = f'{lean_name} : {math_expr}'
         self.setText(caption)
         self.setIcon(_TagIcon(tag))

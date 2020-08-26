@@ -32,9 +32,11 @@ from typing import List, Tuple
 
 import deaduction.pylib.logger as logger
 
-from deaduction.pylib.mathobj import PropObj, ProofStatePO, math_type_store
-from deaduction.pylib.mathobj.give_name import give_name, instantiate_bound_var
-
+from deaduction.pylib.mathobj import PropObj, \
+    ProofStatePO, \
+    math_type_store, \
+    BoundVarPO
+from deaduction.pylib.mathobj.give_name import give_local_name
 
 node_needing_bounds_var = ["SET_FAMILY", "SEQUENCE"]
 
@@ -61,10 +63,14 @@ class Goal:
         the same math_type, and they are modified versions of each other if
         they have the same name and different math_types.
         If goal_is_new == True then all objects will be tagged as new.
+        That's bad: probably in that case objects should be compared with
+        objects of the goal that is logically (and not chronologically) just
+        before the present context
 
         :param new_goal: new goal
         :param old_goal: old goal
         :param goal_is_new: True if previous goal has been solved
+        THIS IS NOT USED for the moment
         :return:
             - two lists old_goal_diff, new_goal_diff of tags
             - two more tags old_goal_diff, new_goal_diff
@@ -73,8 +79,8 @@ class Goal:
         new_goal = self
         new_context = new_goal.context.copy()
         old_context = old_goal.context.copy()
-        log.debug(old_context)
-        log.debug(new_context)
+        # log.debug(old_context)
+        # log.debug(new_context)
         if goal_is_new:
             tags_new_context = ["+" for PO in new_context]
             tags_old_context = ["+" for PO in old_context]
@@ -91,7 +97,7 @@ class Goal:
                          old_context]
             for pfPO in new_context:
                 name = pfPO.lean_data["name"]
-                log.debug(f"pfPO: {name}")
+                # log.debug(f"pfPO: {name}")
                 try:
                     old_index = old_names.index(name)
                 except ValueError:
@@ -107,9 +113,9 @@ class Goal:
                 tags_new_context[new_index] = tag
                 tags_old_context[old_index] = tag
                 new_context[new_index] = None  # will not be considered
-                                               # anymore
+                # anymore
                 old_context[old_index] = None  # will not be considered
-                                               # anymore
+                # anymore
                 new_index += 1
 
             # Tag the remaining objects in old_context as new ("+")
@@ -130,25 +136,24 @@ class Goal:
                 tag_new_target, tag_old_target = "≠", "≠"
         new_goal.future_tags = (tags_new_context, tag_new_target)
         old_goal.past_tags_old_context = (tags_old_context, tag_old_target)
+        # log.debug(f"Old goal old tags: {old_goal.past_tags_old_context}")
+        # log.debug(f"New goal future tags: {new_goal.future_tags}")
 
     def extract_var_names(self) -> List[str]:
         """
         provides the list of names of all variables in the context,
-        including bound variables as listed in the bound_vars field of
-        ProofStatePO's instances
+        (but NOT bound variables, nor names of hypotheses)
         :return: list of strings (variables names)
         """
-        log.info("extracting the list of variables's names")
-        context = self.context
-        target = self.target
+        # log.info("extracting the list of variables's names")
         names = []
-        for pfpo in context:
+        for pfpo in self.context:
             name = pfpo.lean_data["name"]
-            if name != '':
+            if name != '' and not pfpo.is_prop() and not (name in names):
                 names.append(name)
-            names.extend(pfpo.bound_vars)
-        names.extend(target.bound_vars)
-        self.variables_names = names
+        #    names.extend(pfpo.bound_vars)
+        # names.extend(target.bound_vars)
+        # self.variables_names = names
         return names
 
     @classmethod
@@ -178,27 +183,26 @@ class Goal:
         variables_names = []
         goal = cls(context, target, math_types, variables_names)
         #
-        for pfpo in goal.context:
-            ############################################################
-            # special format that needs supplementary bounds variables #
-            # e.g. "SET_FAMILY", "SEQUENCE"                            #
-            ############################################################
-            # todo: this can be moved to a more appropriate place,
-            # since the naming use only the pfpo and NOT the whole context
-            math_type = pfpo.math_type
-            if math_type.node in node_needing_bounds_var:
-                pfpo.node += "INSTANCE_OF_" + math_type.node
-                # a new representation will be computed
-                pfpo.representation = {'latex': '??', 'utf8': '??'}
-                bound_var_type = math_type.children[0]
-                # search for a fresh name valid inside pfpo
-                name = give_name(goal, math_type=bound_var_type, po=pfpo)
-                # create the bound var
-                bound_var = instantiate_bound_var(math_type, name)
-                # update bound_vars list
-                pfpo.bound_vars.append(name)  # TODO : save the pfpo instead
-                # of mere string
-                pfpo.children = [bound_var]
+        # for pfpo in goal.context:
+        #     ############################################################
+        #     # special format that needs supplementary bounds variables #
+        #     # e.g. "SET_FAMILY", "SEQUENCE"                            #
+        #     ############################################################
+        #     # todo: this can be moved to a more appropriate place,
+        #     # since the naming use only the pfpo and NOT the whole context
+        #     # DONE
+        #     math_type = pfpo.math_type
+        #     if math_type.node in node_needing_bounds_var:
+        #         pfpo.node += "INSTANCE_OF_" + math_type.node
+        #         # a new representation will be computed
+        #         pfpo.representation = {'latex': '??', 'utf8': '??'}
+        #         bound_var_type = math_type.children[0]
+        #         # search for a fresh name valid inside pfpo
+        #         name = give_local_name(math_type=bound_var_type,
+        #                                body=pfpo)
+        #         # create the bound var
+        #         bound_var = instantiate_bound_var(math_type, name)
+        #         pfpo.children = [bound_var]
         return goal
 
     def tag_and_split_propositions_objects(self):
@@ -224,6 +228,21 @@ class Goal:
                 objects.append((po, tag))
         return objects, propositions
 
+
+def instantiate_bound_var(math_type, name: str):
+    """
+    create a BoundVarPOof with a given math_type and name
+    :param math_type: PropObj
+    :param name:
+    :return: BoundVarPO
+    """
+    representation = {"latex": [name], "utf8": [name]}
+    lean_data = {"name": '', "id": ''}
+    prop_obj = BoundVarPO('BOUND_VAR_DEADUCTION', [], representation,
+                          lean_data, math_type)
+    return prop_obj
+
+
 @dataclass
 class ProofState:
     goals: List[Goal]
@@ -246,6 +265,15 @@ class ProofState:
             other_goal = Goal.from_lean_data("", other_string_goal)
             goals.append(other_goal)
         return cls(goals)
+
+
+def print_proof_state(goal):
+    print("Context:")
+    for mt, mt_list in goal.math_types:
+        print(f"{[PO.format_as_utf8() for PO in mt_list]} :"
+              f" {mt.format_as_utf8()}")
+    print("Target:")
+    print(goal.target.math_type.format_as_utf8())
 
 
 if __name__ == '__main__':
@@ -283,7 +311,6 @@ OBJECT[LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.725.7047¿]¿(CONSTANT¿[nam
 OBJECT[LOCAL_CONSTANT¿[name:x/identifier:0._fresh.726.4018¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= LOCAL_CONSTANT¿[name:X/identifier:0._fresh.725.7037¿]¿(CONSTANT¿[name:1/1¿]¿)
 PROPERTY[LOCAL_CONSTANT¿[name:H/identifier:0._fresh.726.4020¿]¿(CONSTANT¿[name:1/1¿]¿)/pp_type: x ∈ (f⁻¹⟮B ∪ B'⟯)] ¿= PROP_BELONGS¿(LOCAL_CONSTANT¿[name:x/identifier:0._fresh.726.4018¿]¿(CONSTANT¿[name:1/1¿]¿)¿, SET_INVERSE¿(LOCAL_CONSTANT¿[name:f/identifier:0._fresh.725.7042¿]¿(CONSTANT¿[name:1/1¿]¿)¿, SET_UNION¿(LOCAL_CONSTANT¿[name:B/identifier:0._fresh.725.7044¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:B'/identifier:0._fresh.725.7047¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿)"""
 
-
     essai_set_family_hypo = """context:
 OBJECT[LOCAL_CONSTANT¿[name:X/identifier:0._fresh.212.23980¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= TYPE
 OBJECT[LOCAL_CONSTANT¿[name:I/identifier:0._fresh.212.23982¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= TYPE
@@ -291,6 +318,8 @@ OBJECT[LOCAL_CONSTANT¿[name:E/identifier:0._fresh.212.23985¿]¿(CONSTANT¿[nam
 OBJECT[LOCAL_CONSTANT¿[name:F/identifier:0._fresh.212.23989¿]¿(CONSTANT¿[name:1/1¿]¿)] ¿= SET_FAMILY¿(LOCAL_CONSTANT¿[name:I/identifier:0._fresh.212.23982¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:X/identifier:0._fresh.212.23980¿]¿(CONSTANT¿[name:1/1¿]¿)¿)
 PROPERTY[LOCAL_CONSTANT¿[name:H/identifier:0._fresh.212.24016¿]¿(CONSTANT¿[name:1/1¿]¿)/pp_type: ∀ (i : I), F i = (E iᶜ)] ¿= QUANT_∀¿(LOCAL_CONSTANT¿[name:I/identifier:0._fresh.212.23982¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:i/identifier:_fresh.214.20405¿]¿(LOCAL_CONSTANT¿[name:I/identifier:0._fresh.212.23982¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿, PROP_EQUAL¿(APPLICATION¿(LOCAL_CONSTANT¿[name:F/identifier:0._fresh.212.23989¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:i/identifier:_fresh.214.20405¿]¿(LOCAL_CONSTANT¿[name:I/identifier:0._fresh.212.23982¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿, SET_COMPLEMENT¿(APPLICATION¿(LOCAL_CONSTANT¿[name:E/identifier:0._fresh.212.23985¿]¿(CONSTANT¿[name:1/1¿]¿)¿, LOCAL_CONSTANT¿[name:i/identifier:_fresh.214.20405¿]¿(LOCAL_CONSTANT¿[name:I/identifier:0._fresh.212.23982¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿)¿)¿)"""
     essai_set_family_target = """PROPERTY[METAVAR[_mlocal._fresh.214.20069]/pp_type: Union Eᶜ = Inter F] ¿= PROP_EQUAL¿(SET_COMPLEMENT¿(SET_UNION+¿(LOCAL_CONSTANT¿[name:E/identifier:0._fresh.212.23985¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)¿, SET_INTER+¿(LOCAL_CONSTANT¿[name:F/identifier:0._fresh.212.23989¿]¿(CONSTANT¿[name:1/1¿]¿)¿)¿)"""
+
+
     def print_proof_state(goal):
         print("Context:")
         for mt, mt_list in goal.math_types:
@@ -298,7 +327,9 @@ PROPERTY[LOCAL_CONSTANT¿[name:H/identifier:0._fresh.212.24016¿]¿(CONSTANT¿[n
                   f" {mt.format_as_utf8()}")
         print("Target:")
         print(goal.target.math_type.format_as_utf8())
-    goal = Goal.from_lean_data(essai_set_family_hypo,essai_set_family_target)
+
+
+    goal = Goal.from_lean_data(essai_set_family_hypo, essai_set_family_target)
     print_proof_state(goal)
 
     print(f"variable names {goal.extract_var_names()}")

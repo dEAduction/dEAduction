@@ -39,8 +39,8 @@ import logging
 
 import deaduction.pylib.logger as logger
 import deaduction.pylib.mathobj.lean_analysis as lean_analysis
-from deaduction.pylib.mathobj.latex_format_data import latex_structures, \
-    utf8_structures
+import deaduction.pylib.mathobj.latex_format_data as latex_format_data
+import deaduction.pylib.mathobj.give_name as give_name
 
 log = logging.getLogger(__name__)
 
@@ -100,15 +100,24 @@ class PropObj:
         :param other: AnonymousPO
         :return: bool
         """
-        # First test if nodes are the same
-        if self.node != other.node:
+
+        # first test for class, and then for lean names
+        if self.__class__.__name__ != other.__class__.__name__:
             return False
-        # then test for class, and then for lean names
-        elif self.__class__.__name__ != other.__class__.__name__:
-            return False
-        elif self.__class__.__name__ in ['ProofStatePO', 'BoundVarPO']:
-            if self.lean_data['name'] != other.lean_data['name']:
+        # then if AnonymousPO, test for nodes
+        elif self.__class__.__name__ == "AnonymousPO":
+            if self.node != other.node:
                 return False
+        # if global var, test for names and types
+        elif self.__class__.__name__  == 'ProofStatePO':
+            if self.lean_data['name'] != other.lean_data['name'] \
+                    or self.math_type != other.math_type:
+                return False
+        # if bound var, just test for types
+        elif self.__class__.__name__  == 'BoundVarPO':
+            if self.math_type != other.math_type:
+                return False
+
         # now test equality of children
         elif len(self.children) != len(other.children):
             return False
@@ -143,14 +152,14 @@ class PropObj:
         means having a len_data["name"]
         :return: list of PropObj
         """
-        try:
-            name = self.lean_data["name"]
-            return [self]
-        except [AttributeError, KeyError]:
-            local_vars = []
-            for child in self.children:
-                local_vars.extend(child.extract_local_vars())
-            return local_vars
+        if hasattr(self, "lean_data"):
+            if "name" in self.lean_data.keys():
+                name = self.lean_data["name"]
+                return [self]
+        local_vars = []
+        for child in self.children:
+            local_vars.extend(child.extract_local_vars())
+        return local_vars
 
     def extract_local_vars_names(self) -> List[str]:
         """
@@ -162,68 +171,84 @@ class PropObj:
     ######################################################
     # Computation of latex and utf-8 display for PropObj #
     ######################################################
-    def structured_format(self, format_="latex"):
+    def structured_format(self, format_="latex", is_type_of_pfpo=False):
         """
-        Compute a structured latex or utf-8 "representation" of a prop_obj.
+        Recursively compute a structured latex or utf-8 "representation" of a
+        prop_obj.
         Representations are structured into trees represented by lists,
         they can be turned into usual strings by using the list_string_join
         function below.
         Valid representations are recursively defined as:
         - lists of strings (in latex or utf-8 format)
-        - lists of latex rep
+        - lists of representations
+        :param format_: "latex" or "utf8"
+        :param is_type_of_pfpo: True if the object to display is the
+        math_type of a ProofStatePO instance, e.g. "x: an element of X"
+        (as opposed to the type theory version "x:X").
+        :return:
         """
-        #        log = logging.getLogger("PropObj")
         if format_ == "latex":
+            pass
             log.info(f"computing latex representation of {self}")
         else:
             log.info(f"computing utf-8 representation of {self}")
             format_ = "utf8"
-        if self.representation[format_] != "??":
-            return
+        #######################################################################
+        # compute representation of children, and put parentheses when needed #
+        #######################################################################
         children_rep = []
         node = self.node
         i = -1
         for arg in self.children:
             i += 1
-            if arg.representation[format_] == "??":
-                PropObj.structured_format(arg, format_)  # = compute_latex
-            lr = arg.representation[format_]
+            PropObj.structured_format(arg, format_)
+            rep = arg.representation[format_]
             # the following line computes if parentheses are needed
             # around child n° i
             parentheses = needs_paren(self, i)
             if parentheses:
-                lr = ["(", lr, ")"]
-            children_rep.append(lr)
-        #        log.debug(f"Node: {node}")
-        if node in latex_structures.keys():
-            if format_ == "latex":
-                symbol, format_scheme = latex_structures[node]
-                self.representation["latex"] = format_scheme(symbol,
-                                                             children_rep,
-                                                             self,
-                                                             format_="latex")
-            else:
-                symbol, format_scheme = utf8_structures[node]
-                self.representation["utf8"] = format_scheme(symbol,
-                                                            children_rep,
-                                                            self,
-                                                            format_="utf8")
-        else:  # node not implemented
+                rep = ["(", rep, ")"]
+            children_rep.append(rep)
+        ##############################################################
+        # compute representation by calling the appropriate function #
+        # according to node as indicated in latex_structures         #
+        ##############################################################
+        if node not in latex_format_data.latex_structures.keys():
+            # node not implemented
             log.warning(f"display of {node} not implemented")
-            self.representation['latex'] = '???'
-            self.representation['utf8'] = '???'
-        log.debug(f"---> utf8 rep: {self.representation['utf8']}")
+            self.representation['latex'] = '****'
+            self.representation['utf8'] = '****'
+            return
+        elif format_ == "latex":
+            symbol, format_scheme = \
+                latex_format_data.latex_structures[node]
+            self.representation["latex"] = \
+                format_scheme(symbol=symbol,
+                              children_rep=children_rep,
+                              po=self,
+                              is_type_of_pfpo=is_type_of_pfpo,
+                              format_="latex")
+        else:
+            symbol, format_scheme = \
+                latex_format_data.utf8_structures[node]
+            self.representation["utf8"] = \
+                format_scheme(symbol=symbol,
+                              children_rep=children_rep,
+                              po=self,
+                              is_type_of_pfpo=is_type_of_pfpo,
+                              format_="utf8")
+            log.debug(f"---> utf8 rep: {self.representation['utf8']}")
         return
 
-    def format_as_latex(self):
-        PropObj.structured_format(self, format_="latex")
-        lr = self.representation["latex"]
-        return list_string_join(lr)
+    def format_as_latex(self, is_type_of_pfpo=False):
+        PropObj.structured_format(self, "latex", is_type_of_pfpo)
+        structured_rep  = self.representation["latex"]
+        return list_string_join(structured_rep)
 
-    def format_as_utf8(self):
-        PropObj.structured_format(self, format_="utf8")
-        lr = self.representation["utf8"]
-        return list_string_join(lr)
+    def format_as_utf8(self, is_type_of_pfpo=False):
+        PropObj.structured_format(self, "utf8", is_type_of_pfpo)
+        structured_rep = self.representation["utf8"]
+        return list_string_join(structured_rep)
 
 
 def list_string_join(latex_or_utf8_rep) -> str:
@@ -294,12 +319,10 @@ class AnonymousPO(PropObj):
     """
 
     @classmethod
-    def from_tree(cls, prop_obj_dict: dict, bound_vars):
+    def from_tree(cls, prop_obj_dict: dict):
         """
         create anonymous sub-objects and props, or refer to existing pfPO
         :param prop_obj_dict: dictionary provided by analysis.LeanExprVisitor
-        :param bound_vars: list of bounded variables (BoundVarPO),
-        to be updated if the AnonymousPO is actually a BounVarPO
         :return: an instance of AnonymousPO
         """
         representation = {'latex': "??", 'utf8': "??", 'info': "??"}
@@ -311,51 +334,82 @@ class AnonymousPO(PropObj):
         ##############################
         if lean_data["id"] in ProofStatePO.dict_:
             prop_obj = ProofStatePO.dict_[lean_data["id"]]
-            return prop_obj, bound_vars
+            return prop_obj
         ####################################
         # creation of children AnonymousPO #
         ####################################
         arguments = prop_obj_dict["children"]
         children = []
         for arg in arguments:
-            arg_prop_obj, bound_vars = AnonymousPO.from_tree(arg, bound_vars)
+            arg_prop_obj = AnonymousPO.from_tree(arg)
             children.append(arg_prop_obj)
+
         ###################
         # Bound variables #
         ###################
         if node.startswith("LOCAL_CONSTANT"):
             # unidentified local constant = bound variable
-            representation = {"latex": lean_data["name"],
-                              "utf8": lean_data["name"]}
+            # NB: will be given a name when dealing with quantifier or lambda
+            # lean_data["name"] must be kept untouched here
+            # since it will serve as hint for good name
+            representation = {"latex": "??",
+                              "utf8": "??"}
+            node = "LOCAL_CONSTANT"
             math_type = children[0]
-            prop_obj = BoundVarPO(node, [], representation, [],
-                                  lean_data, math_type)
-            var_name = lean_data["name"]
-            log.debug(f"adding {var_name} to the bound vars names list")
-            if var_name not in bound_vars:
-                bound_vars.append(var_name)
-            return prop_obj, bound_vars
-        #############################
-        # Application of a function #
-        #############################
-        #        if node == "APPLICATION":
-        # if hasattr(children[0],"math_type"):
-        #     if children[0].math_type.node == "FUNCTION":
-        #         node = "APPLICATION_FUNCTION"
+            prop_obj = BoundVarPO(node, [], representation, lean_data,
+                                  math_type)
+            ProofStatePO.dict_[lean_data["id"]] = prop_obj
+            #log.info(
+            #    f"adding {lean_data['name']} to the dictionary, ident ="
+            #    f" {lean_data['id']}")
+
+            return prop_obj
+
+        #############################################################
+        # Quantifiers & lambdas: give a good name to bound variable #
+        #############################################################
+        # NB: lean_data["name"] is given by structures.lean,
+        # but may be inadequate (e.g. two distinct variables sharing the
+        # same name)
+        # For an expression like ∀ x: X, P(x)
+        # the logical constraints are: the name of the bound variable (
+        # which is going to replace `x`)  must be distinct from all names of
+        # variables appearing in the body `P(x)`, whether free or bound
+
+        if node.startswith("QUANT") or node == "LAMBDA":
+            bound_var_type, bound_var, local_context = children
+            #log.debug(f"Processing bound var in {node, children}")
+            # changing lean_data["name"]
+            # so that it will not be on the forbidden list
+            hint = bound_var.lean_data["name"]
+            bound_var.lean_data["name"] = "processing name..."
+            # search for a fresh name valid inside pfpo
+            name = give_name.give_local_name(math_type=bound_var_type,
+                                             hints=[hint],
+                                             body=local_context)
+            # store the new name for representation
+            bound_var.representation = {"latex": name,
+                                        "utf8": name}
+            # store the new name for list of variables'names
+            # BEWARE: original lean nam is changed
+            bound_var.lean_data["name"] = name
+                                     # of mere string
+            #log.debug(f"Give name {name} to bound var {bound_var} in {node}")
+
         #############
         # CONSTANTS #
         #############
-        lean_data = None
+        # todo: suppress
         if node.startswith("CONSTANT"):
             info = extract_name(node)
             representation['info'] = info
             node = "CONSTANT"
-            log.debug(f"creating CONSTANT {info}")
+            #log.debug(f"creating CONSTANT {info}")
         #################
         # Instantiation #
         #################
         prop_obj = cls(node, children, representation)
-        return prop_obj, bound_vars
+        return prop_obj
 
 
 @dataclass(eq=False)
@@ -363,8 +417,6 @@ class ProofStatePO(PropObj):
     """
     Objects and Propositions of the proof state (and bound variables)
     """
-    bound_vars: list  # list of bound variables specific to self
-    # (useful for keeping track of names)
     lean_data: dict  # the Lean data ; keys = "id", "name", "pptype"
     math_type: PropObj
 
@@ -392,7 +444,7 @@ class ProofStatePO(PropObj):
         :param prop_obj_str: a string from Lean that describes the object
         :return: the new object
         """
-        log.debug(f"processing to create ProofStatePO from {prop_obj_str}")
+        #log.debug(f"processing to create ProofStatePO from {prop_obj_str}")
         head, _, tail = prop_obj_str.partition(equal_sep)
         # extract lean_data from the head : name, id, pptype (if prop)
         lean_data = extract_lean_data(head)
@@ -405,26 +457,23 @@ class ProofStatePO(PropObj):
         ##################################################################
         tree = lean_analysis.lean_expr_grammar.parse(tail)
         po_str_list = lean_analysis.LeanExprVisitor().visit(tree)
-        bound_vars = []
-        math_type, bound_vars = \
-            AnonymousPO.from_tree(po_str_list[0], bound_vars)
-        log.debug(f"math type: {math_type}")
-        node = ""
+        math_type = AnonymousPO.from_tree(po_str_list[0])
+        #log.debug(f"math type: {math_type}")
+        node = "LOCAL_CONSTANT"
         children = []
         representation = {"latex": lean_data["name"],
                           "utf8": lean_data["name"]}
         #################
         # Instantiation #
         #################
-        prop_obj = cls(node, children, representation, bound_vars,
-                       lean_data, math_type)
+        prop_obj = cls(node, children, representation, lean_data, math_type)
         ######################################
         # Adjusting data : dict_, math_types #
         ######################################
         if lean_data["id"] != "":
             ProofStatePO.dict_[lean_data["id"]] = prop_obj
-            log.info(f"adding {lean_data['name']} to the dictionary, ident ="
-                     f" {lean_data['id']}")
+            #log.info(f"adding {lean_data['name']} to the dictionary, ident ="
+            #         f" {lean_data['id']}")
         #        if not math_type.is_prop():
         #            math_type_store(prop_obj, math_type)
         return prop_obj
@@ -461,8 +510,8 @@ def math_type_store(math_types: List[Tuple[PropObj, List[ProofStatePO]]],
     :param math_types: list of tuples (math_type, math_type_instances)
     where math_type_instances is a list of instances of math_type
     """
-    log.debug(f"storing {prop_obj.representation['utf8']} in"
-              f"math_types_instances of {math_type}")
+    #log.debug(f"storing {prop_obj.representation['utf8']} in"
+    #          f"math_types_instances of {math_type}")
     index = 0
     for item, item_list in math_types:
         if item == math_type:

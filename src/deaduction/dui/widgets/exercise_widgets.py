@@ -264,12 +264,36 @@ class ExerciseMainWindow(QMainWindow):
         # Init context (objects and properties). Get them as two list of
         # (ProofStatePO, str), the str being the tag of the prop. or obj.
         # FIXME: obj. and prop. tags
+
+        # get old goal and set tags
+        lean_file = self.servint.lean_file
+        previous_idx = max(0, lean_file.idx - 1)  # always compare with
+                                                 # previous entry
+        # NB : when idx = 1, old_goal = new_goal : nothing is new
+        entry = lean_file.history[previous_idx]
+        entry_info = entry.misc_info
+        try:
+            previous_proof_state = entry_info["ProofState"]
+        except KeyError:
+            log.debug("No previous proof state found")
+        except TypeError:
+            log.debug("No previous proof state found")
+        else:
+            old_goal = previous_proof_state.goals[0]
+            Goal.compare(new_goal, old_goal, goal_is_new=False)  # set tags
+        # FIXME: target tag
+        new_target_tag = '='
+        try:
+            new_target_tag = new_goal.future_tags[1]
+            log.debug(f'tag for target: {new_target_tag}')
+        except AttributeError:
+            log.debug('no tag for target')
+            pass
+
         new_context = new_goal.tag_and_split_propositions_objects()
         new_objects_wgt = ProofStatePOWidget(new_context[0])
         new_props_wgt = ProofStatePOWidget(new_context[1])
         new_target = new_goal.target
-        # FIXME: target tag
-        new_target_tag = '=' # new_target.future_tags[1]
         new_target_wgt = TargetWidget(new_target, new_target_tag)
 
         # Replace in the layouts
@@ -373,7 +397,7 @@ class ExerciseMainWindow(QMainWindow):
     async def _server_call_action(self, action_btn: ActionButton):
         action = action_btn.action
         user_input = []
-
+        log.info(f'Calling action {action}')
         # Send action and catch exception when user needs to:
         #   - choose A or B when having to prove (A OR B) ;
         #   - enter an element when clicking on 'exists' button.
