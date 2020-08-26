@@ -143,7 +143,6 @@ def action_or(goal : Goal, l : [PropObj], user_input = []) -> str:
         return construct_or(goal, user_input)
     if len(l) == 1:
         return apply_or(l)
-    
     raise WrongUserInput
 
 ## NOT ##
@@ -226,6 +225,14 @@ def construct_iff(goal : Goal, user_input : [str]):
             raise WrongUserInput
     raise WrongUserInput
 
+def construct_iff_on_hyp(goal : Goal, l : PropObj):
+    if not (l[0].math_type.is_prop() and l[1].math_type.is_prop()):
+        raise WrongUserInput
+    h = get_new_hyp()
+    h1 = l[0].lean_data["name"]
+    h2 = l[1].lean_data["name"]
+    return f'have {h} := iff.intro {h1} {h2}'
+
 @action(_("If the target is of the form P ⇔ Q: introduce two subgoals, P⇒Q, and Q⇒P."), "⇔")
 def action_iff(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
     """
@@ -236,6 +243,8 @@ def action_iff(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
     """
     if len(l) == 0:
         return construct_iff(goal, user_input)
+    if len(l) == 2:
+        return construct_iff_on_hyp(goal, l)
     raise WrongUserInput
 
 ## FOR ALL ##
@@ -287,6 +296,12 @@ def apply_exists(goal : Goal, l : [PropObj]) -> str:
     else :
         return "cases {0} with {1} {2}, ".format(h_name, x, hx)
 
+def construct_exists_on_hyp(goal : Goal, l : [PropObj]):
+    x = l[0].lean_data["name"]
+    hx = l[1].lean_data["name"]
+    new_h = get_new_hyp()
+    return "have {0} := exists.intro {1} {2} <|> have {0} := exists.intro {2} {1}, ".format(new_h, x, hx)
+    
 @action(_("If target is of form ∃ x, P(x): ask the user to enter a specific x and transform the target into P(x). \nIf a hypothesis of form ∃ x, P(x) has been previously selected: introduce a new x and add P(x) to the properties"), "∃")
 def action_exists(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
     """
@@ -302,6 +317,8 @@ def action_exists(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
             return construct_exists(goal, [l[0].lean_data["name"]])
     if len(l) == 0:
         return construct_exists(goal, user_input)
+    if len(l) == 2:
+        return construct_exists_on_hyp(goal, l)
     raise WrongUserInput
 
 ## APPLY
