@@ -186,7 +186,6 @@ begin
     sorry
 end
 
--- set_option pp.all true
 lemma exercise.complement_union_quelconque :
 set.compl (set.Union (λ i, E i)) = set.Inter (λ i, set.compl (E i)) :=
 /- dEAduction
@@ -213,7 +212,7 @@ begin
     sorry
 end
 
-lemma exercise.inclusion_complement_II (Φ: set X → set X) (H: Φ = λ A : set X, set.compl A):
+lemma exercise.inclusion_complement_II :
 A ⊆ B ↔ set.compl B ⊆ set.compl A
 :=
 /- dEAduction
@@ -300,6 +299,7 @@ begin
     sorry
 end
 
+set_option pp.width 100
 lemma exercise.image_reciproque_inter_quelconque :
 (f ⁻¹'  (set.Inter (λ i, F i))) = set.Inter (λ i, f ⁻¹' (F i))
 :=

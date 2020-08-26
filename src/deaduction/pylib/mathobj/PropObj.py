@@ -171,31 +171,37 @@ class PropObj:
     ######################################################
     # Computation of latex and utf-8 display for PropObj #
     ######################################################
-    def structured_format(self, format_="latex"):
+    def structured_format(self, format_="latex", is_type_of_pfpo=False):
         """
-        Compute a structured latex or utf-8 "representation" of a prop_obj.
+        Recursively compute a structured latex or utf-8 "representation" of a
+        prop_obj.
         Representations are structured into trees represented by lists,
         they can be turned into usual strings by using the list_string_join
         function below.
         Valid representations are recursively defined as:
         - lists of strings (in latex or utf-8 format)
-        - lists of latex rep
+        - lists of representations
+        :param format_: "latex" or "utf8"
+        :param is_type_of_pfpo: True if the object to display is the
+        math_type of a ProofStatePO instance, e.g. "x: an element of X"
+        (as opposed to the type theory version "x:X").
+        :return:
         """
         if format_ == "latex":
             pass
-            #log.info(f"computing latex representation of {self}")
+            log.info(f"computing latex representation of {self}")
         else:
-            #log.info(f"computing utf-8 representation of {self}")
+            log.info(f"computing utf-8 representation of {self}")
             format_ = "utf8"
-        if self.representation[format_] != "??":
-            return
+        #######################################################################
+        # compute representation of children, and put parentheses when needed #
+        #######################################################################
         children_rep = []
         node = self.node
         i = -1
         for arg in self.children:
             i += 1
-            if arg.representation[format_] == "??":
-                PropObj.structured_format(arg, format_)  # = compute_latex
+            PropObj.structured_format(arg, format_)
             rep = arg.representation[format_]
             # the following line computes if parentheses are needed
             # around child n° i
@@ -203,37 +209,46 @@ class PropObj:
             if parentheses:
                 rep = ["(", rep, ")"]
             children_rep.append(rep)
-        #        log.debug(f"Node: {node}")
-        if node in latex_format_data.latex_structures.keys():
-            if format_ == "latex":
-                symbol, format_scheme = latex_format_data.latex_structures[
-                                                                        node]
-                self.representation["latex"] = format_scheme(symbol,
-                                                             children_rep,
-                                                             self,
-                                                             format_="latex")
-            else:
-                symbol, format_scheme = latex_format_data.utf8_structures[node]
-                self.representation["utf8"] = format_scheme(symbol,
-                                                            children_rep,
-                                                            self,
-                                                            format_="utf8")
-        else:  # node not implemented
+        ##############################################################
+        # compute representation by calling the appropriate function #
+        # according to node as indicated in latex_structures         #
+        ##############################################################
+        if node not in latex_format_data.latex_structures.keys():
+            # node not implemented
             log.warning(f"display of {node} not implemented")
-            self.representation['latex'] = '???'
-            self.representation['utf8'] = '???'
-        #log.debug(f"---> utf8 rep: {self.representation['utf8']}")
+            self.representation['latex'] = '****'
+            self.representation['utf8'] = '****'
+            return
+        elif format_ == "latex":
+            symbol, format_scheme = \
+                latex_format_data.latex_structures[node]
+            self.representation["latex"] = \
+                format_scheme(symbol=symbol,
+                              children_rep=children_rep,
+                              po=self,
+                              is_type_of_pfpo=is_type_of_pfpo,
+                              format_="latex")
+        else:
+            symbol, format_scheme = \
+                latex_format_data.utf8_structures[node]
+            self.representation["utf8"] = \
+                format_scheme(symbol=symbol,
+                              children_rep=children_rep,
+                              po=self,
+                              is_type_of_pfpo=is_type_of_pfpo,
+                              format_="utf8")
+            log.debug(f"---> utf8 rep: {self.representation['utf8']}")
         return
 
-    def format_as_latex(self):
-        PropObj.structured_format(self, format_="latex")
-        lr = self.representation["latex"]
-        return list_string_join(lr)
+    def format_as_latex(self, is_type_of_pfpo=False):
+        PropObj.structured_format(self, "latex", is_type_of_pfpo)
+        structured_rep  = self.representation["latex"]
+        return list_string_join(structured_rep)
 
-    def format_as_utf8(self):
-        PropObj.structured_format(self, format_="utf8")
-        lr = self.representation["utf8"]
-        return list_string_join(lr)
+    def format_as_utf8(self, is_type_of_pfpo=False):
+        PropObj.structured_format(self, "utf8", is_type_of_pfpo)
+        structured_rep = self.representation["utf8"]
+        return list_string_join(structured_rep)
 
 
 def list_string_join(latex_or_utf8_rep) -> str:
@@ -339,6 +354,7 @@ class AnonymousPO(PropObj):
             # since it will serve as hint for good name
             representation = {"latex": "??",
                               "utf8": "??"}
+            node = "LOCAL_CONSTANT"
             math_type = children[0]
             prop_obj = BoundVarPO(node, [], representation, lean_data,
                                   math_type)
@@ -384,7 +400,6 @@ class AnonymousPO(PropObj):
         # CONSTANTS #
         #############
         # todo: suppress
-        lean_data = None
         if node.startswith("CONSTANT"):
             info = extract_name(node)
             representation['info'] = info
@@ -444,7 +459,7 @@ class ProofStatePO(PropObj):
         po_str_list = lean_analysis.LeanExprVisitor().visit(tree)
         math_type = AnonymousPO.from_tree(po_str_list[0])
         #log.debug(f"math type: {math_type}")
-        node = ""
+        node = "LOCAL_CONSTANT"
         children = []
         representation = {"latex": lean_data["name"],
                           "utf8": lean_data["name"]}
