@@ -406,11 +406,6 @@ end
 end definitions
 
 
-example (x:X) : definitions.composition g f x = g (f x) :=
-begin
-    rw definitions.definition.composition,
-end
-
 ---------------
 -- EXERCICES --
 ---------------
@@ -439,7 +434,7 @@ namespace composition
 open applications_II.definitions
 
 lemma exercise.composition_injections
-(H1 : injective f) (H2 : injective g) :
+(H1 : injective (λx:X, f x)) (H2 : injective g) :
 injective (composition g f)
 :=
 begin

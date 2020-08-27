@@ -47,6 +47,7 @@ class Statement:
                          # .union_distributive_inter'
     lean_statement: str  # 'A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C)'
     lean_variables: str  # '(X : Type) (A : set X)'
+                         # NB: not implemented yet, included in lean_statement
     pretty_name: str     # 'Union d'intersections'
     text_book_identifier: str
 

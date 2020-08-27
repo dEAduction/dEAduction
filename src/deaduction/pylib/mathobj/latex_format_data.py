@@ -55,8 +55,8 @@ def format_name(**kwargs):
 
 def format_app_function(**kwargs):
     """Used for the image of a set under a function"""
-    a = kwargs["children_rep"]
-    return [a[0], '(', a[1], ')']
+    children_rep = kwargs["children_rep"]
+    return [children_rep[0], '(', children_rep[1], ')']
 
 
 def format_app_inverse(**kwargs):
@@ -108,39 +108,56 @@ def format_constant2(**kwargs):
         name = _(po.representation["info"])
         return [latex_text(name, format_)]
     else:
-        return [latex_text(po.node)]
+        return [latex_text(po.node, format_)]
 
 
-# the following includes for instance:
-# "f(x)" (application of a function)
-# "gf"   (composition of functions)
-# "f is injective"
 def general_format_application(**kwargs):
+    """
+This function includes for instance:
+    "APPLICATION(f,x)" -> "f(x)" (application of a function)
+    "APPLICATION(composition, g, f)" ->  "gf"   (composition of functions)
+    "APPLICATION(injective, f)" -> "f is injective"
+
+NB : Type arguments are ignored, e.g. "APPLICATION(composition, g, f)" is
+actually "APPLICATION(composition, X,Y,Z, g, f)"
+    """
     format_ = kwargs["format_"]
     children_rep = kwargs["children_rep"]
     po = kwargs["po"]
+    children = po.children
     #####################################################
     # 1st case: application of a function to a variable #
     #####################################################
     # e.g. f(x), {E_i, i in I}, u_n
-    if hasattr(po.children[0], "math_type"):
-        if po.children[0].math_type.node == "FUNCTION":
-            return [children_rep[0], '(', children_rep[1], ')']
-        if po.children[0].math_type.node in ["SET_FAMILY", "SEQUENCE"]:
+    if hasattr(children[0], "math_type"):
+        if children[0].math_type.node == "FUNCTION":
+            return format_app_function(**kwargs)
+        if children[0].math_type.node in ["SET_FAMILY", "SEQUENCE"]:
             index = global_subscript([children_rep[1]])
-            return [po.children[0].lean_data['name']] + index
+            return [children[0].lean_data['name']] + index
     ######################################
     # 2nd case: composition of functions #
     ######################################
-    if hasattr(po.children[0], "representation"):
-        if "info" in po.children[0].representation.keys():
-            key = po.children[0].representation['info']
-            if key == 'composition':  # composition of functions
+    if hasattr(children[0], "representation"):
+        if "info" in children[0].representation.keys():
+            key = children[0].representation['info']
+            if key == 'composition' and len(children) > 5:
                 # log.debug(f"composition of {a[-2]} and {a[-1]}")
                 if format_ == 'latex':
-                    return [children_rep[-2], r" \circ ", children_rep[-1]]
-                elif format_ == 'utf8':
-                    return [children_rep[-2], '∘', children_rep[-1]]
+                    f_circ_g =  [children_rep[4], r" \circ ", children_rep[5]]
+                else:  # format_ == 'utf8':
+                    f_circ_g =  [children_rep[4], '∘', children_rep[5]]
+                if len(children) == 6:
+                    return f_circ_g
+                elif len(children) == 7:
+                    # case of 'f \circ g (x)'
+                    new_children_rep = [f_circ_g, children_rep[6]]
+                    return format_app_function(children_rep=new_children_rep)
+                else:
+                    log.warning(f"Do not know how to display APP("
+                                f"composition, ...) with more than 7 "
+                                f"arguments")
+                    return "***"
     ###############
     # other cases #
     ###############
@@ -149,7 +166,7 @@ def general_format_application(**kwargs):
     pertinent_children = []
     pertinent_children_rep = []
     counter = 0  # the first child is always pertinent, we leave it aside
-    for child in po.children[1:]:
+    for child in children[1:]:
         counter += 1
         if hasattr(child, "math_type"):
             if child.math_type.node == 'TYPE':
@@ -178,24 +195,37 @@ def general_format_application(**kwargs):
         return "**"
 
 
+
 def format_lambda(**kwargs):
     """
     format for lambda expression,
     i.e. set families with explicit bound variable
-    (lambda (i:I), E i)
+    lambda (i:I), E i)
+    encoded by LAMBDA(I, i, APP(E, i))
 
-    TODO: adapt for functions and sequences
-    this is only for set families
+    TODO: use math_type of body to chose
+    between set_family, function or sequence !
+
     """
     format_ = kwargs["format_"]
+    po = kwargs["po"]
     children_rep = kwargs["children_rep"]
-
     [type_rep, var_rep, body_rep] = children_rep
+    # todo: this could fail, e.g. lambda (i:I), E
+    body = po.children[2]  # = APPLICATION(f,x)
+    f = body.children[0]
+    if body.node == "APPLICATION" and hasattr(f, "math_type"):
+        if f.math_type.node == "FUNCTION":
+            kwargs["po"] = f
+            kwargs["children_rep"] = []
+            return format_local_constant(**kwargs)
+        elif f.math_type.node == "SEQUENCE":
+            return "**"  # TODO
+    # presumed to be a set family
     if format_ == "latex":
         return [r'\{', body_rep, ', ', var_rep, r' \in ', type_rep, r'\}']
-    elif format_ == "utf8":
+    else:  # format_ == utf8
         return ['{', body_rep, ', ', var_rep, '∈', type_rep, '}']
-
 
 def format_name_index_1(**kwargs):
     format_ = kwargs["format_"]
@@ -215,7 +245,7 @@ def format_local_constant(**kwargs):
     is_type_of_pfpo = kwargs["is_type_of_pfpo"]
     if is_type_of_pfpo:
         if po.math_type.node == "TYPE":
-            name = po.representation[format_]
+            name = po.lean_data["name"]
             return [latex_text(_("an element of") + " ", format_), name]
     if po.math_type.node == "SET_FAMILY":
         return instance_set_family(po, format_)
@@ -358,8 +388,8 @@ utf8_structures = {"PROP_AND": (" " + _("AND") + " ", format_0n1),  # logic
                    ###############
                    "PROP_INCLUDED": (" ⊂ ", format_0n1),
                    "PROP_BELONGS": (r" ∈", format_0n1),
-                   "SET_INTER": (r" ∩ ", format_0n1),  # set theory
-                   "SET_UNION": (r" ∪ ", format_0n1),
+                   "SET_INTER": (r" ⋂ ", format_0n1),  # set theory
+                   "SET_UNION": (r" ⋃ ", format_0n1),
                    "SET_INTER+": ("∩", format_n0),
                    "SET_UNION+": ("∪", format_n0),
                    "SET_DIFF": (r" \\ ", format_0n1),
