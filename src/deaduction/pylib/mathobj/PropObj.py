@@ -286,7 +286,6 @@ def needs_paren(parent: PropObj, child_number: int) -> bool:
     so that the display will be
     ( ... ) <=> ( ... )
     """
-    b = True
     child_prop_obj = parent.children[child_number]
     p_node = parent.node
     if isinstance(child_prop_obj, ProofStatePO):
@@ -297,14 +296,14 @@ def needs_paren(parent: PropObj, child_number: int) -> bool:
     if c_node in nature_leaves_list + \
             ["SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
              "PROP_INCLUDED"]:
-        b = False
+        return False
     elif p_node in ["SET_IMAGE", "SET_INVERSE",
                     "SET_UNION+", "SET_INTER+", "APPLICATION",
                     "PROP_EQUAL", "PROP_INCLUDED", "PROP_BELONGS", "LAMBDA"]:
-        b = False
+        return False
     elif c_node == "SET_COMPLEMENT" and p_node != "SET_COMPLEMENT":
-        b = False
-    return b
+        return False
+    return True
 
 
 ###########################################################

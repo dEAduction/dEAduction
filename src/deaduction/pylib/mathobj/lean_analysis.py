@@ -1,6 +1,6 @@
 """
 #####################################################################
-# PropObj.py : Take the result of Lean's tactic "Context_analysis", #
+# lean_analysis.py : Take the result of Lean's tactic "Context_analysis", #
 # and process it to extract the mathematical content.               #
 #####################################################################
 
