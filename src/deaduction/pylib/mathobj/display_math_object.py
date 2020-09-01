@@ -12,255 +12,213 @@ TODO: remove 'PROP' from node names, here and in Structures.lean.
 """
 import logging
 import gettext
+import types
+
 from deaduction.pylib.mathobj.give_name import give_local_name
 
 _ = gettext.gettext
 
 log = logging.getLogger(__name__)
 
-########################################################
-# the following is useful for the function needs_paren #
-########################################################
-nature_leaves_list = ["PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
-                      "FUNCTION", "SEQUENCE", "SET_FAMILY",
-                      "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY"]
 
+def display_math_object(math_object, format_):
+    """
+    This function essentially looks for a shape in the format_from_node
+    dictionary, and then pass the shape to the function
+    display_math_object_from_shape
+    which comutes the display.
 
-def format_arg0(**kwargs):
-    a = kwargs["children_rep"]
-    return [a[0]]
+    :param math_object:
+    :param format_:
+    :return:
+    """
+    log.debug(f"Computing math display of {math_object}")
+    node = math_object.node
+    if node in format_from_node.keys():
+        shape = format_from_node['node']
+        return display_math_object_from_shape(shape, math_object, format_)
 
-
-def format_n0(**kwargs):
-    symbol = kwargs["symbol"]
-    a = kwargs["children_rep"]
-    return [symbol, a[0]]
-
-
-def format_n1(**kwargs):
-    symbol = kwargs["symbol"]
-    a = kwargs["children_rep"]
-    return [symbol, a[1]]
-
-
-def format_0n1(**kwargs):
-    symbol = kwargs["symbol"]
-    a = kwargs["children_rep"]
-    return [a[0], symbol, a[1]]
-
-
-def format_name(**kwargs):
-    po = kwargs["po"]
-    return [po.lean_data["name"]]
-
-
-def format_app_function(**kwargs):
-    """Used for the image of a set under a function"""
-    children_rep = kwargs["children_rep"]
-    return [children_rep[0], '(', children_rep[1], ')']
-
-
-def format_app_inverse(**kwargs):
-    format_ = kwargs["format_"]
-    a = kwargs["children_rep"]
-    if format_ == "latex":
-        return [a[0], '^{-1}(', a[1], ')']
-    elif format_ == "utf8":
-        return [a[0], '⁻¹(', a[1], ')']
-
-
-def format_quantifiers(**kwargs):
-    symbol = kwargs["symbol"]
-    format_ = kwargs["format_"]
-    a = kwargs["children_rep"]
-    po = kwargs["po"]
-    # mind that the variable a[1] comes AFTER the type a[0] in quantifiers
-    if po.children[0].node == "FUNCTION":  # the bound var is a function
-        separator = ' : '
     else:
-        if format_ == "latex":
-            separator = r'\in'
-        elif format_ == "utf8":
-            separator = '∈'
-    return [symbol + ' ' + a[1] + separator, a[0], ', ', a[2]]
+        log.warning(f"display error: node {node} not in display_format")
+        return ["****"]
 
 
-def format_complement(**kwargs):
-    """TODO: use type to find universe and use notation X \ E
-    (type is not implemented yet when E is AnonymousPO)"""
-    format_ = kwargs["format_"]
-    a = kwargs["children_rep"]
-    po = kwargs["po"]
-    if format_ == "latex":
-        return [a[0], '^c']
-    elif format_ == "utf8":
-        return ['∁', a[0]]
-
-
-def format_constant1(**kwargs):
-    symbol = kwargs["symbol"]
-    return [symbol]
-
-
-def format_constant2(**kwargs):
-    format_ = kwargs["format_"]
-    po = kwargs["po"]
-    if "info" in po.representation.keys():
-        name = _(po.representation["info"])
-        return [latex_text(name, format_)]
-    else:
-        return [latex_text(po.node, format_)]
-
-
-def general_format_application(**kwargs):
+def display_math_object_from_shape(shape, math_object, format_):
     """
-This function includes for instance:
-    "APPLICATION(f,x)" -> "f(x)" (application of a function)
-    "APPLICATION(composition, g, f)" ->  "gf"   (composition of functions)
-    "APPLICATION(injective, f)" -> "f is injective"
+    Replace each element of shape with its display.
+        - numbers refer to children, and are replaced by the
+            corresponding display,
+        - strings are displayed as such for utf8, (see exceptions below)
+        - functions are called
 
-NB : Type arguments are ignored, e.g. "APPLICATION(composition, g, f)" is
-actually "APPLICATION(composition, X,Y,Z, g, f)"
+    Exceptions:
+        - "_child#" code for subscript version of child number #
+
+    :param shape:
+    :param math_object:
+    :param format_:
+    :return:    a structured string, to be passed to list_string_join in order
+                to get a fully displayable string
     """
-    format_ = kwargs["format_"]
-    children_rep = kwargs["children_rep"]
-    po = kwargs["po"]
-    children = po.children
-    #####################################################
-    # 1st case: application of a function to a variable #
-    #####################################################
-    # e.g. f(x), {E_i, i in I}, u_n
-    if hasattr(children[0], "math_type"):
-        if children[0].math_type.node == "FUNCTION":
-            return format_app_function(**kwargs)
-        if children[0].math_type.node in ["SET_FAMILY", "SEQUENCE"]:
-            index = global_subscript([children_rep[1]])
-            return [children[0].lean_data['name']] + index
-    ######################################
-    # 2nd case: composition of functions #
-    ######################################
-    if hasattr(children[0], "representation"):
-        if "info" in children[0].representation.keys():
-            key = children[0].representation['info']
-            if key == 'composition' and len(children) > 5:
-                # log.debug(f"composition of {a[-2]} and {a[-1]}")
-                if format_ == 'latex':
-                    f_circ_g =  [children_rep[4], r" \circ ", children_rep[5]]
-                else:  # format_ == 'utf8':
-                    f_circ_g =  [children_rep[4], '∘', children_rep[5]]
-                if len(children) == 6:
-                    return f_circ_g
-                elif len(children) == 7:
-                    # case of 'f \circ g (x)'
-                    new_children_rep = [f_circ_g, children_rep[6]]
-                    return format_app_function(children_rep=new_children_rep)
-                else:
-                    log.warning(f"Do not know how to display APP("
-                                f"composition, ...) with more than 7 "
-                                f"arguments")
-                    return "***"
-    ###############
-    # other cases #
-    ###############
-    # first find the pertinent children
-    # select children that are not Types
-    pertinent_children = []
-    pertinent_children_rep = []
-    counter = 0  # the first child is always pertinent, we leave it aside
-    for child in children[1:]:
-        counter += 1
-        if hasattr(child, "math_type"):
-            if child.math_type.node == 'TYPE':
-                continue
-        pertinent_children.append(child)
-        pertinent_children_rep.append(children_rep[counter])
-    # log.debug(f"pertinent children: {pertinent_children_rep}")
-    ##########################################################################
-    # discriminate according of number of pertinent (i.e. not Type) children #
-    ##########################################################################
-    # no pertinent argument
-    if len(pertinent_children) == 0:  # CONSTANT, e.g. 'Identité'
-        return children_rep[0]
-    # 1 pertinent argument
-    if len(pertinent_children) == 1:  # ADJECTIVE, e.g. 'f is injective'
-        adjective = children_rep[0]
-        noun = pertinent_children_rep[0]
-        if format_ == "latex":
-            return [r"\text{", noun, " " + _("is") + " ", adjective, r"}"]
-        elif format_ == "utf8":
-            return [noun, " " + _("is") + " ", adjective]
-    ###################################################
-    # more than 1 pertinent argument: not implemented #
-    ###################################################
-    else:
-        return "**"
+    display_shape = []
+    for item in shape:
+        display_item = "**"
+        if isinstance(item, types.FunctionType):
+            display_item = item(math_object, format_)
+
+        elif isinstance(item, int):
+            if item < len(math_object.children):
+                child = math_object.children[item]
+                display_item = [display_math_object(child, format_)]
+                if needs_paren(math_object, item):
+                    display_item = ['('] + display_item + [')']
+            else:  # keep the integer, this could be a pending parameter
+                display_item = item
+        elif isinstance(item, str):
+            if item.startswith("_child"):
+                number = int(item[len("_child"):])
+                child = math_object.children[number]
+                pre_display_item = display_math_object(child, format_)
+                display_item = subscript(pre_display_item, format_)  # TODO
+            else:
+                display_item = text_to_latex(item, format_)
+
+        display_shape.append(display_item)
+    return display_shape
 
 
-
-def format_lambda(**kwargs):
+def needs_paren(parent, child_number: int) -> bool:
     """
-    format for lambda expression,
-    i.e. set families with explicit bound variable
-    lambda (i:I), E i)
-    encoded by LAMBDA(I, i, APP(E, i))
-
-    TODO: use math_type of body to chose
-    between set_family, function or sequence !
-
+    Decides if parentheses are needed around the child
+    e.g. if PropObj.node = PROP.IFF then
+    needs_paren(PropObj,i) will be set to True for i = 0, 1
+    so that the display will be
+    ( ... ) <=> ( ... )
+    :param parent: MathObject
+    :param child_number:
+    :return:
     """
-    format_ = kwargs["format_"]
-    po = kwargs["po"]
-    children_rep = kwargs["children_rep"]
-    [type_rep, var_rep, body_rep] = children_rep
-    # todo: this could fail, e.g. lambda (i:I), E
-    body = po.children[2]  # = APPLICATION(f,x)
-    f = body.children[0]
-    if body.node == "APPLICATION" and hasattr(f, "math_type"):
-        if f.math_type.node == "FUNCTION":
-            kwargs["po"] = f
-            kwargs["children_rep"] = []
-            return format_local_constant(**kwargs)
-        elif f.math_type.node == "SEQUENCE":
-            return "**"  # TODO
-    # presumed to be a set family
-    if format_ == "latex":
-        return [r'\{', body_rep, ', ', var_rep, r' \in ', type_rep, r'\}']
-    else:  # format_ == utf8
-        return ['{', body_rep, ', ', var_rep, '∈', type_rep, '}']
-
-def format_name_index_1(**kwargs):
-    format_ = kwargs["format_"]
-    children_rep = kwargs["children_rep"]
-    po = kwargs["po"]
-    name = po.children[0].lean_data["name"]
-    if format_ == "latex":
-        return [name, '_', children_rep[1]]
-    if format_ == "utf8":
-        # TODO : put a[1] in subscript format
-        return [name, '_', children_rep[1]]
+    child_prop_obj = parent.children[child_number]
+    p_node = parent.node
+    # if child_prop_obj.node == "LOCAL_CONSTANT":
+    #     return False
+    if not child_prop_obj.children:
+        return False
+    c_node = child_prop_obj.node
+    if c_node in nature_leaves_list + \
+            ["SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
+             "PROP_INCLUDED"]:
+        return False
+    elif p_node in ["SET_IMAGE", "SET_INVERSE",
+                    "SET_UNION+", "SET_INTER+", "APPLICATION",
+                    "PROP_EQUAL", "PROP_INCLUDED", "PROP_BELONGS", "LAMBDA"]:
+        return False
+    elif c_node == "SET_COMPLEMENT" and p_node != "SET_COMPLEMENT":
+        return False
+    return True
 
 
-def format_local_constant(**kwargs):
-    format_ = kwargs["format_"]
-    po = kwargs["po"]
-    is_type_of_pfpo = kwargs["is_type_of_pfpo"]
-    if is_type_of_pfpo:
-        if po.math_type.node == "TYPE":
-            name = po.lean_data["name"]
-            return [latex_text(_("an element of") + " ", format_), name]
-    if po.math_type.node == "SET_FAMILY":
-        return instance_set_family(po, format_)
-    elif po.math_type == "SEQUENCE":
+#########################################################################
+#########################################################################
+# Special display functions, called from display_math_object_from_shape #
+# (see also the format_from_node dictionary)                            #
+#########################################################################
+#########################################################################
+def display_math_type0(math_object, format_):
+    return math_object.math_type[0]
+
+
+def display_constant(math_object, format_):
+    """
+    Display CONSTANT and LOCAL_CONSTANT
+
+    :param math_object:
+    :param format_:
+    :return:
+    """
+    if math_object.math_type.node == "SET_FAMILY":
+        return display_instance_set_family(math_object, format_)
+    elif math_object.math_type == "SEQUENCE":
         return "**"  # todo
-    elif not hasattr(po, "representation") \
-            or format_ not in po.representation.keys():
-        return "***"
-    representation = po.lean_data["name"]
-    return representation
+    display = math_object.info["name"]
+    # if display in format_from_constant_name.keys():
+    #     shape = format_from_constant_name[display]
+    #     return display_math_object_from_shape(shape, math_object, format_)
+    return [display]
 
 
-# the following is not called directly, but via format_local_constant
-def instance_set_family(po, format_="latex"):
+def display_application(math_object, format_):
+    """
+    Very special case of APPLICATION
+    :param math_object:
+    :param format_:
+    :return:
+    """
+    first_child = math_object.children[0]
+    shape = ["***"]
+
+    # strange cases
+    if first_child.node == "CONSTANT":
+        name = first_child.info['name']
+        if name in format_from_constant_name.keys():
+            shape = format_from_constant_name[name]
+        else:
+            shape = [name, 1]   # presumably we will get some argument
+                                # to apply name
+    # case of index notation
+    elif first_child.math_type.node in ["SET_FAMILY", "SEQUENCE"]:
+        shape = [0, "_child1"]
+        return display_math_object_from_shape(shape, math_object, format_)
+
+    display = display_math_object_from_shape(shape, math_object, format_)
+
+    # general case, functional notation : f(x)
+    elif not has_pending_parameter()
+
+
+        shape = [0, "(", 1, ")"]
+        return display_math_object_from_shape(shape, math_object, format_)
+    ###################################
+    # treatment of pending parameters #
+    ###################################
+    second_child = math_object.children[1]
+
+
+    return display_math_object_from_shape(shape, math_object, format_)
+
+
+def has_pending_parameter(structured_display: [str]):
+    for item in structured_display:
+        if isinstance(item, int):
+            return True
+    return False
+
+
+def display_math_type_of_local_constant(math_object, format_):
+    """
+
+    :param math_object:
+    :param format_:
+    :return:
+    """
+    #######################################################
+    # special math_types for which display is not the same #
+    #######################################################
+    if math_object.math_type.node == "TYPE":
+        name_ = math_object.info["name"]
+        return [text_to_latex(_("an element of") + " ", format_), name_]
+    elif math_object.math_type.node == "SET":
+        shape = [_("a subset of") + " ", 0]
+        return display_math_object_from_shape(shape, math_object, format_)
+    #################
+    # no difference #
+    #################
+    else:
+        return display_math_object(math_object, format_)
+
+
+# the following is not called directly, but via display_constant
+def display_instance_set_family(math_object, format_="latex"):
     """
     e.g. if E: I -> set X,
     then compute a good name for an index in I (e.g. 'i'),
@@ -270,18 +228,18 @@ def instance_set_family(po, format_="latex"):
     it will not appear in extract_local_vars.
 
     :param children_rep:
-    :param po: PropObj
+    :param math_object: PropObj
     :return: None
     """
     # first find a name for the bound var
-    #log.debug("instance of set family")
-    bound_var_type = po.math_type.children[0]
+    # log.debug("instance of set family")
+    bound_var_type = math_object.math_type.children[0]
     index_name = give_local_name(math_type=bound_var_type,
-                                 body=po)
+                                 body=math_object)
     index_rep = index_name
     index_subscript_rep = global_subscript(index_rep)
-    index_set_rep = po.math_type.children[0].representation[format_]
-    name = po.lean_data["name"]
+    index_set_rep = math_object.math_type.children[0].representation[format_]
+    name = math_object.lean_data["name"]
     if format_ == "latex":
         rep = [r"\{", name, r"_{", index_rep, r"}, ",
                index_rep, r"\in ", index_set_rep, r"\}"]
@@ -291,157 +249,25 @@ def instance_set_family(po, format_="latex"):
     return rep
 
 
-def format_set(**kwargs):
-    format_ = kwargs["format_"]
-    children_rep = kwargs["children_rep"]
-    is_type_of_pfpo = kwargs["is_type_of_pfpo"]
-    if is_type_of_pfpo:
-        text = latex_text(_("a subset of") + " ", format_)
-        kwargs["symbol"] = text
-        return format_n0(**kwargs)
-    else:
-        if format_ == "latex":
-            return r"\cP(" + children_rep[0] + ")"
-        else:
-            return "P(" + children_rep[0] + ")"
+#######################################
+#######################################
+# some tools for manipulating strings #
+#######################################
+#######################################
 
-
-# dict nature -> (latex symbol, format name)
-##########
-# LOGIC: #
-##########
-latex_structures = {"PROP_AND": (r" \text{ " + _("AND") + " } ", format_0n1),
-                    "PROP_OR": (r" \text{ " + _("OR") + " } ", format_0n1),
-                    "PROP_FALSE": (r"\textsc{" + _("Contradiction") + "}",
-                                   format_constant1),
-                    "PROP_IFF": (r" \Leftrightarrow ", format_0n1),
-                    "PROP_NOT": (r" \text{" + _("NOT") + " } ", format_n0),
-                    "PROP_IMPLIES": (r" \Rightarrow ", format_0n1),
-                    "QUANT_∀": (r"\forall ", format_quantifiers),
-                    "QUANT_∃": (r"\exists ", format_quantifiers),
-                    "PROP_∃": ("", ""),
-                    ###############
-                    # SET THEORY: #
-                    ###############
-                    "SET_INTER": (r" \cap ", format_0n1),
-                    "SET_UNION": (r" \cup ", format_0n1),
-                    "SET_INTER+": (r"\bigcap", format_n0),  # TODO: improve
-                    "SET_UNION+": (r"\bigcup", format_n0),
-                    "PROP_INCLUDED": (r" \subset ", format_0n1),
-                    "PROP_BELONGS": (r" \in ", format_0n1),
-                    "SET_DIFF": (r" \backslash ", format_0n1),
-                    "SET_COMPLEMENT": (r"", format_complement),
-                    "SET_UNIVERSE": ("", format_arg0),
-                    "SET_EMPTY": (r" \emptyset ", format_constant1),
-                    "SET_IMAGE": ("", format_app_function),
-                    "SET_INVERSE": ("", format_app_inverse),
-                    "SET_FAMILY": (r"\text{" + _("a family of subsets of") +
-                                   " }", format_n1),
-                    #                    "INSTANCE_OF_SET_FAMILY": ("",
-                    #                    format_instance_set_family),
-                    #                    "APPLICATION_OF_SET_FAMILY": ("", format_name_index_1),
-                    ############
-                    # NUMBERS: #
-                    ############
-                    "PROP_EQUAL": (" = ", format_0n1),
-                    "PROP_EQUAL_NOT": ("", ""),
-                    "PROP_<": ("<", format_0n1),
-                    "PROP_>": (">", format_0n1),
-                    "PROP_≤": ("≤", format_0n1),
-                    "PROP_≥": ("≥", format_0n1),
-                    "MINUS": ("-", format_n0),
-                    "+": ("+", format_0n1),
-                    "VAR": ("", "var"),
-                    ##################
-                    # GENERAL TYPES: #
-                    ##################
-                    "LOCAL_CONSTANT": ("", format_local_constant),
-                    "APPLICATION": ("", general_format_application),
-                    "LAMBDA": ("", format_lambda),
-                    "PROP": (r"\text{ " + _("a proposition") + "}",
-                             format_constant1),
-                    "TYPE": (r" \text{ " + _("a set") + "} ",
-                             format_constant1),
-                    "SET": ("", format_set),
-                    # "SET": (r" \text{ " + _("a subset of") + " }",
-                    #         format_n0),
-#                    "ELEMENT": (r" \text{ " + _("an element of") + " }",
-#                                format_n0),
-                    "FUNCTION": (r" \to ", format_0n1),
-                    "SEQUENCE": ("", ""),  # TODO: and also instance of SEQ
-                    "TYPE_NUMBER[name:ℕ]": ("\mathbb{N}", format_constant1),
-                    "TYPE_NUMBER[name:ℝ]": ("\mathbb{R}", format_constant1),
-                    "NUMBER": ("", ""),
-                    "CONSTANT": ("", format_constant2)
-                    }
-
-utf8_structures = {"PROP_AND": (" " + _("AND") + " ", format_0n1),  # logic
-                   "PROP_OR": (" " + _("OR") + " ", format_0n1),
-                   "PROP_FALSE": (_("Contradiction"), format_constant1),
-                   "PROP_IFF": (" ⇔ ", format_0n1),
-                   "PROP_NOT": (" " + _("NOT") + " ", format_n0),
-                   "PROP_IMPLIES": (" ⇒ ", format_0n1),
-                   "QUANT_∀": ("∀ ", format_quantifiers),
-                   "QUANT_∃": ("∃ ", format_quantifiers),
-                   "PROP_∃": ("", ""),
-                   ###############
-                   # SET THEORY: #
-                   ###############
-                   "PROP_INCLUDED": (" ⊂ ", format_0n1),
-                   "PROP_BELONGS": (r" ∈", format_0n1),
-                   "SET_INTER": (r" ⋂ ", format_0n1),  # set theory
-                   "SET_UNION": (r" ⋃ ", format_0n1),
-                   "SET_INTER+": ("∩", format_n0),
-                   "SET_UNION+": ("∪", format_n0),
-                   "SET_DIFF": (r" \\ ", format_0n1),
-                   "SET_COMPLEMENT": (r"", format_complement),
-                   "SET_UNIVERSE": ("", format_arg0),
-                   "SET_EMPTY": (r" ∅ ", format_constant1),
-                   "SET_IMAGE": ("", format_app_function),
-                   "SET_INVERSE": ("", format_app_inverse),
-                   "SET_FAMILY": (_("a family of subsets of") + " ",
-                                  format_n1),
-                   # "INSTANCE_OF_SET_FAMILY": ("", format_instance_set_family),
-                   # "APPLICATION_OF_SET_FAMILY": ("", format_name_index_1),
-                   ############
-                   # NUMBERS: #
-                   ############
-                   "PROP_EQUAL": (" = ", format_0n1),
-                   "PROP_EQUAL_NOT": ("", ""),
-                   "PROP_<": ("<", format_0n1),
-                   "PROP_>": (">", format_0n1),
-                   "PROP_≤": ("≤", format_0n1),
-                   "PROP_≥": ("≥", format_0n1),
-                   "MINUS": ("-", format_n0),
-                   "+": ("+", format_0n1),
-                   "VAR": ("", "var"),
-                   ##################
-                   # GENERAL TYPES: #
-                   ##################
-                   "LOCAL_CONSTANT": ("", format_local_constant),
-                   "APPLICATION": ("", general_format_application),
-                   "LAMBDA": ("", format_lambda),
-                   "PROP": (" " + _("a proposition"), format_constant1),
-                   "TYPE": (" " + _("a set"), format_constant1),
-                   "SET": ("", format_set),
-#                   (" " + _("a subset of "), format_n0),
-#                   "ELEMENT": (" " + _("an element of") + " ", format_n0),
-                   "FUNCTION": (" → ", format_0n1),
-                   "SEQUENCE": ("", ""),
-                   "TYPE_NUMBER[name:ℕ]": ("ℕ", format_constant1),
-                   "TYPE_NUMBER[name:ℝ]": ("ℝ", format_constant1),
-                   "NUMBER": ("", ""),
-                   "CONSTANT": ("", format_constant2)
-                   }
-
-
-def latex_text(string: str, format_="latex"):
+def text_to_latex(string: str, format_="latex"):
     if format_ == "latex":
+        # TODO: replace symbol according to latex_symbols dictionary
         string = r"\textsc{" + string + r"}"
     return string
 
 
-def subscript(structured_string):
+def subscript(index, format_):
+    # TODO !!
+    return "_" + index
+
+
+def text_to_subscript(structured_string):
     """
     recursive version, for strings to be displayed use global_subscript instead
     :param structured_string: list of sturctured string
@@ -456,7 +282,7 @@ def subscript(structured_string):
     if isinstance(structured_string, list):
         sub_list = []
         for item in structured_string:
-            sub, bool = subscript(item)
+            sub, bool = text_to_subscript(item)
             if not bool:  # not subscriptable
                 return structured_string, False
             else:
@@ -477,17 +303,101 @@ def subscript(structured_string):
 
 
 def global_subscript(structured_string):
-    sub, is_subscriptable = subscript(structured_string)
+    sub, is_subscriptable = text_to_subscript(structured_string)
     if is_subscriptable:
         return sub
     else:
         return ['_'] + [sub]
         # [sub] necessary in case sub is an (unstructured) string
 
-# TODO A traiter : R, N ; NUMBER ; emptyset ; PROP_∃ ; SET_INTER+ ; SEQUENCE ;
-# MINUS (n0 ou 0n1 selon le nb d'arguments)
-# NB : two notations for complement :
-# COMPLEMENT:
-# A^c (lean) -> A^c
-# set.univ \ A (lean) -> X \ A
-# avoid notation - A
+
+# TODO : tenir compte de la profondeur des parenthèses,
+# et utiliser \Biggl(\biggl(\Bigl(\bigl((x)\bigr)\Bigr)\biggr)\Biggr)
+nature_leaves_list = ["PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
+                      "FUNCTION", "SEQUENCE", "SET_FAMILY",
+                      "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY"]
+
+format_from_node = {
+    "APPLICATION": [display_application],
+    "LOCAL_CONSTANT": [display_constant],
+    "CONSTANT": [display_constant],
+
+    "PROP_AND": [0, " " + _("AND") + " ", 1],
+    "PROP_OR": [0, " " + _("OR") + " ", 1],
+    "PROP_FALSE": [_("Contradiction"), ],
+    "PROP_IFF": [0, " ⇔ ", 1],
+    "PROP_NOT": [" " + _("NOT") + " ", 0],
+    "PROP_IMPLIES": [0, " ⇒ ", 1],
+    "QUANT_∀": ["∀ ", 0, " ∈", 1, ", ", 2],
+    "QUANT_∃": ["∃ ", 0, " ∈", 1, ", ", 2],
+    "PROP_∃": "not implemented",
+    ###############
+    # SET THEORY: #
+    ###############
+    "PROP_INCLUDED": [0, " ⊂ ", 1],
+    "PROP_BELONGS": [0, " ∈", 1],
+    "SET_INTER": [0, " ⋂ ", 1],
+    "SET_UNION": [0, " ⋃ ", 1],
+    "SET_INTER+": ["∩", 0],
+    "SET_UNION+": ["∪", 0],
+    "SET_DIFF": [0, r" \\ ", 1],
+    "SET_COMPLEMENT": [display_math_type0, r" \\ ", 0],
+    "SET_EMPTY": ["∅"],
+    "SET_FAMILY": [_("a family of subsets of"), 1],
+    ############
+    # NUMBERS: #
+    ############
+    "PROP_EQUAL": [0, " = ", 1],
+    "PROP_EQUAL_NOT": [0, " ≠ ", 1],
+    "PROP_<": [0, " < ", 1],
+    "PROP_>": [0, " > ", 1],
+    "PROP_≤": [0, " ≤ ", 1],
+    "PROP_≥": [0, " ≥ ", 1],
+    "MINUS": [0, " - ", 1],
+    "+": [0, " + ", 1],
+    ##################
+    # GENERAL TYPES: #
+    ##################
+    "PROP": [" " + _("a proposition")],
+    "TYPE": [" " + _("a set")],
+    "FUNCTION": [0, " → ", 1],
+}
+
+format_from_constant_name = {
+    "composition": [0, '∘', 1]
+}
+
+latex_symbols = {  # TODO : complete the dictionary
+    " ⇔ ": r" \LeftRightarrow",
+    " ⇒ ": r" \Rightarrow",
+    "∀ ": r" \forall",
+    "∃ ": r" \exists",
+    ###############
+    # SET THEORY: #
+    ###############
+    "PROP_INCLUDED": " ⊂ ",
+    "PROP_BELONGS": r" ∈",
+    "SET_INTER": r" ⋂ ",
+    "SET_UNION": r" ⋃ ",
+    "SET_INTER+": "∩",
+    "SET_UNION+": "∪",
+    "SET_DIFF": r" \\ ",
+    "SET_COMPLEMENT": "∁",
+    "SET_EMPTY": r"∅",
+    ############
+    # NUMBERS: #
+    ############
+    "PROP_EQUAL": " = ",
+    "PROP_EQUAL_NOT": " ≠ ",
+    "PROP_<": "<",
+    "PROP_>": ">",
+    "PROP_≤": "≤",
+    "PROP_≥": "≥",
+    "MINUS": "-",
+    "+": "+",
+    ##################
+    # GENERAL TYPES: #
+    ##################
+    "FUNCTION": " → ",
+    "composition": '∘',
+}

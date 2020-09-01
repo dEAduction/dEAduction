@@ -38,7 +38,9 @@ from typing import Tuple, List, Any
 import logging
 
 import deaduction.pylib.logger as logger
-import deaduction.pylib.mathobj.display_math_object as display_math
+from deaduction.pylib.mathobj.display_math_object import \
+    display_math_object, display_math_type_of_local_constant
+
 import deaduction.pylib.mathobj.give_name as give_name
 
 log = logging.getLogger(__name__)
@@ -180,6 +182,13 @@ class MathObject:
         """
         return self.math_type.node == "PROP"
 
+    def is_TYPE(self) -> bool:
+        """
+        Test if self represents a mathematical Proposition
+        For global variables, only the math_type attribute should be tested !
+        """
+        return self.math_type.node == "TYPE"
+
     ###############################
     # collect the local variables #
     ###############################
@@ -206,138 +215,47 @@ class MathObject:
         L = [math_obj.info["name"] for math_obj in self.extract_local_vars()]
         return L
 
-    ######################################################
-    # Computation of latex and utf-8 display for PropObj #
-    ######################################################
-    def structured_format(self, format_="latex", is_type_of_pfpo=False):
-        """
-        Recursively compute a structured latex or utf-8 "representation" of a
-        prop_obj.
-        Representations are structured into trees represented by lists,
-        they can be turned into usual strings by using the list_string_join
-        function below.
-        Valid representations are recursively defined as:
-        - lists of strings (in latex or utf-8 format)
-        - lists of representations
-        :param format_: "latex" or "utf8"
-        :param is_type_of_pfpo: True if the object to display is the
-        math_type of a ProofStatePO instance, e.g. "x: an element of X"
-        (as opposed to the type theory version "x:X").
-        :return:
-        """
-        # TODO: change 'is_type_of_pfpo' -> 'is_math_type_of_global_var'
-        if format_ == "latex":
-            log.info(f"computing latex representation of {self}")
+    ##########################################
+    # Computation of display of math objects #
+    ##########################################
+    def format_as_latex(self, math_type=False):
+        format_ = "latex"
+        if math_type:
+            display = display_math_type_of_local_constant(self, format_)
         else:
-            log.info(f"computing utf-8 representation of {self}")
-            format_ = "utf8"
-        #######################################################################
-        # compute representation of children, and put parentheses when needed #
-        #######################################################################
-        children_display = []
-        i = -1
-        for arg in self.children:
-            i += 1
-            math_display = MathObject.structured_format(arg, format_)
-            #rep = arg.representation[format_]
-            # the following line computes if parentheses are needed
-            # around child n° i
-            parentheses = needs_paren(self, i)
-            if parentheses:
-                math_display = ["(", math_display, ")"]
-            children_display.append(math_display)
-        ##############################################################
-        # compute representation by calling the appropriate function #
-        # according to node as indicated in latex_structures         #
-        ##############################################################
-        node = self.node
-        if node not in display_math.latex_structures.keys():
-            # node not implemented
-            log.warning(f"display of {node} not implemented")
-            display = "****"
-            # self.representation['latex'] = '****'
-            # self.representation['utf8'] = '****'
-        elif format_ == "latex":
-            symbol, format_scheme = display_math.latex_structures[node]
-            display = format_scheme(symbol=symbol,
-                                    children_rep=children_display,
-                                    po=self,
-                                    is_type_of_pfpo=is_type_of_pfpo,
-                                    format_="latex")
-        else:
-            symbol, format_scheme = display_math.utf8_structures[node]
-            display = format_scheme(symbol=symbol,
-                                    children_rep=children_display,
-                                    po=self,
-                                    is_type_of_pfpo=is_type_of_pfpo,
-                                    format_="utf8")
-        log.debug(f"---> display: {display}")
-        return display
-
-    def format_as_latex(self, is_type_of_pfpo=False):
-        display = MathObject.structured_format(self, "latex", is_type_of_pfpo)
+            display = display_math_object(self, format_="latex")
         return list_string_join(display)
 
-    def format_as_utf8(self, is_type_of_pfpo=False):
-        display = MathObject.structured_format(self, "utf8", is_type_of_pfpo)
+    def format_as_utf8(self, math_type=False):
+        format_ = "utf8"
+        if math_type:
+            display = display_math_type_of_local_constant(self, format_)
+        else:
+            display = display_math_object(self, format_="utf8")
         return list_string_join(display)
 
 
-def list_string_join(latex_or_utf8_rep) -> str:
+def list_string_join(structured_display) -> str:
     """
-    turn a (structured) latex or utf-8 representation into a latex string
+    turn a (structured) latex or utf-8 display into a latex string
 
-    :param latex_or_utf8_rep: type is recursively defined as str or list of
-    latex_or_utf8_rep
+    :param structured_display: type is recursively defined as str or list of
+    structured_display
     """
-    if isinstance(latex_or_utf8_rep, str):
-        return latex_or_utf8_rep
-    elif isinstance(latex_or_utf8_rep, list):
+    if isinstance(structured_display, str):
+        return structured_display
+    elif isinstance(structured_display, list):
         string = ""
-        for lr in latex_or_utf8_rep:
+        for lr in structured_display:
             lr = list_string_join(lr)
             string += lr
         #    log.debug("string:", latex_str)
         return string
     else:
         log.warning("error in list_string_join: argument should be list or "
-                    "str")
+                    f"str, not {type(structured_display)}")
         return "**"
 
-
-# TODO : tenir compte de la profondeur des parenthèses,
-# et utiliser \Biggl(\biggl(\Bigl(\bigl((x)\bigr)\Bigr)\biggr)\Biggr)
-nature_leaves_list = ["PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
-                      "FUNCTION", "SEQUENCE", "SET_FAMILY",
-                      "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY"]
-
-
-def needs_paren(parent: MathObject, child_number: int) -> bool:
-    """
-    Decides if parentheses are needed around the child
-    e.g. if PropObj.node = PROP.IFF then
-    needs_paren(PropObj,i) will be set to True for i = 0, 1
-    so that the display will be
-    ( ... ) <=> ( ... )
-    """
-    child_prop_obj = parent.children[child_number]
-    p_node = parent.node
-    # if child_prop_obj.node == "LOCAL_CONSTANT":
-    #     return False
-    if not child_prop_obj.children:
-        return False
-    c_node = child_prop_obj.node
-    if c_node in nature_leaves_list + \
-            ["SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
-             "PROP_INCLUDED"]:
-        return False
-    elif p_node in ["SET_IMAGE", "SET_INVERSE",
-                    "SET_UNION+", "SET_INTER+", "APPLICATION",
-                    "PROP_EQUAL", "PROP_INCLUDED", "PROP_BELONGS", "LAMBDA"]:
-        return False
-    elif c_node == "SET_COMPLEMENT" and p_node != "SET_COMPLEMENT":
-        return False
-    return True
 
 ##########
 # essais #

@@ -42,9 +42,9 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class Goal:
-    context: List[ProofStatePO]
-    target: ProofStatePO
-    math_types: List[Tuple[PropObj, List[ProofStatePO]]]
+    context: List[MathObject]
+    target: MathObject
+    math_types: List[Tuple[MathObject, List[MathObject]]]
     variables_names: List[str]
 
     def compare(self, old_goal, goal_is_new):
@@ -64,7 +64,7 @@ class Goal:
         objects of the goal that is logically (and not chronologically) just
         before the present context
 
-        :param new_goal: new goal
+        :param self: new goal
         :param old_goal: old goal
         :param goal_is_new: True if previous goal has been solved
         THIS IS NOT USED for the moment
