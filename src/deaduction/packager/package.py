@@ -25,29 +25,32 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from typing import (Callable,
+                    Dict,
+                    Optional)
+
 import requests
 from pathlib import Path
-from typing import Callable
 import tempfile
 import shutil
+import traceback
 
 import logging
 
 from gettext import gettext as _
-from typing import Dict
 
 from deaduction.pylib.utils import filesystem as fs
 from tempfile import TemporaryFile
 import tarfile
+import git
 
 import deaduction.pylib.config.dirs as dirs
 
 log = logging.getLogger(__name__)
 
-############################################
-# Package class definition
-############################################
-
+# ┌────────────────────────────────────────┐
+# │ Package class                          │
+# └────────────────────────────────────────┘
 class Package:
     def __init__(self, path: Path):
         self.path   = Path(path).resolve()
@@ -79,7 +82,9 @@ class Package:
         log.info(_("Checking package folder for {}").format(self.path))
         fs.check_dir(self.path)
 
-
+# ┌────────────────────────────────────────┐
+# │ ArchivePackage class                   │
+# └────────────────────────────────────────┘
 class ArchivePackage(Package):
     def __init__(self, path: Path,
                  archive_url: str,
@@ -111,6 +116,7 @@ class ArchivePackage(Package):
         except Exception as e:
             log.warning(_("Failed check package {}, reinstall")
                         .format(self.path))
+            log.debug(traceback.format_exc())
 
             if self.path.exists():
                 self.remove()
@@ -118,7 +124,7 @@ class ArchivePackage(Package):
 
 
     def install(self):
-        log.info(_("Installing package {}").format(self.path))
+        log.info(_("Installing package {} from archive").format(self.path))
         with TemporaryFile() as fhandle:
             checksum = fs.download(self.archive_url, fhandle)
             if self.archive_checksum and (self.archive_checksum != checksum):
@@ -132,3 +138,55 @@ class ArchivePackage(Package):
                 tf.extractall(path=str(self.path))
 
         log.info(_("Installed Package to {}").format(self.path))
+
+# ┌────────────────────────────────────────┐
+# │ GitPackage class                       │
+# └────────────────────────────────────────┘
+class GitPackage(Package):
+    def __init__(self,
+                 path: Path,
+                 remote_url: str,
+                 remote_branch: str,
+                 remote_commit: Optional[str] = None ):
+        super().__init__(path)
+
+        self.remote_url    = remote_url   
+        self.remote_branch = remote_branch
+        self.remote_commit = remote_commit
+
+    def _check_repo_state(self):
+        log.info(_("Checking git repo state for package {}").format(str(self.path)))
+
+        repo = git.Repo(str(self.path.resolve()))
+        assert self.remote_branch == str(repo.active_branch)
+
+        if self.remote_commit:
+            assert self.remote_commit == str(repo.commit())
+
+    def check(self):
+        try:
+            self._check_folder()
+            self._check_repo_state()
+        except Exception as e:
+            log.warning(_("Failed check package {}, reinstall")
+                        .format(self.path))
+            log.debug(traceback.format_exc())
+
+            if self.path.exists():
+                self.remove()
+            self.install()
+
+    def install(self):
+        log.info(_("Install package {} from git repo").format(self.path))
+
+        # Create empty local repo
+        empty_repo = git.Repo.init(str(self.path.resolve()))
+
+        # Set remote and fetch
+        origin     = empty_repo.create_remote('origin', self.remote_url)
+        origin.fetch()
+
+        # Create local tracking branch and checkout
+        empty_repo.create_head(self.remote_branch, origin.refs[self.remote_branch])
+        empty_repo.heads[self.remote_branch].set_tracking_branch(origin.refs[self.remote_branch]) # set local branch to track remote branch
+        empty_repo.heads[self.remote_branch].checkout()
