@@ -8,6 +8,7 @@ DESCRIPTION
 
 Contain the data for processing PropObj into a latex representation
 
+TODO: remove 'PROP' from node names, here and in Structures.lean.
 """
 import logging
 import gettext

@@ -34,7 +34,7 @@ from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 import logging
 
-from snippets.mathobj.MathObject import MathObject
+import deaduction.pylib.mathobj.MathObject as MathObject
 import deaduction.pylib.logger as logger
 
 log = logging.getLogger(__name__)
@@ -115,9 +115,21 @@ class LeanEntryVisitor(NodeVisitor):
         """
         node_info = visited_children[0][1]
         children = concatenate(visited_children[1:])[0]
-        math_object = MathObject.from_info_and_children(info=node_info,
-                                                        children=children)
         log.debug(f"collected info at expr: {node_info, children}")
+        ####################################################################
+        # Obsolete: decurryfying APPLICATIONs:
+
+        # #
+        # APP(APP([children]), new_child)  ->  APP([children + new_child]) #
+        ####################################################################
+        # if node_info['node_name'] == "APPLICATION" \
+        #     and children[0].node == "APPLICATION":
+        #     log.debug('decurryfying...')
+        #     math_object = children[0]
+        #     math_object.children.append(children[1])
+        # else:
+        math_object = MathObject.from_info_and_children(info=node_info,
+                                                            children=children)
         log.debug(f"---> {math_object}")
         return [math_object], {}
 
@@ -206,17 +218,6 @@ if __name__ == "__main__":
     logger.configure()
     trials = ["¿¿¿object: LOCAL_CONSTANT¿= TYPE",
               "¿¿¿object: LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.650.7276¿]¿= TYPE",
-              "¿¿¿object: LOCAL_CONSTANT¿[name: f¿/ identifier: "
-              "0._fresh.650.7283¿]¿= FUNCTION¿(LOCAL_CONSTANT¿[name: "
-              "X¿/ identifier: 0._fresh.650.7276¿]¿, LOCAL_CONSTANT¿[name: "
-              "Y¿/ identifier: 0._fresh.650.7278¿]¿)",
-              "¿¿¿property¿[pp_type: surjective f¿]: LOCAL_CONSTANT¿[name: "
-              "H1¿/ identifier: 0._fresh.650.7294¿]¿= APPLICATION¿[type: "
-              "PROP¿]¿(APPLICATION¿)",
-              """¿¿¿property¿[pp_type: surjective f¿]: LOCAL_CONSTANT∀¿[name: H1¿/ identifier: 0._fresh.793.6964¿]¿= APPLICATION¿[type: PROP¿]¿(APPLICATION¿[type: FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.793.6946¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.793.6948¿]¿)¿, PROP¿)¿]¿)""",
-              """¿¿¿object: essai_surjective¿= CONSTANT¿[name: surjective¿]¿[type: QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: X¿/ identifier: _fresh.792.10224¿]¿, QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.792.10236¿]¿, FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: _fresh.792.10224¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.792.10236¿]¿)¿, PROP¿)¿)¿)¿]""",
-              """¿¿¿object: blabla¿= APPLICATION¿[type: QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.792.10197¿]¿, FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.793.6946¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.792.10197¿]¿)¿, PROP¿)¿)¿]¿(CONSTANT¿[name: surjective¿]¿[type: QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: X¿/ identifier: _fresh.792.10224¿]¿, QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.792.10236¿]¿, FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: _fresh.792.10224¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.792.10236¿]¿)¿, PROP¿)¿)¿)¿]¿, LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.793.6946¿]¿)""",
-              """¿¿¿object: LOCAL_CONSTANT¿= APPLICATION¿[type: FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.793.6946¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.793.6948¿]¿)¿, PROP¿)¿]¿(APPLICATION¿[type: QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.792.10197¿]¿, FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.793.6946¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.792.10197¿]¿)¿, PROP¿)¿)¿]¿(CONSTANT¿[name: surjective¿]¿[type: QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: X¿/ identifier: _fresh.792.10224¿]¿, QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.792.10236¿]¿, FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: _fresh.792.10224¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.792.10236¿]¿)¿, PROP¿)¿)¿)¿]¿, LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.793.6946¿]¿)¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.793.6948¿]¿)""",
               """¿¿¿property¿[pp_type: surjective f¿]: LOCAL_CONSTANT¿[name: H1¿/ identifier: 0._fresh.793.6964¿]¿= APPLICATION¿[type: PROP¿]¿(APPLICATION¿[type: FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.793.6946¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.793.6948¿]¿)¿, PROP¿)¿]¿(APPLICATION¿[type: QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.792.10197¿]¿, FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.793.6946¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.792.10197¿]¿)¿, PROP¿)¿)¿]¿(CONSTANT¿[name: surjective¿]¿[type: QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: X¿/ identifier: _fresh.792.10224¿]¿, QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.792.10236¿]¿, FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: _fresh.792.10224¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.792.10236¿]¿)¿, PROP¿)¿)¿)¿]¿, LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.793.6946¿]¿)¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.793.6948¿]¿)¿, LOCAL_CONSTANT¿[name: f¿/ identifier: 0._fresh.793.6953¿]¿)""",
               """¿¿¿property¿[pp_type: surjective (composition g f)¿]: METAVAR¿[name: _mlocal._fresh.798.1615¿]¿= APPLICATION¿[type: PROP¿]¿(APPLICATION¿[type: FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.799.3243¿]¿, LOCAL_CONSTANT¿[name: Z¿/ identifier: 0._fresh.799.3247¿]¿)¿, PROP¿)¿]¿(APPLICATION¿[type: QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.798.2045¿]¿, FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.799.3243¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.798.2045¿]¿)¿, PROP¿)¿)¿]¿(CONSTANT¿[name: surjective¿]¿[type: QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: X¿/ identifier: _fresh.798.2072¿]¿, QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.798.2084¿]¿, FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: _fresh.798.2072¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.798.2084¿]¿)¿, PROP¿)¿)¿)¿]¿, LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.799.3243¿]¿)¿, LOCAL_CONSTANT¿[name: Z¿/ identifier: 0._fresh.799.3247¿]¿)¿, APPLICATION¿[type: FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.799.3243¿]¿, LOCAL_CONSTANT¿[name: Z¿/ identifier: 0._fresh.799.3247¿]¿)¿]¿(APPLICATION¿[type: FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.799.3243¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.799.3245¿]¿)¿, FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.799.3243¿]¿, LOCAL_CONSTANT¿[name: Z¿/ identifier: 0._fresh.799.3247¿]¿)¿)¿]¿(APPLICATION¿[type: FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.799.3245¿]¿, LOCAL_CONSTANT¿[name: Z¿/ identifier: 0._fresh.799.3247¿]¿)¿, FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.799.3243¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.799.3245¿]¿)¿, FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.799.3243¿]¿, LOCAL_CONSTANT¿[name: Z¿/ identifier: 0._fresh.799.3247¿]¿)¿)¿)¿]¿(APPLICATION¿[type: QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: Z¿/ identifier: _fresh.798.2195¿]¿, FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.799.3245¿]¿, LOCAL_CONSTANT¿[name: Z¿/ identifier: _fresh.798.2195¿]¿)¿, FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.799.3243¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.799.3245¿]¿)¿, FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.799.3243¿]¿, LOCAL_CONSTANT¿[name: Z¿/ identifier: _fresh.798.2195¿]¿)¿)¿)¿)¿]¿(APPLICATION¿[type: QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.798.2270¿]¿, QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: Z¿/ identifier: _fresh.798.2299¿]¿, FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.798.2270¿]¿, LOCAL_CONSTANT¿[name: Z¿/ identifier: _fresh.798.2299¿]¿)¿, FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.799.3243¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.798.2270¿]¿)¿, FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.799.3243¿]¿, LOCAL_CONSTANT¿[name: Z¿/ identifier: _fresh.798.2299¿]¿)¿)¿)¿)¿)¿]¿(CONSTANT¿[name: composition¿]¿[type: QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: X¿/ identifier: _fresh.798.2378¿]¿, QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.798.2409¿]¿, QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: Z¿/ identifier: _fresh.798.2438¿]¿, FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.798.2409¿]¿, LOCAL_CONSTANT¿[name: Z¿/ identifier: _fresh.798.2438¿]¿)¿, FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: _fresh.798.2378¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.798.2409¿]¿)¿, FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: _fresh.798.2378¿]¿, LOCAL_CONSTANT¿[name: Z¿/ identifier: _fresh.798.2438¿]¿)¿)¿)¿)¿)¿)¿]¿, LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.799.3243¿]¿)¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.799.3245¿]¿)¿, LOCAL_CONSTANT¿[name: Z¿/ identifier: 0._fresh.799.3247¿]¿)¿, LOCAL_CONSTANT¿[name: g¿/ identifier: 0._fresh.799.3251¿]¿)¿, LOCAL_CONSTANT¿[name: f¿/ identifier: 0._fresh.799.3249¿]¿)¿)""",
               """¿¿¿property¿[pp_type: ∃ (x : Y), g x = y¿]: LOCAL_CONSTANT¿[name: H3¿/ identifier: 0._fresh.830.7332¿]¿= QUANT_∃¿[type: PROP¿]¿(LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.833.4473¿]¿, LOCAL_CONSTANT¿[name: x¿/ identifier: _fresh.830.7488¿]¿, PROP_EQUAL¿[type: PROP¿]¿(APPLICATION¿[type: LOCAL_CONSTANT¿[name: Z¿/ identifier: 0._fresh.833.4475¿]¿]¿(LOCAL_CONSTANT¿[name: g¿/ identifier: 0._fresh.833.4479¿]¿, LOCAL_CONSTANT¿[name: x¿/ identifier: _fresh.830.7488¿]¿)¿, LOCAL_CONSTANT¿[name: y¿/ identifier: 0._fresh.830.7325¿]¿)¿)""",

@@ -39,7 +39,7 @@ import logging
 
 import deaduction.pylib.logger as logger
 import deaduction.pylib.mathobj.lean_analysis as lean_analysis
-import deaduction.pylib.mathobj.latex_format_data as latex_format_data
+import deaduction.pylib.mathobj.display_math_object as latex_format_data
 import deaduction.pylib.mathobj.give_name as give_name
 
 log = logging.getLogger(__name__)

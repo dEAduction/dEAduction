@@ -32,10 +32,7 @@ from typing import List, Tuple
 
 import deaduction.pylib.logger as logger
 
-from deaduction.pylib.mathobj import PropObj, \
-    ProofStatePO, \
-    math_type_store, \
-    BoundVarPO
+from deaduction.pylib.mathobj import MathObject
 from deaduction.pylib.mathobj.give_name import give_local_name
 
 node_needing_bounds_var = ["SET_FAMILY", "SEQUENCE"]

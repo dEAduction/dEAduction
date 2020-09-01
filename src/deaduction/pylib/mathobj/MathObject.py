@@ -38,7 +38,7 @@ from typing import Tuple, List, Any
 import logging
 
 import deaduction.pylib.logger as logger
-import deaduction.pylib.mathobj.latex_format_data as latex_format_data
+import deaduction.pylib.mathobj.display_math_object as display_math
 import deaduction.pylib.mathobj.give_name as give_name
 
 log = logging.getLogger(__name__)
@@ -60,10 +60,23 @@ class MathObject:
     math_type:      Any         # Another MathObject
     children:       list        # list of MathObjects
 
-    Global_variables = {}
+    Variables = {}              # dictionary containing every element having
+    # an identifier, i.e. global and bound variables.
+    # key = identifier,
+    # value = MathObject
 
     @classmethod
     def from_info_and_children(cls, info, children):
+        """
+        create an instance of MathObject from the lean data collected by
+        the parser.
+        :param info: dictionary with mandatory key   'node_name',
+                                    optional keys 'math_type',
+                                            'name'
+                                            'identifier'
+        :param children:
+        :return:
+        """
         node = info.pop("node_name")
         if 'math_type' in info.keys():
             math_type = info.pop('math_type')
@@ -74,17 +87,17 @@ class MathObject:
         #####################################################
         if 'identifier' in info.keys():
             identifier = info['identifier']
-            if identifier in MathObject.Global_variables:    # object already
+            if identifier in MathObject.Variables:    # object already
                 # exists
                 log.debug("already exists")
-                math_object = MathObject.Global_variables[identifier]
+                math_object = MathObject.Variables[identifier]
             else:                                       # new object
                 math_object = MathObject(node=node,
                                   info=info,
                                   math_type=math_type,
                                   children=children
                                   )
-                MathObject.Global_variables[identifier] = math_object
+                MathObject.Variables[identifier] = math_object
         ##############################
         # Treatment of other objects #
         ##############################
@@ -132,35 +145,31 @@ class MathObject:
         This is used for instance to guarantee uniqueness of those AnonymousPO
         objects that appears as math_types
 
+        Not that even for global variables we do NOT want to use identifiers,
+        since they Lean change them every time the file is modified
+
+        WARNING: this should probably not be used for bound variables
+
         :param self: AnonymousPO
         :param other: AnonymousPO
         :return: bool
         """
-        # fixme: just test for node, name, math_type and children
-        # first test for class, and then for lean names
-        if self.__class__.__name__ != other.__class__.__name__:
+        # successively test for     nodes
+        #                           name (if exists)
+        #                           math_type
+        #                           children
+        if self.node != other.node:
             return False
-        # then if AnonymousPO, test for nodes
-        elif self.__class__.__name__ == "AnonymousPO":
-            if self.node != other.node:
+        elif 'name' in self.info.keys():
+            if self.info['name'] != other.info['name']:
                 return False
-        # if global var, test for names and types
-        elif self.__class__.__name__  == 'ProofStatePO':
-            if self.lean_data['name'] != other.lean_data['name'] \
-                    or self.math_type != other.math_type:
-                return False
-        # if bound var, just test for types
-        elif self.__class__.__name__  == 'BoundVarPO':
-            if self.math_type != other.math_type:
-                return False
-
-        # now test equality of children
+        elif self.math_type != other.math_type:
+            return False
         elif len(self.children) != len(other.children):
             return False
         else:
-            for index in range(len(self.children)):
-                if not MathObject.__eq__(self.children[index],
-                                      other.children[index]):
+            for child0, child1 in zip(self.children, other.children):
+                if not MathObject.__eq__(child0, child1):
                     return False
         return True
 
@@ -216,9 +225,8 @@ class MathObject:
         (as opposed to the type theory version "x:X").
         :return:
         """
-        # todo: remove the use of "representation" attribute
+        # TODO: change 'is_type_of_pfpo' -> 'is_math_type_of_global_var'
         if format_ == "latex":
-            pass
             log.info(f"computing latex representation of {self}")
         else:
             log.info(f"computing utf-8 representation of {self}")
@@ -226,59 +234,53 @@ class MathObject:
         #######################################################################
         # compute representation of children, and put parentheses when needed #
         #######################################################################
-        children_rep = []
-        node = self.node
+        children_display = []
         i = -1
         for arg in self.children:
             i += 1
-            MathObject.structured_format(arg, format_)
-            rep = arg.representation[format_]
+            math_display = MathObject.structured_format(arg, format_)
+            #rep = arg.representation[format_]
             # the following line computes if parentheses are needed
             # around child n° i
             parentheses = needs_paren(self, i)
             if parentheses:
-                rep = ["(", rep, ")"]
-            children_rep.append(rep)
+                math_display = ["(", math_display, ")"]
+            children_display.append(math_display)
         ##############################################################
         # compute representation by calling the appropriate function #
         # according to node as indicated in latex_structures         #
         ##############################################################
-        if node not in latex_format_data.latex_structures.keys():
+        node = self.node
+        if node not in display_math.latex_structures.keys():
             # node not implemented
             log.warning(f"display of {node} not implemented")
-            self.representation['latex'] = '****'
-            self.representation['utf8'] = '****'
-            return
+            display = "****"
+            # self.representation['latex'] = '****'
+            # self.representation['utf8'] = '****'
         elif format_ == "latex":
-            symbol, format_scheme = \
-                latex_format_data.latex_structures[node]
-            self.representation["latex"] = \
-                format_scheme(symbol=symbol,
-                              children_rep=children_rep,
-                              po=self,
-                              is_type_of_pfpo=is_type_of_pfpo,
-                              format_="latex")
+            symbol, format_scheme = display_math.latex_structures[node]
+            display = format_scheme(symbol=symbol,
+                                    children_rep=children_display,
+                                    po=self,
+                                    is_type_of_pfpo=is_type_of_pfpo,
+                                    format_="latex")
         else:
-            symbol, format_scheme = \
-                latex_format_data.utf8_structures[node]
-            self.representation["utf8"] = \
-                format_scheme(symbol=symbol,
-                              children_rep=children_rep,
-                              po=self,
-                              is_type_of_pfpo=is_type_of_pfpo,
-                              format_="utf8")
-            log.debug(f"---> utf8 rep: {self.representation['utf8']}")
-        return
+            symbol, format_scheme = display_math.utf8_structures[node]
+            display = format_scheme(symbol=symbol,
+                                    children_rep=children_display,
+                                    po=self,
+                                    is_type_of_pfpo=is_type_of_pfpo,
+                                    format_="utf8")
+        log.debug(f"---> display: {display}")
+        return display
 
     def format_as_latex(self, is_type_of_pfpo=False):
-        MathObject.structured_format(self, "latex", is_type_of_pfpo)
-        structured_rep = self.representation["latex"]
-        return list_string_join(structured_rep)
+        display = MathObject.structured_format(self, "latex", is_type_of_pfpo)
+        return list_string_join(display)
 
     def format_as_utf8(self, is_type_of_pfpo=False):
-        MathObject.structured_format(self, "utf8", is_type_of_pfpo)
-        structured_rep = self.representation["utf8"]
-        return list_string_join(structured_rep)
+        display = MathObject.structured_format(self, "utf8", is_type_of_pfpo)
+        return list_string_join(display)
 
 
 def list_string_join(latex_or_utf8_rep) -> str:
@@ -298,7 +300,9 @@ def list_string_join(latex_or_utf8_rep) -> str:
         #    log.debug("string:", latex_str)
         return string
     else:
-        return "?"
+        log.warning("error in list_string_join: argument should be list or "
+                    "str")
+        return "**"
 
 
 # TODO : tenir compte de la profondeur des parenthèses,
@@ -334,99 +338,6 @@ def needs_paren(parent: MathObject, child_number: int) -> bool:
     elif c_node == "SET_COMPLEMENT" and p_node != "SET_COMPLEMENT":
         return False
     return True
-
-
-
-        # ###################
-        # # Bound variables #
-        # ###################
-        # if node.startswith("LOCAL_CONSTANT"):
-        #     # unidentified local constant = bound variable
-        #     # NB: will be given a name when dealing with quantifier or lambda
-        #     # lean_data["name"] must be kept untouched here
-        #     # since it will serve as hint for good name
-        #     representation = {"latex": "??",
-        #                       "utf8": "??"}
-        #     node = "LOCAL_CONSTANT"
-        #     math_type = children[0]
-        #     prop_obj = BoundVarPO(node, [], representation, lean_data,
-        #                           math_type)
-        #     ProofStatePO.dict_[lean_data["id"]] = prop_obj
-        #     #log.info(
-        #     #    f"adding {lean_data['name']} to the dictionary, ident ="
-        #     #    f" {lean_data['id']}")
-        #
-        #     return prop_obj
-        #
-        # #############################################################
-        # # Quantifiers & lambdas: give a good name to bound variable #
-        # #############################################################
-        # # NB: lean_data["name"] is given by structures.lean,
-        # # but may be inadequate (e.g. two distinct variables sharing the
-        # # same name)
-        # # For an expression like ∀ x: X, P(x)
-        # # the logical constraints are: the name of the bound variable (
-        # # which is going to replace `x`)  must be distinct from all names of
-        # # variables appearing in the body `P(x)`, whether free or bound
-        #
-        # if node.startswith("QUANT") or node == "LAMBDA":
-        #     bound_var_type, bound_var, local_context = children
-        #     #log.debug(f"Processing bound var in {node, children}")
-        #     # changing lean_data["name"]
-        #     # so that it will not be on the forbidden list
-        #     hint = bound_var.lean_data["name"]
-        #     bound_var.lean_data["name"] = "processing name..."
-        #     # search for a fresh name valid inside pfpo
-        #     name = give_name.give_local_name(math_type=bound_var_type,
-        #                                      hints=[hint],
-        #                                      body=local_context)
-        #     # store the new name for representation
-        #     bound_var.representation = {"latex": name,
-        #                                 "utf8": name}
-        #     # store the new name for list of variables'names
-        #     # BEWARE: original lean nam is changed
-        #     bound_var.lean_data["name"] = name
-        #                              # of mere string
-        #     #log.debug(f"Give name {name} to bound var {bound_var} in {node}")
-        #
-        # #############
-        # # CONSTANTS #
-        # #############
-        # # todo: suppress
-        # if node.startswith("CONSTANT"):
-        #     info = extract_name(node)
-        #     representation['info'] = info
-        #     node = "CONSTANT"
-        #     #log.debug(f"creating CONSTANT {info}")
-        # #################
-        # # Instantiation #
-        # #################
-        # prop_obj = cls(node, children, representation)
-        # return prop_obj
-
-
-    # def is_prop_math_type(self) -> bool:
-    #     """
-    #     tells if the math_type of self is a Proposition
-    #     NB: for ProofStatePO's (but not for all PropObj),
-    #     if self.math_type.node = 'APPLICATION' then self
-    #     is the term of a Proposition
-    #     (e.g 'injective' vs 'composition')
-    #     """
-    #     return self.math_type.is_prop() \
-    #            or self.math_type.node == 'APPLICATION' \
-    #            or (hasattr(self.math_type, "math_type") \
-    #                and self.math_type.math_type.node == 'PROP')
-
-
-# @dataclass(eq=False)
-# class BoundVarPO(ProofStatePO):
-#     """
-#     Variables that are bound by a quantifier
-#     """
-
-
-
 
 ##########
 # essais #
