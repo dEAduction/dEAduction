@@ -15,6 +15,7 @@ import gettext
 import types
 
 from deaduction.pylib.mathobj.give_name import give_local_name
+import deaduction.pylib.logger as logger
 
 _ = gettext.gettext
 
@@ -35,41 +36,44 @@ def display_math_object(math_object, format_):
     log.debug(f"Computing math display of {math_object}")
     node = math_object.node
     if node in format_from_node.keys():
-        shape = format_from_node['node']
+        shape = format_from_node[node]
         return display_math_object_from_shape(shape, math_object, format_)
-
     else:
         log.warning(f"display error: node {node} not in display_format")
-        return ["****"]
+        return ["*unknown*"]
 
 
 def display_math_object_from_shape(shape, math_object, format_):
     """
     Replace each element of shape with its display.
-        - numbers refer to children, and are replaced by the
+    Ex of shape: [0, " = ", 1]
+    For more examples, see values of the format_from_node dictionary.
+        - numbers refer to children, and will be replaced by the
             corresponding display,
         - strings are displayed as such for utf8, (see exceptions below)
         - functions are called
-
-    Exceptions:
+    Exceptions for strings:
         - "_child#" code for subscript version of child number #
 
     :param shape:
     :param math_object:
     :param format_:
-    :return:    a structured string, to be passed to list_string_join in order
-                to get a fully displayable string
+    :return:    a structured string (a list whose items are lists or strings),
+    to be passed to list_string_join in order to get a fully displayable string
     """
+    log.debug(f"Trying to display from shape {shape}")
     display_shape = []
     for item in shape:
-        display_item = "**"
+        display_item = "¿**"
         if isinstance(item, types.FunctionType):
+            # e.g. item = display_constant, display_application, ...
             display_item = item(math_object, format_)
 
         elif isinstance(item, int):
             if item < len(math_object.children):
                 child = math_object.children[item]
-                display_item = [display_math_object(child, format_)]
+                display_item = display_math_object(child, format_)
+                            # with brackets?
                 if needs_paren(math_object, item):
                     display_item = ['('] + display_item + [')']
             else:  # keep the integer, this could be a pending parameter
@@ -82,8 +86,12 @@ def display_math_object_from_shape(shape, math_object, format_):
                 display_item = subscript(pre_display_item, format_)  # TODO
             else:
                 display_item = text_to_latex(item, format_)
-
+        elif isinstance(item, list):
+            display_item = item
         display_shape.append(display_item)
+
+    if len(display_shape) == 1:
+        display_shape = display_shape[0]
     return display_shape
 
 
@@ -125,7 +133,7 @@ def needs_paren(parent, child_number: int) -> bool:
 #########################################################################
 #########################################################################
 def display_math_type0(math_object, format_):
-    return math_object.math_type[0]
+    return display_math_object(math_object.math_type[0], format_)
 
 
 def display_constant(math_object, format_):
@@ -136,15 +144,17 @@ def display_constant(math_object, format_):
     :param format_:
     :return:
     """
+    display = "*CST*"
     if math_object.math_type.node == "SET_FAMILY":
         return display_instance_set_family(math_object, format_)
-    elif math_object.math_type == "SEQUENCE":
-        return "**"  # todo
-    display = math_object.info["name"]
+    elif math_object.math_type.node == "SEQUENCE":
+        return "*SEQ*"  # todo
+    if 'name' in math_object.info.keys():
+        display = [math_object.info['name']]
     # if display in format_from_constant_name.keys():
     #     shape = format_from_constant_name[display]
     #     return display_math_object_from_shape(shape, math_object, format_)
-    return [display]
+    return display
 
 
 def display_application(math_object, format_):
@@ -155,43 +165,86 @@ def display_application(math_object, format_):
     :return:
     """
     first_child = math_object.children[0]
-    shape = ["***"]
+    second_child = math_object.children[1]
+    log.debug(f"displaying APP, 1st child = {first_child}, "
+              f"2nd child = {second_child}")
+    shape = ["*APP*"]
 
+    # case of index notation
+    if first_child.math_type.node in ["SET_FAMILY", "SEQUENCE"]:
+        shape = [0, "_child1"]
+        return display_math_object_from_shape(shape, math_object, format_)
     # strange cases
-    if first_child.node == "CONSTANT":
+    elif first_child.node == "CONSTANT":
         name = first_child.info['name']
         if name in format_from_constant_name.keys():
             shape = format_from_constant_name[name]
+        elif not second_child.is_type():
+            shape = [name, 1]
         else:
-            shape = [name, 1]   # presumably we will get some argument
-                                # to apply name
-    # case of index notation
-    elif first_child.math_type.node in ["SET_FAMILY", "SEQUENCE"]:
-        shape = [0, "_child1"]
-        return display_math_object_from_shape(shape, math_object, format_)
+            # shape = [name, 0]
+            shape = [0, " " + _("is") + " ", name]  # we hope to get some
+            # argument to apply name
+    elif first_child.node == "APPLICATION":
+        display_first_child = display_math_object(first_child, format_)
+        if has_pending_parameter(display_first_child):
+            shape = display_first_child
 
-    display = display_math_object_from_shape(shape, math_object, format_)
-
-    # general case, functional notation : f(x)
-    elif not has_pending_parameter()
-
-
-        shape = [0, "(", 1, ")"]
+    if not has_pending_parameter(shape):
+        if math_object.is_prop():
+            # display of a property, e.g. "f is injective"
+            shape = [1, " " + _("is") + " ", 0]
+        else:
+            # general case, functional notation: f(x)
+            shape = [0, "(", 1, ")"]
         return display_math_object_from_shape(shape, math_object, format_)
     ###################################
     # treatment of pending parameters #
     ###################################
-    second_child = math_object.children[1]
-
-
-    return display_math_object_from_shape(shape, math_object, format_)
+    # here shape comes from first_child,
+    # either from display if node == APPLICATION
+    # or if node == CONSTANT
+    # if second parameter is not type, insert it in shape
+    # then return shape if there remains some pending parameters,
+    # else display shape
+    if not second_child.is_type():
+        shape = insert_pending_param(second_child, shape, format_)
+    if has_pending_parameter(shape):
+        return shape
+    else:
+        return display_math_object_from_shape(shape, math_object, format_)
 
 
 def has_pending_parameter(structured_display: [str]):
+    """
+    A structured display is supposed to be a list whose items are either
+    lists or strings. But it may contain "pending parameters" which are
+    integer.
+
+    :param structured_display:
+    :return:
+    """
     for item in structured_display:
         if isinstance(item, int):
             return True
     return False
+
+
+def insert_pending_param(math_object, shape, format_):
+    """
+    Modify shape:
+    replace first integer 0 by math_object and then shift every integer by 1
+
+    :param math_object:
+    :param shape:
+    :return:
+    """
+    # insert math_object
+    shape1 = [display_math_object(math_object, format_)
+              if item == 0 else item for item in shape]
+    # shift integers
+    shape2 = [item - 1 if isinstance(item, int) else item for item in shape1]
+    return shape2
 
 
 def display_math_type_of_local_constant(math_object, format_):
@@ -328,8 +381,8 @@ format_from_node = {
     "PROP_IFF": [0, " ⇔ ", 1],
     "PROP_NOT": [" " + _("NOT") + " ", 0],
     "PROP_IMPLIES": [0, " ⇒ ", 1],
-    "QUANT_∀": ["∀ ", 0, " ∈", 1, ", ", 2],
-    "QUANT_∃": ["∃ ", 0, " ∈", 1, ", ", 2],
+    "QUANT_∀": ["∀ ", 1, " ∈", 0, ", ", 2],
+    "QUANT_∃": ["∃ ", 1, " ∈", 0, ", ", 2],
     "PROP_∃": "not implemented",
     ###############
     # SET THEORY: #
@@ -401,3 +454,10 @@ latex_symbols = {  # TODO : complete the dictionary
     "FUNCTION": " → ",
     "composition": '∘',
 }
+
+
+##########
+# essais #
+##########
+if __name__ == '__main__':
+    logger.configure()

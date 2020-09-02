@@ -81,8 +81,10 @@ def give_name(math_type,
     """
     # log.debug(f"giving name to bound var, type={math_type}, hints={hints}")
     # log.debug(f"forbidden names: {forbidden_names}")
-    if hasattr(math_type, "lean_data"):
-        type_name = math_type.lean_data["name"]
+    hints = [hint[0].lower() for hint in hints]  # so each hint has only one
+    # lowercase letter
+    if 'name' in math_type.info.keys():
+        type_name = math_type.info["name"]
         if type_name[0].isupper():
             hint = type_name[0].lower()
             hints.insert(0, hint)

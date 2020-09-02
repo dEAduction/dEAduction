@@ -127,6 +127,7 @@ class MathObject:
                                                  hints=[hint],
                                                  body=local_context)
                 bound_var.info["name"] = name
+                bound_var.math_type = bound_var_type
             ######################
             # end: instantiation #
             ######################
@@ -182,7 +183,7 @@ class MathObject:
         """
         return self.math_type.node == "PROP"
 
-    def is_TYPE(self) -> bool:
+    def is_type(self) -> bool:
         """
         Test if self represents a mathematical Proposition
         For global variables, only the math_type attribute should be tested !
