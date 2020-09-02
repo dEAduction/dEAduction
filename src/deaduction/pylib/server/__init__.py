@@ -43,6 +43,8 @@ import deaduction.pylib.server.exceptions as exceptions
 
 from PySide2.QtCore import Signal, QObject
 
+from gettext import gettext as _
+
 ############################################
 # Lean magic messages
 ############################################
@@ -78,9 +80,9 @@ class ServerInterface(QObject):
         self.log = logging.getLogger("ServerInterface")
 
         # Lean attributes
-        self.lean_file: LeanFile    = None
-        self.lean_server: LeanServer = LeanServer(nursery)
-        self.nursery: trio.Nursery   = nursery
+        self.lean_file: LeanFile      = None
+        self.lean_server: LeanServer  = LeanServer(nursery)
+        self.nursery: trio.Nursery    = nursery
 
         # Set server callbacks
         self.lean_server.on_message_callback = self.__on_lean_message
@@ -88,14 +90,17 @@ class ServerInterface(QObject):
             self.__on_lean_state_change
 
         # Current exercise
-        self.exercise_current        = None
+        self.exercise_current         = None
 
-        # Current proof state
-        self.__proof_state_valid     = trio.Event()
-        self.__tmp_hypo_analysis     = ""
-        self.__tmp_targets_analysis  = ""
+        # Current proof state + Event s
+        self.__proof_state_valid      = trio.Event()
+        self.__proof_received_context = trio.Event()
+        self.__proof_received_target  = trio.Event()
 
-        self.proof_state             = None
+        self.__tmp_hypo_analysis      = ""
+        self.__tmp_targets_analysis   = ""
+
+        self.proof_state              = None
 
         # Errors memory channels
         self.error_send, self.error_recv = \
@@ -124,12 +129,17 @@ class ServerInterface(QObject):
         elif txt.startswith("context:"):
             self.log.info("Got new context")
             self.__tmp_hypo_analysis = txt
-            self.__proof_state_valid = trio.Event()
+
+            self.__proof_state_valid = trio.Event() # Invalidate proof state
+            self.__proof_received_context.set()     # Received proof context
 
         elif txt.startswith("targets:"):
             self.log.info("Got new targets")
             self.__tmp_targets_analysis = txt
-            self.__proof_state_valid = trio.Event()
+
+            self.__proof_state_valid = trio.Event() # Invalidate proof state
+            self.__proof_received_target.set()      # Received proof target
+
 
     def __on_lean_state_change(self, is_running: bool):
         self.log.info(f"New lean state: {is_running}")
@@ -158,11 +168,19 @@ class ServerInterface(QObject):
         req = SyncRequest(file_name=self.lean_file.file_name,
                           content=self.lean_file.contents)
 
+        # Invalidate events
+        self.__proof_received_context = trio.Event()
+        self.__proof_received_target  = trio.Event()
+
         resp = await self.lean_server.send(req)
         if resp.message == "file invalidated":
             self.lean_file_changed.emit()
 
+            await self.__proof_received_context.wait()
+            await self.__proof_received_target.wait()
             await self.lean_server.running_monitor.wait_ready()
+
+            self.log.debug(_("After request"))
 
             # Construct new proof state from temp strings
             if not self.__proof_state_valid.is_set():
