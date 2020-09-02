@@ -94,8 +94,8 @@ class ServerInterface(QObject):
 
         # Current proof state + Event s
         self.__proof_state_valid      = trio.Event()
-        self.__proof_received_context = trio.Event()
-        self.__proof_received_target  = trio.Event()
+        self.__proof_receive_done     = trio.Event()
+        self.__proof_receive_error    = trio.Event() # Set if request failed
 
         self.__tmp_hypo_analysis      = ""
         self.__tmp_targets_analysis   = ""
@@ -115,6 +115,10 @@ class ServerInterface(QObject):
     ############################################
     # Callbacks from lean server
     ############################################
+    def __check_receive_state(self):
+        if self.__tmp_targets_analysis and self.__tmp_hypo_analysis:
+            self.__proof_receive_done.set()
+
     def __on_lean_message(self, msg: Message):
         txt      = msg.text
         severity = msg.severity
@@ -131,15 +135,14 @@ class ServerInterface(QObject):
             self.__tmp_hypo_analysis = txt
 
             self.__proof_state_valid = trio.Event() # Invalidate proof state
-            self.__proof_received_context.set()     # Received proof context
+            self.__check_receive_state()
 
         elif txt.startswith("targets:"):
             self.log.info("Got new targets")
             self.__tmp_targets_analysis = txt
 
             self.__proof_state_valid = trio.Event() # Invalidate proof state
-            self.__proof_received_target.set()      # Received proof target
-
+            self.__check_receive_state()
 
     def __on_lean_state_change(self, is_running: bool):
         self.log.info(f"New lean state: {is_running}")
@@ -169,15 +172,15 @@ class ServerInterface(QObject):
                           content=self.lean_file.contents)
 
         # Invalidate events
-        self.__proof_received_context = trio.Event()
-        self.__proof_received_target  = trio.Event()
+        self.__proof_receive_done   = trio.Event()
+        self.__tmp_hypo_analysis    = ""
+        self.__tmp_targets_analysis = ""
 
         resp = await self.lean_server.send(req)
         if resp.message == "file invalidated":
             self.lean_file_changed.emit()
 
-            await self.__proof_received_context.wait()
-            await self.__proof_received_target.wait()
+            await self.__proof_receive_done.wait()
             await self.lean_server.running_monitor.wait_ready()
 
             self.log.debug(_("After request"))
