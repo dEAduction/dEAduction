@@ -155,11 +155,14 @@ class ServerInterface(QObject):
         if msg.text.startswith(LEAN_NOGOALS_TEXT):
             if hasattr(self.proof_no_goals, "emit"):
                 self.proof_no_goals.emit()
+                self.__proof_receive_done.set() # Done receiving
+
         elif msg.text.startswith(LEAN_UNRESOLVED_TEXT):
             pass
 
         else:
             self.error_send.send_nowait(msg)
+            self.__proof_receive_done.set() # Done receiving
 
     ############################################
     # Update
