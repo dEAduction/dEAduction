@@ -132,8 +132,14 @@ def needs_paren(parent, child_number: int) -> bool:
 # (see also the format_from_node dictionary)                            #
 #########################################################################
 #########################################################################
+def display_name(math_object, format_):
+    """display first child of math_type"""
+    return [math_object.info['name']]
+
+
 def display_math_type0(math_object, format_):
-    return display_math_object(math_object.math_type[0], format_)
+    """display first child of math_type"""
+    return display_math_object(math_object.math_type.children[0], format_)
 
 
 def display_constant(math_object, format_):
@@ -291,15 +297,14 @@ def display_instance_set_family(math_object, format_="latex"):
                                  body=math_object)
     index_rep = index_name
     index_subscript_rep = global_subscript(index_rep)
-    index_set_rep = math_object.math_type.children[0].representation[format_]
-    name = math_object.lean_data["name"]
-    if format_ == "latex":
-        rep = [r"\{", name, r"_{", index_rep, r"}, ",
-               index_rep, r"\in ", index_set_rep, r"\}"]
-    else:
-        rep = ["{", name, index_subscript_rep, ", ",
-               index_rep, "∈", index_set_rep, "}"]
-    return rep
+    #index_set_rep = math_object.math_type.children[0].representation[format_]
+    #name = math_object.info["name"]
+    # if format_ == "latex":
+    #     rep = [r"\{", name, r"_{", index_rep, r"}, ",
+    #            index_rep, r"\in ", index_set_rep, r"\}"]
+    shape = ["{", display_name, index_subscript_rep, ", ",
+           [index_rep], "∈", display_math_type0, "}"]
+    return display_math_object_from_shape(shape, math_object, format_)
 
 
 #######################################
