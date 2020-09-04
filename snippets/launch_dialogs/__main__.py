@@ -17,6 +17,7 @@ from PySide2.QtWidgets import ( QApplication,
 class CourseChooseAndPreview(QGroupBox):
 
     def __init__(self):
+
         super().__init__()
         self.setTitle('Choose course')
 
@@ -70,29 +71,51 @@ class CourseChooseAndPreview(QGroupBox):
             course_file_path = Path(dialog.selectedFiles()[0])
 
 
+class ExerciseChooseAndPreview(QGroupBox):
+
+    def __init__(self):
+
+        super().__init__()
+        self.setTitle('Choose exercise')
+
+
 class ChooseCourseExercise(QWidget):
 
     def __init__(self):
+
         super().__init__()
+
+        course_cap =   CourseChooseAndPreview()
+        exercise_cap = ExerciseChooseAndPreview()
+        selection_zone_lyt = QHBoxLayout()
+        selection_zone_lyt.addWidget(course_cap)
+        selection_zone_lyt.addWidget(exercise_cap)
 
         buttons_lyt = QHBoxLayout()
         help_btn = QPushButton('Get help')
         quit_btn = QPushButton('Quit')
-        self.choose_this_course_btn = QPushButton('Choose this course')
+        self.choose_this_course_btn = QPushButton('Launch exercise')
         buttons_lyt.addWidget(help_btn)
         buttons_lyt.addWidget(quit_btn)
         buttons_lyt.addStretch()
         buttons_lyt.addWidget(self.choose_this_course_btn)
 
+        # ─────────────────── Main layout ────────────────── #
+        
+        main_lyt = QVBoxLayout()
+        main_lyt.addLayout(selection_zone_lyt)
+        main_lyt.addLayout(buttons_lyt)
+        self.setLayout(main_lyt)
+
         # ─────────────────────── UI ─────────────────────── #
 
-        self.setWindowTitle('Choose course and exercise')
+        self.setWindowTitle('d∃∀duction — Choose course and exercise')
 
 
 if __name__ == '__main__':
     app = QApplication()
 
-    cc = CourseChooseAndPreview()
-    cc.show()
+    blanquistes_du_nil = ChooseCourseExercise()
+    blanquistes_du_nil.show()
 
     sys.exit(app.exec_())
