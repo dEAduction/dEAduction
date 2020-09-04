@@ -21,6 +21,8 @@ class CourseExercisePreview(QWidget):
     def __init__(self, title: str, metadata: OrderedDict[str, str]):
         super().__init__()
 
+        # Result with a grid layout is better than with a pile of
+        # horizontal layouts
         grid_layout = QGridLayout()
 
         for label, val in metadata.items():
@@ -32,7 +34,8 @@ class CourseExercisePreview(QWidget):
         main_layout.addWidget(QLabel(f'<i>{title}</i>'))
         main_layout.addLayout(grid_layout)
 
-        main_layout.setContentsMargins(0, 0, 0, 0)
+        # Default is 11 px in all directions
+        main_layout.setContentsMargins(0, 17, 0, 0)
         
         self.setLayout(main_layout)
 
@@ -51,19 +54,20 @@ class CourseChooseAndPreview(QGroupBox):
         browse_btn.clicked.connect(self.__browse_for_course)
         previous_courses_wgt = QListWidget()
         previous_courses_wgt.addItem(QListWidgetItem('Test item'))
-        choose_course_lyt = QVBoxLayout()
-        choose_course_lyt.addWidget(QLabel('Choose a previous course or browse files'))
-        choose_course_lyt.addWidget(browse_btn)
-        choose_course_lyt.addWidget(previous_courses_wgt)
 
-        metadata = {'Adress': '', 'Teacher': '', 'School': '', 'Year': ''}
+        metadata = {'Course name': 'Topologie algébrique',
+                    'Teacher':     'Professeur Le Roux',
+                    'School':      'Yet another Sorbonne',
+                    'Year':        '2020-2021',
+                    'Adress':      '~/Truc/Machin/Bidule/topalg.lean'}
         course_meta_data = CourseExercisePreview('Selected course', metadata)
 
         # ─────────────────── Main layout ────────────────── #
 
         main_layout = QVBoxLayout()
-        main_layout.addLayout(choose_course_lyt)
-        main_layout.addStretch()
+        main_layout.addWidget(QLabel('Choose a previous course or browse files'))
+        main_layout.addWidget(browse_btn)
+        main_layout.addWidget(previous_courses_wgt)
         main_layout.addWidget(course_meta_data)
         self.setLayout(main_layout)
 
@@ -93,13 +97,12 @@ class ExerciseChooseAndPreview(QGroupBox):
         metadata = {'Name': '', 'Instructions': '', 'Comments': '', 'L∃∀N code': ''}
         exercise_preview_wgt = CourseExercisePreview('Selected exercise', metadata)
 
-        main_lyt = QVBoxLayout()
-        main_lyt.addWidget(QLabel('Exercises list'))
-        main_lyt.addWidget(exercises_list)
-        main_lyt.addStretch()
-        main_lyt.addWidget(exercise_preview_wgt)
+        main_layout = QVBoxLayout()
+        main_layout.addWidget(QLabel('Exercises list'))
+        main_layout.addWidget(exercises_list)
+        main_layout.addWidget(exercise_preview_wgt)
 
-        self.setLayout(main_lyt)
+        self.setLayout(main_layout)
 
 class ChooseCourseExercise(QWidget):
 
