@@ -90,7 +90,8 @@ PrettyName
     Le "ET" est commutatif
 Description
     Le bouton "↔" permet de découper le but en deux implications.
-    On peut alors appliquer le résultat de l'exercice précédent...
+    On peut alors appliquer le résultat de l'exercice précédent en le
+    sélectionnant dans la liste...
 Tools->Logic
     and iff implicate
 Tools->ProofTechniques
@@ -139,7 +140,7 @@ begin
 end
 
 lemma exercise.non_ET :
-not (P and Q) ↔ (not P) or (not Q)
+¬ (P ∧ Q) ↔ (¬ P) ∨ (¬ Q)
 :=
 /- dEAduction
 PrettyName
@@ -162,8 +163,7 @@ lemma exercise.tiers_exclus
 :=
 /- dEAduction
 PrettyName
-    Le tiers exclu dit que l'une des deux propriétés "R" et "NON R" doit être
-    vraie
+    Le tiers exclu : l'une des deux propriétés "R" et "NON R" est vraie
 Description
     Le bouton "0=1" permet de conclure la preuve lorsqu'on a obtenu deux
     propriétés contradictoires.
@@ -183,7 +183,9 @@ lemma exercise.contraposition :
 PrettyName
     Contraposition
 Description
-    Saurez-vous combiner les boutons pour démontrer cette règle ?
+    Le bouton "=>" permet également d'appliquer une implication "P => Q" à la
+    propriété "P" pour obtenir la propriété "Q". Attention, avant de
+    l'actionner il faut sélectionner toutes les propriétés requises !
 Tools->Logic
     negate or and implicate iff
 Tools->ProofTechniques
@@ -200,7 +202,7 @@ lemma exercise.ou_implication_I :
 PrettyName
     Implication sous forme de "OU"
 Description
-    Cette propriété de transformer une implication en une disjonction
+    Cette propriété permet de transformer une implication en une disjonction
 Tools->Logic
     negate or and implicate iff
 Tools->ProofTechniques
