@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from typing import  OrderedDict
+from typing import  OrderedDict, List
 
 from PySide2.QtCore import      Slot
 from PySide2.QtWidgets import ( QApplication,
@@ -12,74 +12,82 @@ from PySide2.QtWidgets import ( QApplication,
                                 QListWidget,
                                 QWidget,
                                 QLabel,
+                                QLayout,
                                 QListWidgetItem,
                                 QVBoxLayout,
                                 QHBoxLayout)
 
 
-class CourseExercisePreview(QWidget):
+class ChoosePreviewCourseExerciseLayout(QHBoxLayout):
 
-    def __init__(self, title: str, metadata: OrderedDict[str, str]):
+    def __init__(self, choose_title:  str, choose_lyt:  QLayout,
+                       preview_title: str, preview_lyt: QLayout):
+
         super().__init__()
 
-        # Result with a grid layout is better than with a pile of
-        # horizontal layouts
-        grid_layout = QGridLayout()
+        choose_gb = QGroupBox(choose_title)
+        choose_gb.setLayout(choose_lyt)
+        
+        preview_gb = QGroupBox(preview_title)
+        preview_gb.setLayout(preview_lyt)
 
-        for label, val in metadata.items():
-            row = grid_layout.rowCount()
-            grid_layout.addWidget(QLabel(f'{label}:'), row, 0)
-            grid_layout.addWidget(QLabel(val),         row, 1)
+        self.setContentsMargins(0, 0, 0, 0)
+        self.addWidget(choose_gb)
+        self.addWidget(preview_gb)
+
+
+class CourseExerciseTitle(QLabel):
+
+    def __init__(self, text: str):
+
+        super().__init__(text)
+        self.setStyleSheet('font-size: 20pt;')
+
+
+class MetainfoBloc(QWidget):
+
+    def __init__(self, list_info: List[str]):
+
+        super().__init__()
 
         main_layout = QVBoxLayout()
-        main_layout.addWidget(QLabel(f'<i>{title}</i>'))
-        main_layout.addLayout(grid_layout)
 
-        # Default is 11 px in all directions
-        main_layout.setContentsMargins(0, 17, 0, 0)
-        
+        for info in list_info:
+            layout = QHBoxLayout()
+            layout.addStretch()
+            label = QLabel(info)
+            label.setStyleSheet('font-style: italic;')
+            layout.addWidget(label)
+            main_layout.addLayout(layout)
+
+        main_layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(main_layout)
 
 
-
-class CourseChooseAndPreview(QWidget):
+class CourseChoosePreview(QWidget):
 
     def __init__(self):
 
         super().__init__()
 
-        # ──────────────────── Choose course ─────────────────── #
-
-        choose_course_gb = QGroupBox('Choose course (browse files or previous course)')
+        # ────────────── Choose course layout ────────────── #
 
         browse_btn = QPushButton('Browse files')
         browse_btn.clicked.connect(self.__browse_for_course)
         previous_courses_wgt = QListWidget()
-        previous_courses_wgt.addItem(QListWidgetItem('Test item'))
 
         choose_course_lyt = QVBoxLayout()
         choose_course_lyt.addWidget(browse_btn)
         choose_course_lyt.addWidget(previous_courses_wgt)
 
-        choose_course_gb.setLayout(choose_course_lyt)
-
-        # ───────────────── Preview course ───────────────── #
-
-        preview_course_gb = QGroupBox('Preview course')
+        # ────────────── Preview course layout ───────────── #
 
         course_title_lyt = QHBoxLayout()
-        course_title = QLabel('<b>Topologie algébrique</b>')
-        course_title.setStyleSheet('font-size: 18pt;')
-        course_title_lyt.addWidget(course_title)
+        course_title_lyt.addWidget(CourseExerciseTitle('Topologie algébrique'))
 
-        course_meta_1_wgt = QLabel('<i>Yet another Sorbonne University — 2020-2021</i>')
-        course_meta_2_wgt = QLabel('<i>Frédéric Le Roux')
-        course_meta_1_lyt = QHBoxLayout()
-        course_meta_1_lyt.addStretch()
-        course_meta_1_lyt.addWidget(course_meta_1_wgt)
-        course_meta_2_lyt = QHBoxLayout()
-        course_meta_2_lyt.addStretch()
-        course_meta_2_lyt.addWidget(course_meta_2_wgt)
+        course_metainfo_list = ['Yet another Sorbonne University, 2020-2021',
+                                 'Frédéric Le Roux']
+        course_metainfo_bloc = MetainfoBloc(course_metainfo_list)
 
         comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit." \
                 'Mauris tempus congue turpis mollis consequat. Nulla finibus tempor' \
@@ -101,18 +109,16 @@ class CourseChooseAndPreview(QWidget):
 
         preview_course_lyt = QVBoxLayout()
         preview_course_lyt.addLayout(course_title_lyt)
-        preview_course_lyt.addLayout(course_meta_1_lyt)
-        preview_course_lyt.addLayout(course_meta_2_lyt)
+        preview_course_lyt.addWidget(course_metainfo_bloc)
         preview_course_lyt.addWidget(course_comment)
-
-        preview_course_gb.setLayout(preview_course_lyt)
 
         # ─────────────────── Main layout ────────────────── #
 
-        main_layout = QHBoxLayout()
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.addWidget(choose_course_gb)
-        main_layout.addWidget(preview_course_gb)
+        main_layout = ChoosePreviewCourseExerciseLayout(
+                'Choose course (browse files or previous course)',
+                choose_course_lyt,
+                'Preview course',
+                preview_course_lyt)
         self.setLayout(main_layout)
 
 
@@ -127,25 +133,29 @@ class CourseChooseAndPreview(QWidget):
             course_file_path = Path(dialog.selectedFiles()[0])
 
 
-class ExerciseChooseAndPreview(QGroupBox):
+class ExerciseChoosePreview(QWidget):
 
     def __init__(self):
 
         super().__init__()
-        self.setTitle('Choose exercise')
+
+        # ───────────────── Choose exercise ──────────────── #
 
         exercises_list = QListWidget()
-        exercises_list.addItem(QListWidgetItem(
-            "L'image réciproque d'un ouvert est un ouvert"))
+        choose_exercise_lyt = QVBoxLayout()
+        choose_exercise_lyt.addWidget(exercises_list)
 
-        metadata = {'Name': '', 'Instructions': '', 'Comments': '', 'L∃∀N code': ''}
-        exercise_preview_wgt = CourseExercisePreview('Selected exercise', metadata)
+        # ──────────────── Preview Exercise ──────────────── #
 
-        main_layout = QHBoxLayout()
-        main_layout.addWidget(QLabel('Exercises list'))
-        main_layout.addWidget(exercises_list)
-        main_layout.addWidget(exercise_preview_wgt)
+        preview_exercise_lyt = QVBoxLayout()
 
+        # ─────────────────── Main layout ────────────────── #
+
+        main_layout = ChoosePreviewCourseExerciseLayout(
+                'Choose exercise (from the list)',
+                choose_exercise_lyt,
+                'Preview exercise',
+                preview_exercise_lyt)
         self.setLayout(main_layout)
 
 class ChooseCourseExercise(QWidget):
@@ -154,8 +164,8 @@ class ChooseCourseExercise(QWidget):
 
         super().__init__()
 
-        course_cap =   CourseChooseAndPreview()
-        exercise_cap = ExerciseChooseAndPreview()
+        course_cap =   CourseChoosePreview()
+        exercise_cap = ExerciseChoosePreview()
         selection_zone_lyt = QVBoxLayout()
         selection_zone_lyt.setContentsMargins(0, 0, 0, 0)
         selection_zone_lyt.addWidget(course_cap)
