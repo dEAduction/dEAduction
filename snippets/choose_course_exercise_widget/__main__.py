@@ -8,6 +8,7 @@ from PySide2.QtWidgets import ( QApplication,
                                 QGroupBox,
                                 QFileDialog,
                                 QPushButton,
+                                QTextEdit,
                                 QListWidget,
                                 QWidget,
                                 QLabel,
@@ -48,27 +49,68 @@ class CourseChooseAndPreview(QGroupBox):
         super().__init__()
         self.setTitle('Choose course')
 
-        # ─────────────── Widgets and layouts ────────────── #
+        # ──────────────────── Selection ─────────────────── #
 
         browse_btn = QPushButton('Browse files')
         browse_btn.clicked.connect(self.__browse_for_course)
         previous_courses_wgt = QListWidget()
         previous_courses_wgt.addItem(QListWidgetItem('Test item'))
 
-        metadata = {'Course name': 'Topologie algébrique',
-                    'Teacher':     'Professeur Le Roux',
-                    'School':      'Yet another Sorbonne',
-                    'Year':        '2020-2021',
-                    'Adress':      '~/Truc/Machin/Bidule/topalg.lean'}
-        course_meta_data = CourseExercisePreview('Selected course', metadata)
+        selection_lyt = QVBoxLayout()
+        selection_lyt.setContentsMargins(0, 0, 0, 0)
+        selection_lyt.addWidget(QLabel('Choose a previous course or browse'
+                                       'files'))
+        selection_lyt.addWidget(browse_btn)
+        selection_lyt.addWidget(previous_courses_wgt)
+        selection_wgt = QWidget()
+        selection_wgt.setLayout(selection_lyt)
+
+        # ───────────────────── Preview ──────────────────── #
+
+        course_title_lyt = QHBoxLayout()
+        course_title_lyt.addWidget(QLabel('<b>Topologie algébrique</b>'))
+
+        course_meta_1_wgt = QLabel('<i>Yet another Sorbonne University — 2020-2021</i>')
+        course_meta_2_wgt = QLabel('<i>Frédéric Le Roux')
+        course_meta_1_lyt = QHBoxLayout()
+        course_meta_1_lyt.addStretch()
+        course_meta_1_lyt.addWidget(course_meta_1_wgt)
+        course_meta_2_lyt = QHBoxLayout()
+        course_meta_2_lyt.addStretch()
+        course_meta_2_lyt.addWidget(course_meta_2_wgt)
+
+        comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit." \
+                'Mauris tempus congue turpis mollis consequat. Nulla finibus tempor' \
+                'pharetra. Duis accumsan nisl tincidunt lacus aliquet, vel sodales nunc' \
+                'blandit. Phasellus ligula tortor, venenatis in quam in, pretium' \
+                'faucibus dolor. Morbi quis orci in mauris scelerisque ultricies at ut' \
+                'augue. In et libero quis arcu tincidunt vestibulum. Etiam at odio eget' \
+                'felis interdum tincidunt. Aenean neque metus, semper vitae metus vitae,' \
+                'euismod dictum lectus. Pellentesque vel turpis metus. Phasellus sed' \
+                'eros vel quam viverra sagittis. Class aptent taciti sociosqu ad litora' \
+                'torquent per conubia nostra, per inceptos himenaeos. Aliquam bibendum' \
+                'ipsum arcu, eu condimentum massa ultricies et. Fusce facilisis felis' \
+                'dictum nunc placerat, ut malesuada lectus maximus. Nam dignissim orci' \
+                'ipsum, id luctus mauris iaculis condimentum. Aliquam arcu eros, tempor' \
+                'vitae vulputate eget, viverra quis metus.'
+
+        course_comment = QTextEdit(comment)
+        course_comment.setReadOnly(True)
+
+        preview_lyt = QVBoxLayout()
+        preview_lyt.setContentsMargins(0, 0, 0, 0)
+        preview_lyt.addLayout(course_title_lyt)
+        preview_lyt.addLayout(course_meta_1_lyt)
+        preview_lyt.addLayout(course_meta_2_lyt)
+        preview_lyt.addWidget(course_comment)
+        preview_wgt = QWidget()
+        preview_wgt.setLayout(preview_lyt)
 
         # ─────────────────── Main layout ────────────────── #
 
-        main_layout = QVBoxLayout()
-        main_layout.addWidget(QLabel('Choose a previous course or browse files'))
-        main_layout.addWidget(browse_btn)
-        main_layout.addWidget(previous_courses_wgt)
-        main_layout.addWidget(course_meta_data)
+        main_layout = QHBoxLayout()
+        main_layout.addWidget(selection_wgt)
+        main_layout.addWidget(preview_wgt)
         self.setLayout(main_layout)
 
 
@@ -97,7 +139,7 @@ class ExerciseChooseAndPreview(QGroupBox):
         metadata = {'Name': '', 'Instructions': '', 'Comments': '', 'L∃∀N code': ''}
         exercise_preview_wgt = CourseExercisePreview('Selected exercise', metadata)
 
-        main_layout = QVBoxLayout()
+        main_layout = QHBoxLayout()
         main_layout.addWidget(QLabel('Exercises list'))
         main_layout.addWidget(exercises_list)
         main_layout.addWidget(exercise_preview_wgt)
@@ -112,7 +154,7 @@ class ChooseCourseExercise(QWidget):
 
         course_cap =   CourseChooseAndPreview()
         exercise_cap = ExerciseChooseAndPreview()
-        selection_zone_lyt = QHBoxLayout()
+        selection_zone_lyt = QVBoxLayout()
         selection_zone_lyt.setContentsMargins(0, 0, 0, 0)
         selection_zone_lyt.addWidget(course_cap)
         selection_zone_lyt.addWidget(exercise_cap)
