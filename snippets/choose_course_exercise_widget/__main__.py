@@ -68,7 +68,9 @@ class CourseChooseAndPreview(QGroupBox):
         # ───────────────────── Preview ──────────────────── #
 
         course_title_lyt = QHBoxLayout()
-        course_title_lyt.addWidget(QLabel('<b>Topologie algébrique</b>'))
+        course_title = QLabel('<b>Topologie algébrique</b>')
+        course_title.setStyleSheet('font-size: 18pt;')
+        course_title_lyt.addWidget(course_title)
 
         course_meta_1_wgt = QLabel('<i>Yet another Sorbonne University — 2020-2021</i>')
         course_meta_2_wgt = QLabel('<i>Frédéric Le Roux')
