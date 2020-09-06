@@ -128,6 +128,24 @@ class PropObj:
                     return False
         return True
 
+    def contains(self, other):
+        """
+        Compute the number of copies of other contained in self
+
+        :param other:
+        :return:
+        """
+        if PropObj.__eq__(self, other):
+            counter = 1
+        else:
+            counter = 0
+        for math_object in self.children:
+            counter += math_object.contains(other)
+        return counter
+
+
+
+
     def is_prop(self) -> bool:
         """
         Test if self represents a mathematical Proposition
