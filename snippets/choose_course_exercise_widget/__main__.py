@@ -42,30 +42,30 @@ class CourseExercisePreview(QWidget):
 
 
 
-class CourseChooseAndPreview(QGroupBox):
+class CourseChooseAndPreview(QWidget):
 
     def __init__(self):
 
         super().__init__()
-        self.setTitle('Choose course')
 
-        # ──────────────────── Selection ─────────────────── #
+        # ──────────────────── Choose course ─────────────────── #
+
+        choose_course_gb = QGroupBox('Choose course (browse files or previous course)')
 
         browse_btn = QPushButton('Browse files')
         browse_btn.clicked.connect(self.__browse_for_course)
         previous_courses_wgt = QListWidget()
         previous_courses_wgt.addItem(QListWidgetItem('Test item'))
 
-        selection_lyt = QVBoxLayout()
-        selection_lyt.setContentsMargins(0, 0, 0, 0)
-        selection_lyt.addWidget(QLabel('Choose a previous course or browse'
-                                       'files'))
-        selection_lyt.addWidget(browse_btn)
-        selection_lyt.addWidget(previous_courses_wgt)
-        selection_wgt = QWidget()
-        selection_wgt.setLayout(selection_lyt)
+        choose_course_lyt = QVBoxLayout()
+        choose_course_lyt.addWidget(browse_btn)
+        choose_course_lyt.addWidget(previous_courses_wgt)
 
-        # ───────────────────── Preview ──────────────────── #
+        choose_course_gb.setLayout(choose_course_lyt)
+
+        # ───────────────── Preview course ───────────────── #
+
+        preview_course_gb = QGroupBox('Preview course')
 
         course_title_lyt = QHBoxLayout()
         course_title = QLabel('<b>Topologie algébrique</b>')
@@ -99,20 +99,20 @@ class CourseChooseAndPreview(QGroupBox):
         course_comment = QTextEdit(comment)
         course_comment.setReadOnly(True)
 
-        preview_lyt = QVBoxLayout()
-        preview_lyt.setContentsMargins(0, 0, 0, 0)
-        preview_lyt.addLayout(course_title_lyt)
-        preview_lyt.addLayout(course_meta_1_lyt)
-        preview_lyt.addLayout(course_meta_2_lyt)
-        preview_lyt.addWidget(course_comment)
-        preview_wgt = QWidget()
-        preview_wgt.setLayout(preview_lyt)
+        preview_course_lyt = QVBoxLayout()
+        preview_course_lyt.addLayout(course_title_lyt)
+        preview_course_lyt.addLayout(course_meta_1_lyt)
+        preview_course_lyt.addLayout(course_meta_2_lyt)
+        preview_course_lyt.addWidget(course_comment)
+
+        preview_course_gb.setLayout(preview_course_lyt)
 
         # ─────────────────── Main layout ────────────────── #
 
         main_layout = QHBoxLayout()
-        main_layout.addWidget(selection_wgt)
-        main_layout.addWidget(preview_wgt)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(choose_course_gb)
+        main_layout.addWidget(preview_course_gb)
         self.setLayout(main_layout)
 
 
