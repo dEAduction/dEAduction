@@ -9,13 +9,16 @@ DESCRIPTION
 Contain the data for processing PropObj into a latex representation
 
 TODO: remove 'PROP' from node names, here and in Structures.lean.
+TODO: display product:
+    - prod (I,J)
+    - prod.fst, prod.snd
 """
 import logging
 import gettext
 import types
 
 from deaduction.pylib.mathobj.give_name import give_local_name
-from deaduction.pylib.mathobj import MathObject
+# from deaduction.pylib.mathobj import MathObject
 import deaduction.pylib.logger as logger
 
 _ = gettext.gettext
@@ -90,9 +93,11 @@ def display_math_object_from_shape(shape, math_object, format_):
                 child = math_object.children[number]
                 pre_display_item = display_math_object(child, format_)
                 display_item = global_subscript(pre_display_item)  # TODO
-            elif item == "∈" and isinstance(shape[counter+1], int):
-                type = math_object.children[shape[counter+1]]
-                display_item = display_belongs_to(type, format_)
+            elif item.find("∈") != -1 and isinstance(shape[counter+1], int):
+                # replace "∈" with ":" in some cases
+                type_ = math_object.children[shape[counter+1]]
+                symbol = display_belongs_to(type_, format_)
+                display_item = item.replace('∈', symbol)
             else:
                 display_item = text_to_latex(item, format_)
 
@@ -211,11 +216,11 @@ def display_application(math_object, format_):
         name = first_child.info['name']
         if name in format_from_constant_name.keys():
             shape = format_from_constant_name[name]
-        elif not second_child.is_type():
-            shape = [name, 1]
+        #elif not second_child.is_type():
+        #    shape = [name, -1]  # '-1' is a place for a pending parameter
         else:
             # shape = [name, 0]
-            shape = [0, " " + _("is") + " ", name]  # we hope to get some
+            shape = [-1, " " + _("is") + " ", name]  # we hope to get some
             # argument to apply name
     elif first_child.node == "APPLICATION":
         display_first_child = display_math_object(first_child, format_)
@@ -257,7 +262,7 @@ def has_pending_parameter(structured_display: [str]):
     :return:
     """
     for item in structured_display:
-        if isinstance(item, int):
+        if isinstance(item, int) and item < 0:
             return True
     return False
 
@@ -271,11 +276,11 @@ def insert_pending_param(math_object, shape, format_):
     :param shape:
     :return:
     """
-    # insert math_object
+    # insert math_object where there is a '-1'
     shape1 = [display_math_object(math_object, format_)
-              if item == 0 else item for item in shape]
+              if item == -1 else item for item in shape]
     # shift integers
-    shape2 = [item - 1 if isinstance(item, int) else item for item in shape1]
+    shape2 = [item + 1 if isinstance(item, int) else item for item in shape1]
     return shape2
 
 
@@ -333,7 +338,7 @@ def display_instance_set_family(math_object, format_="latex"):
     #     rep = [r"\{", name, r"_{", index_rep, r"}, ",
     #            index_rep, r"\in ", index_set_rep, r"\}"]
     shape = ["{", display_name, index_subscript_rep, ", ",
-           [index_rep], "∈", display_math_type0, "}"]
+           [index_rep], " ∈ ", display_math_type0, "}"]
     return display_math_object_from_shape(shape, math_object, format_)
 
 def display_lambda(math_object, format_="latex"):
@@ -351,9 +356,9 @@ def display_lambda(math_object, format_="latex"):
     math_type = math_object.math_type
     _, var, body = math_object.children
     if math_type.node == "SET_FAMILY":
-        shape = ['{', 2, ',', 1, '∈', 0, '}']
+        shape = ['{', 2, ', ', 1, ' ∈ ', 0, '}']
     elif math_type.node == "SEQUENCE":
-        shape = ['(', 2, ')', '_{', 1, '∈', 0, '}']  # todo: manage subscript
+        shape = ['(', 2, ')', '_{', 1, ' ∈ ', 0, '}']  # todo: manage subscript
     elif body.node == "APPLICATION" and body.children[1] == var:
         # object is of the form x -> f(x)
         mere_function = body.children[0]  # this is 'f'
@@ -461,24 +466,24 @@ format_from_node = {
     "PROP_OR": [0, " " + _("OR") + " ", 1],
     "PROP_FALSE": [_("Contradiction"), ],
     "PROP_IFF": [0, " ⇔ ", 1],
-    "PROP_NOT": [" " + _("NOT") + " ", 0],
+    "PROP_NOT": [_("NOT") + " ", 0],
     "PROP_IMPLIES": [0, " ⇒ ", 1],
-    "QUANT_∀": ["∀", 1, "∈", 0, ", ", 2],
-    "QUANT_∃": ["∃", 1, "∈", 0, ", ", 2],
+    "QUANT_∀": ["∀", 1, " ∈ ", 0, ", ", 2],
+    "QUANT_∃": ["∃", 1, " ∈ ", 0, ", ", 2],
     "PROP_∃": "not implemented",
     ###############
     # SET THEORY: #
     ###############
-    "PROP_INCLUDED": [0, "⊂", 1],
-    "PROP_BELONGS": [0, "∈", 1],
-    "SET_INTER": [0, "⋂", 1],
-    "SET_UNION": [0, "⋃", 1],
-    "SET_INTER+": ["∩", 0],
-    "SET_UNION+": ["∪", 0],
+    "PROP_INCLUDED": [0, " ⊂ ", 1],
+    "PROP_BELONGS": [0, " ∈ ", 1],
+    "SET_INTER": [0, " ⋂ ", 1],
+    "SET_UNION": [0, " ⋃ ", 1],
+    "SET_INTER+": [" ∩", 0],
+    "SET_UNION+": [" ∪", 0],
     "SET_DIFF": [0, r" \\ ", 1],
     "SET_COMPLEMENT": [display_math_type0, r" \\ ", 0],
     "SET_EMPTY": ["∅"],
-    "SET_FAMILY": [_("a family of subsets of"), 1],
+    "SET_FAMILY": [_("a family of subsets of") + " ", 1],
     "SET_IMAGE": [0, "(", 1, ")"],
     "SET_INVERSE": [0, '⁻¹(', 1, ')'],
     ############
@@ -495,14 +500,16 @@ format_from_node = {
     ##################
     # GENERAL TYPES: #
     ##################
-    "SET": [" ""P(", 0, ")"],
-    "PROP": [" " + _("a proposition")],
-    "TYPE": [" " + _("a set")],
-    "FUNCTION": [0, "→", 1],
+    "SET": ["P(", 0, ")"],
+    "PROP": [_("a proposition")],
+    "TYPE": [_("a set")],
+    "FUNCTION": [0, " → ", 1],
 }
 
+# negative value = pending parameter
 format_from_constant_name = {
-    "composition": [0, '∘', 1]
+    "composition": [-1, '∘', -2],
+    "prod": [-1, '×', -2]  # FIXME: does not work
 }
 
 latex_symbols = {  # TODO : complete the dictionary
