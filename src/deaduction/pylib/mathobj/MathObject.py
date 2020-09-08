@@ -38,7 +38,7 @@ from typing import Tuple, List, Any
 import logging
 
 import deaduction.pylib.logger as logger
-from deaduction.pylib.mathobj.display_math_object import \
+from deaduction.pylib.mathobj.display_math import \
     display_math_object, display_math_type_of_local_constant
 
 import deaduction.pylib.mathobj.give_name as give_name
@@ -186,8 +186,7 @@ class MathObject:
 
     def is_type(self) -> bool:
         """
-        Test if self represents a mathematical Proposition
-        For global variables, only the math_type attribute should be tested !
+        Test if self is a "universe"
         """
         return self.math_type.node == "TYPE"
 

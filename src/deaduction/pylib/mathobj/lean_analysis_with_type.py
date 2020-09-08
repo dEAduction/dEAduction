@@ -35,7 +35,7 @@ from parsimonious.nodes import NodeVisitor
 import logging
 
 import deaduction.pylib.mathobj.MathObject as MathObject
-import deaduction.pylib.mathobj.display_math_object as display_math_object
+import deaduction.pylib.mathobj.display_math as display_math
 import deaduction.pylib.logger as logger
 
 log = logging.getLogger(__name__)
@@ -217,7 +217,7 @@ def pprint(essai: str):
 
 
 if __name__ == "__main__":
-    logger.configure(debug=False)
+    logger.configure(debug=True)
     hypo_analysis = []
     hypo_analysis.append("""¿¿¿object: LOCAL_CONSTANT¿[name: P¿/ identifier: 0._fresh.1613.1¿]¿= PROP
 ¿¿¿object: LOCAL_CONSTANT¿[name: Q¿/ identifier: 0._fresh.1613.3¿]¿= PROP
@@ -295,8 +295,9 @@ if __name__ == "__main__":
 
         displays.append([])
         for math_object in math_objects:
-            display = display_math_object(math_object, "utf8")
-            display_mt = display_math_object(math_object.math_type, "utf8")
+            display = display_math.display_math_object(math_object, "utf8")
+            display_mt = \
+                display_math.display_math_type_of_local_constant(math_object, "utf8")
             displays[counter].append([display, display_mt])
 
         print(titles[counter])

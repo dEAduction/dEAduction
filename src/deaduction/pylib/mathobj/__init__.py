@@ -29,8 +29,8 @@ This file is part of dEAduction.
 #from .PropObj import AnonymousPO, BoundVarPO, ProofStatePO, PropObj, \
 #    math_type_store
 from .MathObject import MathObject
-from .display_math_object import    display_math_object, \
-                                    display_math_type_of_local_constant
+from .display_math import    display_math_object, \
+    display_math_type_of_local_constant
 
 #from .proof_state import Goal, ProofState
 #from .give_name import give_local_name, give_global_name
