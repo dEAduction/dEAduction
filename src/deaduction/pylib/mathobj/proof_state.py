@@ -59,7 +59,7 @@ class Goal:
         "=" (in both) means present in both and identical
         "≠" (in both) means present in both and different
 
-        In the tests, two pfPO's are equal if they have the same name and
+        In the tests, two math_object's are equal if they have the same name and
         the same math_type, and they are modified versions of each other if
         they have the same name and different math_types.
         If goal_is_new == True then all objects will be tagged as new.
@@ -93,11 +93,11 @@ class Goal:
             tags_new_context = [""] * len(new_context)
             tags_old_context = [""] * len(old_context)
             new_index = 0
-            old_names = [pfPO_old.lean_data["name"] for pfPO_old in
+            old_names = [math_object_old.info["name"] for math_object_old in
                          old_context]
-            for pfPO in new_context:
-                name = pfPO.info["name"]
-                # log.debug(f"pfPO: {name}")
+            for math_object in new_context:
+                name = math_object.info["name"]
+                # log.debug(f"math_object: {name}")
                 try:
                     old_index = old_names.index(name)
                 except ValueError:
@@ -106,7 +106,7 @@ class Goal:
                 else:
                     # next test uses PropObj.__eq__, which is redefined
                     # in PropObj (recursively test nodes)
-                    if old_context[old_index].math_type == pfPO.math_type:
+                    if old_context[old_index].math_type == math_object.math_type:
                         tag = "="
                     else:
                         tag = "≠"
@@ -120,8 +120,8 @@ class Goal:
 
             # Tag the remaining objects in old_context as new ("+")
             old_index = 0
-            for pfPO in old_context:
-                if pfPO is not None:
+            for math_object in old_context:
+                if math_object is not None:
                     tags_old_context[old_index] = "+"
             ###################
             # tag the targets #
@@ -166,14 +166,16 @@ class Goal:
         :return: a Goal
         """
         log.info("creating new Goal from lean strings")
+        log.debug(hypo_analysis)
         lines = hypo_analysis.split("¿¿¿")
-        # put back "¿¿¿" and remove '\n' :
-        lines = ['¿¿¿' + item.replace('\n', '') for item in lines]
+        # put back "¿¿¿" and remove '\n', getting rid of the title line
+        # ("context:")
+        lines = ['¿¿¿' + item.replace('\n', '') for item in lines[1:]]
         context = []
         #math_types = []  # this is a list of tuples
         # (math_type, math_type_instances)
         # where math_type_instances is a list of instances of math_type
-        # computing new pfPO's
+        # computing new math_object's
         for math_obj_string in lines:
             if math_obj_string.startswith("context:"):
                 continue
@@ -203,11 +205,11 @@ class Goal:
             tags = ["="] * len(context)
         objects = []
         propositions = []
-        for (po, tag) in zip(context, tags):
-            if po.is_prop_math_type():
-                propositions.append((po, tag))
+        for (math_object, tag) in zip(context, tags):
+            if math_object.math_type.is_prop():
+                propositions.append((math_object, tag))
             else:
-                objects.append((po, tag))
+                objects.append((math_object, tag))
         return objects, propositions
 
 
@@ -240,8 +242,7 @@ class ProofState:
         targets = targets_analysis.split("¿¿¿")
         # put back "¿¿¿" and remove '\n' :
         targets = ['¿¿¿' + item.replace('\n', '') for item in targets]
-        if targets[0].startswith("targets:"):
-            targets.pop(0)
+        targets.pop(0)  # removing title line ("targets:")
         main_goal = Goal.from_lean_data(hypo_analysis, targets[0])
         goals = [main_goal]
         for other_string_goal in targets[1:]:

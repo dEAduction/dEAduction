@@ -65,5 +65,5 @@ async def main():
 
 
 if __name__ == '__main__':
-    logger.configure(debug=False)
+    logger.configure(debug=True)
     qtrio.run(main)

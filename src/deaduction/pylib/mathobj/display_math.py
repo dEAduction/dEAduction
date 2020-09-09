@@ -132,11 +132,11 @@ def needs_paren(parent, child_number: int) -> bool:
             ["SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
              "PROP_INCLUDED"]:
         return False
+    elif c_node == "APPLICATION":
+        return False
     elif p_node in ["SET_IMAGE", "SET_INVERSE",
                     "SET_UNION+", "SET_INTER+", "APPLICATION",
                     "PROP_EQUAL", "PROP_INCLUDED", "PROP_BELONGS", "LAMBDA"]:
-        return False
-    elif c_node == "SET_COMPLEMENT" and p_node != "SET_COMPLEMENT":
         return False
     elif c_node.startswith("QUANT") and p_node.startswith("QUANT"):
         return False
@@ -284,7 +284,7 @@ def insert_pending_param(math_object, shape, format_):
     return shape2
 
 
-def display_math_type_of_local_constant(math_object, format_):
+def display_math_type_of_local_constant(math_type, format_):
     """
     process special cases, e.g.
     1) x : an element of X"
@@ -299,12 +299,12 @@ def display_math_type_of_local_constant(math_object, format_):
     #######################################################
     # special math_types for which display is not the same #
     #######################################################
-    math_type = math_object.math_type
-    if hasattr(math_type.math_type, "node") \
+    if hasattr(math_type, 'math_type') \
+        and hasattr(math_type.math_type, 'node') \
             and math_type.math_type.node == "TYPE":
         name_ = math_type.info["name"]
         return [text_to_latex(_("an element of") + " ", format_), name_]
-    elif math_type.node == "SET":
+    elif hasattr(math_type, 'node')  and math_type.node == "SET":
         shape = [_("a subset of") + " ", 0]
         return display_math_object_from_shape(shape, math_type, format_)
     #################
@@ -476,12 +476,12 @@ format_from_node = {
     ###############
     "PROP_INCLUDED": [0, " ⊂ ", 1],
     "PROP_BELONGS": [0, " ∈ ", 1],
-    "SET_INTER": [0, " ⋂ ", 1],
-    "SET_UNION": [0, " ⋃ ", 1],
-    "SET_INTER+": [" ∩", 0],
-    "SET_UNION+": [" ∪", 0],
+    "SET_INTER": [0, " ∩ ", 1],  # !! small ∩
+    "SET_UNION": [0, " ∪ ", 1],  #
+    "SET_INTER+": [" ⋂", 0],  # !! big ⋂
+    "SET_UNION+": [" ⋃", 0],
     "SET_DIFF": [0, r" \\ ", 1],
-    "SET_COMPLEMENT": [display_math_type0, r" \\ ", 0],
+    "SET_COMPLEMENT": [display_math_type0, r" \ ", 0],
     "SET_EMPTY": ["∅"],
     "SET_FAMILY": [_("a family of subsets of") + " ", 1],
     "SET_IMAGE": [0, "(", 1, ")"],

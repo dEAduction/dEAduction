@@ -182,7 +182,11 @@ class MathObject:
         Test if self represents a mathematical Proposition
         For global variables, only the math_type attribute should be tested !
         """
-        return self.math_type.node == "PROP"
+        math_type = self.math_type
+        if hasattr(math_type, 'node'):
+            return self.math_type.node == "PROP"
+        else:
+            return False
 
     def is_type(self) -> bool:
         """
@@ -219,17 +223,17 @@ class MathObject:
     ##########################################
     # Computation of display of math objects #
     ##########################################
-    def format_as_latex(self, math_type=False):
+    def format_as_latex(self, is_math_type=False):
         format_ = "latex"
-        if math_type:
+        if is_math_type:
             display = display_math_type_of_local_constant(self, format_)
         else:
             display = display_math_object(self, format_="latex")
         return list_string_join(display)
 
-    def format_as_utf8(self, math_type=False):
+    def format_as_utf8(self, is_math_type=False):
         format_ = "utf8"
-        if math_type:
+        if is_math_type:
             display = display_math_type_of_local_constant(self, format_)
         else:
             display = display_math_object(self, format_="utf8")

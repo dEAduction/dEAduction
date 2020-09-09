@@ -34,15 +34,15 @@ from deaduction.pylib.actions   import (    InputType,
                                             MissingParametersError,
                                             WrongUserInput,
                                             action)
-from deaduction.pylib.mathobj   import (    PropObj,
+from deaduction.pylib.mathobj   import (    MathObject,
                                             Goal)
 
 @action(_("Case-based reasoning"), _("CASES"))
-def action_cbr(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
+def action_cbr(goal : Goal, l : [MathObject], user_input : [str] = []) -> str:
     """
     Translate into string of lean code corresponding to the action
     
-    :param l: list of PropObj arguments preselected by the user
+    :param l: list of MathObject arguments preselected by the user
     :return: string of lean code
     """
     if len(l) == 0:
@@ -56,11 +56,11 @@ def action_cbr(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
         raise WrongUserInput
 
 @action(_("Proof by contrapositive"), "¬Q ⇒ ¬P")
-def action_contrapose(goal : Goal, l : [PropObj]):
+def action_contrapose(goal : Goal, l : [MathObject]):
     """
     Translate into string of lean code corresponding to the action
     
-    :param l: list of PropObj arguments preselected by the user
+    :param l: list of MathObject arguments preselected by the user
     :return: string of lean code
     """
     if len(l) == 0:
@@ -69,11 +69,11 @@ def action_contrapose(goal : Goal, l : [PropObj]):
     raise WrongUserInput
 
 @action(_("Reductio ad absurdum"), _('0=1'))
-def action_absurdum(goal : Goal, l : [PropObj]) -> str:
+def action_absurdum(goal : Goal, l : [MathObject]) -> str:
     """
     Translate into string of lean code corresponding to the action
     
-    :param l: list of PropObj arguments preselected by the user
+    :param l: list of MathObject arguments preselected by the user
     :return: string of lean code
     """
     if len(l) == 0:
@@ -83,15 +83,15 @@ def action_absurdum(goal : Goal, l : [PropObj]) -> str:
 
 
 @action(_("If a hypothesis of form ∀ a ∈ A, ∃ b ∈ B, P(a,b) has been previously selected: use the axiom of choice to introduce a new function f : A → B and add ∀ a ∈ A, P(a, f(a)) to the properties"), _("CREATE FUN"))
-def action_choice(goal : Goal, l : [PropObj]) -> str:
+def action_choice(goal : Goal, l : [MathObject]) -> str:
     """
     Translate into string of lean code corresponding to the action
     
-    :param l: list of PropObj arguments preselected by the user
+    :param l: list of MathObject arguments preselected by the user
     :return: string of lean code
     """
     if len(l) == 1:
-        h = l[0].lean_data["name"]
+        h = l[0].info["name"]
         hf = utils.get_new_hyp()
         f = utils.get_new_fun()
         return f'cases classical.axiom_of_choice {h} with {f} {hf}, dsimp at {hf}, dsimp at {f}, '
@@ -100,11 +100,11 @@ def action_choice(goal : Goal, l : [PropObj]) -> str:
         
         
 @action(_("Introduce new object\nIntroduce new subgoal: transform the current target into the input target and add this to the properties of the future goal."), "+")
-def action_new_object(goal : Goal, l : [PropObj], user_input : [str] = []) -> str:
+def action_new_object(goal : Goal, l : [MathObject], user_input : [str] = []) -> str:
     """
     Translate into string of lean code corresponding to the action
     
-    :param l: list of PropObj arguments preselected by the user
+    :param l: list of MathObject arguments preselected by the user
     :return: string of lean code
     """
     if len(user_input) == 0:
@@ -124,11 +124,11 @@ def action_new_object(goal : Goal, l : [PropObj], user_input : [str] = []) -> st
             return "have {0} : ({1}), ".format(h, user_input[1])    
 
 @action(_("Assumption"), "¯\_(ツ)_/¯")
-def action_assumption(goal : Goal, l : [PropObj]) -> str:
+def action_assumption(goal : Goal, l : [MathObject]) -> str:
     """
     Translate into string of lean code corresponding to the action
     
-    :param l: list of PropObj arguments preselected by the user
+    :param l: list of MathObject arguments preselected by the user
     :return: string of lean code
     """
     if len(l) == 0:
@@ -138,6 +138,6 @@ def action_assumption(goal : Goal, l : [PropObj]) -> str:
 
         
 #@action(_("Proof by induction"))
-#def action_induction(goal : Goal, l : [PropObj]):
+#def action_induction(goal : Goal, l : [MathObject]):
 #    raise WrongUserInput
 

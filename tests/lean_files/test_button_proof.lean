@@ -4,7 +4,7 @@ import tactic
 -- dEAduction imports
 import logics
 import definitions
-import structures
+import structures2
 
 
 local attribute [instance] classical.prop_decidable

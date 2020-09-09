@@ -8,8 +8,8 @@
     continuous). Those widgets will be instantiated in
     ExerciseCentralWidget, which itself will be instantiated as an
     attribute of ExerciseMainWindow. Provided classes:
-        - ProofStatePOWidget;
-        - ProofStatePOWidgetItem;
+        - MathObjectWidget;
+        - MathObjectWidgetItem;
         - TargetWidget.
 
 Author(s)      : Kryzar <antoine@hugounet.com>
@@ -46,10 +46,10 @@ from PySide2.QtWidgets import ( QHBoxLayout,
                                 QListWidget,
                                 QListWidgetItem)
 
-from deaduction.pylib.mathobj import ProofStatePO
+from deaduction.pylib.mathobj import MathObject
 
 ################################
-# ProofStatePO widgets classes #
+# MathObject widgets classes #
 ################################
 
 # A usefull class.
@@ -94,21 +94,21 @@ class _TagIcon(QIcon):
 
 
 # Classes for the two main widgets in 'Context' area of the exercise
-# window, minus the target widget. Class ProofStatePOWidget is a parent
-# widget containing a list of ProofStatePOWidgetItem. Both 'Objects' and
+# window, minus the target widget. Class MathObjectWidget is a parent
+# widget containing a list of MathObjectWidgetItem. Both 'Objects' and
 # 'Properties' widgets use those same two classes.
 
 
-class ProofStatePOWidgetItem(QListWidgetItem):
+class MathObjectWidgetItem(QListWidgetItem):
     """
-    Widget in charge of containing an instance of the class ProofStatePO
-    as an attribute and displaying it in a list (ProofStatePOWidget)
+    Widget in charge of containing an instance of the class MathObject
+    as an attribute and displaying it in a list (MathObjectWidget)
     other such instances. Objects (e.g. f:X->Y a function) and
     properties (e.g. f is continuous) are coded as instances of the
-    class ProofStatePO.
+    class MathObject.
 
     On top of that, a so-called tag icon is displayed. That is, a
-    different icon is displayed whether the ProofStatePO is new or
+    different icon is displayed whether the MathObject is new or
     modified in comparison with the previous goal / context. See
     _TagIcon.__doc__.
 
@@ -118,12 +118,12 @@ class ProofStatePOWidgetItem(QListWidgetItem):
         _TagIcon) of proofstatepo.
     """
 
-    def __init__(self, proofstatepo: ProofStatePO, tag: str='='):
+    def __init__(self, proofstatepo: MathObject, tag: str='='):
         """
-        Init self with an instance of the class ProofStatePO and a tag.
+        Init self with an instance of the class MathObject and a tag.
         See self.__doc__.
 
-        :param proofstatepo: The ProofStatePO one wants to display.
+        :param proofstatepo: The MathObject one wants to display.
         :param tag: The tag of proofstatepo.
         """
 
@@ -133,19 +133,19 @@ class ProofStatePOWidgetItem(QListWidgetItem):
         self.tag          = tag
 
         lean_name = proofstatepo.format_as_utf8()
-        math_expr = proofstatepo.math_type.format_as_utf8(is_type_of_pfpo=True)
+        math_expr = proofstatepo.math_type.format_as_utf8(is_math_type=True)
         caption   = f'{lean_name} : {math_expr}'
         self.setText(caption)
         self.setIcon(_TagIcon(tag))
 
     def __eq__(self, other):
         """
-        Define the operator == for the class ProofStatePOWidgetItem. Do
+        Define the operator == for the class MathObjectWidgetItem. Do
         not delete! It is useful to check if a given instance of the
-        class ProofStatePOWidgetItem is or not in a list of such
+        class MathObjectWidgetItem is or not in a list of such
         instances (the 'for item in pspo_list:' test).
 
-        :param other: An instance of the class ProofStatePOWidgetItem.
+        :param other: An instance of the class MathObjectWidgetItem.
         :return: A boolean.
         """
 
@@ -162,36 +162,36 @@ class ProofStatePOWidgetItem(QListWidgetItem):
         self.setBackground(QBrush(QColor('limegreen')) if yes else QBrush())
 
 
-class ProofStatePOWidget(QListWidget):
+class MathObjectWidget(QListWidget):
     """
     A container class to display an ordered list of tagged (see
-    _TagIcon.__doc__) instances of the class ProofStatePO. Each element
-    of this list inits an instance of the class ProofStatePOWidgetItem;
+    _TagIcon.__doc__) instances of the class MathObject. Each element
+    of this list inits an instance of the class MathObjectWidgetItem;
     this instance is set to be a child of self and is kept as an
     attribute in self.items. The two widgets 'Objects' and 'Properties'
     are instances of this class.
 
-    :attribute items [ProofStatePOWidgetItem]: The displayed ordered
-        list of instances of the class ProofStatePOWidgetItem. This
+    :attribute items [MathObjectWidgetItem]: The displayed ordered
+        list of instances of the class MathObjectWidgetItem. This
         attribute makes accessing them painless.
     """
 
-    def __init__(self, tagged_proofstatepos: [Tuple[ProofStatePO, str]]=[]):
+    def __init__(self, tagged_proofstatepos: [Tuple[MathObject, str]]=[]):
         """
         Init self an ordered list of tuples (proofstatepo, tag), where
-        proofstatepo is an instance of the class ProofStatePO (not
-        ProofStatePOWidgetItem!) and tag is proofstatepo's tag a str,
+        proofstatepo is an instance of the class MathObject (not
+        MathObjectWidgetItem!) and tag is proofstatepo's tag a str,
         (see _TagIcon.__doc__).
 
         :param tagged_proofstatepos: The list of tagged instances of the
-            class ProofStatePO.
+            class MathObject.
         """
 
         super().__init__()
 
         self.items = []
         for proofstatepo, tag in tagged_proofstatepos:
-            item = ProofStatePOWidgetItem(proofstatepo, tag)
+            item = MathObjectWidgetItem(proofstatepo, tag)
             self.addItem(item)
             self.items.append(item)
 
@@ -211,9 +211,9 @@ class _TargetLabel(QLabel):
     arrange it in layouts.
     """
 
-    def __init__(self, target: ProofStatePO=None, tag: str=None):
+    def __init__(self, target: MathObject=None, tag: str=None):
         """
-        Init self with an target (an instance of the class ProofStatePO)
+        Init self with an target (an instance of the class MathObject)
         and a tag.  If those are None, display an empty tag and '…' in
         place of the target.
 
@@ -241,13 +241,13 @@ class TargetWidget(QWidget):
     tag as attributes. To display a target in ExerciseCentralWidget, use
     this class and not _TargetLabel as this one also manages layouts!
 
-    :attribute target ProofStatePO: The target one wants to display.
+    :attribute target MathObject: The target one wants to display.
     :attribute tag str: The tag associated to target.
     """
 
-    def __init__(self, target: ProofStatePO=None, tag: str=None):
+    def __init__(self, target: MathObject=None, tag: str=None):
         """"
-        Init self with an target (an instance of the class ProofStatePO)
+        Init self with an target (an instance of the class MathObject)
         and a tag.  If those are None, display an empty tag and '…' in
         place of the target.
 

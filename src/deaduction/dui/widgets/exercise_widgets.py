@@ -56,8 +56,8 @@ from deaduction.dui.widgets import (    ActionButton,
                                         LeanEditor,
                                         StatementsTreeWidget,
                                         StatementsTreeWidgetItem,
-                                        ProofStatePOWidget,
-                                        ProofStatePOWidgetItem,
+                                        MathObjectWidget,
+                                        MathObjectWidgetItem,
                                         TargetWidget)
 from deaduction.pylib.actions import (  Action,
                                         InputType,
@@ -138,8 +138,8 @@ class ExerciseCentralWidget(QWidget):
 
     def _init_goal(self):
         # Create empty widgets while waiting for Lean
-        self.objects_wgt = ProofStatePOWidget()
-        self.props_wgt = ProofStatePOWidget()
+        self.objects_wgt = MathObjectWidget()
+        self.props_wgt = MathObjectWidget()
         self.target_wgt = TargetWidget()
 
     def _init_put_widgets_in_layouts(self):
@@ -262,7 +262,7 @@ class ExerciseMainWindow(QMainWindow):
         self.clear_user_selection()
 
         # Init context (objects and properties). Get them as two list of
-        # (ProofStatePO, str), the str being the tag of the prop. or obj.
+        # (MathObject, str), the str being the tag of the prop. or obj.
         # FIXME: obj. and prop. tags
 
         # get old goal and set tags
@@ -291,8 +291,8 @@ class ExerciseMainWindow(QMainWindow):
             pass
 
         new_context = new_goal.tag_and_split_propositions_objects()
-        new_objects_wgt = ProofStatePOWidget(new_context[0])
-        new_props_wgt = ProofStatePOWidget(new_context[1])
+        new_objects_wgt = MathObjectWidget(new_context[0])
+        new_props_wgt = MathObjectWidget(new_context[1])
         new_target = new_goal.target
         new_target_wgt = TargetWidget(new_target, new_target_tag)
 
@@ -481,8 +481,8 @@ class ExerciseMainWindow(QMainWindow):
         QMessageBox.information(self, _('Target solved'), _('Target solved!'),
                 QMessageBox.Ok)
 
-    @Slot(ProofStatePOWidgetItem)
-    def process_context_click(self, item: ProofStatePOWidgetItem):
+    @Slot(MathObjectWidgetItem)
+    def process_context_click(self, item: MathObjectWidgetItem):
         log.debug('Recording user selection')
         item.setSelected(False)
 
