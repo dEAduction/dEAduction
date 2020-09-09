@@ -117,7 +117,7 @@ class LeanEntryVisitor(NodeVisitor):
         """
         node_info = visited_children[0][1]
         children = concatenate(visited_children[1:])[0]
-        log.debug(f"collected info at expr: {node_info, children}")
+        #log.debug(f"collected info at expr: {node_info, children}")
         ####################################################################
         # Obsolete: decurryfying APPLICATIONs:
 
@@ -132,7 +132,7 @@ class LeanEntryVisitor(NodeVisitor):
         # else:
         math_object = MathObject.from_info_and_children(info=node_info,
                                                             children=children)
-        log.debug(f"---> {math_object}")
+        #log.debug(f"---> {math_object}")
         return [math_object], {}
 
     def visit_info_type(self, node, visited_children):

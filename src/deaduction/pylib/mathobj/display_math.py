@@ -362,7 +362,7 @@ def display_lambda(math_object, format_="latex"):
     elif body.node == "APPLICATION" and body.children[1] == var:
         # object is of the form x -> f(x)
         mere_function = body.children[0]  # this is 'f'
-        shape = [display_math_object(mere_function)]
+        shape = [display_math_object(mere_function, format_)]
     else:  # generic display
         shape = [1, '↦', 2]
     return display_math_object_from_shape(shape, math_object, format_)
@@ -509,7 +509,8 @@ format_from_node = {
 # negative value = pending parameter
 format_from_constant_name = {
     "composition": [-1, '∘', -2],
-    "prod": [-1, '×', -2]  # FIXME: does not work
+    "prod": [-1, '×', -2],  # FIXME: does not work
+    "Identite": ["Id"]
 }
 
 latex_symbols = {  # TODO : complete the dictionary

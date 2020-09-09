@@ -166,7 +166,7 @@ class Goal:
         :return: a Goal
         """
         log.info("creating new Goal from lean strings")
-        log.debug(hypo_analysis)
+        #log.debug(hypo_analysis)
         lines = hypo_analysis.split("¿¿¿")
         # put back "¿¿¿" and remove '\n', getting rid of the title line
         # ("context:")
