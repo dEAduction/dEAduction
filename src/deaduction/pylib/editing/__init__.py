@@ -278,6 +278,7 @@ class LeanFile:
     def history_at_beginning(self):
         return self.target_idx == 0
 
+    @property
     def history_at_end(self):
         return self.target_idx == (len(self.history) - 1)
 

@@ -184,6 +184,9 @@ class ServerInterface(QObject):
             self.lean_file_changed.emit()
 
             await self.__proof_receive_done.wait()
+
+            self.log.debug(_("Proof State received"))
+
             await self.lean_server.running_monitor.wait_ready()
 
             self.log.debug(_("After request"))

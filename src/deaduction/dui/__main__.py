@@ -30,7 +30,7 @@ This file is part of d∃∀duction.
 import logging
 import qtrio
 import trio
-import sys
+import gettext
 
 from deaduction.dui.launcher import select_course_exercise
 from deaduction.dui.widgets import  ExerciseMainWindow
@@ -66,4 +66,5 @@ async def main():
 
 if __name__ == '__main__':
     logger.configure(debug=True)
+    _ = gettext.gettext
     qtrio.run(main)
