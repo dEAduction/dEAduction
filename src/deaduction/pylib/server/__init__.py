@@ -43,6 +43,8 @@ import deaduction.pylib.server.exceptions as exceptions
 
 from PySide2.QtCore import Signal, QObject
 
+from gettext import gettext as _
+
 ############################################
 # Lean magic messages
 ############################################
@@ -78,9 +80,9 @@ class ServerInterface(QObject):
         self.log = logging.getLogger("ServerInterface")
 
         # Lean attributes
-        self.lean_file: LeanFile    = None
-        self.lean_server: LeanServer = LeanServer(nursery)
-        self.nursery: trio.Nursery   = nursery
+        self.lean_file: LeanFile      = None
+        self.lean_server: LeanServer  = LeanServer(nursery)
+        self.nursery: trio.Nursery    = nursery
 
         # Set server callbacks
         self.lean_server.on_message_callback = self.__on_lean_message
@@ -88,14 +90,17 @@ class ServerInterface(QObject):
             self.__on_lean_state_change
 
         # Current exercise
-        self.exercise_current        = None
+        self.exercise_current         = None
 
-        # Current proof state
-        self.__proof_state_valid     = trio.Event()
-        self.__tmp_hypo_analysis     = ""
-        self.__tmp_targets_analysis  = ""
+        # Current proof state + Event s
+        self.__proof_state_valid      = trio.Event()
+        self.__proof_receive_done     = trio.Event()
+        self.__proof_receive_error    = trio.Event() # Set if request failed
 
-        self.proof_state             = None
+        self.__tmp_hypo_analysis      = ""
+        self.__tmp_targets_analysis   = ""
+
+        self.proof_state              = None
 
         # Errors memory channels
         self.error_send, self.error_recv = \
@@ -110,6 +115,10 @@ class ServerInterface(QObject):
     ############################################
     # Callbacks from lean server
     ############################################
+    def __check_receive_state(self):
+        if self.__tmp_targets_analysis and self.__tmp_hypo_analysis:
+            self.__proof_receive_done.set()
+
     def __on_lean_message(self, msg: Message):
         txt      = msg.text
         severity = msg.severity
@@ -124,12 +133,16 @@ class ServerInterface(QObject):
         elif txt.startswith("context:"):
             self.log.info("Got new context")
             self.__tmp_hypo_analysis = txt
-            self.__proof_state_valid = trio.Event()
+
+            self.__proof_state_valid = trio.Event() # Invalidate proof state
+            self.__check_receive_state()
 
         elif txt.startswith("targets:"):
             self.log.info("Got new targets")
             self.__tmp_targets_analysis = txt
-            self.__proof_state_valid = trio.Event()
+
+            self.__proof_state_valid = trio.Event() # Invalidate proof state
+            self.__check_receive_state()
 
     def __on_lean_state_change(self, is_running: bool):
         self.log.info(f"New lean state: {is_running}")
@@ -142,11 +155,14 @@ class ServerInterface(QObject):
         if msg.text.startswith(LEAN_NOGOALS_TEXT):
             if hasattr(self.proof_no_goals, "emit"):
                 self.proof_no_goals.emit()
+                self.__proof_receive_done.set() # Done receiving
+
         elif msg.text.startswith(LEAN_UNRESOLVED_TEXT):
             pass
 
         else:
             self.error_send.send_nowait(msg)
+            self.__proof_receive_done.set() # Done receiving
 
     ############################################
     # Update
@@ -158,11 +174,19 @@ class ServerInterface(QObject):
         req = SyncRequest(file_name=self.lean_file.file_name,
                           content=self.lean_file.contents)
 
+        # Invalidate events
+        self.__proof_receive_done   = trio.Event()
+        self.__tmp_hypo_analysis    = ""
+        self.__tmp_targets_analysis = ""
+
         resp = await self.lean_server.send(req)
         if resp.message == "file invalidated":
             self.lean_file_changed.emit()
 
+            await self.__proof_receive_done.wait()
             await self.lean_server.running_monitor.wait_ready()
+
+            self.log.debug(_("After request"))
 
             # Construct new proof state from temp strings
             if not self.__proof_state_valid.is_set():
@@ -198,6 +222,7 @@ class ServerInterface(QObject):
         file_content = exercise.course.file_content
         lines        = file_content.splitlines()
         begin_line   = exercise.lean_begin_line_number
+        end_line     = exercise.lean_end_line_number
         end_line     = exercise.lean_end_line_number
 
         # Construct virtual file
