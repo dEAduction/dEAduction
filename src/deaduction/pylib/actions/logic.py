@@ -335,9 +335,12 @@ def apply_function(goal : Goal, l : [MathObject]):
     if len(l) == 1:
         raise WrongUserInput
     code = ""
-    f = l[-1].info["name"]
-    if len(l[-1].math_type.children) >= 2:
-        Y = l[-1].math_type.children[1]
+    function = l[-1]  # let us check the input is indeed a function
+    if function.math_type.node != "FUNCTION":
+        raise WrongUserInput
+    f = function.info["name"]  # name of the function
+    #if len(l[-1].math_type.children) >= 2:
+    Y = l[-1].math_type.children[1]
     while (len(l) != 1):
         new_h = get_new_hyp()
         # if function applied to equality
