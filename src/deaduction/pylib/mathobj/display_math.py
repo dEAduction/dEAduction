@@ -228,12 +228,13 @@ def display_application(math_object, format_):
             shape = display_first_child
 
     if not has_pending_parameter(shape):
-        if math_object.is_prop():
-            # display of a property, e.g. "f is injective"
-            shape = [1, " " + _("is") + " ", 0]
-        else:
-            # general case, functional notation: f(x)
-            shape = [0, "(", 1, ")"]
+        if shape == ["*APP*"]:
+            if math_object.is_prop():
+                # display of a property, e.g. "f is injective"
+                shape = [1, " " + _("is") + " ", 0]
+            else:
+                # general case, functional notation: f(x)
+                shape = [0, "(", 1, ")"]
         return display_math_object_from_shape(shape, math_object, format_)
     ###################################
     # treatment of pending parameters #
