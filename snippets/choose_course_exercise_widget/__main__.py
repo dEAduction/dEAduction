@@ -36,15 +36,7 @@ class ChoosePreviewCourseExerciseLayout(QHBoxLayout):
         self.addWidget(preview_gb)
 
 
-class CourseExerciseTitle(QLabel):
-
-    def __init__(self, text: str):
-
-        super().__init__(text)
-        self.setStyleSheet('font-size: 20pt;')
-
-
-class MetainfoBloc(QWidget):
+class InfoBloc(QWidget):
 
     def __init__(self, list_info: List[str]):
 
@@ -62,6 +54,25 @@ class MetainfoBloc(QWidget):
 
         main_layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(main_layout)
+
+
+class CourseExercisePreviewLayout(QVBoxLayout):
+
+    def __init__(self, title: str, info_list: List[str], long_text: str):
+        super().__init__()
+
+        # Title
+        title_wgt = QLabel(title)
+        title_wgt.setStyleSheet('font-size: 20pt;')
+        self.addWidget(title_wgt)
+
+        # Info bloc
+        self.addWidget(InfoBloc(info_list))
+
+        # Long text
+        long_text_wgt = QTextEdit(long_text)
+        long_text_wgt.setReadOnly(True)
+        self.addWidget(long_text_wgt)
 
 
 class CourseChoosePreview(QWidget):
@@ -82,14 +93,10 @@ class CourseChoosePreview(QWidget):
 
         # ────────────── Preview course layout ───────────── #
 
-        course_title_lyt = QHBoxLayout()
-        course_title_lyt.addWidget(CourseExerciseTitle('Topologie algébrique'))
-
-        course_metainfo_list = ['Yet another Sorbonne University, 2020-2021',
+        title = 'Topologie algébrique'
+        info_list = ['Yet another Sorbonne University, 2020-2021',
                                  'Frédéric Le Roux']
-        course_metainfo_bloc = MetainfoBloc(course_metainfo_list)
-
-        comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit." \
+        long_text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit." \
                 'Mauris tempus congue turpis mollis consequat. Nulla finibus tempor' \
                 'pharetra. Duis accumsan nisl tincidunt lacus aliquet, vel sodales nunc' \
                 'blandit. Phasellus ligula tortor, venenatis in quam in, pretium' \
@@ -104,13 +111,8 @@ class CourseChoosePreview(QWidget):
                 'ipsum, id luctus mauris iaculis condimentum. Aliquam arcu eros, tempor' \
                 'vitae vulputate eget, viverra quis metus.'
 
-        course_comment = QTextEdit(comment)
-        course_comment.setReadOnly(True)
-
-        preview_course_lyt = QVBoxLayout()
-        preview_course_lyt.addLayout(course_title_lyt)
-        preview_course_lyt.addWidget(course_metainfo_bloc)
-        preview_course_lyt.addWidget(course_comment)
+        preview_course_lyt = CourseExercisePreviewLayout(title, info_list,
+                long_text)
 
         # ─────────────────── Main layout ────────────────── #
 
