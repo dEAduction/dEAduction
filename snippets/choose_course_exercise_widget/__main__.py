@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import  OrderedDict, List
 
 from PySide2.QtCore import      Slot
+from PySide2.QtGui  import      QPixmap
 from PySide2.QtWidgets import ( QApplication,
                                 QGridLayout,
                                 QGroupBox,
@@ -48,11 +49,12 @@ class InfoBloc(QWidget):
             layout = QHBoxLayout()
             layout.addStretch()
             label = QLabel(info)
-            label.setStyleSheet('font-style: italic;')
+            label.setStyleSheet('font-style: italic;' \
+                                'color: gray;')
             layout.addWidget(label)
             main_layout.addLayout(layout)
 
-        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
         self.setLayout(main_layout)
 
 
@@ -95,7 +97,8 @@ class CourseChoosePreview(QWidget):
 
         title = 'Topologie algébrique'
         info_list = ['Yet another Sorbonne University, 2020-2021',
-                                 'Frédéric Le Roux']
+                     'Frédéric Le Roux',
+                     '~/Ka/Mou/Lox/Prof_le_Roux/topalg.lean']
         long_text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit." \
                 'Mauris tempus congue turpis mollis consequat. Nulla finibus tempor' \
                 'pharetra. Duis accumsan nisl tincidunt lacus aliquet, vel sodales nunc' \
@@ -149,7 +152,13 @@ class ExerciseChoosePreview(QWidget):
 
         # ──────────────── Preview Exercise ──────────────── #
 
-        preview_exercise_lyt = QVBoxLayout()
+        title = 'Le groupe fondamental de la sphère est trivial'
+        info_list = ['Some info']
+        long_text = "Montrer que le groupe fondamental du cercle est "\
+                    "isomorphe (comme groupe) à (Z, +)."
+
+        preview_exercise_lyt = CourseExercisePreviewLayout(title, info_list,
+                long_text)
 
         # ─────────────────── Main layout ────────────────── #
 
@@ -174,7 +183,7 @@ class ChooseCourseExercise(QWidget):
         selection_zone_lyt.addWidget(exercise_cap)
 
         buttons_lyt = QHBoxLayout()
-        help_btn = QPushButton('Get help')
+        help_btn = QPushButton('Help')
         quit_btn = QPushButton('Quit')
         self.choose_this_course_btn = QPushButton('Launch exercise')
         buttons_lyt.addWidget(help_btn)
