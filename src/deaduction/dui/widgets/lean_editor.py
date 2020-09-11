@@ -41,6 +41,10 @@ from PySide2.QtWidgets import ( QHBoxLayout,
 
 class LeanEditor(QWidget):
 
+    # TODO: use a mono font
+    # TODO: add line numbers
+    # TODO: add syntaxic coloration
+
     editor_send_lean = Signal()
 
     def __init__(self):

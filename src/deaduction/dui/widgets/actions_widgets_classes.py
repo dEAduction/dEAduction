@@ -6,10 +6,10 @@
     Provide widgets classes for an exercise's actions area, that is the
     two rows of action buttons (logic buttons and proof techniques
     buttons) and the so-called statements tree : course definitions,
-    theorems and exercises used as theorems are displayed in a tree of
-    which structure is that of the course. Those widgets will be
-    instanciated in ExerciseCentralWidget, which itself will be
-    instanciated as an attribute of ExerciseMainWindow. Provided
+    theorems and exercises used as theorems are displayed in a tree
+    whose structure is that of the course. Those widgets will be
+    instantiated in ExerciseCentralWidget, which itself will be
+    instantiated as an attribute of ExerciseMainWindow. Provided
     classes:
         - ActionButton;
         - ActionButtonsWidget;
@@ -70,35 +70,35 @@ log = logging.getLogger(__name__)
 
 # Classes for the two rows of buttons (e.g. ∀ button) in the Actions
 # area of the exercise window. Each button is coded as an instance of
-# the class ActionButton and and each row essentially is a container of
+# the class ActionButton and each row essentially is a container of
 # instances of ActionButton coded as an instance of ActionButtonsWidget.
 
 
 class ActionButton(QPushButton):
     """
-
     Class for so-called 'action buttons' (e.g. ∀ button). Each
     instance of this class is associated to an instance of the class
-    Action (self.action), which itself contains L∃∀N-understandable
-    data. The instance of the class Action self is initialized with
-    contains all information required by L∃∀N. Furthermore, each
+    Action (self.action). This instance contains
+    all information required by L∃∀N. Furthermore, each
     such instance also contains all required cosmetic information
     for the graphical interface, that is a symbol and a caption.
     Therefore, all one needs to instantiate ActionButton is an instance
     of the class Action.
 
-    Let exercisemainwindow the instance of the class ExerciseMainWindow
-    of which self is a child. When self is is clicked on:
+    Let exercisemainwindow be the instance of the class ExerciseMainWindow
+    of which self is a child. When self is clicked on:
         1. the signal self.__statement_triggered is emitted;
         2. this signal is received in exercisemainwindow.server_task;
-        3. exercisemainwindow._server_call_action is called and the
-           current goal, the user selection (obj. and prop.) and self
-           are sent to L∃∀N for processing and eventually updating the
-           interface to a new goal.
+        3. exercisemainwindow.__server_call_action is called and from
+           there on the current goal, optional current selection (user
+           selected objects and properties) and self are pre-processed.
+           If everything is ok, everything is sent to L∃∀N. Otherwise,
+           additional info may be asked to the user, such as missing
+           parameters.
     Behavior is analogous to StatementsTreeWidgetItem's.
 
-    :attribute action (Action): The instance of the Action class self
-        was instantiated with.
+    :attribute action Action: The instance of the Action class self was
+        instantiated with.
     :attribute action_triggered (Signal(ActionButton)): A Signal with
         self as an argument, emitted when self is clicked on.
     """
@@ -109,7 +109,7 @@ class ActionButton(QPushButton):
         tooltip and keep the given action as an attribute. When self is
         clicked on, emit the signal self.action_triggered.
 
-        :param action Action: The instance of the class Action one wants
+        :param action: The instance of the class Action one wants
             self to be associated with.
         """
 
@@ -132,10 +132,12 @@ class ActionButton(QPushButton):
         self.action_triggered.emit(self)
 
 
-# Required to have an ActionButton as an argument in an ActionButton.
-# Writting 
-# self.action_triggered = Signal(ActionButton)
-# in ActionButton.__init__ will raise an exception.
+# We wish to have an ActionButton class attribute called
+# action_triggered and defined as Signal(ActionButotn). At first, one
+# may define it in ActionButton.__init__. However, doing this will raise
+# an exception because in ActionButton.__init__, the class ActionButton
+# is not *yet* defined. The workaround is to define this class attribute
+# outside of the class definition, as followed.
 ActionButton.action_triggered = Signal(ActionButton)
 
 
@@ -154,7 +156,7 @@ class ActionButtonsWidget(QWidget):
 
     def __init__(self, actions: [Action]):
         """
-        Init self with an ordered list of instances the class Action.
+        Init self with an ordered list of instances of the class Action.
 
         :param actions: The list of instances of the class Action one
             wants to create buttons from.
@@ -162,6 +164,7 @@ class ActionButtonsWidget(QWidget):
 
         super().__init__()
 
+        # TODO: make self.buttons a property?
         self.buttons = []
 
         main_layout = QHBoxLayout()
@@ -186,10 +189,10 @@ class ActionButtonsWidget(QWidget):
 #   - each leaf (StatementsTreeWidgetItem) corresponds to a statement
 #     (e.g. 'Bolzano-Weierstrass theorem').
 # Even though StatementsTreeWidgetItem and StatementsTreeWidgetNode are
-# not protected nor private, they should not be instanciated outside
+# not protected nor private, they should not be instantiated outside
 # this module. The so-called 'statements tree' is automatically created
 # by StatementsTreeWidget.__init__ given an ordered list of instances of
-# the Statement class and it is this method which instanciates the items
+# the Statement class and it is this method which instantiates the items
 # and nodes.
 
 
@@ -202,15 +205,19 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
     contains cosmetic data (e.g. a title), one only needs an instance of
     the class Statement to instantiate a StatementsTreeWidgetItem.
 
-    Let exercisemainwindow the instance of the class ExerciseMainWindow
+    Let exercisemainwindow be the instance of the class ExerciseMainWindow
     of which self is a child. When self is is clicked on:
         1. the signal exercisemainwindow.__statement_triggered is
            emitted;
         2. this signal is received in exercisemainwindow.server_task;
-        3. exercisemainwindow._server_call_statement is called and the
+        3. exercisemainwindow.__server_call_statement is called and the
            current goal, the user selection (obj. and prop.) and self
            are sent to L∃∀N for processing and eventually updating the
            interface to a new goal.
+        3. exercisemainwindow.__server_call_statement is called and from
+           there on the current goal, optional current selection (user
+           selected objects and properties) and self are pre-processed.
+           If everything is ok, everything is sent to L∃∀N.
     Behavior is analogous to ActionButton's.
 
     :attribute statement Statement: The instance of the class (or child
@@ -221,7 +228,7 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         """
         Init self with an instance of the class (or child of) Statement.
 
-        :parem statement: The instance of the class (or child) one wants
+        :param statement: The instance of the class (or child) one wants
             to associate to self.
         """
 
@@ -231,6 +238,7 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
 
         # Print second col. in gray
         self.setForeground(1, QBrush(QColor('gray')))
+        # TODO: use mono font for lean name column (column 1)
 
         # Print icon (D for definition, T for theorem, etc)
         icons_path = Path('share/graphical_resources/icons/letters')
@@ -256,7 +264,7 @@ class StatementsTreeWidgetNode(QTreeWidgetItem):
         """
         Init self with a title.
 
-        :parem title: The title to be displayed.
+        :param title: The title to be displayed.
         """
 
         # QTreeWidget objects use columns to display titles. So if one
@@ -267,6 +275,18 @@ class StatementsTreeWidgetNode(QTreeWidgetItem):
         # Cosmetics
         self.setExpanded(True)
         self.set_selectable(False)
+
+    def add_child(self, child: QTreeWidgetItem):
+        """
+        Do not delete, used in StatementsTreeWidget._init_tree_branch! This
+        method exists to uniformize notations in
+        StatementsTreeWidget._init_tree_branch.
+
+        :param child: Either an instance of StatementsTreeWidgetNode or
+            StatementsTreeWidgetItem; to ba added as a child of self.
+        """
+
+        self.addChild(child)
 
     def set_selectable(self, yes: bool=True):
         """
@@ -291,7 +311,7 @@ class StatementsTreeWidget(QTreeWidget):
     nodes correspond to hierarchical elements (e.g. chapter/sections/…)
     and the leaves to statements in this hierarchy. This class is
     instantiated with a list of instances of the class Statement and
-    what we called an outline, which is just a Dict[str, str] (most of
+    what we call an outline, which is just a Dict[str, str] (most of
     the time Exercise.outline attribute) of which keys are hierarchy
     levels (e.g. 'groups.finite_groups') and values are pretty names
     for display (e.g. 'Finite groups'). Furthermore, those instances
@@ -330,8 +350,8 @@ class StatementsTreeWidget(QTreeWidget):
         Add branch to extg_tree and StatementsTreeWidgetItem(statement)
         at the end of branch. This function is recursive.
 
-        :param extg_tree: A tree implemented as a reccursive
-            dictionnary, see self._init_tree.__doc__.
+        :param extg_tree: A tree implemented as a recursive
+            dictionary, see self._init_tree.__doc__.
         :param branch: A tree branch (new or already existing), e.g.
             ['Chapter', 'Section', 'Sub-section']. Those are not
             instances of the class StatementsTreeWidgetNode!
@@ -348,7 +368,7 @@ class StatementsTreeWidget(QTreeWidget):
             item            = StatementsTreeWidgetItem(statement)
             root            = item.text(0)
             extg_tree[root] = (item, dict())
-            parent.addChild(item)
+            parent.add_child(item)
             return None
 
         # Else go through the already existing branch and create
@@ -359,7 +379,7 @@ class StatementsTreeWidget(QTreeWidget):
         if root not in extg_tree:
             node            = StatementsTreeWidgetNode(root)
             extg_tree[root] = (node, dict())
-            parent.addChild(node)
+            parent.add_child(node)
             node.setExpanded(True)  # Must be done AFTER node is added
 
         self._init_tree_branch(extg_tree[root][1], branch,
@@ -377,7 +397,7 @@ class StatementsTreeWidget(QTreeWidget):
         values are tuple t, where:
             - t[0] is either an instance of the class
               StatementsTreeWidgetNode or StatementsTreeWidgetItem;
-            - t[1] is a dictionnary on the same principle.
+            - t[1] is a dictionary on the same principle.
         Here is an example:
 
         {'Groups': (StatementsTreeWidgetNode('Groups'),
@@ -417,18 +437,17 @@ class StatementsTreeWidget(QTreeWidget):
         self._init_tree(statements, outline)
 
         # Cosmetics
-        self.setAlternatingRowColors(True)
         self.setHeaderLabels([_('Statement'), _('L∃∀N name')])
         self.setWindowTitle('StatementsTreeWidget')
         self.resizeColumnToContents(0)
         self.resizeColumnToContents(1)
 
-    def addChild(self, item):
+    def add_child(self, item):
         """
         Called in self._init_tree_branch, do not delete!  Useful not to
         have to make a difference between self.addTopLevelItem when we
-        add an item to the tree itself or parent.addChild when we add an
-        item to a parent which is a tree item.
+        add an item to the tree itself or parent.add_child when we add
+        an item to a parent which is a tree item.
 
         :param item: Either a StatementsTreeWidgetItem or a
             StatementsTreeWidgetNode.

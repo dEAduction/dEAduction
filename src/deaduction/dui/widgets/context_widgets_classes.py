@@ -34,13 +34,15 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pathlib import Path
-from typing  import Tuple
+from pathlib import             Path
+from typing  import             Tuple
+from gettext import gettext as  _
 
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
                                 QIcon)
 from PySide2.QtWidgets import ( QHBoxLayout,
+                                QVBoxLayout,
                                 QLabel,
                                 QWidget,
                                 QListWidget,
@@ -189,6 +191,7 @@ class ProofStatePOWidget(QListWidget):
 
         super().__init__()
 
+        # TODO: make self.items a property?
         self.items = []
         for proofstatepo, tag in tagged_proofstatepos:
             item = ProofStatePOWidgetItem(proofstatepo, tag)
@@ -200,39 +203,7 @@ class ProofStatePOWidget(QListWidget):
 # Target widgets classes #
 ##########################
 
-# Classes to display and store the target in the main exercise window.
-
-
-class _TargetLabel(QLabel):
-    """
-    This class should not be used outside of this module! It is an
-    utility QWidget displaying both the tag (see _TagIcon.__doc__) and
-    the target.  TargetWidget will instantiate a _TargetLabel and
-    arrange it in layouts.
-    """
-
-    def __init__(self, target: ProofStatePO=None, tag: str=None):
-        """
-        Init self with an target (an instance of the class ProofStatePO)
-        and a tag.  If those are None, display an empty tag and '…' in
-        place of the target.
-
-        :param target: The target to be displayed.
-        :param tag: The tag associated to target.
-        """
-        super().__init__()
-
-        # Display
-        #   ∀ x ∈ X, ∃ ε, …
-        # and not
-        #   H : ∀ x ∈ X, ∃ ε, …
-        # where H might be the lean name of the target. That's what
-        # the .math_type is for.
-        self.setText(target.math_type.format_as_utf8() if target else '…')
-
-        # TODO: add tag, using _TagIcon will not work
-
-        self.setStyleSheet('font-size: 32pt;')
+# Classe to display and store the target in the main exercise window.
 
 
 class TargetWidget(QWidget):
@@ -248,8 +219,8 @@ class TargetWidget(QWidget):
     def __init__(self, target: ProofStatePO=None, tag: str=None):
         """"
         Init self with an target (an instance of the class ProofStatePO)
-        and a tag.  If those are None, display an empty tag and '…' in
-        place of the target.
+        and a tag. If those are None, display an empty tag and '…' in
+        place of the target. A caption is added on top of the target.
 
         :param target: The target to be displayed.
         :param tag: The tag associated to target.
@@ -260,8 +231,29 @@ class TargetWidget(QWidget):
         self.target = target
         self.tag    = tag
 
+        # ───────────────────── Widgets ──────────────────── #
+        
+        caption_label = QLabel(_('Target (to be solved)'))
+        # TODO: put the pre-set size of group boxes titles
+        caption_label.setStyleSheet('font-size: 11pt;')
+
+        # Display
+        #   ∀ x ∈ X, ∃ ε, …
+        # and not
+        #   H : ∀ x ∈ X, ∃ ε, …
+        # where H might be the lean name of the target. That's what
+        # the .math_type is for.
+        target_label = QLabel(target.math_type.format_as_utf8() if target else '…')
+        target_label.setStyleSheet('font-size: 32pt;')
+
+        # ───────────────────── Layouts ──────────────────── #
+        
+        central_layout = QVBoxLayout()
+        central_layout.addWidget(caption_label)
+        central_layout.addWidget(target_label)
+
         main_layout = QHBoxLayout()
         main_layout.addStretch()
-        main_layout.addWidget(_TargetLabel(self.target, self.tag))
+        main_layout.addLayout(central_layout)
         main_layout.addStretch()
         self.setLayout(main_layout)
