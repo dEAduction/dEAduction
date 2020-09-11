@@ -60,13 +60,19 @@ class InfoBloc(QWidget):
 
 class CourseExercisePreviewLayout(QVBoxLayout):
 
-    def __init__(self, title: str, info_list: List[str], long_text: str):
+    def __init__(self, title: str, info_list: List[str], long_text: str, 
+                 subtitle: str=None):
         super().__init__()
 
         # Title
         title_wgt = QLabel(title)
         title_wgt.setStyleSheet('font-size: 20pt;')
         self.addWidget(title_wgt)
+
+        # Subtitle
+        if subtitle:
+            subtitle_wgt = QLabel(subtitle)
+            self.addWidget(subtitle_wgt)
 
         # Info bloc
         self.addWidget(InfoBloc(info_list))
@@ -152,13 +158,14 @@ class ExerciseChoosePreview(QWidget):
 
         # ──────────────── Preview Exercise ──────────────── #
 
-        title = 'Le groupe fondamental de la sphère est trivial'
+        title = 'Exercice 1.3.4'
         info_list = ['Some info']
         long_text = "Montrer que le groupe fondamental du cercle est "\
                     "isomorphe (comme groupe) à (Z, +)."
+        subtitle = 'Le groupe fondamental de la sphère est trivial'
 
         preview_exercise_lyt = CourseExercisePreviewLayout(title, info_list,
-                long_text)
+                long_text, subtitle)
 
         # ─────────────────── Main layout ────────────────── #
 
