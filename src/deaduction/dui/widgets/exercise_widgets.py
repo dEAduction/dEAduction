@@ -421,7 +421,7 @@ class ExerciseMainWindow(QMainWindow):
         self.window_closed.emit()
 
     @property
-    def current_context_selection_mathobjects(self):
+    def current_context_selection_as_mathobjects(self):
         """
         Do not delete, used many times! Return the current selection as
         an ordered list of instances of the class MathObject directly.
@@ -486,7 +486,7 @@ class ExerciseMainWindow(QMainWindow):
         new_target_wgt = TargetWidget(new_target, new_target_tag)
 
         # Reset current context selection
-        self.clear_context_selection()
+        self.clear_current_selection()
 
         # Update UI and attributes
         self.ecw.update_goal(new_goal)
@@ -620,7 +620,7 @@ class ExerciseMainWindow(QMainWindow):
             try:
                 if user_input == []:
                     code = action.run(self.current_goal,
-                                      self.current_context_selection_mathobjects)
+                                      self.current_context_selection_as_mathobjects)
                 else:
                     code = action_btn.action.run(self.current_goal,
                             self.current_context_selection, user_input)

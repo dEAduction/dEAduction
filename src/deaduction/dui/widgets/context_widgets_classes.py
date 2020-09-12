@@ -36,6 +36,7 @@ This file is part of d∃∀duction.
 
 from pathlib import Path
 from typing  import Tuple
+from gettext import gettext as  _
 
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
