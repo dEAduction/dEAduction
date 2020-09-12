@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from typing import  OrderedDict, List
+from typing import  Dict, List
 
 from PySide2.QtCore import      Slot
 from PySide2.QtGui  import      QPixmap
@@ -15,9 +15,12 @@ from PySide2.QtWidgets import ( QApplication,
                                 QLabel,
                                 QLayout,
                                 QListWidgetItem,
+                                QTreeWidget,
+                                QTreeWidgetItem,
                                 QVBoxLayout,
                                 QHBoxLayout)
 
+from deaduction.dui.utils import set_selectable
 
 class ChoosePreviewCourseExerciseLayout(QHBoxLayout):
 
@@ -60,27 +63,49 @@ class InfoBloc(QWidget):
 
 class CourseExercisePreviewLayout(QVBoxLayout):
 
-    def __init__(self, title: str, info_list: List[str], long_text: str, 
+    def __init__(self, title: str, long_text: str, info: Dict[str, str]=None,
                  subtitle: str=None):
+
         super().__init__()
 
         # Title
         title_wgt = QLabel(title)
-        title_wgt.setStyleSheet('font-size: 20pt;')
-        self.addWidget(title_wgt)
+        title_wgt.setStyleSheet('font-size: 18pt;'\
+                                'font-weight: bold;')
 
         # Subtitle
         if subtitle:
-            subtitle_wgt = QLabel(subtitle)
-            self.addWidget(subtitle_wgt)
+            subtitle_wgt = QLabel(f'({subtitle})')
+            sub_title_lyt = QHBoxLayout()
+            sub_title_lyt.addWidget(title_wgt)
+            sub_title_lyt.addWidget(subtitle_wgt)
+            self.addLayout(sub_title_lyt)
+        else:
+            self.addWidget(title_wgt)
 
-        # Info bloc
-        self.addWidget(InfoBloc(info_list))
+        # Info disclosure triangle
+        if info:
+            triangle = QTreeWidget()
+            triangle.setColumnCount(2)
+            details = QTreeWidgetItem(triangle, ['Details'])
+            details.set_selectable(False)
+            triangle.addTopLevelItem(details)
+
+            for key, val in info.items():
+                item = QTreeWidgetItem(details, [key, val])
+                item.set_selectable(False)
+                details.addChild(item)
+
+            triangle.header().hide()
+            triangle.setStyleSheet("background-color: transparent;")
+            self.addWidget(triangle)
 
         # Long text
-        long_text_wgt = QTextEdit(long_text)
-        long_text_wgt.setReadOnly(True)
+        long_text_wgt = QLabel(long_text)
+        long_text_wgt.setWordWrap(True)
         self.addWidget(long_text_wgt)
+
+        self.addStretch()
 
 
 class CourseChoosePreview(QWidget):
@@ -102,9 +127,6 @@ class CourseChoosePreview(QWidget):
         # ────────────── Preview course layout ───────────── #
 
         title = 'Topologie algébrique'
-        info_list = ['Yet another Sorbonne University, 2020-2021',
-                     'Frédéric Le Roux',
-                     '~/Ka/Mou/Lox/Prof_le_Roux/topalg.lean']
         long_text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit." \
                 'Mauris tempus congue turpis mollis consequat. Nulla finibus tempor' \
                 'pharetra. Duis accumsan nisl tincidunt lacus aliquet, vel sodales nunc' \
@@ -119,9 +141,13 @@ class CourseChoosePreview(QWidget):
                 'dictum nunc placerat, ut malesuada lectus maximus. Nam dignissim orci' \
                 'ipsum, id luctus mauris iaculis condimentum. Aliquam arcu eros, tempor' \
                 'vitae vulputate eget, viverra quis metus.'
+        info = {'Name': 'Frédéric Le Roux',
+                'Year': '2020-2021',
+                'Level': 'M1',
+                'Path': '~/Who/Wants/To/Live/Forever/topalg.lean'}
 
-        preview_course_lyt = CourseExercisePreviewLayout(title, info_list,
-                long_text)
+        preview_course_lyt = CourseExercisePreviewLayout(title, long_text,
+                                                         info)
 
         # ─────────────────── Main layout ────────────────── #
 
@@ -159,13 +185,12 @@ class ExerciseChoosePreview(QWidget):
         # ──────────────── Preview Exercise ──────────────── #
 
         title = 'Exercice 1.3.4'
-        info_list = ['Some info']
         long_text = "Montrer que le groupe fondamental du cercle est "\
                     "isomorphe (comme groupe) à (Z, +)."
         subtitle = 'Le groupe fondamental de la sphère est trivial'
 
-        preview_exercise_lyt = CourseExercisePreviewLayout(title, info_list,
-                long_text, subtitle)
+        preview_exercise_lyt = CourseExercisePreviewLayout(title, long_text,
+                                                           subtitle=subtitle)
 
         # ─────────────────── Main layout ────────────────── #
 
