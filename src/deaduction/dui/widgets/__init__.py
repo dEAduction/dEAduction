@@ -33,8 +33,8 @@ from .actions_widgets_classes import (
         StatementsTreeWidget)
 
 from .context_widgets_classes import (
-        ProofStatePOWidgetItem,
-        ProofStatePOWidget,
+        MathObjectWidgetItem,
+        MathObjectWidget,
         TargetWidget)
 
 from .lean_editor import (

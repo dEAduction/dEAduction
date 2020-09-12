@@ -57,8 +57,8 @@ from deaduction.dui.widgets import (    ActionButton,
                                         LeanEditor,
                                         StatementsTreeWidget,
                                         StatementsTreeWidgetItem,
-                                        ProofStatePOWidget,
-                                        ProofStatePOWidgetItem,
+                                        MathObjectWidget,
+                                        MathObjectWidgetItem,
                                         TargetWidget)
 from deaduction.pylib.actions import (  Action,
                                         InputType,
@@ -70,8 +70,7 @@ from deaduction.pylib.coursedata import (   Definition,
                                             Theorem)
 from deaduction.pylib.server.exceptions import FailedRequestError
 from deaduction.pylib.mathobj import (  Goal,
-                                        ProofState,
-                                        ProofStatePO)
+                                        ProofState)
 from deaduction.pylib.server import     ServerInterface
 
 log = logging.getLogger(__name__)
@@ -193,8 +192,8 @@ class ExerciseCentralWidget(QWidget):
 
         # ─────── Init goal (Context area and target) ────── #
 
-        self.objects_wgt = ProofStatePOWidget()
-        self.props_wgt   = ProofStatePOWidget()
+        self.objects_wgt = MathObjectWidget()
+        self.props_wgt   = MathObjectWidget()
         self.target_wgt  = TargetWidget()
 
         # ───────────── Put widgets in layouts ───────────── #
@@ -229,17 +228,17 @@ class ExerciseCentralWidget(QWidget):
         buttons (instances of the class ActionButton).
         """
 
-        return self.logic_btns.buttons + self.proof_btns.buttons 
-    
+        return self.logic_btns.buttons + self.proof_btns.buttons
+
     ###########
     # Methods #
     ###########
-    
+
 
     def freeze(self, yes=True):
         """
         Freeze interface (inactive widgets, gray appearance, etc) if
-        yes: 
+        yes:
             - disable objects and properties;
             - disable all buttons;
         unfreeze it otherwise.
@@ -272,8 +271,8 @@ class ExerciseCentralWidget(QWidget):
         new_objects    = new_context[0]
         new_props      = new_context[1]
 
-        new_objects_wgt = ProofStatePOWidget(new_objects)
-        new_props_wgt   = ProofStatePOWidget(new_props)
+        new_objects_wgt = MathObjectWidget(new_objects)
+        new_props_wgt   = MathObjectWidget(new_props)
         new_target_wgt  = TargetWidget(new_target, new_target_tag)
 
         # Replace in the layouts
@@ -312,7 +311,7 @@ class ExerciseMainWindow(QMainWindow):
     ExerciseCentralWidget, a toolbar, and probably more things in the future.
     For the communication with self.servint, self:
         1. stores user selection of math. objects or properties
-           (self.current_selection);
+           (self.current_context_selection);
         2. detects when an action button (in self.ecw.logic_btns or
            in self.ecw.proof_btns) or a statement (in
            self.ecw.statements_tree) is clicked on;
@@ -342,8 +341,8 @@ class ExerciseMainWindow(QMainWindow):
         in deaduction.dui.__main__.py.
     :attribute current_goal Goal: The current goal, which contains the
         tagged target, tagged math. objects and tagged math. properties.
-    :attribute current_selection [ProofStatePOWidgetItem]: The ordered
-        of currently selected math. objects and properties by the user. 
+    :attribute current_context_selection [MathObjectWidgetItem]: The ordered
+        of currently selected math. objects and properties by the user.
     :attribute ecw ExerciseCentralWidget: The instance of
         ExerciseCentralWidget instantiated in self.__init__, see
         ExerciseCentraiWidget.__doc__.
@@ -376,7 +375,7 @@ class ExerciseMainWindow(QMainWindow):
 
         self.exercise           = exercise
         self.current_goal       = None
-        self.current_selection  = []
+        self.current_context_selection  = []
         self.ecw                = ExerciseCentralWidget(exercise)
         self.lean_editor        = LeanEditor()
         self.servint            = servint
@@ -414,7 +413,7 @@ class ExerciseMainWindow(QMainWindow):
         """
         Overload native Qt closeEvent method — which is called when self
         is closed — to send the signal self.window_closed.
-    
+
         :param event: Some Qt mandatory thing.
         """
 
@@ -422,15 +421,15 @@ class ExerciseMainWindow(QMainWindow):
         self.window_closed.emit()
 
     @property
-    def current_selection_as_pspos(self) -> [ProofStatePO]:
+    def current_context_selection_mathobjects(self):
         """
         Do not delete, used many times! Return the current selection as
-        an ordered list of instances of the class ProofStatePO directly.
+        an ordered list of instances of the class MathObject directly.
 
         :return: See above.
         """
 
-        return [item.proofstatepo for item in self.current_selection]
+        return [item.mathobject for item in self.current_context_selection]
 
     def pretty_current_selection(self) -> str:
         """
@@ -440,7 +439,7 @@ class ExerciseMainWindow(QMainWindow):
         """
 
         msg = 'Current user selection: '
-        msg += str([item.text() for item in self.current_selection])
+        msg += str([item.text() for item in self.current_context_selection])
 
         return msg
 
@@ -453,7 +452,7 @@ class ExerciseMainWindow(QMainWindow):
         """
 
         # Init context (objects and properties). Get them as two list of
-        # (ProofStatePO, str), the str being the tag of the prop. or obj.
+        # (MathObject, str), the str being the tag of the prop. or obj.
 
         # get old goal and set tags
         lean_file = self.servint.lean_file
@@ -481,13 +480,13 @@ class ExerciseMainWindow(QMainWindow):
             pass
 
         new_context = new_goal.tag_and_split_propositions_objects()
-        new_objects_wgt = ProofStatePOWidget(new_context[0])
-        new_props_wgt = ProofStatePOWidget(new_context[1])
+        new_objects_wgt = MathObjectWidget(new_context[0])
+        new_props_wgt = MathObjectWidget(new_context[1])
         new_target = new_goal.target
         new_target_wgt = TargetWidget(new_target, new_target_tag)
 
         # Reset current context selection
-        self.clear_current_selection()
+        self.clear_context_selection()
 
         # Update UI and attributes
         self.ecw.update_goal(new_goal)
@@ -510,9 +509,9 @@ class ExerciseMainWindow(QMainWindow):
     #     putting them in try… except… blocks, etc;
     #   - other methods are specific methods with a specific task,
     #     called when a particular signal is received in server_task.
-    
+
     # ─────────────────── Server task ────────────────── #
-     
+
     async def server_task(self):
         """
         This method handles sending user data and actions to the server
@@ -559,7 +558,7 @@ class ExerciseMainWindow(QMainWindow):
                                                             emission.args[0]))
 
     # ──────────────── Template function ─────────────── #
-    
+
     async def process_async_signal(self, process_function: Callable):
         """
         This methods wraps specific methods to be called when a specific
@@ -621,10 +620,10 @@ class ExerciseMainWindow(QMainWindow):
             try:
                 if user_input == []:
                     code = action.run(self.current_goal,
-                                      self.current_selection_as_pspos)
+                                      self.current_context_selection_mathobjects)
                 else:
                     code = action_btn.action.run(self.current_goal,
-                            self.current_selection, user_input)
+                            self.current_context_selection, user_input)
             except MissingParametersError as e:
                 if e.input_type == InputType.Text:
                     text, ok = QInputDialog.getText(action_btn,
@@ -656,10 +655,12 @@ class ExerciseMainWindow(QMainWindow):
 
                 if isinstance(statement, Definition):
                     code = generic.action_definition(self.current_goal,
-                            self.current_selection_as_pspos, statement)
+                            self.current_context_selection_as_mathobjects,
+                                                     statement)
                 elif isinstance(statement, Theorem):
                     code = generic.action_theorem(self.current_goal,
-                            self.current_selection_as_pspos, statement)
+                            self.current_context_selection_as_mathobjects,
+                                                  statement)
 
                 await self.servint.code_insert(statement.pretty_name, code)
             except WrongUserInput:
@@ -684,15 +685,15 @@ class ExerciseMainWindow(QMainWindow):
         Clear current (user) selection of math. objects and properties.
         """
 
-        for item in self.current_selection:
+        for item in self.current_context_selection:
             item.mark_user_selected(False)
-        self.current_selection = []
+        self.current_context_selection = []
 
     @Slot()
     def freeze(self, yes=True):
         """
         Freeze interface (inactive widgets, gray appearance, etc) if
-        yes: 
+        yes:
             - disable objects and properties;
             - disable all buttons;
         unfreeze it otherwise.
@@ -714,8 +715,8 @@ class ExerciseMainWindow(QMainWindow):
         QMessageBox.information(self, _('Target solved'), _('Target solved!'),
                                 QMessageBox.Ok)
 
-    @Slot(ProofStatePOWidgetItem)
-    def process_context_click(self, item: ProofStatePOWidgetItem):
+    @Slot(MathObjectWidgetItem)
+    def process_context_click(self, item: MathObjectWidgetItem):
         """
         Add or remove item (item represents a math. object or property)
         from the current selection, depending on whether it was already
@@ -728,12 +729,12 @@ class ExerciseMainWindow(QMainWindow):
         # selected
         item.setSelected(False)
 
-        if item not in self.current_selection:
+        if item not in self.current_context_selection:
             item.mark_user_selected(True)
-            self.current_selection.append(item)
+            self.current_context_selection.append(item)
         else:
             item.mark_user_selected(False)
-            self.current_selection.remove(item)
+            self.current_context_selection.remove(item)
 
     @Slot()
     def __update_lean_editor(self):

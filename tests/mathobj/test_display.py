@@ -1,23 +1,23 @@
 """
-# __init__.py : #ShortDescription #
+# test_display.py : <#ShortDescription> #
     
-    (#optionalLongDescription)
+    <#optionalLongDescription>
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
-Created       : 07 2020 (creation)
+Created       : 09 2020 (creation)
 Repo          : https://github.com/dEAduction/dEAduction
 
-Copyright (c) 2020 the dEAduction team
+Copyright (c) 2020 the d∃∀duction team
 
-This file is part of dEAduction.
+This file is part of d∃∀duction.
 
-    dEAduction is free software: you can redistribute it and/or modify it under
+    d∃∀duction is free software: you can redistribute it and/or modify it under
     the terms of the GNU General Public License as published by the Free
     Software Foundation, either version 3 of the License, or (at your option)
     any later version.
 
-    dEAduction is distributed in the hope that it will be useful, but WITHOUT
+    d∃∀duction is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
     more details.
@@ -26,6 +26,8 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .MathObject import MathObject
-from .proof_state import Goal, ProofState
-from .give_name import give_global_name, give_local_name
+import deaduction.pylib.mathobj.MathObject as MathObject
+import deaduction.pylib.mathobj.display_math_object as display_math_object
+import pytest
+
+def test_

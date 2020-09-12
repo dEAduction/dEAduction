@@ -214,7 +214,7 @@ class ExerciseWindow(QWidget):
         self.properties.clear()
         self.objects.clear()
         for type_, instances in goal.math_types:
-            utf8 = type_.format_as_utf8(is_type_of_pfpo=True)
+            utf8 = type_.format_as_utf8(is_math_type=True)
 
             for obj in instances:
                 txt = f"{obj.format_as_utf8()} : {utf8}"

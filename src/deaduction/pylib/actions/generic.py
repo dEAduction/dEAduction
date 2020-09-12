@@ -34,27 +34,27 @@ from deaduction.pylib.actions import (  WrongUserInput,
                                         get_new_hyp)
 from deaduction.pylib.coursedata import Statement
 from deaduction.pylib.mathobj import (  Goal,
-                                        PropObj)
+                                        MathObject)
 
-def action_definition(goal : Goal, selected_objects : [PropObj], definition : Statement):
+def action_definition(goal : Goal, selected_objects : [MathObject], definition : Statement):
     if len(selected_objects) == 0:
         defi = definition.lean_name
         return "defi {0} <|> simp_rw {0} <|> simp_rw <- {0}, ".format(defi)
     elif len(selected_objects) == 1:
         defi = definition.lean_name
         return "defi {0} at {1} <|> simp_rw {0} at {1} <|> simp_rw <- {0} at {1}, ".format(defi,
-                                        selected_objects[0].lean_data["name"])
+                                        selected_objects[0].info["name"])
     else:
         raise WrongUserInput
 
-def action_theorem(goal : Goal, selected_objects : [PropObj], theorem : Statement):
+def action_theorem(goal : Goal, selected_objects : [MathObject], theorem : Statement):
     th = theorem.lean_name
     if len(selected_objects) == 0:
         h = get_new_hyp()
         
         return "apply {1} <|> have {0} := @{1},".format(h, th)
     else:
-        arguments = " ".join([selected_objects[0].lean_data["name"]])
+        arguments = " ".join([selected_objects[0].info["name"]])
         arguments_type = " "
         h = get_new_hyp()
         return "apply {1} {2} <|> apply @{1} {2} <|> have {0} := {1} {2} <|> have {0} := @{1} {2},".format(h, th, arguments)

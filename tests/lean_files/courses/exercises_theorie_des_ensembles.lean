@@ -2,7 +2,7 @@ import data.set
 import tactic
 
 -- dEAduction imports
-import structures
+import structures2
 import definitions
 
 -- General principles :
@@ -15,7 +15,7 @@ import definitions
 
 local attribute [instance] classical.prop_decidable
 ---------------------------------------------
--- global parameters = iùmplicit variables --
+-- global parameters = implicit variables --
 ---------------------------------------------
 section course
 parameters {X Y Z: Type}

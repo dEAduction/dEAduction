@@ -184,6 +184,9 @@ class ServerInterface(QObject):
             self.lean_file_changed.emit()
 
             await self.__proof_receive_done.wait()
+
+            self.log.debug(_("Proof State received"))
+
             await self.lean_server.running_monitor.wait_ready()
 
             self.log.debug(_("After request"))
@@ -222,6 +225,7 @@ class ServerInterface(QObject):
         file_content = exercise.course.file_content
         lines        = file_content.splitlines()
         begin_line   = exercise.lean_begin_line_number
+        end_line     = exercise.lean_end_line_number
         end_line     = exercise.lean_end_line_number
 
         # Construct virtual file

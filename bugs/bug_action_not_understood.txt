@@ -1,0 +1,30 @@
+--- Error(FailedRequestError("Failed request to server with errors : \n[   Message(file_name='theorie_des_ensembles.complementaire.exercise.inclusion_complement_II', severity=<Severity.error: 3>, caption='', text='type mismatch at application\\n  exercise.complement_complement\\nterm\\n  h4\\nhas type\\n  (∁∁A) ⊆ ∁∁B : Prop\\nbut is expected to have type\\n  set X : Type\\nstate:\\nX : Type,\\nA B : set X,\\nh2 : ∀ {A B : set X}, A ⊆ B → ((∁B) ⊆ ∁A),\\nh3 : (∁B) ⊆ ∁A,\\nh4 : (∁∁A) ⊆ ∁∁B\\n⊢ A ⊆ B', pos_line=230, pos_col=88, end_pos_line=None, end_pos_col=None)]"))
+Traceback (most recent call last):
+  File "/Users/leroux/Documents/PROGRAMMATION/LEAN/LEAN_TRAVAIL/dEAduction/src/deaduction/dui/widgets/exercise_widgets.py", line 367, in process_async_signal
+    await process_function()
+  File "/Users/leroux/Documents/PROGRAMMATION/LEAN/LEAN_TRAVAIL/dEAduction/src/deaduction/dui/widgets/exercise_widgets.py", line 446, in _server_call_statement
+    await self.servint.code_insert(statement.pretty_name, code)
+  File "/Users/leroux/Documents/PROGRAMMATION/LEAN/LEAN_TRAVAIL/dEAduction/src/deaduction/pylib/server/__init__.py", line 263, in code_insert
+    await self.__update()
+  File "/Users/leroux/Documents/PROGRAMMATION/LEAN/LEAN_TRAVAIL/dEAduction/src/deaduction/pylib/server/__init__.py", line 192, in __update
+    raise exceptions.FailedRequestError(errlist)
+deaduction.pylib.server.exceptions.FailedRequestError: Failed request to server with errors :
+[   Message(file_name='theorie_des_ensembles.complementaire.exercise.inclusion_complement_II', severity=<Severity.error: 3>, caption='', text='type mismatch at application\n  exercise.complement_complement\nterm\n  h4\nhas type\n  (∁∁A) ⊆ ∁∁B : Prop\nbut is expected to have type\n  set X : Type\nstate:\nX : Type,\nA B : set X,\nh2 : ∀ {A B : set X}, A ⊆ B → ((∁B) ⊆ ∁A),\nh3 : (∁B) ⊆ ∁A,\nh4 : (∁∁A) ⊆ ∁∁B\n⊢ A ⊆ B', pos_line=230, pos_col=88, end_pos_line=None, end_pos_col=None)]
+During handling of the above exception, another exception occurred:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/qtrio/_core.py", line 451, in trio_main
+    result = await async_fn(*args)
+  File "/Users/leroux/Documents/PROGRAMMATION/LEAN/LEAN_TRAVAIL/dEAduction/src/deaduction/dui/__main__.py", line 64, in main
+    servint.stop() # Good job, buddy
+  File "/usr/local/lib/python3.7/site-packages/trio/_core/_run.py", line 741, in __aexit__
+    raise combined_error_from_nursery
+  File "/Users/leroux/Documents/PROGRAMMATION/LEAN/LEAN_TRAVAIL/dEAduction/src/deaduction/dui/widgets/exercise_widgets.py", line 345, in server_task
+    emission.args[0])
+  File "/Users/leroux/Documents/PROGRAMMATION/LEAN/LEAN_TRAVAIL/dEAduction/src/deaduction/dui/widgets/exercise_widgets.py", line 386, in process_async_signal
+    await self.servint.history_undo()
+  File "/Users/leroux/Documents/PROGRAMMATION/LEAN/LEAN_TRAVAIL/dEAduction/src/deaduction/pylib/server/__init__.py", line 240, in history_undo
+    await self.__update()
+  File "/Users/leroux/Documents/PROGRAMMATION/LEAN/LEAN_TRAVAIL/dEAduction/src/deaduction/pylib/server/__init__.py", line 192, in __update
+    raise exceptions.FailedRequestError(errlist)
+deaduction.pylib.server.exceptions.FailedRequestError: Failed request to server with errors :
+[   Message(file_name='theorie_des_ensembles.complementaire.exercise.inclusion_complement_II', severity=<Severity.error: 3>, caption='', text='type mismatch at application\n  exercise.complement_complement\nterm\n  h4\nhas type\n  (∁∁A) ⊆ ∁∁B : Prop\nbut is expected to have type\n  set X : Type\nstate:\nX : Type,\nA B : set X,\nh2 : ∀ {A B : set X}, A ⊆ B → ((∁B) ⊆ ∁A),\nh3 : (∁B) ⊆ ∁A,\nh4 : (∁∁A) ⊆ ∁∁B\n⊢ A ⊆ B', pos_line=230, pos_col=88, end_pos_line=None, end_pos_col=None)]

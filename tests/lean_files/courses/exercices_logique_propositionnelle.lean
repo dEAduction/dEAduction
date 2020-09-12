@@ -2,7 +2,7 @@
 import tactic
 
 -- dEAduction imports
-import structures
+import structures2
 import definitions
 
 -- General principles :
