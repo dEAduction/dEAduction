@@ -3,7 +3,7 @@ import tactic
 
 -- dEAduction imports
 import logics
-import structures
+import structures2
 import definitions
 
 namespace elementary_logic
