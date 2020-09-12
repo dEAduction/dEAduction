@@ -248,8 +248,8 @@ class ExerciseMainWindow(QMainWindow):
         self.window_closed.emit()
 
     @property
-    def current_context_selection_as_pspos(self):
-        return [item.proofstatepo for item in self.current_context_selection]
+    def current_context_selection_mathobjects(self):
+        return [item.mathobject for item in self.current_context_selection]
 
     def pretty_user_selection(self):
         msg = 'Current user selection: '
@@ -405,7 +405,7 @@ class ExerciseMainWindow(QMainWindow):
             try:
                 if user_input == []:
                     code = action.run(self.current_goal,
-                                      self.current_context_selection_as_pspos)
+                                      self.current_context_selection_mathobjects)
                 else:
                     code = action_btn.action.run(self.current_goal,
                             self.current_context_selection, user_input)
@@ -438,10 +438,10 @@ class ExerciseMainWindow(QMainWindow):
 
                 if isinstance(statement, Definition):
                     code = generic.action_definition(self.current_goal,
-                            self.current_context_selection_as_pspos, statement)
+                            self.current_context_selection_mathobjects, statement)
                 elif isinstance(statement, Theorem):
                     code = generic.action_theorem(self.current_goal,
-                            self.current_context_selection_as_pspos, statement)
+                            self.current_context_selection_mathobjects, statement)
 
                 await self.servint.code_insert(statement.pretty_name, code)
             except WrongUserInput:

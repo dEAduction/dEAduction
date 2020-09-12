@@ -112,28 +112,28 @@ class MathObjectWidgetItem(QListWidgetItem):
     modified in comparison with the previous goal / context. See
     _TagIcon.__doc__.
 
-    :attribute proofstatepo ProofStatePo): The instance of the class
+    :attribute mathobject MathObject: The instance of the class
         one wants to display and keep as an attribute.
     :attribute tag str: The current tag (e.g. '+', '=' or '≠', see
-        _TagIcon) of proofstatepo.
+        _TagIcon) of mathobject.
     """
 
-    def __init__(self, proofstatepo: MathObject, tag: str='='):
+    def __init__(self, mathobject: MathObject, tag: str='='):
         """
         Init self with an instance of the class MathObject and a tag.
         See self.__doc__.
 
-        :param proofstatepo: The MathObject one wants to display.
-        :param tag: The tag of proofstatepo.
+        :param mathobject: The MathObject one wants to display.
+        :param tag: The tag of mathobject.
         """
 
         super().__init__()
 
-        self.proofstatepo = proofstatepo
+        self.mathobject = mathobject
         self.tag          = tag
 
-        lean_name = proofstatepo.format_as_utf8()
-        math_expr = proofstatepo.math_type.format_as_utf8(is_math_type=True)
+        lean_name = mathobject.format_as_utf8()
+        math_expr = mathobject.math_type.format_as_utf8(is_math_type=True)
         caption   = f'{lean_name} : {math_expr}'
         self.setText(caption)
         self.setIcon(_TagIcon(tag))
@@ -143,7 +143,7 @@ class MathObjectWidgetItem(QListWidgetItem):
         Define the operator == for the class MathObjectWidgetItem. Do
         not delete! It is useful to check if a given instance of the
         class MathObjectWidgetItem is or not in a list of such
-        instances (the 'for item in pspo_list:' test).
+        instances (the 'for item in mathobject_list:' test).
 
         :param other: An instance of the class MathObjectWidgetItem.
         :return: A boolean.
@@ -176,22 +176,22 @@ class MathObjectWidget(QListWidget):
         attribute makes accessing them painless.
     """
 
-    def __init__(self, tagged_proofstatepos: [Tuple[MathObject, str]]=[]):
+    def __init__(self, tagged_mathobjects: [Tuple[MathObject, str]]=[]):
         """
-        Init self an ordered list of tuples (proofstatepo, tag), where
-        proofstatepo is an instance of the class MathObject (not
-        MathObjectWidgetItem!) and tag is proofstatepo's tag a str,
+        Init self an ordered list of tuples (mathobject, tag), where
+        mathobject is an instance of the class MathObject (not
+        MathObjectWidgetItem!) and tag is mathobject's tag a str,
         (see _TagIcon.__doc__).
 
-        :param tagged_proofstatepos: The list of tagged instances of the
+        :param tagged_mathobjects: The list of tagged instances of the
             class MathObject.
         """
 
         super().__init__()
 
         self.items = []
-        for proofstatepo, tag in tagged_proofstatepos:
-            item = MathObjectWidgetItem(proofstatepo, tag)
+        for mathobject, tag in tagged_mathobjects:
+            item = MathObjectWidgetItem(mathobject, tag)
             self.addItem(item)
             self.items.append(item)
 
