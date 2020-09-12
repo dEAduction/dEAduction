@@ -186,8 +186,8 @@ class ServerInterface(QObject):
             await self.__proof_receive_done.wait()
 
             self.log.debug(_("Proof State received"))
-
-            await self.lean_server.running_monitor.wait_ready()
+            # next line removed by FLR
+            #await self.lean_server.running_monitor.wait_ready()
 
             self.log.debug(_("After request"))
 

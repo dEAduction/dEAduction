@@ -49,4 +49,7 @@ class MissingParametersError(Exception):
         self.output = output
 
 class WrongUserInput(Exception):
-    pass
+    def __init__(self, error=""):
+        super().__init__(f"Wrong user input with error: {error}")
+        self.error = error
+

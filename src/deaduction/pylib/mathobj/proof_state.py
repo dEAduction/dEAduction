@@ -243,7 +243,11 @@ class ProofState:
         # put back "¿¿¿" and remove '\n' :
         targets = ['¿¿¿' + item.replace('\n', '') for item in targets]
         targets.pop(0)  # removing title line ("targets:")
-        main_goal = Goal.from_lean_data(hypo_analysis, targets[0])
+        main_goal = None
+        if targets:
+            main_goal = Goal.from_lean_data(hypo_analysis, targets[0])
+        else:
+            log.warning(f"No target found! targets_analysis = {targets_analysis}")
         goals = [main_goal]
         for other_string_goal in targets[1:]:
             other_goal = Goal.from_lean_data(hypo_analysis="",

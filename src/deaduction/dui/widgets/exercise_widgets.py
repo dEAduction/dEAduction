@@ -636,8 +636,9 @@ class ExerciseMainWindow(QMainWindow):
                     user_input.append(text)
                 else:
                     break
-            except WrongUserInput:
+            except WrongUserInput as e:
                 self.clear_current_selection()
+                await self.display_WrongUserInput(e)
                 break
             else:
                 log.debug("Code sent to lean: " + code)
@@ -663,8 +664,9 @@ class ExerciseMainWindow(QMainWindow):
                                                   statement)
 
                 await self.servint.code_insert(statement.pretty_name, code)
-            except WrongUserInput:
-                pass
+            except WrongUserInput as e:
+                self.clear_current_selection()
+                await self.display_WrongUserInput(e)
 
     async def __server_send_editor_lean(self):
         """
@@ -674,6 +676,17 @@ class ExerciseMainWindow(QMainWindow):
 
         await self.servint.code_set(_('Code from editor'),
                                     self.lean_editor.code_get())
+
+    async def display_WrongUserInput(self, e):
+        details = e.error
+        msg_box = QMessageBox(self)
+        msg_box.setIcon(QMessageBox.Critical)
+        msg_box.setWindowTitle(_('Action not understood'))
+        msg_box.setText(_("don't know what to do with your input!"))
+        if details:
+            msg_box.setDetailedText(details)
+        msg_box.setStandardButtons(QMessageBox.Ok)
+        msg_box.exec_()
 
     #########
     # Slots #
