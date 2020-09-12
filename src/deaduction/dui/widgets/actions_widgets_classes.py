@@ -61,6 +61,7 @@ from deaduction.pylib.coursedata import ( Definition,
                                           Exercise,
                                           Statement,
                                           Theorem)
+from deaduction.dui.utils        import   set_selectable
 
 log = logging.getLogger(__name__)
 
@@ -287,21 +288,6 @@ class StatementsTreeWidgetNode(QTreeWidgetItem):
         """
 
         self.addChild(child)
-
-    def set_selectable(self, yes: bool=True):
-        """
-        Make self to be selectable if yes or unselectable otherwise.
-        There is no built-in method for this so we use flags as if we
-        are in 1980 (thanks Florian).
-
-        :param yes: See above.
-        """
-
-        if yes:
-            new_flags = self.flags() &  Qt.ItemIsSelectable
-        else:
-            new_flags = self.flags() & ~Qt.ItemIsSelectable
-        self.setFlags(new_flags)
 
 
 class StatementsTreeWidget(QTreeWidget):

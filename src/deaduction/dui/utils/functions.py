@@ -25,11 +25,30 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QWidget, QLayout
+from PySide2.QtCore    import   Qt
+from PySide2.QtWidgets import ( QLayout,
+                                QTreeWidgetItem,
+                                QWidget)
 
 
 def replace_delete_widget(layout: QLayout, old: QWidget, new: QWidget,
                           flag=Qt.FindChildrenRecursively):
     layout.replaceWidget(old, new, flag)
     old.deleteLater()
+    
+def set_selectable(self, yes: bool=True):
+    """
+    Make self to be selectable if yes or unselectable otherwise.
+    There is no built-in method for this so we use flags as if we
+    are in 1980 (thanks Florian).
+
+    :param yes: See above.
+    """
+
+    if yes:
+        new_flags = self.flags() &  Qt.ItemIsSelectable
+    else:
+        new_flags = self.flags() & ~Qt.ItemIsSelectable
+    self.setFlags(new_flags)
+
+QTreeWidgetItem.set_selectable = set_selectable
