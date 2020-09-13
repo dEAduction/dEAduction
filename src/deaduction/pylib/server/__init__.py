@@ -50,7 +50,7 @@ from gettext import gettext as _
 ############################################
 LEAN_UNRESOLVED_TEXT = "tactic failed, there are unsolved goals"
 LEAN_NOGOALS_TEXT    = "tactic failed, there are no goals to be solved"
-
+LEAN_USES_SORRY      = " uses sorry"
 
 ############################################
 # ServerInterface class
@@ -128,7 +128,8 @@ class ServerInterface(QObject):
             self.__filter_error(msg)  # Record error ?
 
         elif severity == Message.Severity.warning:
-            self.log.warning(f"Lean warning at line {msg.pos_line}: {txt}")
+            if not txt.endswith(LEAN_USES_SORRY):
+                self.log.warning(f"Lean warning at line {msg.pos_line}: {txt}")
 
         elif txt.startswith("context:"):
             self.log.info("Got new context")

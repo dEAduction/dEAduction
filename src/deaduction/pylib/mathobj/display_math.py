@@ -37,7 +37,7 @@ def display_math_object(math_object, format_):
     :param format_:
     :return:
     """
-    log.debug(f"Computing math display of {math_object}")
+    #log.debug(f"Computing math display of {math_object}")
     node = math_object.node
     if node in format_from_node.keys():
         shape = format_from_node[node]
@@ -66,7 +66,7 @@ def display_math_object_from_shape(shape, math_object, format_):
     :return:    a structured string (a list whose items are lists or strings),
     to be passed to list_string_join in order to get a fully displayable string
     """
-    log.debug(f"Trying to display from shape {shape}")
+    #log.debug(f"Trying to display from shape {shape}")
     display_shape = []
     counter = -1
     for item in shape:

@@ -113,7 +113,7 @@ class ExerciseCentralWidget(QWidget):
         - the 'context area' widgets:
             - the objects widget (self.objects_wgt) for math. objects
               (e.g. f:X->Y a function);
-            - the properies widget (self.props_wgt) for math.
+            - the properties widget (self.props_wgt) for math.
               properties (e.g. f is continuous);
         - the 'action area' widgets:
             - the logic buttons (self.logic_btns);
@@ -121,7 +121,7 @@ class ExerciseCentralWidget(QWidget):
             - the statements tree (self.statements_tree, see
               StatementsTreeWidget.__doc__).
 
-    All of these are instanciated in self.__init__ as widget classes
+    All of these are instantiated in self.__init__ as widget classes
     defined elsewhere (mainly actions_widgets_classes.py and
     context_widgets_classes.py) and properly arranged in layouts.
 
@@ -132,16 +132,16 @@ class ExerciseCentralWidget(QWidget):
     successfully called and sent back a goal (an instance of the class
     Goal contains a target, objects and properties, see
     deaduction.pylib.mathobj.Goal), context elements widgets are changed
-    with the method update_goal. Note that nor the exercise (used in
-    self.__init__) or the goal are kept as class attributes!
+    with the method update_goal. Note that neither the exercise (used in
+    self.__init__) nor the goal are kept as class attributes!
 
     :attribute logic_btns ActionButtonsWidget: Logic buttons available
         for this exercise.
-    :attribute objects_wgt ProofStatePOWidget: Widget for context
+    :attribute objects_wgt MathObjectWidget: Widget for context
         objects (e.g. f:X->Y a function).
     :attribute proof_btns ActionButtonsWidget: Proof technique buttons
         available for this exercise.
-    :attribute props_wgt ProofStatePOWidget: Widget for context
+    :attribute props_wgt MathObjectWidget: Widget for context
         properties (e.g. f is continuous).
     :attribute statements_tree StatementsTreeWidget: Tree widget for
         statements (theorems, definitions, past exercises) available to
@@ -150,10 +150,10 @@ class ExerciseCentralWidget(QWidget):
         target.
 
     :property actions_buttons [ActionButtons]: A list of all objects
-        and properties (instances of the class ProofStatePoWidgetItem).
-    :property context_items [ProofStatePOWidgetItems]: A list of all
+        and properties (instances of the class MathObjectWidgetItem).
+    :property context_items [MathObjectWidgetItems]: A list of all
         objects and properties (instances of the class
-        ProofStatePoWidgetItem).
+        MathObjectWidgetItem).
     """
 
     def __init__(self, exercise: Exercise):
@@ -263,7 +263,7 @@ class ExerciseCentralWidget(QWidget):
         """
 
         # Init context (objects and properties). Get them as two list of
-        # (ProofStatePO, str), the str being the tag of the prop. or obj.
+        # (MathObject, str), the str being the tag of the prop. or obj.
         # FIXME: tags
         new_context    = new_goal.tag_and_split_propositions_objects()
         new_target     = new_goal.target
@@ -457,7 +457,7 @@ class ExerciseMainWindow(QMainWindow):
         # get old goal and set tags
         lean_file = self.servint.lean_file
         previous_idx = max(0, lean_file.idx - 1)  # always compare with
-                                                 # previous entry
+                                                  # previous entry
         # NB : when idx = 1, old_goal = new_goal : nothing is new
         entry = lean_file.history[previous_idx]
         entry_info = entry.misc_info
@@ -474,7 +474,7 @@ class ExerciseMainWindow(QMainWindow):
         new_target_tag = '='
         try:
             new_target_tag = new_goal.future_tags[1]
-            log.debug(f'tag for target: {new_target_tag}')
+            #log.debug(f'tag for target: {new_target_tag}')
         except AttributeError:
             log.debug('no tag for target')
             pass
@@ -564,7 +564,7 @@ class ExerciseMainWindow(QMainWindow):
         This methods wraps specific methods to be called when a specific
         signal is received in server_task. First, try to call
         process_function and waits for a response. An exception may be
-        risen to ask user for additional info (e.g. an math object).
+        risen to ask user for additional info (e.g. a math object).
         Note that the current goal is modified from elsewhere in the
         program (signal self.servint.proof_state_change.connect), not
         here! This is done before the finally bloc. And finally, update
@@ -612,7 +612,7 @@ class ExerciseMainWindow(QMainWindow):
 
         action = action_btn.action
         user_input = []
-        log.info(f'Calling action {action}')
+        log.info(f'Calling action {action.symbol}')
         # Send action and catch exception when user needs to:
         #   - choose A or B when having to prove (A OR B) ;
         #   - enter an element when clicking on 'exists' button.
@@ -663,6 +663,7 @@ class ExerciseMainWindow(QMainWindow):
                             self.current_context_selection_as_mathobjects,
                                                   statement)
 
+                log.debug("Code sent to Lean: " + code)
                 await self.servint.code_insert(statement.pretty_name, code)
             except WrongUserInput as e:
                 self.clear_current_selection()
