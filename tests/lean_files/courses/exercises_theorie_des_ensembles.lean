@@ -1,4 +1,4 @@
-import data.set
+-- import data.set
 import tactic
 
 -- dEAduction imports
@@ -34,6 +34,9 @@ PrettyName
 ------------------------
 -- COURSE DEFINITIONS --
 ------------------------
+lemma definition.ssi {P Q : Prop} : (P ↔ Q) ↔ (P → Q) ∧ (Q → P) :=
+iff_def
+
 lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, x ∈ A → x ∈ B :=
 iff.rfl
 
@@ -468,6 +471,201 @@ end
 end composition
 
 end applications_II
+
+-----------------------------------
+-----------------------------------
+namespace exercices_supplementaires
+
+-- todo: implémenter
+-- differennce_symetrique
+-- diff
+-- ∃!
+
+-- relations : rel d'eq implique classes égales ou disjointes
+-- les images réciproques des singletons forment une partition
+-- bijective ssi inversible à g et d et inverses coincident
+
+
+
+
+lemma exercise.exercice_ensembles_1
+(A B : set X) :
+A ∩ B = A ∪ B → A = B
+:=
+begin
+    sorry
+end
+
+lemma exercise.exercice_ensembles_2
+(A B C : set X) :
+A ∩ B = A ∩ C ∧ (set.compl A) ∩ B = (set.compl A) ∩ C → B = C
+:=
+begin
+    sorry
+end
+
+
+lemma exercise.exercice_ensembles_3
+(A B C : set X) :
+A ∩ B = A ∩ C ∧ A ∪ B = A ∪ C → B = C
+:=
+begin
+    sorry
+end
+
+lemma exercise.exercice_ensembles_4
+(A B : set X) :
+A ⊆ B ↔ A ∩ B = A
+:=
+begin
+    sorry
+end
+
+lemma exercise.complement_intersection_deux
+(A B : set X):
+set.compl (A ∩  B) = (set.compl A) ∪ (set.compl B)
+:=
+begin
+    sorry
+end
+
+--def diff {X : Type} (A B : set X) := {x ∈ A | ¬ x ∈ B}
+--notation A `\\` B := diff A B
+
+def difference_symetrique {X : Type} (A B : set X) := (B ∪ A) ∪ (A ∩ B)
+notation A `Δ` B := difference_symetrique A B
+
+lemma definition.difference
+(A B : set X) (x : X) :
+x ∈ (A \ B) ↔ x ∈ A ∧ x ∉ B
+:=
+begin
+    refl,
+end
+
+
+lemma definition.difference_symetrique
+(A B : set X) :
+(A Δ B) =  (A ∪ B) \ (A ∩ B)
+:=
+begin
+    sorry
+end
+
+
+lemma exercise.difference_symetrique_1
+(A B : set X) :
+(A Δ B) = (A \ B) ∪ (B \ A)
+:=
+/- dEAduction
+PrettyName
+    Différence symétrique
+-/
+begin
+    sorry
+end
+
+
+lemma exercise.difference_symetrique_2
+(A B : set X) :
+(A Δ B) = (B Δ A)
+:=
+begin
+    sorry
+end
+
+
+lemma exercise.difference_symetrique_3
+(A B C : set X) :
+((A Δ B) Δ C) = (A Δ (B Δ C))
+:=
+begin
+    sorry
+end
+
+
+
+notation `∃!` P := exists_unique P
+
+lemma definition.existe_un_unique
+(P : X → Prop) :
+(∃! P) ↔  (∃ x : X, (P x ∧ (∀ x' : X, P x' → x = x')))
+:=
+begin
+    sorry
+end
+
+lemma exercise.difference_symetrique_4 :
+∃! (λE : set X, ∀ A : set X, (A Δ set.univ) = A) :=
+begin
+    sorry
+end
+
+
+lemma exercise.difference_symetrique_5 (A : set X) :
+exists_unique (λA' : set X, (A Δ A') = set.univ)
+:=
+begin
+    sorry
+ end
+
+lemma exercise.difference_symetrique_6
+(A B : set X) :
+(A Δ B) = ∅ ↔ A = B
+:=
+begin
+    sorry
+end
+
+
+
+
+-- applications
+variable (f: X → Y)
+
+lemma exercise.exercice_applications_1
+(A B : set X) :
+A ⊆ B → f '' A ⊆ f '' B
+:=
+begin
+    sorry
+end
+
+lemma exercise.exercice_applications_2
+(A B : set X) :
+f '' (A ∪ B)  = f '' A ∪ f '' B
+:=
+begin
+    sorry
+end
+
+
+lemma exercise.exercice_factorisation_I
+(g : Y → Z) (h: X → Z) :
+∃ f: X → Y, h = (applications_II.definitions.composition g f) ↔ h '' set.univ ⊆ g '' set.univ
+:=
+begin
+    sorry
+end
+
+
+lemma exercise.exercice_factorisation_II
+(f : X → Y) (h: X → Z) :
+∃ g: Y → Z, h = (applications_II.definitions.composition g f) ↔ (∀ x y, (f x = f y → h x = h y))
+:=
+begin
+    sorry
+end
+
+
+
+-- exoset ficall.pdf exos (140 bijections) 141 142 146
+
+
+
+
+
+end exercices_supplementaires
 
 end theorie_des_ensembles
 
