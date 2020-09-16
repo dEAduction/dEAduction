@@ -20,6 +20,10 @@ class List(QListWidget):
         # Connect actions to slots
         print_items_action.triggered.connect(self.print_items())
 
+        # Disable actions when no item is selected
+        if not self.selectedItems():
+            print_items_action.setEnabled(False)
+
         # Run menu
         context_menu.exec_(self.mapToGlobal(event.pos()))
 
