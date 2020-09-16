@@ -37,7 +37,7 @@ class LeanFile:
                           patch_backward=None,
                           patch_forward=None,
                           cursor_pos=0,
-                          misc_info=dict )
+                          misc_info=dict() )
         ]  # List[HistoryEntry]
 
         self.idx          = 0         # Current position in history
