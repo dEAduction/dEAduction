@@ -233,7 +233,8 @@ class TargetWidget(QWidget):
 
         # ───────────────────── Widgets ──────────────────── #
 
-        caption_label = QLabel(_('Target (to be solved)'))
+        caption_label = QLabel(_('Target'))
+        self.setToolTip('To be solved.')
         # TODO: put the pre-set size of group boxes titles
         caption_label.setStyleSheet('font-size: 11pt;')
 
