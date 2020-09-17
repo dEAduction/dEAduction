@@ -20,6 +20,18 @@ local attribute [instance] classical.prop_decidable
 section course
 parameters {X Y Z: Type}
 
+notation [parsing_only] P ` \and ` Q := P ∧ Q
+notation [parsing_only]  P ` \or ` Q := P ∨ Q
+notation [parsing_only]  ` \not ` P := ¬ P
+notation [parsing_only]  P ` \implies ` Q := P → Q
+notation [parsing_only]  P ` \iff ` Q := P ↔ Q
+
+notation [parsing_only]  x ` \in ` A := x ∈ A
+notation [parsing_only]  A ` \cap ` B := A ∩ B
+notation [parsing_only]  A ` \cup ` B := A ∪ B
+notation [parsing_only]  A ` \subset ` B := A ⊆ B
+
+
 
 ------------------
 -- COURSE TITLE --
