@@ -642,7 +642,7 @@ class ExerciseMainWindow(QMainWindow):
                 break
             else:
                 log.debug("Code sent to lean: " + code)
-                await self.servint.code_insert(action.caption, code)
+                await self.servint.code_insert(action.symbol, code)
                 break
 
     async def __server_call_statement(self, item: StatementsTreeWidgetItem):
