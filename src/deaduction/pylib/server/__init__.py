@@ -188,7 +188,7 @@ class ServerInterface(QObject):
 
             self.log.debug(_("Proof State received"))
             # next line removed by FLR
-            #await self.lean_server.running_monitor.wait_ready()
+            await self.lean_server.running_monitor.wait_ready()
 
             self.log.debug(_("After request"))
 
@@ -227,13 +227,22 @@ class ServerInterface(QObject):
         lines        = file_content.splitlines()
         begin_line   = exercise.lean_begin_line_number
         end_line     = exercise.lean_end_line_number
-        end_line     = exercise.lean_end_line_number
+
+        # construct short end of file by closing all open namespaces
+        end_of_file = "end\n"
+        namespaces = exercise.ugly_hierarchy()
+        while namespaces:
+            namespace = namespaces.pop()
+            end_of_file += "end " + namespace + "\n"
+        end_of_file += "end course"
+        self.log.debug(f"End of file: {end_of_file}")
 
         # Construct virtual file
         virtual_file_preamble = "\n".join(lines[:begin_line]) + "\n"
         virtual_file_afterword = "hypo_analysis,\n"  \
                                  "targets_analysis,\n" \
-                                 + "\n".join(lines[(end_line - 1):])
+                                 + end_of_file
+                                 #+ "\n".join(lines[(end_line - 1):])
 
         virtual_file = LeanFile(file_name=exercise.lean_name,
                                 preamble=virtual_file_preamble,

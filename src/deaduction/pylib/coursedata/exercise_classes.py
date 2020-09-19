@@ -40,15 +40,15 @@ import deaduction.pylib.actions.magic
 
 @dataclass
 class Statement:
-    description: str     # "L'union est distributive par rapport à
-                         # l'intersection"
-    lean_line : int      # line number of the lemma declaration in Lean file
-    lean_name: str       # 'set_theory.unions_and_intersections.exercise
-                         # .union_distributive_inter'
+    description: str  # "L'union est distributive par rapport à
+    # l'intersection"
+    lean_line: int  # line number of the lemma declaration in Lean file
+    lean_name: str  # 'set_theory.unions_and_intersections.exercise
+    # .union_distributive_inter'
     lean_statement: str  # 'A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C)'
     lean_variables: str  # '(X : Type) (A : set X)'
-                         # NB: not implemented yet, included in lean_statement
-    pretty_name: str     # 'Union d'intersections'
+    # NB: not implemented yet, included in lean_statement
+    pretty_name: str  # 'Union d'intersections'
     text_book_identifier: str
 
     @classmethod
@@ -66,7 +66,6 @@ class Statement:
         return cls(data["Description"], data["lean_line"], data["lean_name"],
                    data["lean_statement"], data["lean_variables"],
                    data["PrettyName"], data["text_book_identifier"])
-
 
     def pretty_hierarchy(self, outline):
         """
@@ -99,6 +98,13 @@ class Statement:
 
         return pretty_hierarchy
 
+    def ugly_hierarchy(self):
+        """
+        return the hierarchical list of lean namespaces ending with the
+        namespace containing self
+        """
+        ugly_hierarchy = self.lean_name.split('.')[:-2]
+        return ugly_hierarchy
 
 
 @dataclass
@@ -118,11 +124,10 @@ class Exercise(Theorem):
     available_proof_techniques: List[Action]
     available_statements: List[Statement]
     expected_vars_number: Dict[str, int]  # {'X': 3, 'A': 1, 'B': 1}
-    lean_begin_line_number: int           # proof starts here...
-    lean_end_line_number: int             # ...and ends here
+    lean_begin_line_number: int  # proof starts here...
+    lean_end_line_number: int  # ...and ends here
 
-    course: Any = None                    # the parent course
-
+    course: Any = None  # the parent course
 
     @classmethod
     def from_parser_data(cls, data: dict, statements: list):
@@ -162,7 +167,7 @@ class Exercise(Theorem):
         # (item, True) is in annotated_statements
         prefix = {"Tools->Definitions": "definition", "Tools->Theorems":
             "theorem", "Tools->Exercises": "exercise",
-                   'Tools->Statements': ""}
+                  'Tools->Statements': ""}
         class_dict = {"Tools->Definitions": Definition, "Tools->Theorems":
             Theorem, "Tools->Exercises": Exercise,
                       'Tools->Statements': Statement}
@@ -237,7 +242,7 @@ class Exercise(Theorem):
         ##############################
         post_data = {}
         labels = {"Tools->Logic": "logic", "Tools->ProofTechniques": "proofs",
-                 "Tools->Magic": "magic"}
+                  "Tools->Magic": "magic"}
         dicts = {"Tools->Logic": deaduction.pylib.actions.logic.__actions__,
                  "Tools->ProofTechniques":
                      deaduction.pylib.actions.proofs.__actions__,
@@ -295,7 +300,6 @@ class Exercise(Theorem):
                     log.warning(f"label {item} not in {labels[field]}  lists")
                 else:
                     post_data[field].append(action_dict["action_" + item])
-
 
         return cls(data["Description"],
                    data["lean_line"],

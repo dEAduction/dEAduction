@@ -43,10 +43,21 @@ import deaduction.pylib.coursedata.parser_course as parser_course
 
 @dataclass
 class Course:
-    file_content: str
-    metadata: Dict[str, str]
-    outline: OrderedDict
-    statements: List[Statement]
+    """
+    This class allows to store all the data related to a given course,
+    which is materialised by a Lean file containing a list of definitions,
+    theorems and exercises (all being statements introduced by Lean's
+    keyword "lemma"), structured into namespaces that corresponds to sections.
+    Th attributes are:
+    - the content of the corresponding Lean file,
+    - metadata (e.g. authors, institution, etc.)
+    - the "outline" of the course, an ordered dict describing namespaces
+    - a list of all statements
+    """
+    file_content:           str
+    metadata:               Dict[str, str]
+    outline:                OrderedDict
+    statements:             List[Statement]
     # outline description:
     #   keys = lean complete namespaces,
     #   values = corresponding plain language namespace
