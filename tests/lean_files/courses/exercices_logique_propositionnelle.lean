@@ -23,6 +23,11 @@ local attribute [instance] classical.prop_decidable
 ---------------------------------------------
 section course
 variables (P Q R: Prop) -- NOT global
+notation [parsing_only] P ` \and ` Q := P ∧ Q
+notation [parsing_only]  P ` \or ` Q := P ∨ Q
+notation [parsing_only]  ` \not ` P := ¬ P
+notation [parsing_only]  P ` \implies ` Q := P → Q
+notation [parsing_only]  P ` \iff ` Q := P ↔ Q
 
 
 ------------------
@@ -157,7 +162,28 @@ begin
     sorry
 end
 
-lemma exercise.tiers_exclus
+lemma exercise.tiers_exclu :
+R ∨ ¬ R
+:=
+/- dEAduction
+PrettyName
+    Le tiers exclu : l'une des deux propriétés "R" et "NON R" est vraie
+Description
+    Le bouton "cas" permet de faire une preuve pas cas,
+    c'est-à-dire de considérer successivement le cas où une propriété R est
+    vérifiée, et le cas contraire où elle ne l'est pas. Ce type de preuve
+    incorpore ce qu'on appelle le tiers exclu.
+Tools->Logic
+    case negate or and implicate iff
+Tools->ProofTechniques
+    absurdum assumption
+-/
+begin
+    sorry
+end
+
+
+lemma exercise.contradiction
 (H : R ∧ ¬ R) :
  false
 :=
@@ -237,4 +263,3 @@ end
 end Logique_propositionnelle
 
 end course
-
