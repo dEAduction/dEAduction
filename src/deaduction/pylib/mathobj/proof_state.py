@@ -38,6 +38,8 @@ from deaduction.pylib.mathobj.lean_analysis_with_type import \
                                 lean_expr_with_type_grammar, \
                                 LeanEntryVisitor
 
+from deaduction.pylib.actions import Action
+
 log = logging.getLogger(__name__)
 
 
@@ -106,7 +108,8 @@ class Goal:
                 else:
                     # next test uses PropObj.__eq__, which is redefined
                     # in PropObj (recursively test nodes)
-                    if old_context[old_index].math_type == math_object.math_type:
+                    if old_context[old_index].math_type == \
+                            math_object.math_type:
                         tag = "="
                     else:
                         tag = "≠"
@@ -149,7 +152,8 @@ class Goal:
         names = []
         for math_object in self.context:
             name = math_object.info["name"]
-            if name != '' and not math_object.is_prop() and not (name in names):
+            if name != '' and not math_object.is_prop() \
+                    and not (name in names):
                 names.append(name)
         #    names.extend(pfpo.bound_vars)
         # names.extend(target.bound_vars)
@@ -247,13 +251,52 @@ class ProofState:
         if targets:
             main_goal = Goal.from_lean_data(hypo_analysis, targets[0])
         else:
-            log.warning(f"No target found! targets_analysis = {targets_analysis}")
+            log.warning(f"No target found! "
+                        f"targets_analysis = {targets_analysis}")
         goals = [main_goal]
         for other_string_goal in targets[1:]:
             other_goal = Goal.from_lean_data(hypo_analysis="",
                                              target_analysis=other_string_goal)
             goals.append(other_goal)
         return cls(goals)
+
+
+@dataclass
+class Proof:
+    """
+    This class encodes a whole proof history, maybe uncompleted
+    as a list of ProofStates and
+    Actions.
+    TODO: keep the memory of Action in the history of the lean_file
+    TODO: implement a display_tree method
+    NOT TODO: implement a write_up_proof method ??
+    """
+    steps: [(ProofState, Action)]
+
+    def count_goals_from_proof(self):
+        """
+        Compute and return three values:
+            - total_goals_counter : total number of goals during Proof history
+            - current_goal_number = number of the goal under study
+            - current_goals_counter = number of goals at end of Proof
+        """
+        total_goals_counter = 0
+        current_goal_number = 1
+        current_goals_counter = 0
+        #log.debug(f"counting goals in {self} with {len(self.steps)} "
+        #          f"steps")
+        for proof_state, _ in self.steps:
+            new_counter = len(proof_state.goals)
+            if new_counter > current_goals_counter:  # new goals have appeared
+                total_goals_counter += new_counter - current_goals_counter
+            elif new_counter < current_goals_counter:  # some goals have
+                # been solved
+                current_goal_number += current_goals_counter - new_counter
+            current_goals_counter = new_counter
+
+        return total_goals_counter, \
+               current_goal_number, \
+               current_goals_counter
 
 
 def print_proof_state(goal):

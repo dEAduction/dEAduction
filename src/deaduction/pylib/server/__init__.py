@@ -291,7 +291,7 @@ class ServerInterface(QObject):
         self.lean_file.insert(label=label, add_txt=code)
         await self.__update()
 
-    async def code_set(self, label: str, code: str ):
+    async def code_set(self, label: str, code: str):
         """
         Sets the code for the current exercise
         """

@@ -63,13 +63,21 @@ match e with
 | `(ℕ → %%X) := return ("SEQUENCE", [X])
 | (pi name binder type body) := do
     let is_arr := is_arrow e,
-    if is_arr then do
-        is_pro ← tactic.is_prop e,
-        if is_pro
-            then return ("PROP_IMPLIES", [type,body])
-            else return ("FUNCTION", [type,body])
-    else do (var_, inst_body) ← instanciate e,
-               return ("QUANT_∀", [type, var_, inst_body])
+    if is_arr
+        then do
+            is_pro ← tactic.is_prop e,
+            if is_pro
+                then return ("PROP_IMPLIES", [type,body])
+                else do expr_f ←  infer_type type,
+                if expr_f = `(Type )
+                    then do  match body with
+                    | `(_root_.set %%X) := return ("SET_FAMILY", [type, X])
+                    | _ :=  return ("FUNCTION", [type,body])
+                    end
+                    else  return ("FUNCTION", [type,body])
+        else do
+            (var_, inst_body) ← instanciate e,
+            return ("QUANT_∀", [type, var_, inst_body])
 | `(Exists %%p) := do match p with
     | (lam name binder type body) :=
             do (var_, inst_body) ← instanciate p,
@@ -82,7 +90,7 @@ match e with
 | `(exists_unique %%P) := do match P with
     | (lam name binder type body)   :=
             do (var_, inst_body) ← instanciate P,
-            return ("QUANT_∃_unique", [type, var_, inst_body])
+            return ("QUANT_∃!", [type, var_, inst_body])
     |  _                            := return ("ERROR", [])
     end
 ------------------------- SET THEORY -------------------------
@@ -115,13 +123,7 @@ match e with
 | (app function argument)   :=
     if is_numeral e
         then return ("NUMBER" ++ open_bra ++ e_joli ++ closed_bra, [])
-        else do expr_f ←  infer_type function,
-        if expr_f = `(Type )
-            then do  match argument with
-                | `(%%I → _root_.set %%X) := return ("SET_FAMILY", [I,X])
-                | _ :=  return("APPLICATION", [function,argument])
-                end
-            else return("APPLICATION", [function,argument])
+        else return("APPLICATION", [function,argument])
 -- | `(%%I → _root_.set %%X) := return ("SET_FAMILY", [I,X])
 | `(ℝ) := return ("TYPE_NUMBER" ++ open_bra
     ++ "name: ℝ" ++ closed_bra,[])
