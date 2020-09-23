@@ -582,7 +582,6 @@ PrettyName
     Différence symétrique
 -/
 begin
-    targets_analysis,
     sorry
 end
 

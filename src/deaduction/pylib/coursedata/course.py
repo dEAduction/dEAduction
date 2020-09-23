@@ -47,6 +47,7 @@ class Course:
     metadata: Dict[str, str]
     outline: OrderedDict
     statements: List[Statement]
+
     # outline description:
     #   keys = lean complete namespaces,
     #   values = corresponding plain language namespace
@@ -171,6 +172,12 @@ class Course:
         if counter_exercises < counter_lemma_exercises:
             log.warning(f"{counter_lemma_exercises - counter_exercises}"
                         f" exercises have not been parsed, wrong format?")
+        error_line = file_content.find("targets_analysis")
+        if error_line != -1:
+            log.error(f"File contents 'targets_analysis line{error_line}")
+        error_line = file_content.find("hypo_analysis")
+        if error_line != -1:
+            log.error(f"File contents 'hypo_analysis line{error_line}")
         return course
 
 
@@ -199,13 +206,13 @@ exercises_theorie_des_ensembles.lean")
             print(f"Definition {statement.pretty_name}")
         elif isinstance(statement, Theorem):
             print(f"Theorem {statement.pretty_name}")
-        #for key in statement.__dict__.keys():
+        # for key in statement.__dict__.keys():
         #    print(f"    {key}: {statement.__dict__[key]}")
     print('Sections:')
     for key in my_course.outline.keys():
         print(f"    {key}: {my_course.outline[key]}")
-    #print("Statements list :")
-    #for item in my_course.statements:
+    # print("Statements list :")
+    # for item in my_course.statements:
     #    print(item.lean_name)
     # print("Exercises list with statements :")
     # for item in my_course.statements:
