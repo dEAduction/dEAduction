@@ -211,10 +211,11 @@ class ServerInterface(QObject):
             if not self.__proof_state_valid.is_set():
                 self.proof_state = ProofState.from_lean_data(
                     self.__tmp_hypo_analysis, self.__tmp_targets_analysis)
-                self.__proof_state_valid.set()
-
                 # store proof_state
                 self.lean_file.state_info_attach(ProofState=self.proof_state)
+
+                self.__proof_state_valid.set()
+
 
                 # Emit signal only if from qt context (avoid AttributeError)
                 if hasattr(self.proof_state_change, "emit"):

@@ -70,7 +70,8 @@ from deaduction.pylib.coursedata import (   Definition,
                                             Theorem)
 from deaduction.pylib.server.exceptions import FailedRequestError
 from deaduction.pylib.mathobj import (  Goal,
-                                        ProofState)
+                                        ProofState,
+                                        Proof)
 from deaduction.pylib.server import     ServerInterface
 
 log = logging.getLogger(__name__)
@@ -443,43 +444,44 @@ class ExerciseMainWindow(QMainWindow):
 
         return msg
 
-    def update_goal(self, new_goal: Goal):
+    @Slot(ProofState)
+    def update_proof_state(self, proofstate: ProofState):
         """
-        Change widgets (target, math. objects and properties) to
-        new_goal and update internal mechanics accordingly.
+        Update self (attributes, interface) to the new proof state,
+        which includes the new goal.
 
-        :param new_goal: The new goal to update / set the interface to.
+        :proofstate: The proofstate one wants to update self to.
         """
+
+        new_goal = proofstate.goals[0]
 
         # Init context (objects and properties). Get them as two list of
         # (MathObject, str), the str being the tag of the prop. or obj.
 
         # get old goal and set tags
         lean_file = self.servint.lean_file
-        previous_idx = max(0, lean_file.idx - 1)  # always compare with
-                                                  # previous entry
+        previous_idx = max(0, lean_file.idx - 1)
         # NB : when idx = 1, old_goal = new_goal : nothing is new
         entry = lean_file.history[previous_idx]
         entry_info = entry.misc_info
-        try:
-            previous_proof_state = entry_info["ProofState"]
-        except KeyError:
-            log.debug("No previous proof state found")
-        except TypeError:
-            log.debug("No previous proof state found")
-        else:
-            old_goal = previous_proof_state.goals[0]
-            Goal.compare(new_goal, old_goal, goal_is_new=False)  # set tags
+        previous_proof_state = entry_info["ProofState"]
+        old_goal = previous_proof_state.goals[0]
+        Goal.compare(new_goal, old_goal, goal_is_new=False)  # set tags
         # FIXME: target tag
         new_target_tag = '='
         try:
             new_target_tag = new_goal.future_tags[1]
-            #log.debug(f'tag for target: {new_target_tag}')
         except AttributeError:
             log.debug('no tag for target')
             pass
-
         new_context = new_goal.tag_and_split_propositions_objects()
+
+        # raw count of goals
+        log.debug(f"Number of remaining goals: {len(proofstate.goals)}")
+        total_goals_counter, current_goal_number, current_goals_counter \
+            = self.count_goals()
+        log.debug(f"Goal n°{current_goal_number} / {total_goals_counter}")
+
         new_objects_wgt = MathObjectWidget(new_context[0])
         new_props_wgt = MathObjectWidget(new_context[1])
         new_target = new_goal.target
@@ -759,15 +761,34 @@ class ExerciseMainWindow(QMainWindow):
 
         self.lean_editor.code_set(self.servint.lean_file.inner_contents)
 
-    @Slot(ProofState)
-    def update_proof_state(self, proofstate: ProofState):
-        """
-        Update self (attributes, interface) to the new proof state,
-        which includes the new goal.
+    # @Slot(ProofState)
+    # def update_proof_state(self, proofstate: ProofState):
+    #     """
+    #     Update self (attributes, interface) to the new proof state,
+    #     which includes the new goal.
+    #
+    #     :proofstate: The proofstate one wants to update self to.
+    #     """
+    #
+    #     # Weird that this methods only does this.
+    #     # TODO: maybe delete it to only have self.update_goal?
+    #     self.update_goal(proofstate.goals[0])
 
-        :proofstate: The proofstate one wants to update self to.
-        """
 
-        # Weird that this methods only does this.
-        # TODO: maybe delete it to only have self.update_goal?
-        self.update_goal(proofstate.goals[0])
+    def proof(self):
+        """
+        Return the current proof history, an instance of the Proof class
+        """
+        lean_file = self.servint.lean_file
+        proof = Proof([(entry.misc_info["ProofState"], None) \
+                 for entry in lean_file.history[:lean_file.target_idx+1]])
+        #log.debug({f"idx = {lean_file.idx}, target_idx ="
+        #           f" {lean_file.target_idx}"})
+        #log.debug(f"history = {lean_file.history}")
+
+        #log.debug(f"Proof = {proof}")
+        return proof
+
+    def count_goals(self):
+        proof = self.proof()
+        return proof.count_goals_from_proof()
