@@ -43,12 +43,12 @@ class List(QListWidget):
     @Slot()
     def __print_items_action(self):
         for item in self.selectedItems():
-            print(item.text())
+            print(item.text)
 
     @Slot()
     def __rename_item_action(self):
-        selected_item = self.selectedItems()[0]
-        self.openPersistentEditor(selected_item)
+        item = self.selectedItems()[0]
+        self.editItem(item)
 
 
 class ListItem(QListWidgetItem):
