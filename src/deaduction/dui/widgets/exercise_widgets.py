@@ -772,20 +772,25 @@ class ExerciseMainWindow(QMainWindow):
         # TODO: maybe delete it to only have self.update_goal?
         self.update_goal(proofstate.goals[0])
 
-    def proof(self):
+    ###################
+    # Logical methods #
+    ###################
+
+    def proof(self) -> Proof:
         """
         Return the current proof history, an instance of the Proof class
         """
         lean_file = self.servint.lean_file
         proof = Proof([(entry.misc_info["ProofState"], None) \
                  for entry in lean_file.history[:lean_file.target_idx+1]])
-        #log.debug({f"idx = {lean_file.idx}, target_idx ="
-        #           f" {lean_file.target_idx}"})
-        #log.debug(f"history = {lean_file.history}")
-
-        #log.debug(f"Proof = {proof}")
         return proof
 
-    def count_goals(self):
+    def count_goals(self) -> (int, int, int):
+        """
+        Compute and return three values:
+            - total_goals_counter : total number of goals during Proof history
+            - current_goal_number = number of the goal under study
+            - current_goals_counter = number of goals at end of Proof
+        """
         proof = self.proof()
         return proof.count_goals_from_proof()
