@@ -775,6 +775,18 @@ class ExerciseMainWindow(QMainWindow):
     ###################
     # Logical methods #
     ###################
+    # The following methods are closer to the logical aspect of deaduction:
+    # - the proof method essentially returns the sequence of successive
+    # ProofState from the beginning of the proof until the current ProofState.
+    # This sequence is obtained from the information attached to the lean_file
+    # which provides a reliable account of the proof history.
+    # This sequence is an instance of the Proof class, from proof_state.py
+    # - the count_goals method then applies the count_goals_from_proof method
+    # to the Proof instance, to get information on the proof history:
+    # essentially
+    #       - the total number of goals that have been examined during
+    #       the proof history,
+    #       - the number of the goal that the user is currently trying to prove
 
     def proof(self) -> Proof:
         """
