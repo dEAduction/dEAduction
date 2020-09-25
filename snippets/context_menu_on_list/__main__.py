@@ -1,4 +1,6 @@
+import logging
 import sys
+
 from PySide2.QtCore    import ( Qt,
                                 Slot)
 from PySide2.QtWidgets import ( QApplication,
@@ -7,12 +9,17 @@ from PySide2.QtWidgets import ( QApplication,
                                 QListWidgetItem,
                                 QMenu)
 
+from deaduction.pylib import logger as logger
+
+log = logging.getLogger('')
+
 
 class List(QListWidget):
 
     def __init__(self):
         super().__init__()
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.itemDoubleClicked.connect(self.__rename_item_action)
 
     def contextMenuEvent(self, event):
         context_menu = QMenu(self)
@@ -40,6 +47,12 @@ class List(QListWidget):
         # Run menu
         context_menu.exec_(self.mapToGlobal(event.pos()))
 
+    def editItem(self, item):
+        log.debug('List.editItem called')
+
+        super().editItem(item)
+
+
     @Slot()
     def __print_items_action(self):
         for item in self.selectedItems():
@@ -47,8 +60,11 @@ class List(QListWidget):
 
     @Slot()
     def __rename_item_action(self):
+        log.debug('List.__rename_item_action called')
+
         item = self.selectedItems()[0]
         self.editItem(item)
+
 
 
 class ListItem(QListWidgetItem):
@@ -71,6 +87,8 @@ class ListItem(QListWidgetItem):
         self.setText(f'{self.name} : {self.text}')
 
 if __name__ == '__main__':
+
+    logger.configure()
 
     app = QApplication()
 
