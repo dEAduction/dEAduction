@@ -47,12 +47,6 @@ class List(QListWidget):
         # Run menu
         context_menu.exec_(self.mapToGlobal(event.pos()))
 
-    def editItem(self, item):
-        log.debug('List.editItem called')
-
-        super().editItem(item)
-
-
     @Slot()
     def __print_items_action(self):
         for item in self.selectedItems():
@@ -63,8 +57,10 @@ class List(QListWidget):
         log.debug('List.__rename_item_action called')
 
         item = self.selectedItems()[0]
-        self.editItem(item)
+        item.setData(Qt.EditRole, 'Change item name')
+        log.debug(f'item.text after setData(Qt.EditRole, …): {item.text}')
 
+        self.editItem(item)
 
 
 class ListItem(QListWidgetItem):
