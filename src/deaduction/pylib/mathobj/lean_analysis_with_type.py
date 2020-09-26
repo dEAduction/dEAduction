@@ -64,7 +64,7 @@ details = """
     info_field_name = !"type" ("name" / "identifier" / "pp_type") 
     info_field_content = any_non_sep_symbol+ 
     
-    node_name = ~"[a-z A-Z 0-9 _∀∃+-<>≥≤]"+
+    node_name = ~"[a-z A-Z 0-9 _∀∃+-<>≥≤!]"+
      
     any_non_sep_symbol = !"¿" (~r"." / "\\n")
     """
