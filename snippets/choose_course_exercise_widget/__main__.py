@@ -88,7 +88,12 @@ class DisclosureTree(QTreeWidget):
         return self.sizeHint()
 
 
-class ChoosePreviewCourseExerciseLayout(QHBoxLayout):
+##################
+# Helper classes #
+##################
+
+
+class LauncherLayout(QHBoxLayout):
 
     def __init__(self, choose_title:  str, choose_lyt:  QLayout,
                        preview_title: str, preview_lyt: QLayout):
@@ -105,7 +110,8 @@ class ChoosePreviewCourseExerciseLayout(QHBoxLayout):
         self.addWidget(choose_gb)
         self.addWidget(preview_gb)
 
-class CourseExercisePreviewLayout(QVBoxLayout):
+
+class PreviewerLayout(QVBoxLayout):
 
     def __init__(self, title: str, long_text: str, details: Dict[str, str]=None,
                  subtitle: str=None):
@@ -140,7 +146,12 @@ class CourseExercisePreviewLayout(QVBoxLayout):
         self.addStretch()
 
 
-class CourseChoosePreview(QWidget):
+#############
+# Launchers #
+#############
+
+
+class CourseLauncher(QWidget):
 
     def __init__(self):
 
@@ -178,12 +189,11 @@ class CourseChoosePreview(QWidget):
                 'Level': 'M1',
                 'Path': '~/Who/Wants/To/Live/Forever/topalg.lean'}
 
-        preview_course_lyt = CourseExercisePreviewLayout(title, long_text,
-                                                         info)
+        preview_course_lyt = PreviewerLayout(title, long_text, info)
 
         # ─────────────────── Main layout ────────────────── #
 
-        main_layout = ChoosePreviewCourseExerciseLayout(
+        main_layout = LauncherLayout(
                 'Choose course (browse files or previous course)',
                 choose_course_lyt,
                 'Preview course',
@@ -202,7 +212,7 @@ class CourseChoosePreview(QWidget):
             course_file_path = Path(dialog.selectedFiles()[0])
 
 
-class ExerciseChoosePreview(QWidget):
+class ExerciseLauncher(QWidget):
 
     def __init__(self):
 
@@ -221,26 +231,31 @@ class ExerciseChoosePreview(QWidget):
                     "isomorphe (comme groupe) à (Z, +)."
         subtitle = 'Le groupe fondamental de la sphère est trivial'
 
-        preview_exercise_lyt = CourseExercisePreviewLayout(title, long_text,
-                                                           subtitle=subtitle)
+        preview_exercise_lyt = PreviewerLayout(title, long_text, subtitle=subtitle)
 
         # ─────────────────── Main layout ────────────────── #
 
-        main_layout = ChoosePreviewCourseExerciseLayout(
+        main_layout = LauncherLayout(
                 'Choose exercise (from the list)',
                 choose_exercise_lyt,
                 'Preview exercise',
                 preview_exercise_lyt)
         self.setLayout(main_layout)
 
-class ChooseCourseExercise(QWidget):
+
+###############
+# Main window #
+###############
+
+
+class LaunchersMainWindow(QWidget):
 
     def __init__(self):
 
         super().__init__()
 
-        course_cap =   CourseChoosePreview()
-        exercise_cap = ExerciseChoosePreview()
+        course_cap =   CourseLauncher()
+        exercise_cap = ExerciseLauncher()
         selection_zone_lyt = QVBoxLayout()
         selection_zone_lyt.setContentsMargins(0, 0, 0, 0)
         selection_zone_lyt.addWidget(course_cap)
@@ -270,7 +285,7 @@ class ChooseCourseExercise(QWidget):
 if __name__ == '__main__':
     app = QApplication()
 
-    blanquistes_du_nil = ChooseCourseExercise()
+    blanquistes_du_nil = LaunchersMainWindow()
     blanquistes_du_nil.show()
 
     sys.exit(app.exec_())
