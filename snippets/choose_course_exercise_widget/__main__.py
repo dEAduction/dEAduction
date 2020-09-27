@@ -4,7 +4,9 @@ from typing import  Dict, List
 
 from PySide2.QtCore import    ( Qt,
                                 Slot)
-from PySide2.QtGui  import      QPixmap
+from PySide2.QtGui  import    ( QFontDatabase,
+                                QFont,
+                                QPixmap)
 from PySide2.QtWidgets import ( QApplication,
                                 QGridLayout,
                                 QGroupBox,
@@ -239,18 +241,28 @@ class ExerciseLauncher(QWidget):
         preview_goal_lyt = QVBoxLayout()
         preview_goal_lyt.setContentsMargins(0, 0, 0, 0)
 
-        preview_goal_lyt.addWidget(QLabel('Objects:'))
-        goal_objects = QListWidget()
-        goal_objects.addItems(['X : a set', 'x : X'])
-        preview_goal_lyt.addWidget(goal_objects)
+        goal_propobj_lyt = QHBoxLayout()
 
-        preview_goal_lyt.addWidget(QLabel('Properties:'))
+        goal_objects_lyt = QVBoxLayout()
+        goal_objects_lyt.addWidget(QLabel('Objects:'))
+        goal_objects = QListWidget()
+        goal_objects.setFont(QFont('Fira Code'))
+        goal_objects.addItems(['X : a set', 'x : X'])
+        goal_objects_lyt.addWidget(goal_objects)
+        goal_propobj_lyt.addLayout(goal_objects_lyt)
+
+        goal_properties_lyt = QVBoxLayout()
+        goal_properties_lyt.addWidget(QLabel('Properties:'))
         goal_properties = QListWidget()
+        goal_properties.setFont(QFont('Fira Code'))
         goal_properties.addItems(['X is compact'])
-        preview_goal_lyt.addWidget(goal_properties)
-        
-        preview_goal_lyt.addWidget(QLabel('Target:'))
+        goal_properties_lyt.addWidget(goal_properties)
+        goal_propobj_lyt.addLayout(goal_properties_lyt)
+
         goal_target = QLineEdit('Shit fuck X is continuous over Riemann')
+        goal_target.setFont(QFont('Fira Code'))
+        preview_goal_lyt.addLayout(goal_propobj_lyt)
+        preview_goal_lyt.addWidget(QLabel('Target:'))
         preview_goal_lyt.addWidget(goal_target)
 
         # ─────────────────── Main layout ────────────────── #
