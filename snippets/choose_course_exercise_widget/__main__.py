@@ -105,28 +105,6 @@ class ChoosePreviewCourseExerciseLayout(QHBoxLayout):
         self.addWidget(choose_gb)
         self.addWidget(preview_gb)
 
-
-class InfoBloc(QWidget):
-
-    def __init__(self, list_info: List[str]):
-
-        super().__init__()
-
-        main_layout = QVBoxLayout()
-
-        for info in list_info:
-            layout = QHBoxLayout()
-            layout.addStretch()
-            label = QLabel(info)
-            label.setStyleSheet('font-style: italic;' \
-                                'color: gray;')
-            layout.addWidget(label)
-            main_layout.addLayout(layout)
-
-        main_layout.setSpacing(0)
-        self.setLayout(main_layout)
-
-
 class CourseExercisePreviewLayout(QVBoxLayout):
 
     def __init__(self, title: str, long_text: str, details: Dict[str, str]=None,
