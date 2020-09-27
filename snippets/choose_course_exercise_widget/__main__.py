@@ -96,28 +96,34 @@ class DisclosureTree(QTreeWidget):
 
 class LauncherLayout(QHBoxLayout):
 
-    def __init__(self, choose_title:  str, choose_lyt:  QLayout,
-                       preview_title: str, preview_lyt: QLayout):
+    def __init__(self, chooser_title:  str, chooser:  QWidget,
+                       previewer_title: str, previewer: QWidget):
 
         super().__init__()
 
-        choose_gb = QGroupBox(choose_title)
-        choose_gb.setLayout(choose_lyt)
+        chooser_gb        = QGroupBox(chooser_title)
+        chooser_gb_layout = QVBoxLayout()
+        chooser_gb_layout.addWidget(chooser)
+        chooser_gb.setLayout(chooser_gb_layout)
+
+        previewer_gb        = QGroupBox(previewer_title)
+        previewer_gb_layout = QVBoxLayout()
+        previewer_gb_layout.addWidget(previewer)
+        previewer_gb.setLayout(previewer_gb_layout)
         
-        preview_gb = QGroupBox(preview_title)
-        preview_gb.setLayout(preview_lyt)
-
         self.setContentsMargins(0, 0, 0, 0)
-        self.addWidget(choose_gb)
-        self.addWidget(preview_gb)
+        self.addWidget(chooser_gb)
+        self.addWidget(previewer_gb)
 
 
-class PreviewerLayout(QVBoxLayout):
+class PreviewerHeader(QWidget):
 
     def __init__(self, title: str, long_text: str, details: Dict[str, str]=None,
                  subtitle: str=None):
 
         super().__init__()
+
+        main_layout = QVBoxLayout()
 
         # Title
         title_wgt = QLabel(title)
@@ -130,21 +136,22 @@ class PreviewerLayout(QVBoxLayout):
             sub_title_lyt = QHBoxLayout()
             sub_title_lyt.addWidget(title_wgt)
             sub_title_lyt.addWidget(subtitle_wgt)
-            self.addLayout(sub_title_lyt)
+            main_layout.addLayout(sub_title_lyt)
         else:
-            self.addWidget(title_wgt)
+            main_layout.addWidget(title_wgt)
 
         # Info disclosure triangle
         if details:
             details= DisclosureTree('Details', details)
-            self.addWidget(details)
+            main_layout.addWidget(details)
 
         # Long text
         long_text_wgt = QLabel(long_text)
         long_text_wgt.setWordWrap(True)
-        self.addWidget(long_text_wgt)
+        main_layout.addWidget(long_text_wgt)
 
-        self.addStretch()
+        main_layout.addStretch()
+        self.setLayout(main_layout)
 
 
 #############
@@ -164,9 +171,11 @@ class CourseLauncher(QWidget):
         browse_btn.clicked.connect(self.__browse_for_course)
         previous_courses_wgt = QListWidget()
 
+        course_chooser = QWidget()
         choose_course_lyt = QVBoxLayout()
         choose_course_lyt.addWidget(browse_btn)
         choose_course_lyt.addWidget(previous_courses_wgt)
+        course_chooser.setLayout(choose_course_lyt)
 
         # ────────────── Preview course layout ───────────── #
 
@@ -190,15 +199,15 @@ class CourseLauncher(QWidget):
                 'Level': 'M1',
                 'Path': '~/Who/Wants/To/Live/Forever/topalg.lean'}
 
-        preview_course_lyt = PreviewerLayout(title, long_text, info)
+        course_previewer_header = PreviewerHeader(title, long_text, info)
 
         # ─────────────────── Main layout ────────────────── #
 
         main_layout = LauncherLayout(
                 'Choose course (browse files or previous course)',
-                choose_course_lyt,
+                course_chooser,
                 'Preview course',
-                preview_course_lyt)
+                course_previewer_header)
         self.setLayout(main_layout)
 
 
@@ -221,18 +230,16 @@ class ExerciseLauncher(QWidget):
 
         # ───────────────── Choose exercise ──────────────── #
 
-        exercises_list = QListWidget()
-        choose_exercise_lyt = QVBoxLayout()
-        choose_exercise_lyt.addWidget(exercises_list)
+        exercise_chooser = QListWidget()
 
-        # ──────────────── Preview Exercise ──────────────── #
+        # ───────────────── Exercise header ──────────────── #
 
         title = 'Exercice 1.3.4'
         long_text = "Montrer que le groupe fondamental du cercle est "\
                     "isomorphe (comme groupe) à (Z, +)."
         subtitle = 'Le groupe fondamental de la sphère est trivial'
 
-        preview_exercise_lyt = PreviewerLayout(title, long_text, subtitle=subtitle)
+        exercise_previewer_header = PreviewerHeader(title, long_text, subtitle=subtitle)
 
         # ────────────────── Preview goal ────────────────── #
 
@@ -252,19 +259,21 @@ class ExerciseLauncher(QWidget):
         goal_target = QLineEdit('Shit fuck X is continuous over Riemann')
         preview_goal_lyt.addWidget(goal_target)
 
-
         # ─────────────────── Main layout ────────────────── #
 
-        full_exercise_previewer = QVBoxLayout()
-        full_exercise_previewer.addLayout(preview_exercise_lyt)
-        full_exercise_previewer.addStretch()
-        full_exercise_previewer.addLayout(preview_goal_lyt)
+        exercise_previewer = QWidget()
+        exercise_previewer_layout = QVBoxLayout()
+        exercise_previewer_layout.setSpacing(0)
+        exercise_previewer_layout.addWidget(exercise_previewer_header)
+        exercise_previewer_layout.addStretch()
+        exercise_previewer_layout.addLayout(preview_goal_lyt)
+        exercise_previewer.setLayout(exercise_previewer_layout)
 
         main_layout = LauncherLayout(
                 'Choose exercise (from the list)',
-                choose_exercise_lyt,
+                exercise_chooser,
                 'Preview exercise',
-                full_exercise_previewer)
+                exercise_previewer)
         self.setLayout(main_layout)
 
 
