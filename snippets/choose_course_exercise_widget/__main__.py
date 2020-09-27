@@ -2,7 +2,8 @@ import sys
 from pathlib import Path
 from typing import  Dict, List
 
-from PySide2.QtCore import      Slot
+from PySide2.QtCore import    ( Qt,
+                                Slot)
 from PySide2.QtGui  import      QPixmap
 from PySide2.QtWidgets import ( QApplication,
                                 QGridLayout,
@@ -21,6 +22,71 @@ from PySide2.QtWidgets import ( QApplication,
                                 QHBoxLayout)
 
 from deaduction.dui.utils import set_selectable
+
+
+class DisclosureTree(QTreeWidget):
+    # An implementation of a disclosure triangle.
+    # https://stackoverflow.com/questions/63862724/
+    # qtreeview-dynamic-height-according-to-content-disclosure-triangle
+
+    def __init__(self, title: str, data: Dict[str, str]):
+
+        super().__init__()
+
+        # ─────────────────── Add content ────────────────── #
+
+        self.setColumnCount(2)
+        parent_item = QTreeWidgetItem(self, [f'{title} : '])
+        parent_item.set_selectable(False)
+        self.addTopLevelItem(parent_item)
+
+        for key, val in data.items():
+            item = QTreeWidgetItem(parent_item, [f'{key} : ', val])
+            parent_item.addChild(item)
+
+            # Cosmetics
+            item.set_selectable(False)
+            item.setTextAlignment(0, Qt.AlignRight)
+
+        # ──────────────────── Cosmetics ─────────────────── #
+
+        # Hide header
+        self.header().hide()
+
+        # No background
+        self.setStyleSheet('background-color: transparent;')
+
+        # Dynamically change height when widget is collapsed or expanded
+        # You have to update the maximum height of the widget, based on
+        # its contents. For each top item you need to get the height for
+        # that row using rowHeight() and do the same recursively for
+        # child items whenever the item is expanded. Also, you need to
+        # overwrite the sizeHint and minimumSizeHint.
+        self.expanded.connect(self.update_height)
+        self.collapsed.connect(self.update_height)
+
+    def update_height(self):
+        self.setMaximumHeight(self.sizeHint().height())
+
+    def get_height(self, parent=None):
+        height = 0
+        if not parent:
+            parent = self.rootIndex()
+        for row in range(self.model().rowCount(parent)):
+            child = self.model().index(row, 0, parent)
+            height += self.rowHeight(child)
+            if self.isExpanded(child) and self.model().hasChildren(child):
+                    height += self.get_height(child)
+        return height
+
+    def sizeHint(self):
+        hint = super().sizeHint()
+        hint.setHeight(self.get_height() + self.frameWidth() * 2)
+        return hint
+
+    def minimumSizeHint(self):
+        return self.sizeHint()
+
 
 class ChoosePreviewCourseExerciseLayout(QHBoxLayout):
 
@@ -63,7 +129,7 @@ class InfoBloc(QWidget):
 
 class CourseExercisePreviewLayout(QVBoxLayout):
 
-    def __init__(self, title: str, long_text: str, info: Dict[str, str]=None,
+    def __init__(self, title: str, long_text: str, details: Dict[str, str]=None,
                  subtitle: str=None):
 
         super().__init__()
@@ -84,21 +150,9 @@ class CourseExercisePreviewLayout(QVBoxLayout):
             self.addWidget(title_wgt)
 
         # Info disclosure triangle
-        if info:
-            triangle = QTreeWidget()
-            triangle.setColumnCount(2)
-            details = QTreeWidgetItem(triangle, ['Details'])
-            details.set_selectable(False)
-            triangle.addTopLevelItem(details)
-
-            for key, val in info.items():
-                item = QTreeWidgetItem(details, [key, val])
-                item.set_selectable(False)
-                details.addChild(item)
-
-            triangle.header().hide()
-            triangle.setStyleSheet("background-color: transparent;")
-            self.addWidget(triangle)
+        if details:
+            details= DisclosureTree('Details', details)
+            self.addWidget(details)
 
         # Long text
         long_text_wgt = QLabel(long_text)
