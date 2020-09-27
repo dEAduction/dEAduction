@@ -11,6 +11,7 @@ from PySide2.QtWidgets import ( QApplication,
                                 QFileDialog,
                                 QPushButton,
                                 QTextEdit,
+                                QLineEdit,
                                 QListWidget,
                                 QWidget,
                                 QLabel,
@@ -233,13 +234,37 @@ class ExerciseLauncher(QWidget):
 
         preview_exercise_lyt = PreviewerLayout(title, long_text, subtitle=subtitle)
 
+        # ────────────────── Preview goal ────────────────── #
+
+        preview_goal_lyt = QVBoxLayout()
+
+        preview_goal_lyt.addWidget(QLabel('Objects:'))
+        goal_objects = QListWidget()
+        goal_objects.addItems(['X : a set', 'x : X'])
+        preview_goal_lyt.addWidget(goal_objects)
+
+        preview_goal_lyt.addWidget(QLabel('Properties:'))
+        goal_properties = QListWidget()
+        goal_properties.addItems(['X is compact'])
+        preview_goal_lyt.addWidget(goal_properties)
+        
+        preview_goal_lyt.addWidget(QLabel('Target:'))
+        goal_target = QLineEdit('Shit fuck X is continuous over Riemann')
+        preview_goal_lyt.addWidget(goal_target)
+
+
         # ─────────────────── Main layout ────────────────── #
+
+        full_exercise_previewer = QVBoxLayout()
+        full_exercise_previewer.addLayout(preview_exercise_lyt)
+        full_exercise_previewer.addStretch()
+        full_exercise_previewer.addLayout(preview_goal_lyt)
 
         main_layout = LauncherLayout(
                 'Choose exercise (from the list)',
                 choose_exercise_lyt,
                 'Preview exercise',
-                preview_exercise_lyt)
+                full_exercise_previewer)
         self.setLayout(main_layout)
 
 
