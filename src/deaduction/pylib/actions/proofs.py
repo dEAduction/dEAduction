@@ -127,14 +127,18 @@ def action_new_object(goal : Goal, l : [MathObject], user_input : [str] = []) ->
         raise MissingParametersError(InputType.Choice, [_("new object"), _("subgoal")], title = "+", output = _("Choose what you want to introduce:"))
     if user_input[0] == _("new object"):
         if len(user_input) == 1:
-            raise MissingParametersError(InputType.Text, title = "+", output = _("Introduce new object:"))
+            raise MissingParametersError(InputType.Text,
+                title = "+",
+                output = _("Introduce new object:"))
         else:
             x = utils.get_new_var()
             h = utils.get_new_hyp()
             return "let {0} := {1}, have {2} : {0} = {1}, refl, ".format(x, user_input[1], h)
     if user_input[0] == _("subgoal"):
         if len(user_input) == 1:
-            raise MissingParametersError(InputType.Text, title = "+", output = _("Introduce new subgoal:"))
+            raise MissingParametersError(InputType.Text,
+                title = "+",
+                output = _("Introduce new subgoal:"))
         else:
             h = utils.get_new_hyp()
             return "have {0} : ({1}), ".format(h, user_input[1])   
@@ -152,10 +156,11 @@ def action_assumption(goal : Goal, l : [MathObject]) -> str:
     if len(l) == 0:
         possible_codes.append('assumption')
         possible_codes.append('contradiction')
-        possible_codes.append('refl')
+        if goal.target.math_type.children[0] == goal.target.math_type.children[1]:
+            possible_codes.append('refl')
     if len(l) == 1:
         possible_codes.append(f'apply {l[0].info["name"]}')
-    if len(possible_codes) != 0:
+    if len(possible_codes) == 0:
         raise WrongUserInput
     return format_orelse(possible_codes)
 

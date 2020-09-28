@@ -47,5 +47,5 @@ def get_new_hyp():
     return "h{0}".format(_VAR_NB)
 
 def format_orelse(list_of_choices):
-    return " <|> ".strjoin(list_of_choices) + ", "    
+    return " <|> ".join(list_of_choices) + ", "    
 
