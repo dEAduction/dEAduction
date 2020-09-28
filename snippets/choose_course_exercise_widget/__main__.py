@@ -100,22 +100,18 @@ class DisclosureTree(QTreeWidget):
 ##################
 
 
-class LauncherLayout(QHBoxLayout):
+class LauncherGroupBox(QGroupBox):
 
-    def __init__(self, chooser_title:  str, chooser_layout:  QLayout,
-                       previewer_title: str, previewer_layout: QLayout):
+    def __init__(self, title: str, left_lyt: QLayout,
+                 right_lyt: QLayout):
 
-        super().__init__()
+        super().__init__(title)
 
-        chooser_gb = QGroupBox(chooser_title)
-        chooser_gb.setLayout(chooser_layout)
+        main_layout = QHBoxLayout()
+        main_layout.addLayout(left_lyt)
+        main_layout.addLayout(right_lyt)
 
-        previewer_gb        = QGroupBox(previewer_title)
-        previewer_gb.setLayout(previewer_layout)
-        
-        self.setContentsMargins(0, 0, 0, 0)
-        self.addWidget(chooser_gb)
-        self.addWidget(previewer_gb)
+        self.setLayout(main_layout)
 
 
 class PreviewerHeaderLayout(QVBoxLayout):
@@ -237,11 +233,11 @@ class GoalPreviewerLayout(QVBoxLayout):
 #############
 
 
-class CourseLauncher(QWidget):
+class CourseGroupBox(QGroupBox):
 
     def __init__(self):
 
-        super().__init__()
+        super().__init__('Choose course (browse and preview')
 
         # ────────────── Choose course layout ────────────── #
 
@@ -279,11 +275,9 @@ class CourseLauncher(QWidget):
 
         # ─────────────────── Main layout ────────────────── #
 
-        main_layout = LauncherLayout(
-                                    'Choose course (browse files or previous course)',
-                                    course_chooser_layout,
-                                    'Preview course',
-                                    course_previewer_header_layout)
+        main_layout = QHBoxLayout()
+        main_layout.addLayout(course_chooser_layout)
+        main_layout.addLayout(course_previewer_header_layout)
         self.setLayout(main_layout)
 
 
@@ -298,11 +292,11 @@ class CourseLauncher(QWidget):
             course_file_path = Path(dialog.selectedFiles()[0])
 
 
-class ExerciseLauncher(QWidget):
+class ExerciseGroupBox(QGroupBox):
 
     def __init__(self):
 
-        super().__init__()
+        super().__init__('Choose exercise (browse and preview')
 
         # ──────────────── Exercise chooser ──────────────── #
 
@@ -330,11 +324,9 @@ class ExerciseLauncher(QWidget):
         exercise_previewer_layout.addWidget(QWidget())
         exercise_previewer_layout.addLayout(goal_previewer_layout)
 
-        main_layout = LauncherLayout(
-                'Choose exercise (from the list)',
-                exercise_chooser_lyt,
-                'Preview exercise',
-                exercise_previewer_layout)
+        main_layout = QHBoxLayout()
+        main_layout.addLayout(exercise_chooser_lyt)
+        main_layout.addLayout(exercise_previewer_layout)
         self.setLayout(main_layout)
 
 
@@ -349,12 +341,11 @@ class LaunchersMainWindow(QWidget):
 
         super().__init__()
 
-        course_cap =   CourseLauncher()
-        exercise_cap = ExerciseLauncher()
+        course_cb =   CourseGroupBox()
+        exercise_cb = ExerciseGroupBox()
         selection_zone_lyt = QVBoxLayout()
-        selection_zone_lyt.setContentsMargins(0, 0, 0, 0)
-        selection_zone_lyt.addWidget(course_cap)
-        selection_zone_lyt.addWidget(exercise_cap)
+        selection_zone_lyt.addWidget(course_cb)
+        selection_zone_lyt.addWidget(exercise_cb)
 
         buttons_lyt = QHBoxLayout()
         help_btn = QPushButton('Help')
