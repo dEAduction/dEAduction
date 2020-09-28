@@ -8,6 +8,8 @@ from PySide2.QtGui  import    ( QFontDatabase,
                                 QFont,
                                 QPixmap)
 from PySide2.QtWidgets import ( QApplication,
+                                QButtonGroup,
+                                QCheckBox,
                                 QGridLayout,
                                 QGroupBox,
                                 QFileDialog,
@@ -149,6 +151,71 @@ class PreviewerHeaderLayout(QVBoxLayout):
         self.addStretch()
 
 
+class GoalPreviewerLayout(QVBoxLayout):
+
+    def __init__(self, mode=str):
+        super().__init__()
+
+        # ─────────────────── Check boxes ────────────────── #
+
+        self.pretty_cb = QCheckBox('Pretty mode')
+        self.code_cb   = QCheckBox('LEAN code mode')
+        button_group   = QButtonGroup(self)
+        button_group.setExclusive(True)
+        button_group.addButton(self.pretty_cb)
+        button_group.addButton(self.code_cb)
+        cb_lyt = QHBoxLayout()
+        cb_lyt.addWidget(self.pretty_cb)
+        cb_lyt.addWidget(self.code_cb)
+
+        # ────────────────── Main widgets ────────────────── #
+
+        if mode == 'pretty':
+            self.pretty_wgt = QWidget()
+            pretty_wgt_lyt = QVBoxLayout()
+            pretty_wgt_lyt.setContentsMargins(0, 0, 0, 0)
+
+            propobj_lyt = QHBoxLayout()
+            objects, properties         = QListWidget(), QListWidget()
+            objects_lyt, properties_lyt = QVBoxLayout(), QVBoxLayout()
+            objects_lyt.addWidget(QLabel('Objects:'))
+            properties_lyt.addWidget(QLabel('Properties:'))
+            objects.setFont(QFont('Fira Code'))
+            properties.setFont(QFont('Fira Code'))
+            objects.addItems(['X : a set', 'x : X'])
+            properties.addItems(['X is compact'])
+            objects_lyt.addWidget(objects)
+            properties_lyt.addWidget(properties)
+            propobj_lyt.addLayout(objects_lyt)
+            propobj_lyt.addLayout(properties_lyt)
+
+            target_wgt = QLineEdit('Shit fuck X is continuous over Riemann')
+            target_wgt.setFont(QFont('Fira Code'))
+
+            pretty_wgt_lyt.addLayout(propobj_lyt)
+            pretty_wgt_lyt.addWidget(QLabel('Target:'))
+            pretty_wgt_lyt.addWidget(target_wgt)
+
+            self.pretty_wgt.setLayout(pretty_wgt_lyt)
+
+        elif mode == 'code':
+            self.code_wgt = QTextWidget()
+            self.code_wgt.setReadOnly(True)
+            self.code_wgt.setFont(QFont('Menlo'))
+            self.code_wgt.setText('Let A be a subset of X.'\
+                             'Let B be a subset of X.'\
+                             'Prove that X \ (A ∪ B) = '\
+                             '(X \ A) ∩ (X \ B).')
+
+        # TO BE DELETED
+        self.main_wgt = self.pretty_wgt
+
+        # ──────────────────── Organize ──────────────────── #
+
+        self.addLayout(cb_lyt)
+        self.addWidget(self.main_wgt)
+
+
 #############
 # Launchers #
 #############
@@ -238,39 +305,14 @@ class ExerciseLauncher(QWidget):
 
         # ────────────────── Preview goal ────────────────── #
 
-        preview_goal_lyt = QVBoxLayout()
-        preview_goal_lyt.setContentsMargins(0, 0, 0, 0)
-
-        goal_propobj_lyt = QHBoxLayout()
-
-        goal_objects_lyt = QVBoxLayout()
-        goal_objects_lyt.addWidget(QLabel('Objects:'))
-        goal_objects = QListWidget()
-        goal_objects.setFont(QFont('Fira Code'))
-        goal_objects.addItems(['X : a set', 'x : X'])
-        goal_objects_lyt.addWidget(goal_objects)
-        goal_propobj_lyt.addLayout(goal_objects_lyt)
-
-        goal_properties_lyt = QVBoxLayout()
-        goal_properties_lyt.addWidget(QLabel('Properties:'))
-        goal_properties = QListWidget()
-        goal_properties.setFont(QFont('Fira Code'))
-        goal_properties.addItems(['X is compact'])
-        goal_properties_lyt.addWidget(goal_properties)
-        goal_propobj_lyt.addLayout(goal_properties_lyt)
-
-        goal_target = QLineEdit('Shit fuck X is continuous over Riemann')
-        goal_target.setFont(QFont('Fira Code'))
-        preview_goal_lyt.addLayout(goal_propobj_lyt)
-        preview_goal_lyt.addWidget(QLabel('Target:'))
-        preview_goal_lyt.addWidget(goal_target)
+        goal_previewer_layout = GoalPreviewerLayout(mode='pretty')
 
         # ─────────────────── Main layout ────────────────── #
 
         exercise_previewer_layout = QVBoxLayout()
         exercise_previewer_layout.addLayout(exercise_previewer_header_layout)
-        exercise_previewer_layout.addStretch()
-        exercise_previewer_layout.addLayout(preview_goal_lyt)
+        exercise_previewer_layout.addWidget(QWidget())
+        exercise_previewer_layout.addLayout(goal_previewer_layout)
 
         main_layout = LauncherLayout(
                 'Choose exercise (from the list)',
@@ -301,7 +343,7 @@ class LaunchersMainWindow(QWidget):
         buttons_lyt = QHBoxLayout()
         help_btn = QPushButton('Help')
         quit_btn = QPushButton('Quit')
-        self.choose_this_course_btn = QPushButton('Launch exercise')
+        self.choose_this_course_btn = QPushButton('Start exercise')
         buttons_lyt.addWidget(help_btn)
         buttons_lyt.addWidget(quit_btn)
         buttons_lyt.addStretch()
