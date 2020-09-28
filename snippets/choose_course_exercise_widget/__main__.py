@@ -26,7 +26,8 @@ from PySide2.QtWidgets import ( QApplication,
                                 QVBoxLayout,
                                 QHBoxLayout)
 
-from deaduction.dui.utils import set_selectable
+from deaduction.dui.utils import ( replace_delete_widget,
+                                   set_selectable)
 
 
 class DisclosureTree(QTreeWidget):
@@ -154,26 +155,33 @@ class PreviewerHeaderLayout(QVBoxLayout):
 class GoalPreviewerLayout(QVBoxLayout):
 
     def __init__(self, mode=str):
+
         super().__init__()
+
+        if mode not in ['friendly', 'code']:
+            raise ValueError('mode must be one of "friendly" or "code"')
 
         # ─────────────────── Check boxes ────────────────── #
 
-        self.pretty_cb = QCheckBox('Pretty mode')
+        self.friendly_cb = QCheckBox('Pretty mode')
         self.code_cb   = QCheckBox('LEAN code mode')
         button_group   = QButtonGroup(self)
         button_group.setExclusive(True)
-        button_group.addButton(self.pretty_cb)
+        button_group.addButton(self.friendly_cb)
         button_group.addButton(self.code_cb)
         cb_lyt = QHBoxLayout()
-        cb_lyt.addWidget(self.pretty_cb)
+        cb_lyt.addWidget(self.friendly_cb)
         cb_lyt.addWidget(self.code_cb)
+
+        self.friendly_wgt = QWidget()
+        self.code_wgt = QWidget()
 
         # ────────────────── Main widgets ────────────────── #
 
-        if mode == 'pretty':
-            self.pretty_wgt = QWidget()
-            pretty_wgt_lyt = QVBoxLayout()
-            pretty_wgt_lyt.setContentsMargins(0, 0, 0, 0)
+        if mode == 'friendly':
+            self.friendly_wgt = QWidget()
+            friendly_wgt_lyt = QVBoxLayout()
+            friendly_wgt_lyt.setContentsMargins(0, 0, 0, 0)
 
             propobj_lyt = QHBoxLayout()
             objects, properties         = QListWidget(), QListWidget()
@@ -192,11 +200,11 @@ class GoalPreviewerLayout(QVBoxLayout):
             target_wgt = QLineEdit('Shit fuck X is continuous over Riemann')
             target_wgt.setFont(QFont('Fira Code'))
 
-            pretty_wgt_lyt.addLayout(propobj_lyt)
-            pretty_wgt_lyt.addWidget(QLabel('Target:'))
-            pretty_wgt_lyt.addWidget(target_wgt)
+            friendly_wgt_lyt.addLayout(propobj_lyt)
+            friendly_wgt_lyt.addWidget(QLabel('Target:'))
+            friendly_wgt_lyt.addWidget(target_wgt)
 
-            self.pretty_wgt.setLayout(pretty_wgt_lyt)
+            self.friendly_wgt.setLayout(friendly_wgt_lyt)
 
         elif mode == 'code':
             self.code_wgt = QTextWidget()
@@ -207,8 +215,9 @@ class GoalPreviewerLayout(QVBoxLayout):
                              'Prove that X \ (A ∪ B) = '\
                              '(X \ A) ∩ (X \ B).')
 
-        # TO BE DELETED
-        self.main_wgt = self.pretty_wgt
+        # Default widget is friendly widget
+        self.friendly_cb.setChecked(True)
+        self.main_wgt = self.friendly_wgt
 
         # ──────────────────── Organize ──────────────────── #
 
@@ -305,7 +314,7 @@ class ExerciseLauncher(QWidget):
 
         # ────────────────── Preview goal ────────────────── #
 
-        goal_previewer_layout = GoalPreviewerLayout(mode='pretty')
+        goal_previewer_layout = GoalPreviewerLayout(mode='friendly')
 
         # ─────────────────── Main layout ────────────────── #
 
