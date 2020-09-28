@@ -52,7 +52,7 @@ def action_use_proof_method(goal : Goal, l : [MathObject], user_input : [str] = 
         del user_input[0]
         if method == _("Case-based reasoning"):
             return method_cbr(goal, l, user_input)
-        if method == _("Case-based reasoning"):
+        if method == _("Proof by contrapositive"):
             return method_contrapose(goal, l)
         if method == _("Reductio ad absurdum"):
             return method_absurdum(goal, l)
@@ -156,7 +156,7 @@ def action_assumption(goal : Goal, l : [MathObject]) -> str:
     if len(l) == 0:
         possible_codes.append('assumption')
         possible_codes.append('contradiction')
-        if goal.target.math_type.children[0] == goal.target.math_type.children[1]:
+        if goal.target.math_type.children[0] == goal.target.math_type.children[1]: #TODO : tester si il y a assez d'enfants
             possible_codes.append('refl')
     if len(l) == 1:
         possible_codes.append(f'apply {l[0].info["name"]}')

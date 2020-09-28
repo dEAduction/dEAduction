@@ -28,8 +28,11 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from deaduction.pylib.actions   import  WrongUserInput
+
 _VAR_NB = 0
 _FUN_NB = 0
+_CODE_NB = 0
 
 def get_new_var():
     global _VAR_NB
@@ -47,5 +50,8 @@ def get_new_hyp():
     return "h{0}".format(_VAR_NB)
 
 def format_orelse(list_of_choices):
+    if len(list_of_choices) == 0:
+        raise WrongUserInput
+    list_of_choices = map(lambda string : f'`[ {string}, trace \"EFFECTIVE CODE {_CODE_NB} : {string}\"]', list_of_choices)
     return " <|> ".join(list_of_choices) + ", "    
 
