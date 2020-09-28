@@ -21,6 +21,7 @@ from PySide2.QtWidgets import ( QApplication,
                                 QLabel,
                                 QLayout,
                                 QListWidgetItem,
+                                QTextEdit,
                                 QTreeWidget,
                                 QTreeWidgetItem,
                                 QVBoxLayout,
@@ -126,7 +127,7 @@ class PreviewerHeaderLayout(QVBoxLayout):
 
         # Title
         title_wgt = QLabel(title)
-        title_wgt.setStyleSheet('font-size: 18pt;'\
+        title_wgt.setStyleSheet('font-size: 20pt;'\
                                 'font-weight: bold;')
 
         # Subtitle
@@ -154,18 +155,16 @@ class PreviewerHeaderLayout(QVBoxLayout):
 
 class GoalPreviewerLayout(QVBoxLayout):
 
-    def __init__(self, mode=str):
+    def __init__(self):
 
         super().__init__()
-
-        if mode not in ['friendly', 'code']:
-            raise ValueError('mode must be one of "friendly" or "code"')
 
         # ─────────────────── Check boxes ────────────────── #
 
         self.friendly_cb = QCheckBox('Pretty mode')
         self.code_cb   = QCheckBox('LEAN code mode')
         button_group   = QButtonGroup(self)
+
         button_group.setExclusive(True)
         button_group.addButton(self.friendly_cb)
         button_group.addButton(self.code_cb)
@@ -173,56 +172,64 @@ class GoalPreviewerLayout(QVBoxLayout):
         cb_lyt.addWidget(self.friendly_cb)
         cb_lyt.addWidget(self.code_cb)
 
+        button_group.buttonClicked.connect(self.change_main_widget)
+
+        # ───────────────── Friendly widget ──────────────── #
+
         self.friendly_wgt = QWidget()
-        self.code_wgt = QWidget()
+        friendly_wgt_lyt = QVBoxLayout()
+        friendly_wgt_lyt.setContentsMargins(0, 0, 0, 0)
 
-        # ────────────────── Main widgets ────────────────── #
+        propobj_lyt = QHBoxLayout()
+        objects, properties         = QListWidget(), QListWidget()
+        objects_lyt, properties_lyt = QVBoxLayout(), QVBoxLayout()
+        objects_lyt.addWidget(QLabel('Objects:'))
+        properties_lyt.addWidget(QLabel('Properties:'))
+        objects.setFont(QFont('Fira Code'))
+        properties.setFont(QFont('Fira Code'))
+        objects.addItems(['X : a set', 'x : X'])
+        properties.addItems(['X is compact'])
+        objects_lyt.addWidget(objects)
+        properties_lyt.addWidget(properties)
+        propobj_lyt.addLayout(objects_lyt)
+        propobj_lyt.addLayout(properties_lyt)
 
-        if mode == 'friendly':
-            self.friendly_wgt = QWidget()
-            friendly_wgt_lyt = QVBoxLayout()
-            friendly_wgt_lyt.setContentsMargins(0, 0, 0, 0)
+        target_wgt = QLineEdit('Shit fuck X is continuous over Riemann')
+        target_wgt.setFont(QFont('Fira Code'))
 
-            propobj_lyt = QHBoxLayout()
-            objects, properties         = QListWidget(), QListWidget()
-            objects_lyt, properties_lyt = QVBoxLayout(), QVBoxLayout()
-            objects_lyt.addWidget(QLabel('Objects:'))
-            properties_lyt.addWidget(QLabel('Properties:'))
-            objects.setFont(QFont('Fira Code'))
-            properties.setFont(QFont('Fira Code'))
-            objects.addItems(['X : a set', 'x : X'])
-            properties.addItems(['X is compact'])
-            objects_lyt.addWidget(objects)
-            properties_lyt.addWidget(properties)
-            propobj_lyt.addLayout(objects_lyt)
-            propobj_lyt.addLayout(properties_lyt)
+        friendly_wgt_lyt.addLayout(propobj_lyt)
+        friendly_wgt_lyt.addWidget(QLabel('Target:'))
+        friendly_wgt_lyt.addWidget(target_wgt)
 
-            target_wgt = QLineEdit('Shit fuck X is continuous over Riemann')
-            target_wgt.setFont(QFont('Fira Code'))
+        self.friendly_wgt.setLayout(friendly_wgt_lyt)
 
-            friendly_wgt_lyt.addLayout(propobj_lyt)
-            friendly_wgt_lyt.addWidget(QLabel('Target:'))
-            friendly_wgt_lyt.addWidget(target_wgt)
+        # ─────────────────── Code widget ────────────────── #
 
-            self.friendly_wgt.setLayout(friendly_wgt_lyt)
-
-        elif mode == 'code':
-            self.code_wgt = QTextWidget()
-            self.code_wgt.setReadOnly(True)
-            self.code_wgt.setFont(QFont('Menlo'))
-            self.code_wgt.setText('Let A be a subset of X.'\
-                             'Let B be a subset of X.'\
-                             'Prove that X \ (A ∪ B) = '\
-                             '(X \ A) ∩ (X \ B).')
-
-        # Default widget is friendly widget
-        self.friendly_cb.setChecked(True)
-        self.main_wgt = self.friendly_wgt
+        self.code_wgt = QTextEdit()
+        self.code_wgt.setReadOnly(True)
+        self.code_wgt.setFont(QFont('Menlo'))
+        self.code_wgt.setText('Lean code goes here')
 
         # ──────────────────── Organize ──────────────────── #
 
+        # Default widget is friendly widget
+        self.friendly_cb.setChecked(True)
+        self.friendly_wgt.show()
+        self.code_wgt.hide()
+
         self.addLayout(cb_lyt)
-        self.addWidget(self.main_wgt)
+        self.addWidget(self.friendly_wgt)
+        self.addWidget(self.code_wgt)
+
+    @Slot()
+    def change_main_widget(self):
+
+        if self.friendly_cb.isChecked():
+            self.friendly_wgt.show()
+            self.code_wgt.hide()
+        else:
+            self.friendly_wgt.hide()
+            self.code_wgt.show()
 
 
 #############
@@ -314,7 +321,7 @@ class ExerciseLauncher(QWidget):
 
         # ────────────────── Preview goal ────────────────── #
 
-        goal_previewer_layout = GoalPreviewerLayout(mode='friendly')
+        goal_previewer_layout = GoalPreviewerLayout()
 
         # ─────────────────── Main layout ────────────────── #
 
