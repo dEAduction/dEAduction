@@ -40,8 +40,12 @@ def get_new_fun():
     global _FUN_NB
     _FUN_NB += 1
     return "f{0}".format(_FUN_NB)
+    
 def get_new_hyp():
     global _VAR_NB
     _VAR_NB += 1
     return "h{0}".format(_VAR_NB)
+
+def format_orelse(list_of_choices):
+    return " <|> ".strjoin(list_of_choices) + ", "    
 

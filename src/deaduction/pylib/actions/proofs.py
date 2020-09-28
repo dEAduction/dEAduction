@@ -33,12 +33,32 @@ import deaduction.pylib.actions.utils as utils
 from deaduction.pylib.actions   import (    InputType,
                                             MissingParametersError,
                                             WrongUserInput,
-                                            action)
+                                            action,
+                                            format_orelse)
 from deaduction.pylib.mathobj   import (    MathObject,
                                             Goal)
 
-@action(_("Case-based reasoning"), _("CASES"))
-def action_cbr(goal : Goal, l : [MathObject], user_input : [str] = []) -> str:
+@action(_("Let the user choose a proof method"), _("Use proof method"))
+def action_use_proof_method(goal : Goal, l : [MathObject], user_input : [str] = []) -> str:
+    if user_input == []:
+        raise MissingParametersError(InputType.Choice,
+            [_("Case-based reasoning"),
+            _("Proof by contrapositive"),
+            _("Reductio ad absurdum")],
+            title = "Proof method",
+            output = _("Choose which proof method you want to use:"))
+    else:
+        method = user_input[0]
+        del user_input[0]
+        if method == _("Case-based reasoning"):
+            return method_cbr(goal, l, user_input)
+        if method == _("Case-based reasoning"):
+            return method_contrapose(goal, l)
+        if method == _("Reductio ad absurdum"):
+            return method_absurdum(goal, l)
+    raise WrongUserInput
+    
+def method_cbr(goal : Goal, l : [MathObject], user_input : [str] = []) -> str:
     """
     Translate into string of lean code corresponding to the action
     
@@ -47,16 +67,14 @@ def action_cbr(goal : Goal, l : [MathObject], user_input : [str] = []) -> str:
     """
     if len(l) == 0:
         if user_input == []:
-            raise MissingParametersError(InputType.Text, title = _("cases"), output = _("Enter the case you want to discriminate on:")) #TODO : apprendre l'anglais
+            raise MissingParametersError(InputType.Text, title = _("cases"), output = _("Enter the case you want to discriminate on:"))
         else:
             h1 = utils.get_new_hyp()
             h2 = utils.get_new_hyp()
             return "cases (classical.em ({0})) with {1} {2}, ".format(user_input[0], h1, h2)
-    else:
-        raise WrongUserInput
+    raise WrongUserInput
 
-@action(_("Proof by contrapositive"), "¬Q ⇒ ¬P")
-def action_contrapose(goal : Goal, l : [MathObject]):
+def method_contrapose(goal : Goal, l : [MathObject]):
     """
     Translate into string of lean code corresponding to the action
     
@@ -68,8 +86,7 @@ def action_contrapose(goal : Goal, l : [MathObject]):
             return "contrapose, "
     raise WrongUserInput
 
-@action(_("Reductio ad absurdum"), _('0=1'))
-def action_absurdum(goal : Goal, l : [MathObject]) -> str:
+def method_absurdum(goal : Goal, l : [MathObject]) -> str:
     """
     Translate into string of lean code corresponding to the action
     
@@ -77,9 +94,8 @@ def action_absurdum(goal : Goal, l : [MathObject]) -> str:
     :return: string of lean code
     """
     if len(l) == 0:
-        return "contradiction <|> by_contradiction {0}, ".format(utils.get_new_hyp()) 
-    else:
-        return "contradiction, "
+        return "contradiction <|> by_contradiction {0}, ".format(utils.get_new_hyp())
+    raise WrongUserInput
 
 
 @action(_("If a hypothesis of form ∀ a ∈ A, ∃ b ∈ B, P(a,b) has been previously selected: use the axiom of choice to introduce a new function f : A → B and add ∀ a ∈ A, P(a, f(a)) to the properties"), _("CREATE FUN"))
@@ -121,7 +137,8 @@ def action_new_object(goal : Goal, l : [MathObject], user_input : [str] = []) ->
             raise MissingParametersError(InputType.Text, title = "+", output = _("Introduce new subgoal:"))
         else:
             h = utils.get_new_hyp()
-            return "have {0} : ({1}), ".format(h, user_input[1])    
+            return "have {0} : ({1}), ".format(h, user_input[1])   
+    raise WrongUserInput 
 
 @action(_("Assumption"), "¯\_(ツ)_/¯")
 def action_assumption(goal : Goal, l : [MathObject]) -> str:
@@ -131,10 +148,16 @@ def action_assumption(goal : Goal, l : [MathObject]) -> str:
     :param l: list of MathObject arguments preselected by the user
     :return: string of lean code
     """
+    possible_codes = []
     if len(l) == 0:
-        return "assumption <|> refl, "
-    else:
+        possible_codes.append('assumption')
+        possible_codes.append('contradiction')
+        possible_codes.append('refl')
+    if len(l) == 1:
+        possible_codes.append(f'apply {l[0].info["name"]}')
+    if len(possible_codes) != 0:
         raise WrongUserInput
+    return format_orelse(possible_codes)
 
         
 #@action(_("Proof by induction"))
