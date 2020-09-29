@@ -31,30 +31,46 @@ from dataclasses import dataclass
 from gettext import gettext as _
 import logging
 from deaduction.pylib.actions import (  WrongUserInput,
-                                        get_new_hyp)
+                                        get_new_hyp,
+                                        format_orelse)
 from deaduction.pylib.coursedata import Statement
 from deaduction.pylib.mathobj import (  Goal,
                                         MathObject)
 
 def action_definition(goal : Goal, selected_objects : [MathObject], definition : Statement):
+    possible_codes = []
     if len(selected_objects) == 0:
         defi = definition.lean_name
-        return "defi {0} <|> simp_rw {0} <|> simp_rw <- {0}, ".format(defi)
+        possible_codes.append(f'rw {defi}')
+        possible_codes.append(f'rw <- {defi}')
+        possible_codes.append(f'simp_rw {defi}')
+        possible_codes.append(f'simp_rw <- {defi}')
+
     elif len(selected_objects) == 1:
         defi = definition.lean_name
-        return "defi {0} at {1} <|> simp_rw {0} at {1} <|> simp_rw <- {0} at {1}, ".format(defi,
-                                        selected_objects[0].info["name"])
-    else:
-        raise WrongUserInput
+        h = selected_objects[0].info["name"]
+
+        possible_codes.append(f'rw {defi} at {h}')
+        possible_codes.append(f'rw <- {defi} at {h}')
+        possible_codes.append(f'simp_rw {defi} at {h}')
+        possible_codes.append(f'simp_rw <- {defi} at {h}')
+
+    return format_orelse(possible_codes)
 
 def action_theorem(goal : Goal, selected_objects : [MathObject], theorem : Statement):
+    possible_codes = []
     th = theorem.lean_name
     if len(selected_objects) == 0:
         h = get_new_hyp()
-        
-        return "apply {1} <|> have {0} := @{1},".format(h, th)
+        possible_codes.append(f'apply {th}')
+        possible_codes.append(f'have {h} := @{th}')
     else:
         arguments = " ".join([selected_objects[0].info["name"]])
         arguments_type = " "
         h = get_new_hyp()
-        return "apply {1} {2} <|> apply @{1} {2} <|> have {0} := {1} {2} <|> have {0} := @{1} {2},".format(h, th, arguments)
+        possible_codes.append(f'apply {th} {arguments}')
+        possible_codes.append(f'apply @{th} {arguments}')
+        possible_codes.append(f'have {h} := {th} {arguments}')
+        possible_codes.append(f'have {h} := @{th} {arguments}')
+
+    return format_orelse(possible_codes)
