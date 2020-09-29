@@ -2,80 +2,134 @@ import sys
 from pathlib import Path
 from typing import  Dict, List
 
-from PySide2.QtCore import      Slot
-from PySide2.QtGui  import      QPixmap
+from PySide2.QtCore import    ( Qt,
+                                Slot)
+from PySide2.QtGui  import    ( QFontDatabase,
+                                QFont,
+                                QPixmap)
 from PySide2.QtWidgets import ( QApplication,
+                                QButtonGroup,
+                                QCheckBox,
                                 QGridLayout,
                                 QGroupBox,
                                 QFileDialog,
                                 QPushButton,
                                 QTextEdit,
+                                QLineEdit,
                                 QListWidget,
                                 QWidget,
                                 QLabel,
                                 QLayout,
                                 QListWidgetItem,
+                                QTextEdit,
                                 QTreeWidget,
                                 QTreeWidgetItem,
                                 QVBoxLayout,
                                 QHBoxLayout)
 
-from deaduction.dui.utils import set_selectable
-
-class ChoosePreviewCourseExerciseLayout(QHBoxLayout):
-
-    def __init__(self, choose_title:  str, choose_lyt:  QLayout,
-                       preview_title: str, preview_lyt: QLayout):
-
-        super().__init__()
-
-        choose_gb = QGroupBox(choose_title)
-        choose_gb.setLayout(choose_lyt)
-        
-        preview_gb = QGroupBox(preview_title)
-        preview_gb.setLayout(preview_lyt)
-
-        self.setContentsMargins(0, 0, 0, 0)
-        self.addWidget(choose_gb)
-        self.addWidget(preview_gb)
+from deaduction.dui.utils import ( replace_delete_widget,
+                                   set_selectable)
 
 
-class InfoBloc(QWidget):
+class DisclosureTree(QTreeWidget):
+    # An implementation of a disclosure triangle.
+    # https://stackoverflow.com/questions/63862724/
+    # qtreeview-dynamic-height-according-to-content-disclosure-triangle
 
-    def __init__(self, list_info: List[str]):
+    def __init__(self, title: str, data: Dict[str, str]):
 
         super().__init__()
 
-        main_layout = QVBoxLayout()
+        # ─────────────────── Add content ────────────────── #
 
-        for info in list_info:
-            layout = QHBoxLayout()
-            layout.addStretch()
-            label = QLabel(info)
-            label.setStyleSheet('font-style: italic;' \
-                                'color: gray;')
-            layout.addWidget(label)
-            main_layout.addLayout(layout)
+        self.setColumnCount(2)
+        parent_item = QTreeWidgetItem(self, [f'{title} : '])
+        parent_item.set_selectable(False)
+        self.addTopLevelItem(parent_item)
 
-        main_layout.setSpacing(0)
+        for key, val in data.items():
+            item = QTreeWidgetItem(parent_item, [f'{key} : ', val])
+            parent_item.addChild(item)
+
+            # Cosmetics
+            item.set_selectable(False)
+            item.setTextAlignment(0, Qt.AlignRight)
+
+        # ──────────────────── Cosmetics ─────────────────── #
+
+        # Hide header
+        self.header().hide()
+
+        # No background
+        self.setStyleSheet('background-color: transparent;')
+
+        # Dynamically change height when widget is collapsed or expanded
+        # You have to update the maximum height of the widget, based on
+        # its contents. For each top item you need to get the height for
+        # that row using rowHeight() and do the same recursively for
+        # child items whenever the item is expanded. Also, you need to
+        # overwrite the sizeHint and minimumSizeHint.
+        self.expanded.connect(self.update_height)
+        self.collapsed.connect(self.update_height)
+
+    def update_height(self):
+        self.setMaximumHeight(self.sizeHint().height())
+
+    def get_height(self, parent=None):
+        height = 0
+        if not parent:
+            parent = self.rootIndex()
+        for row in range(self.model().rowCount(parent)):
+            child = self.model().index(row, 0, parent)
+            height += self.rowHeight(child)
+            if self.isExpanded(child) and self.model().hasChildren(child):
+                    height += self.get_height(child)
+        return height
+
+    def sizeHint(self):
+        hint = super().sizeHint()
+        hint.setHeight(self.get_height() + self.frameWidth() * 2)
+        return hint
+
+    def minimumSizeHint(self):
+        return self.sizeHint()
+
+
+##################
+# Helper classes #
+##################
+
+
+class LauncherGroupBox(QGroupBox):
+
+    def __init__(self, title: str, left_lyt: QLayout,
+                 right_lyt: QLayout):
+
+        super().__init__(title)
+
+        main_layout = QHBoxLayout()
+        main_layout.addLayout(left_lyt)
+        main_layout.addLayout(right_lyt)
+
         self.setLayout(main_layout)
 
 
-class CourseExercisePreviewLayout(QVBoxLayout):
+class PreviewerHeaderLayout(QVBoxLayout):
 
-    def __init__(self, title: str, long_text: str, info: Dict[str, str]=None,
+    def __init__(self, title: str, long_text: str, details: Dict[str, str]=None,
                  subtitle: str=None):
 
         super().__init__()
 
         # Title
         title_wgt = QLabel(title)
-        title_wgt.setStyleSheet('font-size: 18pt;'\
+        title_wgt.setStyleSheet('font-size: 16pt;'\
                                 'font-weight: bold;')
 
         # Subtitle
         if subtitle:
-            subtitle_wgt = QLabel(f'({subtitle})')
+            subtitle_wgt = QLabel(subtitle)
+            subtitle_wgt.setStyleSheet('font-style: italic; color: gray;')
             sub_title_lyt = QHBoxLayout()
             sub_title_lyt.addWidget(title_wgt)
             sub_title_lyt.addWidget(subtitle_wgt)
@@ -84,21 +138,9 @@ class CourseExercisePreviewLayout(QVBoxLayout):
             self.addWidget(title_wgt)
 
         # Info disclosure triangle
-        if info:
-            triangle = QTreeWidget()
-            triangle.setColumnCount(2)
-            details = QTreeWidgetItem(triangle, ['Details'])
-            details.set_selectable(False)
-            triangle.addTopLevelItem(details)
-
-            for key, val in info.items():
-                item = QTreeWidgetItem(details, [key, val])
-                item.set_selectable(False)
-                details.addChild(item)
-
-            triangle.header().hide()
-            triangle.setStyleSheet("background-color: transparent;")
-            self.addWidget(triangle)
+        if details:
+            details= DisclosureTree('Details', details)
+            self.addWidget(details)
 
         # Long text
         long_text_wgt = QLabel(long_text)
@@ -108,11 +150,96 @@ class CourseExercisePreviewLayout(QVBoxLayout):
         self.addStretch()
 
 
-class CourseChoosePreview(QWidget):
+class GoalPreviewerLayout(QVBoxLayout):
 
     def __init__(self):
 
         super().__init__()
+
+        # ─────────────────── Check boxes ────────────────── #
+
+        self.friendly_cb = QCheckBox('Friendly mode')
+        self.code_cb   = QCheckBox('L∃∀N mode')
+        button_group   = QButtonGroup(self)
+
+        button_group.setExclusive(True)
+        button_group.addButton(self.friendly_cb)
+        button_group.addButton(self.code_cb)
+        cb_lyt = QHBoxLayout()
+        cb_lyt.addStretch()
+        cb_lyt.addWidget(self.friendly_cb)
+        cb_lyt.addWidget(self.code_cb)
+
+        button_group.buttonClicked.connect(self.change_main_widget)
+
+        # ───────────────── Friendly widget ──────────────── #
+
+        self.friendly_wgt = QWidget()
+        friendly_wgt_lyt = QVBoxLayout()
+        friendly_wgt_lyt.setContentsMargins(0, 0, 0, 0)
+
+        propobj_lyt = QHBoxLayout()
+        objects, properties         = QListWidget(), QListWidget()
+        objects_lyt, properties_lyt = QVBoxLayout(), QVBoxLayout()
+        objects_lyt.addWidget(QLabel('Objects:'))
+        properties_lyt.addWidget(QLabel('Properties:'))
+        objects.setFont(QFont('Fira Code'))
+        properties.setFont(QFont('Fira Code'))
+        objects.addItems(['X : a set', 'x : X'])
+        properties.addItems(['X is compact'])
+        objects_lyt.addWidget(objects)
+        properties_lyt.addWidget(properties)
+        propobj_lyt.addLayout(objects_lyt)
+        propobj_lyt.addLayout(properties_lyt)
+
+        target_wgt = QLineEdit('Shit fuck X is continuous over Riemann')
+        target_wgt.setFont(QFont('Fira Code'))
+
+        friendly_wgt_lyt.addLayout(propobj_lyt)
+        friendly_wgt_lyt.addWidget(QLabel('Target:'))
+        friendly_wgt_lyt.addWidget(target_wgt)
+
+        self.friendly_wgt.setLayout(friendly_wgt_lyt)
+
+        # ─────────────────── Code widget ────────────────── #
+
+        self.code_wgt = QTextEdit()
+        self.code_wgt.setReadOnly(True)
+        self.code_wgt.setFont(QFont('Menlo'))
+        self.code_wgt.setText('Lean code goes here')
+
+        # ──────────────────── Organize ──────────────────── #
+
+        # Default widget is friendly widget
+        self.friendly_cb.setChecked(True)
+        self.friendly_wgt.show()
+        self.code_wgt.hide()
+
+        self.addWidget(self.friendly_wgt)
+        self.addWidget(self.code_wgt)
+        self.addLayout(cb_lyt)
+
+    @Slot()
+    def change_main_widget(self):
+
+        if self.friendly_cb.isChecked():
+            self.friendly_wgt.show()
+            self.code_wgt.hide()
+        else:
+            self.friendly_wgt.hide()
+            self.code_wgt.show()
+
+
+#############
+# Launchers #
+#############
+
+
+class CourseGroupBox(QGroupBox):
+
+    def __init__(self):
+
+        super().__init__('Choose course (browse and preview')
 
         # ────────────── Choose course layout ────────────── #
 
@@ -120,9 +247,9 @@ class CourseChoosePreview(QWidget):
         browse_btn.clicked.connect(self.__browse_for_course)
         previous_courses_wgt = QListWidget()
 
-        choose_course_lyt = QVBoxLayout()
-        choose_course_lyt.addWidget(browse_btn)
-        choose_course_lyt.addWidget(previous_courses_wgt)
+        course_chooser_layout = QVBoxLayout()
+        course_chooser_layout.addWidget(browse_btn)
+        course_chooser_layout.addWidget(previous_courses_wgt)
 
         # ────────────── Preview course layout ───────────── #
 
@@ -146,16 +273,13 @@ class CourseChoosePreview(QWidget):
                 'Level': 'M1',
                 'Path': '~/Who/Wants/To/Live/Forever/topalg.lean'}
 
-        preview_course_lyt = CourseExercisePreviewLayout(title, long_text,
-                                                         info)
+        course_previewer_header_layout = PreviewerHeaderLayout(title, long_text, info)
 
         # ─────────────────── Main layout ────────────────── #
 
-        main_layout = ChoosePreviewCourseExerciseLayout(
-                'Choose course (browse files or previous course)',
-                choose_course_lyt,
-                'Preview course',
-                preview_course_lyt)
+        main_layout = QHBoxLayout()
+        main_layout.addLayout(course_chooser_layout)
+        main_layout.addLayout(course_previewer_header_layout)
         self.setLayout(main_layout)
 
 
@@ -170,54 +294,65 @@ class CourseChoosePreview(QWidget):
             course_file_path = Path(dialog.selectedFiles()[0])
 
 
-class ExerciseChoosePreview(QWidget):
+class ExerciseGroupBox(QGroupBox):
 
     def __init__(self):
 
-        super().__init__()
+        super().__init__('Choose exercise (browse and preview')
 
-        # ───────────────── Choose exercise ──────────────── #
+        # ──────────────── Exercise chooser ──────────────── #
 
-        exercises_list = QListWidget()
-        choose_exercise_lyt = QVBoxLayout()
-        choose_exercise_lyt.addWidget(exercises_list)
+        exercise_chooser_lyt = QVBoxLayout()
+        exercise_chooser_lyt.addWidget(QListWidget())
 
-        # ──────────────── Preview Exercise ──────────────── #
+        # ───────────────── Exercise header ──────────────── #
 
         title = 'Exercice 1.3.4'
         long_text = "Montrer que le groupe fondamental du cercle est "\
                     "isomorphe (comme groupe) à (Z, +)."
         subtitle = 'Le groupe fondamental de la sphère est trivial'
 
-        preview_exercise_lyt = CourseExercisePreviewLayout(title, long_text,
-                                                           subtitle=subtitle)
+        exercise_previewer_header_layout = PreviewerHeaderLayout(title,
+                                    long_text, subtitle=subtitle)
+
+        # ────────────────── Preview goal ────────────────── #
+
+        goal_previewer_layout = GoalPreviewerLayout()
 
         # ─────────────────── Main layout ────────────────── #
 
-        main_layout = ChoosePreviewCourseExerciseLayout(
-                'Choose exercise (from the list)',
-                choose_exercise_lyt,
-                'Preview exercise',
-                preview_exercise_lyt)
+        exercise_previewer_layout = QVBoxLayout()
+        exercise_previewer_layout.addLayout(exercise_previewer_header_layout)
+        exercise_previewer_layout.addWidget(QWidget())
+        exercise_previewer_layout.addLayout(goal_previewer_layout)
+
+        main_layout = QHBoxLayout()
+        main_layout.addLayout(exercise_chooser_lyt)
+        main_layout.addLayout(exercise_previewer_layout)
         self.setLayout(main_layout)
 
-class ChooseCourseExercise(QWidget):
+
+###############
+# Main window #
+###############
+
+
+class LaunchersMainWindow(QWidget):
 
     def __init__(self):
 
         super().__init__()
 
-        course_cap =   CourseChoosePreview()
-        exercise_cap = ExerciseChoosePreview()
+        course_cb =   CourseGroupBox()
+        exercise_cb = ExerciseGroupBox()
         selection_zone_lyt = QVBoxLayout()
-        selection_zone_lyt.setContentsMargins(0, 0, 0, 0)
-        selection_zone_lyt.addWidget(course_cap)
-        selection_zone_lyt.addWidget(exercise_cap)
+        selection_zone_lyt.addWidget(course_cb)
+        selection_zone_lyt.addWidget(exercise_cb)
 
         buttons_lyt = QHBoxLayout()
         help_btn = QPushButton('Help')
         quit_btn = QPushButton('Quit')
-        self.choose_this_course_btn = QPushButton('Launch exercise')
+        self.choose_this_course_btn = QPushButton('Start exercise')
         buttons_lyt.addWidget(help_btn)
         buttons_lyt.addWidget(quit_btn)
         buttons_lyt.addStretch()
@@ -238,7 +373,7 @@ class ChooseCourseExercise(QWidget):
 if __name__ == '__main__':
     app = QApplication()
 
-    blanquistes_du_nil = ChooseCourseExercise()
+    blanquistes_du_nil = LaunchersMainWindow()
     blanquistes_du_nil.show()
 
     sys.exit(app.exec_())

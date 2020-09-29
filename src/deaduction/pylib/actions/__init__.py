@@ -34,7 +34,8 @@ from .exceptions import (   InputType,
                             WrongUserInput)
 
 from .utils import (        get_new_hyp,
-                            get_new_var)
+                            get_new_var,
+                            format_orelse)
 
 from .logic import (        action_negate,
                             action_implicate,
@@ -43,7 +44,4 @@ from .logic import (        action_negate,
                             action_forall,
                             action_exists)
 
-from .proofs import (       action_assumption,
-                            action_absurdum,
-                            action_cbr,
-                            action_contrapose)
+from .proofs import (       action_use_proof_method)

@@ -190,8 +190,8 @@ def display_application(math_object, format_):
     """
     first_child = math_object.children[0]
     second_child = math_object.children[1]
-    log.debug(f"displaying APP, 1st child = {first_child}, "
-              f"2nd child = {second_child}")
+    #log.debug(f"displaying APP, 1st child = {first_child}, "
+    #          f"2nd child = {second_child}")
     shape = ["*APP*"]
 
     # case of index notation
@@ -472,16 +472,19 @@ format_from_node = {
     "QUANT_∀": ["∀", 1, " ∈ ", 0, ", ", 2],
     "QUANT_∃": ["∃", 1, " ∈ ", 0, ", ", 2],
     "PROP_∃": "not implemented",
+    "QUANT_∃_unique": ["∃!",  1, " ∈ ", 0, ", ", 2],
     ###############
     # SET THEORY: #
     ###############
     "PROP_INCLUDED": [0, " ⊂ ", 1],
     "PROP_BELONGS": [0, " ∈ ", 1],
+    "SET_UNIVERSE": [display_math_type0],
     "SET_INTER": [0, " ∩ ", 1],  # !! small ∩
     "SET_UNION": [0, " ∪ ", 1],  #
     "SET_INTER+": [" ⋂", 0],  # !! big ⋂
     "SET_UNION+": [" ⋃", 0],
-    "SET_DIFF": [0, r" \\ ", 1],
+    "SET_DIFF": [0, r" \ ", 1],
+    "SET_DIFF_SYM": [0, " ∆ ", 1],
     "SET_COMPLEMENT": [display_math_type0, r" \ ", 0],
     "SET_EMPTY": ["∅"],
     "SET_FAMILY": [_("a family of subsets of") + " ", 1],
@@ -509,8 +512,9 @@ format_from_node = {
 
 # negative value = pending parameter
 format_from_constant_name = {
+    "symmetric_difference": [-1, '∆', -2],
     "composition": [-1, '∘', -2],
-    "prod": [-1, '×', -2],  # FIXME: does not work
+    "prod": [-1, '×', -2],  # FIXME: does not work (parameters are types)
     "Identite": ["Id"]
 }
 

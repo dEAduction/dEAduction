@@ -100,6 +100,7 @@ class ServerInterface(QObject):
 
         self.__tmp_hypo_analysis      = ""
         self.__tmp_targets_analysis   = ""
+        self.__tmp_effective_code     = ""
 
         self.proof_state              = None
 
@@ -149,6 +150,13 @@ class ServerInterface(QObject):
             self.__proof_state_valid = trio.Event()  # Invalidate proof state
             self.__check_receive_state()
 
+        elif txt.startswith("EFFECTIVE CODE"):  # todo: add line test
+            self.log.info(f"Got {txt}")
+            # find text after "EFFECTIVE CODE xxx : "
+            pos = txt.find(":") + 2
+            self.__tmp_effective_code = txt[pos:]
+            self.history_replace(self.__tmp_effective_code)
+
     def __on_lean_state_change(self, is_running: bool):
         self.log.info(f"New lean state: {is_running}")
         self.is_running = is_running
@@ -184,6 +192,8 @@ class ServerInterface(QObject):
                        f"{self.current_line_of_lean_file}, and context at "
                        f"line {self.last_line_of_lean_code-1}")
 
+        self.lean_file_changed.emit()  # will update the lean text editor
+
         if hasattr(self.update_started, "emit"):
             self.update_started.emit()
 
@@ -194,10 +204,10 @@ class ServerInterface(QObject):
         self.__proof_receive_done   = trio.Event()
         self.__tmp_hypo_analysis    = ""
         self.__tmp_targets_analysis = ""
+        self.__tmp_effective_code   = ""
 
         resp = await self.lean_server.send(req)
         if resp.message == "file invalidated":
-            self.lean_file_changed.emit()
 
             await self.__proof_receive_done.wait()
 
@@ -294,6 +304,28 @@ class ServerInterface(QObject):
         self.lean_file.redo()
         await self.__update()
 
+    def history_replace(self, effective_code):
+        """
+        Replace last entry in the lean_file by effective_code
+        without calling Lean
+        effective_code is assumed to be equivalent, from the Lean viewpoint,
+        to last code entry
+
+        :param effective_code: str
+        """
+        effective_code = effective_code.strip()
+        if not effective_code.endswith(","):
+            effective_code += ","
+        if not effective_code.endswith("\n"):
+            effective_code += "\n"
+
+        lean_file = self.lean_file
+        label = lean_file.history[lean_file.target_idx].label
+        self.lean_file.undo()
+        self.lean_file.insert(label=label, add_txt=effective_code)
+        self.lean_file_changed.emit()  # will update the lean text editor
+
+
     ############################################
     # Code management
     ############################################
@@ -309,6 +341,9 @@ class ServerInterface(QObject):
 
         if not code.endswith("\n"):
             code += "\n"
+
+        if code.find("EFFECTIVE CODE") == -1:  # not used
+            self.__tmp_effective_code = "IRRELEVANT"
 
         self.lean_file.insert(label=label, add_txt=code)
         await self.__update()

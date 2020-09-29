@@ -4,6 +4,7 @@ import tactic
 -- dEAduction imports
 import structures2
 import definitions
+import notations_definitions
 
 -- General principles :
 -- Type should be defined as parameters, in order to be implicit everywhere
@@ -19,7 +20,6 @@ local attribute [instance] classical.prop_decidable
 ---------------------------------------------
 section course
 parameters {X Y Z: Type}
-
 notation [parsing_only] P ` \and ` Q := P ∧ Q
 notation [parsing_only]  P ` \or ` Q := P ∨ Q
 notation [parsing_only]  ` \not ` P := ¬ P
@@ -30,8 +30,9 @@ notation [parsing_only]  x ` \in ` A := x ∈ A
 notation [parsing_only]  A ` \cap ` B := A ∩ B
 notation [parsing_only]  A ` \cup ` B := A ∪ B
 notation [parsing_only]  A ` \subset ` B := A ⊆ B
+notation [parsing_only]  `\emptyset` := ∅
 
-
+open set
 
 ------------------
 -- COURSE TITLE --
@@ -135,7 +136,7 @@ ExpectedVarsNumber
 -/
 
 begin
-    sorry
+    sorry,
 end
 
 lemma exercise.inter_distributive_union : A ∪ (B ∩ C)  = (A ∪ B) ∩ (A ∪ C) :=
@@ -159,7 +160,7 @@ namespace complementaire
 -- variables complementaire --
 variables  {A B : set X}
 variables {I : Type} {E F : I → set X}
-notation `∁`A := set.compl A
+-- notation `∁`A := set.compl A
 
 -----------------
 -- DEFINITIONS --
@@ -262,6 +263,7 @@ PrettyName
 
 
 -- variables applications --
+
 notation f `⟮` A `⟯` := f '' A
 notation f `⁻¹⟮` A `⟯` := f  ⁻¹' A
 
@@ -314,7 +316,7 @@ begin
     sorry
 end
 
-set_option pp.width 100
+-- set_option pp.width 100
 lemma exercise.image_reciproque_inter_quelconque :
 (f ⁻¹'  (set.Inter (λ i, F i))) = set.Inter (λ i, f ⁻¹' (F i))
 :=
@@ -376,12 +378,14 @@ variables (f: X → Y) (g : Y → Z) (h : X → Z)
 -- DEFINITIONS --
 -----------------
 namespace definitions
+/-
 def injective {X Y : Type} (f₀ : X → Y) := ∀ x y : X, (f₀ x = f₀ y → x = y)
 def surjective {X Y : Type} (f₀ : X → Y) := ∀ y : Y, ∃ x : X, f₀ x = y
 def composition {X Y Z : Type} (g₀ : Y → Z) (f₀ : X → Y) := λx:X, g₀ (f₀ x)
 def Identite {X : Type} := λ x:X, x
 
 notation g `∘` f := composition g f
+-/
 
 
 lemma definition.injectivite :
@@ -449,7 +453,8 @@ namespace composition
 open applications_II.definitions
 
 lemma exercise.composition_injections
-(H1 : injective (λx:X, f x)) (H2 : injective g) :
+(H1 : injective f) (H2 : injective g)
+:
 injective (composition g f)
 :=
 begin
@@ -508,6 +513,8 @@ begin
     sorry
 end
 
+
+
 lemma exercise.exercice_ensembles_2
 (A B C : set X) :
 A ∩ B = A ∩ C ∧ (set.compl A) ∩ B = (set.compl A) ∩ C → B = C
@@ -515,6 +522,7 @@ A ∩ B = A ∩ C ∧ (set.compl A) ∩ B = (set.compl A) ∩ C → B = C
 begin
     sorry
 end
+
 
 
 lemma exercise.exercice_ensembles_3
@@ -544,8 +552,8 @@ end
 --def diff {X : Type} (A B : set X) := {x ∈ A | ¬ x ∈ B}
 --notation A `\\` B := diff A B
 
-def difference_symetrique {X : Type} (A B : set X) := (B ∪ A) ∪ (A ∩ B)
-notation A `Δ` B := difference_symetrique A B
+-- def symmetric_difference {X : Type} (A B : set X) := (A ∪ B) \ (A ∩ B)
+-- notation A `Δ` B := symmetric_difference A B
 
 lemma definition.difference
 (A B : set X) (x : X) :
@@ -561,7 +569,7 @@ lemma definition.difference_symetrique
 (A Δ B) =  (A ∪ B) \ (A ∩ B)
 :=
 begin
-    sorry
+    refl,
 end
 
 
@@ -601,14 +609,14 @@ notation `∃!` P := exists_unique P
 
 lemma definition.existe_un_unique
 (P : X → Prop) :
-(∃! P) ↔  (∃ x : X, (P x ∧ (∀ x' : X, P x' → x = x')))
+(∃! (λx,  P x)) ↔  (∃ x : X, (P x ∧ (∀ x' : X, P x' → x = x')))
 :=
 begin
     sorry
 end
 
 lemma exercise.difference_symetrique_4 :
-∃! (λE : set X, ∀ A : set X, (A Δ set.univ) = A) :=
+∃! (λE : set X, ∀ A : set X, (A Δ E) = A) :=
 begin
     sorry
 end
@@ -619,7 +627,7 @@ exists_unique (λA' : set X, (A Δ A') = set.univ)
 :=
 begin
     sorry
- end
+end
 
 lemma exercise.difference_symetrique_6
 (A B : set X) :
@@ -651,10 +659,10 @@ begin
     sorry
 end
 
-
+open applications_II.definitions
 lemma exercise.exercice_factorisation_I
 (g : Y → Z) (h: X → Z) :
-∃ f: X → Y, h = (applications_II.definitions.composition g f) ↔ h '' set.univ ⊆ g '' set.univ
+∃ f: X → Y, h = (composition g f) ↔ h '' set.univ ⊆ g '' set.univ
 :=
 begin
     sorry
@@ -663,7 +671,7 @@ end
 
 lemma exercise.exercice_factorisation_II
 (f : X → Y) (h: X → Z) :
-∃ g: Y → Z, h = (applications_II.definitions.composition g f) ↔ (∀ x y, (f x = f y → h x = h y))
+∃ g: Y → Z, h = (composition g f) ↔ (∀ x y, (f x = f y → h x = h y))
 :=
 begin
     sorry

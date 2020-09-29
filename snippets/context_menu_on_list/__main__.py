@@ -1,10 +1,17 @@
+import logging
 import sys
-from PySide2.QtCore    import   Slot
+
+from PySide2.QtCore    import ( Qt,
+                                Slot)
 from PySide2.QtWidgets import ( QApplication,
                                 QAbstractItemView,
                                 QListWidget,
                                 QListWidgetItem,
                                 QMenu)
+
+from deaduction.pylib import logger as logger
+
+log = logging.getLogger('')
 
 
 class List(QListWidget):
@@ -12,19 +19,21 @@ class List(QListWidget):
     def __init__(self):
         super().__init__()
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.itemDoubleClicked.connect(self.__rename_item_action)
 
     def contextMenuEvent(self, event):
         context_menu = QMenu(self)
 
         # Define actions and add them to menu
         print_items_action = context_menu.addAction('Print item(s)')
-        rename_action      = context_menu.addAction('Rename item')
+        rename_item_action = context_menu.addAction('Rename item')
 
         # Connect actions to slots
-        print_items_action.triggered.connect(self.__print_items_action())
+        print_items_action.triggered.connect(self.__print_items_action)
+        rename_item_action.triggered.connect(self.__rename_item_action)
 
         # Default behavior
-        rename_action.setEnabled(False)
+        rename_item_action.setEnabled(False)
 
         # 0 item selected
         if not self.selectedItems():
@@ -32,7 +41,7 @@ class List(QListWidget):
 
         # 1 item selected
         if len(self.selectedItems()) == 1:
-            rename_action.setEnabled(True)
+            rename_item_action.setEnabled(True)
             print_items_action.setText('Print item')
 
         # Run menu
@@ -41,21 +50,47 @@ class List(QListWidget):
     @Slot()
     def __print_items_action(self):
         for item in self.selectedItems():
-            print(item.text())
+            print(item.text)
 
     @Slot()
-    def __rename_action(self, new_text: str):
-        selected_item = self.selectedItems()[0]
-        selected_item.setText(new_text)
+    def __rename_item_action(self):
+        log.debug('List.__rename_item_action called')
+
+        item = self.selectedItems()[0]
+        item.setData(Qt.EditRole, 'Change item name')
+        log.debug(f'item.text after setData(Qt.EditRole, …): {item.text}')
+
+        self.editItem(item)
 
 
+class ListItem(QListWidgetItem):
+
+    def __init__(self, name: str, text: str):
+        super().__init__()
+
+        self.setFlags(self.flags() | Qt.ItemIsEditable)
+
+        self.name = name
+        self.text = text
+
+        self.__set_name_text()
+
+    def change_name(self, new_name: str):
+        self.name = new_name
+        self.__set_name_text()
+
+    def __set_name_text(self):
+        self.setText(f'{self.name} : {self.text}')
 
 if __name__ == '__main__':
+
+    logger.configure()
 
     app = QApplication()
 
     list = List()
-    list.addItems('Hey Beautiful Satanic Wagnerian'.split())
+    list.addItem(ListItem('1', 'Computer'))
+    list.addItem(ListItem('2', 'Filter'))
     list.show()
 
     sys.exit(app.exec_())
