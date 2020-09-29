@@ -123,12 +123,13 @@ class PreviewerHeaderLayout(QVBoxLayout):
 
         # Title
         title_wgt = QLabel(title)
-        title_wgt.setStyleSheet('font-size: 20pt;'\
+        title_wgt.setStyleSheet('font-size: 16pt;'\
                                 'font-weight: bold;')
 
         # Subtitle
         if subtitle:
-            subtitle_wgt = QLabel(f'({subtitle})')
+            subtitle_wgt = QLabel(subtitle)
+            subtitle_wgt.setStyleSheet('font-style: italic; color: gray;')
             sub_title_lyt = QHBoxLayout()
             sub_title_lyt.addWidget(title_wgt)
             sub_title_lyt.addWidget(subtitle_wgt)
@@ -157,14 +158,15 @@ class GoalPreviewerLayout(QVBoxLayout):
 
         # ─────────────────── Check boxes ────────────────── #
 
-        self.friendly_cb = QCheckBox('Pretty mode')
-        self.code_cb   = QCheckBox('LEAN code mode')
+        self.friendly_cb = QCheckBox('Friendly mode')
+        self.code_cb   = QCheckBox('L∃∀N mode')
         button_group   = QButtonGroup(self)
 
         button_group.setExclusive(True)
         button_group.addButton(self.friendly_cb)
         button_group.addButton(self.code_cb)
         cb_lyt = QHBoxLayout()
+        cb_lyt.addStretch()
         cb_lyt.addWidget(self.friendly_cb)
         cb_lyt.addWidget(self.code_cb)
 
@@ -213,9 +215,9 @@ class GoalPreviewerLayout(QVBoxLayout):
         self.friendly_wgt.show()
         self.code_wgt.hide()
 
-        self.addLayout(cb_lyt)
         self.addWidget(self.friendly_wgt)
         self.addWidget(self.code_wgt)
+        self.addLayout(cb_lyt)
 
     @Slot()
     def change_main_widget(self):
