@@ -33,10 +33,10 @@ from typing import List, Tuple
 import deaduction.pylib.logger as logger
 
 from deaduction.pylib.mathobj.MathObject import \
-    MathObject
+                                MathObject
 from deaduction.pylib.mathobj.lean_analysis_with_type import \
-    lean_expr_with_type_grammar, \
-    LeanEntryVisitor
+                                lean_expr_with_type_grammar, \
+                                LeanEntryVisitor
 
 from deaduction.pylib.actions import Action
 
@@ -47,7 +47,6 @@ log = logging.getLogger(__name__)
 class Goal:
     context: List[MathObject]
     target: MathObject
-
     # the following would be useful if we decide to display objects of the
     # same type together:
     # math_types: List[Tuple[MathObject, List[MathObject]]]
@@ -109,8 +108,8 @@ class Goal:
                 else:
                     # next test uses PropObj.__eq__, which is redefined
                     # in PropObj (recursively test nodes)
-                    if old_context[
-                        old_index].math_type == math_object.math_type:
+                    if old_context[old_index].math_type == \
+                            math_object.math_type:
                         tag = "="
                     else:
                         tag = "≠"
@@ -153,8 +152,8 @@ class Goal:
         names = []
         for math_object in self.context:
             name = math_object.info["name"]
-            if name != '' and not math_object.is_prop() and not (
-                    name in names):
+            if name != '' and not math_object.is_prop() \
+                    and not (name in names):
                 names.append(name)
         #    names.extend(pfpo.bound_vars)
         # names.extend(target.bound_vars)
@@ -252,8 +251,7 @@ class ProofState:
         if targets:
             main_goal = Goal.from_lean_data(hypo_analysis, targets[0])
         else:
-            log.warning(
-                f"No target found! targets_analysis = {targets_analysis}")
+            log.warning(f"No target found! targets_analysis = {targets_analysis}")
         goals = [main_goal]
         for other_string_goal in targets[1:]:
             other_goal = Goal.from_lean_data(hypo_analysis="",

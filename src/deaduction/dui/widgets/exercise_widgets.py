@@ -444,16 +444,13 @@ class ExerciseMainWindow(QMainWindow):
 
         return msg
 
-    @Slot(ProofState)
-    def update_proof_state(self, proofstate: ProofState):
+    def update_goal(self, new_goal: Goal):
         """
-        Update self (attributes, interface) to the new proof state,
-        which includes the new goal.
+        Change widgets (target, math. objects and properties) to
+        new_goal and update internal mechanics accordingly.
 
-        :proofstate: The proofstate one wants to update self to.
+        :param new_goal: The new goal to update / set the interface to.
         """
-
-        new_goal = proofstate.goals[0]
 
         # Init context (objects and properties). Get them as two list of
         # (MathObject, str), the str being the tag of the prop. or obj.
@@ -474,10 +471,10 @@ class ExerciseMainWindow(QMainWindow):
         except AttributeError:
             log.debug('no tag for target')
             pass
+
         new_context = new_goal.tag_and_split_propositions_objects()
 
-        # raw count of goals
-        log.debug(f"Number of remaining goals: {len(proofstate.goals)}")
+        # count of goals
         total_goals_counter, current_goal_number, current_goals_counter \
             = self.count_goals()
         log.debug(f"Goal n°{current_goal_number} / {total_goals_counter}")
@@ -761,34 +758,50 @@ class ExerciseMainWindow(QMainWindow):
 
         self.lean_editor.code_set(self.servint.lean_file.inner_contents)
 
-    # @Slot(ProofState)
-    # def update_proof_state(self, proofstate: ProofState):
-    #     """
-    #     Update self (attributes, interface) to the new proof state,
-    #     which includes the new goal.
-    #
-    #     :proofstate: The proofstate one wants to update self to.
-    #     """
-    #
-    #     # Weird that this methods only does this.
-    #     # TODO: maybe delete it to only have self.update_goal?
-    #     self.update_goal(proofstate.goals[0])
+    @Slot(ProofState)
+    def update_proof_state(self, proofstate: ProofState):
+        """
+        Update self (attributes, interface) to the new proof state,
+        which includes the new goal.
 
+        :proofstate: The proofstate one wants to update self to.
+        """
 
-    def proof(self):
+        # Weird that this methods only does this.
+        # TODO: maybe delete it to only have self.update_goal?
+        self.update_goal(proofstate.goals[0])
+
+    ###################
+    # Logical methods #
+    ###################
+    # The following methods are closer to the logical aspect of deaduction:
+    # - the proof method essentially returns the sequence of successive
+    # ProofState from the beginning of the proof until the current ProofState.
+    # This sequence is obtained from the information attached to the lean_file
+    # which provides a reliable account of the proof history.
+    # This sequence is an instance of the Proof class, from proof_state.py
+    # - the count_goals method then applies the count_goals_from_proof method
+    # to the Proof instance, to get information on the proof history:
+    # essentially
+    #       - the total number of goals that have been examined during
+    #       the proof history,
+    #       - the number of the goal that the user is currently trying to prove
+
+    def proof(self) -> Proof:
         """
         Return the current proof history, an instance of the Proof class
         """
         lean_file = self.servint.lean_file
         proof = Proof([(entry.misc_info["ProofState"], None) \
                  for entry in lean_file.history[:lean_file.target_idx+1]])
-        #log.debug({f"idx = {lean_file.idx}, target_idx ="
-        #           f" {lean_file.target_idx}"})
-        #log.debug(f"history = {lean_file.history}")
-
-        #log.debug(f"Proof = {proof}")
         return proof
 
-    def count_goals(self):
+    def count_goals(self) -> (int, int, int):
+        """
+        Compute and return three values:
+            - total_goals_counter : total number of goals during Proof history
+            - current_goal_number = number of the goal under study
+            - current_goals_counter = number of goals at end of Proof
+        """
         proof = self.proof()
         return proof.count_goals_from_proof()
