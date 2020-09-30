@@ -620,10 +620,10 @@ class ExerciseMainWindow(QMainWindow):
             try:
                 if user_input == []:
                     code = action.run(self.current_goal,
-                                      self.current_context_selection_as_mathobjects)
+                            self.current_context_selection_as_mathobjects)
                 else:
                     code = action_btn.action.run(self.current_goal,
-                            self.current_context_selection, user_input)
+                            self.current_context_selection_as_mathobjects, user_input)
             except MissingParametersError as e:
                 if e.input_type == InputType.Text:
                     text, ok = QInputDialog.getText(action_btn,

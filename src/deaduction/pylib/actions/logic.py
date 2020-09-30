@@ -123,31 +123,48 @@ def construct_or(goal : Goal, user_input : [str]) -> str:
     if goal.target.math_type.node != "PROP_OR":
         raise WrongUserInput
     
+    left = goal.target.math_type.children[0].format_as_utf8()
+    right = goal.target.math_type.children[1].format_as_utf8()
+    choices = [left, right]
+    
     if len(user_input) == 0:
-        left = goal.target.math_type.children[0].format_as_utf8()
-        right = goal.target.math_type.children[1].format_as_utf8()
-        raise MissingParametersError(InputType.Choice, [left,right], title = "Choose element")
+        
+        raise MissingParametersError(InputType.Choice, choices, title = "Choose element")
         
     if len(user_input) == 1:
-        left = goal.target.math_type.children[0].format_as_utf8()
-        right = goal.target.math_type.children[1].format_as_utf8()
-        if user_input[0] in [left, right]:
-            i = [left, right].index(user_input[0])
+        
+        if user_input[0] in choices:
+            i = choices.index(user_input[0])
             code = ["left","right"][i]
             possible_codes.append(code)
             
     return format_orelse(possible_codes)
 
-def apply_or(l : [MathObject]) -> str:
+def apply_or(l : [MathObject], user_input : [str]) -> str:
     possible_codes = []
-    
     if l[0].math_type.node != "PROP_OR":
         raise WrongUserInput
-        
+    
     h_selected = l[0].info["name"]
+    
+    left = l[0].math_type.children[0].format_as_utf8()
+    right = l[0].math_type.children[1].format_as_utf8()
+    choices = [left, right]
+    
+    if len(user_input) == 0:
+        raise MissingParametersError(InputType.Choice, choices, title = "Choose what you want to assume first")
+        
+    if len(user_input) == 1:
+        if user_input[0] in choices:
+            i = choices.index(user_input[0])
+            if i == 1:
+                possible_codes.append(f'rw or.comm at {h_selected}, ')
+            else:
+                possible_codes.append("")
+    
     h1 = get_new_hyp()
     h2 = get_new_hyp()
-    possible_codes.append(f'cases {h_selected} with {h1} {h2}')
+    possible_codes[0] += (f'cases {h_selected} with {h1} {h2}')
     return format_orelse(possible_codes)
 
 @action(_("If the target is of the form P OR Q: tranform the target in P (or Q) accordingly to the user's choice.\nIf a hypothesis of the form P OR Q has been previously selected: transform the current goal into two subgoals, one with P as a hypothesis, and another with Q as a hypothesis."), _("OR"))
@@ -161,7 +178,7 @@ def action_or(goal : Goal, l : [MathObject], user_input = []) -> str:
     if len(l) == 0:
         return construct_or(goal, user_input)
     if len(l) == 1:
-        return apply_or(l)
+        return apply_or(l, user_input)
     raise WrongUserInput
 
 ## NOT ##
