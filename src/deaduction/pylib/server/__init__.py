@@ -352,5 +352,11 @@ class ServerInterface(QObject):
         Sets the code for the current exercise
         """
 
+        if not code.endswith(","):
+            code += ","
+
+        if not code.endswith("\n"):
+            code += "\n"
+
         self.lean_file.state_add(label, code)
         await self.__update()
