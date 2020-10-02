@@ -116,7 +116,7 @@ def action_choice(goal : Goal, l : [MathObject]) -> str:
         h = l[0].info["name"]
         hf = utils.get_new_hyp()
         f = utils.get_new_fun()
-        possible_codes.append('cases classical.axiom_of_choice {h} with {f} {hf}, dsimp at {hf}, dsimp at {f}')
+        possible_codes.append(f'cases classical.axiom_of_choice {h} with {f} {hf}, dsimp at {hf}, dsimp at {f}')
     return format_orelse(possible_codes)        
         
 @action(_("Introduce new object\nIntroduce new subgoal: transform the current target into the input target and add this to the properties of the future goal."), "+")
