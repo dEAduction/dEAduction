@@ -168,10 +168,11 @@ def display_constant(math_object, format_):
     :return:
     """
     display = "*CST*"
-    if math_object.math_type.node == "SET_FAMILY":
-        return display_instance_set_family(math_object, format_)
-    elif math_object.math_type.node == "SEQUENCE":
-        return "*SEQ*"  # todo
+    if hasattr(math_object.math_type,"node"):
+        if math_object.math_type.node == "SET_FAMILY":
+            return display_instance_set_family(math_object, format_)
+        elif math_object.math_type.node == "SEQUENCE":
+            return "*SEQ*"  # todo
     if 'name' in math_object.info.keys():
         display = [math_object.info['name']]
     # if display in format_from_constant_name.keys():
@@ -190,8 +191,8 @@ def display_application(math_object, format_):
     """
     first_child = math_object.children[0]
     second_child = math_object.children[1]
-    #log.debug(f"displaying APP, 1st child = {first_child}, "
-    #          f"2nd child = {second_child}")
+    log.debug(f"displaying APP, 1st child = {first_child}, "
+              f"2nd child = {second_child}")
     shape = ["*APP*"]
 
     # case of index notation

@@ -15,11 +15,13 @@ import notations_definitions
 
 
 local attribute [instance] classical.prop_decidable
+
 ---------------------------------------------
 -- global parameters = implicit variables --
 ---------------------------------------------
 section course
 parameters {X Y Z: Type}
+
 notation [parsing_only] P ` \and ` Q := P ∧ Q
 notation [parsing_only]  P ` \or ` Q := P ∨ Q
 notation [parsing_only]  ` \not ` P := ¬ P
@@ -31,6 +33,7 @@ notation [parsing_only]  A ` \cap ` B := A ∩ B
 notation [parsing_only]  A ` \cup ` B := A ∪ B
 notation [parsing_only]  A ` \subset ` B := A ⊆ B
 notation [parsing_only]  `\emptyset` := ∅
+
 
 open set
 
@@ -48,10 +51,13 @@ PrettyName
 -- COURSE DEFINITIONS --
 ------------------------
 lemma definition.ssi {P Q : Prop} : (P ↔ Q) ↔ (P → Q) ∧ (Q → P) :=
-iff_def
-
+begin
+    exact iff_def
+end
 lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, x ∈ A → x ∈ B :=
-iff.rfl
+begin
+    exact iff.rfl
+end
 
 lemma definition.egalite_deux_ensembles {A A' : set X} :
 (A = A') ↔ ( ∀ x, x ∈ A ↔ x ∈ A' ) :=
@@ -59,7 +65,9 @@ lemma definition.egalite_deux_ensembles {A A' : set X} :
 PrettyName
     egalité de deux ensembles
 -/
-by exact set.ext_iff
+begin
+     exact set.ext_iff
+end
 
 lemma theorem.double_inclusion (A A' : set X) :
 (A ⊆ A' ∧ A' ⊆ A) → A = A' :=
@@ -83,35 +91,43 @@ variables {A B C : set X}
 -----------------
 lemma definition.intersection_deux_ensembles {A B : set X} {x : X} :
 x ∈ A ∩ B ↔ ( x ∈ A ∧ x ∈ B) :=
-iff.rfl
 /- dEAduction
 PrettyName
     Intersection de deux ensembles
 -/
+begin
+    exact iff.rfl
+end
 
 lemma definition.intersection_quelconque_ensembles {I : Type} {E : I → set X}  {x : X} :
 (x ∈ set.Inter (λ i, E i)) ↔ (∀ i:I, x ∈ E i) :=
-set.mem_Inter
 /- dEAduction
 PrettyName
     Intersection d'une famille d'ensembles quelconque
 -/
+begin
+    exact set.mem_Inter
+end
 
 lemma definition.union_deux_ensembles  {A : set X} {B : set X} {x : X} :
 x ∈ A ∪ B ↔ ( x ∈ A ∨ x ∈ B) :=
-iff.rfl
 /- dEAduction
 PrettyName
     Union de deux ensembles
 -/
+begin
+    exact iff.rfl
+end
 
 lemma definition.union_quelconque_ensembles {I : Type} {E : I → set X}  {x : X} :
 (x ∈ set.Union (λ i, E i)) ↔ (∃ i:I, x ∈ E i) :=
-set.mem_Union
 /- dEAduction
 PrettyName
     Union d'une famille d'ensembles quelconque
 -/
+begin
+    exact set.mem_Union
+end
 
 
 ---------------
@@ -134,10 +150,10 @@ Tools->Theorems
 ExpectedVarsNumber
     X=3, A=1, B=1
 -/
-
 begin
     sorry,
 end
+
 
 lemma exercise.inter_distributive_union : A ∪ (B ∩ C)  = (A ∪ B) ∩ (A ∪ C) :=
 /- dEAduction
@@ -170,7 +186,9 @@ lemma definition.complement {A : set X} {x : X} : x ∈ set.compl A ↔ x ∉ A 
 PrettyName
     Complémentaire
 -/
-by finish
+begin
+    finish
+end
 
 --lemma definition.difference_d_ensembles {A B : set X} {x : X} : x ∈ B \ A ↔ (x ∈ B ∧ x ∉ A) :=
 -- iff.rfl
@@ -322,7 +340,7 @@ lemma exercise.image_reciproque_inter_quelconque :
 :=
 /- dEAduction
 PrettyName
-
+    Image réciproque d'une intersection quelconque
 -/
 begin
     sorry
@@ -392,14 +410,14 @@ lemma definition.injectivite :
 injective f ↔ ∀ x y : X, (f x = f y → x = y)
 :=
 begin
-    unfold injective,
+    refl,
 end
 
 lemma definition.surjectivite :
 surjective f ↔ ∀ y : Y, ∃ x : X, f x = y
 :=
 begin
-    unfold surjective,
+    refl,
 end
 
 lemma definition.composition :
@@ -428,25 +446,6 @@ end definitions
 ---------------
 -- EXERCICES --
 ---------------
-
-------------------
-namespace inverses
-open applications_II.definitions
-
-lemma exercise.injective_ssi_inverse_gauche : (injective f) ↔
-∃ F: Y → X, (composition F f) = Identite :=
-begin
-    sorry
-end
-
-lemma exercise.surjective_ssi_inverse_droite : (surjective f) ↔
-∃ F: Y → X, (composition f F) = Identite :=
-begin
-    sorry
-end
-
-
-end inverses
 
 ---------------------
 namespace composition
@@ -485,6 +484,18 @@ begin
     sorry
 end
 
+lemma exercise.injective_ssi_inverse_gauche : (injective f) ↔
+∃ F: Y → X, (composition F f) = Identite :=
+begin
+    sorry
+end
+
+lemma exercise.surjective_ssi_inverse_droite : (surjective f) ↔
+∃ F: Y → X, (composition f F) = Identite :=
+begin
+    sorry
+end
+
 end composition
 
 end applications_II
@@ -493,16 +504,10 @@ end applications_II
 -----------------------------------
 namespace exercices_supplementaires
 
--- todo: implémenter
--- differennce_symetrique
--- diff
--- ∃!
 
 -- relations : rel d'eq implique classes égales ou disjointes
 -- les images réciproques des singletons forment une partition
 -- bijective ssi inversible à g et d et inverses coincident
-
-
 
 
 lemma exercise.exercice_ensembles_1
@@ -680,8 +685,6 @@ end
 
 
 -- exoset ficall.pdf exos (140 bijections) 141 142 146
-
-
 
 
 

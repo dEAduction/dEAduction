@@ -135,7 +135,7 @@ class ServerInterface(QObject):
                 self.log.warning(f"Lean warning at line {msg.pos_line}: {txt}")
 
         elif txt.startswith("context:") \
-                and line == self.last_line_of_lean_code - 1:
+                and line == self.lean_file.last_line_of_inner_content + 1:
             self.log.info("Got new context")
             self.__tmp_hypo_analysis = txt
 
@@ -143,15 +143,16 @@ class ServerInterface(QObject):
             self.__check_receive_state()
 
         elif txt.startswith("targets:") \
-                and line == self.last_line_of_lean_code:
+                and line == self.lean_file.last_line_of_inner_content + 2:
             self.log.info("Got new targets")
             self.__tmp_targets_analysis = txt
 
             self.__proof_state_valid = trio.Event()  # Invalidate proof state
             self.__check_receive_state()
 
-        elif txt.startswith("EFFECTIVE CODE"):  # todo: add line test
-            self.log.info(f"Got {txt}")
+        elif txt.startswith("EFFECTIVE CODE")\
+                and line == self.lean_file.last_line_of_inner_content:
+            self.log.info(f"Got {txt} at line {line}")
             # find text after "EFFECTIVE CODE xxx : "
             pos = txt.find(":") + 2
             self.__tmp_effective_code = txt[pos:]
@@ -173,13 +174,10 @@ class ServerInterface(QObject):
 
         elif msg.text.startswith(LEAN_UNRESOLVED_TEXT):
             pass
-        # ignore messages from other proofs
-        elif msg.pos_line != self.current_line_of_lean_file:
+        # ignore messages that do not concern current proof
+        elif msg.pos_line < self.lean_file.first_line_of_last_change \
+                or msg.pos_line > self.lean_file.last_line_of_inner_content:
             pass
-        # the following is less precise
-        # elif msg.pos_line < self.first_line_of_lean_code() \
-        #        or msg.pos_line > self.last_line_of_lean_code():
-        #    pass
         else:
             self.error_send.send_nowait(msg)
             self.__proof_receive_done.set()  # Done receiving
@@ -188,9 +186,10 @@ class ServerInterface(QObject):
     # Update
     ############################################
     async def __update(self):
-        self.log.debug(f"Updating, checking errors at line "
-                       f"{self.current_line_of_lean_file}, and context at "
-                       f"line {self.last_line_of_lean_code-1}")
+        first_line_of_change = self.lean_file.first_line_of_last_change
+        self.log.debug(f"Updating, checking errors from line "
+                       f"{first_line_of_change}, and context at "
+                       f"line {self.lean_file.last_line_of_inner_content + 1}")
 
         self.lean_file_changed.emit()  # will update the lean text editor
 
@@ -355,32 +354,3 @@ class ServerInterface(QObject):
 
         self.lean_file.state_add(label, code)
         await self.__update()
-
-    @property
-    def first_line_of_lean_code(self):
-        """
-        return number of line where proof begins (just after "begin")
-        """
-        line_number = self.exercise_current.lean_begin_line_number + 1
-        return line_number
-
-    @property
-    def last_line_of_lean_code(self):
-        """
-        return number of line where proof ends (just before "end").
-        This should be the line with "targets_analysis" instruction
-        """
-        text = self.lean_file.preamble + self.lean_file.inner_contents
-        line_number = text.count("\n") + 2  # two lines "hypo/targets_analysis
-        return line_number
-
-    @property
-    def current_line_of_lean_file(self):
-        """
-        return the line number where code has been inserted in the whole
-        file (with preamble)
-        """
-        text = self.lean_file.preamble
-        line_in_vf, _ = self.lean_file.linecol
-        line_number = text.count("\n") + line_in_vf
-        return line_number
