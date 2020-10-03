@@ -28,12 +28,18 @@ This file is part of d∃∀duction.
 
 class AbstractCExChooser(QGroupBox):
 
-    def __init__(self, gb_title: str, preview_header_data: Dict[str, Any],
-                 left_layout: QLayout, right_layout: QLayout, cls=None):
+    def __init__(self, gb_title: str, left_layout: QLayout,
+                 right_layout: QLayout, cls=None):
 
         super().__init__()
         self.cls = cls
-        self.set_preview_header(preview_header_data)
+
+        # At init, there is no course or exercise to preview
+        preview_header = QVBoxLayout()
+        preview_header.addStretch()
+        preview_header.addWidget(QLabel('Nothing to preview'))
+        preview_header.addStretch()
+        self.preview_header = preview_header
 
         # ────────────── Layouts organization ────────────── #
 
@@ -81,3 +87,7 @@ class AbstractCExChooser(QGroupBox):
 
         self.preview_header = preview_header
 
+
+class ExerciseChooser(AbstractCExChooser):
+
+    pass
