@@ -40,7 +40,7 @@ from deaduction.pylib.server import ServerInterface
 log = logging.getLogger(__name__)
 
 async def main():
-
+    log.debug("starting...")
     # Choose course and exercise
     course, exercise = select_course_exercise()
 
