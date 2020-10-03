@@ -91,3 +91,31 @@ class AbstractCExChooser(QGroupBox):
 
         replace_delete_widget(self.right_layout, layout)
         self.right_layout = right_layout
+
+
+def CourseChooser(AbstractCExChooser):
+
+    def __init__(self):
+
+        browse_btn = QPushButton('Browse files')
+        browse_btn.clicked.connect(self.__browse_for_course)
+        # TODO: Add the fucking courses
+        previous_courses_wgt = QListWidget()
+
+        left_layout = QVBoxLayout()
+        left_layout.addWidget(browse_btn)
+        left_layout.addWidget(previous_courses_wgt)
+
+        super().__init__('Choose course (browse and preview)', left_layout)
+
+    @Slot()
+    def __browse_for_course(self):
+
+        dialog = QFileDialog()
+        dialog.setFileMode(QFileDialog.ExistingFile)
+        dialog.setNameFilter('*.lean')
+
+        if dialog.exec_():
+            course_file_path = Path(dialog.selectedFiles()[0])
+            # TODO: Set right layout
+            # TODO: Send selected course somewhere
