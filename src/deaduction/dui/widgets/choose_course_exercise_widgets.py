@@ -26,7 +26,7 @@ This file is part of d∃∀duction.
 """
 
 
-class AbstractCourseExerciseChooser(QGroupBox):
+class AbstractCExChooser(QGroupBox):
 
     def __init__(self, gb_title: str, preview_header_data: Dict[str, Any],
                  left_layout: QLayout, right_layout: QLayout, cls=None):
@@ -80,3 +80,4 @@ class AbstractCourseExerciseChooser(QGroupBox):
             preview_header.addWidget(description_wgt)
 
         self.preview_header = preview_header
+
