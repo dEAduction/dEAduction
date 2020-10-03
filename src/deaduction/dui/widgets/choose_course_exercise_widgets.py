@@ -28,29 +28,31 @@ This file is part of d∃∀duction.
 
 class AbstractCExChooser(QGroupBox):
 
-    def __init__(self, gb_title: str, left_layout: QLayout,
-                 right_layout: QLayout, cls=None):
+    def __init__(self, gb_title: str, left_layout: QLayout=None,
+                 right_layout: QLayout=None):
 
-        super().__init__()
-        self.cls = cls
+        super().__init__(gb_title)
 
-        # At init, there is no course or exercise to preview
-        preview_header = QVBoxLayout()
-        preview_header.addStretch()
-        preview_header.addWidget(QLabel('Nothing to preview'))
-        preview_header.addStretch()
-        self.preview_header = preview_header
+        if not left_layout and not right_layout:
+            main_layout = QVBoxLayout()
+            main_layout.addStretch()
+            main_layout.addWidget(_('Nothing to choose from.'))
+            main_layout.addStretch()
+            self.setLayout(main_layout)
+        elif not left_layout and right_layout:
+            left_layout = QVBoxLayout()
+            left_layout.addStretch()
+            left_layout.addWidget(_('Nothing to choose from.'))
+            left_layout.addStretch()
+        elif left_layout and not right_layout:
+            right_layout = QVBoxLayout()
+            right_layout.addStretch()
+            right_layout.addWidget(_('Nothing to preview.'))
+            right_layout.addStretch()
 
-        # ────────────── Layouts organization ────────────── #
-
-        real_right_lyt = QVBoxLayout()
-        real_right_lyt.addLayout(self.preview_header_lyt)
-        real_right_lyt.addLayout(right_layout)
-
-        self.setTitle(gb_title)
         main_layout = QHBoxLayout()
         main_layout.addLayout(left_layout)
-        main_layout.addLayout(real_right_layout)
+        main_layout.addLayout(right_layout)
         self.setLayout(main_layout)
 
     def set_preview_header(self, preview_header_data: Dict[str, Any]):
@@ -86,8 +88,3 @@ class AbstractCExChooser(QGroupBox):
             preview_header.addWidget(description_wgt)
 
         self.preview_header = preview_header
-
-
-class ExerciseChooser(AbstractCExChooser):
-
-    pass
