@@ -419,6 +419,8 @@ class StatementsTreeWidget(QTreeWidget):
             self.__doc__. 
         """
 
+        #TODO: get rid of self._init_tree ?
+
         super().__init__()
         self._init_tree(statements, outline)
 
