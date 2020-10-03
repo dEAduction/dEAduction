@@ -38,21 +38,34 @@ class AbstractCExChooser(QGroupBox):
             main_layout.addStretch()
             main_layout.addWidget(_('Nothing to choose from.'))
             main_layout.addStretch()
+
+            self.left_layout = QLayout()
+            self.right_layout = QLayout()
             self.setLayout(main_layout)
-        elif not left_layout and right_layout:
-            left_layout = QVBoxLayout()
-            left_layout.addStretch()
-            left_layout.addWidget(_('Nothing to choose from.'))
-            left_layout.addStretch()
-        elif left_layout and not right_layout:
-            right_layout = QVBoxLayout()
-            right_layout.addStretch()
-            right_layout.addWidget(_('Nothing to preview.'))
-            right_layout.addStretch()
+        else:
+            if left_layout:
+                self.left_layout = left_layout
+            else:
+                left_layout = QVBoxLayout()
+                left_layout.addStretch()
+                left_layout.addWidget(_('Nothing to browse.'))
+                left_layout.addStretch()
+
+                self.left_layout = QLayout()
+
+            if right_layout:
+                self.right_layout = right_layout
+            else:
+                right_layout = QVBoxLayout()
+                right_layout.addStretch()
+                right_layout.addWidget(_('Nothing to preview.'))
+                right_layout.addStretch()
+
+                self.right_layout = QLayout()
 
         main_layout = QHBoxLayout()
-        main_layout.addLayout(left_layout)
-        main_layout.addLayout(right_layout)
+        main_layout.addLayout(self.left_layout)
+        main_layout.addLayout(self.right_layout)
         self.setLayout(main_layout)
 
     def set_left_layout(self, layout: QLayout):
