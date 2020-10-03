@@ -468,7 +468,6 @@ class ExerciseMainWindow(QMainWindow):
         new_target_tag = '='
         try:
             new_target_tag = new_goal.future_tags[1]
-            #log.debug(f'tag for target: {new_target_tag}')
         except AttributeError:
             log.debug('no tag for target')
             pass

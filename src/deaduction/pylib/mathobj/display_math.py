@@ -168,10 +168,11 @@ def display_constant(math_object, format_):
     :return:
     """
     display = "*CST*"
-    if math_object.math_type.node == "SET_FAMILY":
-        return display_instance_set_family(math_object, format_)
-    elif math_object.math_type.node == "SEQUENCE":
-        return "*SEQ*"  # todo
+    if hasattr(math_object.math_type,"node"):
+        if math_object.math_type.node == "SET_FAMILY":
+            return display_instance_set_family(math_object, format_)
+        elif math_object.math_type.node == "SEQUENCE":
+            return "*SEQ*"  # todo
     if 'name' in math_object.info.keys():
         display = [math_object.info['name']]
     # if display in format_from_constant_name.keys():

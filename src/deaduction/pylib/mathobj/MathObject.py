@@ -193,7 +193,12 @@ class MathObject:
         """
         Test if self is a "universe"
         """
-        return self.math_type.node == "TYPE"
+        if hasattr(self.math_type, "node"):
+            return self.math_type.node == "TYPE"
+        else:
+            log.warning(f"is_type called on {self}, but math_type is "
+                        f"{self.math_type}")
+            return None
 
     ###############################
     # collect the local variables #

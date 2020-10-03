@@ -170,13 +170,13 @@ class Goal:
         :return: a Goal
         """
         log.info("creating new Goal from lean strings")
-        #log.debug(hypo_analysis)
+        # log.debug(hypo_analysis)
         lines = hypo_analysis.split("¿¿¿")
         # put back "¿¿¿" and remove '\n', getting rid of the title line
         # ("context:")
         lines = ['¿¿¿' + item.replace('\n', '') for item in lines[1:]]
         context = []
-        #math_types = []  # this is a list of tuples
+        # math_types = []  # this is a list of tuples
         # (math_type, math_type_instances)
         # where math_type_instances is a list of instances of math_type
         # computing new math_object's
@@ -186,7 +186,7 @@ class Goal:
             else:
                 tree = lean_expr_with_type_grammar.parse(math_obj_string)
                 math_object = LeanEntryVisitor().visit(tree)
-                #math_type_store(math_types, prop_obj, prop_obj.math_type)
+                # math_type_store(math_types, prop_obj, prop_obj.math_type)
                 context.append(math_object)
         tree = lean_expr_with_type_grammar.parse(target_analysis)
         target = LeanEntryVisitor().visit(tree)
@@ -251,8 +251,7 @@ class ProofState:
         if targets:
             main_goal = Goal.from_lean_data(hypo_analysis, targets[0])
         else:
-            log.warning(f"No target found! "
-                        f"targets_analysis = {targets_analysis}")
+            log.warning(f"No target found! targets_analysis = {targets_analysis}")
         goals = [main_goal]
         for other_string_goal in targets[1:]:
             other_goal = Goal.from_lean_data(hypo_analysis="",

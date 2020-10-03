@@ -43,11 +43,21 @@ import deaduction.pylib.coursedata.parser_course as parser_course
 
 @dataclass
 class Course:
-    file_content: str
-    metadata: Dict[str, str]
-    outline: OrderedDict
-    statements: List[Statement]
-
+    """
+    This class allows to store all the data related to a given course,
+    which is materialised by a Lean file containing a list of definitions,
+    theorems and exercises (all being statements introduced by Lean's
+    keyword "lemma"), structured into namespaces that corresponds to sections.
+    Th attributes are:
+    - the content of the corresponding Lean file,
+    - metadata (e.g. authors, institution, etc.)
+    - the "outline" of the course, an ordered dict describing namespaces
+    - a list of all statements
+    """
+    file_content:           str
+    metadata:               Dict[str, str]
+    outline:                OrderedDict
+    statements:             List[Statement]
     # outline description:
     #   keys = lean complete namespaces,
     #   values = corresponding plain language namespace
@@ -168,10 +178,13 @@ class Course:
                 exo.course = course  # this makes printing raw exercises slow
         log.info(f"{len(statements)} statements, including"
                  f" {counter_exercises} exercises found by parser")
+        # Checking some keypoints:
+        # (1) number of exercises
         counter_lemma_exercises = file_content.count("lemma exercise.")
         if counter_exercises < counter_lemma_exercises:
             log.warning(f"{counter_lemma_exercises - counter_exercises}"
                         f" exercises have not been parsed, wrong format?")
+        # (2) no "targets_analysis" nor "hypo_analysis" in the source file
         error_line = file_content.find("targets_analysis")
         if error_line != -1:
             log.error(f"File contents 'targets_analysis line{error_line}")

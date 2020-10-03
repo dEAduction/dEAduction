@@ -52,6 +52,7 @@ LEAN_UNRESOLVED_TEXT = "tactic failed, there are unsolved goals"
 LEAN_NOGOALS_TEXT    = "tactic failed, there are no goals to be solved"
 LEAN_USES_SORRY      = " uses sorry"
 
+
 ############################################
 # ServerInterface class
 ############################################
@@ -99,6 +100,7 @@ class ServerInterface(QObject):
 
         self.__tmp_hypo_analysis      = ""
         self.__tmp_targets_analysis   = ""
+        self.__tmp_effective_code     = ""
 
         self.proof_state              = None
 
@@ -120,7 +122,8 @@ class ServerInterface(QObject):
             self.__proof_receive_done.set()
 
     def __on_lean_message(self, msg: Message):
-        txt      = msg.text
+        txt = msg.text
+        line = msg.pos_line
         severity = msg.severity
 
         if severity == Message.Severity.error:
@@ -131,22 +134,33 @@ class ServerInterface(QObject):
             if not txt.endswith(LEAN_USES_SORRY):
                 self.log.warning(f"Lean warning at line {msg.pos_line}: {txt}")
 
-        elif txt.startswith("context:"):
+        elif txt.startswith("context:") \
+                and line == self.lean_file.last_line_of_inner_content + 1:
             self.log.info("Got new context")
             self.__tmp_hypo_analysis = txt
 
-            self.__proof_state_valid = trio.Event() # Invalidate proof state
+            self.__proof_state_valid = trio.Event()  # Invalidate proof state
             self.__check_receive_state()
 
-        elif txt.startswith("targets:"):
+        elif txt.startswith("targets:") \
+                and line == self.lean_file.last_line_of_inner_content + 2:
             self.log.info("Got new targets")
             self.__tmp_targets_analysis = txt
 
-            self.__proof_state_valid = trio.Event() # Invalidate proof state
+            self.__proof_state_valid = trio.Event()  # Invalidate proof state
             self.__check_receive_state()
+
+        elif txt.startswith("EFFECTIVE CODE")\
+                and line == self.lean_file.last_line_of_inner_content:
+            self.log.info(f"Got {txt} at line {line}")
+            # find text after "EFFECTIVE CODE xxx : "
+            pos = txt.find(":") + 2
+            self.__tmp_effective_code = txt[pos:]
+            self.history_replace(self.__tmp_effective_code)
 
     def __on_lean_state_change(self, is_running: bool):
         self.log.info(f"New lean state: {is_running}")
+        self.is_running = is_running
 
     ############################################
     # Message filtering
@@ -156,19 +170,29 @@ class ServerInterface(QObject):
         if msg.text.startswith(LEAN_NOGOALS_TEXT):
             if hasattr(self.proof_no_goals, "emit"):
                 self.proof_no_goals.emit()
-                self.__proof_receive_done.set() # Done receiving
+                self.__proof_receive_done.set()  # Done receiving
 
         elif msg.text.startswith(LEAN_UNRESOLVED_TEXT):
             pass
-
+        # ignore messages that do not concern current proof
+        elif msg.pos_line < self.lean_file.first_line_of_last_change \
+                or msg.pos_line > self.lean_file.last_line_of_inner_content:
+            pass
         else:
             self.error_send.send_nowait(msg)
-            self.__proof_receive_done.set() # Done receiving
+            self.__proof_receive_done.set()  # Done receiving
 
     ############################################
     # Update
     ############################################
     async def __update(self):
+        first_line_of_change = self.lean_file.first_line_of_last_change
+        self.log.debug(f"Updating, checking errors from line "
+                       f"{first_line_of_change}, and context at "
+                       f"line {self.lean_file.last_line_of_inner_content + 1}")
+
+        self.lean_file_changed.emit()  # will update the lean text editor
+
         if hasattr(self.update_started, "emit"):
             self.update_started.emit()
 
@@ -179,16 +203,16 @@ class ServerInterface(QObject):
         self.__proof_receive_done   = trio.Event()
         self.__tmp_hypo_analysis    = ""
         self.__tmp_targets_analysis = ""
+        self.__tmp_effective_code   = ""
 
         resp = await self.lean_server.send(req)
         if resp.message == "file invalidated":
-            self.lean_file_changed.emit()
 
             await self.__proof_receive_done.wait()
 
             self.log.debug(_("Proof State received"))
             # next line removed by FLR
-            #await self.lean_server.running_monitor.wait_ready()
+            # await self.lean_server.running_monitor.wait_ready()
 
             self.log.debug(_("After request"))
 
@@ -196,10 +220,11 @@ class ServerInterface(QObject):
             if not self.__proof_state_valid.is_set():
                 self.proof_state = ProofState.from_lean_data(
                     self.__tmp_hypo_analysis, self.__tmp_targets_analysis)
-                self.__proof_state_valid.set()
-
                 # store proof_state
                 self.lean_file.state_info_attach(ProofState=self.proof_state)
+
+                self.__proof_state_valid.set()
+
 
                 # Emit signal only if from qt context (avoid AttributeError)
                 if hasattr(self.proof_state_change, "emit"):
@@ -226,14 +251,20 @@ class ServerInterface(QObject):
         file_content = exercise.course.file_content
         lines        = file_content.splitlines()
         begin_line   = exercise.lean_begin_line_number
-        end_line     = exercise.lean_end_line_number
-        end_line     = exercise.lean_end_line_number
+
+        # construct short end of file by closing all open namespaces
+        end_of_file = "end\n"
+        namespaces = exercise.ugly_hierarchy()
+        while namespaces:
+            namespace = namespaces.pop()
+            end_of_file += "end " + namespace + "\n"
+        end_of_file += "end course"
 
         # Construct virtual file
         virtual_file_preamble = "\n".join(lines[:begin_line]) + "\n"
-        virtual_file_afterword = "hypo_analysis,\n"  \
+        virtual_file_afterword = "hypo_analysis,\n" \
                                  "targets_analysis,\n" \
-                                 + "\n".join(lines[(end_line - 1):])
+                                 + end_of_file
 
         virtual_file = LeanFile(file_name=exercise.lean_name,
                                 preamble=virtual_file_preamble,
@@ -251,8 +282,8 @@ class ServerInterface(QObject):
         :return:virtual_file
         """
 
-        self.log.info( f"Set exercise to: "
-                       f"{exercise.lean_name} -> {exercise.pretty_name}")
+        self.log.info(f"Set exercise to: "
+                      f"{exercise.lean_name} -> {exercise.pretty_name}")
 
         self.exercise_current = exercise
         vf = self.__file_from_exercise(self.exercise_current)
@@ -272,8 +303,30 @@ class ServerInterface(QObject):
         self.lean_file.redo()
         await self.__update()
 
+    def history_replace(self, effective_code):
+        """
+        Replace last entry in the lean_file by effective_code
+        without calling Lean
+        effective_code is assumed to be equivalent, from the Lean viewpoint,
+        to last code entry
+
+        :param effective_code: str
+        """
+        effective_code = effective_code.strip()
+        if not effective_code.endswith(","):
+            effective_code += ","
+        if not effective_code.endswith("\n"):
+            effective_code += "\n"
+
+        lean_file = self.lean_file
+        label = lean_file.history[lean_file.target_idx].label
+        self.lean_file.undo()
+        self.lean_file.insert(label=label, add_txt=effective_code)
+        self.lean_file_changed.emit()  # will update the lean text editor
+
+
     ############################################
-    # Code managment
+    # Code management
     ############################################
     async def code_insert(self, label: str, code: str):
         """
@@ -288,6 +341,9 @@ class ServerInterface(QObject):
         if not code.endswith("\n"):
             code += "\n"
 
+        if code.find("EFFECTIVE CODE") == -1:  # not used
+            self.__tmp_effective_code = "IRRELEVANT"
+
         self.lean_file.insert(label=label, add_txt=code)
         await self.__update()
 
@@ -295,6 +351,12 @@ class ServerInterface(QObject):
         """
         Sets the code for the current exercise
         """
+
+        if not code.endswith(","):
+            code += ","
+
+        if not code.endswith("\n"):
+            code += "\n"
 
         self.lean_file.state_add(label, code)
         await self.__update()

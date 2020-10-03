@@ -50,8 +50,13 @@ def get_new_hyp():
     return "h{0}".format(_VAR_NB)
 
 def format_orelse(list_of_choices):
+    global _CODE_NB
     if len(list_of_choices) == 0:
         raise WrongUserInput
-    list_of_choices = map(lambda string : f'`[ {string}, trace \"EFFECTIVE CODE {_CODE_NB} : {string}\"]', list_of_choices)
-    return " <|> ".join(list_of_choices) + ", "    
+    _CODE_NB += 1
+    if len(list_of_choices) == 1:
+        return list_of_choices[0]
+    else:
+        list_of_choices = map(lambda string : f'`[ {string}, trace \"EFFECTIVE CODE {_CODE_NB} : {string}\"]', list_of_choices)
+        return " <|> ".join(list_of_choices) + ", "
 
