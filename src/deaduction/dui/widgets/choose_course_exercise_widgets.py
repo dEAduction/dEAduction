@@ -55,36 +55,52 @@ class AbstractCExChooser(QGroupBox):
         main_layout.addLayout(right_layout)
         self.setLayout(main_layout)
 
-    def set_preview_header(self, preview_header_data: Dict[str, Any]):
+    def set_left_layout(self, layout: QLayout):
+        
+        delete_replace_widget(self.left_layout, layout)
+        self.left_layout = layout
 
-        preview_header = QVBoxLayout()
+    def set_right_layout(self, cls_metadata: Dict[str, Any]=None,
+                         layout: QLayout=None):
 
-        if preview_header_data['title']
-            title_wgt = QLabel(preview_header_data["title"])
-            title_wgt.setStyleSheet('font-size: 16pt;' \
-                                    'font-weight: bold;')
-            self.preview_header.addWidget(title_wgt)
+        right_layout = QVBoxLayout()
 
-        if preview_header_data['subtitle']:
-            subtitle_wgt = QLabel(subtitle)
-            subtitle_wgt.setStyleSheet('font-style: italic;' \
-                                       'color: gray;')
-            subtitle_lyt = QHBoxLayout()
-            subtitle_lyt.addWidget(title_wgt)
-            subtitle_lyt.addWidget(subtitle_wgt)
+        if cls_metadata:
 
-            preview_header.addLayout(sub_title_lyt)
+            cls_metadata_lyt = QVBoxLayout()
 
-        if preview_header_data['details']:
-            details_wgt = DisclosureTree('Details',
-                                         preview_header_data['details'])
+            if cls_metadata_lyt_data['title']
+                title_wgt = QLabel(cls_metadata_lyt_data["title"])
+                title_wgt.setStyleSheet('font-size: 16pt;' \
+                                        'font-weight: bold;')
+                self.cls_metadata_lyt.addWidget(title_wgt)
 
-            preview_header.addWidget(details_wgt)
+            if cls_metadata_lyt_data['subtitle']:
+                subtitle_wgt = QLabel(subtitle)
+                subtitle_wgt.setStyleSheet('font-style: italic;' \
+                                           'color: gray;')
+                subtitle_lyt = QHBoxLayout()
+                subtitle_lyt.addWidget(title_wgt)
+                subtitle_lyt.addWidget(subtitle_wgt)
 
-        if preview_header_data['description']:
-            description_wgt = QLabel(preview_header_data['description'])
-            description_wgt.setWordWrap(true)
+                cls_metadata_lyt.addLayout(sub_title_lyt)
 
-            preview_header.addWidget(description_wgt)
+            if cls_metadata_lyt_data['details']:
+                details_wgt = DisclosureTree('Details',
+                                             cls_metadata_lyt_data['details'])
 
-        self.preview_header = preview_header
+                cls_metadata_lyt.addWidget(details_wgt)
+
+            if cls_metadata_lyt_data['description']:
+                description_wgt = QLabel(cls_metadata_lyt_data['description'])
+                description_wgt.setWordWrap(true)
+
+                cls_metadata_lyt.addWidget(description_wgt)
+
+            right_layout.addLayout(cls_metadata_lyt)
+
+        if right_layout:
+            right_layout.addLayout(layout)
+
+        replace_delete_widget(self.right_layout, layout)
+        self.right_layout = layout
