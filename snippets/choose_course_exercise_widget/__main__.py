@@ -158,19 +158,12 @@ class GoalPreviewerLayout(QVBoxLayout):
 
         # ─────────────────── Check boxes ────────────────── #
 
-        self.friendly_cb = QCheckBox('Friendly mode')
-        self.code_cb   = QCheckBox('L∃∀N mode')
-        button_group   = QButtonGroup(self)
+        self.code_mode_checkbox   = QCheckBox('L∃∀N mode')
+        checkbox_lyt = QHBoxLayout()
+        checkbox_lyt.addStretch()
+        checkbox_lyt.addWidget(self.code_mode_checkbox)
 
-        button_group.setExclusive(True)
-        button_group.addButton(self.friendly_cb)
-        button_group.addButton(self.code_cb)
-        cb_lyt = QHBoxLayout()
-        cb_lyt.addStretch()
-        cb_lyt.addWidget(self.friendly_cb)
-        cb_lyt.addWidget(self.code_cb)
-
-        button_group.buttonClicked.connect(self.change_main_widget)
+        self.code_mode_checkbox.clicked.connect(self.toggle_code_mode)
 
         # ───────────────── Friendly widget ──────────────── #
 
@@ -209,25 +202,23 @@ class GoalPreviewerLayout(QVBoxLayout):
         self.code_wgt.setText('Lean code goes here')
 
         # ──────────────────── Organize ──────────────────── #
-
-        # Default widget is friendly widget
-        self.friendly_cb.setChecked(True)
+        self.code_mode_checkbox.setChecked(False)
         self.friendly_wgt.show()
         self.code_wgt.hide()
 
         self.addWidget(self.friendly_wgt)
         self.addWidget(self.code_wgt)
-        self.addLayout(cb_lyt)
+        self.addLayout(checkbox_lyt)
 
     @Slot()
-    def change_main_widget(self):
+    def toggle_code_mode(self):
 
-        if self.friendly_cb.isChecked():
-            self.friendly_wgt.show()
-            self.code_wgt.hide()
-        else:
+        if self.code_mode_checkbox.isChecked():
             self.friendly_wgt.hide()
             self.code_wgt.show()
+        else:
+            self.friendly_wgt.show()
+            self.code_wgt.hide()
 
 
 #############
