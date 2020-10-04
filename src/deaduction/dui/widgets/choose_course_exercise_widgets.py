@@ -45,8 +45,9 @@ class AbstractCExChooser(QGroupBox):
         delete_replace_widget(self.left_layout, layout)
         self.left_layout = layout
 
-    def set_right_layout(self, metadata: Dict[str, Any]=None,
-                         layout: QLayout=None):
+    def set_right_layout(self, layout: QLayout=None, title: str=None,
+                         subtitle: str=None, details: Dict[str, str]=None,
+                         description: str=None):
 
         right_layout = QVBoxLayout()
 
@@ -57,14 +58,14 @@ class AbstractCExChooser(QGroupBox):
         else:
             if metadata:
 
-                if metadata['title']
+                if title:
                     title_wgt = QLabel(metadata["title"])
                     title_wgt.setStyleSheet('font-size: 16pt;' \
                                             'font-weight: bold;')
 
                     right_layout.addWidget(title_wgt)
 
-                if metadata['subtitle']:
+                if subtitle:
                     subtitle_wgt = QLabel(subtitle)
                     subtitle_wgt.setStyleSheet('font-style: italic;' \
                                                'color: gray;')
@@ -74,13 +75,13 @@ class AbstractCExChooser(QGroupBox):
 
                     right_layout.addLayout(sub_title_lyt)
 
-                if metadata['details']:
+                if details:
                     details_wgt = DisclosureTree('Details',
                                                  metadata['details'])
 
                     right_layout.addWidget(details_wgt)
 
-                if metadata['description']:
+                if description:
                     description_wgt = QLabel(metadata['description'])
                     description_wgt.setWordWrap(true)
 
@@ -119,3 +120,23 @@ def CourseChooser(AbstractCExChooser):
             course_file_path = Path(dialog.selectedFiles()[0])
             # TODO: Set right layout
             # TODO: Send selected course somewhere
+
+    def set_right_layout(self, course: Course):
+
+        if_exists   = lambda x: course.metadata[x] if data[x] else None
+        title       = if_exists('Title')
+        subtitle    = if_exists('Subtitle')
+        description = if_exists('Description')
+
+        details = course.metadata
+        # Remove title, subtitle and description from details
+        for key in ['Title', 'Subtitle', 'Description']:
+            details.pop(key, None)
+        details = details if details  # Set details to None if empty
+
+        # TODO: Prevent user for using a 'Path' attribute when writing
+        # a course.
+        # TODO: Add course path.
+
+        super().set_right_layout(layout=None, title=title, subtitle=subtitle,
+                                 details=details, description=description)
