@@ -28,26 +28,24 @@ This file is part of d∃∀duction.
 
 class AbstractCExChooser(QGroupBox):
 
-    def __init__(self, gb_title: str, left_layout: QLayout,
-                 right_layout: QLayout=None):
+    def __init__(self, gb_title):
 
+        self.left_layout  = QLayout()
+        self.right_layout = QLayout()
         super().__init__(gb_title)
-        self.set_left_layout()
-        self.set_right_layout()
-
-        main_layout = QHBoxLayout()
-        main_layout.addLayout(self.left_layout)
-        main_layout.addLayout(self.right_layout)
-        self.setLayout(main_layout)
 
     def set_left_layout(self, layout: QLayout):
         
-        delete_replace_widget(self.left_layout, layout)
         self.left_layout = layout
+        self.__set_main_layout()
 
     def set_right_layout(self, layout: QLayout=None, title: str=None,
                          subtitle: str=None, details: Dict[str, str]=None,
                          description: str=None):
+
+        # TODO: Keep previously created right layouts in a
+        # Dict[cls, QLayout], where cls is either Course or Exercise.
+        # It is probably useless tho.
 
         right_layout = QVBoxLayout()
 
@@ -90,15 +88,26 @@ class AbstractCExChooser(QGroupBox):
             if layout:
                 right_layout.addLayout(layout)
 
-        replace_delete_widget(self.right_layout, layout)
         self.right_layout = right_layout
+        self.__set_main_layout()
+
+    def __set_main_layout(self):
+        main_layout = QHBoxLayout()
+        main_layout.addLayout(self.left_layout)
+        main_layout.addLayout(self.right_layout)
+        self.setLayout(main_layout)
 
 
 def CourseChooser(AbstractCExChooser):
 
     def __init__(self):
 
-        browse_btn = QPushButton('Browse files')
+        super().__init__(_('Choose course (browse and preview)'))
+        self.set_left_layout()
+
+    def set_left_layout(self):
+
+        browse_btn = QPushButton(_('Browse files for course'))
         browse_btn.clicked.connect(self.__browse_for_course)
         # TODO: Add the fucking courses
         previous_courses_wgt = QListWidget()
@@ -107,19 +116,8 @@ def CourseChooser(AbstractCExChooser):
         left_layout.addWidget(browse_btn)
         left_layout.addWidget(previous_courses_wgt)
 
-        super().__init__('Choose course (browse and preview)', left_layout)
+        super().set_left_layout(left_layout)
 
-    @Slot()
-    def __browse_for_course(self):
-
-        dialog = QFileDialog()
-        dialog.setFileMode(QFileDialog.ExistingFile)
-        dialog.setNameFilter('*.lean')
-
-        if dialog.exec_():
-            course_file_path = Path(dialog.selectedFiles()[0])
-            # TODO: Set right layout
-            # TODO: Send selected course somewhere
 
     def set_right_layout(self, course: Course):
 
@@ -140,3 +138,15 @@ def CourseChooser(AbstractCExChooser):
 
         super().set_right_layout(layout=None, title=title, subtitle=subtitle,
                                  details=details, description=description)
+
+    @Slot()
+    def __browse_for_course(self):
+
+        dialog = QFileDialog()
+        dialog.setFileMode(QFileDialog.ExistingFile)
+        dialog.setNameFilter('*.lean')
+
+        if dialog.exec_():
+            course_file_path = Path(dialog.selectedFiles()[0])
+            # TODO: Set right layout
+            # TODO: Send selected course somewhere
