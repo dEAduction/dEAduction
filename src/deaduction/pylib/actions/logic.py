@@ -60,14 +60,14 @@ def construct_and(goal : Goal, user_input : [str]):
         raise WrongUserInput
     left = goal.target.math_type.children[0].format_as_utf8()
     right = goal.target.math_type.children[1].format_as_utf8()
-    choices = [("Left", left), ("Right", right)]
+    choices = [(_("Left"), left), (_("Right"), right)]
 
     if user_input == []:
         raise MissingParametersError(
             InputType.Choice,
             choices,
-            title="Choose sub-goal",
-            output="Which property to prove first?")
+            title=_("Choose sub-goal"),
+            output=_("Which property to prove first?"))
 
     if len(user_input) == 1:
         if user_input[0] == 1:
@@ -124,14 +124,15 @@ def construct_or(goal : Goal, user_input : [str]) -> str:
     
     left = goal.target.math_type.children[0].format_as_utf8()
     right = goal.target.math_type.children[1].format_as_utf8()
-    choices = [("Left", left), ("Right", right)]
+    choices = [(_("Left"), left), (_("Right"), right)]
     
     if len(user_input) == 0:
         
         raise MissingParametersError(InputType.Choice,
                                      choices,
-                                     title="Choose new goal",
-                                     output="Which property will you prove?")
+                                     title=_("Choose new goal"),
+                                     output=_("Which property will you "
+                                              "prove?"))
         
     if len(user_input) == 1:
         i = user_input[0]
@@ -149,13 +150,13 @@ def apply_or(l : [MathObject], user_input : [str]) -> str:
     
     left = l[0].math_type.children[0].format_as_utf8()
     right = l[0].math_type.children[1].format_as_utf8()
-    choices = [("Left", left), ("Right", right)]
+    choices = [(_("Left"), left), (_("Right"), right)]
     
     if len(user_input) == 0:
         raise MissingParametersError(InputType.Choice,
                                      choices=choices,
-                                     title="Choose case",
-                                     output="Which case to assume first?")
+                                     title=_("Choose case"),
+                                     output=_("Which case to assume first?"))
         
     if len(user_input) == 1:
         if user_input[0] == 1:
@@ -224,25 +225,42 @@ def apply_implicate(goal : Goal, l : [MathObject]):
     return possible_codes
 
 def apply_implicate_to_hyp(goal : Goal, l : [MathObject]):
+    """
+    Try to apply last selected property on the other ones.
+    :param l: list of 2 or 3 MathObjects
+    :return:
+    """
     possible_codes = []
-    h_selected = l[1].info["name"]
+    h_selected = l[-1].info["name"]
     x_selected = l[0].info["name"]
     h = get_new_hyp()
-    
-    possible_codes.append(f'have {h} := {h_selected} {x_selected}')
-    possible_codes.append(f'have {h} := {h_selected} _ {x_selected}')
-    possible_codes.append(f'have {h} := {h_selected} _ _ {x_selected}')
-    possible_codes.append(f'have {h} := {h_selected} _ _ _ {x_selected}')
-    possible_codes.append(f'have {h} := {h_selected} _ _ _ _ {x_selected}')
-    
-    possible_codes.append(f'have {h} := @{h_selected} {x_selected}')
-    possible_codes.append(f'have {h} := @{h_selected} _ {x_selected}')
-    possible_codes.append(f'have {h} := @{h_selected} _ _ {x_selected}')
-    possible_codes.append(f'have {h} := @{h_selected} _ _ _ {x_selected}')
-    possible_codes.append(f'have {h} := @{h_selected} _ _ _ _ {x_selected}')
-    
+
+    if len(l) ==2:
+        # try with up to 4 implicit parameters
+        possible_codes.append(f'have {h} := {h_selected} {x_selected}')
+        possible_codes.append(f'have {h} := {h_selected} _ {x_selected}')
+        possible_codes.append(f'have {h} := {h_selected} _ _ {x_selected}')
+        possible_codes.append(f'have {h} := {h_selected} _ _ _ {x_selected}')
+        possible_codes.append(f'have {h} := {h_selected} _ _ _ _ {x_selected}')
+
+        possible_codes.append(f'have {h} := @{h_selected} {x_selected}')
+        possible_codes.append(f'have {h} := @{h_selected} _ {x_selected}')
+        possible_codes.append(f'have {h} := @{h_selected} _ _ {x_selected}')
+        possible_codes.append(f'have {h} := @{h_selected} _ _ _ {x_selected}')
+        possible_codes.append(f'have {h} := @{h_selected} _ _ _ _ {x_selected}')
+
+    elif len(l) == 3:
+        y_selected = l[1].info["name"]
+        # try to apply "forall x,y , P(x,y)" to x and y
+        possible_codes.append(f'have {h} := {h_selected} {x_selected} {y_selected}')
+        possible_codes.append(f'have {h} := {h_selected} _ {x_selected} {y_selected}')
+        possible_codes.append(f'have {h} := {h_selected} _ _ {x_selected} {y_selected}')
+        possible_codes.append(f'have {h} := {h_selected} _ _ _ {x_selected} {y_selected}')
+        possible_codes.append(f'have {h} := {h_selected} _ _ _ _ {x_selected} {y_selected}')
+
     return possible_codes
-    
+
+
 @action(_("If the target is of the form P ⇒ Q: introduce the hypothesis P in the properties and transform the target into Q."), "⇒")
 def action_implicate(goal : Goal, l : [MathObject]) -> str:
     """
@@ -375,14 +393,24 @@ def apply_exists(goal : Goal, l : [MathObject]) -> str:
     return format_orelse(possible_codes)
     
 def construct_exists_on_hyp(goal : Goal, l : [MathObject]):
+    """
+    Try to construct an existence property from some object and some property
+    :param goal:
+    :param l:
+    :return:
+    """
     possible_codes = []
-    
     x = l[0].info["name"]
     hx = l[1].info["name"]
-    new_h = get_new_hyp()
-    possible_codes.append(f'have {new_h} := exists.intro {hx} {x}')
-    x, hx = hx, x
-    possible_codes.append(f'have {new_h} := exists.intro {hx} {x}')
+    if not l[0].math_type.is_prop() and l[1].math_type.is_prop():
+        new_h = get_new_hyp()
+        possible_codes.append(f'have {new_h} := exists.intro {hx} {x}')
+    elif not l[1].math_type.is_prop() and l[0].math_type.is_prop():
+        x, hx = hx, x
+        new_h = get_new_hyp()
+        possible_codes.append(f'have {new_h} := exists.intro {hx} {x}')
+    else:
+        raise WrongUserInput
     return format_orelse(possible_codes)
     
 @action(_("If target is of form ∃ x, P(x): ask the user to enter a specific x and transform the target into P(x). \nIf a hypothesis of form ∃ x, P(x) has been previously selected: introduce a new x and add P(x) to the properties"), "∃")
@@ -395,6 +423,7 @@ def action_exists(goal : Goal, l : [MathObject], user_input : [str] = []) -> str
     """
     if len(l) == 1 and user_input == []:
         if l[0].math_type.is_prop():
+            # try to apply property "exists x, P(x)" to get a new MathObject x
             return apply_exists(goal, l)
         else:
             return construct_exists(goal, [l[0].info["name"]])
@@ -407,6 +436,10 @@ def action_exists(goal : Goal, l : [MathObject], user_input : [str] = []) -> str
 ## APPLY
 
 def apply_substitute(goal : Goal, l: [MathObject]):
+    """
+    Try to rewrite the goal or the first selected property using the last
+    selected property
+    """
     possible_codes = []
     
     if len(l) == 1:
@@ -425,6 +458,7 @@ def apply_substitute(goal : Goal, l: [MathObject]):
         possible_codes.append(f'rw {heq} at {h}')
         
     return possible_codes
+
 
 def apply_function(goal : Goal, l : [MathObject]):
     possible_codes = []
@@ -473,13 +507,14 @@ def action_apply(goal : Goal, l : [MathObject]):
     log.info(quantifier)
     if quantifier == "PROP_EQUAL" or quantifier == "PROP_IFF" or \
             quantifier == "QUANT_∀":
+        # will use last property to rewrite goal or first property:
         possible_codes.extend(apply_substitute(goal, l))
     
     if quantifier == "PROP_IMPLIES" or quantifier == "QUANT_∀":
         if len(l) == 1:
             possible_codes.extend(apply_implicate(goal, l))
-        if len(l) == 2:
+        if len(l) == 2 or len(l) == 3:
             possible_codes.extend(apply_implicate_to_hyp(goal,l))
-    
+
     return format_orelse(possible_codes)  
 

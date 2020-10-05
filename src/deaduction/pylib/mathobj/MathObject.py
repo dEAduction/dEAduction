@@ -89,18 +89,17 @@ class MathObject:
         #####################################################
         if 'identifier' in info.keys():
             identifier = info['identifier']
-            if identifier in MathObject.Variables:    # object already
-                # exists
+            if identifier in MathObject.Variables:    # object already exists
                 #log.debug(f"already exists in dict "
                 #          f"{[(key, MathObject.Variables[key]) for key in
                 #          MathObject.Variables]}")
                 math_object = MathObject.Variables[identifier]
             else:                                       # new object
                 math_object = MathObject(node=node,
-                                  info=info,
-                                  math_type=math_type,
-                                  children=children
-                                  )
+                                         info=info,
+                                         math_type=math_type,
+                                         children=children
+                                         )
                 MathObject.Variables[identifier] = math_object
         ##############################
         # Treatment of other objects #

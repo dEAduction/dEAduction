@@ -152,7 +152,8 @@ def action_new_object(goal : Goal, l : [MathObject], user_input : [str] = []) ->
             possible_codes.append("have {0} : ({1}), ".format(h, user_input[1]))
     return format_orelse(possible_codes)
 
-@action(_("Assumption"), "¯\_(ツ)_/¯")
+@action(_("Terminate the proof when the target is obvious from the context"),
+        "¯\_(ツ)_/¯")
 def action_assumption(goal : Goal, l : [MathObject]) -> str:
     """
     Translate into string of lean code corresponding to the action
@@ -166,7 +167,8 @@ def action_assumption(goal : Goal, l : [MathObject]) -> str:
         possible_codes.append('assumption')
         possible_codes.append('contradiction')
         if goal.target.math_type.node == "PROP_EQUAL":
-            if goal.target.math_type.children[0] == goal.target.math_type.children[1]: #TODO : tester si il y a assez d'enfants
+            if goal.target.math_type.children[0] == \
+                    goal.target.math_type.children[1]:
                 possible_codes.append('refl')
     if len(l) == 1:
         possible_codes.append(f'apply {l[0].info["name"]}')
