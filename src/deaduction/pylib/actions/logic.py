@@ -60,22 +60,21 @@ def construct_and(goal : Goal, user_input : [str]):
         raise WrongUserInput
     left = goal.target.math_type.children[0].format_as_utf8()
     right = goal.target.math_type.children[1].format_as_utf8()
-    choices = [left, right]
+    choices = [("Left", left), ("Right", right)]
 
     if user_input == []:
-        raise MissingParametersError(InputType.Choice,
+        raise MissingParametersError(
+            InputType.Choice,
             choices,
-            title = "Choose element",
-            output = "Choose which subgoal you want to prove first")
+            title="Choose sub-goal",
+            output="Which property to prove first?")
 
     if len(user_input) == 1:
-        if user_input[0] in choices:
-            i = choices.index(user_input[0])
-            if i == 1:
-                code = "rw and.comm, "
-            else:
-                code = ""
-            possible_codes.append(f'{code}split')
+        if user_input[0] == 1:
+            code = "rw and.comm, "
+        else:
+            code = ""
+        possible_codes.append(f'{code}split')
             
     return format_orelse(possible_codes)
 
@@ -125,18 +124,19 @@ def construct_or(goal : Goal, user_input : [str]) -> str:
     
     left = goal.target.math_type.children[0].format_as_utf8()
     right = goal.target.math_type.children[1].format_as_utf8()
-    choices = [left, right]
+    choices = [("Left", left), ("Right", right)]
     
     if len(user_input) == 0:
         
-        raise MissingParametersError(InputType.Choice, choices, title = "Choose element")
+        raise MissingParametersError(InputType.Choice,
+                                     choices,
+                                     title="Choose new goal",
+                                     output="Which property will you prove?")
         
     if len(user_input) == 1:
-        
-        if user_input[0] in choices:
-            i = choices.index(user_input[0])
-            code = ["left","right"][i]
-            possible_codes.append(code)
+        i = user_input[0]
+        code = ["left", "right"][i]
+        possible_codes.append(code)
             
     return format_orelse(possible_codes)
 
@@ -149,18 +149,19 @@ def apply_or(l : [MathObject], user_input : [str]) -> str:
     
     left = l[0].math_type.children[0].format_as_utf8()
     right = l[0].math_type.children[1].format_as_utf8()
-    choices = [left, right]
+    choices = [("Left", left), ("Right", right)]
     
     if len(user_input) == 0:
-        raise MissingParametersError(InputType.Choice, choices, title = "Choose what you want to assume first")
+        raise MissingParametersError(InputType.Choice,
+                                     choices=choices,
+                                     title="Choose case",
+                                     output="Which case to assume first?")
         
     if len(user_input) == 1:
-        if user_input[0] in choices:
-            i = choices.index(user_input[0])
-            if i == 1:
-                possible_codes.append(f'rw or.comm at {h_selected}, ')
-            else:
-                possible_codes.append("")
+        if user_input[0] == 1:
+            possible_codes.append(f'rw or.comm at {h_selected}, ')
+        else:
+            possible_codes.append("")
     
     h1 = get_new_hyp()
     h2 = get_new_hyp()
@@ -268,26 +269,23 @@ def construct_iff(goal : Goal, user_input : [str]):
     
     left = goal.target.math_type.children[0].format_as_utf8()
     right = goal.target.math_type.children[1].format_as_utf8()
-    choices = [f'({left}) ⇒ ({right})', f'({right}) ⇒ ({left})']
+    choices = [("⇒", f'({left}) ⇒ ({right})'), ("⇐", f'({right}) ⇒ ({left})')]
     
     if user_input == []:
-        raise MissingParametersError(InputType.Choice,
+        raise MissingParametersError(
+            InputType.Choice,
             choices,
-            title = _("Choose element"),
-            output = _("Choose which subgoal you want to prove first"))
+            title=_("Choose sub-goal"),
+            output=_("Which implication to prove first?"))
             
-    if len(user_input) == 1:
-        left = goal.target.math_type.children[0].format_as_utf8()
-        right = goal.target.math_type.children[1].format_as_utf8()
-        if user_input[0] in choices:
-            i = choices.index(user_input[0])
-            if i == 1:
-                code = "rw iff.comm, "
-            else:
-                code = ""
-            possible_codes.append(f'{code}split')
+    elif len(user_input) == 1:
+        if user_input[0] == 1:
+            code = "rw iff.comm, "
         else:
-            raise WrongUserInput
+            code = ""
+        possible_codes.append(f'{code}split')
+    else:
+        raise WrongUserInput
     return format_orelse(possible_codes)
 
 def construct_iff_on_hyp(goal : Goal, l : MathObject):

@@ -28,5 +28,6 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .functions import ( replace_delete_widget,
-                         set_selectable)
+from .functions import (    replace_delete_widget,
+                            set_selectable)
+from .dialog_button import  ButtonsDialog

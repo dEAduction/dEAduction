@@ -37,26 +37,28 @@ class ButtonsDialog(QDialog):
     A class for displaying a dialog box with several choices displayed as
     QPushButtons
     """
-    def __init__(self, choice_list,
-                 title="",
-                 subtitle="",
-                 cancel_button=False,
-                 choice=None,
-                 parent=None):
+    def __init__(self,
+                 choices,
+                 title          = "",
+                 output       = "",
+                 cancel_button  = False,
+                 choice         = None,
+                 parent         = None):
         """
+        :param choices:  list of couples (caption, text) where caption
+                             will be the text in the button, and text will
+                             be displayed as the corresponding choice
+        :param title:        window title
+        :param output:     output, appears inside window
         :type cancel_button: if True then a Cancel button will appear
         :type choice:        contains either None or the number of the
                              chosen button
-        :param title:        window title
-        :param subtitle:     subtitle, appears inside window
-        :param choice_list:  list of couples (caption, text) where caption
-                             will be the text in the button, and text will
-                             be displayed as the corresponding choice
         """
+        print(choices, title, output)
         super(ButtonsDialog, self).__init__(parent)
         self.setWindowTitle(title)
 
-        self.subtitle = subtitle
+        self.output = output
         self.buttons = []
         self.choices = []
         self.choice = choice
@@ -65,17 +67,17 @@ class ButtonsDialog(QDialog):
         layout = QVBoxLayout()
 
         # title line
-        subtitle_line = QLabel(subtitle, self, StyleSheet='font-weight: bold;')
-        subtitle_layout = QHBoxLayout()
-        subtitle_layout.addWidget(subtitle_line)
-        subtitle_layout.addStretch(1)
+        output_line = QLabel(output, self, StyleSheet='font-weight: bold;')
+        output_layout = QHBoxLayout()
+        output_layout.addWidget(output_line)
+        output_layout.addStretch(1)
 
         # Filling the lines
-        layout.addLayout(subtitle_layout)  # 1st line
+        layout.addLayout(output_layout)  # 1st line
         layout.addSpacing(10)
 
         # Buttons and corresponding texts, one new_layout per line
-        for caption, choice in choice_list:
+        for caption, choice in choices:
             new_button = QPushButton(caption)
             self.buttons.append(new_button)
             self.choices.append(QLabel(choice, self))
@@ -109,7 +111,29 @@ class ButtonsDialog(QDialog):
     def button_clicked(self, number):
         self.choice = number
         self.accept()
-
+    @classmethod
+    def get_item( cls,
+                    choices,
+                    title          = "",
+                    output         = "",
+                    cancel_button  = False,
+                    choice         = None,
+                    parent         = None):
+        """
+        Execute a ButtonsDialog with the given parameters, and return
+        choice_number:     number of the button selected by user
+        OK:                a boolean, 0 = cancel, 1 = accepted
+        """
+        dialog_box = ButtonsDialog( choices,
+                                    title          = title,
+                                    output         = output,
+                                    cancel_button  = cancel_button,
+                                    choice         = choice,
+                                    parent         = parent)
+        # Execute the ButtonsDialog and wait for results
+        OK = dialog_box.exec()
+        choice_number = dialog_box.choice
+        return choice_number, OK
 
 if __name__ == '__main__':
     #button_choice = None
@@ -124,11 +148,11 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     # Example
-    choice_list = [("⇒", "x ∈ A ∩ (B ∪ C) ⇒ x ∈ A ∩ B ∪ A ∩ C"),
+    choices = [("⇒", "x ∈ A ∩ (B ∪ C) ⇒ x ∈ A ∩ B ∪ A ∩ C"),
                    ("⇐", "x ∈ A ∩ B ∪ A ∩ C ⇒ x ∈ A ∩ (B ∪ C)")]
-    dialog = ButtonsDialog(title="Choose sub-goal",
-                           subtitle="Which implication do you want to prove "
-                                    "first?",
-                           choice_list=choice_list)
-    dialog.exec()
-    print(f"Choice = button n°{dialog.choice}")
+    title = "Choose sub-goal"
+    output = "Which implication do you want to prove first?"
+    choice_number, OK = ButtonsDialog.get_item(choices=choices,
+                                                 title=title,
+                                                 output=output)
+    print(f"{OK}, Choice = button n°{choice_number}")

@@ -51,7 +51,8 @@ from PySide2.QtWidgets import ( QAction,
                                 QVBoxLayout,
                                 QWidget)
 
-from deaduction.dui.utils import        replace_delete_widget
+from deaduction.dui.utils import  (     replace_delete_widget,
+                                        ButtonsDialog)
 from deaduction.dui.widgets import (    ActionButton,
                                         ActionButtonsWidget,
                                         LeanEditor,
@@ -625,14 +626,14 @@ class ExerciseMainWindow(QMainWindow):
                             self.current_context_selection_as_mathobjects, user_input)
             except MissingParametersError as e:
                 if e.input_type == InputType.Text:
-                    text, ok = QInputDialog.getText(action_btn,
-                            e.title, e.output)
+                    choice, ok = QInputDialog.getText(action_btn,
+                                                             e.title, e.output)
                 elif e.input_type == InputType.Choice:
-                    text, ok = QInputDialog.getItem(action_btn,
-                            e.title, e.output, e.list_of_choices,
-                            0, False)
+                    choice, ok = ButtonsDialog.get_item(e.choices,
+                                                        e.title,
+                                                        e.output)
                 if ok:
-                    user_input.append(text)
+                    user_input.append(choice)
                 else:
                     break
             except WrongUserInput as e:
