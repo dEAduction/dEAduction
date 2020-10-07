@@ -184,9 +184,13 @@ class MathObject:
 
     def direction_for_substitution_in(self, other) -> str:
         """
-        Assuming self is an equality, and other a property, search if
+        Assuming self is an equality or an iff,
+        and other a property, search if
         left/right members of equality self appear in other.
 
+        WARNING: does not work if the equality (or iff) is hidden behind
+        'forall", so for the moment we cannot use this when applying statements
+        TODO: improve this
         :return:
             - None,
             - '>' if left member appears, but not right member,
@@ -195,7 +199,7 @@ class MathObject:
         """
         direction = None
         equality = self.math_type
-        if equality.node != 'PROP_EQUAL':
+        if equality.node not in ['PROP_EQUAL', 'PROP_IFF']:
             return None
         left, right = equality.children
         contain_left = other.contains(left)
