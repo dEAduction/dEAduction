@@ -1,24 +1,43 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Mon Jun 15 11:15:58 2020
-
-@author: leroux
-DESCRIPTION
+##############################################
+# display_math: display mathematical objects #
+##############################################
 
 Contain the data for processing PropObj into a latex representation
 
-TODO: remove 'PROP' from node names, here and in Structures.lean.
-TODO: display product:
+Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
+Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
+Created       : 06 2020 (creation)
+Repo          : https://github.com/dEAduction/dEAduction
+
+Copyright (c) 2020 the dEAduction team
+
+This file is part of dEAduction.
+
+    dEAduction is free software: you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free
+    Software Foundation, either version 3 of the License, or (at your option)
+    any later version.
+
+    dEAduction is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+    more details.
+
+    You should have received a copy of the GNU General Public License along
+    with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
+
+    TODO: remove 'PROP' from node names, here and in Structures.lean.
+    TODO: display product:
     - prod (I,J)
     - prod.fst, prod.snd
 """
+
 import logging
 import gettext
 import types
 
 from deaduction.pylib.mathobj.give_name import give_local_name
-# from deaduction.pylib.mathobj import MathObject
 import deaduction.pylib.logger as logger
 
 _ = gettext.gettext
@@ -29,12 +48,11 @@ log = logging.getLogger(__name__)
 def display_math_object(math_object, format_):
     """
     This function essentially looks for a shape in the format_from_node
-    dictionary, and then pass the shape to the function
-    display_math_object_from_shape
+    dictionary, and then pass the shape to display_math_object_from_shape
     which computes the display.
 
     :param math_object:
-    :param format_:
+    :param format_: "utf8", "latex" (not implemented)
     :return:
     """
     #log.debug(f"Computing math display of {math_object}")
@@ -117,10 +135,13 @@ def needs_paren(parent, child_number: int) -> bool:
     needs_paren(PropObj,i) will be set to True for i = 0, 1
     so that the display will be
     ( ... ) <=> ( ... )
-    :param parent: MathObject
-    :param child_number:
-    :return:
+
+    TODO : tenir compte de la profondeur des parenthèses,
+    et utiliser \Biggl(\biggl(\Bigl(\bigl((x)\bigr)\Bigr)\biggr)\Biggr)
     """
+    nature_leaves_list = ["PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
+                          "FUNCTION", "SEQUENCE", "SET_FAMILY",
+                          "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY"]
     child_prop_obj = parent.children[child_number]
     p_node = parent.node
     # if child_prop_obj.node == "LOCAL_CONSTANT":
@@ -150,7 +171,7 @@ def needs_paren(parent, child_number: int) -> bool:
 #########################################################################
 #########################################################################
 def display_name(math_object, format_):
-    """display first child of math_type"""
+    """display name"""
     return [math_object.info['name']]
 
 
@@ -161,7 +182,7 @@ def display_math_type0(math_object, format_):
 
 def display_constant(math_object, format_):
     """
-    Display CONSTANT and LOCAL_CONSTANT
+    Display for nodes 'CONSTANT' and 'LOCAL_CONSTANT'
 
     :param math_object:
     :param format_:
@@ -183,16 +204,18 @@ def display_constant(math_object, format_):
 
 def display_application(math_object, format_):
     """
-    Very special case of APPLICATION
+    display for node 'APPLICATION'
+    This is a very special case
     todo: product (prod.fst, prod.snd, prod, node = 'CONSTANT')
+    todo: improve robustness
     :param math_object:
     :param format_:
     :return:
     """
     first_child = math_object.children[0]
     second_child = math_object.children[1]
-    log.debug(f"displaying APP, 1st child = {first_child}, "
-              f"2nd child = {second_child}")
+    #log.debug(f"displaying APP, 1st child = {first_child}, "
+    #          f"2nd child = {second_child}")
     shape = ["*APP*"]
 
     # case of index notation
@@ -259,9 +282,6 @@ def has_pending_parameter(structured_display: [str]):
     A structured display is supposed to be a list whose items are either
     lists or strings. But it may contain "pending parameters" which are
     integer.
-
-    :param structured_display:
-    :return:
     """
     for item in structured_display:
         if isinstance(item, int) and item < 0:
@@ -273,10 +293,6 @@ def insert_pending_param(math_object, shape, format_):
     """
     Modify shape:
     replace first integer 0 by math_object and then shift every integer by 1
-
-    :param math_object:
-    :param shape:
-    :return:
     """
     # insert math_object where there is a '-1'
     shape1 = [display_math_object(math_object, format_)
@@ -294,9 +310,6 @@ def display_math_type_of_local_constant(math_type, format_):
                     math_object.math_type represents X,
                     and the analysis is based on the math_type of X.
     2) A : a subset of X
-    :param math_object:
-    :param format_:
-    :return:
     """
     #######################################################
     # special math_types for which display is not the same #
@@ -325,10 +338,6 @@ def display_instance_set_family(math_object, format_="latex"):
 
     WARNING: this bound variable is not referenced anywhere, in particular
     it will not appear in extract_local_vars.
-
-    :param children_rep:
-    :param math_object: PropObj
-    :return: None
     """
     # first find a name for the bound var
     bound_var_type = math_object.math_type.children[0]
@@ -345,14 +354,13 @@ def display_instance_set_family(math_object, format_="latex"):
 
 def display_lambda(math_object, format_="latex"):
     """
-    TODO
     format for lambda expression, e.g.
     - set families with explicit bound variable
-    lambda (i:I), E i)
-    encoded by LAMBDA(I, i, APP(E, i)) --> "{E_i, i ∈ I}"
+        lambda (i:I), E i)
+        encoded by LAMBDA(I, i, APP(E, i)) --> "{E_i, i ∈ I}"
     - sequences,
     - mere functions
-    encoded by LAMBDA(X, x, APP(f, x))  --> "f"
+        encoded by LAMBDA(X, x, APP(f, x))  --> "f"
     - anything else is displayed as "x ↦ f(x)"
     """
     math_type = math_object.math_type
@@ -452,11 +460,6 @@ def global_subscript(structured_string):
         # [sub] necessary in case sub is an (unstructured) string
 
 
-# TODO : tenir compte de la profondeur des parenthèses,
-# et utiliser \Biggl(\biggl(\Bigl(\bigl((x)\bigr)\Bigr)\biggr)\Biggr)
-nature_leaves_list = ["PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
-                      "FUNCTION", "SEQUENCE", "SET_FAMILY",
-                      "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY"]
 
 format_from_node = {
     "APPLICATION": [display_application],

@@ -34,12 +34,12 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 from dataclasses import dataclass
-from typing import Tuple, List, Any
+from typing import List, Any
 import logging
 
 import deaduction.pylib.logger as logger
-from deaduction.pylib.mathobj.display_math import \
-    display_math_object, display_math_type_of_local_constant
+from .display_math import (display_math_object,
+                           display_math_type_of_local_constant)
 
 import deaduction.pylib.mathobj.give_name as give_name
 
@@ -139,9 +139,6 @@ class MathObject:
                               )
         return math_object
 
-
-
-
     def __eq__(self, other):
         """
         test if the two prop_obj code for the same mathematical objects,
@@ -149,14 +146,10 @@ class MathObject:
         This is used for instance to guarantee uniqueness of those AnonymousPO
         objects that appears as math_types
 
-        Not that even for global variables we do NOT want to use identifiers,
-        since they Lean change them every time the file is modified
+        Note that even for global variables we do NOT want to use identifiers,
+        since Lean change them every time the file is modified
 
         WARNING: this should probably not be used for bound variables
-
-        :param self: AnonymousPO
-        :param other: AnonymousPO
-        :return: bool
         """
         # successively test for     nodes
         #                           name (if exists)
@@ -222,12 +215,12 @@ class MathObject:
         collect the list of names of variables used in the definition of self
         (leaves of the tree)
         """
-        L = [math_obj.info["name"] for math_obj in self.extract_local_vars()]
-        return L
+        l = [math_obj.info["name"] for math_obj in self.extract_local_vars()]
+        return l
 
-    ##########################################
-    # Computation of display of math objects #
-    ##########################################
+    ########################
+    # display math objects #
+    ########################
     def format_as_latex(self, is_math_type=False):
         format_ = "latex"
         if is_math_type:
