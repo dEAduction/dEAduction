@@ -54,7 +54,6 @@ class ButtonsDialog(QDialog):
         :type choice:        contains either None or the number of the
                              chosen button
         """
-        print(choices, title, output)
         super(ButtonsDialog, self).__init__(parent)
         self.setWindowTitle(title)
 
@@ -74,7 +73,7 @@ class ButtonsDialog(QDialog):
 
         # Filling the lines
         layout.addLayout(output_layout)  # 1st line
-        layout.addSpacing(10)
+        layout.addSpacing(5)
 
         # Buttons and corresponding texts, one new_layout per line
         for caption, choice in choices:
@@ -87,7 +86,7 @@ class ButtonsDialog(QDialog):
             new_layout.addWidget(self.choices[-1])
             new_layout.addStretch(1)
             layout.addLayout(new_layout)
-            layout.addSpacing(-10)
+            layout.addSpacing(-15)
 
         # Cancel button
         if cancel_button:
@@ -98,6 +97,7 @@ class ButtonsDialog(QDialog):
             new_layout.addStretch(1)
             layout.addLayout(new_layout)
 
+        layout.setContentsMargins(10, 10, 10, 20)
         self.setLayout(layout)
 
         # Signals
