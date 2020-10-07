@@ -170,6 +170,43 @@ class MathObject:
                     return False
         return True
 
+    def contains(self, other):
+        """
+        Compute the number of copies of other contained in self
+        """
+        if MathObject.__eq__(self, other):
+            counter = 1
+        else:
+            counter = 0
+        for math_object in self.children:
+            counter += math_object.contains(other)
+        return counter
+
+    def direction_for_substitution_in(self, other) -> str:
+        """
+        Assuming self is an equality, and other a property, search if
+        left/right members of equality self appear in other.
+
+        :return:
+            - None,
+            - '>' if left member appears, but not right member,
+            - '<' in the opposite case,
+            - 'both' if both left and right members appear
+        """
+        direction = None
+        equality = self.math_type
+        if equality.node != 'PROP_EQUAL':
+            return None
+        left, right = equality.children
+        contain_left = other.contains(left)
+        contain_right = other.contains(right)
+        decision = {(False, False): None,
+                    (True,  False): '>',
+                    (False, True):  '>',
+                    (True,  True):  'both'
+                    }
+        return decision(contain_left, contain_right)
+
     def is_prop(self) -> bool:
         """
         Test if self represents a mathematical Proposition
