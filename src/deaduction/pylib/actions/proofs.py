@@ -30,23 +30,26 @@ from dataclasses import dataclass
 from gettext import gettext as _
 import logging
 import deaduction.pylib.actions.utils as utils
-from deaduction.pylib.actions   import (    InputType,
-                                            MissingParametersError,
-                                            WrongUserInput,
-                                            action,
-                                            format_orelse)
-from deaduction.pylib.mathobj   import (    MathObject,
-                                            Goal)
+from deaduction.pylib.actions import (InputType,
+                                      MissingParametersError,
+                                      WrongUserInput,
+                                      action,
+                                      format_orelse)
+from deaduction.pylib.mathobj import (MathObject,
+                                      Goal)
+
 
 @action(_("Let the user choose a proof method"), _("Use proof method"))
-def action_use_proof_method(goal : Goal, l : [MathObject], user_input : [str] = []) -> str:
+def action_use_proof_method(goal: Goal, l: [MathObject],
+                            user_input: [str] = []) -> str:
     if user_input == []:
         raise MissingParametersError(InputType.Choice,
-            [_("Case-based reasoning"),
-            _("Proof by contrapositive"),
-            _("Reductio ad absurdum")],
-            title = "Proof method",
-            output = _("Choose which proof method you want to use:"))
+                                     [_("Case-based reasoning"),
+                                      _("Proof by contrapositive"),
+                                      _("Reductio ad absurdum")],
+                                     title="Proof method",
+                                     output=_(
+                                         "Choose which proof method you want to use:"))
     else:
         method = user_input[0]
         del user_input[0]
@@ -57,8 +60,9 @@ def action_use_proof_method(goal : Goal, l : [MathObject], user_input : [str] = 
         if method == _("Reductio ad absurdum"):
             return method_absurdum(goal, l)
     raise WrongUserInput
-    
-def method_cbr(goal : Goal, l : [MathObject], user_input : [str] = []) -> str:
+
+
+def method_cbr(goal: Goal, l: [MathObject], user_input: [str] = []) -> str:
     """
     Translate into string of lean code corresponding to the action
     
@@ -68,14 +72,19 @@ def method_cbr(goal : Goal, l : [MathObject], user_input : [str] = []) -> str:
     possible_codes = []
     if len(l) == 0:
         if user_input == []:
-            raise MissingParametersError(InputType.Text, title = _("cases"), output = _("Enter the case you want to discriminate on:"))
+            raise MissingParametersError(InputType.Text, title=_("cases"),
+                                         output=_(
+                                             "Enter the case you want to discriminate on:"))
         else:
             h1 = utils.get_new_hyp()
             h2 = utils.get_new_hyp()
-            possible_codes.append("cases (classical.em ({0})) with {1} {2}".format(user_input[0], h1, h2))
+            possible_codes.append(
+                "cases (classical.em ({0})) with {1} {2}".format(user_input[0],
+                                                                 h1, h2))
     return format_orelse(possible_codes)
 
-def method_contrapose(goal : Goal, l : [MathObject]):
+
+def method_contrapose(goal: Goal, l: [MathObject]):
     """
     Translate into string of lean code corresponding to the action
     
@@ -88,7 +97,8 @@ def method_contrapose(goal : Goal, l : [MathObject]):
             possible_codes.append("contrapose")
     return format_orelse(possible_codes)
 
-def method_absurdum(goal : Goal, l : [MathObject]) -> str:
+
+def method_absurdum(goal: Goal, l: [MathObject]) -> str:
     """
     Translate into string of lean code corresponding to the action
     
@@ -100,11 +110,12 @@ def method_absurdum(goal : Goal, l : [MathObject]) -> str:
         new_h = utils.get_new_hyp()
         possible_codes.append(f'by_contradiction {new_h}')
     return format_orelse(possible_codes)
-    
 
 
-@action(_("If a hypothesis of form ∀ a ∈ A, ∃ b ∈ B, P(a,b) has been previously selected: use the axiom of choice to introduce a new function f : A → B and add ∀ a ∈ A, P(a, f(a)) to the properties"), _("CREATE FUN"))
-def action_choice(goal : Goal, l : [MathObject]) -> str:
+@action(_(
+    "If a hypothesis of form ∀ a ∈ A, ∃ b ∈ B, P(a,b) has been previously selected: use the axiom of choice to introduce a new function f : A → B and add ∀ a ∈ A, P(a, f(a)) to the properties"),
+        _("CREATE FUN"))
+def action_choice(goal: Goal, l: [MathObject]) -> str:
     """
     Translate into string of lean code corresponding to the action
     
@@ -116,11 +127,16 @@ def action_choice(goal : Goal, l : [MathObject]) -> str:
         h = l[0].info["name"]
         hf = utils.get_new_hyp()
         f = utils.get_new_fun()
-        possible_codes.append(f'cases classical.axiom_of_choice {h} with {f} {hf}, dsimp at {hf}, dsimp at {f}')
-    return format_orelse(possible_codes)        
-        
-@action(_("Introduce new object\nIntroduce new subgoal: transform the current target into the input target and add this to the properties of the future goal."), "+")
-def action_new_object(goal : Goal, l : [MathObject], user_input : [str] = []) -> str:
+        possible_codes.append(
+            f'cases classical.axiom_of_choice {h} with {f} {hf}, dsimp at {hf}, dsimp at {f}')
+    return format_orelse(possible_codes)
+
+
+@action(_(
+    "Introduce new object\nIntroduce new subgoal: transform the current target into the input target and add this to the properties of the future goal."),
+        "+")
+def action_new_object(goal: Goal, l: [MathObject],
+                      user_input: [str] = []) -> str:
     """
     Translate into string of lean code corresponding to the action
     
@@ -130,31 +146,36 @@ def action_new_object(goal : Goal, l : [MathObject], user_input : [str] = []) ->
     possible_codes = []
     if len(user_input) == 0:
         raise MissingParametersError(InputType.Choice,
-            [_("new object"),_("subgoal")],
-            title = "+",
-            output = _("Choose what you want to introduce:"))
-    if user_input[0] == _("new object"):
-        if len(user_input) == 1:
+                             [(_("Object"), _("Introduce a new object")),
+                              (_("Sub-goal"), _("Introduce a new "
+                                                "intermediate sub-goal"))],
+                             title="+",
+                             output=_("Choose what to introduce:"))
+    if user_input[0] == 0:  # choice = new object
+        if len(user_input) == 1:  # ask for new object
             raise MissingParametersError(InputType.Text,
-                title = "+",
-                output = _("Introduce new object:"))
-        else:
+                                         title="+",
+                                         output=_("Introduce new object:"))
+        else:  # send code
             x = utils.get_new_var()
             h = utils.get_new_hyp()
-            possible_codes.append("let {0} := {1}, have {2} : {0} = {1}, refl, ".format(x, user_input[1], h))
-    if user_input[0] == _("subgoal"):
+            possible_codes.append(
+                f"let {x} := {user_input[1]}, "
+                f"have {h} : {x} = {user_input[1]}, refl, ")
+    if user_input[0] == 1:  # new sub-goal
         if len(user_input) == 1:
             raise MissingParametersError(InputType.Text,
-                title = "+",
-                output = _("Introduce new subgoal:"))
+                                         title="+",
+                                         output=_("Introduce new subgoal:"))
         else:
             h = utils.get_new_hyp()
-            possible_codes.append("have {0} : ({1}), ".format(h, user_input[1]))
+            possible_codes.append(f"have {h} : ({user_input[1]}),")
     return format_orelse(possible_codes)
+
 
 @action(_("Terminate the proof when the target is obvious from the context"),
         "¯\_(ツ)_/¯")
-def action_assumption(goal : Goal, l : [MathObject]) -> str:
+def action_assumption(goal: Goal, l: [MathObject]) -> str:
     """
     Translate into string of lean code corresponding to the action
     
@@ -174,8 +195,6 @@ def action_assumption(goal : Goal, l : [MathObject]) -> str:
         possible_codes.append(f'apply {l[0].info["name"]}')
     return format_orelse(possible_codes)
 
-        
-#@action(_("Proof by induction"))
-#def action_induction(goal : Goal, l : [MathObject]):
+# @action(_("Proof by induction"))
+# def action_induction(goal : Goal, l : [MathObject]):
 #    raise WrongUserInput
-
