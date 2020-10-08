@@ -251,6 +251,9 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
             path = icons_path / 't.png'
         self.setIcon(0, QIcon(str(path.resolve())))
 
+        # Set tooltip
+        self.setToolTip(0, statement.caption)
+
 
 class StatementsTreeWidgetNode(QTreeWidgetItem):
     """

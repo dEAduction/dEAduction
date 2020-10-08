@@ -45,7 +45,7 @@ class Statement:
     lean_line: int  # line number of the lemma declaration in Lean file
     lean_name: str  # 'set_theory.unions_and_intersections.exercise
     # .union_distributive_inter'
-    lean_statement: str  # 'A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C)'
+    lean_core_statement: str  # 'A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C)'
     lean_variables: str  # '(X : Type) (A : set X)'
     # NB: not implemented yet, included in lean_statement
     pretty_name: str  # 'Union d'intersections'
@@ -62,9 +62,15 @@ class Statement:
         log = logging.getLogger("Course initialisation")
         data.setdefault("text_book_identifier", "NOT IMPLEMENTED")
         data.setdefault("lean_variables", "NOT IMPLEMENTED")
-        data.setdefault("Description", "NOT PROVIDED")
+        data.setdefault("description", "NOT PROVIDED")
+        # changing keys
+        # names = [(name, change_name(name)) for name in data.keys()]
+        # for VariableName, variable_name in names:
+        #     data[variable_name] = data.pop(VariableName)
+
+        #return cls(**data)
         return cls(data["Description"], data["lean_line"], data["lean_name"],
-                   data["lean_statement"], data["lean_variables"],
+                   data["lean_core_statement"], data["lean_variables"],
                    data["PrettyName"], data["text_book_identifier"])
 
     def pretty_hierarchy(self, outline):
@@ -105,6 +111,23 @@ class Statement:
         """
         ugly_hierarchy = self.lean_name.split('.')[:-2]
         return ugly_hierarchy
+
+
+    @property
+    def caption(self) -> str:
+        """
+        Return a string that shows a simplified version of the statement
+        (e.g. to be displayed as a tooltip)
+        TODO (1): remove variables from lean_statement
+        TODO (2): add properties of the context, if any, as hypotheses
+        """
+        if not hasattr(self, 'initial_proof_state'):
+            text = self.lean_core_statement
+            return text
+        goal = self.initial_proof_state[0]
+        target = goal.target
+        text = target.format_as_utf8()
+        return text
 
 
 @dataclass
@@ -304,7 +327,7 @@ class Exercise(Theorem):
         return cls(data["Description"],
                    data["lean_line"],
                    data["lean_name"],
-                   data["lean_statement"],
+                   data["lean_core_statement"],
                    data["lean_variables"], data["PrettyName"],
                    data["text_book_identifier"],
                    post_data["Tools->Logic"],
@@ -347,6 +370,18 @@ def findsuffix(string, list):
     if nb > 0:
         index = list.index(total[0])
     return index, nb
+
+
+def change_name(name: str) -> str:
+    """
+    e.g. PrettyName -> pretty_name
+    """
+    ALPHABET = [chr(i) for i in range(65,91)]
+    for letter in ALPHABET:
+        name = name.replace(letter, '_' + letter.lower())
+    if name.startswith('_'):
+        name = name[1:]
+    return name
 
 
 if __name__ == "__main__":

@@ -90,6 +90,74 @@ import deaduction.pylib.logger as logger
 
 log = logging.getLogger(__name__)
 
+##################
+# Lean Statement #
+##################
+statement_rules = """
+statement = variables spaces ":" core_statement
+    variables = variable*
+        variable =  paren_expr / accol_expr
+            paren_expr =  spaces "(" (any_char_but_p / variable)* ")" 
+            accol_expr =  spaces "{" (any_char_but_p / variable)* "}"
+
+    core_statement = any_char*
+
+spaces = (" " / end_of_line)*
+any_char_but_p = (!"(" !")" !"{" !"}" any_char_but_eol) / end_of_line 
+any_char = any_char_but_eol / end_of_line
+any_char_but_eol = ~r"."
+end_of_line = "\\n"
+"""
+
+statement_grammar = Grammar(statement_rules)
+
+
+class StatementVisitor(NodeVisitor):
+
+    def visit_statement(self, node, visited_children) -> Tuple[str, str]:
+        # filter spaces and ":" to keep just variables and core_statement
+        visited_children = list(filter(my_filter, visited_children))
+        #log.debug(visited_children)
+        return visited_children
+
+    def visit_variables(selfself, node, visited_children):
+        return node.text
+
+    def visit_core_statement(selfself, node, visited_children):
+        return node.text
+
+    def generic_visit(self, node, visited_children):
+        #visited_children = filter(  lambda text: (text== ""),
+        # visited_children)
+        return None
+
+
+visitor = StatementVisitor()
+
+
+def my_filter(text:str) -> bool:
+    return text not in [" ", ":", None, "\n", "\\n"]
+
+
+def extract_core_statement(statement: str) -> Tuple[str, str]:
+    """
+    Split a Lean statement into the "variables" and the "core" parts.
+    e.g.
+    - variables:    {X : Type} (A B C : set X)'
+    - core:         'A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C)'
+    """
+    statement_tree = statement_grammar.parse(statement)
+    variables, core_statement = visitor.visit(statement_tree)
+    variables = variables.replace('\n', ' ')
+    variables = variables.strip()
+    core_statement = core_statement.replace('\n', ' ')
+    core_statement = core_statement.strip()
+    log.debug(f"Statement: {variables}, {core_statement}")
+    return variables, core_statement
+################
+# Course rules #
+################
+
 course_rules = """course = 
             (something_else metadata)?
             (something_else? 
@@ -194,9 +262,11 @@ rules = course_rules + something_else_rules \
 lean_course_grammar = Grammar(rules)
 
 
+
 #############################################
 # visiting methods for each pertinent nodes #
 #############################################
+#variable_names = ['PrettyName', 'Description']
 class LeanCourseVisitor(NodeVisitor):
     def visit_course(self, node, visited_children) -> Tuple[List[str], dict]:
         course_history, data = get_info(visited_children)
@@ -227,11 +297,12 @@ class LeanCourseVisitor(NodeVisitor):
         elif "theorem_name" in data.keys():
             event_name = "theorem"
             lean_name = data.pop("theorem_name")
-        else: # this should not happen
+        else:  # this should not happen
             log.warning(f"no name found for statement with data "
                         f"{data} and metadata {metadata}")
         metadata["lean_name"] = lean_name
-        metadata["lean_statement"] = data.pop("lean_statement")
+        metadata["lean_variables"] = data.pop("lean_variables")
+        metadata["lean_core_statement"] = data.pop("lean_core_statement")
         # compute automatic PrettyName if not found by parser
         short_name = lean_name.split(".")[1]
         automatic_pretty_name = short_name.replace("_", " ").capitalize()
@@ -341,7 +412,11 @@ class LeanCourseVisitor(NodeVisitor):
 
     def visit_lean_statement(self, node, visited_children):
         course_history, data = get_info(visited_children)
-        data["lean_statement"] = node.text
+        statement = node.text
+        # split statement into variables / core
+        variables, statement = extract_core_statement(statement)
+        data["lean_variables"] = variables
+        data["lean_core_statement"] = statement
         return course_history, data
 
     def visit_namespace_identifier(self, node, visited_children):
@@ -366,6 +441,7 @@ def get_info(children: List[dict]):
         if child_data:
             data.update(child_data)
     return course_history, data
+
 
 
 #########
@@ -402,7 +478,8 @@ begin
 end
 """
     file_content4 = """
-lemma exercise.union toto := 
+lemma exercise.union {I : Type} {E : I → set X}  {x : X} :
+(x ∈ set.Union (λ i, E i)) ↔ (∃ i:I, x ∈ E i)  := 
 
 /- dEAduction
 PrettyName
