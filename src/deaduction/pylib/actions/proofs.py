@@ -29,6 +29,8 @@ This file is part of dEAduction.
 from dataclasses import dataclass
 from gettext import gettext as _
 import logging
+from deaduction.config.config import user_config
+
 import deaduction.pylib.actions.utils as utils
 from deaduction.pylib.actions import (InputType,
                                       MissingParametersError,
@@ -42,23 +44,35 @@ from deaduction.pylib.mathobj import (MathObject,
 @action(_("Let the user choose a proof method"), _("Use proof method"))
 def action_use_proof_method(goal: Goal, l: [MathObject],
                             user_input: [str] = []) -> str:
-    if user_input == []:
+    # parameters
+    allow_proof_by_sorry = user_config.getboolean('allow_proof_by_sorry')
+
+    # 1st call, choose proof method
+    if not user_input:
+        choices = [('1', _("Case-based reasoning")),
+                   ('2', _("Proof by contrapositive")),
+                   ('3', _("Reductio ad absurdum"))]
+        if allow_proof_by_sorry:
+            choices.append(('4', _("Admit current sub-goal!")))
         raise MissingParametersError(InputType.Choice,
-                                     [_("Case-based reasoning"),
-                                      _("Proof by contrapositive"),
-                                      _("Reductio ad absurdum")],
-                                     title="Proof method",
-                                     output=_(
-                                         "Choose which proof method you want to use:"))
+                                     choices,
+                                     title="Choose proof method",
+                                     output=_("Which proof method?")
+                                     )
+    # 2nd call, call the adequate proof method. len(user_input) = 1.
     else:
-        method = user_input[0]
-        del user_input[0]
-        if method == _("Case-based reasoning"):
+        method = user_input[0] + 1
+        if method == 1:
+            # if len(user_input) > 1:
+            #     del user_input[0]   # we do not need this user_input anymore
+            #     # but we need the next choice
             return method_cbr(goal, l, user_input)
-        if method == _("Proof by contrapositive"):
+        if method == 2:
             return method_contrapose(goal, l)
-        if method == _("Reductio ad absurdum"):
+        if method == 3:
             return method_absurdum(goal, l)
+        if method == 4:
+            return method_sorry(goal, l)
     raise WrongUserInput
 
 
@@ -71,20 +85,30 @@ def method_cbr(goal: Goal, l: [MathObject], user_input: [str] = []) -> str:
     """
     possible_codes = []
     if len(l) == 0:
-        if user_input == []:
-            raise MissingParametersError(InputType.Text, title=_("cases"),
-                                         output=_(
-                                             "Enter the case you want to discriminate on:"))
+        # NB: user_input[1] contains the needed property
+        if len(user_input) == 1:
+            raise MissingParametersError(
+                 InputType.Text,
+                 title=_("cases"),
+                 output=_("Enter the property you want to discriminate on:")
+                                        )
         else:
+            h0 = user_input[1]
             h1 = utils.get_new_hyp()
             h2 = utils.get_new_hyp()
             possible_codes.append(
-                "cases (classical.em ({0})) with {1} {2}".format(user_input[0],
-                                                                 h1, h2))
+                f"cases (classical.em ({h0})) with {h1} {h2}")
+    else:
+        h0 = l[0].info['name']
+        h1 = utils.get_new_hyp()
+        h2 = utils.get_new_hyp()
+        possible_codes.append(
+            f"cases (classical.em ({h0})) with {h1} {h2}")
+
     return format_orelse(possible_codes)
 
 
-def method_contrapose(goal: Goal, l: [MathObject]):
+def method_contrapose(goal: Goal, l: [MathObject]) -> str:
     """
     Translate into string of lean code corresponding to the action
     
@@ -109,6 +133,14 @@ def method_absurdum(goal: Goal, l: [MathObject]) -> str:
     if len(l) == 0:
         new_h = utils.get_new_hyp()
         possible_codes.append(f'by_contradiction {new_h}')
+    return format_orelse(possible_codes)
+
+
+def method_sorry(goal: Goal, l: [MathObject]) -> str:
+    """
+    Close the current sub-goal by sending the 'sorry' code
+    """
+    possible_codes = ['sorry']
     return format_orelse(possible_codes)
 
 
