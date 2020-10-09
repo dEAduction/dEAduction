@@ -36,6 +36,7 @@ from deaduction.pylib.actions.actiondef import Action
 import deaduction.pylib.actions.logic
 import deaduction.pylib.actions.proofs
 import deaduction.pylib.actions.magic
+from deaduction.pylib.mathobj.proof_state import Goal
 
 
 @dataclass
@@ -50,6 +51,11 @@ class Statement:
     # NB: not implemented yet, included in lean_statement
     pretty_name: str  # 'Union d'intersections'
     text_book_identifier: str
+    lean_begin_line_number: int  # proof starts here...
+    # this value is set to 0 unless "begin" is found
+    lean_end_line_number: int  # ...and ends here
+
+    course: Any  # the parent course
 
     @classmethod
     def from_parser_data(cls, data: dict):
@@ -71,7 +77,42 @@ class Statement:
         #return cls(**data)
         return cls(data["Description"], data["lean_line"], data["lean_name"],
                    data["lean_core_statement"], data["lean_variables"],
-                   data["PrettyName"], data["text_book_identifier"])
+                   data["PrettyName"], data["text_book_identifier"],
+                   lean_begin_line_number=0,
+                   lean_end_line_number=0,
+                   course=None)
+
+    @property
+    def caption(self):
+        """
+        Return a  text version of the initial target
+        We look for the best possible version, given the available information
+        """
+        if hasattr(self, "initial_proof_state"):
+            target = self.initial_proof_state.goals[0].target
+            text = target.format_as_utf8()
+        elif hasattr(self, "lean_statement_body"):
+            text = self.lean_statement_body
+        else:
+            text = self.lean_statement
+        return text
+
+    @property
+    def statement_to_text(self):
+        """
+        if self has attribute 'initial_proof_state', then return a string
+        with a text version of initial goal. E.g.
+        Let X be a set.
+        Let A be a subset of X.
+        Let B be a subset of X.
+        Prove that X \ (A ∪ B) = (X \ A) ∩ (X \ B).
+        """
+        if hasattr(self, "initial_proof_state"):
+            initial_goal = self.initial_proof_state.goals[0]
+            text = initial_goal.goal_to_text()
+        else:
+            text = ""
+        return text
 
     def pretty_hierarchy(self, outline):
         """
@@ -124,9 +165,9 @@ class Statement:
         if not hasattr(self, 'initial_proof_state'):
             text = self.lean_core_statement
             return text
-        goal = self.initial_proof_state[0]
+        goal = self.initial_proof_state.goals[0]
         target = goal.target
-        text = target.format_as_utf8()
+        text = target.math_type.format_as_utf8()
         return text
 
 
@@ -147,10 +188,6 @@ class Exercise(Theorem):
     available_proof_techniques: List[Action]
     available_statements: List[Statement]
     expected_vars_number: Dict[str, int]  # {'X': 3, 'A': 1, 'B': 1}
-    lean_begin_line_number: int  # proof starts here...
-    lean_end_line_number: int  # ...and ends here
-
-    course: Any = None  # the parent course
 
     @classmethod
     def from_parser_data(cls, data: dict, statements: list):
@@ -191,9 +228,10 @@ class Exercise(Theorem):
         prefix = {"Tools->Definitions": "definition", "Tools->Theorems":
             "theorem", "Tools->Exercises": "exercise",
                   'Tools->Statements': ""}
-        class_dict = {"Tools->Definitions": Definition, "Tools->Theorems":
-            Theorem, "Tools->Exercises": Exercise,
-                      'Tools->Statements': Statement}
+        class_dict = {"Tools->Definitions": Definition,
+                      "Tools->Theorems":    Theorem,
+                      "Tools->Exercises":   Exercise,
+                      'Tools->Statements':  Statement}
         for field in ["Tools->Definitions", "Tools->Theorems",
                       "Tools->Exercises", "Tools->Statements"]:
             if data[field] is None:
@@ -330,13 +368,15 @@ class Exercise(Theorem):
                    data["lean_core_statement"],
                    data["lean_variables"], data["PrettyName"],
                    data["text_book_identifier"],
-                   post_data["Tools->Logic"],
-                   post_data["Tools->Magic"],
-                   post_data["Tools->ProofTechniques"],
-                   available_statements,
-                   expected_vars_number,
-                   lean_begin_line_number=0,  # will be set up soon
-                   lean_end_line_number=0,
+                   lean_begin_line_number=      0,  # will be set up soon
+                   lean_end_line_number=        0,
+                   course=                      None,
+                   available_logic=             post_data["Tools->Logic"],
+                   available_magic=             post_data["Tools->Magic"],
+                   available_proof_techniques=  post_data[
+                                                    "Tools->ProofTechniques"],
+                   available_statements=        available_statements,
+                   expected_vars_number=        expected_vars_number
                    )
 
     def current_name_space(self):
@@ -371,7 +411,7 @@ def findsuffix(string, list):
         index = list.index(total[0])
     return index, nb
 
-
+# not used
 def change_name(name: str) -> str:
     """
     e.g. PrettyName -> pretty_name

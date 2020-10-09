@@ -29,6 +29,9 @@ This file is part of dEAduction.
 from dataclasses import dataclass
 import logging
 from typing import List, Tuple
+import gettext
+
+_ = gettext.gettext
 
 import deaduction.pylib.logger as logger
 
@@ -45,8 +48,8 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class Goal:
-    context: List[MathObject]
-    target: MathObject
+    context:        List[MathObject]
+    target:         MathObject
     # the following would be useful if we decide to display objects of the
     # same type together:
     # math_types: List[Tuple[MathObject, List[MathObject]]]
@@ -215,6 +218,57 @@ class Goal:
             else:
                 objects.append((math_object, tag))
         return objects, propositions
+
+    def goal_to_text(self, format_="text+utf8", to_prove=True, text_depth=1) \
+            -> str:
+        """compute a readable version of the goal as the statement of an
+        exercise.
+
+        :param format_:     NOT USED
+        :param to_prove:    boolean.
+            If True, the goal will be formulated as "Prove that..."
+            If False, the goal will be formulated as "Then..." (useful if
+            the goal comes from a Theorem or Definition)
+        :param text_depth:  int
+            A higher value entail a more verbose formulation (more symbols will
+            be replaced by words).
+            fixme: depth>1 does not really work
+        :return: a text version of the goal
+        """
+        context = self.context
+        target = self.target
+        text = ""
+        for mathobj in context:
+            math_type = mathobj.math_type
+            if math_type.is_prop():
+                prop = mathobj.math_type.format_as_text_utf8(
+                                                        text_depth=text_depth)
+                new_sentence = _("Assume that") + " " + prop + "."
+            else:
+                name = mathobj.format_as_utf8()
+                name_type = math_type.format_as_text_utf8(is_math_type=True,
+                                                          text_depth=text_depth-1)
+                if math_type.node == "FUNCTION" and text_depth == 0:
+                    new_sentence = _("Let") + " " + name + ":" \
+                                   + " " + name_type + "."
+                else:
+                    new_sentence = _("Let") + " " + name + " " + _("be") \
+                                   + " " + name_type + "."
+
+            if text:
+                text += "\n"
+            text += new_sentence
+
+        text += "\n"
+        target_text = target.math_type.format_as_text_utf8(
+                                                    text_depth=text_depth)
+        if to_prove:
+            target_text = _("Prove that") + " " + target_text
+        else:
+            target_text = _("Then") + " " + target_text
+
+        text += target_text + "."
+        return text
 
 
 def instantiate_bound_var(math_type, name: str):

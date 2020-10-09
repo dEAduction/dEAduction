@@ -62,10 +62,11 @@ PrettyName
 ------------------------
 -- COURSE DEFINITIONS --
 ------------------------
-lemma definition.ssi {P Q : Prop} : (P ↔ Q) ↔ (P → Q) ∧ (Q → P) :=
-begin
-    exact iff_def
-end
+-- lemma definition.ssi {P Q : Prop} : (P ↔ Q) ↔ (P → Q) ∧ (Q → P) :=
+-- begin
+--     exact iff_def
+-- end
+
 lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, x ∈ A → x ∈ B :=
 begin
     exact iff.rfl
@@ -310,13 +311,11 @@ variables {I : Type} {E : I → set X} {F : I → set Y}
 -- DEFINITIONS --
 -----------------
 lemma definition.image_directe (y : Y) : y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y :=
-/- dEAduction -/
 begin
     sorry
 end
 
 lemma definition.image_reciproque (x:X) : x ∈ f  ⁻¹' B ↔ f(x) ∈ B :=
-/- dEAduction -/
 begin
     sorry
 end

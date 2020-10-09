@@ -33,13 +33,13 @@ This file is part of dEAduction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
-from dataclasses import dataclass
-from typing import List, Any
+from dataclasses import     dataclass
+from typing import          List, Any
 import logging
 
 import deaduction.pylib.logger as logger
-from .display_math import (display_math_object,
-                           display_math_type_of_local_constant)
+from .display_math import ( display_math_object,
+                            display_math_type_of_local_constant)
 
 import deaduction.pylib.mathobj.give_name as give_name
 
@@ -133,10 +133,10 @@ class MathObject:
             # end: instantiation #
             ######################
             math_object = MathObject(node=node,
-                              info=info,
-                              math_type=math_type,
-                              children=children
-                              )
+                                     info=info,
+                                     math_type=math_type,
+                                     children=children
+                                     )
         return math_object
 
     def __eq__(self, other):
@@ -267,19 +267,28 @@ class MathObject:
         if is_math_type:
             display = display_math_type_of_local_constant(self, format_)
         else:
-            display = display_math_object(self, format_="latex")
-        return list_string_join(display)
+            display = display_math_object(self, format_)
+        return structured_display_to_string(display)
 
     def format_as_utf8(self, is_math_type=False):
         format_ = "utf8"
         if is_math_type:
             display = display_math_type_of_local_constant(self, format_)
         else:
-            display = display_math_object(self, format_="utf8")
-        return list_string_join(display)
+            display = display_math_object(self, format_)
+        return structured_display_to_string(display)
+
+    def format_as_text_utf8(self, is_math_type=False, text_depth=1):
+        format_ = "text+utf8"
+        if is_math_type:
+            display = display_math_type_of_local_constant(self,
+                                                          format_)
+        else:
+            display = display_math_object(self, format_, text_depth)
+        return structured_display_to_string(display)
 
 
-def list_string_join(structured_display) -> str:
+def structured_display_to_string(structured_display) -> str:
     """
     turn a (structured) latex or utf-8 display into a latex string
 
@@ -291,14 +300,20 @@ def list_string_join(structured_display) -> str:
     elif isinstance(structured_display, list):
         string = ""
         for lr in structured_display:
-            lr = list_string_join(lr)
+            lr = structured_display_to_string(lr)
             string += lr
         #    log.debug("string:", latex_str)
-        return string
+        return cut_spaces(string)
     else:
         log.warning("error in list_string_join: argument should be list or "
                     f"str, not {type(structured_display)}")
         return "**"
+
+
+def cut_spaces(string: str) -> str:
+    while string.find("  ") != -1:
+        string = string.replace("  ", " ")
+    return string
 
 
 ##########

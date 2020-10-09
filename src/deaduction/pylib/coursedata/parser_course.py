@@ -194,7 +194,8 @@ definition_or_theorem = "lemma" space_or_eol+
                     (definition_name / theorem_name) space_or_eol+
                     lean_statement
                 separator_equal_def
-                    (interlude metadata)?
+                    ((space_or_eol+ metadata)?
+                    space_or_eol+ proof)?
                     
     definition_name = "definition." identifier 
     theorem_name = "theorem." identifier
