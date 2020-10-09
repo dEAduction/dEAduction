@@ -233,8 +233,12 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         :param statement: The instance of the class (or child) one wants
             to associate to self.
         """
+        if StatementsTreeWidget.show_lean_name_for_statements:
+            to_display = [statement.pretty_name, statement.lean_name]
+        else:
+            to_display = [statement.pretty_name]
 
-        super().__init__(None, [statement.pretty_name, statement.lean_name])
+        super().__init__(None, to_display)
 
         self.statement = statement
 
@@ -333,6 +337,16 @@ class StatementsTreeWidget(QTreeWidget):
     not in the outline, they are already coded in the instances of the
     class Statement themselves with the attribute pretty_name.
     """
+    # config
+    depth_of_unfold_statements = \
+                        user_config.getint('depth_of_unfold_statements')
+    show_lean_name_for_statements = \
+                    user_config.getboolean('show_lean_name_for_statements')
+    tooltips_font_size = user_config.getint('tooltips_font_size')
+    # TODO: show lean names only when lean console is on
+    # (even if show_lean_name_for_statements == TRUE)
+
+
 
     def _init_tree_branch(self, extg_tree, branch: [str],
                           expanded_flags: [bool],
@@ -411,7 +425,7 @@ class StatementsTreeWidget(QTreeWidget):
 
         # set flags for expandedness: branches will be expanded until
         # a certain depth, and unexpanded after
-        depth = user_config.getint('depth_of_unfold_statements')
+        depth = StatementsTreeWidget.depth_of_unfold_statements
 
         for statement in statements:
             branch = statement.pretty_hierarchy(outline)
@@ -445,10 +459,14 @@ class StatementsTreeWidget(QTreeWidget):
         self._init_tree(statements, outline)
 
         # Cosmetics
-        self.setHeaderLabels([_('Statement'), _('L∃∀N name')])
+
         self.setWindowTitle('StatementsTreeWidget')
-        self.resizeColumnToContents(0)
-        self.resizeColumnToContents(1)
+        if StatementsTreeWidget.show_lean_name_for_statements:
+            self.setHeaderLabels([_('Statements'), _('L∃∀N name')])
+            self.resizeColumnToContents(0)
+            self.resizeColumnToContents(1)
+        else:
+            self.setHeaderLabels([_('Statement')])
 
     def add_child(self, item):
         """
