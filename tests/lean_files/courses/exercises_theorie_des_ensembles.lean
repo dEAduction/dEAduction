@@ -679,7 +679,7 @@ end
 open applications_II.definitions
 lemma exercise.exercice_factorisation_I
 (g : Y → Z) (h: X → Z) :
-∃ f: X → Y, h = (composition g f) ↔ h '' set.univ ⊆ g '' set.univ
+(∃ f: X → Y, h = (composition g f)) ↔ h '' set.univ ⊆ g '' set.univ
 :=
 begin
     sorry
@@ -688,7 +688,7 @@ end
 
 lemma exercise.exercice_factorisation_II
 (f : X → Y) (h: X → Z) :
-∃ g: Y → Z, h = (composition g f) ↔ (∀ x y, (f x = f y → h x = h y))
+(∃ g: Y → Z, h = (composition g f)) ↔ (∀ x y, (f x = f y → h x = h y))
 :=
 begin
     sorry
