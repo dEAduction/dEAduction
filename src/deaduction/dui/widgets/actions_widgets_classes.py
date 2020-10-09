@@ -56,6 +56,7 @@ from PySide2.QtWidgets import ( QHBoxLayout,
 from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem)
 
+from deaduction.config.config import user_config
 from deaduction.pylib.actions    import   Action
 from deaduction.pylib.coursedata import ( Definition,
                                           Exercise,
@@ -334,6 +335,7 @@ class StatementsTreeWidget(QTreeWidget):
     """
 
     def _init_tree_branch(self, extg_tree, branch: [str],
+                          expanded_flags: [bool],
                           statement: Statement, parent):
         """
         Add branch to extg_tree and StatementsTreeWidgetItem(statement)
@@ -344,6 +346,8 @@ class StatementsTreeWidget(QTreeWidget):
         :param branch: A tree branch (new or already existing), e.g.
             ['Chapter', 'Section', 'Sub-section']. Those are not
             instances of the class StatementsTreeWidgetNode!
+        :param expanded_flags: list of booleans corresponding to branch,
+        expanded_flags[n] = True if branch[n] must be expanded
         :param statement: The instance of the
             class Statement one wants to represent.
         :param parent: Either extg_tree itself or one of its nodes
@@ -364,14 +368,16 @@ class StatementsTreeWidget(QTreeWidget):
         # children nodes if necessary.
         root   = branch[0]   # 'rings'
         branch = branch[1:]  # ['ideals', 'def']
+        flag    = expanded_flags[0]
+        expanded_flags = expanded_flags[1:]
 
         if root not in extg_tree:
             node            = StatementsTreeWidgetNode(root)
             extg_tree[root] = (node, dict())
             parent.add_child(node)
-            node.setExpanded(True)  # Must be done AFTER node is added
+            node.setExpanded(flag)  # Must be done AFTER node is added
 
-        self._init_tree_branch(extg_tree[root][1], branch,
+        self._init_tree_branch(extg_tree[root][1], branch, expanded_flags,
                                statement, extg_tree[root][0])
 
     def _init_tree(self, statements: [Statement], outline: Dict[str, str]):
@@ -403,9 +409,20 @@ class StatementsTreeWidget(QTreeWidget):
 
         self._tree = dict()
 
+        # set flags for expandedness: branches will be expanded until
+        # a certain depth, and unexpanded after
+        depth = user_config.getint('depth_of_unfold_statements')
+
         for statement in statements:
             branch = statement.pretty_hierarchy(outline)
-            self._init_tree_branch(self._tree, branch, statement, self)
+            # set expanded_flags to True until depth and False after:
+            length = len(branch)
+            if length >= depth:
+                expanded_flags = [True]*depth + [False]*(length-depth)
+            else:
+                expanded_flags = [True]*length
+            self._init_tree_branch(self._tree, branch, expanded_flags,
+                                   statement, self)
 
     def __init__(self, statements: [Statement], outline: Dict[str, str]):
         """

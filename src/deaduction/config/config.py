@@ -40,21 +40,26 @@ config = configparser.ConfigParser()
 # reading file config.ini, assuming it is in the same directory as config.py
 config_file_path = os.path.join(os.path.dirname(__file__)) + '/config.ini'
 config.read(config_file_path)
-user_config = config['DEFAULTS']
+
 # FIXME: this should be set to config['USER'], but then DEFAULTS values
 # are not taken into account ??
 
 # in case no config file is found
 try:
-    user_config = config['DEFAULTS']
+    user_config = config['USER']
 except KeyError:
-    config['DEFAULTS'] = {'alert_target_solved':  True,
-                          'fold_statements':      True,
-                          'allow_proof_by_sorry': True
-                          }
-    with open(config_file_path, 'w') as configfile:
-        config.write(configfile)
-    user_config = config['DEFAULTS']
+    try:
+        user_config = config['DEFAULT']
+    except KeyError:
+        config['DEFAULT'] = {'alert_target_solved':  True,
+                              'depth_of_unfold_statements':      1,
+                              'allow_proof_by_sorry': True,
+                              'show_lean_name_for_statements': False
+                              }
+        config['USER'] = {}
+        with open(config_file_path, 'w') as configfile:
+            config.write(configfile)
+        user_config = config['USER']
 
 if __name__ == "__main__":
     # boolean = user_config.getboolean('fold_statements')
