@@ -524,7 +524,7 @@ utf8_from_node = {
     "QUANT_∀": ["∀", 1, " ∈ ", 0, ", ", 2],
     "QUANT_∃": ["∃", 1, " ∈ ", 0, ", ", 2],
     "PROP_∃": "not implemented",
-    "QUANT_∃_unique": ["∃!",  1, " ∈ ", 0, ", ", 2],
+    "QUANT_∃!": ["∃!",  1, " ∈ ", 0, ", ", 2],
     ###############
     # SET THEORY: #
     ###############
@@ -666,7 +666,7 @@ def display_text_quant(math_object, format_, text_depth):
     Compute a smart text version of a quantified sentence.
 
     :param math_object: a math object with node "QUANT_∀", "QUANT_∃", or
-                        "QUANT_∃_unique".
+                        "QUANT_∃!".
     :param format_:     "text+utf8"
     :param text_depth:  see display_math_object
     """

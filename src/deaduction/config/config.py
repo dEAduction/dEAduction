@@ -31,6 +31,7 @@ This file is part of d∃∀duction.
 """
 import configparser
 import logging
+from pathlib import Path
 import os
 
 log = logging.getLogger(__name__)
