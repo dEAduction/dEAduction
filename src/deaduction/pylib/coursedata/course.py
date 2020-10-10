@@ -196,7 +196,7 @@ class Course:
             log.warning(f"{counter_lemma_exercises - counter_exercises}"
                         f" exercises have not been parsed, wrong format?")
         if begin_counter < len(statements):
-            log.warning(f"Found only {begin_counter} 'begin' for"
+            log.warning(f"Found only {begin_counter} 'begin' for "
                         f"{len(statements)} statements")
         return course
 

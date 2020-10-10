@@ -78,7 +78,7 @@ async def main():
     if course_pkl_path.exists():
         [stored_course] = pickled_items(course_pkl_path)
         stored_hash = hash(stored_course.file_content)
-        log.debug(f"Found '.pkl' file, hash = {stored_hash}")
+        log.debug(f"Found '.pkl' file, hash = {stored_hash} vs {course_hash}")
         if stored_hash == course_hash or True:    # FIXME !!!
             log.info("pkl content file is up to date")
             for statement in stored_course.statements:
@@ -164,7 +164,7 @@ async def get_all_proof_states(servint,
         # too long messages that entail crashing
         if counter % 5 == 0:
             servint.stop()
-            log.info("Saving...")
+            log.info("Saving temporary file...")
             save_objects([course], course_pkl_path)
             await servint.start()
 

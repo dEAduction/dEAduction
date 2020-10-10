@@ -64,6 +64,11 @@ PrettyName
     Théorie des ensembles
 -/
 
+namespace generalites
+/- dEAduction
+PrettyName
+    Généralités
+-/
 
 ------------------------
 -- COURSE DEFINITIONS --
@@ -105,6 +110,7 @@ begin
     exact set.subset.antisymm_iff.mpr
 end
 
+end generalites
 
 ---------------
 -- SECTION 1 --
@@ -116,6 +122,12 @@ variables {A B C : set X}
 -----------------
 -- DEFINITIONS --
 -----------------
+namespace definitions
+/- dEAduction
+PrettyName
+    Définitions
+-/
+
 lemma definition.intersection_deux_ensembles {A B : set X} {x : X} :
 x ∈ A ∩ B ↔ ( x ∈ A ∧ x ∈ B) :=
 /- dEAduction
@@ -156,10 +168,13 @@ begin
     exact set.mem_Union
 end
 
+end definitions
 
 ---------------
 -- EXERCICES --
 ---------------
+namespace exercices
+
 lemma exercise.union_distributive_inter : A ∩ (B ∪ C)  = (A ∩ B) ∪ (A ∩ C) :=
 /- dEAduction
 PrettyName
@@ -169,7 +184,7 @@ Description
 Tools->Logic
     $ALL -negate
 Tools->ProofTechniques
-    $ALL -action_use_proof_method
+    $ALL -use_proof_method
 Tools->Definitions
     $UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles
 Tools->Theorems
@@ -194,6 +209,9 @@ Tools->Definitions
 begin
     sorry
 end
+
+
+end exercices
 
 end unions_et_intersections
 
@@ -334,13 +352,11 @@ PrettyName
     Définitions
 -/
 lemma definition.image_directe (y : Y) : y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y :=
-/- dEAduction -/
 begin
     sorry
 end
 
 lemma definition.image_reciproque (x:X) : x ∈ f  ⁻¹' B ↔ f(x) ∈ B :=
-/- dEAduction -/
 begin
     sorry
 end
@@ -354,6 +370,10 @@ end
 
 lemma definition.egalite_fonctions (f' : X → Y) :
 f = f' ↔ ∀ x, f x = f' x :=
+/- dEAduction
+PrettyName
+    Egalité de deux fonctions
+-/
 begin
     exact function.funext_iff,
 end
@@ -361,6 +381,10 @@ end
 
 lemma definition.Identite (f₀: X → X) :
 f₀ = Identite ↔ ∀ x, f₀ x = x :=
+/- dEAduction
+PrettyName
+    Application identité
+-/
 begin
     apply definition.egalite_fonctions,
 end
@@ -514,6 +538,10 @@ def Identite {X : Type} := λ x:X, x
 lemma definition.injectivite :
 injective f ↔ ∀ x y : X, (f x = f y → x = y)
 :=
+/- dEAduction
+PrettyName
+    Application injective
+-/
 begin
     refl,
 end
@@ -521,6 +549,10 @@ end
 lemma definition.surjectivite :
 surjective f ↔ ∀ y : Y, ∃ x : X, f x = y
 :=
+/- dEAduction
+PrettyName
+    Application surjective
+-/
 begin
     refl,
 end
@@ -544,6 +576,10 @@ lemma exercise.composition_injections
 :
 injective (composition g f)
 :=
+/- dEAduction
+PrettyName
+    Composition d'injections
+-/
 begin
     sorry
 end
@@ -552,14 +588,22 @@ lemma exercise.composition_surjections
 (H1 : surjective f) (H2 : surjective g) :
 surjective (composition g f)
 :=
+/- dEAduction
+PrettyName
+    Composition de surjections
+-/
 begin
     sorry
 end
 
-lemma exercise.injective_si_coompo_injective
+lemma exercise.injective_si_compo_injective
 (H1 : injective (composition g f)) :
 injective f
 :=
+/- dEAduction
+PrettyName
+    Injective si composition injective
+-/
 begin
     sorry
 end
@@ -568,18 +612,30 @@ lemma exercise.surjective_si_coompo_surjective
 (H1 : surjective (composition g f)) :
 surjective g
 :=
+/- dEAduction
+PrettyName
+    Surjective si composition surjective
+-/
 begin
     sorry
 end
 
 lemma exercise.injective_ssi_inverse_gauche : (injective f) ↔
 ∃ F: Y → X, (composition F f) = Identite :=
+/- dEAduction
+PrettyName
+    Injectivité et inverse à gauche
+-/
 begin
     sorry
 end
 
 lemma exercise.surjective_ssi_inverse_droite : (surjective f) ↔
 ∃ F: Y → X, (composition f F) = Identite :=
+/- dEAduction
+PrettyName
+    Surjectivité et inverse à droite
+-/
 begin
     sorry
 end
@@ -601,47 +657,65 @@ namespace exercices_supplementaires
 -- les images réciproques des singletons forment une partition
 -- bijective ssi inversible à g et d et inverses coincident
 
-
 lemma exercise.exercice_ensembles_1
-(A B : set X) :
-A ∩ B = A ∪ B → A = B
-:=
-begin
-    sorry
-end
-
-
-
-lemma exercise.exercice_ensembles_2
-(A B C : set X) :
-A ∩ B = A ∩ C ∧ (set.compl A) ∩ B = (set.compl A) ∩ C → B = C
-:=
-begin
-    sorry
-end
-
-
-
-lemma exercise.exercice_ensembles_3
-(A B C : set X) :
-A ∩ B = A ∩ C ∧ A ∪ B = A ∪ C → B = C
-:=
-begin
-    sorry
-end
-
-lemma exercise.exercice_ensembles_4
 (A B : set X) :
 A ⊆ B ↔ A ∩ B = A
 :=
+/- dEAduction
+PrettyName
+    Caractérisation de l'inclusion par l'intersection
+-/
 begin
     sorry
 end
 
-lemma exercise.complement_intersection_deux
+lemma exercise.complement_intersection_2
 (A B : set X):
 set.compl (A ∩  B) = (set.compl A) ∪ (set.compl B)
 :=
+/- dEAduction
+PrettyName
+    Complémentaire d'une intersection
+-/
+begin
+    sorry
+end
+
+
+lemma exercise.exercice_ensembles_3
+(A B : set X) :
+A ∩ B = A ∪ B → A = B
+:=
+/- dEAduction
+PrettyName
+    Quand l'intersection égale l'union
+-/
+begin
+    sorry
+end
+
+
+lemma exercise.exercice_ensembles_4
+(A B C : set X) :
+A ∩ B = A ∩ C ∧ (set.compl A) ∩ B = (set.compl A) ∩ C → B = C
+:=
+/- dEAduction
+PrettyName
+    Caractérisaton par intersection avec A et son complémentaire
+-/
+begin
+    sorry
+end
+
+
+lemma exercise.exercice_ensembles_5
+(A B C : set X) :
+A ∩ B = A ∩ C ∧ A ∪ B = A ∪ C → B = C
+:=
+/- dEAduction
+PrettyName
+    Même union et même intersection
+-/
 begin
     sorry
 end
@@ -652,10 +726,16 @@ end
 -- def symmetric_difference {X : Type} (A B : set X) := (A ∪ B) \ (A ∩ B)
 -- notation A `Δ` B := symmetric_difference A B
 
-namespace difference_et_dufference_symetrique
+namespace difference_et_difference_symetrique
 /- dEAduction
 PrettyName
     Différence et différence symétrique
+-/
+
+namespace definitions
+/- dEAduction
+PrettyName
+    Définitions
 -/
 
 -- A bouger, mais à enlever de tous les exos où ça ne sert pas !
@@ -666,7 +746,7 @@ lemma definition.existe_un_unique
 :=
 /- dEAduction
 PrettyName
-    ∃! existence et unicité
+    ∃! : existence et unicité
 -/
 begin
     sorry
@@ -697,6 +777,14 @@ begin
     refl,
 end
 
+end definitions
+
+
+namespace exercices
+/- dEAduction
+PrettyName
+    Exercices
+-/
 
 lemma exercise.difference_symetrique_1
 (A B : set X) :
@@ -771,8 +859,9 @@ begin
     sorry
 end
 
+end exercices
 
-end difference_et_dufference_symetrique
+end difference_et_difference_symetrique
 
 -- applications
 variable (f: X → Y)
