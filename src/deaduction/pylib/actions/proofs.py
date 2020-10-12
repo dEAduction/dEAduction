@@ -38,7 +38,8 @@ from deaduction.pylib.actions import (InputType,
                                       action,
                                       format_orelse)
 from deaduction.pylib.mathobj import (MathObject,
-                                      Goal)
+                                      Goal,
+                                      get_new_hyp)
 
 
 @action(_("Let the user choose a proof method"), _("Use proof method"))
@@ -94,14 +95,14 @@ def method_cbr(goal: Goal, l: [MathObject], user_input: [str] = []) -> str:
                                         )
         else:
             h0 = user_input[1]
-            h1 = utils.get_new_hyp()
-            h2 = utils.get_new_hyp()
+            h1 = get_new_hyp(goal)
+            h2 = get_new_hyp(goal)
             possible_codes.append(
                 f"cases (classical.em ({h0})) with {h1} {h2}")
     else:
         h0 = l[0].info['name']
-        h1 = utils.get_new_hyp()
-        h2 = utils.get_new_hyp()
+        h1 = get_new_hyp(goal)
+        h2 = get_new_hyp(goal)
         possible_codes.append(
             f"cases (classical.em ({h0})) with {h1} {h2}")
 
@@ -131,7 +132,7 @@ def method_absurdum(goal: Goal, l: [MathObject]) -> str:
     """
     possible_codes = []
     if len(l) == 0:
-        new_h = utils.get_new_hyp()
+        new_h = get_new_hyp(goal)
         possible_codes.append(f'by_contradiction {new_h}')
     return format_orelse(possible_codes)
 
@@ -157,7 +158,7 @@ def action_choice(goal: Goal, l: [MathObject]) -> str:
     possible_codes = []
     if len(l) == 1:
         h = l[0].info["name"]
-        hf = utils.get_new_hyp()
+        hf = get_new_hyp(goal)
         f = utils.get_new_fun()
         possible_codes.append(
             f'cases classical.axiom_of_choice {h} with {f} {hf}, dsimp at {hf}, dsimp at {f}')
@@ -190,7 +191,7 @@ def action_new_object(goal: Goal, l: [MathObject],
                                          output=_("Introduce new object:"))
         else:  # send code
             x = utils.get_new_var()
-            h = utils.get_new_hyp()
+            h = get_new_hyp(goal)
             possible_codes.append(
                 f"let {x} := {user_input[1]}, "
                 f"have {h} : {x} = {user_input[1]}, refl, ")
@@ -200,7 +201,7 @@ def action_new_object(goal: Goal, l: [MathObject],
                                          title="+",
                                          output=_("Introduce new subgoal:"))
         else:
-            h = utils.get_new_hyp()
+            h = get_new_hyp(goal)
             possible_codes.append(f"have {h} : ({user_input[1]}),")
     return format_orelse(possible_codes)
 

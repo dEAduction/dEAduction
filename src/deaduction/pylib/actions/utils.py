@@ -47,6 +47,7 @@ def get_new_fun():
     return "f{0}".format(_FUN_NB)
 
 
+# OBSOLETE : see mathobj.give_name.get_new_hyp()
 def get_new_hyp():
     global _VAR_NB
     _VAR_NB += 1

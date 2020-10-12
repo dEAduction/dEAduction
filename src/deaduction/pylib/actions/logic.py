@@ -36,23 +36,23 @@ This file is part of dEAduction.
 """
 
 import logging
-from dataclasses import dataclass
 from gettext import gettext as _
+
 from deaduction.pylib.actions import (action,
                                       InputType,
                                       MissingParametersError,
                                       WrongUserInput,
-                                      get_new_hyp,
-                                      get_new_var,
                                       format_orelse)
 from deaduction.pylib.mathobj import (MathObject,
                                       Goal,
-                                      give_global_name)
+                                      give_global_name,
+                                      get_new_hyp)
 
 log = logging.getLogger("logic")  # uncomment to use
 
-
+#########
 ## AND ##
+#########
 
 def construct_and(goal: Goal, user_input: [str]):
     possible_codes = []
@@ -80,24 +80,24 @@ def construct_and(goal: Goal, user_input: [str]):
     return format_orelse(possible_codes)
 
 
-def apply_and(l):
+def apply_and(goal, l):
     possible_codes = []
 
     if l[0].math_type.node != "PROP_AND":
         raise WrongUserInput
 
     h_selected = l[0].info["name"]
-    h1 = get_new_hyp()
-    h2 = get_new_hyp()
+    h1 = get_new_hyp(goal)
+    h2 = get_new_hyp(goal)
     possible_codes.append(f'cases {h_selected} with {h1} {h2}')
     return format_orelse(possible_codes)
 
 
-def construct_and_hyp(selected_objects: [MathObject]):
+def construct_and_hyp(goal, selected_objects: [MathObject]):
     possible_codes = []
     h1 = selected_objects[0].info["name"]
     h2 = selected_objects[1].info["name"]
-    new_h = get_new_hyp()
+    new_h = get_new_hyp(goal)
     possible_codes.append(f'have {new_h} := and.intro {h1} {h2}')
     return format_orelse(possible_codes)
 
@@ -116,9 +116,9 @@ def action_and(goal: Goal, selected_objects: [MathObject],
     if len(selected_objects) == 0:
         return construct_and(goal, user_input)
     if len(selected_objects) == 1:
-        return apply_and(selected_objects)
+        return apply_and(goal, selected_objects)
     if len(selected_objects) == 2:
-        return construct_and_hyp(selected_objects)
+        return construct_and_hyp(goal, selected_objects)
     raise WrongUserInput
 
 
@@ -149,7 +149,7 @@ def construct_or(goal: Goal, user_input: [str]) -> str:
     return format_orelse(possible_codes)
 
 
-def apply_or(l: [MathObject], user_input: [str]) -> str:
+def apply_or(goal, l: [MathObject], user_input: [str]) -> str:
     possible_codes = []
     if l[0].math_type.node != "PROP_OR":
         raise WrongUserInput
@@ -172,8 +172,8 @@ def apply_or(l: [MathObject], user_input: [str]) -> str:
         else:
             possible_codes.append("")
 
-    h1 = get_new_hyp()
-    h2 = get_new_hyp()
+    h1 = get_new_hyp(goal)
+    h2 = get_new_hyp(goal)
     possible_codes[0] += (f'cases {h_selected} with {h1} {h2}')
     return format_orelse(possible_codes)
 
@@ -191,7 +191,7 @@ def action_or(goal: Goal, l: [MathObject], user_input=[]) -> str:
     if len(l) == 0:
         return construct_or(goal, user_input)
     if len(l) == 1:
-        return apply_or(l, user_input)
+        return apply_or(goal, l, user_input)
     raise WrongUserInput
 
 
@@ -229,7 +229,7 @@ def construct_implicate(goal: Goal):
     if goal.target.math_type.node != "PROP_IMPLIES":
         raise WrongUserInput
 
-    h = get_new_hyp()
+    h = get_new_hyp(goal)
     possible_codes.append(f'intro {h}')
     return format_orelse(possible_codes)
 
@@ -250,7 +250,7 @@ def apply_implicate_to_hyp(goal: Goal, l: [MathObject]):
     possible_codes = []
     h_selected = l[-1].info["name"]
     x_selected = l[0].info["name"]
-    h = get_new_hyp()
+    h = get_new_hyp(goal)
 
     if len(l) == 2:
         # try with up to 4 implicit parameters
@@ -338,7 +338,7 @@ def construct_iff_on_hyp(goal: Goal, l: MathObject):
     if not (l[0].math_type.is_prop() and l[1].math_type.is_prop()):
         raise WrongUserInput
 
-    new_h = get_new_hyp()
+    new_h = get_new_hyp(goal)
     h1 = l[0].info["name"]
     h2 = l[1].info["name"]
     possible_codes.append(f'have {new_h} := iff.intro {h1} {h2}')
@@ -422,7 +422,7 @@ def apply_exists(goal: Goal, l: [MathObject]) -> str:
     h_name = l[0].info["name"]
     x = give_global_name(goal=goal, math_type=h_selected.children[0],
                          hints=[h_selected.children[1].format_as_utf8()])
-    hx = get_new_hyp()
+    hx = get_new_hyp(goal)
     if h_selected.children[2].node == "PROP_∃":
         possible_codes.append(
             f'rcases {h_name} with ⟨ {x}, ⟨ {hx}, {h_name} ⟩ ⟩')
@@ -442,11 +442,11 @@ def construct_exists_on_hyp(goal: Goal, l: [MathObject]):
     x = l[0].info["name"]
     hx = l[1].info["name"]
     if not l[0].math_type.is_prop() and l[1].math_type.is_prop():
-        new_h = get_new_hyp()
+        new_h = get_new_hyp(goal)
         possible_codes.append(f'have {new_h} := exists.intro {hx} {x}')
     elif not l[1].math_type.is_prop() and l[0].math_type.is_prop():
         x, hx = hx, x
-        new_h = get_new_hyp()
+        new_h = get_new_hyp(goal)
         possible_codes.append(f'have {new_h} := exists.intro {hx} {x}')
     else:
         raise WrongUserInput
@@ -514,7 +514,7 @@ def apply_function(goal: Goal, l: [MathObject]):
     f = function.info["name"]
     Y = l[-1].math_type.children[1]
     while (len(l) != 1):
-        new_h = get_new_hyp()
+        new_h = get_new_hyp(goal)
         # if function applied to equality
         if l[0].math_type.is_prop():
             h = l[0].info["name"]

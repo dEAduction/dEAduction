@@ -31,11 +31,11 @@ from dataclasses import dataclass
 from gettext import gettext as _
 import logging
 from deaduction.pylib.actions import (  WrongUserInput,
-                                        get_new_hyp,
                                         format_orelse)
 from deaduction.pylib.coursedata import Statement
 from deaduction.pylib.mathobj import (  Goal,
-                                        MathObject)
+                                        MathObject,
+                                        get_new_hyp)
 
 def action_definition(goal : Goal, selected_objects : [MathObject], definition : Statement):
     possible_codes = []
@@ -61,13 +61,12 @@ def action_theorem(goal : Goal, selected_objects : [MathObject], theorem : State
     possible_codes = []
     th = theorem.lean_name
     if len(selected_objects) == 0:
-        h = get_new_hyp()
+        h = get_new_hyp(goal)
         possible_codes.append(f'apply {th}')
         possible_codes.append(f'have {h} := @{th}')
     else:
         arguments = " ".join([selected_objects[0].info["name"]])
-        arguments_type = " "
-        h = get_new_hyp()
+        h = get_new_hyp(goal)
         possible_codes.append(f'apply {th} {arguments}')
         possible_codes.append(f'apply @{th} {arguments}')
         possible_codes.append(f'have {h} := {th} {arguments}')
