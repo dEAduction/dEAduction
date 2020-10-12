@@ -110,6 +110,8 @@ def give_name(math_type,
     # subsets will be named with uppercase letters
     if math_type.node == 'set':
         upper_case_name = True
+    else:
+        upper_case_name = False
 
     # Properties are named 'Hn' where n is an integer
     if math_type.is_prop():
