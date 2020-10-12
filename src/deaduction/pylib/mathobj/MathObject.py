@@ -178,8 +178,8 @@ class MathObject:
             counter = 1
         else:
             counter = 0
-        for math_object in self.children:
-            counter += math_object.contains(other)
+            for math_object in self.children:
+                counter += math_object.contains(other)
         return counter
 
     def direction_for_substitution_in(self, other) -> str:

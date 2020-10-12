@@ -46,7 +46,8 @@ from typing import  Dict
 
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
-                                QIcon)
+                                QIcon,
+                                QCursor)
 from PySide2.QtCore    import ( Signal,
                                 Slot,
                                 Qt)
@@ -122,7 +123,8 @@ class ActionButton(QPushButton):
         self.setText(action.symbol)
         self.setToolTip(action.caption)
         self.clicked.connect(self._emit_action)
-
+        # modify appearance of arrow when over a button
+        self.setCursor(QCursor(Qt.PointingHandCursor))
     @Slot()
     def _emit_action(self):
         """
