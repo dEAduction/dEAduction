@@ -1,9 +1,9 @@
 """
-# config.py : handling the configuration
+# config.py : handle the configuration and the global variables
     
 The configuration is stored in config.ini, IN THE SAME DIRECTORY
 
-Use: from deaduction.config.config import user_config
+Use: from deaduction.config.config import user_config, Global
 and then: allow_proof_by_sorry = user_config.getboolean('allow_proof_by_sorry')
 
 
@@ -52,15 +52,29 @@ except KeyError:
     try:
         user_config = config['DEFAULT']
     except KeyError:
-        config['DEFAULT'] = {'alert_target_solved':  True,
-                              'depth_of_unfold_statements':      1,
-                              'allow_proof_by_sorry': True,
-                              'show_lean_name_for_statements': False
-                              }
+        config['DEFAULT'] = {'alert_target_solved': True,
+                             'depth_of_unfold_statements': 1,
+                             'allow_proof_by_sorry': True,
+                             'show_lean_name_for_statements': False
+                             }
         config['USER'] = {}
         with open(config_file_path, 'w') as configfile:
             config.write(configfile)
         user_config = config['USER']
+
+
+class Global:
+    """
+    all Python global vars should be given throught attrobutes of instances
+     of this class
+    Example if syntax =
+    EXERCISE.PROPERTY_COUNTER
+    """
+    pass
+
+EXERCISE    = Global()  # class for global variables whose lifetime = exercise
+COURSE      = Global()  # class for global variables whose lifetime = 1 course
+SESSION     = Global()  # class for global variables whose lifetime = a session
 
 if __name__ == "__main__":
     # boolean = user_config.getboolean('fold_statements')
