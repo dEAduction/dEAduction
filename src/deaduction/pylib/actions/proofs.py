@@ -49,7 +49,8 @@ for key, value in zip(proof_list, lbt):
     proof_button_texts[key] = value
 
 
-@action(_("Let the user choose a proof method"), _("Use proof method"))
+@action(user_config.get('tooltip_proof_methods'),
+        proof_button_texts['proof_methods'])
 def action_use_proof_method(goal: Goal, l: [MathObject],
                             user_input: [str] = []) -> str:
     # parameters

@@ -38,6 +38,7 @@ This file is part of dEAduction.
 import logging
 from gettext import gettext as _
 
+from deaduction.config.config import user_config
 from deaduction.pylib.actions import (action,
                                       InputType,
                                       MissingParametersError,
@@ -118,14 +119,20 @@ def construct_and_hyp(goal, selected_objects: [MathObject]):
     return format_orelse(possible_codes)
 
 
-@action(_(
-    "If the target is of the form P AND Q: transform the current goal into two subgoals, P, then Q.\nIf a hypothesis of the form P AND Q has been previously selected: creates two new hypothesis P, and Q.\n If two hypothesis P, then Q, have been previously selected: add the new hypothesis P AND Q to the properties."),
-    _('AND'))
+@action(user_config.get('tooltip_and'),
+        logic_button_texts['action_and'])
 def action_and(goal: Goal, selected_objects: [MathObject],
                user_input: [str] = []) -> str:
     """
     Translate into string of lean code corresponding to the action
-    
+
+If the target is of the form P AND Q:
+    transform the current goal into two subgoals, P, then Q.
+If a hypothesis of the form P AND Q has been previously selected:
+    creates two new hypothesis P, and Q.
+If two hypothesis P, then Q, have been previously selected:
+    add the new hypothesis P AND Q to the properties.
+
     :param l:   list of MathObject arguments preselected by the user
     :return:    string of lean code
     """
@@ -194,13 +201,19 @@ def apply_or(goal, l: [MathObject], user_input: [str]) -> str:
     return format_orelse(possible_codes)
 
 
-@action(_(
-    "If the target is of the form P OR Q: tranform the target in P (or Q) accordingly to the user's choice.\nIf a hypothesis of the form P OR Q has been previously selected: transform the current goal into two subgoals, one with P as a hypothesis, and another with Q as a hypothesis."),
-    _("OR"))
+@action(user_config.get('tooltip_or'),
+        logic_button_texts['action_or'])
 def action_or(goal: Goal, l: [MathObject], user_input=[]) -> str:
     """
     Translate into string of lean code corresponding to the action
-    
+
+    If the target is of the form P OR Q:
+tranform the target in P (or Q) accordingly to the user's choice.
+    If a hypothesis of the form P OR Q has been previously selected:
+transform the current goal into two subgoals,
+    one with P as a hypothesis,
+    and another with Q as a hypothesis.
+
     :param l:   list of MathObject arguments preselected by the user
     :return:    string of lean code
     """
@@ -213,13 +226,17 @@ def action_or(goal: Goal, l: [MathObject], user_input=[]) -> str:
 
 ## NOT ##
 
-@action(_(
-    "If no hypothesis has been previously selected: transform the target in an equivalent one which has its negations 'pushed'.\nIf a hypothesis has been previously selected: do the same to the hypothesis."),
-    _("NOT"))
+@action(user_config.get('tooltip_not'),
+        logic_button_texts['action_negate'])
 def action_negate(goal: Goal, l: [MathObject]) -> str:
     """
     Translate into string of lean code corresponding to the action
     
+    If no hypothesis has been previously selected:
+transform the target in an equivalent one which has its negations 'pushed'.
+    If a hypothesis has been previously selected:
+do the same to the hypothesis.
+
     :param l:   list of MathObject arguments preselected by the user
     :return:    string of lean code
     """
@@ -300,13 +317,15 @@ def apply_implicate_to_hyp(goal: Goal, l: [MathObject]):
     return possible_codes
 
 
-@action(_(
-    "If the target is of the form P ⇒ Q: introduce the hypothesis P in the properties and transform the target into Q."),
-    "⇒")
+@action(user_config.get('tooltip_implies'),
+        logic_button_texts['action_implicate'])
 def action_implicate(goal: Goal, l: [MathObject]) -> str:
     """
     Translate into string of lean code corresponding to the action
-    
+
+    If the target is of the form P ⇒ Q:
+introduce the hypothesis P in the properties and transform the target into Q.
+
     :param l:   list of MathObject arguments preselected by the user
     :return:    string of lean code
     """
@@ -361,13 +380,15 @@ def construct_iff_on_hyp(goal: Goal, l: MathObject):
     return format_orelse(possible_codes)
 
 
-@action(_(
-    "If the target is of the form P ⇔ Q: introduce two subgoals, P⇒Q, and Q⇒P."),
-    "⇔")
+@action(user_config.get('tooltip_iff'),
+        logic_button_texts['action_iff'])
 def action_iff(goal: Goal, l: [MathObject], user_input: [str] = []) -> str:
     """
     Translate into string of lean code corresponding to the action
     
+    If the target is of the form P ⇔ Q:
+introduce two subgoals, P⇒Q, and Q⇒P.
+
     :param l:   list of MathObject arguments preselected by the user
     :return:    string of lean code
     """
@@ -394,13 +415,15 @@ def construct_forall(goal):
     return format_orelse(possible_codes)
 
 
-@action(_(
-    "If the target is of the form ∀ x, P(x): introduce x and transform the target into P(x)"),
-    "∀")
+@action(user_config.get('tooltip_forall'),
+        logic_button_texts['action_forall'])
 def action_forall(goal: Goal, l: [MathObject]) -> str:
     """
     Translate into string of lean code corresponding to the action
     
+    If the target is of the form ∀ x, P(x):
+introduce x and transform the target into P(x)
+
     :param l:   list of MathObject arguments preselected by the user
     :return:    string of lean code
     """
@@ -469,13 +492,17 @@ def construct_exists_on_hyp(goal: Goal, l: [MathObject]):
     return format_orelse(possible_codes)
 
 
-@action(_(
-    "If target is of form ∃ x, P(x): ask the user to enter a specific x and transform the target into P(x). \nIf a hypothesis of form ∃ x, P(x) has been previously selected: introduce a new x and add P(x) to the properties"),
-    "∃")
+@action(user_config.get('tooltip_exists'),
+        logic_button_texts['action_exists'])
 def action_exists(goal: Goal, l: [MathObject], user_input: [str] = []) -> str:
     """
     Translate into string of lean code corresponding to the action
     
+    If target is of form ∃ x, P(x):
+ask the user to enter a specific x and transform the target into P(x).
+    If a hypothesis of form ∃ x, P(x) has been previously selected:
+introduce a new x and add P(x) to the properties
+
     :param l:   list of MathObject arguments preselected by the user
     :return:    string of lean code
     """
@@ -546,12 +573,15 @@ def apply_function(goal: Goal, l: [MathObject]):
     return format_orelse(possible_codes)
 
 
-@action(_("Apply last selected item on previous ones"), _("APPLY"))
+@action(user_config.get('tooltip_apply'),
+        logic_button_texts['action_apply'])
 def action_apply(goal: Goal, l: [MathObject]):
     """
     Translate into string of lean code corresponding to the action
     Function explain_how_to_apply should reflect the actions
-    
+
+    Apply last selected item on the other selected items
+
     :param l:   list of MathObject arguments preselected by the user
     :return:    string of lean code
     """
