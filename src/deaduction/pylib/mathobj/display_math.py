@@ -685,15 +685,6 @@ def display_text_belongs_to(math_object, format_, text_depth):
     pass
 
 
-
-
-
-
-
-
-
-
-
 ##########
 # essais #
 ##########

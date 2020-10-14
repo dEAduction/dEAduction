@@ -41,6 +41,13 @@ from deaduction.pylib.mathobj import (MathObject,
                                       Goal,
                                       get_new_hyp)
 
+# turn logic_button_texts into a dictionary
+proof_list= ['proof_methods', 'choice', 'new_object', 'assumption']
+lbt = user_config.get('proof_button_texts').split(', ')
+proof_button_texts = {}
+for key, value in zip(proof_list, lbt):
+    proof_button_texts[key] = value
+
 
 @action(_("Let the user choose a proof method"), _("Use proof method"))
 def action_use_proof_method(goal: Goal, l: [MathObject],
@@ -145,13 +152,16 @@ def method_sorry(goal: Goal, l: [MathObject]) -> str:
     return format_orelse(possible_codes)
 
 
-@action(_(
-    "If a hypothesis of form ∀ a ∈ A, ∃ b ∈ B, P(a,b) has been previously selected: use the axiom of choice to introduce a new function f : A → B and add ∀ a ∈ A, P(a, f(a)) to the properties"),
-        _("CREATE FUN"))
+@action(user_config.get('tooltip_choice'),
+        proof_button_texts['choice'])
 def action_choice(goal: Goal, l: [MathObject]) -> str:
     """
     Translate into string of lean code corresponding to the action
-    
+
+If a hypothesis of form ∀ a ∈ A, ∃ b ∈ B, P(a,b) has been previously selected:
+use the axiom of choice to introduce a new function f : A → B
+and add ∀ a ∈ A, P(a, f(a)) to the properties
+
     :param l: list of MathObject arguments preselected by the user
     :return: string of lean code
     """
@@ -165,14 +175,17 @@ def action_choice(goal: Goal, l: [MathObject]) -> str:
     return format_orelse(possible_codes)
 
 
-@action(_(
-    "Introduce new object\nIntroduce new subgoal: transform the current target into the input target and add this to the properties of the future goal."),
-        "+")
+@action(user_config.get('tooltip_new_object'),
+        proof_button_texts['new_object'])
 def action_new_object(goal: Goal, l: [MathObject],
                       user_input: [str] = []) -> str:
     """
     Translate into string of lean code corresponding to the action
-    
+
+    Introduce new object\nIntroduce new subgoal:
+transform the current target into the input target
+and add this to the properties of the future goal.
+
     :param l: list of MathObject arguments preselected by the user
     :return: string of lean code
     """
@@ -206,8 +219,8 @@ def action_new_object(goal: Goal, l: [MathObject],
     return format_orelse(possible_codes)
 
 
-@action(_("Terminate the proof when the target is obvious from the context"),
-        "¯\_(ツ)_/¯")
+@action(user_config.get('tooltip_assumption'),
+        proof_button_texts['assumption'])
 def action_assumption(goal: Goal, l: [MathObject]) -> str:
     """
     Translate into string of lean code corresponding to the action

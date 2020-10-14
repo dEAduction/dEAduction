@@ -30,7 +30,7 @@ from deaduction.config.config import EXERCISE
 import deaduction.pylib.logger as logger
 
 log = logging.getLogger(__name__)
-EXERCISE.PROPERTY_COUNTER = 0
+EXERCISE.PROPERTY_COUNTER = 1
 
 
 def get_new_hyp(goal):
@@ -108,7 +108,7 @@ def give_name(math_type,
     # special math types #
     ######################
     # subsets will be named with uppercase letters
-    if math_type.node == 'set':
+    if math_type.node == 'SET' or math_type.node == 'TYPE':
         upper_case_name = True
     else:
         upper_case_name = False
@@ -143,7 +143,9 @@ def give_name(math_type,
     if hints:
         starting_name = hints[0]
     else:
-        starting_name = 'A' if upper_case_name else 'x'
+        starting_name = 'A' if math_type.node == 'SET' \
+                   else 'X' if math_type.node == 'TYPE' \
+                   else 'x'
     counter = 0
     potential_name = starting_name
     max_letters = 3  # NB : must be ≤ 26 !

@@ -50,9 +50,25 @@ from deaduction.pylib.mathobj import (MathObject,
 
 log = logging.getLogger("logic")  # uncomment to use
 
-#########
-## AND ##
-#########
+
+# Get buttons symbols from config file
+action_list = ['action_and', 'action_or', 'action_negate',
+               'action_implicate', 'action_iff', 'action_forall',
+               'action_exists', 'action_apply']
+if user_config.getboolean('use_logic_button_symbols'):
+    logic_button_texts = user_config.get('logic_button_symbols')
+else:
+    logic_button_texts = user_config.get('logic_button_texts')
+# turn logic_button_texts into a dictionary
+lbt = logic_button_texts.split(', ')
+logic_button_texts = {}
+for key, value in zip(action_list, lbt):
+    logic_button_texts[key] = value
+
+
+#######
+# AND #
+#######
 
 def construct_and(goal: Goal, user_input: [str]):
     possible_codes = []
@@ -571,7 +587,8 @@ def action_apply(goal: Goal, l: [MathObject]):
 
 applicable_nodes = {'FUNCTION',  # to apply a function
                     'PROP_EQUAL', 'PROP_IFF', 'QUANT_∀',  # for substitution
-                    'PROP_IMPLIES'}
+                    'PROP_IMPLIES'  # TODO: add 'QUANT_∃'
+                    }
 
 
 def is_applicable(math_object) -> bool:
