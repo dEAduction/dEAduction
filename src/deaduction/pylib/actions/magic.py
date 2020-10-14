@@ -27,10 +27,8 @@ This file is part of dEAduction.
 """
 
 from deaduction.pylib.actions.actiondef import action
-
+from deaduction.config.config import _
 from dataclasses import dataclass
-import gettext
-_ = gettext.gettext
 
 import deaduction.pylib.logger as logger
 import logging

@@ -28,7 +28,6 @@ This file is part of dEAduction.
 """
 
 from dataclasses import dataclass
-from gettext import gettext as _
 import logging
 from deaduction.pylib.actions import (  WrongUserInput,
                                         format_orelse)

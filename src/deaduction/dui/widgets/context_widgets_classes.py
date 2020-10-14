@@ -36,7 +36,6 @@ This file is part of d∃∀duction.
 
 from pathlib import Path
 from typing  import Tuple
-from gettext import gettext as  _
 
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
@@ -47,7 +46,7 @@ from PySide2.QtWidgets import ( QHBoxLayout,
                                 QWidget,
                                 QListWidget,
                                 QListWidgetItem)
-from deaduction.config.config import user_config
+from deaduction.config.config import user_config, _
 
 from deaduction.pylib.mathobj import MathObject
 
@@ -236,7 +235,7 @@ class TargetWidget(QWidget):
         # ───────────────────── Widgets ──────────────────── #
 
         caption_label = QLabel(_('Target'))
-        self.setToolTip('To be solved.')
+        self.setToolTip(_('To be proved'))
         # TODO: put the pre-set size of group boxes titles
         caption_label.setStyleSheet('font-size: 11pt;')
 

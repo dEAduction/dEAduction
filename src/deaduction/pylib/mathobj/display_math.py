@@ -48,13 +48,11 @@ shape can include call to some specific formatting functions, e.g.
 """
 
 import logging
-import gettext
 import types
 
-from deaduction.pylib.mathobj.give_name import give_local_name
 import deaduction.pylib.logger as logger
-
-_ = gettext.gettext
+from deaduction.pylib.mathobj.give_name import give_local_name
+from deaduction.config.config import _
 
 log = logging.getLogger(__name__)
 

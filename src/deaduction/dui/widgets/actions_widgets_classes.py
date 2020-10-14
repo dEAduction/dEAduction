@@ -39,7 +39,6 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from gettext import gettext as _
 import              logging
 from pathlib import Path
 from typing import  Dict
@@ -57,7 +56,7 @@ from PySide2.QtWidgets import ( QHBoxLayout,
 from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem)
 
-from deaduction.config.config import user_config
+from deaduction.config.config import user_config, _
 from deaduction.pylib.actions    import   Action
 from deaduction.pylib.coursedata import ( Definition,
                                           Exercise,

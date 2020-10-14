@@ -26,10 +26,7 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from dataclasses import dataclass
-from gettext import gettext as _
-import logging
-from deaduction.config.config import user_config
+from deaduction.config.config import user_config, _
 
 import deaduction.pylib.actions.utils as utils
 from deaduction.pylib.actions import (InputType,

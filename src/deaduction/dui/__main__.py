@@ -27,20 +27,26 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
+# File should be executed from dEAduction/src/deaduction
 import logging
 import qtrio
 import trio
-import gettext
+
 
 from deaduction.dui.launcher import select_course_exercise
 from deaduction.dui.widgets import  ExerciseMainWindow
 from deaduction.pylib import        logger
 from deaduction.pylib.server import ServerInterface
+from deaduction.config.config import _  # for translation
 
 log = logging.getLogger(__name__)
 
+
 async def main():
     log.debug("starting...")
+    test_language = _("Proof by contrapositive")
+    log.debug(f"Language test: {test_language}")
+
     # Choose course and exercise
     course, exercise = select_course_exercise()
 
@@ -66,5 +72,4 @@ async def main():
 
 if __name__ == '__main__':
     logger.configure(debug=True)
-    _ = gettext.gettext
     qtrio.run(main)

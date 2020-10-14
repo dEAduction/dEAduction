@@ -29,7 +29,6 @@ This file is part of d∃∀duction.
 
 from functools import           partial
 import logging
-from gettext import gettext as  _
 from pathlib import Path
 import trio
 from typing import              Callable
@@ -51,6 +50,7 @@ from PySide2.QtWidgets import ( QAction,
                                 QVBoxLayout,
                                 QWidget)
 
+from deaduction.config.config import _
 from deaduction.dui.utils import  (     replace_delete_widget,
                                         ButtonsDialog)
 from deaduction.dui.widgets import (    ActionButton,
@@ -484,7 +484,7 @@ class ExerciseMainWindow(QMainWindow):
         log.debug(f"Goal n°{current_goal_number} / {total_goals_counter}")
         if goals_counter_evolution < 0 and current_goals_counter != 0:
             log.info(f"Current goal solved!")
-            QMessageBox.information(self, _(''),
+            QMessageBox.information(self, '',
                                     _('Current goal solved'),
                                     QMessageBox.Ok)
 
