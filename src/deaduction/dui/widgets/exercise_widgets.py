@@ -476,9 +476,17 @@ class ExerciseMainWindow(QMainWindow):
         new_context = new_goal.tag_and_split_propositions_objects()
 
         # count of goals
-        total_goals_counter, current_goal_number, current_goals_counter \
+        total_goals_counter, \
+            current_goal_number, \
+            current_goals_counter, \
+            goals_counter_evolution \
             = self.count_goals()
         log.debug(f"Goal n°{current_goal_number} / {total_goals_counter}")
+        if goals_counter_evolution < 0 and current_goals_counter != 0:
+            log.info(f"Current goal solved!")
+            QMessageBox.information(self, _(''),
+                                    _('Current goal solved'),
+                                    QMessageBox.Ok)
 
         new_objects_wgt = MathObjectWidget(new_context[0])
         new_props_wgt = MathObjectWidget(new_context[1])
@@ -805,6 +813,9 @@ class ExerciseMainWindow(QMainWindow):
             - total_goals_counter : total number of goals during Proof history
             - current_goal_number = number of the goal under study
             - current_goals_counter = number of goals at end of Proof
+            - goals_counter_evolution = last evolution :
+                > 0 means that new goal has appeared
+                < 0 means that a goal has been solved
         """
         proof = self.proof()
         return proof.count_goals_from_proof()

@@ -332,24 +332,30 @@ class Proof:
             - total_goals_counter : total number of goals during Proof history
             - current_goal_number = number of the goal under study
             - current_goals_counter = number of goals at end of Proof
+            - goals_counter_evolution = last evolution :
+                > 0 means that new goal has appeared
+                < 0 means that a goal has been solved
         """
         total_goals_counter = 0
         current_goal_number = 1
         current_goals_counter = 0
+        goals_counter_evolution = 0
         #log.debug(f"counting goals in {self} with {len(self.steps)} "
         #          f"steps")
         for proof_state, _ in self.steps:
             new_counter = len(proof_state.goals)
-            if new_counter > current_goals_counter:  # new goals have appeared
-                total_goals_counter += new_counter - current_goals_counter
-            elif new_counter < current_goals_counter:  # some goals have
-                # been solved
-                current_goal_number += current_goals_counter - new_counter
+            goals_counter_evolution = new_counter - current_goals_counter
+            if goals_counter_evolution > 0:  # new goals have appeared
+                total_goals_counter += goals_counter_evolution
+            elif goals_counter_evolution < 0:  # some goals have been solved
+                current_goal_number -= goals_counter_evolution
             current_goals_counter = new_counter
 
         return total_goals_counter, \
                current_goal_number, \
-               current_goals_counter
+               current_goals_counter, \
+               goals_counter_evolution
+
 
 
 def print_proof_state(goal):

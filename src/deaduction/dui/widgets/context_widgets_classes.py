@@ -47,6 +47,7 @@ from PySide2.QtWidgets import ( QHBoxLayout,
                                 QWidget,
                                 QListWidget,
                                 QListWidgetItem)
+from deaduction.config.config import user_config
 
 from deaduction.pylib.mathobj import MathObject
 
@@ -139,6 +140,7 @@ class MathObjectWidgetItem(QListWidgetItem):
         caption   = f'{lean_name} : {math_expr}'
         self.setText(caption)
         self.setIcon(_TagIcon(tag))
+
 
     def __eq__(self, other):
         """
@@ -245,7 +247,8 @@ class TargetWidget(QWidget):
         # where H might be the lean name of the target. That's what
         # the .math_type is for.
         target_label = QLabel(target.math_type.format_as_utf8() if target else '…')
-        target_label.setStyleSheet('font-size: 32pt;')
+        size = user_config.get('target_font_size')
+        target_label.setStyleSheet(f'font-size: {size};')
 
         # ───────────────────── Layouts ──────────────────── #
 
