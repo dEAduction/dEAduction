@@ -48,7 +48,7 @@ for key, value in zip(proof_list, lbt):
 
 @action(user_config.get('tooltip_proof_methods'),
         proof_button_texts['proof_methods'])
-def action_use_proof_method(goal: Goal, l: [MathObject],
+def action_use_proof_methods(goal: Goal, l: [MathObject],
                             user_input: [str] = []) -> str:
     # parameters
     allow_proof_by_sorry = user_config.getboolean('allow_proof_by_sorry')

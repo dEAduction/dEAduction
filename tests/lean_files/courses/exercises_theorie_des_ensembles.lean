@@ -182,9 +182,9 @@ PrettyName
 Description
     L'intersection est distributive par rapport à l'union
 Tools->Logic
-    $ALL -negate
+    $ALL
 Tools->ProofTechniques
-    $ALL -use_proof_method
+    $ALL
 Tools->Definitions
     $UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles
 Tools->Theorems
@@ -195,6 +195,9 @@ ExpectedVarsNumber
 begin
     sorry
 end
+
+-- NB: 'ExpectedVarsNumber' is not implemented yet
+-- planned to be used for naming variables
 
 
 lemma exercise.inter_distributive_union : A ∪ (B ∩ C)  = (A ∪ B) ∩ (A ∪ C) :=
@@ -656,6 +659,7 @@ namespace exercices_supplementaires
 -- relations : rel d'eq implique classes égales ou disjointes
 -- les images réciproques des singletons forment une partition
 -- bijective ssi inversible à g et d et inverses coincident
+
 
 lemma exercise.exercice_ensembles_1
 (A B : set X) :

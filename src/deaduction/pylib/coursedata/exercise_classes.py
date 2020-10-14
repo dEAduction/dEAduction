@@ -358,7 +358,7 @@ class Exercise(Theorem):
             post_data[field] = []
             for item in list_3:
                 if item not in action_names:
-                    log.warning(f"label {item} not in {labels[field]}  lists")
+                    log.warning(f"label {item} not in {labels[field]}  list")
                 else:
                     post_data[field].append(action_dict["action_" + item])
 

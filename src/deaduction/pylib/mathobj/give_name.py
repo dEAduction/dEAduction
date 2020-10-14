@@ -108,7 +108,7 @@ def give_name(math_type,
     # special math types #
     ######################
     # subsets will be named with uppercase letters
-    if math_type.node == 'SET' or math_type.node == 'TYPE':
+    if math_type.node in ['SET', 'TYPE', 'PROP']:
         upper_case_name = True
     else:
         upper_case_name = False
@@ -116,6 +116,14 @@ def give_name(math_type,
     # Properties are named 'Hn' where n is an integer
     if math_type.is_prop():
         return get_new_hyp()
+
+    # standard hints
+    standard_hint = 'A' if math_type.node.startswith('SET') \
+                    else 'X' if math_type.node == 'TYPE' \
+                    else 'P' if math_type.node == 'PROP' \
+                    else 'f' if math_type.node == 'FUNCTION' \
+                    else 'x'
+    hints.append(standard_hint)
 
     if upper_case_name:
         hints = [hint[0].upper() for hint in hints]  # so each hint has only

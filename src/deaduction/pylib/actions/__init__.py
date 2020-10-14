@@ -44,4 +44,4 @@ from .logic import (        action_negate,
                             action_forall,
                             action_exists)
 
-from .proofs import (       action_use_proof_method)
+from .proofs import (       action_use_proof_methods)
