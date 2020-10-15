@@ -520,21 +520,60 @@ introduce a new x and add P(x) to the properties
 
 ## APPLY
 
-def apply_substitute(goal: Goal, l: [MathObject]):
+def apply_substitute(goal: Goal, l: [MathObject], user_input: [str]):
     """
     Try to rewrite the goal or the first selected property using the last
     selected property
     """
     possible_codes = []
-
+    if len(l) == 1:
+        heq = l[0]
+    else:
+        heq = l[-1]
+    left_term = heq.math_type.children[0]
+    right_term = heq.math_type.children[1]
+    choices = [("1", left_term.format_as_utf8()),
+            ("2", right_term.format_as_utf8())]
+            
     if len(l) == 1:
         h = l[0].info["name"]
-        possible_codes.append(f'rw {h}')
-        possible_codes.append(f'rw <- {h}')
-
+        print(len(user_input))
+        if len(user_input) > 0 and user_input[0] <= 1:
+            if user_input[0] == 1:
+                possible_codes.append(f'rw <- {h}')
+            else:
+                possible_codes.append(f'rw {h}')
+        else:
+            if goal.target.math_type.contains(left_term) and \
+                    goal.target.math_type.contains(right_term):
+                
+                raise MissingParametersError(
+                    InputType.Choice,
+                    choices, 
+                    title=_("Precision of substitution"),
+                    output=_("Choose what you want to replace"))
+                 
+            possible_codes.append(f'rw {h}')
+            possible_codes.append(f'rw <- {h}')
+    
     if len(l) == 2:
-        h = l[1].info["name"]
-        heq = l[0].info["name"]
+        h = l[0].info["name"]
+        heq = l[-1].info["name"]
+        if len(user_input) > 0 and user_input[0] <= 1:
+            if user_input[0] == 1:
+                possible_codes.append(f'rw <- {heq} at {h}')
+            else:
+                possible_codes.append(f'rw {heq} at {h}')
+        else:     
+            if l[0].math_type.contains(left_term) and \
+                    l[0].math_type.contains(right_term):
+                    
+                raise MissingParametersError(
+                    InputType.Choice,
+                    choices, 
+                    title=_("Precision of substitution"),
+                    output=_("Choose what you want to replace"))
+                
         possible_codes.append(f'rw <- {heq} at {h}')
         possible_codes.append(f'rw {heq} at {h}')
 
@@ -543,6 +582,7 @@ def apply_substitute(goal: Goal, l: [MathObject]):
         possible_codes.append(f'rw {heq} at {h}')
 
     return possible_codes
+
 
 
 def apply_function(goal: Goal, l: [MathObject]):
@@ -574,7 +614,7 @@ def apply_function(goal: Goal, l: [MathObject]):
 
 @action(user_config.get('tooltip_apply'),
         logic_button_texts['action_apply'])
-def action_apply(goal: Goal, l: [MathObject]):
+def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
     """
     Translate into string of lean code corresponding to the action
     Function explain_how_to_apply should reflect the actions
@@ -599,7 +639,7 @@ def action_apply(goal: Goal, l: [MathObject]):
     if quantifier == "PROP_EQUAL" or quantifier == "PROP_IFF" or \
             quantifier == "QUANT_∀":
         # will use last property to rewrite goal or first property:
-        possible_codes.extend(apply_substitute(goal, l))
+        possible_codes.extend(apply_substitute(goal, l, user_input))
 
     if quantifier == "PROP_IMPLIES" or quantifier == "QUANT_∀":
         if len(l) == 1:
