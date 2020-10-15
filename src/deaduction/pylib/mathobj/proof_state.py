@@ -29,11 +29,9 @@ This file is part of dEAduction.
 from dataclasses import dataclass
 import logging
 from typing import List, Tuple
-import gettext
-
-_ = gettext.gettext
 
 import deaduction.pylib.logger as logger
+from deaduction.config.config import _
 
 from deaduction.pylib.mathobj.MathObject import \
                                 MathObject
