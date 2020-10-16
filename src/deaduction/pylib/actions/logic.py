@@ -203,9 +203,6 @@ def construct_or_on_hyp(goal: Goal, l: [MathObject], user_input: [str] = []):
     possible_codes = []
     hP = l[0].info["name"]
     P = l[0].math_type.info["name"]
-    
-    print("QQQQQQQQ")
-    
     print(user_input)
     if len(l) == 2:
         Q = l[1].info["name"]
@@ -218,11 +215,10 @@ def construct_or_on_hyp(goal: Goal, l: [MathObject], user_input: [str] = []):
         Q = user_input[0]
         user_input = user_input[1:]
         
-    print(user_input)
     if len(user_input) == 0:
         raise MissingParametersError(
             InputType.Choice,
-            [("1", "left"), ("2", "right")],
+            [("left", f'{P} or {Q}'), ("right", f'{Q} or {P}')],
             title=_("Choose side"),
             output=_(f'On which side do you want {P} ?'))
     
