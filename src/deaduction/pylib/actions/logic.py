@@ -492,11 +492,11 @@ def construct_exists_on_hyp(goal: Goal, l: [MathObject]):
     hx = l[1].info["name"]
     if not l[0].math_type.is_prop() and l[1].math_type.is_prop():
         new_h = get_new_hyp(goal)
-        possible_codes.append(f'have {new_h} := exists.intro {hx} {x}')
+        possible_codes.append(f'have {new_h} := exists.intro {x} {hx}')
     elif not l[1].math_type.is_prop() and l[0].math_type.is_prop():
         x, hx = hx, x
         new_h = get_new_hyp(goal)
-        possible_codes.append(f'have {new_h} := exists.intro {hx} {x}')
+        possible_codes.append(f'have {new_h} := exists.intro {x} {hx}')
     else:
         raise WrongUserInput
     return format_orelse(possible_codes)
