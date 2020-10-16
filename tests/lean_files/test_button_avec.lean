@@ -504,6 +504,27 @@ begin
 end
 
 
+lemma exercise.test_apply_sub_eg_avec_ambiguite_complique (x y : X) (f g: X → X) (H2 : g (g x) = y) (H3 : f = g) : f (g (g( x))) = g y :=
+/- dEAduction
+PrettyName
+    test_apply_target
+Description
+    test_exist
+Tools->Logic
+    $ALL
+Tools->ProofTechniques
+    $ALL
+Tools->Definitions
+    $UNTIL_NOW
+Tools->Theorems
+    double_inclusion
+ExpectedVarsNumber
+    X=3, A=1, B=1
+-/
+begin
+    sorry
+end
+
 lemma exercise.test_apply_sub_iff_avec_ambiguite (A B : Prop) (H : A ↔  B) (P : Prop → Prop → Prop) (H2 : P A B) : P B A :=
 /- dEAduction
 PrettyName
