@@ -365,8 +365,17 @@ def construct_iff(goal: Goal, user_input: [str]):
         raise WrongUserInput
     return format_orelse(possible_codes)
 
-
-def construct_iff_on_hyp(goal: Goal, l: MathObject):
+def destruct_iff_on_hyp(goal: Goal, l: [MathObject]):
+    possible_codes = []
+    if l[0].math_type.node != "PROP_IFF":
+        raise WrongUserInput
+    h = l[0].info["name"]
+    h1 = get_new_hyp(goal)
+    h2 = get_new_hyp(goal)
+    possible_codes.append(f'cases (iff_def.mp {h}) with {h1} {h2}')
+    return format_orelse(possible_codes)
+    
+def construct_iff_on_hyp(goal: Goal, l: [MathObject]):
     possible_codes = []
 
     if not (l[0].math_type.is_prop() and l[1].math_type.is_prop()):
@@ -393,6 +402,8 @@ introduce two subgoals, P⇒Q, and Q⇒P.
     """
     if len(l) == 0:
         return construct_iff(goal, user_input)
+    if len(l) == 1:
+        return destruct_iff_on_hyp(goal, l)
     if len(l) == 2:
         return construct_iff_on_hyp(goal, l)
     raise WrongUserInput

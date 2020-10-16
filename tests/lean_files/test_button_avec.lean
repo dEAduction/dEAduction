@@ -189,7 +189,6 @@ begin
     sorry
 end
 
-
 lemma exercise.test_not_hyp (P : Prop) (H1 : ¬ ¬ P) : P :=
 /- dEAduction
 PrettyName
@@ -298,6 +297,27 @@ begin
     sorry
 end
 
+
+lemma exercise.test_split_iff_on_hyp (P Q : Prop) (h1: P ↔ Q): (P → Q) ∧ (Q → P) :=
+/- dEAduction
+PrettyName
+    test_apply_and2
+Description
+    test_exist
+Tools->Logic
+    $ALL
+Tools->ProofTechniques
+    $ALL
+Tools->Definitions
+    $UNTIL_NOW
+Tools->Theorems
+    double_inclusion
+ExpectedVarsNumber
+    X=3, A=1, B=1
+-/
+begin
+    sorry
+end
 
 lemma exercise.test_apply_fun (x y : X) (f : X → X) (H1 : x = y) : (f x = f y) :=
 /- dEAduction
