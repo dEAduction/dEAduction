@@ -199,9 +199,48 @@ def apply_or(goal, l: [MathObject], user_input: [str]) -> str:
     possible_codes[0] += (f'cases {h_selected} with {h1} {h2}')
     return format_orelse(possible_codes)
 
-
+def construct_or_on_hyp(goal: Goal, l: [MathObject], user_input: [str] = []):
+    possible_codes = []
+    hP = l[0].info["name"]
+    P = l[0].math_type.info["name"]
+    
+    print("QQQQQQQQ")
+    
+    print(user_input)
+    if len(l) == 2:
+        Q = l[1].info["name"]
+    
+    elif len(l) == 1:
+        if len(user_input) == 0:
+            raise MissingParametersError(InputType.Text,
+                    title=_("OR"),
+                    output=_("Enter proposition you want to use:"))
+        Q = user_input[0]
+        user_input = user_input[1:]
+        
+    print(user_input)
+    if len(user_input) == 0:
+        raise MissingParametersError(
+            InputType.Choice,
+            [("1", "left"), ("2", "right")],
+            title=_("Choose side"),
+            output=_(f'On which side do you want {P} ?'))
+    
+    new_h = get_new_hyp(goal)
+    if user_input[0] == 0:
+        possible_codes.append(f'have {new_h} := @or.inl {P} {Q} {hP}')
+    elif user_input[0] == 1:
+        possible_codes.append(f'have {new_h} := @or.inr {Q} {P} {hP}')
+    else:
+        raise WrongUserInput
+    return format_orelse(possible_codes)
+            
+            
+            
+            
 @action(user_config.get('tooltip_or'),
         logic_button_texts['action_or'])
+        
 def action_or(goal: Goal, l: [MathObject], user_input=[]) -> str:
     """
     Translate into string of lean code corresponding to the action
@@ -219,7 +258,12 @@ transform the current goal into two subgoals,
     if len(l) == 0:
         return construct_or(goal, user_input)
     if len(l) == 1:
-        return apply_or(goal, l, user_input)
+        if l[0].math_type.node == "PROP_OR":
+            return apply_or(goal, l, user_input)
+        else:
+            return construct_or_on_hyp(goal, l, user_input)
+    if len(l) == 2:
+        return construct_or_on_hyp(goal, l, user_input)
     raise WrongUserInput
 
 
@@ -601,25 +645,32 @@ def apply_function(goal: Goal, l: [MathObject]):
 
     if len(l) == 1:
         raise WrongUserInput
-    function = l[-1]  # let us check the input is indeed a function
+    
+    # let us check the input is indeed a function
+    function = l[-1]
     if function.math_type.node != "FUNCTION":
         raise WrongUserInput
+    
     f = function.info["name"]
     Y = l[-1].math_type.children[1]
+    
     while (len(l) != 1):
         new_h = get_new_hyp(goal)
+        
         # if function applied to equality
         if l[0].math_type.is_prop():
             h = l[0].info["name"]
             possible_codes.append(f'have {new_h} := congr_arg {f} {h}')
+            
         # if function applied to element x:
         # create new element y and new equality y=f(x)
         else:
             x = l[0].info["name"]
-            y = give_global_name(goal=goal, math_type=Y, hints=[Y.info[
-                                                                    "name"].lower()])
+            y = give_global_name(goal=goal,
+                    math_type=Y,
+                    hints=[Y.info["name"].lower()])
             possible_codes.append(f'set {y} := {f} {x} with {new_h}')
-        del l[0]
+        l = l[1:]
     return format_orelse(possible_codes)
 
 
