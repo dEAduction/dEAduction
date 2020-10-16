@@ -201,9 +201,10 @@ def apply_or(goal, l: [MathObject], user_input: [str]) -> str:
 
 def construct_or_on_hyp(goal: Goal, l: [MathObject], user_input: [str] = []):
     possible_codes = []
+    if not l[0].math_type.is_prop():
+        raise WrongUserInput
     hP = l[0].info["name"]
-    P = l[0].math_type.info["name"]
-    print(user_input)
+    P = l[0].math_type.format_as_utf8()
     if len(l) == 2:
         Q = l[1].info["name"]
     
@@ -218,15 +219,15 @@ def construct_or_on_hyp(goal: Goal, l: [MathObject], user_input: [str] = []):
     if len(user_input) == 0:
         raise MissingParametersError(
             InputType.Choice,
-            [("left", f'{P} or {Q}'), ("right", f'{Q} or {P}')],
+            [("left", f'({P}) or ({Q})'), ("right", f'({Q}) or ({P})')],
             title=_("Choose side"),
             output=_(f'On which side do you want {P} ?'))
     
     new_h = get_new_hyp(goal)
     if user_input[0] == 0:
-        possible_codes.append(f'have {new_h} := @or.inl {P} {Q} {hP}')
+        possible_codes.append(f'have {new_h} := @or.inl _ ({Q}) ({hP})')
     elif user_input[0] == 1:
-        possible_codes.append(f'have {new_h} := @or.inr {Q} {P} {hP}')
+        possible_codes.append(f'have {new_h} := @or.inr ({Q}) _ ({hP})')
     else:
         raise WrongUserInput
     return format_orelse(possible_codes)
@@ -588,7 +589,6 @@ def apply_substitute(goal: Goal, l: [MathObject], user_input: [str]):
             
     if len(l) == 1:
         h = l[0].info["name"]
-        print(len(user_input))
         if len(user_input) > 0 and user_input[0] <= 1:
             if user_input[0] == 1:
                 possible_codes.append(f'rw <- {h}')
