@@ -78,7 +78,7 @@ log = logging.getLogger(__name__)
 
 class ActionButton(QPushButton):
     """
-    Class for so-called 'action buttons' (e.g. ∀ button). Each
+    Class for so-called 'action buttons' (e.g. '∀' button). Each
     instance of this class is associated to an instance of the class
     Action (self.action). This instance contains
     all information required by L∃∀N. Furthermore, each

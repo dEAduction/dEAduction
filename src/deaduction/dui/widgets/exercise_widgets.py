@@ -483,6 +483,7 @@ class ExerciseMainWindow(QMainWindow):
             = self.count_goals()
         log.debug(f"Goal n°{current_goal_number} / {total_goals_counter}")
         if goals_counter_evolution < 0 and current_goals_counter != 0:
+            # todo: do not display when undo
             log.info(f"Current goal solved!")
             QMessageBox.information(self, '',
                                     _('Current goal solved'),

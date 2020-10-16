@@ -260,3 +260,4 @@ class TargetWidget(QWidget):
         main_layout.addLayout(central_layout)
         main_layout.addStretch()
         self.setLayout(main_layout)
+
