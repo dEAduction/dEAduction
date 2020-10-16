@@ -235,6 +235,9 @@ def action_assumption(goal: Goal, l: [MathObject]) -> str:
             if goal.target.math_type.children[0] == \
                     goal.target.math_type.children[1]:
                 possible_codes.append('refl')
+        possible_codes.append('ac_reflexivity')
+        possible_codes.append('apply eq.symm, assumption')
+        possible_codes.append('apply iff.symm, assumption')
     if len(l) == 1:
         possible_codes.append(f'apply {l[0].info["name"]}')
     return format_orelse(possible_codes)
