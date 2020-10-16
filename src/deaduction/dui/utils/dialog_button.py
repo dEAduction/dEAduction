@@ -86,7 +86,7 @@ class ButtonsDialog(QDialog):
             new_layout.addWidget(self.choices[-1])
             new_layout.addStretch(1)
             layout.addLayout(new_layout)
-            layout.addSpacing(-15)
+            layout.addSpacing(-5)
 
         # Cancel button
         if cancel_button:
