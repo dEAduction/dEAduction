@@ -572,7 +572,31 @@ introduce a new x and add P(x) to the properties
 
 ## APPLY
 
-def apply_substitute(goal: Goal, l: [MathObject], user_input: [str]):
+def apply_substitute_maybe(goal: Goal, l: [MathObject]):
+    """
+    Try to rewrite the goal or the first selected property using the last
+    selected property
+    """
+    possible_codes = []
+
+    if len(l) == 1:
+        h = l[0].info["name"]
+        possible_codes.append(f'rw {h}')
+        possible_codes.append(f'rw <- {h}')
+
+    if len(l) == 2:
+        h = l[1].info["name"]
+        heq = l[0].info["name"]
+        possible_codes.append(f'rw <- {heq} at {h}')
+        possible_codes.append(f'rw {heq} at {h}')
+
+        h, heq = heq, h
+        possible_codes.append(f'rw <- {heq} at {h}')
+        possible_codes.append(f'rw {heq} at {h}')
+
+    return possible_codes
+    
+def apply_substitute_for_sure(goal: Goal, l: [MathObject], user_input: [str]):
     """
     Try to rewrite the goal or the first selected property using the last
     selected property
@@ -584,8 +608,10 @@ def apply_substitute(goal: Goal, l: [MathObject], user_input: [str]):
         heq = l[-1]
     left_term = heq.math_type.children[0]
     right_term = heq.math_type.children[1]
-    choices = [("1", left_term.format_as_utf8()),
-            ("2", right_term.format_as_utf8())]
+    choices = [(left_term.format_as_utf8(),
+            f'{left_term.format_as_utf8()} ← {right_term.format_as_utf8()}'),
+            (right_term.format_as_utf8(),
+            f'{right_term.format_as_utf8()} ← {left_term.format_as_utf8()}')]
             
     if len(l) == 1:
         h = l[0].info["name"]
@@ -602,7 +628,7 @@ def apply_substitute(goal: Goal, l: [MathObject], user_input: [str]):
                     InputType.Choice,
                     choices, 
                     title=_("Precision of substitution"),
-                    output=_("Choose what you want to replace"))
+                    output=_("Choose which one you want to replace"))
                  
             possible_codes.append(f'rw {h}')
             possible_codes.append(f'rw <- {h}')
@@ -693,11 +719,12 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
 
     # determines which kind of property the user wants to apply
     quantifier = l[-1].math_type.node
-    log.info(quantifier)
-    if quantifier == "PROP_EQUAL" or quantifier == "PROP_IFF" or \
-            quantifier == "QUANT_∀":
-        # will use last property to rewrite goal or first property:
-        possible_codes.extend(apply_substitute(goal, l, user_input))
+    log.info(quantifier)    
+    if quantifier == "QUANT_∀":
+        possible_codes.extend(apply_substitute_maybe(goal, l))
+    if quantifier == "PROP_EQUAL" or quantifier == "PROP_IFF":
+        # will use last property to rewrite goal or first property
+        possible_codes.extend(apply_substitute_for_sure(goal, l, user_input))
 
     if quantifier == "PROP_IMPLIES" or quantifier == "QUANT_∀":
         if len(l) == 1:
