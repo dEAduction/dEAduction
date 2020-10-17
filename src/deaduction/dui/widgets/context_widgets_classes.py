@@ -37,6 +37,8 @@ This file is part of d∃∀duction.
 from pathlib import Path
 from typing  import Tuple
 
+from PySide2.QtCore    import ( Signal,
+                                Slot)
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
                                 QIcon)
@@ -198,6 +200,20 @@ class MathObjectWidget(QListWidget):
             item = MathObjectWidgetItem(mathobject, tag)
             self.addItem(item)
             self.items.append(item)
+
+        self.itemDoubleClicked.connect(self._emit_apply_math_object)
+
+    @Slot()
+    def _emit_apply_math_object(self, item):
+        """
+        Emit the signal self.apply_math_object_triggered with self as an
+        argument. This slot is connected to ActionButton.clicked signal in
+        self.__init__.
+        """
+        self.apply_math_object_triggered.emit(self, item)
+
+
+MathObjectWidget.apply_math_object_triggered = Signal(MathObjectWidget)
 
 
 ##########################

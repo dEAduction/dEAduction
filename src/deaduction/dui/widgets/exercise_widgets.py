@@ -62,6 +62,7 @@ from deaduction.dui.widgets import (    ActionButton,
                                         MathObjectWidgetItem,
                                         TargetWidget)
 from deaduction.pylib.actions import (  Action,
+                                        action_apply,
                                         InputType,
                                         MissingParametersError,
                                         WrongUserInput)
@@ -232,6 +233,15 @@ class ExerciseCentralWidget(QWidget):
 
         return self.logic_btns.buttons + self.proof_btns.buttons
 
+    @property
+    def math_objects_widgets(self) -> [MathObjectWidgetItem]:
+        """
+        Do not delete! A list of all objects and properties
+        widgets (instances of the class MathObjectWidgetItem).
+        """
+
+        return self.objects_wgt.items + self.props_wgt.items
+
     ###########
     # Methods #
     ###########
@@ -355,9 +365,10 @@ class ExerciseMainWindow(QMainWindow):
     :attribute toolbar QToolBar: The toolbar.
     """
 
-    window_closed         = Signal()
-    __action_triggered    = Signal(ActionButton)
-    __statement_triggered = Signal(StatementsTreeWidgetItem)
+    window_closed                   = Signal()
+    __action_triggered              = Signal(ActionButton)
+    __apply_math_object_triggered   = Signal(MathObjectWidgetItem)
+    __statement_triggered           = Signal(StatementsTreeWidgetItem)
 
     def __init__(self, exercise: Exercise, servint: ServerInterface):
         """
@@ -396,6 +407,7 @@ class ExerciseMainWindow(QMainWindow):
         for action_button in self.ecw.actions_buttons:
             action_button.action_triggered.connect(self.__action_triggered)
         self.ecw.statements_tree.itemClicked.connect(self.__statement_triggered)
+
 
         # UI
         self.toolbar.toggle_lean_editor_action.triggered.connect(
@@ -504,6 +516,13 @@ class ExerciseMainWindow(QMainWindow):
         # Reconnect Context area signals and slots
         self.ecw.objects_wgt.itemClicked.connect(self.process_context_click)
         self.ecw.props_wgt.itemClicked.connect(self.process_context_click)
+        # for item in self.ecw.math_objects_widgets:
+        #    item.apply_math_object_triggered.connect(
+        #    self.__apply_math_object_triggered)
+        self.ecw.objects_wgt.apply_math_object_triggered.connect(
+            self.__apply_math_object_triggered)
+        self.ecw.props_wgt.apply_math_object_triggered.connect(
+            self.__apply_math_object_triggered)
 
     ##################################
     # Async tasks and server methods #
@@ -540,7 +559,8 @@ class ExerciseMainWindow(QMainWindow):
                          self.window_closed,
                          self.toolbar.undo_action.triggered,
                          self.__action_triggered,
-                         self.__statement_triggered]) as emissions:
+                         self.__statement_triggered,
+                         self.__apply_math_object_triggered]) as emissions:
             async for emission in emissions.channel:
                 if emission.is_from(self.lean_editor.editor_send_lean):
                     await self.process_async_signal(self.__server_send_editor_lean)
@@ -560,11 +580,14 @@ class ExerciseMainWindow(QMainWindow):
                 elif emission.is_from(self.__action_triggered):
                     # TODO: comment, what is emission.args[0]?
                     await self.process_async_signal(partial(self.__server_call_action,
-                                                            emission.args[0]))
+                                                            emission.args[0].action))
 
                 elif emission.is_from(self.__statement_triggered):
                     await self.process_async_signal(partial(self.__server_call_statement,
                                                             emission.args[0]))
+
+                elif emission.is_from(self.__apply_math_object_triggered):
+                    await self.__server_call_apply(emission.args)
 
     # ──────────────── Template function ─────────────── #
 
@@ -616,10 +639,10 @@ class ExerciseMainWindow(QMainWindow):
     # ─────────────── Specific functions ─────────────── #
     # To be called as process_function in the above
 
-    async def __server_call_action(self, action_btn: ActionButton):
+    async def __server_call_action(self, action: Action):
         # TODO: docstring me
 
-        action = action_btn.action
+        #action = action_btn.action
         user_input = []
         log.info(f'Calling action {action.symbol}')
         # Send action and catch exception when user needs to:
@@ -631,13 +654,12 @@ class ExerciseMainWindow(QMainWindow):
                     code = action.run(self.current_goal,
                             self.current_context_selection_as_mathobjects)
                 else:
-                    code = action_btn.action.run(self.current_goal,
+                    code = action.run(self.current_goal,
                             self.current_context_selection_as_mathobjects,
                             user_input)
             except MissingParametersError as e:
                 if e.input_type == InputType.Text:
-                    choice, ok = QInputDialog.getText(action_btn,
-                                                      e.title,
+                    choice, ok = QInputDialog.getText(e.title,
                                                       e.output)
                 elif e.input_type == InputType.Choice:
                     choice, ok = ButtonsDialog.get_item(e.choices,
@@ -655,6 +677,15 @@ class ExerciseMainWindow(QMainWindow):
                 log.debug("Code sent to lean: " + code)
                 await self.servint.code_insert(action.symbol, code)
                 break
+
+    async def __server_call_apply(self, args):
+        # TODO: docstring me
+        log.debug(f"args: {args}")
+        widget, item = args
+        math_object = item.mathobject
+        self.current_context_selection.append(item)
+        await self.process_async_signal(partial(self.__server_call_action,
+                                                action_apply))
 
     async def __server_call_statement(self, item: StatementsTreeWidgetItem):
         # TODO: docstring me

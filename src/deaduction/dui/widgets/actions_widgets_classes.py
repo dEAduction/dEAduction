@@ -136,7 +136,7 @@ class ActionButton(QPushButton):
 
 
 # We wish to have an ActionButton class attribute called
-# action_triggered and defined as Signal(ActionButotn). At first, one
+# action_triggered and defined as Signal(ActionButton). At first, one
 # may define it in ActionButton.__init__. However, doing this will raise
 # an exception because in ActionButton.__init__, the class ActionButton
 # is not *yet* defined. The workaround is to define this class attribute

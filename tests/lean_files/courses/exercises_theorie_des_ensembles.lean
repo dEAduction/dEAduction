@@ -698,14 +698,25 @@ begin
     sorry
 end
 
+lemma exercise.exercice_ensembles_4a
+(A B C : set X) :
+A ∩ B = A ∩ C ∧ (set.compl A) ∩ B = (set.compl A) ∩ C → B ⊆ C
+:=
+/- dEAduction
+PrettyName
+    Caractérisation par intersection avec A et son complémentaire, I
+-/
+begin
+    sorry
+end
 
-lemma exercise.exercice_ensembles_4
+lemma exercise.exercice_ensembles_4b
 (A B C : set X) :
 A ∩ B = A ∩ C ∧ (set.compl A) ∩ B = (set.compl A) ∩ C → B = C
 :=
 /- dEAduction
 PrettyName
-    Caractérisaton par intersection avec A et son complémentaire
+    Caractérisaton par intersection avec A et son complémentaire, II
 -/
 begin
     sorry
