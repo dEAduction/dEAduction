@@ -248,7 +248,10 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         # TODO: use mono font for lean name column (column 1)
 
         # Print icon (D for definition, T for theorem, etc)
-        icons_path = Path('share/graphical_resources/icons/letters')
+        # icons_path = 'share/graphical_resources/icons/letters' #fixme: delete
+        icons_dir = user_config.get('icons_path')
+        icons_type = user_config.get('icons_letter_type')  # e.g. 'red'
+        icons_path = Path(icons_dir) / icons_type
         if isinstance(statement, Definition):
             path = icons_path / 'd.png'
         elif isinstance(statement, Exercise):
