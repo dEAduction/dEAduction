@@ -189,6 +189,12 @@ class ExerciseCentralWidget(QWidget):
         self.proof_btns = ActionButtonsWidget(
                 exercise.available_proof_techniques)
 
+        # search for ActionButton corresponding to action_apply:
+        apply_buttons = [button for button in self.logic_btns.buttons \
+                                        if button.action.run == action_apply]
+        if apply_buttons:
+            self.action_apply_button = apply_buttons[0]
+
         statements           = exercise.available_statements
         outline              = exercise.course.outline
         self.statements_tree = StatementsTreeWidget(statements, outline)
@@ -367,7 +373,7 @@ class ExerciseMainWindow(QMainWindow):
 
     window_closed                   = Signal()
     __action_triggered              = Signal(ActionButton)
-    __apply_math_object_triggered   = Signal(MathObjectWidgetItem)
+    __apply_math_object_triggered   = Signal(MathObjectWidget)
     __statement_triggered           = Signal(StatementsTreeWidgetItem)
 
     def __init__(self, exercise: Exercise, servint: ServerInterface):
@@ -580,14 +586,14 @@ class ExerciseMainWindow(QMainWindow):
                 elif emission.is_from(self.__action_triggered):
                     # TODO: comment, what is emission.args[0]?
                     await self.process_async_signal(partial(self.__server_call_action,
-                                                            emission.args[0].action))
+                                                            emission.args[0]))
 
                 elif emission.is_from(self.__statement_triggered):
                     await self.process_async_signal(partial(self.__server_call_statement,
                                                             emission.args[0]))
 
                 elif emission.is_from(self.__apply_math_object_triggered):
-                    await self.__server_call_apply(emission.args)
+                    await self.__server_call_apply(emission.args[0])
 
     # ──────────────── Template function ─────────────── #
 
@@ -639,10 +645,10 @@ class ExerciseMainWindow(QMainWindow):
     # ─────────────── Specific functions ─────────────── #
     # To be called as process_function in the above
 
-    async def __server_call_action(self, action: Action):
+    async def __server_call_action(self, action_btn: ActionButton):
         # TODO: docstring me
 
-        #action = action_btn.action
+        action = action_btn.action
         user_input = []
         log.info(f'Calling action {action.symbol}')
         # Send action and catch exception when user needs to:
@@ -659,7 +665,8 @@ class ExerciseMainWindow(QMainWindow):
                             user_input)
             except MissingParametersError as e:
                 if e.input_type == InputType.Text:
-                    choice, ok = QInputDialog.getText(e.title,
+                    choice, ok = QInputDialog.getText(action_btn,
+                                                      e.title,
                                                       e.output)
                 elif e.input_type == InputType.Choice:
                     choice, ok = ButtonsDialog.get_item(e.choices,
@@ -678,14 +685,11 @@ class ExerciseMainWindow(QMainWindow):
                 await self.servint.code_insert(action.symbol, code)
                 break
 
-    async def __server_call_apply(self, args):
+    async def __server_call_apply(self, item: MathObjectWidgetItem):
         # TODO: docstring me
-        log.debug(f"args: {args}")
-        widget, item = args
-        math_object = item.mathobject
-        self.current_context_selection.append(item)
+        #self.current_context_selection.append(item) # fixme : uncomment
         await self.process_async_signal(partial(self.__server_call_action,
-                                                action_apply))
+                                                self.ecw.action_apply_button))
 
     async def __server_call_statement(self, item: StatementsTreeWidgetItem):
         # TODO: docstring me

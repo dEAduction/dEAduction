@@ -203,14 +203,15 @@ class MathObjectWidget(QListWidget):
 
         self.itemDoubleClicked.connect(self._emit_apply_math_object)
 
-    @Slot()
+    @Slot(MathObjectWidgetItem)
     def _emit_apply_math_object(self, item):
         """
         Emit the signal self.apply_math_object_triggered with self as an
         argument. This slot is connected to ActionButton.clicked signal in
         self.__init__.
         """
-        self.apply_math_object_triggered.emit(self, item)
+        item.setSelected(False)
+        self.apply_math_object_triggered.emit(item)
 
 
 MathObjectWidget.apply_math_object_triggered = Signal(MathObjectWidget)
