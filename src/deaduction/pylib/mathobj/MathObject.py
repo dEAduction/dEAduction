@@ -233,6 +233,30 @@ class MathObject:
                         f"{self.math_type}")
             return None
 
+    def can_be_used_for_substitution(self) -> bool:
+        """
+        Determines if a proposition can be used as a basis for substituting,
+        i.e. is of the form
+            (∀ ...)*  a = b
+        or
+            (∀ ...)*  P <=> Q
+         with zero or more universal quantifiers at the beginning.
+
+        This is a recursive function: in case self is a universal quantifier,
+        self can_be_used_for_substitution iff the body of self
+        can_be_used_for_substitution.
+        """
+        if self.node in {'PROP.IFF', 'PROP_EQUAL'}:
+            return True
+        elif self.node == 'QUANT_∀':
+            # NB : ∀ var : type, body
+            body = self.children[2]
+            return body.can_be_used_for_substitution()
+        else:
+            return False
+
+
+
     ###############################
     # collect the local variables #
     ###############################
