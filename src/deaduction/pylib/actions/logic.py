@@ -46,7 +46,8 @@ from deaduction.pylib.actions import (action,
 from deaduction.pylib.mathobj import (MathObject,
                                       Goal,
                                       give_global_name,
-                                      get_new_hyp)
+                                      get_new_hyp,
+                                      )
 
 log = logging.getLogger("logic")  # uncomment to use
 
@@ -596,7 +597,7 @@ def apply_substitute_maybe(goal: Goal, l: [MathObject]):
 
     return possible_codes
     
-def apply_substitute_for_sure(goal: Goal, l: [MathObject], user_input: [str]):
+def apply_substitute_for_sure(goal: Goal, l: [MathObject], user_input: [int]):
     """
     Try to rewrite the goal or the first selected property using the last
     selected property
@@ -718,13 +719,18 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
         return apply_function(goal, l)
 
     # determines which kind of property the user wants to apply
+    math_type = l[-1].math_type
     quantifier = l[-1].math_type.node
-    log.info(quantifier)    
-    if quantifier == "QUANT_∀":
-        possible_codes.extend(apply_substitute_maybe(goal, l))
-    if quantifier == "PROP_EQUAL" or quantifier == "PROP_IFF":
-        # will use last property to rewrite goal or first property
-        possible_codes.extend(apply_substitute_for_sure(goal, l, user_input))
+    log.info(quantifier)
+    if math_type.can_be_used_for_substitution():
+        if len(l) == 1 or (len(l) > 1 and l[0].math_type.is_prop()):
+            possible_codes.extend(
+                apply_substitute_for_sure(goal, l, user_input))
+    # if quantifier == "QUANT_∀":
+    #     possible_codes.extend(apply_substitute_maybe(goal, l))
+    # if quantifier == "PROP_EQUAL" or quantifier == "PROP_IFF":
+    #     # will use last property to rewrite goal or first property
+    #     possible_codes.extend(apply_substitute_for_sure(goal, l, user_input))
 
     if quantifier == "PROP_IMPLIES" or quantifier == "QUANT_∀":
         if len(l) == 1:
