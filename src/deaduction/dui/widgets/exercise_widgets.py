@@ -190,8 +190,8 @@ class ExerciseCentralWidget(QWidget):
                 exercise.available_proof_techniques)
 
         # search for ActionButton corresponding to action_apply:
-        apply_buttons = [button for button in self.logic_btns.buttons \
-                                        if button.action.run == action_apply]
+        apply_buttons = [button for button in self.logic_btns.buttons
+                         if button.action.run == action_apply]
         if apply_buttons:
             self.action_apply_button = apply_buttons[0]
 
@@ -687,7 +687,10 @@ class ExerciseMainWindow(QMainWindow):
 
     async def __server_call_apply(self, item: MathObjectWidgetItem):
         # TODO: docstring me
-        #self.current_context_selection.append(item) # fixme : uncomment
+        item.mark_user_selected(True)
+        if item in self.current_context_selection:
+            self.current_context_selection.remove(item)
+        self.current_context_selection.append(item)
         await self.process_async_signal(partial(self.__server_call_action,
                                                 self.ecw.action_apply_button))
 
