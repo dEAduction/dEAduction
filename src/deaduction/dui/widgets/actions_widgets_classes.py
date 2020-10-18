@@ -470,7 +470,7 @@ class StatementsTreeWidget(QTreeWidget):
             self.resizeColumnToContents(0)
             self.resizeColumnToContents(1)
         else:
-            self.setHeaderLabels([_('Statement')])
+            self.setHeaderLabels([_('Statements')])
 
     def add_child(self, item):
         """
