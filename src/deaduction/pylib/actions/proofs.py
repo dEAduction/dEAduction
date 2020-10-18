@@ -149,10 +149,7 @@ def method_sorry(goal: Goal, l: [MathObject]) -> str:
     possible_codes = ['sorry']
     return format_orelse(possible_codes)
 
-
-@action(user_config.get('tooltip_choice'),
-        proof_button_texts['choice'])
-def action_choice(goal: Goal, l: [MathObject]) -> str:
+def introduce_fun(goal: Goal, l: [MathObject]) -> str:
     """
     Translate into string of lean code corresponding to the action
 
@@ -192,7 +189,9 @@ and add this to the properties of the future goal.
         raise MissingParametersError(InputType.Choice,
                              [(_("Object"), _("Introduce a new object")),
                               (_("Sub-goal"), _("Introduce a new "
-                                                "intermediate sub-goal"))],
+                                                "intermediate sub-goal")),
+                              (_("New function"), _("Introduce a new "
+                                                "function"))],
                              title="+",
                              output=_("Choose what to introduce:"))
     if user_input[0] == 0:  # choice = new object
@@ -214,6 +213,8 @@ and add this to the properties of the future goal.
         else:
             h = get_new_hyp(goal)
             possible_codes.append(f"have {h} : ({user_input[1]}),")
+    if user_input[0] == 2:
+        return introduce_fun(goal, l)
     return format_orelse(possible_codes)
 
 
