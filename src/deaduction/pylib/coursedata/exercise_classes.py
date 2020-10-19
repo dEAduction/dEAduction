@@ -210,6 +210,7 @@ class Exercise(Theorem):
             try:
                 for equality in data["ExpectedVarsNumber"].split(", "):
                     key, _, value = equality.partition("=")
+                    key = key.strip()
                     expected_vars_number[key] = int(value)
             except AttributeError:
                 log.error(f"wrong format for ExpectedVarsNumber in exercise "
