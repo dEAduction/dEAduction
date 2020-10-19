@@ -275,7 +275,7 @@ class MathObject:
             local_vars.extend(child.extract_local_vars())
         return local_vars
 
-    def extract_local_vars_names(self) -> List[str]:
+    def extract_local_vars_names(self) -> List[str]:  # deprecated
         """
         collect the list of names of variables used in the definition of self
         (leaves of the tree)

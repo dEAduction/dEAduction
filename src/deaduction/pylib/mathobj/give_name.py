@@ -26,11 +26,16 @@ This file is part of dEAduction.
 from typing import List
 import logging
 
-from deaduction.config.config import EXERCISE
 import deaduction.pylib.logger as logger
+
+from deaduction.pylib.mathobj import MathObject
+from deaduction.config.config import (user_config,
+                                      EXERCISE)
 
 log = logging.getLogger(__name__)
 EXERCISE.PROPERTY_COUNTER = 1
+EXERCISE.USE_PRIMES_FOR_VARIABLES_NAMES = \
+    user_config.getboolean('use_primes_for_variables_names')
 
 
 def get_new_hyp(goal):
@@ -40,7 +45,7 @@ def get_new_hyp(goal):
 
     Makes us of the Python global var Global.PROPERTY_COUNTER
     """
-    forbidden_names = goal.extract_var_names()
+    forbidden_names = goal.extract_vars_names()
 
     counter = EXERCISE.PROPERTY_COUNTER
     potential_name = 'H' + str(counter)
@@ -55,31 +60,31 @@ def give_local_name(math_type, body, hints: [str] = []):
     """
     Attribute a name to a local variable. See give_name below.
 
-    :param math_type: PropObj type of new variable
-    :param body: a PropObj inside which the new name will serve for a bound
-    variable
-    :param hints: a list of hints for the future name
-    :return: a name for the new variable
+    :param math_type:   PropObj type of new variable
+    :param body:        a PropObj inside which the new name will serve for a
+    bound variable
+    :param hints:       a list of hints for the future name
+    :return:            a name for the new variable
     """
-    forbidden_names = body.extract_local_vars_names()
-    return give_name(math_type, forbidden_names, hints)
+    forbidden_vars = body.extract_local_vars()
+    return give_name(math_type, forbidden_vars, hints)
 
 
 def give_global_name(math_type, goal, hints: [str] = []):
     """
     Attribute a name to a global variable See give_name below.
 
-    :param math_type: PropObj type of new variable
-    :param goal: current_goal
-    :param hints: a list of hints for the future name
-    :return: a name for the new variable
+    :param math_type:   PropObj type of new variable
+    :param goal:        current_goal
+    :param hints:       a list of hints for the future name
+    :return:            a name for the new variable
     """
-    forbidden_names = goal.extract_var_names()
-    return give_name(math_type, forbidden_names, hints)
+    forbidden_vars = goal.extract_vars()
+    return give_name(math_type, forbidden_vars, hints)
 
 
 def give_name(math_type,
-              forbidden_names: [str],
+              forbidden_vars: [MathObject],
               hints: [str] = []) -> str:
     """
     Provide a name for a new variable. Baby version.
@@ -96,14 +101,14 @@ def give_name(math_type,
     NB : if x : X but the property 'x belongs to A' is in context, then
     math_type could be A.
 
-    :param math_type: PropObj type of new variable
-    :param forbidden_names: list of names of other variables that must be
-    avoided
-    :param hints: a hint for the future name
-    :return: a name for the new variable
+    :param math_type:       PropObj type of new variable
+    :param forbidden_vars:  list of variables that must be avoided
+    :param hints:           a hint for the future name
+    :return:                a name for the new variable
     """
     # log.debug(f"giving name to bound var, type={math_type}, hints={hints}")
     # log.debug(f"forbidden names: {forbidden_names}")
+    forbidden_names = [mo.info['name'] for mo in forbidden_vars]
     ######################
     # special math types #
     ######################
@@ -145,6 +150,13 @@ def give_name(math_type,
         if potential_name not in forbidden_names:
             new_name = potential_name
             return new_name
+    ###########################
+    # Use primes if permitted #
+    ###########################
+    #if EXERCISE.USE_PRIMES_FOR_VARIABLES_NAMES:
+    #    for potential_name in hints:
+    #        if math_type
+
     ########################################
     # second trial: use alphabetical order #
     ########################################
