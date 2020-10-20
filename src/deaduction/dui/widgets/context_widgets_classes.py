@@ -33,7 +33,7 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
-
+import logging
 from pathlib import Path
 from typing  import Tuple
 
@@ -49,6 +49,8 @@ from PySide2.QtWidgets import ( QHBoxLayout,
 from deaduction.config.config import user_config, _
 
 from deaduction.pylib.mathobj import MathObject
+
+log = logging.getLogger(__name__)
 
 ################################
 # MathObject widgets classes #
@@ -245,7 +247,13 @@ class TargetWidget(QWidget):
         #   H : ∀ x ∈ X, ∃ ε, …
         # where H might be the lean name of the target. That's what
         # the .math_type is for.
-        target_label = QLabel(target.math_type.format_as_utf8() if target else '…')
+        # 'is_math_type=True' triggers the bound variables naming
+        if target:
+            # log.debug("updating target")
+            text = target.math_type.format_as_utf8(is_math_type=True)
+        else:
+            text = '…'
+        target_label = QLabel(text)
         size = user_config.get('target_font_size')
         target_label.setStyleSheet(f'font-size: {size};')
 

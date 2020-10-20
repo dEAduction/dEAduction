@@ -490,10 +490,11 @@ class ExerciseMainWindow(QMainWindow):
                                     _('Current goal solved'),
                                     QMessageBox.Ok)
 
-        new_objects_wgt = MathObjectWidget(new_context[0])
-        new_props_wgt = MathObjectWidget(new_context[1])
-        new_target = new_goal.target
-        new_target_wgt = TargetWidget(new_target, new_target_tag)
+        # fixme: the following is not used!!
+        #new_objects_wgt = MathObjectWidget(new_context[0])
+        #new_props_wgt = MathObjectWidget(new_context[1])
+        #new_target = new_goal.target
+        #new_target_wgt = TargetWidget(new_target, new_target_tag)
 
         # Reset current context selection
         self.clear_current_selection()

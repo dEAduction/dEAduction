@@ -38,8 +38,8 @@ from typing import          List, Any
 import logging
 
 import deaduction.pylib.logger as logger
-from .display_math import ( display_math_object,
-                            display_math_type_of_local_constant)
+from .display_math import (display_math_object,
+                           display_math_type_of_local_constant)
 
 import deaduction.pylib.mathobj.give_name as give_name
 
@@ -57,12 +57,14 @@ class MathObject:
     both objects (sets, elements, functions, ...)
     and properties ("a belongs to A", ...)
     """
-    node:           str         # e.g. "LOCAL_CONSTANT", "FUNCTION", "QUANT_∀"
-    info:           dict        # e.g. "name", "id", "pp_type"
-    math_type:      Any         # Another MathObject
-    children:       list        # list of MathObjects
+    node              : str  # e.g. "LOCAL_CONSTANT", "FUNCTION", "QUANT_∀"
+    info              : dict  # e.g. "name", "id", "pp_type"
+    math_type         : Any  # Another MathObject
+    children          : list  # list of MathObjects
 
-    Variables = {}              # dictionary containing every element having
+    has_unnamed_bound_vars  : bool = False  #  True if bound vars to be named
+
+    Variables = {}  # dictionary containing every element having
     # an identifier, i.e. global and bound variables.
     # key = identifier,
     # value = MathObject
@@ -89,12 +91,12 @@ class MathObject:
         #####################################################
         if 'identifier' in info.keys():
             identifier = info['identifier']
-            if identifier in MathObject.Variables:    # object already exists
-                #log.debug(f"already exists in dict "
+            if identifier in MathObject.Variables:  # object already exists
+                # log.debug(f"already exists in dict "
                 #          f"{[(key, MathObject.Variables[key]) for key in
                 #          MathObject.Variables]}")
                 math_object = MathObject.Variables[identifier]
-            else:                                       # new object
+            else:  # new object
                 math_object = MathObject(node=node,
                                          info=info,
                                          math_type=math_type,
@@ -104,40 +106,81 @@ class MathObject:
         ##############################
         # Treatment of other objects #
         ##############################
-        else:
-            #############################################################
-            # Quantifiers & lambdas: give a good name to bound variable #
-            #############################################################
-            # NB: lean_data["name"] is given by structures.lean,
+        elif node.startswith("QUANT") or node == "LAMBDA":
+            ##############################################################
+            # Quantifiers & lambdas: provisionally unname bound variable #
+            ##############################################################
+            # NB: info["name"] is given by structures.lean,
             # but may be inadequate (e.g. two distinct variables sharing the
             # same name)
-            # For an expression like ∀ x: X, P(x)
-            # the logical constraints are: the name of the bound variable
-            # (which is going to replace `x`)  must be distinct from all
-            # names of variables appearing in the body `P(x)`, whether free
-            # or bound
-            if node.startswith("QUANT") or node == "LAMBDA":
-                bound_var_type, bound_var, local_context = children
-                # changing info["name"]
-                # so that it will not be on the forbidden list
-                hint = bound_var.info["name"]
-                bound_var.info["lean_name"] = hint  # storing just in case
-                bound_var.info["name"] = "processing name..."
-                # search for a fresh name valid inside local context
-                name = give_name.give_local_name(math_type=bound_var_type,
-                                                 hints=[hint],
-                                                 body=local_context)
-                bound_var.info["name"] = name
-                bound_var.math_type = bound_var_type
-            ######################
-            # end: instantiation #
-            ######################
+            bound_var_type, bound_var, local_context = children
+            new_info = {'name': "NO NAME",
+                        'lean_name': bound_var.info['name']}
+            bound_var.info.update(new_info)
+            math_object = MathObject(node=node,
+                                     info=info,
+                                     math_type=math_type,
+                                     children=children,
+                                     has_unnamed_bound_vars=True)
+
+        else:
+            ##############################
+            # end: general instantiation #
+            ##############################
             math_object = MathObject(node=node,
                                      info=info,
                                      math_type=math_type,
                                      children=children
                                      )
         return math_object
+
+    ########################
+    # name bound variables #
+    ########################
+    def name_bound_vars(self):
+        """
+        Provide a good name for all bound variables of self
+
+        (1) assume all bound vars of self are unnamed (name = 'NO NAME'),
+        and have a lean_name (in attribute info)
+        (2) name bound var of main node, if any
+        (3) recursively call name_bound_vars on self.children
+
+         This order gives the wanted result, e.g.
+         ∀ x:X, ∀ x':X, etc. and not the converse
+        """
+        # NB: info["name"] is provided by structures.lean,
+        # but may be inadequate (e.g. two distinct variables sharing the
+        # same name)
+        # For an expression like ∀ x: X, P(x)
+        # the logical constraints are: the name of the bound variable
+        # (which is going to replace `x`)  must be distinct from all
+        # names of variables appearing in the body `P(x)`, whether free
+        # or bound
+        # bound vars must be unnamed, so that their names will not be on
+        # the forbidden list
+        if not self.has_unnamed_bound_vars:
+            # prevents for (badly) renaming vars several times
+            return
+        self.has_unnamed_bound_vars = False
+        node = self.node
+        children = self.children
+        if node.startswith("QUANT") or node == "LAMBDA":
+            bound_var_type, bound_var, local_context = children
+            hint = bound_var.info["lean_name"]
+            # search for a fresh name valid inside local context
+            name = give_name.give_local_name(math_type=bound_var_type,
+                                             hints=[hint],
+                                             body=local_context)
+            bound_var.info["name"] = name
+            bound_var.math_type = bound_var_type
+            log.debug(f"giving name {name} to {display_math_object(bound_var)}")
+
+            children = [local_context]
+
+        # recursively name bound variables
+        for child in children:
+            child.name_bound_vars()
 
     def __eq__(self, other):
         """
@@ -205,9 +248,9 @@ class MathObject:
         contain_left = other.contains(left)
         contain_right = other.contains(right)
         decision = {(False, False): None,
-                    (True,  False): '>',
-                    (False, True):  '>',
-                    (True,  True):  'both'
+                    (True, False): '>',
+                    (False, True): '>',
+                    (True, True): 'both'
                     }
         return decision(contain_left, contain_right)
 
@@ -255,8 +298,6 @@ class MathObject:
         else:
             return False
 
-
-
     ###############################
     # collect the local variables #
     ###############################
@@ -286,9 +327,14 @@ class MathObject:
     ########################
     # display math objects #
     ########################
+    # todo: refactor by merging the three following methods
     def format_as_latex(self, is_math_type=False):
         format_ = "latex"
         if is_math_type:
+            #########################################
+            # naming bound variables before display #
+            #########################################
+            self.name_bound_vars()
             display = display_math_type_of_local_constant(self, format_)
         else:
             display = display_math_object(self, format_)
@@ -297,6 +343,10 @@ class MathObject:
     def format_as_utf8(self, is_math_type=False):
         format_ = "utf8"
         if is_math_type:
+            #########################################
+            # naming bound variables before display #
+            #########################################
+            self.name_bound_vars()
             display = display_math_type_of_local_constant(self, format_)
         else:
             display = display_math_object(self, format_)
@@ -305,6 +355,10 @@ class MathObject:
     def format_as_text_utf8(self, is_math_type=False, text_depth=1):
         format_ = "text+utf8"
         if is_math_type:
+            #########################################
+            # naming bound variables before display #
+            #########################################
+            self.name_bound_vars()
             display = display_math_type_of_local_constant(self,
                                                           format_)
         else:
