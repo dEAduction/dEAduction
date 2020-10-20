@@ -174,7 +174,7 @@ class MathObject:
                                              body=local_context)
             bound_var.info["name"] = name
             bound_var.math_type = bound_var_type
-            log.debug(f"giving name {name} to {display_math_object(bound_var)}")
+            log.debug(f"giving name {name}")
 
             children = [local_context]
 
