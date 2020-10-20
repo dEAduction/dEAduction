@@ -135,7 +135,7 @@ def give_name(math_type,
                     else 'P' if math_type.node == 'PROP' \
                     else 'f' if math_type.node == 'FUNCTION' \
                     else 'x'
-    hints.append(standard_hint)
+    insert_maybe(hints, standard_hint)
 
     if upper_case_name:
         hints = [hint[0].upper() for hint in hints]  # so each hint has only
@@ -149,7 +149,7 @@ def give_name(math_type,
         type_name = math_type.info["name"]
         if type_name[0].isupper():
             hint = type_name[0].lower()
-            hints.insert(0, hint)
+            insert_maybe(hints, hint, position=0)
 
     log.debug(f"hints: {hints}")
     ##########################################################
@@ -171,19 +171,14 @@ def give_name(math_type,
             potential_name  = name + "'"
             log.debug(f"trying {potential_name}...")
             if potential_name not in forbidden_names \
-                and variable.math_type == math_type:
+                and math_type == variable.math_type:
                 new_name = potential_name
                 return new_name
 
     ########################################
     # second trial: use alphabetical order #
     ########################################
-    if hints:
-        starting_name = hints[0]
-    else:
-        starting_name = 'A' if math_type.node == 'SET' \
-                   else 'X' if math_type.node == 'TYPE' \
-                   else 'x'
+    starting_name = hints[0]
     counter = 0
     potential_name = starting_name
     max_letters = 3  # NB : must be ≤ 26 !
@@ -227,3 +222,10 @@ def next_in_list(letter: str, letters: List[str]):
         return letters[index]
     else:
         return letters[0]
+
+def insert_maybe(L: list, item, position=-1):
+    """Insert in a list if item is not already in"""
+    if item in L:
+        return
+    else:
+        L.insert(position, item)

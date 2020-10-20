@@ -162,8 +162,7 @@ tooltips_apply = {}  # TODO
 # Text for buttons
 buttons = {
     'logic_button_texts': _("AND, OR, NOT, IMPLIES, IFF, FORALL, EXISTS"),
-    'proof_button_texts': _(
-        "PROOF METHODS, CREATE FUNCTION, NEW OBJECT, APPLY, QED")
+    'proof_button_texts': _("APPLY, PROOF METHODS, NEW OBJECT, QED")
 }
 # sad thoughts for "¯\_(ツ)_/¯", I loved you so much...
 
