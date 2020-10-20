@@ -256,7 +256,7 @@ class ExerciseCentralWidget(QWidget):
         for widget in to_freeze:
             widget.setEnabled(not yes)
 
-    def update_goal(self, new_goal: Goal):
+    def update_goal(self, new_goal: Goal, goal_count: str=''):
         """
         Change goal widgets (self.objects_wgts, self.props_wgt and
         self.target_wgt) to new widgets, corresponding to new_goal.
@@ -275,7 +275,7 @@ class ExerciseCentralWidget(QWidget):
 
         new_objects_wgt = MathObjectWidget(new_objects)
         new_props_wgt   = MathObjectWidget(new_props)
-        new_target_wgt  = TargetWidget(new_target, new_target_tag)
+        new_target_wgt  = TargetWidget(new_target, new_target_tag, goal_count)
 
         # Replace in the layouts
         replace_delete_widget(self.__context_lyt,
@@ -482,7 +482,8 @@ class ExerciseMainWindow(QMainWindow):
             current_goals_counter, \
             goals_counter_evolution \
             = self.count_goals()
-        log.debug(f"Goal n°{current_goal_number} / {total_goals_counter}")
+        goal_count = f' {current_goal_number} / {total_goals_counter}'
+        log.debug(f"Goal {goal_count}")
         if goals_counter_evolution < 0 and current_goals_counter != 0:
             # todo: do not display when undo
             log.info(f"Current goal solved!")
@@ -500,7 +501,7 @@ class ExerciseMainWindow(QMainWindow):
         self.clear_current_selection()
 
         # Update UI and attributes
-        self.ecw.update_goal(new_goal)
+        self.ecw.update_goal(new_goal, goal_count)
         self.current_goal = new_goal
 
         # Reconnect Context area signals and slots

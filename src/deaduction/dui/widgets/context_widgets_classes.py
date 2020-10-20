@@ -219,7 +219,10 @@ class TargetWidget(QWidget):
     :attribute tag str: The tag associated to target.
     """
 
-    def __init__(self, target: MathObject=None, tag: str=None):
+    def __init__(self,
+                 target: MathObject=None,
+                 tag: str=None,
+                 goal_count: str=''):
         """"
         Init self with an target (an instance of the class ProofStatePO)
         and a tag. If those are None, display an empty tag and '…' in
@@ -235,8 +238,7 @@ class TargetWidget(QWidget):
         self.tag    = tag
 
         # ───────────────────── Widgets ──────────────────── #
-
-        caption_label = QLabel(_('Target'))
+        caption_label = QLabel(_('Target') + goal_count)
         self.setToolTip(_('To be proved'))
         # TODO: put the pre-set size of group boxes titles
         caption_label.setStyleSheet('font-size: 11pt;')
