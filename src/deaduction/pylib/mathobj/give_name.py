@@ -106,9 +106,9 @@ def give_name(math_type,
     :param hints:           a hint for the future name
     :return:                a name for the new variable
     """
+    forbidden_names = [mo.info['name'] for mo in forbidden_vars]
     # log.debug(f"giving name to bound var, type={math_type}, hints={hints}")
     # log.debug(f"forbidden names: {forbidden_names}")
-    forbidden_names = [mo.info['name'] for mo in forbidden_vars]
     ######################
     # special math types #
     ######################
@@ -154,8 +154,7 @@ def give_name(math_type,
     # Use primes if permitted #
     ###########################
     #if EXERCISE.USE_PRIMES_FOR_VARIABLES_NAMES:
-    #    for potential_name in hints:
-    #        if math_type
+    # TODO
 
     ########################################
     # second trial: use alphabetical order #

@@ -308,8 +308,7 @@ class ProofState:
         if targets:
             main_goal = Goal.from_lean_data(hypo_analysis, targets[0])
         else:
-            log.warning(
-                f"No target found! targets_analysis = {targets_analysis}")
+            log.warning(f"No target, targets_analysis={targets_analysis}")
         goals = [main_goal]
         for other_string_goal in targets[1:]:
             other_goal = Goal.from_lean_data(hypo_analysis="",

@@ -458,13 +458,14 @@ class ExerciseMainWindow(QMainWindow):
 
         # get old goal and set tags
         lean_file = self.servint.lean_file
-        previous_idx = max(0, lean_file.idx - 1)
-        # NB : when idx = 1, old_goal = new_goal : nothing is new
-        entry = lean_file.history[previous_idx]
-        entry_info = entry.misc_info
-        previous_proof_state = entry_info["ProofState"]
-        old_goal = previous_proof_state.goals[0]
-        Goal.compare(new_goal, old_goal, goal_is_new=False)  # set tags
+        if lean_file.idx > 0:
+            # NB : when idx = 0, old_goal = new_goal : nothing is new
+            previous_idx = lean_file.idx - 1
+            entry = lean_file.history[previous_idx]
+            entry_info = entry.misc_info
+            previous_proof_state = entry_info["ProofState"]
+            old_goal = previous_proof_state.goals[0]
+            Goal.compare(new_goal, old_goal, goal_is_new=False)  # set tags
         # FIXME: target tag
         new_target_tag = '='
         try:
