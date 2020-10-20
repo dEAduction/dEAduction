@@ -54,7 +54,7 @@ log = logging.getLogger("logic")  # uncomment to use
 # Get buttons symbols from config file
 action_list = ['action_and', 'action_or', 'action_negate',
                'action_implicate', 'action_iff', 'action_forall',
-               'action_exists', 'action_apply']
+               'action_exists']
 if user_config.getboolean('use_logic_button_symbols'):
     logic_button_texts = user_config.get('logic_button_symbols')
 else:
@@ -98,10 +98,6 @@ def construct_and(goal: Goal, user_input: [str]):
 
 def apply_and(goal, l):
     possible_codes = []
-
-    if l[0].math_type.node != "PROP_AND":
-        raise WrongUserInput
-
     h_selected = l[0].info["name"]
     h1 = get_new_hyp(goal)
     h2 = get_new_hyp(goal)
@@ -138,9 +134,16 @@ If two hypothesis P, then Q, have been previously selected:
     if len(selected_objects) == 0:
         return construct_and(goal, user_input)
     if len(selected_objects) == 1:
-        return apply_and(goal, selected_objects)
+        if selected_objects[0].math_type.node != "PROP_AND":
+            raise WrongUserInput
+        else:
+            return apply_and(goal, selected_objects)
     if len(selected_objects) == 2:
-        return construct_and_hyp(goal, selected_objects)
+        if not (selected_objects[0].math_type.is_prop and
+                selected_objects[1].math_type.is_prop):
+            raise WrongUserInput
+        else:
+            return construct_and_hyp(goal, selected_objects)
     raise WrongUserInput
 
 
@@ -211,17 +214,17 @@ def construct_or_on_hyp(goal: Goal, l: [MathObject], user_input: [str] = []):
     elif len(l) == 1:
         if len(user_input) == 0:
             raise MissingParametersError(InputType.Text,
-                    title=_("OR"),
-                    output=_("Enter proposition you want to use:"))
+                    title=_("Obtain 'P OR Q'"),
+                    output=_("Enter the proposition you want to use:"))
         Q = user_input[0]
         user_input = user_input[1:]
         
     if len(user_input) == 0:
         raise MissingParametersError(
             InputType.Choice,
-            [("left", f'({P}) or ({Q})'), ("right", f'({Q}) or ({P})')],
+            [(_("Left"), f'({P}) OR ({Q})'), (_('Right'), f'({Q}) OR ({P})')],
             title=_("Choose side"),
-            output=_(f'On which side do you want {P} ?'))
+            output=_(f'On which side do you want') + f' {P} ?')
     
     new_h = get_new_hyp(goal)
     if user_input[0] == 0:
@@ -257,9 +260,9 @@ transform the current goal into two subgoals,
     if len(l) == 1:
         if l[0].math_type.node == "PROP_OR":
             return apply_or(goal, l, user_input)
-        else:
+        elif l[0].math_type.is_prop():
             return construct_or_on_hyp(goal, l, user_input)
-    if len(l) == 2:
+    if len(l) == 2 and l[0].math_type.is_prop() and l[1].math_type.is_prop():
         return construct_or_on_hyp(goal, l, user_input)
     raise WrongUserInput
 
@@ -558,14 +561,18 @@ introduce a new x and add P(x) to the properties
     :return:    string of lean code
     """
     if len(l) == 1 and user_input == []:
-        if l[0].math_type.is_prop():
+        h_selected = l[0].math_type
+        if h_selected.is_prop():
             # try to apply property "exists x, P(x)" to get a new MathObject x
-            return apply_exists(goal, l)
+            if h_selected.node != "QUANT_∃":
+                raise WrongUserInput
+            else:
+                return apply_exists(goal, l)
         else:
             return construct_exists(goal, [l[0].info["name"]])
-    if len(l) == 0:
+    elif len(l) == 0:
         return construct_exists(goal, user_input)
-    if len(l) == 2:
+    elif len(l) == 2:
         return construct_exists_on_hyp(goal, l)
     raise WrongUserInput
 

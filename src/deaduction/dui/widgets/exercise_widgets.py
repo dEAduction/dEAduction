@@ -482,8 +482,8 @@ class ExerciseMainWindow(QMainWindow):
             current_goals_counter, \
             goals_counter_evolution \
             = self.count_goals()
-        goal_count = f' {current_goal_number} / {total_goals_counter}'
-        log.debug(f"Goal {goal_count}")
+        goal_count = f'  {current_goal_number} / {total_goals_counter}'
+        log.debug(f"Goal  {goal_count}")
         if goals_counter_evolution < 0 and current_goals_counter != 0:
             # todo: do not display when undo
             log.info(f"Current goal solved!")

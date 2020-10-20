@@ -33,14 +33,15 @@ from deaduction.pylib.actions import (InputType,
                                       MissingParametersError,
                                       WrongUserInput,
                                       action,
-                                      format_orelse)
+                                      format_orelse,
+                                      apply_exists)
 from deaduction.pylib.mathobj import (MathObject,
                                       Goal,
                                       get_new_hyp,
                                       give_global_name)
 
 # turn logic_button_texts into a dictionary
-proof_list= ['proof_methods', 'choice', 'new_object', 'action_apply', 'assumption']
+proof_list= ['action_apply', 'proof_methods', 'new_object', 'assumption']
 lbt = user_config.get('proof_button_texts').split(', ')
 proof_button_texts = {}
 for key, value in zip(proof_list, lbt):
@@ -306,7 +307,7 @@ def apply_substitute(goal: Goal, l: [MathObject], user_input: [int]):
                     InputType.Choice,
                     choices, 
                     title=_("Precision of substitution"),
-                    output=_("Choose which one you want to replace"))
+                    output=_("Choose which expression you want to replace"))
                  
             possible_codes.append(f'rw {h}')
             possible_codes.append(f'rw <- {h}')
@@ -327,7 +328,7 @@ def apply_substitute(goal: Goal, l: [MathObject], user_input: [int]):
                     InputType.Choice,
                     choices, 
                     title=_("Precision of substitution"),
-                    output=_("Choose what you want to replace"))
+                    output=_("Choose which expression you want to replace"))
                 
         possible_codes.append(f'rw <- {heq} at {h}')
         possible_codes.append(f'rw {heq} at {h}')
@@ -408,6 +409,9 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
             possible_codes.extend(apply_implicate(goal, l))
         if len(l) == 2 or len(l) == 3:
             possible_codes.extend(apply_implicate_to_hyp(goal, l))
+
+    if quantifier == "QUANT_∃":
+        possible_codes.append(apply_exists(goal, l))
 
     return format_orelse(possible_codes)
 

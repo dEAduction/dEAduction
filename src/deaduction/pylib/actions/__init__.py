@@ -42,6 +42,7 @@ from .logic import (        action_negate,
                             action_and,
                             action_or,
                             action_forall,
-                            action_exists)
+                            action_exists,
+                            apply_exists)
 
 from .proofs import (       action_use_proof_methods)
