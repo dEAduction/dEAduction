@@ -230,6 +230,9 @@ class TargetWidget(QWidget):
 
         :param target: The target to be displayed.
         :param tag: The tag associated to target.
+        :param goal_count: a string indicating the goal_count state,
+        e.g. "  2 / 3" means the goal number 2 out of 3 is currently being
+        studied
         """
 
         super().__init__()

@@ -262,6 +262,9 @@ class ExerciseCentralWidget(QWidget):
         self.target_wgt) to new widgets, corresponding to new_goal.
 
         :param new_goal: The goal to update self to.
+        :param goal_count: a string indicating the goal_count state,
+        e.g. "  2 / 3" means the goal number 2 out of 3 is currently being
+        studied
         """
 
         # Init context (objects and properties). Get them as two list of
