@@ -145,12 +145,10 @@ True and Q is True"""),
 • Apply a function to an element or an equality"""),
     'tooltip_proof_methods':
         _("""Choose some specific proof method"""),
-    'tooltip_choice':
-        _(
-            "From a property '∀ a ∈ A, ∃ b ∈ B, P(a,b)', get a function from A to B"),
     'tooltip_new_object':
         _("""• Create a new object (e.g. 'f(x)' from 'f' and 'x')
-• Create a new subgoal (a lemma) which will be proved, and added to the context"""
+• Create a new subgoal (a lemma) which will be proved, and added to the context
+• From a property '∀ a ∈ A, ∃ b ∈ B, P(a,b)', create a new function from A to B"""
           ),
     'tooltip_assumption':
         _(

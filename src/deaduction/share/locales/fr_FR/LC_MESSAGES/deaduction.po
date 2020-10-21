@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2020-10-20 22:04+0200\n"
-"PO-Revision-Date: 2020-10-20 22:04+0200\n"
+"POT-Creation-Date: 2020-10-21 21:42+0200\n"
+"PO-Revision-Date: 2020-10-21 21:43+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -87,20 +87,25 @@ msgstr ""
 msgid ""
 "• Create a new object (e.g. 'f(x)' from 'f' and 'x')\n"
 "• Create a new subgoal (a lemma) which will be proved, and added to the "
-"context"
+"context\n"
+"• From a property '∀ a ∈ A, ∃ b ∈ B, P(a,b)', create a new function from A "
+"to B"
 msgstr ""
 "• Créer un nouvel objet (par exemple 'f(x)' à partir de 'f' et de 'x')\n"
-"• Créer un nouveau but (un lemme) qui sera démontré, puis ajouté au contexte"
+"• Créer un nouveau but (un lemme) qui sera démontré, puis ajouté au "
+"contexte\n"
+"• Utiliser une propriété ‘∀ a ∈ A, ∃ b ∈ B, P(a,b)’, pour créer une nouvelle "
+"fonction de A dans B"
 
-#: config/config.py:157
+#: config/config.py:158
 msgid "Terminate the proof when the target is obvious from the context"
 msgstr "Conclut la preuve lorsque le but est évident à partir du contexte"
 
-#: config/config.py:164
+#: config/config.py:165
 msgid "AND, OR, NOT, ⇒, ⇔, ∀, ∃"
 msgstr "ET, OU, NON, ⇒, ⇔, ∀, ∃"
 
-#: config/config.py:165
+#: config/config.py:166
 msgid "Apply, Proof Methods, New Object, QED"
 msgstr "Appliquer, Méthodes de Preuve, Nouvel Objet, CQFD"
 
@@ -125,11 +130,11 @@ msgstr "Enoncés"
 msgid "L∃∀N name"
 msgstr "Nom L∃∀N"
 
-#: dui/widgets/context_widgets_classes.py:241
+#: dui/widgets/context_widgets_classes.py:246
 msgid "Target"
 msgstr "But"
 
-#: dui/widgets/context_widgets_classes.py:242
+#: dui/widgets/context_widgets_classes.py:247
 msgid "To be proved"
 msgstr "A démontrer"
 
@@ -157,28 +162,28 @@ msgstr "Actions (transforment le contexte et le but)"
 msgid "Context (objects and properties)"
 msgstr "Contexte (objets et propriétés)"
 
-#: dui/widgets/exercise_widgets.py:491
+#: dui/widgets/exercise_widgets.py:493
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/widgets/exercise_widgets.py:595 dui/widgets/exercise_widgets.py:596
-#: dui/widgets/exercise_widgets.py:699
+#: dui/widgets/exercise_widgets.py:591 dui/widgets/exercise_widgets.py:592
+#: dui/widgets/exercise_widgets.py:695
 msgid "Action not understood"
 msgstr "L∃∀N n’a pas compris !"
 
-#: dui/widgets/exercise_widgets.py:692
+#: dui/widgets/exercise_widgets.py:688
 msgid "Code from editor"
 msgstr "Code depuis l’éditeur"
 
-#: dui/widgets/exercise_widgets.py:700
+#: dui/widgets/exercise_widgets.py:696
 msgid "don't know what to do with your input!"
 msgstr "Je n’ai pas compris ce que vous voulez faire :-("
 
-#: dui/widgets/exercise_widgets.py:743
+#: dui/widgets/exercise_widgets.py:739
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/widgets/exercise_widgets.py:743
+#: dui/widgets/exercise_widgets.py:739
 msgid "Target solved!"
 msgstr "La preuve est terminée !"
 
@@ -276,63 +281,63 @@ msgstr "Preuve par cas"
 msgid "Enter the property you want to discriminate on:"
 msgstr "Entrez la propriété sur laquelle la preuve par cas sera fondée :"
 
-#: pylib/actions/proofs.py:192
+#: pylib/actions/proofs.py:208
 msgid "Object"
 msgstr "Objet"
 
-#: pylib/actions/proofs.py:192
+#: pylib/actions/proofs.py:208
 msgid "Introduce a new object"
 msgstr "Introduire un nouvel objet"
 
-#: pylib/actions/proofs.py:193
+#: pylib/actions/proofs.py:209
 msgid "Sub-goal"
 msgstr "Nouveau but"
 
-#: pylib/actions/proofs.py:193
+#: pylib/actions/proofs.py:209
 msgid "Introduce a new intermediate sub-goal"
 msgstr "Introduire un but intermédiaire"
 
-#: pylib/actions/proofs.py:195
+#: pylib/actions/proofs.py:211
 msgid "New function"
 msgstr "Nouvelle fonction"
 
-#: pylib/actions/proofs.py:195
+#: pylib/actions/proofs.py:211
 msgid "Introduce a new function"
 msgstr "Introduire une nouvelle fonction"
 
-#: pylib/actions/proofs.py:198
+#: pylib/actions/proofs.py:214
 msgid "Choose what to introduce:"
 msgstr "Choisissez :"
 
-#: pylib/actions/proofs.py:203
+#: pylib/actions/proofs.py:219
 msgid "Introduce new object:"
 msgstr "Introduire un nouvel objet"
 
-#: pylib/actions/proofs.py:214
+#: pylib/actions/proofs.py:230
 msgid "Introduce new subgoal:"
 msgstr "Introduire un but intermédiaire"
 
-#: pylib/actions/proofs.py:309 pylib/actions/proofs.py:330
+#: pylib/actions/proofs.py:325 pylib/actions/proofs.py:346
 msgid "Precision of substitution"
 msgstr "Préciser le sens de substitution"
 
-#: pylib/actions/proofs.py:310 pylib/actions/proofs.py:331
+#: pylib/actions/proofs.py:326 pylib/actions/proofs.py:347
 msgid "Choose which expression you want to replace"
 msgstr "Choisissez quelle expression remplacer"
 
-#: pylib/actions/proofs.py:452
+#: pylib/actions/proofs.py:468
 msgid "Apply function to an element or an equality"
 msgstr "Appliquer une fonction à un élément ou à une égalité"
 
-#: pylib/actions/proofs.py:455 pylib/actions/proofs.py:459
+#: pylib/actions/proofs.py:471 pylib/actions/proofs.py:475
 msgid "Substitute in selected property"
 msgstr "Substituer dans la propriété sélectionnée"
 
-#: pylib/actions/proofs.py:464
+#: pylib/actions/proofs.py:480
 msgid "Apply to selected object"
 msgstr "Appliquer à l’objet sélectionné"
 
-#: pylib/actions/proofs.py:468
+#: pylib/actions/proofs.py:484
 msgid "Apply to selected property, or to change the goal"
 msgstr "Appliquer à la propriété sélectionnée, ou pour transformer le but"
 
