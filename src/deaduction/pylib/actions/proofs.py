@@ -151,6 +151,7 @@ def method_sorry(goal: Goal, l: [MathObject]) -> str:
     possible_codes = ['sorry']
     return format_orelse(possible_codes)
 
+
 def introduce_fun(goal: Goal, l: [MathObject]) -> str:
     """
     Translate into string of lean code corresponding to the action
@@ -165,11 +166,26 @@ and add ∀ a ∈ A, P(a, f(a)) to the properties
     possible_codes = []
     if len(l) == 1:
         h = l[0].info["name"]
-        hf = get_new_hyp(goal)
-        f = utils.get_new_fun()
-        possible_codes.append(
-            f'cases classical.axiom_of_choice {h} with {f} {hf}, dsimp at {hf}, dsimp at {f}')
-    return format_orelse(possible_codes)
+        # finding expected math_type for the new function
+        universal_property = l[0].math_type
+        if universal_property.node == 'QUANT_∀':
+            source_type = universal_property.children[0]
+            exist_property = universal_property.children[2]
+            if exist_property.node == 'QUANT_∃':
+                target_type = exist_property.children[0]
+                node = "FUNCTION"
+                children = [source_type, target_type]
+                info = {}
+                type_type = "not provided"
+                math_type = MathObject(node, info, type_type, children)
+
+                hf = get_new_hyp(goal)
+                f = give_global_name(math_type, goal)
+                possible_codes.append(f'cases classical.axiom_of_choice {h} '
+                                      f'with {f} {hf}, dsimp at {hf}, '
+                                      f'dsimp at {f}')
+                return format_orelse(possible_codes)
+    raise WrongUserInput
 
 
 @action(user_config.get('tooltip_new_object'),
@@ -288,9 +304,9 @@ def apply_substitute(goal: Goal, l: [MathObject], user_input: [int]):
     left_term = heq.math_type.children[0]
     right_term = heq.math_type.children[1]
     choices = [(left_term.format_as_utf8(),
-            f'{left_term.format_as_utf8()} ← {right_term.format_as_utf8()}'),
-            (right_term.format_as_utf8(),
-            f'{right_term.format_as_utf8()} ← {left_term.format_as_utf8()}')]
+                f'Replace by {right_term.format_as_utf8()}'),
+               (right_term.format_as_utf8(),
+                f'Replace by {left_term.format_as_utf8()}')]
             
     if len(l) == 1:
         h = l[0].info["name"]

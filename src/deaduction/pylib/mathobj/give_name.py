@@ -223,9 +223,11 @@ def next_in_list(letter: str, letters: List[str]):
     else:
         return letters[0]
 
-def insert_maybe(L: list, item, position=-1):
+def insert_maybe(L: list, item, position=None):
     """Insert in a list if item is not already in"""
     if item in L:
         return
     else:
+        if position is None:
+            position = len(L)
         L.insert(position, item)
