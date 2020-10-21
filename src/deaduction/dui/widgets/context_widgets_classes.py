@@ -81,7 +81,9 @@ class _TagIcon(QIcon):
         :param tag: One of '+', '=', '≠'.
         """
 
-        icons_folder = Path('share/graphical_resources/icons/')
+        icons_base_dir = user_config.get('icons_path')
+        icons_type = user_config.get('icons_context')  # e.g. 'blue'
+        icons_dir = Path(icons_base_dir) / icons_type
 
         if tag not in ['=', '+', '≠']:
             # TODO: catch the exception below?
@@ -90,9 +92,9 @@ class _TagIcon(QIcon):
             super().__init__('')  # No icon, empty icon trick
             return None
         elif tag == '+':
-            icon_path = icons_folder / 'tag_plus.png'
+            icon_path = icons_dir / 'tag_plus.png'
         elif tag == '≠':
-            icon_path = icons_folder / 'tag_different.png'
+            icon_path = icons_dir / 'tag_different.png'
 
         super().__init__(str(icon_path.resolve()))
 
