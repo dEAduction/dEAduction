@@ -127,11 +127,14 @@ class MathObject:
             ##############################
             # end: general instantiation #
             ##############################
+            # self has unnamed bound vars if some child has
+            child_bool = (True in [child.has_unnamed_bound_vars
+                                                    for child in children])
             math_object = MathObject(node=node,
                                      info=info,
                                      math_type=math_type,
-                                     children=children
-                                     )
+                                     children=children,
+                                     has_unnamed_bound_vars=child_bool)
         return math_object
 
     ########################
@@ -174,7 +177,7 @@ class MathObject:
                                              body=local_context)
             bound_var.info["name"] = name
             bound_var.math_type = bound_var_type
-            log.debug(f"giving name {name} to {display_math_object(bound_var)}")
+            log.debug(f"giving name {name}")
 
             children = [local_context]
 
@@ -194,11 +197,20 @@ class MathObject:
 
         WARNING: this should probably not be used for bound variables
         """
-        # successively test for     nodes
+
+
+        # successively test for
+        #                           types
+        # (string case)
+        #                           nodes
         #                           name (if exists)
         #                           math_type
         #                           children
-        if self.node != other.node:
+        if type(self) != type (other):
+            return False
+        elif type(self) == str and self != other:
+            return False
+        elif self.node != other.node:
             return False
         elif 'name' in self.info.keys():
             if self.info['name'] != other.info['name']:
@@ -274,7 +286,7 @@ class MathObject:
         else:
             log.warning(f"is_type called on {self}, but math_type is "
                         f"{self.math_type}")
-            return None
+            return False
 
     def can_be_used_for_substitution(self) -> bool:
         """
@@ -346,6 +358,7 @@ class MathObject:
             #########################################
             # naming bound variables before display #
             #########################################
+            log.debug(f"Naming bound vars in {self}")
             self.name_bound_vars()
             display = display_math_type_of_local_constant(self, format_)
         else:

@@ -269,7 +269,6 @@ class ExerciseCentralWidget(QWidget):
 
         # Init context (objects and properties). Get them as two list of
         # (MathObject, str), the str being the tag of the prop. or obj.
-        # FIXME: tags
         new_context    = new_goal.tag_and_split_propositions_objects()
         new_target     = new_goal.target
         new_target_tag = '='  # new_target.future_tags[1]
@@ -477,7 +476,7 @@ class ExerciseMainWindow(QMainWindow):
             log.debug('no tag for target')
             pass
 
-        new_context = new_goal.tag_and_split_propositions_objects()
+        #new_context = new_goal.tag_and_split_propositions_objects()
 
         # count of goals
         total_goals_counter, \
@@ -493,12 +492,6 @@ class ExerciseMainWindow(QMainWindow):
             QMessageBox.information(self, '',
                                     _('Current goal solved'),
                                     QMessageBox.Ok)
-
-        # fixme: the following is not used!!
-        #new_objects_wgt = MathObjectWidget(new_context[0])
-        #new_props_wgt = MathObjectWidget(new_context[1])
-        #new_target = new_goal.target
-        #new_target_wgt = TargetWidget(new_target, new_target_tag)
 
         # Reset current context selection
         self.clear_current_selection()
