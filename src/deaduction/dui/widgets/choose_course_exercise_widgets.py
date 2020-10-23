@@ -26,9 +26,10 @@ This file is part of d∃∀duction.
 """
 
 import sys
-from pathlib import Path
-from gettext import gettext as _
-from typing  import Dict
+from pathlib import   Path
+from gettext import   gettext as _
+from typing  import ( Any,
+                      Dict)
 
 from PySide2.QtCore    import   Slot
 from PySide2.QtWidgets import ( QApplication,
@@ -45,36 +46,37 @@ from deaduction.dui.utils        import DisclosureTree
 from deaduction.pylib.coursedata import Course
 
 
-class AbstractCExChooser(QGroupBox):
+class AbstractCoExChooser(QGroupBox):
 
-    def __init__(self, gb_title):
+    def __init__(self, title: str, left_widget: QWidget, cls: Any):
 
-        super().__init__(gb_title)
-
-        self.left_layout  = QVBoxLayout()
-        self.right_layout = QVBoxLayout()
-
-    def set_left_layout(self, layout: QLayout):
+        super().__init__(title)
         
-        self.left_layout = layout
-        self.__set_main_layout()
+        nothing_to_preview = QWidget()
+        nothing_to_preview_lyt = QVBoxLayout()
+        nothing_to_preview_lyt.addStretch()
+        nothing_to_preview_lyt.addWidget(QLabel(_('Nothing to preview')))
+        nothing_to_preview_lyt.addStretch()
+        nothing_to_preview.setLayout(nothing_to_preview_lyt)
 
-    def set_right_layout(self, layout: QLayout=None, title: str=None,
-                         subtitle: str=None, details: Dict[str, str]=None,
-                         description: str=None):
+        self.__preview_wgt = nothing_to_preview
 
-        # TODO: Keep previously created right layouts in a
-        # Dict[cls, QLayout], where cls is either Course or Exercise.
-        # It is probably useless tho.
+        self.__main_layout = QHBoxLayout()
+        self.__main_layout.addWidget(left_widget)
+        self.__main_layout.addWidget(self.__preview_wgt)
 
-        right_layout = QVBoxLayout()
+    def set_preview(self, widget: QWidget, title: str=None, subtitle: str=None,
+                    details: Dict[str, str]=None, description: str=None):
+
+        preview_wgt = QWidget()
+        layout      = QVBoxLayout()
 
         if title:
             title_wgt = QLabel(title)
             title_wgt.setStyleSheet('font-size: 16pt;' \
                                     'font-weight: bold;')
 
-            right_layout.addWidget(title_wgt)
+            layout.addWidget(title_wgt)
 
         if subtitle:
             subtitle_wgt = QLabel(subtitle)
@@ -84,30 +86,25 @@ class AbstractCExChooser(QGroupBox):
             subtitle_lyt.addWidget(title_wgt)
             subtitle_lyt.addWidget(subtitle_wgt)
 
-            right_layout.addLayout(sub_title_lyt)
+            layout.addLayout(sub_title_lyt)
 
         if details:
             details_wgt = DisclosureTree('Details', details)
 
-            right_layout.addWidget(details_wgt)
+            layout.addWidget(details_wgt)
 
         if description:
             description_wgt = QLabel(description)
             description_wgt.setWordWrap(True)
 
-            right_layout.addWidget(description_wgt)
+            layout.addWidget(description_wgt)
 
-            if layout:
-                right_layout.addLayout(layout)
+        layout.addWidget(widget)
+        preview_wgt.setWidget(layout)
 
-        self.right_layout = right_layout
-        self.__set_main_layout()
-
-    def __set_main_layout(self):
-        main_layout = QHBoxLayout()
-        main_layout.addLayout(self.left_layout)
-        main_layout.addLayout(self.right_layout)
-        self.setLayout(main_layout)
+        self.__main_layout.replaceWidget(self.__preview_wgt, preview_wgt)
+        self.__preview_wgt.deleteLater()
+        self.__preview_wgt = preview_wgt
 
 
 class CourseChooser(AbstractCExChooser):
