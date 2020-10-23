@@ -288,6 +288,16 @@ class MathObject:
                         f"{self.math_type}")
             return False
 
+    def is_function(self) -> bool:
+        """
+        Test if math_type of self is function.
+        """
+        log.debug(f"Is function? {self.math_type.node == 'FUNCTION'}")
+        if hasattr(self.math_type, "node"):
+            return self.math_type.node == "FUNCTION"
+        else:
+            return False
+
     def can_be_used_for_substitution(self) -> bool:
         """
         Determines if a proposition can be used as a basis for substituting,

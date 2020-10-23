@@ -26,6 +26,8 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import logging
+
 from deaduction.config.config import user_config, _
 
 import deaduction.pylib.actions.utils as utils
@@ -39,6 +41,9 @@ from deaduction.pylib.mathobj import (MathObject,
                                       Goal,
                                       get_new_hyp,
                                       give_global_name)
+
+log = logging.getLogger(__name__)
+
 
 # turn logic_button_texts into a dictionary
 proof_list= ['action_apply', 'proof_methods', 'new_object', 'assumption']
@@ -59,7 +64,7 @@ def action_use_proof_methods(goal: Goal, l: [MathObject],
     if not user_input:
         choices = [('1', _("Case-based reasoning")),
                    ('2', _("Proof by contrapositive")),
-                   ('3', _("Reductio ad absurdum"))]
+                   ('3', _("Proof by contradiction"))]
         if allow_proof_by_sorry:
             choices.append(('4', _("Admit current sub-goal!")))
         raise MissingParametersError(InputType.Choice,
@@ -206,11 +211,11 @@ and add this to the properties of the future goal.
     if len(user_input) == 0:
         raise MissingParametersError(InputType.Choice,
                              [(_("Object"), _("Introduce a new object")),
-                              (_("Sub-goal"), _("Introduce a new "
+                              (_("Goal"), _("Introduce a new "
                                                 "intermediate sub-goal")),
-                              (_("New function"), _("Introduce a new "
+                              (_("Function"), _("Introduce a new "
                                                 "function"))],
-                             title="+",
+                             title="New object",
                              output=_("Choose what to introduce:"))
     if user_input[0] == 0:  # choice = new object
         if len(user_input) == 1:  # ask for new object
@@ -358,6 +363,13 @@ def apply_substitute(goal: Goal, l: [MathObject], user_input: [int]):
 
 
 def apply_function(goal: Goal, l: [MathObject]):
+    """
+    Apply l[-1], which is assumed to be a function f, to previous elements of
+    l, which can be:
+    - an equality
+    - an object x (then create the new object f(x) )
+    """
+    log.debug('Applying function')
     possible_codes = []
 
     if len(l) == 1:
@@ -365,8 +377,8 @@ def apply_function(goal: Goal, l: [MathObject]):
     
     # let us check the input is indeed a function
     function = l[-1]
-    if function.math_type.node != "FUNCTION":
-        raise WrongUserInput
+    # if function.math_type.node != "FUNCTION":
+    #    raise WrongUserInput
     
     f = function.info["name"]
     Y = l[-1].math_type.children[1]
@@ -398,7 +410,13 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
     Translate into string of lean code corresponding to the action
     Function explain_how_to_apply should reflect the actions
 
-    Apply last selected item on the other selected items
+    Apply last selected item on the other selected
+
+    test for last selected item l[-1], and call functions accordingly:
+    - apply_function, if item is a function
+    - apply_susbtitute, if item can_be_used_for_substitution
+    - apply_implicate, if item is an implication or a universal property
+    - apply_exists, if item is an existential property
 
     :param l:   list of MathObject arguments preselected by the user
     :return:    string of lean code
@@ -409,7 +427,7 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
         raise WrongUserInput  # n'apparaîtra plus quand ce sera un double-clic
 
     # if user wants to apply a function
-    if not l[-1].math_type.is_prop():
+    if l[-1].is_function():
         return apply_function(goal, l)
 
     # determines which kind of property the user wants to apply
@@ -438,11 +456,11 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
 
 applicable_nodes = {'FUNCTION',  # to apply a function
                     'PROP_EQUAL', 'PROP_IFF', 'QUANT_∀',  # for substitution
-                    'PROP_IMPLIES'  # TODO: add 'QUANT_∃'
+                    'PROP_IMPLIES', 'QUANT_∃'
                     }
 
 
-def is_applicable(math_object) -> bool:
+def user_can_apply(math_object) -> bool:
     """
     True if math_object may be applied
     (--> an 'APPLY' button may be created)
@@ -460,31 +478,23 @@ def explain_how_to_apply(math_object: MathObject, dynamic=False, long=False) \
     :param long: boolean
     TODO: implement dynamic and long tooltips
     """
-    if not is_applicable(math_object):
-        return None
-
     node = math_object.math_type.node
     if node == 'FUNCTION':
-        caption = _("Apply function to an element or an equality")
+        caption = _("apply function to a selected object or "
+                    "equality")
 
-    if node == 'PROP_EQUAL':
-        caption = _("Substitute in selected property")
+    elif node == 'PROP_EQUAL' or node == 'PROP_IFF':
+        caption = _("substitute in a selected property")
 
+    elif node == 'QUANT_∀':
+        caption = _("apply to a selected object")
 
-    if node == 'PROP_IFF':
-        caption = _("Substitute in selected property")
+    elif node == 'PROP_IMPLIES':
+        caption = _("apply to a selected property, or to modify the goal")
 
-
-    if node == 'QUANT_∀':
-        # todo: test for substitution
-        caption = _("Apply to selected object")
-
-
-    if node == 'PROP_IMPLIES':
-        caption = _("Apply to selected property, or to change the goal")
-
+    else:
+        caption = ''
     return caption
-    
     
 
 @action(user_config.get('tooltip_assumption'),
