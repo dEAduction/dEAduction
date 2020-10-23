@@ -34,13 +34,14 @@ from typing  import ( Any,
 from PySide2.QtCore    import   Slot
 from PySide2.QtWidgets import ( QApplication,
                                 QFileDialog,
+                                QGroupBox,
+                                QHBoxLayout,
                                 QLabel,
                                 QLayout,
                                 QListWidget,
-                                QGroupBox,
-                                QHBoxLayout,
                                 QPushButton,
-                                QVBoxLayout)
+                                QVBoxLayout,
+                                QWidget)
 
 from deaduction.dui.utils        import DisclosureTree
 from deaduction.pylib.coursedata import Course
@@ -48,7 +49,7 @@ from deaduction.pylib.coursedata import Course
 
 class AbstractCoExChooser(QGroupBox):
 
-    def __init__(self, title: str, left_widget: QWidget, cls: Any):
+    def __init__(self, title: str, left_layout: QLayout):
 
         super().__init__(title)
         
@@ -62,11 +63,14 @@ class AbstractCoExChooser(QGroupBox):
         self.__preview_wgt = nothing_to_preview
 
         self.__main_layout = QHBoxLayout()
-        self.__main_layout.addWidget(left_widget)
+        self.__main_layout.addLayout(left_layout)
         self.__main_layout.addWidget(self.__preview_wgt)
 
-    def set_preview(self, widget: QWidget, title: str=None, subtitle: str=None,
-                    details: Dict[str, str]=None, description: str=None):
+        self.setLayout(self.__main_layout)
+
+    def set_preview(self, widget: QWidget=None, title: str=None,
+                    subtitle: str=None, details: Dict[str, str]=None,
+                    description: str=None):
 
         preview_wgt = QWidget()
         layout      = QVBoxLayout()
@@ -107,30 +111,23 @@ class AbstractCoExChooser(QGroupBox):
         self.__preview_wgt = preview_wgt
 
 
-class CourseChooser(AbstractCExChooser):
+class CourseChooser(AbstractCoExChooser):
 
     def __init__(self):
-
-        super().__init__(_('Choose course (browse and preview)'))
-        self.set_left_layout()
-
-    def set_left_layout(self):
 
         # Browse files button
         browse_btn = QPushButton(_('Browse files for course'))
         browse_btn.clicked.connect(self.__browse_for_course)
-        # Previous courses
-        # TODO: Add the damn feature
+        # TODO: Add previous courses
         self.previous_courses_wgt = QListWidget()
 
         left_layout = QVBoxLayout()
         left_layout.addWidget(browse_btn)
         left_layout.addWidget(self.previous_courses_wgt)
 
-        super().set_left_layout(left_layout)
+        super().__init__(_('Choose course (browse and preview)'), left_layout)
 
-
-    def set_right_layout(self, course: Course):
+    def set_preview(self, course: Course):
 
         title       = course.metadata.get('Title',       None)
         subtitle    = course.metadata.get('Subtitle',    None)
@@ -148,8 +145,8 @@ class CourseChooser(AbstractCExChooser):
         # a course.
         # TODO: Add course path.
 
-        super().set_right_layout(layout=None, title=title, subtitle=subtitle,
-                                 details=details, description=description)
+        super().set_preview(widget=None, title=title, subtitle=subtitle,
+                            details=details, description=description)
 
     @Slot()
     def __browse_for_course(self):
@@ -161,7 +158,7 @@ class CourseChooser(AbstractCExChooser):
         if dialog.exec_():
             course_path = Path(dialog.selectedFiles()[0])
             course = Course.from_file(course_path)
-            self.set_right_layout(course)
+            self.set_preview(course)
 
 
 if __name__ == '__main__':
