@@ -36,6 +36,8 @@ log = logging.getLogger(__name__)
 EXERCISE.PROPERTY_COUNTER = 1
 EXERCISE.USE_PRIMES_FOR_VARIABLES_NAMES = \
     user_config.getboolean('use_primes_for_variables_names')
+EXERCISE.USE_SECONDS_FOR_VARIABLES_NAMES = \
+    user_config.getboolean('use_seconds_for_variables_names')
 
 
 def get_new_hyp(goal):
@@ -106,13 +108,16 @@ def give_name(math_type,
     :param hints:           a hint for the future name
     :return:                a name for the new variable
     """
+
+    # determine list of forbidden names from forbidden variables
     forbidden_names = []  # a list of strings with no duplication
     for math_object in forbidden_vars:
         name = math_object.info['name']
         if name not in forbidden_names:
             forbidden_names.append(name)
-    log.debug(f"giving name to bound var, type={math_type}")
+    log.debug(f"giving name to bound var, hints = {hints} type={math_type}")
     log.debug(f"forbidden names: {forbidden_names}")
+
     ######################
     # special math types #
     ######################
@@ -129,13 +134,6 @@ def give_name(math_type,
     ##################
     # managing hints #
     ##################
-    # standard hints
-    standard_hint = 'A' if math_type.node.startswith('SET') \
-                    else 'X' if math_type.node == 'TYPE' \
-                    else 'P' if math_type.node == 'PROP' \
-                    else 'f' if math_type.node == 'FUNCTION' \
-                    else 'x'
-    insert_maybe(hints, standard_hint)
 
     if upper_case_name:
         hints = [hint[0].upper() for hint in hints]  # so each hint has only
@@ -151,7 +149,14 @@ def give_name(math_type,
             hint = type_name[0].lower()
             insert_maybe(hints, hint, position=0)
 
-    log.debug(f"hints: {hints}")
+    # standard hints
+    standard_hint = 'A' if math_type.node.startswith('SET') \
+        else 'X' if math_type.node == 'TYPE' \
+        else 'P' if math_type.node == 'PROP' \
+        else 'f' if math_type.node == 'FUNCTION' \
+        else 'x'
+    insert_maybe(hints, standard_hint)
+
     ##########################################################
     # first trial: use hints, maybe with primes if permitted #
     ##########################################################
@@ -160,20 +165,29 @@ def give_name(math_type,
         if potential_name not in forbidden_names:
             new_name = potential_name
             return new_name
-    # if hint = "x" and this is already the name of a variable with the
-    # same math_type as the variable we want to name,
-    # then try to use "x'"
-    # here all hints are assumed to be the name of some variable
+        # if hint = "x" and this is already the name of a variable with the
+        # same math_type as the variable we want to name,
+        # then try to use "x'"
+        # here all hints are assumed to be the name of some variable
         elif EXERCISE.USE_PRIMES_FOR_VARIABLES_NAMES:
-            name            = potential_name
-            index_          = forbidden_names.index(name)
-            variable        = forbidden_vars[index_]
-            potential_name  = name + "'"
+            name = potential_name
+            index_ = forbidden_names.index(name)
+            variable = forbidden_vars[index_]
+            potential_name = name + "'"
             log.debug(f"trying {potential_name}...")
-            if potential_name not in forbidden_names \
-                and math_type == variable.math_type:
-                new_name = potential_name
-                return new_name
+            if math_type == variable.math_type:
+                if potential_name not in forbidden_names:
+                    return potential_name
+                elif EXERCISE.USE_SECONDS_FOR_VARIABLES_NAMES:
+                    name = potential_name
+                    index_ = forbidden_names.index(name)
+                    variable = forbidden_vars[index_]
+                    potential_name = name + "'"
+                    log.debug(f"trying {potential_name}...")
+                    if math_type == variable.math_type \
+                            and not potential_name.endswith("'''") \
+                            and not potential_name in forbidden_names:
+                        return potential_name
 
     ########################################
     # second trial: use alphabetical order #
@@ -196,6 +210,7 @@ def give_name(math_type,
     while potential_name + '_' + str(counter) in forbidden_names:
         counter += 1
     return potential_name + '_' + str(counter)
+
 
 def next_(letter: str) -> str:
     """
@@ -222,6 +237,7 @@ def next_in_list(letter: str, letters: List[str]):
         return letters[index]
     else:
         return letters[0]
+
 
 def insert_maybe(L: list, item, position=None):
     """Insert in a list if item is not already in"""
