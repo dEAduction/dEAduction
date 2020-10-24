@@ -26,11 +26,18 @@ This file is part of dEAduction.
 from typing import List
 import logging
 
-from deaduction.config.config import EXERCISE
 import deaduction.pylib.logger as logger
+
+from deaduction.pylib.mathobj import MathObject
+from deaduction.config.config import (user_config,
+                                      EXERCISE)
 
 log = logging.getLogger(__name__)
 EXERCISE.PROPERTY_COUNTER = 1
+EXERCISE.USE_PRIMES_FOR_VARIABLES_NAMES = \
+    user_config.getboolean('use_primes_for_variables_names')
+EXERCISE.USE_SECONDS_FOR_VARIABLES_NAMES = \
+    user_config.getboolean('use_seconds_for_variables_names')
 
 
 def get_new_hyp(goal):
@@ -40,7 +47,7 @@ def get_new_hyp(goal):
 
     Makes us of the Python global var Global.PROPERTY_COUNTER
     """
-    forbidden_names = goal.extract_var_names()
+    forbidden_names = goal.extract_vars_names()
 
     counter = EXERCISE.PROPERTY_COUNTER
     potential_name = 'H' + str(counter)
@@ -55,31 +62,31 @@ def give_local_name(math_type, body, hints: [str] = []):
     """
     Attribute a name to a local variable. See give_name below.
 
-    :param math_type: PropObj type of new variable
-    :param body: a PropObj inside which the new name will serve for a bound
-    variable
-    :param hints: a list of hints for the future name
-    :return: a name for the new variable
+    :param math_type:   PropObj type of new variable
+    :param body:        a PropObj inside which the new name will serve for a
+    bound variable
+    :param hints:       a list of hints for the future name
+    :return:            a name for the new variable
     """
-    forbidden_names = body.extract_local_vars_names()
-    return give_name(math_type, forbidden_names, hints)
+    forbidden_vars = body.extract_local_vars()
+    return give_name(math_type, forbidden_vars, hints)
 
 
 def give_global_name(math_type, goal, hints: [str] = []):
     """
     Attribute a name to a global variable See give_name below.
 
-    :param math_type: PropObj type of new variable
-    :param goal: current_goal
-    :param hints: a list of hints for the future name
-    :return: a name for the new variable
+    :param math_type:   PropObj type of new variable
+    :param goal:        current_goal
+    :param hints:       a list of hints for the future name
+    :return:            a name for the new variable
     """
-    forbidden_names = goal.extract_var_names()
-    return give_name(math_type, forbidden_names, hints)
+    forbidden_vars = goal.extract_vars()
+    return give_name(math_type, forbidden_vars, hints)
 
 
 def give_name(math_type,
-              forbidden_names: [str],
+              forbidden_vars: [MathObject],
               hints: [str] = []) -> str:
     """
     Provide a name for a new variable. Baby version.
@@ -96,14 +103,21 @@ def give_name(math_type,
     NB : if x : X but the property 'x belongs to A' is in context, then
     math_type could be A.
 
-    :param math_type: PropObj type of new variable
-    :param forbidden_names: list of names of other variables that must be
-    avoided
-    :param hints: a hint for the future name
-    :return: a name for the new variable
+    :param math_type:       PropObj type of new variable
+    :param forbidden_vars:  list of variables that must be avoided
+    :param hints:           a hint for the future name
+    :return:                a name for the new variable
     """
-    # log.debug(f"giving name to bound var, type={math_type}, hints={hints}")
-    # log.debug(f"forbidden names: {forbidden_names}")
+
+    # determine list of forbidden names from forbidden variables
+    forbidden_names = []  # a list of strings with no duplication
+    for math_object in forbidden_vars:
+        name = math_object.info['name']
+        if name not in forbidden_names:
+            forbidden_names.append(name)
+    log.debug(f"giving name to bound var, hints = {hints} type={math_type}")
+    log.debug(f"forbidden names: {forbidden_names}")
+
     ######################
     # special math types #
     ######################
@@ -117,13 +131,9 @@ def give_name(math_type,
     if math_type.is_prop():
         return get_new_hyp()
 
-    # standard hints
-    standard_hint = 'A' if math_type.node.startswith('SET') \
-                    else 'X' if math_type.node == 'TYPE' \
-                    else 'P' if math_type.node == 'PROP' \
-                    else 'f' if math_type.node == 'FUNCTION' \
-                    else 'x'
-    hints.append(standard_hint)
+    ##################
+    # managing hints #
+    ##################
 
     if upper_case_name:
         hints = [hint[0].upper() for hint in hints]  # so each hint has only
@@ -137,23 +147,52 @@ def give_name(math_type,
         type_name = math_type.info["name"]
         if type_name[0].isupper():
             hint = type_name[0].lower()
-            hints.insert(0, hint)
-    ###############################
-    # first trial: use hints only #
-    ###############################
+            insert_maybe(hints, hint, position=0)
+
+    # standard hints
+    standard_hint = 'A' if math_type.node.startswith('SET') \
+        else 'X' if math_type.node == 'TYPE' \
+        else 'P' if math_type.node == 'PROP' \
+        else 'f' if math_type.node == 'FUNCTION' \
+        else 'x'
+    insert_maybe(hints, standard_hint)
+
+    ##########################################################
+    # first trial: use hints, maybe with primes if permitted #
+    ##########################################################
     for potential_name in hints:
+        log.debug(f"trying {potential_name}...")
         if potential_name not in forbidden_names:
             new_name = potential_name
             return new_name
+        # if hint = "x" and this is already the name of a variable with the
+        # same math_type as the variable we want to name,
+        # then try to use "x'"
+        # here all hints are assumed to be the name of some variable
+        elif EXERCISE.USE_PRIMES_FOR_VARIABLES_NAMES:
+            name = potential_name
+            index_ = forbidden_names.index(name)
+            variable = forbidden_vars[index_]
+            potential_name = name + "'"
+            log.debug(f"trying {potential_name}...")
+            if math_type == variable.math_type:
+                if potential_name not in forbidden_names:
+                    return potential_name
+                elif EXERCISE.USE_SECONDS_FOR_VARIABLES_NAMES:
+                    name = potential_name
+                    index_ = forbidden_names.index(name)
+                    variable = forbidden_vars[index_]
+                    potential_name = name + "'"
+                    log.debug(f"trying {potential_name}...")
+                    if math_type == variable.math_type \
+                            and not potential_name.endswith("'''") \
+                            and not potential_name in forbidden_names:
+                        return potential_name
+
     ########################################
     # second trial: use alphabetical order #
     ########################################
-    if hints:
-        starting_name = hints[0]
-    else:
-        starting_name = 'A' if math_type.node == 'SET' \
-                   else 'X' if math_type.node == 'TYPE' \
-                   else 'x'
+    starting_name = hints[0]
     counter = 0
     potential_name = starting_name
     max_letters = 3  # NB : must be ≤ 26 !
@@ -171,6 +210,7 @@ def give_name(math_type,
     while potential_name + '_' + str(counter) in forbidden_names:
         counter += 1
     return potential_name + '_' + str(counter)
+
 
 def next_(letter: str) -> str:
     """
@@ -197,3 +237,13 @@ def next_in_list(letter: str, letters: List[str]):
         return letters[index]
     else:
         return letters[0]
+
+
+def insert_maybe(L: list, item, position=None):
+    """Insert in a list if item is not already in"""
+    if item in L:
+        return
+    else:
+        if position is None:
+            position = len(L)
+        L.insert(position, item)

@@ -221,6 +221,7 @@ class ServerInterface(QObject):
                 self.proof_state = ProofState.from_lean_data(
                     self.__tmp_hypo_analysis, self.__tmp_targets_analysis)
                 # store proof_state
+                self.log.debug("storing ProofState")
                 self.lean_file.state_info_attach(ProofState=self.proof_state)
 
                 self.__proof_state_valid.set()

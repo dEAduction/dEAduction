@@ -34,10 +34,10 @@ import deaduction.pylib.logger as logger
 from deaduction.config.config import _
 
 from deaduction.pylib.mathobj.MathObject import \
-                                MathObject
+    MathObject
 from deaduction.pylib.mathobj.lean_analysis_with_type import \
-                                lean_expr_with_type_grammar, \
-                                LeanEntryVisitor
+    lean_expr_with_type_grammar, \
+    LeanEntryVisitor
 
 from deaduction.pylib.actions import Action
 
@@ -46,8 +46,9 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class Goal:
-    context:        List[MathObject]
-    target:         MathObject
+    context: List[MathObject]
+    target: MathObject
+
     # the following would be useful if we decide to display objects of the
     # same type together:
     # math_types: List[Tuple[MathObject, List[MathObject]]]
@@ -143,22 +144,26 @@ class Goal:
         # log.debug(f"Old goal old tags: {old_goal.past_tags_old_context}")
         # log.debug(f"New goal future tags: {new_goal.future_tags}")
 
-    def extract_var_names(self) -> List[str]:
+    def extract_vars(self) -> List[MathObject]:
+        """
+        provides the list of all variables in the context,
+        (but NOT bound variables, nor names of hypotheses)
+        :return: list of MathObject (variables names)
+        """
+        # log.info("extracting the list of global variables")
+        variables = [math_object for math_object in self.context
+                     if not math_object.is_prop()]
+        return variables
+
+    def extract_vars_names(self) -> List[str]:
         """
         provides the list of names of all variables in the context,
         (but NOT bound variables, nor names of hypotheses)
-        :return: list of strings (variables names)
+        :return: list of MathObject (variables names)
         """
-        # log.info("extracting the list of variables's names")
-        names = []
-        for math_object in self.context:
-            name = math_object.info["name"]
-            if name != '' and not math_object.is_prop() \
-                    and not (name in names):
-                names.append(name)
-        #    names.extend(pfpo.bound_vars)
-        # names.extend(target.bound_vars)
-        # self.variables_names = names
+        # log.info("extracting the list of global variables")
+        names = [math_object.info['name'] for math_object in
+                     self.extract_vars()]
         return names
 
     @classmethod
@@ -240,12 +245,12 @@ class Goal:
             math_type = mathobj.math_type
             if math_type.is_prop():
                 prop = mathobj.math_type.format_as_text_utf8(
-                                                        text_depth=text_depth)
+                    text_depth=text_depth)
                 new_sentence = _("Assume that") + " " + prop + "."
             else:
                 name = mathobj.format_as_utf8()
                 name_type = math_type.format_as_text_utf8(is_math_type=True,
-                                                          text_depth=text_depth-1)
+                                                          text_depth=text_depth - 1)
                 if math_type.node == "FUNCTION" and text_depth == 0:
                     new_sentence = _("Let") + " " + name + ":" \
                                    + " " + name_type + "."
@@ -259,7 +264,7 @@ class Goal:
 
         text += "\n"
         target_text = target.math_type.format_as_text_utf8(
-                                                    text_depth=text_depth)
+            text_depth=text_depth)
         if to_prove:
             target_text = _("Prove that") + " " + target_text
         else:
@@ -303,7 +308,7 @@ class ProofState:
         if targets:
             main_goal = Goal.from_lean_data(hypo_analysis, targets[0])
         else:
-            log.warning(f"No target found! targets_analysis = {targets_analysis}")
+            log.warning(f"No target, targets_analysis={targets_analysis}")
         goals = [main_goal]
         for other_string_goal in targets[1:]:
             other_goal = Goal.from_lean_data(hypo_analysis="",
@@ -338,7 +343,7 @@ class Proof:
         current_goal_number = 1
         current_goals_counter = 0
         goals_counter_evolution = 0
-        #log.debug(f"counting goals in {self} with {len(self.steps)} "
+        # log.debug(f"counting goals in {self} with {len(self.steps)} "
         #          f"steps")
         for proof_state, _ in self.steps:
             new_counter = len(proof_state.goals)
@@ -353,7 +358,6 @@ class Proof:
                current_goal_number, \
                current_goals_counter, \
                goals_counter_evolution
-
 
 
 def print_proof_state(goal):

@@ -210,6 +210,7 @@ class Exercise(Theorem):
             try:
                 for equality in data["ExpectedVarsNumber"].split(", "):
                     key, _, value = equality.partition("=")
+                    key = key.strip()
                     expected_vars_number[key] = int(value)
             except AttributeError:
                 log.error(f"wrong format for ExpectedVarsNumber in exercise "
@@ -366,7 +367,8 @@ class Exercise(Theorem):
                    data["lean_line"],
                    data["lean_name"],
                    data["lean_core_statement"],
-                   data["lean_variables"], data["PrettyName"],
+                   data["lean_variables"],
+                   data["PrettyName"],
                    data["text_book_identifier"],
                    lean_begin_line_number=      0,  # will be set up soon
                    lean_end_line_number=        0,

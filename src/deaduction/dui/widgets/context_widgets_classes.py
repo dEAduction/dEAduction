@@ -33,7 +33,7 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
-
+import logging
 from pathlib import Path
 from typing  import Tuple
 
@@ -51,6 +51,9 @@ from PySide2.QtWidgets import ( QHBoxLayout,
 from deaduction.config.config import user_config, _
 
 from deaduction.pylib.mathobj import MathObject
+from deaduction.pylib.actions import explain_how_to_apply
+
+log = logging.getLogger(__name__)
 
 ################################
 # MathObject widgets classes #
@@ -81,7 +84,9 @@ class _TagIcon(QIcon):
         :param tag: One of '+', '=', '≠'.
         """
 
-        icons_folder = Path('share/graphical_resources/icons/')
+        icons_base_dir = user_config.get('icons_path')
+        icons_type = user_config.get('icons_context')  # e.g. 'blue'
+        icons_dir = Path(icons_base_dir) / icons_type
 
         if tag not in ['=', '+', '≠']:
             # TODO: catch the exception below?
@@ -90,9 +95,9 @@ class _TagIcon(QIcon):
             super().__init__('')  # No icon, empty icon trick
             return None
         elif tag == '+':
-            icon_path = icons_folder / 'tag_plus.png'
+            icon_path = icons_dir / 'tag_plus.png'
         elif tag == '≠':
-            icon_path = icons_folder / 'tag_different.png'
+            icon_path = icons_dir / 'tag_different.png'
 
         super().__init__(str(icon_path.resolve()))
 
@@ -141,7 +146,9 @@ class MathObjectWidgetItem(QListWidgetItem):
         caption   = f'{lean_name} : {math_expr}'
         self.setText(caption)
         self.setIcon(_TagIcon(tag))
-
+        tool_tip = explain_how_to_apply(mathobject)
+        if tool_tip:
+            self.setToolTip(tool_tip.capitalize())
 
     def __eq__(self, other):
         """
@@ -234,7 +241,10 @@ class TargetWidget(QWidget):
     :attribute tag str: The tag associated to target.
     """
 
-    def __init__(self, target: MathObject=None, tag: str=None):
+    def __init__(self,
+                 target: MathObject=None,
+                 tag: str=None,
+                 goal_count: str=''):
         """"
         Init self with an target (an instance of the class ProofStatePO)
         and a tag. If those are None, display an empty tag and '…' in
@@ -242,6 +252,9 @@ class TargetWidget(QWidget):
 
         :param target: The target to be displayed.
         :param tag: The tag associated to target.
+        :param goal_count: a string indicating the goal_count state,
+        e.g. "  2 / 3" means the goal number 2 out of 3 is currently being
+        studied
         """
 
         super().__init__()
@@ -250,8 +263,7 @@ class TargetWidget(QWidget):
         self.tag    = tag
 
         # ───────────────────── Widgets ──────────────────── #
-
-        caption_label = QLabel(_('Target'))
+        caption_label = QLabel(_('Target') + goal_count)
         self.setToolTip(_('To be proved'))
         # TODO: put the pre-set size of group boxes titles
         caption_label.setStyleSheet('font-size: 11pt;')
@@ -262,7 +274,13 @@ class TargetWidget(QWidget):
         #   H : ∀ x ∈ X, ∃ ε, …
         # where H might be the lean name of the target. That's what
         # the .math_type is for.
-        target_label = QLabel(target.math_type.format_as_utf8() if target else '…')
+        # 'is_math_type=True' triggers the bound variables naming
+        if target:
+            log.debug("updating target")
+            text = target.math_type.format_as_utf8(is_math_type=True)
+        else:
+            text = '…'
+        target_label = QLabel(text)
         size = user_config.get('target_font_size')
         target_label.setStyleSheet(f'font-size: {size};')
 

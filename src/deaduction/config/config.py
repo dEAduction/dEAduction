@@ -123,11 +123,12 @@ log.debug(f"test: {test_language}")
 tooltips = {
     'tooltip_and':
         _("""• Split a property 'P AND Q' into the two properties 'P', 'Q'
-• Inversely, assembles 'P' and 'Q' to get 'P AND Q'"""),
+• Inversely, assembles 'P' and 'Q' to get 'P AND Q'"""
+          ),
     'tooltip_or':
         _("""• Prove 'P OR Q' by proving either 'P' or 'Q'
-• Use the property 'P OR Q' by splitting the cases when P is
-True and Q is True"""),
+• Use the property 'P OR Q' by splitting the cases when P is True and Q is True"""
+          ),
     'tooltip_not':
         _("""Try to simplify the property 'NOT P'"""),
     'tooltip_implies':
@@ -137,34 +138,37 @@ True and Q is True"""),
     'tooltip_forall':
         _("""Prove '∀ a, P(a)' by introducing 'a'"""),
     'tooltip_exists':  # TODO: possibility to 'APPLY' '∃ x, P(x)'
-        _("""Prove '∃ x, P(x)' by specifying some 'x' and proving P(x)"""),
+        _("""Prove '∃ x, P(x)' by specifying some 'x' and proving P(x)"""
+          ),
     'tooltip_apply':
         _("""• Apply to a property '∀ a, P(a)' and some 'a' to get 'P(a)' 
-• Apply to a property 'P ⇒ Q' and 'P' to get 'Q'
-• Apply to an equality to substitute in another property
-• Apply a function to an element or an equality"""),
+• Apply a property 'P ⇒ Q' to 'P' to get 'Q'
+• Apply an equality or a logical equivalence to substitute in another property
+• Apply a function to an element or an equality"""
+          ),
     'tooltip_proof_methods':
-        _("""Choose some specific proof method"""),
-    'tooltip_choice':
-        _(
-            "From a property '∀ a ∈ A, ∃ b ∈ B, P(a,b)', get a function from A to B"),
+        _("""Choose some specific proof method: 
+• Case-based reasoning
+• Proof by contrapositive
+• Proof by contradiction"""
+          ),
     'tooltip_new_object':
         _("""• Create a new object (e.g. 'f(x)' from 'f' and 'x')
-• Create a new subgoal (a lemma) which will be proved, and added to the context"""
+• Create a new subgoal (a lemma) which will be proved, and added to the context
+• From a property '∀ a ∈ A, ∃ b ∈ B, P(a,b)', create a new function from A to B"""
           ),
     'tooltip_assumption':
         _(
-            """Terminate the proof when the target is obvious from the context""")
+            """Terminate the proof when the target is obvious from the context"""
+        )
 }
 # decentralized apply buttons
 tooltips_apply = {}  # TODO
 
 # Text for buttons
 buttons = {
-    'logic_button_texts': _("AND, OR, NOT, IMPLIES, IFF, FORALL, EXISTS, "
-                            "APPLY"),
-    'proof_button_texts': _(
-        "PROOF METHODS, CREATE FUNCTION, NEW OBJECT, QED")
+    'logic_button_texts': _("AND, OR, NOT, ⇒, ⇔, ∀, ∃"),
+    'proof_button_texts': _("Apply, Proof Methods, New Object, QED")
 }
 # sad thoughts for "¯\_(ツ)_/¯", I loved you so much...
 

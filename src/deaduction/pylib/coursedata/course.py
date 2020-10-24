@@ -214,7 +214,10 @@ if __name__ == "__main__":
     course_file_path2 = Path("../../../../tests/lean_files/courses/\
 exercises_theorie_des_ensembles.lean")
 
-    my_course = Course.from_file(course_file_path2)
+    course_file_path3 = Path("../../tests/lean_files/courses/\
+exercises_theorie_des_ensembles.lean")
+
+    my_course = Course.from_file(course_file_path3)
     print("My course:")
     print("List of statements:")
     count_ex = 0

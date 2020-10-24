@@ -249,15 +249,15 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
 
         # Print icon (D for definition, T for theorem, etc)
         # icons_path = 'share/graphical_resources/icons/letters' #fixme: delete
-        icons_dir = user_config.get('icons_path')
+        icons_base_dir = user_config.get('icons_path')
         icons_type = user_config.get('icons_letter_type')  # e.g. 'red'
-        icons_path = Path(icons_dir) / icons_type
+        icons_dir = Path(icons_base_dir) / icons_type
         if isinstance(statement, Definition):
-            path = icons_path / 'd.png'
+            path = icons_dir / 'd.png'
         elif isinstance(statement, Exercise):
-            path = icons_path / 'e.png'
+            path = icons_dir / 'e.png'
         elif isinstance(statement, Theorem):
-            path = icons_path / 't.png'
+            path = icons_dir / 't.png'
         self.setIcon(0, QIcon(str(path.resolve())))
 
         # Set tooltip
@@ -470,7 +470,7 @@ class StatementsTreeWidget(QTreeWidget):
             self.resizeColumnToContents(0)
             self.resizeColumnToContents(1)
         else:
-            self.setHeaderLabels([_('Statement')])
+            self.setHeaderLabels([_('Statements')])
 
     def add_child(self, item):
         """
