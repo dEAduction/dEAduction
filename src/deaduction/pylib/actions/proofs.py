@@ -36,7 +36,9 @@ from deaduction.pylib.actions import (InputType,
                                       WrongUserInput,
                                       action,
                                       format_orelse,
-                                      apply_exists)
+                                      apply_exists,
+                                      apply_and,
+                                      apply_or)
 from deaduction.pylib.mathobj import (MathObject,
                                       Goal,
                                       get_new_hyp,
@@ -443,10 +445,14 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
             possible_codes.extend(apply_implicate(goal, l))
         if len(l) == 2 or len(l) == 3:
             possible_codes.extend(apply_implicate_to_hyp(goal, l))
-
-    if quantifier == "QUANT_∃":
-        possible_codes.append(apply_exists(goal, l))
-
+            
+    if len(l) == 1 and user_can_apply(l[0]):
+        if quantifier == "QUANT_∃":
+            possible_codes.append(apply_exists(goal, l))
+        if quantifier == "PROP_AND":
+            possible_codes.append(apply_and(goal, l))
+        if quantifier == "PROP_OR":
+            possible_codes.append(apply_or(goal, l, user_input))
     return format_orelse(possible_codes)
 
 
@@ -456,8 +462,8 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
 
 applicable_nodes = {'FUNCTION',  # to apply a function
                     'PROP_EQUAL', 'PROP_IFF', 'QUANT_∀',  # for substitution
-                    'PROP_IMPLIES', 'QUANT_∃'
-                    }
+                    'PROP_IMPLIES',
+                    'QUANT_∃', 'PROP_AND', 'PROP_OR'} # for obvious action
 
 
 def user_can_apply(math_object) -> bool:
