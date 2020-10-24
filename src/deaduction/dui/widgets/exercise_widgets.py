@@ -190,7 +190,7 @@ class ExerciseCentralWidget(QWidget):
                 exercise.available_proof_techniques)
 
         # search for ActionButton corresponding to action_apply:
-        apply_buttons = [button for button in self.logic_btns.buttons
+        apply_buttons = [button for button in self.proof_btns.buttons
                          if button.action.run == action_apply]
         if apply_buttons:
             self.action_apply_button = apply_buttons[0]

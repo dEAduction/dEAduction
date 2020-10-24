@@ -110,6 +110,19 @@ begin
     exact set.subset.antisymm_iff.mpr
 end
 
+lemma exercise.inclusion_transitive
+(A B C : set X) :
+(A ⊆ B ∧ B ⊆ C) → A ⊆ C
+:=
+/- dEAduction
+PrettyName
+    Transitivité de l'inclusion
+-/
+begin
+    sorry
+end
+
+
 end generalites
 
 ---------------
@@ -174,6 +187,18 @@ end definitions
 -- EXERCICES --
 ---------------
 namespace exercices
+
+lemma exercise.intersection_inclus_ensemble :
+A ∩ B ⊆ A
+:=
+/- dEAduction
+PrettyName
+    Un ensemble contient son intersection avec un autre
+-/
+begin
+    sorry
+end
+
 
 lemma exercise.union_distributive_inter : A ∩ (B ∪ C)  = (A ∩ B) ∪ (A ∩ C) :=
 /- dEAduction
@@ -643,8 +668,8 @@ begin
     sorry
 end
 
--- TODO: ajouter la définition de bijectif = inj + surj,
--- la caractérisation par l'existence d'un inverse,
+-- TODO: ajouter la définition de bijectif = inj + surj = unique image inverse,
+-- la caractérisation par l'existence d'un inverse à g et à d,
 -- l'unicité de l'inverse, etc.
 
 end exercices
