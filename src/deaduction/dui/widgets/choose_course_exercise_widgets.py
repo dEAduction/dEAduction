@@ -160,11 +160,32 @@ class CourseChooser(AbstractCoExChooser):
             course = Course.from_file(course_path)
             self.set_preview(course)
 
+class DuiLauncher(QWidget):
+
+    def __init__(self):
+
+        super().__init__()
+        self.setWindowTitle(_('Choose course and exercise'))
+
+        self.__coex_lyt = QVBoxLayout()
+        self.__coex_lyt.addWidget(CourseChooser())
+
+        buttons_lyt = QHBoxLayout()
+        buttons_lyt.addStretch()
+        buttons_lyt.addWidget(QPushButton(_('Quit')))
+        buttons_lyt.addWidget(QPushButton(_('Start exercise')))
+
+        mlyt = QVBoxLayout()
+        mlyt.addLayout(self.__coex_lyt)
+        mlyt.addLayout(buttons_lyt)
+
+        self.setLayout(mlyt)
+
 
 if __name__ == '__main__':
     app = QApplication()
 
-    course_chooser = CourseChooser()
-    course_chooser.show()
+    deaduction_launcher = DeaductionLauncher()
+    deaduction_launcher.show()
 
     sys.exit(app.exec_())
