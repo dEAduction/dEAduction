@@ -37,6 +37,13 @@ import gettext
 
 log = logging.getLogger(__name__)
 
+##################################################################
+#               Setting cwd to src/deaduction                    #
+# This assumes this file (config.py) is in src/deaduction/config #
+##################################################################
+deaduction_directory = os.path.join(os.path.dirname(__file__)) + '/../'
+os.chdir(deaduction_directory)
+
 
 ################################
 # A class for global variables #
@@ -94,31 +101,22 @@ if available_languages == '':
 if select_language == '':
     select_language = 'en'
 
-# done = False
-# for key_ in ['LANGUAGE', 'LC_ALL', 'LC_MESSAGES', 'LANG']:
-#     if key_ in os.environ.keys():
-#         os.environ[key_] = select_language
-#         done = True
-# if not done:
-#     os.environ['LANG'] = select_language
-
-log.debug(f"Setting language to {select_language}")
 language_dir_path = Path.cwd() / 'share/locales'
 #gettext.bindtextdomain("deaduction", str(language_dir_path))
 #gettext.textdomain("deaduction")
-fr = gettext.translation('deaduction',
+language = gettext.translation('deaduction',
                          localedir=language_dir_path,
                          languages=[select_language])
-fr.install()
-_ = fr.gettext
+language.install()
+_ = language.gettext
 # _ = gettext.gettext
 
 test_language = gettext.gettext("Proof by contrapositive")
 log.debug(f"test: {test_language}")
 
-###############################################################
-# set tooltips and text button HERE FOR POTENTIAL TRANSLATION #
-###############################################################
+########################################################################
+# set tooltips and text button HERE to enable translation with gettext #
+########################################################################
 # Logic and proof Buttons tooltips
 tooltips = {
     'tooltip_and':
@@ -177,6 +175,9 @@ config['DEFAULT'].update(tooltips_apply)
 config['DEFAULT'].update(buttons)
 
 
+#########
+# tests #
+#########
 if __name__ == "__main__":
     # boolean = user_config.getboolean('fold_statements')
     # text_boolean = user_config.get('fold_statements')
