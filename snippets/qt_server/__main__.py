@@ -1,6 +1,8 @@
 """
 A dummy dEAduction main window interface, but with server !
 """
+
+import logging
 from PySide2.QtWidgets import QApplication, QMainWindow, QPushButton, \
                               QHBoxLayout, QVBoxLayout, QGridLayout, \
                               QLineEdit, QListWidget, QWidget, QGroupBox, \
@@ -26,6 +28,7 @@ from deaduction.pylib.coursedata.course           import Course
 from deaduction.pylib.mathobj.proof_state         import ProofState
 from deaduction.pylib.coursedata.exercise_classes import Exercise
 
+log = logging.getLogger(__name__)
 
 class Goal(QPushButton):
     def __init__(self, goal):
@@ -205,6 +208,7 @@ class ExerciseWindow(QWidget):
     @Slot(ProofState)
     def proof_state_update(self, po:ProofState):
         # Update goal
+        # log.debug("Updating goal")
         goal   = po.goals[0]
         target = goal.target.math_type.format_as_utf8()
 

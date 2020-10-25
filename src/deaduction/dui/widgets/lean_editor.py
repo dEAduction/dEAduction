@@ -27,7 +27,6 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from gettext import gettext as  _
 
 from PySide2.QtCore import (    Qt,
                                 Signal,
@@ -38,6 +37,7 @@ from PySide2.QtWidgets import ( QHBoxLayout,
                                 QVBoxLayout,
                                 QWidget)
 
+from deaduction.config.config import _
 
 class LeanEditor(QWidget):
 

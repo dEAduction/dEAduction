@@ -27,14 +27,14 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from gettext import gettext as  _
-import logging
+from gettext import             gettext as  _
+import                          logging
+import                          pickle
 from pathlib import             Path
 import sys
-
-from PySide2.QtWidgets import (QApplication,
-                               QFileDialog,
-                               QInputDialog)
+from PySide2.QtWidgets import ( QApplication,
+                                QFileDialog,
+                                QInputDialog)
 
 import deaduction.pylib.logger as               logger
 from deaduction.pylib.coursedata.course import (Exercise,
@@ -55,7 +55,18 @@ def select_course():
     if ok:
         course_path = Path(course_path)
         log.info(f'Selected course: {str(course_path.resolve())}')
-        course = Course.from_file(course_path)
+        extension = course_path.suffix
+        # case of a standard Lean file
+        if extension == '.lean':
+            course = Course.from_file(course_path)
+        # case of a pre-processed .pkl file
+        elif extension == '.pkl':
+            [course] = pickled_items(course_path)
+            # h = hash function of file_content
+            # TODO: compare file_content with Lean file, and raise a warning
+            # if different (or if no Lean file)
+        else:
+            log.error("Wrong file format")
         return course
     else:
         return None
@@ -99,3 +110,13 @@ def select_course_exercise():
         exercise = select_exercise(course)
 
     return (course, exercise)
+
+
+def pickled_items(filename):
+    """ Unpickle a file of pickled data. """
+    with open(filename, "rb") as f:
+        while True:
+            try:
+                yield pickle.load(f)
+            except EOFError:
+                break

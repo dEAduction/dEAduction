@@ -28,4 +28,6 @@ This file is part of dEAduction.
 
 from .MathObject import MathObject
 from .proof_state import Goal, ProofState, Proof
-from .give_name import give_global_name, give_local_name
+from .give_name import (get_new_hyp,
+                        give_global_name, give_local_name,
+                        )

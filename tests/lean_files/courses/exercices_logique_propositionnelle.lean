@@ -117,7 +117,7 @@ Description
     dans le premier cas on suppose P, dans le second cas on suppose Q.
     Pour démontrer "Q OU P", on doit démontrer soit P, soit Q.
 Tools->Logic
-    or and implicate iff
+    and or implicate iff
 Tools->ProofTechniques
     assumption
 -/
@@ -136,7 +136,7 @@ Description
     On peut l'utiliser uniquement sur les propriétés qui sont des négations,
     c'est-à-dire de la forme "NON (...)".
 Tools->Logic
-    negate or and implicate iff
+    and or negate implicate iff
 Tools->ProofTechniques
     assumption
 -/
@@ -154,7 +154,7 @@ Description
     En général, le bouton "NON" tente de "pousser" la négation le long de la
     propriété.
 Tools->Logic
-    negate or and implicate iff
+    and or negate implicate iff
 Tools->ProofTechniques
     assumption
 -/
@@ -162,41 +162,19 @@ begin
     sorry
 end
 
-lemma exercise.tiers_exclu :
+
+lemma exercise.contradiction :
 R ∨ ¬ R
 :=
 /- dEAduction
 PrettyName
     Le tiers exclu : l'une des deux propriétés "R" et "NON R" est vraie
 Description
-    Le bouton "cas" permet de faire une preuve pas cas,
-    c'est-à-dire de considérer successivement le cas où une propriété R est
-    vérifiée, et le cas contraire où elle ne l'est pas. Ce type de preuve
-    incorpore ce qu'on appelle le tiers exclu.
+    Le mécanisme de preuve inclus le tiers exclu, de façon un peu cachéé...
 Tools->Logic
-    case negate or and implicate iff
+    and or negate implicate iff
 Tools->ProofTechniques
-    absurdum assumption
--/
-begin
-    sorry
-end
-
-
-lemma exercise.contradiction
-(H : R ∧ ¬ R) :
- false
-:=
-/- dEAduction
-PrettyName
-    Le tiers exclu : l'une des deux propriétés "R" et "NON R" est vraie
-Description
-    Le bouton "0=1" permet de conclure la preuve lorsqu'on a obtenu deux
-    propriétés contradictoires.
-Tools->Logic
-    negate or and implicate iff
-Tools->ProofTechniques
-    absurdum assumption
+    use_proof_methods assumption
 -/
 begin
     sorry
@@ -213,9 +191,9 @@ Description
     propriété "P" pour obtenir la propriété "Q". Attention, avant de
     l'actionner il faut sélectionner toutes les propriétés requises !
 Tools->Logic
-    negate or and implicate iff
+    and or negate implicate iff apply
 Tools->ProofTechniques
-    absurdum assumption
+    use_proof_methods assumption
 -/
 begin
     sorry
@@ -230,9 +208,9 @@ PrettyName
 Description
     Cette propriété permet de transformer une implication en une disjonction
 Tools->Logic
-    negate or and implicate iff
+    and or negate implicate iff apply
 Tools->ProofTechniques
-    absurdum assumption
+    use_proof_methods assumption
 -/
 begin
     sorry
@@ -250,9 +228,9 @@ Description
     le résultat de l'exercice précédent. Pour cela, il faudra introduire
     un nouvel objet, avant de lui appliquer le résultat précédent...
 Tools->Logic
-    negate or and implicate iff apply
+    and or negate implicate iff apply
 Tools->ProofTechniques
-    absurdum assumption new_object
+    use_proof_methods new_object  assumption
 -/
 begin
     sorry
@@ -263,3 +241,4 @@ end
 end Logique_propositionnelle
 
 end course
+

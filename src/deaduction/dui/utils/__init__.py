@@ -29,5 +29,6 @@ This file is part of d∃∀duction.
 """
 
 from .classes   import   DisclosureTree
-from .functions import ( replace_delete_widget,
-                         set_selectable)
+from .functions import (    replace_delete_widget,
+                            set_selectable)
+from .dialog_button import  ButtonsDialog

@@ -54,6 +54,7 @@ class Course:
     - the "outline" of the course, an ordered dict describing namespaces
     - a list of all statements
     """
+    course_path:            Path
     file_content:           str
     metadata:               Dict[str, str]
     outline:                OrderedDict
@@ -91,7 +92,8 @@ class Course:
         log = logging.getLogger("Course initialisation")
         statements = []
         outline = {}
-
+        begin_counter = 0
+        begin_found = True
         log.info(f"Parsing file {str(course_path.resolve())}")
         file_content = course_path.read_text()
         ########################
@@ -128,6 +130,10 @@ class Course:
             # statements #
             ##############
             elif event_name in ["exercise", "definition", "theorem"]:
+                if not begin_found:
+                    log.warning(f"Missing 'begin' for statement"
+                                f"{statements[-1].pretty_name}")
+                begin_found = False
                 metadata = event_content
                 metadata["lean_line"] = line_counter
                 if namespace:
@@ -161,36 +167,37 @@ class Course:
                 statements.append(theorem)
 
             elif event_name == "begin_proof":
-                exercise = statements[-1]
-                exercise.lean_begin_line_number = line_counter
+                st = statements[-1]
+                st.lean_begin_line_number = line_counter
+                begin_counter += 1
+                log.debug(f"Statements {st.pretty_name} begins at line {line_counter}")
+                begin_found = True
             elif event_name == "end_proof":
-                exercise = statements[-1]
-                exercise.lean_end_line_number = line_counter
+                st = statements[-1]
+                st.lean_end_line_number = line_counter
 
             continue
 
         # Creating the course
-        course = cls(file_content, course_metadata, outline, statements)
+        course = cls(course_path,
+                     file_content,
+                     course_metadata,
+                     outline,
+                     statements)
         counter_exercises = 0
-        for exo in statements:  # add reference to the course in Exercises
-            if isinstance(exo, Exercise):
+        for st in statements:  # add reference to the course
+            if isinstance(st, Exercise):
                 counter_exercises += 1
-                exo.course = course  # this makes printing raw exercises slow
+            st.course = course  # this makes printing raw exercises slow
         log.info(f"{len(statements)} statements, including"
                  f" {counter_exercises} exercises found by parser")
-        # Checking some keypoints:
-        # (1) number of exercises
         counter_lemma_exercises = file_content.count("lemma exercise.")
         if counter_exercises < counter_lemma_exercises:
             log.warning(f"{counter_lemma_exercises - counter_exercises}"
                         f" exercises have not been parsed, wrong format?")
-        # (2) no "targets_analysis" nor "hypo_analysis" in the source file
-        error_line = file_content.find("targets_analysis")
-        if error_line != -1:
-            log.error(f"File contents 'targets_analysis line{error_line}")
-        error_line = file_content.find("hypo_analysis")
-        if error_line != -1:
-            log.error(f"File contents 'hypo_analysis line{error_line}")
+        if begin_counter < len(statements):
+            log.warning(f"Found only {begin_counter} 'begin' for "
+                        f"{len(statements)} statements")
         return course
 
 
@@ -207,7 +214,10 @@ if __name__ == "__main__":
     course_file_path2 = Path("../../../../tests/lean_files/courses/\
 exercises_theorie_des_ensembles.lean")
 
-    my_course = Course.from_file(course_file_path2)
+    course_file_path3 = Path("../../tests/lean_files/courses/\
+exercises_theorie_des_ensembles.lean")
+
+    my_course = Course.from_file(course_file_path3)
     print("My course:")
     print("List of statements:")
     count_ex = 0
@@ -219,13 +229,13 @@ exercises_theorie_des_ensembles.lean")
             print(f"Definition {statement.pretty_name}")
         elif isinstance(statement, Theorem):
             print(f"Theorem {statement.pretty_name}")
-        # for key in statement.__dict__.keys():
+        #for key in statement.__dict__.keys():
         #    print(f"    {key}: {statement.__dict__[key]}")
     print('Sections:')
     for key in my_course.outline.keys():
         print(f"    {key}: {my_course.outline[key]}")
-    # print("Statements list :")
-    # for item in my_course.statements:
+    #print("Statements list :")
+    #for item in my_course.statements:
     #    print(item.lean_name)
     # print("Exercises list with statements :")
     # for item in my_course.statements:

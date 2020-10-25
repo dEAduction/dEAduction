@@ -39,14 +39,14 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from gettext import gettext as _
 import              logging
 from pathlib import Path
 from typing import  Dict
 
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
-                                QIcon)
+                                QIcon,
+                                QCursor)
 from PySide2.QtCore    import ( Signal,
                                 Slot,
                                 Qt)
@@ -56,6 +56,7 @@ from PySide2.QtWidgets import ( QHBoxLayout,
 from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem)
 
+from deaduction.config.config import user_config, _
 from deaduction.pylib.actions    import   Action
 from deaduction.pylib.coursedata import ( Definition,
                                           Exercise,
@@ -77,7 +78,7 @@ log = logging.getLogger(__name__)
 
 class ActionButton(QPushButton):
     """
-    Class for so-called 'action buttons' (e.g. ∀ button). Each
+    Class for so-called 'action buttons' (e.g. '∀' button). Each
     instance of this class is associated to an instance of the class
     Action (self.action). This instance contains
     all information required by L∃∀N. Furthermore, each
@@ -121,7 +122,8 @@ class ActionButton(QPushButton):
         self.setText(action.symbol)
         self.setToolTip(action.caption)
         self.clicked.connect(self._emit_action)
-
+        # modify appearance of arrow when over a button
+        self.setCursor(QCursor(Qt.PointingHandCursor))
     @Slot()
     def _emit_action(self):
         """
@@ -232,8 +234,12 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         :param statement: The instance of the class (or child) one wants
             to associate to self.
         """
+        if StatementsTreeWidget.show_lean_name_for_statements:
+            to_display = [statement.pretty_name, statement.lean_name]
+        else:
+            to_display = [statement.pretty_name]
 
-        super().__init__(None, [statement.pretty_name, statement.lean_name])
+        super().__init__(None, to_display)
 
         self.statement = statement
 
@@ -242,14 +248,20 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         # TODO: use mono font for lean name column (column 1)
 
         # Print icon (D for definition, T for theorem, etc)
-        icons_path = Path('share/graphical_resources/icons/letters')
+        # icons_path = 'share/graphical_resources/icons/letters' #fixme: delete
+        icons_base_dir = user_config.get('icons_path')
+        icons_type = user_config.get('icons_letter_type')  # e.g. 'red'
+        icons_dir = Path(icons_base_dir) / icons_type
         if isinstance(statement, Definition):
-            path = icons_path / 'd.png'
+            path = icons_dir / 'd.png'
         elif isinstance(statement, Exercise):
-            path = icons_path / 'e.png'
+            path = icons_dir / 'e.png'
         elif isinstance(statement, Theorem):
-            path = icons_path / 't.png'
+            path = icons_dir / 't.png'
         self.setIcon(0, QIcon(str(path.resolve())))
+
+        # Set tooltip
+        self.setToolTip(0, statement.caption)
 
 
 class StatementsTreeWidgetNode(QTreeWidgetItem):
@@ -329,8 +341,19 @@ class StatementsTreeWidget(QTreeWidget):
     not in the outline, they are already coded in the instances of the
     class Statement themselves with the attribute pretty_name.
     """
+    # config
+    depth_of_unfold_statements = \
+                        user_config.getint('depth_of_unfold_statements')
+    show_lean_name_for_statements = \
+                    user_config.getboolean('show_lean_name_for_statements')
+    tooltips_font_size = user_config.getint('tooltips_font_size')
+    # TODO: show lean names only when lean console is on
+    # (even if show_lean_name_for_statements == TRUE)
+
+
 
     def _init_tree_branch(self, extg_tree, branch: [str],
+                          expanded_flags: [bool],
                           statement: Statement, parent):
         """
         Add branch to extg_tree and StatementsTreeWidgetItem(statement)
@@ -341,6 +364,8 @@ class StatementsTreeWidget(QTreeWidget):
         :param branch: A tree branch (new or already existing), e.g.
             ['Chapter', 'Section', 'Sub-section']. Those are not
             instances of the class StatementsTreeWidgetNode!
+        :param expanded_flags: list of booleans corresponding to branch,
+        expanded_flags[n] = True if branch[n] must be expanded
         :param statement: The instance of the
             class Statement one wants to represent.
         :param parent: Either extg_tree itself or one of its nodes
@@ -361,14 +386,16 @@ class StatementsTreeWidget(QTreeWidget):
         # children nodes if necessary.
         root   = branch[0]   # 'rings'
         branch = branch[1:]  # ['ideals', 'def']
+        flag    = expanded_flags[0]
+        expanded_flags = expanded_flags[1:]
 
         if root not in extg_tree:
             node            = StatementsTreeWidgetNode(root)
             extg_tree[root] = (node, dict())
             parent.add_child(node)
-            node.setExpanded(True)  # Must be done AFTER node is added
+            node.setExpanded(flag)  # Must be done AFTER node is added
 
-        self._init_tree_branch(extg_tree[root][1], branch,
+        self._init_tree_branch(extg_tree[root][1], branch, expanded_flags,
                                statement, extg_tree[root][0])
 
     def _init_tree(self, statements: [Statement], outline: Dict[str, str]):
@@ -400,9 +427,20 @@ class StatementsTreeWidget(QTreeWidget):
 
         self._tree = dict()
 
+        # set flags for expandedness: branches will be expanded until
+        # a certain depth, and unexpanded after
+        depth = StatementsTreeWidget.depth_of_unfold_statements
+
         for statement in statements:
             branch = statement.pretty_hierarchy(outline)
-            self._init_tree_branch(self._tree, branch, statement, self)
+            # set expanded_flags to True until depth and False after:
+            length = len(branch)
+            if length >= depth:
+                expanded_flags = [True]*depth + [False]*(length-depth)
+            else:
+                expanded_flags = [True]*length
+            self._init_tree_branch(self._tree, branch, expanded_flags,
+                                   statement, self)
 
     def __init__(self, statements: [Statement], outline: Dict[str, str]):
         """
@@ -425,10 +463,14 @@ class StatementsTreeWidget(QTreeWidget):
         self._init_tree(statements, outline)
 
         # Cosmetics
-        self.setHeaderLabels([_('Statement'), _('L∃∀N name')])
+
         self.setWindowTitle('StatementsTreeWidget')
-        self.resizeColumnToContents(0)
-        self.resizeColumnToContents(1)
+        if StatementsTreeWidget.show_lean_name_for_statements:
+            self.setHeaderLabels([_('Statements'), _('L∃∀N name')])
+            self.resizeColumnToContents(0)
+            self.resizeColumnToContents(1)
+        else:
+            self.setHeaderLabels([_('Statements')])
 
     def add_child(self, item):
         """

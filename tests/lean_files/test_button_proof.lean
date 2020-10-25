@@ -569,4 +569,54 @@ begin
 end
 
 
+
+lemma exercise.test_assumption_symm_eq (x y: X) (H1 : x=y) : y = x :=
+/- dEAduction
+PrettyName
+    test_apply_target
+Description
+    test_exist
+Tools->Logic
+    $ALL
+Tools->ProofTechniques
+    $ALL
+Tools->Definitions
+    $UNTIL_NOW
+Tools->Theorems
+    double_inclusion
+ExpectedVarsNumber
+    X=3, A=1, B=1
+-/
+begin
+    sorry
+end
+
+
+
+lemma exercise.test_assumption_symm_iff (P Q: Prop)  (h1: P ↔ Q): (Q ↔ P) :=
+/- dEAduction
+PrettyName
+    test_apply_target
+Description
+    test_exist
+Tools->Logic
+    $ALL
+Tools->ProofTechniques
+    $ALL
+Tools->Definitions
+    $UNTIL_NOW
+Tools->Theorems
+    double_inclusion
+ExpectedVarsNumber
+    X=3, A=1, B=1
+-/
+begin
+    sorry
+end
+
+
+
+
+
+
 end theorie_des_ensembles

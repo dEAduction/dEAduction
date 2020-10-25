@@ -1,53 +1,104 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Mon Jun 15 11:15:58 2020
+##############################################
+# display_math: display mathematical objects #
+##############################################
 
-@author: leroux
-DESCRIPTION
+Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
+Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
+Created       : 06 2020 (creation)
+Repo          : https://github.com/dEAduction/dEAduction
+
+Copyright (c) 2020 the dEAduction team
 
 Contain the data for processing PropObj into a latex representation
 
-TODO: remove 'PROP' from node names, here and in Structures.lean.
-TODO: display product:
+The basic data for representing math objects is the utf8_from_node dictionary.
+It associates, to each MathObject.node attribute, the shape to displya, e.g.
+    "PROP_INCLUDED": [0, " ⊂ ", 1],
+where the numbers refer to the MathObject's children.
+The display_math_object function pick the right shape from this dictionary,
+and then call the display_math_object_from_shape function. Note that the
+shape can include call to some specific formatting functions, e.g.
+    - display_application,
+    - display_local_constant,
+    - display_constant,
+    - display_lambda,
+    - display_math_type0
+
+
+    This file is part of dEAduction.
+
+    dEAduction is free software: you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free
+    Software Foundation, either version 3 of the License, or (at your option)
+    any later version.
+
+    dEAduction is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+    more details.
+
+    You should have received a copy of the GNU General Public License along
+    with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
+
+    TODO: remove 'PROP' from node names, here and in Structures.lean.
+    TODO: display product:
     - prod (I,J)
     - prod.fst, prod.snd
 """
+
 import logging
-import gettext
 import types
 
-from deaduction.pylib.mathobj.give_name import give_local_name
-# from deaduction.pylib.mathobj import MathObject
 import deaduction.pylib.logger as logger
-
-_ = gettext.gettext
+from deaduction.pylib.mathobj.give_name import give_local_name
+from deaduction.config.config import _
 
 log = logging.getLogger(__name__)
 
 
-def display_math_object(math_object, format_):
+def display_math_object(math_object, format_="utf8", text_depth=1):
     """
     This function essentially looks for a shape in the format_from_node
-    dictionary, and then pass the shape to the function
-    display_math_object_from_shape
+    dictionary, and then pass the shape to display_math_object_from_shape
     which computes the display.
 
-    :param math_object:
-    :param format_:
-    :return:
+    :param math_object: the MathObject instance to be displayed
+    :param format_:     "utf8", "text+utf8", "latex" TODO: implement latex
+    :param text_depth:  when format_="text+utf8", only the symbols at level
+                        less than text_depth in the tree are replaced by text.
+                        So for instance
+                                format_="text+utf8" and text_depth=0
+                        will yield the same result as
+                                format_="utf8".
+    :return:            a "structured string", to be transform into a string
+                        by the structured_display_to_string function
     """
     #log.debug(f"Computing math display of {math_object}")
     node = math_object.node
-    if node in format_from_node.keys():
-        shape = format_from_node[node]
-        return display_math_object_from_shape(shape, math_object, format_)
+    if format_ == "text+utf8" \
+            and text_depth > 0 \
+            and node in text_from_node.keys():
+        shape = text_from_node[node]
+        return display_math_object_from_shape(shape,
+                                              math_object,
+                                              format_,
+                                              text_depth)
+    elif node in utf8_from_node.keys():
+        shape = utf8_from_node[node]
+        return display_math_object_from_shape(shape,
+                                              math_object,
+                                              format_,
+                                              text_depth)
     else:
         log.warning(f"display error: node {node} not in display_format")
         return ["*unknown*"]
 
 
-def display_math_object_from_shape(shape, math_object, format_):
+def display_math_object_from_shape(shape,
+                                   math_object,
+                                   format_="utf8",
+                                   text_depth=1):
     """
     Replace each element of shape with its display.
     Ex of shape: [0, " = ", 1]
@@ -60,13 +111,15 @@ def display_math_object_from_shape(shape, math_object, format_):
         - "_child#" code for subscript version of child number #
         - some items may already be in displayable form
 
-    :param shape:
-    :param math_object:
-    :param format_:
-    :return:    a structured string (a list whose items are lists or strings),
-    to be passed to list_string_join in order to get a fully displayable string
+    :param shape:       a value of the node_to_utf8 dictionary
+    :param math_object: an instance of MathObject
+    :param format_:     "utf8", "text+utf8" or "latex"
+    :param text_depth:  see display_math_object_as_text
+    :return:            a structured string (a list whose items are lists or
+                        strings), to be passed to structured_display_to_string
+                        in order to get a string
     """
-    #log.debug(f"Trying to display from shape {shape}")
+    # log.debug(f"Trying to display from shape {shape}")
     display_shape = []
     counter = -1
     for item in shape:
@@ -80,10 +133,13 @@ def display_math_object_from_shape(shape, math_object, format_):
         elif isinstance(item, int):
             if item < len(math_object.children):
                 child = math_object.children[item]
-                display_item = display_math_object(child, format_)
-                            # with brackets?
-                if needs_paren(math_object, item):
-                    display_item = ['('] + display_item + [')']
+                display_item = display_math_object(child,
+                                                   format_,
+                                                   text_depth - 1)
+                # with brackets?
+                if not format_.startswith("text") or text_depth < 1:
+                    if needs_paren(math_object, item):
+                        display_item = ['('] + display_item + [')']
             else:  # keep the integer, this could be a pending parameter
                 display_item = item
         # strings
@@ -91,12 +147,14 @@ def display_math_object_from_shape(shape, math_object, format_):
             if item.startswith("_child"):
                 number = int(item[len("_child"):])
                 child = math_object.children[number]
-                pre_display_item = display_math_object(child, format_)
+                pre_display_item = display_math_object(child,
+                                                       format_,
+                                                       text_depth - 1)
                 display_item = global_subscript(pre_display_item)  # TODO
-            elif item.find("∈") != -1 and isinstance(shape[counter+1], int):
+            elif item.find("∈") != -1 and isinstance(shape[counter + 1], int):
                 # replace "∈" with ":" in some cases
-                type_ = math_object.children[shape[counter+1]]
-                symbol = display_belongs_to(type_, format_)
+                type_ = math_object.children[shape[counter + 1]]
+                symbol = display_belongs_to(type_, format_, text_depth)
                 display_item = item.replace('∈', symbol)
             else:
                 display_item = text_to_latex(item, format_)
@@ -117,10 +175,13 @@ def needs_paren(parent, child_number: int) -> bool:
     needs_paren(PropObj,i) will be set to True for i = 0, 1
     so that the display will be
     ( ... ) <=> ( ... )
-    :param parent: MathObject
-    :param child_number:
-    :return:
+
+    TODO : tenir compte de la profondeur des parenthèses,
+    et utiliser \Biggl(\biggl(\Bigl(\bigl((x)\bigr)\Bigr)\biggr)\Biggr)
     """
+    nature_leaves_list = ["PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
+                          "FUNCTION", "SEQUENCE", "SET_FAMILY",
+                          "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY"]
     child_prop_obj = parent.children[child_number]
     p_node = parent.node
     # if child_prop_obj.node == "LOCAL_CONSTANT":
@@ -130,7 +191,7 @@ def needs_paren(parent, child_number: int) -> bool:
     c_node = child_prop_obj.node
     if c_node in nature_leaves_list + \
             ["SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
-             "PROP_INCLUDED"]:
+             "PROP_INCLUDED", "SET_UNION+", "SET_INTER+"]:
         return False
     elif c_node == "APPLICATION":
         return False
@@ -150,7 +211,7 @@ def needs_paren(parent, child_number: int) -> bool:
 #########################################################################
 #########################################################################
 def display_name(math_object, format_):
-    """display first child of math_type"""
+    """display name"""
     return [math_object.info['name']]
 
 
@@ -161,7 +222,7 @@ def display_math_type0(math_object, format_):
 
 def display_constant(math_object, format_):
     """
-    Display CONSTANT and LOCAL_CONSTANT
+    Display for nodes 'CONSTANT' and 'LOCAL_CONSTANT'
 
     :param math_object:
     :param format_:
@@ -183,16 +244,18 @@ def display_constant(math_object, format_):
 
 def display_application(math_object, format_):
     """
-    Very special case of APPLICATION
+    display for node 'APPLICATION'
+    This is a very special case
     todo: product (prod.fst, prod.snd, prod, node = 'CONSTANT')
+    todo: improve robustness
     :param math_object:
     :param format_:
     :return:
     """
     first_child = math_object.children[0]
     second_child = math_object.children[1]
-    log.debug(f"displaying APP, 1st child = {first_child}, "
-              f"2nd child = {second_child}")
+    #log.debug(f"displaying APP, 1st child = {first_child}, "
+    #          f"2nd child = {second_child}")
     shape = ["*APP*"]
 
     # case of index notation
@@ -259,9 +322,6 @@ def has_pending_parameter(structured_display: [str]):
     A structured display is supposed to be a list whose items are either
     lists or strings. But it may contain "pending parameters" which are
     integer.
-
-    :param structured_display:
-    :return:
     """
     for item in structured_display:
         if isinstance(item, int) and item < 0:
@@ -273,10 +333,6 @@ def insert_pending_param(math_object, shape, format_):
     """
     Modify shape:
     replace first integer 0 by math_object and then shift every integer by 1
-
-    :param math_object:
-    :param shape:
-    :return:
     """
     # insert math_object where there is a '-1'
     shape1 = [display_math_object(math_object, format_)
@@ -294,19 +350,16 @@ def display_math_type_of_local_constant(math_type, format_):
                     math_object.math_type represents X,
                     and the analysis is based on the math_type of X.
     2) A : a subset of X
-    :param math_object:
-    :param format_:
-    :return:
     """
     #######################################################
     # special math_types for which display is not the same #
     #######################################################
     if hasattr(math_type, 'math_type') \
-        and hasattr(math_type.math_type, 'node') \
+            and hasattr(math_type.math_type, 'node') \
             and math_type.math_type.node == "TYPE":
         name_ = math_type.info["name"]
         return [text_to_latex(_("an element of") + " ", format_), name_]
-    elif hasattr(math_type, 'node')  and math_type.node == "SET":
+    elif hasattr(math_type, 'node') and math_type.node == "SET":
         shape = [_("a subset of") + " ", 0]
         return display_math_object_from_shape(shape, math_type, format_)
     #################
@@ -325,10 +378,6 @@ def display_instance_set_family(math_object, format_="latex"):
 
     WARNING: this bound variable is not referenced anywhere, in particular
     it will not appear in extract_local_vars.
-
-    :param children_rep:
-    :param math_object: PropObj
-    :return: None
     """
     # first find a name for the bound var
     bound_var_type = math_object.math_type.children[0]
@@ -345,14 +394,13 @@ def display_instance_set_family(math_object, format_="latex"):
 
 def display_lambda(math_object, format_="latex"):
     """
-    TODO
     format for lambda expression, e.g.
     - set families with explicit bound variable
-    lambda (i:I), E i)
-    encoded by LAMBDA(I, i, APP(E, i)) --> "{E_i, i ∈ I}"
+        lambda (i:I), E i)
+        encoded by LAMBDA(I, i, APP(E, i)) --> "{E_i, i ∈ I}"
     - sequences,
     - mere functions
-    encoded by LAMBDA(X, x, APP(f, x))  --> "f"
+        encoded by LAMBDA(X, x, APP(f, x))  --> "f"
     - anything else is displayed as "x ↦ f(x)"
     """
     math_type = math_object.math_type
@@ -376,23 +424,29 @@ def display_lambda(math_object, format_="latex"):
 # some tools for manipulating strings #
 #######################################
 #######################################
-def display_belongs_to(math_type, format_):
+def display_belongs_to(math_type, format_, text_depth, belonging=True) -> str:
     """
     compute the adequate shape for display of "x belongs to X", e.g.
     - generically, "x∈X"
     - specifically,
         - "f : X -> Y" (and not f ∈ X-> Y),
+        or "f is a function from X to Y"
         - "P: a proposition" (and not P ∈ a proposition),
-
-    :param math_object:
-    :param math_type:
-    :param format_:
-    :return:
     """
-    if math_type.node in ["FUNCTION", "PROP"]:
-        symbol = ":"
+    log.debug(f"display ∈ with {math_type}, {format_}, {text_depth}")
+    if format_ == "text+utf8" and text_depth > 0:
+        if math_type.node == "PROP" \
+                or (math_type.node == "FUNCTION" and text_depth > 1):
+            symbol = _("is")
+        elif math_type.node == "FUNCTION" and text_depth == 1:
+            symbol = ":"
+        else:
+            symbol = _("belongs to")
     else:
-        symbol = "∈"
+        if math_type.node in ["FUNCTION", "PROP"]:
+            symbol = ":"
+        else:
+            symbol = "∈"
     return symbol
 
 
@@ -452,13 +506,8 @@ def global_subscript(structured_string):
         # [sub] necessary in case sub is an (unstructured) string
 
 
-# TODO : tenir compte de la profondeur des parenthèses,
-# et utiliser \Biggl(\biggl(\Bigl(\bigl((x)\bigr)\Bigr)\biggr)\Biggr)
-nature_leaves_list = ["PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
-                      "FUNCTION", "SEQUENCE", "SET_FAMILY",
-                      "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY"]
 
-format_from_node = {
+utf8_from_node = {
     "APPLICATION": [display_application],
     "LOCAL_CONSTANT": [display_constant],
     "CONSTANT": [display_constant],
@@ -473,7 +522,7 @@ format_from_node = {
     "QUANT_∀": ["∀", 1, " ∈ ", 0, ", ", 2],
     "QUANT_∃": ["∃", 1, " ∈ ", 0, ", ", 2],
     "PROP_∃": "not implemented",
-    "QUANT_∃_unique": ["∃!",  1, " ∈ ", 0, ", ", 2],
+    "QUANT_∃!": ["∃!",  1, " ∈ ", 0, ", ", 2],
     ###############
     # SET THEORY: #
     ###############
@@ -482,8 +531,8 @@ format_from_node = {
     "SET_UNIVERSE": [display_math_type0],
     "SET_INTER": [0, " ∩ ", 1],  # !! small ∩
     "SET_UNION": [0, " ∪ ", 1],  #
-    "SET_INTER+": [" ⋂", 0],  # !! big ⋂
-    "SET_UNION+": [" ⋃", 0],
+    "SET_INTER+": ["⋂", 0],  # !! big ⋂
+    "SET_UNION+": ["⋃", 0],
     "SET_DIFF": [0, r" \ ", 1],
     "SET_DIFF_SYM": [0, " ∆ ", 1],
     "SET_COMPLEMENT": [display_math_type0, r" \ ", 0],
@@ -519,7 +568,7 @@ format_from_constant_name = {
     "Identite": ["Id"]
 }
 
-latex_symbols = {  # TODO : complete the dictionary
+symbols_to_latex = {  # TODO : complete the dictionary
     " ⇔ ": r" \LeftRightarrow",
     " ⇒ ": r" \Rightarrow",
     "∀ ": r" \forall",
@@ -553,6 +602,85 @@ latex_symbols = {  # TODO : complete the dictionary
     "FUNCTION": " → ",
     "composition": '∘',
 }
+
+text_from_node = {
+    # "APPLICATION": [display_application],
+    # "LOCAL_CONSTANT": [display_constant],
+    # "CONSTANT": [display_constant],
+    # "LAMBDA": [display_lambda],
+    #
+    "PROP_AND": [0, " " + _("and") + " ", 1],
+    "PROP_OR": [0, " " + _("or") + " ", 1],
+    "PROP_FALSE": [_("Contradiction"), ],
+    "PROP_IFF": [0, " " + _("if and only if") + " ", 1],
+    "PROP_NOT": [_("the negation of") + " ", 0],
+    "PROP_IMPLIES": [_("if") + " ", 0, " " + _("then") + " ", 1],
+    "QUANT_∀": [_("for every") + " ", 1, " " + "in" + " ", 0,
+                ", ", 2],
+    "QUANT_∃": [_("there exists") + " ", 1, " " + "in" + " ", 0,
+                " " + _("such that") + " ", 2],
+    # "PROP_∃": "not implemented",
+    ###############
+    # SET THEORY: #
+    ###############
+    "PROP_INCLUDED": [0, " " + _("is included in") + " ", 1],
+    # "PROP_BELONGS": [0, " " + _("belongs to") + " ", 1],
+    "PROP_BELONGS": [0, " ∈ ", 1],  # this special case is processed in
+    # the function display_belongs_to
+    "SET_INTER": [_("the intersection of") + " ", 0, " " + _("and") + " ", 1],
+    "SET_UNION": [_("the union of") + " ", 0, " " + _("and") + " ", 1],
+    "SET_INTER+": [_("the intersection of the sets") + " ", 0],
+    "SET_UNION+": [_("the union of the sets") + " ", 0],
+    # "SET_DIFF": [0, r" \\ ", 1],
+    "SET_COMPLEMENT": [_("the complement of ") + " ", 0],
+    "SET_EMPTY": [_("the empty set")],
+    "SET_FAMILY": [_("a family of subsets of") + " ", 1],
+    "SET_IMAGE": [_("the image under") + " ", 0, " " + _("of") + " ", 1],
+    "SET_INVERSE": [_("the inverse image under") + " ", 0, " " + _("of") + " ",
+                    1],
+    ############
+    # NUMBERS: #
+    ############
+    "PROP_EQUAL": [0, " " + _("equals") + " ", 1],
+    "PROP_EQUAL_NOT": [0, " " + _("is different from") + " ", 1],
+    "PROP_<": [0, " " + _("is less than") + " ", 1],
+    "PROP_>": [0, " " + _("is greater than") + " ", 1],
+    "PROP_≤": [0, " " + _("is less than or equal to") + " ", 1],
+    "PROP_≥": [0, " " + _("is greater than or equal to") + " ", 1],
+    # "MINUS": [0, " - ", 1],
+    # "+": [0, " + ", 1],
+    ##################
+    # GENERAL TYPES: #
+    ##################
+    "SET": ["P(", 0, ")"],
+    "PROP": [_("a proposition")],
+    "TYPE": [_("a set")],
+    "FUNCTION": [_("a function from") + " ", 0, " " + _("to") + " ", 1],
+}
+
+
+def display_text_quant(math_object, format_, text_depth):
+    """
+    Compute a smart text version of a quantified sentence.
+
+    :param math_object: a math object with node "QUANT_∀", "QUANT_∃", or
+                        "QUANT_∃!".
+    :param format_:     "text+utf8"
+    :param text_depth:  see display_math_object
+    """
+    #TODO
+    pass
+
+
+def display_text_belongs_to(math_object, format_, text_depth):
+    """Compute a smart version of
+
+    :param math_object: a math object whose node is "PROP_BELONGS"
+    :param format_:     "text+utf8"
+    :param text_depth:  see display_math_object
+    """
+    #TODO
+    pass
 
 
 ##########

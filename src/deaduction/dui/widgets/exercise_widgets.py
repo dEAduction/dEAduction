@@ -29,7 +29,6 @@ This file is part of d∃∀duction.
 
 from functools import           partial
 import logging
-from gettext import gettext as  _
 from pathlib import Path
 import trio
 from typing import              Callable
@@ -51,7 +50,9 @@ from PySide2.QtWidgets import ( QAction,
                                 QVBoxLayout,
                                 QWidget)
 
-from deaduction.dui.utils import        replace_delete_widget
+from deaduction.config.config import _
+from deaduction.dui.utils import  (     replace_delete_widget,
+                                        ButtonsDialog)
 from deaduction.dui.widgets import (    ActionButton,
                                         ActionButtonsWidget,
                                         LeanEditor,
@@ -255,17 +256,19 @@ class ExerciseCentralWidget(QWidget):
         for widget in to_freeze:
             widget.setEnabled(not yes)
 
-    def update_goal(self, new_goal: Goal):
+    def update_goal(self, new_goal: Goal, goal_count: str=''):
         """
         Change goal widgets (self.objects_wgts, self.props_wgt and
         self.target_wgt) to new widgets, corresponding to new_goal.
 
         :param new_goal: The goal to update self to.
+        :param goal_count: a string indicating the goal_count state,
+        e.g. "  2 / 3" means the goal number 2 out of 3 is currently being
+        studied
         """
 
         # Init context (objects and properties). Get them as two list of
         # (MathObject, str), the str being the tag of the prop. or obj.
-        # FIXME: tags
         new_context    = new_goal.tag_and_split_propositions_objects()
         new_target     = new_goal.target
         new_target_tag = '='  # new_target.future_tags[1]
@@ -274,7 +277,7 @@ class ExerciseCentralWidget(QWidget):
 
         new_objects_wgt = MathObjectWidget(new_objects)
         new_props_wgt   = MathObjectWidget(new_props)
-        new_target_wgt  = TargetWidget(new_target, new_target_tag)
+        new_target_wgt  = TargetWidget(new_target, new_target_tag, goal_count)
 
         # Replace in the layouts
         replace_delete_widget(self.__context_lyt,
@@ -457,13 +460,14 @@ class ExerciseMainWindow(QMainWindow):
 
         # get old goal and set tags
         lean_file = self.servint.lean_file
-        previous_idx = max(0, lean_file.idx - 1)
-        # NB : when idx = 1, old_goal = new_goal : nothing is new
-        entry = lean_file.history[previous_idx]
-        entry_info = entry.misc_info
-        previous_proof_state = entry_info["ProofState"]
-        old_goal = previous_proof_state.goals[0]
-        Goal.compare(new_goal, old_goal, goal_is_new=False)  # set tags
+        if lean_file.idx > 0:
+            # NB : when idx = 0, old_goal = new_goal : nothing is new
+            previous_idx = lean_file.idx - 1
+            entry = lean_file.history[previous_idx]
+            entry_info = entry.misc_info
+            previous_proof_state = entry_info["ProofState"]
+            old_goal = previous_proof_state.goals[0]
+            Goal.compare(new_goal, old_goal, goal_is_new=False)  # set tags
         # FIXME: target tag
         new_target_tag = '='
         try:
@@ -472,23 +476,28 @@ class ExerciseMainWindow(QMainWindow):
             log.debug('no tag for target')
             pass
 
-        new_context = new_goal.tag_and_split_propositions_objects()
+        #new_context = new_goal.tag_and_split_propositions_objects()
 
         # count of goals
-        total_goals_counter, current_goal_number, current_goals_counter \
+        total_goals_counter, \
+            current_goal_number, \
+            current_goals_counter, \
+            goals_counter_evolution \
             = self.count_goals()
-        log.debug(f"Goal n°{current_goal_number} / {total_goals_counter}")
-
-        new_objects_wgt = MathObjectWidget(new_context[0])
-        new_props_wgt = MathObjectWidget(new_context[1])
-        new_target = new_goal.target
-        new_target_wgt = TargetWidget(new_target, new_target_tag)
+        goal_count = f'  {current_goal_number} / {total_goals_counter}'
+        log.debug(f"Goal  {goal_count}")
+        if goals_counter_evolution < 0 and current_goals_counter != 0:
+            # todo: do not display when undo
+            log.info(f"Current goal solved!")
+            QMessageBox.information(self, '',
+                                    _('Current goal solved'),
+                                    QMessageBox.Ok)
 
         # Reset current context selection
         self.clear_current_selection()
 
         # Update UI and attributes
-        self.ecw.update_goal(new_goal)
+        self.ecw.update_goal(new_goal, goal_count)
         self.current_goal = new_goal
 
         # Reconnect Context area signals and slots
@@ -622,17 +631,19 @@ class ExerciseMainWindow(QMainWindow):
                             self.current_context_selection_as_mathobjects)
                 else:
                     code = action_btn.action.run(self.current_goal,
-                            self.current_context_selection_as_mathobjects, user_input)
+                            self.current_context_selection_as_mathobjects,
+                            user_input)
             except MissingParametersError as e:
                 if e.input_type == InputType.Text:
-                    text, ok = QInputDialog.getText(action_btn,
-                            e.title, e.output)
+                    choice, ok = QInputDialog.getText(action_btn,
+                                                      e.title,
+                                                      e.output)
                 elif e.input_type == InputType.Choice:
-                    text, ok = QInputDialog.getItem(action_btn,
-                            e.title, e.output, e.list_of_choices,
-                            0, False)
+                    choice, ok = ButtonsDialog.get_item(e.choices,
+                                                        e.title,
+                                                        e.output)
                 if ok:
-                    user_input.append(text)
+                    user_input.append(choice)
                 else:
                     break
             except WrongUserInput as e:
@@ -802,6 +813,9 @@ class ExerciseMainWindow(QMainWindow):
             - total_goals_counter : total number of goals during Proof history
             - current_goal_number = number of the goal under study
             - current_goals_counter = number of goals at end of Proof
+            - goals_counter_evolution = last evolution :
+                > 0 means that new goal has appeared
+                < 0 means that a goal has been solved
         """
         proof = self.proof()
         return proof.count_goals_from_proof()

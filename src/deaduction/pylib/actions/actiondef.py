@@ -27,11 +27,11 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-
 import deaduction.pylib.logger as logger
 import logging
 import inspect
 from dataclasses import dataclass
+
 
 @dataclass
 class Action:
@@ -39,9 +39,10 @@ class Action:
     Associates data, name to a specific action function.
     run is the specific action function.
     """
-    caption:str
+    caption: str
     symbol: str
-    run:any
+    run: any
+
 
 def action(caption: str, symbol: str):
     """
@@ -57,7 +58,7 @@ def action(caption: str, symbol: str):
 
     def wrap_action(func):
         act = Action(caption, symbol, func)
-        
+
         # Init the __actions__ object in the corresponding module if not
         # existing, then add the Action object.
         # Identifier is taken from the function name.
@@ -66,4 +67,4 @@ def action(caption: str, symbol: str):
 
         return func
 
-    return wrap_action 
+    return wrap_action

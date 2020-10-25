@@ -31,12 +31,13 @@ import logging
 from typing import List, Tuple
 
 import deaduction.pylib.logger as logger
+from deaduction.config.config import _
 
 from deaduction.pylib.mathobj.MathObject import \
-                                MathObject
+    MathObject
 from deaduction.pylib.mathobj.lean_analysis_with_type import \
-                                lean_expr_with_type_grammar, \
-                                LeanEntryVisitor
+    lean_expr_with_type_grammar, \
+    LeanEntryVisitor
 
 from deaduction.pylib.actions import Action
 
@@ -47,6 +48,7 @@ log = logging.getLogger(__name__)
 class Goal:
     context: List[MathObject]
     target: MathObject
+
     # the following would be useful if we decide to display objects of the
     # same type together:
     # math_types: List[Tuple[MathObject, List[MathObject]]]
@@ -142,22 +144,26 @@ class Goal:
         # log.debug(f"Old goal old tags: {old_goal.past_tags_old_context}")
         # log.debug(f"New goal future tags: {new_goal.future_tags}")
 
-    def extract_var_names(self) -> List[str]:
+    def extract_vars(self) -> List[MathObject]:
+        """
+        provides the list of all variables in the context,
+        (but NOT bound variables, nor names of hypotheses)
+        :return: list of MathObject (variables names)
+        """
+        # log.info("extracting the list of global variables")
+        variables = [math_object for math_object in self.context
+                     if not math_object.is_prop()]
+        return variables
+
+    def extract_vars_names(self) -> List[str]:
         """
         provides the list of names of all variables in the context,
         (but NOT bound variables, nor names of hypotheses)
-        :return: list of strings (variables names)
+        :return: list of MathObject (variables names)
         """
-        # log.info("extracting the list of variables's names")
-        names = []
-        for math_object in self.context:
-            name = math_object.info["name"]
-            if name != '' and not math_object.is_prop() \
-                    and not (name in names):
-                names.append(name)
-        #    names.extend(pfpo.bound_vars)
-        # names.extend(target.bound_vars)
-        # self.variables_names = names
+        # log.info("extracting the list of global variables")
+        names = [math_object.info['name'] for math_object in
+                     self.extract_vars()]
         return names
 
     @classmethod
@@ -216,6 +222,57 @@ class Goal:
                 objects.append((math_object, tag))
         return objects, propositions
 
+    def goal_to_text(self, format_="text+utf8", to_prove=True, text_depth=1) \
+            -> str:
+        """compute a readable version of the goal as the statement of an
+        exercise.
+
+        :param format_:     NOT USED
+        :param to_prove:    boolean.
+            If True, the goal will be formulated as "Prove that..."
+            If False, the goal will be formulated as "Then..." (useful if
+            the goal comes from a Theorem or Definition)
+        :param text_depth:  int
+            A higher value entail a more verbose formulation (more symbols will
+            be replaced by words).
+            fixme: depth>1 does not really work
+        :return: a text version of the goal
+        """
+        context = self.context
+        target = self.target
+        text = ""
+        for mathobj in context:
+            math_type = mathobj.math_type
+            if math_type.is_prop():
+                prop = mathobj.math_type.format_as_text_utf8(
+                    text_depth=text_depth)
+                new_sentence = _("Assume that") + " " + prop + "."
+            else:
+                name = mathobj.format_as_utf8()
+                name_type = math_type.format_as_text_utf8(is_math_type=True,
+                                                          text_depth=text_depth - 1)
+                if math_type.node == "FUNCTION" and text_depth == 0:
+                    new_sentence = _("Let") + " " + name + ":" \
+                                   + " " + name_type + "."
+                else:
+                    new_sentence = _("Let") + " " + name + " " + _("be") \
+                                   + " " + name_type + "."
+
+            if text:
+                text += "\n"
+            text += new_sentence
+
+        text += "\n"
+        target_text = target.math_type.format_as_text_utf8(
+            text_depth=text_depth)
+        if to_prove:
+            target_text = _("Prove that") + " " + target_text
+        else:
+            target_text = _("Then") + " " + target_text
+
+        text += target_text + "."
+        return text
+
 
 def instantiate_bound_var(math_type, name: str):
     """
@@ -251,7 +308,7 @@ class ProofState:
         if targets:
             main_goal = Goal.from_lean_data(hypo_analysis, targets[0])
         else:
-            log.warning(f"No target found! targets_analysis = {targets_analysis}")
+            log.warning(f"No target, targets_analysis={targets_analysis}")
         goals = [main_goal]
         for other_string_goal in targets[1:]:
             other_goal = Goal.from_lean_data(hypo_analysis="",
@@ -278,24 +335,29 @@ class Proof:
             - total_goals_counter : total number of goals during Proof history
             - current_goal_number = number of the goal under study
             - current_goals_counter = number of goals at end of Proof
+            - goals_counter_evolution = last evolution :
+                > 0 means that new goal has appeared
+                < 0 means that a goal has been solved
         """
         total_goals_counter = 0
         current_goal_number = 1
         current_goals_counter = 0
-        #log.debug(f"counting goals in {self} with {len(self.steps)} "
+        goals_counter_evolution = 0
+        # log.debug(f"counting goals in {self} with {len(self.steps)} "
         #          f"steps")
         for proof_state, _ in self.steps:
             new_counter = len(proof_state.goals)
-            if new_counter > current_goals_counter:  # new goals have appeared
-                total_goals_counter += new_counter - current_goals_counter
-            elif new_counter < current_goals_counter:  # some goals have
-                # been solved
-                current_goal_number += current_goals_counter - new_counter
+            goals_counter_evolution = new_counter - current_goals_counter
+            if goals_counter_evolution > 0:  # new goals have appeared
+                total_goals_counter += goals_counter_evolution
+            elif goals_counter_evolution < 0:  # some goals have been solved
+                current_goal_number -= goals_counter_evolution
             current_goals_counter = new_counter
 
         return total_goals_counter, \
                current_goal_number, \
-               current_goals_counter
+               current_goals_counter, \
+               goals_counter_evolution
 
 
 def print_proof_state(goal):
