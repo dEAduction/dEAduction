@@ -107,6 +107,8 @@ class AbstractCoExChooser(QGroupBox):
         if widget:
             layout.addWidget(widget)
 
+        layout.addStretch()
+
         preview_wgt.setLayout(layout)
         self.__main_layout.replaceWidget(self.__preview_wgt, preview_wgt)
         self.__preview_wgt.deleteLater()
