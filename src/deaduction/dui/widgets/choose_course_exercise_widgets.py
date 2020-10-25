@@ -195,6 +195,7 @@ class ExerciseChooser(AbstractCoExChooser):
         propobj_lyt.addLayout(properties_lyt)
 
         target = QLineEdit()
+        target.setText(exercise.lean_statement)
         target.setFont(QFont('Menlo'))
 
         self.__friendly_wgt = QWidget()
@@ -215,19 +216,21 @@ class ExerciseChooser(AbstractCoExChooser):
 
         # ─────────────────── Check boxes ────────────────── #
 
-        self.__lean_mode_cb = QCheckBox(_('L∃∀N mode'))
+        self.__lean_mode_checkbox = QCheckBox(_('L∃∀N mode'))
+        self.__lean_mode_checkbox.clicked.connect(self.toggle_lean_mode)
         cb_lyt = QHBoxLayout()
         cb_lyt.addStretch()
-        cb_lyt.addWidget(self.__lean_mode_cb)
+        cb_lyt.addWidget(self.__lean_mode_checkbox)
 
         # ──────────────── Organize widgets ──────────────── #
 
-        self.__lean_mode_cb.setChecked(False)
+        self.__lean_mode_checkbox.setChecked(False)
         self.__friendly_wgt.show()
         self.__code_wgt.hide()
         
         widget_lyt.addWidget(self.__friendly_wgt)
         widget_lyt.addWidget(self.__code_wgt)
+        widget_lyt.addLayout(cb_lyt)
         widget.setLayout(widget_lyt)
 
         # ────────────────── Meta, super() ───────────────── #
@@ -246,7 +249,7 @@ class ExerciseChooser(AbstractCoExChooser):
     @Slot()
     def toggle_lean_mode(self):
 
-        if self.__lean_mode_cb.isChecked():
+        if self.__lean_mode_checkbox.isChecked():
             self.__friendly_wgt.hide()
             self.__code_wgt.show()
         else:
