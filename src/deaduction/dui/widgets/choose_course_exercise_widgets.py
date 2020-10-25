@@ -43,6 +43,7 @@ from PySide2.QtWidgets import ( QApplication,
                                 QVBoxLayout,
                                 QWidget)
 
+from deaduction.dui.widgets      import StatementsTreeWidget
 from deaduction.dui.utils        import DisclosureTree
 from deaduction.pylib.coursedata import Course
 
@@ -103,9 +104,10 @@ class AbstractCoExChooser(QGroupBox):
 
             layout.addWidget(description_wgt)
 
-        layout.addWidget(widget)
-        preview_wgt.setWidget(layout)
+        if widget:
+            layout.addWidget(widget)
 
+        preview_wgt.setLayout(layout)
         self.__main_layout.replaceWidget(self.__preview_wgt, preview_wgt)
         self.__preview_wgt.deleteLater()
         self.__preview_wgt = preview_wgt
@@ -116,13 +118,12 @@ class CourseChooser(AbstractCoExChooser):
     def __init__(self):
 
         # Browse files button
-        browse_btn = QPushButton(_('Browse files for course'))
-        browse_btn.clicked.connect(self.__browse_for_course)
+        self.browse_btn = QPushButton(_('Browse files for course'))
         # TODO: Add previous courses
         self.previous_courses_wgt = QListWidget()
 
         browser_layout = QVBoxLayout()
-        browser_layout.addWidget(browse_btn)
+        browser_layout.addWidget(self.browse_btn)
         browser_layout.addWidget(self.previous_courses_wgt)
 
         super().__init__(_('Choose course (browse and preview)'), browser_layout)
@@ -145,20 +146,23 @@ class CourseChooser(AbstractCoExChooser):
         # a course.
         # TODO: Add course path.
 
+        # FIXME: seg fault after this, created in CourseChooser
         super().set_preview(widget=None, title=title, subtitle=subtitle,
                             details=details, description=description)
 
-    @Slot()
-    def __browse_for_course(self):
 
-        dialog = QFileDialog()
-        dialog.setFileMode(QFileDialog.ExistingFile)
-        dialog.setNameFilter('*.lean')
+class ExerciseChooser(AbstractCoExChooser):
 
-        if dialog.exec_():
-            course_path = Path(dialog.selectedFiles()[0])
-            course = Course.from_file(course_path)
-            self.set_preview(course)
+    def __init__(self, course: Course):
+
+        browser_layout = QVBoxLayout()
+        self.__exercises_tree = StatementsTreeWidget(course.exercises_list(),
+                                                     course.outline)
+        browser_layout.addWidget(self.__exercises_tree)
+
+        super().__init__(_('Choose exercise from selected course (browse and '\
+                           'preview)'), browser_layout)
+
 
 class DuiLauncher(QWidget):
 
@@ -167,25 +171,51 @@ class DuiLauncher(QWidget):
         super().__init__()
         self.setWindowTitle(_('Choose course and exercise'))
 
+        self.__course_chooser = CourseChooser()
+        self.__course_chooser.browse_btn.clicked.connect(self.__browse_courses)
+        self.__exercise_chooser = QWidget()
+
+        # ───────────────────── Layouts ──────────────────── #
+
         self.__coex_lyt = QVBoxLayout()
-        self.__coex_lyt.addWidget(CourseChooser())
+        self.__coex_lyt.addWidget(self.__course_chooser)
+        self.__coex_lyt.addWidget(self.__exercise_chooser)
 
         buttons_lyt = QHBoxLayout()
         buttons_lyt.addStretch()
         buttons_lyt.addWidget(QPushButton(_('Quit')))
         buttons_lyt.addWidget(QPushButton(_('Start exercise')))
 
-        mlyt = QVBoxLayout()
-        mlyt.addLayout(self.__coex_lyt)
-        mlyt.addLayout(buttons_lyt)
+        self.__mlyt = QVBoxLayout()
+        self.__mlyt.addLayout(self.__coex_lyt)
+        self.__mlyt.addLayout(buttons_lyt)
 
-        self.setLayout(mlyt)
+        self.setLayout(self.__mlyt)
+
+    @Slot()
+    def __browse_courses(self):
+
+        dialog = QFileDialog()
+        dialog.setFileMode(QFileDialog.ExistingFile)
+        dialog.setNameFilter('*.lean')
+
+        if dialog.exec_():
+            course_path = Path(dialog.selectedFiles()[0])
+            course = Course.from_file(course_path)
+            self.__set_course(course)
+
+    def __set_course(self, course: Course):
+        self.__course_chooser.set_preview(course)  # FIXME seg fault here
+        exercise_chooser = ExerciseChooser(course)
+        self.__mlyt.replaceWidget(self.__exercise_chooser, exercise_chooser)
+        self.__exercise_chooser.deleteLater()
+        self.__exercise_chooser = exercise_chooser
 
 
 if __name__ == '__main__':
     app = QApplication()
 
-    deaduction_launcher = DeaductionLauncher()
-    deaduction_launcher.show()
+    dui_launcher = DuiLauncher()
+    dui_launcher.show()
 
     sys.exit(app.exec_())
