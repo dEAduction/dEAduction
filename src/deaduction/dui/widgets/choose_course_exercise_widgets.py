@@ -29,23 +29,29 @@ import sys
 from pathlib import   Path
 from gettext import   gettext as _
 from typing  import ( Any,
-                      Dict)
+                      Dict )
 
 from PySide2.QtCore    import   Slot
+from PySide2.QtGui     import   QFont
 from PySide2.QtWidgets import ( QApplication,
+                                QCheckBox,
                                 QFileDialog,
                                 QGroupBox,
                                 QHBoxLayout,
                                 QLabel,
                                 QLayout,
+                                QLineEdit,
                                 QListWidget,
                                 QPushButton,
+                                QTextEdit,
                                 QVBoxLayout,
-                                QWidget)
+                                QWidget )
 
-from deaduction.dui.widgets      import StatementsTreeWidget
-from deaduction.dui.utils        import DisclosureTree
-from deaduction.pylib.coursedata import Course
+from deaduction.dui.widgets      import ( StatementsTreeWidget,
+                                          StatementsTreeWidgetItem )
+from deaduction.dui.utils        import   DisclosureTree
+from deaduction.pylib.coursedata import ( Course,
+                                          Exercise )
 
 
 class AbstractCoExChooser(QGroupBox):
@@ -158,13 +164,94 @@ class ExerciseChooser(AbstractCoExChooser):
     def __init__(self, course: Course):
 
         browser_layout = QVBoxLayout()
-        self.__exercises_tree = StatementsTreeWidget(course.exercises_list(),
-                                                     course.outline)
-        browser_layout.addWidget(self.__exercises_tree)
+        exercises_tree = StatementsTreeWidget(course.exercises_list(),
+                                              course.outline)
+        browser_layout.addWidget(exercises_tree)
+
+        exercises_tree.itemClicked.connect(self.__call_set_preview)
 
         super().__init__(_('Choose exercise from selected course (browse and '\
                            'preview)'), browser_layout)
 
+    def set_preview(self, exercise: Exercise):
+
+        widget = QWidget()
+        widget_lyt = QVBoxLayout()
+
+        # ───────────────── Friendly widget ──────────────── #
+
+        # TODO: Set values
+        propobj_lyt = QHBoxLayout()
+        objects, properties = QListWidget(), QListWidget()
+        objects_lyt, properties_lyt = QVBoxLayout(), QVBoxLayout()
+        objects.setFont(QFont('Menlo'))
+        properties.setFont(QFont('Menlo'))
+
+        objects_lyt.addWidget(QLabel(_('Objects:')))
+        properties_lyt.addWidget(QLabel(_('Properties:')))
+        objects_lyt.addWidget(objects)
+        properties_lyt.addWidget(properties)
+        propobj_lyt.addLayout(objects_lyt)
+        propobj_lyt.addLayout(properties_lyt)
+
+        target = QLineEdit()
+        target.setFont(QFont('Menlo'))
+
+        self.__friendly_wgt = QWidget()
+        friendly_wgt_lyt = QVBoxLayout()
+        friendly_wgt_lyt.setContentsMargins(0, 0, 0, 0)
+        friendly_wgt_lyt.addLayout(propobj_lyt)
+        friendly_wgt_lyt.addWidget(QLabel(_('Target:')))
+        friendly_wgt_lyt.addWidget(target)
+
+        self.__friendly_wgt.setLayout(friendly_wgt_lyt)
+
+        # ─────────────────── Code widget ────────────────── #
+
+        self.__code_wgt = QTextEdit()
+        self.__code_wgt.setReadOnly(True)
+        self.__code_wgt.setFont(QFont('Menlo'))
+        # TODO: Set value
+
+        # ─────────────────── Check boxes ────────────────── #
+
+        self.__lean_mode_cb = QCheckBox(_('L∃∀N mode'))
+        cb_lyt = QHBoxLayout()
+        cb_lyt.addStretch()
+        cb_lyt.addWidget(self.__lean_mode_cb)
+
+        # ──────────────── Organize widgets ──────────────── #
+
+        self.__lean_mode_cb.setChecked(False)
+        self.__friendly_wgt.show()
+        self.__code_wgt.hide()
+        
+        widget_lyt.addWidget(self.__friendly_wgt)
+        widget_lyt.addWidget(self.__code_wgt)
+        widget.setLayout(widget_lyt)
+
+        # ────────────────── Meta, super() ───────────────── #
+
+        # TODO: Add subtitle, task…
+        title = exercise.pretty_name
+        description = exercise.description
+
+        super().set_preview(widget=widget, title=title, description=description)
+
+    @Slot(StatementsTreeWidgetItem)
+    def __call_set_preview(self, item: StatementsTreeWidgetItem):
+        exercise = item.statement
+        self.set_preview(exercise)
+
+    @Slot()
+    def toggle_lean_mode(self):
+
+        if self.__lean_mode_cb.isChecked():
+            self.__friendly_wgt.hide()
+            self.__code_wgt.show()
+        else:
+            self.__friendly_wgt.show()
+            self.__code_wgt.hide()
 
 class DuiLauncher(QWidget):
 
@@ -174,7 +261,6 @@ class DuiLauncher(QWidget):
         self.setWindowTitle(_('Choose course and exercise'))
 
         self.__course_chooser = CourseChooser()
-        self.__course_chooser.browse_btn.clicked.connect(self.__browse_courses)
         self.__exercise_chooser = QWidget()
 
         # ───────────────────── Layouts ──────────────────── #
@@ -194,6 +280,10 @@ class DuiLauncher(QWidget):
 
         self.setLayout(self.__mlyt)
 
+        # ────────────────────── Slots ───────────────────── #
+
+        self.__course_chooser.browse_btn.clicked.connect(self.__browse_courses)
+
     @Slot()
     def __browse_courses(self):
 
@@ -207,11 +297,15 @@ class DuiLauncher(QWidget):
             self.__set_course(course)
 
     def __set_course(self, course: Course):
-        self.__course_chooser.set_preview(course)  # FIXME seg fault here
+        self.__course_chooser.set_preview(course)
         exercise_chooser = ExerciseChooser(course)
         self.__mlyt.replaceWidget(self.__exercise_chooser, exercise_chooser)
         self.__exercise_chooser.deleteLater()
         self.__exercise_chooser = exercise_chooser
+
+    @Slot(Exercise)
+    def __set_exercise(self, exercise: Exercise):
+        self.__exercise_chooser.set_preview(exercise)
 
 
 if __name__ == '__main__':
