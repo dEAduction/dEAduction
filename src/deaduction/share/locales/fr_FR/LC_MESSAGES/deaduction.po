@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: 2020-10-23 18:11+0200\n"
-"PO-Revision-Date: 2020-10-23 18:12+0200\n"
+"PO-Revision-Date: 2020-10-25 18:32+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -193,7 +193,7 @@ msgstr "La preuve est terminée !"
 
 #: dui/widgets/lean_editor.py:53
 msgid "Send to L∃∀N"
-msgstr "Envoyé à L∃∀N"
+msgstr "Envoyer à L∃∀N"
 
 #: pylib/actions/logic.py:80 pylib/actions/logic.py:160
 #: pylib/actions/logic.py:186 pylib/actions/logic.py:225
