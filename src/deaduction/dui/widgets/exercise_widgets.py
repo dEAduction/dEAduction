@@ -194,6 +194,8 @@ class ExerciseCentralWidget(QWidget):
                          if button.action.run == action_apply]
         if apply_buttons:
             self.action_apply_button = apply_buttons[0]
+        else:
+            log.warning("Non action_apply_button found")
 
         statements           = exercise.available_statements
         outline              = exercise.course.outline
@@ -521,13 +523,11 @@ class ExerciseMainWindow(QMainWindow):
         # Reconnect Context area signals and slots
         self.ecw.objects_wgt.itemClicked.connect(self.process_context_click)
         self.ecw.props_wgt.itemClicked.connect(self.process_context_click)
-        # for item in self.ecw.math_objects_widgets:
-        #    item.apply_math_object_triggered.connect(
-        #    self.__apply_math_object_triggered)
-        self.ecw.objects_wgt.apply_math_object_triggered.connect(
-            self.__apply_math_object_triggered)
-        self.ecw.props_wgt.apply_math_object_triggered.connect(
-            self.__apply_math_object_triggered)
+        if hasattr(self.ecw, "action_apply_button"):
+            self.ecw.objects_wgt.apply_math_object_triggered.connect(
+                self.__apply_math_object_triggered)
+            self.ecw.props_wgt.apply_math_object_triggered.connect(
+                self.__apply_math_object_triggered)
 
     ##################################
     # Async tasks and server methods #

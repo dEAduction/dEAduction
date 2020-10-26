@@ -81,11 +81,14 @@ async def main():
         log.debug(f"Found '.pkl' file, hash = {stored_hash} vs {course_hash}")
         if stored_hash == course_hash or True:    # FIXME !!!
             log.info("pkl content file is up to date")
+            course = stored_course  # new proof_state will be added to stored
             for statement in stored_course.statements:
                 name = statement.pretty_name
-                if hasattr(statement, 'initial_proof_state'):
-                    log.info(f"found initial_roof_state for {name}")
+                if hasattr(statement, 'initial_proof_state') \
+                        and not (statement.initial_proof_state is None):
+                    log.info(f"Found initial_roof_state for {name}")
                 else:
+                    log.info(f"NO initial_roof_state found for {name}")
                     unprocessed_statements.append(statement)
         else:
             log.info(f"pkl content file is NOT up to date: "
@@ -188,7 +191,7 @@ async def get_all_proof_states(servint,
 
 async def get_proof_state(servint, exercise):
     await servint.exercise_set(exercise)
-    # proof_state is sotred as servint.proof_state
+    # proof_state is stored as servint.proof_state
 
 
 def save_objects(objects: list, filename):
