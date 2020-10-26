@@ -49,6 +49,7 @@ from PySide2.QtWidgets import ( QHBoxLayout,
 from deaduction.config.config import user_config, _
 
 from deaduction.pylib.mathobj import MathObject
+from deaduction.pylib.actions import explain_how_to_apply
 
 log = logging.getLogger(__name__)
 
@@ -143,7 +144,9 @@ class MathObjectWidgetItem(QListWidgetItem):
         caption   = f'{lean_name} : {math_expr}'
         self.setText(caption)
         self.setIcon(_TagIcon(tag))
-
+        tool_tip = explain_how_to_apply(mathobject)
+        if tool_tip:
+            self.setToolTip(tool_tip.capitalize())
 
     def __eq__(self, other):
         """

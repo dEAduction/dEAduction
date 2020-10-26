@@ -37,6 +37,13 @@ import gettext
 
 log = logging.getLogger(__name__)
 
+##################################################################
+#               Setting cwd to src/deaduction                    #
+# This assumes this file (config.py) is in src/deaduction/config #
+##################################################################
+deaduction_directory = os.path.join(os.path.dirname(__file__)) + '/../'
+os.chdir(deaduction_directory)
+
 
 ################################
 # A class for global variables #
@@ -94,40 +101,32 @@ if available_languages == '':
 if select_language == '':
     select_language = 'en'
 
-# done = False
-# for key_ in ['LANGUAGE', 'LC_ALL', 'LC_MESSAGES', 'LANG']:
-#     if key_ in os.environ.keys():
-#         os.environ[key_] = select_language
-#         done = True
-# if not done:
-#     os.environ['LANG'] = select_language
-
-log.debug(f"Setting language to {select_language}")
 language_dir_path = Path.cwd() / 'share/locales'
 #gettext.bindtextdomain("deaduction", str(language_dir_path))
 #gettext.textdomain("deaduction")
-fr = gettext.translation('deaduction',
+language = gettext.translation('deaduction',
                          localedir=language_dir_path,
                          languages=[select_language])
-fr.install()
-_ = fr.gettext
+language.install()
+_ = language.gettext
 # _ = gettext.gettext
 
 test_language = gettext.gettext("Proof by contrapositive")
 log.debug(f"test: {test_language}")
 
-###############################################################
-# set tooltips and text button HERE FOR POTENTIAL TRANSLATION #
-###############################################################
+########################################################################
+# set tooltips and text button HERE to enable translation with gettext #
+########################################################################
 # Logic and proof Buttons tooltips
 tooltips = {
     'tooltip_and':
         _("""• Split a property 'P AND Q' into the two properties 'P', 'Q'
-• Inversely, assembles 'P' and 'Q' to get 'P AND Q'"""),
+• Inversely, assembles 'P' and 'Q' to get 'P AND Q'"""
+          ),
     'tooltip_or':
         _("""• Prove 'P OR Q' by proving either 'P' or 'Q'
-• Use the property 'P OR Q' by splitting the cases when P is
-True and Q is True"""),
+• Use the property 'P OR Q' by splitting the cases when P is True and Q is True"""
+          ),
     'tooltip_not':
         _("""Try to simplify the property 'NOT P'"""),
     'tooltip_implies':
@@ -137,14 +136,20 @@ True and Q is True"""),
     'tooltip_forall':
         _("""Prove '∀ a, P(a)' by introducing 'a'"""),
     'tooltip_exists':  # TODO: possibility to 'APPLY' '∃ x, P(x)'
-        _("""Prove '∃ x, P(x)' by specifying some 'x' and proving P(x)"""),
+        _("""Prove '∃ x, P(x)' by specifying some 'x' and proving P(x)"""
+          ),
     'tooltip_apply':
         _("""• Apply to a property '∀ a, P(a)' and some 'a' to get 'P(a)' 
-• Apply to a property 'P ⇒ Q' and 'P' to get 'Q'
-• Apply to an equality to substitute in another property
-• Apply a function to an element or an equality"""),
+• Apply a property 'P ⇒ Q' to 'P' to get 'Q'
+• Apply an equality or a logical equivalence to substitute in another property
+• Apply a function to an element or an equality"""
+          ),
     'tooltip_proof_methods':
-        _("""Choose some specific proof method"""),
+        _("""Choose some specific proof method: 
+• Case-based reasoning
+• Proof by contrapositive
+• Proof by contradiction"""
+          ),
     'tooltip_new_object':
         _("""• Create a new object (e.g. 'f(x)' from 'f' and 'x')
 • Create a new subgoal (a lemma) which will be proved, and added to the context
@@ -152,7 +157,8 @@ True and Q is True"""),
           ),
     'tooltip_assumption':
         _(
-            """Terminate the proof when the target is obvious from the context""")
+            """Terminate the proof when the target is obvious from the context"""
+        )
 }
 # decentralized apply buttons
 tooltips_apply = {}  # TODO
@@ -169,6 +175,9 @@ config['DEFAULT'].update(tooltips_apply)
 config['DEFAULT'].update(buttons)
 
 
+#########
+# tests #
+#########
 if __name__ == "__main__":
     # boolean = user_config.getboolean('fold_statements')
     # text_boolean = user_config.get('fold_statements')

@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2020-10-21 21:42+0200\n"
-"PO-Revision-Date: 2020-10-21 21:43+0200\n"
+"POT-Creation-Date: 2020-10-23 18:11+0200\n"
+"PO-Revision-Date: 2020-10-25 18:32+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -31,59 +31,63 @@ msgstr ""
 "• Sépare une propriété ‘P ET Q’ en deux propriétés ‘P’, ‘Q’\n"
 "• Inversement, assemble ‘P’, ‘Q’ pour obtenir ‘P ET Q’"
 
-#: config/config.py:128
+#: config/config.py:129
 msgid ""
 "• Prove 'P OR Q' by proving either 'P' or 'Q'\n"
-"• Use the property 'P OR Q' by splitting the cases when P is\n"
-"True and Q is True"
+"• Use the property 'P OR Q' by splitting the cases when P is True and Q is "
+"True"
 msgstr ""
-"• Démontre ‘P OR Q’ en démontrant soit ‘P’, soit ‘Q’\n"
-"• Utilise la propriété ‘P OU Q’ en séparant\n"
-"  le cas où P est vrai et le cas où Q est vrai"
+"• Démontre ‘P OU Q’ en démontrant soit ‘P’, soit ‘Q’\n"
+"• Utilise la propriété ‘P OU Q’ en séparant le cas où P est vrai et le cas "
+"où Q est vrai"
 
-#: config/config.py:132
+#: config/config.py:133
 msgid "Try to simplify the property 'NOT P'"
 msgstr "Essaie de simplifier la propriété ‘NON P’"
 
-#: config/config.py:134
+#: config/config.py:135
 msgid "Prove 'P ⇒ Q' by assuming 'P', and proving 'Q'"
 msgstr "Démontre ‘P ⇒ Q’ en supposant ‘P’, et en démontrant ‘Q’"
 
-#: config/config.py:136
+#: config/config.py:137
 msgid "Split 'P ⇔ Q' into two implications"
 msgstr "Sépare ‘P ⇔ Q’ en deux implications"
 
-#: config/config.py:138
+#: config/config.py:139
 msgid "Prove '∀ a, P(a)' by introducing 'a'"
 msgstr "Démontre ‘∀ a, P(a)’ en introduisant ‘a’"
 
-#: config/config.py:140
+#: config/config.py:141
 msgid "Prove '∃ x, P(x)' by specifying some 'x' and proving P(x)"
 msgstr "Démontre ‘∃ x, P(x)’ en spécifiant un ‘x’ et en démontrant P(x)"
 
-#: config/config.py:142
+#: config/config.py:144
 msgid ""
 "• Apply to a property '∀ a, P(a)' and some 'a' to get 'P(a)' \n"
-"• Apply to a property 'P ⇒ Q' and 'P' to get 'Q'\n"
-"• Apply to an equality to substitute in another property\n"
+"• Apply a property 'P ⇒ Q' to 'P' to get 'Q'\n"
+"• Apply an equality or a logical equivalence to substitute in another "
+"property\n"
 "• Apply a function to an element or an equality"
 msgstr ""
-"• Appliquer à une propriété ‘∀ a, P(a)’ et un ‘a’ pour obtenir ‘P(a)’ \n"
-"• Appliquer à une propriété ‘P ⇒ Q’ et ‘P’ pour obtenir ‘Q’\n"
-"• Appliquer à une égalité pour substituer dans une autre propriété\n"
+"• Appliquer une propriété ‘∀ a, P(a)’ à un élément ‘a’ pour obtenir ‘P(a)’ \n"
+"• Appliquer une propriété ‘P ⇒ Q’ à une propriété ‘P’ pour obtenir ‘Q’\n"
+"• Appliquer une égalité ou une équivalence logique pour substituer dans une "
+"autre propriété\n"
 "• Appliquer une fonction à un élément ou à une égalité"
 
-#: config/config.py:147
-msgid "Choose some specific proof method"
-msgstr "Choisir une méthode de preuve"
-
 #: config/config.py:150
-msgid "From a property '∀ a ∈ A, ∃ b ∈ B, P(a,b)', get a function from A to B"
+msgid ""
+"Choose some specific proof method: \n"
+"• Case-based reasoning\n"
+"• Proof by contrapositive\n"
+"• Proof by contradiction"
 msgstr ""
-"A partir d’une propriété ‘∀ a ∈ A, ∃ b ∈ B, P(a,b)’, obtenir une fonction de "
-"A dans B"
+"Choisissez une méthode de preuve: \n"
+"• Preuve par cas\n"
+"• Preuve par contraposition\n"
+"• Preuve par l’absurde"
 
-#: config/config.py:152
+#: config/config.py:156
 msgid ""
 "• Create a new object (e.g. 'f(x)' from 'f' and 'x')\n"
 "• Create a new subgoal (a lemma) which will be proved, and added to the "
@@ -97,15 +101,15 @@ msgstr ""
 "• Utiliser une propriété ‘∀ a ∈ A, ∃ b ∈ B, P(a,b)’, pour créer une nouvelle "
 "fonction de A dans B"
 
-#: config/config.py:158
+#: config/config.py:162
 msgid "Terminate the proof when the target is obvious from the context"
 msgstr "Conclut la preuve lorsque le but est évident à partir du contexte"
 
-#: config/config.py:165
+#: config/config.py:170
 msgid "AND, OR, NOT, ⇒, ⇔, ∀, ∃"
 msgstr "ET, OU, NON, ⇒, ⇔, ∀, ∃"
 
-#: config/config.py:166
+#: config/config.py:171
 msgid "Apply, Proof Methods, New Object, QED"
 msgstr "Appliquer, Méthodes de Preuve, Nouvel Objet, CQFD"
 
@@ -130,11 +134,11 @@ msgstr "Enoncés"
 msgid "L∃∀N name"
 msgstr "Nom L∃∀N"
 
-#: dui/widgets/context_widgets_classes.py:246
+#: dui/widgets/context_widgets_classes.py:249
 msgid "Target"
 msgstr "But"
 
-#: dui/widgets/context_widgets_classes.py:247
+#: dui/widgets/context_widgets_classes.py:250
 msgid "To be proved"
 msgstr "A démontrer"
 
@@ -189,7 +193,7 @@ msgstr "La preuve est terminée !"
 
 #: dui/widgets/lean_editor.py:53
 msgid "Send to L∃∀N"
-msgstr "Envoyé à L∃∀N"
+msgstr "Envoyer à L∃∀N"
 
 #: pylib/actions/logic.py:80 pylib/actions/logic.py:160
 #: pylib/actions/logic.py:186 pylib/actions/logic.py:225
@@ -262,7 +266,7 @@ msgid "Case-based reasoning"
 msgstr "Raisonnement par cas"
 
 #: pylib/actions/proofs.py:62
-msgid "Reductio ad absurdum"
+msgid "Proof by contradiction"
 msgstr "Preuve par l’absurde"
 
 #: pylib/actions/proofs.py:64
@@ -290,16 +294,16 @@ msgid "Introduce a new object"
 msgstr "Introduire un nouvel objet"
 
 #: pylib/actions/proofs.py:209
-msgid "Sub-goal"
-msgstr "Nouveau but"
+msgid "Goal"
+msgstr "But"
 
 #: pylib/actions/proofs.py:209
 msgid "Introduce a new intermediate sub-goal"
 msgstr "Introduire un but intermédiaire"
 
 #: pylib/actions/proofs.py:211
-msgid "New function"
-msgstr "Nouvelle fonction"
+msgid "Function"
+msgstr "Fonction"
 
 #: pylib/actions/proofs.py:211
 msgid "Introduce a new function"
@@ -325,21 +329,21 @@ msgstr "Préciser le sens de substitution"
 msgid "Choose which expression you want to replace"
 msgstr "Choisissez quelle expression remplacer"
 
-#: pylib/actions/proofs.py:468
-msgid "Apply function to an element or an equality"
-msgstr "Appliquer une fonction à un élément ou à une égalité"
+#: pylib/actions/proofs.py:477
+msgid "apply function to a selected object or equality"
+msgstr "appliquer cette fonction à un élément ou à une égalité"
 
-#: pylib/actions/proofs.py:471 pylib/actions/proofs.py:475
-msgid "Substitute in selected property"
-msgstr "Substituer dans la propriété sélectionnée"
-
-#: pylib/actions/proofs.py:480
-msgid "Apply to selected object"
-msgstr "Appliquer à l’objet sélectionné"
+#: pylib/actions/proofs.py:481
+msgid "substitute in a selected property"
+msgstr "substituer dans une propriété sélectionnée"
 
 #: pylib/actions/proofs.py:484
-msgid "Apply to selected property, or to change the goal"
-msgstr "Appliquer à la propriété sélectionnée, ou pour transformer le but"
+msgid "apply to a selected object"
+msgstr "appliquer à un objet sélectionné"
+
+#: pylib/actions/proofs.py:487
+msgid "apply to a selected property, or to modify the goal"
+msgstr "appliquer à une propriété sélectionnée, ou pour transformer le but"
 
 #: pylib/mathobj/display_math.py:287 pylib/mathobj/display_math.py:298
 #: pylib/mathobj/display_math.py:440
@@ -522,6 +526,21 @@ msgstr "Etat de preuve reçu"
 #: pylib/server/__init__.py:217
 msgid "After request"
 msgstr "Après la requête"
+
+#~ msgid "Choose some specific proof method"
+#~ msgstr "Choisir une méthode de preuve"
+
+#~ msgid ""
+#~ "From a property '∀ a ∈ A, ∃ b ∈ B, P(a,b)', get a function from A to B"
+#~ msgstr ""
+#~ "A partir d’une propriété ‘∀ a ∈ A, ∃ b ∈ B, P(a,b)’, obtenir une fonction "
+#~ "de A dans B"
+
+#~ msgid "Reductio ad absurdum"
+#~ msgstr "Preuve par l’absurde"
+
+#~ msgid "Sub-goal"
+#~ msgstr "Nouveau but"
 
 #, fuzzy
 #~| msgid "Choose what to introduce:"

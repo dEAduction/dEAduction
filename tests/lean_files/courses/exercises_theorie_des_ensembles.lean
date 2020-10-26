@@ -52,6 +52,7 @@ notation f `⟮` A `⟯` := f '' A
 notation f `⁻¹⟮` A `⟯` := f  ⁻¹' A
 notation [parsing_only] f `inverse` A := f  ⁻¹' A
 notation g `∘` f := set.composition g f
+notation `∃!` P := exists_unique P
 
 open set
 
@@ -109,6 +110,19 @@ PrettyName
 begin
     exact set.subset.antisymm_iff.mpr
 end
+
+lemma exercise.inclusion_transitive
+(A B C : set X) :
+(A ⊆ B ∧ B ⊆ C) → A ⊆ C
+:=
+/- dEAduction
+PrettyName
+    Transitivité de l'inclusion
+-/
+begin
+    sorry
+end
+
 
 end generalites
 
@@ -174,6 +188,18 @@ end definitions
 -- EXERCICES --
 ---------------
 namespace exercices
+
+lemma exercise.intersection_inclus_ensemble :
+A ∩ B ⊆ A
+:=
+/- dEAduction
+PrettyName
+    Un ensemble contient son intersection avec un autre
+-/
+begin
+    sorry
+end
+
 
 lemma exercise.union_distributive_inter : A ∩ (B ∪ C)  = (A ∩ B) ∪ (A ∩ C) :=
 /- dEAduction
@@ -560,6 +586,30 @@ begin
     refl,
 end
 
+-- A bouger ? (Mais alors à enlever de tous les exos où ça ne sert pas)
+lemma definition.existe_un_unique
+(P : X → Prop) :
+(∃! (λx,  P x)) ↔  (∃ x : X, (P x ∧ (∀ x' : X, P x' → x = x')))
+:=
+/- dEAduction
+PrettyName
+    ∃! : existence et unicité
+-/
+begin
+    sorry
+end
+
+lemma definition.bijectivite :
+bijective f ↔ ∀ y : Y, exists_unique (λ x, f x = y)
+:=
+/- dEAduction
+PrettyName
+    Application bijective
+-/
+begin
+    refl,
+end
+
 end definitions
 
 
@@ -643,9 +693,42 @@ begin
     sorry
 end
 
--- TODO: ajouter la définition de bijectif = inj + surj,
--- la caractérisation par l'existence d'un inverse,
--- l'unicité de l'inverse, etc.
+
+lemma exercise.bijective_ssi_injective_et_surjective :
+(bijective f) ↔ (injective f ∧ surjective f)
+:=
+/- dEAduction
+PrettyName
+    "Bijectif" équivaut à "injectif et surjectif"
+-/
+begin
+    sorry
+end
+
+lemma exercise.bijective_ssi_inverse :
+(bijective f) ↔ ∃ g : Y → X,
+composition g f = Identite ∧ composition g f  = Identite
+:=
+/- dEAduction
+PrettyName
+    Bijectivité et existence d'une application réciproque
+-/
+begin
+    sorry
+end
+
+lemma exercise.unicite_inverse :
+(bijective f) → exists_unique (λ g : Y → X,
+composition g f = Identite)
+:=
+/- dEAduction
+PrettyName
+    Unicité de la réciproque d'une application bijective
+-/
+begin
+    sorry
+end
+
 
 end exercices
 
@@ -698,14 +781,25 @@ begin
     sorry
 end
 
+lemma exercise.exercice_ensembles_4a
+(A B C : set X) :
+A ∩ B = A ∩ C ∧ (set.compl A) ∩ B = (set.compl A) ∩ C → B ⊆ C
+:=
+/- dEAduction
+PrettyName
+    Caractérisation par intersection avec A et son complémentaire, I
+-/
+begin
+    sorry
+end
 
-lemma exercise.exercice_ensembles_4
+lemma exercise.exercice_ensembles_4b
 (A B C : set X) :
 A ∩ B = A ∩ C ∧ (set.compl A) ∩ B = (set.compl A) ∩ C → B = C
 :=
 /- dEAduction
 PrettyName
-    Caractérisaton par intersection avec A et son complémentaire
+    Caractérisation par intersection avec A et son complémentaire, II
 -/
 begin
     sorry
@@ -741,20 +835,6 @@ namespace definitions
 PrettyName
     Définitions
 -/
-
--- A bouger, mais à enlever de tous les exos où ça ne sert pas !
-notation `∃!` P := exists_unique P
-lemma definition.existe_un_unique
-(P : X → Prop) :
-(∃! (λx,  P x)) ↔  (∃ x : X, (P x ∧ (∀ x' : X, P x' → x = x')))
-:=
-/- dEAduction
-PrettyName
-    ∃! : existence et unicité
--/
-begin
-    sorry
-end
 
 lemma definition.difference
 (A B : set X) (x : X) :

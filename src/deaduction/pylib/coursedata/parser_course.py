@@ -358,7 +358,10 @@ class LeanCourseVisitor(NodeVisitor):
     def visit_metadata_field_content(self, node, visited_children):
         course_history, data = get_info(visited_children)
         data.setdefault("metadata_field_content", "")
-        data["metadata_field_content"] += " " + node.text.strip()
+        if data["metadata_field_content"]:
+            data["metadata_field_content"] += " " + node.text.strip()
+        else:
+            data["metadata_field_content"] = node.text.strip()
         # field content may spread on several lines
         return course_history, data
 

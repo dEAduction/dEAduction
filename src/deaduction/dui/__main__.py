@@ -45,7 +45,7 @@ log = logging.getLogger(__name__)
 async def main():
     log.debug("starting...")
     test_language = _("Proof by contrapositive")
-    log.debug(f"Language test: {test_language}")
+    log.debug(f"Language test: 'Proof by contrapositive' = '{test_language}'")
 
     # Choose course and exercise
     course, exercise = select_course_exercise()
