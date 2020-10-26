@@ -228,6 +228,7 @@ def read_data(filename):
             print(f"Definition: {st.pretty_name}")
             goal = st.initial_proof_state.goals[0]
             print(goal.goal_to_text(to_prove=False))
+            print(f"Caption: {st.caption}")
 
 
 

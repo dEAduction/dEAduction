@@ -261,6 +261,9 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         self.setIcon(0, QIcon(str(path.resolve())))
 
         # Set tooltip
+        ### fixme DEBUGGING
+        #target = statement.initial_proof_state.goals[0].target
+        #text = target.math_type.format_as_utf8(is_math_type=True)
         self.setToolTip(0, statement.caption)
 
 

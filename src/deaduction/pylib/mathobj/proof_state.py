@@ -264,7 +264,7 @@ class Goal:
 
         text += "\n"
         target_text = target.math_type.format_as_text_utf8(
-            text_depth=text_depth)
+            text_depth=text_depth, is_math_type=True)
         if to_prove:
             target_text = _("Prove that") + " " + target_text
         else:
@@ -274,17 +274,17 @@ class Goal:
         return text
 
 
-def instantiate_bound_var(math_type, name: str):
-    """
-    create a BoundVarPOof with a given math_type and name
-    :param math_type: PropObj
-    :param name:
-    :return: BoundVarPO
-    """
-    info = {"name": name}
-    math_obj = MathObject(node='BOUND_VAR_DEADUCTION', info=info,
-                          math_type=math_type, children=[])
-    return math_obj
+# def instantiate_bound_var(math_type, name: str):
+#     """
+#     create a BoundVarPOof with a given math_type and name
+#     :param math_type: PropObj
+#     :param name:
+#     :return: BoundVarPO
+#     """
+#     info = {"name": name}
+#     math_obj = MathObject(node='BOUND_VAR_DEADUCTION', info=info,
+#                           math_type=math_type, children=[])
+#     return math_obj
 
 
 @dataclass
