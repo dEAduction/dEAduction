@@ -14,8 +14,9 @@ msg=$(cat $1) # Hook paremeter is a path to a temoprary file containing the
 regex='([a-zA-Z]+)(\(([^()]+)\))?[:][ ]*(.*)'
 regex_msg='^[a-z].*'
 
-word_reg='[a-zA-Z0-9_-]+'
-regex_merge="((${word_reg}/)+${word_reg}+) -> ((${word_reg}/)+${word_reg}+)"
+#word_reg='[a-zA-Z0-9_-]+'
+word_reg='[a-zA-Z0-9_\-]+'
+regex_merge="((${word_reg}/)+${word_reg}) -> ((${word_reg}/)+${word_reg})"
 
 # group 1 : task type
 # group 2 : scope (with parentheses)
@@ -36,7 +37,7 @@ show_help() {
     task_type(optional scope): message
 
     task_type can be one of :
-		- chores	: changes that do not affect the source-code nor the tools
+        - chores	: changes that do not affect the source-code nor the tools
 	(e.g. reorganize tree, rename files);
         - docs		: documentation only changes ;
         - feat		: a new feature ;
