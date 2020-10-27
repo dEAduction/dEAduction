@@ -167,7 +167,8 @@ class Statement:
         TODO (1): remove variables from lean_statement
         TODO (2): add properties of the context, if any, as hypotheses
         """
-        if not hasattr(self, 'initial_proof_state'):
+        if not hasattr(self, 'initial_proof_state') \
+                or self.initial_proof_state is None:
             text = self.lean_core_statement
             return text
         goal = self.initial_proof_state.goals[0]

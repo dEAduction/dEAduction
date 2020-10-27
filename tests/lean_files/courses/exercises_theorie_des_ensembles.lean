@@ -902,7 +902,7 @@ lemma exercise.difference_symetrique_3
 :=
 /- dEAduction
 PrettyName
-    Différence symétrique III
+    (**) Différence symétrique III
 -/
 begin
     sorry
@@ -913,7 +913,7 @@ lemma exercise.difference_symetrique_4 :
 ∃! (λE : set X, ∀ A : set X, (A Δ E) = A) :=
 /- dEAduction
 PrettyName
-    Différence symétrique VI
+    (+) Différence symétrique IV
 -/
 begin
     sorry
@@ -925,7 +925,7 @@ exists_unique (λA' : set X, (A Δ A') = set.univ)
 :=
 /- dEAduction
 PrettyName
-    Différence symétrique V
+    (+) Différence symétrique V
 -/
 begin
     sorry
@@ -937,7 +937,7 @@ lemma exercise.difference_symetrique_6
 :=
 /- dEAduction
 PrettyName
-    Différence symétrique VI
+    (+) Différence symétrique VI
 -/
 begin
     sorry
@@ -981,6 +981,10 @@ lemma exercise.exercice_factorisation_I
 (g : Y → Z) (h: X → Z) :
 (∃ f: X → Y, h = (composition g f)) ↔ h '' set.univ ⊆ g '' set.univ
 :=
+/- dEAduction
+PrettyName
+    (*) Factorisation I
+-/
 begin
     sorry
 end
@@ -990,6 +994,10 @@ lemma exercise.exercice_factorisation_II
 (f : X → Y) (h: X → Z) :
 (∃ g: Y → Z, h = (composition g f)) ↔ (∀ x y, (f x = f y → h x = h y))
 :=
+/- dEAduction
+PrettyName
+    (***) Factorisation II
+-/
 begin
     sorry
 end
