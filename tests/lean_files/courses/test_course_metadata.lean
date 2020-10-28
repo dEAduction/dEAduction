@@ -48,7 +48,7 @@ Teacher
 Year
     2020-2021
 Description
-    Blaaablabla bllaa blaa blaaa.
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas cursus, erat ut accumsan mattis, lorem magna tincidunt neque, et scelerisque lacus est vitae nulla. Ut mi diam, eleifend ut pharetra non, consectetur eu lacus. Vestibulum et nisl euismod, rhoncus nisi eget, viverra nibh. Etiam magna augue, rhoncus a nunc vitae, eleifend tristique velit. Donec ullamcorper posuere lorem, vel iaculis orci vestibulum sed. In suscipit efficitur maximus. Praesent accumsan suscipit quam. Aenean sodales leo vitae lacus laoreet, id rutrum augue fringilla. Sed pellentesque odio pharetra velit varius, eget finibus eros placerat. Phasellus dolor purus, ullamcorper quis pellentesque in, consectetur vel purus. Nunc fringilla ex felis, sit amet pretium mauris elementum in.
 -/
 
 namespace theorie_des_ensembles

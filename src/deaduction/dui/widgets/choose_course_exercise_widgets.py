@@ -48,7 +48,8 @@ from PySide2.QtWidgets import ( QApplication,
                                 QVBoxLayout,
                                 QWidget )
 
-from deaduction.dui.widgets      import ( StatementsTreeWidget,
+from deaduction.dui.widgets      import ( MathObjectWidget,
+                                          StatementsTreeWidget,
                                           StatementsTreeWidgetItem )
 from deaduction.dui.utils        import   DisclosureTree
 from deaduction.pylib.coursedata import ( Course,
@@ -94,11 +95,11 @@ class AbstractCoExChooser(QGroupBox):
 
         preview_wgt = QWidget()
         layout      = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
 
         if title:
             title_wgt = QLabel(title)
-            title_wgt.setStyleSheet('font-size: 16pt;' \
-                                    'font-weight: bold;')
+            title_wgt.setStyleSheet('font-weight: bold;')
 
             layout.addWidget(title_wgt)
 
@@ -118,8 +119,7 @@ class AbstractCoExChooser(QGroupBox):
             layout.addWidget(details_wgt)
 
         if description:
-            description_wgt = QLabel(description)
-            description_wgt.setWordWrap(True)
+            description_wgt = QTextEdit(description)
 
             layout.addWidget(description_wgt)
 
@@ -143,11 +143,11 @@ class CourseChooser(AbstractCoExChooser):
         # TODO: Add previous courses
         self.previous_courses_wgt = QListWidget()
 
-        browser_layout = QVBoxLayout()
-        browser_layout.addWidget(self.browse_btn)
-        browser_layout.addWidget(self.previous_courses_wgt)
+        browser_lyt = QVBoxLayout()
+        browser_lyt.addWidget(self.browse_btn)
+        browser_lyt.addWidget(self.previous_courses_wgt)
 
-        super().__init__(_('Choose course (browse and preview)'), browser_layout)
+        super().__init__(_('Choose course (browse and preview)'), browser_lyt)
 
     def set_preview(self, course: Course):
 
@@ -195,31 +195,40 @@ class ExerciseChooser(AbstractCoExChooser):
 
         if self.__course_filetype == '.pkl':
 
+            proofstate = exercise.initial_proof_state
+            goal = proofstate.goals[0]  # Only one goal (?)
+            target = goal.target
+            context = goal.tag_and_split_propositions_objects()
+            objects = context[0]
+            properties = context[1]
+
             # ───────────────── Friendly widget ──────────────── #
 
-            # TODO: Set values
             propobj_lyt = QHBoxLayout()
-            objects, properties = QListWidget(), QListWidget()
+            objects_wgt = MathObjectWidget(objects)
+            properties_wgt = MathObjectWidget(properties)
             objects_lyt, properties_lyt = QVBoxLayout(), QVBoxLayout()
-            objects.setFont(QFont('Menlo'))
-            properties.setFont(QFont('Menlo'))
+            objects_wgt.setFont(QFont('Menlo'))
+            properties_wgt.setFont(QFont('Menlo'))
 
             objects_lyt.addWidget(QLabel(_('Objects:')))
             properties_lyt.addWidget(QLabel(_('Properties:')))
-            objects_lyt.addWidget(objects)
-            properties_lyt.addWidget(properties)
+            objects_lyt.addWidget(objects_wgt)
+            properties_lyt.addWidget(properties_wgt)
             propobj_lyt.addLayout(objects_lyt)
             propobj_lyt.addLayout(properties_lyt)
 
-            target = QLineEdit()
-            target.setFont(QFont('Menlo'))
+            target_wgt = QLineEdit()
+            target_wgt.setText(target.math_type.format_as_utf8(
+                    is_math_type=True))
+            target_wgt.setFont(QFont('Menlo'))
 
             self.__friendly_wgt = QWidget()
             friendly_wgt_lyt = QVBoxLayout()
             friendly_wgt_lyt.setContentsMargins(0, 0, 0, 0)
             friendly_wgt_lyt.addLayout(propobj_lyt)
             friendly_wgt_lyt.addWidget(QLabel(_('Target:')))
-            friendly_wgt_lyt.addWidget(target)
+            friendly_wgt_lyt.addWidget(target_wgt)
             self.__friendly_wgt.setLayout(friendly_wgt_lyt)
 
             # ─────────────────── Code widget ────────────────── #
@@ -242,7 +251,7 @@ class ExerciseChooser(AbstractCoExChooser):
             self.__lean_mode_checkbox.setChecked(False)
             self.__friendly_wgt.show()
             self.__code_wgt.hide()
-            
+
             widget_lyt.addWidget(self.__friendly_wgt)
             widget_lyt.addWidget(self.__code_wgt)
             widget_lyt.addLayout(cb_lyt)
@@ -287,7 +296,7 @@ class DuiLauncher(QWidget):
     def __init__(self):
 
         super().__init__()
-        self.setWindowTitle(_('Choose course and exercise'))
+        self.setWindowTitle(_('d∃∀duction — Choose course and exercise'))
 
         self.__course_chooser = CourseChooser()
         self.__exercise_chooser = QWidget()
