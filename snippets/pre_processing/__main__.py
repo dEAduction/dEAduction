@@ -120,14 +120,11 @@ async def main():
         await servint.start()
         try:
             log.info("Pre-processing course...")
-            T1 = time.clock()
             await get_all_proof_states(servint,
                                        course,
                                        unprocessed_statements,
                                        course_pkl_path
                                        )
-            T2 = time.clock()
-            log.info(f"Got all proof states in time {T2 - T1}")
         finally:
             servint.stop()  # Good job, buddy
             h = hash(course.file_content)
