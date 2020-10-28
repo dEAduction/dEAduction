@@ -6,3 +6,6 @@ qtrio>=0.1.0
 diff-match-patch>=20200713
 parsimonious>=0.8.1
 trio>=0.16.0
+requests>=2.24.0
+dictdiffer>=0.8.1
+mathlibtools>=0.0.8
