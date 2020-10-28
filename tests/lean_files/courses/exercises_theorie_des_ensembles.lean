@@ -3,8 +3,6 @@ import tactic
 
 -- dEAduction imports
 import structures2
-import definitions
-import notations_definitions
 
 -- General principles :
 -- Type should be defined as parameters, in order to be implicit everywhere
@@ -586,19 +584,6 @@ begin
     refl,
 end
 
--- A bouger ? (Mais alors à enlever de tous les exos où ça ne sert pas)
-lemma definition.existe_un_unique
-(P : X → Prop) :
-(∃! (λx,  P x)) ↔  (∃ x : X, (P x ∧ (∀ x' : X, P x' → x = x')))
-:=
-/- dEAduction
-PrettyName
-    ∃! : existence et unicité
--/
-begin
-    sorry
-end
-
 lemma definition.bijectivite :
 bijective f ↔ ∀ y : Y, exists_unique (λ x, f x = y)
 :=
@@ -799,7 +784,7 @@ A ∩ B = A ∩ C ∧ (set.compl A) ∩ B = (set.compl A) ∩ C → B = C
 :=
 /- dEAduction
 PrettyName
-    Caractérisation par intersection avec A et son complémentaire, II
+    Caractérisaton par intersection avec A et son complémentaire, II
 -/
 begin
     sorry
@@ -835,6 +820,19 @@ namespace definitions
 PrettyName
     Définitions
 -/
+
+-- A bouger, mais à enlever de tous les exos où ça ne sert pas !
+lemma definition.existe_un_unique
+(P : X → Prop) :
+(∃! (λx,  P x)) ↔  (∃ x : X, (P x ∧ (∀ x' : X, P x' → x = x')))
+:=
+/- dEAduction
+PrettyName
+    ∃! : existence et unicité
+-/
+begin
+    sorry
+end
 
 lemma definition.difference
 (A B : set X) (x : X) :
