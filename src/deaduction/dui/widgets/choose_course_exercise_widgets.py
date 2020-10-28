@@ -161,7 +161,9 @@ class CourseChooser(AbstractCoExChooser):
 
 class ExerciseChooser(AbstractCoExChooser):
 
-    def __init__(self, course: Course):
+    def __init__(self, course: Course, course_filetype: str):
+
+        self.__course_filetype = course_filetype  # 'lean' or 'pkl'
 
         browser_layout = QVBoxLayout()
         exercises_tree = StatementsTreeWidget(course.exercises_list(),
@@ -178,59 +180,70 @@ class ExerciseChooser(AbstractCoExChooser):
         widget = QWidget()
         widget_lyt = QVBoxLayout()
 
-        # ───────────────── Friendly widget ──────────────── #
+        if self.__course_filetype == '.pkl':
 
-        # TODO: Set values
-        propobj_lyt = QHBoxLayout()
-        objects, properties = QListWidget(), QListWidget()
-        objects_lyt, properties_lyt = QVBoxLayout(), QVBoxLayout()
-        objects.setFont(QFont('Menlo'))
-        properties.setFont(QFont('Menlo'))
+            # ───────────────── Friendly widget ──────────────── #
 
-        objects_lyt.addWidget(QLabel(_('Objects:')))
-        properties_lyt.addWidget(QLabel(_('Properties:')))
-        objects_lyt.addWidget(objects)
-        properties_lyt.addWidget(properties)
-        propobj_lyt.addLayout(objects_lyt)
-        propobj_lyt.addLayout(properties_lyt)
+            # TODO: Set values
+            propobj_lyt = QHBoxLayout()
+            objects, properties = QListWidget(), QListWidget()
+            objects_lyt, properties_lyt = QVBoxLayout(), QVBoxLayout()
+            objects.setFont(QFont('Menlo'))
+            properties.setFont(QFont('Menlo'))
 
-        target = QLineEdit()
-        target.setText(exercise.lean_statement)
-        target.setFont(QFont('Menlo'))
+            objects_lyt.addWidget(QLabel(_('Objects:')))
+            properties_lyt.addWidget(QLabel(_('Properties:')))
+            objects_lyt.addWidget(objects)
+            properties_lyt.addWidget(properties)
+            propobj_lyt.addLayout(objects_lyt)
+            propobj_lyt.addLayout(properties_lyt)
 
-        self.__friendly_wgt = QWidget()
-        friendly_wgt_lyt = QVBoxLayout()
-        friendly_wgt_lyt.setContentsMargins(0, 0, 0, 0)
-        friendly_wgt_lyt.addLayout(propobj_lyt)
-        friendly_wgt_lyt.addWidget(QLabel(_('Target:')))
-        friendly_wgt_lyt.addWidget(target)
+            target = QLineEdit()
+            target.setFont(QFont('Menlo'))
 
-        self.__friendly_wgt.setLayout(friendly_wgt_lyt)
+            self.__friendly_wgt = QWidget()
+            friendly_wgt_lyt = QVBoxLayout()
+            friendly_wgt_lyt.setContentsMargins(0, 0, 0, 0)
+            friendly_wgt_lyt.addLayout(propobj_lyt)
+            friendly_wgt_lyt.addWidget(QLabel(_('Target:')))
+            friendly_wgt_lyt.addWidget(target)
+            self.__friendly_wgt.setLayout(friendly_wgt_lyt)
 
-        # ─────────────────── Code widget ────────────────── #
+            # ─────────────────── Code widget ────────────────── #
 
-        self.__code_wgt = QTextEdit()
-        self.__code_wgt.setReadOnly(True)
-        self.__code_wgt.setFont(QFont('Menlo'))
-        # TODO: Set value
+            self.__code_wgt = QTextEdit()
+            self.__code_wgt.setReadOnly(True)
+            self.__code_wgt.setFont(QFont('Menlo'))
+            # TODO: Set value
 
-        # ─────────────────── Check boxes ────────────────── #
+            # ─────────────────── Check boxes ────────────────── #
 
-        self.__lean_mode_checkbox = QCheckBox(_('L∃∀N mode'))
-        self.__lean_mode_checkbox.clicked.connect(self.toggle_lean_mode)
-        cb_lyt = QHBoxLayout()
-        cb_lyt.addStretch()
-        cb_lyt.addWidget(self.__lean_mode_checkbox)
+            self.__lean_mode_checkbox = QCheckBox(_('L∃∀N mode'))
+            self.__lean_mode_checkbox.clicked.connect(self.toggle_lean_mode)
+            cb_lyt = QHBoxLayout()
+            cb_lyt.addStretch()
+            cb_lyt.addWidget(self.__lean_mode_checkbox)
 
-        # ──────────────── Organize widgets ──────────────── #
+            # ──────────────── Organize widgets ──────────────── #
 
-        self.__lean_mode_checkbox.setChecked(False)
-        self.__friendly_wgt.show()
-        self.__code_wgt.hide()
-        
-        widget_lyt.addWidget(self.__friendly_wgt)
-        widget_lyt.addWidget(self.__code_wgt)
-        widget_lyt.addLayout(cb_lyt)
+            self.__lean_mode_checkbox.setChecked(False)
+            self.__friendly_wgt.show()
+            self.__code_wgt.hide()
+            
+            widget_lyt.addWidget(self.__friendly_wgt)
+            widget_lyt.addWidget(self.__code_wgt)
+            widget_lyt.addLayout(cb_lyt)
+
+        elif self.__course_filetype == '.lean':
+
+            widget_lbl = QLabel(_('Goal preview is not available when course ' \
+                              'file extension is .lean.'))
+            widget_lbl.setStyleSheet('font-style: italic; color: gray;')
+
+            widget_lyt.addStretch()
+            widget_lyt.addWidget(widget_lbl)
+            widget_lyt.addStretch()
+
         widget.setLayout(widget_lyt)
 
         # ────────────────── Meta, super() ───────────────── #
@@ -275,6 +288,7 @@ class DuiLauncher(QWidget):
         buttons_lyt = QHBoxLayout()
         buttons_lyt.addStretch()
         buttons_lyt.addWidget(QPushButton(_('Quit')))
+        buttons_lyt.addWidget(QPushButton(_('Load goal')))
         buttons_lyt.addWidget(QPushButton(_('Start exercise')))
 
         self.__mlyt = QVBoxLayout()
@@ -292,23 +306,24 @@ class DuiLauncher(QWidget):
 
         dialog = QFileDialog()
         dialog.setFileMode(QFileDialog.ExistingFile)
-        dialog.setNameFilter('*.lean')
+        dialog.setNameFilter('*.lean *.pkl')
 
         if dialog.exec_():
             course_path = Path(dialog.selectedFiles()[0])
             course = Course.from_file(course_path)
-            self.__set_course(course)
+            course_filetype = course_path.suffix
+            self.__set_course(course, course_filetype)
 
-    def __set_course(self, course: Course):
+    def __set_course(self, course: Course, course_filetype: str):
         self.__course_chooser.set_preview(course)
-        exercise_chooser = ExerciseChooser(course)
+        exercise_chooser = ExerciseChooser(course, course_filetype)
         self.__mlyt.replaceWidget(self.__exercise_chooser, exercise_chooser)
         self.__exercise_chooser.deleteLater()
         self.__exercise_chooser = exercise_chooser
 
-    @Slot(Exercise)
-    def __set_exercise(self, exercise: Exercise):
-        self.__exercise_chooser.set_preview(exercise)
+    # @Slot(Exercise)
+    # def __set_exercise(self, exercise: Exercise):
+    #     self.__exercise_chooser.set_preview(exercise)
 
 
 if __name__ == '__main__':
