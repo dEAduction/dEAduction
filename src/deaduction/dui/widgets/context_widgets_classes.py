@@ -46,8 +46,8 @@ from PySide2.QtWidgets import ( QHBoxLayout,
                                 QWidget,
                                 QListWidget,
                                 QListWidgetItem)
-from deaduction.config.config import user_config, _
 
+from deaduction.config.config import user_config, _
 from deaduction.pylib.mathobj import MathObject
 from deaduction.pylib.actions import explain_how_to_apply
 
@@ -224,9 +224,7 @@ class TargetWidget(QWidget):
     :attribute tag str: The tag associated to target.
     """
 
-    def __init__(self,
-                 target: MathObject=None,
-                 tag: str=None,
+    def __init__(self, target: MathObject=None, tag: str=None,
                  goal_count: str=''):
         """"
         Init self with an target (an instance of the class ProofStatePO)
@@ -278,4 +276,3 @@ class TargetWidget(QWidget):
         main_layout.addLayout(central_layout)
         main_layout.addStretch()
         self.setLayout(main_layout)
-

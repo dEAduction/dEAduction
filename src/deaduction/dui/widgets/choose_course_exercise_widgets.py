@@ -33,7 +33,8 @@ from typing  import ( Any,
                       Dict )
 
 from PySide2.QtCore    import   Slot
-from PySide2.QtGui     import   QFont
+from PySide2.QtGui     import ( QFont,
+                                QPixmap )
 from PySide2.QtWidgets import ( QApplication,
                                 QCheckBox,
                                 QFileDialog,
@@ -119,6 +120,7 @@ class AbstractCoExChooser(QGroupBox):
             layout.addWidget(details_wgt)
 
         if description:
+            # TODO: Make text unselectable
             description_wgt = QTextEdit(description)
 
             layout.addWidget(description_wgt)
@@ -305,6 +307,7 @@ class DuiLauncher(QWidget):
 
         self.__coex_lyt = QVBoxLayout()
         self.__coex_lyt.addWidget(self.__course_chooser)
+        # TODO: Add space
         self.__coex_lyt.addWidget(self.__exercise_chooser)
 
         buttons_lyt = QHBoxLayout()
