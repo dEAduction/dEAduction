@@ -27,6 +27,7 @@ This file is part of d∃∀duction.
 
 import sys
 from pathlib import   Path
+import pickle
 from gettext import   gettext as _
 from typing  import ( Any,
                       Dict )
@@ -52,6 +53,18 @@ from deaduction.dui.widgets      import ( StatementsTreeWidget,
 from deaduction.dui.utils        import   DisclosureTree
 from deaduction.pylib.coursedata import ( Course,
                                           Exercise )
+
+
+# TODO: Put this function somewhere else
+def read_pkl_course(course_path: Path) -> Course:
+    """
+    Extract an instance of the class Course from a .pkl file.
+    """
+
+    with course_path.open(mode='rb') as input:
+        course = pickle.load(input)
+
+    return course
 
 
 class AbstractCoExChooser(QGroupBox):
@@ -310,8 +323,13 @@ class DuiLauncher(QWidget):
 
         if dialog.exec_():
             course_path = Path(dialog.selectedFiles()[0])
-            course = Course.from_file(course_path)
             course_filetype = course_path.suffix
+
+            if course_filetype == '.lean':
+                course = Course.from_file(course_path)
+            elif course_filetype == '.pkl':
+                course = read_pkl_course(course_path)
+
             self.__set_course(course, course_filetype)
 
     def __set_course(self, course: Course, course_filetype: str):
