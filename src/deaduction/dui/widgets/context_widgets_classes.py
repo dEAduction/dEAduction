@@ -46,7 +46,7 @@ from PySide2.QtWidgets import ( QHBoxLayout,
                                 QWidget,
                                 QListWidget,
                                 QListWidgetItem)
-from deaduction.config.config import user_config, _
+from deaduction.config        import user_config, _
 
 from deaduction.pylib.mathobj import MathObject
 from deaduction.pylib.actions import explain_how_to_apply

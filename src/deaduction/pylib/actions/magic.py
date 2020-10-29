@@ -26,8 +26,8 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from deaduction.pylib.actions.actiondef import action
-from deaduction.config.config import _
+from deaduction.pylib.actions.actiondef      import action
+from deaduction.config                       import _
 from dataclasses import dataclass
 
 import deaduction.pylib.logger as logger
