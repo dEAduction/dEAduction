@@ -37,7 +37,7 @@ from deaduction.dui.launcher import select_course_exercise
 from deaduction.dui.widgets import  ExerciseMainWindow
 from deaduction.pylib import        logger
 from deaduction.pylib.server import ServerInterface
-from deaduction.config.config import _  # for translation
+from deaduction.config import _  # for translation
 
 log = logging.getLogger(__name__)
 

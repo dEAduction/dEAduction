@@ -41,7 +41,6 @@ shape can include call to some specific formatting functions, e.g.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 
-    TODO: remove 'PROP' from node names, here and in Structures.lean.
     TODO: display product:
     - prod (I,J)
     - prod.fst, prod.snd
@@ -50,9 +49,9 @@ shape can include call to some specific formatting functions, e.g.
 import logging
 import types
 
-import deaduction.pylib.logger as logger
-from deaduction.pylib.mathobj.give_name import give_local_name
-from deaduction.config.config import _
+import deaduction.pylib.logger              as logger
+from deaduction.pylib.mathobj.give_name     import give_local_name
+from deaduction.config                      import _
 
 log = logging.getLogger(__name__)
 
@@ -433,7 +432,7 @@ def display_belongs_to(math_type, format_, text_depth, belonging=True) -> str:
         or "f is a function from X to Y"
         - "P: a proposition" (and not P ∈ a proposition),
     """
-    log.debug(f"display ∈ with {math_type}, {format_}, {text_depth}")
+    #log.debug(f"display ∈ with {math_type}, {format_}, {text_depth}")
     if format_ == "text+utf8" and text_depth > 0:
         if math_type.node == "PROP" \
                 or (math_type.node == "FUNCTION" and text_depth > 1):

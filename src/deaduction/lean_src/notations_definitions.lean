@@ -15,6 +15,8 @@ notation [parsing_only]  A ` \subset ` B := A ⊆ B
 notation [parsing_only]  `\emptyset` := ∅
 -/
 
+
+
 namespace set
 def symmetric_difference {X : Type} (A B : set X) := (A ∪ B) \ (A ∩ B)
 notation A `Δ` B := symmetric_difference A B

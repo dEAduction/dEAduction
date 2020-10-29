@@ -37,7 +37,7 @@ This file is part of dEAduction.
 
 import logging
 
-from deaduction.config.config import user_config, _
+from deaduction.config        import user_config, _
 from deaduction.pylib.actions import (action,
                                       InputType,
                                       MissingParametersError,

@@ -50,7 +50,7 @@ from PySide2.QtWidgets import ( QAction,
                                 QVBoxLayout,
                                 QWidget)
 
-from deaduction.config.config import _
+from deaduction.config import           _
 from deaduction.dui.utils import  (     replace_delete_widget,
                                         ButtonsDialog)
 from deaduction.dui.widgets import (    ActionButton,
