@@ -558,7 +558,7 @@ PrettyName
 
 /-
 def injective {X Y : Type} (f₀ : X → Y) := ∀ x y : X, (f₀ x = f₀ y → x = y)
-def surjective {X Y : Type} (f₀ : X → Y) := ∀ y : Y, ∃ x : X, f₀ x = y
+def surjective {X Y : Type} (f₀ : X → Y) := ∀ y : Y, ∃ x : X, y = f₀ x
 def composition {X Y Z : Type} (g₀ : Y → Z) (f₀ : X → Y) := λx:X, g₀ (f₀ x)
 def Identite {X : Type} := λ x:X, x
 -/
@@ -575,7 +575,7 @@ begin
 end
 
 lemma definition.surjectivite :
-surjective f ↔ ∀ y : Y, ∃ x : X, f x = y
+surjective f ↔ ∀ y : Y, ∃ x : X, y = f x
 :=
 /- dEAduction
 PrettyName
@@ -585,8 +585,21 @@ begin
     refl,
 end
 
+-- A bouger, mais à enlever de tous les exos où ça ne sert pas !
+lemma definition.existe_un_unique
+(P : X → Prop) :
+(∃! (λx,  P x)) ↔  (∃ x : X, (P x ∧ (∀ x' : X, P x' → x' = x)))
+:=
+/- dEAduction
+PrettyName
+    ∃! : existence et unicité
+-/
+begin
+    sorry
+end
+
 lemma definition.bijectivite :
-bijective f ↔ ∀ y : Y, exists_unique (λ x, f x = y)
+bijective f ↔ ∀ y : Y, exists_unique (λ x, y = f x)
 :=
 /- dEAduction
 PrettyName
@@ -663,7 +676,7 @@ lemma exercise.injective_ssi_inverse_gauche : (injective f) ↔
 ∃ F: Y → X, (composition F f) = Identite :=
 /- dEAduction
 PrettyName
-    Injectivité et inverse à gauche
+    (x) Injectivité et inverse à gauche
 -/
 begin
     sorry
@@ -673,7 +686,7 @@ lemma exercise.surjective_ssi_inverse_droite : (surjective f) ↔
 ∃ F: Y → X, (composition f F) = Identite :=
 /- dEAduction
 PrettyName
-    Surjectivité et inverse à droite
+    (*) Surjectivité et inverse à droite
 -/
 begin
     sorry
@@ -685,7 +698,7 @@ lemma exercise.bijective_ssi_injective_et_surjective :
 :=
 /- dEAduction
 PrettyName
-    "Bijectif" équivaut à "injectif et surjectif"
+    (+) "Bijectif" équivaut à "injectif et surjectif"
 -/
 begin
     sorry
@@ -697,7 +710,7 @@ composition g f = Identite ∧ composition g f  = Identite
 :=
 /- dEAduction
 PrettyName
-    Bijectivité et existence d'une application réciproque
+    (+) Bijectivité et existence d'une application réciproque
 -/
 begin
     sorry
@@ -709,7 +722,7 @@ composition g f = Identite)
 :=
 /- dEAduction
 PrettyName
-    Unicité de la réciproque d'une application bijective
+    (+) Unicité de la réciproque d'une application bijective
 -/
 begin
     sorry
@@ -822,18 +835,6 @@ PrettyName
     Définitions
 -/
 
--- A bouger, mais à enlever de tous les exos où ça ne sert pas !
-lemma definition.existe_un_unique
-(P : X → Prop) :
-(∃! (λx,  P x)) ↔  (∃ x : X, (P x ∧ (∀ x' : X, P x' → x = x')))
-:=
-/- dEAduction
-PrettyName
-    ∃! : existence et unicité
--/
-begin
-    sorry
-end
 
 lemma definition.difference
 (A B : set X) (x : X) :
@@ -888,7 +889,7 @@ lemma exercise.difference_symetrique_2
 :=
 /- dEAduction
 PrettyName
-    Différence symétrique II
+    (*) Différence symétrique II
 -/
 begin
     sorry
@@ -912,7 +913,7 @@ lemma exercise.difference_symetrique_4 :
 ∃! (λE : set X, ∀ A : set X, (A Δ E) = A) :=
 /- dEAduction
 PrettyName
-    (+) Différence symétrique IV
+    (+) Différence symétrique VI
 -/
 begin
     sorry
@@ -969,7 +970,7 @@ f '' (A ∪ B)  = f '' A ∪ f '' B
 :=
 /- dEAduction
 PrettyName
-    image d'une union
+    Image d'une union
 -/
 begin
     sorry
@@ -982,7 +983,7 @@ lemma exercise.exercice_factorisation_I
 :=
 /- dEAduction
 PrettyName
-    (*) Factorisation I
+    (+) Factorisation I
 -/
 begin
     sorry
@@ -995,7 +996,7 @@ lemma exercise.exercice_factorisation_II
 :=
 /- dEAduction
 PrettyName
-    (***) Factorisation II
+    (+) Factorisation II
 -/
 begin
     sorry
