@@ -9,3 +9,4 @@ trio>=0.16.0
 requests>=2.24.0
 dictdiffer>=0.8.1
 mathlibtools>=0.0.8
+toml>=0.10.1
