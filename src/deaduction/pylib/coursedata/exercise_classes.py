@@ -57,6 +57,8 @@ class Statement:
 
     course: Any  # the parent course
 
+    initial_proof_state: Any = None  # this is used when pre-processing
+
     @classmethod
     def from_parser_data(cls, data: dict):
         """
@@ -82,20 +84,22 @@ class Statement:
                    lean_end_line_number=0,
                    course=None)
 
-    @property
-    def caption(self):
-        """
-        Return a  text version of the initial target
-        We look for the best possible version, given the available information
-        """
-        if hasattr(self, "initial_proof_state"):
-            target = self.initial_proof_state.goals[0].target
-            text = target.format_as_utf8()
-        elif hasattr(self, "lean_statement_body"):
-            text = self.lean_statement_body
-        else:
-            text = self.lean_statement
-        return text
+    # def caption(self):
+    #     """
+    #     Return a displayable version of the initial target
+    #     We look for the best possible version, given the available information
+    #     """
+    #     self.log.debug("Setting caption")
+    #     if hasattr(self, "initial_proof_state") \
+    #             and self.initial_proof_state is not None:
+    #         target = self.initial_proof_state.goals[0].target
+    #         text = target.math_type.format_as_utf8(is_math_type=True)
+    #     elif hasattr(self, "lean_statement_body") \
+    #             and self.lean_statement_body is not None:
+    #         text = self.lean_statement_body
+    #     else:
+    #         text = self.lean_statement
+    #     return text
 
     @property
     def statement_to_text(self):
@@ -107,7 +111,8 @@ class Statement:
         Let B be a subset of X.
         Prove that X \ (A ∪ B) = (X \ A) ∩ (X \ B).
         """
-        if hasattr(self, "initial_proof_state"):
+        if hasattr(self, "initial_proof_state") and \
+                self.initial_proof_state is not None:
             initial_goal = self.initial_proof_state.goals[0]
             text = initial_goal.goal_to_text()
         else:
@@ -162,12 +167,13 @@ class Statement:
         TODO (1): remove variables from lean_statement
         TODO (2): add properties of the context, if any, as hypotheses
         """
-        if not hasattr(self, 'initial_proof_state'):
+        if not hasattr(self, 'initial_proof_state') \
+                or self.initial_proof_state is None:
             text = self.lean_core_statement
             return text
         goal = self.initial_proof_state.goals[0]
         target = goal.target
-        text = target.math_type.format_as_utf8()
+        text = target.math_type.format_as_utf8(is_math_type=True)
         return text
 
 
@@ -183,11 +189,11 @@ class Theorem(Statement):
 
 @dataclass
 class Exercise(Theorem):
-    available_logic: List[Action]
-    available_magic: List[Action]
-    available_proof_techniques: List[Action]
-    available_statements: List[Statement]
-    expected_vars_number: Dict[str, int]  # {'X': 3, 'A': 1, 'B': 1}
+    available_logic: List[Action]            = None
+    available_magic: List[Action]            = None
+    available_proof_techniques: List[Action] = None
+    available_statements: List[Statement]    = None
+    expected_vars_number: Dict[str, int]     = None # {'X': 3, 'A': 1, 'B': 1}
 
     @classmethod
     def from_parser_data(cls, data: dict, statements: list):

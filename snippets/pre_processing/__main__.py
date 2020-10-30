@@ -65,7 +65,7 @@ async def main():
     # Choose course and parse it
     course = select_course()
     # check for pkl file and, if it exists, find all unprocessed statements
-    unprocessed_statements, course_pkl_path = check_statements(course)
+    course, unprocessed_statements, course_pkl_path = check_statements(course)
 
     if not unprocessed_statements:
         log.info("pkl fle is up_to_date with all initial_proof_states")
@@ -99,7 +99,6 @@ async def main():
                                        )
         finally:
             servint.stop()  # Good job, buddy
-            h = hash(course.file_content)
             save_objects([course], course_pkl_path)
 
         # Checking
@@ -111,8 +110,11 @@ def check_statements(course):
     Check every statement of course for initial_proof_state attribute
 
     :param course: Course
-    :return:    1) list of statements without initial_proof_state attribute
-                2) path for pkl version of the course (whether the file exists
+
+    :return:    1) a Course instance, with some preprocessed statement
+            (if a pkl file have been found with the good file content)
+                2) list of statements without initial_proof_state attribute
+                3) path for pkl version of the course (whether the file exists
                 or not)
     """
     course_path = course.course_path
@@ -130,13 +132,17 @@ def check_statements(course):
         stored_hash = hash(stored_course.file_content)
         log.debug(f"Found '.pkl' file, hash = {stored_hash} vs {course_hash}")
         if stored_hash == course_hash or True:    # FIXME !!!
-            log.info("pkl content file is up to date")
-            for statement in stored_course.statements:
+            # log.info("pkl content file is up to date")
+            # we want the statements already processed to be conserved:
+            course = stored_course
+            for statement in course.statements:
                 name = statement.pretty_name
-                if hasattr(statement, 'initial_proof_state'):
-                    log.info(f"found initial_roof_state for {name}")
+                if hasattr(statement, 'initial_proof_state') \
+                        and statement.initial_proof_state is not None:
+                    log.info(f"found initial_proof_state for {name}")
                 else:
                     unprocessed_statements.append(statement)
+                    log.info(f"NO initial_proof_state for {name}")
         else:
             log.info(f"pkl content file is NOT up to date: "
                      f"course hash ={course_hash}")
@@ -144,7 +150,7 @@ def check_statements(course):
     else:
         log.debug("File '.pkl' does not exist")
         unprocessed_statements = course.statements
-    return unprocessed_statements, course_pkl_path
+    return course, unprocessed_statements, course_pkl_path
 
 
 async def get_all_proof_states(servint,
