@@ -465,9 +465,12 @@ class ExerciseMainWindow(QMainWindow):
             previous_idx = lean_file.idx - 1
             entry = lean_file.history[previous_idx]
             entry_info = entry.misc_info
-            previous_proof_state = entry_info["ProofState"]
-            old_goal = previous_proof_state.goals[0]
-            Goal.compare(new_goal, old_goal, goal_is_new=False)  # set tags
+            if 'ProofState' in entry_info.keys():
+                previous_proof_state = entry_info['ProofState']
+                old_goal = previous_proof_state.goals[0]
+                Goal.compare(new_goal, old_goal, goal_is_new=False)  # set tags
+            else:
+                log.warning(f"No proof state found for previous step")
         # FIXME: target tag
         new_target_tag = '='
         try:
