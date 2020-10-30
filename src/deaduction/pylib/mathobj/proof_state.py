@@ -30,16 +30,15 @@ from dataclasses import dataclass
 import logging
 from typing import List, Tuple
 
-import deaduction.pylib.logger as logger
-from deaduction.config.config import _
+import deaduction.pylib.logger  as              logger
+from deaduction.config          import          _
 
-from deaduction.pylib.mathobj.MathObject import \
-    MathObject
+from deaduction.pylib.mathobj.MathObject import MathObject
 from deaduction.pylib.mathobj.lean_analysis_with_type import \
-    lean_expr_with_type_grammar, \
-    LeanEntryVisitor
+                                                lean_expr_with_type_grammar, \
+                                                LeanEntryVisitor
 
-from deaduction.pylib.actions import Action
+from deaduction.pylib.actions import            Action
 
 log = logging.getLogger(__name__)
 

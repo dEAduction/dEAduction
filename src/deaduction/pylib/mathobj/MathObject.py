@@ -284,7 +284,7 @@ class MathObject:
         if hasattr(self.math_type, "node"):
             return self.math_type.node == "TYPE"
         else:
-            log.warning(f"is_type called on {self}, but math_type is "
+            log.debug(f"is_type called on {self}, but math_type is "
                         f"{self.math_type}")
             return False
 

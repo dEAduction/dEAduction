@@ -35,6 +35,7 @@ import os
 from pathlib import Path
 import gettext
 
+
 log = logging.getLogger(__name__)
 
 ##################################################################
@@ -87,106 +88,3 @@ except KeyError:
         with open(config_file_path, 'w') as configfile:
             config.write(configfile)
         user_config = config['USER']
-
-
-################
-# Set language #
-################
-available_languages = user_config.get('available_languages')
-available_languages = available_languages.split(', ')
-select_language = user_config.get('select_language')
-
-if available_languages == '':
-    available_languages = ['en']
-if select_language == '':
-    select_language = 'en'
-
-language_dir_path = Path.cwd() / 'share/locales'
-#gettext.bindtextdomain("deaduction", str(language_dir_path))
-#gettext.textdomain("deaduction")
-language = gettext.translation('deaduction',
-                         localedir=language_dir_path,
-                         languages=[select_language])
-language.install()
-_ = language.gettext
-# _ = gettext.gettext
-
-test_language = gettext.gettext("Proof by contrapositive")
-log.debug(f"test: {test_language}")
-
-########################################################################
-# set tooltips and text button HERE to enable translation with gettext #
-########################################################################
-# Logic and proof Buttons tooltips
-tooltips = {
-    'tooltip_and':
-        _("""• Split a property 'P AND Q' into the two properties 'P', 'Q'
-• Inversely, assembles 'P' and 'Q' to get 'P AND Q'"""
-          ),
-    'tooltip_or':
-        _("""• Prove 'P OR Q' by proving either 'P' or 'Q'
-• Use the property 'P OR Q' by splitting the cases when P is True and Q is True"""
-          ),
-    'tooltip_not':
-        _("""Try to simplify the property 'NOT P'"""),
-    'tooltip_implies':
-        _("""Prove 'P ⇒ Q' by assuming 'P', and proving 'Q'"""),
-    'tooltip_iff':
-        _("""Split 'P ⇔ Q' into two implications"""),
-    'tooltip_forall':
-        _("""Prove '∀ a, P(a)' by introducing 'a'"""),
-    'tooltip_exists':  # TODO: possibility to 'APPLY' '∃ x, P(x)'
-        _("""Prove '∃ x, P(x)' by specifying some 'x' and proving P(x)"""
-          ),
-    'tooltip_apply':
-        _("""• Apply to a property '∀ a, P(a)' and some 'a' to get 'P(a)' 
-• Apply a property 'P ⇒ Q' to 'P' to get 'Q'
-• Apply an equality or a logical equivalence to substitute in another property
-• Apply a function to an element or an equality"""
-          ),
-    'tooltip_proof_methods':
-        _("""Choose some specific proof method: 
-• Case-based reasoning
-• Proof by contrapositive
-• Proof by contradiction"""
-          ),
-    'tooltip_new_object':
-        _("""• Create a new object (e.g. 'f(x)' from 'f' and 'x')
-• Create a new subgoal (a lemma) which will be proved, and added to the context
-• From a property '∀ a ∈ A, ∃ b ∈ B, P(a,b)', create a new function from A to B"""
-          ),
-    'tooltip_assumption':
-        _(
-            """Terminate the proof when the target is obvious from the context"""
-        )
-}
-# decentralized apply buttons
-tooltips_apply = {}  # TODO
-
-# Text for buttons
-buttons = {
-    'logic_button_texts': _("AND, OR, NOT, ⇒, ⇔, ∀, ∃"),
-    'proof_button_texts': _("Apply, Proof Methods, New Object, QED")
-}
-# sad thoughts for "¯\_(ツ)_/¯", I loved you so much...
-
-config['DEFAULT'].update(tooltips)
-config['DEFAULT'].update(tooltips_apply)
-config['DEFAULT'].update(buttons)
-
-
-#########
-# tests #
-#########
-if __name__ == "__main__":
-    # boolean = user_config.getboolean('fold_statements')
-    # text_boolean = user_config.get('fold_statements')
-    # print(boolean, text_boolean)
-
-    #####################
-    # Print config file #
-    #####################
-    for sect in config.sections():
-        print('Section:', sect)
-        for k, v in config.items(sect):
-            print(f' {k} = {v}')

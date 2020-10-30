@@ -56,7 +56,7 @@ from PySide2.QtWidgets import ( QHBoxLayout,
 from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem)
 
-from deaduction.config.config import user_config, _
+from deaduction.config           import   user_config, _
 from deaduction.pylib.actions    import   Action
 from deaduction.pylib.coursedata import ( Definition,
                                           Exercise,

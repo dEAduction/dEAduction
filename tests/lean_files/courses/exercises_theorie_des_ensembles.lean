@@ -3,7 +3,6 @@ import tactic
 
 -- dEAduction imports
 import structures2
-import definitions
 import notations_definitions
 
 -- General principles :
@@ -559,7 +558,7 @@ PrettyName
 
 /-
 def injective {X Y : Type} (f₀ : X → Y) := ∀ x y : X, (f₀ x = f₀ y → x = y)
-def surjective {X Y : Type} (f₀ : X → Y) := ∀ y : Y, ∃ x : X, f₀ x = y
+def surjective {X Y : Type} (f₀ : X → Y) := ∀ y : Y, ∃ x : X, y = f₀ x
 def composition {X Y Z : Type} (g₀ : Y → Z) (f₀ : X → Y) := λx:X, g₀ (f₀ x)
 def Identite {X : Type} := λ x:X, x
 -/
@@ -576,7 +575,7 @@ begin
 end
 
 lemma definition.surjectivite :
-surjective f ↔ ∀ y : Y, ∃ x : X, f x = y
+surjective f ↔ ∀ y : Y, ∃ x : X, y = f x
 :=
 /- dEAduction
 PrettyName
@@ -586,10 +585,10 @@ begin
     refl,
 end
 
--- A bouger ? (Mais alors à enlever de tous les exos où ça ne sert pas)
+-- A bouger, mais à enlever de tous les exos où ça ne sert pas !
 lemma definition.existe_un_unique
 (P : X → Prop) :
-(∃! (λx,  P x)) ↔  (∃ x : X, (P x ∧ (∀ x' : X, P x' → x = x')))
+(∃! (λx,  P x)) ↔  (∃ x : X, (P x ∧ (∀ x' : X, P x' → x' = x)))
 :=
 /- dEAduction
 PrettyName
@@ -600,7 +599,7 @@ begin
 end
 
 lemma definition.bijectivite :
-bijective f ↔ ∀ y : Y, exists_unique (λ x, f x = y)
+bijective f ↔ ∀ y : Y, exists_unique (λ x, y = f x)
 :=
 /- dEAduction
 PrettyName
@@ -677,7 +676,7 @@ lemma exercise.injective_ssi_inverse_gauche : (injective f) ↔
 ∃ F: Y → X, (composition F f) = Identite :=
 /- dEAduction
 PrettyName
-    Injectivité et inverse à gauche
+    (x) Injectivité et inverse à gauche
 -/
 begin
     sorry
@@ -687,7 +686,7 @@ lemma exercise.surjective_ssi_inverse_droite : (surjective f) ↔
 ∃ F: Y → X, (composition f F) = Identite :=
 /- dEAduction
 PrettyName
-    Surjectivité et inverse à droite
+    (*) Surjectivité et inverse à droite
 -/
 begin
     sorry
@@ -699,7 +698,7 @@ lemma exercise.bijective_ssi_injective_et_surjective :
 :=
 /- dEAduction
 PrettyName
-    "Bijectif" équivaut à "injectif et surjectif"
+    (*) "Bijectif" équivaut à "injectif et surjectif"
 -/
 begin
     sorry
@@ -711,7 +710,7 @@ composition g f = Identite ∧ composition g f  = Identite
 :=
 /- dEAduction
 PrettyName
-    Bijectivité et existence d'une application réciproque
+    (+) Bijectivité et existence d'une application réciproque
 -/
 begin
     sorry
@@ -723,7 +722,7 @@ composition g f = Identite)
 :=
 /- dEAduction
 PrettyName
-    Unicité de la réciproque d'une application bijective
+    (+) Unicité de la réciproque d'une application bijective
 -/
 begin
     sorry
@@ -799,7 +798,7 @@ A ∩ B = A ∩ C ∧ (set.compl A) ∩ B = (set.compl A) ∩ C → B = C
 :=
 /- dEAduction
 PrettyName
-    Caractérisation par intersection avec A et son complémentaire, II
+    Caractérisaton par intersection avec A et son complémentaire, II
 -/
 begin
     sorry
@@ -835,6 +834,7 @@ namespace definitions
 PrettyName
     Définitions
 -/
+
 
 lemma definition.difference
 (A B : set X) (x : X) :
@@ -889,7 +889,7 @@ lemma exercise.difference_symetrique_2
 :=
 /- dEAduction
 PrettyName
-    Différence symétrique II
+    (*) Différence symétrique II
 -/
 begin
     sorry
@@ -902,7 +902,7 @@ lemma exercise.difference_symetrique_3
 :=
 /- dEAduction
 PrettyName
-    Différence symétrique III
+    (**) Différence symétrique III
 -/
 begin
     sorry
@@ -913,7 +913,7 @@ lemma exercise.difference_symetrique_4 :
 ∃! (λE : set X, ∀ A : set X, (A Δ E) = A) :=
 /- dEAduction
 PrettyName
-    Différence symétrique VI
+    (+) Différence symétrique VI
 -/
 begin
     sorry
@@ -925,7 +925,7 @@ exists_unique (λA' : set X, (A Δ A') = set.univ)
 :=
 /- dEAduction
 PrettyName
-    Différence symétrique V
+    (+) Différence symétrique V
 -/
 begin
     sorry
@@ -937,7 +937,7 @@ lemma exercise.difference_symetrique_6
 :=
 /- dEAduction
 PrettyName
-    Différence symétrique VI
+    (+) Différence symétrique VI
 -/
 begin
     sorry
@@ -970,7 +970,7 @@ f '' (A ∪ B)  = f '' A ∪ f '' B
 :=
 /- dEAduction
 PrettyName
-    image d'une union
+    Image d'une union
 -/
 begin
     sorry
@@ -981,6 +981,10 @@ lemma exercise.exercice_factorisation_I
 (g : Y → Z) (h: X → Z) :
 (∃ f: X → Y, h = (composition g f)) ↔ h '' set.univ ⊆ g '' set.univ
 :=
+/- dEAduction
+PrettyName
+    (+) Factorisation I
+-/
 begin
     sorry
 end
@@ -990,6 +994,10 @@ lemma exercise.exercice_factorisation_II
 (f : X → Y) (h: X → Z) :
 (∃ g: Y → Z, h = (composition g f)) ↔ (∀ x y, (f x = f y → h x = h y))
 :=
+/- dEAduction
+PrettyName
+    (+) Factorisation II
+-/
 begin
     sorry
 end
