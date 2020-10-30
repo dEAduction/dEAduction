@@ -242,15 +242,15 @@ class ExerciseChooser(AbstractCoExChooser):
 
             # ─────────────────── Check boxes ────────────────── #
 
-            self.__lean_mode_checkbox = QCheckBox(_('L∃∀N mode'))
-            self.__lean_mode_checkbox.clicked.connect(self.toggle_lean_mode)
+            self.__text_mode_checkbox = QCheckBox(_('Text mode'))
+            self.__text_mode_checkbox.clicked.connect(self.toggle_text_mode)
             cb_lyt = QHBoxLayout()
             cb_lyt.addStretch()
-            cb_lyt.addWidget(self.__lean_mode_checkbox)
+            cb_lyt.addWidget(self.__text_mode_checkbox)
 
             # ──────────────── Organize widgets ──────────────── #
 
-            self.__lean_mode_checkbox.setChecked(False)
+            self.__text_mode_checkbox.setChecked(False)
             self.__friendly_wgt.show()
             self.__code_wgt.hide()
 
@@ -284,9 +284,9 @@ class ExerciseChooser(AbstractCoExChooser):
         self.set_preview(exercise)
 
     @Slot()
-    def toggle_lean_mode(self):
+    def toggle_text_mode(self):
 
-        if self.__lean_mode_checkbox.isChecked():
+        if self.__text_mode_checkbox.isChecked():
             self.__friendly_wgt.hide()
             self.__code_wgt.show()
         else:
