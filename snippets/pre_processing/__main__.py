@@ -64,39 +64,8 @@ async def main():
     """
     # Choose course and parse it
     course = select_course()
-
-    course_path = course.course_path
-    directory_name = course_path.parent
-    course_hash = hash(course.file_content)
-
-    # search for pkl file, and compare contents
-    # so that only unprocessed statements will be processed
-    unprocessed_statements = []
-    filename = course_path.stem + '.pkl'
-    course_pkl_path = directory_name.joinpath(Path(filename))
-    log.debug(f"Checking for {course_pkl_path}")
-    if course_pkl_path.exists():
-        [stored_course] = pickled_items(course_pkl_path)
-        stored_hash = hash(stored_course.file_content)
-        log.debug(f"Found '.pkl' file, hash = {stored_hash} vs {course_hash}")
-        if stored_hash == course_hash or True:    # FIXME !!!
-            log.info("pkl content file is up to date")
-            course = stored_course  # new proof_state will be added to stored
-            for statement in stored_course.statements:
-                name = statement.pretty_name
-                if hasattr(statement, 'initial_proof_state') \
-                        and not (statement.initial_proof_state is None):
-                    log.info(f"Found initial_roof_state for {name}")
-                else:
-                    log.info(f"NO initial_roof_state found for {name}")
-                    unprocessed_statements.append(statement)
-        else:
-            log.info(f"pkl content file is NOT up to date: "
-                     f"course hash ={course_hash}")
-            unprocessed_statements = course.statements
-    else:
-        log.debug("File '.pkl' does not exist")
-        unprocessed_statements = course.statements
+    # check for pkl file and, if it exists, find all unprocessed statements
+    course, unprocessed_statements, course_pkl_path = check_statements(course)
 
     if not unprocessed_statements:
         log.info("pkl fle is up_to_date with all initial_proof_states")
@@ -106,7 +75,7 @@ async def main():
     else:
         log.info(f"Still {len(unprocessed_statements)} statements to process")
 
-
+    # confirm before processing file
     print("Processing? (y/n)")
     answer = input()
     if answer == 'y':
@@ -130,11 +99,58 @@ async def main():
                                        )
         finally:
             servint.stop()  # Good job, buddy
-            h = hash(course.file_content)
             save_objects([course], course_pkl_path)
 
         # Checking
         read_data(course_pkl_path)
+
+
+def check_statements(course):
+    """
+    Check every statement of course for initial_proof_state attribute
+
+    :param course: Course
+
+    :return:    1) a Course instance, with some preprocessed statement
+            (if a pkl file have been found with the good file content)
+                2) list of statements without initial_proof_state attribute
+                3) path for pkl version of the course (whether the file exists
+                or not)
+    """
+    course_path = course.course_path
+    directory_name = course_path.parent
+    course_hash = hash(course.file_content)
+
+    # search for pkl file, and compare contents
+    # so that only unprocessed statements will be processed
+    unprocessed_statements = []
+    filename = course_path.stem + '.pkl'
+    course_pkl_path = directory_name.joinpath(Path(filename))
+    log.debug(f"Checking for {course_pkl_path}")
+    if course_pkl_path.exists():
+        [stored_course] = pickled_items(course_pkl_path)
+        stored_hash = hash(stored_course.file_content)
+        log.debug(f"Found '.pkl' file, hash = {stored_hash} vs {course_hash}")
+        if stored_hash == course_hash or True:    # FIXME !!!
+            # log.info("pkl content file is up to date")
+            # we want the statements already processed to be conserved:
+            course = stored_course
+            for statement in course.statements:
+                name = statement.pretty_name
+                if hasattr(statement, 'initial_proof_state') \
+                        and statement.initial_proof_state is not None:
+                    log.info(f"found initial_proof_state for {name}")
+                else:
+                    unprocessed_statements.append(statement)
+                    log.info(f"NO initial_proof_state for {name}")
+        else:
+            log.info(f"pkl content file is NOT up to date: "
+                     f"course hash ={course_hash}")
+            unprocessed_statements = course.statements
+    else:
+        log.debug("File '.pkl' does not exist")
+        unprocessed_statements = course.statements
+    return course, unprocessed_statements, course_pkl_path
 
 
 async def get_all_proof_states(servint,
@@ -143,18 +159,16 @@ async def get_all_proof_states(servint,
                                course_pkl_path):
     """
     for each statement to process,
-    initialize servint with the statement,
-    get initial proof_state,
-    store it as a statement attribute
-
+        initialize servint with the statement,
+        get initial proof_state,
+        store it as a statement attribute
     Save the course in the course_pkl_path every 5 statements
-
-    todo: save every 5 statements
     """
     counter = 0
     for statement in statements_to_process:
         counter += 1
-        await get_proof_state(servint, statement)
+        await servint.exercise_set(statement)
+        # proof_state is now stored as servint.proof_state
         log.info(f"Got proof state of statement "
                  f"{statement.pretty_name}, n"
                  f"°{counter}")
@@ -168,32 +182,9 @@ async def get_all_proof_states(servint,
             save_objects([course], course_pkl_path)
             await servint.start()
 
-# async def get_exercises_proof_states(servint, course):
-#     counter = 0
-#     for exercise in course.statements:
-#         if isinstance(exercise, Exercise):
-#             counter += 1
-#             await get_proof_state(servint, exercise)
-#             log.info(f"Got proof state of exercise "
-#                      f"{exercise.pretty_name}, n"
-#                      f"°{counter}")
-#             exercise.initial_proof_state = servint.proof_state
-#
-#             # stop and restart server every 5 exercises to avoid
-#             # too long messages that entail crashing
-#             if counter % 5 == 0:
-#                 servint.stop()
-#                 await servint.start()
-
-
-async def get_proof_state(servint, exercise):
-    await servint.exercise_set(exercise)
-    # proof_state is stored as servint.proof_state
-
 
 def save_objects(objects: list, filename):
-    with filename.open(mode='wb') as output:  # Overwrites any existing
-        # file.
+    with filename.open(mode='wb') as output:  # Overwrites any existing file
         for obj in objects:
             pickle.dump(obj, output, pickle.HIGHEST_PROTOCOL)
 
@@ -225,9 +216,6 @@ def read_data(filename):
             print(f"Definition: {st.pretty_name}")
             goal = st.initial_proof_state.goals[0]
             print(goal.goal_to_text(to_prove=False))
-            print(f"Caption: {st.caption}")
-
-
 
 
 if __name__ == '__main__':

@@ -63,7 +63,7 @@ curl -o "mathlib.tar.xz" "${URL}"
 ###############################
 echo ">> Extract to $(pwd)/share/mathlib folder"
 mkdir -p "share/mathlib"
-tar xaf "mathlib.tar.xz" -C "share/mathlib"
+tar xjf "mathlib.tar.xz" -C "share/mathlib"
 rm "mathlib.tar.xz"
 
 popd

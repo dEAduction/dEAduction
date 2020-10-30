@@ -698,7 +698,7 @@ lemma exercise.bijective_ssi_injective_et_surjective :
 :=
 /- dEAduction
 PrettyName
-    (+) "Bijectif" équivaut à "injectif et surjectif"
+    (*) "Bijectif" équivaut à "injectif et surjectif"
 -/
 begin
     sorry
