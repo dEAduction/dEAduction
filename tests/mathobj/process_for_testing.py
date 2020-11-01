@@ -131,10 +131,13 @@ def check_statements(course):
                 info = False
                 if hasattr(statement, 'initial_proof_state') \
                         and statement.initial_proof_state is not None:
+                    proof_state = statement.initial_proof_state
                     goal = statement.initial_proof_state.goals[0]
                     if hasattr(goal, 'text') \
                             and hasattr(goal, 'display_context') \
-                            and hasattr(goal, 'display_target'):
+                            and hasattr(goal, 'display_target') \
+                            and hasattr(proof_state, 'lean_data') \
+                            and proof_state.lean_data is not None:
                         log.info(f"found infos for {name}")
                         info = True
                 if not info:

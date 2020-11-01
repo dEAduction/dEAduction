@@ -31,7 +31,7 @@ from pathlib import Path
 import os
 
 from deaduction.pylib.coursedata import Course
-from deaduction.pylib.mathobj import MathObject
+from deaduction.pylib.mathobj import MathObject, ProofState
 
 
 @pytest.fixture
@@ -46,6 +46,19 @@ def course():
 @pytest.fixture
 def statements(course):
     return course.statements
+
+
+@pytest.fixture
+def lean_data_list(course):
+    statements = course.statements
+    lean_data_list = [st.initial_proof_state.lean_data for st in statements]
+    return lean_data_list
+
+
+@pytest.fixture
+def proof_states(statements):
+    proof_states = [st.initial_proof_state for st in statements]
+    return proof_states
 
 
 @pytest.fixture
@@ -86,14 +99,30 @@ def target_displays(goals):
 ############################
 # test MathObject creation #
 ############################
+def test_math_objects_creation(proof_states, lean_data_list):
+    """
+    Test ProofState.from_lean_data,
+    i.e. creation of a ProofState from the lean_data strings
+    hypo_analysis, targets_analysis
+    which include
+        - lean_analysis_with_type  (which parses the lean data)
+        - MathObject.from_info_and_children (which creates the MathObject)
+    """
+    for (proof_state, lean_data) in zip (proof_states, lean_data_list):
+        hypo_analysis, target_analysis = lean_data
+        computed = ProofState.from_lean_data(hypo_analysis, target_analysis)
+        assert proof_state == computed
 
 
 ###########################
 # test MathObject display #
 ###########################
-
-
 def test_display_contexts(contexts, context_displays):
+    """
+    test MathObject.format_as_utf8()
+    which creates a displayable version of MathObjects
+    this tests all the content of display_math.py
+    """
     for (context, displays) in zip(contexts, context_displays):
         for (math_object, display) in zip(context, displays):
             (display_object, display_type) = display
@@ -103,6 +132,9 @@ def test_display_contexts(contexts, context_displays):
 
 
 def test_display_targets(targets, target_displays):
+    """
+    like test_display_contexts, but with another set of data (targets)
+    """
     for (target, display) in zip(targets, target_displays):
         assert display == target.math_type.format_as_utf8(is_math_type=True)
 

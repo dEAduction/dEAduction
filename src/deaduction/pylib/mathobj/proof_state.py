@@ -289,6 +289,7 @@ def instantiate_bound_var(math_type, name: str):
 @dataclass
 class ProofState:
     goals: List[Goal]
+    lean_data: Tuple[str] = None
 
     @classmethod
     def from_lean_data(cls, hypo_analysis: str, targets_analysis: str):
@@ -313,7 +314,7 @@ class ProofState:
             other_goal = Goal.from_lean_data(hypo_analysis="",
                                              target_analysis=other_string_goal)
             goals.append(other_goal)
-        return cls(goals)
+        return cls(goals, (hypo_analysis, targets_analysis))
 
 
 @dataclass
