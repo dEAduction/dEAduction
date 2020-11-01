@@ -3,6 +3,22 @@
 # __main__.py :  Compute and save objects for future unitary tests #
 ####################################################################
 
+This files creates an instance of the class Course, from the Lean file
+lean_files/exercises_theorie_des_ensembles.lean
+and save it in the file lean_files/exercises_theorie_des_ensembles.pkl.
+
+The statements in course.statements have attributes
+statement.initial_proof_states
+statement.initial_proof_states.lean_data
+= (hypo_analysis, target_analysis)
+goal = statement.initial_proof_state.goals[0]
+goal.context
+goal.display_context
+goal.target
+goal.display_target
+
+which are loaded and used in test_mathobject.py
+
 
 Author(s)      : - Frédéric Le Roux <frederic.le_roux@imj-prg.fr>
 
