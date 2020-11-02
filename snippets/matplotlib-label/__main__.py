@@ -22,6 +22,8 @@ def mathTex_to_QPixmap(mathTex, fs):
     ax = fig.add_axes([0, 0, 1, 1])
     ax.axis('off')
     ax.patch.set_facecolor('none')
+    # set font to 'computer modern':
+    mpl.rcParams['mathtext.fontset'] = 'cm'
     t = ax.text(0, 0, f"${mathTex}$", ha='left', va='bottom', fontsize=fs)
 
     #---- fit figure size to text artist ----
