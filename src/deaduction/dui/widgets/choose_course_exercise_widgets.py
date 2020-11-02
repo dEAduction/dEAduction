@@ -45,6 +45,7 @@ from PySide2.QtWidgets import ( QApplication,
                                 QLineEdit,
                                 QListWidget,
                                 QPushButton,
+                                QTabWidget,
                                 QTextEdit,
                                 QVBoxLayout,
                                 QWidget )
@@ -69,11 +70,11 @@ def read_pkl_course(course_path: Path) -> Course:
     return course
 
 
-class AbstractCoExChooser(QGroupBox):
+class AbstractCoExChooser(QWidget):
 
-    def __init__(self, title: str, browser_layout: QLayout):
+    def __init__(self, browser_layout: QLayout):
 
-        super().__init__(title)
+        super().__init__()
         
         nothing_to_preview = QWidget()
         nothing_to_preview_lyt = QVBoxLayout()
@@ -102,7 +103,12 @@ class AbstractCoExChooser(QGroupBox):
             title_wgt = QLabel(title)
             title_wgt.setStyleSheet('font-weight: bold;')
 
-            layout.addWidget(title_wgt)
+            title_lyt = QHBoxLayout()
+            title_lyt.addStretch()
+            title_lyt.addWidget(title_wgt)
+            title_lyt.addStretch()
+
+            layout.addLayout(title_lyt)
 
         if subtitle:
             subtitle_wgt = QLabel(subtitle)
@@ -122,6 +128,7 @@ class AbstractCoExChooser(QGroupBox):
         if description:
             # TODO: Make text unselectable
             description_wgt = QTextEdit(description)
+            description_wgt.setReadOnly(True)
 
             layout.addWidget(description_wgt)
 
@@ -149,7 +156,7 @@ class CourseChooser(AbstractCoExChooser):
         browser_lyt.addWidget(self.browse_btn)
         browser_lyt.addWidget(self.previous_courses_wgt)
 
-        super().__init__(_('Choose course (browse and preview)'), browser_lyt)
+        super().__init__(browser_lyt)
 
     def set_preview(self, course: Course):
 
@@ -187,8 +194,7 @@ class ExerciseChooser(AbstractCoExChooser):
 
         exercises_tree.itemClicked.connect(self.__call_set_preview)
 
-        super().__init__(_('Choose exercise from selected course (browse and '\
-                           'preview)'), browser_layout)
+        super().__init__(browser_layout)
 
     def set_preview(self, exercise: Exercise):
 
@@ -280,8 +286,9 @@ class ExerciseChooser(AbstractCoExChooser):
 
     @Slot(StatementsTreeWidgetItem)
     def __call_set_preview(self, item: StatementsTreeWidgetItem):
-        exercise = item.statement
-        self.set_preview(exercise)
+        if isinstance(item, StatementsTreeWidgetItem):
+            exercise = item.statement
+            self.set_preview(exercise)
 
     @Slot()
     def toggle_text_mode(self):
@@ -298,17 +305,16 @@ class DuiLauncher(QWidget):
     def __init__(self):
 
         super().__init__()
-        self.setWindowTitle(_('d∃∀duction — Choose course and exercise'))
+        self.setWindowTitle(_('Choose course and exercise — d∃∀duction'))
 
         self.__course_chooser = CourseChooser()
         self.__exercise_chooser = QWidget()
 
         # ───────────────────── Layouts ──────────────────── #
 
-        self.__coex_lyt = QVBoxLayout()
-        self.__coex_lyt.addWidget(self.__course_chooser)
-        # TODO: Add space
-        self.__coex_lyt.addWidget(self.__exercise_chooser)
+        self.__coex_tabwidget = QTabWidget()
+        self.__coex_tabwidget.addTab(self.__course_chooser, _('Course'))
+        self.__coex_tabwidget.addTab(self.__exercise_chooser, _('Exercise'))
 
         buttons_lyt = QHBoxLayout()
         buttons_lyt.addStretch()
@@ -316,14 +322,15 @@ class DuiLauncher(QWidget):
         buttons_lyt.addWidget(QPushButton(_('Load goal')))
         buttons_lyt.addWidget(QPushButton(_('Start exercise')))
 
-        self.__mlyt = QVBoxLayout()
-        self.__mlyt.addLayout(self.__coex_lyt)
-        self.__mlyt.addLayout(buttons_lyt)
+        main_layout = QVBoxLayout()
+        main_layout.addWidget(self.__coex_tabwidget)
+        main_layout.addLayout(buttons_lyt)
 
-        self.setLayout(self.__mlyt)
+        self.setLayout(main_layout)
 
-        # ────────────────────── Slots ───────────────────── #
+        # ───────────────────── Others ───────────────────── #
 
+        self.__coex_tabwidget.setTabEnabled(1, False)
         self.__course_chooser.browse_btn.clicked.connect(self.__browse_courses)
 
     @Slot()
@@ -345,15 +352,11 @@ class DuiLauncher(QWidget):
             self.__set_course(course, course_filetype)
 
     def __set_course(self, course: Course, course_filetype: str):
+        self.__coex_tabwidget.removeTab(1)
+        self.__coex_tabwidget.setTabEnabled(1, True)
         self.__course_chooser.set_preview(course)
-        exercise_chooser = ExerciseChooser(course, course_filetype)
-        self.__mlyt.replaceWidget(self.__exercise_chooser, exercise_chooser)
-        self.__exercise_chooser.deleteLater()
-        self.__exercise_chooser = exercise_chooser
-
-    # @Slot(Exercise)
-    # def __set_exercise(self, exercise: Exercise):
-    #     self.__exercise_chooser.set_preview(exercise)
+        self.__exercise_chooser = ExerciseChooser(course, course_filetype)
+        self.__coex_tabwidget.addTab(self.__exercise_chooser, _('Exercise'))
 
 
 if __name__ == '__main__':
