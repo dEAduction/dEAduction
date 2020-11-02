@@ -40,6 +40,8 @@ from deaduction.pylib.coursedata.exercise_classes import (Exercise, Definition,
                                                           Theorem, Statement)
 import deaduction.pylib.coursedata.parser_course as parser_course
 
+log = logging.getLogger(__name__)
+
 
 @dataclass
 class Course:
@@ -89,7 +91,6 @@ class Course:
 
         :param course_dir_path: name of directory
         """
-        log = logging.getLogger("Course initialisation")
         statements = []
         outline = {}
         begin_counter = 0

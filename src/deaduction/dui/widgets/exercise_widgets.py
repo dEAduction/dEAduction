@@ -488,7 +488,7 @@ class ExerciseMainWindow(QMainWindow):
             goals_counter_evolution \
             = self.count_goals()
         goal_count = f'  {current_goal_number} / {total_goals_counter}'
-        log.debug(f"Goal  {goal_count}")
+        #log.debug(f"Goal  {goal_count}")
         if goals_counter_evolution < 0 and current_goals_counter != 0:
             # todo: do not display when undo
             log.info(f"Current goal solved!")
@@ -623,7 +623,7 @@ class ExerciseMainWindow(QMainWindow):
 
         action = action_btn.action
         user_input = []
-        log.info(f'Calling action {action.symbol}')
+        log.debug(f'Calling action {action.symbol}')
         # Send action and catch exception when user needs to:
         #   - choose A or B when having to prove (A OR B) ;
         #   - enter an element when clicking on 'exists' button.
@@ -654,7 +654,7 @@ class ExerciseMainWindow(QMainWindow):
                 await self.display_WrongUserInput(e)
                 break
             else:
-                log.debug("Code sent to lean: " + code)
+                log.info("Code sent to lean: " + code)
                 await self.servint.code_insert(action.symbol, code)
                 break
 

@@ -39,6 +39,7 @@ from deaduction.pylib import        logger
 from deaduction.pylib.server import ServerInterface
 from deaduction.config import _  # for translation
 
+
 log = logging.getLogger(__name__)
 
 
@@ -71,5 +72,24 @@ async def main():
 
 
 if __name__ == '__main__':
-    logger.configure(debug=True)
+    # list of names of modules whose logs should not be printed
+    all_domains = ['lean',
+               'ServerInterface',
+               'Course',
+               'deaduction.dui',
+               'deaduction.pylib.coursedata',
+               'deaduction.pylib.mathobj'
+               ]
+    domains = ['lean',
+               'ServerInterface',
+               'Course',
+               'deaduction.pylib.coursedata',
+               'deaduction.pylib.mathobj'
+               ]
+    # if suppress=False, only logs from modules in 'domains' will printed
+    # if suppress=True, only logs NOT from modules in 'domains' will be printed
+    logger.configure(debug=True,
+                     domains=domains,
+                     suppress=True)
+
     qtrio.run(main)

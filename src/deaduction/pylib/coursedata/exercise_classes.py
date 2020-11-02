@@ -203,7 +203,7 @@ class Exercise(Theorem):
         :param statements: list of all Statement instances until the current
         exercise
         :param data: a dictionary whose keys =
-        fields parsed by the from_directory function
+        fields parsed by the Course.from_file method
         TODO: change definitions into Definitions object
         """
         log = logging.getLogger("Course initialisation")
