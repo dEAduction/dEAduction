@@ -56,11 +56,12 @@ class Course:
     - the "outline" of the course, an ordered dict describing namespaces
     - a list of all statements
     """
-    course_path:            Path
     file_content:           str
     metadata:               Dict[str, str]
     outline:                OrderedDict
     statements:             List[Statement]
+    course_path:            Path = None
+
     # outline description:
     #   keys = lean complete namespaces,
     #   values = corresponding plain language namespace
@@ -81,22 +82,35 @@ class Course:
                      if isinstance(item, Exercise)]
         return exercises
 
+
     @classmethod
     def from_file(cls, course_path: Path):
         """
-        instantiate a Course object by parsing every lean files
-        in course_dir_path
+        instanciate a Course object from the provided file
+
+        :param course_dir_path: name of directory
+        :return: a Course instance
+        """
+        log.info(f"Parsing file {str(course_path.resolve())}")
+        file_content = course_path.read_text()
+        course = Course.from_file_content(file_content)
+        course.course_path = course_path
+        return course
+
+    @classmethod
+    def from_file_content(cls, file_content: str):
+        """
+        instantiate a Course object by parsing file_content
         data fields to be parsed must start with "/- dEAduction"
         and end with "-/"
 
-        :param course_dir_path: name of directory
+        :param file_content: str to be parsed
+        :return: a Course instance
         """
         statements = []
         outline = {}
         begin_counter = 0
         begin_found = True
-        log.info(f"Parsing file {str(course_path.resolve())}")
-        file_content = course_path.read_text()
         ########################
         # Parsimonious's magic #
         ########################
@@ -180,8 +194,7 @@ class Course:
             continue
 
         # Creating the course
-        course = cls(course_path,
-                     file_content,
+        course = cls(file_content,
                      course_metadata,
                      outline,
                      statements)
