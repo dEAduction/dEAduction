@@ -698,7 +698,7 @@ lemma exercise.bijective_ssi_injective_et_surjective :
 :=
 /- dEAduction
 PrettyName
-    (*) "Bijectif" équivaut à "injectif et surjectif"
+    (+) "Bijectif" équivaut à "injectif et surjectif"
 -/
 begin
     sorry
@@ -727,6 +727,18 @@ PrettyName
 begin
     sorry
 end
+
+lemma exercise.Cantor :
+∀ f : X → set X, ¬ surjective f
+:=
+/- dEAduction
+PrettyName
+    (+) Théorème de Cantor : il n'y a pas de surjection d'un ensemble vers l'ensemble de ses parties
+-/
+begin
+    sorry
+end
+
 
 
 end exercices
@@ -1007,6 +1019,7 @@ end
 
 
 end applications
+
 
 end exercices_supplementaires
 
