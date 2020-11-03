@@ -26,8 +26,12 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .MathObject import MathObject
-from .proof_state import Goal, ProofState, Proof
-from .give_name import (get_new_hyp,
-                        give_global_name, give_local_name,
-                        )
+from .MathObject import     MathObject
+from .proof_state import    (Goal,
+                             ProofState,
+                             Proof
+                             )
+from .give_name import     (get_new_hyp,
+                            give_global_name,
+                            give_local_name,
+                            )
