@@ -38,6 +38,7 @@ import deaduction.pylib.actions.proofs
 import deaduction.pylib.actions.magic
 from deaduction.pylib.mathobj.proof_state import Goal
 
+log = logging.getLogger(__name__)
 
 @dataclass
 class Statement:
@@ -67,7 +68,6 @@ class Statement:
         :param data: a dictionary whose keys =
         fields parsed by the from_directory function
         """
-        log = logging.getLogger("Course initialisation")
         data.setdefault("text_book_identifier", "NOT IMPLEMENTED")
         data.setdefault("lean_variables", "NOT IMPLEMENTED")
         data.setdefault("description", "NOT PROVIDED")
@@ -83,23 +83,6 @@ class Statement:
                    lean_begin_line_number=0,
                    lean_end_line_number=0,
                    course=None)
-
-    # def caption(self):
-    #     """
-    #     Return a displayable version of the initial target
-    #     We look for the best possible version, given the available information
-    #     """
-    #     self.log.debug("Setting caption")
-    #     if hasattr(self, "initial_proof_state") \
-    #             and self.initial_proof_state is not None:
-    #         target = self.initial_proof_state.goals[0].target
-    #         text = target.math_type.format_as_utf8(is_math_type=True)
-    #     elif hasattr(self, "lean_statement_body") \
-    #             and self.lean_statement_body is not None:
-    #         text = self.lean_statement_body
-    #     else:
-    #         text = self.lean_statement
-    #     return text
 
     @property
     def statement_to_text(self):

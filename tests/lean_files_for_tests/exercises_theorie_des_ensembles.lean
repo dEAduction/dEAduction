@@ -1,3 +1,6 @@
+/- WARNING: this file is used for automatic testing,
+and should not be modified! -/
+
 -- import data.set
 import tactic
 

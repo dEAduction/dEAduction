@@ -68,14 +68,14 @@ async def main():
     log.info('Starting, loading lean file, computing objects, and storing')
     # Choose course and parse it
     dir = os.path.join(os.path.dirname(__file__))
-    course_path = dir / Path('lean_files/exercises_theorie_des_ensembles.lean')
+    course_path = dir / Path('exercises_theorie_des_ensembles.lean')
     course = Course.from_file(course_path)
 
     # check for pkl file and, if it exists, process all statements
     course, unprocessed_statements, course_pkl_path = check_statements(course)
 
     if not unprocessed_statements:
-        log.info("pkl fle is up_to_date with all initial_proof_states")
+        log.info("pkl file is up_to_date with all initial_proof_states")
         # Checking
         course = read_data(course_pkl_path)
         return
