@@ -68,7 +68,7 @@ async def main():
     log.info('Starting, loading lean file, computing objects, and storing')
     # Choose course and parse it
     dir = os.path.join(os.path.dirname(__file__))
-    course_path = dir / Path('exercises_theorie_des_ensembles.lean')
+    course_path = dir / Path('exercises_for_tests.lean')
     course = Course.from_file(course_path)
 
     # check for pkl file and, if it exists, process all statements

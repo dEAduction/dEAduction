@@ -36,7 +36,7 @@ def course():
     from tests.lean_files_for_tests.process_for_testing import pickled_items
     dir = os.path.join(os.path.dirname(__file__))
     pkl_path = dir / Path(
-        'lean_files_for_tests/exercises_theorie_des_ensembles.pkl')
+        'lean_files_for_tests/exercises_for_tests.pkl')
     [stored_course] = pickled_items(pkl_path)
     return stored_course
 

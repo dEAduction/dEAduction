@@ -83,6 +83,7 @@ class Statement:
 
     @classmethod
     def attributes(cls):
+        """return the list of attributes of the class"""
         return cls.__annotations__.keys()
 
     @property
@@ -175,7 +176,7 @@ class Theorem(Statement):
 class Exercise(Statement):
     available_logic:            List[Action] = None
     available_magic:            List[Action] = None
-    available_proof:           List[Action] = None
+    available_proof:            List[Action] = None
     available_statements:       List[Statement] = None
     expected_vars_number:       Dict[str, int] = None  # {'X': 3, 'A': 1}
 
@@ -183,14 +184,16 @@ class Exercise(Statement):
     def from_parser_data(cls, data: dict, statements: list):
         """
         Create an Exercise from the raw data obtained by the parser
+        The main task is to determine
+        - the list of available_statements,
+        - the list of available actions
+        from the metadata. Both lists are computed analogously.
 
         :param statements: list of all Statement instances until the current
         exercise
         :param data: a dictionary whose keys =
         fields parsed by the Course.from_file method
-        TODO: change definitions into Definitions object
         """
-        #split_macro_lists(data)
 
         ########################
         # expected_vars_number #
@@ -225,19 +228,26 @@ class Exercise(Statement):
                 continue  # DO NOT add all statements!
 
             elif field_name not in data.keys():
-                data[field_name] = '$UNTIL_NOW'
+                data[field_name] = '$UNTIL_NOW'  # default value
 
+            # (Step 1) substitute macros in string
             string = substitute_macros(data[field_name], data)
-            # this is still a string with macro names that should either
-            # be '$ALL' or in data.keys() with values in Statements
+            # this is still a string containing
+            # (a) macro names that should either be '$ALL'
+            # or in data.keys() with values in Statements,
+            # and (b) usual names describing statements
+
             statement_callable = make_statement_callable(statement_type,
                                                          statements)
             # this is the function that computes Statements from names
             # we can now compute the available_actions:
+
+            # (Step 2) replace every word in string by the corresponding
+            # statement or list of statement
             more_statements = extract_list(string, data, statement_callable)
             unsorted_statements.extend(more_statements)
 
-        # finally sort statements:
+        # finally sort statements: this is not optimised!!
         data['available_statements'] = []
         for item in statements:
             if item in unsorted_statements:
@@ -299,6 +309,10 @@ class Exercise(Statement):
         index = statements.index(name)
         return statements[:index]
 
+
+#############
+# utilities #
+#############
 
 def make_action_callable(prefix) -> callable:
     """

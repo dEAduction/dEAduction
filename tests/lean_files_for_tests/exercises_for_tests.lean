@@ -1,6 +1,3 @@
-/- WARNING: this file is used for automatic testing,
-and should not be modified! -/
-
 -- import data.set
 import tactic
 
@@ -23,14 +20,25 @@ import notations_definitions
 -- proof methods names ['cbr', 'contrapose', 'absurdum', 'sorry']
 
 
+/- MACROS
+user macros must start with '$',    e.g.:
+$FAMILY_STATEMENT
+    union_quelconque_ensembles intersection_quelconque_ensembles
+                                    and then:
+AvailableDefinitions
+    $UNTIL_NOW -$FAMILY_STATEMENT
+-/
+
 
 /- dEAduction
 Author
     Frédéric Le Roux
 Institution
     Université de France
-DefaultAvailableProofs
-    $ALL - new_object
+DefaultAvailableProof
+    $ALL
+$FAMILY_STATEMENT
+    union_quelconque_ensembles intersection_quelconque_ensembles
 -/
 
 
@@ -134,6 +142,10 @@ lemma exercise.inclusion_transitive
 /- dEAduction
 PrettyName
     Transitivité de l'inclusion
+AvailableLogic
+    $ALL -iff -exists -negate
+AvailableProof
+    $ALL -use_proof_methods -new_object
 -/
 begin
     sorry
@@ -211,6 +223,8 @@ A ∩ B ⊆ A
 /- dEAduction
 PrettyName
     Un ensemble contient son intersection avec un autre
+AvailableDefinitions
+    $UNTIL_NOW -$FAMILY_STATEMENT
 -/
 begin
     sorry
@@ -223,14 +237,8 @@ PrettyName
     Intersection avec une union
 Description
     L'intersection est distributive par rapport à l'union
-AvailableLogic
-    $ALL
-AvailableProofs
-    $ALL
 AvailableDefinitions
-    $UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles
-AvailableTheorems
-    double_inclusion
+    $UNTIL_NOW -$FAMILY_STATEMENT
 ExpectedVarsNumber
     X=3, A=1, B=1
 -/
@@ -296,7 +304,7 @@ PrettyName
 Description
     Tout ensemble est égal au complémentaire de son complémentaire
 AvailableDefinitions
-    $UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles
+    $UNTIL_NOW -$FAMILY_STATEMENT
 -/
 begin
     sorry
@@ -723,7 +731,7 @@ end
 
 lemma exercise.bijective_ssi_inverse :
 (bijective f) ↔ ∃ g : Y → X,
-composition g f = Identite ∧ composition g f  = Identite
+composition g f = Identite ∧ composition f g  = Identite
 :=
 /- dEAduction
 PrettyName
