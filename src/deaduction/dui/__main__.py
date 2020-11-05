@@ -86,10 +86,11 @@ if __name__ == '__main__':
                'deaduction.pylib.coursedata',
                'deaduction.pylib.mathobj'
                ]
+    dui_only = ['deaduction.dui']
     # if suppress=False, only logs from modules in 'domains' will printed
     # if suppress=True, only logs NOT from modules in 'domains' will be printed
     logger.configure(debug=True,
-                     domains=domains,
-                     suppress=True)
+                     domains=all_domains,
+                     suppress=False)
 
     qtrio.run(main)

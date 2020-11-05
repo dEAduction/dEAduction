@@ -11,6 +11,24 @@ import notations_definitions
 -- but explicit everywhere else, i.e. defined using '()' (e.g. (A : set X) )
 -- each definition must be an iff statement (since it will be called with 'rw' or 'symp_rw')
 
+---------------------
+-- Course metadata --
+---------------------
+-- logic names ['and', 'or', 'negate', 'implicate', 'iff', 'forall', 'exists']
+-- proofs names ['use_proof_methods', 'new_object', 'apply', 'assumption']
+-- TODO: add 'compute'
+-- proof methods names ['cbr', 'contrapose', 'absurdum', 'sorry']
+
+
+
+/- dEAduction
+Author
+    Frédéric Le Roux
+Institution
+    Université de France
+DefaultAvailableProofs
+    $ALL - compute
+-/
 
 
 local attribute [instance] classical.prop_decidable
@@ -73,10 +91,6 @@ PrettyName
 ------------------------
 -- COURSE DEFINITIONS --
 ------------------------
---lemma definition.ssi {P Q : Prop} : (P ↔ Q) ↔ (P → Q) ∧ (Q → P) :=
---begin
---    exact iff_def
---end
 lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, x ∈ A → x ∈ B :=
 begin
     exact iff.rfl
@@ -206,13 +220,13 @@ PrettyName
     Intersection avec une union
 Description
     L'intersection est distributive par rapport à l'union
-Tools->Logic
+AvailableLogic
     $ALL
-Tools->ProofTechniques
+AvailableProofs
     $ALL
-Tools->Definitions
+AvailableDefinitions
     $UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles
-Tools->Theorems
+AvailableTheorems
     double_inclusion
 ExpectedVarsNumber
     X=3, A=1, B=1
@@ -231,7 +245,7 @@ PrettyName
     Union avec une intersection
 Description
     L'union est distributive par rapport à l'intersection
-Tools->Definitions
+AvailableDefinitions
     $UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles
 -/
 begin
@@ -278,7 +292,7 @@ PrettyName
     Complémentaire du complémentaire
 Description
     Tout ensemble est égal au complémentaire de son complémentaire
-Tools->Definitions
+AvailableDefinitions
     $UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles
 -/
 begin
@@ -292,7 +306,7 @@ PrettyName
     Complémentaire d'union I
 Description
     Le complémentaire de l'union de deux ensembles égale l'intersection des complémentaires
-Tools->Definitions
+AvailableDefinitions
     $UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles
 -/
 begin

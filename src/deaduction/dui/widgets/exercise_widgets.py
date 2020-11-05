@@ -119,7 +119,7 @@ class ExerciseCentralWidget(QWidget):
               properties (e.g. f is continuous);
         - the 'action area' widgets:
             - the logic buttons (self.logic_btns);
-            - the proof techniques buttons (self.proof_btns);
+            - the proof buttons (self.proof_btns);
             - the statements tree (self.statements_tree, see
               StatementsTreeWidget.__doc__).
 
@@ -141,7 +141,7 @@ class ExerciseCentralWidget(QWidget):
         for this exercise.
     :attribute objects_wgt MathObjectWidget: Widget for context
         objects (e.g. f:X->Y a function).
-    :attribute proof_btns ActionButtonsWidget: Proof technique buttons
+    :attribute proof_btns ActionButtonsWidget: Proof buttons
         available for this exercise.
     :attribute props_wgt MathObjectWidget: Widget for context
         properties (e.g. f is continuous).
@@ -186,7 +186,7 @@ class ExerciseCentralWidget(QWidget):
 
         self.logic_btns = ActionButtonsWidget(exercise.available_logic)
         self.proof_btns = ActionButtonsWidget(
-                exercise.available_proof_techniques)
+                exercise.available_proofs)
 
         statements           = exercise.available_statements
         outline              = exercise.course.outline
@@ -226,7 +226,7 @@ class ExerciseCentralWidget(QWidget):
     @property
     def actions_buttons(self) -> [ActionButton]:
         """
-        Do not delete! A list of all logic buttons and proof technique
+        Do not delete! A list of all logic buttons and proof
         buttons (instances of the class ActionButton).
         """
 
