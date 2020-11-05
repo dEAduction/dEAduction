@@ -30,7 +30,7 @@ Author
 Institution
     Université de France
 DefaultAvailableProofs
-    $ALL - compute
+    $ALL - new_object
 -/
 
 

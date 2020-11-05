@@ -458,6 +458,9 @@ def change_name(name: str) -> str:
     e.g. PrettyName -> pretty_name
     Used to adapt keys of metadata to PEP8 format
     """
+    if name.startswith('$'):  # macro: do not touch!!
+        return name
+
     upper_case_alphabet = [chr(i) for i in range(65, 91)]
     for letter in upper_case_alphabet:
         name = name.replace(letter, '_' + letter.lower())
@@ -465,7 +468,6 @@ def change_name(name: str) -> str:
     if name.startswith('_'):
         name = name[1:]
     return name
-
 
 #########
 # tests #

@@ -63,12 +63,19 @@ def substitute_macros(string: str, macros: {}) -> str:
     for macro_name in macros:
         if isinstance(macros[macro_name], str):
             new_string = ""
+            macro_string = macros[macro_name]
+            macro_name2 = '$' + macro_name
+            if string.count(macro_name2):
+                macro_name = macro_name2
             if string.count(macro_name):  # found macro_name in string
-                new_string = string.replace(macro_name, macros[macro_name])
-            if string.count('$' + macro_name):
-                new_string = string.replace('$' + macro_name, macros[
-                                            macro_name])
+                n = string.find(macro_name)
+                if string[n-1] == '-':  # minus !
+                    macro_list = separate(macro_string)
+                    macro_string = " -".join(macro_list)
+                    # NB : we keep the preceding minus...
+                new_string = string.replace(macro_name, macro_string)
     if new_string:
+        log.debug(f"changed {string} into {new_string}")
         return substitute_macros(new_string, macros)
     else:  # no macro found
         return string
@@ -109,8 +116,10 @@ def extract_list(string: str, macros: {}, search: callable) -> list:
             if remove:
                 for item in diff_list:
                     if item in final_list:
+                        log.debug(f"removing {len(diff_list)} item(s)")
                         final_list.remove(item)
             else:
+                log.debug(f"adding {len(diff_list)} item(s)")
                 final_list.extend(diff_list)
         else:
             log.warning(f"Found no item for {word} in metadata")

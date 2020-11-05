@@ -36,7 +36,6 @@ import deaduction.pylib.actions.logic
 import deaduction.pylib.actions.proofs
 import deaduction.pylib.actions.magic
 from deaduction.pylib.coursedata.utils import (find_suffix,
-                                               separate,
                                                substitute_macros,
                                                extract_list)
 
@@ -46,6 +45,7 @@ LOGIC_BUTTONS = deaduction.pylib.actions.logic.__actions__
 # e.g. key = action_and, value = corresponding instance of the class Action
 PROOF_BUTTONS = deaduction.pylib.actions.proofs.__actions__
 MAGIC_BUTTONS = deaduction.pylib.actions.magic.__actions__
+
 
 @dataclass
 class Statement:
@@ -172,7 +172,7 @@ class Theorem(Statement):
 
 
 @dataclass
-class Exercise(Theorem):
+class Exercise(Statement):
     available_logic:            List[Action] = None
     available_magic:            List[Action] = None
     available_proof:           List[Action] = None
@@ -221,7 +221,10 @@ class Exercise(Theorem):
                                'exercise',
                                'statement']:
             field_name = 'available_' + statement_type + 's'
-            if field_name not in data.keys():
+            if statement_type == 'statement' and field_name not in data.keys():
+                continue  # DO NOT add all statements!
+
+            elif field_name not in data.keys():
                 data[field_name] = '$UNTIL_NOW'
 
             string = substitute_macros(data[field_name], data)
@@ -241,7 +244,7 @@ class Exercise(Theorem):
                 data['available_statements'].append(item)
 
         names = [st.pretty_name for st in data['available_statements']]
-        log.debug(f"statements: {names}")
+        log.debug(f"Available statements: {names}")
 
         ########################
         # treatment of buttons #
@@ -324,9 +327,9 @@ def make_action_callable(prefix) -> callable:
         if not name.startswith("action_"):
             name = "action_" + name
         action = None
-        if name in LOGIC_BUTTONS:
-            action = LOGIC_BUTTONS[name]
-        return [action]
+        if name in dictionary:
+            action = [dictionary[name]]
+        return action
 
     return action_callable
 
@@ -351,21 +354,21 @@ def make_statement_callable(prefix, statements) -> callable:
         e.g. "union_quelconque" (prefix = "definition)
         ->  Statement whose name endswith definition.union_quelconque
         """
+        log.debug(f"searching {prefix} {name}")
         if name in ['$UNTIL_NOW', 'UNTIL_NOW']:
             available_statements = []
             for statement in statements:
                 if isinstance(statement, class_):
                     available_statements.append(statement)
+                    log.debug(f"considering {statement.pretty_name}...")
             return available_statements
 
         statement = None
         name = prefix + '.' + name
-        index, nb = find_suffix(name,
-                                [item.lean_name for item in
-                                 statements])
+        index, nb = find_suffix(name, [item.lean_name for item in statements])
         if nb > 0:
-            statement = statements[index]
-        return [statement]
+            statement = [statements[index]]
+        return statement
 
     return statement_callable
 
@@ -373,3 +376,5 @@ def make_statement_callable(prefix, statements) -> callable:
 if __name__ == "__main__":
     print(LOGIC_BUTTONS)
     print(PROOF_BUTTONS)
+    print(LOGIC_BUTTONS.keys())
+    print(PROOF_BUTTONS.keys())
