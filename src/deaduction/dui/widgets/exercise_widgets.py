@@ -120,6 +120,7 @@ class ExerciseCentralWidget(QWidget):
         - the 'action area' widgets:
             - the logic buttons (self.logic_btns);
             - the proof buttons (self.proof_btns);
+            - the magic buttons (self.magic_btns), if any
             - the statements tree (self.statements_tree, see
               StatementsTreeWidget.__doc__).
 
@@ -186,6 +187,7 @@ class ExerciseCentralWidget(QWidget):
 
         self.logic_btns = ActionButtonsWidget(exercise.available_logic)
         self.proof_btns = ActionButtonsWidget(exercise.available_proof)
+        self.magic_btns = ActionButtonsWidget(exercise.available_magic)
 
         statements           = exercise.available_statements
         outline              = exercise.course.outline
@@ -202,6 +204,8 @@ class ExerciseCentralWidget(QWidget):
         # Actions
         actions_lyt.addWidget(self.logic_btns)
         actions_lyt.addWidget(self.proof_btns)
+        if exercise.available_magic:
+            actions_lyt.addWidget(self.magic_btns)
         actions_lyt.addWidget(self.statements_tree)
         actions_gb.setLayout(actions_lyt)
 
@@ -229,12 +233,12 @@ class ExerciseCentralWidget(QWidget):
         buttons (instances of the class ActionButton).
         """
 
-        return self.logic_btns.buttons + self.proof_btns.buttons
-
+        return self.logic_btns.buttons \
+               + self.proof_btns.buttons \
+               + self.magic_btns.buttons
     ###########
     # Methods #
     ###########
-
 
     def freeze(self, yes=True):
         """
@@ -251,6 +255,7 @@ class ExerciseCentralWidget(QWidget):
                      self.props_wgt,
                      self.logic_btns,
                      self.proof_btns,
+                     self.magic_btns,
                      self.statements_tree]
         for widget in to_freeze:
             widget.setEnabled(not yes)

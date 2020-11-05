@@ -335,9 +335,10 @@ def make_action_callable(prefix) -> callable:
         '$ALL' -> LOGIC_BUTTONS
         """
         log.debug(f"searching Action {name}")
+        if name in ['NONE', '$NONE']:
+            return []
         if name in ['ALL', '$ALL']:
             return dictionary.values()
-
         if not name.startswith("action_"):
             name = "action_" + name
         action = None
@@ -369,6 +370,8 @@ def make_statement_callable(prefix, statements) -> callable:
         ->  Statement whose name endswith definition.union_quelconque
         """
         log.debug(f"searching {prefix} {name}")
+        if name in ['NONE', '$NONE']:
+            return []
         if name in ['$UNTIL_NOW', 'UNTIL_NOW']:
             available_statements = []
             for statement in statements:
