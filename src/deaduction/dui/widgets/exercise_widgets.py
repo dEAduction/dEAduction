@@ -185,8 +185,7 @@ class ExerciseCentralWidget(QWidget):
         # ──────────────── Init Actions area ─────────────── #
 
         self.logic_btns = ActionButtonsWidget(exercise.available_logic)
-        self.proof_btns = ActionButtonsWidget(
-                exercise.available_proofs)
+        self.proof_btns = ActionButtonsWidget(exercise.available_proof)
 
         statements           = exercise.available_statements
         outline              = exercise.course.outline

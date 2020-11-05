@@ -26,8 +26,6 @@ Author
     Frédéric Le Roux
 Institution
     Université de France
-DefaultAvailableProofs
-    $ALL - compute
 -/
 
 
@@ -720,7 +718,7 @@ end
 
 lemma exercise.bijective_ssi_inverse :
 (bijective f) ↔ ∃ g : Y → X,
-composition g f = Identite ∧ composition g f  = Identite
+composition g f = Identite ∧ composition f g  = Identite
 :=
 /- dEAduction
 PrettyName

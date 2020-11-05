@@ -38,7 +38,6 @@ import deaduction.pylib.actions.magic
 from deaduction.pylib.coursedata.utils import (find_suffix,
                                                separate,
                                                substitute_macros,
-                                               list_arithmetic,
                                                extract_list)
 
 log = logging.getLogger(__name__)
@@ -176,7 +175,7 @@ class Theorem(Statement):
 class Exercise(Theorem):
     available_logic:            List[Action] = None
     available_magic:            List[Action] = None
-    available_proofs:           List[Action] = None
+    available_proof:           List[Action] = None
     available_statements:       List[Statement] = None
     expected_vars_number:       Dict[str, int] = None  # {'X': 3, 'A': 1}
 
@@ -216,36 +215,32 @@ class Exercise(Theorem):
         ###########################
         # treatment of statements #
         ###########################
-        # annotate statements that should be available for this exercise
-        classes = [Definition, Theorem, Exercise, Statement]
-        for class_ in classes:
-            # determine field name
-            prefix = {Definition: 'definition',
-                      Theorem: 'theorem',
-                      Exercise: 'exercise',
-                      Statement: 'statement'}
-            field_name = 'available_' + prefix[class_] + 's'
-            # e.g. available_definitions
+        unsorted_statements = []
+        for statement_type in ['definition',
+                               'theorem',
+                               'exercise',
+                               'statement']:
+            field_name = 'available_' + statement_type + 's'
             if field_name not in data.keys():
-                data[field_name] = "$UNTIL_NOW"  # default value
-            log.debug(f"processing data in {field_name}, {data[field_name]}")
+                data[field_name] = '$UNTIL_NOW'
 
-            list_1 = separate(data[field_name])  # split string
+            string = substitute_macros(data[field_name], data)
+            # this is still a string with macro names that should either
+            # be '$ALL' or in data.keys() with values in Statements
+            statement_callable = make_statement_callable(statement_type,
+                                                         statements)
+            # this is the function that computes Statements from names
+            # we can now compute the available_actions:
+            more_statements = extract_list(string, data, statement_callable)
+            unsorted_statements.extend(more_statements)
 
-            # first step, replace macros, get a list of strings
-            list_2 = cls.replace_macros(list_1, data)
+        # finally sort statements:
+        data['available_statements'] = []
+        for item in statements:
+            if item in unsorted_statements:
+                data['available_statements'].append(item)
 
-            # second step, annotate statements from each class_
-            annotated_statements = cls.annotate_statements(list_2,
-                                                           statements,
-                                                           class_,
-                                                           prefix[class_])
-
-        # last step, extract the good list
-        available_statements = [item for (item, b) in annotated_statements
-                                if b]
-        data['available_statements'] = available_statements
-        names = [st.pretty_name for st in available_statements]
+        names = [st.pretty_name for st in data['available_statements']]
         log.debug(f"statements: {names}")
 
         ########################
@@ -259,15 +254,14 @@ class Exercise(Theorem):
                     data[field_name] = data[default_field_name]
                 else:  # take all buttons
                     data[field_name] = '$ALL'  # not optimal
-            else:  # data[field_name] is specified in lean file
-                log.debug(
-                    f"processing data in {field_name}, {data[field_name]}")
 
-                string = substitute_macros(data[field_name], data)
-                # this is still a string with macro names that should either
-                # be '$ALL' or in data.keys() with values in Action
-                action_callable = make_action_callable(action_type)
-                # this is the function that computes Actions from names
+            log.debug(f"processing data in {field_name}, {data[field_name]}")
+
+            string = substitute_macros(data[field_name], data)
+            # this is still a string with macro names that should either
+            # be '$ALL' or in data.keys() with values in Action
+            action_callable = make_action_callable(action_type)
+            # this is the function that computes Actions from names
             # we can now compute the available_actions:
             data[field_name] = extract_list(string, data, action_callable)
 
@@ -280,89 +274,11 @@ class Exercise(Theorem):
                         for attribute in cls.attributes()}
         extract_data.update(more_data)
 
+        log.debug(f"available_logic: {extract_data['available_logic']}")
+        log.debug(f"available_proof: {extract_data['available_proof']}")
+        log.debug(f"available_statements: "
+                  f"{len(extract_data['available_statements'])}")
         return cls(**extract_data)
-
-    @classmethod
-    def replace_macros(cls, list_1: [], data: {}) -> []:
-        list_2 = []
-        for item in list_1:
-            item = item.strip()
-            if item in ["UNTIL_NOW", "$UNTIL_NOW"]:
-                list_2.append(item)
-                continue
-            elif item.startswith("$"):
-                macro_list=[]
-                if item in data.keys():
-                    macro_list = separate(data[item])
-                elif item[1:] in data.keys():
-                    macro_list = separate(data[item[1:]])
-                else:
-                    log.warning(f"Macro {item} called but no definition found")
-                list_2.extend([item.strip() for item in macro_list])
-                continue
-            elif item.endswith(","):
-                item = item[:-1].strip()
-            if item.startswith("+"):
-                item = item[1:].strip()
-            list_2.append(item)
-        return list_2
-
-
-    @classmethod
-    def annotate_statements(cls, list_2, statements, class_, prefix) -> []:
-        """
-        Decide which statement will be put in the Statement list for the
-        exercise
-
-        :param list_2: list of strings corresponding to statements,
-        except maybe the macro $UNTIL_NOW
-        :param statements: [Statement]
-        :param class_: one of Definition, Theorem, Exercise, Statement
-        :param prefix: str
-        :return: list of annotated statements, i.e. couples
-                (Statement, boolean)
-        """
-        annotated_statements = [(item, False) for item in statements]
-        # annotated_statements and statements must always have the same length
-        # the list of available statements will be those item for which
-        # (item, True) is in annotated_statements
-
-        for item in list_2:
-            item = item.strip()  # remove spaces
-
-            if item in ["UNTIL_NOW", "$UNTIL_NOW"]:
-                # turn all instances of the good class to True
-                for i in range(len(statements)):
-                    item = statements[i]
-                    if isinstance(item, class_):
-                        new_item = (item, True)
-                        annotated_statements[i] = new_item
-            elif item.startswith("-"):
-                # find item in statements and change annotation to False
-
-                item = prefix + "." + item[1:].strip()
-                index, nb = find_suffix(item,
-                                        [item.lean_name for item in
-                                        statements])
-                if nb > 0:
-                    new_item = (statements[index], False)
-                    annotated_statements[index] = new_item
-                else:
-                    log.warning(
-                        f"Cannot remove item {item} from statements")
-            else:
-                # find item in statement and change annotation to True
-                item = prefix + "." + item
-                index, nb = find_suffix(item, [item.lean_name for item in
-                                               statements])
-                if nb > 0:
-                    new_item = (statements[index], True)
-                    annotated_statements[index] = new_item
-                    if nb > 1:
-                        log.warning(f"Found >1 item {item} in statements")
-                else:
-                    log.warning(f"Cannot find item {item} in statements")
-        return annotated_statements
 
     def current_name_space(self):
         current_name_space, _, end = self.lean_name.partition(".exercise.")
@@ -401,6 +317,7 @@ def make_action_callable(prefix) -> callable:
         e.g. 'and' -> [ LOGIC_BUTTONS['action_and'] ]
         '$ALL' -> LOGIC_BUTTONS
         """
+        log.debug(f"searching Action {name}")
         if name in ['ALL', '$ALL']:
             return dictionary.values()
 
@@ -424,7 +341,7 @@ def make_statement_callable(prefix, statements) -> callable:
     classes = {'statement': Statement,
                'definition': Definition,
                'theorem': Theorem,
-               'exercises': Exercise}
+               'exercise': Exercise}
     class_ = classes[prefix]
 
     def statement_callable(name: str) -> [Statement]:
@@ -448,12 +365,11 @@ def make_statement_callable(prefix, statements) -> callable:
                                  statements])
         if nb > 0:
             statement = statements[index]
-        return statement
+        return [statement]
 
-    return [statement_callable]
+    return statement_callable
 
 
 if __name__ == "__main__":
-    print(deaduction.pylib.actions.logic.__actions__.keys())
-    print(deaduction.pylib.actions.proofs.__actions__.keys())
-    print(deaduction.pylib.actions.magic.__actions__.keys())
+    print(LOGIC_BUTTONS)
+    print(PROOF_BUTTONS)

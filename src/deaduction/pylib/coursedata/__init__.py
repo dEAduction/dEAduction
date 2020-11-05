@@ -28,4 +28,4 @@ This file is part of dEAduction.
 
 from .exercise_classes import Definition, Exercise, Statement, Theorem
 from .course import Course
-from .utils import find_suffix, separate, substitute_macros, list_arithmetic
+#from .utils import find_suffix, separate, substitute_macros

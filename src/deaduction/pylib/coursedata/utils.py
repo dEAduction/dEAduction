@@ -95,16 +95,17 @@ def extract_list(string: str, macros: {}, search: callable) -> list:
         elif word.startswith('+'):
             word = word[1:]
         # (2) macro?
-        if '$' + word in macros:
-            word = '$' + word
+        word1 = '$' + word
+        if word1 in macros:
+            word = word1
         if word in macros:
             diff_list = (macros[word])
         else:  # find word
             diff_list = search(word)
             if diff_list is None:
-                diff_list = search('$' + word)  # word could still be a
-                                           # pre-defined macro
-        if diff_list:
+                diff_list = search(word1)  # word could still be a
+                                           # pre-defined macro , e.g. *ALL
+        if diff_list is not None:
             if remove:
                 for item in diff_list:
                     if item in final_list:
@@ -115,66 +116,3 @@ def extract_list(string: str, macros: {}, search: callable) -> list:
             log.warning(f"Found no item for {word} in metadata")
 
     return final_list
-
-
-
-
-def substitute_macros_old(list_: [], macros: {}) -> []:
-    """recursively replace macros in list by their value"""
-    for macro_name in macros:
-        n = None
-        if list_.count(macro_name):  # found macro_name in list_
-            n = list_.index(macro_name)
-        if list_.count('$' + macro_name):
-            n = list_.index('$' + macro_name)
-        if n is not None:  # replace macro_name with
-            list_.pop(n)
-            list_insert(list_, n, macros[macro_name])
-            return substitute_macros(list_, macros)  # recursion
-
-    # no macro found:
-    return list_
-
-
-def list_arithmetic(list_: [str]) -> [str]:
-    """
-    perform "arithmetic" n list_, e.g.
-[banane, pomme, -banane]  -> [pomme]
-    """
-    list_2 = []
-    for item in list_:
-        if item.startswith('+'):
-            list_2.append(item[1:])
-        elif item.startswith('-'):
-            item = item[1:]
-            if list_2.count(item):
-                list_2.remove(item)
-            else:
-                log.warning(f"No {item} found in {list_}")
-        else:
-            list_2.append(item)
-
-    return list_2
-
-
-def extract_list_old(names: [str], search: callable) -> iter:
-    """
-    replace each name by its value in the dictionary
-    """
-    list_ = map(lambda name: search(name), names)
-    return list_
-
-
-def list_insert(list_: [], n: int, macro_value):
-    """
-    insert the list macro_value in list_ at position n
-
-    macro_value is either a list, or a string that has to be split
-    """
-    macro_value = separate(macro_value)  # make sure macro_value is a list
-    counter = 0
-    for item in macro_value:
-        list_.insert(n+counter, item)
-        counter += 1  # insert in the right order
-
-
