@@ -44,6 +44,7 @@ from PySide2.QtWidgets import ( QApplication,
                                 QLayout,
                                 QLineEdit,
                                 QListWidget,
+                                QSpacerItem,
                                 QPushButton,
                                 QTabWidget,
                                 QTextEdit,
@@ -77,17 +78,22 @@ class AbstractCoExChooser(QWidget):
         super().__init__()
         
         nothing_to_preview = QWidget()
+        nothing_to_preview_lbl = QLabel(_('Nothing to preview'))
+        nothing_to_preview_lbl.setStyleSheet('color: gray;')
+
         nothing_to_preview_lyt = QVBoxLayout()
         nothing_to_preview_lyt.addStretch()
-        nothing_to_preview_lyt.addWidget(QLabel(_('Nothing to preview')))
+        nothing_to_preview_lyt.addWidget(nothing_to_preview_lbl)
         nothing_to_preview_lyt.addStretch()
         nothing_to_preview.setLayout(nothing_to_preview_lyt)
 
         self.__preview_wgt = nothing_to_preview
 
-        self.__main_layout = QHBoxLayout()
+        self.__main_layout = QVBoxLayout()
         self.__main_layout.addLayout(browser_layout)
+        self.__main_layout.addItem(QSpacerItem(1, 30))
         self.__main_layout.addWidget(self.__preview_wgt)
+        self.__main_layout.addItem(QSpacerItem(1, 5))
 
         self.setLayout(self.__main_layout)
 
@@ -101,7 +107,8 @@ class AbstractCoExChooser(QWidget):
 
         if title:
             title_wgt = QLabel(title)
-            title_wgt.setStyleSheet('font-weight: bold;')
+            title_wgt.setStyleSheet('font-weight: bold;' \
+                                    'font-size:   18pt;')
 
             title_lyt = QHBoxLayout()
             title_lyt.addStretch()
@@ -113,7 +120,7 @@ class AbstractCoExChooser(QWidget):
         if subtitle:
             subtitle_wgt = QLabel(subtitle)
             subtitle_wgt.setStyleSheet('font-style: italic;' \
-                                       'color: gray;')
+                                       'color:      gray;')
             subtitle_lyt = QHBoxLayout()
             subtitle_lyt.addWidget(title_wgt)
             subtitle_lyt.addWidget(subtitle_wgt)
@@ -190,6 +197,8 @@ class ExerciseChooser(AbstractCoExChooser):
         browser_layout = QVBoxLayout()
         exercises_tree = StatementsTreeWidget(course.exercises_list(),
                                               course.outline)
+        exercises_tree.resizeColumnToContents(0)
+        # TODO: Expand items (write function in StatementsTreeWidget)
         browser_layout.addWidget(exercises_tree)
 
         exercises_tree.itemClicked.connect(self.__call_set_preview)
@@ -233,7 +242,6 @@ class ExerciseChooser(AbstractCoExChooser):
 
             self.__friendly_wgt = QWidget()
             friendly_wgt_lyt = QVBoxLayout()
-            friendly_wgt_lyt.setContentsMargins(0, 0, 0, 0)
             friendly_wgt_lyt.addLayout(propobj_lyt)
             friendly_wgt_lyt.addWidget(QLabel(_('Target:')))
             friendly_wgt_lyt.addWidget(target_wgt)
@@ -246,13 +254,19 @@ class ExerciseChooser(AbstractCoExChooser):
             self.__code_wgt.setFont(QFont('Menlo'))
             # TODO: Set value
 
-            # ─────────────────── Check boxes ────────────────── #
+            # ──────────────────── Checkbox ──────────────────── #
 
             self.__text_mode_checkbox = QCheckBox(_('Text mode'))
             self.__text_mode_checkbox.clicked.connect(self.toggle_text_mode)
             cb_lyt = QHBoxLayout()
             cb_lyt.addStretch()
             cb_lyt.addWidget(self.__text_mode_checkbox)
+
+            # ──────────────── Contents margins ──────────────── #
+
+            for lyt in [widget_lyt, friendly_wgt_lyt]:
+                # Somehow this works…
+                lyt.setContentsMargins(0, 0, 0, 0)
 
             # ──────────────── Organize widgets ──────────────── #
 
@@ -276,7 +290,7 @@ class ExerciseChooser(AbstractCoExChooser):
 
         widget.setLayout(widget_lyt)
 
-        # ────────────────── Meta, super() ───────────────── #
+        # ───────────────────── Others ───────────────────── #
 
         # TODO: Add subtitle, task…
         title = exercise.pretty_name
@@ -292,13 +306,13 @@ class ExerciseChooser(AbstractCoExChooser):
 
     @Slot()
     def toggle_text_mode(self):
-
         if self.__text_mode_checkbox.isChecked():
             self.__friendly_wgt.hide()
             self.__code_wgt.show()
         else:
             self.__friendly_wgt.show()
             self.__code_wgt.hide()
+
 
 class DuiLauncher(QWidget):
 
@@ -357,6 +371,7 @@ class DuiLauncher(QWidget):
         self.__course_chooser.set_preview(course)
         self.__exercise_chooser = ExerciseChooser(course, course_filetype)
         self.__coex_tabwidget.addTab(self.__exercise_chooser, _('Exercise'))
+        self.__coex_tabwidget.setCurrentIndex(1)
 
 
 if __name__ == '__main__':
