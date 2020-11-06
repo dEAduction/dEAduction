@@ -3,13 +3,18 @@ import tactic
 
 -- dEAduction imports
 import structures2
-import definitions
 
 -- General principles :
 -- Type should be defined as parameters, in order to be implicit everywhere
 -- other parameters are implicit in definitions, i.e. defined using '{}' (e.g. {A : set X} )
 -- but explicit everywhere else, i.e. defined using '()' (e.g. (A : set X) )
 -- each definition must be an iff statement (since it will be called with 'rw' or 'symp_rw')
+
+-- no Magic button ("compute")
+/- dEAduction
+DefaultAvailableMagic
+    $NONE
+-/
 
 
 -- logic names ['and', 'or', 'negate', 'implicate', 'iff', 'forall', 'exists', 'apply']
@@ -46,7 +51,7 @@ Description
     "P => Q", on suppose P, et on montre Q.
 AvailableLogic
     implicate
-AvailableProofs
+AvailableProof
     assumption
 -/
 begin
@@ -63,7 +68,7 @@ Description
     Le bouton "ET" permet de découper une hypothèse
 AvailableLogic
     and implicate
-AvailableProofs
+AvailableProof
     assumption
 -/
 begin
@@ -80,7 +85,7 @@ Description
     Le bouton "ET" permet aussi de découper le but en deux buts distincts
 AvailableLogic
     and implicate
-AvailableProofs
+AvailableProof
     assumption
 -/
 begin
@@ -99,7 +104,7 @@ Description
     sélectionnant dans la liste...
 AvailableLogic
     and iff implicate
-AvailableProofs
+AvailableProof
     assumption
 -/
 begin
@@ -118,7 +123,7 @@ Description
     Pour démontrer "Q OU P", on doit démontrer soit P, soit Q.
 AvailableLogic
     and or implicate iff
-AvailableProofs
+AvailableProof
     assumption
 -/
 begin
@@ -137,7 +142,7 @@ Description
     c'est-à-dire de la forme "NON (...)".
 AvailableLogic
     and or negate implicate iff
-AvailableProofs
+AvailableProof
     assumption
 -/
 begin
@@ -155,7 +160,7 @@ Description
     propriété.
 AvailableLogic
     and or negate implicate iff
-AvailableProofs
+AvailableProof
     assumption
 -/
 begin
@@ -173,7 +178,7 @@ Description
     Le mécanisme de preuve inclus le tiers exclu, de façon un peu cachéé...
 AvailableLogic
     and or negate implicate iff
-AvailableProofs
+AvailableProof
     use_proof_methods assumption
 -/
 begin
@@ -192,7 +197,7 @@ Description
     l'actionner il faut sélectionner toutes les propriétés requises !
 AvailableLogic
     and or negate implicate iff apply
-AvailableProofs
+AvailableProof
     use_proof_methods assumption
 -/
 begin
@@ -209,7 +214,7 @@ Description
     Cette propriété permet de transformer une implication en une disjonction
 AvailableLogic
     and or negate implicate iff apply
-AvailableProofs
+AvailableProof
     use_proof_methods assumption
 -/
 begin
@@ -229,7 +234,7 @@ Description
     un nouvel objet, avant de lui appliquer le résultat précédent...
 AvailableLogic
     and or negate implicate iff apply
-AvailableProofs
+AvailableProof
     use_proof_methods new_object  assumption
 -/
 begin

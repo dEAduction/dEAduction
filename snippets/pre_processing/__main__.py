@@ -131,7 +131,7 @@ def check_statements(course):
         [stored_course] = pickled_items(course_pkl_path)
         stored_hash = hash(stored_course.file_content)
         log.debug(f"Found '.pkl' file, hash = {stored_hash} vs {course_hash}")
-        if stored_hash == course_hash or True:    # FIXME !!!
+        if stored_hash == course_hash:
             # log.info("pkl content file is up to date")
             # we want the statements already processed to be conserved:
             course = stored_course

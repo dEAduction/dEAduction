@@ -173,7 +173,7 @@ class Theorem(Statement):
 
 
 @dataclass
-class Exercise(Statement):
+class Exercise(Theorem):
     available_logic:            List[Action] = None
     available_magic:            List[Action] = None
     available_proof:            List[Action] = None
@@ -375,7 +375,12 @@ def make_statement_callable(prefix, statements) -> callable:
         if name in ['$UNTIL_NOW', 'UNTIL_NOW']:
             available_statements = []
             for statement in statements:
-                if isinstance(statement, class_):
+                if class_ == Theorem:
+                    if isinstance(statement, Theorem) \
+                        and not isinstance(statement, Exercise):
+                        available_statements.append(statement)
+                        log.debug(f"considering {statement.pretty_name}...")
+                elif isinstance(statement, class_):
                     available_statements.append(statement)
                     log.debug(f"considering {statement.pretty_name}...")
             return available_statements
