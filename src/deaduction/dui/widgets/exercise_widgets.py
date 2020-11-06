@@ -120,7 +120,8 @@ class ExerciseCentralWidget(QWidget):
               properties (e.g. f is continuous);
         - the 'action area' widgets:
             - the logic buttons (self.logic_btns);
-            - the proof techniques buttons (self.proof_btns);
+            - the proof buttons (self.proof_btns);
+            - the magic buttons (self.magic_btns), if any
             - the statements tree (self.statements_tree, see
               StatementsTreeWidget.__doc__).
 
@@ -142,7 +143,7 @@ class ExerciseCentralWidget(QWidget):
         for this exercise.
     :attribute objects_wgt MathObjectWidget: Widget for context
         objects (e.g. f:X->Y a function).
-    :attribute proof_btns ActionButtonsWidget: Proof technique buttons
+    :attribute proof_btns ActionButtonsWidget: Proof buttons
         available for this exercise.
     :attribute props_wgt MathObjectWidget: Widget for context
         properties (e.g. f is continuous).
@@ -186,8 +187,8 @@ class ExerciseCentralWidget(QWidget):
         # ──────────────── Init Actions area ─────────────── #
 
         self.logic_btns = ActionButtonsWidget(exercise.available_logic)
-        self.proof_btns = ActionButtonsWidget(
-                exercise.available_proof_techniques)
+        self.proof_btns = ActionButtonsWidget(exercise.available_proof)
+        self.magic_btns = ActionButtonsWidget(exercise.available_magic)
 
         # search for ActionButton corresponding to action_apply:
         apply_buttons = [button for button in self.proof_btns.buttons
@@ -212,6 +213,8 @@ class ExerciseCentralWidget(QWidget):
         # Actions
         actions_lyt.addWidget(self.logic_btns)
         actions_lyt.addWidget(self.proof_btns)
+        if exercise.available_magic:
+            actions_lyt.addWidget(self.magic_btns)
         actions_lyt.addWidget(self.statements_tree)
         actions_gb.setLayout(actions_lyt)
 
@@ -235,25 +238,16 @@ class ExerciseCentralWidget(QWidget):
     @property
     def actions_buttons(self) -> [ActionButton]:
         """
-        Do not delete! A list of all logic buttons and proof technique
+        Do not delete! A list of all logic buttons and proof
         buttons (instances of the class ActionButton).
         """
 
-        return self.logic_btns.buttons + self.proof_btns.buttons
-
-    @property
-    def math_objects_widgets(self) -> [MathObjectWidgetItem]:
-        """
-        Do not delete! A list of all objects and properties
-        widgets (instances of the class MathObjectWidgetItem).
-        """
-
-        return self.objects_wgt.items + self.props_wgt.items
-
+        return self.logic_btns.buttons \
+               + self.proof_btns.buttons \
+               + self.magic_btns.buttons
     ###########
     # Methods #
     ###########
-
 
     def freeze(self, yes=True):
         """
@@ -270,6 +264,7 @@ class ExerciseCentralWidget(QWidget):
                      self.props_wgt,
                      self.logic_btns,
                      self.proof_btns,
+                     self.magic_btns,
                      self.statements_tree]
         for widget in to_freeze:
             widget.setEnabled(not yes)
@@ -418,7 +413,6 @@ class ExerciseMainWindow(QMainWindow):
             action_button.action_triggered.connect(self.__action_triggered)
         self.ecw.statements_tree.itemClicked.connect(self.__statement_triggered)
 
-
         # UI
         self.toolbar.toggle_lean_editor_action.triggered.connect(
                 self.lean_editor.toggle)
@@ -508,7 +502,7 @@ class ExerciseMainWindow(QMainWindow):
             goals_counter_evolution \
             = self.count_goals()
         goal_count = f'  {current_goal_number} / {total_goals_counter}'
-        log.debug(f"Goal  {goal_count}")
+        #log.debug(f"Goal  {goal_count}")
         if goals_counter_evolution < 0 and current_goals_counter != 0:
             # todo: do not display when undo
             log.info(f"Current goal solved!")
@@ -652,7 +646,7 @@ class ExerciseMainWindow(QMainWindow):
 
         action = action_btn.action
         user_input = []
-        log.info(f'Calling action {action.symbol}')
+        log.debug(f'Calling action {action.symbol}')
         # Send action and catch exception when user needs to:
         #   - choose A or B when having to prove (A OR B) ;
         #   - enter an element when clicking on 'exists' button.
@@ -683,7 +677,7 @@ class ExerciseMainWindow(QMainWindow):
                 await self.display_WrongUserInput(e)
                 break
             else:
-                log.debug("Code sent to lean: " + code)
+                log.info("Code sent to lean: " + code)
                 await self.servint.code_insert(action.symbol, code)
                 break
 
