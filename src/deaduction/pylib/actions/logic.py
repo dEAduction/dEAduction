@@ -128,7 +128,7 @@ If a hypothesis of the form P AND Q has been previously selected:
 If two hypothesis P, then Q, have been previously selected:
     add the new hypothesis P AND Q to the properties.
 
-    :param l:   list of MathObject arguments preselected by the user
+    :param selected_objects:   list of MathObject preselected by user
     :return:    string of lean code
     """
     if len(selected_objects) == 0:

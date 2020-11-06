@@ -3,13 +3,18 @@ import tactic
 
 -- dEAduction imports
 import structures2
-import definitions
 
 -- General principles :
 -- Type should be defined as parameters, in order to be implicit everywhere
 -- other parameters are implicit in definitions, i.e. defined using '{}' (e.g. {A : set X} )
 -- but explicit everywhere else, i.e. defined using '()' (e.g. (A : set X) )
 -- each definition must be an iff statement (since it will be called with 'rw' or 'symp_rw')
+
+-- no Magic button ("compute")
+/- dEAduction
+DefaultAvailableMagic
+    $NONE
+-/
 
 
 -- logic names ['and', 'or', 'negate', 'implicate', 'iff', 'forall', 'exists', 'apply']
@@ -44,9 +49,9 @@ PrettyName
 Description
     Le bouton "=>" permet de démontrer une implication : pour montrer
     "P => Q", on suppose P, et on montre Q.
-Tools->Logic
+AvailableLogic
     implicate
-Tools->ProofTechniques
+AvailableProof
     assumption
 -/
 begin
@@ -61,9 +66,9 @@ PrettyName
     P et Q implique P
 Description
     Le bouton "ET" permet de découper une hypothèse
-Tools->Logic
+AvailableLogic
     and implicate
-Tools->ProofTechniques
+AvailableProof
     assumption
 -/
 begin
@@ -78,9 +83,9 @@ PrettyName
     Le "ET" est commutatif (version faible)
 Description
     Le bouton "ET" permet aussi de découper le but en deux buts distincts
-Tools->Logic
+AvailableLogic
     and implicate
-Tools->ProofTechniques
+AvailableProof
     assumption
 -/
 begin
@@ -97,9 +102,9 @@ Description
     Le bouton "↔" permet de découper le but en deux implications.
     On peut alors appliquer le résultat de l'exercice précédent en le
     sélectionnant dans la liste...
-Tools->Logic
+AvailableLogic
     and iff implicate
-Tools->ProofTechniques
+AvailableProof
     assumption
 -/
 begin
@@ -116,9 +121,9 @@ Description
     Pour utiliser l'hypothèse "P OU Q", on sépare les cas :
     dans le premier cas on suppose P, dans le second cas on suppose Q.
     Pour démontrer "Q OU P", on doit démontrer soit P, soit Q.
-Tools->Logic
+AvailableLogic
     and or implicate iff
-Tools->ProofTechniques
+AvailableProof
     assumption
 -/
 begin
@@ -135,9 +140,9 @@ Description
     Le bouton "NON" permet d'utiliser les règles logiques du "NON".
     On peut l'utiliser uniquement sur les propriétés qui sont des négations,
     c'est-à-dire de la forme "NON (...)".
-Tools->Logic
+AvailableLogic
     and or negate implicate iff
-Tools->ProofTechniques
+AvailableProof
     assumption
 -/
 begin
@@ -153,9 +158,9 @@ PrettyName
 Description
     En général, le bouton "NON" tente de "pousser" la négation le long de la
     propriété.
-Tools->Logic
+AvailableLogic
     and or negate implicate iff
-Tools->ProofTechniques
+AvailableProof
     assumption
 -/
 begin
@@ -171,9 +176,9 @@ PrettyName
     Le tiers exclu : l'une des deux propriétés "R" et "NON R" est vraie
 Description
     Le mécanisme de preuve inclus le tiers exclu, de façon un peu cachéé...
-Tools->Logic
+AvailableLogic
     and or negate implicate iff
-Tools->ProofTechniques
+AvailableProof
     use_proof_methods assumption
 -/
 begin
@@ -190,9 +195,9 @@ Description
     Le bouton "=>" permet également d'appliquer une implication "P => Q" à la
     propriété "P" pour obtenir la propriété "Q". Attention, avant de
     l'actionner il faut sélectionner toutes les propriétés requises !
-Tools->Logic
+AvailableLogic
     and or negate implicate iff apply
-Tools->ProofTechniques
+AvailableProof
     use_proof_methods assumption
 -/
 begin
@@ -207,9 +212,9 @@ PrettyName
     Implication sous forme de "OU"
 Description
     Cette propriété permet de transformer une implication en une disjonction
-Tools->Logic
+AvailableLogic
     and or negate implicate iff apply
-Tools->ProofTechniques
+AvailableProof
     use_proof_methods assumption
 -/
 begin
@@ -227,9 +232,9 @@ Description
     On peut la redémontrer entièrement, mais on peut aussi tenter d'appliquer
     le résultat de l'exercice précédent. Pour cela, il faudra introduire
     un nouvel objet, avant de lui appliquer le résultat précédent...
-Tools->Logic
+AvailableLogic
     and or negate implicate iff apply
-Tools->ProofTechniques
+AvailableProof
     use_proof_methods new_object  assumption
 -/
 begin

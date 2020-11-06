@@ -39,6 +39,6 @@ import logging
 ##
 
 @action(_("Computation"), _('Computation'))
-def action_compute(goal):
-     return ""
+def action_compute(goal, selected_objects):
+     return "linarith"
 

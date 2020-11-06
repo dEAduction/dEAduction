@@ -42,7 +42,6 @@ from deaduction.pylib.coursedata.course import (Exercise,
 
 log = logging.getLogger(__name__)
 
-
 def select_course():
     """
     Open a file dialog to choose a course lean file.

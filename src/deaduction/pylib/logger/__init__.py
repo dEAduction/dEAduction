@@ -79,10 +79,15 @@ class Color_Formatter(logging.Formatter):
 ############################################
 # Logger procedures
 ############################################
-def configure( debug: bool = True ):
+def configure(debug: bool = False,
+              domains: [str] = [],
+              suppress = True):
     """
     Configures the logging module for use with d∃∀duction.
 
+    :param suppress: if True, the names in domains will be rejected
+                        if False, they will be accepted
+    :param domains: list of names of loggers
     :param debug: enable debug messages
     """
 
@@ -95,6 +100,12 @@ def configure( debug: bool = True ):
 
     sh = logging.StreamHandler()
     sh.setFormatter(ft)
+
+    # set filter
+    def filter(record):
+        test = [record.name.startswith(domain) for domain in domains]
+        return (not suppress) == (True in test)
+    sh.addFilter(filter)
 
     root.addHandler(sh)
 

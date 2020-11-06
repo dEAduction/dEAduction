@@ -48,7 +48,7 @@ log = logging.getLogger(__name__)
 
 
 # turn logic_button_texts into a dictionary
-proof_list= ['action_apply', 'proof_methods', 'new_object', 'assumption']
+proof_list = ['action_apply', 'proof_methods', 'new_object', 'assumption']
 lbt = user_config.get('proof_button_texts').split(', ')
 proof_button_texts = {}
 for key, value in zip(proof_list, lbt):

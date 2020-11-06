@@ -93,6 +93,8 @@ log = logging.getLogger(__name__)
 ##################
 # Lean Statement #
 ##################
+# the only purpose of this is to separate variables from the core statement
+# in Lean's lemmas
 statement_rules = """
 statement = variables spaces ":" core_statement
     variables = variable*
@@ -154,10 +156,11 @@ def extract_core_statement(statement: str) -> Tuple[str, str]:
     core_statement = core_statement.strip()
     log.debug(f"Statement: {variables}, {core_statement}")
     return variables, core_statement
+
+
 ################
 # Course rules #
 ################
-
 course_rules = """course = 
             (something_else metadata)?
             (something_else? 
@@ -267,7 +270,6 @@ lean_course_grammar = Grammar(rules)
 #############################################
 # visiting methods for each pertinent nodes #
 #############################################
-#variable_names = ['PrettyName', 'Description']
 class LeanCourseVisitor(NodeVisitor):
     def visit_course(self, node, visited_children) -> Tuple[List[str], dict]:
         course_history, data = get_info(visited_children)
@@ -304,10 +306,10 @@ class LeanCourseVisitor(NodeVisitor):
         metadata["lean_name"] = lean_name
         metadata["lean_variables"] = data.pop("lean_variables")
         metadata["lean_core_statement"] = data.pop("lean_core_statement")
-        # compute automatic PrettyName if not found by parser
+        # compute automatic pretty_name if not found by parser
         short_name = lean_name.split(".")[1]
         automatic_pretty_name = short_name.replace("_", " ").capitalize()
-        metadata.setdefault("PrettyName", automatic_pretty_name)
+        metadata.setdefault("pretty_name", automatic_pretty_name)
 
         event = event_name, metadata
         course_history.insert(0, event)
@@ -333,6 +335,9 @@ class LeanCourseVisitor(NodeVisitor):
     ############
     def visit_metadata(self, node, visited_children):
         # return the joined data of all children
+        # NB : keys are changed from Lean-deaduction file format
+        # to PEP8 conventions,
+        # e.g. PrettyName -> pretty_name
         course_history, metadata = get_info(visited_children)
         data = {"metadata": metadata}
         log.debug(f"got metadata {data}")
@@ -346,8 +351,9 @@ class LeanCourseVisitor(NodeVisitor):
         # so it is passed as data
         metadata = {}
         if "metadata_field_content" in data.keys():
-            metadata[data["metadata_field_name"]] = \
-                data["metadata_field_content"]
+            field_name = change_name(data["metadata_field_name"])
+            # e.g. PrettyName -> pretty_name
+            metadata[field_name] = data["metadata_field_content"]
         return course_history, metadata
 
     def visit_metadata_field_name(self, node, visited_children):
@@ -374,7 +380,7 @@ class LeanCourseVisitor(NodeVisitor):
         # get PrettyName or compute it if absent
         try:
             metadata = data.pop("metadata")
-            pretty_name = metadata["PrettyName"]
+            pretty_name = metadata["pretty_name"]
         except KeyError:
             pretty_name = name.replace("_", " ").capitalize()
         event = "open_namespace", {"name": name, "pretty_name": pretty_name}
@@ -447,6 +453,21 @@ def get_info(children: List[dict]):
     return course_history, data
 
 
+def change_name(name: str) -> str:
+    """
+    e.g. PrettyName -> pretty_name
+    Used to adapt keys of metadata to PEP8 format
+    """
+    if name.startswith('$'):  # macro: do not touch!!
+        return name
+
+    upper_case_alphabet = [chr(i) for i in range(65, 91)]
+    for letter in upper_case_alphabet:
+        name = name.replace(letter, '_' + letter.lower())
+    # finally remove the leading '_'
+    if name.startswith('_'):
+        name = name[1:]
+    return name
 
 #########
 # tests #
