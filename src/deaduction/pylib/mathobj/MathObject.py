@@ -45,7 +45,6 @@ import deaduction.pylib.mathobj.give_name as give_name
 
 log = logging.getLogger(__name__)
 
-
 ##########################################
 # MathObject: general mathematical entities #
 ##########################################

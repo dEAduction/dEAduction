@@ -21,8 +21,7 @@ import notations_definitions
 
 
 /- MACROS
--- macro $NONE means no item.
--- User macros must start with '$',    e.g.:
+user macros must start with '$',    e.g.:
 $FAMILY_STATEMENT
     union_quelconque_ensembles intersection_quelconque_ensembles
                                     and then:
@@ -36,8 +35,8 @@ Author
     Frédéric Le Roux
 Institution
     Université de France
-DefaultAvailableMagic
-    $NONE
+DefaultAvailableProof
+    $ALL
 $FAMILY_STATEMENT
     union_quelconque_ensembles intersection_quelconque_ensembles
 -/

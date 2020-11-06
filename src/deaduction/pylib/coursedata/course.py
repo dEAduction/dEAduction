@@ -36,9 +36,13 @@ from typing import List, Dict
 import logging
 
 import deaduction.pylib.logger as logger
-from deaduction.pylib.coursedata.exercise_classes import (Exercise, Definition,
-                                                          Theorem, Statement)
+from deaduction.pylib.coursedata import (Exercise,
+                                         Definition,
+                                         Theorem,
+                                         Statement)
 import deaduction.pylib.coursedata.parser_course as parser_course
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -54,11 +58,13 @@ class Course:
     - the "outline" of the course, an ordered dict describing namespaces
     - a list of all statements
     """
-    course_path:            Path
     file_content:           str
     metadata:               Dict[str, str]
     outline:                OrderedDict
     statements:             List[Statement]
+    course_path:            Path = None
+    # course_path is added after instantiation
+
     # outline description:
     #   keys = lean complete namespaces,
     #   values = corresponding plain language namespace
@@ -82,20 +88,31 @@ class Course:
     @classmethod
     def from_file(cls, course_path: Path):
         """
-        instantiate a Course object by parsing every lean files
-        in course_dir_path
+        instantiate a Course object from the provided file
+
+        :param course_path: name of directory
+        :return: a Course instance
+        """
+        log.info(f"Parsing file {str(course_path.resolve())}")
+        file_content = course_path.read_text()
+        course = Course.from_file_content(file_content)
+        course.course_path = course_path
+        return course
+
+    @classmethod
+    def from_file_content(cls, file_content: str):
+        """
+        instantiate a Course object by parsing file_content
         data fields to be parsed must start with "/- dEAduction"
         and end with "-/"
 
-        :param course_dir_path: name of directory
+        :param file_content: str to be parsed
+        :return: a Course instance
         """
-        log = logging.getLogger("Course initialisation")
         statements = []
         outline = {}
         begin_counter = 0
         begin_found = True
-        log.info(f"Parsing file {str(course_path.resolve())}")
-        file_content = course_path.read_text()
         ########################
         # Parsimonious's magic #
         ########################
@@ -103,6 +120,7 @@ class Course:
         visitor = parser_course.LeanCourseVisitor()
         course_history, course_metadata = visitor.visit(course_tree)
         log.debug(f"course history: {course_history}")
+        log.info(f"Course metadata: {course_metadata}")
 
         ##########################
         # parsing course_history #
@@ -139,31 +157,19 @@ class Course:
                 if namespace:
                     metadata["lean_name"] = whole(namespace) + "." \
                                             + metadata["lean_name"]
-                ###############################
-                # optional or not implemented #
-                ###############################
-                not_implemented = ["text_book_identifier", "lean_variables"]
-                default_to_none = ["Tools->Logic",
-                                   "Tools->Magic", "Tools->ProofTechniques",
-                                   "Tools->Definitions", "Tools->Theorems",
-                                   "Tools->Exercises", "Tools->Statements"]
-                metadata.setdefault("Description", "NOT PROVIDED")
-                for item in not_implemented:
-                    metadata.setdefault(item, "NOT IMPLEMENTED")
-                for item in default_to_none:
-                    metadata.setdefault(item, None)
 
             if event_name == "exercise":
+                metadata.update(course_metadata)  # add potential macros
                 log.info(f"creating exercise from data {metadata}")
                 exercise = Exercise.from_parser_data(metadata, statements)
                 statements.append(exercise)
             elif event_name == "definition":
                 log.info(f"creating definition from data {metadata}")
-                definition = Definition.from_parser_data(metadata)
+                definition = Definition.from_parser_data(**metadata)
                 statements.append(definition)
             elif event_name == "theorem":
                 log.info(f"creating theorem from data {metadata}")
-                theorem = Theorem.from_parser_data(metadata)
+                theorem = Theorem.from_parser_data(**metadata)
                 statements.append(theorem)
 
             elif event_name == "begin_proof":
@@ -179,13 +185,19 @@ class Course:
             continue
 
         # Creating the course
-        course = cls(course_path,
-                     file_content,
-                     course_metadata,
-                     outline,
-                     statements)
+        course = cls(file_content=file_content,
+                     metadata=course_metadata,
+                     outline=outline,
+                     statements=statements)
+
+        # Test data for coherence
         counter_exercises = 0
+        counter = 0
         for st in statements:  # add reference to the course
+            counter += 1
+            # XXX = st.pretty_hierarchy(outline)
+            # if not isinstance(st, Statement):
+            #    log.warning(f"Dubious statement n°{counter}: {st}")
             if isinstance(st, Exercise):
                 counter_exercises += 1
             st.course = course  # this makes printing raw exercises slow

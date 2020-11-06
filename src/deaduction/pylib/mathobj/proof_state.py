@@ -28,7 +28,7 @@ This file is part of dEAduction.
 
 from dataclasses import dataclass
 import logging
-from typing import List, Tuple
+from typing import List, Tuple, Any
 
 import deaduction.pylib.logger  as              logger
 from deaduction.config          import          _
@@ -38,7 +38,7 @@ from deaduction.pylib.mathobj.lean_analysis_with_type import \
                                                 lean_expr_with_type_grammar, \
                                                 LeanEntryVisitor
 
-from deaduction.pylib.actions import            Action
+#from deaduction.pylib.actions import            Action
 
 log = logging.getLogger(__name__)
 
@@ -289,6 +289,7 @@ def instantiate_bound_var(math_type, name: str):
 @dataclass
 class ProofState:
     goals: List[Goal]
+    lean_data: Tuple[str] = None
 
     @classmethod
     def from_lean_data(cls, hypo_analysis: str, targets_analysis: str):
@@ -313,7 +314,7 @@ class ProofState:
             other_goal = Goal.from_lean_data(hypo_analysis="",
                                              target_analysis=other_string_goal)
             goals.append(other_goal)
-        return cls(goals)
+        return cls(goals, (hypo_analysis, targets_analysis))
 
 
 @dataclass
@@ -326,7 +327,7 @@ class Proof:
     TODO: implement a display_tree method
     NOT TODO: implement a write_up_proof method ??
     """
-    steps: [(ProofState, Action)]
+    steps: [(ProofState, Any)]
 
     def count_goals_from_proof(self):
         """
