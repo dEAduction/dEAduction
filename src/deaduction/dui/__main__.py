@@ -33,7 +33,7 @@ import qtrio
 import trio
 
 
-from deaduction.dui.launcher import select_course_exercise
+from deaduction.dui.launcher import select_exercise
 from deaduction.dui.widgets import  ExerciseMainWindow
 from deaduction.pylib import        logger
 from deaduction.pylib.server import ServerInterface
@@ -48,8 +48,7 @@ async def main():
     test_language = _("Proof by contrapositive")
     log.debug(f"Language test: 'Proof by contrapositive' = '{test_language}'")
 
-    # Choose course and exercise
-    course, exercise = select_course_exercise()
+    exercise = select_exercise()
 
     if exercise is None:
         raise ValueError(_('Exercise is None'))

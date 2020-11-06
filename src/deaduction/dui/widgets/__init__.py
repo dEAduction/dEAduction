@@ -32,6 +32,9 @@ from .actions_widgets_classes import (
         StatementsTreeWidgetNode,
         StatementsTreeWidget)
 
+from .choose_course_exercise_widgets import (
+        LauncherMainWindow)
+
 from .context_widgets_classes import (
         MathObjectWidgetItem,
         MathObjectWidget,

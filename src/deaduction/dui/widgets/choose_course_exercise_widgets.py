@@ -209,6 +209,7 @@ class ExerciseChooser(AbstractCoExChooser):
 
         widget = QWidget()
         widget_lyt = QVBoxLayout()
+        self.__exercise = exercise
 
         if self.__course_filetype == '.pkl':
 
@@ -278,10 +279,12 @@ class ExerciseChooser(AbstractCoExChooser):
             widget_lyt.addWidget(self.__code_wgt)
             widget_lyt.addLayout(cb_lyt)
 
+        # FIXME: Bug with course and exercise widgets
         elif self.__course_filetype == '.lean':
 
+            # TODO: Say "Preview is available if…"
             widget_lbl = QLabel(_('Goal preview is not available when course ' \
-                              'file extension is .lean.'))
+                                  'file extension is .lean.'))
             widget_lbl.setStyleSheet('font-style: italic; color: gray;')
 
             widget_lyt.addStretch()
@@ -313,8 +316,12 @@ class ExerciseChooser(AbstractCoExChooser):
             self.__friendly_wgt.show()
             self.__code_wgt.hide()
 
+    def selected_exercise(self) -> Exercise:
+        if self.__exercise:
+            return self.__exercise
 
-class DuiLauncher(QWidget):
+
+class LauncherMainWindow(QWidget):
 
     def __init__(self):
 
@@ -373,11 +380,14 @@ class DuiLauncher(QWidget):
         self.__coex_tabwidget.addTab(self.__exercise_chooser, _('Exercise'))
         self.__coex_tabwidget.setCurrentIndex(1)
 
+    def selected_exercise(self) -> Exercise:
+        return self.__exercise_chooser.selected_exercise()
+
 
 if __name__ == '__main__':
     app = QApplication()
 
-    dui_launcher = DuiLauncher()
-    dui_launcher.show()
+    launcher_main_window = LauncherMainWindow()
+    launcher_main_window.show()
 
     sys.exit(app.exec_())
