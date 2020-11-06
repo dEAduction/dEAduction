@@ -319,6 +319,8 @@ class ExerciseChooser(AbstractCoExChooser):
     def selected_exercise(self) -> Exercise:
         if self.__exercise:
             return self.__exercise
+        else:
+            return None
 
 
 class LauncherMainWindow(QWidget):
