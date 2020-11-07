@@ -31,7 +31,7 @@ import logging
 from typing import List, Tuple, Any
 
 import deaduction.pylib.logger  as              logger
-from deaduction.config          import          _
+from deaduction.config          import          _, user_config
 
 from deaduction.pylib.mathobj.MathObject import MathObject
 from deaduction.pylib.mathobj.lean_analysis_with_type import \
@@ -244,7 +244,8 @@ class Goal:
             math_type = mathobj.math_type
             if math_type.is_prop():
                 prop = mathobj.math_type.format_as_text_utf8(
-                    text_depth=text_depth)
+                    text_depth=text_depth,
+                    is_math_type=True)
                 new_sentence = _("Assume that") + " " + prop + "."
             else:
                 name = mathobj.format_as_utf8()
@@ -254,8 +255,15 @@ class Goal:
                     new_sentence = _("Let") + " " + name + ":" \
                                    + " " + name_type + "."
                 else:
-                    new_sentence = _("Let") + " " + name + " " + _("be") \
+                    if user_config['select_language'] == 'fr_FR':
+                        # indispensable pour la gestion des espacements
+                        # (le "be" anglais n'a pas d'équivalent en français)
+                        new_sentence = "Soit" + " " + name + " " \
+                                       + name_type + "."
+                    else:
+                        new_sentence = _("Let") + " " + name + " " + _("be") \
                                    + " " + name_type + "."
+
 
             if text:
                 text += "\n"
@@ -263,7 +271,8 @@ class Goal:
 
         text += "\n"
         target_text = target.math_type.format_as_text_utf8(
-            text_depth=text_depth)
+            text_depth=text_depth,
+            is_math_type=True)
         if to_prove:
             target_text = _("Prove that") + " " + target_text
         else:

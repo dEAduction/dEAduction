@@ -13,12 +13,12 @@ Copyright (c) 2020 the dEAduction team
 Contain the data for processing PropObj into a latex representation
 
 The basic data for representing math objects is the utf8_from_node dictionary.
-It associates, to each MathObject.node attribute, the shape to displya, e.g.
+It associates, to each MathObject.node attribute, the shape to display, e.g.
     "PROP_INCLUDED": [0, " ⊂ ", 1],
 where the numbers refer to the MathObject's children.
 The display_math_object function pick the right shape from this dictionary,
 and then call the display_math_object_from_shape function. Note that the
-shape can include call to some specific formatting functions, e.g.
+shape can include calls to some specific formatting functions, e.g.
     - display_application,
     - display_local_constant,
     - display_constant,
