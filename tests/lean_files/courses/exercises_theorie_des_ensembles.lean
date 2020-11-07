@@ -754,8 +754,9 @@ begin
     sorry
 end
 
-lemma exercise.Cantor :
-∀ f : X → set X, ¬ surjective f
+lemma exercise.Cantor
+(f : X → set X):
+ ¬ surjective f
 :=
 /- dEAduction
 PrettyName
