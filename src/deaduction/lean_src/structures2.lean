@@ -60,7 +60,11 @@ match e with
 | `(¬ %%p) := return ("PROP_NOT", [p])
 | `(%%p → false)  := return ("PROP_NOT", [p])
 | `(false) := return ("PROP_FALSE",[])
-| `(ℕ → %%X) := return ("SEQUENCE", [X])
+-- | `(ℕ → %%X) := return ("SEQUENCE", [X])
+-- | `(%%I → _root_.set %%X) :=
+--    if I = X
+--        then return ("FUNCTION", [X, X])
+--        else return ("SET_FAMILY", [I, X])
 | (pi name binder type body) := do
     let is_arr := is_arrow e,
     if is_arr
@@ -68,13 +72,23 @@ match e with
             is_pro ← tactic.is_prop e,
             if is_pro
                 then return ("PROP_IMPLIES", [type,body])
-                else do expr_f ←  infer_type type,
-                if expr_f = `(Type )
-                    then do  match body with
-                    | `(_root_.set %%X) := return ("SET_FAMILY", [type, X])
-                    | _ :=  return ("FUNCTION", [type,body])
+                else match e with
+                -- do expr_f ←  infer_type type,
+                -- if expr_f = `(Type )
+                    | `(%%X → %%Y) :=
+                    match X with
+                        | `(ℕ) := return ("SEQUENCE", [Y])
+                        | _ := do
+                        match Y with
+                            | `(_root_.set %%Z) :=
+                        if Z = X
+                            then return ("FUNCTION", [X, Y])
+                            else return ("SET_FAMILY", [X, Z])
+                            | _ := return ("FUNCTION", [X, Y])
+                            end
+                        end
+                    | _ := return ("ERROR", [])
                     end
-                    else  return ("FUNCTION", [type,body])
         else do
             (var_, inst_body) ← instanciate e,
             return ("QUANT_∀", [type, var_, inst_body])
