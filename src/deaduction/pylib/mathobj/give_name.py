@@ -134,6 +134,10 @@ def give_name(math_type,
     ##################
     # managing hints #
     ##################
+    # avoid bad name, e.g. for families where hints could be {E_i, i in I}
+    for hint in hints:
+        if not hint.isalpha():
+            hints.remove(hint)
 
     if upper_case_name:
         hints = [hint[0].upper() for hint in hints]  # so each hint has only
