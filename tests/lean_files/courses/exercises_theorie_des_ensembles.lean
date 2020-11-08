@@ -31,14 +31,6 @@ Institution
 
 local attribute [instance] classical.prop_decidable
 
-lemma ensemble_extension {X: Type}  {P : X → Prop} :
-∀{x:X}, x ∈ {x | P x} ↔ P x
-:=
-begin
-    intro x,
-    refl,
-end
-
 
 ---------------------------------------------
 -- global parameters = implicit variables --
@@ -128,6 +120,19 @@ lemma definition.ensemble_non_vide
 begin
     sorry
 end
+
+lemma definition.ensemble_extension {X: Type}  {P : X → Prop} :
+∀{x:X}, x ∈ {x | P x} ↔ P x
+:=
+/- dEAduction
+PrettyName
+    Ensemble en extension
+-/
+begin
+    intro x,
+    refl
+end
+
 
 lemma theorem.double_inclusion (A A' : set X) :
 (A ⊆ A' ∧ A' ⊆ A) → A = A' :=
@@ -382,7 +387,6 @@ PrettyName
     Produits cartésiens
 -/
 
-
 lemma definition.type_produit :
 ∀ z:X × Y, ∃ x:X, ∃ y:Y, z = (x,y)
 :=
@@ -400,7 +404,7 @@ lemma definition.produit_de_parties (A : set X) (B : set Y) :
 :=
 /- dEAduction
 PrettyName
-    Produit cartésien de deux sous-ensembles
+    Produit cartésien de deux ensembles
 -/
 begin
     sorry
@@ -412,11 +416,17 @@ lemma exercise.produit_avec_intersection
 set.prod A (B ∩ C) = (set.prod A B) ∩ (set.prod A C)
 :=
 begin
-    sorry
+    rw generalites.definition.egalite_deux_ensembles,
+    --intro z,
+    --have H, from definition.type_produit z,
+    --cases H with x Hx,
+    --cases Hx with y Hy,
+    --rw Hy,
+
 end
 
 
-
+end produits_cartesiens
 ---------------
 -- SECTION 3 --
 ---------------
@@ -815,13 +825,16 @@ begin
     {
         have H22b: x ∉ A,
         rw H15 at H22,
+        rw ensemble_extension at H22,
         rw H17, assumption,
         contradiction,
     },
     {
         have H22b: x ∈ A,
         rw H15 at H23,
-        simp only[ensemble_extension] at H23, push_neg at H23,
+        -- simp only[ensemble_extension] at H23,
+        rw ensemble_extension at H23,
+        push_neg at H23,
         rw H17, assumption,
         contradiction
     }
