@@ -457,15 +457,23 @@ introduce two subgoals, P⇒Q, and Q⇒P.
 
 def construct_forall(goal):
     possible_codes = []
-    if goal.target.math_type.node != "QUANT_∀":
+    math_object = goal.target.math_type
+    if math_object.node != "QUANT_∀":
         raise WrongUserInput
-    x = give_global_name(goal=goal,
-                         math_type=goal.target.math_type.children[0],
-                         hints=[goal.target.math_type.children[
-                                    1].format_as_utf8(),
-                                goal.target.math_type.children[
-                                    0].format_as_utf8().lower()])
-    possible_codes.append(f'intro {x}')
+    math_type = math_object.children[0]
+    if math_type.node == "PRODUCT":
+        [math_type_1, math_type_2] = math_type.children
+        x = give_global_name(goal=goal, math_type=math_type_1)
+        y = give_global_name(goal=goal, math_type=math_type_2)
+        possible_codes.append(f'rintro ⟨ {x}, {y} ⟩')
+    else:
+        x = give_global_name(goal=goal,
+                             math_type=goal.target.math_type.children[0],
+                             hints=[goal.target.math_type.children[
+                                        1].format_as_utf8(),
+                                    goal.target.math_type.children[
+                                        0].format_as_utf8().lower()])
+        possible_codes.append(f'intro {x}')
     return format_orelse(possible_codes)
 
 

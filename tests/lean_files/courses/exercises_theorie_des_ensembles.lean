@@ -20,30 +20,25 @@ import notations_definitions
 -- proof methods names ['cbr', 'contrapose', 'absurdum', 'sorry']
 
 
-/- MACROS
--- macro $NONE means no item.
--- User macros must start with '$',    e.g.:
-$FAMILY_STATEMENT
-    union_quelconque_ensembles intersection_quelconque_ensembles
-                                    and then:
-AvailableDefinitions
-    $UNTIL_NOW -$FAMILY_STATEMENT
--/
-
 
 /- dEAduction
 Author
     Frédéric Le Roux
 Institution
     Université de France
-DefaultAvailableMagic
-    $NONE
-$FAMILY_STATEMENT
-    union_quelconque_ensembles intersection_quelconque_ensembles
 -/
 
 
 local attribute [instance] classical.prop_decidable
+
+lemma ensemble_extension {X: Type}  {P : X → Prop} :
+∀{x:X}, x ∈ {x | P x} ↔ P x
+:=
+begin
+    intro x,
+    refl,
+end
+
 
 ---------------------------------------------
 -- global parameters = implicit variables --
@@ -126,6 +121,14 @@ begin
     exact eq_empty_iff_forall_not_mem,
 end
 
+lemma definition.ensemble_non_vide
+(A: set X) :
+(A ≠ ∅) ↔ ∃ x : X, x ∈ A
+:=
+begin
+    sorry
+end
+
 lemma theorem.double_inclusion (A A' : set X) :
 (A ⊆ A' ∧ A' ⊆ A) → A = A' :=
 /- dEAduction
@@ -143,10 +146,6 @@ lemma exercise.inclusion_transitive
 /- dEAduction
 PrettyName
     Transitivité de l'inclusion
-AvailableLogic
-    $ALL -iff -exists -negate
-AvailableProof
-    $ALL -use_proof_methods -new_object
 -/
 begin
     sorry
@@ -224,8 +223,6 @@ A ∩ B ⊆ A
 /- dEAduction
 PrettyName
     Un ensemble contient son intersection avec un autre
-AvailableDefinitions
-    $UNTIL_NOW -$FAMILY_STATEMENT
 -/
 begin
     sorry
@@ -238,8 +235,14 @@ PrettyName
     Intersection avec une union
 Description
     L'intersection est distributive par rapport à l'union
+AvailableLogic
+    $ALL
+AvailableProofs
+    $ALL
 AvailableDefinitions
-    $UNTIL_NOW -$FAMILY_STATEMENT
+    $UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles
+AvailableTheorems
+    double_inclusion
 ExpectedVarsNumber
     X=3, A=1, B=1
 -/
@@ -305,7 +308,7 @@ PrettyName
 Description
     Tout ensemble est égal au complémentaire de son complémentaire
 AvailableDefinitions
-    $UNTIL_NOW -$FAMILY_STATEMENT
+    $UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles
 -/
 begin
     sorry
@@ -372,6 +375,45 @@ end complementaire
 
 -- Ajouter : 3. produit cartésien, 4. relations ?
 -- comment définit-on un produit cartésien d'ensembles ?
+
+namespace produits_cartesiens
+/- dEAduction
+PrettyName
+    Produits cartésiens
+-/
+
+
+lemma definition.type_produit :
+∀ z:X × Y, ∃ x:X, ∃ y:Y, z = (x,y)
+:=
+/- dEAduction
+PrettyName
+    Produit cartésien de deux ensembles
+-/
+begin
+    sorry
+end
+
+
+lemma definition.produit_de_parties (A : set X) (B : set Y) :
+∀ x:X, ∀ y:Y, (x,y) ∈ set.prod A B ↔ x ∈ A ∧ y ∈ B
+:=
+/- dEAduction
+PrettyName
+    Produit cartésien de deux sous-ensembles
+-/
+begin
+    sorry
+end
+
+
+lemma exercise.produit_avec_intersection
+(A : set X) (B C : set Y) :
+set.prod A (B ∩ C) = (set.prod A B) ∩ (set.prod A C)
+:=
+begin
+    sorry
+end
 
 
 
@@ -754,8 +796,9 @@ begin
     sorry
 end
 
-lemma exercise.Cantor
-(f : X → set X):
+
+
+lemma exercise.Cantor (f : X → set X):
  ¬ surjective f
 :=
 /- dEAduction
@@ -763,9 +806,26 @@ PrettyName
     (+) Théorème de Cantor : il n'y a pas de surjection d'un ensemble vers l'ensemble de ses parties
 -/
 begin
-    sorry
+    by_contradiction H14,
+    let A := {x | x ∉ f x}, have H15 : A = {x | x ∉ f x}, refl,
+    rw theorie_des_ensembles.applications_II.definitions.definition.surjectivite at H14,
+    have H16 := H14 A,
+    cases H16 with x H17,
+    cases (classical.em (x dans A)) with H22 H23,
+    {
+        have H22b: x ∉ A,
+        rw H15 at H22,
+        rw H17, assumption,
+        contradiction,
+    },
+    {
+        have H22b: x ∈ A,
+        rw H15 at H23,
+        simp only[ensemble_extension] at H23, push_neg at H23,
+        rw H17, assumption,
+        contradiction
+    }
 end
-
 
 
 end exercices

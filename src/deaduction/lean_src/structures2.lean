@@ -57,14 +57,36 @@ match e with
 | `(%%p ∧ %%q) := return ("PROP_AND", [p,q])
 | `(%%p ∨ %%q) := return ("PROP_OR", [p,q])
 | `(%%p ↔ %%q) := return ("PROP_IFF", [p,q])
+| `(%%a ∉ %%A) := return ("PROP_NOT_BELONGS", [a,A])
 | `(¬ %%p) := return ("PROP_NOT", [p])
 | `(%%p → false)  := return ("PROP_NOT", [p])
 | `(false) := return ("PROP_FALSE",[])
--- | `(ℕ → %%X) := return ("SEQUENCE", [X])
--- | `(%%I → _root_.set %%X) :=
---    if I = X
---        then return ("FUNCTION", [X, X])
---        else return ("SET_FAMILY", [I, X])
+------------------------- SET THEORY -------------------------
+| `(%%A ∩ %%B) := return ("SET_INTER", [A,B])
+| `(%%A ∪ %%B) := return ("SET_UNION", [A,B])
+| `(set.compl %%A) := return ("SET_COMPLEMENT", [A])
+| `(set.symmetric_difference %%A %%B) := return ("SET_DIFF_SYM", [A,B])
+| `(%%A \ %%B) := return ("SET_DIFF", [A,B])
+| `(%%A ⊆ %%B) := return ("PROP_INCLUDED", [A,B])
+| `(%%a ∈ %%A) := return ("PROP_BELONGS", [a,A])
+| `(@set.univ %%X) := return ("SET_UNIVERSE", [X])
+| `(-%%A) := return ("MINUS", [A])
+| `(set.Union %%A) := return ("SET_UNION+", [A])
+| `(set.Inter %%A) := return ("SET_INTER+", [A])
+| `(%%f '' %%A) := return ("SET_IMAGE", [f,A])
+| `(%%f  ⁻¹' %%A) := return ("SET_INVERSE", [f,A])
+| `(∅) := return ("SET_EMPTY", [])
+| `(_root_.set %%X) := return ("SET", [X])
+| `(set.prod %%A %%B) := return ("SET_PRODUCT", [A, B])
+| `(prod.mk %%x %%y) := return ("COUPLE", [x, y])
+| `(%%X × %%Y) := return ("PRODUCT", [X, Y]) -- TODO: distinguish types/numbers
+-- set in extension, e.g. A = {x | P x} or A = {x:X | P x} :
+| `(@set_of %%X %%P) := match P with
+    | (lam name binder type body) :=
+            do (var_, inst_body) ← instanciate P,
+                return ("SET_EXTENSION",[X, var_, inst_body])
+    | _ := return ("SET_EXTENSION", [X, P])
+    end
 | (pi name binder type body) := do
     let is_arr := is_arrow e,
     if is_arr
@@ -107,27 +129,12 @@ match e with
             return ("QUANT_∃!", [type, var_, inst_body])
     |  _                            := return ("ERROR", [])
     end
-------------------------- SET THEORY -------------------------
-| `(%%A ∩ %%B) := return ("SET_INTER", [A,B])
-| `(%%A ∪ %%B) := return ("SET_UNION", [A,B])
-| `(set.compl %%A) := return ("SET_COMPLEMENT", [A])
-| `(set.symmetric_difference %%A %%B) := return ("SET_DIFF_SYM", [A,B])
-| `(%%A \ %%B) := return ("SET_DIFF", [A,B])
-| `(%%A ⊆ %%B) := return ("PROP_INCLUDED", [A,B])
-| `(%%a ∈ %%A) := return ("PROP_BELONGS", [a,A])
-| `(@set.univ %%X) := return ("SET_UNIVERSE", [X])
-| `(-%%A) := return ("MINUS", [A])
-| `(set.Union %%A) := return ("SET_UNION+", [A])
-| `(set.Inter %%A) := return ("SET_INTER+", [A])
-| `(%%f '' %%A) := return ("SET_IMAGE", [f,A])
-| `(%%f  ⁻¹' %%A) := return ("SET_INVERSE", [f,A])
-| `(∅) := return ("SET_EMPTY", [])
-| `(_root_.set %%X) := return ("SET", [X])
 -- polymorphic
 | `(%%a = %%b) := return ("PROP_EQUAL", [a,b]) -- does not provide the type
-| `(%%a ≠ %%b) := return ("PROP_EQUAL_NOT", [a,b])
+-- | `(%%a ≠ %%b) := return ("PROP_EQUAL_NOT", [a,b])
 ----------- TOPOLOGY --------------
 -- | `(B(%%x, %%r))
+------------ ORDER ----------------
 | `(%%a < %%b) := return ("PROP_<", [a,b])
 | `(%%a ≤ %%b) := return ("PROP_≤", [a,b])
 | `(%%a > %%b) := return ("PROP_>", [a,b])

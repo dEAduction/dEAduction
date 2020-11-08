@@ -90,7 +90,7 @@ def display_math_object(math_object, format_="utf8", text_depth=1):
                                               format_,
                                               text_depth)
     else:
-        log.warning(f"display error: node {node} not in display_format")
+        log.warning(f"display error: node {node} not in utf8_from_node")
         return ["*unknown*"]
 
 
@@ -527,6 +527,7 @@ utf8_from_node = {
     ###############
     "PROP_INCLUDED": [0, " ⊂ ", 1],
     "PROP_BELONGS": [0, " ∈ ", 1],
+    "PROP_NOT_BELONGS": [0, " ∉ ", 1],
     "SET_UNIVERSE": [display_math_type0],
     "SET_INTER": [0, " ∩ ", 1],  # !! small ∩
     "SET_UNION": [0, " ∪ ", 1],  #
@@ -539,6 +540,9 @@ utf8_from_node = {
     "SET_FAMILY": [_("a family of subsets of") + " ", 1],
     "SET_IMAGE": [0, "(", 1, ")"],
     "SET_INVERSE": [0, '⁻¹(', 1, ')'],
+    "SET_PRODUCT": [0, '×', 1],
+    "COUPLE": ['(', 0, ',', 1, ')'],
+    "SET_EXTENSION": ['{', 1, ' ∈ ', 0, ' | ', 2, '}'],  # FIXME: instanciate
     ############
     # NUMBERS: #
     ############
@@ -549,7 +553,8 @@ utf8_from_node = {
     "PROP_≤": [0, " ≤ ", 1],
     "PROP_≥": [0, " ≥ ", 1],
     "MINUS": [0, " - ", 1],
-    "+": [0, " + ", 1],
+    "+": [0, "+", 1],
+    "PRODUCT": [0, "×", 1],
     ##################
     # GENERAL TYPES: #
     ##################
