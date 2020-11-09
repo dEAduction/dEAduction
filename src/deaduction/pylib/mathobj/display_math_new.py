@@ -41,135 +41,191 @@ shape can include calls to some specific formatting functions, e.g.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 
-    TODO: display product:
-    - prod (I,J)
-    - prod.fst, prod.snd
 """
 
 import logging
 import types
+from dataclasses import dataclass
 
 import deaduction.pylib.logger              as logger
-from deaduction.pylib.mathobj.give_name     import give_local_name
 from deaduction.config                      import _
-from deaduction.pylib.mathobj.display_data import ( utf8_from_node,
-                                                    format_from_constant_name,
-                                                    text_from_node
-                                                    )
 
+from .MathObject import MathObject
+from deaduction.pylib.mathobj.give_name     import give_local_name
+from .display_data import ( latex_from_constant_name,
+                            text_from_node,
+                            lean_from_node,
+                            latex_from_node,
+                            latex_to_utf8_dic,
+                            latex_to_lean_dic,
+                            have_bound_vars
+                            )
 
 log = logging.getLogger(__name__)
 
 
-def display_math_object(math_object, format_="utf8", text_depth=1):
+@dataclass
+class Shape:
+    """class used in computing the display of some MathObject
+    Example: if node = 'PROP_EQUAL',
+    - as a first step the shape will have display [0, " = ", 1]
+    (as a result of the from_math_object() class method)
+    - as a second step, this display will be expanded with '0' and '1' replaced
+    by the shapes of the children (by the Shape.from_shape method)
     """
-    This function essentially looks for a shape in the format_from_node
-    dictionary, and then pass the shape to display_math_object_from_shape
-    which computes the display.
+    display:                    list
+    math_object:                MathObject
+    format_:                    str         = 'latex'
+    text_depth:                 int         = 0
+    supplementary_children:     list        = []
 
-    :param math_object: the MathObject instance to be displayed
-    :param format_:     "utf8", "text+utf8", "latex" TODO: implement latex
-    :param text_depth:  when format_="text+utf8", only the symbols at level
-                        less than text_depth in the tree are replaced by text.
-                        So for instance
-                                format_="text+utf8" and text_depth=0
-                        will yield the same result as
-                                format_="utf8".
-    :return:            a "structured string", to be transform into a string
-                        by the structured_display_to_string function
-    """
-    #log.debug(f"Computing math display of {math_object}")
-    node = math_object.node
-    if format_ == "text+utf8" \
-            and text_depth > 0 \
-            and node in text_from_node.keys():
-        shape = text_from_node[node]
-        return display_math_object_from_shape(shape,
-                                              math_object,
-                                              format_,
-                                              text_depth)
-    elif node in utf8_from_node.keys():
-        shape = utf8_from_node[node]
-        return display_math_object_from_shape(shape,
-                                              math_object,
-                                              format_,
-                                              text_depth)
-    else:
-        log.warning(f"display error: node {node} not in utf8_from_node")
-        return ["*unknown*"]
+    @classmethod
+    def from_math_object(cls,
+                         math_object: MathObject,
+                         format_="utf8",
+                         text_depth=0
+                         ):
+        """
+        This function essentially looks for a shape in the format_from_node
+        dictionary, and then pass the shape to display_math_object_from_shape
+        which computes the display.
 
+        :param math_object: the MathObject instance to be displayed
+        :param format_:     "utf8", "latex", "lean"
+        :param text_depth:  when format_="latex" or "utf8", only the symbols at
+                            level less than text_depth in the tree are replaced
+                            by text. So for instance
+                                    format_="utf8" and text_depth=0
+                            uses only symbols ; this is used to display context.
+        :return:            a "structured string", to be transform into a string
+                            by the structured_display_to_string function
+        """
+        # log.debug(f"Computing math display of {math_object}")
+        if format_ not in ["latex", 'utf8', "lean"]:
+            return ["*unknown format*"]
 
-def display_math_object_from_shape(shape,
-                                   math_object,
-                                   format_="utf8",
-                                   text_depth=1):
-    """
-    Replace each element of shape with its display.
-    Ex of shape: [0, " = ", 1]
-    For more examples, see values of the format_from_node dictionary.
-        - numbers refer to children, and will be replaced by the
-            corresponding display,
-        - strings are displayed as such for utf8, (see exceptions below)
-        - functions are called
-    Exceptions for strings:
-        - "_child#" code for subscript version of child number #
-        - some items may already be in displayable form
+        node = math_object.node
+        if format_ == "lean" and node in lean_from_node:
+            shape = Shape(display=lean_from_node[node],
+                          math_object=math_object,
+                          format_=format_)
+            return shape.expand_from_shape()
 
-    :param shape:       a value of the node_to_utf8 dictionary
-    :param math_object: an instance of MathObject
-    :param format_:     "utf8", "text+utf8" or "latex"
-    :param text_depth:  see display_math_object_as_text
-    :return:            a structured string (a list whose items are lists or
-                        strings), to be passed to structured_display_to_string
-                        in order to get a string
-    """
-    # log.debug(f"Trying to display from shape {shape}")
-    display_shape = []
-    counter = -1
-    for item in shape:
-        counter += 1
-        display_item = "¿**"
-        # specific display
-        if isinstance(item, types.FunctionType):
-            # e.g. item = display_constant, display_application, ...
-            display_item = item(math_object, format_)
-        # integers code for children
-        elif isinstance(item, int):
-            if item < len(math_object.children):
-                child = math_object.children[item]
-                display_item = display_math_object(child,
-                                                   format_,
-                                                   text_depth - 1)
-                # with brackets?
-                if not format_.startswith("text") or text_depth < 1:
-                    if needs_paren(math_object, item):
-                        display_item = ['('] + display_item + [')']
-            else:  # keep the integer, this could be a pending parameter
+        elif node in text_from_node and text_depth > 0:
+            shape = Shape(display=text_from_node[node],
+                          math_object=math_object,
+                          format_=format_)
+
+        elif node in latex_from_node:
+            shape = Shape(display=latex_from_node[node],
+                          math_object=math_object,
+                          format_=format_)
+
+        else:  # node not found in dictionaries: try specific methods
+            shape = Shape.from_specific_nodes(math_object, format_, text_depth)
+
+        # From now on shape is an instance of Shape
+        if format_ == "lean":
+            shape.latex_to_lean()
+        elif format_ == "utf8":
+            shape.latex_to_utf8()
+
+        # TODO: manage subscript, exponents, and \text
+        # for elements of shape that are strings (not list)
+
+        return shape.expand_from_shape()
+
+    @classmethod
+    def from_specific_nodes(cls, math_object, format_, text_depth):
+        """
+        case of node in
+        ["APPLICATION", "LOCAL_CONSTANT", "CONSTANT", "LAMBDA",
+         "SET_UNIVERSE", "SET_COMPLEMENT"]
+        """
+        pass  # TODO
+
+    def expand_from_shape(self):  # TODO: take care of supplementary children
+        """
+        Replace each element of shape with its display.
+        Ex of shape: [0, " = ", 1]
+        For more examples, see values of the latex_from_node dictionary.
+            - numbers refer to children, and will be replaced by the
+                corresponding display,
+            - strings are displayed as such for utf8, (see exceptions below)
+            - functions are called
+        Exceptions for strings:
+            - "_child#" code for subscript version of child number #
+            - some items may already be in displayable form
+
+        :return:            a structured string (a list whose items are lists or
+                            strings), to be passed to structured_display_to_string
+                            in order to get a string
+        """
+        # log.debug(f"Trying to display from shape {shape}")
+        # todo: supplementary children, negative indices
+        display =       self.display
+        math_object =   self.math_object
+        format_ =       self.format_
+        text_depth =    self.text_depth
+
+        expanded_shape = []
+        counter = -1
+        for item in display:
+            counter += 1
+            display_item = "¿**"
+            # specific display
+            if isinstance(item, types.FunctionType):
+                # e.g. item = display_constant, display_application, ...
+                display_item = item(math_object, format_)
+            # integers code for children
+            elif isinstance(item, int):
+                if item < len(math_object.children):
+                    child = math_object.children[item]
+                    display_item = Shape.from_math_object(
+                                        math_object=child,
+                                        format_=format_,
+                                        text_depth=text_depth - 1
+                                                          )
+                    # with brackets?
+                    if not format_.startswith("text") or text_depth < 1:
+                        if needs_paren(math_object, item):
+                            display_item = ['('] + display_item + [')']
+                else:  # keep the integer, this could be a pending parameter
+                    display_item = item
+            # strings
+            elif isinstance(item, str):
+                if item.startswith("_child"):
+                    number = int(item[len("_child"):])
+                    child = math_object.children[number]
+                    pre_display_item = Shape.from_math_object(
+                                            math_object=child,
+                                            format_=format_,
+                                            text_depth=text_depth - 1
+                                                              )
+                    display_item = global_subscript(pre_display_item)  # TODO
+                elif item.find("∈") != -1 and isinstance(display[counter + 1], int):
+                    # replace "∈" with ":" in some cases
+                    type_ = math_object.children[display[counter + 1]]
+                    symbol = display_belongs_to(type_, format_, text_depth)
+                    display_item = item.replace('∈', symbol)
+                else:
+                    display_item = text_to_latex(item, format_)
+
+            elif isinstance(item, list):
                 display_item = item
-        # strings
-        elif isinstance(item, str):
-            if item.startswith("_child"):
-                number = int(item[len("_child"):])
-                child = math_object.children[number]
-                pre_display_item = display_math_object(child,
-                                                       format_,
-                                                       text_depth - 1)
-                display_item = global_subscript(pre_display_item)  # TODO
-            elif item.find("∈") != -1 and isinstance(shape[counter + 1], int):
-                # replace "∈" with ":" in some cases
-                type_ = math_object.children[shape[counter + 1]]
-                symbol = display_belongs_to(type_, format_, text_depth)
-                display_item = item.replace('∈', symbol)
-            else:
-                display_item = text_to_latex(item, format_)
+            expanded_shape.append(display_item)
 
-        elif isinstance(item, list):
-            display_item = item
-        display_shape.append(display_item)
+        if len(expanded_shape) == 1:
+            expanded_shape = expanded_shape[0]
+        return expanded_shape
 
-    if len(display_shape) == 1:
-        display_shape = display_shape[0]
-    return display_shape
+    def latex_to_utf8(self):
+        """call latex_to_utf8_dic"""
+        pass
+
+    def latex_to_lean(self):
+        """call latex_to_lean_dic"""
+        pass
 
 
 def needs_paren(parent, child_number: int) -> bool:
@@ -246,105 +302,72 @@ def display_constant(math_object, format_):
     return display
 
 
-def display_application(math_object, format_):
+def display_application(math_object,
+                        format_,
+                        supplementary_children=None
+                        ) -> Shape:
     """
     display for node 'APPLICATION'
-    This is a very special case
-    todo: product (prod.fst, prod.snd, prod, node = 'CONSTANT')
-    todo: improve robustness
-    :param math_object:
-    :param format_:
-    :return:
-    """
-    first_child = math_object.children[0]
-    second_child = math_object.children[1]
-    #log.debug(f"displaying APP, 1st child = {first_child}, "
-    #          f"2nd child = {second_child}")
-    shape = ["*APP*"]
+    This is a very special case, includes e.g.
+    - APP(injective, f)             -> f is injective
+    - APP(APP(composition, f),g)    -> f \circ g
+    - APP(f, x)                     -> f(x)
 
-    # case of index notation
-    if first_child.math_type.node in ["SET_FAMILY", "SEQUENCE"]:
-        # we DO NOT call display for first_child because we just want
+    :param supplementary_children: use to transform
+                                            APP(APP(...APP(x0,x1),...,xn)
+                                    into
+                                            APP(x0, x1, ..., xn)
+    """
+    if supplementary_children is None:
+        supplementary_children = []
+    application = math_object.children[0]
+    second_child = math_object.children[1]
+    supplementary_children.insert(0, second_child)
+
+    # (1) call the function recursively until all args are in
+    # supplementary_children
+    if application.node == "APPLICATION":
+        return display_application(application,
+                                   format_,
+                                   supplementary_children)
+
+    display = []
+
+    # (2) case of index notation: sequences, set families
+    if application.math_type.node in ["SET_FAMILY", "SEQUENCE"]:
+        # we DO NOT call display for application because we just want
         #  "E_i",       but NOT       "{E_i, i ∈ I}_i"      !!!
         # We just take care of two cases of APP(E,i) with either
         # (1) E a local constant, or
         # (2) E a LAMBDA with body APP(F, j) with F local constant
-        name = 0  # for the unknown case
-        if first_child.node == "LOCAL_CONSTANT":
-            name = first_child.info['name']
-        elif first_child.node == "LAMBDA":
-            body = first_child.children[2]
+        name = 0  # default case
+        if application.node == "LOCAL_CONSTANT":
+            name = application.info['name']
+        if application.node == "LAMBDA":
+            body = application.children[2]
             if body.node == "APPLICATION" and body.children[0].node == \
                     "LOCAL_CONSTANT":
                 name = body.children[0].info['name']
-        shape = [name, "_child1"]
-        return display_math_object_from_shape(shape, math_object, format_)
-    # strange cases
-    elif first_child.node == "CONSTANT":
-        name = first_child.info['name']
-        if name in format_from_constant_name.keys():
-            shape = format_from_constant_name[name]
-        #elif not second_child.is_type():
-        #    shape = [name, -1]  # '-1' is a place for a pending parameter
-        else:
-            # shape = [name, 0]
-            shape = [-1, " " + _("is") + " ", name]  # we hope to get some
-            # argument to apply name
-    elif first_child.node == "APPLICATION":
-        display_first_child = display_math_object(first_child, format_)
-        if has_pending_parameter(display_first_child):
-            shape = display_first_child
+        display = [name, "_child1"],
 
+    # (3) case of constants, e.g. APP( injective, f)
+    elif application.node == "CONSTANT":
+        name = application.info['name']
+        if name in latex_from_constant_name:
+            display = latex_from_constant_name[name]
+        else:  # standard format
+            display = latex_from_constant_name['STANDARD']
 
-    if not has_pending_parameter(shape):
-        if shape == ["*APP*"]:
-            if math_object.is_prop():
-                # display of a property, e.g. "f is injective"
-                shape = [1, " " + _("is") + " ", 0]
-            else:
-                # general case, functional notation: f(x)
-                shape = [0, "(", 1, ")"]
-        return display_math_object_from_shape(shape, math_object, format_)
-    ###################################
-    # treatment of pending parameters #
-    ###################################
-    # here shape comes from first_child,
-    # either from display if node == APPLICATION
-    # or if node == CONSTANT
-    # if second parameter is not type, insert it in shape
-    # then return shape if there remains some pending parameters,
-    # else display shape
-    if not second_child.is_type():
-        shape = insert_pending_param(second_child, shape, format_)
-    if has_pending_parameter(shape):
-        return shape
-    else:
-        return display_math_object_from_shape(shape, math_object, format_)
+    # (4) finally: functional notation
+    if not display:
+        display = [0, "(", 1, ")"]
 
-
-def has_pending_parameter(structured_display: [str]):
-    """
-    A structured display is supposed to be a list whose items are either
-    lists or strings. But it may contain "pending parameters" which are
-    integer.
-    """
-    for item in structured_display:
-        if isinstance(item, int) and item < 0:
-            return True
-    return False
-
-
-def insert_pending_param(math_object, shape, format_):
-    """
-    Modify shape:
-    replace first integer 0 by math_object and then shift every integer by 1
-    """
-    # insert math_object where there is a '-1'
-    shape1 = [display_math_object(math_object, format_)
-              if item == -1 else item for item in shape]
-    # shift integers
-    shape2 = [item + 1 if isinstance(item, int) else item for item in shape1]
-    return shape2
+    shape = Shape(display=display,
+                  math_object=math_object,
+                  format_=format_,
+                  supplementary_children=supplementary_children
+                  )
+    return shape.expand_from_shape()
 
 
 def display_math_type_of_local_constant(math_type, format_):
@@ -533,6 +556,14 @@ def display_text_belongs_to(math_object, format_, text_depth):
     """
     #TODO
     pass
+
+
+
+
+
+
+
+
 
 
 ##########

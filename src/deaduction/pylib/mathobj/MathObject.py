@@ -39,7 +39,8 @@ import logging
 
 import deaduction.pylib.logger as logger
 from .display_math import (display_math_object,
-                           display_math_type_of_local_constant)
+                           display_math_type_of_local_constant,
+                           have_bound_vars)
 
 import deaduction.pylib.mathobj.give_name as give_name
 
