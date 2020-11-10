@@ -14,12 +14,12 @@ Contain the data for processing PropObj into a latex representation
 
 The basic data for representing math objects is the latex_from_node dictionary.
 It associates, to each MathObject.node attribute, the shape to display, e.g.
-    "PROP_INCLUDED": [0, " \subset ", 1],
+    "PROP_INCLUDED": [0, r" \subset ", 1],
 where the numbers refer to the MathObject's children.
 The from_math_object method picks the right shape from this dictionary,
 and then call the Shape.from_shape method.
 
-TODO: explain utf8 and Lean
+TODO: explain process for utf8 and Lean
 
 To implement a new node for display:
 - for standards nodes, it suffices to add an entry in the latex_from_node
@@ -58,15 +58,19 @@ via the from_specific_node function.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 
 """
+# todo: subscript and exponents
+# todo: belongs to
+# todo: revise expand_from_shape
+# todo: test for text_depth
+# todo: text quantifiers, text belongs to
 
 import logging
-import types
+from typing import Any
 from dataclasses import dataclass
 
 import deaduction.pylib.logger              as logger
 from deaduction.config                      import _
 
-from .MathObject import MathObject
 from deaduction.pylib.mathobj.give_name     import give_local_name
 from .display_data import ( latex_from_constant_name,
                             text_from_node,
@@ -74,7 +78,6 @@ from .display_data import ( latex_from_constant_name,
                             latex_from_node,
                             latex_to_utf8_dic,
                             latex_to_lean_dic,
-                            have_bound_vars,
                             needs_paren
                             )
 
@@ -94,15 +97,15 @@ class Shape:
     "shape" instead of "shape"
     """
     display:                    list
-    math_object:                MathObject
+    math_object:                Any
     format_:                    str         = 'latex'
     text_depth:                 int         = 0
     supplementary_children:     list        = None
 
     @classmethod
     def from_math_object(cls,
-                         math_object: MathObject,
-                         format_="utf8",
+                         math_object: Any,
+                         format_="latex",
                          text_depth=0
                          ):
         """
@@ -121,7 +124,7 @@ class Shape:
                             structured string, to be transform into a string by
                             the structured_display_to_string function
         """
-        # log.debug(f"Computing math display of {math_object}")
+        log.debug(f"Computing shape of {math_object}")
         if format_ not in ["latex", 'utf8', "lean"]:
             return shape_error(f"unknown format = {format_}")
 
@@ -155,10 +158,12 @@ class Shape:
         elif format == "latex" and text_depth <= 0:
             raw_shape.text_to_latex()
 
-        # TODO: manage subscript, exponents, and \text
+        # TODO: manage subscript and exponents
+
         # for elements of raw_shape that are strings (not list)
         # finally expand raw_shape
-        return raw_shape.expand_from_shape()
+        raw_shape.expand_from_shape()
+        return raw_shape  # now expanded
 
     @classmethod
     def from_specific_nodes(cls, math_object, format_, text_depth):
@@ -182,13 +187,12 @@ class Shape:
         elif node in ["LOCAL_CONSTANT", "CONSTANT"]:
             # return display, not shape
             display = display_constant(math_object, format_)
-            # TODO: display or shape ?
         elif node == "LAMBDA":
             display = display_lambda(math_object, format_)
         elif node == "SET_UNIVERSE":
-            display = [math_object.math_type_child_name()]
+            display = [math_object.math_type_child_name(format_)]
         elif node == "SET_COMPLEMENT":
-            universe = math_object.math_type_child_name()
+            universe = math_object.math_type_child_name(format_)
             display = [universe, r" \backslash ", 0]
         if display:
             shape = Shape(display,
@@ -200,8 +204,7 @@ class Shape:
         else:
             return shape_error("unknown object")
 
-    def expand_from_shape(self):
-        # TODO: take care of supplementary children
+    def expand_from_shape(self) -> Any:  #todo: revise
         """
         Replace each element of shape with its display.
         Ex of shape: [0, " = ", 1]
@@ -216,8 +219,7 @@ class Shape:
 
         :return: a modified instance of Shape
         """
-        # log.debug(f"Trying to display from shape {shape}")
-        # todo: supplementary children, negative indices
+        log.debug(f"Expanding shape {self.display}")
         display =       self.display
         math_object =   self.math_object
         format_ =       self.format_
@@ -230,51 +232,61 @@ class Shape:
 
         expanded_display = []
         counter = -1
+        subscript = False
+        superscript = False
         for item in display:
             counter += 1
             display_item = "¿**"
-            # specific display
-            if isinstance(item, types.FunctionType):
-                # e.g. item = display_constant, display_application, ...
-                display_item = item(math_object, format_)
+            # # specific display
+            # if isinstance(item, types.FunctionType):
+            #     # e.g. item = display_constant, display_application, ...
+            #     display_item = item(math_object, format_)
             # integers code for children
-            elif isinstance(item, int):
-                if -len(math_object.children) <= item < len(
+            if isinstance(item, int):
+                if not -len(math_object.children) <= item < len(
                                                     math_object.children):
+                    display_item = '*child out of range*'
+                else:
                     child = math_object.children[item]
-                    display_item = Shape.from_math_object(
+                    shape = Shape.from_math_object(
                                         math_object=child,
                                         format_=format_,
                                         text_depth=text_depth - 1
                                                           )
+                    display_item = shape.display
                     # with brackets?
                     if text_depth < 1:
                         if needs_paren(math_object, item):
                             display_item = ['('] + display_item + [')']
-                else:
-                    display_item = '*child out of range*'
             # strings
             elif isinstance(item, str):
-                if item.startswith("_child"):
-                    number = int(item[len("_child"):])
-                    child = math_object.children[number]
-                    pre_display_item = Shape.from_math_object(
-                                            math_object=child,
-                                            format_=format_,
-                                            text_depth=text_depth - 1
-                                                              )
-                    display_item = global_subscript(pre_display_item)  # TODO
-                elif item.find("∈") != -1 and isinstance(display[counter + 1], int):
-                    # replace "∈" with ":" in some cases
-                    type_ = math_object.children[display[counter + 1]]
-                    symbol = display_belongs_to(type_, format_, text_depth)
-                    display_item = item.replace('∈', symbol)
+                if item.find(r"\in") != -1 or item.find(r"∈") != -1:
+                    if isinstance(display[counter + 1], int):
+                        # replace "∈" with ":" in some cases
+                        type_ = math_object.children[display[counter + 1]]
+                        symbol = display_belongs_to(type_, format_, text_depth)
+                        display_item = item.replace(r"\in", symbol)
+                        display_item = display_item.replace(r"∈", symbol)
                 else:
-                    pass  # todo: remove if useless
-                    #display_item = string_to_latex(item)
+                    display_item = item
 
             elif isinstance(item, list):
                 display_item = item
+
+            # subscript and superscript
+            if counter > 0:
+                if display[counter - 1] == '_':
+                    subscript = True
+                elif display[counter - 1] == '^':
+                    superscript = True
+            if subscript or superscript:
+                display[counter - 1] = ''
+                display_item = text_to_subscript_or_sup(display_item,
+                                                        format_,
+                                                        sup=superscript)
+                subscript = False
+                superscript = False
+
             expanded_display.append(display_item)
 
         if len(expanded_display) == 1:
@@ -286,13 +298,14 @@ class Shape:
         """call latex_to_utf8_dic to replace each item in self by utf8
         version"""
         display = self.display
+        log.debug(f"convert {display} to utf8")
         for string, n in zip(display, range(len(display))):
             if isinstance(string, str):
                 striped_string = string.strip()  # remove spaces
                 if striped_string in latex_to_utf8_dic:
                     utf8_string = latex_to_utf8_dic[striped_string]
-                    string.replace(striped_string, utf8_string)
-                    display[n] = string
+                    utf8_string = string.replace(striped_string, utf8_string)
+                    display[n] = utf8_string
 
     def latex_to_lean(self):
         """call latex_to_lean_dic"""
@@ -302,8 +315,8 @@ class Shape:
                 striped_string = string.strip()  # remove spaces
                 if striped_string in latex_to_lean_dic:
                     lean_string = latex_to_lean_dic[striped_string]
-                    string.replace(striped_string, lean_string)
-                    display[n] = string
+                    lean_string = string.replace(striped_string, lean_string)
+                    display[n] = lean_string
 
     def text_to_latex(self):
         """for each string item in self which is pure text,
@@ -332,7 +345,7 @@ def shape_from_application(math_object,
     display for node 'APPLICATION'
     This is a very special case, includes e.g.
     - APP(injective, f)             -> f is injective
-    - APP(APP(composition, f),g)    -> f \circ g
+    - APP(APP(composition, f),g)    -> r"f \circ g"
     - APP(f, x)                     -> f(x)
 
     :param format_:
@@ -342,6 +355,8 @@ def shape_from_application(math_object,
                                     into
                                             APP(x0, x1, ..., xn)
     """
+    log.debug(f"shape from app {math_object}")
+    log.debug(f"supplementary children : {supplementary_children}")
     if supplementary_children is None:
         supplementary_children = []
     application = math_object.children[0]
@@ -366,17 +381,17 @@ def shape_from_application(math_object,
         # (2) E a LAMBDA with body APP(F, j) with F local constant
         name = 0  # default case
         if application.node == "LOCAL_CONSTANT":
-            name = application.display_name()
+            name = application.display_name
         if application.node == "LAMBDA":
             body = application.children[2]
             if body.node == "APPLICATION" and body.children[0].node == \
                     "LOCAL_CONSTANT":
-                name = body.children[0].display_name()
-        display = [name, "_child1"],
+                name = body.children[0].display_name
+        display = [name, '_', 1],
 
     # (3) case of constants, e.g. APP( injective, f)
     elif application.node == "CONSTANT":
-        name = application.display_name()
+        name = application.display_name
         if name in latex_from_constant_name:
             display = latex_from_constant_name[name]
         else:  # standard format
@@ -410,7 +425,7 @@ def display_constant(math_object, format_) -> list:
             return display_set_family(math_object, format_)
         elif math_object.math_type.node == "SEQUENCE":
             return "*SEQ*"  # todo
-    display = [math_object.display_name()]
+    display = [math_object.display_name]
     return display
 
 
@@ -430,8 +445,8 @@ def display_set_family(math_object, format_="latex") -> list:
     it will not appear in extract_local_vars.
     """
     # first find a name for the bound var
-    name = math_object.display_name()
-    math_type_name = math_object.math_type_child_name()
+    name = math_object.display_name
+    math_type_name = math_object.math_type_child_name(format_)
     bound_var_type = math_object.math_type.children[0]
     index_name = give_local_name(math_type=bound_var_type,
                                  body=math_object)
@@ -457,7 +472,7 @@ def display_lambda(math_object, format_="latex") -> list:
     if math_type.node == "SET_FAMILY":
         display = [r'\{', 2, ', ', 1, r' \in ', 0, r'\}']
     elif math_type.node == "SEQUENCE":
-        shape = ['(', 2, ')', '_{', 1, r' \in ', 0, '}']
+        shape = ['(', 2, ')', '_', 1, r' \in ', 0, '}']
         # todo: manage subscript
     elif body.node == "APPLICATION" and body.children[1] == var:
         # object is of the form x -> f(x)
@@ -499,19 +514,22 @@ def display_math_type_of_local_constant(math_type, format_, text_depth=0) \
         display = [_("a subset of") + " ", 0]
     if display:
         raw_shape = Shape(display=display,
-                      math_object=math_type,
-                      format_=format_,
-                      text_depth=text_depth
-                      )
-        return raw_shape.expand_from_shape()
-
-    #################
+                          math_object=math_type,
+                          format_=format_,
+                          text_depth=text_depth
+                          )
+        raw_shape.expand_from_shape()
+        return raw_shape
+        #################
     # usual method  #
     #################
     else:  # return usual expanded shape
-        return Shape.from_math_object(math_object=math_type,
-                                      format_=format_,
-                                      text_depth=text_depth)
+        shape = Shape.from_math_object(math_object=math_type,
+                                       format_=format_,
+                                       text_depth=text_depth
+                                       )
+        shape.expand_from_shape()
+        return shape
 
 
 ######################
@@ -529,8 +547,8 @@ def display_belongs_to(math_type, format_, text_depth, belonging=True) -> str:
         - "P: a proposition" (and not P ∈ a proposition),
         FIXME
     """
-    #log.debug(f"display ∈ with {math_type}, {format_}, {text_depth}")
-    if format_ == "text+utf8" and text_depth > 0:
+    log.debug(f"display ∈ with {math_type}, {format_}, {text_depth}")
+    if text_depth > 0:
         if math_type.node == "PROP" \
                 or (math_type.node == "FUNCTION" and text_depth > 1):
             symbol = _("is")
@@ -542,7 +560,7 @@ def display_belongs_to(math_type, format_, text_depth, belonging=True) -> str:
         if math_type.node in ["FUNCTION", "PROP"]:
             symbol = ":"
         else:
-            symbol = "∈"
+            symbol = "∈" if format_ == "utf8" else r"\in"
     return symbol
 
 
@@ -558,53 +576,77 @@ def string_to_latex(string: str):
 # some tools for manipulating strings #
 #######################################
 #######################################
-def subscript(index, format_):
-    # TODO !!
-    return "_" + index
-
-
-def text_to_subscript(structured_string):
+def text_to_subscript_or_sup(structured_string,
+                             format_="latex",
+                             sup=False
+                             ):
     """
-    recursive version, for strings to be displayed use global_subscript instead
-    :param structured_string: list of sturctured string
+    Convert structured_string to subscript of superscript
+
+    :param structured_string:
+    :param format_: "latex" or "utf8" or "lean"
+    :param sup: bool, if True then superscript, else subscript
+    :return: converted structured string
+    """
+    if format_ == 'latex':
+        if sup:
+            return [r'^{', structured_string, r'}']
+        else:
+            return [r'_{', structured_string, r'}']
+    else:
+        sub_or_sup, is_subscriptable = recursive_subscript(structured_string,
+                                                           sup)
+        if is_subscriptable:
+            return sub_or_sup
+        else:
+            if sup:
+                return ['^'] + [structured_string]
+            else:
+                return ['_'] + [structured_string]
+            # [sub] necessary in case sub is an (unstructured) string
+
+
+SOURCE = {'sub': "0123456789" + "aeioruv",
+          'sup': "-1"}
+TARGET = {'sub': "₀₁₂₃₄₅₆₇₈₉" + "ₐₑᵢₒᵣᵤᵥ",
+          'sup': "⁻¹"}
+
+
+def recursive_subscript(structured_string, sup):
+    """
+    Recursive version, for strings to be displayed use global_subscript instead
+    This is not for latex format
+
+    :param structured_string: list of structured string
+    :param sup: bool
     :return: the structured string in a subscript version if available,
     or the structured string unchanged if not,
     and a boolean is_subscriptable
     """
-    normal_list = "0123456789" + "aeioruv"
-    subscript_list = "₀₁₂₃₄₅₆₇₈₉" + "ₐₑᵢₒᵣᵤᵥ"
-    # subscript_list = "₀₁₂₃₄₅₆₇₈₉" + "ₐₑᵢⱼₒᵣᵤᵥₓ"
     is_subscriptable = True
     if isinstance(structured_string, list):
         sub_list = []
         for item in structured_string:
-            sub, bool = text_to_subscript(item)
-            if not bool:  # not subscriptable
+            sub, still_is_sub = recursive_subscript(item, sup)
+            if not still_is_sub:  # not subscriptable
                 return structured_string, False
             else:
                 sub_list.append(sub)
         return sub_list, True
 
     # from now on structured_string is assumed to be a string
+    style = 'sup' if sup else 'sub'
     for letter in structured_string:
-        if letter not in normal_list:
+        if letter not in SOURCE[style]:
             is_subscriptable = False
     if is_subscriptable:
         subscript_string = ""
-        for l in structured_string:
-            subscript_string += subscript_list[normal_list.index(l)]
+        for letter in structured_string:
+            pos = SOURCE[style].index(letter)
+            subscript_string += TARGET[style][pos]
     else:
         subscript_string = structured_string
     return subscript_string, is_subscriptable
-
-
-def global_subscript(structured_string):
-    sub, is_subscriptable = text_to_subscript(structured_string)
-    if is_subscriptable:
-        return sub
-    else:
-        return ['_'] + [sub]
-        # [sub] necessary in case sub is an (unstructured) string
 
 
 def display_text_quant(math_object, format_, text_depth):
@@ -631,7 +673,7 @@ def display_text_belongs_to(math_object, format_, text_depth):
     pass
 
 
-def shape_error(message: str, math_object= None, format_ = "", text_depth=0):
+def shape_error(message: str, math_object=None, format_="", text_depth=0):
     shape = Shape(['*' + message + '*'],
                   math_object,
                   format_,

@@ -75,8 +75,8 @@ def construct_and(goal: Goal, user_input: [str]):
 
     if goal.target.math_type.node != "PROP_AND":
         raise WrongUserInput
-    left = goal.target.math_type.children[0].format_as_utf8()
-    right = goal.target.math_type.children[1].format_as_utf8()
+    left = goal.target.math_type.children[0].to_display()
+    right = goal.target.math_type.children[1].to_display()
     choices = [(_("Left"), left), (_("Right"), right)]
 
     if user_input == []:
@@ -155,8 +155,8 @@ def construct_or(goal: Goal, user_input: [str]) -> str:
     if goal.target.math_type.node != "PROP_OR":
         raise WrongUserInput
 
-    left = goal.target.math_type.children[0].format_as_utf8()
-    right = goal.target.math_type.children[1].format_as_utf8()
+    left = goal.target.math_type.children[0].to_display()
+    right = goal.target.math_type.children[1].to_display()
     choices = [(_("Left"), left), (_("Right"), right)]
 
     if len(user_input) == 0:
@@ -181,8 +181,8 @@ def apply_or(goal, l: [MathObject], user_input: [str]) -> str:
 
     h_selected = l[0].info["name"]
 
-    left = l[0].math_type.children[0].format_as_utf8()
-    right = l[0].math_type.children[1].format_as_utf8()
+    left = l[0].math_type.children[0].to_display()
+    right = l[0].math_type.children[1].to_display()
     choices = [(_("Left"), left), (_("Right"), right)]
 
     if len(user_input) == 0:
@@ -207,7 +207,7 @@ def construct_or_on_hyp(goal: Goal, l: [MathObject], user_input: [str] = []):
     if not l[0].math_type.is_prop():
         raise WrongUserInput
     hP = l[0].info["name"]
-    P = l[0].math_type.format_as_utf8()
+    P = l[0].math_type.to_display()
     if len(l) == 2:
         Q = l[1].info["name"]
     
@@ -388,8 +388,8 @@ def construct_iff(goal: Goal, user_input: [str]):
     if goal.target.math_type.node != "PROP_IFF":
         raise WrongUserInput
 
-    left = goal.target.math_type.children[0].format_as_utf8()
-    right = goal.target.math_type.children[1].format_as_utf8()
+    left = goal.target.math_type.children[0].to_display()
+    right = goal.target.math_type.children[1].to_display()
     choices = [("⇒", f'({left}) ⇒ ({right})'), ("⇐", f'({right}) ⇒ ({left})')]
 
     if user_input == []:
@@ -470,9 +470,9 @@ def construct_forall(goal):
         x = give_global_name(goal=goal,
                              math_type=goal.target.math_type.children[0],
                              hints=[goal.target.math_type.children[
-                                        1].format_as_utf8(),
+                                        1].to_display(),
                                     goal.target.math_type.children[
-                                        0].format_as_utf8().lower()])
+                                        0].to_display().lower()])
         possible_codes.append(f'intro {x}')
     return format_orelse(possible_codes)
 
@@ -522,7 +522,7 @@ def apply_exists(goal: Goal, l: [MathObject]) -> str:
         raise WrongUserInput
     h_name = l[0].info["name"]
     x = give_global_name(goal=goal, math_type=h_selected.children[0],
-                         hints=[h_selected.children[1].format_as_utf8()])
+                         hints=[h_selected.children[1].to_display()])
     hx = get_new_hyp(goal)
     if h_selected.children[2].node == "PROP_∃":
         possible_codes.append(

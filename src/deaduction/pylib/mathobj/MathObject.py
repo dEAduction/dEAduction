@@ -38,9 +38,9 @@ from typing import          List, Any
 import logging
 
 import deaduction.pylib.logger as logger
-from .display_math import (Shape,
-                           display_math_type_of_local_constant,
-                           have_bound_vars)
+from .display_math import (display_math_type_of_local_constant,
+                           Shape)
+from .display_data import have_bound_vars
 
 import deaduction.pylib.mathobj.give_name as give_name
 
@@ -76,13 +76,12 @@ class MathObject:
         else:
             return '*no_name*'
 
-    @property
     def math_type_child_name(self, format_):
         """display first child of math_type"""
         math_type = self.math_type
         if hasattr(math_type, 'children'):
             child = math_type.children[0]
-            return child.display_name()
+            return child.display_name
         else:
             return '*no_name*'
 
@@ -372,7 +371,7 @@ class MathObject:
     ########################
     def to_display(self,
                    is_math_type=False,
-                   format_="latex",
+                   format_="utf8",  # change to "latex" for latex...
                    text_depth=0
                    ):
         if is_math_type:
@@ -385,6 +384,7 @@ class MathObject:
                                                         text_depth)
         else:
             shape = Shape.from_math_object(self, format_, text_depth)
+        log.debug(f"got shape = {shape}")
         return structured_display_to_string(shape.display)
 
 

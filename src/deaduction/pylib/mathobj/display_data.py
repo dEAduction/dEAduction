@@ -53,14 +53,14 @@ latex_from_node = {
     "SET_INTER+": [r"\bigcap", 0],  # !! big ⋂
     "SET_UNION+": [r"\bigcup", 0],
     "SET_DIFF": [0, r" \backslash ", 1],
-    "SET_DIFF_SYM": [0, " \Delta ", 1],
-    "SET_EMPTY": ["\emptyset"],
+    "SET_DIFF_SYM": [0, r" \Delta ", 1],
+    "SET_EMPTY": [r"\emptyset"],
     "SET_FAMILY": [_("a family of subsets of") + " ", 1],
     "SET_IMAGE": [0, "(", 1, ")"],
-    "SET_INVERSE": [0, '^{-1}', '(', 1, ')'],  # todo: exponent ⁻¹
+    "SET_INVERSE": [0, r'^', '-1', '(', 1, ')'],
     "SET_PRODUCT": [0, r'\times', 1],
     "COUPLE": ['(', 0, ',', 1, ')'],
-    "SET_EXTENSION": [r'\{', 1, ' \in ', 0, ' | ', 2, r'\}'],
+    "SET_EXTENSION": [r'\{', 1, r' \in ', 0, ' | ', 2, r'\}'],
     # FIXME: instantiate set extensions
     ############
     # NUMBERS: #
@@ -77,7 +77,7 @@ latex_from_node = {
     ##################
     # GENERAL TYPES: #
     ##################
-    "SET": ["{\mathcal P}", "(", 0, ")"],
+    "SET": [r'{\mathcal P}', "(", 0, ")"],
     "PROP": [_("a proposition")],
     "TYPE": [_("a set")],
     "FUNCTION": [0, r" \to ", 1],
@@ -99,19 +99,20 @@ lean_from_node = {  # todo: complete
 
 # negative value = from end of children list
 latex_from_constant_name = {
-    "STANDARD": [1, " " + _("is") + " ", 0],
+    "STANDARD": [-1, " " + _("is") + " ", 0],
     "symmetric_difference": [-2, r'\Delta', -1],
-    "composition": [-2, r'\circ', -1],
+    "composition": [5, r'\circ', 6],
     "prod": [0, r'\times', 1],
-    "Identite": ["\mathrm{Id}"]
+    "Identite": ["Id"]
                             }
 
-latex_to_utf8_dic = {  # TODO: complete
-    '\Delta': '∆',
-    '\circ': '∘',
+latex_to_utf8_dic = {
+    r'\backslash': '\\',
+    r'\Delta': '∆',
+    r'\circ': '∘',
     r'\times': '×',
     r'\in': '∈',
-    r'\LeftRightarrow': '⇔',
+    r'\Leftrightarrow': '⇔',
     r'\Rightarrow': '⇒',
     r'\forall': '∀',
     r'\exists': '∃',
@@ -128,7 +129,8 @@ latex_to_utf8_dic = {  # TODO: complete
     r'\leq': '≤',
     r'\geq': '≥',
     r'{\mathcal P}': '𝒫',
-    r'\{': '{'
+    r'\{': '{',
+    r'\}': '}'
                      }
 
 # only those lean symbols that are not in the latex_to_utf8 dict
@@ -207,7 +209,7 @@ def needs_paren(parent, child_number: int) -> bool:
     ( ... ) <=> ( ... )
 
     TODO : tenir compte de la profondeur des parenthèses,
-    et utiliser \Biggl(\biggl(\Bigl(\bigl((x)\bigr)\Bigr)\biggr)\Biggr)
+    et utiliser Biggl( biggl( Bigl( bigl( (x) bigr) Bigr) biggr) Biggr)
     """
     child_prop_obj = parent.children[child_number]
     p_node = parent.node
