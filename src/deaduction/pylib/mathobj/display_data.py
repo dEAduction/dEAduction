@@ -28,7 +28,10 @@ This file is part of d∃∀duction.
 
 from deaduction.config                      import _
 
-latex_from_node= {  # TODO: a REVOIR
+# !! Latex commands should be alone in their strings,
+# except for spaces around them, so that up to strip(), they appear in
+# latex_to_utf8_dic
+latex_from_node = {
     "PROP_AND": [0, " " + _("AND") + " ", 1],
     "PROP_OR": [0, " " + _("OR") + " ", 1],
     "PROP_FALSE": [_("Contradiction"), ],
@@ -45,14 +48,12 @@ latex_from_node= {  # TODO: a REVOIR
     "PROP_INCLUDED": [0, r" \subset ", 1],
     "PROP_BELONGS": [0, r" \in ", 1],
     "PROP_NOT_BELONGS": [0, r" \not\in ", 1],
-#    "SET_UNIVERSE": [display_math_type0],
     "SET_INTER": [0, r" \cap ", 1],  # !! small ∩
     "SET_UNION": [0, r" \cup ", 1],  #
     "SET_INTER+": [r"\bigcap", 0],  # !! big ⋂
     "SET_UNION+": [r"\bigcup", 0],
-    "SET_DIFF": [0, r" \ ", 1],  # TODO antislash!
+    "SET_DIFF": [0, r" \backslash ", 1],
     "SET_DIFF_SYM": [0, " \Delta ", 1],
-#    "SET_COMPLEMENT": [display_math_type0, r" \ ", 0],
     "SET_EMPTY": ["\emptyset"],
     "SET_FAMILY": [_("a family of subsets of") + " ", 1],
     "SET_IMAGE": [0, "(", 1, ")"],
@@ -65,7 +66,7 @@ latex_from_node= {  # TODO: a REVOIR
     # NUMBERS: #
     ############
     "PROP_EQUAL": [0, " = ", 1],
-    "PROP_EQUAL_NOT": [0, " ≠ ", 1],  # todo
+    "PROP_EQUAL_NOT": [0, r" \neq ", 1],  # todo
     "PROP_<": [0, " < ", 1],
     "PROP_>": [0, " > ", 1],
     "PROP_≤": [0, r" \leq ", 1],
@@ -83,7 +84,7 @@ latex_from_node= {  # TODO: a REVOIR
                   }
 
 # Lean formats that cannot be deduced from latex
-lean_from_node = {
+lean_from_node = {  # todo: complete
     "PROP_FALSE": ['False'],
     "SET_INTER+": [],
     "SET_UNION+": [],
@@ -96,12 +97,12 @@ lean_from_node = {
                   }
 
 
-# negative value = pending parameter
+# negative value = from end of children list
 latex_from_constant_name = {
     "STANDARD": [1, " " + _("is") + " ", 0],
     "symmetric_difference": [-2, r'\Delta', -1],
     "composition": [-2, r'\circ', -1],
-    "prod": [-2, r'\times', -1],  # FIXME: does not work (parameters are types)
+    "prod": [0, r'\times', 1],
     "Identite": ["\mathrm{Id}"]
                             }
 
@@ -123,9 +124,11 @@ latex_to_utf8_dic = {  # TODO: complete
     r'\bigcup': '⋃',
     r'\emptyset': '∅',
     r'\to': '→',
+    r'\neq': '≠',
     r'\leq': '≤',
     r'\geq': '≥',
-    r'{\mathcal P}': 'P'  # todo: cal P in utf8
+    r'{\mathcal P}': '𝒫',
+    r'\{': '{'
                      }
 
 # only those lean symbols that are not in the latex_to_utf8 dict
@@ -189,3 +192,40 @@ text_from_node = {
 
 # nodes of math objects that need instantiation of bound variables
 have_bound_vars = ["QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_EXTENSION", "LAMBDA"]
+
+nature_leaves_list = ["PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
+                      "FUNCTION", "SEQUENCE", "SET_FAMILY",
+                      "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY"]
+
+
+def needs_paren(parent, child_number: int) -> bool:
+    """
+    Decides if parentheses are needed around the child
+    e.g. if PropObj.node = PROP.IFF then
+    needs_paren(PropObj,i) will be set to True for i = 0, 1
+    so that the display will be
+    ( ... ) <=> ( ... )
+
+    TODO : tenir compte de la profondeur des parenthèses,
+    et utiliser \Biggl(\biggl(\Bigl(\bigl((x)\bigr)\Bigr)\biggr)\Biggr)
+    """
+    child_prop_obj = parent.children[child_number]
+    p_node = parent.node
+    # if child_prop_obj.node == "LOCAL_CONSTANT":
+    #     return False
+    if not child_prop_obj.children:
+        return False
+    c_node = child_prop_obj.node
+    if c_node in nature_leaves_list + \
+            ["SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
+             "PROP_INCLUDED", "SET_UNION+", "SET_INTER+"]:
+        return False
+    elif c_node == "APPLICATION":
+        return False
+    elif p_node in ["SET_IMAGE", "SET_INVERSE",
+                    "SET_UNION+", "SET_INTER+", "APPLICATION",
+                    "PROP_EQUAL", "PROP_INCLUDED", "PROP_BELONGS", "LAMBDA"]:
+        return False
+    elif c_node.startswith("QUANT") and p_node.startswith("QUANT"):
+        return False
+    return True
