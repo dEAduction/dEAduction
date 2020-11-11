@@ -38,7 +38,6 @@ from deaduction.pylib.mathobj.lean_analysis_with_type import \
                                                 lean_expr_with_type_grammar, \
                                                 LeanEntryVisitor
 
-#from deaduction.pylib.actions import            Action
 
 log = logging.getLogger(__name__)
 
@@ -221,7 +220,7 @@ class Goal:
                 objects.append((math_object, tag))
         return objects, propositions
 
-    def goal_to_text(self, format_="text+utf8", to_prove=True, text_depth=1) \
+    def goal_to_text(self, format_="utf8", to_prove=True, text_depth=1) \
             -> str:
         """compute a readable version of the goal as the statement of an
         exercise.

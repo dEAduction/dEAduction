@@ -141,7 +141,7 @@ latex_to_lean_dic = {
     'AND': '∧',
     'OR': '∨',
     'NOT': '¬',
-    r'\LeftRightarrow': '↔',
+    r'\Leftrightarrow': '↔',
     r'\Rightarrow': '→',
     r'\cap': '∩',
     r'\cup': '∪',
@@ -229,7 +229,8 @@ def needs_paren(parent, child_number: int) -> bool:
         return False
     elif p_node in ["SET_IMAGE", "SET_INVERSE",
                     "SET_UNION+", "SET_INTER+", "APPLICATION",
-                    "PROP_EQUAL", "PROP_INCLUDED", "PROP_BELONGS", "LAMBDA"]:
+                    "PROP_EQUAL", "PROP_INCLUDED", "PROP_BELONGS",
+                    "PROP_NOT_BELONGS", "LAMBDA"]:
         return False
     elif c_node.startswith("QUANT") and p_node.startswith("QUANT"):
         return False

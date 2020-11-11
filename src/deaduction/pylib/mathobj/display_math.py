@@ -14,12 +14,16 @@ Contain the data for processing PropObj into a latex representation
 
 The basic data for representing math objects is the latex_from_node dictionary.
 It associates, to each MathObject.node attribute, the shape to display, e.g.
-    "PROP_INCLUDED": [0, r" \subset ", 1],
+    "PROP_INCLUDED": [0, " \\subset ", 1],
 where the numbers refer to the MathObject's children.
-The from_math_object method picks the right shape from this dictionary,
-and then call the Shape.from_shape method.
+For generic nodes at least, the from_math_object method picks the right shape
+from this dictionary, and then call the Shape.from_shape method.
 
-TODO: explain process for utf8 and Lean
+utf8 and lean format are also provided. The utf8 format is obtained from
+the latex string using latex_to_utf8_dic. For Lean format some nodes have to be
+computed from scratch, these are in lean_from_node. For the other one,
+the latex string is first converted to utf8
+
 
 To implement a new node for display:
 - for standards nodes, it suffices to add an entry in the latex_from_node
@@ -133,17 +137,17 @@ class Shape:
 
         node = math_object.node
         if format_ == "lean" and node in lean_from_node:
-            raw_shape = Shape(display=lean_from_node[node],
+            raw_shape = Shape(display=lean_from_node[node].copy(),
                               math_object=math_object,
                               format_=format_)
 
         elif node in text_from_node and text_depth > 0:
-            raw_shape = Shape(display=text_from_node[node],
+            raw_shape = Shape(display=text_from_node[node].copy(),
                               math_object=math_object,
                               format_=format_)
 
         elif node in latex_from_node:
-            raw_shape = Shape(display=latex_from_node[node],
+            raw_shape = Shape(display=latex_from_node[node].copy(),
                               math_object=math_object,
                               format_=format_)
 
@@ -208,7 +212,7 @@ class Shape:
         """
         Expand the shape:
         (1) replace umbers by displya of corresponding children
-        (2) takecare of subscript/superscript
+        (2) take care of subscript/superscript
         (3) takes care of display of "\\in" according to context
 
         :return: an modified instance of Shape with expanded display
@@ -309,6 +313,11 @@ class Shape:
                     lean_string = latex_to_lean_dic[striped_string]
                     lean_string = string.replace(striped_string, lean_string)
                     display[n] = lean_string
+                elif striped_string in latex_to_utf8_dic:
+                    lean_string = latex_to_utf8_dic[striped_string]
+                    lean_string = string.replace(striped_string,
+                                                 lean_string)
+                    display[n] = lean_string
 
     def text_to_latex(self):
         """for each string item in self which is pure text,
@@ -390,13 +399,15 @@ def shape_from_application(math_object,
     elif first_child.node == "CONSTANT":
         name = first_child.display_name
         if name in latex_from_constant_name:
-            display = latex_from_constant_name[name]
+            display = latex_from_constant_name[name].copy()  # damn bug!!!!!
+            log.debug(f"display constant = {display}")
+            pass
         else:  # standard format
-            display = latex_from_constant_name['STANDARD_CONSTANT']
+            display = latex_from_constant_name['STANDARD_CONSTANT'].copy()
 
-    if not isinstance(display, list):
-        log.warning(f"in shape_from_app, display {display} is not a list")
-        display = list(display)  # fixme some tuples appear
+    # if not isinstance(display, list):
+    #     log.warning(f"in shape_from_app, display {display} is not a list")
+    #     display = list(display)
 
     # (4) finally: use functional notation for remaining arguments
     # ONLY if they are not type

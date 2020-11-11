@@ -158,7 +158,7 @@ class Statement:
             return text
         goal = self.initial_proof_state.goals[0]
         target = goal.target
-        text = target.math_type.format_as_utf8(is_math_type=True)
+        text = target.math_type.to_display(is_math_type=True)
         return text
 
 
