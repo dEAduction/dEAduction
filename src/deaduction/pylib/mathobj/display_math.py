@@ -58,11 +58,13 @@ via the from_specific_node function.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-# todo: belongs to
-# todo: revise expand_from_shape
+# todo: add a fake_math_object attribute when display format is too
+#  different from lean, e.g. for set families
+#  this would be used for display, but the original format is kept for
+#  coherence with Lean
 # todo: test for text_depth
 # todo: text quantifiers, text belongs to
-# todo : expand shape before converting to utf8
+# todo: expand shape before converting to utf8
 
 
 import logging
@@ -398,7 +400,6 @@ def shape_from_application(math_object,
 
     # (4) finally: use functional notation for remaining arguments
     # ONLY if they are not type
-    more_display = []
     # first search for unused children
     # search for least used child
     least_used_child = 0
@@ -409,23 +410,19 @@ def shape_from_application(math_object,
             if item > least_used_child:
                 least_used_child = item
 
-    unused_children = list(range(least_used_child+1,
-                                 len(all_app_arguments)
-                                 )
-                           )
     # keep only those unused_children whose math_type is not TYPE
-    for n in unused_children:
+    more_display = []
+    for n in range(least_used_child+1, len(all_app_arguments)):
         math_type = all_app_arguments[n].math_type
-        if math_type.node == 'TYPE':
-            unused_children.remove(n)
-    if unused_children:
-        more_display = ['('] + unused_children + [')']
+        if not hasattr(math_type, 'node') or not math_type.node == 'TYPE':
+            more_display.append(n)
+    if more_display:
+        display += ['('] + more_display + [')']
         # NB: in generic case APP(f,x), this gives  ['(', 1, ')']
-
-    display += more_display
     names = [item.display_name for item in all_app_arguments]
-    log.debug(f"supplementary children : {names}")
+    log.debug(f"all arguments : {names}")
     log.debug(f"more display: {more_display}")
+    log.debug(f"display: {display}")
 
     raw_shape = Shape(display=display,
                       math_object=math_object,

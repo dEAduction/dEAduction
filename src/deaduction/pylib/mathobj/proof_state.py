@@ -243,14 +243,14 @@ class Goal:
         for mathobj in context:
             math_type = mathobj.math_type
             if math_type.is_prop():
-                prop = mathobj.math_type.format_as_text_utf8(
+                prop = mathobj.math_type.to_display(
                     text_depth=text_depth,
                     is_math_type=True)
                 new_sentence = _("Assume that") + " " + prop + "."
             else:
-                name = mathobj.format_as_utf8()
-                name_type = math_type.format_as_text_utf8(is_math_type=True,
-                                                          text_depth=text_depth - 1)
+                name = mathobj.to_display()
+                name_type = math_type.to_display(is_math_type=True,
+                                                 text_depth=text_depth - 1)
                 if math_type.node == "FUNCTION" and text_depth == 0:
                     new_sentence = _("Let") + " " + name + ":" \
                                    + " " + name_type + "."
@@ -270,9 +270,9 @@ class Goal:
             text += new_sentence
 
         text += "\n"
-        target_text = target.math_type.format_as_text_utf8(
-            text_depth=text_depth,
-            is_math_type=True)
+        target_text = target.math_type.to_display(text_depth=text_depth,
+                                                  is_math_type=True,
+                                                  format_="utf8")
         if to_prove:
             target_text = _("Prove that") + " " + target_text
         else:
@@ -372,10 +372,10 @@ class Proof:
 def print_proof_state(goal):
     print("Context:")
     for mt, mt_list in goal.math_types:
-        print(f"{[PO.format_as_utf8() for PO in mt_list]} :"
-              f" {mt.format_as_utf8()}")
+        print(f"{[PO.to_display() for PO in mt_list]} :"
+              f" {mt.to_display()}")
     print("Target:")
-    print(goal.target.math_type.format_as_utf8())
+    print(goal.target.math_type.to_display())
 
 
 if __name__ == '__main__':
@@ -404,10 +404,10 @@ if __name__ == '__main__':
     def print_proof_state(goal):
         print("Context:")
         for mt, mt_list in goal.math_types:
-            print(f"{[PO.format_as_utf8() for PO in mt_list]} :"
-                  f" {mt.format_as_utf8()}")
+            print(f"{[PO.to_display() for PO in mt_list]} :"
+                  f" {mt.to_display()}")
         print("Target:")
-        print(goal.target.math_type.format_as_utf8())
+        print(goal.target.math_type.to_display())
 
 
     goal = Goal.from_lean_data(essai_set_family_hypo, essai_set_family_target)

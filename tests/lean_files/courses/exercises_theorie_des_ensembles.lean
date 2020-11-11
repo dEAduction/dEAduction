@@ -825,7 +825,7 @@ begin
     {
         have H22b: x ∉ A,
         rw H15 at H22,
-        rw ensemble_extension at H22,
+        rw generalites.definition.ensemble_extension at H22,
         rw H17, assumption,
         contradiction,
     },
@@ -833,7 +833,7 @@ begin
         have H22b: x ∈ A,
         rw H15 at H23,
         -- simp only[ensemble_extension] at H23,
-        rw ensemble_extension at H23,
+        rw generalites.definition.ensemble_extension at H23,
         push_neg at H23,
         rw H17, assumption,
         contradiction

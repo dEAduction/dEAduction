@@ -62,9 +62,9 @@ class MathObject:
     math_type         : Any  # Another MathObject
     children          : list  # list of MathObjects
 
-    has_unnamed_bound_vars  : bool = False  #  True if bound vars to be named
+    has_unnamed_bound_vars: bool = False  # True if bound vars to be named
 
-    Variables = {}  # dictionary containing every element having
+    Variables = {}  #  containing every element having
     # an identifier, i.e. global and bound variables.
     # key = identifier,
     # value = MathObject
@@ -82,7 +82,7 @@ class MathObject:
         display_child = ''
         for child in self.children:
             if display_child:
-                display_child += ' ,'
+                display_child += ' ; '
             display_child += child.display_debug
         if display_child:
             display += ', children: **' + display_child + '**'
@@ -113,7 +113,11 @@ class MathObject:
         if 'math_type' in info.keys():
             math_type = info.pop('math_type')
         else:
-            math_type = "not provided"
+            math_type = MathObject(node="not provided",  # todo: implement
+                                   info={},
+                                   math_type=None,
+                                   children=[])
+            #math_type = "not provided"
         #####################################################
         # Treatment of global variables: avoiding duplicate #
         #####################################################
@@ -134,10 +138,10 @@ class MathObject:
         ##############################
         # Treatment of other objects #
         ##############################
-        elif node.startswith("QUANT") or node == "LAMBDA":
-            ##############################################################
-            # Quantifiers & lambdas: provisionally unname bound variable #
-            ##############################################################
+        elif node in have_bound_vars:
+            ###############################################################
+            # Quantifiers & lambdas: provisionally unname bound variables #
+            ###############################################################
             # NB: info["name"] is given by structures.lean,
             # but may be inadequate (e.g. two distinct variables sharing the
             # same name)
