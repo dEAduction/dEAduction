@@ -62,6 +62,8 @@ via the from_specific_node function.
 # todo: revise expand_from_shape
 # todo: test for text_depth
 # todo: text quantifiers, text belongs to
+# todo : expand shape before converting to utf8
+
 
 import logging
 from typing import Any
@@ -99,7 +101,7 @@ class Shape:
     math_object:                Any
     format_:                    str         = 'latex'
     text_depth:                 int         = 0
-    all_app_arguments:     list        = None
+    all_app_arguments:          list        = None
 
     @classmethod
     def from_math_object(cls,
@@ -149,7 +151,7 @@ class Shape:
                                                   text_depth
                                                   )
 
-        # From now on shape is an instance of Shape
+        # From now on shape is an instance of Shape, with latex format
         if format_ == "lean" and node not in lean_from_node:
             raw_shape.latex_to_lean()
         elif format_ == "utf8":
@@ -157,9 +159,6 @@ class Shape:
         elif format == "latex" and text_depth <= 0:
             raw_shape.text_to_latex()
 
-        # TODO: manage subscript and exponents
-
-        # for elements of raw_shape that are strings (not list)
         # finally expand raw_shape
         raw_shape.expand_from_shape()
         return raw_shape  # now expanded
@@ -223,6 +222,7 @@ class Shape:
         if self.all_app_arguments:
             children = self.all_app_arguments
 
+        # successively expand each item in display list
         expanded_display = []
         counter = -1
         subscript = False
@@ -231,7 +231,7 @@ class Shape:
             counter += 1
             display_item = item
 
-            # integers code for children
+            # (1) integers code for children
             if isinstance(item, int):
                 if not -len(children) <= item < len(children):
                     display_item = '*child out of range*'
@@ -248,17 +248,20 @@ class Shape:
                         if needs_paren(math_object, item):
                             display_item = ['('] + display_item + [')']
 
-            # strings: handling "belongs to"
+            # (2) strings: handling "belongs to"
             elif isinstance(item, str):
-                if item.find(r"\in") != -1 or item.find(r"∈") != -1:
-                    if isinstance(display[counter + 1], int):
+                if r"\in" in item:  # or item.find(r"∈") != -1:
+                    if counter + 1 < len(display) \
+                            and isinstance(display[counter + 1], int):
                         # replace "∈" with ":" in some cases
                         type_ = children[display[counter + 1]]
-                        symbol = display_belongs_to(type_, format_, text_depth)
-                        display_item = item.replace(r"\in", symbol)
-                        display_item = display_item.replace(r"∈", symbol)
+                    else:
+                        type_ = "unknown"
+                    symbol = display_belongs_to(type_, format_, text_depth)
+                    display_item = item.replace(r"\in", symbol)
+                    # display_item = display_item.replace(r"∈", symbol)
 
-            # subscript and superscript
+            # (3) handling subscript and superscript
             if counter > 0:
                 if display[counter - 1] == '_':
                     subscript = True
@@ -363,6 +366,7 @@ def shape_from_application(math_object,
 
     # (2) case of index notation: sequences, set families
     if first_child.math_type.node in ["SET_FAMILY", "SEQUENCE"]:
+        # APP(E, i) -> E_i
         # we DO NOT call display for first_child because we just want
         #  "E_i",       but NOT       "{E_i, i ∈ I}_i"      !!!
         # We just take care of two cases of APP(E,i) with either
@@ -376,7 +380,9 @@ def shape_from_application(math_object,
             if body.node == "APPLICATION" and body.children[0].node == \
                     "LOCAL_CONSTANT":
                 name = body.children[0].display_name
-        display = [name, '_', 1],
+            else:
+                name = '*set_family*'
+        display = [name, '_', 1]
 
     # (3) case of constants, e.g. APP( injective, f)
     elif first_child.node == "CONSTANT":
@@ -387,8 +393,8 @@ def shape_from_application(math_object,
             display = latex_from_constant_name['STANDARD_CONSTANT']
 
     if not isinstance(display, list):
-        display = list(display)
         log.warning(f"in shape_from_app, display {display} is not a list")
+        display = list(display)  # fixme some tuples appear
 
     # (4) finally: use functional notation for remaining arguments
     # ONLY if they are not type
@@ -499,6 +505,7 @@ def display_set_family(math_object, format_="latex") -> list:
     it will not appear in extract_local_vars.
     """
     # first find a name for the bound var
+    log.debug(f"Display set family")
     name = math_object.display_name
     math_type_name = math_object.math_type_child_name(format_)
     bound_var_type = math_object.math_type.children[0]
@@ -563,7 +570,8 @@ def display_math_type_of_local_constant(math_type, format_, text_depth=0) \
 # auxiliary displays #
 ######################
 ######################
-def display_belongs_to(math_type, format_, text_depth, belonging=True) -> str:
+def display_belongs_to(math_type: Any, format_, text_depth, belonging=True) \
+        -> str:
     """
     compute the adequate shape for display of "x belongs to X", e.g.
     - generically, "x∈X"
@@ -572,8 +580,17 @@ def display_belongs_to(math_type, format_, text_depth, belonging=True) -> str:
         or "f is a function from X to Y"
         - "P: a proposition" (and not P ∈ a proposition),
         FIXME
+        :param math_type: string (='unknown') or MathObject
+        :param format_:
+        :param text_depth:
+        :param belonging:
+        :return:
     """
     log.debug(f"display ∈ with {math_type}, {format_}, {text_depth}")
+    if math_type == 'unknown':
+        if format_ in ['utf8', 'lean']:
+            return "∈"
+    # from now on math_type is an instance of MathObject
     if text_depth > 0:
         if math_type.node == "PROP" \
                 or (math_type.node == "FUNCTION" and text_depth > 1):
