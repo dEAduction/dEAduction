@@ -76,6 +76,18 @@ class MathObject:
         else:
             return '*no_name*'
 
+    @property
+    def display_debug(self):
+        display = self.display_name + ', Node: *' + self.node + '*'
+        display_child = ''
+        for child in self.children:
+            if display_child:
+                display_child += ' ,'
+            display_child += child.display_debug
+        if display_child:
+            display += ', children: **' + display_child + '**'
+        return display
+
     def math_type_child_name(self, format_):
         """display first child of math_type"""
         math_type = self.math_type
@@ -367,7 +379,7 @@ class MathObject:
         return l
 
     ########################
-    # display math objects #  TODO: change name in dui
+    # display math objects #
     ########################
     def to_display(self,
                    is_math_type=False,
@@ -384,7 +396,7 @@ class MathObject:
                                                         text_depth)
         else:
             shape = Shape.from_math_object(self, format_, text_depth)
-        log.debug(f"got shape = {shape}")
+        log.debug(f"got shape = {shape.display}")
         return structured_display_to_string(shape.display)
 
 

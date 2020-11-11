@@ -99,10 +99,13 @@ lean_from_node = {  # todo: complete
 
 # negative value = from end of children list
 latex_from_constant_name = {
-    "STANDARD": [-1, " " + _("is") + " ", 0],
+    "STANDARD_CONSTANT": [-1, " " + _("is") + " ", 0],
+    # NB: STANDARD_CONSTANT prevents supplementary arguments,
+    # do not use with a CONSTANT c s.t. APP(c, x) is a FUNCTION,
+    # or anything that can be applied (i.e. in APP(APP(c,x),...) )
     "symmetric_difference": [-2, r'\Delta', -1],
-    "composition": [5, r'\circ', 6],
-    "prod": [0, r'\times', 1],
+    "composition": [4, r'\circ', 5],  # APP(compo, X, Y, Z, g, f)
+    "prod": [1, r'\times', 2],
     "Identite": ["Id"]
                             }
 
@@ -111,7 +114,7 @@ latex_to_utf8_dic = {
     r'\Delta': '∆',
     r'\circ': '∘',
     r'\times': '×',
-    r'\in': '∈',
+    #    r'\in': '∈',       this is handled in the expand_from_shape method
     r'\Leftrightarrow': '⇔',
     r'\Rightarrow': '⇒',
     r'\forall': '∀',
@@ -197,7 +200,8 @@ have_bound_vars = ["QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_EXTENSION", "LAM
 
 nature_leaves_list = ["PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                       "FUNCTION", "SEQUENCE", "SET_FAMILY",
-                      "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY"]
+                      "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY",
+                      "CONSTANT", "LOCAL_CONSTANT"]
 
 
 def needs_paren(parent, child_number: int) -> bool:
@@ -211,13 +215,12 @@ def needs_paren(parent, child_number: int) -> bool:
     TODO : tenir compte de la profondeur des parenthèses,
     et utiliser Biggl( biggl( Bigl( bigl( (x) bigr) Bigr) biggr) Biggr)
     """
-    child_prop_obj = parent.children[child_number]
-    p_node = parent.node
-    # if child_prop_obj.node == "LOCAL_CONSTANT":
-    #     return False
-    if not child_prop_obj.children:
+    children = parent.children
+    if child_number >= len(children):
         return False
-    c_node = child_prop_obj.node
+    child = children[child_number]
+    p_node = parent.node
+    c_node = child.node
     if c_node in nature_leaves_list + \
             ["SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
              "PROP_INCLUDED", "SET_UNION+", "SET_INTER+"]:

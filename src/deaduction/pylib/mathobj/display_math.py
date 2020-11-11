@@ -58,7 +58,6 @@ via the from_specific_node function.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-# todo: subscript and exponents
 # todo: belongs to
 # todo: revise expand_from_shape
 # todo: test for text_depth
@@ -100,7 +99,7 @@ class Shape:
     math_object:                Any
     format_:                    str         = 'latex'
     text_depth:                 int         = 0
-    supplementary_children:     list        = None
+    all_app_arguments:     list        = None
 
     @classmethod
     def from_math_object(cls,
@@ -204,31 +203,25 @@ class Shape:
         else:
             return shape_error("unknown object")
 
-    def expand_from_shape(self) -> Any:  #todo: revise
+    def expand_from_shape(self):
         """
-        Replace each element of shape with its display.
-        Ex of shape: [0, " = ", 1]
-        For more examples, see values of the latex_from_node dictionary.
-            - numbers refer to children, and will be replaced by the
-                corresponding display,
-            - strings are displayed as such for utf8, (see exceptions below)
-            - functions are called
-        Exceptions for strings:
-            - "_child#" code for subscript version of child number #
-            - some items may already be in displayable form
+        Expand the shape:
+        (1) replace umbers by displya of corresponding children
+        (2) takecare of subscript/superscript
+        (3) takes care of display of "\\in" according to context
 
-        :return: a modified instance of Shape
+        :return: an modified instance of Shape with expanded display
         """
         log.debug(f"Expanding shape {self.display}")
         display =       self.display
         math_object =   self.math_object
         format_ =       self.format_
         text_depth =    self.text_depth
+        children =      math_object.children
 
-        # add supplementary children (in case node = "APPLICATION")
-        children = math_object.children
-        if self.supplementary_children:
-            children += self.supplementary_children
+        # case of supplementary children (when node = "APPLICATION")
+        if self.all_app_arguments:
+            children = self.all_app_arguments
 
         expanded_display = []
         counter = -1
@@ -236,18 +229,14 @@ class Shape:
         superscript = False
         for item in display:
             counter += 1
-            display_item = "¿**"
-            # # specific display
-            # if isinstance(item, types.FunctionType):
-            #     # e.g. item = display_constant, display_application, ...
-            #     display_item = item(math_object, format_)
+            display_item = item
+
             # integers code for children
             if isinstance(item, int):
-                if not -len(math_object.children) <= item < len(
-                                                    math_object.children):
+                if not -len(children) <= item < len(children):
                     display_item = '*child out of range*'
                 else:
-                    child = math_object.children[item]
+                    child = children[item]
                     shape = Shape.from_math_object(
                                         math_object=child,
                                         format_=format_,
@@ -258,20 +247,16 @@ class Shape:
                     if text_depth < 1:
                         if needs_paren(math_object, item):
                             display_item = ['('] + display_item + [')']
-            # strings
+
+            # strings: handling "belongs to"
             elif isinstance(item, str):
                 if item.find(r"\in") != -1 or item.find(r"∈") != -1:
                     if isinstance(display[counter + 1], int):
                         # replace "∈" with ":" in some cases
-                        type_ = math_object.children[display[counter + 1]]
+                        type_ = children[display[counter + 1]]
                         symbol = display_belongs_to(type_, format_, text_depth)
                         display_item = item.replace(r"\in", symbol)
                         display_item = display_item.replace(r"∈", symbol)
-                else:
-                    display_item = item
-
-            elif isinstance(item, list):
-                display_item = item
 
             # subscript and superscript
             if counter > 0:
@@ -280,7 +265,7 @@ class Shape:
                 elif display[counter - 1] == '^':
                     superscript = True
             if subscript or superscript:
-                display[counter - 1] = ''
+                expanded_display.pop()  # remove the '_'/'^' in last entry
                 display_item = text_to_subscript_or_sup(display_item,
                                                         format_,
                                                         sup=superscript)
@@ -289,7 +274,9 @@ class Shape:
 
             expanded_display.append(display_item)
 
-        if len(expanded_display) == 1:
+        # finally: remove unnecessary nesting, and replace display
+        if len(expanded_display) == 1 and isinstance(expanded_display[0],
+                                                     list):
             expanded_display = expanded_display[0]
 
         self.display = expanded_display
@@ -339,7 +326,7 @@ class Shape:
 # display_lambda
 def shape_from_application(math_object,
                            format_,
-                           supplementary_children=None
+                           all_app_arguments=None
                            ) -> Shape:
     """
     display for node 'APPLICATION'
@@ -347,66 +334,132 @@ def shape_from_application(math_object,
     - APP(injective, f)             -> f is injective
     - APP(APP(composition, f),g)    -> r"f \circ g"
     - APP(f, x)                     -> f(x)
+    - APP(APP(APP(composition, f),g),x)    -> r"f \circ g (x)"
 
     :param format_:
     :param math_object:
-    :param supplementary_children: use to transform
+    :param all_app_arguments: use to transform
                                             APP(APP(...APP(x0,x1),...,xn)
                                     into
                                             APP(x0, x1, ..., xn)
     """
-    log.debug(f"shape from app {math_object}")
-    log.debug(f"supplementary children : {supplementary_children}")
-    if supplementary_children is None:
-        supplementary_children = []
-    application = math_object.children[0]
+    log.debug(f"shape from app {math_object.display_debug}")
+    if all_app_arguments is None:
+        all_app_arguments = []
+    first_child = math_object.children[0]
     second_child = math_object.children[1]
-    supplementary_children.insert(0, second_child)
+    all_app_arguments.insert(0, second_child)
 
     # (1) call the function recursively until all args are in
-    # supplementary_children
-    if application.node == "APPLICATION":
-        return shape_from_application(application,
+    # all_app_arguments
+    if first_child.node == "APPLICATION":
+        return shape_from_application(first_child,
                                       format_,
-                                      supplementary_children)
+                                      all_app_arguments)
+    # finally insert first child at first position
+    all_app_arguments.insert(0, first_child)
 
-    display = []
+    display = [0]  # default = display first child as a function
 
     # (2) case of index notation: sequences, set families
-    if application.math_type.node in ["SET_FAMILY", "SEQUENCE"]:
-        # we DO NOT call display for application because we just want
+    if first_child.math_type.node in ["SET_FAMILY", "SEQUENCE"]:
+        # we DO NOT call display for first_child because we just want
         #  "E_i",       but NOT       "{E_i, i ∈ I}_i"      !!!
         # We just take care of two cases of APP(E,i) with either
         # (1) E a local constant, or
         # (2) E a LAMBDA with body APP(F, j) with F local constant
         name = 0  # default case
-        if application.node == "LOCAL_CONSTANT":
-            name = application.display_name
-        if application.node == "LAMBDA":
-            body = application.children[2]
+        if first_child.node == "LOCAL_CONSTANT":
+            name = first_child.display_name
+        if first_child.node == "LAMBDA":
+            body = first_child.children[2]
             if body.node == "APPLICATION" and body.children[0].node == \
                     "LOCAL_CONSTANT":
                 name = body.children[0].display_name
         display = [name, '_', 1],
 
     # (3) case of constants, e.g. APP( injective, f)
-    elif application.node == "CONSTANT":
-        name = application.display_name
+    elif first_child.node == "CONSTANT":
+        name = first_child.display_name
         if name in latex_from_constant_name:
             display = latex_from_constant_name[name]
         else:  # standard format
-            display = latex_from_constant_name['STANDARD']
+            display = latex_from_constant_name['STANDARD_CONSTANT']
 
-    # (4) finally: functional notation
-    if not display:
-        display = [0, "(", 1, ")"]
+    if not isinstance(display, list):
+        display = list(display)
+        log.warning(f"in shape_from_app, display {display} is not a list")
+
+    # (4) finally: use functional notation for remaining arguments
+    # ONLY if they are not type
+    more_display = []
+    # first search for unused children
+    # search for least used child
+    least_used_child = 0
+    for item in display:
+        if isinstance(item, int):
+            if item < 0:  # negative values forbid supplementary arguments
+                least_used_child = len(all_app_arguments) + 10
+            if item > least_used_child:
+                least_used_child = item
+
+    unused_children = list(range(least_used_child+1,
+                                 len(all_app_arguments)
+                                 )
+                           )
+    # keep only those unused_children whose math_type is not TYPE
+    for n in unused_children:
+        math_type = all_app_arguments[n].math_type
+        if math_type.node == 'TYPE':
+            unused_children.remove(n)
+    if unused_children:
+        more_display = ['('] + unused_children + [')']
+        # NB: in generic case APP(f,x), this gives  ['(', 1, ')']
+
+    display += more_display
+    names = [item.display_name for item in all_app_arguments]
+    log.debug(f"supplementary children : {names}")
+    log.debug(f"more display: {more_display}")
 
     raw_shape = Shape(display=display,
-                  math_object=math_object,
-                  format_=format_,
-                  supplementary_children=supplementary_children
-                  )
+                      math_object=math_object,
+                      format_=format_,
+                      all_app_arguments=all_app_arguments
+                      )
     return raw_shape
+
+
+def display_lambda(math_object, format_="latex") -> list:
+    """
+    format for lambda expression, e.g.
+    - set families with explicit bound variable
+        lambda (i:I), E i)
+        encoded by LAMBDA(I, i, APP(E, i)) --> "{E_i, i ∈ I}"
+    - sequences,
+    - mere functions
+        encoded by LAMBDA(X, x, APP(f, x))  --> "f"
+    - anything else is displayed as "x ↦ f(x)"
+    """
+    display = []
+    math_type = math_object.math_type
+    _, var, body = math_object.children
+    log.debug(f"display LAMBDA with var, body, type = {var, body, math_type}")
+    if math_type.node == "SET_FAMILY":
+        display = [r'\{', 2, ', ', 1, r' \in ', 0, r'\}']
+    elif math_type.node == "SEQUENCE":
+        display = ['(', 2, ')', '_', 1, r' \in ', 0, '}']
+        # todo: manage subscript
+    elif body.node == "APPLICATION" and body.children[1] == var:
+        # object is of the form x -> f(x)
+        mere_function = body.children[0]  # this is 'f'
+        # we call the whole process in case 'f' is not a LOCAL_CONSTANT
+        display = Shape.from_math_object(mere_function, format_).display
+    else:  # generic display
+        display = [1, '↦', 2]
+    if not display:
+        display = ['*unknown lambda*']
+    log.debug(f"--> {display}")
+    return display
 
 
 def display_constant(math_object, format_) -> list:
@@ -419,13 +472,14 @@ def display_constant(math_object, format_) -> list:
     :param format_:
     :return:            'display' list
     """
-    display = "*CST*"
-    if hasattr(math_object.math_type,"node"):
+
+    display = [math_object.display_name]  # generic case
+    if hasattr(math_object.math_type, "node"):
         if math_object.math_type.node == "SET_FAMILY":
-            return display_set_family(math_object, format_)
+            display = display_set_family(math_object, format_)
         elif math_object.math_type.node == "SEQUENCE":
-            return "*SEQ*"  # todo
-    display = [math_object.display_name]
+            display = "*SEQ*"  # todo
+
     return display
 
 
@@ -450,39 +504,8 @@ def display_set_family(math_object, format_="latex") -> list:
     bound_var_type = math_object.math_type.children[0]
     index_name = give_local_name(math_type=bound_var_type,
                                  body=math_object)
-    display = [r"\{", name, "_", index_name, ', ',
+    display = [r"\{", name, '_', index_name, ', ',
                index_name, r" \in ", math_type_name, r"\}"]
-    return display
-
-
-def display_lambda(math_object, format_="latex") -> list:
-    """
-    format for lambda expression, e.g.
-    - set families with explicit bound variable
-        lambda (i:I), E i)
-        encoded by LAMBDA(I, i, APP(E, i)) --> "{E_i, i ∈ I}"
-    - sequences,
-    - mere functions
-        encoded by LAMBDA(X, x, APP(f, x))  --> "f"
-    - anything else is displayed as "x ↦ f(x)"
-    """
-    display = []
-    math_type = math_object.math_type
-    _, var, body = math_object.children
-    if math_type.node == "SET_FAMILY":
-        display = [r'\{', 2, ', ', 1, r' \in ', 0, r'\}']
-    elif math_type.node == "SEQUENCE":
-        shape = ['(', 2, ')', '_', 1, r' \in ', 0, '}']
-        # todo: manage subscript
-    elif body.node == "APPLICATION" and body.children[1] == var:
-        # object is of the form x -> f(x)
-        mere_function = body.children[0]  # this is 'f'
-        # we call the whole process in case 'f' is not a LOCAL_CONSTANT
-        display = Shape.from_math_object(mere_function, format_).display
-    else:  # generic display
-        display = [1, '↦', 2]
-    if not display:
-        display = ['*unknown lambda*']
     return display
 
 
@@ -500,6 +523,11 @@ def display_math_type_of_local_constant(math_type, format_, text_depth=0) \
                     math_object.math_type represents X,
                     and the analysis is based on the math_type of X.
     2) A : a subset of X
+
+    :param math_type:
+    :param format_:
+    :param text_depth:
+    :return: shape with expanded display
     """
     #######################################################
     # special math_types for which display is not the same #
@@ -518,18 +546,16 @@ def display_math_type_of_local_constant(math_type, format_, text_depth=0) \
                           format_=format_,
                           text_depth=text_depth
                           )
-        raw_shape.expand_from_shape()
-        return raw_shape
-        #################
+    #################
     # usual method  #
     #################
-    else:  # return usual expanded shape
-        shape = Shape.from_math_object(math_object=math_type,
-                                       format_=format_,
-                                       text_depth=text_depth
-                                       )
-        shape.expand_from_shape()
-        return shape
+    else:  # compute Shape from math_object
+        raw_shape = Shape.from_math_object(math_object=math_type,
+                                           format_=format_,
+                                           text_depth=text_depth
+                                           )
+    raw_shape.expand_from_shape()
+    return raw_shape
 
 
 ######################
@@ -588,6 +614,7 @@ def text_to_subscript_or_sup(structured_string,
     :param sup: bool, if True then superscript, else subscript
     :return: converted structured string
     """
+    log.debug(f"converting into sub/superscript {structured_string}")
     if format_ == 'latex':
         if sup:
             return [r'^{', structured_string, r'}']
@@ -596,20 +623,20 @@ def text_to_subscript_or_sup(structured_string,
     else:
         sub_or_sup, is_subscriptable = recursive_subscript(structured_string,
                                                            sup)
-        if is_subscriptable:
-            return sub_or_sup
-        else:
+        if not is_subscriptable:
             if sup:
-                return ['^'] + [structured_string]
+                sub_or_sup =  ['^'] + [structured_string]
             else:
-                return ['_'] + [structured_string]
+                sub_or_sup =  ['_'] + [structured_string]
             # [sub] necessary in case sub is an (unstructured) string
+        log.debug(f"--> {sub_or_sup}")
+        return sub_or_sup
 
 
-SOURCE = {'sub': "0123456789" + "aeioruv",
-          'sup': "-1"}
-TARGET = {'sub': "₀₁₂₃₄₅₆₇₈₉" + "ₐₑᵢₒᵣᵤᵥ",
-          'sup': "⁻¹"}
+SOURCE = {'sub': " 0123456789" + "aeioruv",
+          'sup': " -1"}
+TARGET = {'sub': " ₀₁₂₃₄₅₆₇₈₉" + "ₐₑᵢₒᵣᵤᵥ",
+          'sup': " ⁻¹"}
 
 
 def recursive_subscript(structured_string, sup):
