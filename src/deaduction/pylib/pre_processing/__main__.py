@@ -202,8 +202,17 @@ def pickled_items(filename):
 def read_data(filename):
     print("Reading file:")
     [stored_course] = pickled_items(filename)
+
+    print("Text version ? (t)")
+    answer = input()
+    if answer == 't':
+        print_text_version(stored_course)
+    else:
+        print_goal(stored_course)
+
+def print_text_version(course):
     counter = 0
-    for st in stored_course.statements:
+    for st in course.statements:
         print("-------------------------")
         if isinstance(st, Exercise):
             counter += 1
@@ -218,8 +227,24 @@ def read_data(filename):
             print(goal.goal_to_text(to_prove=False, text_depth=1))
 
 
+def print_goal(course):
+    counter = 0
+    for st in course.statements:
+        print("-------------------------")
+        if isinstance(st, Exercise):
+            counter += 1
+            print(f"Exercise n°{counter}: {st.pretty_name}")
+        else:
+            print(f"Definition: {st.pretty_name}")
+
+        goal = st.initial_proof_state.goals[0]
+        print(goal.print_goal())
+
+
 if __name__ == '__main__':
-    logger.configure(debug=True)
+    logger.configure(debug=True,
+                     domains="pre_processing",
+                     suppress=False)
     _ = gettext.gettext
     log.debug("starting pre-processing...")
     qtrio.run(main)

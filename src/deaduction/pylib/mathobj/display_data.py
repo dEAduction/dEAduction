@@ -106,7 +106,8 @@ latex_from_constant_name = {
     "symmetric_difference": [-2, r'\Delta', -1],
     "composition": [4, r'\circ', 5],  # APP(compo, X, Y, Z, g, f)
     "prod": [1, r'\times', 2],
-    "Identite": ["Id"]
+    "Identite": ["Id"],
+    "ne": [2, r" \neq ", 3]  # Lean name for ≠  temporary
                             }
 
 latex_to_utf8_dic = {

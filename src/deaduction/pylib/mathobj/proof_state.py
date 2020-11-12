@@ -39,7 +39,7 @@ from deaduction.pylib.mathobj.lean_analysis_with_type import \
                                                 LeanEntryVisitor
 
 
-log = logging.getLogger(__name__)
+# log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -279,6 +279,26 @@ class Goal:
 
         text += target_text + "."
         return text
+
+    def print_goal(self) -> str:
+            """
+            return context and target in a raw form
+            """
+            context = self.context
+            target = self.target
+            text = _("Context:") + "\n"
+            for mathobj in context:
+                math_type = mathobj.math_type
+                # if math_type.is_prop():
+                #     prop = mathobj.math_type.to_display(is_math_type=True)
+                #     new_sentence = _("Assume that") + " " + prop + "."
+                name = mathobj.to_display()
+                name_type = math_type.to_display(is_math_type=True)
+                text_object = name + " : " + name_type
+                text += "  " + text_object + "\n"
+            text += _("Target:") + "\n"
+            text += target.math_type.to_display(is_math_type=True)
+            return text
 
 
 def instantiate_bound_var(math_type, name: str):
