@@ -137,17 +137,17 @@ class Shape:
 
         node = math_object.node
         if format_ == "lean" and node in lean_from_node:
-            raw_shape = Shape(display=lean_from_node[node].copy(),
+            raw_shape = Shape(display=list(lean_from_node[node]),
                               math_object=math_object,
                               format_=format_)
 
         elif node in text_from_node and text_depth > 0:
-            raw_shape = Shape(display=text_from_node[node].copy(),
+            raw_shape = Shape(display=list(text_from_node[node]),
                               math_object=math_object,
                               format_=format_)
 
         elif node in latex_from_node:
-            raw_shape = Shape(display=latex_from_node[node].copy(),
+            raw_shape = Shape(display=list(latex_from_node[node]),
                               math_object=math_object,
                               format_=format_)
 
@@ -399,11 +399,11 @@ def shape_from_application(math_object,
     elif first_child.node == "CONSTANT":
         name = first_child.display_name
         if name in latex_from_constant_name:
-            display = latex_from_constant_name[name].copy()  # damn bug!!!!!
+            display = list(latex_from_constant_name[name])  # damn bug!!!!!
             log.debug(f"display constant = {display}")
             pass
         else:  # standard format
-            display = latex_from_constant_name['STANDARD_CONSTANT'].copy()
+            display = list(latex_from_constant_name['STANDARD_CONSTANT'])
 
     # if not isinstance(display, list):
     #     log.warning(f"in shape_from_app, display {display} is not a list")
@@ -596,7 +596,7 @@ def display_belongs_to(math_type: Any, format_, text_depth, belonging=True) \
     """
     log.debug(f"display ∈ with {math_type}, {format_}, {text_depth}")
     if math_type == 'unknown':
-        if format_ in ['utf8', 'lean']:
+        if format_ in ('utf8', 'lean'):
             return "∈"
     # from now on math_type is an instance of MathObject
     if text_depth > 0:

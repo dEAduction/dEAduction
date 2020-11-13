@@ -210,19 +210,20 @@ def read_data(filename):
     else:
         print_goal(stored_course)
 
+
 def print_text_version(course):
     counter = 0
     for st in course.statements:
         print("-------------------------")
         if isinstance(st, Exercise):
             counter += 1
-            print(f"Exercise n°{counter}: {st.pretty_name}")
+            print(_("Exercise") + f" n°{counter}: {st.pretty_name}")
             goal = st.initial_proof_state.goals[0]
             print(goal.goal_to_text(text_depth=1))
             # print("     More verbose:")
             # print(goal.goal_to_text(text_depth=2))
         else:
-            print(f"Definition: {st.pretty_name}")
+            print(_("Definition:") + f" {st.pretty_name}")
             goal = st.initial_proof_state.goals[0]
             print(goal.goal_to_text(to_prove=False, text_depth=1))
 
@@ -233,9 +234,9 @@ def print_goal(course):
         print("-------------------------")
         if isinstance(st, Exercise):
             counter += 1
-            print(f"Exercise n°{counter}: {st.pretty_name}")
+            print(_("Exercise") + f" n°{counter}: {st.pretty_name}")
         else:
-            print(f"Definition: {st.pretty_name}")
+            print(_("Definition:") + f" {st.pretty_name}")
 
         goal = st.initial_proof_state.goals[0]
         print(goal.print_goal())

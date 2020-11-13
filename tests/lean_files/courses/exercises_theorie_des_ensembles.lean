@@ -113,13 +113,13 @@ begin
     exact eq_empty_iff_forall_not_mem,
 end
 
-lemma definition.ensemble_non_vide
-(A: set X) :
-(A ≠ ∅) ↔ ∃ x : X, x ∈ A
-:=
-begin
-    sorry
-end
+-- lemma definition.ensemble_non_vide
+-- (A: set X) :
+-- (A ≠ ∅) ↔ ∃ x : X, x ∈ A
+-- :=
+-- begin
+--     sorry
+-- end
 
 lemma definition.ensemble_extension {X: Type}  {P : X → Prop} :
 ∀{x:X}, x ∈ {x | P x} ↔ P x

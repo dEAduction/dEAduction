@@ -250,7 +250,7 @@ class Goal:
                 name = mathobj.to_display()
                 name_type = math_type.to_display(is_math_type=True,
                                                  text_depth=text_depth - 1)
-                if math_type.node == "FUNCTION" and text_depth == 0:
+                if math_type.node == "FUNCTION":  # and text_depth == 0:
                     new_sentence = _("Let") + " " + name + ":" \
                                    + " " + name_type + "."
                 else:
