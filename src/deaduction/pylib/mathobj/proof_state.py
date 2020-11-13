@@ -320,9 +320,8 @@ class ProofState:
 @dataclass
 class Proof:
     """
-    This class encodes a whole proof history, maybe uncompleted
-    as a list of ProofStates and
-    Actions.
+    This class encodes a whole proof history, maybe uncompleted (i.e. the
+    goal is not solved) as a list of ProofStates and Actions.
     TODO: keep the memory of Action in the history of the lean_file
     TODO: implement a display_tree method
     NOT TODO: implement a write_up_proof method ??
