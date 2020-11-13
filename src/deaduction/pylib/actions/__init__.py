@@ -47,5 +47,6 @@ from .logic import (        action_negate,
                             apply_and,
                             apply_or)
 
-from .proofs import (       action_use_proof_methods,
+from .proofs import (       action_apply,
+                            action_use_proof_methods,
                             explain_how_to_apply)

@@ -163,6 +163,7 @@ class MathObject:
         # the forbidden list
         if not self.has_unnamed_bound_vars:
             # prevents for (badly) renaming vars several times
+            # log.debug("no bound vars")
             return
         self.has_unnamed_bound_vars = False
         node = self.node

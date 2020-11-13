@@ -62,6 +62,7 @@ from deaduction.dui.widgets import (    ActionButton,
                                         MathObjectWidgetItem,
                                         TargetWidget)
 from deaduction.pylib.actions import (  Action,
+                                        action_apply,
                                         InputType,
                                         MissingParametersError,
                                         WrongUserInput)
@@ -189,6 +190,15 @@ class ExerciseCentralWidget(QWidget):
         self.proof_btns = ActionButtonsWidget(exercise.available_proof)
         self.magic_btns = ActionButtonsWidget(exercise.available_magic)
 
+        # search for ActionButton corresponding to action_apply
+        # (which will be called by double-click):
+        apply_buttons = [button for button in self.proof_btns.buttons
+                         if button.action.run == action_apply]
+        if apply_buttons:
+            self.action_apply_button = apply_buttons[0]
+        else:
+            log.warning("Action_apply_button not found")
+
         statements           = exercise.available_statements
         outline              = exercise.course.outline
         self.statements_tree = StatementsTreeWidget(statements, outline)
@@ -204,6 +214,7 @@ class ExerciseCentralWidget(QWidget):
         # Actions
         actions_lyt.addWidget(self.logic_btns)
         actions_lyt.addWidget(self.proof_btns)
+        # if there is no magic button, do not take space for them!
         if exercise.available_magic:
             actions_lyt.addWidget(self.magic_btns)
         actions_lyt.addWidget(self.statements_tree)
@@ -234,8 +245,9 @@ class ExerciseCentralWidget(QWidget):
         """
 
         return self.logic_btns.buttons \
-               + self.proof_btns.buttons \
-               + self.magic_btns.buttons
+                + self.proof_btns.buttons \
+                + self.magic_btns.buttons
+
     ###########
     # Methods #
     ###########
@@ -260,7 +272,7 @@ class ExerciseCentralWidget(QWidget):
         for widget in to_freeze:
             widget.setEnabled(not yes)
 
-    def update_goal(self, new_goal: Goal, goal_count: str=''):
+    def update_goal(self, new_goal: Goal, goal_count: str = ''):
         """
         Change goal widgets (self.objects_wgts, self.props_wgt and
         self.target_wgt) to new widgets, corresponding to new_goal.
@@ -361,9 +373,10 @@ class ExerciseMainWindow(QMainWindow):
     :attribute toolbar QToolBar: The toolbar.
     """
 
-    window_closed         = Signal()
-    __action_triggered    = Signal(ActionButton)
-    __statement_triggered = Signal(StatementsTreeWidgetItem)
+    window_closed                   = Signal()
+    __action_triggered              = Signal(ActionButton)
+    __apply_math_object_triggered   = Signal(MathObjectWidget)
+    __statement_triggered           = Signal(StatementsTreeWidgetItem)
 
     def __init__(self, exercise: Exercise, servint: ServerInterface):
         """
@@ -476,14 +489,14 @@ class ExerciseMainWindow(QMainWindow):
             else:
                 log.warning(f"No proof state found for previous step")
         # FIXME: target tag
-        new_target_tag = '='
-        try:
-            new_target_tag = new_goal.future_tags[1]
-        except AttributeError:
-            log.debug('no tag for target')
-            pass
+        # new_target_tag = '='
+        # try:
+        #     new_target_tag = new_goal.future_tags[1]
+        # except AttributeError:
+        #     log.debug('no tag for target')
+        #     pass
 
-        #new_context = new_goal.tag_and_split_propositions_objects()
+        # new_context = new_goal.tag_and_split_propositions_objects()
 
         # count of goals
         total_goals_counter, \
@@ -492,13 +505,15 @@ class ExerciseMainWindow(QMainWindow):
             goals_counter_evolution \
             = self.count_goals()
         goal_count = f'  {current_goal_number} / {total_goals_counter}'
-        #log.debug(f"Goal  {goal_count}")
+        # log.debug(f"Goal  {goal_count}")
         if goals_counter_evolution < 0 and current_goals_counter != 0:
             # todo: do not display when undo
             log.info(f"Current goal solved!")
-            QMessageBox.information(self, '',
+            QMessageBox.information(self,
+                                    '',
                                     _('Current goal solved'),
-                                    QMessageBox.Ok)
+                                    QMessageBox.Ok
+                                    )
 
         # Reset current context selection
         self.clear_current_selection()
@@ -510,6 +525,11 @@ class ExerciseMainWindow(QMainWindow):
         # Reconnect Context area signals and slots
         self.ecw.objects_wgt.itemClicked.connect(self.process_context_click)
         self.ecw.props_wgt.itemClicked.connect(self.process_context_click)
+        if hasattr(self.ecw, "action_apply_button"):
+            self.ecw.objects_wgt.apply_math_object_triggered.connect(
+                self.__apply_math_object_triggered)
+            self.ecw.props_wgt.apply_math_object_triggered.connect(
+                self.__apply_math_object_triggered)
 
     ##################################
     # Async tasks and server methods #
@@ -546,7 +566,8 @@ class ExerciseMainWindow(QMainWindow):
                          self.window_closed,
                          self.toolbar.undo_action.triggered,
                          self.__action_triggered,
-                         self.__statement_triggered]) as emissions:
+                         self.__statement_triggered,
+                         self.__apply_math_object_triggered]) as emissions:
             async for emission in emissions.channel:
                 if emission.is_from(self.lean_editor.editor_send_lean):
                     await self.process_async_signal(self.__server_send_editor_lean)
@@ -571,6 +592,9 @@ class ExerciseMainWindow(QMainWindow):
                 elif emission.is_from(self.__statement_triggered):
                     await self.process_async_signal(partial(self.__server_call_statement,
                                                             emission.args[0]))
+
+                elif emission.is_from(self.__apply_math_object_triggered):
+                    await self.__server_call_apply(emission.args[0])
 
     # ──────────────── Template function ─────────────── #
 
@@ -637,7 +661,7 @@ class ExerciseMainWindow(QMainWindow):
                     code = action.run(self.current_goal,
                             self.current_context_selection_as_mathobjects)
                 else:
-                    code = action_btn.action.run(self.current_goal,
+                    code = action.run(self.current_goal,
                             self.current_context_selection_as_mathobjects,
                             user_input)
             except MissingParametersError as e:
@@ -662,9 +686,22 @@ class ExerciseMainWindow(QMainWindow):
                 await self.servint.code_insert(action.symbol, code)
                 break
 
+    async def __server_call_apply(self, item: MathObjectWidgetItem):
+        # This function is called when user double-click on an item in the
+        # context area
+        # The item is added to the end of the current_context_selection,
+        # and the action corresponding to the "apply" button is called
+        item.mark_user_selected(True)
+        if item in self.current_context_selection:
+            self.current_context_selection.remove(item)
+        self.current_context_selection.append(item)
+        await self.process_async_signal(partial(self.__server_call_action,
+                                                self.ecw.action_apply_button))
+
     async def __server_call_statement(self, item: StatementsTreeWidgetItem):
         # TODO: docstring me
 
+        log.debug(f'Calling statement {item.statement.pretty_name}')
         # Do nothing is user clicks on a node
         if isinstance(item, StatementsTreeWidgetItem):
             try: 

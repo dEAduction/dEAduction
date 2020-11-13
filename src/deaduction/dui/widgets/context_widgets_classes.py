@@ -37,6 +37,8 @@ import logging
 from pathlib import Path
 from typing  import Tuple
 
+from PySide2.QtCore    import ( Signal,
+                                Slot)
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
                                 QIcon)
@@ -167,6 +169,7 @@ class MathObjectWidgetItem(QListWidgetItem):
         (e.g. white in light mode) if not yes.
 
         :param yes: See paragraph above.
+        TODO: change color for double-click
         """
 
         self.setBackground(QBrush(QColor('limegreen')) if yes else QBrush())
@@ -205,6 +208,21 @@ class MathObjectWidget(QListWidget):
             item = MathObjectWidgetItem(mathobject, tag)
             self.addItem(item)
             self.items.append(item)
+
+        self.itemDoubleClicked.connect(self._emit_apply_math_object)
+
+    @Slot(MathObjectWidgetItem)
+    def _emit_apply_math_object(self, item):
+        """
+        Emit the signal self.apply_math_object_triggered with self as an
+        argument. This slot is connected to ActionButton.clicked signal in
+        self.__init__.
+        """
+        item.setSelected(False)
+        self.apply_math_object_triggered.emit(item)
+
+
+MathObjectWidget.apply_math_object_triggered = Signal(MathObjectWidget)
 
 
 ##########################
