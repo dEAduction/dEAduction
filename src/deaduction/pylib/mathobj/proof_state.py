@@ -264,7 +264,6 @@ class Goal:
                         new_sentence = _("Let") + " " + name + " " + _("be") \
                                    + " " + name_type + "."
 
-
             if text:
                 text += "\n"
             text += new_sentence
@@ -282,17 +281,17 @@ class Goal:
         return text
 
 
-def instantiate_bound_var(math_type, name: str):
-    """
-    create a BoundVarPOof with a given math_type and name
-    :param math_type: PropObj
-    :param name:
-    :return: BoundVarPO
-    """
-    info = {"name": name}
-    math_obj = MathObject(node='BOUND_VAR_DEADUCTION', info=info,
-                          math_type=math_type, children=[])
-    return math_obj
+# def instantiate_bound_var(math_type, name: str):
+#     """
+#     create a BoundVarPOof with a given math_type and name
+#     :param math_type: PropObj
+#     :param name:
+#     :return: BoundVarPO
+#     """
+#     info = {"name": name}
+#     math_obj = MathObject(node='BOUND_VAR_DEADUCTION', info=info,
+#                           math_type=math_type, children=[])
+#     return math_obj
 
 
 @dataclass
@@ -329,9 +328,8 @@ class ProofState:
 @dataclass
 class Proof:
     """
-    This class encodes a whole proof history, maybe uncompleted
-    as a list of ProofStates and
-    Actions.
+    This class encodes a whole proof history, maybe uncompleted (i.e. the
+    goal is not solved) as a list of ProofStates and Actions.
     TODO: keep the memory of Action in the history of the lean_file
     TODO: implement a display_tree method
     NOT TODO: implement a write_up_proof method ??
