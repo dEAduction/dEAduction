@@ -346,9 +346,9 @@ def shape_from_application(math_object,
     display for node 'APPLICATION'
     This is a very special case, includes e.g.
     - APP(injective, f)             -> f is injective
-    - APP(APP(composition, f),g)    -> r"f \circ g"
+    - APP(APP(composition, f),g)    -> r"f \\circ g"
     - APP(f, x)                     -> f(x)
-    - APP(APP(APP(composition, f),g),x)    -> r"f \circ g (x)"
+    - APP(APP(APP(composition, f),g),x)    -> r"f \\circ g (x)"
 
     :param format_:
     :param math_object:

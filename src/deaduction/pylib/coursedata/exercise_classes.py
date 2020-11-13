@@ -94,7 +94,7 @@ class Statement:
         Let X be a set.
         Let A be a subset of X.
         Let B be a subset of X.
-        Prove that X \ (A ∪ B) = (X \ A) ∩ (X \ B).
+        Prove that X \\ (A ∪ B) = (X \\ A) ∩ (X \\ B).
         """
         if hasattr(self, "initial_proof_state") and \
                 self.initial_proof_state is not None:

@@ -39,7 +39,7 @@ from deaduction.pylib.mathobj.lean_analysis_with_type import \
                                                 LeanEntryVisitor
 
 
-# log = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 @dataclass

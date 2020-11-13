@@ -69,12 +69,12 @@ def test_display_contexts(contexts, context_displays):
             new_display_object = math_object.to_display()
             if new_display_object != display_object:
                 print_both(display_object, new_display_object)
-            #assert display_object == new_display_object
+            assert display_object == new_display_object
             math_type = math_object.math_type
             new_display_type = math_type.to_display(is_math_type=True)
             if new_display_type != display_type:
                 print_both(display_type, new_display_type)
-            #assert display_type == math_type.to_display(is_math_type=True)
+            assert display_type == math_type.to_display(is_math_type=True)
 
 
 def test_display_targets(targets, target_displays):
@@ -85,7 +85,7 @@ def test_display_targets(targets, target_displays):
         new_display = target.math_type.to_display(is_math_type=True)
         if new_display != display:
             print_both(display, new_display)
-        #assert display == new_display
+        assert display == new_display
 
 
 def print_both(string1, string2):
