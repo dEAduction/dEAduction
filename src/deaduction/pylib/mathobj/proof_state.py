@@ -38,7 +38,6 @@ from deaduction.pylib.mathobj.lean_analysis_with_type import \
                                                 lean_expr_with_type_grammar, \
                                                 LeanEntryVisitor
 
-#from deaduction.pylib.actions import            Action
 
 log = logging.getLogger(__name__)
 
@@ -221,7 +220,7 @@ class Goal:
                 objects.append((math_object, tag))
         return objects, propositions
 
-    def goal_to_text(self, format_="text+utf8", to_prove=True, text_depth=1) \
+    def goal_to_text(self, format_="utf8", to_prove=True, text_depth=1) \
             -> str:
         """compute a readable version of the goal as the statement of an
         exercise.
@@ -243,15 +242,15 @@ class Goal:
         for mathobj in context:
             math_type = mathobj.math_type
             if math_type.is_prop():
-                prop = mathobj.math_type.format_as_text_utf8(
+                prop = mathobj.math_type.to_display(
                     text_depth=text_depth,
                     is_math_type=True)
                 new_sentence = _("Assume that") + " " + prop + "."
             else:
-                name = mathobj.format_as_utf8()
-                name_type = math_type.format_as_text_utf8(is_math_type=True,
-                                                          text_depth=text_depth - 1)
-                if math_type.node == "FUNCTION" and text_depth == 0:
+                name = mathobj.to_display()
+                name_type = math_type.to_display(is_math_type=True,
+                                                 text_depth=text_depth - 1)
+                if math_type.node == "FUNCTION":  # and text_depth == 0:
                     new_sentence = _("Let") + " " + name + ":" \
                                    + " " + name_type + "."
                 else:
@@ -269,9 +268,9 @@ class Goal:
             text += new_sentence
 
         text += "\n"
-        target_text = target.math_type.format_as_text_utf8(
-            text_depth=text_depth,
-            is_math_type=True)
+        target_text = target.math_type.to_display(text_depth=text_depth,
+                                                  is_math_type=True,
+                                                  format_="utf8")
         if to_prove:
             target_text = _("Prove that") + " " + target_text
         else:
@@ -279,6 +278,26 @@ class Goal:
 
         text += target_text + "."
         return text
+
+    def print_goal(self) -> str:
+            """
+            return context and target in a raw form
+            """
+            context = self.context
+            target = self.target
+            text = _("Context:") + "\n"
+            for mathobj in context:
+                math_type = mathobj.math_type
+                # if math_type.is_prop():
+                #     prop = mathobj.math_type.to_display(is_math_type=True)
+                #     new_sentence = _("Assume that") + " " + prop + "."
+                name = mathobj.to_display()
+                name_type = math_type.to_display(is_math_type=True)
+                text_object = name + " : " + name_type
+                text += "  " + text_object + "\n"
+            text += _("Target:") + "\n"
+            text += target.math_type.to_display(is_math_type=True)
+            return text
 
 
 # def instantiate_bound_var(math_type, name: str):
@@ -370,10 +389,10 @@ class Proof:
 def print_proof_state(goal):
     print("Context:")
     for mt, mt_list in goal.math_types:
-        print(f"{[PO.format_as_utf8() for PO in mt_list]} :"
-              f" {mt.format_as_utf8()}")
+        print(f"{[PO.to_display() for PO in mt_list]} :"
+              f" {mt.to_display()}")
     print("Target:")
-    print(goal.target.math_type.format_as_utf8())
+    print(goal.target.math_type.to_display())
 
 
 if __name__ == '__main__':
@@ -402,10 +421,10 @@ if __name__ == '__main__':
     def print_proof_state(goal):
         print("Context:")
         for mt, mt_list in goal.math_types:
-            print(f"{[PO.format_as_utf8() for PO in mt_list]} :"
-                  f" {mt.format_as_utf8()}")
+            print(f"{[PO.to_display() for PO in mt_list]} :"
+                  f" {mt.to_display()}")
         print("Target:")
-        print(goal.target.math_type.format_as_utf8())
+        print(goal.target.math_type.to_display())
 
 
     goal = Goal.from_lean_data(essai_set_family_hypo, essai_set_family_target)

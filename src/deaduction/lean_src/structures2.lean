@@ -48,8 +48,8 @@ end
 open set
 
 /- Decompose the root of an expression (just one step)
-BEWARE, propositions should either start by "PROP" or "QUANT"
-    since this is how dEAduction distinguish between objects and props -/
+General types should be at the end.
+-/
 private meta def analysis_expr_step  (e : expr) : tactic (string × (list expr)) :=
 do  S ←  (tactic.pp e), let e_joli := to_string S,
 match e with
@@ -131,7 +131,7 @@ match e with
     end
 -- polymorphic
 | `(%%a = %%b) := return ("PROP_EQUAL", [a,b]) -- does not provide the type
--- | `(%%a ≠ %%b) := return ("PROP_EQUAL_NOT", [a,b])
+| `(%%a ≠ %%b) := return ("PROP_EQUAL_NOT", [a,b])
 ----------- TOPOLOGY --------------
 -- | `(B(%%x, %%r))
 ------------ ORDER ----------------
@@ -212,7 +212,6 @@ meta def analysis_expr : expr →  tactic string
             let S3 := "OBJECT" ++ open_bra ++ S1b ++ closed_bra
                         ++ separator_equal ++ S2,
             return(S3)
-
 
 /- Recursively analyses an expression using analysis_expr_step,
 and provides a string with parentheses reflecting the mathematical object,

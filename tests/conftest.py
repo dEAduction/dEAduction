@@ -29,6 +29,9 @@ This file is part of d∃∀duction.
 import pytest
 from pathlib import Path
 import os
+import logging
+
+log = logging.getLogger(__name__)
 
 
 @pytest.fixture

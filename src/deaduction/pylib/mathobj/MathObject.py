@@ -38,17 +38,18 @@ from typing import          List, Any
 import logging
 
 import deaduction.pylib.logger as logger
-from .display_math import (display_math_object,
-                           display_math_type_of_local_constant)
+from .display_math import (display_math_type_of_local_constant,
+                           Shape)
+from .display_data import have_bound_vars
 
 import deaduction.pylib.mathobj.give_name as give_name
 
 log = logging.getLogger(__name__)
 
+
 ##########################################
 # MathObject: general mathematical entities #
 ##########################################
-
 @dataclass
 class MathObject:
     """
@@ -61,12 +62,40 @@ class MathObject:
     math_type         : Any  # Another MathObject
     children          : list  # list of MathObjects
 
-    has_unnamed_bound_vars  : bool = False  #  True if bound vars to be named
+    has_unnamed_bound_vars: bool = False  # True if bound vars to be named
 
-    Variables = {}  # dictionary containing every element having
+    Variables = {}  #  containing every element having
     # an identifier, i.e. global and bound variables.
     # key = identifier,
     # value = MathObject
+
+    @property
+    def display_name(self):
+        if 'name' in self.info:
+            return self.info['name']
+        else:
+            return '*no_name*'
+
+    @property
+    def display_debug(self):
+        display = self.display_name + ', Node: *' + self.node + '*'
+        display_child = ''
+        for child in self.children:
+            if display_child:
+                display_child += ' ; '
+            display_child += child.display_debug
+        if display_child:
+            display += ', children: **' + display_child + '**'
+        return display
+
+    def math_type_child_name(self, format_):
+        """display first child of math_type"""
+        math_type = self.math_type
+        if hasattr(math_type, 'children'):
+            child = math_type.children[0]
+            return child.display_name
+        else:
+            return '*no_name*'
 
     @classmethod
     def from_info_and_children(cls, info, children):
@@ -84,7 +113,11 @@ class MathObject:
         if 'math_type' in info.keys():
             math_type = info.pop('math_type')
         else:
-            math_type = "not provided"
+            math_type = MathObject(node="not provided",
+                                   info={},
+                                   math_type=None,
+                                   children=[])
+            #math_type = "not provided"
         #####################################################
         # Treatment of global variables: avoiding duplicate #
         #####################################################
@@ -105,10 +138,10 @@ class MathObject:
         ##############################
         # Treatment of other objects #
         ##############################
-        elif node.startswith("QUANT") or node == "LAMBDA":
-            ##############################################################
-            # Quantifiers & lambdas: provisionally unname bound variable #
-            ##############################################################
+        elif node in have_bound_vars:
+            ###############################################################
+            # Quantifiers & lambdas: provisionally unname bound variables #
+            ###############################################################
             # NB: info["name"] is given by structures.lean,
             # but may be inadequate (e.g. two distinct variables sharing the
             # same name)
@@ -150,6 +183,10 @@ class MathObject:
 
          This order gives the wanted result, e.g.
          ∀ x:X, ∀ x':X, etc. and not the converse
+
+         e.g. when the node is a quantifier, "LAMBDA", "SET_EXTENSION".
+         (cf the have_bound_vars list in display_data.py)
+
         """
         # NB: info["name"] is provided by structures.lean,
         # but may be inadequate (e.g. two distinct variables sharing the
@@ -168,7 +205,7 @@ class MathObject:
         self.has_unnamed_bound_vars = False
         node = self.node
         children = self.children
-        if node.startswith("QUANT") or node == "LAMBDA":
+        if node in have_bound_vars:
             bound_var_type, bound_var, local_context = children
             hint = bound_var.info["lean_name"]
             # search for a fresh name valid inside local context
@@ -349,44 +386,23 @@ class MathObject:
     ########################
     # display math objects #
     ########################
-    # todo: refactor by merging the three following methods
-    def format_as_latex(self, is_math_type=False):
-        format_ = "latex"
+    def to_display(self,
+                   is_math_type=False,
+                   format_="utf8",  # change to "latex" for latex...
+                   text_depth=0
+                   ):
         if is_math_type:
             #########################################
             # naming bound variables before display #
             #########################################
             self.name_bound_vars()
-            display = display_math_type_of_local_constant(self, format_)
+            shape = display_math_type_of_local_constant(self,
+                                                        format_,
+                                                        text_depth)
         else:
-            display = display_math_object(self, format_)
-        return structured_display_to_string(display)
-
-    def format_as_utf8(self, is_math_type=False):
-        format_ = "utf8"
-        if is_math_type:
-            #########################################
-            # naming bound variables before display #
-            #########################################
-            log.debug(f"Naming bound vars in {self}")
-            self.name_bound_vars()
-            display = display_math_type_of_local_constant(self, format_)
-        else:
-            display = display_math_object(self, format_)
-        return structured_display_to_string(display)
-
-    def format_as_text_utf8(self, is_math_type=False, text_depth=1):
-        format_ = "text+utf8"
-        if is_math_type:
-            #########################################
-            # naming bound variables before display #
-            #########################################
-            self.name_bound_vars()
-            display = display_math_type_of_local_constant(self,
-                                                          format_)
-        else:
-            display = display_math_object(self, format_, text_depth)
-        return structured_display_to_string(display)
+            shape = Shape.from_math_object(self, format_, text_depth)
+        log.debug(f"got shape = {shape.display}")
+        return structured_display_to_string(shape.display)
 
 
 def structured_display_to_string(structured_display) -> str:

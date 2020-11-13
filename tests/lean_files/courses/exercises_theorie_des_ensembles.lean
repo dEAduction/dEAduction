@@ -113,13 +113,13 @@ begin
     exact eq_empty_iff_forall_not_mem,
 end
 
-lemma definition.ensemble_non_vide
-(A: set X) :
-(A ≠ ∅) ↔ ∃ x : X, x ∈ A
-:=
-begin
-    sorry
-end
+-- lemma definition.ensemble_non_vide
+-- (A: set X) :
+-- (A ≠ ∅) ↔ ∃ x : X, x ∈ A
+-- :=
+-- begin
+--     sorry
+-- end
 
 lemma definition.ensemble_extension {X: Type}  {P : X → Prop} :
 ∀{x:X}, x ∈ {x | P x} ↔ P x
@@ -825,7 +825,7 @@ begin
     {
         have H22b: x ∉ A,
         rw H15 at H22,
-        rw ensemble_extension at H22,
+        rw generalites.definition.ensemble_extension at H22,
         rw H17, assumption,
         contradiction,
     },
@@ -833,7 +833,7 @@ begin
         have H22b: x ∈ A,
         rw H15 at H23,
         -- simp only[ensemble_extension] at H23,
-        rw ensemble_extension at H23,
+        rw generalites.definition.ensemble_extension at H23,
         push_neg at H23,
         rw H17, assumption,
         contradiction

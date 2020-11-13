@@ -310,10 +310,10 @@ def apply_substitute(goal: Goal, l: [MathObject], user_input: [int]):
         heq = l[-1]
     left_term = heq.math_type.children[0]
     right_term = heq.math_type.children[1]
-    choices = [(left_term.format_as_utf8(),
-                f'Replace by {right_term.format_as_utf8()}'),
-               (right_term.format_as_utf8(),
-                f'Replace by {left_term.format_as_utf8()}')]
+    choices = [(left_term.to_display(),
+                f'Replace by {right_term.to_display()}'),
+               (right_term.to_display(),
+                f'Replace by {left_term.to_display()}')]
             
     if len(l) == 1:
         h = l[0].info["name"]
