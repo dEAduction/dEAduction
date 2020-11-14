@@ -34,7 +34,7 @@ import deaduction.pylib.logger  as              logger
 from deaduction.config          import          _, user_config
 
 from deaduction.pylib.mathobj.MathObject import MathObject
-from deaduction.pylib.mathobj.lean_analysis_with_type import \
+from deaduction.pylib.mathobj.lean_analysis import \
                                                 lean_expr_with_type_grammar, \
                                                 LeanEntryVisitor
 
