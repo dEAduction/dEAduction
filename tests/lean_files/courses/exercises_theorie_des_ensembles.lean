@@ -416,13 +416,13 @@ lemma exercise.produit_avec_intersection
 set.prod A (B ∩ C) = (set.prod A B) ∩ (set.prod A C)
 :=
 begin
-    rw generalites.definition.egalite_deux_ensembles,
+    --rw generalites.definition.egalite_deux_ensembles,
     --intro z,
     --have H, from definition.type_produit z,
     --cases H with x Hx,
     --cases Hx with y Hy,
     --rw Hy,
-
+    sorry
 end
 
 
@@ -776,7 +776,7 @@ lemma exercise.bijective_ssi_injective_et_surjective :
 :=
 /- dEAduction
 PrettyName
-    (+) "Bijectif" équivaut à "injectif et surjectif"
+    (**) "Bijectif" équivaut à "injectif et surjectif"
 -/
 begin
     sorry
@@ -788,7 +788,7 @@ composition g f = Identite ∧ composition f g  = Identite
 :=
 /- dEAduction
 PrettyName
-    (+) Bijectivité et existence d'une application réciproque
+    (**) Bijectivité et existence d'une application réciproque
 -/
 begin
     sorry

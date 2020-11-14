@@ -40,7 +40,7 @@ latex_from_node = {
     "PROP_IMPLIES": (0, r" \Rightarrow ", 1),
     "QUANT_∀": (r"\forall", 1, r" \in ", 0, ", ", 2),
     "QUANT_∃": (r"\exists", 1, r" \in ", 0, ", ", 2),
-    "PROP_∃": "*PROP_∃*",  # should not happen
+    "PROP_∃": ("*PROP_∃*",),
     "QUANT_∃!": (r"\exists !",  1, r" \in ", 0, ", ", 2),
     ###############
     # SET THEORY: #
@@ -54,7 +54,7 @@ latex_from_node = {
     "SET_UNION+": (r"\bigcup", 0),
     "SET_DIFF": (0, r" \backslash ", 1),
     "SET_DIFF_SYM": (0, r" \Delta ", 1),
-    "SET_EMPTY": (r"\emptyset"),
+    "SET_EMPTY": (r"\emptyset",),
     "SET_FAMILY": (_("a family of subsets of") + " ", 1),
     "SET_IMAGE": (0, "(", 1, ")"),
     "SET_INVERSE": (0, r'^', '-1', '(', 1, ')'),
@@ -78,22 +78,22 @@ latex_from_node = {
     # GENERAL TYPES: #
     ##################
     "SET": (r'{\mathcal P}', "(", 0, ")"),
-    "PROP": (_("a proposition")),
-    "TYPE": (_("a set")),
+    "PROP": (_("a proposition"),),
+    "TYPE": (_("a set"),),
     "FUNCTION": (0, r" \to ", 1),
                   }
 
 # Lean formats that cannot be deduced from latex
 lean_from_node = {  # todo: this has not been tested on Lean yet!
-    "PROP_FALSE": ('False'),
+    "PROP_FALSE": ('False',),
     "SET_INTER+": ('set.Inter', 0),
     "SET_UNION+": ('set.Union', 0),
     "SET_FAMILY": (),    # FIXME: should be lean_name
     "SET_IMAGE": (0, " '' ", 1),
     "SET_INVERSE": (0, " ⁻¹' ", 1),
     "SET": ("set", 0),
-    "PROP": ("Prop"),
-    "TYPE": ("Type")
+    "PROP": ("Prop",),
+    "TYPE": ("Type",)
                   }
 
 
@@ -106,7 +106,7 @@ latex_from_constant_name = {
     "symmetric_difference": (-2, r'\Delta', -1),
     "composition": (4, r'\circ', 5),  # APP(compo, X, Y, Z, g, f)
     "prod": (1, r'\times', 2),
-    "Identite": ("Id"),
+    "Identite": ("Id",),
     "ne": (2, r" \neq ", 3)  # Lean name for ≠  temporary
                             }
 
@@ -173,7 +173,7 @@ text_from_node = {
     "SET_INTER+": (_("the intersection of the sets") + " ", 0),
     "SET_UNION+": (_("the union of the sets") + " ", 0),
     "SET_COMPLEMENT": (_("the complement of ") + " ", 0),
-    "SET_EMPTY": (_("the empty set")),
+    "SET_EMPTY": (_("the empty set"),),
     "SET_FAMILY": (_("a family of subsets of") + " ", 1),
     "SET_IMAGE": (_("the image under") + " ", 0, " " + _("of") + " ", 1),
     "SET_INVERSE": (_("the inverse image under") + " ", 0, " " + _("of") + " ",
@@ -191,8 +191,8 @@ text_from_node = {
     # GENERAL TYPES: #
     ##################
     "SET": ("P(", 0, ")"),
-    "PROP": (_("a proposition")),
-    "TYPE": (_("a set")),
+    "PROP": (_("a proposition"),),
+    "TYPE": (_("a set"),),
     "FUNCTION": (_("a function from") + " ", 0, " " + _("to") + " ", 1),
 }
 

@@ -701,8 +701,7 @@ class ExerciseMainWindow(QMainWindow):
     async def __server_call_statement(self, item: StatementsTreeWidgetItem):
         # TODO: docstring me
 
-        log.debug(f'Calling statement {item.statement.pretty_name}')
-        # Do nothing is user clicks on a node
+        # Do nothing if user clicks on a node
         if isinstance(item, StatementsTreeWidgetItem):
             try: 
                 item.setSelected(False)
@@ -717,6 +716,7 @@ class ExerciseMainWindow(QMainWindow):
                             self.current_context_selection_as_mathobjects,
                                                   statement)
 
+                log.debug(f'Calling statement {item.statement.pretty_name}')
                 log.debug("Code sent to Lean: " + code)
                 await self.servint.code_insert(statement.pretty_name, code)
             except WrongUserInput as e:
