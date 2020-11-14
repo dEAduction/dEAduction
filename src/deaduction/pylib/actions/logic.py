@@ -507,10 +507,8 @@ def construct_exists(goal, user_input: [str]):
                                      title=_("Exist"),
                                      output=_(
                                          "Enter element you want to use:"))
-    # TODO : demander à FLR différence entre use et existsi. Un prend en compte le type et pas l'autre ?... la doc dit :
-    # "Similar to existsi, use l will use entries in l to instantiate existential obligations at the beginning of a target. Unlike existsi, the pexprs in l are elaborated with respect to the expected type."
     x = user_input[0]
-    possible_codes.append(f'existsi {x}')
+    possible_codes.append(f'use {x}')
     return format_orelse(possible_codes)
 
 
@@ -518,12 +516,14 @@ def apply_exists(goal: Goal, l: [MathObject]) -> str:
     possible_codes = []
 
     h_selected = l[0].math_type
-    if h_selected.node != "QUANT_∃":
-        raise WrongUserInput
     h_name = l[0].info["name"]
     x = give_global_name(goal=goal, math_type=h_selected.children[0],
                          hints=[h_selected.children[1].to_display()])
     hx = get_new_hyp(goal)
+    if h_selected.node == 'QUANT_∃!':
+        # we have to add the "simp" tactic to avoid appearance of lambda expr
+        possible_codes.append(f'cases {h_name} with {x} {hx}, simp at {hx}')
+
     if h_selected.children[2].node == "PROP_∃":
         possible_codes.append(
             f'rcases {h_name} with ⟨ {x}, ⟨ {hx}, {h_name} ⟩ ⟩')
@@ -572,7 +572,7 @@ introduce a new x and add P(x) to the properties
         h_selected = l[0].math_type
         if h_selected.is_prop():
             # try to apply property "exists x, P(x)" to get a new MathObject x
-            if h_selected.node != "QUANT_∃":
+            if h_selected.node not in ("QUANT_∃", "QUANT_∃!"):
                 raise WrongUserInput
             else:
                 return apply_exists(goal, l)

@@ -178,7 +178,7 @@ and add ∀ a ∈ A, P(a, f(a)) to the properties
         if universal_property.node == 'QUANT_∀':
             source_type = universal_property.children[0]
             exist_property = universal_property.children[2]
-            if exist_property.node == 'QUANT_∃':
+            if exist_property.node in ('QUANT_∃', 'QUANT_∃!'):
                 target_type = exist_property.children[0]
                 node = "FUNCTION"
                 children = [source_type, target_type]
@@ -447,7 +447,7 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
             possible_codes.extend(apply_implicate_to_hyp(goal, l))
             
     if len(l) == 1 and user_can_apply(l[0]):
-        if quantifier == "QUANT_∃":
+        if quantifier in ("QUANT_∃", "QUANT_∃!"):
             possible_codes.append(apply_exists(goal, l))
         if quantifier == "PROP_AND":
             possible_codes.append(apply_and(goal, l))
@@ -463,7 +463,8 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
 applicable_nodes = {'FUNCTION',  # to apply a function
                     'PROP_EQUAL', 'PROP_IFF', 'QUANT_∀',  # for substitution
                     'PROP_IMPLIES',
-                    'QUANT_∃', 'PROP_AND', 'PROP_OR'} # for obvious action
+                    # for obvious action:
+                    'QUANT_∃', 'QUANT_∃!', 'PROP_AND', 'PROP_OR'}
 
 
 def user_can_apply(math_object) -> bool:
