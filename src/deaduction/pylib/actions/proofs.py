@@ -183,7 +183,7 @@ and add ∀ a ∈ A, P(a, f(a)) to the properties
                 node = "FUNCTION"
                 children = [source_type, target_type]
                 info = {}
-                type_type = "not provided"
+                type_type = None
                 math_type = MathObject(node, info, type_type, children)
 
                 hf = get_new_hyp(goal)
@@ -485,23 +485,29 @@ def explain_how_to_apply(math_object: MathObject, dynamic=False, long=False) \
     :param long: boolean
     TODO: implement dynamic and long tooltips
     """
-    node = math_object.math_type.node
-    if node == 'FUNCTION':
-        caption = _("apply function to a selected object or "
-                    "equality")
+    captions = []  # default value
 
-    elif node == 'PROP_EQUAL' or node == 'PROP_IFF':
-        caption = _("substitute in a selected property")
+    # the following 4 cases are mutually exclusive
+    if math_object.is_function():
+        captions.append(user_config.get('tooltip_apply_function'))
 
-    elif node == 'QUANT_∀':
-        caption = _("apply to a selected object")
+    elif math_object.is_for_all():
+        captions.append(user_config.get('tooltip_apply_for_all'))
 
-    elif node == 'PROP_IMPLIES':
-        caption = _("apply to a selected property, or to modify the goal")
+    elif math_object.is_exists():
+        captions.append(user_config.get('tooltip_apply_exists'))
 
-    else:
-        caption = ''
-    return caption
+    elif math_object.is_and():
+        captions.append(user_config.get('tooltip_apply_and'))
+
+    # additional line
+    if math_object.can_be_used_for_implication():
+        captions.append(user_config.get('tooltip_apply_implication'))
+
+    elif math_object.can_be_used_for_substitution():
+        captions.append(user_config.get('tooltip_apply_substitute'))
+
+    return captions
     
 
 @action(user_config.get('tooltip_assumption'),
