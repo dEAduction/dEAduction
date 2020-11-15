@@ -217,7 +217,7 @@ class Shape:
 
         :return: an modified instance of Shape with expanded display
         """
-        log.debug(f"Expanding shape {self.display}")
+        # log.debug(f"Expanding shape {self.display}")
         display =       self.display
         math_object =   self.math_object
         format_ =       self.format_
@@ -294,7 +294,7 @@ class Shape:
         """call latex_to_utf8_dic to replace each item in self by utf8
         version"""
         display = self.display
-        log.debug(f"convert {display} to utf8")
+        # log.debug(f"convert {display} to utf8")
         for string, n in zip(display, range(len(display))):
             if isinstance(string, str):
                 striped_string = string.strip()  # remove spaces
@@ -357,7 +357,7 @@ def shape_from_application(math_object,
                                     into
                                             APP(x0, x1, ..., xn)
     """
-    log.debug(f"shape from app {math_object.display_debug}")
+    # log.debug(f"shape from app {math_object.display_debug}")
     if all_app_arguments is None:
         all_app_arguments = []
     first_child = math_object.children[0]
@@ -400,7 +400,6 @@ def shape_from_application(math_object,
         name = first_child.display_name
         if name in latex_from_constant_name:
             display = list(latex_from_constant_name[name])  # damn bug!!!!!
-            log.debug(f"display constant = {display}")
             pass
         else:  # standard format
             display = list(latex_from_constant_name['STANDARD_CONSTANT'])
@@ -431,9 +430,9 @@ def shape_from_application(math_object,
         display += ['('] + more_display + [')']
         # NB: in generic case APP(f,x), this gives  ['(', 1, ')']
     names = [item.display_name for item in all_app_arguments]
-    log.debug(f"all arguments : {names}")
-    log.debug(f"more display: {more_display}")
-    log.debug(f"display: {display}")
+    # log.debug(f"all arguments : {names}")
+    # log.debug(f"more display: {more_display}")
+    # log.debug(f"display: {display}")
 
     raw_shape = Shape(display=display,
                       math_object=math_object,
@@ -457,7 +456,8 @@ def display_lambda(math_object, format_="latex") -> list:
     display = []
     math_type = math_object.math_type
     _, var, body = math_object.children
-    log.debug(f"display LAMBDA with var, body, type = {var, body, math_type}")
+    # log.debug(f"display LAMBDA with var, body, type = {var, body,
+    # math_type}")
     if math_type.node == "SET_FAMILY":
         display = [r'\{', 2, ', ', 1, r' \in ', 0, r'\}']
     elif math_type.node == "SEQUENCE":
@@ -472,7 +472,7 @@ def display_lambda(math_object, format_="latex") -> list:
         display = [1, '↦', 2]
     if not display:
         display = ['*unknown lambda*']
-    log.debug(f"--> {display}")
+    # log.debug(f"--> {display}")
     return display
 
 
@@ -513,7 +513,7 @@ def display_set_family(math_object, format_="latex") -> list:
     it will not appear in extract_local_vars.
     """
     # first find a name for the bound var
-    log.debug(f"Display set family")
+    # log.debug(f"Display set family")
     name = math_object.display_name
     math_type_name = math_object.math_type_child_name(format_)
     bound_var_type = math_object.math_type.children[0]
@@ -594,7 +594,7 @@ def display_belongs_to(math_type: Any, format_, text_depth, belonging=True) \
         :param belonging:
         :return:
     """
-    log.debug(f"display ∈ with {math_type}, {format_}, {text_depth}")
+    # log.debug(f"display ∈ with {math_type}, {format_}, {text_depth}")
     if math_type == 'unknown':
         if format_ in ('utf8', 'lean'):
             return "∈"
@@ -639,7 +639,7 @@ def text_to_subscript_or_sup(structured_string,
     :param sup: bool, if True then superscript, else subscript
     :return: converted structured string
     """
-    log.debug(f"converting into sub/superscript {structured_string}")
+    # log.debug(f"converting into sub/superscript {structured_string}")
     if format_ == 'latex':
         if sup:
             return [r'^{', structured_string, r'}']
@@ -654,7 +654,7 @@ def text_to_subscript_or_sup(structured_string,
             else:
                 sub_or_sup =  ['_'] + [structured_string]
             # [sub] necessary in case sub is an (unstructured) string
-        log.debug(f"--> {sub_or_sup}")
+        # log.debug(f"--> {sub_or_sup}")
         return sub_or_sup
 
 

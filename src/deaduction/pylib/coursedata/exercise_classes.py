@@ -143,14 +143,11 @@ class Statement:
         ugly_hierarchy = self.lean_name.split('.')[:-2]
         return ugly_hierarchy
 
-
     @property
     def caption(self) -> str:
         """
         Return a string that shows a simplified version of the statement
         (e.g. to be displayed as a tooltip)
-        TODO (1): remove variables from lean_statement
-        TODO (2): add properties of the context, if any, as hypotheses
         """
         if not hasattr(self, 'initial_proof_state') \
                 or self.initial_proof_state is None:

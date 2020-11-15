@@ -482,6 +482,7 @@ class ExerciseMainWindow(QMainWindow):
             previous_idx = lean_file.idx - 1
             entry = lean_file.history[previous_idx]
             entry_info = entry.misc_info
+            log.debug(f'Proof step n°{lean_file.idx}')
             if 'ProofState' in entry_info.keys():
                 previous_proof_state = entry_info['ProofState']
                 old_goal = previous_proof_state.goals[0]

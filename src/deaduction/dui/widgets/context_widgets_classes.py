@@ -146,9 +146,17 @@ class MathObjectWidgetItem(QListWidgetItem):
         caption   = f'{lean_name} : {math_expr}'
         self.setText(caption)
         self.setIcon(_TagIcon(tag))
-        tool_tip = explain_how_to_apply(mathobject)
-        if tool_tip:
-            self.setToolTip(tool_tip.capitalize())
+        # set tool_tips (merge several tool_tips if needed)
+        tool_tips = explain_how_to_apply(mathobject)
+        log.debug(f"Setting tooltips {tool_tips}")
+        if len(tool_tips) == 1:
+            tool_tip = _("Double click to") + " " + tool_tips[0]
+            self.setToolTip(tool_tip)
+        elif len(tool_tips) > 1:
+            text = _("Double click to:")
+            for tool_tip in tool_tips:
+                text += "\n" + "• " + tool_tip
+            self.setToolTip(text)
 
     def __eq__(self, other):
         """

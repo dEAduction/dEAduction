@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2020-11-13 18:48+0100\n"
-"PO-Revision-Date: 2020-11-13 18:49+0100\n"
+"POT-Creation-Date: 2020-11-14 22:30+0100\n"
+"PO-Revision-Date: 2020-11-14 22:47+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -54,10 +54,14 @@ msgid "Prove '∀ a, P(a)' by introducing 'a'"
 msgstr "Démontre ‘∀ a, P(a)’ en introduisant ‘a’"
 
 #: config/tooltips.py:53
-msgid "Prove '∃ x, P(x)' by specifying some 'x' and proving P(x)"
-msgstr "Démontre ‘∃ x, P(x)’ en spécifiant un ‘x’ et en démontrant P(x)"
+msgid ""
+"• Prove '∃ a, P(a)' by specifying some 'a' and proving P(a)\n"
+"• Apply '∃ a, P(a)' to get an 'a' satisfying 'P(a)'"
+msgstr ""
+"• Démontre ‘∃ a, P(a)’ en spécifiant un ‘a’ et en démontrant P(a)\n"
+"• Applique ‘∃ a, P(a)’ pour obtenir un ‘a’ et la propriété P(a)"
 
-#: config/tooltips.py:56
+#: config/tooltips.py:57
 msgid ""
 "• Apply to a property '∀ a, P(a)' and some 'a' to get 'P(a)' \n"
 "• Apply a property 'P ⇒ Q' to 'P' to get 'Q'\n"
@@ -71,7 +75,7 @@ msgstr ""
 "autre propriété\n"
 "• Appliquer une fonction à un élément ou à une égalité"
 
-#: config/tooltips.py:62
+#: config/tooltips.py:63
 msgid ""
 "Choose some specific proof method: \n"
 "• Case-based reasoning\n"
@@ -83,29 +87,53 @@ msgstr ""
 "• Preuve par contraposition\n"
 "• Preuve par l’absurde"
 
-#: config/tooltips.py:68
+#: config/tooltips.py:69
 msgid ""
-"• Create a new object (e.g. 'f(x)' from 'f' and 'x')\n"
+"• Create a new object (e.g. 'f(a)' from 'f' and 'a')\n"
 "• Create a new subgoal (a lemma) which will be proved, and added to the "
 "context\n"
 "• From a property '∀ a ∈ A, ∃ b ∈ B, P(a,b)', create a new function from A "
 "to B"
 msgstr ""
-"• Créer un nouvel objet (par exemple 'f(x)' à partir de 'f' et de 'x')\n"
+"• Créer un nouvel objet (par exemple ‘f(a)’ à partir de 'f' et de ‘a’)\n"
 "• Créer un nouveau but (un lemme) qui sera démontré, puis ajouté au "
 "contexte\n"
 "• Utiliser une propriété ‘∀ a ∈ A, ∃ b ∈ B, P(a,b)’, pour créer une nouvelle "
 "fonction de A dans B"
 
-#: config/tooltips.py:74
+#: config/tooltips.py:75
 msgid "Terminate the proof when the target is obvious from the context"
 msgstr "Conclut la preuve lorsque le but est évident à partir du contexte"
 
-#: config/tooltips.py:82
+#: config/tooltips.py:81
+msgid "apply function to a selected object or equality"
+msgstr "appliquer cette fonction à un élément ou à une égalité"
+
+#: config/tooltips.py:83
+msgid "apply to a selected property, or to modify the goal"
+msgstr "appliquer à une propriété sélectionnée, ou pour transformer le but"
+
+#: config/tooltips.py:85
+msgid "substitute in a selected property"
+msgstr "substituer dans une propriété sélectionnée"
+
+#: config/tooltips.py:87
+msgid "apply to a selected object"
+msgstr "appliquer à un objet sélectionné"
+
+#: config/tooltips.py:89
+msgid "get a new object in the context"
+msgstr "obtenir un nouvel objet dans le contexte"
+
+#: config/tooltips.py:91
+msgid "Split into two properties"
+msgstr "Sépare en deux propriétés"
+
+#: config/tooltips.py:96
 msgid "AND, OR, NOT, ⇒, ⇔, ∀, ∃"
 msgstr "ET, OU, NON, ⇒, ⇔, ∀, ∃"
 
-#: config/tooltips.py:83
+#: config/tooltips.py:97
 msgid "Apply, Proof Methods, New Object, QED"
 msgstr "Appliquer, Méthodes de Preuve, Nouvel Objet, CQFD"
 
@@ -134,60 +162,68 @@ msgstr "Enoncés"
 msgid "L∃∀N name"
 msgstr "Nom L∃∀N"
 
-#: dui/widgets/context_widgets_classes.py:249
+#: dui/widgets/context_widgets_classes.py:152
+msgid "Double click to"
+msgstr "Double-cliquer pour"
+
+#: dui/widgets/context_widgets_classes.py:155
+msgid "Double click to:"
+msgstr "Double-cliquer pour :"
+
+#: dui/widgets/context_widgets_classes.py:273
 msgid "Target"
 msgstr "But"
 
-#: dui/widgets/context_widgets_classes.py:250
+#: dui/widgets/context_widgets_classes.py:274
 msgid "To be proved"
 msgstr "A démontrer"
 
-#: dui/widgets/exercise_widgets.py:89
+#: dui/widgets/exercise_widgets.py:90
 msgid "Toolbar"
 msgstr "Barre d’outils"
 
-#: dui/widgets/exercise_widgets.py:94
+#: dui/widgets/exercise_widgets.py:95
 msgid "Undo action"
 msgstr "Annuler l’action"
 
-#: dui/widgets/exercise_widgets.py:97
+#: dui/widgets/exercise_widgets.py:98
 msgid "Redo action"
 msgstr "Refaire l’action"
 
-#: dui/widgets/exercise_widgets.py:101
+#: dui/widgets/exercise_widgets.py:102
 msgid "Toggle L∃∀N"
 msgstr "Console L∃∀N"
 
-#: dui/widgets/exercise_widgets.py:183
+#: dui/widgets/exercise_widgets.py:184
 msgid "Actions (transform context and target)"
 msgstr "Actions (transforment le contexte et le but)"
 
-#: dui/widgets/exercise_widgets.py:184
+#: dui/widgets/exercise_widgets.py:185
 msgid "Context (objects and properties)"
 msgstr "Contexte (objets et propriétés)"
 
-#: dui/widgets/exercise_widgets.py:500
+#: dui/widgets/exercise_widgets.py:515
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/widgets/exercise_widgets.py:598 dui/widgets/exercise_widgets.py:599
-#: dui/widgets/exercise_widgets.py:702
+#: dui/widgets/exercise_widgets.py:623 dui/widgets/exercise_widgets.py:624
+#: dui/widgets/exercise_widgets.py:740
 msgid "Action not understood"
 msgstr "L∃∀N n’a pas compris !"
 
-#: dui/widgets/exercise_widgets.py:695
+#: dui/widgets/exercise_widgets.py:733
 msgid "Code from editor"
 msgstr "Code depuis l’éditeur"
 
-#: dui/widgets/exercise_widgets.py:703
+#: dui/widgets/exercise_widgets.py:741
 msgid "don't know what to do with your input!"
 msgstr "Je n’ai pas compris ce que vous voulez faire :-("
 
-#: dui/widgets/exercise_widgets.py:746
+#: dui/widgets/exercise_widgets.py:784
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/widgets/exercise_widgets.py:746
+#: dui/widgets/exercise_widgets.py:784
 msgid "Target solved!"
 msgstr "La preuve est terminée !"
 
@@ -328,22 +364,6 @@ msgstr "Préciser le sens de substitution"
 #: pylib/actions/proofs.py:333 pylib/actions/proofs.py:354
 msgid "Choose which expression you want to replace"
 msgstr "Choisissez quelle expression remplacer"
-
-#: pylib/actions/proofs.py:489
-msgid "apply function to a selected object or equality"
-msgstr "appliquer cette fonction à un élément ou à une égalité"
-
-#: pylib/actions/proofs.py:493
-msgid "substitute in a selected property"
-msgstr "substituer dans une propriété sélectionnée"
-
-#: pylib/actions/proofs.py:496
-msgid "apply to a selected object"
-msgstr "appliquer à un objet sélectionné"
-
-#: pylib/actions/proofs.py:499
-msgid "apply to a selected property, or to modify the goal"
-msgstr "appliquer à une propriété sélectionnée, ou pour transformer le but"
 
 #: pylib/mathobj/display_data.py:35
 msgid "AND"
@@ -510,19 +530,19 @@ msgstr "Soit"
 msgid "be"
 msgstr " "
 
-#: pylib/mathobj/proof_state.py:276
+#: pylib/mathobj/proof_state.py:275
 msgid "Prove that"
 msgstr "Démontrer que"
 
-#: pylib/mathobj/proof_state.py:278
+#: pylib/mathobj/proof_state.py:277
 msgid "Then"
 msgstr "Alors"
 
-#: pylib/mathobj/proof_state.py:289
+#: pylib/mathobj/proof_state.py:288
 msgid "Context:"
 msgstr "Contexte :"
 
-#: pylib/mathobj/proof_state.py:299
+#: pylib/mathobj/proof_state.py:298
 msgid "Target:"
 msgstr "But :"
 
