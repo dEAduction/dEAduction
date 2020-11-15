@@ -33,7 +33,7 @@ This file is part of dEAduction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
-from dataclasses import     dataclass
+from dataclasses import     dataclass, field
 from typing import          List, Any
 import logging
 
@@ -56,28 +56,50 @@ class MathObject:
     Python representation of mathematical entities,
     both objects (sets, elements, functions, ...)
     and properties ("a belongs to A", ...)
+    NB : When instancing, math_type and item in the children list must be
+    instances of MathObject (except for the constant NO_MATH_TYPE)
+
     """
-    node              : str  # e.g. "LOCAL_CONSTANT", "FUNCTION", "QUANT_∀"
+    node              : str   # e.g. "LOCAL_CONSTANT", "FUNCTION", "QUANT_∀"
     info              : dict  # e.g. "name", "id", "pp_type"
-    math_type         : Any  # Another MathObject
     children          : list  # list of MathObjects
+    math_type         : Any   # Another MathObject
+    _math_type        : Any   = field(init=False,
+                                      repr=False,
+                                      default=None)
 
     has_unnamed_bound_vars: bool = False  # True if bound vars to be named
 
-    Variables = {}  #  containing every element having
+    Variables = {}  # containing every element having
     # an identifier, i.e. global and bound variables.
     # key = identifier,
     # value = MathObject
 
     @property
-    def display_name(self):
+    def math_type(self) -> Any:
+        """
+        This is a work-around to the impossibility of defining a class
+        recursively. Thus every instance of a MathObject has a math_type
+        which is a MathObject (and has a node, info dic, and children list)
+        """
+        if self._math_type is None:
+            return NO_MATH_TYPE
+        else:
+            return self._math_type
+
+    @math_type.setter
+    def math_type(self, math_type: Any):
+        self._math_type = math_type
+
+    @property
+    def display_name(self) -> str:
         if 'name' in self.info:
             return self.info['name']
         else:
             return '*no_name*'
 
     @property
-    def display_debug(self):
+    def display_debug(self) -> str:
         display = self.display_name + ', Node: *' + self.node + '*'
         display_child = ''
         for child in self.children:
@@ -88,10 +110,10 @@ class MathObject:
             display += ', children: **' + display_child + '**'
         return display
 
-    def math_type_child_name(self, format_):
+    def math_type_child_name(self, format_) -> str:
         """display first child of math_type"""
         math_type = self.math_type
-        if hasattr(math_type, 'children'):
+        if math_type.children:
             child = math_type.children[0]
             return child.display_name
         else:
@@ -113,11 +135,8 @@ class MathObject:
         if 'math_type' in info.keys():
             math_type = info.pop('math_type')
         else:
-            math_type = MathObject(node="not provided",
-                                   info={},
-                                   math_type=None,
-                                   children=[])
-            #math_type = "not provided"
+            math_type = None  # NB math_type is a @property
+
         #####################################################
         # Treatment of global variables: avoiding duplicate #
         #####################################################
@@ -222,6 +241,10 @@ class MathObject:
         for child in children:
             child.name_bound_vars()
 
+####################################
+# Tests for equality and inclusion #
+####################################
+
     def __eq__(self, other):
         """
         test if the two prop_obj code for the same mathematical objects,
@@ -283,59 +306,123 @@ class MathObject:
         WARNING: does not work if the equality (or iff) is hidden behind
         'forall", so for the moment we cannot use this when applying statements
         TODO: improve this
+        FIXME: not used
         :return:
             - None,
             - '>' if left member appears, but not right member,
             - '<' in the opposite case,
             - 'both' if both left and right members appear
         """
-        direction = None
         equality = self.math_type
         if equality.node not in ['PROP_EQUAL', 'PROP_IFF']:
-            return None
+            return ''
         left, right = equality.children
         contain_left = other.contains(left)
         contain_right = other.contains(right)
-        decision = {(False, False): None,
+        decision = {(False, False): '',
                     (True, False): '>',
                     (False, True): '>',
                     (True, True): 'both'
                     }
-        return decision(contain_left, contain_right)
+        return decision[contain_left, contain_right]
 
-    def is_prop(self) -> bool:
+#######################
+# Tests for math_type #
+#######################
+
+    def is_prop(self, is_math_type=False) -> bool:
         """
         Test if self represents a mathematical Proposition
         For global variables, only the math_type attribute should be tested !
         """
-        math_type = self.math_type
-        if hasattr(math_type, 'node'):
-            return self.math_type.node == "PROP"
+        if is_math_type:
+            math_type = self
         else:
-            return False
+            math_type = self.math_type
+        return math_type.node == "PROP"
 
-    def is_type(self) -> bool:
+    def is_type(self, is_math_type=False) -> bool:
         """
-        Test if self is a "universe"
+        Test if (math_type of) is a "universe"
         """
-        if hasattr(self.math_type, "node"):
-            return self.math_type.node == "TYPE"
+        if is_math_type:
+            math_type = self
         else:
-            log.debug(f"is_type called on {self}, but math_type is "
-                        f"{self.math_type}")
-            return False
+            math_type = self.math_type
+        return math_type.node == "TYPE"
 
-    def is_function(self) -> bool:
+    def is_function(self, is_math_type=False) -> bool:
         """
-        Test if math_type of self is function.
+        Test if (math_type of) self is function.
         """
-        log.debug(f"Is function? {self.math_type.node == 'FUNCTION'}")
-        if hasattr(self.math_type, "node"):
-            return self.math_type.node == "FUNCTION"
+        if is_math_type:
+            math_type = self
         else:
-            return False
+            math_type = self.math_type
+        return math_type.node == "FUNCTION"
 
-    def can_be_used_for_substitution(self) -> bool:
+    def is_and(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is an implication.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node == "PROP_AND"
+
+    def is_implication(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is an implication.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node == "PROP_IMPLIES"
+
+    def is_exists(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is an implication.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node in ("QUANT_∃", "QUANT_∃!")
+
+    def is_for_all(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is function.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node == "QUANT_∀"
+
+    def is_equal(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is an equality
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node == "PROP_EQUAL"
+
+    def is_iff(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is 'PROP_IFF'
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+
+        return math_type.node == "PROP_IFF"
+
+    def can_be_used_for_substitution(self, is_math_type=False) -> bool:
         """
         Determines if a proposition can be used as a basis for substituting,
         i.e. is of the form
@@ -348,12 +435,41 @@ class MathObject:
         self can_be_used_for_substitution iff the body of self
         can_be_used_for_substitution.
         """
-        if self.node in {'PROP.IFF', 'PROP_EQUAL'}:
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        if math_type.is_equal(is_math_type=True) \
+                or math_type.is_iff(is_math_type=True):
             return True
-        elif self.node == 'QUANT_∀':
+        elif math_type.is_for_all(is_math_type=True):
             # NB : ∀ var : type, body
-            body = self.children[2]
-            return body.can_be_used_for_substitution()
+            body = math_type.children[2]
+            # recursive call
+            return body.can_be_used_for_substitution(is_math_type=True)
+        else:
+            return False
+
+    def can_be_used_for_implication(self, is_math_type=False) -> bool:
+        """
+        Determines if a proposition can be used as a basis for substituting,
+        i.e. is of the form
+            (∀ ...)*  P => Q
+         with zero or more universal quantifiers at the beginning.
+
+        This is a recursive function.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        if math_type.is_implication(is_math_type=True):
+            return True
+        elif math_type.is_for_all(is_math_type=True):
+            # NB : ∀ var : type, body
+            body = math_type.children[2]
+            # recursive call
+            return body.can_be_used_for_implication(is_math_type=True)
         else:
             return False
 
@@ -401,8 +517,12 @@ class MathObject:
                                                         text_depth)
         else:
             shape = Shape.from_math_object(self, format_, text_depth)
-        log.debug(f"got shape = {shape.display}")
         return structured_display_to_string(shape.display)
+
+
+NO_MATH_TYPE = MathObject(node="not provided",
+                          info={},
+                          children=[])
 
 
 def structured_display_to_string(structured_display) -> str:
@@ -419,7 +539,6 @@ def structured_display_to_string(structured_display) -> str:
         for lr in structured_display:
             lr = structured_display_to_string(lr)
             string += lr
-        #    log.debug("string:", latex_str)
         return cut_spaces(string)
     else:
         log.warning("error in list_string_join: argument should be list or "
@@ -428,6 +547,9 @@ def structured_display_to_string(structured_display) -> str:
 
 
 def cut_spaces(string: str) -> str:
+    """
+    Remove unnecessary spaces inside string
+    """
     while string.find("  ") != -1:
         string = string.replace("  ", " ")
     return string
