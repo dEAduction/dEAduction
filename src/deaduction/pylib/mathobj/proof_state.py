@@ -61,14 +61,14 @@ class Goal:
         "=" (in both) means present in both and identical
         "≠" (in both) means present in both and different
 
-        In the tests, two math_object's are equal if they have the same name and
-        the same math_type, and they are modified versions of each other if
+        In the tests, two math_object's are equal if they have the same name
+        and the same math_type, and they are modified versions of each other if
         they have the same name and different math_types.
         If goal_is_new == True then all objects will be tagged as new.
-        That's bad: probably in that case objects should be compared with
-        objects of the goal that is logically (and not chronologically) just
-        before the present context
-
+        fixme: That's bad: probably in that case objects should be compared
+         with objects of the goal that is logically (and not
+         chronologically) just before the present context
+         Anyway, this is never used
         :param self: new goal
         :param old_goal: old goal
         :param goal_is_new: True if previous goal has been solved
@@ -84,8 +84,8 @@ class Goal:
         # log.debug(old_context)
         # log.debug(new_context)
         if goal_is_new:
-            tags_new_context = ["+" for PO in new_context]
-            tags_old_context = ["+" for PO in old_context]
+            tags_new_context = ["+"] * len(new_context)
+            tags_old_context = ["+"] * len(old_context)
             tag_new_target = "+"
             tag_old_target = "+"
         else:
@@ -105,6 +105,7 @@ class Goal:
                 except ValueError:
                     # log.debug("the name does not exist in old_context")
                     tag = "+"
+                    old_index = None
                 else:
                     # next test uses PropObj.__eq__, which is redefined
                     # in PropObj (recursively test nodes)
@@ -114,17 +115,17 @@ class Goal:
                     else:
                         tag = "≠"
                 tags_new_context[new_index] = tag
-                tags_old_context[old_index] = tag
                 new_context[new_index] = None  # will not be considered
                 # anymore
-                old_context[old_index] = None  # will not be considered
-                # anymore
+                if old_index is not None:
+                    tags_old_context[old_index] = tag
+                    old_context[old_index] = None  # will not be considered
+                    # anymore
                 new_index += 1
 
             # Tag the remaining objects in old_context as new ("+")
-            old_index = 0
-            for math_object in old_context:
-                if math_object is not None:
+            for old_index in range(len(old_context)):
+                if old_context[old_index] is not None:
                     tags_old_context[old_index] = "+"
             ###################
             # tag the targets #
@@ -175,6 +176,7 @@ class Goal:
         """
         log.info("creating new Goal from lean strings")
         # log.debug(hypo_analysis)
+        # log.debug(target_analysis)
         lines = hypo_analysis.split("¿¿¿")
         # put back "¿¿¿" and remove '\n', getting rid of the title line
         # ("context:")
@@ -192,6 +194,7 @@ class Goal:
                 math_object = LeanEntryVisitor().visit(tree)
                 # math_type_store(math_types, prop_obj, prop_obj.math_type)
                 context.append(math_object)
+
         tree = lean_expr_with_type_grammar.parse(target_analysis)
         target = LeanEntryVisitor().visit(tree)
         goal = cls(context, target)
