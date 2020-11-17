@@ -63,19 +63,22 @@ PrettyName
     Logique et nombres réels
 -/
 
-lemma exercise.zero_ou_un :
-∀ n:ℕ, (n ≠ 0 or n ≠ 1)
+lemma exercise.zero_ou_un : ∀ n:ℕ, (n ≠ 0 or n ≠ 1)
 :=
 /- dEAduction
 PrettyName
     Pas zéro ou pas un
 -/
 begin
-    sorry
+    intro n,
+    by_cases H: n=0,
+    right,
+    linarith,
+    left,
+    assumption,
 end
 
-lemma exercise.zero_ou_un_2 :
-∀ n:ℕ, (n = 0 or n = 1)
+lemma exercise.zero_ou_un_2 : not (∀ n:ℕ, (n = 0 or n = 1))
 :=
 /- dEAduction
 PrettyName
@@ -85,8 +88,7 @@ begin
     sorry
 end
 
-lemma exercise.plus_petit :
-∃ m:ℕ, ∀ n:ℕ, m ≤ n
+lemma exercise.plus_petit : ∃ m:ℕ, ∀ n:ℕ, m ≤ n
 :=
 /- dEAduction
 PrettyName
@@ -96,8 +98,7 @@ begin
     sorry
 end
 
-lemma exercise.vraiment_plus_petit :
-∃ m:ℤ, ∀ n:ℤ, m ≤ n
+lemma exercise.vraiment_plus_petit : not (∃ m:ℤ, ∀ n:ℤ, m ≤ n)
 :=
 /- dEAduction
 PrettyName
@@ -107,8 +108,7 @@ begin
     sorry
 end
 
-lemma exercise.egalite :
-∀ n:ℕ, ∃ m:ℕ, m=n
+lemma exercise.egalite : ∀ n:ℕ, ∃ m:ℕ, m=n
 :=
 /- dEAduction
 PrettyName
@@ -118,8 +118,7 @@ begin
     sorry
 end
 
-lemma exercise.egalite_2 :
-∃ m:ℕ, ∀ n:ℕ, m=n
+lemma exercise.egalite_2 : not ( ∃ m:ℕ, ∀ n:ℕ, m=n )
 :=
 /- dEAduction
 PrettyName
@@ -130,7 +129,7 @@ begin
 end
 
 lemma exercise.tres_petit :
-∀ a ≥ (0:ℝ), ∀ ε ≥ (0:ℝ), (a ≤ ε → a = 0)
+not ( ∀ a ≥ (0:ℝ), ∀ ε ≥ (0:ℝ), (a ≤ ε → a = 0) )
 :=
 /- dEAduction
 PrettyName
