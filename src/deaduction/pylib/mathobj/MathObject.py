@@ -351,6 +351,16 @@ class MathObject:
             math_type = self.math_type
         return math_type.node == "TYPE"
 
+    def is_nat(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) is a "universe"
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node == "CONSTANT" and math_type.info['name'] == "ℕ"
+
     def is_function(self, is_math_type=False) -> bool:
         """
         Test if (math_type of) self is function.

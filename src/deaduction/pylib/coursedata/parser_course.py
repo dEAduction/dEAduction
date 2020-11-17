@@ -68,6 +68,8 @@ log = logging.getLogger(__name__)
 # statement and proof
 # nor "lemma exercise." in a docstring comment
 
+# statements name must be followed by a space or end_of_line
+
 # metadata = starts with /- dEAduction,
 #           must end with a line starting with "-/".
 # metadata are optional. The proof of a definition can be before or after

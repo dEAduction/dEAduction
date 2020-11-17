@@ -57,6 +57,8 @@ match e with
 | `(%%p ∧ %%q) := return ("PROP_AND", [p,q])
 | `(%%p ∨ %%q) := return ("PROP_OR", [p,q])
 | `(%%p ↔ %%q) := return ("PROP_IFF", [p,q])
+-- various negations
+| `(%%a ≠ %%b) := return ("PROP_EQUAL_NOT", [a,b])
 | `(%%a ∉ %%A) := return ("PROP_NOT_BELONGS", [a,A])
 | `(¬ %%p) := return ("PROP_NOT", [p])
 | `(%%p → false)  := return ("PROP_NOT", [p])
@@ -79,7 +81,6 @@ match e with
 | `(_root_.set %%X) := return ("SET", [X])
 | `(set.prod %%A %%B) := return ("SET_PRODUCT", [A, B])
 | `(prod.mk %%x %%y) := return ("COUPLE", [x, y])
-| `(%%X × %%Y) := return ("PRODUCT", [X, Y]) -- TODO: distinguish types/numbers
 -- set in extension, e.g. A = {x | P x} or A = {x:X | P x} :
 | `(@set_of %%X %%P) := match P with
     | (lam name binder type body) :=
@@ -131,7 +132,6 @@ match e with
     end
 -- polymorphic
 | `(%%a = %%b) := return ("PROP_EQUAL", [a,b]) -- does not provide the type
-| `(%%a ≠ %%b) := return ("PROP_EQUAL_NOT", [a,b])
 ----------- TOPOLOGY --------------
 -- | `(B(%%x, %%r))
 ------------ ORDER ----------------
@@ -139,17 +139,21 @@ match e with
 | `(%%a ≤ %%b) := return ("PROP_≤", [a,b])
 | `(%%a > %%b) := return ("PROP_>", [a,b])
 | `(%%a ≥ %%b) := return ("PROP_≥", [a,b])
+------------ ARITHMETIC ------------
+| `(%%a + %%b) := return ("SUM", [a, b])
+| `(%%a - %%b) := return ("DIFFERENCE", [a, b])
+| `(%%a × %%b) := return ("PRODUCT", [a, b]) -- TODO: distinguish types/numbers
 ------------------------------ Leaves with data ---------------------------
 -- | `(%%g ∘ %%f) := return ("COMPOSITION", [g,f])  does not work
 | (app function argument)   :=
     if is_numeral e
-        then return ("NUMBER" ++ open_bra ++ e_joli ++ closed_bra, [])
+        then return ("NUMBER" ++ open_bra ++ "value: " ++ e_joli ++ closed_bra, [])
         else return("APPLICATION", [function,argument])
 -- | `(%%I → _root_.set %%X) := return ("SET_FAMILY", [I,X])
-| `(ℝ) := return ("TYPE_NUMBER" ++ open_bra
-    ++ "name: ℝ" ++ closed_bra,[])
-| `(ℕ) := return ("TYPE_NUMBER"++ open_bra
-    ++ "name: ℕ" ++ closed_bra,[])
+-- | `(ℝ) := return ("TYPE_NUMBER" ++ open_bra
+--    ++ "name: ℝ" ++ closed_bra,[])
+--| `(ℕ) := return ("TYPE_NUMBER"++ open_bra
+--     ++ "name: ℕ" ++ closed_bra,[])
 | (const name list_level)   :=
             return ("CONSTANT" ++ open_bra ++ "name: " ++ e_joli ++ closed_bra, [])
 | (sort level.zero) := return ("PROP", [])
