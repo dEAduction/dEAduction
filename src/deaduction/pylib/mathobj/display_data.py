@@ -71,8 +71,8 @@ latex_from_node = {
     "PROP_>": (0, " > ", 1),
     "PROP_≤": (0, r" \leq ", 1),
     "PROP_≥": (0, r" \geq ", 1),
-    "MINUS": (0, " - ", 1),
-    "+": (0, " + ", 1),
+    "DIFFERENCE": (0, " - ", 1),
+    "SUM": (0, " + ", 1),
     "PRODUCT": (0, r" \times ", 1),
     ##################
     # GENERAL TYPES: #
@@ -230,8 +230,10 @@ def needs_paren(parent, child_number: int) -> bool:
         return False
     elif p_node in ("SET_IMAGE", "SET_INVERSE",
                     "SET_UNION+", "SET_INTER+", "APPLICATION",
-                    "PROP_EQUAL", "PROP_INCLUDED", "PROP_BELONGS",
-                    "PROP_NOT_BELONGS", "LAMBDA"):
+                    "PROP_INCLUDED",  "PROP_BELONGS", "PROP_NOT_BELONGS",
+                    "LAMBDA",
+                    "PROP_EQUAL", "PROP_EQUAL_NOT",
+                    "PROP_≤", "PROP_≥", "PROP_<", "PROP_>"):
         return False
     elif p_node.startswith("QUANT") and child_number in (0,1):
         return False

@@ -191,6 +191,8 @@ class Shape:
         elif node in ["LOCAL_CONSTANT", "CONSTANT"]:
             # return display, not shape
             display = display_constant(math_object, format_)
+        elif node == 'NUMBER':
+            display = display_number(math_object, format_)
         elif node == "LAMBDA":
             display = display_lambda(math_object, format_)
         elif node == "SET_UNIVERSE":
@@ -494,6 +496,19 @@ def display_constant(math_object, format_) -> list:
         elif math_object.math_type.node == "SEQUENCE":
             display = "*SEQ*"  # todo
 
+    return display
+
+
+def display_number(math_object, format_) -> list:
+    """
+    Display for nodes 'NUMBER'
+
+    :param math_object:
+    :param format_:
+    :return:            'display' list
+    """
+
+    display = [math_object.info['value']]
     return display
 
 
