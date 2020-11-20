@@ -143,6 +143,7 @@ match e with
 | `(%%a + %%b) := return ("SUM", [a, b])
 | `(%%a - %%b) := return ("DIFFERENCE", [a, b])
 | `(%%a × %%b) := return ("PRODUCT", [a, b]) -- TODO: distinguish types/numbers
+| `(%%a / %%b) := return ("DIV", [a, b])
 ------------------------------ Leaves with data ---------------------------
 -- | `(%%g ∘ %%f) := return ("COMPOSITION", [g,f])  does not work
 | (app function argument)   :=

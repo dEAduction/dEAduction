@@ -74,6 +74,7 @@ latex_from_node = {
     "DIFFERENCE": (0, " - ", 1),
     "SUM": (0, " + ", 1),
     "PRODUCT": (0, r" \times ", 1),
+    "DIV": (0, r"/", 1),
     ##################
     # GENERAL TYPES: #
     ##################
