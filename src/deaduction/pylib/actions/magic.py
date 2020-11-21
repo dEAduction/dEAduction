@@ -26,19 +26,35 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from deaduction.pylib.actions.actiondef      import action
-from deaduction.config                       import _
-from dataclasses import dataclass
-
-import deaduction.pylib.logger as logger
 import logging
 
+import deaduction.pylib.logger as logger
 
-##
-# Squelette actions type de preuves
-##
+
+from deaduction.config                      import user_config, _
+from deaduction.pylib.actions.actiondef     import action
+from deaduction.config                      import _
+from deaduction.pylib.actions               import (format_orelse,
+                                                    WrongUserInput)
+from deaduction.pylib.mathobj               import MathObject
+
+# turn logic_button_texts into a dictionary
+lbt = user_config.get('magic_button_texts').split(', ')
+magic_list = ['action_compute']
+magic_button_texts = {}
+for key, value in zip(magic_list, lbt):
+    magic_button_texts[key] = value
+
 
 @action(_("Computation"), _('Computation'))
 def action_compute(goal, selected_objects):
-    return "linarith"
+    target = goal.target
+    if not (target.is_equality() or target.is_inequality()):
+        raise WrongUserInput(error="Target is not an equality or an "
+                                   "inequality")
+    else:
+        possible_code = ["linarith", "norm_num *", "finish"]
+        if user_config.getboolean('use_library_search_for_computations'):
+            possible_code.append('library_search')
+        return format_orelse(possible_code)
 
