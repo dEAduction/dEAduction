@@ -69,22 +69,15 @@ SESSION = Global()  # class for global variables whose lifetime = a session
 config = configparser.ConfigParser()
 
 # reading file config.ini, assuming it is in the same directory as config.py
-config_file_path = os.path.join(os.path.dirname(__file__)) + '/config.ini'
-config.read(config_file_path)
+__config_file_path = os.path.join(os.path.dirname(__file__)) + '/config.ini'
+config.read(__config_file_path)
 
 # in case no config file is found
-try:
-    user_config = config['USER']
-except KeyError:
-    try:
-        user_config = config['DEFAULT']
-    except KeyError:
-        config['DEFAULT'] = {'alert_target_solved': True,
-                             'depth_of_unfold_statements': 1,
-                             'allow_proof_by_sorry': True,
-                             'show_lean_name_for_statements': False
-                             }
-        config['USER'] = {}
-        with open(config_file_path, 'w') as configfile:
-            config.write(configfile)
-        user_config = config['USER']
+user_config = config['USER']
+
+
+def write_config(field_name: str = None, field_content: str = None):
+    with open(__config_file_path, 'w') as configfile:
+        if field_name:
+            user_config[field_name] = field_content
+        config.write(configfile)

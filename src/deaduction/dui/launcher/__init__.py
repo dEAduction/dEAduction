@@ -27,20 +27,23 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from gettext import             gettext as  _
-import                          logging
-import                          pickle
-from pathlib import             Path
+from gettext import gettext as  _
+import logging
+import pickle
+from pathlib import Path
 import sys
-from PySide2.QtWidgets import ( QApplication,
-                                QFileDialog,
-                                QInputDialog)
+from PySide2.QtWidgets import (QApplication,
+                               QFileDialog,
+                               QInputDialog)
 
 import deaduction.pylib.logger as               logger
+from deaduction.config import (user_config,
+                               write_config)
 from deaduction.pylib.coursedata.course import (Exercise,
                                                 Course)
 
 log = logging.getLogger(__name__)
+
 
 def select_course():
     """
@@ -53,7 +56,9 @@ def select_course():
 
     if ok:
         course_path = Path(course_path)
-        log.info(f'Selected course: {str(course_path.resolve())}')
+        course_path_str = str(course_path.resolve())
+        log.info(f'Selected course: {course_path_str}')
+
         extension = course_path.suffix
         # case of a standard Lean file
         if extension == '.lean':
@@ -66,6 +71,12 @@ def select_course():
             # if different (or if no Lean file)
         else:
             log.error("Wrong file format")
+
+        # store course file name in config file
+        add_recent_courses(course_path_str)
+        user_config['last_course'] = course_path_str
+        write_config()
+
         return course
     else:
         return None
@@ -85,8 +96,10 @@ def select_exercise(course: Course):
     exercise_ids = {exercise.lean_name: exercise for exercise in exercise_list}
 
     exercise_id, ok = QInputDialog().getItem(None,
-            _('Please select an exercise'), _( 'Selected exercise:'),
-            list(exercise_ids.keys()), 0, False)
+                                             _('Please select an exercise'),
+                                             _('Selected exercise:'),
+                                             list(exercise_ids.keys()), 0,
+                                             False)
 
     return exercise_ids[exercise_id] if ok else None
 
@@ -119,3 +132,26 @@ def pickled_items(filename):
                 yield pickle.load(f)
             except EOFError:
                 break
+
+
+def add_recent_courses(course_path: str):
+    """
+    Add course_path to the list of recent courses in user_config
+    NB: do not save this in config.ini; write_config() must be called for that
+    """
+    try:
+        max = user_config['max_recent_courses']
+    except KeyError:
+        max = 5
+    try:
+        recent_courses = user_config['recent_courses']
+    except KeyError:
+        recent_courses = ""
+    recent_courses_list = recent_courses.split(',')
+    if course_path not in recent_courses_list:
+        recent_courses_list.append(course_path)
+    if len(recent_courses_list) > max:
+        # remove oldest
+        recent_courses_list.pop(0)
+    recent_courses_string = ','.join(recent_courses_list)
+    user_config['recent_courses'] = recent_courses_string
