@@ -38,11 +38,14 @@ from typing import          List, Any
 import logging
 
 import deaduction.pylib.logger as logger
+
 from .display_math import (display_math_type_of_local_constant,
                            Shape)
-from .display_data import have_bound_vars
+from .display_data import (HAVE_BOUND_VARS,
+                           INEQUALITIES)
 
 import deaduction.pylib.mathobj.give_name as give_name
+
 
 log = logging.getLogger(__name__)
 
@@ -157,7 +160,7 @@ class MathObject:
         ##############################
         # Treatment of other objects #
         ##############################
-        elif node in have_bound_vars:
+        elif node in HAVE_BOUND_VARS:
             ###############################################################
             # Quantifiers & lambdas: provisionally unname bound variables #
             ###############################################################
@@ -224,7 +227,7 @@ class MathObject:
         self.has_unnamed_bound_vars = False
         node = self.node
         children = self.children
-        if node in have_bound_vars:
+        if node in HAVE_BOUND_VARS:
             bound_var_type, bound_var, local_context = children
             hint = bound_var.info["lean_name"]
             # search for a fresh name valid inside local context
@@ -411,7 +414,7 @@ class MathObject:
             math_type = self.math_type
         return math_type.node == "QUANT_∀"
 
-    def is_equal(self, is_math_type=False) -> bool:
+    def is_equality(self, is_math_type=False) -> bool:
         """
         Test if (math_type of) self is an equality
         """
@@ -420,6 +423,16 @@ class MathObject:
         else:
             math_type = self.math_type
         return math_type.node == "PROP_EQUAL"
+
+    def is_inequality(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is an equality
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node in INEQUALITIES
 
     def is_iff(self, is_math_type=False) -> bool:
         """
@@ -449,7 +462,7 @@ class MathObject:
             math_type = self
         else:
             math_type = self.math_type
-        if math_type.is_equal(is_math_type=True) \
+        if math_type.is_equality(is_math_type=True) \
                 or math_type.is_iff(is_math_type=True):
             return True
         elif math_type.is_for_all(is_math_type=True):

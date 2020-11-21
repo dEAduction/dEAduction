@@ -198,9 +198,10 @@ text_from_node = {
 }
 
 # nodes of math objects that need instantiation of bound variables
-have_bound_vars = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_EXTENSION", "LAMBDA")
+HAVE_BOUND_VARS = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_EXTENSION", "LAMBDA")
+INEQUALITIES = ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥", "PROP_EQUAL_NOT")
 
-nature_leaves_list = ("PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
+NATURE_LEAVES_LIST = ("PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                       "FUNCTION", "SEQUENCE", "SET_FAMILY",
                       "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY",
                       "CONSTANT", "LOCAL_CONSTANT")
@@ -223,7 +224,7 @@ def needs_paren(parent, child_number: int) -> bool:
     child = children[child_number]
     p_node = parent.node
     c_node = child.node
-    if c_node in nature_leaves_list + \
+    if c_node in NATURE_LEAVES_LIST + \
             ("SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
              "PROP_INCLUDED", "SET_UNION+", "SET_INTER+"):
         return False

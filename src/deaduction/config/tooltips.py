@@ -49,7 +49,7 @@ __tooltips = {
         _("""Split 'P ⇔ Q' into two implications"""),
     'tooltip_forall':
         _("""Prove '∀ a, P(a)' by introducing 'a'"""),
-    'tooltip_exists':  # TODO: possibility to 'APPLY' '∃ x, P(x)'
+    'tooltip_exists':
         _("""• Prove '∃ a, P(a)' by specifying some 'a' and proving P(a)
 • Apply '∃ a, P(a)' to get an 'a' satisfying 'P(a)'"""
           ),
@@ -94,6 +94,7 @@ __tooltips_apply = {
 # Text for buttons
 __buttons = {
     'logic_button_texts': _("AND, OR, NOT, ⇒, ⇔, ∀, ∃"),
-    'proof_button_texts': _("Apply, Proof Methods, New Object, QED")
+    'proof_button_texts': _("Apply, Proof Methods, New Object, QED"),
+    'magic_button_texts': _('Compute')
 }
 # sad thoughts for "¯\_(ツ)_/¯", I loved you so much...

@@ -1,0 +1,48 @@
+https://streamingsites.com/
+https://ffmovies.ru/film/the-expanse.lrnyn/3r6o1zr
+https://cineb.net/watch-tv/watch-the-expanse-free-39357.1612598
+
+* Installer LEAN
+Sous Mac, "trylean" ne marche pas si on n'a pas installé Homebrew avant (il ne trouve pas la librairie gmp).
+--> Installer Homebrew, puis "brew install gmp corutils", ensuite trylean fonctionne correctement.
+
+
+
+
+(0) Installer Git
+Sous Linux : 
+apt-get install git-all
+
+
+Sous Mac :
+git --version
+
+git clone 
+
+
+
+
+
+
+
+Alternative install for linux (Ubuntu)
+
+- from
+https://leanprover-community.github.io/get_started.html#regular-install
+
+
+- Clonage du dépot : ne marche pas ; télécharger zip est OK.
+
+- (ubuntu) extraction du fichier archive de mathlib ne fonctionne pas :
+dans le script, tar -xjf mathlib.tar.xz —> bzip2: is not a bzip2 file
+Ca marche en extrayant à la main (menu contextuel sur l’archive)
+
+- l'exécution ne fonctionne pas : 
+"could not load the QT platform plugin"
+
+-> sudo apt install qt5-default
+
+Sous Mac, installer qt avec pip, ou homebrew ?
+bug shiboken : 
+	https://bugreports.qt.io/browse/PYSIDE-1140
+	https://bugzilla.redhat.com/show_bug.cgi?id=1750107

@@ -50,7 +50,8 @@ from PySide2.QtWidgets import ( QAction,
                                 QVBoxLayout,
                                 QWidget)
 
-from deaduction.config import           _
+from deaduction.config import          (_,
+                                        user_config)
 from deaduction.dui.utils import  (     replace_delete_widget,
                                         ButtonsDialog)
 from deaduction.dui.widgets import (    ActionButton,
@@ -739,7 +740,8 @@ class ExerciseMainWindow(QMainWindow):
         msg_box.setIcon(QMessageBox.Critical)
         msg_box.setWindowTitle(_('Action not understood'))
         msg_box.setText(_("don't know what to do with your input!"))
-        if details:
+        display_errors = user_config['display_detailed_errors_on_WUI']
+        if details and display_errors:
             msg_box.setDetailedText(details)
         msg_box.setStandardButtons(QMessageBox.Ok)
         msg_box.exec_()
