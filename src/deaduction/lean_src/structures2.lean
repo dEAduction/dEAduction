@@ -59,6 +59,7 @@ match e with
 | `(%%p ↔ %%q) := return ("PROP_IFF", [p,q])
 -- various negations
 | `(%%a ≠ %%b) := return ("PROP_EQUAL_NOT", [a,b])
+| `(¬ %%a = %%b) := return ("PROP_EQUAL_NOT", [a,b])
 | `(%%a ∉ %%A) := return ("PROP_NOT_BELONGS", [a,A])
 | `(¬ %%p) := return ("PROP_NOT", [p])
 | `(%%p → false)  := return ("PROP_NOT", [p])
