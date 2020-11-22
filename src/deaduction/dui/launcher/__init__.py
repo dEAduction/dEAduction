@@ -75,7 +75,9 @@ def select_course():
         # store course file name in config file
         add_recent_courses(course_path_str)
         user_config['last_course'] = course_path_str
-        write_config()
+        # fixme: the following line store the recent courses,
+        #  but also all the tooltips...
+        # write_config()
 
         return course
     else:

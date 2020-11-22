@@ -60,6 +60,7 @@ class Global:
 
 
 EXERCISE = Global()  # class for global variables whose lifetime = exercise
+EXERCISE.last_action = None
 COURSE = Global()  # class for global variables whose lifetime = 1 course
 SESSION = Global()  # class for global variables whose lifetime = a session
 
