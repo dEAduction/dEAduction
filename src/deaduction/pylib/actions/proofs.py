@@ -435,7 +435,7 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
     # determines which kind of property the user wants to apply
     math_type = l[-1].math_type
     quantifier = l[-1].math_type.node
-    if math_type.can_be_used_for_substitution():
+    if math_type.can_be_used_for_substitution(is_math_type=True):
         if len(l) == 1 or (len(l) > 1 and l[0].math_type.is_prop()):
             possible_codes.extend(
                 apply_substitute(goal, l, user_input))
