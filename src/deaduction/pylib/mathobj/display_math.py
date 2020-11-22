@@ -185,7 +185,9 @@ class Shape:
         node = math_object.node
         display = []
         shape = None
-        if node == "APPLICATION":
+        if node == "No more goal":
+            display = _("All goals reached!")
+        elif node == "APPLICATION":
             # this one returns a shape, to handle supplementary children
             shape = shape_from_application(math_object, format_)
         elif node in ["LOCAL_CONSTANT", "CONSTANT"]:
@@ -224,7 +226,8 @@ class Shape:
         math_object =   self.math_object
         format_ =       self.format_
         text_depth =    self.text_depth
-        children =      math_object.children
+        if math_object:  # math_object is None if shape = error_shape
+            children =      math_object.children
 
         # case of supplementary children (when node = "APPLICATION")
         if self.all_app_arguments:

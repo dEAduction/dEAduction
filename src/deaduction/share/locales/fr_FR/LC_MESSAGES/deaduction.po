@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2020-11-14 22:30+0100\n"
-"PO-Revision-Date: 2020-11-14 22:47+0100\n"
+"POT-Creation-Date: 2020-11-22 17:54+0100\n"
+"PO-Revision-Date: 2020-11-22 17:55+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -137,6 +137,10 @@ msgstr "ET, OU, NON, ⇒, ⇔, ∀, ∃"
 msgid "Apply, Proof Methods, New Object, QED"
 msgstr "Appliquer, Méthodes de Preuve, Nouvel Objet, CQFD"
 
+#: config/tooltips.py:98
+msgid "Compute"
+msgstr "Calculer"
+
 #: dui/__main__.py:48 pylib/actions/proofs.py:68
 msgid "Proof by contrapositive"
 msgstr "Preuve par contraposée"
@@ -145,11 +149,11 @@ msgstr "Preuve par contraposée"
 msgid "Exercise is None"
 msgstr "Pas d’exercice choisi"
 
-#: dui/launcher/__init__.py:88
+#: dui/launcher/__init__.py:101
 msgid "Please select an exercise"
 msgstr "Choisissez un exercice"
 
-#: dui/launcher/__init__.py:88
+#: dui/launcher/__init__.py:102
 msgid "Selected exercise:"
 msgstr "Exercice choisi :"
 
@@ -162,70 +166,74 @@ msgstr "Enoncés"
 msgid "L∃∀N name"
 msgstr "Nom L∃∀N"
 
-#: dui/widgets/context_widgets_classes.py:152
+#: dui/widgets/context_widgets_classes.py:153
 msgid "Double click to"
 msgstr "Double-cliquer pour"
 
-#: dui/widgets/context_widgets_classes.py:155
+#: dui/widgets/context_widgets_classes.py:156
 msgid "Double click to:"
 msgstr "Double-cliquer pour :"
 
-#: dui/widgets/context_widgets_classes.py:273
+#: dui/widgets/context_widgets_classes.py:275
 msgid "Target"
 msgstr "But"
 
-#: dui/widgets/context_widgets_classes.py:274
+#: dui/widgets/context_widgets_classes.py:276
 msgid "To be proved"
 msgstr "A démontrer"
 
-#: dui/widgets/exercise_widgets.py:90
+#: dui/widgets/exercise_widgets.py:93
 msgid "Toolbar"
 msgstr "Barre d’outils"
 
-#: dui/widgets/exercise_widgets.py:95
+#: dui/widgets/exercise_widgets.py:98
 msgid "Undo action"
 msgstr "Annuler l’action"
 
-#: dui/widgets/exercise_widgets.py:98
+#: dui/widgets/exercise_widgets.py:101
 msgid "Redo action"
 msgstr "Refaire l’action"
 
-#: dui/widgets/exercise_widgets.py:102
+#: dui/widgets/exercise_widgets.py:105
 msgid "Toggle L∃∀N"
 msgstr "Console L∃∀N"
 
-#: dui/widgets/exercise_widgets.py:184
+#: dui/widgets/exercise_widgets.py:187
 msgid "Actions (transform context and target)"
 msgstr "Actions (transforment le contexte et le but)"
 
-#: dui/widgets/exercise_widgets.py:185
+#: dui/widgets/exercise_widgets.py:188
 msgid "Context (objects and properties)"
 msgstr "Contexte (objets et propriétés)"
 
-#: dui/widgets/exercise_widgets.py:515
+#: dui/widgets/exercise_widgets.py:521
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/widgets/exercise_widgets.py:623 dui/widgets/exercise_widgets.py:624
-#: dui/widgets/exercise_widgets.py:740
+#: dui/widgets/exercise_widgets.py:630 dui/widgets/exercise_widgets.py:631
+#: dui/widgets/exercise_widgets.py:747
 msgid "Action not understood"
 msgstr "L∃∀N n’a pas compris !"
 
-#: dui/widgets/exercise_widgets.py:733
+#: dui/widgets/exercise_widgets.py:740
 msgid "Code from editor"
 msgstr "Code depuis l’éditeur"
 
-#: dui/widgets/exercise_widgets.py:741
+#: dui/widgets/exercise_widgets.py:748
 msgid "don't know what to do with your input!"
 msgstr "Je n’ai pas compris ce que vous voulez faire :-("
 
-#: dui/widgets/exercise_widgets.py:784
+#: dui/widgets/exercise_widgets.py:793
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/widgets/exercise_widgets.py:784
-msgid "Target solved!"
+#: dui/widgets/exercise_widgets.py:794
+msgid "The proof is complete!"
 msgstr "La preuve est terminée !"
+
+#: dui/widgets/exercise_widgets.py:798
+msgid "No more goal"
+msgstr "Pas de but"
 
 #: dui/widgets/lean_editor.py:53
 msgid "Send to L∃∀N"
@@ -293,7 +301,7 @@ msgstr "Existence"
 msgid "Enter element you want to use:"
 msgstr "Quel objet voulez-vous utiliser ?"
 
-#: pylib/actions/magic.py:41
+#: pylib/actions/magic.py:49
 msgid "Computation"
 msgstr "Calcul"
 
@@ -373,7 +381,7 @@ msgstr "ET"
 msgid "OR"
 msgstr "OU"
 
-#: pylib/mathobj/display_data.py:37 pylib/mathobj/display_data.py:157
+#: pylib/mathobj/display_data.py:37 pylib/mathobj/display_data.py:158
 msgid "Contradiction"
 msgstr "Contradiction"
 
@@ -381,168 +389,172 @@ msgstr "Contradiction"
 msgid "NOT"
 msgstr "NON"
 
-#: pylib/mathobj/display_data.py:58 pylib/mathobj/display_data.py:177
+#: pylib/mathobj/display_data.py:58 pylib/mathobj/display_data.py:178
 msgid "a family of subsets of"
 msgstr "une famille de parties de"
 
-#: pylib/mathobj/display_data.py:81 pylib/mathobj/display_data.py:194
+#: pylib/mathobj/display_data.py:82 pylib/mathobj/display_data.py:195
 msgid "a proposition"
 msgstr "une proposition"
 
-#: pylib/mathobj/display_data.py:82 pylib/mathobj/display_data.py:195
+#: pylib/mathobj/display_data.py:83 pylib/mathobj/display_data.py:196
 msgid "a set"
 msgstr "un ensemble"
 
-#: pylib/mathobj/display_data.py:102 pylib/mathobj/display_math.py:605
+#: pylib/mathobj/display_data.py:103 pylib/mathobj/display_math.py:622
 msgid "is"
 msgstr "est"
 
-#: pylib/mathobj/display_data.py:155 pylib/mathobj/display_data.py:171
-#: pylib/mathobj/display_data.py:172
+#: pylib/mathobj/display_data.py:156 pylib/mathobj/display_data.py:172
+#: pylib/mathobj/display_data.py:173
 msgid "and"
 msgstr "et"
 
-#: pylib/mathobj/display_data.py:156
+#: pylib/mathobj/display_data.py:157
 msgid "or"
 msgstr "ou"
 
-#: pylib/mathobj/display_data.py:158
+#: pylib/mathobj/display_data.py:159
 msgid "if and only if"
 msgstr "si et seulement si"
 
-#: pylib/mathobj/display_data.py:159
+#: pylib/mathobj/display_data.py:160
 msgid "the negation of"
 msgstr "la négation de"
 
-#: pylib/mathobj/display_data.py:160
+#: pylib/mathobj/display_data.py:161
 msgid "if"
 msgstr "si"
 
-#: pylib/mathobj/display_data.py:160
+#: pylib/mathobj/display_data.py:161
 msgid "then"
 msgstr "alors"
 
-#: pylib/mathobj/display_data.py:161
+#: pylib/mathobj/display_data.py:162
 msgid "for every"
 msgstr "pour tout"
 
-#: pylib/mathobj/display_data.py:163
+#: pylib/mathobj/display_data.py:164
 msgid "there exists"
 msgstr "il existe"
 
-#: pylib/mathobj/display_data.py:164
+#: pylib/mathobj/display_data.py:165
 msgid "such that"
 msgstr "tel que"
 
-#: pylib/mathobj/display_data.py:168
+#: pylib/mathobj/display_data.py:169
 msgid "is included in"
 msgstr "est inclus dans"
 
-#: pylib/mathobj/display_data.py:171
+#: pylib/mathobj/display_data.py:172
 msgid "the intersection of"
 msgstr "l’intersection de"
 
-#: pylib/mathobj/display_data.py:172
+#: pylib/mathobj/display_data.py:173
 msgid "the union of"
 msgstr "l’union de"
 
-#: pylib/mathobj/display_data.py:173
+#: pylib/mathobj/display_data.py:174
 msgid "the intersection of the sets"
 msgstr "l’intersection des ensembles"
 
-#: pylib/mathobj/display_data.py:174
+#: pylib/mathobj/display_data.py:175
 msgid "the union of the sets"
 msgstr "l’union des ensembles"
 
-#: pylib/mathobj/display_data.py:175
+#: pylib/mathobj/display_data.py:176
 msgid "the complement of "
 msgstr "le complémentaire de "
 
-#: pylib/mathobj/display_data.py:176
+#: pylib/mathobj/display_data.py:177
 msgid "the empty set"
 msgstr "l’ensemble vide"
 
-#: pylib/mathobj/display_data.py:178
+#: pylib/mathobj/display_data.py:179
 msgid "the image under"
 msgstr "l’image par"
 
-#: pylib/mathobj/display_data.py:178 pylib/mathobj/display_data.py:179
+#: pylib/mathobj/display_data.py:179 pylib/mathobj/display_data.py:180
 msgid "of"
 msgstr "de"
 
-#: pylib/mathobj/display_data.py:179
+#: pylib/mathobj/display_data.py:180
 msgid "the inverse image under"
 msgstr "l’image réciproque par"
 
-#: pylib/mathobj/display_data.py:184
+#: pylib/mathobj/display_data.py:185
 msgid "equals"
 msgstr "égale"
 
-#: pylib/mathobj/display_data.py:185
+#: pylib/mathobj/display_data.py:186
 msgid "is different from"
 msgstr "est différent de"
 
-#: pylib/mathobj/display_data.py:186
+#: pylib/mathobj/display_data.py:187
 msgid "is less than"
 msgstr "est inférieur à"
 
-#: pylib/mathobj/display_data.py:187
+#: pylib/mathobj/display_data.py:188
 msgid "is greater than"
 msgstr "est plus grand que"
 
-#: pylib/mathobj/display_data.py:188
+#: pylib/mathobj/display_data.py:189
 msgid "is less than or equal to"
 msgstr "est inférieur ou égal à"
 
-#: pylib/mathobj/display_data.py:189
+#: pylib/mathobj/display_data.py:190
 msgid "is greater than or equal to"
 msgstr "est supérieur ou égal à"
 
-#: pylib/mathobj/display_data.py:196
+#: pylib/mathobj/display_data.py:197
 msgid "a function from"
 msgstr "une fonction de"
 
-#: pylib/mathobj/display_data.py:196
+#: pylib/mathobj/display_data.py:197
 msgid "to"
 msgstr "vers"
 
-#: pylib/mathobj/display_math.py:555
+#: pylib/mathobj/display_math.py:189
+msgid "All goals reached!"
+msgstr "Tous les buts ont été atteints !"
+
+#: pylib/mathobj/display_math.py:572
 msgid "an element of"
 msgstr "un élément de"
 
-#: pylib/mathobj/display_math.py:557
+#: pylib/mathobj/display_math.py:574
 msgid "a subset of"
 msgstr "une partie de"
 
-#: pylib/mathobj/display_math.py:609
+#: pylib/mathobj/display_math.py:626
 msgid "belongs to"
 msgstr "appartient à"
 
-#: pylib/mathobj/proof_state.py:248
+#: pylib/mathobj/proof_state.py:251
 msgid "Assume that"
 msgstr "Supposons que"
 
-#: pylib/mathobj/proof_state.py:254 pylib/mathobj/proof_state.py:263
+#: pylib/mathobj/proof_state.py:257 pylib/mathobj/proof_state.py:266
 msgid "Let"
 msgstr "Soit"
 
-#: pylib/mathobj/proof_state.py:263
+#: pylib/mathobj/proof_state.py:266
 msgid "be"
 msgstr " "
 
-#: pylib/mathobj/proof_state.py:275
+#: pylib/mathobj/proof_state.py:278
 msgid "Prove that"
 msgstr "Démontrer que"
 
-#: pylib/mathobj/proof_state.py:277
+#: pylib/mathobj/proof_state.py:280
 msgid "Then"
 msgstr "Alors"
 
-#: pylib/mathobj/proof_state.py:288
+#: pylib/mathobj/proof_state.py:291
 msgid "Context:"
 msgstr "Contexte :"
 
-#: pylib/mathobj/proof_state.py:298
+#: pylib/mathobj/proof_state.py:301
 msgid "Target:"
 msgstr "But :"
 
@@ -554,13 +566,16 @@ msgstr "Exercice"
 msgid "Definition:"
 msgstr "Définition :"
 
-#: pylib/server/__init__.py:213
+#: pylib/server/__init__.py:230
 msgid "Proof State received"
 msgstr "Etat de preuve reçu"
 
-#: pylib/server/__init__.py:217
+#: pylib/server/__init__.py:234
 msgid "After request"
 msgstr "Après la requête"
+
+#~ msgid "Target solved!"
+#~ msgstr "La preuve est terminée !"
 
 #~ msgid "Choose some specific proof method"
 #~ msgstr "Choisir une méthode de preuve"

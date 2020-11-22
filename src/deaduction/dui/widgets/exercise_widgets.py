@@ -51,7 +51,8 @@ from PySide2.QtWidgets import ( QAction,
                                 QWidget)
 
 from deaduction.config import          (_,
-                                        user_config)
+                                        user_config,
+                                        EXERCISE)
 from deaduction.dui.utils import  (     replace_delete_widget,
                                         ButtonsDialog)
 from deaduction.dui.widgets import (    ActionButton,
@@ -72,7 +73,8 @@ from deaduction.pylib.coursedata import (   Definition,
                                             Exercise,
                                             Theorem)
 from deaduction.pylib.server.exceptions import FailedRequestError
-from deaduction.pylib.mathobj import (  Goal,
+from deaduction.pylib.mathobj import (  MathObject,
+                                        Goal,
                                         ProofState,
                                         Proof)
 from deaduction.pylib.server import     ServerInterface
@@ -477,6 +479,7 @@ class ExerciseMainWindow(QMainWindow):
         # (MathObject, str), the str being the tag of the prop. or obj.
 
         # get old goal and set tags
+        # TODO: make a separate method get_old_goal(lean_file)
         lean_file = self.servint.lean_file
         if lean_file.idx > 0:
             # NB : when idx = 0, old_goal = new_goal : nothing is new
@@ -508,14 +511,17 @@ class ExerciseMainWindow(QMainWindow):
             = self.count_goals()
         goal_count = f'  {current_goal_number} / {total_goals_counter}'
         # log.debug(f"Goal  {goal_count}")
+
+        # Display if a goal has been solved and user is not undoing
         if goals_counter_evolution < 0 and current_goals_counter != 0:
-            # todo: do not display when undo
-            log.info(f"Current goal solved!")
-            QMessageBox.information(self,
-                                    '',
-                                    _('Current goal solved'),
-                                    QMessageBox.Ok
-                                    )
+            if EXERCISE.last_action != 'undo':
+                log.info(f"Current goal solved!")
+                QMessageBox.information(self,
+                                        '',
+                                        _('Current goal solved'),
+                                        QMessageBox.Ok
+                                        )
+        EXERCISE.last_action = None
 
         # Reset current context selection
         self.clear_current_selection()
@@ -778,13 +784,24 @@ class ExerciseMainWindow(QMainWindow):
     @Slot()
     def fireworks(self):
         """
-        As of now, display a dialog when the target is successfully
-        solved.
+        As of now,
+        - display a dialog when the target is successfully solved,
+        - replace the target by a message "Proof complete"
         """
-
         # TODO: make it a separate class
-        QMessageBox.information(self, _('Target solved'), _('Target solved!'),
-                                QMessageBox.Ok)
+        QMessageBox.information(self,
+                                _('Target solved'),
+                                _('The proof is complete!'),
+                                QMessageBox.Ok
+                                )
+        # make fake target to display message
+        no_more_goal_text = "No more goal"
+        target = self.current_goal.target
+        target.math_type = MathObject(  node=no_more_goal_text,
+                                        info={},
+                                        children=[],
+                                      )
+        self.ecw.update_goal(self.current_goal, goal_count='')
 
     @Slot(MathObjectWidgetItem)
     def process_context_click(self, item: MathObjectWidgetItem):

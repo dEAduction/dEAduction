@@ -336,6 +336,7 @@ class ProofState:
         targets.pop(0)  # removing title line ("targets:")
         main_goal = None
         if targets:
+            # create main goal:
             main_goal = Goal.from_lean_data(hypo_analysis, targets[0])
         else:
             log.warning(f"No target, targets_analysis={targets_analysis}")
