@@ -32,6 +32,7 @@ This file is part of d∃∀duction.
 import trio
 import logging
 
+from deaduction.config import EXERCISE
 from deaduction.pylib.coursedata.exercise_classes import Exercise
 from deaduction.pylib.mathobj.proof_state import ProofState
 from deaduction.pylib.lean.response import Message
@@ -122,6 +123,17 @@ class ServerInterface(QObject):
             self.__proof_receive_done.set()
 
     def __on_lean_message(self, msg: Message):
+        """
+        Treatment of relevant Lean messages.
+        NB: only the first message starting with
+            - "EFFECTIVE CODE",
+            - "context:" or
+            - "target:"
+        is accepted for each request sent.
+
+        :param msg:
+        :return:
+        """
         txt = msg.text
         line = msg.pos_line
         severity = msg.severity
@@ -135,7 +147,8 @@ class ServerInterface(QObject):
                 self.log.warning(f"Lean warning at line {msg.pos_line}: {txt}")
 
         elif txt.startswith("context:") \
-                and line == self.lean_file.last_line_of_inner_content + 1:
+                and line == self.lean_file.last_line_of_inner_content + 1\
+                and not self.__tmp_hypo_analysis:
             self.log.info("Got new context")
             self.__tmp_hypo_analysis = txt
 
@@ -143,7 +156,8 @@ class ServerInterface(QObject):
             self.__check_receive_state()
 
         elif txt.startswith("targets:") \
-                and line == self.lean_file.last_line_of_inner_content + 2:
+                and line == self.lean_file.last_line_of_inner_content + 2\
+                and not self.__tmp_targets_analysis:
             self.log.info("Got new targets")
             self.__tmp_targets_analysis = txt
 
@@ -152,11 +166,14 @@ class ServerInterface(QObject):
 
         elif txt.startswith("EFFECTIVE CODE")\
                 and line == self.lean_file.last_line_of_inner_content:
-            self.log.info(f"Got {txt} at line {line}")
-            # find text after "EFFECTIVE CODE xxx : "
-            pos = txt.find(":") + 2
-            self.__tmp_effective_code = txt[pos:]
-            self.history_replace(self.__tmp_effective_code)
+            if self.__tmp_effective_code:
+                self.log.warning("(effective code received twice)")
+            else:
+                self.log.info(f"Got {txt} at line {line}")
+                # find text after "EFFECTIVE CODE xxx : "
+                pos = txt.find(":") + 2
+                self.__tmp_effective_code = txt[pos:]
+                self.history_replace(self.__tmp_effective_code)
 
     def __on_lean_state_change(self, is_running: bool):
         self.log.info(f"New lean state: {is_running}")
@@ -220,7 +237,7 @@ class ServerInterface(QObject):
             if not self.__proof_state_valid.is_set():
                 self.proof_state = ProofState.from_lean_data(
                     self.__tmp_hypo_analysis, self.__tmp_targets_analysis)
-                # store proof_state
+                # store proof_state for history
                 self.log.debug("storing ProofState")
                 self.lean_file.state_info_attach(ProofState=self.proof_state)
 
@@ -297,6 +314,7 @@ class ServerInterface(QObject):
     # History
     ############################################
     async def history_undo(self):
+        EXERCISE.last_action = 'undo'
         self.lean_file.undo()
         await self.__update()
 
@@ -310,6 +328,9 @@ class ServerInterface(QObject):
         without calling Lean
         effective_code is assumed to be equivalent, from the Lean viewpoint,
         to last code entry
+        NB: this method does NOT call self.__update().
+        Indeed, it is designed to replace a piece of code by another piece
+        which is assumed to be equivalent from Lean's viewpoint.
 
         :param effective_code: str
         """
@@ -325,13 +346,12 @@ class ServerInterface(QObject):
         self.lean_file.insert(label=label, add_txt=effective_code)
         self.lean_file_changed.emit()  # will update the lean text editor
 
-
     ############################################
     # Code management
     ############################################
     async def code_insert(self, label: str, code: str):
         """
-        Inserts code in the lean virtual file.
+        Inserts code in the Lean virtual file.
         """
 
         code = code.strip()
@@ -342,8 +362,8 @@ class ServerInterface(QObject):
         if not code.endswith("\n"):
             code += "\n"
 
-        if code.find("EFFECTIVE CODE") == -1:  # not used
-            self.__tmp_effective_code = "IRRELEVANT"
+        # if code.find("EFFECTIVE CODE") == -1:  # not used
+        #     self.__tmp_effective_code = "IRRELEVANT"
 
         self.lean_file.insert(label=label, add_txt=code)
         await self.__update()
