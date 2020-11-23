@@ -606,27 +606,37 @@ def display_belongs_to(math_type: Any, format_, text_depth, belonging=True) \
         or "f is a function from X to Y"
         - "P: a proposition" (and not P ∈ a proposition),
         FIXME
-        :param math_type: string (='unknown') or MathObject
+        :param math_type: MathObject or "unknown"
         :param format_:
         :param text_depth:
         :param belonging:
         :return:
     """
     # log.debug(f"display ∈ with {math_type}, {format_}, {text_depth}")
-    if math_type == 'unknown':
-        if format_ in ('utf8', 'lean'):
-            return "∈"
+    # if 'unknown' == math_type:  # should not happen anymore
+    #    if format_ in ('utf8', 'lean'):
+    #        return "∈"
     # from now on math_type is an instance of MathObject
-    if text_depth > 0:
-        if math_type.node == "PROP" \
-                or (math_type.node == "FUNCTION" and text_depth > 1):
+    if math_type is 'unknown':
+        if text_depth > 0:
             symbol = _("is")
-        elif math_type.node == "FUNCTION" and text_depth == 1:
+        else:
+            symbol = "∈" if format_ == "utf8" else r"\in"
+        return symbol
+    if text_depth > 0:
+        if math_type.is_prop(is_math_type=True) \
+                or math_type.is_type(is_math_type=True) \
+                or (math_type.is_function(is_math_type=True)
+                    and text_depth > 1):
+            symbol = _("is")
+        elif math_type.is_function(is_math_type=True) and text_depth == 1:
             symbol = ":"
         else:
             symbol = _("belongs to")
     else:
-        if math_type.node in ["FUNCTION", "PROP"]:
+        if math_type.is_function(is_math_type=True) \
+                or math_type.is_prop(is_math_type=True) \
+                or math_type.is_type(is_math_type=True):
             symbol = ":"
         else:
             symbol = "∈" if format_ == "utf8" else r"\in"

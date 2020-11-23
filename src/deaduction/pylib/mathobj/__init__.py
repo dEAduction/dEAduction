@@ -26,7 +26,8 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .MathObject import     MathObject
+from .MathObject import     (MathObject,
+                             NO_MATH_TYPE)
 from .proof_state import    (Goal,
                              ProofState,
                              Proof

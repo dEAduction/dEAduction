@@ -52,7 +52,7 @@ class Goal:
     # math_types: List[Tuple[MathObject, List[MathObject]]]
     # variables_names: List[str]
 
-    def compare(self, old_goal, goal_is_new):
+    def compare(self, old_goal, goal_is_new=False):
         """
         Compare the new goal to the old one, and tag the target and the element
         of both new and old context accordingly. tag is one of the following:
@@ -81,8 +81,8 @@ class Goal:
         new_goal = self
         new_context = new_goal.context.copy()
         old_context = old_goal.context.copy()
-        # log.debug(old_context)
-        # log.debug(new_context)
+        log.debug(old_context)
+        log.debug(new_context)
         if goal_is_new:
             tags_new_context = ["+"] * len(new_context)
             tags_old_context = ["+"] * len(old_context)
@@ -109,10 +109,14 @@ class Goal:
                 else:
                     # next test uses PropObj.__eq__, which is redefined
                     # in PropObj (recursively test nodes)
-                    if old_context[old_index].math_type == \
-                            math_object.math_type:
+                    old_math_type = old_context[old_index].math_type
+                    new_math_type = math_object.math_type
+                    if old_math_type == new_math_type:
                         tag = "="
                     else:
+                        log.warning("Modified objects")
+                        log.debug(f"Old:{old_context[old_index].math_type}")
+                        log.debug(f"New:{math_object.math_type}")
                         tag = "≠"
                 tags_new_context[new_index] = tag
                 new_context[new_index] = None  # will not be considered

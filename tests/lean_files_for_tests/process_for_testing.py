@@ -211,12 +211,14 @@ def compute_objects(goal: Goal):
     """
     display_context = []
     for mathobject in goal.context:
-        display_object = mathobject.format_as_utf8()
-        display_type = mathobject.math_type.format_as_utf8(is_math_type=True)
+        display_object = mathobject.to_display(format_='utf8')
+        display_type = mathobject.math_type.to_display( format_='utf8',
+                                                        is_math_type=True)
         display_context.append((display_object, display_type))
         log.debug(f"{display_object} : {display_type}")
     target = goal.target
-    display_target = target.math_type.format_as_utf8(is_math_type=True)
+    display_target = target.math_type.to_display( format_='utf8',
+                                                  is_math_type=True)
     log.debug(f"Target: {display_target}")
 
     goal.display_context    = display_context
