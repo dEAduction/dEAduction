@@ -6,7 +6,8 @@ import data.real.basic
 
 -- dEAduction imports
 import structures2
-import notations_definitions
+-- import notations_definitions
+-- import compute
 
 -- General principles :
 -- Type should be defined as parameters, in order to be implicit everywhere
@@ -49,10 +50,6 @@ notation [parsing_only]  A ` union ` B := A ∪ B
 notation [parsing_only]  A ` inclus ` B := A ⊆ B
 notation [parsing_only]  `vide` := ∅
 
-notation f `⟮` A `⟯` := f '' A
-notation f `⁻¹⟮` A `⟯` := f  ⁻¹' A
-notation [parsing_only] f `inverse` A := f  ⁻¹' A
-notation g `∘` f := set.composition g f
 
 open set
 
@@ -70,12 +67,7 @@ PrettyName
     Pas zéro ou pas un
 -/
 begin
-    intro n,
-    by_cases H: n=0,
-    right,
-    linarith,
-    left,
-    assumption,
+    sorry
 end
 
 lemma exercise.zero_ou_un_2 : not (∀ n:ℕ, (n = 0 or n = 1))
@@ -88,6 +80,7 @@ begin
     sorry
 end
 
+
 lemma exercise.plus_petit : ∃ m:ℕ, ∀ n:ℕ, m ≤ n
 :=
 /- dEAduction
@@ -97,6 +90,7 @@ PrettyName
 begin
     sorry
 end
+
 
 lemma exercise.vraiment_plus_petit : not (∃ m:ℤ, ∀ n:ℤ, m ≤ n)
 :=
@@ -108,6 +102,7 @@ begin
     sorry
 end
 
+
 lemma exercise.egalite : ∀ n:ℕ, ∃ m:ℕ, m=n
 :=
 /- dEAduction
@@ -118,7 +113,9 @@ begin
     sorry
 end
 
-lemma exercise.egalite_2 : not ( ∃ m:ℕ, ∀ n:ℕ, m=n )
+
+lemma exercise.egalite_2 :
+not ( ∃ m:ℕ, ∀ n:ℕ, m=n )
 :=
 /- dEAduction
 PrettyName
@@ -127,6 +124,7 @@ PrettyName
 begin
     sorry
 end
+
 
 lemma exercise.tres_petit :
 not ( ∀ a ≥ (0:ℝ), ∀ ε ≥ (0:ℝ), (a ≤ ε → a = 0) )
@@ -139,16 +137,21 @@ begin
     sorry
 end
 
+
 lemma exercise.tres_petit_2 :
 ∀ a ≥ (0:ℝ), ((∀ ε ≥ (0:ℝ), a ≤ ε) → a = 0)
 :=
 /- dEAduction
 PrettyName
     Ca se complique
+SimplificationCompute
+    $ALL
 -/
 begin
     sorry
 end
+
+
 
 lemma exercise.tres_petit_3 :
 ∀ a ≥ (0:ℝ), ((∀ ε > (0:ℝ), a ≤ ε) → a = 0)
@@ -163,7 +166,7 @@ end
 
 
 lemma exercise.entre_deux_entiers :
-∀x:ℤ, ∀y:ℤ, (x<y → (∃z:ℤ, x < z and z < y))
+not (∀x:ℤ, ∀y:ℤ, (x<y → (∃z:ℤ, x < z and z < y)))
 :=
 /- dEAduction
 PrettyName
