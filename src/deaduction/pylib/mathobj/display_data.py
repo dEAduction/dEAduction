@@ -32,11 +32,11 @@ from deaduction.config                      import _
 # except for spaces around them, so that up to strip(), they appear in
 # latex_to_utf8_dic
 latex_from_node = {
-    "PROP_AND": (0, " " + _("AND") + " ", 1),
-    "PROP_OR": (0, " " + _("OR") + " ", 1),
+    "PROP_AND": (0, " " + _("and") + " ", 1),
+    "PROP_OR": (0, " " + _("or") + " ", 1),
     "PROP_FALSE": (_("Contradiction"), ),
     "PROP_IFF": (0, r" \Leftrightarrow ", 1),
-    "PROP_NOT": (_("NOT") + " ", 0),
+    "PROP_NOT": (_("not") + " ", 0),
     "PROP_IMPLIES": (0, r" \Rightarrow ", 1),
     "QUANT_∀": (r"\forall", 1, r" \in ", 0, ", ", 2),
     "QUANT_∃": (r"\exists", 1, r" \in ", 0, ", ", 2),
@@ -141,9 +141,9 @@ latex_to_utf8_dic = {
 
 # only those lean symbols that are not in the latex_to_utf8 dict
 latex_to_lean_dic = {
-    'AND': 'and',
-    'OR': 'or',
-    'NOT': 'not',
+    #'AND': 'and',
+    #'OR': 'or',
+    #'NOT': 'not',
     r'\Leftrightarrow': '↔',
     r'\Rightarrow': '→',
     r'\cap': '∩',
@@ -160,9 +160,9 @@ text_from_node = {
     "PROP_IFF": (0, " " + _("if and only if") + " ", 1),
     "PROP_NOT": (_("the negation of") + " ", 0),
     "PROP_IMPLIES": (_("if") + " ", 0, " " + _("then") + " ", 1),
-    "QUANT_∀": (_("for every") + " ", 1, " " + "in" + " ", 0,
+    "QUANT_∀": (_("for every") + " ", 1, " " + _("in") + " ", 0,
                 ", ", 2),
-    "QUANT_∃": (_("there exists") + " ", 1, " " + "in" + " ", 0,
+    "QUANT_∃": (_("there exists") + " ", 1, " " + _("in") + " ", 0,
                 " " + _("such that") + " ", 2),
     ###############
     # SET THEORY: #
