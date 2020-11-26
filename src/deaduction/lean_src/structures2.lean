@@ -143,6 +143,7 @@ match e with
 ------------ ARITHMETIC ------------
 | `(%%a + %%b) := return ("SUM", [a, b])
 | `(%%a - %%b) := return ("DIFFERENCE", [a, b])
+| `(has_mul.mul %%a %%b) := return ("MULT", [a, b]) -- TODO: distinguish types/numbers
 | `(%%a × %%b) := return ("PRODUCT", [a, b]) -- TODO: distinguish types/numbers
 | `(%%a / %%b) := return ("DIV", [a, b])
 ------------------------------ Leaves with data ---------------------------

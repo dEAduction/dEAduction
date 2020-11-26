@@ -73,6 +73,7 @@ latex_from_node = {
     "PROP_≥": (0, r" \geq ", 1),
     "DIFFERENCE": (0, " - ", 1),
     "SUM": (0, " + ", 1),
+    "MULT": (0, r" \times ", 1),
     "PRODUCT": (0, r" \times ", 1),
     "DIV": (0, r"/", 1),
     ##################
