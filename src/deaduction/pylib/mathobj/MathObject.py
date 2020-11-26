@@ -482,6 +482,16 @@ class MathObject:
 
         return math_type.node == "PROP_IFF"
 
+    def is_false(self, is_math_type=False) -> bool:
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        if self.node == "PROP_FALSE":
+            return True
+        else:
+            return False
+
     def is_bound_var(self) -> bool:
         """
         Test if self is a bound variable by searching in the info dict

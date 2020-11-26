@@ -154,29 +154,38 @@ class Course:
                 begin_found = False
                 metadata = event_content
                 metadata["lean_line"] = line_counter
+                # log.debug(f"creating statement with lean_line {
+                # line_counter}")
                 if namespace:
                     metadata["lean_name"] = whole(namespace) + "." \
                                             + metadata["lean_name"]
 
-            if event_name == "exercise":
-                metadata.update(course_metadata)  # add potential macros
-                log.info(f"creating exercise from data {metadata}")
-                exercise = Exercise.from_parser_data(metadata, statements)
-                statements.append(exercise)
-            elif event_name == "definition":
-                log.info(f"creating definition from data {metadata}")
-                definition = Definition.from_parser_data(**metadata)
-                statements.append(definition)
-            elif event_name == "theorem":
-                log.info(f"creating theorem from data {metadata}")
-                theorem = Theorem.from_parser_data(**metadata)
-                statements.append(theorem)
+                if event_name == "exercise":
+                    # add values from course_metadata only if NOT already in
+                    # exercise metadata
+                    # so that global option like OpenQuestion may be modified
+                    # locally
+                    for field_name in course_metadata:
+                        metadata.setdefault(field_name,
+                                            course_metadata[field_name])
+                    # log.info(f"creating exercise from data {metadata}")
+                    exercise = Exercise.from_parser_data(metadata, statements)
+                    statements.append(exercise)
+                elif event_name == "definition":
+                    # log.info(f"creating definition from data {metadata}")
+                    definition = Definition.from_parser_data(**metadata)
+                    statements.append(definition)
+                elif event_name == "theorem":
+                    # log.info(f"creating theorem from data {metadata}")
+                    theorem = Theorem.from_parser_data(**metadata)
+                    statements.append(theorem)
 
             elif event_name == "begin_proof":
                 st = statements[-1]
                 st.lean_begin_line_number = line_counter
                 begin_counter += 1
-                log.debug(f"Statements {st.pretty_name} begins at line {line_counter}")
+                #log.debug(f"Proof of statement {st.pretty_name} begins at "
+                #          f"line {line_counter}")
                 begin_found = True
             elif event_name == "end_proof":
                 st = statements[-1]

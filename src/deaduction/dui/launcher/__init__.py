@@ -32,13 +32,14 @@ import logging
 import pickle
 from pathlib import Path
 import sys
-from PySide2.QtWidgets import (QApplication,
-                               QFileDialog,
-                               QInputDialog)
+from PySide2.QtWidgets import                   (QApplication,
+                                                QFileDialog,
+                                                QInputDialog)
 
 import deaduction.pylib.logger as               logger
-from deaduction.config import (user_config,
-                               write_config)
+from deaduction.dui.utils import                (ButtonsDialog)
+from deaduction.config import                   (user_config,
+                                                write_config)
 from deaduction.pylib.coursedata.course import (Exercise,
                                                 Course)
 
@@ -89,6 +90,9 @@ def select_exercise(course: Course):
     Open a combo box to choose an exercise and launch the exercise 
     window.
 
+    If needed, ask the user to choose between proving the statement and its
+    negation.
+
     :param course: An instance of the Course class, user-selected in
         select_course.
     :return: An instance of the Exercise class corresponding to the
@@ -102,7 +106,30 @@ def select_exercise(course: Course):
                                              _('Selected exercise:'),
                                              list(exercise_ids.keys()), 0,
                                              False)
-
+    if ok:
+        exercise = exercise_ids[exercise_id]
+        open_question = exercise.info.setdefault('open_question', False)
+        if 'negate_statement' in exercise.info:
+            if exercise.info['negate_statement']:
+                exercise.negate_statement = True
+        elif open_question:
+            # exercise is an open question and the user has to choose her way
+            title = _("Do you want to prove this statement or its negation?")
+            if exercise.initial_proof_state:
+                output = ""  # fixme
+            else:
+                output = ""
+            choices = [("1", "Prove statement"),
+                       ("2", "Prove negation")]
+            choice, ok2 = ButtonsDialog.get_item(choices,
+                                                 title,
+                                                 output)
+            log.debug(f"choice: {choice}")
+            if ok2:
+                exercise.negate_statement = (choice == 1)
+                log.debug(f"negate: {exercise.negate_statement}")
+            else:  # cancel exercise if no choice
+                ok = False
     return exercise_ids[exercise_id] if ok else None
 
 
@@ -123,7 +150,7 @@ def select_course_exercise():
 
         exercise = select_exercise(course)
 
-    return (course, exercise)
+    return course, exercise
 
 
 def pickled_items(filename):

@@ -40,7 +40,7 @@ class ButtonsDialog(QDialog):
     def __init__(self,
                  choices,
                  title          = "",
-                 output       = "",
+                 output         = "",
                  cancel_button  = False,
                  choice         = None,
                  parent         = None):

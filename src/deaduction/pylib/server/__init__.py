@@ -266,6 +266,19 @@ class ServerInterface(QObject):
     # Exercise initialisation
     ############################################
     def __file_from_exercise(self, exercise):
+        """
+        Create a virtual file from exercise. Concretely, this consists in
+        - separating the part of the file before the proof into a preamble,
+        - add the tactics instruction "hypo_analysis, targets_analysis"
+        - remove all statements after the proof.
+
+        If exercise.negate_statement, then the statement is replaced by its
+        negation.
+
+        Then a virtual file is instanciated.
+
+        :param exercise: Exercise
+        """
         file_content = exercise.course.file_content
         lines        = file_content.splitlines()
         begin_line   = exercise.lean_begin_line_number
@@ -278,8 +291,23 @@ class ServerInterface(QObject):
             end_of_file += "end " + namespace + "\n"
         end_of_file += "end course"
 
-        # Construct virtual file
-        virtual_file_preamble = "\n".join(lines[:begin_line]) + "\n"
+        # replace statement by negation if required
+        if exercise.negate_statement:
+            lean_core_statement = exercise.lean_core_statement
+            negation = " not( " + lean_core_statement + " )"
+            lemma_line = exercise.lean_line - 1
+            rough_core_content = "\n".join(lines[lemma_line:begin_line]) + "\n"
+            # self.log.debug(rough_core_content.find(lean_core_statement))
+            new_core_content = rough_core_content.replace(
+                                    lean_core_statement, negation)
+            # self.log.debug(f"New core content:{new_core_content}")
+            # self.log.debug(f"Lean_core_statement:{lean_core_statement}")
+            virtual_file_preamble = "\n".join(lines[:lemma_line]) \
+                                    + "\n" + new_core_content
+        else:
+            # Construct virtual file
+            virtual_file_preamble = "\n".join(lines[:begin_line]) + "\n"
+
         virtual_file_afterword = "hypo_analysis,\n" \
                                  "targets_analysis,\n" \
                                  + end_of_file
@@ -295,9 +323,10 @@ class ServerInterface(QObject):
 
     async def exercise_set(self, exercise: Exercise):
         """
-        initialise the virtual_file from exercise
-        :param exercise:
-        :return:virtual_file
+        Initialise the virtual_file from exercise
+
+        :param exercise:        The exercise to be set
+        :return:                virtual_file
         """
 
         self.log.info(f"Set exercise to: "

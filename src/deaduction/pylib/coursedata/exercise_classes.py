@@ -59,26 +59,48 @@ class Statement:
     # '(X : Type) (A : set X)'
     pretty_name:            str
     # 'Union d'intersections'
-    description:            str = None
+    description:            str             = None  # todo: put in info
     # "L'union est distributive par rapport à l'intersection"
-    text_book_identifier:   str = None
-    lean_begin_line_number: int = None
+    text_book_identifier:   str             = None  # todo: put in info
+    lean_begin_line_number: int             = None
     # proof starts here...
     # this value is set to None until "begin" is found
-    lean_end_line_number:   int = None
+    lean_end_line_number:   int             = None
     # ...and ends here
 
-    course:                 Any = None
+    course:                 Any             = None
     # the parent course
 
-    initial_proof_state:    Any = None
+    initial_proof_state:    Any             = None
     # this is used when pre-processing
+
+    info:                   Dict[str, Any]  = None
+    # Any other (non-essential) information
 
     @classmethod
     def from_parser_data(cls, **data):
-        extract_data = {attribute: data.setdefault(attribute, None)
-                        for attribute in cls.attributes()}
-        # to keep only the relevant data
+        """
+        Create a Statement instance from data
+        :param data: dictionary containing the relevant information:
+        keys in data will be transformed into attributes
+        """
+        attributes = cls.attributes()
+        extract_data = {}
+        for attribute in attributes:
+            if attribute in data.keys():
+                extract_data[attribute] = data.pop(attribute)
+        # extract_data = {attribute: data.setdefault(attribute, None)
+        #                for attribute in attributes}
+        # keep only the relevant data, i.e. the keys which corresponds to
+        # attribute of the class. The remaining information are put in the
+        # info dictionary attribute
+        for field_name in data:  # replace string by bool if needed
+            if data[field_name] == 'True':
+                data[field_name] = True
+            elif data[field_name] == 'False':
+                data[field_name] = False
+
+        extract_data["info"] = data
         return cls(**extract_data)
 
     @classmethod
@@ -171,11 +193,13 @@ class Theorem(Statement):
 
 @dataclass
 class Exercise(Theorem):
-    available_logic:            List[Action] = None
-    available_magic:            List[Action] = None
-    available_proof:            List[Action] = None
+    available_logic:            List[Action]    = None
+    available_magic:            List[Action]    = None
+    available_proof:            List[Action]    = None
     available_statements:       List[Statement] = None
-    expected_vars_number:       Dict[str, int] = None  # {'X': 3, 'A': 1}
+    expected_vars_number:       Dict[str, int]  = None  # {'X': 3, 'A': 1}
+    info:                       Dict[str, Any]  = None
+    negate_statement:           bool            = False
 
     @classmethod
     def from_parser_data(cls, data: dict, statements: list):
@@ -278,16 +302,29 @@ class Exercise(Theorem):
         # to keep only the relevant data, the keys that appear as attributes
         # in the class Exercise or in the parent class Statement
         # this removes the entry in 'data' corresponding to course_metadata
-        extract_data = {attribute: data.setdefault(attribute, None)
-                        for attribute in Statement.attributes()}
-        more_data = {attribute: data.setdefault(attribute, None)
-                        for attribute in cls.attributes()}
-        extract_data.update(more_data)
+        extract_data = {}
+        for attributes in [Statement.attributes(), cls.attributes()]:
+            for attribute in attributes:
+                if attribute in data.keys():
+                    extract_data[attribute] = data.pop(attribute)
+        # keep only the relevant data, i.e. the keys which corresponds to
+        # attribute of the class. The remaining information are put in the
+        # info dictionary attribute
+        for field_name in data:  # replace string by bool if needed
+            if data[field_name] == 'True':
+                data[field_name] = True
+            elif data[field_name] == 'False':
+                data[field_name] = False
 
-        log.debug(f"available_logic: {extract_data['available_logic']}")
-        log.debug(f"available_proof: {extract_data['available_proof']}")
-        log.debug(f"available_statements: "
-                  f"{len(extract_data['available_statements'])}")
+        extract_data["info"] = data
+
+        # log.debug(f"available_logic: {extract_data['available_logic']}")
+        # log.debug(f"available_proof: {extract_data['available_proof']}")
+        # log.debug(f"available_statements: "
+        #           f"{len(extract_data['available_statements'])}")
+        # log.debug(f"Creating exercise with supplementary info"
+        #          f" {extract_data['info']}")
+        # log.debug(f"Creating exercise, line: {extract_data['lean_line']}")
         return cls(**extract_data)
 
     def current_name_space(self):

@@ -62,6 +62,6 @@ def format_orelse(list_of_choices):
     if len(list_of_choices) == 1:
         return list_of_choices[0]
     else:
-        list_of_choices = map(lambda string : f'`[ {string}, trace \"EFFECTIVE CODE {_CODE_NB} : {string}\"]', list_of_choices)
+        list_of_choices = map(lambda string: f'`[ {string}, trace \"EFFECTIVE CODE {_CODE_NB} : {string}\"]', list_of_choices)
         return " <|> ".join(list_of_choices) + ", "
 
