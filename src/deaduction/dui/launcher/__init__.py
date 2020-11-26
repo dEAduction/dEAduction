@@ -116,9 +116,11 @@ def select_exercise(course: Course):
             # exercise is an open question and the user has to choose her way
             title = _("Do you want to prove this statement or its negation?")
             if exercise.initial_proof_state:
-                output = ""  # fixme
+                goal = exercise.initial_proof_state.goals[0]
+                output = goal.goal_to_text(text_depth=1, to_prove=False)
             else:
-                output = ""
+                output = exercise.lean_variables + "   " \
+                         + exercise.lean_core_statement
             choices = [("1", "Prove statement"),
                        ("2", "Prove negation")]
             choice, ok2 = ButtonsDialog.get_item(choices,
