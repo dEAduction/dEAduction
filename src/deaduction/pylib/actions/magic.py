@@ -53,15 +53,17 @@ def action_compute(goal, selected_objects):
             or target.is_false()):
         raise WrongUserInput(error="Target is not an equality or an "
                                    "inequality")
-    else:
-        try_before = "try {apply div_pos}, " \
-                     + "try { all_goals {norm_num at *}}" \
-                     + ", "
-        simplify_1 = "simp only " \
-                     + "[*, ne.symm, ne.def, not_false_iff, lt_of_le_of_ne]"
-        possible_code = [try_before + "linarith",
-                         try_before + simplify_1]
-        # "finish" "norm_num *"
-        # if user_config.getboolean('use_library_search_for_computations'):
-        #     possible_code.append('library_search')
-        return format_orelse(possible_code)
+    # try_before = "try {apply div_pos}, " \
+    #            + "try { all_goals {norm_num at *}}" \
+    #             + ", "
+    #simplify_1 = "simp only " \
+    #             + "[*, ne.symm, ne.def, not_false_iff, lt_of_le_of_ne]"
+    #possible_code = [try_before + "linarith",
+    #                 try_before + simplify_1]
+    # "finish" "norm_num *"
+    # if user_config.getboolean('use_library_search_for_computations'):
+    #     possible_code.append('library_search')
+
+    possible_code = ["try {norm_num at *}, compute_n 10"]
+
+    return format_orelse(possible_code)

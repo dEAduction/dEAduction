@@ -6,7 +6,7 @@ import data.real.basic
 
 -- dEAduction imports
 import structures2
--- import compute
+import compute
 
 -- General principles :
 -- Type should be defined as parameters, in order to be implicit everywhere
