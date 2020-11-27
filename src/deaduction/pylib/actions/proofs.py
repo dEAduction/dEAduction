@@ -200,16 +200,13 @@ and add ∀ a ∈ A, P(a, f(a)) to the properties
 def action_new_object(goal: Goal, l: [MathObject],
                       user_input: [str] = []) -> str:
     """
-    Translate into string of lean code corresponding to the action
-
-    Introduce new object\nIntroduce new subgoal:
-transform the current target into the input target
-and add this to the properties of the future goal.
+    Introduce new object / sub-goal / function
 
     :param l: list of MathObject arguments preselected by the user
     :return: string of lean code
     """
     possible_codes = []
+    # Choose between object/sub-goal/function
     if len(user_input) == 0:
         raise MissingParametersError(InputType.Choice,
                              [(_("Object"), _("Introduce a new object")),
@@ -219,18 +216,21 @@ and add this to the properties of the future goal.
                                                 "function"))],
                              title="New object",
                              output=_("Choose what to introduce:"))
-    if user_input[0] == 0:  # choice = new object
+    # Choice = new object
+    if user_input[0] == 0:
         if len(user_input) == 1:  # ask for new object
             raise MissingParametersError(InputType.Text,
                                          title="+",
                                          output=_("Introduce new object:"))
         else:  # send code
-            x = utils.get_new_var()
+            x = utils.get_new_var()  # fixme: ask the user for a name
             h = get_new_hyp(goal)
             possible_codes.append(
                 f"let {x} := {user_input[1]}, "
                 f"have {h} : {x} = {user_input[1]}, refl, ")
-    if user_input[0] == 1:  # new sub-goal
+
+    # Choice = new sub-goal
+    elif user_input[0] == 1:
         if len(user_input) == 1:
             raise MissingParametersError(InputType.Text,
                                          title="+",
@@ -238,7 +238,9 @@ and add this to the properties of the future goal.
         else:
             h = get_new_hyp(goal)
             possible_codes.append(f"have {h} : ({user_input[1]}),")
-    if user_input[0] == 2:
+
+    # Choice = new function
+    elif user_input[0] == 2:
         return introduce_fun(goal, l)
     return format_orelse(possible_codes)
 
@@ -519,6 +521,9 @@ def action_assumption(goal: Goal, l: [MathObject]) -> str:
     :param l: list of MathObject arguments preselected by the user
     :return: string of lean code
     """
+    # NB: this button should either solve the goal or fail.
+    # For this we wrap the non "solve-or-fail" tactics
+    # into the combinator "solve1"
 
     possible_codes = []
     if len(l) == 0:
@@ -532,10 +537,15 @@ def action_assumption(goal: Goal, l: [MathObject]) -> str:
         possible_codes.append('apply eq.symm, assumption')
         possible_codes.append('apply iff.symm, assumption')
     if len(l) == 1:
-        possible_codes.append(f'apply {l[0].info["name"]}')
+        possible_codes.append(solve1_wrap(f'apply {l[0].info["name"]}'))
+
+    possible_codes.append(solve1_wrap('norm_num at *'))
     return format_orelse(possible_codes)
 
 
 # @action(_("Proof by induction"))
 # def action_induction(goal : Goal, l : [MathObject]):
 #    raise WrongUserInput
+
+def solve1_wrap(string: str) -> str:
+    return "solve1 {" + string + "}"

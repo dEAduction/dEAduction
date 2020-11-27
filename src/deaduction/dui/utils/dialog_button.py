@@ -111,8 +111,9 @@ class ButtonsDialog(QDialog):
     def button_clicked(self, number):
         self.choice = number
         self.accept()
+
     @classmethod
-    def get_item( cls,
+    def get_item(   cls,
                     choices,
                     title          = "",
                     output         = "",
@@ -135,15 +136,8 @@ class ButtonsDialog(QDialog):
         choice_number = dialog_box.choice
         return choice_number, OK
 
+
 if __name__ == '__main__':
-    #button_choice = None
-
-
-    #def button_clicked(number, box):
-    #    global button_choice
-    #    button_choice = number
-    #    box.accept()
-
     # Create the Qt Application
     app = QApplication(sys.argv)
 
