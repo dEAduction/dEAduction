@@ -122,8 +122,9 @@ class ActionButton(QPushButton):
         self.setText(action.symbol)
         self.setToolTip(action.caption)
         self.clicked.connect(self._emit_action)
-        # modify appearance of arrow when over a button
+        # Modify arrow appearance when over a button
         self.setCursor(QCursor(Qt.PointingHandCursor))
+
     @Slot()
     def _emit_action(self):
         """
@@ -171,10 +172,15 @@ class ActionButtonsWidget(QWidget):
         self.buttons = []
 
         main_layout = QHBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)
+
         for action in actions:
             action_button = ActionButton(action)
             main_layout.addWidget(action_button)
             self.buttons.append(action_button)
+
+        main_layout.addStretch()
+
         self.setLayout(main_layout)
 
 
@@ -248,7 +254,6 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         # TODO: use mono font for lean name column (column 1)
 
         # Print icon (D for definition, T for theorem, etc)
-        # icons_path = 'share/graphical_resources/icons/letters' #fixme: delete
         icons_base_dir = user_config.get('icons_path')
         icons_type = user_config.get('icons_letter_type')  # e.g. 'red'
         icons_dir = Path(icons_base_dir) / icons_type

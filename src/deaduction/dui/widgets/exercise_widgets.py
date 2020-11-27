@@ -183,6 +183,10 @@ class ExerciseCentralWidget(QWidget):
         self.__context_lyt  = QVBoxLayout()
         context_actions_lyt = QHBoxLayout()
         actions_lyt         = QVBoxLayout()
+        action_btns_lyt     = QVBoxLayout()
+
+        action_btns_lyt.setContentsMargins(0, 0, 0, 0)
+        action_btns_lyt.setSpacing(0)
 
         actions_gb = QGroupBox(_('Actions (transform context and target)'))
         context_gb = QGroupBox(_('Context (objects and properties)'))
@@ -193,10 +197,11 @@ class ExerciseCentralWidget(QWidget):
         self.proof_btns = ActionButtonsWidget(exercise.available_proof)
         self.magic_btns = ActionButtonsWidget(exercise.available_magic)
 
-        # search for ActionButton corresponding to action_apply
+        # Search for ActionButton corresponding to action_apply
         # (which will be called by double-click):
         apply_buttons = [button for button in self.proof_btns.buttons
                          if button.action.run == action_apply]
+
         if apply_buttons:
             self.action_apply_button = apply_buttons[0]
         else:
@@ -215,11 +220,11 @@ class ExerciseCentralWidget(QWidget):
         # ───────────── Put widgets in layouts ───────────── #
 
         # Actions
-        actions_lyt.addWidget(self.logic_btns)
-        actions_lyt.addWidget(self.proof_btns)
-        # if there is no magic button, do not take space for them!
+        action_btns_lyt.addWidget(self.logic_btns)
+        action_btns_lyt.addWidget(self.proof_btns)
         if exercise.available_magic:
-            actions_lyt.addWidget(self.magic_btns)
+            action_btns_lyt.addWidget(self.magic_btns)
+        actions_lyt.addLayout(action_btns_lyt)
         actions_lyt.addWidget(self.statements_tree)
         actions_gb.setLayout(actions_lyt)
 
