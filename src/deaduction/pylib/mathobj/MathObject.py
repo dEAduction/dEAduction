@@ -267,41 +267,51 @@ class MathObject:
         WARNING: this should probably not be used for bound variables
         """
 
-        # successively test for
+        # Successively test for
         #                           nodes
         #                           name (if exists)
         #                           math_type
         #                           children
-        # if type(self) != type(other):
-        #    return False
-        # elif type(self) == str and self != other:
-        #    return False
+
         node = self.node
         # Case of NO_MATH_TYPE
         if self is NO_MATH_TYPE \
                 and other is NO_MATH_TYPE:
             return True  # avoid infinite recursion!
 
-        # node
+        # Node
         elif node != other.node:
             log.debug(f"distinct nodes {self.node, other.node}")
             return False
-        elif node in HAVE_BOUND_VARS:  # mark bound vars to distinguish them
-            # (amounts to giving the same name to both variables)
+
+        # Mark bound vars in quantified expressions to distinguish them
+        elif node in HAVE_BOUND_VARS:
+            # Here self and other are assumed to be a quantified proposition
+            # and children[1] is the bound variable.
+            # We mark the bound variables in self and other
             bound_var_1 = self.children[1]
             bound_var_2 = other.children[1]
-            MathObject.bound_var_number += 1
-            bound_var_1.info['bound_var_number'] = MathObject.bound_var_number
-            bound_var_2.info['bound_var_number'] = MathObject.bound_var_number
+            mark_bound_vars(bound_var_1, bound_var_2)
 
-        # names
+        # Names
         if 'name' in self.info.keys():
             # for bound variables, do not use names, use numbers
             if self.is_bound_var():
                 if not other.is_bound_var():
                     return False
+                # here both are bound variables
+                elif 'bound_var_number' not in self.info:
+                    if 'bound_var_number' in other.info:
+                        return False
+                    else:
+                        mark_bound_vars(self, other)
+                        return True  # unmarked bound vars...
+                # From now on self.info['bound_var_number'] exists
+                elif 'bound_var_number' not in other.info:
+                    return False
+                # From now on both variables have a number
                 elif self.info['bound_var_number'] != \
-                other.info['bound_var_number']:
+                        other.info['bound_var_number']:
                     return False
             else:  # self is not bound var
                 if other.is_bound_var():
@@ -604,6 +614,20 @@ NO_MATH_TYPE = MathObject(node="not provided",
                           info={},
                           children=[],
                           math_type=None)
+
+
+#########
+# Utils #
+#########
+def mark_bound_vars(bound_var_1, bound_var_2):
+    """
+    Mark two bound variables with a common number, so that we can follow
+    them along two quantified expressions and check tif these expressions
+    are identical
+    """
+    MathObject.bound_var_number += 1
+    bound_var_1.info['bound_var_number'] = MathObject.bound_var_number
+    bound_var_2.info['bound_var_number'] = MathObject.bound_var_number
 
 
 def structured_display_to_string(structured_display) -> str:

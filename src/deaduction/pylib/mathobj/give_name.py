@@ -175,11 +175,11 @@ def give_name(math_type,
         if potential_name not in forbidden_names:
             new_name = potential_name
             return new_name
-        # if hint = "x" and this is already the name of a variable with the
+        # If hint = "x" and this is already the name of a variable with the
         # same math_type as the variable we want to name,
         # then try to use "x'"
-        # here all hints are assumed to be the name of some variable
         elif EXERCISE.USE_PRIMES_FOR_VARIABLES_NAMES:
+            # here potential_name are assumed to be the name of some variable
             name = potential_name
             index_ = forbidden_names.index(name)
             variable = forbidden_vars[index_]
@@ -196,7 +196,7 @@ def give_name(math_type,
                     log.debug(f"trying {potential_name}...")
                     if math_type == variable.math_type \
                             and not potential_name.endswith("'''") \
-                            and not potential_name in forbidden_names:
+                            and potential_name not in forbidden_names:
                         return potential_name
 
     ########################################
