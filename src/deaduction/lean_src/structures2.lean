@@ -141,6 +141,7 @@ match e with
 | `(%%a > %%b) := return ("PROP_>", [a,b])
 | `(%%a ≥ %%b) := return ("PROP_≥", [a,b])
 ------------ ARITHMETIC ------------
+| `(↑%%a)      := return ("COE", [a])
 | `(%%a + %%b) := return ("SUM", [a, b])
 | `(%%a - %%b) := return ("DIFFERENCE", [a, b])
 | `(has_mul.mul %%a %%b) := return ("MULT", [a, b]) -- TODO: distinguish types/numbers

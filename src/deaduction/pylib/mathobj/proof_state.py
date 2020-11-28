@@ -274,14 +274,20 @@ class Goal:
                 text += "\n"
             text += new_sentence
 
-        text += "\n"
+        if text:
+            text += "\n"
         target_text = target.math_type.to_display(text_depth=text_depth,
                                                   is_math_type=True,
                                                   format_="utf8")
         if to_prove:
             target_text = _("Prove that") + " " + target_text
         else:
-            target_text = _("Then") + " " + target_text
+            if text:
+                target_text = _("Then") + " " + target_text
+            else:
+                target_text = target_text.capitalize()
+                # little problem: if sentence starts with a lower case
+                # variable. This should never happen though...
 
         text += target_text + "."
         return text

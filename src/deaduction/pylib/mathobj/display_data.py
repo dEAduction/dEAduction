@@ -65,6 +65,7 @@ latex_from_node = {
     ############
     # NUMBERS: #
     ############
+    "COE": (0,),    # we do not want to see bindings
     "PROP_EQUAL": (0, " = ", 1),
     "PROP_EQUAL_NOT": (0, r" \neq ", 1),  # todo
     "PROP_<": (0, " < ", 1),
@@ -227,6 +228,7 @@ def needs_paren(parent, child_number: int) -> bool:
     c_node = child.node
     if c_node in NATURE_LEAVES_LIST + \
             ("SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
+             "PROP_EQUAL_NOT", "PROP_≤", "PROP_≥", "PROP_<", "PROP_>"
              "PROP_INCLUDED", "SET_UNION+", "SET_INTER+"):
         return False
     elif c_node == "APPLICATION":

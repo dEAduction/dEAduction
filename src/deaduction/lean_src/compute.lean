@@ -44,14 +44,14 @@ meta def make_ineq : expr × expr × expr → expr × expr × expr → tactic un
     {
     H ← mk_fresh_name,
     «have» H none ``(lt_of_le_of_ne %%H1 %%H2),
-    tactic.trace "EFFECTIVE CODE: have H := lt_of_le_of_ne blabla"
+    tactic.trace "EFFECTIVE LEAN CODE: have H := lt_of_le_of_ne blabla"
     }
     <|>
     tactic.unify a b' >> tactic.unify a' b >> do
     {
     H ← mk_fresh_name,
     «have» H none ``(lt_of_le_of_ne %%H1 (ne.symm %%H2)),
-    tactic.trace "EFFECTIVE CODE: have H := lt_of_le_of_ne (ne.symm blabla)"
+    tactic.trace "EFFECTIVE LEAN CODE: have H := lt_of_le_of_ne (ne.symm blabla)"
     }
     <|>
     skip
@@ -108,8 +108,8 @@ meta def list_prod {α β : Type} : list α → list β → list (α × β)
 meta def get_pos_from_pos_eq_from_list (hypos: list expr) : tactic unit :=
 do
 {
-    inequalities    ← extract_gt hypos, tactic.trace inequalities,
-    equalities      ← extract_non_eq hypos, tactic.trace equalities,
+    inequalities    ← extract_gt hypos,     -- tactic.trace inequalities,
+    equalities      ← extract_non_eq hypos, -- tactic.trace equalities,
     -- take all pairs and try to build " a < b "
     (list_prod inequalities equalities).mmap (λh, make_ineq h.1 h.2),
     return ()
@@ -152,17 +152,17 @@ meta def compute1 : tactic unit :=
 /- try several computing tactics for STRICT inequalities -/
 do
 {
-    do {assumption, tactic.trace "EFFECTIVE CODE: assumption"}
+    do {assumption, tactic.trace "EFFECTIVE LEAN CODE: assumption"}
     <|>
-    do {nl_linarith, tactic.trace "EFFECTIVE CODE: nl_linarith"}
+    do {nl_linarith, tactic.trace "EFFECTIVE LEAN CODE: nl_linarith"}
     <|>
-    do {tactic.applyc ``mul_pos, tactic.trace "EFFECTIVE CODE: apply mul_pos"}
+    do {tactic.applyc ``mul_pos, tactic.trace "EFFECTIVE LEAN CODE: apply mul_pos"}
     <|>
     -- a>0 → a⁻¹ >0
-    do {tactic.applyc ``inv_pos_mpr, tactic.trace "EFFECTIVE CODE: apply inv_pos.mpr"}
+    do {tactic.applyc ``inv_pos_mpr, tactic.trace "EFFECTIVE LEAN CODE: apply inv_pos.mpr"}
     <|>
  -- a≠0 → b≠0 → ab≠0
-     do {tactic.applyc ``mul_ne_zero, tactic.trace "EFFECTIVE CODE: apply mul_ne_zero"}
+     do {tactic.applyc ``mul_ne_zero, tactic.trace "EFFECTIVE LEAN CODE: apply mul_ne_zero"}
 --  div_pos devient inutile
 }
 
