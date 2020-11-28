@@ -399,6 +399,7 @@ class ExerciseMainWindow(QMainWindow):
         """
 
         super().__init__()
+        self.setWindowTitle(f'{exercise.pretty_name} — d∃∀duction')
 
         # ─────────────────── Attributes ─────────────────── #
 
