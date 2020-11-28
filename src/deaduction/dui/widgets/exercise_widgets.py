@@ -108,7 +108,7 @@ class ExerciseToolbar(QToolBar):
         self.addAction(self.redo_action)
         self.addAction(self.toggle_lean_editor_action)
 
-
+# 
 class ExerciseCentralWidget(QWidget):
     """
     Main / central / biggest widget in the exercise window. Self is to
@@ -486,18 +486,21 @@ class ExerciseMainWindow(QMainWindow):
         # get old goal and set tags
         # TODO: make a separate method get_old_goal(lean_file)
         lean_file = self.servint.lean_file
+
         if lean_file.idx > 0:
             # NB : when idx = 0, old_goal = new_goal : nothing is new
             previous_idx = lean_file.idx - 1
             entry = lean_file.history[previous_idx]
             entry_info = entry.misc_info
             log.debug(f'Proof step n°{lean_file.idx}')
+
             if 'ProofState' in entry_info.keys():
                 previous_proof_state = entry_info['ProofState']
                 old_goal = previous_proof_state.goals[0]
                 Goal.compare(new_goal, old_goal, goal_is_new=False)  # set tags
             else:
                 log.warning(f"No proof state found for previous step")
+
         # FIXME: target tag
         # new_target_tag = '='
         # try:
@@ -508,7 +511,7 @@ class ExerciseMainWindow(QMainWindow):
 
         # new_context = new_goal.tag_and_split_propositions_objects()
 
-        # count of goals
+        # Count of goals
         total_goals_counter, \
             current_goal_number, \
             current_goals_counter, \
@@ -599,12 +602,12 @@ class ExerciseMainWindow(QMainWindow):
 
                 elif emission.is_from(self.__action_triggered):
                     # TODO: comment, what is emission.args[0]?
-                    await self.process_async_signal(partial(self.__server_call_action,
-                                                            emission.args[0]))
+                    await self.process_async_signal(partial(
+                            self.__server_call_action, emission.args[0]))
 
                 elif emission.is_from(self.__statement_triggered):
-                    await self.process_async_signal(partial(self.__server_call_statement,
-                                                            emission.args[0]))
+                    await self.process_async_signal(partial(
+                            self.__server_call_statement, emission.args[0]))
 
                 elif emission.is_from(self.__apply_math_object_triggered):
                     await self.__server_call_apply(emission.args[0])
@@ -662,12 +665,13 @@ class ExerciseMainWindow(QMainWindow):
     async def __server_call_action(self, action_btn: ActionButton):
         # TODO: docstring me
 
-        action = action_btn.action
+        action     = action_btn.action
         user_input = []
         log.debug(f'Calling action {action.symbol}')
         # Send action and catch exception when user needs to:
         #   - choose A or B when having to prove (A OR B) ;
         #   - enter an element when clicking on 'exists' button.
+
         while True:
             try:
                 if user_input == []:
@@ -700,14 +704,19 @@ class ExerciseMainWindow(QMainWindow):
                 break
 
     async def __server_call_apply(self, item: MathObjectWidgetItem):
-        # This function is called when user double-click on an item in the
-        # context area
-        # The item is added to the end of the current_context_selection,
-        # and the action corresponding to the "apply" button is called
+        """
+        This function is called when user double-click on an item in the
+        context area The item is added to the end of the
+        current_context_selection, and the action corresponding to the "apply"
+        button is called
+        """
+
         item.mark_user_selected(True)
+
         if item in self.current_context_selection:
             self.current_context_selection.remove(item)
         self.current_context_selection.append(item)
+
         await self.process_async_signal(partial(self.__server_call_action,
                                                 self.ecw.action_apply_button))
 
@@ -767,8 +776,9 @@ class ExerciseMainWindow(QMainWindow):
         Clear current (user) selection of math. objects and properties.
         """
 
-        for item in self.current_context_selection:
-            item.mark_user_selected(False)
+        # No need to call mark_user_selected on current selection's items
+        # because this is cosmetics and widgets are destroyed and re-created at
+        # each goal change anyway.
         self.current_context_selection = []
 
     @Slot()
