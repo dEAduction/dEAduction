@@ -497,7 +497,7 @@ class MathObject:
             math_type = self
         else:
             math_type = self.math_type
-        if self.node == "PROP_FALSE":
+        if math_type.node == "PROP_FALSE":
             return True
         else:
             return False

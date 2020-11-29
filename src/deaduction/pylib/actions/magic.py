@@ -51,8 +51,8 @@ def action_compute(goal, selected_objects):
     if not (target.is_equality()
             or target.is_inequality()
             or target.is_false()):
-        raise WrongUserInput(error="Target is not an equality or an "
-                                   "inequality")
+        raise WrongUserInput(error="Target is not an equality, an "
+                                   "inequality, nor a contradiction")
     # try_before = "try {apply div_pos}, " \
     #            + "try { all_goals {norm_num at *}}" \
     #             + ", "
