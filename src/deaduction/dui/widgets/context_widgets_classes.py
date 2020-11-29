@@ -139,7 +139,7 @@ class MathObjectWidgetItem(QListWidgetItem):
         super().__init__()
 
         self.mathobject = mathobject
-        self.tag          = tag
+        self.tag        = tag
 
         lean_name = mathobject.to_display()
         math_expr = mathobject.math_type.to_display(is_math_type=True)
@@ -177,8 +177,9 @@ class MathObjectWidgetItem(QListWidgetItem):
         (e.g. white in light mode) if not yes.
 
         :param yes: See paragraph above.
-        TODO: change color for double-click
         """
+
+        # TODO: change color for double-click
 
         self.setBackground(QBrush(QColor('limegreen')) if yes else QBrush())
 
