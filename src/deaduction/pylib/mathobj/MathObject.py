@@ -126,7 +126,23 @@ class MathObject:
         else:
             return '*no_name*'
 
-    # Main creation method
+    def descendant(self, line_of_descent):
+        """Return the MathObject corresponding to the line_of_descent
+        e.g. self.descendant((1.0))  -> children[1].children[0]
+
+        :param line_of_descent:     int or tuple or list
+        :return:                    MathObject
+        """
+        if type(line_of_descent) == int:
+            return self.children[line_of_descent]
+        child_number, *remaining = line_of_descent
+        child = self.children[child_number]
+        if not remaining:
+            return child
+        else:
+            return child.descendant(remaining)
+
+    # Main creation method #
     @classmethod
     def from_info_and_children(cls, info: {}, children: []):
         """
@@ -139,6 +155,7 @@ class MathObject:
         :param children: list of MathObject instances
         :return: a MathObject
         """
+
         node = info.pop("node_name")
         if 'math_type' in info.keys():
             math_type = info.pop('math_type')
@@ -273,6 +290,9 @@ class MathObject:
         #                           math_type
         #                           children
 
+        equal = True    # Self and other are presumed to be equal
+        marked = False  # Will be True if bound variables should be unmarked
+
         node = self.node
         # Case of NO_MATH_TYPE
         if self is NO_MATH_TYPE \
@@ -292,48 +312,55 @@ class MathObject:
             bound_var_1 = self.children[1]
             bound_var_2 = other.children[1]
             mark_bound_vars(bound_var_1, bound_var_2)
+            marked = True
 
         # Names
         if 'name' in self.info.keys():
             # for bound variables, do not use names, use numbers
             if self.is_bound_var():
                 if not other.is_bound_var():
-                    return False
+                    equal = False
                 # here both are bound variables
                 elif 'bound_var_number' not in self.info:
                     if 'bound_var_number' in other.info:
-                        return False
+                        equal = False
                     else:
-                        mark_bound_vars(self, other)
-                        return True  # unmarked bound vars...
+                        # unmarked bound vars: we are comparing two parts of
+                        # a given quantified expression, names have a meaning
+                        equal = (self.info['name'] == other.info['name'])
                 # From now on self.info['bound_var_number'] exists
                 elif 'bound_var_number' not in other.info:
-                    return False
+                    equal = False
                 # From now on both variables have a number
                 elif self.info['bound_var_number'] != \
                         other.info['bound_var_number']:
-                    return False
+                    equal = False
             else:  # self is not bound var
                 if other.is_bound_var():
-                    return False
+                    equal = False
                 elif self.info['name'] != other.info['name']:
                     log.debug(f"distinct names "
                               f"{self.info['name'], other.info['name']}")
-                    return False
-        # recursively test for math_types
+                    equal = False
+        # Recursively test for math_types
         elif self.math_type != other.math_type:
             log.debug(f"distinct types {self.math_type}")
             log.debug(f"other type     {other.math_type}")
-            return False
+            equal = False
 
-        # children
+        # Recursively test for children
         elif len(self.children) != len(other.children):
-            return False
+            equal = False
         else:  # recursively test for children
             for child0, child1 in zip(self.children, other.children):
                 if child0 != child1:
-                    return False
-        return True
+                    equal = False
+
+        # Unmark bound_vars, in prevision of future tests
+        if marked:
+            unmark_bound_vars(bound_var_1, bound_var_2)
+
+        return equal
 
     def contains(self, other):
         """
@@ -460,6 +487,17 @@ class MathObject:
         else:
             math_type = self.math_type
         return math_type.node == "QUANT_∀"
+
+    def is_quantifier(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is function.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return (math_type.is_exists(is_math_type=True)
+                or math_type.is_for_all(is_math_type=True))
 
     def is_equality(self, is_math_type=False) -> bool:
         """
@@ -628,6 +666,16 @@ def mark_bound_vars(bound_var_1, bound_var_2):
     MathObject.bound_var_number += 1
     bound_var_1.info['bound_var_number'] = MathObject.bound_var_number
     bound_var_2.info['bound_var_number'] = MathObject.bound_var_number
+
+
+def unmark_bound_vars(bound_var_1, bound_var_2):
+    """
+    Mark two bound variables with a common number, so that we can follow
+    them along two quantified expressions and check tif these expressions
+    are identical
+    """
+    bound_var_1.info.pop('bound_var_number')
+    bound_var_2.info.pop('bound_var_number')
 
 
 def structured_display_to_string(structured_display) -> str:

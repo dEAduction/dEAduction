@@ -108,6 +108,10 @@ def select_exercise(course: Course):
                                              False)
     if ok:
         exercise = exercise_ids[exercise_id]
+
+        # Treat the case of an open question #
+        if exercise.info is None:
+            exercise.info = dict()
         open_question = exercise.info.setdefault('open_question', False)
         if 'negate_statement' in exercise.info:
             if exercise.info['negate_statement']:
@@ -117,7 +121,7 @@ def select_exercise(course: Course):
             title = _("Do you want to prove this statement or its negation?")
             if exercise.initial_proof_state:
                 goal = exercise.initial_proof_state.goals[0]
-                output = goal.goal_to_text(text_depth=1, to_prove=False)
+                output = goal.goal_to_text(text_depth=0, to_prove=False)
             else:
                 output = exercise.lean_variables + "   " \
                          + exercise.lean_core_statement

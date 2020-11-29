@@ -38,10 +38,10 @@ latex_from_node = {
     "PROP_IFF": (0, r" \Leftrightarrow ", 1),
     "PROP_NOT": (_("not") + " ", 0),
     "PROP_IMPLIES": (0, r" \Rightarrow ", 1),
-    "QUANT_∀": (r"\forall", 1, r" \in ", 0, ", ", 2),
-    "QUANT_∃": (r"\exists", 1, r" \in ", 0, ", ", 2),
-    "PROP_∃": ("*PROP_∃*",),
-    "QUANT_∃!": (r"\exists !",  1, r" \in ", 0, ", ", 2),
+    # "QUANT_∀": (r"\forall", 1, r" \in ", 0, ", ", 2),
+    # "QUANT_∃": (r"\exists", 1, r" \in ", 0, ", ", 2),
+    # "PROP_∃": ("*PROP_∃*",),
+    # "QUANT_∃!": (r"\exists !",  1, r" \in ", 0, ", ", 2),
     ###############
     # SET THEORY: #
     ###############
@@ -84,21 +84,14 @@ latex_from_node = {
     "PROP": (_("a proposition"),),
     "TYPE": (_("a set"),),
     "FUNCTION": (0, r" \to ", 1),
-                  }
+}
 
-# Lean formats that cannot be deduced from latex
-lean_from_node = {  # todo: this has not been tested on Lean yet!
-    "PROP_FALSE": ('False',),
-    "SET_INTER+": ('set.Inter', 0),
-    "SET_UNION+": ('set.Union', 0),
-    "SET_FAMILY": (),    # FIXME: should be lean_name
-    "SET_IMAGE": (0, " '' ", 1),
-    "SET_INVERSE": (0, " ⁻¹' ", 1),
-    "SET": ("set", 0),
-    "PROP": ("Prop",),
-    "TYPE": ("Type",)
-                  }
-
+latex_from_quant_node = {
+    "QUANT_∀": (r"\forall", 1, r" \in ", 0, ", ", 2),
+    "QUANT_∃": (r"\exists", 1, r" \in ", 0, ", ", 2),
+    "PROP_∃": ("*PROP_∃*",),
+    "QUANT_∃!": (r"\exists !", 1, r" \in ", 0, ", ", 2)
+}
 
 # negative value = from end of children list
 latex_from_constant_name = {
@@ -112,6 +105,19 @@ latex_from_constant_name = {
     "Identite": ("Id",),
     "ne": (2, r" \neq ", 3)  # Lean name for ≠  temporary
                             }
+
+# Lean formats that cannot be deduced from latex
+lean_from_node = {  # todo: this has not been tested on Lean yet!
+    "PROP_FALSE": ('False',),
+    "SET_INTER+": ('set.Inter', 0),
+    "SET_UNION+": ('set.Union', 0),
+    "SET_FAMILY": (),    # FIXME: should be lean_name
+    "SET_IMAGE": (0, " '' ", 1),
+    "SET_INVERSE": (0, " ⁻¹' ", 1),
+    "SET": ("set", 0),
+    "PROP": ("Prop",),
+    "TYPE": ("Type",)
+}
 
 latex_to_utf8_dic = {
     r'\backslash': '\\',
@@ -153,7 +159,6 @@ latex_to_lean_dic = {
     r'\bigcup': '⋃'
                     }
 
-
 text_from_node = {
     "PROP_AND": (0, " " + _("and") + " ", 1),
     "PROP_OR": (0, " " + _("or") + " ", 1),
@@ -161,10 +166,13 @@ text_from_node = {
     "PROP_IFF": (0, " " + _("if and only if") + " ", 1),
     "PROP_NOT": (_("the negation of") + " ", 0),
     "PROP_IMPLIES": (_("if") + " ", 0, " " + _("then") + " ", 1),
-    "QUANT_∀": (_("for every") + " ", 1, " " + _("in") + " ", 0,
-                ", ", 2),
-    "QUANT_∃": (_("there exists") + " ", 1, " " + _("in") + " ", 0,
-                " " + _("such that") + " ", 2),
+    # "QUANT_∀": (_("for every") + " ", 1, " " + _("in") + " ", 0,
+    #             ", ", 2),
+    # "QUANT_∃": (_("there exists") + " ", 1, " " + _("in") + " ", 0,
+    #             " " + _("such that") + " ", 2),
+    # "QUANT_∃!": (_("there exists a unique") + " ", 1, " " + _("in") + " ", 0,
+    #             " " + _("such that") + " ", 2),
+    # "PROP_∃": ("*PROP_∃*",),
     ###############
     # SET THEORY: #
     ###############
@@ -199,6 +207,16 @@ text_from_node = {
     "FUNCTION": (_("a function from") + " ", 0, " " + _("to") + " ", 1),
 }
 
+text_from_quant_node = {
+    "QUANT_∀": (_("for every") + " ", 1, " " + _("in") + " ", 0,
+                ", ", 2),
+    "QUANT_∃": (_("there exists") + " ", 1, " " + _("in") + " ", 0,
+                " " + _("such that") + " ", 2),
+    "QUANT_∃!": (_("there exists a unique") + " ", 1, " " + _("in") + " ", 0,
+                 " " + _("such that") + " ", 2),
+    "PROP_∃": ("*PROP_∃*",)
+}
+
 # nodes of math objects that need instantiation of bound variables
 HAVE_BOUND_VARS = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_EXTENSION", "LAMBDA")
 INEQUALITIES = ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥", "PROP_EQUAL_NOT")
@@ -209,21 +227,23 @@ NATURE_LEAVES_LIST = ("PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                       "CONSTANT", "LOCAL_CONSTANT")
 
 
-def needs_paren(parent, child_number: int) -> bool:
+def needs_paren(parent, child, child_number) -> bool:
     """
     Decides if parentheses are needed around the child
     e.g. if PropObj.node = PROP.IFF then
-    needs_paren(PropObj,i) will be set to True for i = 0, 1
-    so that the display will be
+    needs_paren(PropObj, [i])
+    will be set to True for i = 0, 1 so that the display will be
     ( ... ) <=> ( ... )
 
-    TODO : tenir compte de la profondeur des parenthèses,
-    et utiliser Biggl( biggl( Bigl( bigl( (x) bigr) Bigr) biggr) Biggr)
+    :param parent:          MathObject
+    :param child:           MathObject
+    :param child_number:    an integer or a list indicating the line_of_descent
+    :return:                bool
     """
-    children = parent.children
-    if child_number >= len(children):
-        return False
-    child = children[child_number]
+
+    # TODO : tenir compte de la profondeur des parenthèses,
+    #   et utiliser Biggl( biggl( Bigl( bigl( (x) bigr) Bigr) biggr) Biggr)
+
     p_node = parent.node
     c_node = child.node
     if c_node in NATURE_LEAVES_LIST + \
@@ -240,8 +260,11 @@ def needs_paren(parent, child_number: int) -> bool:
                     "PROP_EQUAL", "PROP_EQUAL_NOT",
                     "PROP_≤", "PROP_≥", "PROP_<", "PROP_>"):
         return False
-    elif p_node.startswith("QUANT") and child_number in (0,1):
-        return False
-    elif c_node.startswith("QUANT") and p_node.startswith("QUANT"):
-        return False
+    elif p_node.startswith("QUANT"):
+        if child_number in (0, 1, (0,), (1,), (2, 0)):
+            # no parentheses around the variable, the type, or the leading
+            # inequality
+            return False
+        elif c_node.startswith("QUANT"):
+            return False
     return True

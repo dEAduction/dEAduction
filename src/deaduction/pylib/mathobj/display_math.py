@@ -37,15 +37,6 @@ e.g. APP(injective, f).
 - for more specific nodes, one can define a new display function and call it
 via the from_specific_node function.
 
-
- Note that the shape can include calls to some specific formatting functions,
- e.g.
-    - display_application,
-    - display_local_constant,
-    - display_constant,
-    - display_lambda
-
-
     This file is part of dEAduction.
 
     dEAduction is free software: you can redistribute it and/or modify it under
@@ -81,8 +72,10 @@ from deaduction.config                      import _
 from deaduction.pylib.mathobj.give_name     import give_local_name
 from .display_data import ( latex_from_constant_name,
                             text_from_node,
+                            text_from_quant_node,
                             lean_from_node,
                             latex_from_node,
+                            latex_from_quant_node,
                             latex_to_utf8_dic,
                             latex_to_lean_dic,
                             needs_paren
@@ -172,16 +165,21 @@ class Shape:
     @classmethod
     def from_specific_nodes(cls, math_object, format_, text_depth):
         """
-        case of node in specific_node_dic,
-        or  "SET_UNIVERSE" ->
-            "SET_COMPLEMENT": ""
+        Treat the case of some specific nodes, in particular:
+        - application,
+        - constant and local_constant,
+        - number,
+        - quantifiers,
+        - lambda expressions,
+        - set families
+        - sequences
 
-            :param math_object:
-            :param format_:
-            :param text_depth:
-
-            :return: a raw shape
+        :param math_object:
+        :param format_:
+        :param text_depth:
+        :return:            A raw shape
         """
+
         node = math_object.node
         display = []
         shape = None
@@ -195,6 +193,8 @@ class Shape:
             display = display_constant(math_object, format_)
         elif node == 'NUMBER':
             display = display_number(math_object, format_)
+        elif math_object.is_quantifier(is_math_type=True):
+            display = display_quantifier(math_object, format_, text_depth)
         elif node == "LAMBDA":
             display = display_lambda(math_object, format_)
         elif node == "SET_UNIVERSE":
@@ -222,12 +222,12 @@ class Shape:
         :return: an modified instance of Shape with expanded display
         """
         # log.debug(f"Expanding shape {self.display}")
-        display =       self.display
-        math_object =   self.math_object
-        format_ =       self.format_
-        text_depth =    self.text_depth
+        display =      self.display
+        math_object =  self.math_object
+        format_ =      self.format_
+        text_depth =   self.text_depth
         if math_object:  # math_object is None if shape = error_shape
-            children =      math_object.children
+            children = math_object.children
 
         # case of supplementary children (when node = "APPLICATION")
         if self.all_app_arguments:
@@ -242,30 +242,35 @@ class Shape:
             counter += 1
             display_item = item
 
-            # (1) integers code for children
+            # (1) integers code for children, or lists for grandchildren
             if isinstance(item, int):
-                if not -len(children) <= item < len(children):
-                    display_item = '*child out of range*'
-                else:
-                    child = children[item]
-                    shape = Shape.from_math_object(
-                                        math_object=child,
-                                        format_=format_,
-                                        text_depth=text_depth - 1
-                                                          )
-                    display_item = shape.display
-                    # with brackets?
-                    if text_depth < 1:
-                        if needs_paren(math_object, item):
-                            display_item = ['('] + display_item + [')']
+                child = children[item]
+                # item = (item,)
+            elif isinstance(item, tuple):  # DO NOT call this when item was int
+                # (case of supplementary children from 'application' node)
+                child = math_object.descendant(item)
+            if isinstance(item, int) or isinstance(item, tuple):
+                shape = Shape.from_math_object(
+                                    math_object=child,
+                                    format_=format_,
+                                    text_depth=text_depth - 1
+                                                      )
+                display_item = shape.display
+                # with brackets?
+                if text_depth < 1:
+                    if needs_paren(math_object, child, item):
+                        display_item = ['('] + display_item + [')']
 
             # (2) strings: handling "belongs to"
             elif isinstance(item, str):
                 if r"\in" in item:  # or item.find(r"∈") != -1:
-                    if counter + 1 < len(display) \
-                            and isinstance(display[counter + 1], int):
+                    if (counter + 1 < len(display)
+                            and (isinstance(display[counter + 1], int)
+                                 or isinstance(display[counter + 1], tuple)
+                                )
+                       ):
                         # replace "∈" with ":" in some cases
-                        type_ = children[display[counter + 1]]
+                        type_ = math_object.descendant(display[counter + 1])
                     else:
                         type_ = "unknown"
                     symbol = display_belongs_to(type_, format_, text_depth)
@@ -447,40 +452,6 @@ def shape_from_application(math_object,
     return raw_shape
 
 
-def display_lambda(math_object, format_="latex") -> list:
-    """
-    format for lambda expression, e.g.
-    - set families with explicit bound variable
-        lambda (i:I), E i)
-        encoded by LAMBDA(I, i, APP(E, i)) --> "{E_i, i ∈ I}"
-    - sequences,
-    - mere functions
-        encoded by LAMBDA(X, x, APP(f, x))  --> "f"
-    - anything else is displayed as "x ↦ f(x)"
-    """
-    display = []
-    math_type = math_object.math_type
-    _, var, body = math_object.children
-    # log.debug(f"display LAMBDA with var, body, type = {var, body,
-    # math_type}")
-    if math_type.node == "SET_FAMILY":
-        display = [r'\{', 2, ', ', 1, r' \in ', 0, r'\}']
-    elif math_type.node == "SEQUENCE":
-        display = ['(', 2, ')', '_', 1, r' \in ', 0, '}']
-        # todo: manage subscript
-    elif body.node == "APPLICATION" and body.children[1] == var:
-        # object is of the form x -> f(x)
-        mere_function = body.children[0]  # this is 'f'
-        # we call the whole process in case 'f' is not a LOCAL_CONSTANT
-        display = Shape.from_math_object(mere_function, format_).display
-    else:  # generic display
-        display = [1, '↦', 2]
-    if not display:
-        display = ['*unknown lambda*']
-    # log.debug(f"--> {display}")
-    return display
-
-
 def display_constant(math_object, format_) -> list:
     """
     Display for nodes 'CONSTANT' and 'LOCAL_CONSTANT'
@@ -512,6 +483,86 @@ def display_number(math_object, format_) -> list:
     """
 
     display = [math_object.info['value']]
+    return display
+
+
+def display_quantifier(math_object, format_="latex", text_depth=0) -> list:
+    """
+    Display quantifiers, in particular handles the case of
+    "
+    ∀ x >0, ...
+    which is encoded by Lean as
+    ∀ x:R, (x>0 ==> ...)
+    but should be displayed as above.
+
+    """
+    # fixme: parentheses should be treated as in the general case,
+    #  for the moment they are just inserted eagerly
+    #  solution = accept children of children in shapes,
+    #  eg (2.1) for second child of first child
+    node = math_object.node
+    children = math_object.children
+    if text_depth > 0:
+        display = list(text_from_quant_node[node])
+    else:
+        display = list(latex_from_quant_node[node])
+    variable = children[1]
+    potential_implication = children[2]
+
+    # The following tests if math_object has the form
+    # ∀ x:X, (x R ... ==> ...)
+    # where R is some inequality relation
+    if potential_implication .is_implication(is_math_type=True):
+        premise = potential_implication.children[0]  # children (2,0)
+        if premise.is_inequality(is_math_type=True):
+            item = premise.children[0]
+            if item == variable:
+                quantifier = display[0]
+                # inequality = premise
+                # true_body = potential_implication.children[1]
+                # children (2,1)
+                display = [quantifier,
+                           (2, 0),
+                           # inequality.to_display(format_=format_),
+                           ", ",
+                           (2, 1),
+                           # true_body.to_display(format_=format_,
+                           #                     text_depth=text_depth-1),
+                           ]
+    return display
+
+
+def display_lambda(math_object, format_="latex") -> list:
+    """
+    format for lambda expression, e.g.
+    - set families with explicit bound variable
+        lambda (i:I), E i)
+        encoded by LAMBDA(I, i, APP(E, i)) --> "{E_i, i ∈ I}"
+    - sequences,
+    - mere functions
+        encoded by LAMBDA(X, x, APP(f, x))  --> "f"
+    - anything else is displayed as "x ↦ f(x)"
+    """
+    display = []
+    math_type = math_object.math_type
+    _, var, body = math_object.children
+    # log.debug(f"display LAMBDA with var, body, type = {var, body,
+    # math_type}")
+    if math_type.node == "SET_FAMILY":
+        display = [r'\{', 2, ', ', 1, r' \in ', 0, r'\}']
+    elif math_type.node == "SEQUENCE":
+        display = ['(', 2, ')', '_', 1, r' \in ', 0, '}']
+        # todo: manage subscript
+    elif body.node == "APPLICATION" and body.children[1] == var:
+        # object is of the form x -> f(x)
+        mere_function = body.children[0]  # this is 'f'
+        # we call the whole process in case 'f' is not a LOCAL_CONSTANT
+        display = Shape.from_math_object(mere_function, format_).display
+    else:  # generic display
+        display = [1, '↦', 2]
+    if not display:
+        display = ['*unknown lambda*']
+    # log.debug(f"--> {display}")
     return display
 
 
