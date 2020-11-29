@@ -664,7 +664,25 @@ class ExerciseMainWindow(QMainWindow):
     # To be called as process_function in the above
 
     async def __server_call_action(self, action_btn: ActionButton):
-        # TODO: docstring me
+        """
+        Call the action corresponding to the action_btn
+
+        The action is linked to the action_btn in the "action" field. Then, we
+        can try to call the action in a loop. As we doesn't now if the action
+        needs some parameters or not, it may throw the
+        "MissingParametersErrorException". This exception indicates that we
+        need to ask some info to the user. So, we ask what the user wants, then
+        we redo one loop iteration, feeding the action with the new input.
+
+        Another exception that can occur is the WrongUserInput exception. At
+        this point, the user entered some wrong data, we display an error box
+        and stop.
+
+        Note the usage of the try .. else statement.
+
+        :param action_btn: the button corresponding to the action we want to
+        call
+        """
 
         action     = action_btn.action
         user_input = []
@@ -721,7 +739,11 @@ class ExerciseMainWindow(QMainWindow):
                                                 self.ecw.action_apply_button))
 
     async def __server_call_statement(self, item: StatementsTreeWidgetItem):
-        # TODO: docstring me
+        """
+        This function is called when the user clicks on a Statement he wants to
+        apply. The statement can be either a Definition or a Theorem. the code
+        is then inserted to the server.
+        """
 
         # Do nothing if user clicks on a node
         if isinstance(item, StatementsTreeWidgetItem):
