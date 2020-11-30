@@ -323,39 +323,31 @@ def apply_implicate_to_hyp(goal: Goal, l: [MathObject]):
     :param l: list of 2 or 3 MathObjects
     :return:
     """
+
     possible_codes = []
     h_selected = l[-1].info["name"]
-    x_selected = l[0].info["name"]
     h = get_new_hyp(goal)
 
-    if len(l) == 2:
-        # try with up to 4 implicit parameters
-        possible_codes.append(f'have {h} := {h_selected} {x_selected}')
-        possible_codes.append(f'have {h} := {h_selected} _ {x_selected}')
-        possible_codes.append(f'have {h} := {h_selected} _ _ {x_selected}')
-        possible_codes.append(f'have {h} := {h_selected} _ _ _ {x_selected}')
-        possible_codes.append(f'have {h} := {h_selected} _ _ _ _ {x_selected}')
+    command = f'have {h} := {h_selected}'
+    command_explicit = f'have {h} := @{h_selected}'
 
-        possible_codes.append(f'have {h} := @{h_selected} {x_selected}')
-        possible_codes.append(f'have {h} := @{h_selected} _ {x_selected}')
-        possible_codes.append(f'have {h} := @{h_selected} _ _ {x_selected}')
-        possible_codes.append(f'have {h} := @{h_selected} _ _ _ {x_selected}')
-        possible_codes.append(
-            f'have {h} := @{h_selected} _ _ _ _ {x_selected}')
+    names = [item.info['name'] for item in l[:-1]]
+    arguments = ' '.join(names)
 
-    elif len(l) == 3:
-        y_selected = l[1].info["name"]
-        # try to apply "forall x,y , P(x,y)" to x and y
-        possible_codes.append(
-            f'have {h} := {h_selected} {x_selected} {y_selected}')
-        possible_codes.append(
-            f'have {h} := {h_selected} _ {x_selected} {y_selected}')
-        possible_codes.append(
-            f'have {h} := {h_selected} _ _ {x_selected} {y_selected}')
-        possible_codes.append(
-            f'have {h} := {h_selected} _ _ _ {x_selected} {y_selected}')
-        possible_codes.append(
-            f'have {h} := {h_selected} _ _ _ _ {x_selected} {y_selected}')
+    # try with up to 4 implicit parameters
+    implicit_codes = [command + ' ' + arguments,
+                      command + ' _ ' + arguments,
+                      command + ' _ _ ' + arguments,
+                      command + ' _ _ _ ' + arguments,
+                      command + ' _ _ _ _ ' + arguments]
+
+    explicit_codes = [command_explicit + ' ' + arguments,
+                      command_explicit + ' _ ' + arguments,
+                      command_explicit + ' _ _ ' + arguments,
+                      command_explicit + ' _ _ _ ' + arguments,
+                      command_explicit + ' _ _ _ _ ' + arguments]
+
+    possible_codes = implicit_codes + explicit_codes
 
     return possible_codes
 

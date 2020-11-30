@@ -496,10 +496,7 @@ def display_quantifier(math_object, format_="latex", text_depth=0) -> list:
     but should be displayed as above.
 
     """
-    # fixme: parentheses should be treated as in the general case,
-    #  for the moment they are just inserted eagerly
-    #  solution = accept children of children in shapes,
-    #  eg (2.1) for second child of first child
+
     node = math_object.node
     children = math_object.children
     if text_depth > 0:
