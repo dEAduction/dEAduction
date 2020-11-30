@@ -498,19 +498,9 @@ class ExerciseMainWindow(QMainWindow):
             if 'ProofState' in entry_info.keys():
                 previous_proof_state = entry_info['ProofState']
                 old_goal = previous_proof_state.goals[0]
-                Goal.compare(new_goal, old_goal, goal_is_new=False)  # set tags
+                Goal.compare(new_goal, old_goal)  # set tags
             else:
                 log.warning(f"No proof state found for previous step")
-
-        # FIXME: target tag
-        # new_target_tag = '='
-        # try:
-        #     new_target_tag = new_goal.future_tags[1]
-        # except AttributeError:
-        #     log.debug('no tag for target')
-        #     pass
-
-        # new_context = new_goal.tag_and_split_propositions_objects()
 
         # Count of goals
         total_goals_counter, \
@@ -519,7 +509,6 @@ class ExerciseMainWindow(QMainWindow):
             goals_counter_evolution \
             = self.count_goals()
         goal_count = f'  {current_goal_number} / {total_goals_counter}'
-        # log.debug(f"Goal  {goal_count}")
 
         # Display if a goal has been solved and user is not undoing
         if goals_counter_evolution < 0 and current_goals_counter != 0:

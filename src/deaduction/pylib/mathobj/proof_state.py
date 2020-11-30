@@ -44,130 +44,13 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class Goal:
-    context: List[MathObject]
-    target: MathObject
-
+    context:        [MathObject]
+    target:         MathObject
+    future_tags:    [] = None
     # the following would be useful if we decide to display objects of the
     # same type together:
     # math_types: List[Tuple[MathObject, List[MathObject]]]
     # variables_names: List[str]
-
-    def compare(self, old_goal, goal_is_new=False):
-        """
-        Compare the new goal to the old one, and tag the target and the element
-        of both new and old context accordingly. tag is one of the following:
-        "+" (in new tag) means present in the new goal, absent in the old goal
-        "+" (in old tag) means absent in the new goal, present in the old goal
-        "=" (in both) means present in both and identical
-        "≠" (in both) means present in both and different
-
-        In the tests, two math_object's are equal if they have the same name
-        and the same math_type, and they are modified versions of each other if
-        they have the same name and different math_types.
-        If goal_is_new == True then all objects will be tagged as new.
-        fixme: That's bad: probably in that case objects should be compared
-         with objects of the goal that is logically (and not
-         chronologically) just before the present context
-         Anyway, this is never used
-        :param self: new goal
-        :param old_goal: old goal
-        :param goal_is_new: True if previous goal has been solved
-        THIS IS NOT USED for the moment
-        :return:
-            - two lists old_goal_diff, new_goal_diff of tags
-            - two more tags old_goal_diff, new_goal_diff
-        """
-        log.info("comparing and tagging old goal and new goal")
-        new_goal = self
-        new_context = new_goal.context.copy()
-        old_context = old_goal.context.copy()
-        log.debug(old_context)
-        log.debug(new_context)
-        if goal_is_new:
-            tags_new_context = ["+"] * len(new_context)
-            tags_old_context = ["+"] * len(old_context)
-            tag_new_target = "+"
-            tag_old_target = "+"
-        else:
-            ##################################
-            # tag objects in the new context #
-            ##################################
-            tags_new_context = [""] * len(new_context)
-            tags_old_context = [""] * len(old_context)
-            new_index = 0
-            old_names = [math_object_old.info["name"] for math_object_old in
-                         old_context]
-            for math_object in new_context:
-                name = math_object.info["name"]
-                # log.debug(f"math_object: {name}")
-                try:
-                    old_index = old_names.index(name)
-                except ValueError:
-                    # log.debug("the name does not exist in old_context")
-                    tag = "+"
-                    old_index = None
-                else:
-                    # next test uses PropObj.__eq__, which is redefined
-                    # in PropObj (recursively test nodes)
-                    old_math_type = old_context[old_index].math_type
-                    new_math_type = math_object.math_type
-                    if old_math_type == new_math_type:
-                        tag = "="
-                    else:
-                        log.warning("Modified objects")
-                        log.debug(f"Old:{old_context[old_index].math_type}")
-                        log.debug(f"New:{math_object.math_type}")
-                        tag = "≠"
-                tags_new_context[new_index] = tag
-                new_context[new_index] = None  # will not be considered
-                # anymore
-                if old_index is not None:
-                    tags_old_context[old_index] = tag
-                    old_context[old_index] = None  # will not be considered
-                    # anymore
-                new_index += 1
-
-            # Tag the remaining objects in old_context as new ("+")
-            for old_index in range(len(old_context)):
-                if old_context[old_index] is not None:
-                    tags_old_context[old_index] = "+"
-            ###################
-            # tag the targets #
-            ###################
-            # if goal is not new then the target is either modified ("≠")
-            # or unchanged ("=")
-            new_target = new_goal.target.math_type
-            old_target = old_goal.target.math_type
-            if new_target == old_target:
-                tag_new_target, tag_old_target = "=", "="
-            else:
-                tag_new_target, tag_old_target = "≠", "≠"
-        new_goal.future_tags = (tags_new_context, tag_new_target)
-        old_goal.past_tags_old_context = (tags_old_context, tag_old_target)
-        # log.debug(f"Old goal old tags: {old_goal.past_tags_old_context}")
-        # log.debug(f"New goal future tags: {new_goal.future_tags}")
-
-    def extract_vars(self) -> List[MathObject]:
-        """
-        provides the list of all variables in the context,
-        (but NOT bound variables, nor names of hypotheses)
-        :return: list of MathObject (variables names)
-        """
-        # log.info("extracting the list of global variables")
-        variables = [math_object for math_object in self.context
-                     if not math_object.is_prop()]
-        return variables
-
-    def extract_vars_names(self) -> List[str]:
-        """
-        provides the list of names of all variables in the context,
-        (but NOT bound variables, nor names of hypotheses)
-        :return: list of MathObject (variables names)
-        """
-        # log.info("extracting the list of global variables")
-        names = [math_object.info['name'] for math_object in
-                     self.extract_vars()]
-        return names
 
     @classmethod
     def from_lean_data(cls, hypo_analysis: str, target_analysis: str):
@@ -204,6 +87,130 @@ class Goal:
         goal = cls(context, target)
         return goal
 
+    def compare(self, old_goal):
+        """
+        Compare the new goal to the old one, and tag the target and the element
+        of both new and old context accordingly. tag is one of the following:
+        "+" (in new tag) means present in the new goal, absent in the old goal
+        "+" (in old tag) means absent in the new goal, present in the old goal
+        "=" (in both) means present in both and identical
+        "≠" (in both) means present in both and different
+
+        In the tests, two math_object's are equal if they have the same name
+        and the same math_type, and they are modified versions of each other if
+        they have the same name and different math_types.
+
+        :param self: new goal
+        :param old_goal: old goal
+        :param goal_is_new: True if previous goal has been solved
+        THIS IS NOT USED for the moment
+        :return:
+            - two lists old_goal_diff, new_goal_diff of tags
+            - two more tags old_goal_diff, new_goal_diff
+        """
+
+        # fixme: when the goal is new,  probably in that case objects should
+        #  be compared with objects of the goal that is logically (and not
+        #  chronologically) just before the present context.
+        #  Anyway, this is never used
+
+        new_goal = self
+        new_context = new_goal.context.copy()
+        old_context = old_goal.context.copy()
+        # permuted_new_context will contain the new_context in the order
+        # of the old_context
+        # Each new item that is found in the old_context will be affected at
+        # its old index, new items that are new will be appended, and then
+        # None objects will be removed from the list
+        permuted_new_context = [None] * len(old_context)
+        permuted_new_tags    = [None] * len(old_context)
+
+        log.info("comparing and tagging old goal and new goal")
+        log.debug(old_context)
+        log.debug(new_context)
+        # if goal_is_new:
+        #     tags_new_context = ["+"] * len(new_context)
+        #     tags_old_context = ["+"] * len(old_context)
+        #     tag_new_target = "+"
+        #     tag_old_target = "+"
+        ##################################
+        # tag objects in the new context #
+        ##################################
+        tags_new_context = [""] * len(new_context)
+        tags_old_context = [""] * len(old_context)
+        old_names = [math_object_old.info["name"] for math_object_old in
+                     old_context]
+        new_index = 0
+        for math_object in new_context:
+            name = math_object.info["name"]
+
+            # (1) search for an object with the same name
+            try:
+                old_index = old_names.index(name)
+            except ValueError:
+                # (2) If no such object then object is new
+                # log.debug("the name does not exist in old_context")
+                tag = "+"
+                old_index = None
+                permuted_new_context.append(math_object)
+                permuted_new_tags.append(tag)
+            else:
+                # put new object at old index
+                permuted_new_context[old_index] = math_object
+                # next test uses PropObj.__eq__, which is redefined
+                # in PropObj (recursively test nodes)
+                old_math_type = old_context[old_index].math_type
+                new_math_type = math_object.math_type
+                # (3) Check if the object has the same type
+                if old_math_type == new_math_type:
+                    tag = "="
+                    permuted_new_tags[old_index] = tag
+                else:  # (4) If not, object has been modified
+                    log.warning("Modified objects")
+                    log.debug(f"Old:{old_context[old_index].math_type}")
+                    log.debug(f"New:{math_object.math_type}")
+                    tag = "≠"
+                    permuted_new_tags[old_index] = tag
+
+            # tags_new_context[new_index] = tag
+            # new_context[new_index] = None  # will not be considered anymore
+            if old_index is not None:
+                # tags_old_context[old_index] = tag
+                old_context[old_index] = None  # will not be considered
+                # anymore
+            new_index += 1
+
+        # (5) Remove 'None' entries
+        clean_permuted_new_context = [item for item in permuted_new_context
+                                      if item is not None]
+        clean_permuted_new_tags    = [item for item in permuted_new_tags
+                                      if item is not None]
+
+        # fixme: this is useless
+        # Tag the remaining objects in old_context as new ("+")
+        # NB: these tags are not used
+        # for old_index in range(len(old_context)):
+        #    if old_context[old_index] is not None:
+        #        tags_old_context[old_index] = "+"
+        ###################
+        # tag the targets #
+        ###################
+        # if goal is not new then the target is either modified ("≠")
+        # or unchanged ("=")
+        # new_target = new_goal.target.math_type
+        # old_target = old_goal.target.math_type
+        # if new_target == old_target:
+        #     tag_new_target, tag_old_target = "=", "="
+        # else:
+        #     tag_new_target, tag_old_target = "≠", "≠"
+
+        # Finally modify order and set tags
+        self.context     = clean_permuted_new_context
+        self.future_tags = clean_permuted_new_tags
+        # old_goal.past_tags_old_context = (tags_old_context, tag_old_target)
+        # log.debug(f"Old goal old tags: {old_goal.past_tags_old_context}")
+        # log.debug(f"New goal future tags: {new_goal.future_tags}")
+
     def tag_and_split_propositions_objects(self):
         """
         :return:
@@ -214,13 +221,11 @@ class Goal:
         """
         log.info("split objects and propositions of the context")
         context = self.context
-        try:
-            tags = self.future_tags[0]  # tags of the context
-        except AttributeError:  # if tags have not been computed
-            tags = ["="] * len(context)
+        if not self.future_tags:
+            self.future_tags = ["="] * len(context)
         objects = []
         propositions = []
-        for (math_object, tag) in zip(context, tags):
+        for (math_object, tag) in zip(context, self.future_tags):
             if math_object.math_type.is_prop():
                 propositions.append((math_object, tag))
             else:
@@ -311,6 +316,28 @@ class Goal:
             text += _("Target:") + "\n"
             text += target.math_type.to_display(is_math_type=True)
             return text
+
+    def extract_vars(self) -> List[MathObject]:
+        """
+        provides the list of all variables in the context,
+        (but NOT bound variables, nor names of hypotheses)
+        :return: list of MathObject (variables names)
+        """
+        # log.info("extracting the list of global variables")
+        variables = [math_object for math_object in self.context
+                     if not math_object.is_prop()]
+        return variables
+
+    def extract_vars_names(self) -> List[str]:
+        """
+        provides the list of names of all variables in the context,
+        (but NOT bound variables, nor names of hypotheses)
+        :return: list of MathObject (variables names)
+        """
+        # log.info("extracting the list of global variables")
+        names = [math_object.info['name'] for math_object in
+                     self.extract_vars()]
+        return names
 
 
 # def instantiate_bound_var(math_type, name: str):
