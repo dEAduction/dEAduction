@@ -27,59 +27,59 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from functools import partial
+from functools import           partial
 import logging
 from pathlib import Path
 import trio
-from typing import Callable
+from typing import              Callable
 import qtrio
 
-from PySide2.QtCore import (Signal,
-                            Slot,
-                            QEvent,
-                            Qt)
-from PySide2.QtGui import QIcon
-from PySide2.QtWidgets import (QAction,
-                               QDesktopWidget,
-                               QGroupBox,
-                               QHBoxLayout,
-                               QInputDialog,
-                               QMainWindow,
-                               QMessageBox,
-                               QToolBar,
-                               QVBoxLayout,
-                               QWidget,
-                               QStatusBar)
+from PySide2.QtCore import (    Signal,
+                                Slot,
+                                QEvent,
+                                Qt)
+from PySide2.QtGui import       QIcon
+from PySide2.QtWidgets import ( QAction,
+                                QDesktopWidget,
+                                QGroupBox,
+                                QHBoxLayout,
+                                QInputDialog,
+                                QMainWindow,
+                                QMessageBox,
+                                QToolBar,
+                                QVBoxLayout,
+                                QWidget,
+                                QStatusBar)
 
-from deaduction.config import (_,
-                               user_config,
-                               EXERCISE)
-from deaduction.memory import JOURNAL
-from deaduction.dui.utils import (replace_delete_widget,
-                                  ButtonsDialog)
-from deaduction.dui.widgets import (ActionButton,
-                                    ActionButtonsWidget,
-                                    LeanEditor,
-                                    StatementsTreeWidget,
-                                    StatementsTreeWidgetItem,
-                                    MathObjectWidget,
-                                    MathObjectWidgetItem,
-                                    TargetWidget)
-from deaduction.pylib.actions import (Action,
-                                      action_apply,
-                                      InputType,
-                                      MissingParametersError,
-                                      WrongUserInput)
+from deaduction.config import          (_,
+                                        user_config,
+                                        EXERCISE)
+from deaduction.memory import           JOURNAL
+from deaduction.dui.utils import  (     replace_delete_widget,
+                                        ButtonsDialog)
+from deaduction.dui.widgets import (    ActionButton,
+                                        ActionButtonsWidget,
+                                        LeanEditor,
+                                        StatementsTreeWidget,
+                                        StatementsTreeWidgetItem,
+                                        MathObjectWidget,
+                                        MathObjectWidgetItem,
+                                        TargetWidget)
+from deaduction.pylib.actions import (  Action,
+                                        action_apply,
+                                        InputType,
+                                        MissingParametersError,
+                                        WrongUserInput)
 import deaduction.pylib.actions.generic as generic
-from deaduction.pylib.coursedata import (Definition,
-                                         Exercise,
-                                         Theorem)
+from deaduction.pylib.coursedata import (   Definition,
+                                            Exercise,
+                                            Theorem)
 from deaduction.pylib.server.exceptions import FailedRequestError
-from deaduction.pylib.mathobj import (MathObject,
-                                      Goal,
-                                      ProofState,
-                                      Proof)
-from deaduction.pylib.server import ServerInterface
+from deaduction.pylib.mathobj import (  MathObject,
+                                        Goal,
+                                        ProofState,
+                                        Proof)
+from deaduction.pylib.server import     ServerInterface
 
 log = logging.getLogger(__name__)
 
@@ -96,15 +96,15 @@ class ExerciseToolbar(QToolBar):
 
         icons_dir = Path('share/graphical_resources/icons/')
         self.undo_action = QAction(
-            QIcon(str((icons_dir / 'undo_action.png').resolve())),
-            _('Undo action'), self)
+                QIcon(str((icons_dir / 'undo_action.png').resolve())),
+                _('Undo action'), self)
         self.redo_action = QAction(
-            QIcon(str((icons_dir / 'redo_action.png').resolve())),
-            _('Redo action'), self)
+                QIcon(str((icons_dir / 'redo_action.png').resolve())),
+                _('Redo action'), self)
 
         self.toggle_lean_editor_action = QAction(
-            QIcon(str((icons_dir / 'lean_editor.png').resolve())),
-            _('Toggle L∃∀N'), self)
+                QIcon(str((icons_dir / 'lean_editor.png').resolve())),
+                _('Toggle L∃∀N'), self)
 
         self.addAction(self.undo_action)
         self.addAction(self.redo_action)
@@ -182,11 +182,11 @@ class ExerciseCentralWidget(QWidget):
         # least self.__main_lyt and self.__context_lyt in the method
         # self.update_goal.
 
-        self.__main_lyt = QVBoxLayout()
-        self.__context_lyt = QVBoxLayout()
+        self.__main_lyt     = QVBoxLayout()
+        self.__context_lyt  = QVBoxLayout()
         context_actions_lyt = QHBoxLayout()
-        actions_lyt = QVBoxLayout()
-        action_btns_lyt = QVBoxLayout()
+        actions_lyt         = QVBoxLayout()
+        action_btns_lyt     = QVBoxLayout()
 
         action_btns_lyt.setContentsMargins(0, 0, 0, 0)
         action_btns_lyt.setSpacing(0)
@@ -210,15 +210,15 @@ class ExerciseCentralWidget(QWidget):
         else:
             log.warning("Action_apply_button not found")
 
-        statements = exercise.available_statements
-        outline = exercise.course.outline
+        statements           = exercise.available_statements
+        outline              = exercise.course.outline
         self.statements_tree = StatementsTreeWidget(statements, outline)
 
         # ─────── Init goal (Context area and target) ────── #
 
         self.objects_wgt = MathObjectWidget()
-        self.props_wgt = MathObjectWidget()
-        self.target_wgt = TargetWidget()
+        self.props_wgt   = MathObjectWidget()
+        self.target_wgt  = TargetWidget()
 
         # ───────────── Put widgets in layouts ───────────── #
 
@@ -256,8 +256,8 @@ class ExerciseCentralWidget(QWidget):
         """
 
         return self.logic_btns.buttons \
-               + self.proof_btns.buttons \
-               + self.magic_btns.buttons
+                + self.proof_btns.buttons \
+                + self.magic_btns.buttons
 
     ###########
     # Methods #
@@ -296,15 +296,15 @@ class ExerciseCentralWidget(QWidget):
 
         # Init context (objects and properties). Get them as two list of
         # (MathObject, str), the str being the tag of the prop. or obj.
-        new_context = new_goal.tag_and_split_propositions_objects()
-        new_target = new_goal.target
+        new_context    = new_goal.tag_and_split_propositions_objects()
+        new_target     = new_goal.target
         new_target_tag = '='  # new_target.future_tags[1]
-        new_objects = new_context[0]
-        new_props = new_context[1]
+        new_objects    = new_context[0]
+        new_props      = new_context[1]
 
         new_objects_wgt = MathObjectWidget(new_objects)
-        new_props_wgt = MathObjectWidget(new_props)
-        new_target_wgt = TargetWidget(new_target, new_target_tag, goal_count)
+        new_props_wgt   = MathObjectWidget(new_props)
+        new_target_wgt  = TargetWidget(new_target, new_target_tag, goal_count)
 
         # Replace in the layouts
         replace_delete_widget(self.__context_lyt,
@@ -316,9 +316,9 @@ class ExerciseCentralWidget(QWidget):
                               ~Qt.FindChildrenRecursively)
 
         # Set the attributes to the new values
-        self.objects_wgt = new_objects_wgt
-        self.props_wgt = new_props_wgt
-        self.target_wgt = new_target_wgt
+        self.objects_wgt  = new_objects_wgt
+        self.props_wgt    = new_props_wgt
+        self.target_wgt   = new_target_wgt
         self.current_goal = new_goal
 
 
@@ -384,10 +384,10 @@ class ExerciseMainWindow(QMainWindow):
     :attribute toolbar QToolBar: The toolbar.
     """
 
-    window_closed = Signal()
-    __action_triggered = Signal(ActionButton)
-    __apply_math_object_triggered = Signal(MathObjectWidget)
-    __statement_triggered = Signal(StatementsTreeWidgetItem)
+    window_closed                   = Signal()
+    __action_triggered              = Signal(ActionButton)
+    __apply_math_object_triggered   = Signal(MathObjectWidget)
+    __statement_triggered           = Signal(StatementsTreeWidgetItem)
 
     def __init__(self, exercise: Exercise, servint: ServerInterface):
         """
@@ -406,13 +406,13 @@ class ExerciseMainWindow(QMainWindow):
 
         # ─────────────────── Attributes ─────────────────── #
 
-        self.exercise = exercise
-        self.current_goal = None
-        self.current_selection = []
-        self.ecw = ExerciseCentralWidget(exercise)
-        self.lean_editor = LeanEditor()
-        self.servint = servint
-        self.toolbar = ExerciseToolbar()
+        self.exercise           = exercise
+        self.current_goal       = None
+        self.current_selection  = []
+        self.ecw                = ExerciseCentralWidget(exercise)
+        self.lean_editor        = LeanEditor()
+        self.servint            = servint
+        self.toolbar            = ExerciseToolbar()
 
         # ─────────────────────── UI ─────────────────────── #
 
@@ -430,12 +430,11 @@ class ExerciseMainWindow(QMainWindow):
         # Actions area
         for action_button in self.ecw.actions_buttons:
             action_button.action_triggered.connect(self.__action_triggered)
-        self.ecw.statements_tree.itemClicked.connect(
-            self.__statement_triggered)
+        self.ecw.statements_tree.itemClicked.connect(self.__statement_triggered)
 
         # UI
         self.toolbar.toggle_lean_editor_action.triggered.connect(
-            self.lean_editor.toggle)
+                self.lean_editor.toggle)
 
         # Server communication
         self.servint.proof_state_change.connect(self.update_proof_state)
@@ -463,8 +462,10 @@ class ExerciseMainWindow(QMainWindow):
                                    instruction=None):
         """
         Display an error message in the status bar.
-
+        :param event:       tuple of strings, (nature, content, details)
+        :param instruction: 'erase' or None
         """
+
         if instruction == 'erase':
             self.statusBar.showMessage("")
         elif event:
@@ -530,7 +531,7 @@ class ExerciseMainWindow(QMainWindow):
         current_goal_number, \
         current_goals_counter, \
         goals_counter_evolution \
-            = self.count_goals()
+                = self.count_goals()
         goal_count = f'  {current_goal_number} / {total_goals_counter}'
 
         # Display if a goal has been solved and user is not undoing
@@ -605,8 +606,7 @@ class ExerciseMainWindow(QMainWindow):
                 self.display_status_bar_message(instruction='erase')
 
                 if emission.is_from(self.lean_editor.editor_send_lean):
-                    await self.process_async_signal(
-                        self.__server_send_editor_lean)
+                    await self.process_async_signal(self.__server_send_editor_lean)
 
                 elif emission.is_from(self.toolbar.redo_action.triggered):
                     # No need to call self.update_goal, this emits the
@@ -623,11 +623,11 @@ class ExerciseMainWindow(QMainWindow):
                 elif emission.is_from(self.__action_triggered):
                     # TODO: comment, what is emission.args[0]?
                     await self.process_async_signal(partial(
-                        self.__server_call_action, emission.args[0]))
+                            self.__server_call_action, emission.args[0]))
 
                 elif emission.is_from(self.__statement_triggered):
                     await self.process_async_signal(partial(
-                        self.__server_call_statement, emission.args[0]))
+                            self.__server_call_statement, emission.args[0]))
 
                 elif emission.is_from(self.__apply_math_object_triggered):
                     await self.__server_call_apply(emission.args[0])
@@ -684,9 +684,9 @@ class ExerciseMainWindow(QMainWindow):
             self.freeze(False)
             # Required because history is always changed with signals
             self.toolbar.undo_action.setEnabled(
-                not self.servint.lean_file.history_at_beginning)
+                    not self.servint.lean_file.history_at_beginning)
             self.toolbar.redo_action.setEnabled(
-                not self.servint.lean_file.history_at_end)
+                    not self.servint.lean_file.history_at_end)
 
     # ─────────────── Specific functions ─────────────── #
     # To be called as process_function in the above
@@ -712,7 +712,7 @@ class ExerciseMainWindow(QMainWindow):
         call
         """
 
-        action = action_btn.action
+        action     = action_btn.action
         user_input = []
         log.debug(f'Calling action {action.symbol}')
         # Send action and catch exception when user needs to:
@@ -723,11 +723,11 @@ class ExerciseMainWindow(QMainWindow):
             try:
                 if not user_input:
                     code = action.run(self.current_goal,
-                                      self.current_selection_as_mathobjects)
+                            self.current_selection_as_mathobjects)
                 else:
                     code = action.run(self.current_goal,
-                                      self.current_selection_as_mathobjects,
-                                      user_input)
+                            self.current_selection_as_mathobjects,
+                            user_input)
             except MissingParametersError as e:
                 if e.input_type == InputType.Text:
                     choice, ok = QInputDialog.getText(action_btn,
@@ -781,12 +781,10 @@ class ExerciseMainWindow(QMainWindow):
 
                 if isinstance(statement, Definition):
                     code = generic.action_definition(self.current_goal,
-                                                     self.current_selection_as_mathobjects,
-                                                     statement)
+                            self.current_selection_as_mathobjects, statement)
                 elif isinstance(statement, Theorem):
                     code = generic.action_theorem(self.current_goal,
-                                                  self.current_selection_as_mathobjects,
-                                                  statement)
+                            self.current_selection_as_mathobjects, statement)
 
                 log.debug(f'Calling statement {item.statement.pretty_name}')
                 log.debug("Code sent to Lean: " + code)
@@ -867,9 +865,9 @@ class ExerciseMainWindow(QMainWindow):
         # make fake target to display message
         no_more_goal_text = "No more goal"
         target = self.current_goal.target
-        target.math_type = MathObject(node=no_more_goal_text,
-                                      info={},
-                                      children=[],
+        target.math_type = MathObject(  node=no_more_goal_text,
+                                        info={},
+                                        children=[],
                                       )
         self.ecw.update_goal(self.current_goal, goal_count='')
 
@@ -938,8 +936,7 @@ class ExerciseMainWindow(QMainWindow):
         """
         lean_file = self.servint.lean_file
         proof = Proof([(entry.misc_info["ProofState"], None) \
-                       for entry in
-                       lean_file.history[:lean_file.target_idx + 1]])
+                 for entry in lean_file.history[:lean_file.target_idx+1]])
         return proof
 
     def count_goals(self) -> (int, int, int):
