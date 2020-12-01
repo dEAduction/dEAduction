@@ -71,15 +71,18 @@ for key, value in zip(action_list, lbt):
 #######
 
 def construct_and(goal: Goal, user_input: [str]):
+    """
+Split the target 'P AND Q' into two sub-goals
+    """
     possible_codes = []
 
     if goal.target.math_type.node != "PROP_AND":
-        raise WrongUserInput
+        raise WrongUserInput(error=_("target is not a conjunction 'P AND Q'"))
     left = goal.target.math_type.children[0].to_display()
     right = goal.target.math_type.children[1].to_display()
     choices = [(_("Left"), left), (_("Right"), right)]
 
-    if user_input == []:
+    if not user_input:
         raise MissingParametersError(
             InputType.Choice,
             choices,
@@ -97,6 +100,10 @@ def construct_and(goal: Goal, user_input: [str]):
 
 
 def apply_and(goal, l):
+    """
+Destruct a property 'P and Q'
+Here l contains exactly one conjunction property
+    """
     possible_codes = []
     h_selected = l[0].info["name"]
     h1 = get_new_hyp(goal)
@@ -106,6 +113,10 @@ def apply_and(goal, l):
 
 
 def construct_and_hyp(goal, selected_objects: [MathObject]):
+    """
+Construct 'P AND Q' from properties P and Q
+Here l contains exactly two properties
+    """
     possible_codes = []
     h1 = selected_objects[0].info["name"]
     h2 = selected_objects[1].info["name"]
@@ -116,8 +127,10 @@ def construct_and_hyp(goal, selected_objects: [MathObject]):
 
 @action(user_config.get('tooltip_and'),
         logic_button_texts['action_and'])
-def action_and(goal: Goal, selected_objects: [MathObject],
-               user_input: [str] = []) -> str:
+def action_and(goal: Goal,
+               selected_objects: [MathObject],
+               user_input: [str] = []
+               ) -> str:
     """
     Translate into string of lean code corresponding to the action
 
@@ -135,25 +148,28 @@ If two hypothesis P, then Q, have been previously selected:
         return construct_and(goal, user_input)
     if len(selected_objects) == 1:
         if selected_objects[0].math_type.node != "PROP_AND":
-            raise WrongUserInput
+            raise WrongUserInput(error=_("selected property is not "
+                                         "a conjunction 'P AND Q'"))
         else:
             return apply_and(goal, selected_objects)
     if len(selected_objects) == 2:
         if not (selected_objects[0].math_type.is_prop and
                 selected_objects[1].math_type.is_prop):
-            raise WrongUserInput
+            raise WrongUserInput(error=_("selected items are not properties"))
         else:
             return construct_and_hyp(goal, selected_objects)
-    raise WrongUserInput
+    raise WrongUserInput(error=_("does not apply to more than to properties"))
 
 
-## OR ##
-
+# OR #
 def construct_or(goal: Goal, user_input: [str]) -> str:
+    """
+When target is a disjunction 'P OR Q', choose to prove either P or Q
+    """
     possible_codes = []
 
     if goal.target.math_type.node != "PROP_OR":
-        raise WrongUserInput
+        raise WrongUserInput(error=_("target is not a disjunction 'P OR Q'"))
 
     left = goal.target.math_type.children[0].to_display()
     right = goal.target.math_type.children[1].to_display()
@@ -175,9 +191,13 @@ def construct_or(goal: Goal, user_input: [str]) -> str:
 
 
 def apply_or(goal, l: [MathObject], user_input: [str]) -> str:
+    """
+Engage in a proof by cases by applying a property 'P OR Q'
+    """
     possible_codes = []
     if l[0].math_type.node != "PROP_OR":
-        raise WrongUserInput
+        raise WrongUserInput(error=_("Selected property is not "
+                                     "a disjunction 'P OR Q'"))
 
     h_selected = l[0].info["name"]
 
@@ -199,19 +219,32 @@ def apply_or(goal, l: [MathObject], user_input: [str]) -> str:
 
     h1 = get_new_hyp(goal)
     h2 = get_new_hyp(goal)
-    possible_codes[0] += (f'cases {h_selected} with {h1} {h2}')
+    possible_codes[0] += f'cases {h_selected} with {h1} {h2}'
     return format_orelse(possible_codes)
 
+
 def construct_or_on_hyp(goal: Goal, l: [MathObject], user_input: [str] = []):
+    """
+Construct a property 'P or Q' from property 'P' or property 'Q'
+    """
+
     possible_codes = []
-    if not l[0].math_type.is_prop():
-        raise WrongUserInput
+    if len(l) > 2:
+        error = _("does not apply to more than two properties")
+        raise WrongUserInput(error)
     hP = l[0].info["name"]
     P = l[0].math_type.to_display()
+
     if len(l) == 2:
-        Q = l[1].info["name"]
-    
+        if not (l[0].is_prop() and l[1].is_prop()):
+            error = _("selected objects are not properties")
+            raise WrongUserInput(error)
+        else:
+            Q = l[1].info["name"]
     elif len(l) == 1:
+        if not l[0].is_prop():
+            error = _("selected object is not a property")
+            raise WrongUserInput(error)
         if len(user_input) == 0:
             raise MissingParametersError(InputType.Text,
                     title=_("Obtain 'P OR Q'"),
@@ -232,42 +265,40 @@ def construct_or_on_hyp(goal: Goal, l: [MathObject], user_input: [str] = []):
     elif user_input[0] == 1:
         possible_codes.append(f'have {new_h} := @or.inr ({Q}) _ ({hP})')
     else:
-        raise WrongUserInput
+        raise WrongUserInput("unexpected error")
     return format_orelse(possible_codes)
             
-            
-            
-            
+
 @action(user_config.get('tooltip_or'),
         logic_button_texts['action_or'])
-        
 def action_or(goal: Goal, l: [MathObject], user_input=[]) -> str:
     """
-    Translate into string of lean code corresponding to the action
+Translate into string of lean code corresponding to the action
 
-    If the target is of the form P OR Q:
-tranform the target in P (or Q) accordingly to the user's choice.
-    If a hypothesis of the form P OR Q has been previously selected:
-transform the current goal into two subgoals,
-    one with P as a hypothesis,
-    and another with Q as a hypothesis.
+If the target is of the form P OR Q:
+    tranform the target in P (or Q) accordingly to the user's choice.
+If a hypothesis of the form P OR Q has been previously selected:
+    transform the current goal into two subgoals,
+        one with P as a hypothesis,
+        and another with Q as a hypothesis.
 
     :param l:   list of MathObject arguments preselected by the user
     :return:    string of lean code
     """
+
     if len(l) == 0:
         return construct_or(goal, user_input)
     if len(l) == 1:
         if l[0].math_type.node == "PROP_OR":
             return apply_or(goal, l, user_input)
-        elif l[0].math_type.is_prop():
+        else:
             return construct_or_on_hyp(goal, l, user_input)
-    if len(l) == 2 and l[0].math_type.is_prop() and l[1].math_type.is_prop():
+    if len(l) == 2:
         return construct_or_on_hyp(goal, l, user_input)
-    raise WrongUserInput
+    raise WrongUserInput(error=_("does not apply to more than two properties"))
 
 
-## NOT ##
+# NOT #
 
 @action(user_config.get('tooltip_not'),
         logic_button_texts['action_negate'])
@@ -287,23 +318,24 @@ do the same to the hypothesis.
 
     if len(l) == 0:
         if goal.target.math_type.node != "PROP_NOT":
-            raise WrongUserInput
+            raise WrongUserInput(error=_("target is not a negation 'NOT P'"))
         possible_codes.append('push_neg')
     if len(l) == 1:
         if l[0].math_type.node != "PROP_NOT":
-            raise WrongUserInput
+            error = _("selected property is not a negation 'NOT P'")
+            raise WrongUserInput(error)
         h_selected = l[0].info["name"]
         possible_codes.append(f'push_neg at {h_selected}')
     return format_orelse(possible_codes)
 
 
-## IMPLICATION ##
+# IMPLICATION #
 
 def construct_implicate(goal: Goal):
     possible_codes = []
 
     if goal.target.math_type.node != "PROP_IMPLIES":
-        raise WrongUserInput
+        raise WrongUserInput(error=_("target is not an implication 'P ⇒ Q'"))
 
     h = get_new_hyp(goal)
     possible_codes.append(f'intro {h}')
@@ -320,10 +352,14 @@ def apply_implicate(goal: Goal, l: [MathObject]):
 def apply_implicate_to_hyp(goal: Goal, l: [MathObject]):
     """
     Try to apply last selected property on the other ones.
+    The last property should be an implcation or a universal property
+    (or equivalent to such after unfolding definitions)
+
     :param l: list of 2 or 3 MathObjects
     :return:
     """
 
+    # todo: raise errors if wrong type?
     possible_codes = []
     h_selected = l[-1].info["name"]
     h = get_new_hyp(goal)
@@ -370,7 +406,7 @@ introduce the hypothesis P in the properties and transform the target into Q.
         return format_orelse(apply_implicate(goal, l))
     if len(l) == 2:
         return format_orelse(apply_implicate_to_hyp(goal, l))
-    raise WrongUserInput
+    raise WrongUserInput(error=_("does not apply to more than two properties"))
 
 
 ## IFF ##
@@ -378,13 +414,13 @@ introduce the hypothesis P in the properties and transform the target into Q.
 def construct_iff(goal: Goal, user_input: [str]):
     possible_codes = []
     if goal.target.math_type.node != "PROP_IFF":
-        raise WrongUserInput
+        raise WrongUserInput(error=_("target is not an iff property"))
 
     left = goal.target.math_type.children[0].to_display()
     right = goal.target.math_type.children[1].to_display()
     choices = [("⇒", f'({left}) ⇒ ({right})'), ("⇐", f'({right}) ⇒ ({left})')]
 
-    if user_input == []:
+    if not user_input:
         raise MissingParametersError(
             InputType.Choice,
             choices,
@@ -398,24 +434,36 @@ def construct_iff(goal: Goal, user_input: [str]):
             code = ""
         possible_codes.append(f'{code}split')
     else:
-        raise WrongUserInput
+        raise WrongUserInput(error=_("unknown error"))
     return format_orelse(possible_codes)
 
+
 def destruct_iff_on_hyp(goal: Goal, l: [MathObject]):
+    """
+    Split a property 'P iff Q' into two implications.
+    len(l) should be 1.
+    """
     possible_codes = []
     if l[0].math_type.node != "PROP_IFF":
-        raise WrongUserInput
+        error = _("selected property is not an iff property 'P ⇔ Q")
+        raise WrongUserInput(error)
     h = l[0].info["name"]
     h1 = get_new_hyp(goal)
     h2 = get_new_hyp(goal)
     possible_codes.append(f'cases (iff_def.mp {h}) with {h1} {h2}')
     return format_orelse(possible_codes)
-    
+
+
 def construct_iff_on_hyp(goal: Goal, l: [MathObject]):
+    """
+    Construct property 'P iff Q' from both implications.
+    len(l) should be 2.
+    """
     possible_codes = []
 
     if not (l[0].math_type.is_prop() and l[1].math_type.is_prop()):
-        raise WrongUserInput
+        error = _("selected objects should both be implications")
+        raise WrongUserInput(error)
 
     new_h = get_new_hyp(goal)
     h1 = l[0].info["name"]
@@ -442,16 +490,17 @@ introduce two subgoals, P⇒Q, and Q⇒P.
         return destruct_iff_on_hyp(goal, l)
     if len(l) == 2:
         return construct_iff_on_hyp(goal, l)
-    raise WrongUserInput
+    raise WrongUserInput(error=_("does not apply to more than two properties"))
 
 
-## FOR ALL ##
+# FOR ALL #
 
 def construct_forall(goal):
     possible_codes = []
     math_object = goal.target.math_type
     if math_object.node != "QUANT_∀":
-        raise WrongUserInput
+        error = _("target is not a universal property '∀x, P(x)'")
+        raise WrongUserInput(error)
     math_type = math_object.children[0]
     if math_type.node == "PRODUCT":
         [math_type_1, math_type_2] = math_type.children
@@ -483,17 +532,26 @@ introduce x and transform the target into P(x)
     """
     if len(l) == 0:
         return construct_forall(goal)
-    else:
-        raise WrongUserInput
+
+    # search for a universal property among l, beginning with last item
+    l.reverse()
+    for item in l:
+        if item.is_forall():
+            # put item on last position
+            l.remove(item)
+            l.append(item)
+            return apply_implicate_to_hyp(goal, l)
+    raise WrongUserInput(error=_("no universal property among selected"))
 
 
-## EXISTS ##
+# EXISTS #
 
 def construct_exists(goal, user_input: [str]):
     possible_codes = []
 
     if goal.target.math_type.node != "QUANT_∃":
-        raise WrongUserInput
+        error = _("target is not existential property '∃x, P(x)'")
+        raise WrongUserInput(error)
     if len(user_input) != 1:
         raise MissingParametersError(InputType.Text,
                                      title=_("Exist"),
@@ -527,22 +585,22 @@ def apply_exists(goal: Goal, l: [MathObject]) -> str:
 def construct_exists_on_hyp(goal: Goal, l: [MathObject]):
     """
     Try to construct an existence property from some object and some property
-    :param goal:
-    :param l:
-    :return:
+    Here len(l) = 2
     """
+
     possible_codes = []
     x = l[0].info["name"]
     hx = l[1].info["name"]
-    if not l[0].math_type.is_prop() and l[1].math_type.is_prop():
+    if (not l[0].is_prop()) and l[1].is_prop():
         new_h = get_new_hyp(goal)
         possible_codes.append(f'have {new_h} := exists.intro {x} {hx}')
-    elif not l[1].math_type.is_prop() and l[0].math_type.is_prop():
+    elif (not l[1].is_prop()) and l[0].is_prop():
         x, hx = hx, x
         new_h = get_new_hyp(goal)
         possible_codes.append(f'have {new_h} := exists.intro {x} {hx}')
     else:
-        raise WrongUserInput
+        error = _("I cannot build an existential property with this")
+        raise WrongUserInput(error)
     return format_orelse(possible_codes)
 
 
@@ -560,19 +618,19 @@ introduce a new x and add P(x) to the properties
     :param l:   list of MathObject arguments preselected by the user
     :return:    string of lean code
     """
-    if len(l) == 1 and user_input == []:
-        h_selected = l[0].math_type
+    if len(l) == 0:
+        return construct_exists(goal, user_input)
+    elif len(l) == 1 and user_input == []:
+        h_selected = l[0]
         if h_selected.is_prop():
             # try to apply property "exists x, P(x)" to get a new MathObject x
-            if h_selected.node not in ("QUANT_∃", "QUANT_∃!"):
-                raise WrongUserInput
+            if not h_selected.is_exists():
+                error = _("selection is not existential property '∃x, P(x)'")
+                raise WrongUserInput(error)
             else:
                 return apply_exists(goal, l)
-        else:
+        else:  # h_selected is not a property : get an existence property
             return construct_exists(goal, [l[0].info["name"]])
-    elif len(l) == 0:
-        return construct_exists(goal, user_input)
     elif len(l) == 2:
         return construct_exists_on_hyp(goal, l)
-    raise WrongUserInput
-
+    raise WrongUserInput(error=_("does not apply to more than two properties"))

@@ -47,7 +47,6 @@ import qtrio
 import trio
 import gettext
 import pickle
-import time
 from pathlib import Path
 
 from deaduction.dui.launcher import select_course

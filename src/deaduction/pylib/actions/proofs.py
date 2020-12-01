@@ -425,23 +425,28 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
     :param l:   list of MathObject arguments preselected by the user
     :return:    string of lean code
     """
+
+    # fixme: rewrite to provide meaningful error messages
     possible_codes = []
+    error = ""
 
-    if len(l) == 0:
-        raise WrongUserInput  # n'apparaîtra plus quand ce sera un double-clic
+    if not l:
+        raise WrongUserInput(error="no property selected")
 
+    # Now len(l) > 0
+    prop = l[-1]  # property to be applied
     # if user wants to apply a function
-    if l[-1].is_function():
+    if prop.is_function():
         return apply_function(goal, l)
 
     # determines which kind of property the user wants to apply
-    math_type = l[-1].math_type
-    quantifier = l[-1].math_type.node
-    if math_type.can_be_used_for_substitution(is_math_type=True):
+    if prop.can_be_used_for_substitution():
         if len(l) == 1 or (len(l) > 1 and l[0].math_type.is_prop()):
-            possible_codes.extend(
-                apply_substitute(goal, l, user_input))
+            possible_codes.extend(apply_substitute(goal, l, user_input))
 
+    # todo: allow apply_implicate_hyp even when property is not explicitly
+    #  an implication
+    quantifier = prop.math_type.node
     if quantifier == "PROP_IMPLIES" or quantifier == "QUANT_∀":
         if len(l) == 1:
             possible_codes.extend(apply_implicate(goal, l))
@@ -449,14 +454,17 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
             possible_codes.extend(apply_implicate_to_hyp(goal, l))
             
     if len(l) == 1 and user_can_apply(l[0]):
-        if quantifier in ("QUANT_∃", "QUANT_∃!"):
+        if prop.is_exists():
             possible_codes.append(apply_exists(goal, l))
-        if quantifier == "PROP_AND":
+        if prop.is_and():
             possible_codes.append(apply_and(goal, l))
-        if quantifier == "PROP_OR":
+        if prop.is_or():
             possible_codes.append(apply_or(goal, l, user_input))
-    return format_orelse(possible_codes)
-
+    if possible_codes:
+        return format_orelse(possible_codes)
+    else:
+        error = "I cannot apply this"  # fixme!!
+        raise WrongUserInput(error)
 
 ################################
 # Captions for 'APPLY' buttons #

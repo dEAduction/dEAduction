@@ -410,6 +410,7 @@ class MathObject:
     def is_prop(self, is_math_type=False) -> bool:
         """
         Test if self represents a mathematical Proposition
+        WARNING:
         For global variables, only the math_type attribute should be tested !
         """
         if is_math_type:
@@ -457,6 +458,16 @@ class MathObject:
         else:
             math_type = self.math_type
         return math_type.node == "PROP_AND"
+
+    def is_or(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is an implication.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node == "PROP_OR"
 
     def is_implication(self, is_math_type=False) -> bool:
         """
