@@ -33,7 +33,7 @@ Institution
     Université de France
 OpenQuestion
     True
-AvailableStatements
+AvailableExercises
     NONE
 -/
 
@@ -42,7 +42,8 @@ AvailableStatements
 -- NegateStatement accordingly
 -- If NegateStatement is True, then the statement will be replaced by its
 -- negation
-
+-- AvailableExercises is set to None so that no exercise statement can be applied
+-- by the user. Recommended with OpenQuestions set to True!
 
 
 
