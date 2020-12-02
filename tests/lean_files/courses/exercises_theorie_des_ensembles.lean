@@ -796,7 +796,7 @@ end
 
 lemma exercise.unicite_inverse :
 (bijective f) → exists_unique (λ g : Y → X,
-composition g f = Identite)
+composition f g = Identite)
 :=
 /- dEAduction
 PrettyName

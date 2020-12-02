@@ -42,7 +42,8 @@ from deaduction.pylib.actions import (InputType,
 from deaduction.pylib.mathobj import (MathObject,
                                       Goal,
                                       get_new_hyp,
-                                      give_global_name)
+                                      give_global_name,
+                                      NO_MATH_TYPE)
 
 log = logging.getLogger(__name__)
 
@@ -174,17 +175,16 @@ and add ∀ a ∈ A, P(a, f(a)) to the properties
     if len(l) == 1:
         h = l[0].info["name"]
         # finding expected math_type for the new function
-        universal_property = l[0].math_type
-        if universal_property.node == 'QUANT_∀':
-            source_type = universal_property.children[0]
-            exist_property = universal_property.children[2]
-            if exist_property.node in ('QUANT_∃', 'QUANT_∃!'):
+        universal_property = l[0]
+        if universal_property.is_for_all():
+            source_type = universal_property.math_type.children[0]
+            exist_property = universal_property.math_type.children[2]
+            if exist_property.is_exists(is_math_type=True):
                 target_type = exist_property.children[0]
-                node = "FUNCTION"
-                children = [source_type, target_type]
-                info = {}
-                type_type = None
-                math_type = MathObject(node, info, type_type, children)
+                math_type = MathObject(node="FUNCTION",
+                                       info={},
+                                       children=[source_type, target_type],
+                                       math_type=NO_MATH_TYPE)
 
                 hf = get_new_hyp(goal)
                 f = give_global_name(math_type, goal)

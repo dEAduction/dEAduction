@@ -549,7 +549,7 @@ introduce x and transform the target into P(x)
 def construct_exists(goal, user_input: [str]):
     possible_codes = []
 
-    if goal.target.math_type.node != "QUANT_∃":
+    if not goal.target.is_exists():
         error = _("target is not existential property '∃x, P(x)'")
         raise WrongUserInput(error)
     if len(user_input) != 1:
@@ -558,6 +558,7 @@ def construct_exists(goal, user_input: [str]):
                                      output=_(
                                          "Enter element you want to use:"))
     x = user_input[0]
+    possible_codes.append(f'use {x}, dsimp')
     possible_codes.append(f'use {x}')
     return format_orelse(possible_codes)
 
