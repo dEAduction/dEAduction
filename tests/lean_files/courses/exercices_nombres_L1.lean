@@ -33,6 +33,8 @@ Institution
     Université de France
 OpenQuestion
     True
+AvailableStatements
+    NONE
 -/
 
 -- If OpenQuestion is True, DEAduction will ask the user if she wants to

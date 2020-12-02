@@ -239,17 +239,30 @@ class Exercise(Theorem):
         ###########################
         # treatment of statements #
         ###########################
+        # default value = '$UNTIL_NOW'
+        # other pre-defined value = 'NONE'
+        # other possibility = macro defined in the Lean file
         unsorted_statements = []
         for statement_type in ['definition',
                                'theorem',
                                'exercise',
-                               'statement']:
+                               'statement'
+                               ]:
             field_name = 'available_' + statement_type + 's'
-            if statement_type == 'statement' and field_name not in data.keys():
+            if 'available_statements' in data:
+                if data['available_statements'].endswith("NONE"):
+                    # If data['available_statements'].endswith("NONE")
+                    # then default value is '$NONE'
+                    data.setdefault(field_name, "$NONE")
+            elif (statement_type == 'statement'
+                  and 'available_statements' not in data.keys()
+                  ):
                 continue  # DO NOT add all statements!
-
-            elif field_name not in data.keys():
-                data[field_name] = '$UNTIL_NOW'  # default value
+            # if not NONE then default value = UNTIL_NOW
+            data.setdefault(field_name, "$UNTIL_NOW")
+            # Now field_name is in data
+            if data[field_name].endswith("NONE"):
+                continue  # no statement of type statement_type
 
             # (Step 1) substitute macros in string
             string = substitute_macros(data[field_name], data)
