@@ -232,8 +232,11 @@ class Goal:
                 objects.append((math_object, tag))
         return objects, propositions
 
-    def goal_to_text(self, format_="utf8", to_prove=True, text_depth=1) \
-            -> str:
+    def goal_to_text(self,
+                     format_="utf8",
+                     to_prove=True,
+                     text_depth=1,
+                     open_problem=False) -> str:
         """compute a readable version of the goal as the statement of an
         exercise.
 
@@ -245,9 +248,10 @@ class Goal:
         :param text_depth:  int
             A higher value entail a more verbose formulation (more symbols will
             be replaced by words).
-            fixme: depth>1 does not really work
+        :param open_problem: if True, then display as "True or False?"
         :return: a text version of the goal
         """
+        # fixme: depth>1 does not really work
         context = self.context
         target = self.target
         text = ""
@@ -261,8 +265,8 @@ class Goal:
             else:
                 name = mathobj.to_display()
                 name_type = math_type.to_display(is_math_type=True,
-                                                 text_depth=text_depth - 1)
-                if math_type.node == "FUNCTION":  # and text_depth == 0:
+                                                 text_depth=text_depth)
+                if math_type.node == "FUNCTION" and text_depth == 0:
                     new_sentence = _("Let") + " " + name + ":" \
                                    + " " + name_type + "."
                 else:
@@ -284,15 +288,16 @@ class Goal:
         target_text = target.math_type.to_display(text_depth=text_depth,
                                                   is_math_type=True,
                                                   format_="utf8")
-        if to_prove:
+        if to_prove and not open_problem:
             target_text = _("Prove that") + " " + target_text
-        else:
-            if text:
+        elif text:
                 target_text = _("Then") + " " + target_text
-            else:
-                target_text = target_text.capitalize()
+        else:
+            target_text = target_text.capitalize()
                 # little problem: if sentence starts with a lower case
                 # variable. This should never happen though...
+        if open_problem:
+            text = _("True or False?") + "\n" + text
 
         text += target_text + "."
         return text
@@ -311,7 +316,7 @@ class Goal:
                 #     new_sentence = _("Assume that") + " " + prop + "."
                 name = mathobj.to_display()
                 name_type = math_type.to_display(is_math_type=True)
-                text_object = name + " : " + name_type
+                text_object = name + _(": ") + name_type
                 text += "  " + text_object + "\n"
             text += _("Target:") + "\n"
             text += target.math_type.to_display(is_math_type=True)
