@@ -32,7 +32,8 @@ from gettext import   gettext as _
 from typing  import ( Any,
                       Dict )
 
-from PySide2.QtCore    import   Slot
+from PySide2.QtCore    import ( Signal,
+                                Slot )
 from PySide2.QtGui     import ( QFont,
                                 QPixmap )
 from PySide2.QtWidgets import ( QApplication,
@@ -112,7 +113,7 @@ class AbstractCoExChooser(QWidget):
                                     'font-size:   18pt;')
 
             title_lyt = QHBoxLayout()
-            title_lyt.addStretch()
+            # title_lyt.addStretch()
             title_lyt.addWidget(title_wgt)
             title_lyt.addStretch()
 
@@ -326,7 +327,7 @@ class ExerciseChooser(AbstractCoExChooser):
 
 class StartExerciseDialog(QDialog):
 
-    exercise_choosen = Signal(exercise)
+    exercise_choosen = Signal(Exercise)
 
     def __init__(self):
 
@@ -337,7 +338,7 @@ class StartExerciseDialog(QDialog):
         self.__exercise_chooser = QWidget()
 
         self.__start_ex_btn = QPushButton(_('Start exercise'))
-        self.__start_ex_btn.connect(self.__start_exercise)
+        self.__start_ex_btn.clicked.connect(self.__start_exercise)
 
         # ───────────────────── Layouts ──────────────────── #
 
@@ -390,8 +391,11 @@ class StartExerciseDialog(QDialog):
 
     @Slot()
     def __start_exercise(self):
+
         exercise = self.__exercise_chooser.selected_exercise()
         self.exercise_choosen.emit(exercise)
+
+        self.accept()  # Fuck you and I'll see you tomorrow!
 
 
 if __name__ == '__main__':
