@@ -302,13 +302,19 @@ class Goal:
         text += target_text + "."
         return text
 
-    def print_goal(self) -> str:
+    def print_goal(self, open_problem=False, to_prove=True) -> str:
             """
             return context and target in a raw form
             """
             context = self.context
             target = self.target
-            text = _("Context:") + "\n"
+            text = ""
+            if open_problem:
+                text += _("True or False?") + "\n"
+            if len(context) == 1:
+                text += _("Hypothesis:") + "\n"
+            elif len(context) > 1:
+                text += _("Hypotheses:") + "\n"
             for mathobj in context:
                 math_type = mathobj.math_type
                 # if math_type.is_prop():
@@ -318,7 +324,10 @@ class Goal:
                 name_type = math_type.to_display(is_math_type=True)
                 text_object = name + _(": ") + name_type
                 text += "  " + text_object + "\n"
-            text += _("Target:") + "\n"
+            if to_prove and not open_problem:
+                text += _("Prove that") + "\n"
+            elif context:
+                text += _("Then") + "\n"
             text += target.math_type.to_display(is_math_type=True)
             return text
 

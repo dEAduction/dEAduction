@@ -50,7 +50,7 @@ import pickle
 from pathlib import Path
 
 from deaduction.dui.launcher import select_course
-from deaduction.pylib.coursedata import Exercise
+from deaduction.pylib.coursedata import Exercise, Definition, Theorem
 from deaduction.pylib import logger
 from deaduction.pylib.server import ServerInterface
 
@@ -238,11 +238,21 @@ def print_goal(course):
         if isinstance(st, Exercise):
             counter += 1
             print(_("Exercise") + f" n°{counter}: {st.pretty_name}")
-        else:
-            print(_("Definition:") + f" {st.pretty_name}")
+            to_prove = True
+        elif isinstance(st, Definition):
+                print(_("Definition:") + f" {st.pretty_name}")
+                to_prove = False
+        elif isinstance(st, Theorem):
+                print(_("Theorem:") + f" {st.pretty_name}")
+                to_prove = False
 
+        if 'open_question' in st.info:
+            open_problem = True
+        else:
+            open_problem = False
         goal = st.initial_proof_state.goals[0]
-        print(goal.print_goal())
+        print(goal.print_goal(open_problem=open_problem,
+                              to_prove=to_prove))
 
 
 if __name__ == '__main__':
