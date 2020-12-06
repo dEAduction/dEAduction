@@ -121,15 +121,14 @@ end
 --     sorry
 -- end
 
-lemma definition.ensemble_extension {X: Type}  {P : X → Prop} :
-∀{x:X}, x ∈ {x | P x} ↔ P x
+lemma definition.ensemble_extension {X: Type}  {P : X → Prop} {x:X} :
+ x ∈ {x | P x} ↔ P x
 :=
 /- dEAduction
 PrettyName
     Ensemble en extension
 -/
 begin
-    intro x,
     refl
 end
 
@@ -378,8 +377,7 @@ end complementaire
 
 
 
--- Ajouter : 3. produit cartésien, 4. relations ?
--- comment définit-on un produit cartésien d'ensembles ?
+-- Ajouter :  4. relations ?
 
 namespace produits_cartesiens
 /- dEAduction
@@ -387,24 +385,27 @@ PrettyName
     Produits cartésiens
 -/
 
-lemma definition.type_produit :
+
+-- Peut-on en faire une définition ?
+lemma theorem.type_produit :
 ∀ z:X × Y, ∃ x:X, ∃ y:Y, z = (x,y)
 :=
 /- dEAduction
 PrettyName
-    Produit cartésien de deux ensembles
+    Element d'un produit cartésien de deux ensembles
 -/
 begin
     sorry
 end
 
 
-lemma definition.produit_de_parties (A : set X) (B : set Y) :
-∀ x:X, ∀ y:Y, (x,y) ∈ set.prod A B ↔ x ∈ A ∧ y ∈ B
+lemma definition.produit_de_parties {A : set X} {B : set Y}
+{x:X} {y:Y} :
+(x,y) ∈ set.prod A B ↔ x ∈ A ∧ y ∈ B
 :=
 /- dEAduction
 PrettyName
-    Produit cartésien de deux ensembles
+    Produit cartésien de deux parties
 -/
 begin
     sorry
@@ -422,7 +423,6 @@ begin
     --cases H with x Hx,
     --cases Hx with y Hy,
     --rw Hy,
-    sorry
 end
 
 
@@ -467,8 +467,8 @@ begin
     sorry
 end
 
-lemma definition.composition :
-∀ x:X, composition g f x = g (f x)
+lemma definition.composition {x:X}:
+composition g f x = g (f x)
 :=
 begin
     sorry,
@@ -796,7 +796,7 @@ end
 
 lemma exercise.unicite_inverse :
 (bijective f) → exists_unique (λ g : Y → X,
-composition f g = Identite)
+composition g f = Identite)
 :=
 /- dEAduction
 PrettyName

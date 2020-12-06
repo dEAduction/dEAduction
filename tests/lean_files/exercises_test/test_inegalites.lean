@@ -59,6 +59,18 @@ PrettyName
     Logique et nombres réels
 -/
 
+
+lemma exercise.egalite1 (f:ℝ -> ℝ) (a b c:ℝ) (H1: f(a)=a) (H2: f(a)=b)
+(H3: b = f(a)) (H4: a+b = f(a+b)) : b=a :=
+begin
+    sorry
+end
+
+lemma exercise.egalite2 (a b c:ℝ) (H1: a=1) (H2: a=b) (b=c) : c=1 :=
+begin
+    sorry
+end
+
 lemma exercise.inegalite_1 (a:ℝ) (H1: 0 ≠ a) (H2 : 0 ≤ a) : 0 < a
 :=
 begin

@@ -54,7 +54,7 @@ from pathlib import Path
 
 from deaduction.pylib import logger
 
-from deaduction.pylib.coursedata import Exercise, Course
+from deaduction.pylib.coursedata import Exercise, Definition, Theorem, Course
 from deaduction.pylib.mathobj import Goal, MathObject
 from deaduction.pylib.server import ServerInterface
 
@@ -253,8 +253,10 @@ def read_data(filename):
         if isinstance(st, Exercise):
             counter += 1
             print(f"Exercise n°{counter}: {st.pretty_name}")
-        else:
+        elif isinstance(st, Definition):
             print(f"Definition: {st.pretty_name}")
+        elif isinstance(st, Theorem):
+            print(f"Theorem: {st.pretty_name}")
 
         goal = st.initial_proof_state.goals[0]
         print(goal.text)
