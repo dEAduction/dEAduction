@@ -38,7 +38,7 @@ from .context_widgets_classes import (
         TargetWidget)
 
 from .choose_course_exercise_widgets import (
-        LauncherMainWindow)
+        StartExerciseDialog)
 
 from .lean_editor import (
         LeanEditor)

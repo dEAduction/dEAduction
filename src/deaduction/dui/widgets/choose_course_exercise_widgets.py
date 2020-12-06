@@ -324,7 +324,7 @@ class ExerciseChooser(AbstractCoExChooser):
             self.__code_wgt.hide()
 
 
-class LauncherMainWindow(QDialog):
+class StartExerciseDialog(QDialog):
 
     exercise_choosen = Signal(exercise)
 
@@ -397,7 +397,7 @@ class LauncherMainWindow(QDialog):
 if __name__ == '__main__':
     app = QApplication()
 
-    launcher_main_window = LauncherMainWindow()
+    launcher_main_window = CexStarterDialog()
     launcher_main_window.show()
 
     sys.exit(app.exec_())
