@@ -37,6 +37,7 @@ from PySide2.QtGui     import ( QFont,
                                 QPixmap )
 from PySide2.QtWidgets import ( QApplication,
                                 QCheckBox,
+                                QDialog,
                                 QFileDialog,
                                 QGroupBox,
                                 QHBoxLayout,
@@ -301,6 +302,12 @@ class ExerciseChooser(AbstractCoExChooser):
 
         super().set_preview(widget=widget, title=title, description=description)
 
+    def selected_exercise(self) -> Exercise:
+        if self.__exercise:
+            return self.__exercise
+        else:
+            return None
+
     @Slot(StatementsTreeWidgetItem)
     def __call_set_preview(self, item: StatementsTreeWidgetItem):
         if isinstance(item, StatementsTreeWidgetItem):
@@ -316,14 +323,10 @@ class ExerciseChooser(AbstractCoExChooser):
             self.__friendly_wgt.show()
             self.__code_wgt.hide()
 
-    def selected_exercise(self) -> Exercise:
-        if self.__exercise:
-            return self.__exercise
-        else:
-            return None
 
+class LauncherMainWindow(QDialog):
 
-class LauncherMainWindow(QWidget):
+    exercise_choosen = Signal(exercise)
 
     def __init__(self):
 
@@ -332,6 +335,9 @@ class LauncherMainWindow(QWidget):
 
         self.__course_chooser = CourseChooser()
         self.__exercise_chooser = QWidget()
+
+        self.__start_ex_btn = QPushButton(_('Start exercise'))
+        self.__start_ex_btn.connect(self.__start_exercise)
 
         # ───────────────────── Layouts ──────────────────── #
 
@@ -343,7 +349,7 @@ class LauncherMainWindow(QWidget):
         buttons_lyt.addStretch()
         buttons_lyt.addWidget(QPushButton(_('Quit')))
         buttons_lyt.addWidget(QPushButton(_('Load goal')))
-        buttons_lyt.addWidget(QPushButton(_('Start exercise')))
+        buttons_lyt.addWidget(self.__start_ex_btn)
 
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.__coex_tabwidget)
@@ -355,6 +361,14 @@ class LauncherMainWindow(QWidget):
 
         self.__coex_tabwidget.setTabEnabled(1, False)
         self.__course_chooser.browse_btn.clicked.connect(self.__browse_courses)
+
+    def __set_course(self, course: Course, course_filetype: str):
+        self.__coex_tabwidget.removeTab(1)
+        self.__coex_tabwidget.setTabEnabled(1, True)
+        self.__course_chooser.set_preview(course)
+        self.__exercise_chooser = ExerciseChooser(course, course_filetype)
+        self.__coex_tabwidget.addTab(self.__exercise_chooser, _('Exercise'))
+        self.__coex_tabwidget.setCurrentIndex(1)
 
     @Slot()
     def __browse_courses(self):
@@ -374,16 +388,10 @@ class LauncherMainWindow(QWidget):
 
             self.__set_course(course, course_filetype)
 
-    def __set_course(self, course: Course, course_filetype: str):
-        self.__coex_tabwidget.removeTab(1)
-        self.__coex_tabwidget.setTabEnabled(1, True)
-        self.__course_chooser.set_preview(course)
-        self.__exercise_chooser = ExerciseChooser(course, course_filetype)
-        self.__coex_tabwidget.addTab(self.__exercise_chooser, _('Exercise'))
-        self.__coex_tabwidget.setCurrentIndex(1)
-
-    def selected_exercise(self) -> Exercise:
-        return self.__exercise_chooser.selected_exercise()
+    @Slot()
+    def __start_exercise(self):
+        exercise = self.__exercise_chooser.selected_exercise()
+        self.exercise_choosen.emit(exercise)
 
 
 if __name__ == '__main__':
