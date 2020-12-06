@@ -218,7 +218,11 @@ def print_text_version(course):
             counter += 1
             print(_("Exercise") + f" n°{counter}: {st.pretty_name}")
             goal = st.initial_proof_state.goals[0]
-            print(goal.goal_to_text(text_depth=1))
+            if 'open_question' in st.info:
+                open_problem = True
+            else:
+                open_problem = False
+            print(goal.goal_to_text(text_depth=1, open_problem=open_problem))
             # print("     More verbose:")
             # print(goal.goal_to_text(text_depth=2))
         else:
