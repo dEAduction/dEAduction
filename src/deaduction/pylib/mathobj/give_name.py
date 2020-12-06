@@ -140,24 +140,25 @@ def give_name(math_type,
     alphabet_upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     alphabet = alphabet_lower + alphabet_upper
     for hint in hints:
-        if not hint in alphabet:
+        if hint not in alphabet:
             hints.remove(hint)
 
     if upper_case_name:
         hints = [hint[0].upper() for hint in hints]  # so each hint has only
-        # one uppercase letter
+        # One uppercase letter
     else:
         hints = [hint[0].lower() for hint in hints]  # so each hint has only
-        # one lowercase letter
+        # One lowercase letter
 
-    # lower case: add main hint according to math_type's name
-    if not upper_case_name and 'name' in math_type.info.keys():
+    # Lower case: add main hint (in pole position)
+    # according to math_type's name
+    if (not upper_case_name) and 'name' in math_type.info:
         type_name = math_type.info["name"]
         if type_name[0] in alphabet_upper:
             hint = type_name[0].lower()
             insert_maybe(hints, hint, position=0)
 
-    # standard hints
+    # Standard hints
     standard_hints = ['A'] if math_type.node.startswith('SET') \
         else ['X'] if math_type.is_type(is_math_type=True) \
         else ['P'] if math_type.is_prop(is_math_type=True) \
@@ -168,7 +169,7 @@ def give_name(math_type,
         insert_maybe(hints, standard_hint)
 
     ##########################################################
-    # first trial: use hints, maybe with primes if permitted #
+    # First trial: use hints, maybe with primes if permitted #
     ##########################################################
     for potential_name in hints:
         log.debug(f"trying {potential_name}...")
