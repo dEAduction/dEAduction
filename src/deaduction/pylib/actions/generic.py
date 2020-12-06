@@ -36,6 +36,7 @@ from deaduction.pylib.mathobj import (  Goal,
                                         MathObject,
                                         get_new_hyp)
 
+
 def action_definition(goal : Goal, selected_objects : [MathObject], definition : Statement):
     possible_codes = []
     if len(selected_objects) == 0:
@@ -45,30 +46,46 @@ def action_definition(goal : Goal, selected_objects : [MathObject], definition :
         possible_codes.append(f'simp_rw {defi}')
         possible_codes.append(f'simp_rw <- {defi}')
         
-    elif len(selected_objects) == 1:
+    else:
+        names = [item.info['name'] for item in selected_objects]
+        arguments = ' '.join(names)
+
         defi = definition.lean_name
-        h = selected_objects[0].info["name"]
-        
-        possible_codes.append(f'rw {defi} at {h}')
-        possible_codes.append(f'rw <- {defi} at {h}')
-        possible_codes.append(f'simp_rw {defi} at {h}')
-        possible_codes.append(f'simp_rw <- {defi} at {h}')
+
+        possible_codes.append(f'rw {defi} at {arguments}')
+        possible_codes.append(f'rw <- {defi} at {arguments}')
+        possible_codes.append(f'simp_rw {defi} at {arguments}')
+        possible_codes.append(f'simp_rw <- {defi} at {arguments}')
         
     return format_orelse(possible_codes)
 
+
 def action_theorem(goal : Goal, selected_objects : [MathObject], theorem : Statement):
     possible_codes = []
+    h = get_new_hyp(goal)
     th = theorem.lean_name
     if len(selected_objects) == 0:
-        h = get_new_hyp(goal)
         possible_codes.append(f'apply {th}')
         possible_codes.append(f'have {h} := @{th}')
     else:
-        arguments = " ".join([selected_objects[0].info["name"]])
-        h = get_new_hyp(goal)
+        command = f'have {h} := {th}'
+        command_implicit = f'have {h} := @{th}'
+        names = [item.info['name'] for item in selected_objects]
+        arguments = ' '.join(names)
+        # up to 4 implicit arguments
         possible_codes.append(f'apply {th} {arguments}')
         possible_codes.append(f'apply @{th} {arguments}')
-        possible_codes.append(f'have {h} := {th} {arguments}')
-        possible_codes.append(f'have {h} := @{th} {arguments}')
-    
+        more_codes = [command + arguments,
+                      command_implicit + arguments,
+                      command + ' _ ' + arguments,
+                      command_implicit + ' _ ' + arguments,
+                      command + ' _ _ ' + arguments,
+                      command_implicit + ' _ _ ' + arguments,
+                      command + ' _ _ _ ' + arguments,
+                      command_implicit + ' _ _ _ ' + arguments,
+                      command + ' _ _ _ _ ' + arguments,
+                      command_implicit + ' _ _ _ _ ' + arguments
+                      ]
+        possible_codes.extend(more_codes)
+
     return format_orelse(possible_codes)

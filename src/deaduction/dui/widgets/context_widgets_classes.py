@@ -37,6 +37,8 @@ import logging
 from pathlib import Path
 from typing  import Tuple
 
+from PySide2.QtCore    import ( Signal,
+                                Slot)
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
                                 QIcon)
@@ -138,16 +140,24 @@ class MathObjectWidgetItem(QListWidgetItem):
         super().__init__()
 
         self.mathobject = mathobject
-        self.tag          = tag
+        self.tag        = tag
 
-        lean_name = mathobject.format_as_utf8()
-        math_expr = mathobject.math_type.format_as_utf8(is_math_type=True)
+        lean_name = mathobject.to_display()
+        math_expr = mathobject.math_type.to_display(is_math_type=True)
         caption   = f'{lean_name} : {math_expr}'
         self.setText(caption)
         self.setIcon(_TagIcon(tag))
-        tool_tip = explain_how_to_apply(mathobject)
-        if tool_tip:
-            self.setToolTip(tool_tip.capitalize())
+        # set tool_tips (merge several tool_tips if needed)
+        tool_tips = explain_how_to_apply(mathobject)
+        log.debug(f"Setting tooltips {tool_tips}")
+        if len(tool_tips) == 1:
+            tool_tip = _("Double click to") + " " + tool_tips[0]
+            self.setToolTip(tool_tip)
+        elif len(tool_tips) > 1:
+            text = _("Double click to:")
+            for tool_tip in tool_tips:
+                text += "\n" + "• " + tool_tip
+            self.setToolTip(text)
 
     def __eq__(self, other):
         """
@@ -169,6 +179,8 @@ class MathObjectWidgetItem(QListWidgetItem):
 
         :param yes: See paragraph above.
         """
+
+        # TODO: change color for double-click
 
         self.setBackground(QBrush(QColor('limegreen')) if yes else QBrush())
 
@@ -206,6 +218,21 @@ class MathObjectWidget(QListWidget):
             item = MathObjectWidgetItem(mathobject, tag)
             self.addItem(item)
             self.items.append(item)
+
+        self.itemDoubleClicked.connect(self._emit_apply_math_object)
+
+    @Slot(MathObjectWidgetItem)
+    def _emit_apply_math_object(self, item):
+        """
+        Emit the signal self.apply_math_object_triggered with self as an
+        argument. This slot is connected to ActionButton.clicked signal in
+        self.__init__.
+        """
+        item.setSelected(False)
+        self.apply_math_object_triggered.emit(item)
+
+
+MathObjectWidget.apply_math_object_triggered = Signal(MathObjectWidget)
 
 
 ##########################
@@ -259,7 +286,7 @@ class TargetWidget(QWidget):
         # 'is_math_type=True' triggers the bound variables naming
         if target:
             log.debug("updating target")
-            text = target.math_type.format_as_utf8(is_math_type=True)
+            text = target.math_type.to_display(is_math_type=True)
         else:
             text = '…'
         target_label = QLabel(text)

@@ -24,8 +24,13 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .config import config, user_config, EXERCISE, COURSE, SESSION
-from .set_language import _
+from .config        import (config,
+                            user_config,
+                            write_config,
+                            COURSE,
+                            EXERCISE,
+                            SESSION)
+from .set_language  import _
 import deaduction.config.tooltips as tooltips
 
 config['DEFAULT'].update(tooltips.__tooltips)

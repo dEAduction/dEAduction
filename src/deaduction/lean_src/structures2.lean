@@ -48,8 +48,8 @@ end
 open set
 
 /- Decompose the root of an expression (just one step)
-BEWARE, propositions should either start by "PROP" or "QUANT"
-    since this is how dEAduction distinguish between objects and props -/
+General types should be at the end.
+-/
 private meta def analysis_expr_step  (e : expr) : tactic (string × (list expr)) :=
 do  S ←  (tactic.pp e), let e_joli := to_string S,
 match e with
@@ -57,10 +57,38 @@ match e with
 | `(%%p ∧ %%q) := return ("PROP_AND", [p,q])
 | `(%%p ∨ %%q) := return ("PROP_OR", [p,q])
 | `(%%p ↔ %%q) := return ("PROP_IFF", [p,q])
+-- various negations
+| `(%%a ≠ %%b) := return ("PROP_EQUAL_NOT", [a,b])
+| `(¬ %%a = %%b) := return ("PROP_EQUAL_NOT", [a,b])
+| `(%%a ∉ %%A) := return ("PROP_NOT_BELONGS", [a,A])
 | `(¬ %%p) := return ("PROP_NOT", [p])
 | `(%%p → false)  := return ("PROP_NOT", [p])
 | `(false) := return ("PROP_FALSE",[])
-| `(ℕ → %%X) := return ("SEQUENCE", [X])
+------------------------- SET THEORY -------------------------
+| `(%%A ∩ %%B) := return ("SET_INTER", [A,B])
+| `(%%A ∪ %%B) := return ("SET_UNION", [A,B])
+| `(set.compl %%A) := return ("SET_COMPLEMENT", [A])
+| `(set.symmetric_difference %%A %%B) := return ("SET_DIFF_SYM", [A,B])
+| `(%%A \ %%B) := return ("SET_DIFF", [A,B])
+| `(%%A ⊆ %%B) := return ("PROP_INCLUDED", [A,B])
+| `(%%a ∈ %%A) := return ("PROP_BELONGS", [a,A])
+| `(@set.univ %%X) := return ("SET_UNIVERSE", [X])
+| `(-%%A) := return ("MINUS", [A])
+| `(set.Union %%A) := return ("SET_UNION+", [A])
+| `(set.Inter %%A) := return ("SET_INTER+", [A])
+| `(%%f '' %%A) := return ("SET_IMAGE", [f,A])
+| `(%%f  ⁻¹' %%A) := return ("SET_INVERSE", [f,A])
+| `(∅) := return ("SET_EMPTY", [])
+| `(_root_.set %%X) := return ("SET", [X])
+| `(set.prod %%A %%B) := return ("SET_PRODUCT", [A, B])
+| `(prod.mk %%x %%y) := return ("COUPLE", [x, y])
+-- set in extension, e.g. A = {x | P x} or A = {x:X | P x} :
+| `(@set_of %%X %%P) := match P with
+    | (lam name binder type body) :=
+            do (var_, inst_body) ← instanciate P,
+                return ("SET_EXTENSION",[X, var_, inst_body])
+    | _ := return ("SET_EXTENSION", [X, P])
+    end
 | (pi name binder type body) := do
     let is_arr := is_arrow e,
     if is_arr
@@ -68,13 +96,23 @@ match e with
             is_pro ← tactic.is_prop e,
             if is_pro
                 then return ("PROP_IMPLIES", [type,body])
-                else do expr_f ←  infer_type type,
-                if expr_f = `(Type )
-                    then do  match body with
-                    | `(_root_.set %%X) := return ("SET_FAMILY", [type, X])
-                    | _ :=  return ("FUNCTION", [type,body])
+                else match e with
+                -- do expr_f ←  infer_type type,
+                -- if expr_f = `(Type )
+                    | `(%%X → %%Y) :=
+                    match X with
+                        | `(ℕ) := return ("SEQUENCE", [Y])
+                        | _ := do
+                        match Y with
+                            | `(_root_.set %%Z) :=
+                        if Z = X
+                            then return ("FUNCTION", [X, Y])
+                            else return ("SET_FAMILY", [X, Z])
+                            | _ := return ("FUNCTION", [X, Y])
+                            end
+                        end
+                    | _ := return ("ERROR", [])
                     end
-                    else  return ("FUNCTION", [type,body])
         else do
             (var_, inst_body) ← instanciate e,
             return ("QUANT_∀", [type, var_, inst_body])
@@ -93,42 +131,33 @@ match e with
             return ("QUANT_∃!", [type, var_, inst_body])
     |  _                            := return ("ERROR", [])
     end
-------------------------- SET THEORY -------------------------
-| `(%%A ∩ %%B) := return ("SET_INTER", [A,B])
-| `(%%A ∪ %%B) := return ("SET_UNION", [A,B])
-| `(set.compl %%A) := return ("SET_COMPLEMENT", [A])
-| `(set.symmetric_difference %%A %%B) := return ("SET_DIFF_SYM", [A,B])
-| `(%%A \ %%B) := return ("SET_DIFF", [A,B])
-| `(%%A ⊆ %%B) := return ("PROP_INCLUDED", [A,B])
-| `(%%a ∈ %%A) := return ("PROP_BELONGS", [a,A])
-| `(@set.univ %%X) := return ("SET_UNIVERSE", [X])
-| `(-%%A) := return ("MINUS", [A])
-| `(set.Union %%A) := return ("SET_UNION+", [A])
-| `(set.Inter %%A) := return ("SET_INTER+", [A])
-| `(%%f '' %%A) := return ("SET_IMAGE", [f,A])
-| `(%%f  ⁻¹' %%A) := return ("SET_INVERSE", [f,A])
-| `(∅) := return ("SET_EMPTY", [])
-| `(_root_.set %%X) := return ("SET", [X])
 -- polymorphic
 | `(%%a = %%b) := return ("PROP_EQUAL", [a,b]) -- does not provide the type
-| `(%%a ≠ %%b) := return ("PROP_EQUAL_NOT", [a,b])
 ----------- TOPOLOGY --------------
 -- | `(B(%%x, %%r))
+------------ ORDER ----------------
 | `(%%a < %%b) := return ("PROP_<", [a,b])
 | `(%%a ≤ %%b) := return ("PROP_≤", [a,b])
 | `(%%a > %%b) := return ("PROP_>", [a,b])
 | `(%%a ≥ %%b) := return ("PROP_≥", [a,b])
+------------ ARITHMETIC ------------
+| `(↑%%a)      := return ("COE", [a])
+| `(%%a + %%b) := return ("SUM", [a, b])
+| `(%%a - %%b) := return ("DIFFERENCE", [a, b])
+| `(has_mul.mul %%a %%b) := return ("MULT", [a, b]) -- TODO: distinguish types/numbers
+| `(%%a × %%b) := return ("PRODUCT", [a, b]) -- TODO: distinguish types/numbers
+| `(%%a / %%b) := return ("DIV", [a, b])
 ------------------------------ Leaves with data ---------------------------
 -- | `(%%g ∘ %%f) := return ("COMPOSITION", [g,f])  does not work
 | (app function argument)   :=
     if is_numeral e
-        then return ("NUMBER" ++ open_bra ++ e_joli ++ closed_bra, [])
+        then return ("NUMBER" ++ open_bra ++ "value: " ++ e_joli ++ closed_bra, [])
         else return("APPLICATION", [function,argument])
 -- | `(%%I → _root_.set %%X) := return ("SET_FAMILY", [I,X])
-| `(ℝ) := return ("TYPE_NUMBER" ++ open_bra
-    ++ "name: ℝ" ++ closed_bra,[])
-| `(ℕ) := return ("TYPE_NUMBER"++ open_bra
-    ++ "name: ℕ" ++ closed_bra,[])
+-- | `(ℝ) := return ("TYPE_NUMBER" ++ open_bra
+--    ++ "name: ℝ" ++ closed_bra,[])
+--| `(ℕ) := return ("TYPE_NUMBER"++ open_bra
+--     ++ "name: ℕ" ++ closed_bra,[])
 | (const name list_level)   :=
             return ("CONSTANT" ++ open_bra ++ "name: " ++ e_joli ++ closed_bra, [])
 | (sort level.zero) := return ("PROP", [])
@@ -191,7 +220,6 @@ meta def analysis_expr : expr →  tactic string
             let S3 := "OBJECT" ++ open_bra ++ S1b ++ closed_bra
                         ++ separator_equal ++ S2,
             return(S3)
-
 
 /- Recursively analyses an expression using analysis_expr_step,
 and provides a string with parentheses reflecting the mathematical object,

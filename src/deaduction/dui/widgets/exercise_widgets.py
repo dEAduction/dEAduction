@@ -48,9 +48,13 @@ from PySide2.QtWidgets import ( QAction,
                                 QMessageBox,
                                 QToolBar,
                                 QVBoxLayout,
-                                QWidget)
+                                QWidget,
+                                QStatusBar)
 
-from deaduction.config import           _
+from deaduction.config import          (_,
+                                        user_config,
+                                        EXERCISE)
+from deaduction.memory import           JOURNAL
 from deaduction.dui.utils import  (     replace_delete_widget,
                                         ButtonsDialog)
 from deaduction.dui.widgets import (    ActionButton,
@@ -62,6 +66,7 @@ from deaduction.dui.widgets import (    ActionButton,
                                         MathObjectWidgetItem,
                                         TargetWidget)
 from deaduction.pylib.actions import (  Action,
+                                        action_apply,
                                         InputType,
                                         MissingParametersError,
                                         WrongUserInput)
@@ -70,7 +75,8 @@ from deaduction.pylib.coursedata import (   Definition,
                                             Exercise,
                                             Theorem)
 from deaduction.pylib.server.exceptions import FailedRequestError
-from deaduction.pylib.mathobj import (  Goal,
+from deaduction.pylib.mathobj import (  MathObject,
+                                        Goal,
                                         ProofState,
                                         Proof)
 from deaduction.pylib.server import     ServerInterface
@@ -105,10 +111,11 @@ class ExerciseToolbar(QToolBar):
         self.addAction(self.toggle_lean_editor_action)
 
 
+# 
 class ExerciseCentralWidget(QWidget):
     """
     Main / central / biggest widget in the exercise window. Self is to
-    be instanciated as the central widget of d∃∀duction, more
+    be instantiated as the central widget of d∃∀duction, more
     specifically as ExerciseMainWindow.centralWidget(). This widgets
     contains many crucial children widgets:
         - the target widget (self.target_wgt);
@@ -179,6 +186,10 @@ class ExerciseCentralWidget(QWidget):
         self.__context_lyt  = QVBoxLayout()
         context_actions_lyt = QHBoxLayout()
         actions_lyt         = QVBoxLayout()
+        action_btns_lyt     = QVBoxLayout()
+
+        action_btns_lyt.setContentsMargins(0, 0, 0, 0)
+        action_btns_lyt.setSpacing(0)
 
         actions_gb = QGroupBox(_('Actions (transform context and target)'))
         context_gb = QGroupBox(_('Context (objects and properties)'))
@@ -188,6 +199,16 @@ class ExerciseCentralWidget(QWidget):
         self.logic_btns = ActionButtonsWidget(exercise.available_logic)
         self.proof_btns = ActionButtonsWidget(exercise.available_proof)
         self.magic_btns = ActionButtonsWidget(exercise.available_magic)
+
+        # Search for ActionButton corresponding to action_apply
+        # (which will be called by double-click):
+        apply_buttons = [button for button in self.proof_btns.buttons
+                         if button.action.run == action_apply]
+
+        if apply_buttons:
+            self.action_apply_button = apply_buttons[0]
+        else:
+            log.warning("Action_apply_button not found")
 
         statements           = exercise.available_statements
         outline              = exercise.course.outline
@@ -202,10 +223,11 @@ class ExerciseCentralWidget(QWidget):
         # ───────────── Put widgets in layouts ───────────── #
 
         # Actions
-        actions_lyt.addWidget(self.logic_btns)
-        actions_lyt.addWidget(self.proof_btns)
+        action_btns_lyt.addWidget(self.logic_btns)
+        action_btns_lyt.addWidget(self.proof_btns)
         if exercise.available_magic:
-            actions_lyt.addWidget(self.magic_btns)
+            action_btns_lyt.addWidget(self.magic_btns)
+        actions_lyt.addLayout(action_btns_lyt)
         actions_lyt.addWidget(self.statements_tree)
         actions_gb.setLayout(actions_lyt)
 
@@ -234,8 +256,9 @@ class ExerciseCentralWidget(QWidget):
         """
 
         return self.logic_btns.buttons \
-               + self.proof_btns.buttons \
-               + self.magic_btns.buttons
+                + self.proof_btns.buttons \
+                + self.magic_btns.buttons
+
     ###########
     # Methods #
     ###########
@@ -260,7 +283,7 @@ class ExerciseCentralWidget(QWidget):
         for widget in to_freeze:
             widget.setEnabled(not yes)
 
-    def update_goal(self, new_goal: Goal, goal_count: str=''):
+    def update_goal(self, new_goal: Goal, goal_count: str = ''):
         """
         Change goal widgets (self.objects_wgts, self.props_wgt and
         self.target_wgt) to new widgets, corresponding to new_goal.
@@ -319,7 +342,7 @@ class ExerciseMainWindow(QMainWindow):
     ExerciseCentralWidget, a toolbar, and probably more things in the future.
     For the communication with self.servint, self:
         1. stores user selection of math. objects or properties
-           (self.current_context_selection);
+           (self.current_selection);
         2. detects when an action button (in self.ecw.logic_btns or
            in self.ecw.proof_btns) or a statement (in
            self.ecw.statements_tree) is clicked on;
@@ -349,8 +372,8 @@ class ExerciseMainWindow(QMainWindow):
         in deaduction.dui.__main__.py.
     :attribute current_goal Goal: The current goal, which contains the
         tagged target, tagged math. objects and tagged math. properties.
-    :attribute current_context_selection [MathObjectWidgetItem]: The ordered
-        of currently selected math. objects and properties by the user.
+    :attribute current_selection [MathObjectWidgetItem]: The ordered of
+        currently selected math. objects and properties by the user.
     :attribute ecw ExerciseCentralWidget: The instance of
         ExerciseCentralWidget instantiated in self.__init__, see
         ExerciseCentraiWidget.__doc__.
@@ -361,9 +384,10 @@ class ExerciseMainWindow(QMainWindow):
     :attribute toolbar QToolBar: The toolbar.
     """
 
-    window_closed         = Signal()
-    __action_triggered    = Signal(ActionButton)
-    __statement_triggered = Signal(StatementsTreeWidgetItem)
+    window_closed                   = Signal()
+    __action_triggered              = Signal(ActionButton)
+    __apply_math_object_triggered   = Signal(MathObjectWidget)
+    __statement_triggered           = Signal(StatementsTreeWidgetItem)
 
     def __init__(self, exercise: Exercise, servint: ServerInterface):
         """
@@ -378,12 +402,13 @@ class ExerciseMainWindow(QMainWindow):
         """
 
         super().__init__()
+        self.setWindowTitle(f'{exercise.pretty_name} — d∃∀duction')
 
         # ─────────────────── Attributes ─────────────────── #
 
         self.exercise           = exercise
         self.current_goal       = None
-        self.current_context_selection  = []
+        self.current_selection  = []
         self.ecw                = ExerciseCentralWidget(exercise)
         self.lean_editor        = LeanEditor()
         self.servint            = servint
@@ -395,6 +420,10 @@ class ExerciseMainWindow(QMainWindow):
         self.addToolBar(self.toolbar)
         self.toolbar.redo_action.setEnabled(False)  # No history at beginning
         self.toolbar.undo_action.setEnabled(False)  # same
+
+        # Status Bar
+        self.statusBar = QStatusBar()
+        self.setStatusBar(self.statusBar)
 
         # ──────────────── Signals and slots ─────────────── #
 
@@ -428,8 +457,25 @@ class ExerciseMainWindow(QMainWindow):
         super().closeEvent(event)
         self.window_closed.emit()
 
+    def display_status_bar_message(self,
+                                   event=None,
+                                   instruction=None):
+        """
+        Display an error message in the status bar.
+        :param event:       tuple of strings, (nature, content, details)
+        :param instruction: 'erase' or None
+        """
+
+        if instruction == 'erase':
+            self.statusBar.showMessage("")
+        elif event:
+            nature, content, details = event
+            if details:
+                content += _(": ") + details
+            self.statusBar.showMessage(content)
+
     @property
-    def current_context_selection_as_mathobjects(self):
+    def current_selection_as_mathobjects(self):
         """
         Do not delete, used many times! Return the current selection as
         an ordered list of instances of the class MathObject directly.
@@ -437,7 +483,7 @@ class ExerciseMainWindow(QMainWindow):
         :return: See above.
         """
 
-        return [item.mathobject for item in self.current_context_selection]
+        return [item.mathobject for item in self.current_selection]
 
     def pretty_current_selection(self) -> str:
         """
@@ -447,7 +493,7 @@ class ExerciseMainWindow(QMainWindow):
         """
 
         msg = 'Current user selection: '
-        msg += str([item.text() for item in self.current_context_selection])
+        msg += str([item.text() for item in self.current_selection])
 
         return msg
 
@@ -463,45 +509,47 @@ class ExerciseMainWindow(QMainWindow):
         # (MathObject, str), the str being the tag of the prop. or obj.
 
         # get old goal and set tags
+        # TODO: make a separate method get_old_goal(lean_file)
         lean_file = self.servint.lean_file
+
         if lean_file.idx > 0:
             # NB : when idx = 0, old_goal = new_goal : nothing is new
             previous_idx = lean_file.idx - 1
             entry = lean_file.history[previous_idx]
             entry_info = entry.misc_info
+            log.debug(f'Proof step n°{lean_file.idx}')
+
             if 'ProofState' in entry_info.keys():
                 previous_proof_state = entry_info['ProofState']
                 old_goal = previous_proof_state.goals[0]
-                Goal.compare(new_goal, old_goal, goal_is_new=False)  # set tags
+                Goal.compare(new_goal, old_goal)  # set tags
             else:
                 log.warning(f"No proof state found for previous step")
-        # FIXME: target tag
-        new_target_tag = '='
-        try:
-            new_target_tag = new_goal.future_tags[1]
-        except AttributeError:
-            log.debug('no tag for target')
-            pass
 
-        #new_context = new_goal.tag_and_split_propositions_objects()
-
-        # count of goals
+        # Count of goals
         total_goals_counter, \
-            current_goal_number, \
-            current_goals_counter, \
-            goals_counter_evolution \
-            = self.count_goals()
+        current_goal_number, \
+        current_goals_counter, \
+        goals_counter_evolution \
+                = self.count_goals()
         goal_count = f'  {current_goal_number} / {total_goals_counter}'
-        #log.debug(f"Goal  {goal_count}")
+
+        # Display if a goal has been solved and user is not undoing
         if goals_counter_evolution < 0 and current_goals_counter != 0:
-            # todo: do not display when undo
-            log.info(f"Current goal solved!")
-            QMessageBox.information(self, '',
-                                    _('Current goal solved'),
-                                    QMessageBox.Ok)
+            if EXERCISE.last_action != 'undo':
+                log.info(f"Current goal solved!")
+                QMessageBox.information(self,
+                                        '',
+                                        _('Current goal solved'),
+                                        QMessageBox.Ok
+                                        )
+        EXERCISE.last_action = None
 
         # Reset current context selection
-        self.clear_current_selection()
+        # Here we do not use empty_current_selection since Widgets may have
+        # been deleted, and anyway this is cosmetics since  widgets are
+        # destroyed and re-created by "self.ecw.update_goal" just below
+        self.current_selection = []
 
         # Update UI and attributes
         self.ecw.update_goal(new_goal, goal_count)
@@ -510,6 +558,11 @@ class ExerciseMainWindow(QMainWindow):
         # Reconnect Context area signals and slots
         self.ecw.objects_wgt.itemClicked.connect(self.process_context_click)
         self.ecw.props_wgt.itemClicked.connect(self.process_context_click)
+        if hasattr(self.ecw, "action_apply_button"):
+            self.ecw.objects_wgt.apply_math_object_triggered.connect(
+                self.__apply_math_object_triggered)
+            self.ecw.props_wgt.apply_math_object_triggered.connect(
+                self.__apply_math_object_triggered)
 
     ##################################
     # Async tasks and server methods #
@@ -546,8 +599,12 @@ class ExerciseMainWindow(QMainWindow):
                          self.window_closed,
                          self.toolbar.undo_action.triggered,
                          self.__action_triggered,
-                         self.__statement_triggered]) as emissions:
+                         self.__statement_triggered,
+                         self.__apply_math_object_triggered]) as emissions:
             async for emission in emissions.channel:
+                # erase status bar
+                self.display_status_bar_message(instruction='erase')
+
                 if emission.is_from(self.lean_editor.editor_send_lean):
                     await self.process_async_signal(self.__server_send_editor_lean)
 
@@ -565,12 +622,15 @@ class ExerciseMainWindow(QMainWindow):
 
                 elif emission.is_from(self.__action_triggered):
                     # TODO: comment, what is emission.args[0]?
-                    await self.process_async_signal(partial(self.__server_call_action,
-                                                            emission.args[0]))
+                    await self.process_async_signal(partial(
+                            self.__server_call_action, emission.args[0]))
 
                 elif emission.is_from(self.__statement_triggered):
-                    await self.process_async_signal(partial(self.__server_call_statement,
-                                                            emission.args[0]))
+                    await self.process_async_signal(partial(
+                            self.__server_call_statement, emission.args[0]))
+
+                elif emission.is_from(self.__apply_math_object_triggered):
+                    await self.__server_call_apply(emission.args[0])
 
     # ──────────────── Template function ─────────────── #
 
@@ -593,20 +653,29 @@ class ExerciseMainWindow(QMainWindow):
         except FailedRequestError as e:
             # Display an error message
             # TODO: make it a separate class
-            message_box = QMessageBox(self)
-            message_box.setIcon(QMessageBox.Critical)
-            message_box.setWindowTitle(_('Action not understood'))
-            message_box.setText(_('Action not understood'))
-
-            detailed = ""
+            # # message_box = QMessageBox(self)
+            # # message_box.setIcon(QMessageBox.Critical)
+            # # message_box.setWindowTitle(_('Action not understood'))
+            # # message_box.setText(_('Action not understood'))
+            #
+            # detailed = ""
+            # for error in e.errors:
+            #     rel_line_number = error.pos_line \
+            #                       - self.exercise.lean_begin_line_number
+            #     detailed += f'* at {rel_line_number}: {error.text}\n'
+            #
+            # message_box.setDetailedText(detailed)
+            # message_box.setStandardButtons(QMessageBox.Ok)
+            # message_box.exec_()
+            error_message = _('Error')
+            details = ""
             for error in e.errors:
-                rel_line_number = error.pos_line \
-                                  - self.exercise.lean_begin_line_number
-                detailed += f'* at {rel_line_number}: {error.text}\n'
-
-            message_box.setDetailedText(detailed)
-            message_box.setStandardButtons(QMessageBox.Ok)
-            message_box.exec_()
+                details += "\n" + error.text
+                event = ('lean_error', error_message, details)
+            JOURNAL.add_event(event, self)
+            # self.display_status_bar_message(content=error_message,
+            #                                nature='error',
+            #                                details=details)
 
             # Abort and go back to last goal
             await self.servint.history_undo()
@@ -623,22 +692,41 @@ class ExerciseMainWindow(QMainWindow):
     # To be called as process_function in the above
 
     async def __server_call_action(self, action_btn: ActionButton):
-        # TODO: docstring me
+        """
+        Call the action corresponding to the action_btn
 
-        action = action_btn.action
+        The action is linked to the action_btn in the "action" field. Then, we
+        can try to call the action in a loop. As we doesn't now if the action
+        needs some parameters or not, it may throw the
+        "MissingParametersErrorException". This exception indicates that we
+        need to ask some info to the user. So, we ask what the user wants, then
+        we redo one loop iteration, feeding the action with the new input.
+
+        Another exception that can occur is the WrongUserInput exception. At
+        this point, the user entered some wrong data, we display an error box
+        and stop.
+
+        Note the usage of the try .. else statement.
+
+        :param action_btn: the button corresponding to the action we want to
+        call
+        """
+
+        action     = action_btn.action
         user_input = []
         log.debug(f'Calling action {action.symbol}')
         # Send action and catch exception when user needs to:
         #   - choose A or B when having to prove (A OR B) ;
         #   - enter an element when clicking on 'exists' button.
+
         while True:
             try:
-                if user_input == []:
+                if not user_input:
                     code = action.run(self.current_goal,
-                            self.current_context_selection_as_mathobjects)
+                            self.current_selection_as_mathobjects)
                 else:
-                    code = action_btn.action.run(self.current_goal,
-                            self.current_context_selection_as_mathobjects,
+                    code = action.run(self.current_goal,
+                            self.current_selection_as_mathobjects,
                             user_input)
             except MissingParametersError as e:
                 if e.input_type == InputType.Text:
@@ -654,37 +742,56 @@ class ExerciseMainWindow(QMainWindow):
                 else:
                     break
             except WrongUserInput as e:
-                self.clear_current_selection()
-                await self.display_WrongUserInput(e)
+                self.empty_current_selection()
+                self.display_WrongUserInput(e)
                 break
             else:
                 log.info("Code sent to lean: " + code)
                 await self.servint.code_insert(action.symbol, code)
                 break
 
-    async def __server_call_statement(self, item: StatementsTreeWidgetItem):
-        # TODO: docstring me
+    async def __server_call_apply(self, item: MathObjectWidgetItem):
+        """
+        This function is called when user double-click on an item in the
+        context area The item is added to the end of the current_selection, and
+        the action corresponding to the "apply" button is called
+        """
 
-        # Do nothing is user clicks on a node
+        item.mark_user_selected(True)
+
+        if item in self.current_selection:
+            self.current_selection.remove(item)
+        self.current_selection.append(item)
+
+        await self.process_async_signal(partial(self.__server_call_action,
+                                                self.ecw.action_apply_button))
+
+    async def __server_call_statement(self, item: StatementsTreeWidgetItem):
+        """
+        This function is called when the user clicks on a Statement he wants to
+        apply. The statement can be either a Definition or a Theorem. the code
+        is then inserted to the server.
+        """
+
+        # Do nothing if user clicks on a node
         if isinstance(item, StatementsTreeWidgetItem):
-            try: 
+            try:
                 item.setSelected(False)
                 statement = item.statement
 
                 if isinstance(statement, Definition):
                     code = generic.action_definition(self.current_goal,
-                            self.current_context_selection_as_mathobjects,
-                                                     statement)
+                            self.current_selection_as_mathobjects, statement)
                 elif isinstance(statement, Theorem):
                     code = generic.action_theorem(self.current_goal,
-                            self.current_context_selection_as_mathobjects,
-                                                  statement)
+                            self.current_selection_as_mathobjects, statement)
 
+                log.debug(f'Calling statement {item.statement.pretty_name}')
                 log.debug("Code sent to Lean: " + code)
                 await self.servint.code_insert(statement.pretty_name, code)
             except WrongUserInput as e:
-                self.clear_current_selection()
-                await self.display_WrongUserInput(e)
+                self.empty_current_selection()
+                self.display_WrongUserInput(e)
 
     async def __server_send_editor_lean(self):
         """
@@ -695,30 +802,37 @@ class ExerciseMainWindow(QMainWindow):
         await self.servint.code_set(_('Code from editor'),
                                     self.lean_editor.code_get())
 
-    async def display_WrongUserInput(self, e):
+    def display_WrongUserInput(self, e):
+        error_message = _("Error")
         details = e.error
-        msg_box = QMessageBox(self)
-        msg_box.setIcon(QMessageBox.Critical)
-        msg_box.setWindowTitle(_('Action not understood'))
-        msg_box.setText(_("don't know what to do with your input!"))
-        if details:
-            msg_box.setDetailedText(details)
-        msg_box.setStandardButtons(QMessageBox.Ok)
-        msg_box.exec_()
+        # msg_box = QMessageBox(self)
+        # msg_box.setIcon(QMessageBox.Critical)
+        # msg_box.setWindowTitle(_('Action not understood'))
+        # msg_box.setText(_("don't know what to do with your input!"))
+        # display_errors = user_config['display_detailed_errors_on_WUI']
+        # if details and display_errors:
+        #     msg_box.setDetailedText(details)
+        # msg_box.setStandardButtons(QMessageBox.Ok)
+        # msg_box.exec_()
+        event = ('error', error_message, details)
+        JOURNAL.add_event(event, self)
+        # self.display_status_bar_message(message=error_message,
+        #                                 nature='error',
+        #                                 details=details)
 
     #########
     # Slots #
     #########
 
     @Slot()
-    def clear_current_selection(self):
+    def empty_current_selection(self):
         """
         Clear current (user) selection of math. objects and properties.
         """
 
-        for item in self.current_context_selection:
+        for item in self.current_selection:
             item.mark_user_selected(False)
-        self.current_context_selection = []
+        self.current_selection = []
 
     @Slot()
     def freeze(self, yes=True):
@@ -738,13 +852,24 @@ class ExerciseMainWindow(QMainWindow):
     @Slot()
     def fireworks(self):
         """
-        As of now, display a dialog when the target is successfully
-        solved.
+        As of now,
+        - display a dialog when the target is successfully solved,
+        - replace the target by a message "Proof complete"
         """
-
         # TODO: make it a separate class
-        QMessageBox.information(self, _('Target solved'), _('Target solved!'),
-                                QMessageBox.Ok)
+        QMessageBox.information(self,
+                                _('Target solved'),
+                                _('The proof is complete!'),
+                                QMessageBox.Ok
+                                )
+        # make fake target to display message
+        no_more_goal_text = "No more goal"
+        target = self.current_goal.target
+        target.math_type = MathObject(  node=no_more_goal_text,
+                                        info={},
+                                        children=[],
+                                      )
+        self.ecw.update_goal(self.current_goal, goal_count='')
 
     @Slot(MathObjectWidgetItem)
     def process_context_click(self, item: MathObjectWidgetItem):
@@ -760,12 +885,12 @@ class ExerciseMainWindow(QMainWindow):
         # selected
         item.setSelected(False)
 
-        if item not in self.current_context_selection:
+        if item not in self.current_selection:
             item.mark_user_selected(True)
-            self.current_context_selection.append(item)
+            self.current_selection.append(item)
         else:
             item.mark_user_selected(False)
-            self.current_context_selection.remove(item)
+            self.current_selection.remove(item)
 
     @Slot()
     def __update_lean_editor(self):

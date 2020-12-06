@@ -26,19 +26,45 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from deaduction.pylib.actions.actiondef      import action
-from deaduction.config                       import _
-from dataclasses import dataclass
-
-import deaduction.pylib.logger as logger
 import logging
 
+import deaduction.pylib.logger as logger
 
-##
-# Squelette actions type de preuves
-##
+from deaduction.config import user_config, _
+from deaduction.pylib.actions.actiondef import action
+from deaduction.config import _
+from deaduction.pylib.actions import (format_orelse,
+                                      WrongUserInput)
+from deaduction.pylib.mathobj import MathObject
+
+# turn logic_button_texts into a dictionary
+lbt = user_config.get('magic_button_texts').split(', ')
+magic_list = ['action_compute']
+magic_button_texts = {}
+for key, value in zip(magic_list, lbt):
+    magic_button_texts[key] = value
+
 
 @action(_("Computation"), _('Computation'))
 def action_compute(goal, selected_objects):
-     return "linarith"
+    target = goal.target
+    if not (target.is_equality()
+            or target.is_inequality()
+            or target.is_false()):
+        error = _("target is not an equality, an inequality, "
+                  "nor a contradiction")
+        raise WrongUserInput(error)
+    # try_before = "try {apply div_pos}, " \
+    #            + "try { all_goals {norm_num at *}}" \
+    #             + ", "
+    #simplify_1 = "simp only " \
+    #             + "[*, ne.symm, ne.def, not_false_iff, lt_of_le_of_ne]"
+    #possible_code = [try_before + "linarith",
+    #                 try_before + simplify_1]
+    # "finish" "norm_num *"
+    # if user_config.getboolean('use_library_search_for_computations'):
+    #     possible_code.append('library_search')
 
+    possible_code = ["try {norm_num at *}, compute_n 10"]
+
+    return format_orelse(possible_code)

@@ -68,6 +68,8 @@ log = logging.getLogger(__name__)
 # statement and proof
 # nor "lemma exercise." in a docstring comment
 
+# statements name must be followed by a space or end_of_line
+
 # metadata = starts with /- dEAduction,
 #           must end with a line starting with "-/".
 # metadata are optional. The proof of a definition can be before or after
@@ -147,14 +149,18 @@ def extract_core_statement(statement: str) -> Tuple[str, str]:
     e.g.
     - variables:    {X : Type} (A B C : set X)'
     - core:         'A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C)'
+
+    WARNING: core must be left as is, so that it might be negated by
+    DEAduction if needed
+
     """
     statement_tree = statement_grammar.parse(statement)
     variables, core_statement = visitor.visit(statement_tree)
-    variables = variables.replace('\n', ' ')
-    variables = variables.strip()
-    core_statement = core_statement.replace('\n', ' ')
-    core_statement = core_statement.strip()
-    log.debug(f"Statement: {variables}, {core_statement}")
+    # variables = variables.replace('\n', ' ')
+    # variables = variables.strip()
+    # core_statement = core_statement.replace('\n', ' ')
+    # core_statement = core_statement.strip()
+    # log.debug(f"Statement: {variables}, {core_statement}")
     return variables, core_statement
 
 
@@ -287,6 +293,8 @@ class LeanCourseVisitor(NodeVisitor):
         - create an event in the  course_history list with
             name    = 'exercise', 'definition' or 'theorem'
             content = metadata dictionary
+        - this event is placed BEFORE the children's events so that the
+        line number is OK
         """
         course_history, data = get_info(visited_children)
         data.setdefault("metadata", {})

@@ -24,9 +24,12 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import logging
+
 from deaduction.pylib.mathobj import ProofState
+from deaduction.config                      import _
 
-
+log = logging.getLogger(__name__)
 
 ########################
 # test course creation #
@@ -56,16 +59,22 @@ def test_math_objects_creation(proof_states, lean_data_list):
 ###########################
 def test_display_contexts(contexts, context_displays):
     """
-    test MathObject.format_as_utf8()
+    test MathObject.to_display()
     which creates a displayable version of MathObjects
     this tests all the content of display_math.py
     """
     for (context, displays) in zip(contexts, context_displays):
         for (math_object, display) in zip(context, displays):
             (display_object, display_type) = display
-            assert display_object == math_object.format_as_utf8()
+            new_display_object = math_object.to_display()
+            if new_display_object != display_object:
+                print_both(display_object, new_display_object)
+            assert display_object == new_display_object
             math_type = math_object.math_type
-            assert display_type == math_type.format_as_utf8(is_math_type=True)
+            new_display_type = math_type.to_display(is_math_type=True)
+            if new_display_type != display_type:
+                print_both(display_type, new_display_type)
+            assert display_type == math_type.to_display(is_math_type=True)
 
 
 def test_display_targets(targets, target_displays):
@@ -73,7 +82,16 @@ def test_display_targets(targets, target_displays):
     like test_display_contexts, but with another set of data (targets)
     """
     for (target, display) in zip(targets, target_displays):
-        assert display == target.math_type.format_as_utf8(is_math_type=True)
+        new_display = target.math_type.to_display(is_math_type=True)
+        if new_display != display:
+            print_both(display, new_display)
+        assert display == new_display
+
+
+def print_both(string1, string2):
+    print(string1)
+    print(string2)
+    print('--------------')
 
 
 ########################

@@ -1,4 +1,3 @@
 builtin_path
 path lean_src/
 path share/mathlib/src
-path tests/lean_files

@@ -42,7 +42,8 @@ from deaduction.pylib.actions import (InputType,
 from deaduction.pylib.mathobj import (MathObject,
                                       Goal,
                                       get_new_hyp,
-                                      give_global_name)
+                                      give_global_name,
+                                      NO_MATH_TYPE)
 
 log = logging.getLogger(__name__)
 
@@ -174,17 +175,16 @@ and add ∀ a ∈ A, P(a, f(a)) to the properties
     if len(l) == 1:
         h = l[0].info["name"]
         # finding expected math_type for the new function
-        universal_property = l[0].math_type
-        if universal_property.node == 'QUANT_∀':
-            source_type = universal_property.children[0]
-            exist_property = universal_property.children[2]
-            if exist_property.node == 'QUANT_∃':
+        universal_property = l[0]
+        if universal_property.is_for_all():
+            source_type = universal_property.math_type.children[0]
+            exist_property = universal_property.math_type.children[2]
+            if exist_property.is_exists(is_math_type=True):
                 target_type = exist_property.children[0]
-                node = "FUNCTION"
-                children = [source_type, target_type]
-                info = {}
-                type_type = "not provided"
-                math_type = MathObject(node, info, type_type, children)
+                math_type = MathObject(node="FUNCTION",
+                                       info={},
+                                       children=[source_type, target_type],
+                                       math_type=NO_MATH_TYPE)
 
                 hf = get_new_hyp(goal)
                 f = give_global_name(math_type, goal)
@@ -200,16 +200,13 @@ and add ∀ a ∈ A, P(a, f(a)) to the properties
 def action_new_object(goal: Goal, l: [MathObject],
                       user_input: [str] = []) -> str:
     """
-    Translate into string of lean code corresponding to the action
-
-    Introduce new object\nIntroduce new subgoal:
-transform the current target into the input target
-and add this to the properties of the future goal.
+    Introduce new object / sub-goal / function
 
     :param l: list of MathObject arguments preselected by the user
     :return: string of lean code
     """
     possible_codes = []
+    # Choose between object/sub-goal/function
     if len(user_input) == 0:
         raise MissingParametersError(InputType.Choice,
                              [(_("Object"), _("Introduce a new object")),
@@ -219,18 +216,21 @@ and add this to the properties of the future goal.
                                                 "function"))],
                              title="New object",
                              output=_("Choose what to introduce:"))
-    if user_input[0] == 0:  # choice = new object
+    # Choice = new object
+    if user_input[0] == 0:
         if len(user_input) == 1:  # ask for new object
             raise MissingParametersError(InputType.Text,
                                          title="+",
                                          output=_("Introduce new object:"))
         else:  # send code
-            x = utils.get_new_var()
+            x = utils.get_new_var()  # fixme: ask the user for a name
             h = get_new_hyp(goal)
             possible_codes.append(
                 f"let {x} := {user_input[1]}, "
                 f"have {h} : {x} = {user_input[1]}, refl, ")
-    if user_input[0] == 1:  # new sub-goal
+
+    # Choice = new sub-goal
+    elif user_input[0] == 1:
         if len(user_input) == 1:
             raise MissingParametersError(InputType.Text,
                                          title="+",
@@ -238,7 +238,9 @@ and add this to the properties of the future goal.
         else:
             h = get_new_hyp(goal)
             possible_codes.append(f"have {h} : ({user_input[1]}),")
-    if user_input[0] == 2:
+
+    # Choice = new function
+    elif user_input[0] == 2:
         return introduce_fun(goal, l)
     return format_orelse(possible_codes)
 
@@ -310,10 +312,10 @@ def apply_substitute(goal: Goal, l: [MathObject], user_input: [int]):
         heq = l[-1]
     left_term = heq.math_type.children[0]
     right_term = heq.math_type.children[1]
-    choices = [(left_term.format_as_utf8(),
-                f'Replace by {right_term.format_as_utf8()}'),
-               (right_term.format_as_utf8(),
-                f'Replace by {left_term.format_as_utf8()}')]
+    choices = [(left_term.to_display(),
+                f'Replace by {right_term.to_display()}'),
+               (right_term.to_display(),
+                f'Replace by {left_term.to_display()}')]
             
     if len(l) == 1:
         h = l[0].info["name"]
@@ -423,23 +425,28 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
     :param l:   list of MathObject arguments preselected by the user
     :return:    string of lean code
     """
+
+    # fixme: rewrite to provide meaningful error messages
     possible_codes = []
+    error = ""
 
-    if len(l) == 0:
-        raise WrongUserInput  # n'apparaîtra plus quand ce sera un double-clic
+    if not l:
+        raise WrongUserInput(error="no property selected")
 
+    # Now len(l) > 0
+    prop = l[-1]  # property to be applied
     # if user wants to apply a function
-    if l[-1].is_function():
+    if prop.is_function():
         return apply_function(goal, l)
 
     # determines which kind of property the user wants to apply
-    math_type = l[-1].math_type
-    quantifier = l[-1].math_type.node
-    if math_type.can_be_used_for_substitution():
+    if prop.can_be_used_for_substitution():
         if len(l) == 1 or (len(l) > 1 and l[0].math_type.is_prop()):
-            possible_codes.extend(
-                apply_substitute(goal, l, user_input))
+            possible_codes.extend(apply_substitute(goal, l, user_input))
 
+    # todo: allow apply_implicate_hyp even when property is not explicitly
+    #  an implication
+    quantifier = prop.math_type.node
     if quantifier == "PROP_IMPLIES" or quantifier == "QUANT_∀":
         if len(l) == 1:
             possible_codes.extend(apply_implicate(goal, l))
@@ -447,14 +454,17 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
             possible_codes.extend(apply_implicate_to_hyp(goal, l))
             
     if len(l) == 1 and user_can_apply(l[0]):
-        if quantifier == "QUANT_∃":
+        if prop.is_exists():
             possible_codes.append(apply_exists(goal, l))
-        if quantifier == "PROP_AND":
+        if prop.is_and():
             possible_codes.append(apply_and(goal, l))
-        if quantifier == "PROP_OR":
+        if prop.is_or():
             possible_codes.append(apply_or(goal, l, user_input))
-    return format_orelse(possible_codes)
-
+    if possible_codes:
+        return format_orelse(possible_codes)
+    else:
+        error = "I cannot apply this"  # fixme!!
+        raise WrongUserInput(error)
 
 ################################
 # Captions for 'APPLY' buttons #
@@ -463,7 +473,8 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
 applicable_nodes = {'FUNCTION',  # to apply a function
                     'PROP_EQUAL', 'PROP_IFF', 'QUANT_∀',  # for substitution
                     'PROP_IMPLIES',
-                    'QUANT_∃', 'PROP_AND', 'PROP_OR'} # for obvious action
+                    # for obvious action:
+                    'QUANT_∃', 'QUANT_∃!', 'PROP_AND', 'PROP_OR'}
 
 
 def user_can_apply(math_object) -> bool:
@@ -484,23 +495,29 @@ def explain_how_to_apply(math_object: MathObject, dynamic=False, long=False) \
     :param long: boolean
     TODO: implement dynamic and long tooltips
     """
-    node = math_object.math_type.node
-    if node == 'FUNCTION':
-        caption = _("apply function to a selected object or "
-                    "equality")
+    captions = []  # default value
 
-    elif node == 'PROP_EQUAL' or node == 'PROP_IFF':
-        caption = _("substitute in a selected property")
+    # the following 4 cases are mutually exclusive
+    if math_object.is_function():
+        captions.append(user_config.get('tooltip_apply_function'))
 
-    elif node == 'QUANT_∀':
-        caption = _("apply to a selected object")
+    elif math_object.is_for_all():
+        captions.append(user_config.get('tooltip_apply_for_all'))
 
-    elif node == 'PROP_IMPLIES':
-        caption = _("apply to a selected property, or to modify the goal")
+    elif math_object.is_exists():
+        captions.append(user_config.get('tooltip_apply_exists'))
 
-    else:
-        caption = ''
-    return caption
+    elif math_object.is_and():
+        captions.append(user_config.get('tooltip_apply_and'))
+
+    # additional line
+    if math_object.can_be_used_for_implication():
+        captions.append(user_config.get('tooltip_apply_implication'))
+
+    elif math_object.can_be_used_for_substitution():
+        captions.append(user_config.get('tooltip_apply_substitute'))
+
+    return captions
     
 
 @action(user_config.get('tooltip_assumption'),
@@ -512,6 +529,9 @@ def action_assumption(goal: Goal, l: [MathObject]) -> str:
     :param l: list of MathObject arguments preselected by the user
     :return: string of lean code
     """
+    # NB: this button should either solve the goal or fail.
+    # For this we wrap the non "solve-or-fail" tactics
+    # into the combinator "solve1"
 
     possible_codes = []
     if len(l) == 0:
@@ -525,10 +545,15 @@ def action_assumption(goal: Goal, l: [MathObject]) -> str:
         possible_codes.append('apply eq.symm, assumption')
         possible_codes.append('apply iff.symm, assumption')
     if len(l) == 1:
-        possible_codes.append(f'apply {l[0].info["name"]}')
+        possible_codes.append(solve1_wrap(f'apply {l[0].info["name"]}'))
+
+    possible_codes.append(solve1_wrap('norm_num at *'))
     return format_orelse(possible_codes)
 
 
 # @action(_("Proof by induction"))
 # def action_induction(goal : Goal, l : [MathObject]):
 #    raise WrongUserInput
+
+def solve1_wrap(string: str) -> str:
+    return "solve1 {" + string + "}"

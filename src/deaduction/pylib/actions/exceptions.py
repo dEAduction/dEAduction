@@ -34,6 +34,7 @@ This file is part of dEAduction.
 
 from enum import IntEnum
 
+
 class InputType(IntEnum):
     """
     Class clarifying second argument of output of functions action_*
@@ -41,12 +42,14 @@ class InputType(IntEnum):
     Text = 0
     Choice = 1
 
+
 class MissingParametersError(Exception):
     def __init__(self, input_type, choices=None, title="", output=""):
         self.input_type         = input_type
         self.choices            = choices
         self.title              = title
         self.output             = output
+
 
 class WrongUserInput(Exception):
     def __init__(self, error=""):

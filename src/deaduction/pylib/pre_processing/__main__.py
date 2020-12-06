@@ -1,24 +1,22 @@
 """
-####################################################################
-# __main__.py :  Compute and save objects for future unitary tests #
-####################################################################
+##################################################################
+# __main__.py : pre-process all statements of a lean course file #
+##################################################################
 
-This files creates an instance of the class Course, from the Lean file
-lean_files/exercises_theorie_des_ensembles.lean
-and save it in the file lean_files/exercises_theorie_des_ensembles.pkl.
+Allow the user to choose a lean file, and pre-process all statements,
+sending them to Lean one by one to get their initial proof_state.
+The resulting course is stored in a '.pkl' file in the same directory
+If the corresponding '.pkl' file already exists, then
+- if the file_content was different, just erase the '.pkl' file
+- if not, read the stored course and keep the initial proof_states
+that are already stored there.
 
-The statements in course.statements have attributes
-statement.initial_proof_states
-statement.initial_proof_states.lean_data
-= (hypo_analysis, target_analysis)
-goal = statement.initial_proof_state.goals[0]
-goal.context
-goal.display_context
-goal.target
-goal.display_target
+Every 5 processed statements, Lean server is stopped and started again.
+This prevents the Lean serve from crashing because of messages of length
+> 65535. The resulting course with partial pre-processing is also stored,
+to take into account the possibility of a crash.
 
-which are loaded and used in test_mathobject.py
-
+TODO: change the data to avoid saving the whole contents every 5 statements.
 
 Author(s)      : - Frédéric Le Roux <frederic.le_roux@imj-prg.fr>
 
@@ -49,13 +47,11 @@ import qtrio
 import trio
 import gettext
 import pickle
-import os
 from pathlib import Path
 
+from deaduction.dui.launcher import select_course
+from deaduction.pylib.coursedata import Exercise
 from deaduction.pylib import logger
-
-from deaduction.pylib.coursedata import Exercise, Course
-from deaduction.pylib.mathobj import Goal, MathObject
 from deaduction.pylib.server import ServerInterface
 
 log = logging.getLogger(__name__)
@@ -65,19 +61,15 @@ async def main():
     """
     See file doc
     """
-    log.info('Starting, loading lean file, computing objects, and storing')
     # Choose course and parse it
-    dir = os.path.join(os.path.dirname(__file__))
-    course_path = dir / Path('exercises_for_tests.lean')
-    course = Course.from_file(course_path)
-
-    # check for pkl file and, if it exists, process all statements
+    course = select_course()
+    # check for pkl file and, if it exists, find all unprocessed statements
     course, unprocessed_statements, course_pkl_path = check_statements(course)
 
     if not unprocessed_statements:
-        log.info("pkl file is up_to_date with all initial_proof_states")
+        log.info("pkl fle is up_to_date with all initial_proof_states")
         # Checking
-        course = read_data(course_pkl_path)
+        read_data(course_pkl_path)
         return
     else:
         log.info(f"Still {len(unprocessed_statements)} statements to process")
@@ -109,7 +101,7 @@ async def main():
             save_objects([course], course_pkl_path)
 
         # Checking
-        course = read_data(course_pkl_path)
+        read_data(course_pkl_path)
 
 
 def check_statements(course):
@@ -138,27 +130,18 @@ def check_statements(course):
         [stored_course] = pickled_items(course_pkl_path)
         stored_hash = hash(stored_course.file_content)
         log.debug(f"Found '.pkl' file, hash = {stored_hash} vs {course_hash}")
-        if stored_hash == course_hash:    # FIXME !!!
+        if stored_hash == course_hash:
             # log.info("pkl content file is up to date")
             # we want the statements already processed to be conserved:
             course = stored_course
             for statement in course.statements:
                 name = statement.pretty_name
-                info = False
                 if hasattr(statement, 'initial_proof_state') \
                         and statement.initial_proof_state is not None:
-                    proof_state = statement.initial_proof_state
-                    goal = statement.initial_proof_state.goals[0]
-                    if hasattr(goal, 'text') \
-                            and hasattr(goal, 'display_context') \
-                            and hasattr(goal, 'display_target') \
-                            and hasattr(proof_state, 'lean_data') \
-                            and proof_state.lean_data is not None:
-                        log.info(f"found infos for {name}")
-                        info = True
-                if not info:
+                    log.info(f"found initial_proof_state for {name}")
+                else:
                     unprocessed_statements.append(statement)
-                    log.info(f"No info for {name}")
+                    log.info(f"NO initial_proof_state for {name}")
         else:
             log.info(f"pkl content file is NOT up to date: "
                      f"course hash ={course_hash}")
@@ -190,9 +173,6 @@ async def get_all_proof_states(servint,
                  f"°{counter}")
         statement.initial_proof_state = servint.proof_state
 
-        # compute objects
-        compute_objects(statement.initial_proof_state.goals[0])
-
         # stop and restart server every 5 exercises to avoid
         # too long messages that entail crashing
         if counter % 5 == 0:
@@ -200,32 +180,6 @@ async def get_all_proof_states(servint,
             log.info("Saving temporary file...")
             save_objects([course], course_pkl_path)
             await servint.start()
-
-
-def compute_objects(goal: Goal):
-    """
-    Compute some display associated from goal and store it as attibutes
-    goal.display_context
-    goal.display_target
-    goal.text
-    """
-    display_context = []
-    for mathobject in goal.context:
-        display_object = mathobject.to_display(format_='utf8')
-        display_type = mathobject.math_type.to_display( format_='utf8',
-                                                        is_math_type=True)
-        display_context.append((display_object, display_type))
-        log.debug(f"{display_object} : {display_type}")
-    target = goal.target
-    display_target = target.math_type.to_display( format_='utf8',
-                                                  is_math_type=True)
-    log.debug(f"Target: {display_target}")
-
-    goal.display_context    = display_context
-    goal.display_target     = display_target
-    goal.text               = goal.goal_to_text()
-    log.debug(goal.text)
-    return
 
 
 def save_objects(objects: list, filename):
@@ -247,21 +201,50 @@ def pickled_items(filename):
 def read_data(filename):
     print("Reading file:")
     [stored_course] = pickled_items(filename)
+
+    print("Text version ? (t)")
+    answer = input()
+    if answer == 't':
+        print_text_version(stored_course)
+    else:
+        print_goal(stored_course)
+
+
+def print_text_version(course):
     counter = 0
-    for st in stored_course.statements:
+    for st in course.statements:
         print("-------------------------")
         if isinstance(st, Exercise):
             counter += 1
-            print(f"Exercise n°{counter}: {st.pretty_name}")
+            print(_("Exercise") + f" n°{counter}: {st.pretty_name}")
+            goal = st.initial_proof_state.goals[0]
+            print(goal.goal_to_text(text_depth=1))
+            # print("     More verbose:")
+            # print(goal.goal_to_text(text_depth=2))
         else:
-            print(f"Definition: {st.pretty_name}")
+            print(_("Definition:") + f" {st.pretty_name}")
+            goal = st.initial_proof_state.goals[0]
+            print(goal.goal_to_text(to_prove=False, text_depth=1))
+
+
+def print_goal(course):
+    counter = 0
+    for st in course.statements:
+        print("-------------------------")
+        if isinstance(st, Exercise):
+            counter += 1
+            print(_("Exercise") + f" n°{counter}: {st.pretty_name}")
+        else:
+            print(_("Definition:") + f" {st.pretty_name}")
 
         goal = st.initial_proof_state.goals[0]
-        print(goal.text)
-    return stored_course
+        print(goal.print_goal())
+
 
 if __name__ == '__main__':
-    logger.configure(debug=True)
+    logger.configure(debug=True,
+                     domains="pre_processing",
+                     suppress=False)
     _ = gettext.gettext
     log.debug("starting pre-processing...")
     qtrio.run(main)

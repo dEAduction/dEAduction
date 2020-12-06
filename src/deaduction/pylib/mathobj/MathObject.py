@@ -33,58 +33,135 @@ This file is part of dEAduction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
-from dataclasses import     dataclass
+from dataclasses import     dataclass, field
 from typing import          List, Any
 import logging
 
 import deaduction.pylib.logger as logger
-from .display_math import (display_math_object,
-                           display_math_type_of_local_constant)
+
+from .display_math      import (display_math_type_of_local_constant,
+                                Shape)
+from .display_data      import (HAVE_BOUND_VARS,
+                                INEQUALITIES)
 
 import deaduction.pylib.mathobj.give_name as give_name
 
+
 log = logging.getLogger(__name__)
 
-##########################################
-# MathObject: general mathematical entities #
-##########################################
 
+#############################################
+# MathObject: general mathematical entities #
+#############################################
 @dataclass
 class MathObject:
     """
     Python representation of mathematical entities,
     both objects (sets, elements, functions, ...)
     and properties ("a belongs to A", ...)
+    NB : When instancing, math_type and item in the children list must be
+    instances of MathObject (except for the constant NO_MATH_TYPE)
+
     """
-    node              : str  # e.g. "LOCAL_CONSTANT", "FUNCTION", "QUANT_∀"
+    node              : str   # e.g. "LOCAL_CONSTANT", "FUNCTION", "QUANT_∀"
     info              : dict  # e.g. "name", "id", "pp_type"
-    math_type         : Any  # Another MathObject
     children          : list  # list of MathObjects
+    math_type         : Any = field(repr=False)  # Another MathObject
+    _math_type        : Any = field(init=False,
+                                    repr=False,
+                                    default=None)
 
-    has_unnamed_bound_vars  : bool = False  #  True if bound vars to be named
+    has_unnamed_bound_vars: bool = False  # True if bound vars to be named
 
-    Variables = {}  # dictionary containing every element having
-    # an identifier, i.e. global and bound variables.
+    Variables = {}  # containing every element having an identifier,
+    # i.e. global and bound variables. This avoids duplicate.
     # key = identifier,
     # value = MathObject
+    bound_var_number = 0  # a counter to distinguish bound variables
 
+
+    # Some robust methods to access information stored in attributes
+    @property
+    def math_type(self) -> Any:
+        """
+        This is a work-around to the impossibility of defining a class
+        recursively. Thus every instance of a MathObject has a math_type
+        which is a MathObject (and has a node, info dic, and children list)
+        The constant NO_MATH_TYPE is defined below, after the methods
+        """
+        if self._math_type is None:
+            return NO_MATH_TYPE
+        else:
+            return self._math_type
+
+    @math_type.setter
+    def math_type(self, math_type: Any):
+        self._math_type = math_type
+
+    @property
+    def display_name(self) -> str:
+        if 'name' in self.info:
+            return self.info['name']
+        else:
+            return '*no_name*'
+
+    @property
+    def display_debug(self) -> str:
+        display = self.display_name + ', Node: *' + self.node + '*'
+        display_child = ''
+        for child in self.children:
+            if display_child:
+                display_child += ' ; '
+            display_child += child.display_debug
+        if display_child:
+            display += ', children: **' + display_child + '**'
+        return display
+
+    def math_type_child_name(self, format_) -> str:
+        """display first child of math_type"""
+        math_type = self.math_type
+        if math_type.children:
+            child = math_type.children[0]
+            return child.display_name
+        else:
+            return '*no_name*'
+
+    def descendant(self, line_of_descent):
+        """Return the MathObject corresponding to the line_of_descent
+        e.g. self.descendant((1.0))  -> children[1].children[0]
+
+        :param line_of_descent:     int or tuple or list
+        :return:                    MathObject
+        """
+        if type(line_of_descent) == int:
+            return self.children[line_of_descent]
+        child_number, *remaining = line_of_descent
+        child = self.children[child_number]
+        if not remaining:
+            return child
+        else:
+            return child.descendant(remaining)
+
+    # Main creation method #
     @classmethod
-    def from_info_and_children(cls, info, children):
+    def from_info_and_children(cls, info: {}, children: []):
         """
         create an instance of MathObject from the lean data collected by
         the parser.
-        :param info: dictionary with mandatory key   'node_name',
-                                    optional keys 'math_type',
-                                            'name'
-                                            'identifier'
-        :param children:
-        :return:
+        :param info: dictionary with mandatory key  'node_name',
+                                    optional keys   'math_type',
+                                                    'name'
+                                                    'identifier'
+        :param children: list of MathObject instances
+        :return: a MathObject
         """
+
         node = info.pop("node_name")
         if 'math_type' in info.keys():
             math_type = info.pop('math_type')
         else:
-            math_type = "not provided"
+            math_type = None  # NB math_type is a @property, cf above
+
         #####################################################
         # Treatment of global variables: avoiding duplicate #
         #####################################################
@@ -105,16 +182,17 @@ class MathObject:
         ##############################
         # Treatment of other objects #
         ##############################
-        elif node.startswith("QUANT") or node == "LAMBDA":
-            ##############################################################
-            # Quantifiers & lambdas: provisionally unname bound variable #
-            ##############################################################
+        elif node in HAVE_BOUND_VARS:
+            #################################################################
+            # Quantifiers & lambdas: provisionally "unname" bound variables #
+            #################################################################
             # NB: info["name"] is given by structures.lean,
             # but may be inadequate (e.g. two distinct variables sharing the
             # same name)
             bound_var_type, bound_var, local_context = children
             new_info = {'name': "NO NAME",
-                        'lean_name': bound_var.info['name']}
+                        'lean_name': bound_var.info['name'],
+                        'is_bound_var': True}
             bound_var.info.update(new_info)
             math_object = MathObject(node=node,
                                      info=info,
@@ -150,6 +228,10 @@ class MathObject:
 
          This order gives the wanted result, e.g.
          ∀ x:X, ∀ x':X, etc. and not the converse
+
+         e.g. when the node is a quantifier, "LAMBDA", "SET_EXTENSION".
+         (cf the have_bound_vars list in display_data.py)
+
         """
         # NB: info["name"] is provided by structures.lean,
         # but may be inadequate (e.g. two distinct variables sharing the
@@ -163,11 +245,12 @@ class MathObject:
         # the forbidden list
         if not self.has_unnamed_bound_vars:
             # prevents for (badly) renaming vars several times
+            # log.debug("no bound vars")
             return
         self.has_unnamed_bound_vars = False
         node = self.node
         children = self.children
-        if node.startswith("QUANT") or node == "LAMBDA":
+        if node in HAVE_BOUND_VARS:
             bound_var_type, bound_var, local_context = children
             hint = bound_var.info["lean_name"]
             # search for a fresh name valid inside local context
@@ -184,7 +267,11 @@ class MathObject:
         for child in children:
             child.name_bound_vars()
 
-    def __eq__(self, other):
+######################################
+# Tests for equality related methods #
+######################################
+
+    def __eq__(self, other) -> bool:
         """
         test if the two prop_obj code for the same mathematical objects,
         by recursively testing nodes.
@@ -197,32 +284,83 @@ class MathObject:
         WARNING: this should probably not be used for bound variables
         """
 
-
-        # successively test for
-        #                           types
-        # (string case)
+        # Successively test for
         #                           nodes
         #                           name (if exists)
         #                           math_type
         #                           children
-        if type(self) != type (other):
+
+        equal = True    # Self and other are presumed to be equal
+        marked = False  # Will be True if bound variables should be unmarked
+
+        node = self.node
+        # Case of NO_MATH_TYPE
+        if self is NO_MATH_TYPE \
+                and other is NO_MATH_TYPE:
+            return True  # avoid infinite recursion!
+
+        # Node
+        elif node != other.node:
+            log.debug(f"distinct nodes {self.node, other.node}")
             return False
-        elif type(self) == str and self != other:
-            return False
-        elif self.node != other.node:
-            return False
-        elif 'name' in self.info.keys():
-            if self.info['name'] != other.info['name']:
-                return False
+
+        # Mark bound vars in quantified expressions to distinguish them
+        elif node in HAVE_BOUND_VARS:
+            # Here self and other are assumed to be a quantified proposition
+            # and children[1] is the bound variable.
+            # We mark the bound variables in self and other
+            bound_var_1 = self.children[1]
+            bound_var_2 = other.children[1]
+            mark_bound_vars(bound_var_1, bound_var_2)
+            marked = True
+
+        # Names
+        if 'name' in self.info.keys():
+            # for bound variables, do not use names, use numbers
+            if self.is_bound_var():
+                if not other.is_bound_var():
+                    equal = False
+                # here both are bound variables
+                elif 'bound_var_number' not in self.info:
+                    if 'bound_var_number' in other.info:
+                        equal = False
+                    else:
+                        # unmarked bound vars: we are comparing two parts of
+                        # a given quantified expression, names have a meaning
+                        equal = (self.info['name'] == other.info['name'])
+                # From now on self.info['bound_var_number'] exists
+                elif 'bound_var_number' not in other.info:
+                    equal = False
+                # From now on both variables have a number
+                elif self.info['bound_var_number'] != \
+                        other.info['bound_var_number']:
+                    equal = False
+            else:  # self is not bound var
+                if other.is_bound_var():
+                    equal = False
+                elif self.info['name'] != other.info['name']:
+                    log.debug(f"distinct names "
+                              f"{self.info['name'], other.info['name']}")
+                    equal = False
+        # Recursively test for math_types
         elif self.math_type != other.math_type:
-            return False
+            log.debug(f"distinct types {self.math_type}")
+            log.debug(f"other type     {other.math_type}")
+            equal = False
+
+        # Recursively test for children
         elif len(self.children) != len(other.children):
-            return False
-        else:
+            equal = False
+        else:  # recursively test for children
             for child0, child1 in zip(self.children, other.children):
-                if not MathObject.__eq__(child0, child1):
-                    return False
-        return True
+                if child0 != child1:
+                    equal = False
+
+        # Unmark bound_vars, in prevision of future tests
+        if marked:
+            unmark_bound_vars(bound_var_1, bound_var_2)
+
+        return equal
 
     def contains(self, other):
         """
@@ -245,59 +383,185 @@ class MathObject:
         WARNING: does not work if the equality (or iff) is hidden behind
         'forall", so for the moment we cannot use this when applying statements
         TODO: improve this
+        FIXME: not used
         :return:
             - None,
             - '>' if left member appears, but not right member,
             - '<' in the opposite case,
             - 'both' if both left and right members appear
         """
-        direction = None
         equality = self.math_type
         if equality.node not in ['PROP_EQUAL', 'PROP_IFF']:
-            return None
+            return ''
         left, right = equality.children
         contain_left = other.contains(left)
         contain_right = other.contains(right)
-        decision = {(False, False): None,
+        decision = {(False, False): '',
                     (True, False): '>',
                     (False, True): '>',
                     (True, True): 'both'
                     }
-        return decision(contain_left, contain_right)
+        return decision[contain_left, contain_right]
 
-    def is_prop(self) -> bool:
+#######################
+# Tests for math_type #
+#######################
+
+    def is_prop(self, is_math_type=False) -> bool:
         """
         Test if self represents a mathematical Proposition
+        WARNING:
         For global variables, only the math_type attribute should be tested !
         """
-        math_type = self.math_type
-        if hasattr(math_type, 'node'):
-            return self.math_type.node == "PROP"
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node == "PROP"
+
+    def is_type(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) is a "universe"
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node == "TYPE"
+
+    def is_nat(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) is a "universe"
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node == "CONSTANT" and math_type.info['name'] == "ℕ"
+
+    def is_function(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is function.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node == "FUNCTION"
+
+    def is_and(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is an implication.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node == "PROP_AND"
+
+    def is_or(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is an implication.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node == "PROP_OR"
+
+    def is_implication(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is an implication.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node == "PROP_IMPLIES"
+
+    def is_exists(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is an implication.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node in ("QUANT_∃", "QUANT_∃!")
+
+    def is_for_all(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is function.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node == "QUANT_∀"
+
+    def is_quantifier(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is function.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return (math_type.is_exists(is_math_type=True)
+                or math_type.is_for_all(is_math_type=True))
+
+    def is_equality(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is an equality
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node == "PROP_EQUAL"
+
+    def is_inequality(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is an equality
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node in INEQUALITIES
+
+    def is_iff(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is 'PROP_IFF'
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+
+        return math_type.node == "PROP_IFF"
+
+    def is_false(self, is_math_type=False) -> bool:
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        if math_type.node == "PROP_FALSE":
+            return True
         else:
             return False
 
-    def is_type(self) -> bool:
+    def is_bound_var(self) -> bool:
         """
-        Test if self is a "universe"
+        Test if self is a bound variable by searching in the info dict
         """
-        if hasattr(self.math_type, "node"):
-            return self.math_type.node == "TYPE"
-        else:
-            log.debug(f"is_type called on {self}, but math_type is "
-                        f"{self.math_type}")
-            return False
-
-    def is_function(self) -> bool:
-        """
-        Test if math_type of self is function.
-        """
-        log.debug(f"Is function? {self.math_type.node == 'FUNCTION'}")
-        if hasattr(self.math_type, "node"):
-            return self.math_type.node == "FUNCTION"
+        if 'is_bound_var' in self.info and self.info['is_bound_var']:
+            return True
         else:
             return False
 
-    def can_be_used_for_substitution(self) -> bool:
+    # Determine some important classes of MathObjects
+    def can_be_used_for_substitution(self, is_math_type=False) -> bool:
         """
         Determines if a proposition can be used as a basis for substituting,
         i.e. is of the form
@@ -310,12 +574,41 @@ class MathObject:
         self can_be_used_for_substitution iff the body of self
         can_be_used_for_substitution.
         """
-        if self.node in {'PROP.IFF', 'PROP_EQUAL'}:
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        if math_type.is_equality(is_math_type=True) \
+                or math_type.is_iff(is_math_type=True):
             return True
-        elif self.node == 'QUANT_∀':
+        elif math_type.is_for_all(is_math_type=True):
             # NB : ∀ var : type, body
-            body = self.children[2]
-            return body.can_be_used_for_substitution()
+            body = math_type.children[2]
+            # recursive call
+            return body.can_be_used_for_substitution(is_math_type=True)
+        else:
+            return False
+
+    def can_be_used_for_implication(self, is_math_type=False) -> bool:
+        """
+        Determines if a proposition can be used as a basis for substituting,
+        i.e. is of the form
+            (∀ ...)*  P => Q
+         with zero or more universal quantifiers at the beginning.
+
+        This is a recursive function.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        if math_type.is_implication(is_math_type=True):
+            return True
+        elif math_type.is_for_all(is_math_type=True):
+            # NB : ∀ var : type, body
+            body = math_type.children[2]
+            # recursive call
+            return body.can_be_used_for_implication(is_math_type=True)
         else:
             return False
 
@@ -327,7 +620,7 @@ class MathObject:
         recursively collect the list of variables used in the definition of
         self (leaves of the tree). Here by definition, being a variable
         means having an info["name"]
-        :return: list of MathObject
+        :return: list of MathObject instances
         """
         # todo: change by testing if node == "LOCAL_CONSTANT" ?
         if "name" in self.info.keys():
@@ -348,44 +641,52 @@ class MathObject:
     ########################
     # display math objects #
     ########################
-    # todo: refactor by merging the three following methods
-    def format_as_latex(self, is_math_type=False):
-        format_ = "latex"
+    def to_display(self,
+                   is_math_type=False,
+                   format_="utf8",  # change to "latex" for latex...
+                   text_depth=0
+                   ):
         if is_math_type:
             #########################################
             # naming bound variables before display #
             #########################################
             self.name_bound_vars()
-            display = display_math_type_of_local_constant(self, format_)
+            shape = display_math_type_of_local_constant(self,
+                                                        format_,
+                                                        text_depth)
         else:
-            display = display_math_object(self, format_)
-        return structured_display_to_string(display)
+            shape = Shape.from_math_object(self, format_, text_depth)
+        return structured_display_to_string(shape.display)
 
-    def format_as_utf8(self, is_math_type=False):
-        format_ = "utf8"
-        if is_math_type:
-            #########################################
-            # naming bound variables before display #
-            #########################################
-            log.debug(f"Naming bound vars in {self}")
-            self.name_bound_vars()
-            display = display_math_type_of_local_constant(self, format_)
-        else:
-            display = display_math_object(self, format_)
-        return structured_display_to_string(display)
 
-    def format_as_text_utf8(self, is_math_type=False, text_depth=1):
-        format_ = "text+utf8"
-        if is_math_type:
-            #########################################
-            # naming bound variables before display #
-            #########################################
-            self.name_bound_vars()
-            display = display_math_type_of_local_constant(self,
-                                                          format_)
-        else:
-            display = display_math_object(self, format_, text_depth)
-        return structured_display_to_string(display)
+NO_MATH_TYPE = MathObject(node="not provided",
+                          info={},
+                          children=[],
+                          math_type=None)
+
+
+#########
+# Utils #
+#########
+def mark_bound_vars(bound_var_1, bound_var_2):
+    """
+    Mark two bound variables with a common number, so that we can follow
+    them along two quantified expressions and check tif these expressions
+    are identical
+    """
+    MathObject.bound_var_number += 1
+    bound_var_1.info['bound_var_number'] = MathObject.bound_var_number
+    bound_var_2.info['bound_var_number'] = MathObject.bound_var_number
+
+
+def unmark_bound_vars(bound_var_1, bound_var_2):
+    """
+    Mark two bound variables with a common number, so that we can follow
+    them along two quantified expressions and check tif these expressions
+    are identical
+    """
+    bound_var_1.info.pop('bound_var_number')
+    bound_var_2.info.pop('bound_var_number')
 
 
 def structured_display_to_string(structured_display) -> str:
@@ -402,7 +703,6 @@ def structured_display_to_string(structured_display) -> str:
         for lr in structured_display:
             lr = structured_display_to_string(lr)
             string += lr
-        #    log.debug("string:", latex_str)
         return cut_spaces(string)
     else:
         log.warning("error in list_string_join: argument should be list or "
@@ -411,6 +711,9 @@ def structured_display_to_string(structured_display) -> str:
 
 
 def cut_spaces(string: str) -> str:
+    """
+    Remove unnecessary spaces inside string
+    """
     while string.find("  ") != -1:
         string = string.replace("  ", " ")
     return string

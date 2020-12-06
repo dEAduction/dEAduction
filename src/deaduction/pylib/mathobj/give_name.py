@@ -134,6 +134,14 @@ def give_name(math_type,
     ##################
     # managing hints #
     ##################
+    # avoid bad name, e.g. for families where hints could be {E_i, i in I}
+    # All hints have to be acceptable variable names!
+    alphabet_lower = "abcdefghijklmnopqrstuvwxyz"
+    alphabet_upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    alphabet = alphabet_lower + alphabet_upper
+    for hint in hints:
+        if not hint in alphabet:
+            hints.remove(hint)
 
     if upper_case_name:
         hints = [hint[0].upper() for hint in hints]  # so each hint has only
@@ -145,17 +153,19 @@ def give_name(math_type,
     # lower case: add main hint according to math_type's name
     if not upper_case_name and 'name' in math_type.info.keys():
         type_name = math_type.info["name"]
-        if type_name[0].isupper():
+        if type_name[0] in alphabet_upper:
             hint = type_name[0].lower()
             insert_maybe(hints, hint, position=0)
 
     # standard hints
-    standard_hint = 'A' if math_type.node.startswith('SET') \
-        else 'X' if math_type.node == 'TYPE' \
-        else 'P' if math_type.node == 'PROP' \
-        else 'f' if math_type.node == 'FUNCTION' \
-        else 'x'
-    insert_maybe(hints, standard_hint)
+    standard_hints = ['A'] if math_type.node.startswith('SET') \
+        else ['X'] if math_type.is_type(is_math_type=True) \
+        else ['P'] if math_type.is_prop(is_math_type=True) \
+        else ['f'] if math_type.is_function(is_math_type=True) \
+        else ['n', 'm', 'p'] if math_type.is_nat(is_math_type=True) \
+        else ['x']
+    for standard_hint in standard_hints:
+        insert_maybe(hints, standard_hint)
 
     ##########################################################
     # first trial: use hints, maybe with primes if permitted #
@@ -165,11 +175,11 @@ def give_name(math_type,
         if potential_name not in forbidden_names:
             new_name = potential_name
             return new_name
-        # if hint = "x" and this is already the name of a variable with the
+        # If hint = "x" and this is already the name of a variable with the
         # same math_type as the variable we want to name,
         # then try to use "x'"
-        # here all hints are assumed to be the name of some variable
         elif EXERCISE.USE_PRIMES_FOR_VARIABLES_NAMES:
+            # here potential_name are assumed to be the name of some variable
             name = potential_name
             index_ = forbidden_names.index(name)
             variable = forbidden_vars[index_]
@@ -186,7 +196,7 @@ def give_name(math_type,
                     log.debug(f"trying {potential_name}...")
                     if math_type == variable.math_type \
                             and not potential_name.endswith("'''") \
-                            and not potential_name in forbidden_names:
+                            and potential_name not in forbidden_names:
                         return potential_name
 
     ########################################

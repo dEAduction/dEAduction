@@ -92,7 +92,7 @@ if __name__ == '__main__':
     # if suppress=False, only logs from modules in 'domains' will printed
     # if suppress=True, only logs NOT from modules in 'domains' will be printed
     logger.configure(debug=True,
-                     domains=all_domains,
+                     domains=['ServerInterface', 'deaduction.dui'],
                      suppress=False)
 
     qtrio.run(main)

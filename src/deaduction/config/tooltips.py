@@ -49,8 +49,9 @@ __tooltips = {
         _("""Split 'P ⇔ Q' into two implications"""),
     'tooltip_forall':
         _("""Prove '∀ a, P(a)' by introducing 'a'"""),
-    'tooltip_exists':  # TODO: possibility to 'APPLY' '∃ x, P(x)'
-        _("""Prove '∃ x, P(x)' by specifying some 'x' and proving P(x)"""
+    'tooltip_exists':
+        _("""• Prove '∃ a, P(a)' by specifying some 'a' and proving P(a)
+• Apply '∃ a, P(a)' to get an 'a' satisfying 'P(a)'"""
           ),
     'tooltip_apply':
         _("""• Apply to a property '∀ a, P(a)' and some 'a' to get 'P(a)' 
@@ -65,7 +66,7 @@ __tooltips = {
 • Proof by contradiction"""
           ),
     'tooltip_new_object':
-        _("""• Create a new object (e.g. 'f(x)' from 'f' and 'x')
+        _("""• Create a new object (e.g. 'f(a)' from 'f' and 'a')
 • Create a new subgoal (a lemma) which will be proved, and added to the context
 • From a property '∀ a ∈ A, ∃ b ∈ B, P(a,b)', create a new function from A to B"""
           ),
@@ -75,11 +76,25 @@ __tooltips = {
         )
 }
 # decentralized apply buttons
-__tooltips_apply = {}  # TODO
+__tooltips_apply = {
+    'tooltip_apply_function':
+        _("""apply function to a selected object or equality"""),
+    'tooltip_apply_implication':
+        _("""apply to a selected property, or to modify the goal"""),
+    'tooltip_apply_substitute':
+        _("""substitute in a selected property"""),
+    'tooltip_apply_for_all':
+        _("""apply to a selected object"""),
+    'tooltip_apply_exists':
+        _("""get a new object in the context"""),
+    'tooltip_apply_and':
+        _("""Split into two properties""")
+}  # TODO
 
 # Text for buttons
 __buttons = {
     'logic_button_texts': _("AND, OR, NOT, ⇒, ⇔, ∀, ∃"),
-    'proof_button_texts': _("Apply, Proof Methods, New Object, QED")
+    'proof_button_texts': _("Apply, Proof Methods, New Object, QED"),
+    'magic_button_texts': _('Compute')
 }
 # sad thoughts for "¯\_(ツ)_/¯", I loved you so much...
