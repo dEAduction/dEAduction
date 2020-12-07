@@ -537,12 +537,16 @@ def action_assumption(goal: Goal, l: [MathObject]) -> str:
     if len(l) == 0:
         possible_codes.append('assumption')
         possible_codes.append('contradiction')
-        if goal.target.math_type.node == "PROP_EQUAL":
+        if goal.target.is_equality():
             if goal.target.math_type.children[0] == \
                     goal.target.math_type.children[1]:
                 possible_codes.append('refl')
-        possible_codes.append('ac_reflexivity')
-        possible_codes.append('apply eq.symm, assumption')
+            # try to use associativity and commutativity
+            possible_codes.append('ac_reflexivity')
+            # try to permute members of the goal equality
+            possible_codes.append('apply eq.symm, assumption')
+            # congruence closure, solves e.g. (a=b, b=c : f a = f c)
+            possible_codes.append('cc')
         possible_codes.append('apply iff.symm, assumption')
     if len(l) == 1:
         possible_codes.append(solve1_wrap(f'apply {l[0].info["name"]}'))
