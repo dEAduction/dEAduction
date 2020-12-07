@@ -65,7 +65,7 @@ class Journal:
         """
         log.debug(f"New event: {event}")
         if event[0] not in self.event_natures:
-            log.warning("Unexpected event")
+            log.warning(f"Unexpected event: {event[0]}")
         self.memory.append(event)
 
         if emw:

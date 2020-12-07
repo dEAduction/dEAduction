@@ -49,6 +49,7 @@ import gettext
 import pickle
 from pathlib import Path
 
+from deaduction.config import _
 from deaduction.dui.launcher import select_course
 from deaduction.pylib.coursedata import Exercise, Definition, Theorem
 from deaduction.pylib import logger
@@ -259,7 +260,6 @@ if __name__ == '__main__':
     logger.configure(debug=True,
                      domains="pre_processing",
                      suppress=False)
-    _ = gettext.gettext
     log.debug("starting pre-processing...")
     qtrio.run(main)
 
