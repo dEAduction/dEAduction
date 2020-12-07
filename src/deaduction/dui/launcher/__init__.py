@@ -118,6 +118,11 @@ def select_exercise(course: Course):
                 exercise.negate_statement = True
         elif open_question:
             # exercise is an open question and the user has to choose her way
+            if exercise.lean_variables:
+                log.warning("Exercise is an open question but has variables:"
+                            "negation will not be correct!!")
+
+
             title = _("Do you want to prove this statement or its negation?")
             if exercise.initial_proof_state:
                 goal = exercise.initial_proof_state.goals[0]
