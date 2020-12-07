@@ -79,16 +79,8 @@ class AbstractCoExChooser(QWidget):
 
         super().__init__()
         
-        nothing_to_preview = QWidget()
-        nothing_to_preview_lbl = QLabel(_('Nothing to preview'))
-        nothing_to_preview_lbl.setStyleSheet('color: gray;')
-
-        nothing_to_preview_lyt = QVBoxLayout()
-        nothing_to_preview_lyt.addStretch()
-        nothing_to_preview_lyt.addWidget(nothing_to_preview_lbl)
-        nothing_to_preview_lyt.addStretch()
-        nothing_to_preview.setLayout(nothing_to_preview_lyt)
-
+        nothing_to_preview = QLabel(_('Nothing to preview'))
+        nothing_to_preview.setStyleSheet('color: gray;')
         self.__preview_wgt = nothing_to_preview
 
         self.__main_layout = QVBoxLayout()
@@ -401,7 +393,7 @@ class StartExerciseDialog(QDialog):
 if __name__ == '__main__':
     app = QApplication()
 
-    launcher_main_window = CexStarterDialog()
-    launcher_main_window.show()
+    start_exercise_dialog = StartExerciseDialog()
+    start_exercise_dialog.show()
 
     sys.exit(app.exec_())
