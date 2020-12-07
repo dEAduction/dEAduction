@@ -231,8 +231,8 @@ class ExerciseChooser(AbstractCoExChooser):
             propobj_lyt.addLayout(properties_lyt)
 
             target_wgt = QLineEdit()
-            target_wgt.setText(target.math_type.format_as_utf8(
-                    is_math_type=True))
+            target_wgt.setText(target.math_type.to_display(format_="utf8",
+                                                           is_math_type=True))
             target_wgt.setFont(QFont('Menlo'))
 
             self.__friendly_wgt = QWidget()
