@@ -123,7 +123,7 @@ class AbstractCoExChooser(QWidget):
             subtitle_lyt = QHBoxLayout()
             subtitle_lyt.addWidget(title_wgt)
             subtitle_lyt.addWidget(subtitle_wgt)
-            layout.addLayout(sub_title_lyt)
+            layout.addLayout(subtitle_lyt)
 
         if details:
             details_wgt = DisclosureTree('Details', details)
@@ -252,7 +252,9 @@ class ExerciseChooser(AbstractCoExChooser):
             self.__code_wgt = QTextEdit()
             self.__code_wgt.setReadOnly(True)
             self.__code_wgt.setFont(QFont('Menlo'))
-            # TODO: Set value
+            if exercise.initial_proof_state:
+                text = goal.goal_to_text()
+                self.__code_wgt.setText(text)
 
             # ──────────────────── Checkbox ──────────────────── #
 
