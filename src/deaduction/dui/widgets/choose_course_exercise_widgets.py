@@ -40,6 +40,7 @@ from PySide2.QtWidgets import ( QApplication,
                                 QCheckBox,
                                 QDialog,
                                 QFileDialog,
+                                QFrame,
                                 QGroupBox,
                                 QHBoxLayout,
                                 QLabel,
@@ -73,21 +74,31 @@ def read_pkl_course(course_path: Path) -> Course:
     return course
 
 
+class HorizontalLine(QFrame):
+
+    def __init__(self):
+
+        super().__init__()
+        self.setFrameShape(QFrame.HLine)
+        self.setFrameShadow(QFrame.Sunken)
+
+
 class AbstractCoExChooser(QWidget):
 
     def __init__(self, browser_layout: QLayout):
 
         super().__init__()
-        
-        nothing_to_preview = QLabel(_('Nothing to preview'))
-        nothing_to_preview.setStyleSheet('color: gray;')
-        self.__preview_wgt = nothing_to_preview
+
+        no_preview_yet = QLabel(_('No preview yet.'))
+        no_preview_yet.setStyleSheet('color: gray;')
+        self.__preview_wgt = no_preview_yet
 
         self.__main_layout = QVBoxLayout()
         self.__main_layout.addLayout(browser_layout)
-        self.__main_layout.addItem(QSpacerItem(1, 30))
-        self.__main_layout.addWidget(self.__preview_wgt)
         self.__main_layout.addItem(QSpacerItem(1, 5))
+        self.__main_layout.addWidget(HorizontalLine())
+        self.__main_layout.addItem(QSpacerItem(1, 5))
+        self.__main_layout.addWidget(self.__preview_wgt)
 
         self.setLayout(self.__main_layout)
 
@@ -102,14 +113,8 @@ class AbstractCoExChooser(QWidget):
         if title:
             title_wgt = QLabel(title)
             title_wgt.setStyleSheet('font-weight: bold;' \
-                                    'font-size:   18pt;')
-
-            title_lyt = QHBoxLayout()
-            # title_lyt.addStretch()
-            title_lyt.addWidget(title_wgt)
-            title_lyt.addStretch()
-
-            layout.addLayout(title_lyt)
+                                    'font-size:   17pt;')
+            layout.addWidget(title_wgt)
 
         if subtitle:
             subtitle_wgt = QLabel(subtitle)
@@ -118,19 +123,16 @@ class AbstractCoExChooser(QWidget):
             subtitle_lyt = QHBoxLayout()
             subtitle_lyt.addWidget(title_wgt)
             subtitle_lyt.addWidget(subtitle_wgt)
-
             layout.addLayout(sub_title_lyt)
 
         if details:
             details_wgt = DisclosureTree('Details', details)
-
             layout.addWidget(details_wgt)
 
         if description:
             # TODO: Make text unselectable
             description_wgt = QTextEdit(description)
             description_wgt.setReadOnly(True)
-
             layout.addWidget(description_wgt)
 
         if widget:
@@ -203,6 +205,7 @@ class ExerciseChooser(AbstractCoExChooser):
 
         widget = QWidget()
         widget_lyt = QVBoxLayout()
+        widget_lyt.setContentsMargins(0, 0, 0, 0)
         self.__exercise = exercise
 
         if self.__course_filetype == '.pkl':
@@ -277,13 +280,11 @@ class ExerciseChooser(AbstractCoExChooser):
         elif self.__course_filetype == '.lean':
 
             # TODO: Say "Preview is available if…"
-            widget_lbl = QLabel(_('Goal preview is not available when course ' \
-                                  'file extension is .lean.'))
-            widget_lbl.setStyleSheet('font-style: italic; color: gray;')
+            widget_lbl = QLabel(_('Goal preview only available when course ' \
+                                  'file extension is .pkl.'))
+            widget_lbl.setStyleSheet('color: gray;')
 
-            widget_lyt.addStretch()
             widget_lyt.addWidget(widget_lbl)
-            widget_lyt.addStretch()
 
         widget.setLayout(widget_lyt)
 
