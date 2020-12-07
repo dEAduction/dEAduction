@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2020-12-05 18:34+0100\n"
-"PO-Revision-Date: 2020-12-05 18:35+0100\n"
+"POT-Creation-Date: 2020-12-06 15:14+0100\n"
+"PO-Revision-Date: 2020-12-06 17:50+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -157,7 +157,7 @@ msgstr "Choisissez un exercice"
 msgid "Selected exercise:"
 msgstr "Exercice choisi :"
 
-#: dui/launcher/__init__.py:121
+#: dui/launcher/__init__.py:126
 msgid "Do you want to prove this statement or its negation?"
 msgstr "Voulez-vous démontrer cet énoncé ou bien sa négation ?"
 
@@ -210,7 +210,7 @@ msgstr "Actions (transforment le contexte et le but)"
 msgid "Context (objects and properties)"
 msgstr "Contexte (objets et propriétés)"
 
-#: dui/widgets/exercise_widgets.py:474 pylib/mathobj/proof_state.py:319
+#: dui/widgets/exercise_widgets.py:474 pylib/mathobj/proof_state.py:325
 msgid ": "
 msgstr " : "
 
@@ -484,8 +484,8 @@ msgstr "proposition"
 msgid "set"
 msgstr "ensemble"
 
-#: pylib/mathobj/display_data.py:98 pylib/mathobj/display_math.py:682
-#: pylib/mathobj/display_math.py:691
+#: pylib/mathobj/display_data.py:98 pylib/mathobj/display_math.py:694
+#: pylib/mathobj/display_math.py:703
 msgid "is"
 msgstr "est"
 
@@ -610,27 +610,27 @@ msgstr "tel que"
 msgid "there exists a unique"
 msgstr "il existe un unique"
 
-#: pylib/mathobj/display_math.py:190
+#: pylib/mathobj/display_math.py:192
 msgid "All goals reached!"
 msgstr "Tous les buts ont été atteints !"
 
-#: pylib/mathobj/display_math.py:628
+#: pylib/mathobj/display_math.py:640
 msgid "an element of"
 msgstr "un élément de"
 
-#: pylib/mathobj/display_math.py:630
+#: pylib/mathobj/display_math.py:642
 msgid "element of"
 msgstr "élément de"
 
-#: pylib/mathobj/display_math.py:633
+#: pylib/mathobj/display_math.py:645
 msgid "a subset of"
 msgstr "une partie de"
 
-#: pylib/mathobj/display_math.py:635
+#: pylib/mathobj/display_math.py:647
 msgid "subset of"
 msgstr "partie de"
 
-#: pylib/mathobj/display_math.py:695
+#: pylib/mathobj/display_math.py:707
 msgid "belongs to"
 msgstr "appartient à"
 
@@ -646,33 +646,37 @@ msgstr "Soit"
 msgid "be"
 msgstr " "
 
-#: pylib/mathobj/proof_state.py:292
+#: pylib/mathobj/proof_state.py:292 pylib/mathobj/proof_state.py:328
 msgid "Prove that"
 msgstr "Démontrer que"
 
-#: pylib/mathobj/proof_state.py:294
+#: pylib/mathobj/proof_state.py:294 pylib/mathobj/proof_state.py:330
 msgid "Then"
 msgstr "Alors"
 
-#: pylib/mathobj/proof_state.py:300
+#: pylib/mathobj/proof_state.py:300 pylib/mathobj/proof_state.py:313
 msgid "True or False?"
 msgstr "Vrai ou faux ?"
 
-#: pylib/mathobj/proof_state.py:311
-msgid "Context:"
-msgstr "Contexte :"
+#: pylib/mathobj/proof_state.py:315
+msgid "Hypothesis:"
+msgstr "Hypothèse :"
 
-#: pylib/mathobj/proof_state.py:321
-msgid "Target:"
-msgstr "But :"
+#: pylib/mathobj/proof_state.py:317
+msgid "Hypotheses:"
+msgstr "Hypothèses :"
 
-#: pylib/pre_processing/__main__.py:219 pylib/pre_processing/__main__.py:240
+#: pylib/pre_processing/__main__.py:220 pylib/pre_processing/__main__.py:241
 msgid "Exercise"
 msgstr "Exercice"
 
-#: pylib/pre_processing/__main__.py:229 pylib/pre_processing/__main__.py:242
+#: pylib/pre_processing/__main__.py:230 pylib/pre_processing/__main__.py:244
 msgid "Definition:"
 msgstr "Définition :"
+
+#: pylib/pre_processing/__main__.py:247
+msgid "Theorem:"
+msgstr "Théorème :"
 
 #: pylib/server/__init__.py:230
 msgid "Proof State received"
@@ -681,6 +685,12 @@ msgstr "Etat de preuve reçu"
 #: pylib/server/__init__.py:234
 msgid "After request"
 msgstr "Après la requête"
+
+#~ msgid "Context:"
+#~ msgstr "Contexte :"
+
+#~ msgid "Target:"
+#~ msgstr "But :"
 
 #~ msgid "selected objects are not properties"
 #~ msgstr "Les ob"
