@@ -130,11 +130,8 @@ class AbstractCoExChooser(QWidget):
             layout.addWidget(details_wgt)
 
         if description:
-            # TODO: Make text unselectable
-            description_wgt = QTextEdit(description)
-            description_wgt.setReadOnly(True)
-            # TODO: QSlider is ugly, make it not. that. way.
-            description_wgt.setStyleSheet('background-color: transparent')
+            description_wgt = QLabel(description)
+            description_wgt.setWordWrap(True)
             layout.addWidget(description_wgt)
 
         if widget:
