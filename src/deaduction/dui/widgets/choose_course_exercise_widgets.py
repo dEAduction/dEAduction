@@ -153,7 +153,7 @@ class AbstractCoExChooser(QWidget):
 
         self.setLayout(self.__main_layout)
 
-    def set_preview(self, widget: QWidget=None, title: str=None,
+    def set_preview(self, main_widget: QWidget=None, title: str=None,
                     subtitle: str=None, details: Dict[str, str]=None,
                     description: str=None):
         # TODO: Make widget a QLayout instead?
@@ -209,8 +209,8 @@ class AbstractCoExChooser(QWidget):
             description_wgt.setWordWrap(True)
             layout.addWidget(description_wgt)
 
-        if widget:
-            layout.addWidget(widget)
+        if main_widget:
+            layout.addWidget(main_widget)
 
         layout.addStretch()
 
@@ -221,8 +221,18 @@ class AbstractCoExChooser(QWidget):
 
 
 class CourseChooser(AbstractCoExChooser):
+    """
+    The course chooser. The browser part is composed of a browse-button
+    to browse courses files and a QListWidget displaying recent courses.
+    The preview area has no main_widget.
+    """
 
     def __init__(self):
+        """
+        See AbstractCoExChooser.__init__ docstring. Here, the browser
+        layout is composed of a browse-button to browse courses files
+        and a QListWidget displayling recent courses.
+        """
 
         # Browse files button
         self.browse_btn = QPushButton(_('Browse files for course'))
@@ -236,6 +246,14 @@ class CourseChooser(AbstractCoExChooser):
         super().__init__(browser_lyt)
 
     def set_preview(self, course: Course):
+        """
+        Set course preview. See AbstractCoExChooser.set_preview
+        docstring. Here, there is no main_widget. Course metadata are
+        displayed in the disclosure triangle by passing them as details
+        in super().set_preview.
+
+        :param Course: Course to be previewed.
+        """
 
         title       = course.metadata.get('Title',       None)
         subtitle    = course.metadata.get('Subtitle',    None)
@@ -243,23 +261,24 @@ class CourseChooser(AbstractCoExChooser):
 
         details = course.metadata
         # Remove title, subtitle and description from details
+        # TODO: Prevent user for using a 'Path' attribute (in the course
+        # file) when writing a course.
+        # TODO: Add course path.
         for key in ['Title', 'Subtitle', 'Description']:
             if key in details:
                 details.pop(key)
         if not details:  # Set details to None if empty
             details = None
 
-        # TODO: Prevent user for using a 'Path' attribute when writing
-        # a course.
-        # TODO: Add course path.
-
-        # FIXME: seg fault after this, created in CourseChooser
-        super().set_preview(widget=None, title=title, subtitle=subtitle,
+        super().set_preview(main_widget=None, title=title, subtitle=subtitle,
                             details=details, description=description)
 
 
 class ExerciseChooser(AbstractCoExChooser):
 
+    # This signal is emitted when an exercise is previewed. It is
+    # received in StartExerciseDialog and the Start exercise button is
+    # enabled and set to default.
     exercise_previewed = Signal()
 
     def __init__(self, course: Course, course_filetype: str):
@@ -280,7 +299,7 @@ class ExerciseChooser(AbstractCoExChooser):
 
     def set_preview(self, exercise: Exercise):
 
-        widget = QWidget()
+        main_widget = QWidget()
         widget_lyt = QVBoxLayout()
         widget_lyt.setContentsMargins(0, 0, 0, 0)
         self.__exercise = exercise
@@ -370,7 +389,7 @@ class ExerciseChooser(AbstractCoExChooser):
 
             widget_lyt.addWidget(widget_lbl)
 
-        widget.setLayout(widget_lyt)
+        main_widget.setLayout(widget_lyt)
 
         # ───────────────────── Others ───────────────────── #
 
@@ -378,7 +397,8 @@ class ExerciseChooser(AbstractCoExChooser):
         title = exercise.pretty_name
         description = exercise.description
 
-        super().set_preview(widget=widget, title=title, description=description)
+        super().set_preview(main_widget=main_widget, title=title,
+                description=description)
 
     @Slot(StatementsTreeWidgetItem)
     def __call_set_preview(self, item: StatementsTreeWidgetItem):
