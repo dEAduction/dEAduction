@@ -187,7 +187,8 @@ class ExerciseChooser(AbstractCoExChooser):
 
     def __init__(self, course: Course, course_filetype: str):
 
-        self.__course_filetype = course_filetype  # 'lean' or 'pkl'
+        # Public attribute required
+        self.course_filetype = course_filetype  # 'lean' or 'pkl'
 
         browser_layout = QVBoxLayout()
         exercises_tree = StatementsTreeWidget(course.exercises_list(),
@@ -207,7 +208,7 @@ class ExerciseChooser(AbstractCoExChooser):
         widget_lyt.setContentsMargins(0, 0, 0, 0)
         self.__exercise = exercise
 
-        if self.__course_filetype == '.pkl':
+        if self.course_filetype == '.pkl':
 
             proofstate = exercise.initial_proof_state
             goal = proofstate.goals[0]  # Only one goal (?)
@@ -278,7 +279,7 @@ class ExerciseChooser(AbstractCoExChooser):
             widget_lyt.addLayout(cb_lyt)
 
         # FIXME: Bug with course and exercise widgets
-        elif self.__course_filetype == '.lean':
+        elif self.course_filetype == '.lean':
 
             # TODO: Say "Preview is available if…"
             widget_lbl = QLabel(_('Goal preview only available when course ' \
