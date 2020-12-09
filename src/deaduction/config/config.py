@@ -32,6 +32,7 @@ This file is part of d∃∀duction.
 import configparser
 import logging
 import os
+from pathlib import Path
 
 
 log = logging.getLogger(__name__)
@@ -73,6 +74,93 @@ config.read(__config_file_path)
 
 # in case no config file is found
 user_config = config['USER']
+
+# config for temporary parameters
+temp_config = configparser.ConfigParser()
+
+
+#########
+# utils #
+#########
+def add_to_recent_courses(course_path: str,
+                          course_type: str = '.lean',
+                          title: str = "",
+                          exercise_number: int = -1):
+    """
+    Add course_path to the list of recent courses in user_config
+    NB: do not save this in config.ini; write_config() must be called for that
+    """
+    try:
+        max = user_config['max_recent_courses']
+    except KeyError:
+        max = 5
+
+    if course_type == '.pkl' and course_path.endswith('.lean'):
+        course_path = course_path[:-4] + 'pkl'
+
+    recent_courses, titles, exercise_numbers = get_recent_courses()
+    if course_path in recent_courses:
+        # We want the course to appear in pole position
+        # 0 = newest, last = oldest
+        n = recent_courses.index(course_path)
+        recent_courses.pop(n)
+        titles.pop(n)
+        exercise_numbers.pop(n)
+    recent_courses.insert(0, course_path)
+    titles.insert(0,title)
+    exercise_numbers.insert(0,exercise_number)
+
+    if len(recent_courses) > max:
+        # Remove oldest
+        recent_courses.pop()
+        titles.pop()
+        exercise_numbers.pop()
+
+    # Turn each list into a single string
+    recent_courses_string   = ','.join(recent_courses)
+    titles_string           = ','.join(titles)
+    exercise_numbers_string = ','.join(map(str, exercise_numbers))
+    user_config['recent_courses'] = recent_courses_string
+    user_config['recent_courses_titles'] = titles_string
+    user_config['exercise_numbers'] = exercise_numbers_string
+
+    # Save config file
+    write_config()
+
+
+def get_recent_courses() -> [(str, str)]:
+    """
+    Return the list of (recent course, title) found in the user_config dict
+    """
+
+    try:
+        recent_courses  = user_config['recent_courses']
+    except KeyError:
+        recent_courses  = ""
+    try:
+        titles    = user_config['recent_courses_titles']
+    except KeyError:
+        titles    = ""
+    try:
+        numbers    = user_config['exercise_numbers']
+    except KeyError:
+        numbers    = ""
+
+    if recent_courses:
+        recent_courses_list = recent_courses.split(',')
+        titles_list = titles.split(',')
+        numbers_list = [-1] * len(recent_courses_list)
+    else:
+        recent_courses_list = []
+        titles_list = []
+        numbers_list = []
+
+    if numbers_list:
+        try:
+            numbers_list        = list(map(int, numbers.split(',')))
+        except ValueError:
+            pass
+    return recent_courses_list, titles_list, numbers_list
 
 
 def write_config(field_name: str = None, field_content: str = None):
