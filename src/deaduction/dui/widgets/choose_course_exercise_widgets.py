@@ -55,6 +55,7 @@ from PySide2.QtWidgets import ( QApplication,
                                 QLayout,
                                 QLineEdit,
                                 QListWidget,
+                                QListWidgetItem,
                                 QSpacerItem,
                                 QPushButton,
                                 QTabWidget,
@@ -66,6 +67,8 @@ from deaduction.dui.widgets      import ( MathObjectWidget,
                                           StatementsTreeWidget,
                                           StatementsTreeWidgetItem )
 from deaduction.dui.utils        import   DisclosureTree
+from deaduction.config           import ( add_to_recent_courses,
+                                          get_recent_courses )
 from deaduction.pylib.coursedata import ( Course,
                                           Exercise )
 
@@ -95,6 +98,25 @@ class HorizontalLine(QFrame):
         super().__init__()
         self.setFrameShape(QFrame.HLine)
         self.setFrameShadow(QFrame.Sunken)
+
+
+class CourseListItem(QListWidgetItem):
+    """
+    A class to display recent courses and store their Path
+    title           str, title to be displayed
+    course_path     str, to be displayed in tooltips, and stored as a Path
+    number          int, number of last exercise done in this course
+    """
+
+    def __init__(self, course_path, title, number):
+
+        if course_path.endswith('pkl'):
+            precision = "(with preview)"
+        else:
+            precision = "(without preview)"
+        super().__init__(title + " " + precision)
+        self.setToolTip(str(course_path))
+        self.course_path = Path(course_path)
 
 
 class AbstractCoExChooser(QWidget):
@@ -236,8 +258,14 @@ class CourseChooser(AbstractCoExChooser):
 
         # Browse files button
         self.browse_btn = QPushButton(_('Browse files for course'))
-        # TODO: Add previous courses
+
+        # Previous courses list
         self.previous_courses_wgt = QListWidget()
+        courses_paths, titles, exercise_numbers = get_recent_courses()
+        info = zip(courses_paths, titles, exercise_numbers)
+        for course_path, title, number in info:
+            item = CourseListItem(course_path, title, number)
+            self.previous_courses_wgt.addItem(item)
 
         browser_lyt = QVBoxLayout()
         browser_lyt.addWidget(self.browse_btn)
@@ -291,6 +319,7 @@ class ExerciseChooser(AbstractCoExChooser):
                                               course.outline)
         exercises_tree.resizeColumnToContents(0)
         # TODO: Expand items (write function in StatementsTreeWidget)
+        # Fred : pas clair qu'il faille "expandre"...
         browser_layout.addWidget(exercises_tree)
 
         exercises_tree.itemClicked.connect(self.__call_set_preview)
@@ -302,7 +331,7 @@ class ExerciseChooser(AbstractCoExChooser):
         main_widget = QWidget()
         widget_lyt = QVBoxLayout()
         widget_lyt.setContentsMargins(0, 0, 0, 0)
-        self.__exercise = exercise
+        self.exercise = exercise
 
         if self.course_filetype == '.pkl':
 
@@ -431,7 +460,7 @@ class StartExerciseDialog(QDialog):
         self.__course_chooser = CourseChooser()
         self.__exercise_chooser = QWidget()
 
-        self.__couse_chooser.previous_courses_wgt.itemClicked.connect(
+        self.__course_chooser.previous_courses_wgt.itemClicked.connect(
                 self.__set_previous_course)
 
         # ───────────────────── Buttons ──────────────────── #
@@ -466,7 +495,7 @@ class StartExerciseDialog(QDialog):
         self.__coex_tabwidget.setTabEnabled(1, False)
         self.__course_chooser.browse_btn.clicked.connect(self.__browse_courses)
 
-    def __set_course(self, course_path: Path):
+    def set_course(self, course_path: Path):
 
         self.__start_ex_btn.setEnabled(False)
 
@@ -495,10 +524,9 @@ class StartExerciseDialog(QDialog):
     #########
 
     @Slot(CourseListItem)
-    def __set_previous_course(self, course_list_item:
-            CourseListItem):
+    def __set_previous_course(self, course_list_item: CourseListItem):
         course_path = course_list_item.course_path
-        self.__set_course(course_path)
+        self.set_course(course_path)
 
     @Slot()
     def __browse_courses(self):
@@ -510,7 +538,7 @@ class StartExerciseDialog(QDialog):
         # TODO: Stop using exec_, not recommended by documentation
         if dialog.exec_():
             course_path = Path(dialog.selectedFiles()[0])
-            self.__set_course(course_path)
+            self.set_course(course_path)
 
     @Slot()
     def __enable_start_ex_btn(self):
@@ -521,9 +549,24 @@ class StartExerciseDialog(QDialog):
     @Slot()
     def __start_exercise(self):
 
-        exercise = self.__exercise_chooser.selected_exercise()
-        self.exercise_choosen.emit(exercise)
+        exercise = self.__exercise_chooser.exercise
 
+        # save course_path, title, and exercise number
+        # in user_config's previous_courses_list
+        course_type     = self.__exercise_chooser.course_filetype
+        course          = exercise.course
+        course_path     = course.course_path
+        title           = course.title
+        if exercise in course.statements:
+            exercise_number = course.statements.index(exercise)
+        else:
+            exercise_number = -1
+        add_to_recent_courses(str(course_path),
+                              course_type,
+                              title,
+                              exercise_number)
+
+        self.exercise_choosen.emit(exercise)
         self.accept()  # Fuck you and I'll see you tomorrow!
 
 
