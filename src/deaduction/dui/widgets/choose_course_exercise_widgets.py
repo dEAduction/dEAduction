@@ -358,7 +358,14 @@ class StartExerciseDialog(QDialog):
         self.__coex_tabwidget.setTabEnabled(1, False)
         self.__course_chooser.browse_btn.clicked.connect(self.__browse_courses)
 
-    def __set_course(self, course: Course, course_filetype: str):
+    def __set_course(self, course_path: Path):
+
+        course_filetype = course_path.suffix
+        if course_filetype == '.lean':
+            course = Course.from_file(course_path)
+        elif course_filetype == '.pkl':
+            course = read_pkl_course(course_path)
+
         self.__coex_tabwidget.removeTab(1)
         self.__coex_tabwidget.setTabEnabled(1, True)
         self.__course_chooser.set_preview(course)
@@ -373,16 +380,10 @@ class StartExerciseDialog(QDialog):
         dialog.setFileMode(QFileDialog.ExistingFile)
         dialog.setNameFilter('*.lean *.pkl')
 
+        # TODO: Stop using exec_, not recommended by documentation
         if dialog.exec_():
             course_path = Path(dialog.selectedFiles()[0])
-            course_filetype = course_path.suffix
-
-            if course_filetype == '.lean':
-                course = Course.from_file(course_path)
-            elif course_filetype == '.pkl':
-                course = read_pkl_course(course_path)
-
-            self.__set_course(course, course_filetype)
+            self.__set_course(course_path)
 
     @Slot()
     def __start_exercise(self):
