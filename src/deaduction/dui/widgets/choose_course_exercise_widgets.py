@@ -185,6 +185,8 @@ class CourseChooser(AbstractCoExChooser):
 
 class ExerciseChooser(AbstractCoExChooser):
 
+    exercise_previewed = Signal()
+
     def __init__(self, course: Course, course_filetype: str):
 
         # Public attribute required
@@ -278,6 +280,8 @@ class ExerciseChooser(AbstractCoExChooser):
             widget_lyt.addWidget(self.__code_wgt)
             widget_lyt.addLayout(cb_lyt)
 
+            self.exercise_previewed.emit()
+
         # FIXME: Bug with course and exercise widgets
         elif self.course_filetype == '.lean':
 
@@ -332,7 +336,14 @@ class StartExerciseDialog(QDialog):
         self.__course_chooser = CourseChooser()
         self.__exercise_chooser = QWidget()
 
+        # ───────────────────── Buttons ──────────────────── #
+
+        self.__quit_btn = QPushButton(_('Quit'))
         self.__start_ex_btn = QPushButton(_('Start exercise'))
+
+        self.__quit_btn.setEnabled(False)
+        self.__start_ex_btn.setEnabled(False)
+
         self.__start_ex_btn.clicked.connect(self.__start_exercise)
 
         # ───────────────────── Layouts ──────────────────── #
@@ -343,8 +354,7 @@ class StartExerciseDialog(QDialog):
 
         buttons_lyt = QHBoxLayout()
         buttons_lyt.addStretch()
-        buttons_lyt.addWidget(QPushButton(_('Quit')))
-        buttons_lyt.addWidget(QPushButton(_('Load goal')))
+        buttons_lyt.addWidget(self.__quit_btn)
         buttons_lyt.addWidget(self.__start_ex_btn)
 
         main_layout = QVBoxLayout()
@@ -360,6 +370,8 @@ class StartExerciseDialog(QDialog):
 
     def __set_course(self, course_path: Path):
 
+        self.__start_ex_btn.setEnabled(False)
+
         course_filetype = course_path.suffix
         if course_filetype == '.lean':
             course = Course.from_file(course_path)
@@ -372,6 +384,19 @@ class StartExerciseDialog(QDialog):
         self.__exercise_chooser = ExerciseChooser(course, course_filetype)
         self.__coex_tabwidget.addTab(self.__exercise_chooser, _('Exercise'))
         self.__coex_tabwidget.setCurrentIndex(1)
+
+        # This can't be done in __init__ because at first,
+        # self.__exercise_chooser is an empty QWidget() and therefore it
+        # has no signal exercise_previewed. So we must have
+        # self.__exercise_chooser to be ExerciseChooser to connect.
+        self.__exercise_chooser.exercise_previewed.connect(
+                self.__enable_start_ex_btn)
+
+    @Slot()
+    def __enable_start_ex_btn(self):
+        
+        self.__start_ex_btn.setEnabled(True)
+        self.__start_ex_btn.setDefault(True)
 
     @Slot()
     def __browse_courses(self):
