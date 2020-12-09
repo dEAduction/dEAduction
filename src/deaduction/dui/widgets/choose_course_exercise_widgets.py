@@ -225,7 +225,10 @@ class ExerciseChooser(AbstractCoExChooser):
             objects_wgt = MathObjectWidget(objects)
             properties_wgt = MathObjectWidget(properties)
             objects_lyt, properties_lyt = QVBoxLayout(), QVBoxLayout()
+    
+            objects_wgt.adjustSize()
             objects_wgt.setFont(QFont('Menlo'))
+            properties_wgt.adjustSize()
             properties_wgt.setFont(QFont('Menlo'))
 
             objects_lyt.addWidget(QLabel(_('Objects:')))
@@ -331,7 +334,10 @@ class StartExerciseDialog(QDialog):
     def __init__(self):
 
         super().__init__()
+
         self.setWindowTitle(_('Choose course and exercise — d∃∀duction'))
+        self.setMinimumWidth(450)
+        self.setMinimumHeight(550)
 
         self.__course_chooser = CourseChooser()
         self.__exercise_chooser = QWidget()
