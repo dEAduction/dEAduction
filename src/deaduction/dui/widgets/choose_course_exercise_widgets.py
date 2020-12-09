@@ -305,12 +305,6 @@ class ExerciseChooser(AbstractCoExChooser):
 
         super().set_preview(widget=widget, title=title, description=description)
 
-    def selected_exercise(self) -> Exercise:
-        if self.__exercise:
-            return self.__exercise
-        else:
-            return None
-
     @Slot(StatementsTreeWidgetItem)
     def __call_set_preview(self, item: StatementsTreeWidgetItem):
         if isinstance(item, StatementsTreeWidgetItem):
