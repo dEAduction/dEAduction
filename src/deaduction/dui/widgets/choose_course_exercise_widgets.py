@@ -74,6 +74,9 @@ from deaduction.pylib.coursedata import ( Course,
 def read_pkl_course(course_path: Path) -> Course:
     """
     Extract an instance of the class Course from a .pkl file.
+
+    :param course_path: The path of the course we want to instanciate.
+    :return: The instance of the Course class.
     """
 
     with course_path.open(mode='rb') as input:
@@ -83,6 +86,9 @@ def read_pkl_course(course_path: Path) -> Course:
 
 
 class HorizontalLine(QFrame):
+    """
+    An horizontal line (like <hr> in HTML) QWidget.
+    """
 
     def __init__(self):
 
@@ -92,8 +98,45 @@ class HorizontalLine(QFrame):
 
 
 class AbstractCoExChooser(QWidget):
+    """
+    This class was made for technical purposes and is not to be used
+    outside this file. In StartExerciseDialog, both the course and the
+    exercise choosers have the same structure:
+        - a browser area (browse courses or browse exercices inside one
+          course) on top;
+        - a previewer area (preview the title, task, description, etc)
+          on bottom.
+    In other words, course and exercise choosers contain different
+    widgets which are organized in the same way. Therefore, both
+    CourseChooser and ExerciseChooser inherit from this class
+    (AbstractCoExChooser). It looks like this:
+
+    |------------|
+    |   browser  |
+    |------------|
+    |   preview  |
+    |------------|
+
+    For the details, the bowser part never changes and is instanciated
+    at init (browser_layout passed as argument). On the opposite, there
+    is a preview only if something (a course or exercise) has been
+    chosen. This preview is set with the method set_preview, which is
+    called in StartExerciseDialog. Now, CourseChooser and
+    ExerciseChooser need to have their own sub-widgets. The way to do
+    that here is to redefine __init__ (for the browser) and set_preview
+    (for the preview), define the sub-widgets inside the definitions,
+    and call super().__init__ and super().set_preview with the defined
+    widgets.
+    """
 
     def __init__(self, browser_layout: QLayout):
+        """
+        Init self by preparing layouts and adding the (fixed)
+        browser_layout (not a QWidget!).
+
+        :param browser_layout: QLayout to be displayed for the browser
+            area.
+        """
 
         super().__init__()
 
@@ -113,6 +156,31 @@ class AbstractCoExChooser(QWidget):
     def set_preview(self, widget: QWidget=None, title: str=None,
                     subtitle: str=None, details: Dict[str, str]=None,
                     description: str=None):
+        # TODO: Make widget a QLayout instead?
+        """
+        Set the preview area (given something (course or exercise) has
+        been chosen. The preview area is composed of a title, a
+        substitle, details, a description and a widget. The widget is of
+        course specific to CourseChooser or ExerciseChooser and defined
+        when the set_preview method is redefined in CourseChooser or
+        ExerciseChooser. Visually, the preview area looks like this:
+
+        |----------------------------|
+        | title (big)                |
+        | subtitle (small, italic)   |
+        | |> Details:                |
+        |     …: …                   |
+        |     …: …                   |
+        |                            |
+        | description .............. |
+        | .......................... |
+        | .......................... |
+        |                            |
+        | |------------------------| |
+        | |         widget         | |
+        | |------------------------| |
+        |----------------------------|
+        """
 
         preview_wgt = QWidget()
         layout      = QVBoxLayout()
@@ -129,7 +197,6 @@ class AbstractCoExChooser(QWidget):
             subtitle_wgt.setStyleSheet('font-style: italic;' \
                                        'color:      gray;')
             subtitle_lyt = QHBoxLayout()
-            subtitle_lyt.addWidget(title_wgt)
             subtitle_lyt.addWidget(subtitle_wgt)
             layout.addLayout(subtitle_lyt)
 
