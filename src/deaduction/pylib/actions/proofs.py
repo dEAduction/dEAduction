@@ -28,7 +28,9 @@ This file is part of dEAduction.
 
 import logging
 
-from deaduction.config       import user_config, _
+from deaduction.config       import (tooltips_config,
+                                     tooltips_config,
+                                     _)
 
 import deaduction.pylib.actions.utils as utils
 from deaduction.pylib.actions import (InputType,
@@ -50,13 +52,13 @@ log = logging.getLogger(__name__)
 
 # turn logic_button_texts into a dictionary
 proof_list = ['action_apply', 'proof_methods', 'new_object', 'assumption']
-lbt = user_config.get('proof_button_texts').split(', ')
+lbt = tooltips_config.get('proof_button_texts').split(', ')
 proof_button_texts = {}
 for key, value in zip(proof_list, lbt):
     proof_button_texts[key] = value
 
 
-@action(user_config.get('tooltip_proof_methods'),
+@action(tooltips_config.get('tooltip_proof_methods'),
         proof_button_texts['proof_methods'])
 def action_use_proof_methods(goal: Goal, l: [MathObject],
                             user_input: [str] = []) -> str:
@@ -195,7 +197,7 @@ and add ∀ a ∈ A, P(a, f(a)) to the properties
     raise WrongUserInput
 
 
-@action(user_config.get('tooltip_new_object'),
+@action(tooltips_config.get('tooltip_new_object'),
         proof_button_texts['new_object'])
 def action_new_object(goal: Goal, l: [MathObject],
                       user_input: [str] = []) -> str:
@@ -407,7 +409,7 @@ def apply_function(goal: Goal, l: [MathObject]):
     return format_orelse(possible_codes)
 
 
-@action(user_config.get('tooltip_apply'),
+@action(tooltips_config.get('tooltip_apply'),
         proof_button_texts['action_apply'])
 def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
     """
@@ -499,28 +501,28 @@ def explain_how_to_apply(math_object: MathObject, dynamic=False, long=False) \
 
     # the following 4 cases are mutually exclusive
     if math_object.is_function():
-        captions.append(user_config.get('tooltip_apply_function'))
+        captions.append(tooltips_config.get('tooltip_apply_function'))
 
     elif math_object.is_for_all():
-        captions.append(user_config.get('tooltip_apply_for_all'))
+        captions.append(tooltips_config.get('tooltip_apply_for_all'))
 
     elif math_object.is_exists():
-        captions.append(user_config.get('tooltip_apply_exists'))
+        captions.append(tooltips_config.get('tooltip_apply_exists'))
 
     elif math_object.is_and():
-        captions.append(user_config.get('tooltip_apply_and'))
+        captions.append(tooltips_config.get('tooltip_apply_and'))
 
     # additional line
     if math_object.can_be_used_for_implication():
-        captions.append(user_config.get('tooltip_apply_implication'))
+        captions.append(tooltips_config.get('tooltip_apply_implication'))
 
     elif math_object.can_be_used_for_substitution():
-        captions.append(user_config.get('tooltip_apply_substitute'))
+        captions.append(tooltips_config.get('tooltip_apply_substitute'))
 
     return captions
     
 
-@action(user_config.get('tooltip_assumption'),
+@action(tooltips_config.get('tooltip_assumption'),
         proof_button_texts['assumption'])
 def action_assumption(goal: Goal, l: [MathObject]) -> str:
     """

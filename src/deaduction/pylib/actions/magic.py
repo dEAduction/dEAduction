@@ -30,7 +30,7 @@ import logging
 
 import deaduction.pylib.logger as logger
 
-from deaduction.config import user_config, _
+from deaduction.config import user_config, tooltips_config, _
 from deaduction.pylib.actions.actiondef import action
 from deaduction.config import _
 from deaduction.pylib.actions import (format_orelse,
@@ -38,7 +38,7 @@ from deaduction.pylib.actions import (format_orelse,
 from deaduction.pylib.mathobj import MathObject
 
 # turn logic_button_texts into a dictionary
-lbt = user_config.get('magic_button_texts').split(', ')
+lbt = tooltips_config.get('magic_button_texts').split(', ')
 magic_list = ['action_compute']
 magic_button_texts = {}
 for key, value in zip(magic_list, lbt):
