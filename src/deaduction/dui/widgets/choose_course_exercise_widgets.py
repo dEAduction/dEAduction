@@ -336,6 +336,9 @@ class StartExerciseDialog(QDialog):
         self.__course_chooser = CourseChooser()
         self.__exercise_chooser = QWidget()
 
+        self.__couse_chooser.previous_courses_wgt.itemClicked.connect(
+                self.__set_previous_course)
+
         # ───────────────────── Buttons ──────────────────── #
 
         self.__quit_btn = QPushButton(_('Quit'))
@@ -392,11 +395,15 @@ class StartExerciseDialog(QDialog):
         self.__exercise_chooser.exercise_previewed.connect(
                 self.__enable_start_ex_btn)
 
-    @Slot()
-    def __enable_start_ex_btn(self):
-        
-        self.__start_ex_btn.setEnabled(True)
-        self.__start_ex_btn.setDefault(True)
+    #########
+    # Slots #
+    #########
+
+    @Slot(CourseListItem)
+    def __set_previous_course(self, course_list_item:
+            CourseListItem):
+        course_path = course_list_item.course_path
+        self.__set_course(course_path)
 
     @Slot()
     def __browse_courses(self):
@@ -409,6 +416,12 @@ class StartExerciseDialog(QDialog):
         if dialog.exec_():
             course_path = Path(dialog.selectedFiles()[0])
             self.__set_course(course_path)
+
+    @Slot()
+    def __enable_start_ex_btn(self):
+        
+        self.__start_ex_btn.setEnabled(True)
+        self.__start_ex_btn.setDefault(True)
 
     @Slot()
     def __start_exercise(self):
