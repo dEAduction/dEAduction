@@ -5,9 +5,11 @@
 
     Provide widgets classes for an exercise's context area, that is its
     target, objects (e.g. f:X->Y a function) and properties (e.g. f is
-    continuous). Those widgets will be instantiated in
-    ExerciseCentralWidget, which itself will be instantiated as an
-    attribute of ExerciseMainWindow. Provided classes:
+    continuous).
+
+    Those widgets will be instantiated in ExerciseCentralWidget, which
+    itself will be instantiated as an attribute of ExerciseMainWindow.
+    Provided classes:
         - MathObjectWidget;
         - MathObjectWidgetItem;
         - TargetWidget.

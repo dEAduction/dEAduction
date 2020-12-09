@@ -3,6 +3,14 @@
 # choose_course_exercise_widgets.py : course/exercise chooser widgets #
 #######################################################################
 
+    Provide StartExerciseDialog: the dialog used by the user to choose
+    a course, then an exercise, and start the latter. 
+
+    The class to be used elsewhere in the program is
+    StartExerciseDialog (inherits QDialog). The other classes
+    (AbstractCoExChooser, CourseChooser, ExerciseChooser) are meant to
+    be used in this file only, for technical purposes.
+
 Author(s)      : Kryzar <antoine@hugounet.com>
 Maintainers(s) : Kryzar <antoine@hugounet.com>
 Date           : October 2020
