@@ -36,6 +36,7 @@ This file is part of d∃∀duction.
 import sys
 from pathlib import   Path
 import pickle
+from functools import partial
 from gettext import   gettext as _
 from typing  import ( Any,
                       Dict )
@@ -461,7 +462,9 @@ class StartExerciseDialog(QDialog):
         self.__exercise_chooser = QWidget()
 
         self.__course_chooser.previous_courses_wgt.itemClicked.connect(
-                self.__set_previous_course)
+                partial(self.__course_clicked, goto_exercise=False))
+        self.__course_chooser.previous_courses_wgt.itemDoubleClicked.connect(
+                partial(self.__course_clicked, goto_exercise=True))
 
         # ───────────────────── Buttons ──────────────────── #
 
@@ -495,7 +498,7 @@ class StartExerciseDialog(QDialog):
         self.__coex_tabwidget.setTabEnabled(1, False)
         self.__course_chooser.browse_btn.clicked.connect(self.__browse_courses)
 
-    def set_course(self, course_path: Path):
+    def set_course(self, course_path: Path, goto_exercise: bool):
 
         self.__start_ex_btn.setEnabled(False)
 
@@ -510,7 +513,8 @@ class StartExerciseDialog(QDialog):
         self.__course_chooser.set_preview(course)
         self.__exercise_chooser = ExerciseChooser(course, course_filetype)
         self.__coex_tabwidget.addTab(self.__exercise_chooser, _('Exercise'))
-        self.__coex_tabwidget.setCurrentIndex(1)
+        if goto_exercise:
+            self.__coex_tabwidget.setCurrentIndex(1)
 
         # This can't be done in __init__ because at first,
         # self.__exercise_chooser is an empty QWidget() and therefore it
@@ -523,10 +527,11 @@ class StartExerciseDialog(QDialog):
     # Slots #
     #########
 
-    @Slot(CourseListItem)
-    def __set_previous_course(self, course_list_item: CourseListItem):
+    @Slot(CourseListItem, bool)
+    def __course_clicked(self, course_list_item: CourseListItem, goto_exercise:
+            bool):
         course_path = course_list_item.course_path
-        self.set_course(course_path)
+        self.set_course(course_path, goto_exercise)
 
     @Slot()
     def __browse_courses(self):
@@ -538,7 +543,7 @@ class StartExerciseDialog(QDialog):
         # TODO: Stop using exec_, not recommended by documentation
         if dialog.exec_():
             course_path = Path(dialog.selectedFiles()[0])
-            self.set_course(course_path)
+            self.set_course(course_path, False)
 
     @Slot()
     def __enable_start_ex_btn(self):
