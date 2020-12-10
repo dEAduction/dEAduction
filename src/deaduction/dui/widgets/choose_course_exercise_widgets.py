@@ -283,6 +283,8 @@ class CourseChooser(AbstractCoExChooser):
         self.__browse_btn = QPushButton(_('Browse files for course'))
         self.__previous_courses_wgt = RecentCoursesLW()
 
+        self.__browse_btn.setAutoDefault(False)
+
         browser_lyt = QVBoxLayout()
         browser_lyt.addWidget(self.__browse_btn)
         browser_lyt.addWidget(self.__previous_courses_wgt)
