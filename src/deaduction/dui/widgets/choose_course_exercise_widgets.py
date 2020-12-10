@@ -34,12 +34,13 @@ This file is part of d∃∀duction.
 """
 
 import sys
-from pathlib import   Path
-import pickle
 from functools import partial
 from gettext import   gettext as _
+from pathlib import   Path
+import pickle
 from typing  import ( Any,
-                      Dict )
+                      Dict,
+                      Optional )
 
 from PySide2.QtCore    import ( Signal,
                                 Slot )
@@ -205,7 +206,7 @@ class AbstractCoExChooser(QWidget):
         # TODO: Make widget a QLayout instead?
         """
         Set the preview area (given something (course or exercise) has
-        been chosen. The preview area is composed of a title, a
+        been chosen. The preview area is made of a title, a
         substitle, details, a description and a widget. The widget is of
         course specific to CourseChooser or ExerciseChooser and defined
         when the set_preview method is redefined in CourseChooser or
@@ -268,15 +269,16 @@ class AbstractCoExChooser(QWidget):
 
 class CourseChooser(AbstractCoExChooser):
     """
-    The course chooser. The browser part is composed of a browse-button
-    to browse courses files and a QListWidget displaying recent courses.
-    The preview area has no main_widget.
+    The course chooser.
+    - The browser part is made of a browse-button to browse courses
+      files and a QListWidget displaying recent courses.
+    - The preview area has no main_widget.
     """
 
     def __init__(self):
         """
         See AbstractCoExChooser.__init__ docstring. Here, the browser
-        layout is composed of a browse-button to browse courses files
+        layout is made of a browse-button to browse courses files
         and a QListWidget displayling recent courses.
         """
 
@@ -334,15 +336,51 @@ class CourseChooser(AbstractCoExChooser):
 
 
 class ExerciseChooser(AbstractCoExChooser):
+    """
+    The exercise chooser. This widget is activated / shown when a course
+    has been chosen by the user.
+    - The browser area is made of the course's StatementsTreeWidget
+      displaying only the exercises (e.g. no theorems).
+    - The preview area is more complex and depends on the course's
+      filetype.
+      - If the course was chosen from a .lean file, the preview is only
+        made of the exercise's title, subtitle and description.
+      - If the course was chosend from a .pkl file, exercise's title,
+        subtitle and description are available, as well as its goal
+        (target, math. objects and math. properties). This cannot be
+        done (yet) if the file course is .lean because for displaying
+        the goal, we would need to launch the lean server interface and
+        we obviously do not want to do that for each exercise. Pickle
+        files (see puthon modyle pickle) allow to store class instances
+        and thus we can store the course if it has been pre-processed.
+        Finally, this preview is either displayed as:
+        - two lists for the math objects and properties and a line edit
+          for the target;
+        - or a single list with all these informations (this is called
+          the text mode and it is toggle with a checkbox).
 
+    :property exercise: The exercise being previewed or None.
+    """
+    
     # This signal is emitted when an exercise is previewed. It is
     # received in StartExerciseDialog and the Start exercise button is
     # enabled and set to default.
     exercise_previewed = Signal()
 
     def __init__(self, course: Course, course_filetype: str):
+        """
+        See AbstractCoExChooser.__init__ docstring. Here, the browser
+        layout is only made of the course's StatementsTreeWidget
+        displaying only the exercises (e.g. no theorems). The course
+        file type is stored as a class private attribute and will be
+        used by set_preview to determine if an exercise is to be
+        previewed with its goal or not (see self docstring).
 
-        # Public attribute required
+        :param course: The course in which the user chooses an exercise.
+        :param course_filetype: The course's file file-type ('.lean' or
+            '.pkl'), see self docstring.
+        """
+
         self.__course_filetype = course_filetype  # 'lean' or 'pkl'
 
         browser_layout = QVBoxLayout()
@@ -357,13 +395,25 @@ class ExerciseChooser(AbstractCoExChooser):
         super().__init__(browser_layout)
 
     def set_preview(self, exercise: Exercise):
+        """
+        Set exercise preview. See AbstractCoExChooser.set_preview
+        docstring. The exercise's title, subtitle and description are
+        displayed; if a preview is available (i.e. when course's file
+        file-type is '.pkl', see self doctring), it is displayed. This
+        method manages these two possibilities with a big if / else
+        condition.
+
+        :param exercise: The exercise to be previewed.
+        """
 
         main_widget = QWidget()
         widget_lyt = QVBoxLayout()
         widget_lyt.setContentsMargins(0, 0, 0, 0)
         self.__exercise = exercise
 
-        if self.course_filetype == '.pkl':
+        with_preview = self.course_file == '.pkl':
+
+        if with_preview:
 
             proofstate = exercise.initial_proof_state
             goal = proofstate.goals[0]  # Only one goal (?)
@@ -435,11 +485,8 @@ class ExerciseChooser(AbstractCoExChooser):
             widget_lyt.addWidget(self.__friendly_wgt)
             widget_lyt.addWidget(self.__code_wgt)
             widget_lyt.addLayout(cb_lyt)
+        else:
 
-        # FIXME: Bug with course and exercise widgets
-        elif self.__course_filetype == '.lean':
-
-            # TODO: Say "Preview is available if…"
             widget_lbl = QLabel(_('Goal preview only available when course ' \
                                   'file extension is .pkl.'))
             widget_lbl.setStyleSheet('color: gray;')
@@ -462,12 +509,23 @@ class ExerciseChooser(AbstractCoExChooser):
     ##############
 
     @property
-    def course_filetype(self):
+    def course_filetype(self) -> str:
+        """
+        Return self.__course_filetype.
+        """
+
         return self.__course_filetype
     
     @property
-    def exercise(self):
-        return self.__exercise
+    def exercise(self) -> Optional[Exercise]:
+        """
+        Return self.__exercise if it exists, None otherwise.
+        """
+
+        if self.__exercise:
+            return self.__exercise
+        else:
+            return None
 
     #########
     # Slots #
@@ -475,17 +533,44 @@ class ExerciseChooser(AbstractCoExChooser):
 
     @Slot(StatementsTreeWidgetItem)
     def __call_set_preview(self, item: StatementsTreeWidgetItem):
+        """
+        When the user selects an exercise in the course's exercises
+        tree, the signal itemClicked is emitted and this slot is called.
+        One cannot directly call set_preview because at first we must be
+        sure that the clicked item was an exercise item and not a nod
+        (e.g. a course section).
+
+        :param item: The clicked item (exercise item or nod item) in the
+            course's exercises tree.
+        """
+
         if isinstance(item, StatementsTreeWidgetItem):
             exercise = item.statement
             self.set_preview(exercise)
 
     @Slot(QTreeWidgetItem)
     def __emit_exercise_previewed(self, item):
+        """
+        When the user selects an exercise in the course's exercises
+        tree, the signal itemClicked is emitted and this slot is called.
+        If the clicked item is an exercise item (and not a node, e.g. a
+        course section), the signal self.exercise_previewed is emitted.
+        The aim of this signal is to tell the class StartExerciseDialog
+        when to enable its Start exercise button.
+
+        :param item: The clicked item (exercise item or nod item) in the
+            course's exercises tree.
+        """
+
         if isinstance(item, StatementsTreeWidgetItem):
             self.exercise_previewed.emit()
 
     @Slot()
     def toggle_text_mode(self):
+        """
+        Toggle the text mode for the previewed goal (see self docstring). 
+        """
+
         if self.__text_mode_checkbox.isChecked():
             self.__friendly_wgt.hide()
             self.__code_wgt.show()
