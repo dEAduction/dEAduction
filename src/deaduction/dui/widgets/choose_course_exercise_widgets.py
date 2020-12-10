@@ -60,6 +60,7 @@ from PySide2.QtWidgets import ( QApplication,
                                 QSpacerItem,
                                 QPushButton,
                                 QTabWidget,
+                                QTreeWidgetItem,
                                 QTextEdit,
                                 QVBoxLayout,
                                 QWidget )
@@ -319,8 +320,7 @@ class ExerciseChooser(AbstractCoExChooser):
         exercises_tree = StatementsTreeWidget(course.exercises_list(),
                                               course.outline)
         exercises_tree.resizeColumnToContents(0)
-        # TODO: Expand items (write function in StatementsTreeWidget)
-        # Fred : pas clair qu'il faille "expandre"...
+        exercises_tree.itemClicked.connect(self.__emit_exercise_previewed)
         browser_layout.addWidget(exercises_tree)
 
         exercises_tree.itemClicked.connect(self.__call_set_preview)
@@ -407,8 +407,6 @@ class ExerciseChooser(AbstractCoExChooser):
             widget_lyt.addWidget(self.__code_wgt)
             widget_lyt.addLayout(cb_lyt)
 
-            self.exercise_previewed.emit()
-
         # FIXME: Bug with course and exercise widgets
         elif self.course_filetype == '.lean':
 
@@ -435,6 +433,11 @@ class ExerciseChooser(AbstractCoExChooser):
         if isinstance(item, StatementsTreeWidgetItem):
             exercise = item.statement
             self.set_preview(exercise)
+
+    @Slot(QTreeWidgetItem)
+    def __emit_exercise_previewed(self, item):
+        if isinstance(item, StatementsTreeWidgetItem):
+            self.exercise_previewed.emit()
 
     @Slot()
     def toggle_text_mode(self):
