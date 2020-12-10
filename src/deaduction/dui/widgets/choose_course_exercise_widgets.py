@@ -112,13 +112,15 @@ class CourseListItem(QListWidgetItem):
 
     def __init__(self, course_path, title, number):
 
-        if course_path.endswith('pkl'):
-            precision = "(with preview)"
-        else:
-            precision = "(without preview)"
-        super().__init__(title + " " + precision)
+        w_or_wo = 'w/' if course_path.endswith('pkl') else 'w/o'
+        super().__init__(f'{title} [{w_or_wo} preview]')
+
         self.setToolTip(str(course_path))
-        self.course_path = Path(course_path)
+        self.__course_path = Path(course_path)
+
+    @property
+    def course_path(self):
+        return self.__course_path
 
 
 class AbstractCoExChooser(QWidget):
@@ -259,19 +261,19 @@ class CourseChooser(AbstractCoExChooser):
         """
 
         # Browse files button
-        self.browse_btn = QPushButton(_('Browse files for course'))
+        self.__browse_btn = QPushButton(_('Browse files for course'))
 
         # Previous courses list
-        self.previous_courses_wgt = QListWidget()
+        self.__previous_courses_wgt = QListWidget()
         courses_paths, titles, exercise_numbers = get_recent_courses()
         info = zip(courses_paths, titles, exercise_numbers)
         for course_path, title, number in info:
             item = CourseListItem(course_path, title, number)
-            self.previous_courses_wgt.addItem(item)
+            self.__previous_courses_wgt.addItem(item)
 
         browser_lyt = QVBoxLayout()
-        browser_lyt.addWidget(self.browse_btn)
-        browser_lyt.addWidget(self.previous_courses_wgt)
+        browser_lyt.addWidget(self.__browse_btn)
+        browser_lyt.addWidget(self.__previous_courses_wgt)
 
         super().__init__(browser_lyt)
 
@@ -303,6 +305,18 @@ class CourseChooser(AbstractCoExChooser):
         super().set_preview(main_widget=None, title=title, subtitle=subtitle,
                             details=details, description=description)
 
+    ##############
+    # Properties #
+    ##############
+    
+    @property
+    def browse_btn(self):
+        return self.__browse_btn
+
+    @property
+    def previous_courses_wgt(self):
+        return self.__previous_courses_wgt
+
 
 class ExerciseChooser(AbstractCoExChooser):
 
@@ -314,7 +328,7 @@ class ExerciseChooser(AbstractCoExChooser):
     def __init__(self, course: Course, course_filetype: str):
 
         # Public attribute required
-        self.course_filetype = course_filetype  # 'lean' or 'pkl'
+        self.__course_filetype = course_filetype  # 'lean' or 'pkl'
 
         browser_layout = QVBoxLayout()
         exercises_tree = StatementsTreeWidget(course.exercises_list(),
@@ -332,7 +346,7 @@ class ExerciseChooser(AbstractCoExChooser):
         main_widget = QWidget()
         widget_lyt = QVBoxLayout()
         widget_lyt.setContentsMargins(0, 0, 0, 0)
-        self.exercise = exercise
+        self.__exercise = exercise
 
         if self.course_filetype == '.pkl':
 
@@ -408,7 +422,7 @@ class ExerciseChooser(AbstractCoExChooser):
             widget_lyt.addLayout(cb_lyt)
 
         # FIXME: Bug with course and exercise widgets
-        elif self.course_filetype == '.lean':
+        elif self.__course_filetype == '.lean':
 
             # TODO: Say "Preview is available if…"
             widget_lbl = QLabel(_('Goal preview only available when course ' \
@@ -427,6 +441,22 @@ class ExerciseChooser(AbstractCoExChooser):
 
         super().set_preview(main_widget=main_widget, title=title,
                 description=description)
+
+    ##############
+    # Properties #
+    ##############
+
+    @property
+    def course_filetype(self):
+        return self.__course_filetype
+    
+    @property
+    def exercise(self):
+        return self.__exercise
+
+    #########
+    # Slots #
+    #########
 
     @Slot(StatementsTreeWidgetItem)
     def __call_set_preview(self, item: StatementsTreeWidgetItem):
