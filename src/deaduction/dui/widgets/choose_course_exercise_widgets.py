@@ -273,6 +273,11 @@ class CourseChooser(AbstractCoExChooser):
     - The browser part is made of a browse-button to browse courses
       files and a QListWidget displaying recent courses.
     - The preview area has no main_widget.
+
+    :property browse_btn: The 'Browse files' button (self.__browse_btn).
+    :property previous_courses_wgt: The previous courses widget
+        (instance of RecentCoursesLW, displays the last five courses
+        used by the user, self.__previous_courses_wgt).
     """
 
     def __init__(self):
@@ -328,10 +333,18 @@ class CourseChooser(AbstractCoExChooser):
     
     @property
     def browse_btn(self):
+        """
+        Return self.__browse_btn.
+        """
+
         return self.__browse_btn
 
     @property
     def previous_courses_wgt(self):
+        """
+        Return self.__previous_courses_wgt.
+        """
+
         return self.__previous_courses_wgt
 
 
