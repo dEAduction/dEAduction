@@ -547,6 +547,12 @@ class StartExerciseDialog(QDialog):
         if dialog.exec_():
             course_path = Path(dialog.selectedFiles()[0])
             self.set_course(course_path, False)
+            # Unselect selected course from previous_courses_wgt
+            # Yeah we must use indexes.
+            previous_courses = self.__course_chooser.previous_courses_wgt
+            for i in range(0, previous_courses.count()):
+                item = previous_courses.item(i)
+                previous_courses.setItemSelected(item, False)
 
     @Slot()
     def __enable_start_ex_btn(self):
