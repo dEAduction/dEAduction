@@ -82,7 +82,7 @@ temp_config = configparser.ConfigParser()
 #########
 # utils #
 #########
-def add_to_recent_courses(course_path: str,
+def add_to_recent_courses(course_path: Path,
                           course_type: str = '.lean',
                           title: str = "",
                           exercise_number: int = -1):
@@ -95,40 +95,41 @@ def add_to_recent_courses(course_path: str,
     except KeyError:
         max = 5
 
-    if course_type == '.pkl' and course_path.endswith('.lean'):
-        course_path = course_path[:-4] + 'pkl'
+    if course_type == '.pkl' and course_path.suffix == '.lean':
+        course_path = course_path.with_suffix('.pkl')
 
-    recent_courses, titles, exercise_numbers = get_recent_courses()
-    if course_path in recent_courses:
+    courses_paths, courses_titles, exercises_numbers = get_recent_courses()
+    if course_path in courses_paths:
         # We want the course to appear in pole position
         # 0 = newest, last = oldest
-        n = recent_courses.index(course_path)
-        recent_courses.pop(n)
-        titles.pop(n)
-        exercise_numbers.pop(n)
-    recent_courses.insert(0, course_path)
-    titles.insert(0,title)
-    exercise_numbers.insert(0,exercise_number)
+        n = courses_paths.index(course_path)
+        courses_paths.pop(n)
+        courses_titles.pop(n)
+        exercises_numbers.pop(n)
+    courses_paths.insert(0, course_path)
+    courses_titles.insert(0, title)
+    exercises_numbers.insert(0, exercise_number)
 
-    if len(recent_courses) > max:
+    if len(courses_paths) > max:
         # Remove oldest
-        recent_courses.pop()
-        titles.pop()
-        exercise_numbers.pop()
+        courses_paths.pop()
+        courses_titles.pop()
+        exercises_numbers.pop()
 
     # Turn each list into a single string
-    recent_courses_string   = ','.join(recent_courses)
-    titles_string           = ','.join(titles)
-    exercise_numbers_string = ','.join(map(str, exercise_numbers))
-    user_config['recent_courses'] = recent_courses_string
-    user_config['recent_courses_titles'] = titles_string
-    user_config['exercise_numbers'] = exercise_numbers_string
+    courses_paths_strings = [str(path.resolve()) for path in courses_paths]
+    courses_paths_string   = ','.join(courses_paths_strings)
+    courses_titles_string = ','.join(courses_titles)
+    exercises_numbers_string = ','.join(map(str, exercises_numbers))
+    user_config['recent_courses'] = courses_paths_string
+    user_config['recent_courses_titles'] = courses_titles_string
+    user_config['exercise_numbers'] = exercises_numbers_string
 
     # Save config file
     write_config()
 
 
-def get_recent_courses() -> [(str, str)]:
+def get_recent_courses() -> ([Path], [str], [int]):
     """
     Return the list of (recent course, title) found in the user_config dict
     """
@@ -148,19 +149,20 @@ def get_recent_courses() -> [(str, str)]:
 
     if recent_courses:
         recent_courses_list = recent_courses.split(',')
-        titles_list = titles.split(',')
-        numbers_list = [-1] * len(recent_courses_list)
+        courses_paths = list(map(Path, recent_courses_list))
+        courses_titles = titles.split(',')
+        exercises_numbers = [-1] * len(recent_courses_list)
     else:
-        recent_courses_list = []
-        titles_list = []
-        numbers_list = []
+        courses_paths = []
+        courses_titles = []
+        exercises_numbers = []
 
-    if numbers_list:
+    if exercises_numbers:
         try:
-            numbers_list        = list(map(int, numbers.split(',')))
+            exercises_numbers = list(map(int, numbers.split(',')))
         except ValueError:
             pass
-    return recent_courses_list, titles_list, numbers_list
+    return courses_paths, courses_titles, exercises_numbers
 
 
 def write_config(field_name: str = None, field_content: str = None):

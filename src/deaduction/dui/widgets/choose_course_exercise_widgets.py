@@ -102,7 +102,27 @@ class HorizontalLine(QFrame):
         self.setFrameShadow(QFrame.Sunken)
 
 
-class CourseListItem(QListWidgetItem):
+class RecentCoursesLW(QListWidget):
+
+    def __init__(self):
+
+        super().__init__()
+
+        courses_paths, titles, exercise_numbers = get_recent_courses()
+        info = zip(courses_paths, titles, exercise_numbers)
+        for course_path, course_title, exercise_number in info:
+            item = RecentCoursesLWI(course_path, course_title)
+            self.addItem(item)
+
+    def add_browsed_course(self, course_path: Path, title: str):
+
+        displayed_title = f'(browsed) {title}'
+        item = RecentCoursesLWI(course_path, displayed_title)
+        self.insertItem(0, item)
+        self.setItemSelected(item, True)
+    
+
+class RecentCoursesLWI(QListWidgetItem):
     """
     A class to display recent courses and store their Path
     title           str, title to be displayed
@@ -110,13 +130,13 @@ class CourseListItem(QListWidgetItem):
     number          int, number of last exercise done in this course
     """
 
-    def __init__(self, course_path, title, number):
+    def __init__(self, course_path: Path, title: str):
 
-        w_or_wo = 'w/' if course_path.endswith('pkl') else 'w/o'
+        w_or_wo = 'w/' if course_path.suffix == '.pkl' else 'w/o'
         super().__init__(f'{title} [{w_or_wo} preview]')
 
         self.setToolTip(str(course_path))
-        self.__course_path = Path(course_path)
+        self.__course_path = course_path
 
     @property
     def course_path(self):
@@ -260,16 +280,8 @@ class CourseChooser(AbstractCoExChooser):
         and a QListWidget displayling recent courses.
         """
 
-        # Browse files button
         self.__browse_btn = QPushButton(_('Browse files for course'))
-
-        # Previous courses list
-        self.__previous_courses_wgt = QListWidget()
-        courses_paths, titles, exercise_numbers = get_recent_courses()
-        info = zip(courses_paths, titles, exercise_numbers)
-        for course_path, title, number in info:
-            item = CourseListItem(course_path, title, number)
-            self.__previous_courses_wgt.addItem(item)
+        self.__previous_courses_wgt = RecentCoursesLW()
 
         browser_lyt = QVBoxLayout()
         browser_lyt.addWidget(self.__browse_btn)
@@ -287,6 +299,7 @@ class CourseChooser(AbstractCoExChooser):
         :param Course: Course to be previewed.
         """
 
+        # TODO: Add these properties to the course class?
         title       = course.metadata.get('Title',       None)
         subtitle    = course.metadata.get('Subtitle',    None)
         description = course.metadata.get('Description', None)
@@ -531,7 +544,8 @@ class StartExerciseDialog(QDialog):
         self.__coex_tabwidget.setTabEnabled(1, False)
         self.__course_chooser.browse_btn.clicked.connect(self.__browse_courses)
 
-    def set_course(self, course_path: Path, goto_exercise: bool):
+    def set_course(self, course_path: Path, goto_exercise: bool,
+                   course_was_browsed: bool=False):
 
         self.__start_ex_btn.setEnabled(False)
 
@@ -556,14 +570,19 @@ class StartExerciseDialog(QDialog):
         self.__exercise_chooser.exercise_previewed.connect(
                 self.__enable_start_ex_btn)
 
+        if course_was_browsed:
+            title = course.metadata.get('Title', 'no title')
+            self.__course_chooser.previous_courses_wgt.add_browsed_course(
+                    course_path, title)
+
     #########
     # Slots #
     #########
 
-    @Slot(CourseListItem, bool)
-    def __course_clicked(self, course_list_item: CourseListItem, goto_exercise:
-            bool):
-        course_path = course_list_item.course_path
+    @Slot(RecentCoursesLWI, bool)
+    def __course_clicked(self, item: RecentCoursesLWI,
+                        goto_exercise: bool):
+        course_path = item.course_path
         self.set_course(course_path, goto_exercise)
 
     @Slot()
@@ -576,13 +595,7 @@ class StartExerciseDialog(QDialog):
         # TODO: Stop using exec_, not recommended by documentation
         if dialog.exec_():
             course_path = Path(dialog.selectedFiles()[0])
-            self.set_course(course_path, False)
-            # Unselect selected course from previous_courses_wgt
-            # Yeah we must use indexes.
-            previous_courses = self.__course_chooser.previous_courses_wgt
-            for i in range(0, previous_courses.count()):
-                item = previous_courses.item(i)
-                previous_courses.setItemSelected(item, False)
+            self.set_course(course_path, False, course_was_browsed=True)
 
     @Slot()
     def __enable_start_ex_btn(self):
@@ -605,7 +618,7 @@ class StartExerciseDialog(QDialog):
             exercise_number = course.statements.index(exercise)
         else:
             exercise_number = -1
-        add_to_recent_courses(str(course_path),
+        add_to_recent_courses(course_path,
                               course_type,
                               title,
                               exercise_number)
