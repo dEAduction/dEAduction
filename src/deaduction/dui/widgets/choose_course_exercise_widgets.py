@@ -416,7 +416,7 @@ class ExerciseChooser(AbstractCoExChooser):
     """
     The exercise chooser. This widget is activated / shown when a course
     has been chosen by the user (signal
-    StartExerciseDialog.__course_chooser.course_choosen).
+    StartExerciseDialog.__course_chooser.course_chosen).
     - The browser area is made of the course's StatementsTreeWidget
       displaying only the exercises (e.g. no theorems).
     - The preview area is more complex and depends on the course's
@@ -649,23 +649,47 @@ class ExerciseChooser(AbstractCoExChooser):
 class StartExerciseDialog(QDialog):
     """
     The course and exercise chooser (inherits QDialog). This is the
-    first widget when launching d∃∀duction as it is the one which
-    allows the user to:
-    1. choose a course (from a file or from recent courses);
+    first widget activated / shown when launching d∃∀duction as it is
+    the one which allows the user to:
+    1. choose a course (from a file or from recent courses' list);
     2. browse / preview the exercises for the chosen course;
     3. start the chosen exercise (launchs the ExerciseMainWindow).
 
+    This class is to be instanciated in deaduction.dui.__main__.py. The
+    dialog is opened with QDialog.open and qtrio waits for the signal
+    self.exercise_chosen to be emitted with the corresponding exercise.
+    Once it is done, the program proceeds on launching the main exercise
+    window.
+
     StartExerciseDialog is divided in two main sub-widgets (presented in
     a QTabWidget): the course chooser (self.__course_chooser) and the
-    exercise chooser (self.__exercise_chooser). At first, only the
-    course chooser is enabled. When the user selects a course (either by
-    browsing files or clicking on the recent courses list), all its
-    exercises.
+    exercise chooser (self.__exercise_chooser), see those choosers
+    docstrings. At first, only the course chooser is enabled. When the
+    user selects a course (either by browsing files or clicking on the
+    recent courses list), the signal self.__course_chooser.course_chosen
+    is emitted and the slot __set_course is called (with the
+    corresponding courses and other data). An ExerciseChooser object is
+    instanciated (self.__exercise_chooser) in a new tab and the user can
+    browse exercises and preview them. Once the user chose a course,
+    they click on the 'Start exercise' button, which closes the dialog
+    and launches the exercise main window.
+
+    The communication between this class, the two choosers and the rest
+    of the program can be tricky and the actual solution is
+    not-so-elegant; enhancements encouraged and welcome. For example,
+    the 'Start exercise' button is not always enabled. At init, it is
+    disabled and it is enabled when the user clicks on an exercise item
+    in self.__exercise_chooser and the signal
+    self.__exercise_chooser.exercise_previewed is emitted.
     """
 
-    exercise_choosen = Signal(Exercise)
+    exercise_chosen = Signal(Exercise)
 
     def __init__(self):
+        """
+        Init self by setting up the layouts, the buttons and the tab
+        widget (see self docstring).
+        """
 
         super().__init__()
 
@@ -709,8 +733,44 @@ class StartExerciseDialog(QDialog):
 
         self.__coex_tabwidget.setTabEnabled(1, False)
 
+    #########
+    # Slots #
+    #########
+
+    @Slot()
+    def __enable_start_ex_btn(self):
+        """
+        This method is called when an exercise item is clicked on in the
+        exercise chooser and therefore is being previewed.  Its goal is
+        to enable the 'Start exercise' button which may have been
+        disabled until then.  The corresponding signal is
+        self.__exercise_chooser.exercise_previewed. However note that it
+        is not connected in self.__init__. Indeed, when self is
+        instanciated, self.__exercise_chooser is a simple QWidget and
+        not an instance of ExerciseChooser. Consequently,
+        exercise_previewed is at this stage *not* an attribute of
+        self.__exercise_chooser. So the signal is connected in
+        __preview_exercises once self.__exercise_chooser has been set to
+        an ExerciseChooser object.
+        """
+        
+        self.__start_ex_btn.setEnabled(True)
+        self.__start_ex_btn.setDefault(True)
+
+    @Slot(Course, Path, bool)
     def __preview_exercises(self, course: Course, course_filetype: Path,
-                     goto_exercise: bool):
+                            goto_exercise: bool):
+        """
+        This method is called when the user chose a course an the signal
+        self.__course_chooser.course_chosen is emitted. It instanciates
+        an ExerciseChooser object for the corresponding course, puts it
+        in the second tab and activates the tab. Furthermore, this
+        method connects the signal
+        self.__exercise_chooser.exercise_previewed to the slot
+        self.__enable_start_ex_btn (see __enable_start_ex_btn for the
+        why).
+        """
+
 
         self.__start_ex_btn.setEnabled(False)
 
@@ -721,29 +781,21 @@ class StartExerciseDialog(QDialog):
         if goto_exercise:
             self.__coex_tabwidget.setCurrentIndex(1)
 
-        # This can't be done in __init__ because at first,
-        # self.__exercise_chooser is an empty QWidget() and therefore it
-        # has no signal exercise_previewed. So we must have
-        # self.__exercise_chooser to be ExerciseChooser to connect.
         self.__exercise_chooser.exercise_previewed.connect(
                 self.__enable_start_ex_btn)
 
-    #########
-    # Slots #
-    #########
-
-    @Slot()
-    def __enable_start_ex_btn(self):
-        
-        self.__start_ex_btn.setEnabled(True)
-        self.__start_ex_btn.setDefault(True)
-
     @Slot()
     def __start_exercise(self):
+        """
+        This method is called when the user clicks on the 'Start
+        exercise' button. It adds the corresponding course to the recent
+        courses list if needed, emits the signal self.exercise_chosen
+        (see self docstring) and closes the dialog.
+        """
 
         exercise = self.__exercise_chooser.exercise
 
-        # save course_path, title, and exercise number
+        # Save course_path, title, and exercise number
         # in user_config's previous_courses_list
         course_type     = self.__exercise_chooser.course_filetype
         course          = exercise.course
@@ -758,7 +810,8 @@ class StartExerciseDialog(QDialog):
                               title,
                               exercise_number)
 
-        self.exercise_choosen.emit(exercise)
+        # Send exercise_chosen signal and close dialog
+        self.exercise_chosen.emit(exercise)
         self.accept()  # Fuck you and I'll see you tomorrow!
 
 
@@ -769,3 +822,23 @@ if __name__ == '__main__':
     start_exercise_dialog.show()
 
     sys.exit(app.exec_())
+
+
+#         db         db
+#       d88           88
+#      888            888
+#     d88             888b
+#     888             d88P
+#     Y888b  /``````\8888
+#   ,----Y888        Y88P`````\
+#   |        ,'`\_/``\ |,,    |
+#    \,,,,-| | o | o / |  ```'
+#          |  """ """  |
+#         /             \
+#        |               \
+#        |  ,,,,----'''```|
+#        |``   @    @     |
+#         \,,    ___    ,,/
+#            \__|   |__/
+#               | | |
+#               \_|_/
