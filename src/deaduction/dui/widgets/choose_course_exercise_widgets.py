@@ -404,7 +404,7 @@ class ExerciseChooser(AbstractCoExChooser):
     # This signal is emitted when an exercise is previewed. It is
     # received in StartExerciseDialog and the Start exercise button is
     # enabled and set to default.
-    exercise_selected = Signal()
+    exercise_previewed = Signal()
 
     def __init__(self, course: Course, course_filetype: str):
         """
@@ -426,7 +426,7 @@ class ExerciseChooser(AbstractCoExChooser):
         exercises_tree = StatementsTreeWidget(course.exercises_list(),
                                               course.outline)
         exercises_tree.resizeColumnToContents(0)
-        exercises_tree.itemClicked.connect(self.__emit_exercise_selected)
+        exercises_tree.itemClicked.connect(self.__emit_exercise_previewed)
         browser_layout.addWidget(exercises_tree)
 
         exercises_tree.itemClicked.connect(self.__call_set_preview)
@@ -588,12 +588,12 @@ class ExerciseChooser(AbstractCoExChooser):
             self.set_preview(exercise)
 
     @Slot(QTreeWidgetItem)
-    def __emit_exercise_selected(self, item):
+    def __emit_exercise_previewed(self, item):
         """
         When the user selects an exercise in the course's exercises
         tree, the signal itemClicked is emitted and this slot is called.
         If the clicked item is an exercise item (and not a node, e.g. a
-        course section), the signal self.exercise_selected is emitted.
+        course section), the signal self.exercise_previewed is emitted.
         The aim of this signal is to tell the class StartExerciseDialog
         when to enable its Start exercise button.
 
@@ -602,7 +602,7 @@ class ExerciseChooser(AbstractCoExChooser):
         """
 
         if isinstance(item, StatementsTreeWidgetItem):
-            self.exercise_selected.emit()
+            self.exercise_previewed.emit()
 
     @Slot()
     def toggle_text_mode(self):
@@ -648,7 +648,7 @@ class StartExerciseDialog(QDialog):
         self.__course_chooser = CourseChooser()
         self.__exercise_chooser = QWidget()
 
-        self.__course_chooser.course_selected.connect(self.__preview_exercise)
+        self.__course_chooser.course_selected.connect(self.__preview_exercises)
 
         # ───────────────────── Buttons ──────────────────── #
 
@@ -681,7 +681,7 @@ class StartExerciseDialog(QDialog):
 
         self.__coex_tabwidget.setTabEnabled(1, False)
 
-    def __preview_exercise(self, course: Course, course_filetype: Path,
+    def __preview_exercises(self, course: Course, course_filetype: Path,
                      goto_exercise: bool):
 
         self.__start_ex_btn.setEnabled(False)
@@ -695,9 +695,9 @@ class StartExerciseDialog(QDialog):
 
         # This can't be done in __init__ because at first,
         # self.__exercise_chooser is an empty QWidget() and therefore it
-        # has no signal exercise_selected. So we must have
+        # has no signal exercise_previewed. So we must have
         # self.__exercise_chooser to be ExerciseChooser to connect.
-        self.__exercise_chooser.exercise_selected.connect(
+        self.__exercise_chooser.exercise_previewed.connect(
                 self.__enable_start_ex_btn)
 
     #########
