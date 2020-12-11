@@ -76,7 +76,7 @@ from deaduction.pylib.coursedata import ( Course,
                                           Exercise )
 
 
-# TODO: Put this function somewhere else
+# TODO: Put this function somewhere else (course classmethod?)
 def read_pkl_course(course_path: Path) -> Course:
     """
     Extract an instance of the class Course from a .pkl file.
@@ -273,12 +273,9 @@ class CourseChooser(AbstractCoExChooser):
     - The browser part is made of a browse-button to browse courses
       files and a QListWidget displaying recent courses.
     - The preview area has no main_widget.
-
-    :property browse_btn: The 'Browse files' button (self.__browse_btn).
-    :property previous_courses_wgt: The previous courses widget
-        (instance of RecentCoursesLW, displays the last five courses
-        used by the user, self.__previous_courses_wgt).
     """
+
+    course_selected = Signal(Course, str, bool)
 
     def __init__(self):
         """
@@ -290,6 +287,12 @@ class CourseChooser(AbstractCoExChooser):
         self.__browse_btn = QPushButton(_('Browse files for course'))
         self.__previous_courses_wgt = RecentCoursesLW()
 
+        self.__browse_btn.clicked.connect(self.__browse_courses)
+        self.__previous_courses_wgt.itemClicked.connect(
+                partial(self.__recent_course_clicked, goto_exercise=False))
+        self.__previous_courses_wgt.itemDoubleClicked.connect(
+                partial(self.__recent_course_clicked, goto_exercise=True))
+
         self.__browse_btn.setAutoDefault(False)
 
         browser_lyt = QVBoxLayout()
@@ -298,7 +301,7 @@ class CourseChooser(AbstractCoExChooser):
 
         super().__init__(browser_lyt)
 
-    def set_preview(self, course: Course):
+    def set_preview(self):
         """
         Set course preview. See AbstractCoExChooser.set_preview
         docstring. Here, there is no main_widget. Course metadata are
@@ -309,11 +312,11 @@ class CourseChooser(AbstractCoExChooser):
         """
 
         # TODO: Add these properties to the course class?
-        title       = course.metadata.get('Title',       None)
-        subtitle    = course.metadata.get('Subtitle',    None)
-        description = course.metadata.get('Description', None)
+        title       = self.__course.metadata.get('Title',       None)
+        subtitle    = self.__course.metadata.get('Subtitle',    None)
+        description = self.__course.metadata.get('Description', None)
 
-        details = course.metadata
+        details = self.__course.metadata
         # Remove title, subtitle and description from details
         # TODO: Prevent user for using a 'Path' attribute (in the course
         # file) when writing a course.
@@ -327,25 +330,50 @@ class CourseChooser(AbstractCoExChooser):
         super().set_preview(main_widget=None, title=title, subtitle=subtitle,
                             details=details, description=description)
 
-    ##############
-    # Properties #
-    ##############
-    
-    @property
-    def browse_btn(self):
-        """
-        Return self.__browse_btn.
-        """
+        self.course_selected.emit(self.__course, self.__course_filetype,
+                                  self.__goto_exercise)
 
-        return self.__browse_btn
+    def __instanciate_course(self, course_path: Path):
 
-    @property
-    def previous_courses_wgt(self):
-        """
-        Return self.__previous_courses_wgt.
-        """
+        course_filetype = course_path.suffix
+        if course_filetype == '.lean':
+            course = Course.from_file(course_path)
+        elif course_filetype == '.pkl':
+            course = read_pkl_course(course_path)
 
-        return self.__previous_courses_wgt
+        self.__course = course
+        self.__course_filetype = course_filetype
+
+    #########
+    # Slots #
+    #########
+   
+    @Slot()
+    def __browse_courses(self):
+
+        dialog = QFileDialog()
+        dialog.setFileMode(QFileDialog.ExistingFile)
+        dialog.setNameFilter('*.lean *.pkl')
+
+        # TODO: Stop using exec_, not recommended by documentation
+        if dialog.exec_():
+            course_path = Path(dialog.selectedFiles()[0])
+            self.__instanciate_course(course_path)
+
+            title = self.__course.metadata.get('Title', 'no title')
+            self.__previous_courses_wgt.add_browsed_course(
+                    course_path, title)
+            self.__goto_exercise = False
+            self.set_preview()
+
+    @Slot(RecentCoursesLWI, bool)
+    def __recent_course_clicked(self, course_item: RecentCoursesLWI,
+                                goto_exercise: bool):
+        course_path = course_item.course_path
+        self.__instanciate_course(course_path)
+        self.__goto_exercise = goto_exercise
+        self.set_preview()
+
 
 
 class ExerciseChooser(AbstractCoExChooser):
@@ -371,14 +399,12 @@ class ExerciseChooser(AbstractCoExChooser):
           for the target;
         - or a single list with all these informations (this is called
           the text mode and it is toggle with a checkbox).
-
-    :property exercise: The exercise being previewed or None.
     """
     
     # This signal is emitted when an exercise is previewed. It is
     # received in StartExerciseDialog and the Start exercise button is
     # enabled and set to default.
-    exercise_previewed = Signal()
+    exercise_selected = Signal()
 
     def __init__(self, course: Course, course_filetype: str):
         """
@@ -400,7 +426,7 @@ class ExerciseChooser(AbstractCoExChooser):
         exercises_tree = StatementsTreeWidget(course.exercises_list(),
                                               course.outline)
         exercises_tree.resizeColumnToContents(0)
-        exercises_tree.itemClicked.connect(self.__emit_exercise_previewed)
+        exercises_tree.itemClicked.connect(self.__emit_exercise_selected)
         browser_layout.addWidget(exercises_tree)
 
         exercises_tree.itemClicked.connect(self.__call_set_preview)
@@ -424,7 +450,7 @@ class ExerciseChooser(AbstractCoExChooser):
         widget_lyt.setContentsMargins(0, 0, 0, 0)
         self.__exercise = exercise
 
-        with_preview = self.course_file == '.pkl':
+        with_preview = self.__course_filetype == '.pkl'
 
         if with_preview:
 
@@ -562,12 +588,12 @@ class ExerciseChooser(AbstractCoExChooser):
             self.set_preview(exercise)
 
     @Slot(QTreeWidgetItem)
-    def __emit_exercise_previewed(self, item):
+    def __emit_exercise_selected(self, item):
         """
         When the user selects an exercise in the course's exercises
         tree, the signal itemClicked is emitted and this slot is called.
         If the clicked item is an exercise item (and not a node, e.g. a
-        course section), the signal self.exercise_previewed is emitted.
+        course section), the signal self.exercise_selected is emitted.
         The aim of this signal is to tell the class StartExerciseDialog
         when to enable its Start exercise button.
 
@@ -576,7 +602,7 @@ class ExerciseChooser(AbstractCoExChooser):
         """
 
         if isinstance(item, StatementsTreeWidgetItem):
-            self.exercise_previewed.emit()
+            self.exercise_selected.emit()
 
     @Slot()
     def toggle_text_mode(self):
@@ -593,6 +619,21 @@ class ExerciseChooser(AbstractCoExChooser):
 
 
 class StartExerciseDialog(QDialog):
+    """
+    The course and exercise chooser (inherits QDialog). This is the
+    first widget when launching d∃∀duction as it is the one which
+    allows the user to:
+    1. choose a course (from a file or from recent courses);
+    2. browse / preview the exercises for the chosen course;
+    3. start the chosen exercise (launchs the ExerciseMainWindow).
+
+    StartExerciseDialog is divided in two main sub-widgets (presented in
+    a QTabWidget): the course chooser (self.__course_chooser) and the
+    exercise chooser (self.__exercise_chooser). At first, only the
+    course chooser is enabled. When the user selects a course (either by
+    browsing files or clicking on the recent courses list), all its
+    exercises.
+    """
 
     exercise_choosen = Signal(Exercise)
 
@@ -607,10 +648,7 @@ class StartExerciseDialog(QDialog):
         self.__course_chooser = CourseChooser()
         self.__exercise_chooser = QWidget()
 
-        self.__course_chooser.previous_courses_wgt.itemClicked.connect(
-                partial(self.__course_clicked, goto_exercise=False))
-        self.__course_chooser.previous_courses_wgt.itemDoubleClicked.connect(
-                partial(self.__course_clicked, goto_exercise=True))
+        self.__course_chooser.course_selected.connect(self.__preview_exercise)
 
         # ───────────────────── Buttons ──────────────────── #
 
@@ -642,22 +680,14 @@ class StartExerciseDialog(QDialog):
         # ───────────────────── Others ───────────────────── #
 
         self.__coex_tabwidget.setTabEnabled(1, False)
-        self.__course_chooser.browse_btn.clicked.connect(self.__browse_courses)
 
-    def set_course(self, course_path: Path, goto_exercise: bool,
-                   course_was_browsed: bool=False):
+    def __preview_exercise(self, course: Course, course_filetype: Path,
+                     goto_exercise: bool):
 
         self.__start_ex_btn.setEnabled(False)
 
-        course_filetype = course_path.suffix
-        if course_filetype == '.lean':
-            course = Course.from_file(course_path)
-        elif course_filetype == '.pkl':
-            course = read_pkl_course(course_path)
-
         self.__coex_tabwidget.removeTab(1)
         self.__coex_tabwidget.setTabEnabled(1, True)
-        self.__course_chooser.set_preview(course)
         self.__exercise_chooser = ExerciseChooser(course, course_filetype)
         self.__coex_tabwidget.addTab(self.__exercise_chooser, _('Exercise'))
         if goto_exercise:
@@ -665,37 +695,14 @@ class StartExerciseDialog(QDialog):
 
         # This can't be done in __init__ because at first,
         # self.__exercise_chooser is an empty QWidget() and therefore it
-        # has no signal exercise_previewed. So we must have
+        # has no signal exercise_selected. So we must have
         # self.__exercise_chooser to be ExerciseChooser to connect.
-        self.__exercise_chooser.exercise_previewed.connect(
+        self.__exercise_chooser.exercise_selected.connect(
                 self.__enable_start_ex_btn)
-
-        if course_was_browsed:
-            title = course.metadata.get('Title', 'no title')
-            self.__course_chooser.previous_courses_wgt.add_browsed_course(
-                    course_path, title)
 
     #########
     # Slots #
     #########
-
-    @Slot(RecentCoursesLWI, bool)
-    def __course_clicked(self, item: RecentCoursesLWI,
-                        goto_exercise: bool):
-        course_path = item.course_path
-        self.set_course(course_path, goto_exercise)
-
-    @Slot()
-    def __browse_courses(self):
-
-        dialog = QFileDialog()
-        dialog.setFileMode(QFileDialog.ExistingFile)
-        dialog.setNameFilter('*.lean *.pkl')
-
-        # TODO: Stop using exec_, not recommended by documentation
-        if dialog.exec_():
-            course_path = Path(dialog.selectedFiles()[0])
-            self.set_course(course_path, False, course_was_browsed=True)
 
     @Slot()
     def __enable_start_ex_btn(self):
