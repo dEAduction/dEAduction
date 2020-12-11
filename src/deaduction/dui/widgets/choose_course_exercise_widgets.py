@@ -146,17 +146,18 @@ class RecentCoursesLWI(QListWidgetItem):
 
 class AbstractCoExChooser(QWidget):
     """
+
     This class was made for technical purposes and is not to be used
-    outside this file. In StartExerciseDialog, both the course and the
-    exercise choosers have the same structure:
-        - a browser area (browse courses or browse exercices inside one
-          course) on top;
-        - a previewer area (preview the title, task, description, etc)
-          on bottom.
+    outside this file. In StartExerciseDialog, both the course chooser
+    and the exercise chooser have the same structure:
+    - a browser area (browse courses or browse exercices inside one
+      course) on top;
+    - a previewer area (preview the title, task, description, etc) on
+      bottom.
     In other words, course and exercise choosers contain different
     widgets which are organized in the same way. Therefore, both
-    CourseChooser and ExerciseChooser inherit from this class
-    (AbstractCoExChooser). It looks like this:
+    CourseChooser and ExerciseChooser inherit from this class . It looks
+    like this:
 
     |------------|
     |   browser  |
@@ -167,13 +168,15 @@ class AbstractCoExChooser(QWidget):
     For the details, the bowser part never changes and is instanciated
     at init (browser_layout passed as argument). On the opposite, there
     is a preview only if something (a course or exercise) has been
-    chosen. This preview is set with the method set_preview, which is
-    called in StartExerciseDialog. Now, CourseChooser and
-    ExerciseChooser need to have their own sub-widgets. The way to do
-    that here is to redefine __init__ (for the browser) and set_preview
-    (for the preview), define the sub-widgets inside the definitions,
-    and call super().__init__ and super().set_preview with the defined
-    widgets.
+    chosen. This preview is set with the method set_preview. Now,
+    CourseChooser and ExerciseChooser need to have their own
+    sub-widgets. The way to do that here is to redefine __init__ (for
+    the browser) and set_preview (for the preview), define the
+    sub-widgets inside the definitions, and call super().__init__ and
+    super().set_preview with the defined widgets.
+
+    Finally, data such as the course being previewed and its filetype
+    are kept as private class atributes.
     """
 
     def __init__(self, browser_layout: QLayout):
@@ -205,12 +208,13 @@ class AbstractCoExChooser(QWidget):
                     description: str=None):
         # TODO: Make widget a QLayout instead?
         """
-        Set the preview area (given something (course or exercise) has
-        been chosen. The preview area is made of a title, a
-        substitle, details, a description and a widget. The widget is of
-        course specific to CourseChooser or ExerciseChooser and defined
-        when the set_preview method is redefined in CourseChooser or
-        ExerciseChooser. Visually, the preview area looks like this:
+        Set the preview area of the choosze (given something (course or
+        exercise) has been chosen). The preview area is made of a title,
+        a substitle, details, a description and a main widget. This
+        widget is of course specific to CourseChooser or ExerciseChooser
+        and defined when the set_preview method is redefined in
+        CourseChooser or ExerciseChooser. Visually, the preview area
+        looks like this:
 
         |----------------------------|
         | title (big)                |
@@ -269,13 +273,13 @@ class AbstractCoExChooser(QWidget):
 
 class CourseChooser(AbstractCoExChooser):
     """
-    The course chooser.
+    The course chooser, see AbstractCoExChooser docstring.
     - The browser part is made of a browse-button to browse courses
       files and a QListWidget displaying recent courses.
     - The preview area has no main_widget.
     """
 
-    course_selected = Signal(Course, str, bool)
+    course_chosen = Signal(Course, str, bool)
 
     def __init__(self):
         """
@@ -306,7 +310,12 @@ class CourseChooser(AbstractCoExChooser):
         Set course preview. See AbstractCoExChooser.set_preview
         docstring. Here, there is no main_widget. Course metadata are
         displayed in the disclosure triangle by passing them as details
-        in super().set_preview.
+        in super().set_preview. When a course is selected (either by
+        browsing course files or clicking on a recent course in
+        self.__recent_courses_wgt), the signal course_chosen is
+        emitted with the course (and additional info). It is received in
+        StartExerciseDialog, which then instanciates an ExerciseChooser
+        for this course.
 
         :param Course: Course to be previewed.
         """
@@ -330,10 +339,19 @@ class CourseChooser(AbstractCoExChooser):
         super().set_preview(main_widget=None, title=title, subtitle=subtitle,
                             details=details, description=description)
 
-        self.course_selected.emit(self.__course, self.__course_filetype,
+        self.course_chosen.emit(self.__course, self.__course_filetype,
                                   self.__goto_exercise)
 
+    # TODO: Make this a course classmethod?
     def __instanciate_course(self, course_path: Path):
+        """
+        Given a course path, instanciate a Course object and save the
+        course and its file type ('.lean' or '.pkl') ass private class
+        atributes.
+
+        :param course_path: The course-file path of the course we want
+            to instanciate.
+        """
 
         course_filetype = course_path.suffix
         if course_filetype == '.lean':
@@ -350,6 +368,12 @@ class CourseChooser(AbstractCoExChooser):
    
     @Slot()
     def __browse_courses(self):
+        """
+        This method is called when the 'Browse courses' button is
+        clicked on. It opens a file dialog, the user chooses a
+        course-file, a Course object is instanciated and the method
+        set_preview is called.
+        """
 
         dialog = QFileDialog()
         dialog.setFileMode(QFileDialog.ExistingFile)
@@ -369,24 +393,37 @@ class CourseChooser(AbstractCoExChooser):
     @Slot(RecentCoursesLWI, bool)
     def __recent_course_clicked(self, course_item: RecentCoursesLWI,
                                 goto_exercise: bool):
+        """
+        This method is called when the user clicks on an item in
+        self.__recent_courses_wgt. It sends the corresponding
+        RecentCoursesLWI and this method instanciates a Course object
+        from it and passes it to set_preview. Furthermore, is this slot
+        was called by a simple click, goto_exercise is True; if it was
+        called by a double click, goto_exercise is False. This
+        information will be sent (in self.exercise_selected signal by
+        set_preview) to the instance of StartExerciseDialog and
+        determines whether or not the interface directly goes to the
+        exercise viewer when the course has been chosen.
+        """
+
         course_path = course_item.course_path
         self.__instanciate_course(course_path)
         self.__goto_exercise = goto_exercise
         self.set_preview()
 
 
-
 class ExerciseChooser(AbstractCoExChooser):
     """
     The exercise chooser. This widget is activated / shown when a course
-    has been chosen by the user.
+    has been chosen by the user (signal
+    StartExerciseDialog.__course_chooser.course_choosen).
     - The browser area is made of the course's StatementsTreeWidget
       displaying only the exercises (e.g. no theorems).
     - The preview area is more complex and depends on the course's
       filetype.
-      - If the course was chosen from a .lean file, the preview is only
+      - If the course was loaded from a .lean file, the preview is only
         made of the exercise's title, subtitle and description.
-      - If the course was chosend from a .pkl file, exercise's title,
+      - If the course was loaded from a .pkl file, exercise's title,
         subtitle and description are available, as well as its goal
         (target, math. objects and math. properties). This cannot be
         done (yet) if the file course is .lean because for displaying
@@ -394,16 +431,16 @@ class ExerciseChooser(AbstractCoExChooser):
         we obviously do not want to do that for each exercise. Pickle
         files (see puthon modyle pickle) allow to store class instances
         and thus we can store the course if it has been pre-processed.
-        Finally, this preview is either displayed as:
+        Finally, this goal preview is either displayed as:
         - two lists for the math objects and properties and a line edit
           for the target;
         - or a single list with all these informations (this is called
           the text mode and it is toggle with a checkbox).
     """
     
-    # This signal is emitted when an exercise is previewed. It is
-    # received in StartExerciseDialog and the Start exercise button is
-    # enabled and set to default.
+    # This signal is emitted when an exercise is being previewed. It is
+    # received in the instance ofStartExerciseDialog and the Start
+    # exercise button is enabled and set to default.
     exercise_previewed = Signal()
 
     def __init__(self, course: Course, course_filetype: str):
@@ -426,10 +463,9 @@ class ExerciseChooser(AbstractCoExChooser):
         exercises_tree = StatementsTreeWidget(course.exercises_list(),
                                               course.outline)
         exercises_tree.resizeColumnToContents(0)
-        exercises_tree.itemClicked.connect(self.__emit_exercise_previewed)
         browser_layout.addWidget(exercises_tree)
 
-        exercises_tree.itemClicked.connect(self.__call_set_preview)
+        exercises_tree.itemClicked.connect(self.__set_preview_from_click)
 
         super().__init__(browser_layout)
 
@@ -543,6 +579,8 @@ class ExerciseChooser(AbstractCoExChooser):
         super().set_preview(main_widget=main_widget, title=title,
                 description=description)
 
+        self.exercise_previewed.emit()
+
     ##############
     # Properties #
     ##############
@@ -550,7 +588,9 @@ class ExerciseChooser(AbstractCoExChooser):
     @property
     def course_filetype(self) -> str:
         """
-        Return self.__course_filetype.
+        Return self.__course_filetype. Usefull in
+        StartExerciseDialog.__start_exercise to add the corresponding
+        course to the recent courses' list.
         """
 
         return self.__course_filetype
@@ -558,10 +598,15 @@ class ExerciseChooser(AbstractCoExChooser):
     @property
     def exercise(self) -> Optional[Exercise]:
         """
-        Return self.__exercise if it exists, None otherwise.
+        Return self.__exercise if it exists, None otherwise. Usefull in
+        StartExerciseDialog.__start_exercise to get the exercise being
+        previewed and start it.
+
+        :return: The exercise being previewed if it is not none, None
+            otherwise.
         """
 
-        if self.__exercise:
+        if self.__exercise is not None:
             return self.__exercise
         else:
             return None
@@ -571,7 +616,7 @@ class ExerciseChooser(AbstractCoExChooser):
     #########
 
     @Slot(StatementsTreeWidgetItem)
-    def __call_set_preview(self, item: StatementsTreeWidgetItem):
+    def __set_preview_from_click(self, item: StatementsTreeWidgetItem):
         """
         When the user selects an exercise in the course's exercises
         tree, the signal itemClicked is emitted and this slot is called.
@@ -586,23 +631,6 @@ class ExerciseChooser(AbstractCoExChooser):
         if isinstance(item, StatementsTreeWidgetItem):
             exercise = item.statement
             self.set_preview(exercise)
-
-    @Slot(QTreeWidgetItem)
-    def __emit_exercise_previewed(self, item):
-        """
-        When the user selects an exercise in the course's exercises
-        tree, the signal itemClicked is emitted and this slot is called.
-        If the clicked item is an exercise item (and not a node, e.g. a
-        course section), the signal self.exercise_previewed is emitted.
-        The aim of this signal is to tell the class StartExerciseDialog
-        when to enable its Start exercise button.
-
-        :param item: The clicked item (exercise item or nod item) in the
-            course's exercises tree.
-        """
-
-        if isinstance(item, StatementsTreeWidgetItem):
-            self.exercise_previewed.emit()
 
     @Slot()
     def toggle_text_mode(self):
@@ -648,7 +676,7 @@ class StartExerciseDialog(QDialog):
         self.__course_chooser = CourseChooser()
         self.__exercise_chooser = QWidget()
 
-        self.__course_chooser.course_selected.connect(self.__preview_exercises)
+        self.__course_chooser.course_chosen.connect(self.__preview_exercises)
 
         # ───────────────────── Buttons ──────────────────── #
 
