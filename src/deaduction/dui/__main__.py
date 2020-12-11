@@ -52,7 +52,7 @@ async def main():
     start_exercise_dialog.show()
 
     async with qtrio.enter_emissions_channel(signals=[
-            start_exercise_dialog.exercise_choosen]) as emissions:
+            start_exercise_dialog.exercise_chosen]) as emissions:
         emission = await emissions.channel.receive()
         exercise = emission.args[0]
 
