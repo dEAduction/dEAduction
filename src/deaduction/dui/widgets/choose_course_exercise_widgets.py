@@ -69,7 +69,7 @@ from PySide2.QtWidgets import ( QApplication,
 from deaduction.dui.widgets      import ( MathObjectWidget,
                                           StatementsTreeWidget,
                                           StatementsTreeWidgetItem )
-from deaduction.dui.utils        import   DisclosureTree
+from deaduction.dui.utils        import   DisclosureTriangle
 from deaduction.config           import ( add_to_recent_courses,
                                           get_recent_courses )
 from deaduction.pylib.coursedata import ( Course,
@@ -205,7 +205,7 @@ class AbstractCoExChooser(QWidget):
 
     def set_preview(self, main_widget: QWidget=None, title: str=None,
                     subtitle: str=None, details: Dict[str, str]=None,
-                    description: str=None):
+                    description: str=None, expand_details: bool=False):
         # TODO: Make widget a QLayout instead?
         """
         Set the preview area of the choosze (given something (course or
@@ -228,9 +228,19 @@ class AbstractCoExChooser(QWidget):
         | .......................... |
         |                            |
         | |------------------------| |
-        | |         widget         | |
+        | |      main_widget       | |
         | |------------------------| |
         |----------------------------|
+
+        :param main_widget: The main widget of the preview (nothing for
+            the course, goal preview for the exercise).
+        :param title: Course or exercise title.
+        :param subtitle: Course or exercise subtitle.
+        :param details: Other data for the course or exercise such as
+            the course's year, teacher, school, etc.
+        :param description: The course or exercise description.
+        :param exapand_details: Tell if the 'Details' disclosure tree is
+            expanded at __init__ (True) or not (False).
         """
 
         preview_wgt = QWidget()
@@ -242,7 +252,6 @@ class AbstractCoExChooser(QWidget):
             title_wgt.setStyleSheet('font-weight: bold;' \
                                     'font-size:   17pt;')
             layout.addWidget(title_wgt)
-
         if subtitle:
             subtitle_wgt = QLabel(subtitle)
             subtitle_wgt.setStyleSheet('font-style: italic;' \
@@ -252,7 +261,9 @@ class AbstractCoExChooser(QWidget):
             layout.addLayout(subtitle_lyt)
 
         if details:
-            details_wgt = DisclosureTree('Details', details)
+            details_wgt = DisclosureTriangle('Details', details)
+            details_wgt.expand(expand_details)
+
             layout.addWidget(details_wgt)
 
         if description:
@@ -337,7 +348,8 @@ class CourseChooser(AbstractCoExChooser):
             details = None
 
         super().set_preview(main_widget=None, title=title, subtitle=subtitle,
-                            details=details, description=description)
+                            details=details, description=description, 
+                            expand_details=True)
 
         self.course_chosen.emit(self.__course, self.__course_filetype,
                                   self.__goto_exercise)
@@ -577,7 +589,8 @@ class ExerciseChooser(AbstractCoExChooser):
         description = exercise.description
 
         super().set_preview(main_widget=main_widget, title=title,
-                description=description)
+                            description=description,
+                            expand_details=False)
 
         self.exercise_previewed.emit()
 

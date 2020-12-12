@@ -31,27 +31,50 @@ from PySide2.QtCore    import   Qt
 from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem)
 
-# TODO: Comment me
 
-class DisclosureTree(QTreeWidget):
-    # An implementation of a disclosure triangle.
-    # https://stackoverflow.com/questions/63862724/
-    # qtreeview-dynamic-height-according-to-content-disclosure-triangle
+class DisclosureTriangle(QTreeWidget):
+    """
+    An (very basic) implementation of a DisclosureTriangle, i.e. a
+    widget that looks like this:
+
+    ____________________
+    |                  |
+    |  |> Title:       |
+    |      key1: val1  |
+    |      key2: val2  |
+    |      …           |
+    --------------------
+
+    This triangle can be expanded or collapsed and is instanciated with
+    a title and a dictionnary of keys and values. Made with the help of
+    musicamente on Stackoverflow:  https://stackoverflow.com/questions/
+    63862724/
+    qtreeview-dynamic-height-according-to-content-disclosure-triangle.
+    """
 
     def __init__(self, title: str, data: Dict[str, str]):
+        """
+        Init self with a title and a dictionnary of keys and values (see
+        self docstring).
+
+        :param title: The title of the disclosure tree (e.g. 'Details'
+            in dEAduction's course and exercise choosers.
+        :param data: The data to be displayed in the disclosure
+            triangle.
+        """
 
         super().__init__()
 
         # ─────────────────── Add content ────────────────── #
 
         self.setColumnCount(2)
-        parent_item = QTreeWidgetItem(self, [f'{title} : '])
-        parent_item.set_selectable(False)
-        self.addTopLevelItem(parent_item)
+        self.__parent_item = QTreeWidgetItem(self, [f'{title} : '])
+        self.__parent_item.set_selectable(False)
+        self.addTopLevelItem(self.__parent_item)
 
         for key, val in data.items():
-            item = QTreeWidgetItem(parent_item, [f'{key} : ', val])
-            parent_item.addChild(item)
+            item = QTreeWidgetItem(self.__parent_item, [f'{key} : ', val])
+            self.__parent_item.addChild(item)
 
             # Cosmetics
             item.set_selectable(False)
@@ -74,6 +97,26 @@ class DisclosureTree(QTreeWidget):
         self.expanded.connect(self.update_height)
         self.collapsed.connect(self.update_height)
 
+    def expand(self, yes: bool=True):
+        """
+        Expand the tree is yes is True, collapse it otherwise.
+
+        :param yes: See above.
+        """
+
+        if yes:
+            self.expandItem(self.__parent_item)
+        else:
+            self.collapseItem(self.__parent_item)
+
+    #####################
+    # Redifined methods #
+    #####################
+
+    # See
+    # https://stackoverflow.com/questions/63862724/
+    # qtreeview-dynamic-height-according-to-content-disclosure-triangle
+
     def update_height(self):
         self.setMaximumHeight(self.sizeHint().height())
 
@@ -90,7 +133,8 @@ class DisclosureTree(QTreeWidget):
 
     def sizeHint(self):
         hint = super().sizeHint()
-        hint.setHeight(self.get_height() + self.frameWidth() * 2)
+        # The + 10 avoids an ugly scroll bar
+        hint.setHeight(self.get_height() + 10 + self.frameWidth() * 2)
         return hint
 
     def minimumSizeHint(self):
