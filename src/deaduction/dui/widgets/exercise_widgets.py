@@ -312,8 +312,7 @@ class ExerciseCentralWidget(QWidget):
         replace_delete_widget(self.__context_lyt,
                               self.props_wgt, new_props_wgt)
         replace_delete_widget(self.__main_lyt,
-                              self.target_wgt, new_target_wgt,
-                              ~Qt.FindChildrenRecursively)
+                              self.target_wgt, new_target_wgt, True)
 
         # Set the attributes to the new values
         self.objects_wgt  = new_objects_wgt
