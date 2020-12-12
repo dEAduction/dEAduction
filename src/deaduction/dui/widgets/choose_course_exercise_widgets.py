@@ -37,30 +37,23 @@ import sys
 from functools import partial
 from gettext import   gettext as _
 from pathlib import   Path
-from typing  import ( Any,
-                      Dict,
+from typing  import ( Dict,
                       Optional )
 
 from PySide2.QtCore    import ( Signal,
                                 Slot )
-from PySide2.QtGui     import ( QFont,
-                                QPixmap )
+from PySide2.QtGui     import   QFont
 from PySide2.QtWidgets import ( QApplication,
                                 QCheckBox,
                                 QDialog,
                                 QFileDialog,
-                                QFrame,
-                                QGroupBox,
                                 QHBoxLayout,
                                 QLabel,
                                 QLayout,
                                 QLineEdit,
-                                QListWidget,
-                                QListWidgetItem,
                                 QSpacerItem,
                                 QPushButton,
                                 QTabWidget,
-                                QTreeWidgetItem,
                                 QTextEdit,
                                 QVBoxLayout,
                                 QWidget )
@@ -73,7 +66,8 @@ from deaduction.dui.utils        import ( DisclosureTriangle,
                                           HorizontalLine,
                                           RecentCoursesLW,
                                           RecentCoursesLWI,
-                                          read_pkl_course )
+                                          read_pkl_course,
+                                          replace_widget_layout )
 from deaduction.pylib.coursedata import ( Course,
                                           Exercise )
 
@@ -124,22 +118,21 @@ class AbstractCoExChooser(QWidget):
 
         super().__init__()
 
-        no_preview_yet = QLabel(_('No preview yet.'))
-        no_preview_yet.setStyleSheet('color: gray;')
-        self.__preview_wgt = no_preview_yet
-
+        self.__preview_wgt = QLabel(_('No preview yet.'))
+        self.__preview_wgt.setStyleSheet('color: gray;')
+        spacer             = QSpacerItem(1, 5)
         self.__main_layout = QVBoxLayout()
         self.__main_layout.addLayout(browser_layout)
-        self.__main_layout.addItem(QSpacerItem(1, 5))
+        self.__main_layout.addItem(spacer)
         self.__main_layout.addWidget(HorizontalLine())
-        self.__main_layout.addItem(QSpacerItem(1, 5))
+        self.__main_layout.addItem(spacer)
         self.__main_layout.addWidget(self.__preview_wgt)
 
         self.setLayout(self.__main_layout)
 
-    def set_preview(self, main_widget: QWidget=None, title: str=None,
-                    subtitle: str=None, details: Dict[str, str]=None,
-                    description: str=None, expand_details: bool=False):
+    def set_preview(self, main_widget: QWidget = None, title: str = None,
+                    subtitle: str = None, details: Dict[str, str] = None,
+                    description: str = None, expand_details: bool = False):
         # TODO: Make widget a QLayout instead?
         """
         Set the preview area of the choosze (given something (course or
@@ -177,43 +170,39 @@ class AbstractCoExChooser(QWidget):
             expanded at __init__ (True) or not (False).
         """
 
-        preview_wgt = QWidget()
-        layout      = QVBoxLayout()
+        widget = QWidget()
+        layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
 
         if title:
             title_wgt = QLabel(title)
-            title_wgt.setStyleSheet('font-weight: bold;' \
+            title_wgt.setStyleSheet('font-weight: bold;'
                                     'font-size:   17pt;')
             layout.addWidget(title_wgt)
         if subtitle:
             subtitle_wgt = QLabel(subtitle)
-            subtitle_wgt.setStyleSheet('font-style: italic;' \
-                                       'color:      gray;')
             subtitle_lyt = QHBoxLayout()
+            subtitle_wgt.setStyleSheet('font-style: italic;'
+                                       'color:      gray;')
             subtitle_lyt.addWidget(subtitle_wgt)
             layout.addLayout(subtitle_lyt)
-
         if details:
             details_wgt = DisclosureTriangle('Details', details)
             details_wgt.expand(expand_details)
 
             layout.addWidget(details_wgt)
-
         if description:
             description_wgt = QLabel(description)
             description_wgt.setWordWrap(True)
             layout.addWidget(description_wgt)
-
         if main_widget:
             layout.addWidget(main_widget)
 
         layout.addStretch()
 
-        preview_wgt.setLayout(layout)
-        self.__main_layout.replaceWidget(self.__preview_wgt, preview_wgt)
-        self.__preview_wgt.deleteLater()
-        self.__preview_wgt = preview_wgt
+        widget.setLayout(layout)
+        replace_widget_layout(self.__main_layout, self.__preview_wgt, widget)
+        self.__preview_wgt = widget
 
 
 class CourseChooser(AbstractCoExChooser):
@@ -233,43 +222,46 @@ class CourseChooser(AbstractCoExChooser):
         and a QListWidget displayling recent courses.
         """
 
+        # Browse button
         self.__browse_btn = QPushButton(_('Browse files for course'))
-        self.__previous_courses_wgt = RecentCoursesLW()
-
-        self.__browse_btn.clicked.connect(self.__browse_courses)
-        self.__previous_courses_wgt.itemClicked.connect(
-                partial(self.__recent_course_clicked, goto_exercise=False))
-        self.__previous_courses_wgt.itemDoubleClicked.connect(
-                partial(self.__recent_course_clicked, goto_exercise=True))
-
         self.__browse_btn.setAutoDefault(False)
+        self.__browse_btn.clicked.connect(self.__browse_courses)
 
-        browser_lyt = QVBoxLayout()
-        browser_lyt.addWidget(self.__browse_btn)
-        browser_lyt.addWidget(self.__previous_courses_wgt)
+        # Recent courses widget
+        self.__recent_courses_wgt = RecentCoursesLW()
+        self.__recent_courses_wgt.itemClicked.connect(partial(
+                self.__recent_course_clicked, goto_exercise=False))
+        self.__recent_courses_wgt.itemDoubleClicked.connect(partial(
+                self.__recent_course_clicked, goto_exercise=True))
 
-        super().__init__(browser_lyt)
+        browser_layout = QVBoxLayout()
+        browser_layout.addWidget(self.__browse_btn)
+        browser_layout.addWidget(self.__recent_courses_wgt)
+
+        super().__init__(browser_layout)
 
     def set_preview(self):
         """
         Set course preview. See AbstractCoExChooser.set_preview
-        docstring. Here, there is no main_widget. Course metadata are
+        docstring.  Here, there is no main_widget. Course metadata are
         displayed in the disclosure triangle by passing them as details
-        in super().set_preview. When a course is selected (either by
+        in super().set_preview.  When a course is selected (either by
         browsing course files or clicking on a recent course in
-        self.__recent_courses_wgt), the signal course_chosen is
-        emitted with the course (and additional info). It is received in
+        self.__recent_courses_wgt), the signal course_chosen is emitted
+        with the course (and additional info). It is received in
         StartExerciseDialog, which then instanciates an ExerciseChooser
         for this course.
 
         :param Course: Course to be previewed.
         """
 
+        # Title, subtitle, etc
         # TODO: Add these properties to the course class?
-        title       = self.__course.metadata.get('Title',       None)
-        subtitle    = self.__course.metadata.get('Subtitle',    None)
+        title       = self.__course.metadata.get('Title', None)
+        subtitle    = self.__course.metadata.get('Subtitle', None)
         description = self.__course.metadata.get('Description', None)
 
+        # Details
         details = self.__course.metadata
         # Remove title, subtitle and description from details
         # TODO: Prevent user for using a 'Path' attribute (in the course
@@ -278,15 +270,16 @@ class CourseChooser(AbstractCoExChooser):
         for key in ['Title', 'Subtitle', 'Description']:
             if key in details:
                 details.pop(key)
+
         if not details:  # Set details to None if empty
             details = None
 
         super().set_preview(main_widget=None, title=title, subtitle=subtitle,
-                            details=details, description=description, 
+                            details=details, description=description,
                             expand_details=True)
 
         self.course_chosen.emit(self.__course, self.__course_filetype,
-                                  self.__goto_exercise)
+                                self.__goto_exercise)
 
     # TODO: Make this a course classmethod?
     def __instanciate_course(self, course_path: Path):
@@ -305,7 +298,7 @@ class CourseChooser(AbstractCoExChooser):
         elif course_filetype == '.pkl':
             course = read_pkl_course(course_path)
 
-        self.__course = course
+        self.__course          = course
         self.__course_filetype = course_filetype
 
     #########
@@ -331,7 +324,7 @@ class CourseChooser(AbstractCoExChooser):
             self.__instanciate_course(course_path)
 
             title = self.__course.metadata.get('Title', 'no title')
-            self.__previous_courses_wgt.add_browsed_course(
+            self.__recent_courses_wgt.add_browsed_course(
                     course_path, title)
             self.__goto_exercise = False
             self.set_preview()
@@ -352,9 +345,9 @@ class CourseChooser(AbstractCoExChooser):
         exercise viewer when the course has been chosen.
         """
 
-        course_path = course_item.course_path
-        self.__instanciate_course(course_path)
         self.__goto_exercise = goto_exercise
+        course_path          = course_item.course_path
+        self.__instanciate_course(course_path)
         self.set_preview()
 
 
@@ -403,7 +396,7 @@ class ExerciseChooser(AbstractCoExChooser):
             '.pkl'), see self docstring.
         """
 
-        self.__course_filetype = course_filetype  # 'lean' or 'pkl'
+        self.__course_filetype = course_filetype
 
         browser_layout = QVBoxLayout()
         exercises_tree = StatementsTreeWidget(course.exercises_list(),
@@ -427,29 +420,35 @@ class ExerciseChooser(AbstractCoExChooser):
         :param exercise: The exercise to be previewed.
         """
 
-        main_widget = QWidget()
-        widget_lyt = QVBoxLayout()
-        widget_lyt.setContentsMargins(0, 0, 0, 0)
         self.__exercise = exercise
+        main_widget     = QWidget()
+        main_widget_lyt = QVBoxLayout()
+        main_widget_lyt.setContentsMargins(0, 0, 0, 0)
 
         with_preview = self.__course_filetype == '.pkl'
-
         if with_preview:
 
             proofstate = exercise.initial_proof_state
-            goal = proofstate.goals[0]  # Only one goal (?)
-            target = goal.target
-            context = goal.tag_and_split_propositions_objects()
-            objects = context[0]
+            goal       = proofstate.goals[0]  # Only one goal (?)
+            target     = goal.target
+            context    = goal.tag_and_split_propositions_objects()
+            objects    = context[0]
             properties = context[1]
 
-            # ───────────────── Friendly widget ──────────────── #
+            ###################
+            # Friendly widget #
+            ###################
+            # The widget with lists for math. objects and properties
+            # and a line edit for the target.
 
-            propobj_lyt = QHBoxLayout()
-            objects_wgt = MathObjectWidget(objects)
+            # ───────────── Objects and properties ───────────── #
+
+            propobj_lyt    = QHBoxLayout()
+            objects_wgt    = MathObjectWidget(objects)
             properties_wgt = MathObjectWidget(properties)
-            objects_lyt, properties_lyt = QVBoxLayout(), QVBoxLayout()
-    
+            objects_lyt    = QVBoxLayout()
+            properties_lyt = QVBoxLayout()
+
             objects_wgt.adjustSize()
             objects_wgt.setFont(QFont('Menlo'))
             properties_wgt.adjustSize()
@@ -462,19 +461,26 @@ class ExerciseChooser(AbstractCoExChooser):
             propobj_lyt.addLayout(objects_lyt)
             propobj_lyt.addLayout(properties_lyt)
 
+            # ───────────────────── Target ───────────────────── #
+
             target_wgt = QLineEdit()
             target_wgt.setText(target.math_type.to_display(format_="utf8",
                                                            is_math_type=True))
             target_wgt.setFont(QFont('Menlo'))
 
+            # ────────────────────── Rest ────────────────────── #
+
             self.__friendly_wgt = QWidget()
-            friendly_wgt_lyt = QVBoxLayout()
+            friendly_wgt_lyt    = QVBoxLayout()
             friendly_wgt_lyt.addLayout(propobj_lyt)
             friendly_wgt_lyt.addWidget(QLabel(_('Target:')))
             friendly_wgt_lyt.addWidget(target_wgt)
             self.__friendly_wgt.setLayout(friendly_wgt_lyt)
 
-            # ─────────────────── Code widget ────────────────── #
+            ###############
+            # Code widget #
+            ###############
+            # The goal is presented in a single list widget.
 
             self.__code_wgt = QTextEdit()
             self.__code_wgt.setReadOnly(True)
@@ -483,43 +489,43 @@ class ExerciseChooser(AbstractCoExChooser):
                 text = goal.goal_to_text()
                 self.__code_wgt.setText(text)
 
-            # ──────────────────── Checkbox ──────────────────── #
-
+            ########
+            # Rest #
+            ########
+            
+            # Checkbox
             self.__text_mode_checkbox = QCheckBox(_('Text mode'))
             self.__text_mode_checkbox.clicked.connect(self.toggle_text_mode)
             cb_lyt = QHBoxLayout()
             cb_lyt.addStretch()
             cb_lyt.addWidget(self.__text_mode_checkbox)
 
-            # ──────────────── Contents margins ──────────────── #
-
-            for lyt in [widget_lyt, friendly_wgt_lyt]:
+            # Ugly margins
+            for lyt in [main_widget_lyt, friendly_wgt_lyt]:
                 # Somehow this works…
                 lyt.setContentsMargins(0, 0, 0, 0)
-
-            # ──────────────── Organize widgets ──────────────── #
 
             self.__text_mode_checkbox.setChecked(False)
             self.__friendly_wgt.show()
             self.__code_wgt.hide()
 
-            widget_lyt.addWidget(self.__friendly_wgt)
-            widget_lyt.addWidget(self.__code_wgt)
-            widget_lyt.addLayout(cb_lyt)
+            main_widget_lyt.addWidget(self.__friendly_wgt)
+            main_widget_lyt.addWidget(self.__code_wgt)
+            main_widget_lyt.addLayout(cb_lyt)
         else:
 
-            widget_lbl = QLabel(_('Goal preview only available when course ' \
+            widget_lbl = QLabel(_('Goal preview only available when course '
                                   'file extension is .pkl.'))
             widget_lbl.setStyleSheet('color: gray;')
 
-            widget_lyt.addWidget(widget_lbl)
+            main_widget_lyt.addWidget(widget_lbl)
 
-        main_widget.setLayout(widget_lyt)
+        main_widget.setLayout(main_widget_lyt)
 
         # ───────────────────── Others ───────────────────── #
 
         # TODO: Add subtitle, task…
-        title = exercise.pretty_name
+        title       = exercise.pretty_name
         description = exercise.description
 
         super().set_preview(main_widget=main_widget, title=title,
@@ -541,7 +547,7 @@ class ExerciseChooser(AbstractCoExChooser):
         """
 
         return self.__course_filetype
-    
+
     @property
     def exercise(self) -> Optional[Exercise]:
         """
@@ -644,14 +650,14 @@ class StartExerciseDialog(QDialog):
         self.setMinimumWidth(450)
         self.setMinimumHeight(550)
 
-        self.__course_chooser = CourseChooser()
+        self.__course_chooser   = CourseChooser()
         self.__exercise_chooser = QWidget()
 
         self.__course_chooser.course_chosen.connect(self.__preview_exercises)
 
         # ───────────────────── Buttons ──────────────────── #
 
-        self.__quit_btn = QPushButton(_('Quit'))
+        self.__quit_btn     = QPushButton(_('Quit'))
         self.__start_ex_btn = QPushButton(_('Start exercise'))
 
         self.__quit_btn.setEnabled(False)
@@ -718,7 +724,6 @@ class StartExerciseDialog(QDialog):
         why).
         """
 
-
         self.__start_ex_btn.setEnabled(False)
 
         self.__coex_tabwidget.removeTab(1)
@@ -744,6 +749,7 @@ class StartExerciseDialog(QDialog):
 
         # Save course_path, title, and exercise number
         # in user_config's previous_courses_list
+        # TODO: Rename the list recent_courses_list?
         course_type     = self.__exercise_chooser.course_filetype
         course          = exercise.course
         course_path     = course.course_path
