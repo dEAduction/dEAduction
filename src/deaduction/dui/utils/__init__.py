@@ -28,6 +28,11 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .functions import (    replace_delete_widget,
-                            set_selectable)
+from .classes   import    ( DisclosureTriangle,
+                            HorizontalLine,
+                            RecentCoursesLW,
+                            RecentCoursesLWI )
+from .functions import (    replace_widget_layout,
+                            read_pkl_course,
+                            set_selectable )
 from .dialog_button import  ButtonsDialog

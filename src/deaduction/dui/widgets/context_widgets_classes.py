@@ -5,9 +5,11 @@
 
     Provide widgets classes for an exercise's context area, that is its
     target, objects (e.g. f:X->Y a function) and properties (e.g. f is
-    continuous). Those widgets will be instantiated in
-    ExerciseCentralWidget, which itself will be instantiated as an
-    attribute of ExerciseMainWindow. Provided classes:
+    continuous).
+
+    Those widgets will be instantiated in ExerciseCentralWidget, which
+    itself will be instantiated as an attribute of ExerciseMainWindow.
+    Provided classes:
         - MathObjectWidget;
         - MathObjectWidgetItem;
         - TargetWidget.
@@ -48,10 +50,11 @@ from PySide2.QtWidgets import ( QHBoxLayout,
                                 QWidget,
                                 QListWidget,
                                 QListWidgetItem)
-from deaduction.config        import user_config, _
 
-from deaduction.pylib.mathobj import MathObject
-from deaduction.pylib.actions import explain_how_to_apply
+from deaduction.config        import ( user_config,
+                                       _ )
+from deaduction.pylib.mathobj import   MathObject
+from deaduction.pylib.actions import   explain_how_to_apply
 
 log = logging.getLogger(__name__)
 
@@ -251,9 +254,7 @@ class TargetWidget(QWidget):
     :attribute tag str: The tag associated to target.
     """
 
-    def __init__(self,
-                 target: MathObject=None,
-                 tag: str=None,
+    def __init__(self, target: MathObject=None, tag: str=None,
                  goal_count: str=''):
         """"
         Init self with an target (an instance of the class ProofStatePO)
@@ -305,4 +306,3 @@ class TargetWidget(QWidget):
         main_layout.addLayout(central_layout)
         main_layout.addStretch()
         self.setLayout(main_layout)
-

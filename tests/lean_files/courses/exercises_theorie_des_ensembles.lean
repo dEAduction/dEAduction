@@ -16,12 +16,14 @@ import notations_definitions
 ---------------------
 -- logic names ['and', 'or', 'negate', 'implicate', 'iff', 'forall', 'exists']
 -- proofs names ['use_proof_methods', 'new_object', 'apply', 'assumption']
--- TODO: add 'compute'
+-- magic names ['compute']
 -- proof methods names ['cbr', 'contrapose', 'absurdum', 'sorry']
 
 
 
 /- dEAduction
+Title
+    Théorie des ensembles
 Author
     Frédéric Le Roux
 Institution

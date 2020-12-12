@@ -72,6 +72,21 @@ class Course:
     #   "Unions and intersections"
     # statements is a list of all Statements, including exercises
 
+    @property
+    def title(self) -> str:
+        """
+        Return title if a title exists in metadata,
+        else make a title from course_path
+        """
+        if 'title' in self.metadata:
+            title = self.metadata['title']
+        # elif self.outline:  # Return the title of the first section
+        #    first_key = list(self.outline)[0]
+        #    title = self.outline[first_key]
+        else:  # Make a title from the course_path
+            title = str(self.course_path.stem).replace("_", " ").capitalize()
+        return title
+
     def print_metadata(self):
         for field_name, field_content in self.metadata.items():
             print(f"{field_name}: {field_content}")

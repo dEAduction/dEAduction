@@ -37,6 +37,9 @@ from .context_widgets_classes import (
         MathObjectWidget,
         TargetWidget)
 
+from .choose_course_exercise_widgets import (
+        StartExerciseDialog)
+
 from .lean_editor import (
         LeanEditor)
 

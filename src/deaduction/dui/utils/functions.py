@@ -25,14 +25,44 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from pathlib import Path
+import pickle
+
 from PySide2.QtCore    import   Qt
 from PySide2.QtWidgets import ( QLayout,
                                 QTreeWidgetItem,
                                 QWidget)
 
+from deaduction.pylib.coursedata import Course
 
-def replace_delete_widget(layout: QLayout, old: QWidget, new: QWidget,
-                          flag=Qt.FindChildrenRecursively):
+# TODO: Put this function somewhere else (course classmethod?)
+def read_pkl_course(course_path: Path) -> Course:
+    """
+    Extract an instance of the class Course from a .pkl file.
+
+    :param course_path: The path of the course we want to instanciate.
+    :return: The instance of the Course class.
+    """
+
+    with course_path.open(mode='rb') as input:
+        course = pickle.load(input)
+
+    return course
+
+def replace_widget_layout(layout: QLayout, old: QWidget, new: QWidget,
+                          recursive: bool=True):
+    """
+    Replace an old widget by a new one in a layout.
+
+    :param layout: The layout in which we replace the widget.
+    :param old: The old / replaced widget.
+    :param new: The new / replacing widget.
+    :param recursive: If recursive is True, the function looks for old
+        in layout's sub-layouts.
+    """
+
+    flag = Qt.FindChildrenRecursively if recursive else \
+            ~Qt.FindChildrenRecursively
     layout.replaceWidget(old, new, flag)
     old.deleteLater()
     

@@ -33,8 +33,8 @@ import qtrio
 import trio
 
 
-from deaduction.dui.launcher import select_course_exercise
-from deaduction.dui.widgets import  ExerciseMainWindow
+from deaduction.dui.widgets import  ( ExerciseMainWindow,
+                                      StartExerciseDialog )
 from deaduction.pylib import        logger
 from deaduction.pylib.server import ServerInterface
 from deaduction.config import _  # for translation
@@ -48,11 +48,13 @@ async def main():
     test_language = _("Proof by contrapositive")
     log.debug(f"Language test: 'Proof by contrapositive' = '{test_language}'")
 
-    # Choose course and exercise
-    course, exercise = select_course_exercise()
+    start_exercise_dialog = StartExerciseDialog()
+    start_exercise_dialog.show()
 
-    if exercise is None:
-        raise ValueError(_('Exercise is None'))
+    async with qtrio.enter_emissions_channel(signals=[
+            start_exercise_dialog.exercise_chosen]) as emissions:
+        emission = await emissions.channel.receive()
+        exercise = emission.args[0]
 
     # Init and start server
     async with trio.open_nursery() as nursery:
@@ -60,7 +62,7 @@ async def main():
         await servint.start()
         ex_main_window = ExerciseMainWindow(exercise, servint)
 
-        # Show main window, and wait for the "window_closed" signal to append,
+        # Show main window, and wait for the "window_closed" signal to happen,
         # so that we can stop the program execution properly.
         try:
             async with qtrio.enter_emissions_channel(

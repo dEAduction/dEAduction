@@ -346,7 +346,9 @@ class StatementsTreeWidget(QTreeWidget):
     not in the outline, they are already coded in the instances of the
     class Statement themselves with the attribute pretty_name.
     """
-    # config
+
+    # TODO: Put this in self.__init__
+    # Config
     depth_of_unfold_statements = \
                         user_config.getint('depth_of_unfold_statements')
     show_lean_name_for_statements = \
@@ -354,8 +356,6 @@ class StatementsTreeWidget(QTreeWidget):
     tooltips_font_size = user_config.getint('tooltips_font_size')
     # TODO: show lean names only when lean console is on
     # (even if show_lean_name_for_statements == TRUE)
-
-
 
     def _init_tree_branch(self, extg_tree, branch: [str],
                           expanded_flags: [bool],
@@ -468,13 +468,13 @@ class StatementsTreeWidget(QTreeWidget):
         self._init_tree(statements, outline)
 
         # Cosmetics
-
         self.setWindowTitle('StatementsTreeWidget')
         if StatementsTreeWidget.show_lean_name_for_statements:
             self.setHeaderLabels([_('Statements'), _('L∃∀N name')])
             self.resizeColumnToContents(0)
             self.resizeColumnToContents(1)
         else:
+            self.resizeColumnToContents(0)
             self.setHeaderLabels([_('Statements')])
 
     def add_child(self, item):
