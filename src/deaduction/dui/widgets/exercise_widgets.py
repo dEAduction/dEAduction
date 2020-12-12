@@ -55,7 +55,7 @@ from deaduction.config import          (_,
                                         user_config,
                                         EXERCISE)
 from deaduction.memory import           JOURNAL
-from deaduction.dui.utils import  (     replace_delete_widget,
+from deaduction.dui.utils import  (     replace_widget_layout,
                                         ButtonsDialog)
 from deaduction.dui.widgets import (    ActionButton,
                                         ActionButtonsWidget,
@@ -307,11 +307,11 @@ class ExerciseCentralWidget(QWidget):
         new_target_wgt  = TargetWidget(new_target, new_target_tag, goal_count)
 
         # Replace in the layouts
-        replace_delete_widget(self.__context_lyt,
+        replace_widget_layout(self.__context_lyt,
                               self.objects_wgt, new_objects_wgt)
-        replace_delete_widget(self.__context_lyt,
+        replace_widget_layout(self.__context_lyt,
                               self.props_wgt, new_props_wgt)
-        replace_delete_widget(self.__main_lyt,
+        replace_widget_layout(self.__main_lyt,
                               self.target_wgt, new_target_wgt, True)
 
         # Set the attributes to the new values

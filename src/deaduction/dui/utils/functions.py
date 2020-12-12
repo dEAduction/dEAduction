@@ -25,10 +25,15 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from pathlib import Path
+import pickle
+
 from PySide2.QtCore    import   Qt
 from PySide2.QtWidgets import ( QLayout,
                                 QTreeWidgetItem,
                                 QWidget)
+
+from deaduction.pylib.coursedata import Course
 
 # TODO: Put this function somewhere else (course classmethod?)
 def read_pkl_course(course_path: Path) -> Course:
@@ -44,7 +49,7 @@ def read_pkl_course(course_path: Path) -> Course:
 
     return course
 
-def replace_delete_widget(layout: QLayout, old: QWidget, new: QWidget,
+def replace_widget_layout(layout: QLayout, old: QWidget, new: QWidget,
                           recursive: bool=True):
     """
     Replace an old widget by a new one in a layout.

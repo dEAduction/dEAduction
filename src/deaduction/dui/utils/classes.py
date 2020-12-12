@@ -25,11 +25,18 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from typing import Dict
+from pathlib import Path
+from typing  import Dict
 
 from PySide2.QtCore    import   Qt
-from PySide2.QtWidgets import ( QTreeWidget,
+from PySide2.QtWidgets import ( QFrame,
+                                QListWidget,
+                                QListWidgetItem,
+                                QTreeWidget,
                                 QTreeWidgetItem)
+
+from deaduction.config import ( add_to_recent_courses,
+                                get_recent_courses )
 
 
 class DisclosureTriangle(QTreeWidget):
@@ -139,3 +146,95 @@ class DisclosureTriangle(QTreeWidget):
 
     def minimumSizeHint(self):
         return self.sizeHint()
+
+
+class HorizontalLine(QFrame):
+    """
+    An horizontal line (like <hr> in HTML) QWidget.
+    """
+
+    def __init__(self):
+
+        super().__init__()
+        self.setFrameShape(QFrame.HLine)
+        self.setFrameShadow(QFrame.Sunken)
+
+
+class RecentCoursesLW(QListWidget):
+    """
+    An adaptated QListWidget to display *the* list of courses' paths and
+    minor metadata (e.g. course title). Consequently, no arguments are
+    given to __init__ since the function get_recent_courses gets the
+    recent courses itself. Therefore, the items do not contain Course
+    objects since only courses' paths and minor metadata are saved in
+    the config files. This class uses the RecentCoursesLWI for items
+    instead of QListWidgetItem.
+    """
+
+    def __init__(self):
+        """
+        Init self. See self docstring.
+        """
+
+        super().__init__()
+
+        courses_paths, titles, exercise_numbers = get_recent_courses()
+        info = zip(courses_paths, titles, exercise_numbers)
+        for course_path, course_title, exercise_number in info:
+            item = RecentCoursesLWI(course_path, course_title)
+            self.addItem(item)
+
+    def add_browsed_course(self, course_path: Path, course_title: str):
+        """
+        Insert a course at the top of the list and mark (in the item
+        text) the course as browsed. This is useful in dEaduction
+        courses's chooser (see CourseChooser and StartExerciseDialog
+        from deaduction.widgets): when a user browses a course, this
+        allows to temporarly save the course. This way, the user can
+        preview other courses without having to rebrowse the files
+        everytime they want to see the first browsed course.
+
+        :param course_path: The course path of the browsed course.
+        :param course_title: The course title of the browsed course.
+        """
+
+        displayed_title = f'(browsed) {course_title}'
+        item = RecentCoursesLWI(course_path, displayed_title)
+        self.insertItem(0, item)
+        self.setItemSelected(item, True)
+    
+
+class RecentCoursesLWI(QListWidgetItem):
+    """
+    Course items used in the class RecentCoursesLW (see the docstring).
+    Those courses are not instanciated with an instance of the Course
+    class but with a course's path and title. Indeed: RecentCoursesLW
+    displays the recent courses in which the user did exercises, and
+    only those data are in the config files.
+
+    :property course_path: Self's course path.
+    """
+
+    def __init__(self, course_path: Path, course_title: str):
+        """
+        Init self, see self docstring.
+
+        :param course_path: The course path of the recent course saved
+            in the config files.
+        :param course_title: The course title of the recent course
+            savec in the config files.
+        """
+
+        w_or_wo = 'w/' if course_path.suffix == '.pkl' else 'w/o'
+        super().__init__(f'{course_title} [{w_or_wo} preview]')
+
+        self.setToolTip(str(course_path))
+        self.__course_path = course_path
+
+    @property
+    def course_path(self):
+        """
+        Return the item's course path (self.__course_path)
+        """
+
+        return self.__course_path

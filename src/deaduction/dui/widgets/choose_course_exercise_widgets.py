@@ -37,7 +37,6 @@ import sys
 from functools import partial
 from gettext import   gettext as _
 from pathlib import   Path
-import pickle
 from typing  import ( Any,
                       Dict,
                       Optional )
@@ -66,82 +65,17 @@ from PySide2.QtWidgets import ( QApplication,
                                 QVBoxLayout,
                                 QWidget )
 
+from deaduction.config           import   add_to_recent_courses
 from deaduction.dui.widgets      import ( MathObjectWidget,
                                           StatementsTreeWidget,
                                           StatementsTreeWidgetItem )
-from deaduction.dui.utils        import   DisclosureTriangle
-from deaduction.config           import ( add_to_recent_courses,
-                                          get_recent_courses )
+from deaduction.dui.utils        import ( DisclosureTriangle,
+                                          HorizontalLine,
+                                          RecentCoursesLW,
+                                          RecentCoursesLWI,
+                                          read_pkl_course )
 from deaduction.pylib.coursedata import ( Course,
                                           Exercise )
-
-
-# TODO: Put this function somewhere else (course classmethod?)
-def read_pkl_course(course_path: Path) -> Course:
-    """
-    Extract an instance of the class Course from a .pkl file.
-
-    :param course_path: The path of the course we want to instanciate.
-    :return: The instance of the Course class.
-    """
-
-    with course_path.open(mode='rb') as input:
-        course = pickle.load(input)
-
-    return course
-
-
-class HorizontalLine(QFrame):
-    """
-    An horizontal line (like <hr> in HTML) QWidget.
-    """
-
-    def __init__(self):
-
-        super().__init__()
-        self.setFrameShape(QFrame.HLine)
-        self.setFrameShadow(QFrame.Sunken)
-
-
-class RecentCoursesLW(QListWidget):
-
-    def __init__(self):
-
-        super().__init__()
-
-        courses_paths, titles, exercise_numbers = get_recent_courses()
-        info = zip(courses_paths, titles, exercise_numbers)
-        for course_path, course_title, exercise_number in info:
-            item = RecentCoursesLWI(course_path, course_title)
-            self.addItem(item)
-
-    def add_browsed_course(self, course_path: Path, title: str):
-
-        displayed_title = f'(browsed) {title}'
-        item = RecentCoursesLWI(course_path, displayed_title)
-        self.insertItem(0, item)
-        self.setItemSelected(item, True)
-    
-
-class RecentCoursesLWI(QListWidgetItem):
-    """
-    A class to display recent courses and store their Path
-    title           str, title to be displayed
-    course_path     str, to be displayed in tooltips, and stored as a Path
-    number          int, number of last exercise done in this course
-    """
-
-    def __init__(self, course_path: Path, title: str):
-
-        w_or_wo = 'w/' if course_path.suffix == '.pkl' else 'w/o'
-        super().__init__(f'{title} [{w_or_wo} preview]')
-
-        self.setToolTip(str(course_path))
-        self.__course_path = course_path
-
-    @property
-    def course_path(self):
-        return self.__course_path
 
 
 class AbstractCoExChooser(QWidget):
