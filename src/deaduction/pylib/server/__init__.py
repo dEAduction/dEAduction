@@ -292,7 +292,8 @@ class ServerInterface(QObject):
         end_of_file += "end course"
 
         # replace statement by negation if required
-        if exercise.negate_statement:
+        if (hasattr(exercise, 'negate_statement')
+                and exercise.negate_statement):
             lean_core_statement = exercise.lean_core_statement
             negation = " not( " + lean_core_statement + " )"
             lemma_line = exercise.lean_line - 1

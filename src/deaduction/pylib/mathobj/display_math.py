@@ -94,20 +94,25 @@ class Shape:
     by the shapes of the children (by the from_shape() method)
 
     To distinguish expanded vs non expanded forms, the latter is usually named
-    "shape" instead of "shape"
+    "raw_shape" instead of "shape"
+
+    display_not contains the negated version of display, if any
     """
     display:                    list
     math_object:                Any
     format_:                    str         = 'latex'
     text_depth:                 int         = 0
+    display_not:                list        = None
     all_app_arguments:          list        = None
+    negate:                     bool        = False
+    # when negate is True, try to compute display_not instead of display
 
     @classmethod
     def from_math_object(cls,
                          math_object: Any,
                          format_="latex",
-                         text_depth=0
-                         ):
+                         text_depth=0,
+                         negate=False):
         """
         This function essentially looks in the format_from_node
         dictionary, and then pass the result to the from_shape method
@@ -159,7 +164,7 @@ class Shape:
             raw_shape.text_to_latex()
 
         # finally expand raw_shape
-        raw_shape.expand_from_shape()
+        raw_shape.expand_from_shape(negate=negate)
         return raw_shape  # now expanded
 
     @classmethod
@@ -212,17 +217,29 @@ class Shape:
         else:
             return shape_error("unknown object")
 
-    def expand_from_shape(self):
+    def expand_from_shape(self, negate=False):
         """
-        Expand the shape:
-        (1) replace umbers by displya of corresponding children
+        Expand the shape: in self.display,
+        (1) replace numbers by display of corresponding children
         (2) take care of subscript/superscript
         (3) takes care of display of "\\in" according to context
 
-        :return: an modified instance of Shape with expanded display
+        if negate is True, this indicates that it is the negation that we
+        need : display_not will be expanded instead of display (
+        except if display_not is None). This is effective for instance for
+        properties to display
+        'f is not injective' instead of 'NOT (f is injective)'
+
+        :return: a modified instance of Shape with expanded display
         """
+        format_not = (latex_from_node["PROP_NOT"][0],
+                      text_from_node["PROP_NOT"][0])
         # log.debug(f"Expanding shape {self.display}")
-        display =      self.display
+        if negate and self.display_not:
+            # Negation will be computed if required and possible
+            display =      self.display_not
+        else:
+            display = self.display
         math_object =  self.math_object
         format_ =      self.format_
         text_depth =   self.text_depth
@@ -238,6 +255,7 @@ class Shape:
         counter = -1
         subscript = False
         superscript = False
+        negate_child = False
         for item in display:
             counter += 1
             display_item = item
@@ -250,33 +268,40 @@ class Shape:
                 # (case of supplementary children from 'application' node)
                 child = math_object.descendant(item)
             if isinstance(item, int) or isinstance(item, tuple):
-                shape = Shape.from_math_object(
-                                    math_object=child,
-                                    format_=format_,
-                                    text_depth=text_depth - 1
-                                                      )
+                shape = Shape.from_math_object(math_object=child,
+                                               format_=format_,
+                                               text_depth=text_depth - 1,
+                                               negate=negate_child
+                                               )
                 display_item = shape.display
+                if negate_child and shape.display_not:
+                    # if negation has already been incorporated in display:
+                    expanded_display.pop()  # remove the 'not' before item
+                negate_child = False
+
                 # with brackets?
                 if text_depth < 1:
                     if needs_paren(math_object, child, item):
                         display_item = ['('] + display_item + [')']
 
-            # (2) strings: handling "belongs to"
+            # (2) strings: handling "belongs to", and negations
             elif isinstance(item, str):
                 if r"\in" in item:  # or item.find(r"∈") != -1:
+                    # replace "∈" with ":" in some cases
                     if (counter + 1 < len(display)
                             and (isinstance(display[counter + 1], int)
                                  or isinstance(display[counter + 1], tuple)
                                 )
                        ):
-                        # replace "∈" with ":" in some cases
                         type_ = math_object.descendant(display[counter + 1])
                     else:
                         type_ = "unknown"
                     symbol = display_belongs_to(type_, format_, text_depth)
                     display_item = item.replace(r"\in", symbol)
                     # display_item = display_item.replace(r"∈", symbol)
-
+                elif item in format_not:
+                    # next item will be negated prettily if possible
+                    negate_child = True
             # (3) handling subscript and superscript
             if counter > 0:
                 if display[counter - 1] == '_':
@@ -384,7 +409,7 @@ def shape_from_application(math_object,
     all_app_arguments.insert(0, first_child)
 
     display = [0]  # default = display first child as a function
-
+    display_not = None
     # (2) case of index notation: sequences, set families
     if first_child.math_type.node in ["SET_FAMILY", "SEQUENCE"]:
         # APP(E, i) -> E_i
@@ -413,7 +438,8 @@ def shape_from_application(math_object,
             pass
         else:  # standard format
             display = list(latex_from_constant_name['STANDARD_CONSTANT'])
-
+            display_not = list(latex_from_constant_name[
+                                   'STANDARD_CONSTANT_NOT'])
     # if not isinstance(display, list):
     #     log.warning(f"in shape_from_app, display {display} is not a list")
     #     display = list(display)
@@ -445,6 +471,7 @@ def shape_from_application(math_object,
     # log.debug(f"display: {display}")
 
     raw_shape = Shape(display=display,
+                      display_not=display_not,
                       math_object=math_object,
                       format_=format_,
                       all_app_arguments=all_app_arguments
@@ -496,6 +523,7 @@ def display_quantifier(math_object, format_="latex", text_depth=0) -> list:
     but should be displayed as above.
 
     """
+    # TODO: handle format='text'
 
     node = math_object.node
     children = math_object.children
@@ -509,23 +537,13 @@ def display_quantifier(math_object, format_="latex", text_depth=0) -> list:
     # The following tests if math_object has the form
     # ∀ x:X, (x R ... ==> ...)
     # where R is some inequality relation
-    if potential_implication .is_implication(is_math_type=True):
+    if potential_implication.is_implication(is_math_type=True):
         premise = potential_implication.children[0]  # children (2,0)
         if premise.is_inequality(is_math_type=True):
             item = premise.children[0]
             if item == variable:
                 quantifier = display[0]
-                # inequality = premise
-                # true_body = potential_implication.children[1]
-                # children (2,1)
-                display = [quantifier,
-                           (2, 0),
-                           # inequality.to_display(format_=format_),
-                           ", ",
-                           (2, 1),
-                           # true_body.to_display(format_=format_,
-                           #                     text_depth=text_depth-1),
-                           ]
+                display = [quantifier, (2, 0), ", ", (2, 1)]
     return display
 
 
@@ -540,7 +558,7 @@ def display_lambda(math_object, format_="latex") -> list:
         encoded by LAMBDA(X, x, APP(f, x))  --> "f"
     - anything else is displayed as "x ↦ f(x)"
     """
-    display = []
+
     math_type = math_object.math_type
     _, var, body = math_object.children
     # log.debug(f"display LAMBDA with var, body, type = {var, body,
@@ -618,9 +636,15 @@ def display_math_type_of_local_constant(math_type, format_, text_depth=0) \
             and hasattr(math_type.math_type, 'node') \
             and math_type.math_type.node == "TYPE":
         name = math_type.info["name"]
-        display = [_("an element of") + " ", name]
+        if text_depth > 0:
+            display = [_("an element of") + " ", name]
+        else:
+            display = [_("element of") + " ", name]
     elif hasattr(math_type, 'node') and math_type.node == "SET":
-        display = [_("a subset of") + " ", 0]
+        if text_depth > 0:
+            display = [_("a subset of") + " ", 0]
+        else:
+            display = [_("subset of") + " ", 0]
     if display:
         raw_shape = Shape(display=display,
                           math_object=math_type,

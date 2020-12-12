@@ -741,8 +741,8 @@ class ExerciseMainWindow(QMainWindow):
                 else:
                     break
             except WrongUserInput as e:
-                self.empty_current_selection()
                 self.display_WrongUserInput(e)
+                self.empty_current_selection()
                 break
             else:
                 log.info("Code sent to lean: " + code)
@@ -758,6 +758,7 @@ class ExerciseMainWindow(QMainWindow):
 
         item.mark_user_selected(True)
 
+        # Put double-clicked item on last position in current_selection
         if item in self.current_selection:
             self.current_selection.remove(item)
         self.current_selection.append(item)

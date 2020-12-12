@@ -81,8 +81,8 @@ latex_from_node = {
     # GENERAL TYPES: #
     ##################
     "SET": (r'{\mathcal P}', "(", 0, ")"),
-    "PROP": (_("a proposition"),),
-    "TYPE": (_("a set"),),
+    "PROP": (_("proposition"),),
+    "TYPE": (_("set"),),
     "FUNCTION": (0, r" \to ", 1),
 }
 
@@ -96,6 +96,7 @@ latex_from_quant_node = {
 # negative value = from end of children list
 latex_from_constant_name = {
     "STANDARD_CONSTANT": (-1, " " + _("is") + " ", 0),
+    "STANDARD_CONSTANT_NOT": (-1, " " + _("is not") + " ", 0),
     # NB: STANDARD_CONSTANT prevents supplementary arguments,
     # do not use with a CONSTANT c s.t. APP(c, x) is a FUNCTION,
     # or anything that can be applied (i.e. in APP(APP(c,x),...) )

@@ -160,7 +160,7 @@ If two hypothesis P, then Q, have been previously selected:
             raise WrongUserInput(error=_("selected items are not properties"))
         else:
             return construct_and_hyp(goal, selected_objects)
-    raise WrongUserInput(error=_("does not apply to more than to properties"))
+    raise WrongUserInput(error=_("does not apply to more than two properties"))
 
 
 # OR #
@@ -239,13 +239,13 @@ Construct a property 'P or Q' from property 'P' or property 'Q'
 
     if len(l) == 2:
         if not (l[0].is_prop() and l[1].is_prop()):
-            error = _("selected objects are not properties")
+            error = _("selected items are not properties")
             raise WrongUserInput(error)
         else:
             Q = l[1].info["name"]
     elif len(l) == 1:
         if not l[0].is_prop():
-            error = _("selected object is not a property")
+            error = _("selected item is not a property")
             raise WrongUserInput(error)
         if len(user_input) == 0:
             raise MissingParametersError(InputType.Text,
@@ -348,10 +348,10 @@ def apply_implicate(goal: Goal, l: [MathObject]):
     possible_codes = []
     h_selected = l[0].info["name"]
     possible_codes.append(f'apply {h_selected}')
-    return possible_codes
+    return format_orelse(possible_codes)
 
 
-def apply_implicate_to_hyp(goal: Goal, l: [MathObject]):
+def apply_implicate_to_hyp(goal: Goal, l: [MathObject]) -> str:
     """
     Try to apply last selected property on the other ones.
     The last property should be an implcation or a universal property
@@ -387,7 +387,7 @@ def apply_implicate_to_hyp(goal: Goal, l: [MathObject]):
 
     possible_codes = implicit_codes + explicit_codes
 
-    return possible_codes
+    return format_orelse(possible_codes)
 
 
 @action(tooltips_config.get('tooltip_implies'),
@@ -405,9 +405,9 @@ introduce the hypothesis P in the properties and transform the target into Q.
     if len(l) == 0:
         return construct_implicate(goal)
     if len(l) == 1:
-        return format_orelse(apply_implicate(goal, l))
+        return apply_implicate(goal, l)
     if len(l) == 2:
-        return format_orelse(apply_implicate_to_hyp(goal, l))
+        return apply_implicate_to_hyp(goal, l)
     raise WrongUserInput(error=_("does not apply to more than two properties"))
 
 
@@ -416,7 +416,7 @@ introduce the hypothesis P in the properties and transform the target into Q.
 def construct_iff(goal: Goal, user_input: [str]):
     possible_codes = []
     if goal.target.math_type.node != "PROP_IFF":
-        raise WrongUserInput(error=_("target is not an iff property"))
+        raise WrongUserInput(error=_("target is not an iff property 'P ⇔ Q'"))
 
     left = goal.target.math_type.children[0].to_display()
     right = goal.target.math_type.children[1].to_display()
@@ -436,7 +436,7 @@ def construct_iff(goal: Goal, user_input: [str]):
             code = ""
         possible_codes.append(f'{code}split')
     else:
-        raise WrongUserInput(error=_("unknown error"))
+        raise WrongUserInput(error=_("undocumented error"))
     return format_orelse(possible_codes)
 
 
@@ -447,7 +447,7 @@ def destruct_iff_on_hyp(goal: Goal, l: [MathObject]):
     """
     possible_codes = []
     if l[0].math_type.node != "PROP_IFF":
-        error = _("selected property is not an iff property 'P ⇔ Q")
+        error = _("selected property is not an iff property 'P ⇔ Q'")
         raise WrongUserInput(error)
     h = l[0].info["name"]
     h1 = get_new_hyp(goal)
@@ -464,7 +464,7 @@ def construct_iff_on_hyp(goal: Goal, l: [MathObject]):
     possible_codes = []
 
     if not (l[0].math_type.is_prop() and l[1].math_type.is_prop()):
-        error = _("selected objects should both be implications")
+        error = _("selected items should both be implications")
         raise WrongUserInput(error)
 
     new_h = get_new_hyp(goal)
@@ -497,10 +497,10 @@ introduce two subgoals, P⇒Q, and Q⇒P.
 
 # FOR ALL #
 
-def construct_forall(goal):
+def construct_forall(goal) -> str:
     possible_codes = []
     math_object = goal.target.math_type
-    if math_object.node != "QUANT_∀":
+    if not goal.target.is_for_all():
         error = _("target is not a universal property '∀x, P(x)'")
         raise WrongUserInput(error)
     math_type = math_object.children[0]
@@ -512,10 +512,10 @@ def construct_forall(goal):
     else:
         x = give_global_name(goal=goal,
                              math_type=goal.target.math_type.children[0],
-                             hints=[goal.target.math_type.children[
-                                        1].to_display(),
-                                    goal.target.math_type.children[
-                                        0].to_display().lower()])
+                             )
+        # It is probably not a good idea to include Lean's bound variable name
+        # since it is not necessarily a smart name
+        # hints=[math_object.children[1].to_display()]
         possible_codes.append(f'intro {x}')
     return format_orelse(possible_codes)
 
@@ -548,7 +548,7 @@ introduce x and transform the target into P(x)
 
 # EXISTS #
 
-def construct_exists(goal, user_input: [str]):
+def construct_exists(goal, user_input: [str]) -> str:
     possible_codes = []
 
     if not goal.target.is_exists():

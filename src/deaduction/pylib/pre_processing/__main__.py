@@ -49,8 +49,9 @@ import gettext
 import pickle
 from pathlib import Path
 
+from deaduction.config import _
 from deaduction.dui.launcher import select_course
-from deaduction.pylib.coursedata import Exercise
+from deaduction.pylib.coursedata import Exercise, Definition, Theorem
 from deaduction.pylib import logger
 from deaduction.pylib.server import ServerInterface
 
@@ -218,7 +219,11 @@ def print_text_version(course):
             counter += 1
             print(_("Exercise") + f" n°{counter}: {st.pretty_name}")
             goal = st.initial_proof_state.goals[0]
-            print(goal.goal_to_text(text_depth=1))
+            if 'open_question' in st.info:
+                open_problem = True
+            else:
+                open_problem = False
+            print(goal.goal_to_text(text_depth=1, open_problem=open_problem))
             # print("     More verbose:")
             # print(goal.goal_to_text(text_depth=2))
         else:
@@ -234,18 +239,27 @@ def print_goal(course):
         if isinstance(st, Exercise):
             counter += 1
             print(_("Exercise") + f" n°{counter}: {st.pretty_name}")
-        else:
-            print(_("Definition:") + f" {st.pretty_name}")
+            to_prove = True
+        elif isinstance(st, Definition):
+                print(_("Definition:") + f" {st.pretty_name}")
+                to_prove = False
+        elif isinstance(st, Theorem):
+                print(_("Theorem:") + f" {st.pretty_name}")
+                to_prove = False
 
+        if 'open_question' in st.info:
+            open_problem = True
+        else:
+            open_problem = False
         goal = st.initial_proof_state.goals[0]
-        print(goal.print_goal())
+        print(goal.print_goal(open_problem=open_problem,
+                              to_prove=to_prove))
 
 
 if __name__ == '__main__':
     logger.configure(debug=True,
                      domains="pre_processing",
                      suppress=False)
-    _ = gettext.gettext
     log.debug("starting pre-processing...")
     qtrio.run(main)
 
