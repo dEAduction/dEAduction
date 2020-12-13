@@ -41,13 +41,17 @@ EXERCISE.USE_SECONDS_FOR_VARIABLES_NAMES = \
 
 
 def get_new_hyp(goal):
+    forbidden_names = goal.extract_vars_names()
+    return get_new_hyp_from_forbidden_names(forbidden_names)
+
+
+def get_new_hyp_from_forbidden_names(forbidden_names: [str]):
     """Find a fresh name for a new property
     The name is 'Hn' where n is the least integer such that Hn has never
     been given by the present function, and Hn is not in the current context
 
     Makes us of the Python global var Global.PROPERTY_COUNTER
     """
-    forbidden_names = goal.extract_vars_names()
 
     counter = EXERCISE.PROPERTY_COUNTER
     potential_name = 'H' + str(counter)
@@ -129,7 +133,7 @@ def give_name(math_type,
 
     # Properties are named 'Hn' where n is an integer
     if math_type.is_prop():
-        return get_new_hyp()
+        return get_new_hyp_from_forbidden_names(forbidden_names)
 
     ##################
     # managing hints #
