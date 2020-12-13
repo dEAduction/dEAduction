@@ -40,7 +40,7 @@ latex_from_node = {
     "PROP_IMPLIES": (0, r" \Rightarrow ", 1),
     # "QUANT_∀": (r"\forall", 1, r" \in ", 0, ", ", 2),
     # "QUANT_∃": (r"\exists", 1, r" \in ", 0, ", ", 2),
-    # "PROP_∃": ("*PROP_∃*",),
+    "PROP_∃":  (0, " " + _("and") + " ", 1),  # ∃ (H : P), Q
     # "QUANT_∃!": (r"\exists !",  1, r" \in ", 0, ", ", 2),
     ###############
     # SET THEORY: #

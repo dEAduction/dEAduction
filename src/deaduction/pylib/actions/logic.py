@@ -78,7 +78,7 @@ Split the target 'P AND Q' into two sub-goals
     """
     possible_codes = []
 
-    if goal.target.math_type.node != "PROP_AND":
+    if not goal.target.is_and():
         raise WrongUserInput(error=_("target is not a conjunction 'P AND Q'"))
     left = goal.target.math_type.children[0].to_display()
     right = goal.target.math_type.children[1].to_display()
@@ -93,7 +93,11 @@ Split the target 'P AND Q' into two sub-goals
 
     if len(user_input) == 1:
         if user_input[0] == 1:
-            code = "rw and.comm, "
+            if goal.target.math_type.node == "PROP_∃":
+                # In this case, first rw target as a conjunction
+                code = "rw exists_prop, rw and.comm, "
+            else:
+                code = "rw and.comm, "
         else:
             code = ""
         possible_codes.append(f'{code}split')
@@ -149,7 +153,7 @@ If two hypothesis P, then Q, have been previously selected:
     if len(selected_objects) == 0:
         return construct_and(goal, user_input)
     if len(selected_objects) == 1:
-        if selected_objects[0].math_type.node != "PROP_AND":
+        if not selected_objects[0].is_and():
             raise WrongUserInput(error=_("selected property is not "
                                          "a conjunction 'P AND Q'"))
         else:
@@ -170,7 +174,7 @@ When target is a disjunction 'P OR Q', choose to prove either P or Q
     """
     possible_codes = []
 
-    if goal.target.math_type.node != "PROP_OR":
+    if not goal.target.is_or():
         raise WrongUserInput(error=_("target is not a disjunction 'P OR Q'"))
 
     left = goal.target.math_type.children[0].to_display()

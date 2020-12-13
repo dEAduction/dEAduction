@@ -457,7 +457,8 @@ class MathObject:
             math_type = self
         else:
             math_type = self.math_type
-        return math_type.node == "PROP_AND"
+        return (math_type.node == "PROP_AND"
+                or math_type.node == "PROP_∃")
 
     def is_or(self, is_math_type=False) -> bool:
         """

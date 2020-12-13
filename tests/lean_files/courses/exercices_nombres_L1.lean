@@ -148,19 +148,20 @@ begin
 end
 
 
-lemma theorem.negation_existe {X : Sort} {P : X → Prop} :
-( not (∃ x, P x ) ) ↔ ∀ x, not P x
+lemma theorem.negation_existe  {X : Sort*} {P : X → Prop} :
+( ( not ∃ (x:X), P x  ) ↔ ∀ x:X, not P x )
 :=
 /- dEAduction
 PrettyName
     Négation de '∃X, P(x)'
 -/
 begin
-    exact not_exists
+    exact not_exists,
 end
 
 
-lemma theorem.negation_pour_tout {X : Sort} {P : X → Prop} :
+
+lemma theorem.negation_pour_tout {X : Sort*} {P : X → Prop} :
 ( not (∀x, P x ) ) ↔ ∃x, not P x
 :=
 /- dEAduction
