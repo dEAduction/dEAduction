@@ -35,6 +35,7 @@ from PySide2.QtWidgets import ( QLayout,
 
 from deaduction.pylib.coursedata import Course
 
+
 # TODO: Put this function somewhere else (course classmethod?)
 def read_pkl_course(course_path: Path) -> Course:
     """
@@ -48,6 +49,7 @@ def read_pkl_course(course_path: Path) -> Course:
         course = pickle.load(input)
 
     return course
+
 
 def replace_widget_layout(layout: QLayout, old: QWidget, new: QWidget,
                           recursive: bool=True):
@@ -65,7 +67,8 @@ def replace_widget_layout(layout: QLayout, old: QWidget, new: QWidget,
             ~Qt.FindChildrenRecursively
     layout.replaceWidget(old, new, flag)
     old.deleteLater()
-    
+
+
 def set_selectable(self, yes: bool=True):
     """
     Make self to be selectable if yes or unselectable otherwise.
@@ -81,4 +84,7 @@ def set_selectable(self, yes: bool=True):
         new_flags = self.flags() & ~Qt.ItemIsSelectable
     self.setFlags(new_flags)
 
+
 QTreeWidgetItem.set_selectable = set_selectable
+
+
