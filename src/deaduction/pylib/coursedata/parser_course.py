@@ -45,7 +45,6 @@ This file is part of d∃∀duction.
 """
 
 from pathlib import Path
-from typing import List
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 import logging
