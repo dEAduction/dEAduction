@@ -39,8 +39,8 @@ from deaduction.pylib.mathobj import (  Goal,
 
 def action_definition(goal : Goal, selected_objects : [MathObject], definition : Statement):
     possible_codes = []
+    defi = definition.lean_name
     if len(selected_objects) == 0:
-        defi = definition.lean_name
         possible_codes.append(f'rw {defi}')
         possible_codes.append(f'rw <- {defi}')
         possible_codes.append(f'simp_rw {defi}')
@@ -49,9 +49,6 @@ def action_definition(goal : Goal, selected_objects : [MathObject], definition :
     else:
         names = [item.info['name'] for item in selected_objects]
         arguments = ' '.join(names)
-
-        defi = definition.lean_name
-
         possible_codes.append(f'rw {defi} at {arguments}')
         possible_codes.append(f'rw <- {defi} at {arguments}')
         possible_codes.append(f'simp_rw {defi} at {arguments}')
