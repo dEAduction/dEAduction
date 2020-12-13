@@ -238,6 +238,9 @@ class CourseChooser(AbstractCoExChooser):
                 self.__recent_course_clicked)
         self.__recent_courses_wgt.itemDoubleClicked.connect(
                 self.__recent_course_clicked)
+        # Cannot connect signal directly to signal because
+        # itemDoubleClicked sends an argument but goto_exercise
+        # does not receive one. See snippets/connect_signal_to_signal.
         self.__recent_courses_wgt.itemDoubleClicked.connect(
                 lambda x: self.goto_exercise.emit())
 

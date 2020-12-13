@@ -23,9 +23,17 @@ class BabyClass(QWidget):
 
 class MyWidget(QWidget):
 
+    # Snake
     signal_1 = Signal()
     signal_2 = Signal()
     signal_3 = Signal()
+
+    # Emit no argument but should receive argument
+    signal_4 = Signal()
+    signal_5 = Signal(int)
+    # Emit argument but should not receive one
+    signal_6 = Signal(str)
+    signal_7 = Signal()
 
     def __init__(self):
 
@@ -45,6 +53,12 @@ class MyWidget(QWidget):
         self.signal_2.connect(self.bbc.baby_signal)
         self.bbc.baby_signal.connect(self.signal_3)
         self.signal_3.connect(self.print_datetime)
+
+        # Everything worked until there, but the following connections
+        # fail:
+
+        self.signal_4.connect(self.signal_5)
+        self.signal_6.connect(self.signal_7)
 
         self.show()
 
