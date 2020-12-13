@@ -213,7 +213,8 @@ class CourseChooser(AbstractCoExChooser):
     - The preview area has no main_widget.
     """
 
-    course_chosen = Signal(Course, str, bool)
+    course_chosen = Signal(Course, str)
+    goto_exercise = Signal()
 
     def __init__(self):
         """
@@ -229,14 +230,16 @@ class CourseChooser(AbstractCoExChooser):
 
         # Recent courses widget
         self.__recent_courses_wgt = RecentCoursesLW()
-        self.__recent_courses_wgt.itemClicked.connect(partial(
-                self.__recent_course_clicked, goto_exercise=False))
-        self.__recent_courses_wgt.itemDoubleClicked.connect(partial(
-                self.__recent_course_clicked, goto_exercise=True))
-
         browser_layout = QVBoxLayout()
         browser_layout.addWidget(self.__browse_btn)
         browser_layout.addWidget(self.__recent_courses_wgt)
+
+        self.__recent_courses_wgt.itemClicked.connect(
+                self.__recent_course_clicked)
+        self.__recent_courses_wgt.itemDoubleClicked.connect(
+                self.__recent_course_clicked)
+        self.__recent_courses_wgt.itemDoubleClicked.connect(
+                lambda x: self.goto_exercise.emit())
 
         super().__init__(browser_layout)
 
@@ -278,8 +281,7 @@ class CourseChooser(AbstractCoExChooser):
                             details=details, description=description,
                             expand_details=True)
 
-        self.course_chosen.emit(self.__course, self.__course_filetype,
-                                self.__goto_exercise)
+        self.course_chosen.emit(self.__course, self.__course_filetype)
 
     # TODO: Make this a course classmethod?
     def __instanciate_course(self, course_path: Path):
@@ -326,27 +328,20 @@ class CourseChooser(AbstractCoExChooser):
             title = self.__course.metadata.get('Title', 'no title')
             self.__recent_courses_wgt.add_browsed_course(
                     course_path, title)
-            self.__goto_exercise = False
             self.set_preview()
 
     @Slot(RecentCoursesLWI, bool)
-    def __recent_course_clicked(self, course_item: RecentCoursesLWI,
-                                goto_exercise: bool):
+    def __recent_course_clicked(self, course_item: RecentCoursesLWI):
         """
         This method is called when the user clicks on an item in
         self.__recent_courses_wgt. It sends the corresponding
         RecentCoursesLWI and this method instanciates a Course object
-        from it and passes it to set_preview. Furthermore, is this slot
-        was called by a simple click, goto_exercise is True; if it was
-        called by a double click, goto_exercise is False. This
-        information will be sent (in self.exercise_selected signal by
-        set_preview) to the instance of StartExerciseDialog and
-        determines whether or not the interface directly goes to the
-        exercise viewer when the course has been chosen.
+        from it and passes it to set_preview. 
+
+        :course_item: The REcentCoursesLWI the user clicked on.
         """
 
-        self.__goto_exercise = goto_exercise
-        course_path          = course_item.course_path
+        course_path = course_item.course_path
         self.__instanciate_course(course_path)
         self.set_preview()
 
@@ -653,6 +648,8 @@ class StartExerciseDialog(QDialog):
         self.__course_chooser   = CourseChooser()
         self.__exercise_chooser = QWidget()
 
+        # Somehow the order of connections changes performances
+        self.__course_chooser.goto_exercise.connect(self.__goto_exercise)
         self.__course_chooser.course_chosen.connect(self.__preview_exercises)
 
         # ───────────────────── Buttons ──────────────────── #
@@ -667,9 +664,9 @@ class StartExerciseDialog(QDialog):
 
         # ───────────────────── Layouts ──────────────────── #
 
-        self.__coex_tabwidget = QTabWidget()
-        self.__coex_tabwidget.addTab(self.__course_chooser, _('Course'))
-        self.__coex_tabwidget.addTab(self.__exercise_chooser, _('Exercise'))
+        self.__tabwidget = QTabWidget()
+        self.__tabwidget.addTab(self.__course_chooser, _('Course'))
+        self.__tabwidget.addTab(self.__exercise_chooser, _('Exercise'))
 
         buttons_lyt = QHBoxLayout()
         buttons_lyt.addStretch()
@@ -677,14 +674,14 @@ class StartExerciseDialog(QDialog):
         buttons_lyt.addWidget(self.__start_ex_btn)
 
         main_layout = QVBoxLayout()
-        main_layout.addWidget(self.__coex_tabwidget)
+        main_layout.addWidget(self.__tabwidget)
         main_layout.addLayout(buttons_lyt)
 
         self.setLayout(main_layout)
 
         # ───────────────────── Others ───────────────────── #
 
-        self.__coex_tabwidget.setTabEnabled(1, False)
+        self.__tabwidget.setTabEnabled(1, False)
 
     #########
     # Slots #
@@ -706,13 +703,20 @@ class StartExerciseDialog(QDialog):
         __preview_exercises once self.__exercise_chooser has been set to
         an ExerciseChooser object.
         """
-        
+
         self.__start_ex_btn.setEnabled(True)
         self.__start_ex_btn.setDefault(True)
 
-    @Slot(Course, Path, bool)
-    def __preview_exercises(self, course: Course, course_filetype: Path,
-                            goto_exercise: bool):
+    @Slot()
+    def __goto_exercise(self):
+        """
+        Go to the exercise tab.
+        """
+
+        self.__tabwidget.setCurrentIndex(1)
+
+    @Slot(Course, str)
+    def __preview_exercises(self, course: Course, course_filetype: str):
         """
         This method is called when the user chose a course an the signal
         self.__course_chooser.course_chosen is emitted. It instanciates
@@ -722,16 +726,19 @@ class StartExerciseDialog(QDialog):
         self.__exercise_chooser.exercise_previewed to the slot
         self.__enable_start_ex_btn (see __enable_start_ex_btn for the
         why).
+
+        :param course: The instance of the Course class the user just chose.
+        :param course_filetype: The course's file file-type ('.lean' or
+            '.pkl').
         """
 
         self.__start_ex_btn.setEnabled(False)
 
-        self.__coex_tabwidget.removeTab(1)
-        self.__coex_tabwidget.setTabEnabled(1, True)
+        # Tab 0 is course, 1 is exercise
+        self.__tabwidget.removeTab(1)
+        self.__tabwidget.setTabEnabled(1, True)
         self.__exercise_chooser = ExerciseChooser(course, course_filetype)
-        self.__coex_tabwidget.addTab(self.__exercise_chooser, _('Exercise'))
-        if goto_exercise:
-            self.__coex_tabwidget.setCurrentIndex(1)
+        self.__tabwidget.addTab(self.__exercise_chooser, _('Exercise'))
 
         self.__exercise_chooser.exercise_previewed.connect(
                 self.__enable_start_ex_btn)
