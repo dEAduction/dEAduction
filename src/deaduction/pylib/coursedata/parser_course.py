@@ -45,7 +45,6 @@ This file is part of d∃∀duction.
 """
 
 from pathlib import Path
-from typing import List
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 import logging
@@ -100,14 +99,15 @@ log = logging.getLogger(__name__)
 statement_rules = """
 statement = variables spaces ":" core_statement
     variables = variable*
-        variable =  paren_expr / accol_expr
-            paren_expr =  spaces "(" (any_char_but_p / variable)* ")" 
-            accol_expr =  spaces "{" (any_char_but_p / variable)* "}"
-
+        variable =  paren_expr / accol_expr / bracket_expr
+            paren_expr      =  spaces "(" (any_char_but_p / variable)* ")" 
+            accol_expr      =  spaces "{" (any_char_but_p / variable)* "}"
+            bracket_expr    =  spaces "[" (any_char_but_p / variable)* "]"
     core_statement = any_char*
 
 spaces = (" " / end_of_line)*
-any_char_but_p = (!"(" !")" !"{" !"}" any_char_but_eol) / end_of_line 
+any_char_but_p = (!"(" !")" !"{" !"}" !"[" !"]" any_char_but_eol) / 
+end_of_line 
 any_char = any_char_but_eol / end_of_line
 any_char_but_eol = ~r"."
 end_of_line = "\\n"

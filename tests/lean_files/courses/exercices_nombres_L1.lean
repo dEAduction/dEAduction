@@ -31,10 +31,14 @@ Author
     Frédéric Le Roux
 Institution
     Université de France
+Title
+    Logique et inégalités
 OpenQuestion
     True
 AvailableExercises
     NONE
+AvailableLogic
+    ALL -negate
 -/
 
 -- If OpenQuestion is True, DEAduction will ask the user if she wants to
@@ -91,6 +95,118 @@ namespace Logique_et_nombres_reels
 PrettyName
     Logique et nombres réels
 -/
+
+namespace negation
+/- dEAduction
+PrettyName
+    Enoncés de négation
+-/
+
+lemma theorem.negation_et {P Q : Prop} :
+( not (P and Q) ) ↔ ( (not P) or (not Q) )
+:=
+/- dEAduction
+PrettyName
+    Négation du 'et'
+-/
+begin
+    exact not_and_distrib
+end
+
+lemma theorem.negation_ou {P Q : Prop} :
+( not (P or Q) ) ↔ ( (not P) and (not Q) )
+:=
+/- dEAduction
+PrettyName
+    Négation du 'ou'
+-/
+begin
+    exact not_or_distrib
+end
+
+lemma theorem.negation_non {P : Prop} :
+( not not P ) ↔  P
+:=
+/- dEAduction
+PrettyName
+    Négation du 'non'
+-/
+begin
+    exact not_not
+end
+
+
+lemma theorem.negation_implique {P Q : Prop} :
+( not (P → Q) ) ↔  ( P and (not Q) )
+:=
+/- dEAduction
+PrettyName
+    Négation d'une implication
+-/
+begin
+    exact not_imp,
+end
+
+
+lemma theorem.negation_existe  {X : Sort*} {P : X → Prop} :
+( ( not ∃ (x:X), P x  ) ↔ ∀ x:X, not P x )
+:=
+/- dEAduction
+PrettyName
+    Négation de '∃X, P(x)'
+-/
+begin
+    exact not_exists,
+end
+
+
+
+lemma theorem.negation_pour_tout {X : Sort*} {P : X → Prop} :
+( not (∀x, P x ) ) ↔ ∃x, not P x
+:=
+/- dEAduction
+PrettyName
+    Négation de '∀x, P(x)'
+-/
+begin
+    exact not_forall
+end
+
+
+lemma theorem.negation_inegalite_stricte {X : Type} (x y : X) [linear_order X]:
+( not (x < y) ) ↔ y ≤ x
+:=
+/- dEAduction
+PrettyName
+    Négation de 'x < y'
+-/
+begin
+    exact not_lt
+end
+
+
+lemma theorem.negation_inegalite_large {X : Type} (x y : X) [linear_order X]:
+( not (x ≤ y) ) ↔ y < x
+:=
+/- dEAduction
+PrettyName
+    Négation de 'x ≤ y'
+-/
+begin
+    exact not_le
+end
+
+
+
+
+end negation
+
+namespace exercices
+/- dEAduction
+PrettyName
+    Exercices
+-/
+
 
 
 lemma exercise.zero_ou_un : ∀ n:ℕ, (n ≠ 0 or n ≠ 1)
@@ -223,6 +339,7 @@ begin
     sorry
 end
 
+end exercices
 
 end Logique_et_nombres_reels
 

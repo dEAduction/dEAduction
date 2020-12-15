@@ -118,8 +118,7 @@ class Statement:
         Let B be a subset of X.
         Prove that X \\ (A ∪ B) = (X \\ A) ∩ (X \\ B).
         """
-        if hasattr(self, "initial_proof_state") and \
-                self.initial_proof_state is not None:
+        if self.initial_proof_state is not None:
             initial_goal = self.initial_proof_state.goals[0]
             text = initial_goal.goal_to_text()
         else:
@@ -171,8 +170,7 @@ class Statement:
         Return a string that shows a simplified version of the statement
         (e.g. to be displayed as a tooltip)
         """
-        if not hasattr(self, 'initial_proof_state') \
-                or self.initial_proof_state is None:
+        if self.initial_proof_state is None:
             text = self.lean_core_statement
             return text
         goal = self.initial_proof_state.goals[0]

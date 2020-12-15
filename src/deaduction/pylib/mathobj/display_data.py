@@ -40,7 +40,7 @@ latex_from_node = {
     "PROP_IMPLIES": (0, r" \Rightarrow ", 1),
     # "QUANT_∀": (r"\forall", 1, r" \in ", 0, ", ", 2),
     # "QUANT_∃": (r"\exists", 1, r" \in ", 0, ", ", 2),
-    # "PROP_∃": ("*PROP_∃*",),
+    "PROP_∃":  (0, " " + _("and") + " ", 1),  # ∃ (H : P), Q
     # "QUANT_∃!": (r"\exists !",  1, r" \in ", 0, ", ", 2),
     ###############
     # SET THEORY: #
@@ -77,6 +77,7 @@ latex_from_node = {
     "MULT": (0, r" \times ", 1),
     "PRODUCT": (0, r" \times ", 1),
     "DIV": (0, r"/", 1),
+    "MINUS": ("-", 0),
     ##################
     # GENERAL TYPES: #
     ##################
@@ -104,8 +105,16 @@ latex_from_constant_name = {
     "composition": (4, r'\circ', 5),  # APP(compo, X, Y, Z, g, f)
     "prod": (1, r'\times', 2),
     "Identite": ("Id",),
-    "ne": (2, r" \neq ", 3)  # Lean name for ≠  temporary
-                            }
+    "ne": (2, r" \neq ", 3),  # Lean name for ≠  temporary
+    "interval": ("\[", -2, ",", -1, "\]"),
+    "majorant": (-1, " majorant de ", -2),
+    "minorant": (-1, " minorant de ", -2),
+    "borne_sup": ("Sup", -2, " = ", -1),
+    "borne_inf": ("Inf", -2, " = ", -1),
+    "est_majore": (-1, " majoré"),
+    "est_minore": (-1, " minoré"),
+    "est_borne": (-1, " borné")
+}
 
 # Lean formats that cannot be deduced from latex
 lean_from_node = {  # todo: this has not been tested on Lean yet!
@@ -144,8 +153,10 @@ latex_to_utf8_dic = {
     r'\geq': '≥',
     r'{\mathcal P}': '𝒫',
     r'\{': '{',
-    r'\}': '}'
-                     }
+    r'\}': '}',
+    r'\[': '[',
+    r'\]': ']'
+                    }
 
 # only those lean symbols that are not in the latex_to_utf8 dict
 latex_to_lean_dic = {

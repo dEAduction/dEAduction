@@ -34,6 +34,7 @@ This file is part of d∃∀duction.
 """
 
 import sys
+import logging
 from functools import partial
 from gettext import   gettext as _
 from pathlib import   Path
@@ -67,9 +68,12 @@ from deaduction.dui.utils        import ( DisclosureTriangle,
                                           RecentCoursesLW,
                                           RecentCoursesLWI,
                                           read_pkl_course,
-                                          replace_widget_layout )
+                                          replace_widget_layout,
+                                          ButtonsDialog)
 from deaduction.pylib.coursedata import ( Course,
                                           Exercise )
+
+log = logging.getLogger(__name__)
 
 
 class AbstractCoExChooser(QWidget):
@@ -262,10 +266,9 @@ class CourseChooser(AbstractCoExChooser):
         """
 
         # Title, subtitle, etc
-        # TODO: Add these properties to the course class?
-        title       = self.__course.metadata.get('Title', None)
-        subtitle    = self.__course.metadata.get('Subtitle', None)
-        description = self.__course.metadata.get('Description', None)
+        title       = self.__course.title
+        subtitle    = self.__course.subtitle
+        description = self.__course.description
 
         # Details
         details = self.__course.metadata
@@ -273,7 +276,7 @@ class CourseChooser(AbstractCoExChooser):
         # TODO: Prevent user for using a 'Path' attribute (in the course
         # file) when writing a course.
         # TODO: Add course path.
-        for key in ['Title', 'Subtitle', 'Description']:
+        for key in ['title', 'subtitle', 'description']:
             if key in details:
                 details.pop(key)
 
@@ -328,7 +331,7 @@ class CourseChooser(AbstractCoExChooser):
             course_path = Path(dialog.selectedFiles()[0])
             self.__instanciate_course(course_path)
 
-            title = self.__course.metadata.get('Title', 'no title')
+            title = self.__course.title
             self.__recent_courses_wgt.add_browsed_course(
                     course_path, title)
             self.set_preview()
@@ -549,7 +552,7 @@ class ExerciseChooser(AbstractCoExChooser):
     @property
     def exercise(self) -> Optional[Exercise]:
         """
-        Return self.__exercise if it exists, None otherwise. Usefull in
+        Return self.__exercise if it exists, None otherwise. Useful in
         StartExerciseDialog.__start_exercise to get the exercise being
         previewed and start it.
 
@@ -757,6 +760,11 @@ class StartExerciseDialog(QDialog):
 
         exercise = self.__exercise_chooser.exercise
 
+        # check if exercise must be negated (e.g. in an open question)
+        ok = check_negate_statement(exercise)
+        if not ok:
+            return
+
         # Save course_path, title, and exercise number
         # in user_config's previous_courses_list
         # TODO: Rename the list recent_courses_list?
@@ -776,6 +784,45 @@ class StartExerciseDialog(QDialog):
         # Send exercise_chosen signal and close dialog
         self.exercise_chosen.emit(exercise)
         self.accept()  # Fuck you and I'll see you tomorrow!
+
+
+def check_negate_statement(exercise) -> bool:
+    """
+    If needed, ask the user to choose between proving the statement
+    or its negation. Change the attribute exercise.negate_statement
+    accordingly.
+    :param exercise:    Exercise
+    :return:            True if choice has been made, else False
+
+    """
+    ok = True  # default value
+    open_question = exercise.info.setdefault('open_question', False)
+    if ('negate_statement' in exercise.info
+            and exercise.info['negate_statement']):
+        exercise.negate_statement = True
+    elif open_question:
+        # exercise is an open question and the user has to choose her way
+        if exercise.lean_variables:
+            log.warning("Exercise is an open question but has variables:"
+                        "negation will not be correct!!")
+
+        title = _("Do you want to prove this statement or its negation?")
+        if exercise.initial_proof_state:
+            goal = exercise.initial_proof_state.goals[0]
+            output = goal.goal_to_text(text_depth=0, to_prove=False)
+        else:
+            output = exercise.lean_variables + "   " \
+                     + exercise.lean_core_statement
+        choices = [("1", _("Prove statement")),
+                   ("2", _("Prove negation"))]
+        choice, ok2 = ButtonsDialog.get_item(choices,
+                                             title,
+                                             output)
+        if ok2:
+            exercise.negate_statement = (choice == 1)
+        else:  # cancel exercise if no choice
+            ok = False
+    return ok
 
 
 if __name__ == '__main__':

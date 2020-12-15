@@ -76,6 +76,7 @@ __tooltips = {
         )
 }
 # decentralized apply buttons
+# this phrase will be preceded by "double click to "
 __tooltips_apply = {
     'tooltip_apply_function':
         _("""apply function to a selected object or equality"""),
@@ -88,7 +89,7 @@ __tooltips_apply = {
     'tooltip_apply_exists':
         _("""get a new object in the context"""),
     'tooltip_apply_and':
-        _("""Split into two properties""")
+        _("""split into two properties""")
 }  # TODO
 
 # Text for buttons

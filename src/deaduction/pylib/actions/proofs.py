@@ -550,6 +550,31 @@ def action_assumption(goal: Goal, l: [MathObject]) -> str:
             # congruence closure, solves e.g. (a=b, b=c : f a = f c)
             possible_codes.append('cc')
         possible_codes.append('apply iff.symm, assumption')
+
+        # Try some symmetry rules
+        if goal.target.is_and():
+            possible_codes.append('apply and.symm, assumption')
+            possible_codes.append('split, assumption, assumption')
+        if goal.target.is_or():
+            possible_codes.append('apply or.symm, assumption')
+            # The following is too much?
+            # possible_codes.append('left, assumption')
+            # possible_codes.append('right, assumption')
+
+        # Try to split hypotheses that are conjunctions
+        code = ""
+        counter = 0
+        for prop in goal.context:
+            if prop.is_and():
+                name = prop.info['name']
+                H0 = f"H_aux_{counter}"  # these hypotheses will disappear
+                H1 = f"H_aux_{counter+1}"  # so names are unimportant
+                code += f"cases {name} with {H0} {H1}, "
+                counter += 2
+        if code:
+            code += 'assumption'
+        possible_codes.append(code)
+
     if len(l) == 1:
         possible_codes.append(solve1_wrap(f'apply {l[0].info["name"]}'))
 

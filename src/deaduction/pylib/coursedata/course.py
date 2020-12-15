@@ -87,6 +87,28 @@ class Course:
             title = str(self.course_path.stem).replace("_", " ").capitalize()
         return title
 
+    @property
+    def subtitle(self) -> str:
+        """
+        Return subtitle if a subtitle exists in metadata,
+        else return "no subtitle"
+        """
+        if 'subtitle' in self.metadata:
+            return self.metadata['subtitle']
+        else:
+            return "no subtitle"
+
+    @property
+    def description(self) -> str:
+        """
+        Return description if exists in metadata,
+        else return "no description"
+        """
+        if 'description' in self.metadata:
+            return self.metadata['description']
+        else:
+            return "no description"
+
     def print_metadata(self):
         for field_name, field_content in self.metadata.items():
             print(f"{field_name}: {field_content}")
