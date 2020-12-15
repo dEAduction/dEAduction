@@ -29,7 +29,8 @@ import                  logging
 from dataclasses import dataclass
 import                  pickle
 import os
-from deaduction.config import user_config
+from deaduction.config import ( user_config,
+                                _ )
 
 log = logging.getLogger(__name__)
 
@@ -71,7 +72,7 @@ class Journal:
         if emw:
             nature, content, details = event
             if nature == 'lean_error':
-                event = (nature, content, "request failed")
+                event = (nature, content, _("request failed"))
 
             # display event
             emw.display_status_bar_message(event=event)
