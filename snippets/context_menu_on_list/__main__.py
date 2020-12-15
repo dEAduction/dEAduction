@@ -22,11 +22,11 @@ class List(QListWidget):
         self.itemDoubleClicked.connect(self.__rename_item_action)
 
     def contextMenuEvent(self, event):
-        context_menu = QMenu(self)
+        cmenu = QMenu(self)
 
         # Define actions and add them to menu
-        print_items_action = context_menu.addAction('Print item(s)')
-        rename_item_action = context_menu.addAction('Rename item')
+        print_items_action = cmenu.addAction('Print item(s)')
+        rename_item_action = cmenu.addAction('Rename item')
 
         # Connect actions to slots
         print_items_action.triggered.connect(self.__print_items_action)
@@ -37,7 +37,7 @@ class List(QListWidget):
 
         # 0 item selected
         if not self.selectedItems():
-            context_menu.setEnabled(False)
+            cmenu.setEnabled(False)
 
         # 1 item selected
         if len(self.selectedItems()) == 1:
@@ -45,7 +45,7 @@ class List(QListWidget):
             print_items_action.setText('Print item')
 
         # Run menu
-        context_menu.exec_(self.mapToGlobal(event.pos()))
+        cmenu.exec_(self.mapToGlobal(event.pos()))
 
     @Slot()
     def __print_items_action(self):
