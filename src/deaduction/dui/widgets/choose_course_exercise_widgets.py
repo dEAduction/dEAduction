@@ -822,7 +822,7 @@ def check_negate_statement(exercise) -> bool:
             exercise.negate_statement = (choice == 1)
         else:  # cancel exercise if no choice
             ok = False
-        return ok
+    return ok
 
 
 if __name__ == '__main__':
