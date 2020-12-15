@@ -550,6 +550,17 @@ def action_assumption(goal: Goal, l: [MathObject]) -> str:
             # congruence closure, solves e.g. (a=b, b=c : f a = f c)
             possible_codes.append('cc')
         possible_codes.append('apply iff.symm, assumption')
+
+        # Apply symmetry rules
+        if goal.target.is_and():
+            possible_codes.append('apply and.symm, assumption')
+            possible_codes.append('split, assumption, assumption')
+        if goal.target.is_or():
+            possible_codes.append('apply or.symm, assumption')
+            # The following is too much?
+            # possible_codes.append('left, assumption')
+            # possible_codes.append('right, assumption')
+
     if len(l) == 1:
         possible_codes.append(solve1_wrap(f'apply {l[0].info["name"]}'))
 

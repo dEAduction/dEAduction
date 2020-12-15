@@ -201,7 +201,7 @@ def apply_or(goal, l: [MathObject], user_input: [str]) -> str:
 Engage in a proof by cases by applying a property 'P OR Q'
     """
     possible_codes = []
-    if l[0].math_type.node != "PROP_OR":
+    if not l[0].is_or():
         raise WrongUserInput(error=_("Selected property is not "
                                      "a disjunction 'P OR Q'"))
 
@@ -295,7 +295,7 @@ If a hypothesis of the form P OR Q has been previously selected:
     if len(l) == 0:
         return construct_or(goal, user_input)
     if len(l) == 1:
-        if l[0].math_type.node == "PROP_OR":
+        if l[0].is_or():
             return apply_or(goal, l, user_input)
         else:
             return construct_or_on_hyp(goal, l, user_input)
