@@ -419,12 +419,7 @@ lemma exercise.produit_avec_intersection
 set.prod A (B ∩ C) = (set.prod A B) ∩ (set.prod A C)
 :=
 begin
-    --rw generalites.definition.egalite_deux_ensembles,
-    --intro z,
-    --have H, from definition.type_produit z,
-    --cases H with x Hx,
-    --cases Hx with y Hy,
-    --rw Hy,
+    sorry
 end
 
 

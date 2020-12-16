@@ -38,7 +38,8 @@ from PySide2.QtCore import (    Signal,
                                 Slot,
                                 QEvent,
                                 Qt)
-from PySide2.QtGui import       QIcon
+from PySide2.QtGui import     ( QIcon,
+                                QFont )
 from PySide2.QtWidgets import ( QAction,
                                 QDesktopWidget,
                                 QGroupBox,
@@ -181,6 +182,8 @@ class ExerciseCentralWidget(QWidget):
         # I wish none of these were class atributes, but we need at
         # least self.__main_lyt and self.__context_lyt in the method
         # self.update_goal.
+
+        self.setFont(QFont('Menlo'))
 
         self.__main_lyt     = QVBoxLayout()
         self.__context_lyt  = QVBoxLayout()
