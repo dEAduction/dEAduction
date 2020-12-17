@@ -1,65 +1,80 @@
-import logging
+from functools import partial
 import sys
+from typing import    Callable
 
 from PySide2.QtCore    import ( Qt,
                                 Slot)
-from PySide2.QtWidgets import ( QApplication,
+from PySide2.QtWidgets import ( QAction,
+                                QApplication,
                                 QAbstractItemView,
                                 QListWidget,
                                 QListWidgetItem,
-                                QMenu)
-
-from deaduction.pylib import logger as logger
-
-log = logging.getLogger('')
+                                QMenu )
 
 
-class List(QListWidget):
+class MyAction(QAction):
+
+    def __init__(self, title: str, slot: Callable):
+
+        super().__init__()
+        self.setText(title)
+
+        self.__slot = slot
+
+    @property
+    def slot(self) -> Callable:
+
+        return self.__slot
+
+
+class MyMenu(QMenu):
+
+    def __init__(self, actions: [MyAction], selection_function: Callable):
+
+        super().__init__()
+
+        for action in actions:
+            @Slot()
+            def slut(): action.slot(selection_function())
+            action.triggered.connect(slut)
+            self.addAction(action)
+
+
+class MyList(QListWidget):
 
     def __init__(self):
+
         super().__init__()
+
         self.setAlternatingRowColors(True)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
+        # Context menu
+        self.__context_menu = MyMenu(ACTIONS, self.selection)
+
+    def selection(self):
+
+        return self.selectedItems()
+
     def contextMenuEvent(self, event):
-        cmenu = QMenu(self)
+        self.__context_menu.exec_(self.mapToGlobal(event.pos()))
 
-        # Define actions and add them to menu
-        print_items_action = cmenu.addAction('Print item(s)')
 
-        # Connect actions to slots
-        print_items_action.triggered.connect(self.__print_items_action)
-
-        # Default behavior
-
-        # 0 item selected
-        if not self.selectedItems():
-            cmenu.setEnabled(False)
-
-        # 1 item selected
-        if len(self.selectedItems()) == 1:
-            print_items_action.setText('Print item')
-
-        # Run menu
-        cmenu.exec_(self.mapToGlobal(event.pos()))
-
-    @Slot()
-    def __print_items_action(self):
-        for item in self.selectedItems():
-            print(item.text)
+ACTION_1 = MyAction('Print selection', lambda selection: print(len(selection), [x.text() for x in selection]))
+ACTION_2 = MyAction('Go fuck yourself', lambda x: print('Go fuck yourself'))
+ACTIONS = [ACTION_1, ACTION_2]
 
 
 if __name__ == '__main__':
 
-    logger.configure()
-
     app = QApplication()
 
-    list = List()
-    list.addItem(QListWidgetItem('Computer'))
-    list.addItem(QListWidgetItem('Filter'))
-    list.addItem(QListWidgetItem('Happier'))
-    list.addItem(QListWidgetItem('Obscured by clouds'))
-    list.show()
+    my_list = MyList()
+    my_list.addItem(QListWidgetItem('Gulli good'))
+    my_list.addItem(QListWidgetItem('Computer'))
+    my_list.addItem(QListWidgetItem('Filter'))
+    my_list.addItem(QListWidgetItem('Happier'))
+    my_list.addItem(QListWidgetItem('Obscured by clouds'))
+    my_list.show()
 
     sys.exit(app.exec_())
