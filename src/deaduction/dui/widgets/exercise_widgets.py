@@ -183,7 +183,7 @@ class ExerciseCentralWidget(QWidget):
         # least self.__main_lyt and self.__context_lyt in the method
         # self.update_goal.
 
-        self.setFont(QFont('Menlo'))
+        # self.setFont(QFont('Menlo'))
 
         self.__main_lyt     = QVBoxLayout()
         self.__context_lyt  = QVBoxLayout()
