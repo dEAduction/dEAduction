@@ -4,6 +4,7 @@ import tactic
 -- dEAduction imports
 import structures2
 import notations_definitions
+import utils
 
 -- General principles :
 -- Type should be defined as parameters, in order to be implicit everywhere
@@ -28,6 +29,8 @@ Author
     Frédéric Le Roux
 Institution
     Université de France
+AvailableMagic
+    NONE
 -/
 
 
