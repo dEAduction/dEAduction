@@ -63,5 +63,7 @@ def format_orelse(list_of_choices):
         return list_of_choices[0]
     else:
         list_of_choices = map(lambda string: f'`[ {string}, trace \"EFFECTIVE CODE {_CODE_NB} : {string}\"]', list_of_choices)
-        return " <|> ".join(list_of_choices) + ", "
+        return " <|> ".join(list_of_choices)
 
+def solve1_wrap(string: str) -> str:
+    return "solve1 {" + string + "}"

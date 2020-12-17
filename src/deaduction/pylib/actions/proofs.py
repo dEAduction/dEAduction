@@ -38,6 +38,8 @@ from deaduction.pylib.actions import (InputType,
                                       WrongUserInput,
                                       action,
                                       format_orelse,
+                                      get_new_var,
+                                      solve1_wrap,
                                       apply_exists,
                                       apply_and,
                                       apply_or)
@@ -225,7 +227,7 @@ def action_new_object(goal: Goal, l: [MathObject],
                                          title="+",
                                          output=_("Introduce new object:"))
         else:  # send code
-            x = utils.get_new_var()  # fixme: ask the user for a name
+            x = get_new_var()  # fixme: ask the user for a name
             h = get_new_hyp(goal)
             possible_codes.append(
                 f"let {x} := {user_input[1]}, "
@@ -554,7 +556,7 @@ def action_assumption(goal: Goal, l: [MathObject]) -> str:
         # Try some symmetry rules
         if goal.target.is_iff():
             possible_codes.append('apply iff.symm, assumption')
-        elif goal.target.is_and():
+        elif goal.target.is_and(): # todo: change to "id_and_like"
             possible_codes.append('apply and.symm, assumption')
             possible_codes.append('split, assumption, assumption')
         elif goal.target.is_or():
@@ -590,6 +592,3 @@ def action_assumption(goal: Goal, l: [MathObject]) -> str:
 # @action(_("Proof by induction"))
 # def action_induction(goal : Goal, l : [MathObject]):
 #    raise WrongUserInput
-
-def solve1_wrap(string: str) -> str:
-    return "solve1 {" + string + "}"
