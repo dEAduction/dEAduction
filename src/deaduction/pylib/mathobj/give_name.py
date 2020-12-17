@@ -62,21 +62,35 @@ def get_new_hyp_from_forbidden_names(forbidden_names: [str]):
     return potential_name
 
 
-def give_local_name(math_type, body, hints: [str] = []):
+def give_local_name(math_type: MathObject,
+                    body: MathObject,
+                    hints: [str] = [],
+                    forbidden_vars: [MathObject] = []) -> str:
     """
     Attribute a name to a local variable. See give_name below.
 
-    :param math_type:   PropObj type of new variable
-    :param body:        a PropObj inside which the new name will serve for a
-    bound variable
-    :param hints:       a list of hints for the future name
-    :return:            a name for the new variable
+    :param math_type:       PropObj type of new variable
+    :param body:            a PropObj inside which the new name will serve
+                            for a bound variable
+    :param hints:           a list of hints for the future name
+    :param forbidden_vars:  list of vars whose names are forbidden
+    :return:                a name for the new variable
     """
-    forbidden_vars = body.extract_local_vars()
+
+    additional_forbidden_vars = body.extract_local_vars()
+
+    names = [var.info['name'] for var in forbidden_vars]
+    log.debug(f'Giving name to bound var, a priori forbidden names ={names}')
+    more_names = [var.info['name'] for var in additional_forbidden_vars]
+    log.debug(f'Additional forbidden names ={more_names}')
+
+    forbidden_vars.extend(additional_forbidden_vars)
     return give_name(math_type, forbidden_vars, hints)
 
 
-def give_global_name(math_type, goal, hints: [str] = []):
+def give_global_name(math_type:MathObject,
+                     goal,
+                     hints: [str] = []) -> str:
     """
     Attribute a name to a global variable See give_name below.
 
@@ -114,12 +128,15 @@ def give_name(math_type,
     """
 
     # determine list of forbidden names from forbidden variables
-    forbidden_names = []  # a list of strings with no duplication
-    for math_object in forbidden_vars:
-        name = math_object.info['name']
-        if name not in forbidden_names:
-            forbidden_names.append(name)
-    log.debug(f"giving name to bound var, hints = {hints} type={math_type}")
+    # forbidden_names = []  # a list of strings with no duplication
+    # for math_object in forbidden_vars:
+    #     name = math_object.info['name']
+    #     if name not in forbidden_names:
+    #         forbidden_names.append(name)
+
+    # list of forbidden names (with repeat)
+    forbidden_names = [var.info['name'] for var in forbidden_vars]
+    log.debug(f"giving name to var, hints = {hints} type={math_type}")
     log.debug(f"forbidden names: {forbidden_names}")
 
     ######################
@@ -194,6 +211,7 @@ def give_name(math_type,
                 if potential_name not in forbidden_names:
                     return potential_name
                 elif EXERCISE.USE_SECONDS_FOR_VARIABLES_NAMES:
+                    # try to use "x''"
                     name = potential_name
                     index_ = forbidden_names.index(name)
                     variable = forbidden_vars[index_]

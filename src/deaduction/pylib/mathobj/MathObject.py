@@ -206,7 +206,7 @@ class MathObject:
             ##############################
             # self has unnamed bound vars if some child has
             child_bool = (True in [child.has_unnamed_bound_vars
-                                                    for child in children])
+                                   for child in children])
             math_object = MathObject(node=node,
                                      info=info,
                                      math_type=math_type,
@@ -217,9 +217,11 @@ class MathObject:
     ########################
     # name bound variables #
     ########################
-    def name_bound_vars(self):
+    def name_bound_vars(self, forbidden_vars=None):
         """
         Provide a good name for all bound variables of self
+         e.g. when the node is a quantifier, "LAMBDA", "SET_EXTENSION".
+         (cf the have_bound_vars list in display_data.py)
 
         (1) assume all bound vars of self are unnamed (name = 'NO NAME'),
         and have a lean_name (in attribute info)
@@ -228,26 +230,30 @@ class MathObject:
 
          This order gives the wanted result, e.g.
          ∀ x:X, ∀ x':X, etc. and not the converse
-
-         e.g. when the node is a quantifier, "LAMBDA", "SET_EXTENSION".
-         (cf the have_bound_vars list in display_data.py)
-
         """
         # NB: info["name"] is provided by structures.lean,
         # but may be inadequate (e.g. two distinct variables sharing the
         # same name)
+
         # For an expression like ∀ x: X, P(x)
-        # the logical constraints are: the name of the bound variable
-        # (which is going to replace `x`)  must be distinct from all
-        # names of variables appearing in the body `P(x)`, whether free
-        # or bound
-        # bound vars must be unnamed, so that their names will not be on
-        # the forbidden list
+        # the constraints are:
+        # (1) the name of the bound variable
+        # (which is going to replace `x`)  must be distinct from all names
+        # of variables appearing in the body `P(x)`, whether free or bound
+        # (2) the name of the bound variable must be distinct from names
+        # of bound variables appearing previously in the same MathObject
+
+        # Bound vars inside P(x) must be unnamed, so that their names will not
+        # be on the forbidden list
+
         if not self.has_unnamed_bound_vars:
             # prevents for (badly) renaming vars several times
             # log.debug("no bound vars")
             return
+        log.debug(f"Naming bound vars in {self}")
         self.has_unnamed_bound_vars = False
+        if not forbidden_vars:
+            forbidden_vars = []
         node = self.node
         children = self.children
         if node in HAVE_BOUND_VARS:
@@ -256,16 +262,21 @@ class MathObject:
             # search for a fresh name valid inside local context
             name = give_name.give_local_name(math_type=bound_var_type,
                                              hints=[hint],
-                                             body=local_context)
+                                             body=local_context,
+                                             forbidden_vars=forbidden_vars)
             bound_var.info["name"] = name
+            # Bound vars have no math_type indication
+            # but we need one for further proper naming
             bound_var.math_type = bound_var_type
             log.debug(f"giving name {name}")
 
             children = [local_context]
-
+            # prevent further bound vars in the expression to take the same
+            # name
+            forbidden_vars.append(bound_var)
         # recursively name bound variables
         for child in children:
-            child.name_bound_vars()
+            child.name_bound_vars(forbidden_vars=forbidden_vars)
 
 ######################################
 # Tests for equality related methods #
@@ -626,8 +637,8 @@ class MathObject:
         means having an info["name"]
         :return: list of MathObject instances
         """
-        # todo: change by testing if node == "LOCAL_CONSTANT" ?
-        if "name" in self.info.keys():
+        # todo: change by testing if node == "LOCAL_CONSTANT"?
+        if "name" in self.info.keys() and self.info['name'] != 'NO NAME':
             return [self]
         local_vars = []
         for child in self.children:
@@ -639,8 +650,8 @@ class MathObject:
         collect the list of names of variables used in the definition of self
         (leaves of the tree)
         """
-        l = [math_obj.info["name"] for math_obj in self.extract_local_vars()]
-        return l
+        return [math_obj.info["name"] for math_obj in
+                self.extract_local_vars()]
 
     ########################
     # display math objects #
@@ -654,7 +665,7 @@ class MathObject:
             #########################################
             # naming bound variables before display #
             #########################################
-            self.name_bound_vars()
+            self.name_bound_vars(forbidden_vars=[])
             shape = display_math_type_of_local_constant(self,
                                                         format_,
                                                         text_depth)
@@ -675,7 +686,7 @@ NO_MATH_TYPE = MathObject(node="not provided",
 def mark_bound_vars(bound_var_1, bound_var_2):
     """
     Mark two bound variables with a common number, so that we can follow
-    them along two quantified expressions and check tif these expressions
+    them along two quantified expressions and check if these expressions
     are identical
     """
     MathObject.bound_var_number += 1
