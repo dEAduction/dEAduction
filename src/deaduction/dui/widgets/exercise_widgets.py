@@ -540,9 +540,14 @@ class ExerciseMainWindow(QMainWindow):
         if goals_counter_evolution < 0 and current_goals_counter != 0:
             if EXERCISE.last_action != 'undo':
                 log.info(f"Current goal solved!")
+                if goals_counter_evolution == -1:
+                    message = _('Current goal solved')
+                else:
+                    nb = str(-goals_counter_evolution)
+                    message = nb + ' ' + _('goals solved!')
                 QMessageBox.information(self,
                                         '',
-                                        _('Current goal solved'),
+                                        message,
                                         QMessageBox.Ok
                                         )
         EXERCISE.last_action = None
