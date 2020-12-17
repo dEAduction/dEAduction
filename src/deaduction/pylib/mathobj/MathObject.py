@@ -412,6 +412,9 @@ class MathObject:
         Test if self represents a mathematical Proposition
         WARNING:
         For global variables, only the math_type attribute should be tested !
+        e.g. If self represents property (H : ∀ x, P(x) )
+        then self.math_type.is_prop() is true,
+        but NOT self.is_prop()
         """
         if is_math_type:
             math_type = self
