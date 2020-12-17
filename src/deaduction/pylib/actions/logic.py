@@ -242,19 +242,19 @@ Construct a property 'P or Q' from property 'P' or property 'Q'
     P = l[0].math_type.to_display()
 
     if len(l) == 2:
-        if not (l[0].is_prop() and l[1].is_prop()):
+        if not (l[0].math_type.is_prop() and l[1].math_type.is_prop()):
             error = _("selected items are not properties")
             raise WrongUserInput(error)
         else:
             Q = l[1].info["name"]
     elif len(l) == 1:
-        if not l[0].is_prop():
+        if not l[0].math_type.is_prop():
             error = _("selected item is not a property")
             raise WrongUserInput(error)
         if len(user_input) == 0:
             raise MissingParametersError(InputType.Text,
-                    title=_("Obtain 'P OR Q'"),
-                    output=_("Enter the proposition you want to use:"))
+                        title=_("Obtain 'P OR Q'"),
+                        output=_("Enter the proposition you want to use:"))
         Q = user_input[0]
         user_input = user_input[1:]
         
@@ -598,10 +598,10 @@ def construct_exists_on_hyp(goal: Goal, l: [MathObject]):
     possible_codes = []
     x = l[0].info["name"]
     hx = l[1].info["name"]
-    if (not l[0].is_prop()) and l[1].is_prop():
+    if (not l[0].math_type.is_prop()) and l[1].math_type.is_prop():
         new_h = get_new_hyp(goal)
         possible_codes.append(f'have {new_h} := exists.intro {x} {hx}')
-    elif (not l[1].is_prop()) and l[0].is_prop():
+    elif (not l[1].math_type.is_prop()) and l[0].math_type.is_prop():
         x, hx = hx, x
         new_h = get_new_hyp(goal)
         possible_codes.append(f'have {new_h} := exists.intro {x} {hx}')
@@ -629,7 +629,7 @@ introduce a new x and add P(x) to the properties
         return construct_exists(goal, user_input)
     elif len(l) == 1 and user_input == []:
         h_selected = l[0]
-        if h_selected.is_prop():
+        if h_selected.math_type.is_prop():
             # try to apply property "exists x, P(x)" to get a new MathObject x
             if not h_selected.is_exists():
                 error = _("selection is not existential property '∃x, P(x)'")
