@@ -28,7 +28,122 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from dataclasses import dataclass
+from typing import Any
+
+
 from deaduction.pylib.actions import WrongUserInput
+
+
+@dataclass()
+class CodeForLean:
+    """
+    A class for encoding a structured set of instructions for Lean,
+    i.e. tactics combined by combinators then or or_else.
+    - Basic tactics are defined via the from_string method
+    - Combined tactics are defined via the or_else and and_then methods
+    - raw code is retrieved via the to_string method
+    - an error_message can be added, to be displayed in case of Lean failure
+    """
+    instruction:        str = None     # instruction, iff combinator = "single"
+    combinator:         str = 'single' # one of "and_then", "or_else", "single"
+    children:           Any = None     # instance of CodeForLean
+    error_message:      str = ""
+
+    # TODO: make properties to ensure that either instruction ≠ ""
+    #  (and then combinator ='single' and children are empty)
+    #  or combinator and children are non empty, and len(children) ≥ 2
+
+    @classmethod
+    def from_string(cls, instruction: str, error_message: str = ''):
+        """
+        Create a CodeForLean with a single instruction
+        """
+        return CodeForLean(instruction=instruction,
+                           error_message=error_message)
+
+    def or_else(self, other):
+        """
+        Combine 2 CodeForLean with an or_else combinator
+
+        :param other:   another instance of CodeForLean
+        :return:        CodeForLean
+        """
+        if self.is_or_else():
+            self.children.append(other)
+            return self
+        else:
+            return CodeForLean(combinator='or_else',
+                               children=[self, other])
+
+    def and_then(self, other):
+        """
+        Combine 2 CodeForLean with an and_then combinator
+
+        :param other:   another instance of CodeForLean
+        :return:        CodeForLean
+        """
+        if self.is_and_then():
+            self.children.append(other)
+            return self
+        else:
+            return CodeForLean(combinator='and_then',
+                               children=[self, other])
+
+    def and_finally(self, other):
+        """
+        Add other before each "or_else" combinator, so that whatever
+        sequence of instruction that succeeds ends with other
+
+        :param other:   another instance of CodeForLean
+        :return:        CodeForLean
+        """
+        if self.is_single() or self.is_and_then():
+            # replace self by self and then other
+            return self.and_then(other)
+        elif self.is_or_else():
+            children = [piece_of_code.and_finally(other)
+                        for piece_of_code in self.children]
+            return CodeForLean(combinator='or_else',
+                               children=children)
+
+    def to_string(self, effective_code=True) -> str:
+        """
+        Format CodeForLean into a string which can be sent to Lean
+
+        :param effective_code:  if True then include a trace instruction to
+                                retrieve effective code.
+        """
+        # TODO: handle error_messages
+        if self.instruction:
+            return self.instruction
+
+        elif self.is_and_then():
+            return ', '.join([child.to_string() for child in self.children])
+
+        elif self.is_or_else():
+            strings = ['{' + child.to_string() + '}'
+                       for child in self.children]
+            return ' <|> '.join(strings)
+
+    def add_error_message(self, error_message: str):
+        self.error_message = error_message
+
+    def record_into_journal(self):
+        """
+        Add a record in the journal
+        """
+
+        pass
+
+    def is_single(self):
+        return self.combinator == "single"
+
+    def is_and_then(self):
+        return self.combinator == "and_then"
+
+    def is_or_else(self):
+        return self.combinator == "or_else"
 
 _VAR_NB = 0
 _FUN_NB = 0
@@ -65,5 +180,16 @@ def format_orelse(list_of_choices):
         list_of_choices = map(lambda string: f'`[ {string}, trace \"EFFECTIVE CODE {_CODE_NB} : {string}\"]', list_of_choices)
         return " <|> ".join(list_of_choices)
 
+
 def solve1_wrap(string: str) -> str:
     return "solve1 {" + string + "}"
+
+
+if __name__ == '__main__':
+    code = CodeForLean.from_string('assumption')
+    code = code.or_else(CodeForLean.from_string('norm_num'))
+    code = code.or_else(CodeForLean.from_string('good bye'))
+    code = code.and_finally(CodeForLean.from_string('no_meta_vars'))
+
+    print(code)
+    print(code.to_string())
