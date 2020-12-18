@@ -27,9 +27,14 @@ This file is part of d∃∀duction.
 """
 
 import sys
+from logging import getLogger
 from PySide2.QtWidgets import   QApplication, QDialog, QLabel, QPushButton, \
                                 QVBoxLayout, QHBoxLayout
+from PySide2.QtGui import QFont, QFontInfo
+
 from functools import partial
+
+log = getLogger(__name__)
 
 
 class ButtonsDialog(QDialog):
@@ -67,6 +72,21 @@ class ButtonsDialog(QDialog):
 
         # title line
         output_line = QLabel(output, self, StyleSheet='font-weight: bold;')
+        font1 = QFont('Menlo')
+        output_line.setFont(font1)  # ça marche !
+        log.debug(f" Font match: {output_line.fontInfo().exactMatch()}")
+        log.debug(f"Font family: {output_line.fontInfo().family()}")
+        log.debug(f"Font style Hint: {output_line.fontInfo().styleHint()}")
+        log.debug(f"Font style Name: {output_line.fontInfo().styleName()}")
+
+        font2 = QFont('Helvetica')
+        output_line.setFont(font2)
+        log.debug(f" Font match: {output_line.fontInfo().exactMatch()}")
+        log.debug(f"Font family: {output_line.fontInfo().family()}")
+#        log.debug(output_line.QFontInfo.exactMatch(),
+#                  output_line.QFontInfo.family())
+
+
         output_layout = QHBoxLayout()
         output_layout.addWidget(output_line)
         output_layout.addStretch(1)

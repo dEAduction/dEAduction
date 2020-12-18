@@ -43,7 +43,7 @@ from typing  import ( Dict,
 
 from PySide2.QtCore    import ( Signal,
                                 Slot )
-from PySide2.QtGui     import   QFont
+from PySide2.QtGui     import   QFont, QFontInfo
 from PySide2.QtWidgets import ( QApplication,
                                 QCheckBox,
                                 QDialog,
@@ -397,6 +397,8 @@ class ExerciseChooser(AbstractCoExChooser):
             '.pkl'), see self docstring.
         """
 
+
+
         self.__course_filetype = course_filetype
 
         browser_layout = QVBoxLayout()
@@ -451,9 +453,10 @@ class ExerciseChooser(AbstractCoExChooser):
             properties_lyt = QVBoxLayout()
 
             objects_wgt.adjustSize()
-            objects_wgt.setFont(QFont('Menlo'))
+            #objects_wgt.setFont(QFont('Menlo'))
             properties_wgt.adjustSize()
-            properties_wgt.setFont(QFont('Menlo'))
+            #properties_wgt.setFont(QFont('Menlo'))
+
 
             objects_lyt.addWidget(QLabel(_('Objects:')))
             properties_lyt.addWidget(QLabel(_('Properties:')))
@@ -467,7 +470,8 @@ class ExerciseChooser(AbstractCoExChooser):
             target_wgt = QLineEdit()
             target_wgt.setText(target.math_type.to_display(format_="utf8",
                                                            is_math_type=True))
-            target_wgt.setFont(QFont('Menlo'))
+            # target_wgt.setFont(QFont('Menlo'))
+            log.debug(f"Default font family for target: {target_wgt.fontInfo().family()}")
 
             # ────────────────────── Rest ────────────────────── #
 
@@ -485,7 +489,7 @@ class ExerciseChooser(AbstractCoExChooser):
 
             self.__code_wgt = QTextEdit()
             self.__code_wgt.setReadOnly(True)
-            self.__code_wgt.setFont(QFont('Menlo'))
+            # self.__code_wgt.setFont(QFont('Menlo'))
             if exercise.initial_proof_state:
                 text = goal.goal_to_text()
                 self.__code_wgt.setText(text)

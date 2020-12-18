@@ -43,7 +43,8 @@ from PySide2.QtCore    import ( Signal,
                                 Slot)
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
-                                QIcon)
+                                QIcon,
+                                QFont)
 from PySide2.QtWidgets import ( QHBoxLayout,
                                 QVBoxLayout,
                                 QLabel,
@@ -216,6 +217,8 @@ class MathObjectWidget(QListWidget):
 
         # TODO: make self.items a property?
         self.items = []
+        self.setFont(QFont('Menlo'))  # -> fonctionne pour tout le contexte
+
         for mathobject, tag in tagged_mathobjects:
             item = MathObjectWidgetItem(mathobject, tag)
             self.addItem(item)
@@ -272,7 +275,7 @@ class TargetWidget(QWidget):
 
         self.target = target
         self.tag    = tag
-
+        # self.setFont('Menlo') -> ne fonctionne pas
         # ───────────────────── Widgets ──────────────────── #
         caption_label = QLabel(_('Target') + goal_count)
         self.setToolTip(_('To be proved'))
@@ -291,10 +294,15 @@ class TargetWidget(QWidget):
             text = target.math_type.to_display(is_math_type=True)
         else:
             text = '…'
+
         target_label = QLabel(text)
         size = user_config.get('target_font_size')
         target_label.setStyleSheet(f'font-size: {size};')
-
+        # target_label.setFont(QFont('Menlo'))  # -> fonctionne pour le target
+        # target_label.setFont(QFont('Helvetica [Neue]'))  # -> pas bon
+        # target_label.setFont(QFont('Courier New'))  # -> charge la fonte mais pas bon
+        # target_label.setFont(QFont('Arial'))  # marche pas
+        target_label.setFont(QFont('Geneva'))  #
         # ───────────────────── Layouts ──────────────────── #
 
         central_layout = QVBoxLayout()

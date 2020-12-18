@@ -38,7 +38,8 @@ from PySide2.QtCore import (    Signal,
                                 Slot,
                                 QEvent,
                                 Qt)
-from PySide2.QtGui import       QIcon
+from PySide2.QtGui import (     QIcon,
+                                QFont )
 from PySide2.QtWidgets import ( QAction,
                                 QDesktopWidget,
                                 QGroupBox,
@@ -182,6 +183,8 @@ class ExerciseCentralWidget(QWidget):
         # least self.__main_lyt and self.__context_lyt in the method
         # self.update_goal.
 
+
+
         self.__main_lyt     = QVBoxLayout()
         self.__context_lyt  = QVBoxLayout()
         context_actions_lyt = QHBoxLayout()
@@ -219,6 +222,8 @@ class ExerciseCentralWidget(QWidget):
         self.objects_wgt = MathObjectWidget()
         self.props_wgt   = MathObjectWidget()
         self.target_wgt  = TargetWidget()
+
+        # self.target_wgt.setFont(QFont('Menlo')) -> ne marche pas
 
         # ───────────── Put widgets in layouts ───────────── #
 

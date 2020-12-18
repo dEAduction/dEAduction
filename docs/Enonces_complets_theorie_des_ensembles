@@ -19,14 +19,14 @@ Contexte :
   X : un ensemble
   A : une partie de X
 But :
-A = \emptyset ⇔ (∀x ∈ X, (x ∉ A))
+A = Ø ⇔ (∀x ∈ X, (x ∉ A))
 -------------------------
 Definition: Ensemble non vide
 Contexte :
   X : un ensemble
   A : une partie de X
 But :
-A ≠ \emptyset ⇔ (∃x ∈ X, x ∈ A)
+A ≠ Ø ⇔ (∃x ∈ X, x ∈ A)
 -------------------------
 Definition: Ensemble en extension
 Contexte :
