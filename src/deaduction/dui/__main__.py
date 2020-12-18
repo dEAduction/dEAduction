@@ -80,7 +80,8 @@ if __name__ == '__main__':
                'Course',
                'deaduction.dui',
                'deaduction.pylib.coursedata',
-               'deaduction.pylib.mathobj'
+               'deaduction.pylib.mathobj',
+               'deaduction.config'
                ]
     domains = ['lean',
                'ServerInterface',
@@ -92,7 +93,7 @@ if __name__ == '__main__':
     # if suppress=False, only logs from modules in 'domains' will printed
     # if suppress=True, only logs NOT from modules in 'domains' will be printed
     logger.configure(debug=True,
-                     domains=['ServerInterface', 'deaduction.dui'],
+                     domains=all_domains,
                      suppress=False)
 
     qtrio.run(main)

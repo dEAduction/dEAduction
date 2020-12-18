@@ -24,7 +24,7 @@ import utils
 
 /- dEAduction
 Title
-    Théorie des ensembles
+    Théorie Des Ensembles
 Author
     Frédéric Le Roux
 Institution

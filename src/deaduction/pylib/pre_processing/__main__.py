@@ -117,14 +117,16 @@ def check_statements(course):
                 3) path for pkl version of the course (whether the file exists
                 or not)
     """
-    course_path = course.course_path
-    directory_name = course_path.parent
+    # get course_path relative to cwd
+    # (cwd is set be src/deaduction by config.py)
+    relative_course_path = course.relative_course_path
+    directory_name = relative_course_path.parent
     course_hash = hash(course.file_content)
 
     # search for pkl file, and compare contents
     # so that only unprocessed statements will be processed
     unprocessed_statements = []
-    filename = course_path.stem + '.pkl'
+    filename = relative_course_path.stem + '.pkl'
     course_pkl_path = directory_name.joinpath(Path(filename))
     log.debug(f"Checking for {course_pkl_path}")
     if course_pkl_path.exists():

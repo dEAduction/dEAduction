@@ -770,7 +770,7 @@ class StartExerciseDialog(QDialog):
         # TODO: Rename the list recent_courses_list?
         course_type     = self.__exercise_chooser.course_filetype
         course          = exercise.course
-        course_path     = course.course_path
+        course_path     = course.relative_course_path
         title           = course.title
         if exercise in course.statements:
             exercise_number = course.statements.index(exercise)

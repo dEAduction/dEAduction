@@ -29,17 +29,18 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from collections import OrderedDict
-from dataclasses import dataclass
-from pathlib import Path
-from typing import List, Dict
+from collections import                     OrderedDict
+from dataclasses import                     dataclass
+from pathlib import                         Path
+from typing import                          List, Dict
+import os
 import logging
 
-import deaduction.pylib.logger as logger
-from deaduction.pylib.coursedata import (Exercise,
-                                         Definition,
-                                         Theorem,
-                                         Statement)
+import deaduction.pylib.logger as           logger
+from deaduction.pylib.coursedata import (   Exercise,
+                                            Definition,
+                                            Theorem,
+                                            Statement)
 import deaduction.pylib.coursedata.parser_course as parser_course
 
 log = logging.getLogger(__name__)
@@ -62,7 +63,7 @@ class Course:
     metadata:               Dict[str, str]
     outline:                OrderedDict
     statements:             List[Statement]
-    course_path:            Path = None
+    relative_course_path:   Path = None
     # course_path is added after instantiation
 
     # outline description:
@@ -84,7 +85,8 @@ class Course:
         #    first_key = list(self.outline)[0]
         #    title = self.outline[first_key]
         else:  # Make a title from the course_path
-            title = str(self.course_path.stem).replace("_", " ").capitalize()
+            string_title = str(self.relative_course_path.stem)
+            title = string_title.replace("_", " ").title()
         return title
 
     @property
@@ -127,13 +129,15 @@ class Course:
         """
         instantiate a Course object from the provided file
 
-        :param course_path: name of directory
+        :param course_path: path of file
         :return: a Course instance
         """
         log.info(f"Parsing file {str(course_path.resolve())}")
         file_content = course_path.read_text()
         course = Course.from_file_content(file_content)
-        course.course_path = course_path
+        course_path = course_path.resolve()
+        relative_course_path = Path(os.path.relpath(course_path))
+        course.relative_course_path = relative_course_path
         return course
 
     @classmethod

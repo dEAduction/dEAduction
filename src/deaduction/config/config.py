@@ -99,8 +99,10 @@ def add_to_recent_courses(course_path: Path,
         course_path = course_path.with_suffix('.pkl')
 
     courses_paths, courses_titles, exercises_numbers = get_recent_courses()
+    # log.debug(f"Recent courses paths: {courses_paths}")
+    # log.debug(f"Adding path: {course_path}")
     if course_path in courses_paths:
-        # We want the course to appear in pole position
+        # We want the course to appear exactly once, and in pole position
         # 0 = newest, last = oldest
         n = courses_paths.index(course_path)
         courses_paths.pop(n)
@@ -117,7 +119,7 @@ def add_to_recent_courses(course_path: Path,
         exercises_numbers.pop()
 
     # Turn each list into a single string
-    courses_paths_strings = [str(path.resolve()) for path in courses_paths]
+    courses_paths_strings = [str(path) for path in courses_paths]
     courses_paths_string   = ','.join(courses_paths_strings)
     courses_titles_string = ','.join(courses_titles)
     exercises_numbers_string = ','.join(map(str, exercises_numbers))
