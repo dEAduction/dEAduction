@@ -299,7 +299,7 @@ class TargetWidget(QWidget):
         target_label = QLabel(text)
         size = user_config.get('target_font_size')
         target_label.setStyleSheet(f'font-size: {size};')
-        # set fonts for maths display
+        # Set fonts for maths display
         if SESSION.math_font_name:
             target_label.setFont(QFont(SESSION.math_font_name))
 
