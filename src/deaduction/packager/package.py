@@ -123,10 +123,10 @@ class ArchivePackage(Package):
             self.install()
 
 
-    def install(self):
+    def install(self, on_progress: Callable = None):
         log.info(_("Installing package {} from archive").format(self.path))
         with TemporaryFile() as fhandle:
-            checksum = fs.download(self.archive_url, fhandle)
+            checksum = fs.download(self.archive_url, fhandle, on_progress)
             if self.archive_checksum and (self.archive_checksum != checksum):
                 raise AssertionError(_("Invalid checksum: {}, expected {}").format(
                     checksum, self.archive_checksum))
@@ -190,3 +190,58 @@ class GitPackage(Package):
         empty_repo.create_head(self.remote_branch, origin.refs[self.remote_branch])
         empty_repo.heads[self.remote_branch].set_tracking_branch(origin.refs[self.remote_branch]) # set local branch to track remote branch
         empty_repo.heads[self.remote_branch].checkout()
+
+# ┌────────────────────────────────────────┐
+# │ FolderPackage class                    │
+# └────────────────────────────────────────┘
+class FolderPackage(Package):
+    def __init__( self,
+                  path: Path,
+                  hlist: Path = None ):
+        super().__init__(path)
+        self.hlist = hlist
+
+    def _check_files(self):
+        if self.hlist is not None:
+            log.info(_("Checking files for {}").format(self.path))
+            hlist_ref  = fs.HashList.from_file(self.hlist)
+            hlist_dest = fs.HashList.from_path(self.path)
+
+            diff = list(hlist_dest.diff(hlist_ref))
+            if len(diff) > 0:
+                raise RuntimeError("Found differences inf files, reinstall.")
+
+    def check(self):
+        self._check_folder()
+        self._check_files()
+
+# ┌────────────────────────────────────────┐
+# │ Load from config                       │
+# └────────────────────────────────────────┘
+def from_config(conf: Dict[str, any]):
+    """
+    Loads a specific package information from info given
+    in config.
+
+    :param conf: a key/pair value giving config insight. must contain the
+    "type attribute"
+    :return: a Package subclass (FolderPackage, ArchivePackage, GitPackage)
+    with the correct settings.
+    """
+
+    package_types = { "folder" : FolderPackage,
+                      "git"    : GitPackage,
+                      "archive": ArchivePackage }
+    
+    if not "type" in conf:
+        raise KeyError(_("Excepted \"type\" key in package config."))
+    
+    ttype = conf["type"]
+    if not ttype in package_types:
+        raise KeyError( _("Uknown package type {}, excepted {}")
+                         .format(ttype, ",".join(package_types.keys())) )
+
+    del conf["type"] # Remove type entry from config
+
+    # Construct package class with remaining parameters
+    return package_types[ttype](**conf) 
