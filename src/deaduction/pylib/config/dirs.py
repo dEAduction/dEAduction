@@ -26,8 +26,8 @@ This file is part of d∃∀duction.
 """
 
 import logging
-from pathlib import Path
-from gettext import gettext as _
+from   pathlib import Path
+from   gettext import gettext as _
 
 log = logging.getLogger(__name__)
 
@@ -48,5 +48,5 @@ local    = (home / ".deaduction").resolve()
 # Utilities
 ############################################
 
-def init():
-    check_dir(local)
+#def init():
+#    check_dir(local)

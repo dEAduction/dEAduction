@@ -13,7 +13,7 @@ Date           : July 2020
 
     By default, user configuration has precedence over factory configuration.
     the user should not have its own configuration, unless it is an advanced
-    user who which to mess with that stuff.
+    user who wish to mess with that stuff.
 
 Copyright (c) 2020 the dEAduction team
 
