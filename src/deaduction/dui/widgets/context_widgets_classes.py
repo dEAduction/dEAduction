@@ -43,7 +43,8 @@ from PySide2.QtCore    import ( Signal,
                                 Slot)
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
-                                QIcon)
+                                QIcon,
+                                QFont)
 from PySide2.QtWidgets import ( QHBoxLayout,
                                 QVBoxLayout,
                                 QLabel,
@@ -52,7 +53,8 @@ from PySide2.QtWidgets import ( QHBoxLayout,
                                 QListWidgetItem)
 
 from deaduction.config        import ( user_config,
-                                       _ )
+                                       _,
+                                       SESSION )
 from deaduction.pylib.mathobj import   MathObject
 from deaduction.pylib.actions import   explain_how_to_apply
 
@@ -216,6 +218,9 @@ class MathObjectWidget(QListWidget):
 
         # TODO: make self.items a property?
         self.items = []
+        # set fonts for maths display
+        if SESSION.math_font_name:
+            self.setFont(QFont(SESSION.math_font_name))
         for mathobject, tag in tagged_mathobjects:
             item = MathObjectWidgetItem(mathobject, tag)
             self.addItem(item)
@@ -294,6 +299,10 @@ class TargetWidget(QWidget):
         target_label = QLabel(text)
         size = user_config.get('target_font_size')
         target_label.setStyleSheet(f'font-size: {size};')
+        # set fonts for maths display
+        if SESSION.math_font_name:
+            target_label.setFont(QFont(SESSION.math_font_name))
+
 
         # ───────────────────── Layouts ──────────────────── #
 

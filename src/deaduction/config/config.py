@@ -78,6 +78,10 @@ user_config = config['USER']
 # config for temporary parameters
 temp_config = configparser.ConfigParser()
 
+# Mathematical fonts
+SESSION.math_font_name = user_config.get('mathematics_font')
+if SESSION.math_font_name.title() in ('System', 'Default'):
+    SESSION.math_font_name = ''
 
 #########
 # utils #

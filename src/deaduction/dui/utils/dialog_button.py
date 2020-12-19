@@ -29,7 +29,10 @@ This file is part of d∃∀duction.
 import sys
 from PySide2.QtWidgets import   QApplication, QDialog, QLabel, QPushButton, \
                                 QVBoxLayout, QHBoxLayout
+from PySide2.QtGui import QFont
 from functools import partial
+
+from deaduction.config import SESSION
 
 
 class ButtonsDialog(QDialog):
@@ -65,8 +68,10 @@ class ButtonsDialog(QDialog):
         # Display #
         layout = QVBoxLayout()
 
-        # title line
+        # Output line
         output_line = QLabel(output, self, StyleSheet='font-weight: bold;')
+        if SESSION.math_font_name:
+            output_line.setFont(QFont(SESSION.math_font_name))
         output_layout = QHBoxLayout()
         output_layout.addWidget(output_line)
         output_layout.addStretch(1)
