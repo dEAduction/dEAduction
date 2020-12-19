@@ -74,12 +74,14 @@ def action_definition(goal : Goal,
 def action_theorem(goal : Goal, selected_objects : [MathObject], theorem : Statement):
     possible_codes = []
     # For an iff statement, use rewriting
+    # fixme: test for iff or equality is removed since it works only with
+    #  pkl files
     proof_state = theorem.initial_proof_state
-    if proof_state and ( proof_state.goals[0].target.is_iff()
-                         or proof_state.goals[0].target.is_equality() ):
-        possible_codes = rw_using_statement(goal,
-                                            selected_objects,
-                                            theorem)
+    # if proof_state and ( proof_state.goals[0].target.is_iff()
+    #                      or proof_state.goals[0].target.is_equality() ):
+    possible_codes = rw_using_statement(goal,
+                                        selected_objects,
+                                        theorem)
     h = get_new_hyp(goal)
     th = theorem.lean_name
     if len(selected_objects) == 0:

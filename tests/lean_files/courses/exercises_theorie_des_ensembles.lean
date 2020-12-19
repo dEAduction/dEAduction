@@ -30,7 +30,7 @@ Author
 Institution
     Université de France
 AvailableMagic
-    NONE
+    assumption
 -/
 
 

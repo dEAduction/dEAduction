@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2020-12-15 17:33+0100\n"
-"PO-Revision-Date: 2020-12-15 17:33+0100\n"
+"POT-Creation-Date: 2020-12-19 15:14+0100\n"
+"PO-Revision-Date: 2020-12-19 15:15+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -105,43 +105,47 @@ msgstr ""
 msgid "Terminate the proof when the target is obvious from the context"
 msgstr "Conclut la preuve lorsque le but est évident à partir du contexte"
 
-#: config/tooltips.py:82
+#: config/tooltips.py:79
+msgid "Terminate the proof when target results from 'easy' computations"
+msgstr "Conclut la preuve lorsque le but se déduit de « calculs faciles »"
+
+#: config/tooltips.py:86
 msgid "apply function to a selected object or equality"
 msgstr "appliquer cette fonction à un élément ou à une égalité"
 
-#: config/tooltips.py:84
+#: config/tooltips.py:88
 msgid "apply to a selected property, or to modify the goal"
 msgstr "appliquer à une propriété sélectionnée, ou pour transformer le but"
 
-#: config/tooltips.py:86
+#: config/tooltips.py:90
 msgid "substitute in a selected property"
 msgstr "substituer dans une propriété sélectionnée"
 
-#: config/tooltips.py:88
+#: config/tooltips.py:92
 msgid "apply to a selected object"
 msgstr "appliquer à un objet sélectionné"
 
-#: config/tooltips.py:90
+#: config/tooltips.py:94
 msgid "get a new object in the context"
 msgstr "obtenir un nouvel objet dans le contexte"
 
-#: config/tooltips.py:92
+#: config/tooltips.py:96
 msgid "split into two properties"
 msgstr "séparer en deux propriétés"
 
-#: config/tooltips.py:97
+#: config/tooltips.py:101
 msgid "AND, OR, NOT, ⇒, ⇔, ∀, ∃"
 msgstr "ET, OU, NON, ⇒, ⇔, ∀, ∃"
 
-#: config/tooltips.py:98
-msgid "Apply, Proof Methods, New Object, QED"
-msgstr "Appliquer, Méthodes de Preuve, Nouvel Objet, CQFD"
+#: config/tooltips.py:102
+msgid "Apply, Proof Methods, New Object"
+msgstr "Appliquer, Méthodes de Preuve, Nouvel Objet"
 
-#: config/tooltips.py:99
-msgid "Compute"
-msgstr "Calculer"
+#: config/tooltips.py:103
+msgid "Compute, QED"
+msgstr "Calculer, CQFD"
 
-#: dui/__main__.py:48 pylib/actions/proofs.py:71
+#: dui/__main__.py:48 pylib/actions/proofs.py:73
 msgid "Proof by contrapositive"
 msgstr "Preuve par contraposée"
 
@@ -158,12 +162,12 @@ msgstr "Exercice choisi :"
 msgid "Do you want to prove this statement or its negation?"
 msgstr "Voulez-vous démontrer cet énoncé ou bien sa négation ?"
 
-#: dui/widgets/actions_widgets_classes.py:473
-#: dui/widgets/actions_widgets_classes.py:478
+#: dui/widgets/actions_widgets_classes.py:479
+#: dui/widgets/actions_widgets_classes.py:484
 msgid "Statements"
 msgstr "Enoncés"
 
-#: dui/widgets/actions_widgets_classes.py:473
+#: dui/widgets/actions_widgets_classes.py:479
 msgid "L∃∀N name"
 msgstr "Nom L∃∀N"
 
@@ -213,7 +217,7 @@ msgstr "Cours"
 
 #: dui/widgets/choose_course_exercise_widgets.py:675
 #: dui/widgets/choose_course_exercise_widgets.py:747
-#: pylib/pre_processing/__main__.py:220 pylib/pre_processing/__main__.py:241
+#: pylib/pre_processing/__main__.py:222 pylib/pre_processing/__main__.py:243
 msgid "Exercise"
 msgstr "Exercice"
 
@@ -225,67 +229,71 @@ msgstr "Démontrer l’énoncé"
 msgid "Prove negation"
 msgstr "Démontrer la négation"
 
-#: dui/widgets/context_widgets_classes.py:156
+#: dui/widgets/context_widgets_classes.py:158
 msgid "Double click to"
 msgstr "Double-cliquer pour"
 
-#: dui/widgets/context_widgets_classes.py:159
+#: dui/widgets/context_widgets_classes.py:161
 msgid "Double click to:"
 msgstr "Double-cliquer pour :"
 
-#: dui/widgets/context_widgets_classes.py:277
+#: dui/widgets/context_widgets_classes.py:282
 msgid "Target"
 msgstr "But"
 
-#: dui/widgets/context_widgets_classes.py:278
+#: dui/widgets/context_widgets_classes.py:283
 msgid "To be proved"
 msgstr "A démontrer"
 
-#: dui/widgets/exercise_widgets.py:95
+#: dui/widgets/exercise_widgets.py:96
 msgid "Toolbar"
 msgstr "Barre d’outils"
 
-#: dui/widgets/exercise_widgets.py:100
+#: dui/widgets/exercise_widgets.py:101
 msgid "Undo action"
 msgstr "Annuler l’action"
 
-#: dui/widgets/exercise_widgets.py:103
+#: dui/widgets/exercise_widgets.py:104
 msgid "Redo action"
 msgstr "Refaire l’action"
 
-#: dui/widgets/exercise_widgets.py:107
+#: dui/widgets/exercise_widgets.py:108
 msgid "Toggle L∃∀N"
 msgstr "Console L∃∀N"
 
-#: dui/widgets/exercise_widgets.py:194
+#: dui/widgets/exercise_widgets.py:197
 msgid "Actions (transform context and target)"
 msgstr "Actions (transforment le contexte et le but)"
 
-#: dui/widgets/exercise_widgets.py:195
+#: dui/widgets/exercise_widgets.py:198
 msgid "Context (objects and properties)"
 msgstr "Contexte (objets et propriétés)"
 
-#: dui/widgets/exercise_widgets.py:473 pylib/mathobj/proof_state.py:325
+#: dui/widgets/exercise_widgets.py:476 pylib/mathobj/proof_state.py:325
 msgid ": "
 msgstr " : "
 
-#: dui/widgets/exercise_widgets.py:542
+#: dui/widgets/exercise_widgets.py:544
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/widgets/exercise_widgets.py:669 dui/widgets/exercise_widgets.py:806
+#: dui/widgets/exercise_widgets.py:547
+msgid "goals solved!"
+msgstr "buts atteints !"
+
+#: dui/widgets/exercise_widgets.py:677 dui/widgets/exercise_widgets.py:814
 msgid "Error"
 msgstr "Erreur"
 
-#: dui/widgets/exercise_widgets.py:802
+#: dui/widgets/exercise_widgets.py:810
 msgid "Code from editor"
 msgstr "Code depuis l’éditeur"
 
-#: dui/widgets/exercise_widgets.py:861
+#: dui/widgets/exercise_widgets.py:869
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/widgets/exercise_widgets.py:862
+#: dui/widgets/exercise_widgets.py:870
 msgid "The proof is complete!"
 msgstr "La preuve est terminée !"
 
@@ -437,80 +445,76 @@ msgstr "ceci ne me permet pas de construire une propriété existentielle"
 msgid "selection is not existential property '∃x, P(x)'"
 msgstr "l’objet sélectionné n’est pas une propriété existentielle ’∃x, P(x)’"
 
-#: pylib/actions/magic.py:48
-msgid "Computation"
-msgstr "Calcul"
-
-#: pylib/actions/magic.py:54
+#: pylib/actions/magic.py:60
 msgid "target is not an equality, an inequality, nor a contradiction"
 msgstr ""
 "le but n’est pas ni une égalité, ni une inégalité, ni une contradiction"
 
-#: pylib/actions/proofs.py:70
+#: pylib/actions/proofs.py:72
 msgid "Case-based reasoning"
 msgstr "Raisonnement par cas"
 
-#: pylib/actions/proofs.py:72
+#: pylib/actions/proofs.py:74
 msgid "Proof by contradiction"
 msgstr "Preuve par l’absurde"
 
-#: pylib/actions/proofs.py:74
+#: pylib/actions/proofs.py:76
 msgid "Admit current sub-goal!"
 msgstr "Admettre le but en cours !"
 
-#: pylib/actions/proofs.py:78
+#: pylib/actions/proofs.py:80
 msgid "Which proof method?"
 msgstr "Quelle méthode de preuve ?"
 
-#: pylib/actions/proofs.py:110
+#: pylib/actions/proofs.py:112
 msgid "cases"
 msgstr "Preuve par cas"
 
-#: pylib/actions/proofs.py:111
+#: pylib/actions/proofs.py:113
 msgid "Enter the property you want to discriminate on:"
 msgstr "Entrez la propriété sur laquelle la preuve par cas sera fondée :"
 
-#: pylib/actions/proofs.py:214
+#: pylib/actions/proofs.py:216
 msgid "Object"
 msgstr "Objet"
 
-#: pylib/actions/proofs.py:214
+#: pylib/actions/proofs.py:216
 msgid "Introduce a new object"
 msgstr "Introduire un nouvel objet"
 
-#: pylib/actions/proofs.py:215
+#: pylib/actions/proofs.py:217
 msgid "Goal"
 msgstr "But"
 
-#: pylib/actions/proofs.py:215
+#: pylib/actions/proofs.py:217
 msgid "Introduce a new intermediate sub-goal"
 msgstr "Introduire un but intermédiaire"
 
-#: pylib/actions/proofs.py:217
+#: pylib/actions/proofs.py:219
 msgid "Function"
 msgstr "Fonction"
 
-#: pylib/actions/proofs.py:217
+#: pylib/actions/proofs.py:219
 msgid "Introduce a new function"
 msgstr "Introduire une nouvelle fonction"
 
-#: pylib/actions/proofs.py:220
+#: pylib/actions/proofs.py:222
 msgid "Choose what to introduce:"
 msgstr "Choisissez :"
 
-#: pylib/actions/proofs.py:226
+#: pylib/actions/proofs.py:228
 msgid "Introduce new object:"
 msgstr "Introduire un nouvel objet"
 
-#: pylib/actions/proofs.py:239
+#: pylib/actions/proofs.py:241
 msgid "Introduce new subgoal:"
 msgstr "Introduire un but intermédiaire"
 
-#: pylib/actions/proofs.py:336 pylib/actions/proofs.py:357
+#: pylib/actions/proofs.py:338 pylib/actions/proofs.py:359
 msgid "Precision of substitution"
 msgstr "Préciser le sens de substitution"
 
-#: pylib/actions/proofs.py:337 pylib/actions/proofs.py:358
+#: pylib/actions/proofs.py:339 pylib/actions/proofs.py:360
 msgid "Choose which expression you want to replace"
 msgstr "Choisissez quelle expression remplacer"
 
@@ -726,11 +730,11 @@ msgstr "Hypothèse :"
 msgid "Hypotheses:"
 msgstr "Hypothèses :"
 
-#: pylib/pre_processing/__main__.py:230 pylib/pre_processing/__main__.py:244
+#: pylib/pre_processing/__main__.py:232 pylib/pre_processing/__main__.py:246
 msgid "Definition:"
 msgstr "Définition :"
 
-#: pylib/pre_processing/__main__.py:247
+#: pylib/pre_processing/__main__.py:249
 msgid "Theorem:"
 msgstr "Théorème :"
 
@@ -741,6 +745,9 @@ msgstr "Etat de preuve reçu"
 #: pylib/server/__init__.py:234
 msgid "After request"
 msgstr "Après la requête"
+
+#~ msgid "Computation"
+#~ msgstr "Calcul"
 
 #~ msgid "Exercise is None"
 #~ msgstr "Pas d’exercice choisi"

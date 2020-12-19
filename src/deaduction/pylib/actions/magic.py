@@ -28,24 +28,30 @@ This file is part of dEAduction.
 
 import logging
 
-import deaduction.pylib.logger as logger
+from deaduction.config import                   (user_config,
+                                                 tooltips_config,
+                                                 _
+                                                 )
+from deaduction.pylib.actions.actiondef import   action
+from deaduction.pylib.actions import            (format_orelse,
+                                                 solve1_wrap,
+                                                 WrongUserInput
+                                                 )
+from deaduction.pylib.mathobj import            (MathObject,
+                                                 Goal
+                                                 )
 
-from deaduction.config import user_config, tooltips_config, _
-from deaduction.pylib.actions.actiondef import action
-from deaduction.config import _
-from deaduction.pylib.actions import (format_orelse,
-                                      WrongUserInput)
-from deaduction.pylib.mathobj import MathObject
 
-# turn logic_button_texts into a dictionary
+# Turn magic_button_texts into a dictionary
 lbt = tooltips_config.get('magic_button_texts').split(', ')
-magic_list = ['action_compute']
+magic_list = ['compute', 'assumption']
 magic_button_texts = {}
 for key, value in zip(magic_list, lbt):
     magic_button_texts[key] = value
 
 
-@action(_("Computation"), _('Computation'))
+@action(tooltips_config.get('tooltip_compute'),
+        magic_button_texts['compute'])
 def action_compute(goal, selected_objects):
     target = goal.target
     if not (target.is_equality()
@@ -68,3 +74,72 @@ def action_compute(goal, selected_objects):
     possible_code = ["try {norm_num at *}, compute_n 10"]
 
     return format_orelse(possible_code)
+
+
+@action(tooltips_config.get('tooltip_assumption'),
+        magic_button_texts['assumption'])
+def action_assumption(goal: Goal, l: [MathObject]) -> str:
+    """
+    Translate into string of lean code corresponding to the action
+
+    :param l: list of MathObject arguments preselected by the user
+    :return: string of lean code
+    """
+    # NB: this button should either solve the goal or fail.
+    # For this we wrap the non "solve-or-fail" tactics
+    # into the combinator "solve1"
+
+    possible_codes = []
+    if len(l) == 0:
+        possible_codes.append('assumption')
+        possible_codes.append('contradiction')
+        if goal.target.is_equality():
+            if goal.target.math_type.children[0] == \
+                    goal.target.math_type.children[1]:
+                possible_codes.append('refl')
+            # try to use associativity and commutativity
+            possible_codes.append('ac_reflexivity')
+            # try to permute members of the goal equality
+            possible_codes.append('apply eq.symm, assumption')
+            # congruence closure, solves e.g. (a=b, b=c : f a = f c)
+            possible_codes.append('cc')
+        # possible_codes.append('apply iff.symm, assumption')
+
+        # Try some symmetry rules
+        if goal.target.is_iff():
+            possible_codes.append('apply iff.symm, assumption')
+        elif goal.target.is_and():  # todo: change to "id_and_like"
+            possible_codes.append('apply and.symm, assumption')
+            possible_codes.append('split, assumption, assumption')
+        elif goal.target.is_or():
+            possible_codes.append('apply or.symm, assumption')
+            # The following is too much?
+            # possible_codes.append('left, assumption')
+            # possible_codes.append('right, assumption')
+
+        # Try to split hypotheses that are conjunctions
+        code = ""
+        counter = 0
+        for prop in goal.context:
+            if prop.is_and():
+                name = prop.info['name']
+                H0 = f"H_aux_{counter}"  # these hypotheses will disappear
+                H1 = f"H_aux_{counter + 1}"  # so names are unimportant
+                code += f"cases {name} with {H0} {H1}, "
+                counter += 2
+        if code:
+            code += 'assumption'
+            possible_codes.append(code)
+
+        # TODO: if context contains "H1 : x in Ø",
+        #  exact not_mem_empty x H1" donne false
+
+    if len(l) == 1:
+        possible_codes.append(solve1_wrap(f'apply {l[0].info["name"]}'))
+    if (goal.target.is_equality()
+            or goal.target.is_inequality()
+            or goal.target.is_false()):
+        # Do not remove above test, since norm_num may solve some
+        # not-so-trivial goal, e.g. implications
+        possible_codes.append(solve1_wrap('norm_num at *'))
+    return format_orelse(possible_codes)

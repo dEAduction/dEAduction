@@ -73,6 +73,10 @@ __tooltips = {
     'tooltip_assumption':
         _(
             """Terminate the proof when the target is obvious from the context"""
+        ),
+    'tooltip_compute':
+        _(
+            "Terminate the proof when target results from 'easy' computations"
         )
 }
 # decentralized apply buttons
@@ -95,7 +99,7 @@ __tooltips_apply = {
 # Text for buttons
 __buttons = {
     'logic_button_texts': _("AND, OR, NOT, ⇒, ⇔, ∀, ∃"),
-    'proof_button_texts': _("Apply, Proof Methods, New Object, QED"),
-    'magic_button_texts': _('Compute')
+    'proof_button_texts': _("Apply, Proof Methods, New Object"),
+    'magic_button_texts': _('Compute, QED')
 }
 # sad thoughts for "¯\_(ツ)_/¯", I loved you so much...
