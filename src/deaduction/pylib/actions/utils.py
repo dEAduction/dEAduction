@@ -31,7 +31,6 @@ This file is part of dEAduction.
 from dataclasses import dataclass
 from typing import Any
 
-
 from deaduction.pylib.actions import WrongUserInput
 
 
@@ -45,10 +44,10 @@ class CodeForLean:
     - raw code is retrieved via the to_string method
     - an error_message can be added, to be displayed in case of Lean failure
     """
-    instruction:        str = None     # instruction, iff combinator = "single"
-    combinator:         str = 'single' # one of "and_then", "or_else", "single"
-    children:           Any = None     # instance of CodeForLean
-    error_message:      str = ""
+    instruction: str = None  # instruction, iff combinator = "single"
+    combinator: str = 'single'  # one of "and_then", "or_else", "single"
+    children: Any = None  # instance of CodeForLean
+    error_message: str = ""
 
     # TODO: make properties to ensure that either instruction ≠ ""
     #  (and then combinator ='single' and children are empty)
@@ -107,12 +106,13 @@ class CodeForLean:
             return CodeForLean(combinator='or_else',
                                children=children)
 
-    def to_string(self, effective_code=True) -> str:
+    def to_string(self) -> str:
         """
         Format CodeForLean into a string which can be sent to Lean
 
         :param effective_code:  if True then include a trace instruction to
                                 retrieve effective code.
+        :return: string to be sent to Lean
         """
         # TODO: handle error_messages
         if self.instruction:
@@ -125,6 +125,25 @@ class CodeForLean:
             strings = ['{' + child.to_string() + '}'
                        for child in self.children]
             return ' <|> '.join(strings)
+
+    def add_trace_effective_code(self, num_effective_code):
+        """
+        Add "trace "EFFECTIVE CODE {num_effective_code}: <code>"
+        before each "or_else" combinator.
+
+        :return:        CodeForLean
+        """
+        if self.is_single() or self.is_and_then():
+            # replace self by self and_then trace the code
+            trace_string = f'trace \"EFFECTIVE CODE {num_effective_code}: ' \
+                           f'{self.to_string()}\"'
+            trace_code = CodeForLean.from_string(trace_string)
+            return self.and_then(trace_code)
+        elif self.is_or_else():
+            children = [piece_of_code.add_trace_effective_code(
+                num_effective_code) for piece_of_code in self.children]
+            return CodeForLean(combinator='or_else',
+                               children=children)
 
     def add_error_message(self, error_message: str):
         self.error_message = error_message
@@ -144,6 +163,7 @@ class CodeForLean:
 
     def is_or_else(self):
         return self.combinator == "or_else"
+
 
 _VAR_NB = 0
 _FUN_NB = 0
@@ -177,7 +197,9 @@ def format_orelse(list_of_choices):
     if len(list_of_choices) == 1:
         return list_of_choices[0]
     else:
-        list_of_choices = map(lambda string: f'`[ {string}, trace \"EFFECTIVE CODE {_CODE_NB} : {string}\"]', list_of_choices)
+        list_of_choices = map(lambda
+                                  string: f'`[ {string}, trace \"EFFECTIVE CODE {_CODE_NB} : {string}\"]',
+                              list_of_choices)
         return " <|> ".join(list_of_choices)
 
 
@@ -193,3 +215,5 @@ if __name__ == '__main__':
 
     print(code)
     print(code.to_string())
+    effective_code = code.add_trace_effective_code(42)
+    print(effective_code.to_string())

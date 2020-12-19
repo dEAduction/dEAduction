@@ -659,30 +659,12 @@ class ExerciseMainWindow(QMainWindow):
             await process_function()
         except FailedRequestError as e:
             # Display an error message
-            # TODO: make it a separate class
-            # # message_box = QMessageBox(self)
-            # # message_box.setIcon(QMessageBox.Critical)
-            # # message_box.setWindowTitle(_('Action not understood'))
-            # # message_box.setText(_('Action not understood'))
-            #
-            # detailed = ""
-            # for error in e.errors:
-            #     rel_line_number = error.pos_line \
-            #                       - self.exercise.lean_begin_line_number
-            #     detailed += f'* at {rel_line_number}: {error.text}\n'
-            #
-            # message_box.setDetailedText(detailed)
-            # message_box.setStandardButtons(QMessageBox.Ok)
-            # message_box.exec_()
             error_message = _('Error')
             details = ""
             for error in e.errors:
                 details += "\n" + error.text
                 event = ('lean_error', error_message, details)
             JOURNAL.add_event(event, self)
-            # self.display_status_bar_message(content=error_message,
-            #                                nature='error',
-            #                                details=details)
 
             # Abort and go back to last goal
             await self.servint.history_undo()
@@ -710,7 +692,7 @@ class ExerciseMainWindow(QMainWindow):
         we redo one loop iteration, feeding the action with the new input.
 
         Another exception that can occur is the WrongUserInput exception. At
-        this point, the user entered some wrong data, we display an error box
+        this point, the user entered some wrong data, we display the error
         and stop.
 
         Note the usage of the try .. else statement.
@@ -813,20 +795,8 @@ class ExerciseMainWindow(QMainWindow):
     def display_WrongUserInput(self, e):
         error_message = _("Error")
         details = e.error
-        # msg_box = QMessageBox(self)
-        # msg_box.setIcon(QMessageBox.Critical)
-        # msg_box.setWindowTitle(_('Action not understood'))
-        # msg_box.setText(_("don't know what to do with your input!"))
-        # display_errors = user_config['display_detailed_errors_on_WUI']
-        # if details and display_errors:
-        #     msg_box.setDetailedText(details)
-        # msg_box.setStandardButtons(QMessageBox.Ok)
-        # msg_box.exec_()
         event = ('error', error_message, details)
         JOURNAL.add_event(event, self)
-        # self.display_status_bar_message(message=error_message,
-        #                                 nature='error',
-        #                                 details=details)
 
     #########
     # Slots #

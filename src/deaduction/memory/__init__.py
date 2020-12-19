@@ -1,7 +1,7 @@
 """
-# __init__.py : <#ShortDescription> #
-    
-    <#optionalLongDescription>
+# __init__.py : a class for keeping memory of every event
+(actions called, code sent, errors)
+and writing messages for the user in the status bar.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -25,15 +25,15 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
-import                  logging
-from dataclasses import dataclass
-import                  pickle
+
+import                          logging
+from dataclasses import         dataclass
+import                          pickle
 import os
 from deaduction.config import ( user_config,
                                 _ )
 
 log = logging.getLogger(__name__)
-
 
 
 @dataclass
@@ -53,8 +53,8 @@ class Journal:
                      'user_input',
                      'various')
     __save_journal = user_config.getboolean('save_journal')
-    __journal_file_name = os.path.join(
-        os.path.dirname(__file__)) + '/journal.pkl'
+    __journal_file_name = os.path.join(os.path.dirname(__file__)) \
+                        + '/journal.pkl'
 
     def add_event(self, event: tuple, emw=None):
         """
@@ -74,7 +74,7 @@ class Journal:
             if nature == 'lean_error':
                 event = (nature, content, _("request failed"))
 
-            # display event
+            # Display event in the status bar
             emw.display_status_bar_message(event=event)
 
         if self.__save_journal:  # fixme: should not be done each time!
@@ -91,7 +91,7 @@ class Journal:
                 return self.memory[-1]
             else:
                 return None
-
+        # Nature is not any
         for anti_idx in range(len(self.memory)):
             idx = len(self.memory) - anti_idx -1
             event = self.memory[idx]
