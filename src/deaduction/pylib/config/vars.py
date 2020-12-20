@@ -36,6 +36,7 @@ This file is part of d∃∀duction.
 from gettext import gettext as _
 import logging
 from . import dirs
+import toml
 
 FACTORY_CONFIG_FILE_PATH = (dirs.share / "config.toml").resolve()
 USER_CONFIG_FILE_PATH    = (dirs.local / "config.toml").resolve()
@@ -45,17 +46,28 @@ dict_ = dict() # Contains loaded configuration
 log = logging.getLogger(__name__)
 
 def load():
+    global dict_
+
     log.info(_("Loading configuration files"))
+    log.debug(_("Factory config path: {}").format(FACTORY_CONFIG_FILE_PATH))
+    log.debug(_("User config path: {}").format(USER_CONFIG_FILE_PATH))
 
     # Load configuration file
-    dict_ = toml.load(str(FACTORY_CONFIG_FILE_PATH))
-    dict_.update(toml.load(str(USER_CONFIG_FILE_PATH)))
+    if FACTORY_CONFIG_FILE_PATH.exists():
+        dict_ = toml.load(str(FACTORY_CONFIG_FILE_PATH))
+
+    if USER_CONFIG_FILE_PATH.exists():
+        dict_.update(toml.load(str(USER_CONFIG_FILE_PATH)))
 
 def save():
+    global dict_
+
     log.info(_("Saving configuration file"))
     toml.dump(dict_, CONFIG_FILE_PATH)
 
 def get(k: str):
+    global dict_
+
     """
     Return the wanted setting variable. dot get style,
     for example, calling the function with package.linux
@@ -63,13 +75,15 @@ def get(k: str):
     """
     try:
         keys = list(k.split("."))
-        rp = _dict
+        rp = dict_
         for idx in range(0, len(keys)-1):
             rp = rp[keys[idx]]
         return rp[keys[-1]]
     except KeyError as e : raise KeyError( "%s in %s" % (str(e), k))
 
 def set( k, v, if_not_exists=False ):
+    global dict_
+
     """
     Sets an item in a directory with a hierarchical path. Creates sub directories
     if needed
@@ -89,7 +103,7 @@ def set( k, v, if_not_exists=False ):
     # 5 : if_not_exists don't overwrite
 
     keys = list(k.split("."))
-    dst  = _dict # Destination
+    dst  = dict_ # Destination
     for idx in range(0,len(keys)-1):
         kp = keys[idx]
         if not kp in dst : dst[kp] = dict()
