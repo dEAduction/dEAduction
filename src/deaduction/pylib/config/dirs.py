@@ -29,6 +29,8 @@ import logging
 from   pathlib import Path
 from   gettext import gettext as _
 
+import deaduction.pylib.utils.filesystem as fs
+
 log = logging.getLogger(__name__)
 
 ############################################
@@ -48,5 +50,5 @@ local    = (home / ".deaduction").resolve()
 # Utilities
 ############################################
 
-#def init():
-#    check_dir(local)
+def init():
+    fs.check_dir(local)

@@ -72,7 +72,7 @@ def file_hash(fp: Path):
 ############################################
 # Checking utilities
 ############################################
-def check_dir(path: Path):
+def check_dir(path: Path, exc=False):
     """
     Checks that the directory pointed by path exists.
     Creates the folder if not existing.
@@ -84,7 +84,7 @@ def check_dir(path: Path):
 
     elif not path.is_dir() or not path.exists():
         path.mkdir()
-        raise RuntimeError(
+        if exc: raise RuntimeError(
             _("Directory {} doesn't exists, creating").format(str(path))
         )
 

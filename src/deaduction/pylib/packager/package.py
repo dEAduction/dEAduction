@@ -83,7 +83,7 @@ class Package:
     ############################################
     def _check_folder(self):
         log.info(_("Checking package folder for {}").format(self.path))
-        fs.check_dir(self.path)
+        fs.check_dir(self.path, exc=True)
 
 # ┌────────────────────────────────────────┐
 # │ ArchivePackage class                   │
@@ -101,7 +101,7 @@ class ArchivePackage(Package):
 
         self.archive_url      = archive_url
         self.archive_checksum = archive_checksum
-        self.archive_hlist    = archive_hlist
+        self.archive_hlist    = fs.path_helper(archive_hlist)
         self.archive_root     = archive_root
         self.archive_type     = archive_type
 
@@ -126,7 +126,8 @@ class ArchivePackage(Package):
 
             if self.path.exists():
                 self.remove()
-            self.install()
+            self.install() # TODO # if error, only raise exception, don't
+                           #  install !!!
 
 
     def install(self, on_progress: Callable = None):
@@ -169,8 +170,10 @@ class ArchivePackage(Package):
 
                 if self.archive_root:
                     tpath = (tpath / self.archive_root).resolve()
-                    log.info(_("→ Move {} to {}").format(tpath, self.path))
-                    shutil.move(str(tpath), str(self.path))
+
+                log.info(_("→ Move {} to {}").format(tpath, self.path))
+                shutil.move(str(tpath), str(self.path))
+
 
         log.info(_("Installed Package to {}").format(self.path))
 
@@ -265,7 +268,7 @@ def from_config(conf: Dict[str, any]):
     """
 
     package_types = { "folder" : FolderPackage,
-                      "git"    : GitPackage,
+                      #"git"    : GitPackage,
                       "archive": ArchivePackage }
     
     if not "type" in conf:
