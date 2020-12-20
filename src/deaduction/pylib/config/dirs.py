@@ -34,7 +34,7 @@ log = logging.getLogger(__name__)
 ############################################
 # Path objects
 ############################################
-pkg_dir  = (Path(__file__) / "../../").resolve()
+pkg_dir  = (Path(__file__) / "../../../").resolve()
 
 # Share paths
 share    = (pkg_dir / "share").resolve()
