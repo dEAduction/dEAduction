@@ -30,7 +30,7 @@ from typing import (Callable,
                     Optional)
 
 import requests
-from pathlib import Path
+from   pathlib import Path
 import tempfile
 import shutil
 import traceback
@@ -41,10 +41,14 @@ from gettext import gettext as _
 
 from deaduction.pylib.utils import filesystem as fs
 from tempfile import TemporaryFile
-import tarfile
 import git
 
+import tarfile
+import zipfile
+
 import deaduction.pylib.config.dirs as dirs
+from functools import partial
+
 
 log = logging.getLogger(__name__)
 
@@ -89,7 +93,10 @@ class ArchivePackage(Package):
     def __init__(self, path: Path,
                  archive_url: str,
                  archive_checksum: str = None,
-                 archive_hlist: Path = None):
+                 archive_hlist: Path   = None,
+                 archive_root: Path    = None,        # Root folder
+                 archive_type: str     = "tar"):      # can be "tar" or "zip"
+                 
 
         super().__init__(path)
 
@@ -98,6 +105,8 @@ class ArchivePackage(Package):
         self.archive_url      = archive_url
         self.archive_checksum = archive_checksum
         self.archive_hlist    = archive_hlist
+        self.archive_root     = archive_root
+        self.archive_type     = archive_type
 
     def _check_files(self):
         if self.archive_hlist is not None:
@@ -124,6 +133,16 @@ class ArchivePackage(Package):
 
 
     def install(self, on_progress: Callable = None):
+        """
+        Downloads and extracts the archive in the destination directory.
+
+        Please note the following regarding archive_root :
+            → the archive is extracted into a temporary folder.
+            → Then, if archive_root is given, the whole temp path is moved to
+            the destination, else, it is only the component given by
+            archive_root that is moved.
+        """
+
         log.info(_("Installing package {} from archive").format(self.path))
         with TemporaryFile() as fhandle:
             checksum = fs.download(self.archive_url, fhandle, on_progress)
@@ -134,8 +153,27 @@ class ArchivePackage(Package):
             fhandle.seek(0)
 
             log.info(_("Extract file to {}").format(self.path))
-            with tarfile.open(fileobj=fhandle) as tf:
-                tf.extractall(path=str(self.path))
+
+            # Get correct archiving module to extract the file
+            archive_open_fkt    = { "tar": lambda x: tarfile.open(fileobj=x),
+                                    "zip": lambda x: zipfile.ZipFile(x) }
+
+            if not self.archive_type in archive_open_fkt:
+                raise KeyError(_("Invalid archive type {}")
+                               .format(self.archive_type))
+            archive_module = archive_open_fkt[self.archive_type]
+
+            # Create temporary directory
+            tpath = Path(tempfile.mkdtemp()).resolve()
+            log.debug(_("Temporary path is {}").format(tpath))
+
+            with archive_module(fhandle) as tf:
+                tf.extractall(path=str(tpath))
+
+                if self.archive_root:
+                    tpath = (tpath / self.archive_root).resolve()
+                    log.info(_("→ Move {} to {}").format(tpath, self.path))
+                    shutil.move(str(tpath), str(self.path))
 
         log.info(_("Installed Package to {}").format(self.path))
 
