@@ -27,6 +27,7 @@ This file is part of d∃∀duction.
 
 from pathlib import Path
 from io import BufferedWriter
+import os.path
 import logging
 from gettext import gettext as _
 from typing import Callable
@@ -47,6 +48,16 @@ log = logging.getLogger(__name__)
 CHUNK_SIZE = 4096
 HASH_REGEX = re.compile(r"^((?:.+)\/(?:[^\/]+)) ([a-zA-Z0-9]+)$")
 
+
+############################################
+# Path utilities
+############################################
+def path_helper(pp: Path):
+    """
+    Resolve relative path to absolute paths, and expand
+    environment variables.
+    """
+    return Path(os.path.expandvars(str(pp))).resolve()
 
 ############################################
 # Hashing

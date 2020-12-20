@@ -41,7 +41,8 @@ from gettext import gettext as _
 
 from deaduction.pylib.utils import filesystem as fs
 from tempfile import TemporaryFile
-import git
+import os.path
+#import git
 
 import tarfile
 import zipfile
@@ -57,7 +58,7 @@ log = logging.getLogger(__name__)
 # └────────────────────────────────────────┘
 class Package:
     def __init__(self, path: Path):
-        self.path   = Path(path).resolve()
+        self.path   = fs.path_helper(path)
 
     ############################################
     # Public interface to be implemented
@@ -72,8 +73,6 @@ class Package:
         """
         Remove package directory
         """
-        self.path = self.path.resolve()
-
         if not str(self.path).startswith(str(dirs.local)):
             raise RuntimeError( _("invalid directory, must be "
                                   "in $HOME/.deaduction folder !!!"))
@@ -99,8 +98,6 @@ class ArchivePackage(Package):
                  
 
         super().__init__(path)
-
-        self.path             = path
 
         self.archive_url      = archive_url
         self.archive_checksum = archive_checksum
@@ -180,54 +177,54 @@ class ArchivePackage(Package):
 # ┌────────────────────────────────────────┐
 # │ GitPackage class                       │
 # └────────────────────────────────────────┘
-class GitPackage(Package):
-    def __init__(self,
-                 path: Path,
-                 remote_url: str,
-                 remote_branch: str,
-                 remote_commit: Optional[str] = None ):
-        super().__init__(path)
-
-        self.remote_url    = remote_url   
-        self.remote_branch = remote_branch
-        self.remote_commit = remote_commit
-
-    def _check_repo_state(self):
-        log.info(_("Checking git repo state for package {}").format(str(self.path)))
-
-        repo = git.Repo(str(self.path.resolve()))
-        assert self.remote_branch == str(repo.active_branch)
-
-        if self.remote_commit:
-            assert self.remote_commit == str(repo.commit())
-
-    def check(self):
-        try:
-            self._check_folder()
-            self._check_repo_state()
-        except Exception as e:
-            log.warning(_("Failed check package {}, reinstall")
-                        .format(self.path))
-            log.debug(traceback.format_exc())
-
-            if self.path.exists():
-                self.remove()
-            self.install()
-
-    def install(self):
-        log.info(_("Install package {} from git repo").format(self.path))
-
-        # Create empty local repo
-        empty_repo = git.Repo.init(str(self.path.resolve()))
-
-        # Set remote and fetch
-        origin     = empty_repo.create_remote('origin', self.remote_url)
-        origin.fetch()
-
-        # Create local tracking branch and checkout
-        empty_repo.create_head(self.remote_branch, origin.refs[self.remote_branch])
-        empty_repo.heads[self.remote_branch].set_tracking_branch(origin.refs[self.remote_branch]) # set local branch to track remote branch
-        empty_repo.heads[self.remote_branch].checkout()
+#class GitPackage(Package):
+#    def __init__(self,
+#                 path: Path,
+#                 remote_url: str,
+#                 remote_branch: str,
+#                 remote_commit: Optional[str] = None ):
+#        super().__init__(path)
+#
+#        self.remote_url    = remote_url   
+#        self.remote_branch = remote_branch
+#        self.remote_commit = remote_commit
+#
+#    def _check_repo_state(self):
+#        log.info(_("Checking git repo state for package {}").format(str(self.path)))
+#
+#        repo = git.Repo(str(self.path.resolve()))
+#        assert self.remote_branch == str(repo.active_branch)
+#
+#        if self.remote_commit:
+#            assert self.remote_commit == str(repo.commit())
+#
+#    def check(self):
+#        try:
+#            self._check_folder()
+#            self._check_repo_state()
+#        except Exception as e:
+#            log.warning(_("Failed check package {}, reinstall")
+#                        .format(self.path))
+#            log.debug(traceback.format_exc())
+#
+#            if self.path.exists():
+#                self.remove()
+#            self.install()
+#
+#    def install(self):
+#        log.info(_("Install package {} from git repo").format(self.path))
+#
+#        # Create empty local repo
+#        empty_repo = git.Repo.init(str(self.path.resolve()))
+#
+#        # Set remote and fetch
+#        origin     = empty_repo.create_remote('origin', self.remote_url)
+#        origin.fetch()
+#
+#        # Create local tracking branch and checkout
+#        empty_repo.create_head(self.remote_branch, origin.refs[self.remote_branch])
+#        empty_repo.heads[self.remote_branch].set_tracking_branch(origin.refs[self.remote_branch]) # set local branch to track remote branch
+#        empty_repo.heads[self.remote_branch].checkout()
 
 # ┌────────────────────────────────────────┐
 # │ FolderPackage class                    │
