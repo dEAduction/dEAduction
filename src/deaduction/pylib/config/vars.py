@@ -55,10 +55,49 @@ def save():
     log.info(_("Saving configuration file"))
     toml.dump(dict_, CONFIG_FILE_PATH)
 
-def get(name: str):
-    return dict_[name]
+def get(k: str):
+    """
+    Return the wanted setting variable. dot get style,
+    for example, calling the function with package.linux
+    returns → _dict["package"]["linux"]
+    """
+    try:
+        keys = list(k.split("."))
+        rp = _dict
+        for idx in range(0, len(keys)-1):
+            rp = rp[keys[idx]]
+        return rp[keys[-1]]
+    except KeyError as e : raise KeyError( "%s in %s" % (str(e), k))
 
-def set(name: str, value: any):
-    dict_[name] = value
+def set( k, v, if_not_exists=False ):
+    """
+    Sets an item in a directory with a hierarchical path. Creates sub directories
+    if needed
 
+    :param r: The destination dict
+    :param k: The hierarchical key, separated with dots
+    :param v: The value to set
+    :param if_not_exists: Set value only if key doesn't exist
 
+    :return: True if item was set, False otherwise
+    """
+
+    # Test cases :
+    # 1 : default case (no depth)
+    # 2 : subdict (2 levels of depth)
+    # 3 : Excepted dict value exception
+    # 5 : if_not_exists don't overwrite
+
+    keys = list(k.split("."))
+    dst  = _dict # Destination
+    for idx in range(0,len(keys)-1):
+        kp = keys[idx]
+        if not kp in dst : dst[kp] = dict()
+        dst = dst[kp]
+
+    # If key not in last subdict, so the item doesn't exist yet
+    klast = keys[-1]
+    if (not klast in dst) or (not if_not_exists) :
+        dst[klast] = v
+        return True
+    else : return False
