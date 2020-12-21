@@ -47,6 +47,7 @@ import deaduction.pylib.config.dirs as dirs
 
 import os
 
-os.environ["DEADUCTION_PKG"]   = str(dirs.pkg_dir)
-os.environ["DEADUCTION_HOME"]  = str(dirs.local)
-os.environ["DEADUCTION_SHARE"] = str(dirs.share)
+def init():
+    os.environ["DEADUCTION_PKG"]   = str(dirs.pkg_dir)
+    os.environ["DEADUCTION_HOME"]  = str(dirs.local)
+    os.environ["DEADUCTION_SHARE"] = str(dirs.share)
