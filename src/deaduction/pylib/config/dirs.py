@@ -51,4 +51,4 @@ local    = (home / ".deaduction").resolve()
 ############################################
 
 def init():
-    fs.check_dir(local)
+    fs.check_dir(local, create=True)
