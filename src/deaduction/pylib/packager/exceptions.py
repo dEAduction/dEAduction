@@ -1,11 +1,11 @@
 """
 ##################################################
-# exceptions.py : Exceptions for the util module #
+# exceptions.py : Exceptions for packager module #
 ##################################################
 
 Author(s)      : Florian Dupeyron <florian.dupeyron@mugcat.fr>
 Maintainers(s) : Florian Dupeyron <florian.dupeyron@mugcat.fr>
-Date           : August 2020
+Date           : December 2020
 
 Copyright (c) 2020 the dEAduction team
 
@@ -26,24 +26,10 @@ This file is part of d∃∀duction.
 """
 
 from gettext import gettext as _
-from pathlib import Path
 
-############################################
-# filesystem exceptions
-############################################
-class FileCheckError:
-    def __init__(self, path: Path, msg: str):
-        super.__init__(msg)
-        self.path = path
+class PackageCheckError(RuntimeError):
+    def __init__(self, pkg, msg, dbg_info=None):
+        super().__init__(_("Package {} check error: {}").format( pkg.name,
+                                                                 msg       ))
+        self.dbg_info = dbg_info
 
-class FileDontExistError(FileCheckError):
-    def __init__(self, path: Path ):
-        super.__init__( path, _("File {} not found").format(str(path)) )
-
-class FileNotDirectoryError(FileCheckError):
-    def __init__(self, path: Path):
-        super().__init__(path, _("Path {} is not a directory"), path)
-
-class FileNotExploitableError(Exception):
-    def __init__(self, path: Path):
-        super().__init__(_("Path {} does not point to an exploitable file"))

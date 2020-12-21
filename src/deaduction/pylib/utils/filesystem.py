@@ -35,6 +35,10 @@ import requests
 import hashlib
 import gzip
 
+from .exceptions import ( FileCheckError
+                          FileDontExistError,
+                          FileNotDirectoryError)
+
 import re
 
 from dictdiffer import diff as ddiff  # ddiff for "dict diff"
@@ -68,7 +72,6 @@ def file_hash(fp: Path):
 
     return hh.hexdigest()
 
-
 ############################################
 # Checking utilities
 ############################################
@@ -79,14 +82,12 @@ def check_dir(path: Path, exc=False, create=False):
     """
     log.debug(_("Checking path: {}").format(str(path)))
 
-    if path.is_file():
-        raise RuntimeError(_("Path {} is a file").format(str(path)))
-
-    elif not path.is_dir() or not path.exists():
+    if (not path.exists()):
         if create: path.mkdir()
-        if exc: raise RuntimeError(
-            _("Directory {} doesn't exists").format(str(path))
-        )
+        if exc: raise FileDontExistError(path)
+
+    elif not path.is_dir():
+        raise FileNotDirectoryError(path)
 
 ############################################
 # Hashlist class

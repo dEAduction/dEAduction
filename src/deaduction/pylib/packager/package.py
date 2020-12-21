@@ -44,6 +44,8 @@ from tempfile import TemporaryFile
 import os.path
 #import git
 
+from . import exceptions as pkg_exc
+
 import tarfile
 import zipfile
 
@@ -83,7 +85,12 @@ class Package:
     ############################################
     def _check_folder(self):
         log.info(_("Checking package folder for {}").format(self.path))
-        fs.check_dir(self.path, exc=True)
+        try: fs.check_dir(self.path, exc=True)
+        except FileCheckError as e:
+            raise PackageCheckError(self,
+                                    _("Failed to check for folder at {}")
+                                        .format(str(self.path)),
+                                        dbg_info=e )
 
 # ┌────────────────────────────────────────┐
 # │ ArchivePackage class                   │
@@ -113,21 +120,26 @@ class ArchivePackage(Package):
 
             diff = list(hlist_dest.diff(hlist_ref))
             if len(diff) > 0:
-                raise RuntimeError("Found differences in files, reinstall.")
+                raise pkg_exc.PackageCheckError(self, 
+                                                _("Found differences in files, reinstall."), 
+                                                diff )
 
     def check(self):
-        try:
-            self._check_folder()
-            self._check_files()
-        except Exception as e:
-            log.warning(_("Failed check package {}, reinstall")
-                        .format(self.path))
-            log.debug(traceback.format_exc())
+        self._check_folder()
+        self._check_files()
 
-            if self.path.exists():
-                self.remove()
-            self.install() # TODO # if error, only raise exception, don't
-                           #  install !!!
+        #try:
+        #    self._check_folder()
+        #    self._check_files()
+        #except Exception as e:
+        #    log.warning(_("Failed check package {}, reinstall")
+        #                .format(self.path))
+        #    log.debug(traceback.format_exc())
+
+        #    if self.path.exists():
+        #        self.remove()
+        #    self.install() # TODO # if error, only raise exception, don't
+        #                   #  install !!!
 
 
     def install(self, on_progress: Callable = None):
@@ -151,6 +163,10 @@ class ArchivePackage(Package):
             fhandle.seek(0)
 
             log.info(_("Extract file to {}").format(self.path))
+
+            # Create destination folder
+            self.path.mkdir(exist_ok=True) # exist_ok=True → Don't bother if
+                                           # path already exists
 
             # Get correct archiving module to extract the file
             archive_open_fkt    = { "tar": lambda x: tarfile.open(fileobj=x),
@@ -247,7 +263,9 @@ class FolderPackage(Package):
 
             diff = list(hlist_dest.diff(hlist_ref))
             if len(diff) > 0:
-                raise RuntimeError("Found differences inf files, reinstall.")
+                raise pkg_exc.PackageCheckError(self, 
+                                                _("Found differences in files, reinstall."), 
+                                                diff )
 
     def check(self):
         self._check_folder()
