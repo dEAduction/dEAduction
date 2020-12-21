@@ -112,26 +112,13 @@ class LeanEntryVisitor(NodeVisitor):
 
     def visit_expr(self, node, visited_children):
         """
-        Create AnonymousPO from children
+        Create MathObject from children
         (node, children, math_type if any, NO representation)
         """
         node_info = visited_children[0][1]
         children = concatenate(visited_children[1:])[0]
-        #log.debug(f"collected info at expr: {node_info, children}")
-        ####################################################################
-        # Obsolete: decurryfying APPLICATIONs:
-
-        # #
-        # APP(APP([children]), new_child)  ->  APP([children + new_child]) #
-        ####################################################################
-        # if node_info['node_name'] == "APPLICATION" \
-        #     and children[0].node == "APPLICATION":
-        #     log.debug('decurryfying...')
-        #     math_object = children[0]
-        #     math_object.children.append(children[1])
-        # else:
         math_object = MathObject.from_info_and_children(info=node_info,
-                                                            children=children)
+                                                        children=children)
         #log.debug(f"---> {math_object}")
         return [math_object], {}
 
@@ -141,10 +128,10 @@ class LeanEntryVisitor(NodeVisitor):
         [ type: expr ]
         and we care only about the third one
 
-        Return: an AnonymousPO representing the math type
+        Return: a MathObject representing the math type
         """
-        [expr], _ = concatenate(visited_children)  # no info and just one
-        # object
+        [expr], _ = concatenate(visited_children)
+        # No info and just one object
         return [], {'math_type': expr}
 
     def visit_info_field(self, node, visited_children):

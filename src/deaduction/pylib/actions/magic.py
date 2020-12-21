@@ -71,7 +71,7 @@ def action_compute(goal, selected_objects):
     # if user_config.getboolean('use_library_search_for_computations'):
     #     possible_code.append('library_search')
 
-    possible_code = ["try {norm_num at *}, compute_n 10"]
+    possible_code = [solve1_wrap("try {norm_num at *}, compute_n 10")]
 
     return format_orelse(possible_code)
 

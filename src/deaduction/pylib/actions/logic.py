@@ -503,10 +503,12 @@ introduce two subgoals, P⇒Q, and Q⇒P.
 
 def construct_forall(goal) -> str:
     possible_codes = []
-    math_object = goal.target.math_type
     if not goal.target.is_for_all():
         error = _("target is not a universal property '∀x, P(x)'")
         raise WrongUserInput(error)
+
+    math_object = goal.target.math_type
+    body = math_object.children[2]
     math_type = math_object.children[0]
     if math_type.node == "PRODUCT":
         [math_type_1, math_type_2] = math_type.children
@@ -515,12 +517,21 @@ def construct_forall(goal) -> str:
         possible_codes.append(f'rintro ⟨ {x}, {y} ⟩')
     else:
         x = give_global_name(goal=goal,
-                             math_type=goal.target.math_type.children[0],
+                             math_type=math_type,
                              )
-        # It is probably not a good idea to include Lean's bound variable name
-        # since it is not necessarily a smart name
-        # hints=[math_object.children[1].to_display()]
         possible_codes.append(f'intro {x}')
+
+    if body.is_implication(is_math_type=True):
+        # If math_object has the form
+        # ∀ x:X, (x R ... ==> ...)
+        # where R is some inequality relation
+        # then introduce the inequality on top of x
+        premise = body.children[0]  # children (2,0)
+        if premise.is_inequality(is_math_type=True):
+            h = get_new_hyp(goal)
+            # Add and_then intro h
+            possible_codes[0] += (f', intro {h}')
+
     return format_orelse(possible_codes)
 
 
@@ -542,7 +553,7 @@ introduce x and transform the target into P(x)
     # search for a universal property among l, beginning with last item
     l.reverse()
     for item in l:
-        if item.is_forall():
+        if item.is_for_all():
             # put item on last position
             l.remove(item)
             l.append(item)

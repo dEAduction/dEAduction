@@ -27,7 +27,8 @@ This file is part of dEAduction.
 """
 
 from .MathObject import     (MathObject,
-                             NO_MATH_TYPE)
+                             NO_MATH_TYPE,
+                             NUMBER_SETS_LIST)
 from .proof_state import    (Goal,
                              ProofState,
                              Proof
