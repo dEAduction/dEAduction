@@ -27,6 +27,7 @@ This file is part of dEAduction.
 """
 
 import logging
+from typing import Union
 
 from deaduction.config       import (user_config,
                                      tooltips_config,
@@ -47,13 +48,14 @@ from deaduction.pylib.mathobj import (MathObject,
                                       Goal,
                                       get_new_hyp,
                                       give_global_name,
-                                      NO_MATH_TYPE)
+                                      NO_MATH_TYPE,
+                                      NUMBER_SETS_LIST)
 
 log = logging.getLogger(__name__)
 
 
-# turn logic_button_texts into a dictionary
-proof_list = ['action_apply', 'proof_methods', 'new_object', 'assumption']
+# Turn proof_button_texts into a dictionary
+proof_list = ['action_apply', 'proof_methods', 'new_object']
 lbt = tooltips_config.get('proof_button_texts').split(', ')
 proof_button_texts = {}
 for key, value in zip(proof_list, lbt):
@@ -249,10 +251,9 @@ def action_new_object(goal: Goal, l: [MathObject],
     return format_orelse(possible_codes)
 
 
-
-
-## APPLY
-
+#########
+# APPLY #
+#########
 
 def apply_implicate(goal: Goal, l: [MathObject]):
     possible_codes = []
@@ -261,33 +262,110 @@ def apply_implicate(goal: Goal, l: [MathObject]):
     return possible_codes
 
 
-def apply_implicate_to_hyp(goal: Goal, l: [MathObject]):
+def have(for_all: MathObject,
+         variable_name: str,
+         hypo_name) -> [str]:
+    # TODO: adapt for more than 1 variable
+    h_selected = for_all.info["name"]
+    x_selected = variable_name
+    h = hypo_name
+    possible_codes = []
+    # try with up to 4 implicit parameters
+    possible_codes.append(f'have {h} := {h_selected} {x_selected}')
+    possible_codes.append(f'have {h} := {h_selected} _ {x_selected}')
+    possible_codes.append(f'have {h} := {h_selected} _ _ {x_selected}')
+    possible_codes.append(f'have {h} := {h_selected} _ _ _ {x_selected}')
+    possible_codes.append(f'have {h} := {h_selected} _ _ _ _ {x_selected}')
+
+    possible_codes.append(f'have {h} := @{h_selected} {x_selected}')
+    possible_codes.append(f'have {h} := @{h_selected} _ {x_selected}')
+    possible_codes.append(f'have {h} := @{h_selected} _ _ {x_selected}')
+    possible_codes.append(f'have {h} := @{h_selected} _ _ _ {x_selected}')
+    possible_codes.append(
+        f'have {h} := @{h_selected} _ _ _ _ {x_selected}')
+
+    return possible_codes
+
+
+def inequality_from_pattern_matching(math_object: MathObject,
+                                     variable: MathObject):
+    """
+    Check if math_object.math_type has the form
+    ∀ x:X, (x R ... ==> ...)
+    where R is some inequality relation, and if this statement may be
+    applied to variable. If so, return inequality with x replaced by variable
+    """
+    inequality = None
+    if math_object.is_for_all():
+        math_type, var, body = math_object.math_type.children
+        # NB: following line does not work because of coercions
+        # if var.math_type == variable.math_type:
+        if body.is_implication(is_math_type=True):
+            premise = body.children[0]  # children (2,0)
+            if (premise.is_inequality(is_math_type=True) and
+                    var == premise.children[0]):
+                children = [variable, premise.children[1]]
+                inequality = MathObject(node=premise.node,
+                                        info={},
+                                        children=children,
+                                        math_type=premise.math_type)
+    return inequality
+
+
+def apply_implicate_to_hyp(goal: Goal, l: [MathObject], user_input=None):
     """
     Try to apply last selected property on the other ones.
-    :param l: list of 2 or 3 MathObjects
+    :param l: list of 1-3 MathObjects
+    :param user_input: in case of 1 MathObject, list of 1 str
     :return:
     """
     possible_codes = []
-    h_selected = l[-1].info["name"]
-    x_selected = l[0].info["name"]
-    h = get_new_hyp(goal)
-
+    if len(l) == 1 and user_input:
+        item = user_input[0]
+        item = add_type_indication(item)  # e.g. (0:ℝ)
+        potential_var = MathObject(node="LOCAL_CONSTANT",
+                                   info={'name': item},
+                                   children=[],
+                                   math_type=None)
+        l.insert(0,potential_var)
+        # Now len(l) == 2 so next test will be positive
     if len(l) == 2:
-        # try with up to 4 implicit parameters
-        possible_codes.append(f'have {h} := {h_selected} {x_selected}')
-        possible_codes.append(f'have {h} := {h_selected} _ {x_selected}')
-        possible_codes.append(f'have {h} := {h_selected} _ _ {x_selected}')
-        possible_codes.append(f'have {h} := {h_selected} _ _ _ {x_selected}')
-        possible_codes.append(f'have {h} := {h_selected} _ _ _ _ {x_selected}')
-
-        possible_codes.append(f'have {h} := @{h_selected} {x_selected}')
-        possible_codes.append(f'have {h} := @{h_selected} _ {x_selected}')
-        possible_codes.append(f'have {h} := @{h_selected} _ _ {x_selected}')
-        possible_codes.append(f'have {h} := @{h_selected} _ _ _ {x_selected}')
-        possible_codes.append(
-            f'have {h} := @{h_selected} _ _ _ _ {x_selected}')
+        math_object = l[-1]
+        potential_var = l[0]
+        # TODO: replace by pattern matching
+        # Check for "∀x>0" (and variations)
+        inequality = inequality_from_pattern_matching(math_object,
+                                                      potential_var)
+        h1 = get_new_hyp(goal)
+        # TODO: structure this into:
+        #  (1) try { have <INEQ>, by <compute> , and_then (have.. or_else ...)
+        #  (2) or_else {(have.. or_else ...)}
+        #  For the moment, the first have is tried many time by Lean,
+        #  which is highly inefficient
+        if inequality:
+            # Add type indication
+            math_type = inequality.children[1].math_type
+            variable = inequality.children[0]
+            variable = add_type_indication(variable, math_type)
+            h2 = get_new_hyp(goal)
+            display_inequality = inequality.to_display(
+                is_math_type=False,
+                format_='lean')
+            code = f"have {h1} : {display_inequality}, "
+            code += "by { try {norm_num at *}, try {compute_n 10}}"
+            code = "try { " + code + "}, "
+            # Then apply to h2 instead of x
+            new_codes = have(math_object, h1, h2)
+            possible_codes = [code + other_code
+                              for other_code in new_codes]
+            # And try this combination before standard "have"
+        possible_codes.extend(have(math_object,
+                                   potential_var.info['name'],
+                                   h1))
 
     elif len(l) == 3:
+        h_selected = l[-1].info["name"]
+        x_selected = l[0].info["name"]
         y_selected = l[1].info["name"]
         # try to apply "forall x,y , P(x,y)" to x and y
         possible_codes.append(
@@ -369,7 +447,6 @@ def apply_substitute(goal: Goal, l: [MathObject], user_input: [int]):
     return possible_codes
 
 
-
 def apply_function(goal: Goal, l: [MathObject]):
     """
     Apply l[-1], which is assumed to be a function f, to previous elements of
@@ -439,21 +516,28 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
 
     # Now len(l) > 0
     prop = l[-1]  # property to be applied
-    # if user wants to apply a function
+    # If user wants to apply a function
     if prop.is_function():
         return apply_function(goal, l)
 
-    # determines which kind of property the user wants to apply
+    # Determines which kind of property the user wants to apply
     if prop.can_be_used_for_substitution():
         if len(l) == 1 or (len(l) > 1 and l[0].math_type.is_prop()):
             possible_codes.extend(apply_substitute(goal, l, user_input))
 
     # todo: allow apply_implicate_hyp even when property is not explicitly
     #  an implication
-    quantifier = prop.math_type.node
-    if quantifier == "PROP_IMPLIES" or quantifier == "QUANT_∀":
-        if len(l) == 1:
-            possible_codes.extend(apply_implicate(goal, l))
+    if prop.is_implication() and len(l) == 1:
+        possible_codes.extend(apply_implicate(goal, l))
+    if prop.is_for_all() and len(l) == 1:
+        if len(user_input) != 1:
+            raise MissingParametersError(InputType.Text,
+                                         title=_("Apply"),
+                                         output=_(
+                                             "Enter element on which you "
+                                             "want to apply:"))
+        possible_codes.extend(apply_implicate_to_hyp(goal, l, user_input))
+    elif prop.is_implication() or prop.is_for_all():
         if len(l) == 2 or len(l) == 3:
             possible_codes.extend(apply_implicate_to_hyp(goal, l))
             
@@ -469,6 +553,7 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
     else:
         error = "I cannot apply this"  # fixme!!
         raise WrongUserInput(error)
+
 
 ################################
 # Captions for 'APPLY' buttons #
@@ -522,73 +607,62 @@ def explain_how_to_apply(math_object: MathObject, dynamic=False, long=False) \
         captions.append(tooltips_config.get('tooltip_apply_substitute'))
 
     return captions
-    
-
-@action(tooltips_config.get('tooltip_assumption'),
-        proof_button_texts['assumption'])
-def action_assumption(goal: Goal, l: [MathObject]) -> str:
-    """
-    Translate into string of lean code corresponding to the action
-    
-    :param l: list of MathObject arguments preselected by the user
-    :return: string of lean code
-    """
-    # NB: this button should either solve the goal or fail.
-    # For this we wrap the non "solve-or-fail" tactics
-    # into the combinator "solve1"
-
-    possible_codes = []
-    if len(l) == 0:
-        possible_codes.append('assumption')
-        possible_codes.append('contradiction')
-        if goal.target.is_equality():
-            if goal.target.math_type.children[0] == \
-                    goal.target.math_type.children[1]:
-                possible_codes.append('refl')
-            # try to use associativity and commutativity
-            possible_codes.append('ac_reflexivity')
-            # try to permute members of the goal equality
-            possible_codes.append('apply eq.symm, assumption')
-            # congruence closure, solves e.g. (a=b, b=c : f a = f c)
-            possible_codes.append('cc')
-        # possible_codes.append('apply iff.symm, assumption')
-
-        # Try some symmetry rules
-        if goal.target.is_iff():
-            possible_codes.append('apply iff.symm, assumption')
-        elif goal.target.is_and(): # todo: change to "id_and_like"
-            possible_codes.append('apply and.symm, assumption')
-            possible_codes.append('split, assumption, assumption')
-        elif goal.target.is_or():
-            possible_codes.append('apply or.symm, assumption')
-            # The following is too much?
-            # possible_codes.append('left, assumption')
-            # possible_codes.append('right, assumption')
-
-        # Try to split hypotheses that are conjunctions
-        code = ""
-        counter = 0
-        for prop in goal.context:
-            if prop.is_and():
-                name = prop.info['name']
-                H0 = f"H_aux_{counter}"  # these hypotheses will disappear
-                H1 = f"H_aux_{counter+1}"  # so names are unimportant
-                code += f"cases {name} with {H0} {H1}, "
-                counter += 2
-        if code:
-            code += 'assumption'
-            possible_codes.append(code)
-
-        # TODO: if context contains "H1 : x in Ø",
-        #  exact not_mem_empty x H1" donne false
-
-    if len(l) == 1:
-        possible_codes.append(solve1_wrap(f'apply {l[0].info["name"]}'))
-
-    possible_codes.append(solve1_wrap('norm_num at *'))
-    return format_orelse(possible_codes)
 
 
 # @action(_("Proof by induction"))
 # def action_induction(goal : Goal, l : [MathObject]):
 #    raise WrongUserInput
+
+
+#########
+# UTILS #
+#########
+
+def which_number_set(string: str):
+    """
+    Return 'ℕ', 'ℤ', 'ℚ', 'ℝ' if string represents a number, else None
+    """
+    ind = -1
+    if '.' in string or '/' in string:
+        ind = 2  # at least Q
+    string = string.replace('.', '')
+    string = string.replace('/', '')
+    if not string.isdigit():
+        return None
+    else:
+        return NUMBER_SETS_LIST[ind]
+
+
+def add_type_indication(item: Union[str, MathObject],
+                        math_type: MathObject=None) -> Union[str, MathObject]:
+    """
+    Add type indication for Lean. e.g.
+    '0' -> (0:ℝ)
+    'x' -> (x:ℝ)
+    :param item:        either a string (provided by user in TextDialog) or
+    MathObject
+    :param math_type:   math_type indication to add. If None, largest number
+    set used in current context will be indicated
+    :return: either     string or MathObject, with type indication in name
+    """
+    if math_type:
+        number_type = math_type.which_number_set(is_math_type=True)
+    if isinstance(item, str):
+        number_set = which_number_set(item)
+        if number_set and ':' not in item:
+            if not math_type:
+                MathObject.add_numbers_set(number_set)
+                # Add type indication = largest set of numbers among used
+                number_type = MathObject.number_sets[-1]
+            item = f"({item}:{number_type})"  # e.g. (0:ℝ)
+        return item
+    else:
+        if not math_type:
+            number_type = MathObject.number_sets[-1]
+        if hasattr(item, 'info'):
+            name = item.display_name
+            # Do not put 2 type indications!!
+            if (':' not in name
+                    and hasattr(item, 'info')):
+                item.info['name'] = f"({name}:{number_type})"
+        return item

@@ -48,6 +48,7 @@ import deaduction.pylib.mathobj.give_name as give_name
 
 
 log = logging.getLogger(__name__)
+NUMBER_SETS_LIST = ['ℕ', 'ℤ', 'ℚ', 'ℝ']
 
 
 #############################################
@@ -77,6 +78,8 @@ class MathObject:
     # i.e. global and bound variables. This avoids duplicate.
     # key = identifier,
     # value = MathObject
+    number_sets = []  # Ordered list of sets of numbers involved in all
+    # MathObjects, subset of ['ℕ', 'ℤ', 'ℚ', 'ℝ']
     bound_var_number = 0  # a counter to distinguish bound variables
 
 
@@ -86,7 +89,7 @@ class MathObject:
         """
         This is a work-around to the impossibility of defining a class
         recursively. Thus every instance of a MathObject has a math_type
-        which is a MathObject (and has a node, info dic, and children list)
+        which is a MathObject (and has a node, info dict, and children list)
         The constant NO_MATH_TYPE is defined below, after the methods
         """
         if self._math_type is None:
@@ -212,7 +215,28 @@ class MathObject:
                                      math_type=math_type,
                                      children=children,
                                      has_unnamed_bound_vars=child_bool)
+        # Detect number sets and insert in number_sets if needed
+        # at the right place so that the list stay ordered
+        name = math_object.display_name
+        cls.add_numbers_set(name)
         return math_object
+
+    @classmethod
+    def add_numbers_set(cls, name: str):
+        if name in NUMBER_SETS_LIST and name not in cls.number_sets:
+            cls.number_sets.append(name)
+            counter = len(MathObject.number_sets) -1
+            while counter > 0:
+                old_item = cls.number_sets[counter - 1]
+                if NUMBER_SETS_LIST.index(name) < \
+                   NUMBER_SETS_LIST.index(old_item):
+                    # Swap
+                    cls.number_sets[counter] = old_item
+                    cls.number_sets[counter-1] = name
+                    counter -= 1
+                else:
+                    break
+            log.debug(f"Number_sets: {MathObject.number_sets}")
 
     ########################
     # name bound variables #
@@ -574,6 +598,20 @@ class MathObject:
             return True
         else:
             return False
+
+    def which_number_set(self, is_math_type=False) -> str:
+        """
+        Return 'ℕ', 'ℤ', 'ℚ', 'ℝ' if self is a number, else None
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        name = math_type.display_name
+        if math_type.node == 'CONSTANT' and name in ['ℕ', 'ℤ', 'ℚ', 'ℝ']:
+            return name
+        else:
+            return None
 
     # Determine some important classes of MathObjects
     def can_be_used_for_substitution(self, is_math_type=False) -> bool:

@@ -503,12 +503,7 @@ def display_constant(math_object, format_) -> list:
 def display_number(math_object, format_) -> list:
     """
     Display for nodes 'NUMBER'
-
-    :param math_object:
-    :param format_:
-    :return:            'display' list
     """
-
     display = [math_object.info['value']]
     return display
 

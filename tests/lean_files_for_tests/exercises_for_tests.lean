@@ -31,6 +31,8 @@ AvailableDefinitions
 
 
 /- dEAduction
+Title
+    Exercises for unitary test
 Author
     Frédéric Le Roux
 Institution

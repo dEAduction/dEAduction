@@ -124,7 +124,7 @@ def check_statements(course):
                 3) path for pkl version of the course (whether the file exists
                 or not)
     """
-    course_path = course.course_path
+    course_path = course.relative_course_path
     directory_name = course_path.parent
     course_hash = hash(course.file_content)
 
