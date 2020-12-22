@@ -2,10 +2,7 @@ import data.set
 import tactic
 
 -- dEAduction imports
-import logics
-import structures
-import definitions
-
+import structures2
 
 lemma definition.iff {P Q : Prop} : ( P ↔ Q ) ↔ (P → Q) ∧ (Q → P) :=
 iff_def
@@ -26,7 +23,9 @@ lemma definition.equality_two_sets {A A' : set X} : (A = A') ↔ ( ∀ x, x ∈ 
 PrettyName
     Equality of two sets
 -/
-by exact set.ext_iff
+begin
+    exact set.ext_iff
+end
 
 lemma theorem.double_inclusion {A A' : set X} : (A = A') ↔ (A ⊆ A' ∧ A' ⊆ A) :=
 begin
@@ -38,11 +37,14 @@ namespace unions_and_intersections -- Section 1
 
 
 lemma definition.intersection_two_sets (A B : set X) (x : X) :  x ∈ A ∩ B ↔ ( x ∈ A ∧ x ∈ B) :=
-iff.rfl
 /- dEAduction
 PrettyName
     Intersection of two sets
 -/
+begin
+    iff.rfl
+end
+
 
 lemma theorem.included_in_intersection_iff  (A B C : set X) : C ⊆ A ∩ B ↔ C ⊆ A ∧ C ⊆ B :=
 begin
@@ -50,25 +52,34 @@ begin
 end
 
 lemma definition.intersection_arbitrary_sets (I : Type) (O : I → set X)  (x : X) : (x ∈ set.Inter O) ↔ (∀ i:I, x ∈ O i) :=
-set.mem_Inter
 /- dEAduction
 PrettyName
     Intersection of an arbitrary family of sets
 -/
+begin
+    set.mem_Inter
+end
+
 
 lemma definition.union_two_sets  (A : set X) (B : set X) (x : X) :  x ∈ A ∪ B ↔ ( x ∈ A ∨ x ∈ B) :=
-iff.rfl
 /- dEAduction
 PrettyName
     Union of two sets
 -/
+begin
+    exact set.mem_Inter
+end
+
 
 lemma definition.union_arbitrary_sets (I : Type) (O : I → set X)  (x : X) : (x ∈ set.Union O) ↔ (∃ i:I, x ∈ O i) :=
-set.mem_Union
 /- dEAduction
 PrettyName
     Union of an arbitrary family of sets
 -/
+begin
+    exact set.mem_Union
+end
+
 
 lemma exercise.intersection_dist_over_union (X : Type) (A B C : set X) : A ∩ (B ∪ C)  = (A ∩ B) ∪ (A ∩ C) :=
 /- dEAduction
@@ -121,13 +132,17 @@ Section
 
 
 lemma definition.complement {A : set X} {x : X} : x ∈ set.univ \ A ↔ x ∉ A :=
-by finish
-
+begin
+    finish
+end
 lemma definition.complement_1 {A : set X} {x : X} : x ∈ set.compl A ↔ x ∉ A :=
-by finish
-
+begin
+     finish
+end
 lemma definition.complement_2 {A B : set X} {x : X} : x ∈ B \ A ↔ (x ∈ B ∧ x ∉ A) :=
-iff.rfl
+begin
+    sorry
+end
 
 lemma exercise.complement_of_complement {A : set X} : - - A = A :=
 /- dEAduction
@@ -141,4 +156,13 @@ begin
 end
 
 end complements
+
+lemma exercise.ensemble_vide
+(X:Type) (x:X) (A B: set X) (H: A = has_emptyc.emptyc) (H2: x ∈ A)
+:
+A = B :=
+begin
+    sorry
+end
+
 end set_theory

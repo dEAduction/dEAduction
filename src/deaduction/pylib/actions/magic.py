@@ -70,8 +70,8 @@ def action_compute(goal, selected_objects):
     # "finish" "norm_num *"
     # if user_config.getboolean('use_library_search_for_computations'):
     #     possible_code.append('library_search')
-
-    possible_code = [solve1_wrap("try {norm_num at *}, compute_n 10")]
+    possible_code = [solve1_wrap("norm_num at *"),
+                     solve1_wrap("try {norm_num at *}, compute_n 10")]
 
     return format_orelse(possible_code)
 
@@ -130,9 +130,18 @@ def action_assumption(goal: Goal, l: [MathObject]) -> str:
         if code:
             code += 'assumption'
             possible_codes.append(code)
-
-        # TODO: if context contains "H1 : x in Ø",
-        #  exact not_mem_empty x H1" donne false
+        # Search for specific prop
+        for prop in goal.context:
+            math_type = prop.math_type
+            if (math_type.node == "PROP_BELONGS"
+                    and math_type.children[1].node == "SET_EMPTY"):
+                H2 = prop.info['name']
+                if goal.target.node != "PROP_FALSE":
+                    code = "exfalso, "
+                else:
+                    code = ""
+                code += f"exact set.not_mem_empty _ {H2}"
+                possible_codes.append(code)
 
     if len(l) == 1:
         possible_codes.append(solve1_wrap(f'apply {l[0].info["name"]}'))
