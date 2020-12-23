@@ -32,6 +32,8 @@ from   gettext import gettext as _
 import deaduction.pylib.packager.package as package
 import deaduction.pylib.config.vars      as cvars
 
+from   deaduction.pylib.packager.exceptions import (PackageCheckError)
+
 log = logging.getLogger(__name__)
 
 __platform_os = platform.system().lower() # Evaluated at first module import,
@@ -53,6 +55,24 @@ def init():
         packages[name] = package.from_config(conf)
 
 def check():
+    """
+    Checks for packages installation, returns list of invalid
+    packages. The user can then process this list to
+    install them.
+    """
+    global packages
+
+    failed_checks=[]
+
     log.info(_("Check packages installation"))
-    for pkg in packages.values():
-        pkg.check()
+    for pkg_name,pkg in packages.items():
+        try:
+            pkg.check()
+        except PackageCheckError as exc:
+            log.warning(_("Failed checking package {}: {}")
+                            .format(pkg_name,str(exc)) )
+            if exc.dbg_info: log.debug(str(exc.dbg_info))
+
+            failed_checks.append( (pkg_name,pkg,exc,) )
+        
+    return failed_checks
