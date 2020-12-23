@@ -1,5 +1,7 @@
 """
-# give_name.py : provide names for new variables
+##################################################
+# give_name.py : provide names for new variables #
+##################################################
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -26,8 +28,6 @@ This file is part of dEAduction.
 from typing import List
 import logging
 
-import deaduction.pylib.logger as logger
-
 from deaduction.pylib.mathobj import MathObject
 from deaduction.config.config import (user_config,
                                       EXERCISE)
@@ -40,17 +40,20 @@ EXERCISE.USE_SECONDS_FOR_VARIABLES_NAMES = \
     user_config.getboolean('use_seconds_for_variables_names')
 
 
-def get_new_hyp(goal):
+def get_new_hyp(goal) -> str:
     forbidden_names = goal.extract_vars_names()
     return get_new_hyp_from_forbidden_names(forbidden_names)
 
 
-def get_new_hyp_from_forbidden_names(forbidden_names: [str]):
-    """Find a fresh name for a new property
+def get_new_hyp_from_forbidden_names(forbidden_names: [str]) -> str:
+    """
+    Find a fresh name for a new property.
     The name is 'Hn' where n is the least integer such that Hn has never
-    been given by the present function, and Hn is not in the current context
+    been given by the present function, and Hn is not in the current context.
+    Makes use of the Python global var Global.PROPERTY_COUNTER.
 
-    Makes us of the Python global var Global.PROPERTY_COUNTER
+    :param forbidden_names: list of names of variables in the context
+    :return:                str, a fresh name
     """
 
     counter = EXERCISE.PROPERTY_COUNTER
@@ -68,22 +71,22 @@ def give_local_name(math_type: MathObject,
                     forbidden_vars: [MathObject] = []) -> str:
     """
     Attribute a name to a local variable. See give_name below.
+    Mainly computes all pertinent forbidden variables, by adding vars from
+    body to the forbidden_vars list.
 
-    :param math_type:       PropObj type of new variable
-    :param body:            a PropObj inside which the new name will serve
-                            for a bound variable
-    :param hints:           a list of hints for the future name
-    :param forbidden_vars:  list of vars whose names are forbidden
-    :return:                a name for the new variable
+    :param math_type:       MathObject type of new variable
+    :param body:            a MathObject inside which the new name will serve
+                            as a bound variable
+    :param hints:           a list of hints (str) for the future name
+    :param forbidden_vars:  list of vars (MathObject) whose names are forbidden
+    :return:                str, a name for the new variable
     """
 
     additional_forbidden_vars = body.extract_local_vars()
-
     names = [var.info['name'] for var in forbidden_vars]
     log.debug(f'Giving name to bound var, a priori forbidden names ={names}')
     more_names = [var.info['name'] for var in additional_forbidden_vars]
     log.debug(f'Additional forbidden names ={more_names}')
-
     forbidden_vars.extend(additional_forbidden_vars)
     return give_name(math_type, forbidden_vars, hints)
 
@@ -92,7 +95,8 @@ def give_global_name(math_type:MathObject,
                      goal,
                      hints: [str] = []) -> str:
     """
-    Attribute a name to a global variable See give_name below.
+    Attribute a name to a global variable. See give_name below.
+    Here the forbidden variables are all variables from the context.
 
     :param math_type:   PropObj type of new variable
     :param goal:        current_goal
@@ -107,7 +111,7 @@ def give_name(math_type,
               forbidden_vars: [MathObject],
               hints: [str] = []) -> str:
     """
-    Provide a name for a new variable. Baby version.
+    Provide a name for a new variable.
     Roughly speaking,
         - look if math_type has a name which starts with an uppercase letter,
         and if so add the corresponding lowercase letter as the main hint
@@ -127,14 +131,9 @@ def give_name(math_type,
     :return:                a name for the new variable
     """
 
-    # determine list of forbidden names from forbidden variables
-    # forbidden_names = []  # a list of strings with no duplication
-    # for math_object in forbidden_vars:
-    #     name = math_object.info['name']
-    #     if name not in forbidden_names:
-    #         forbidden_names.append(name)
+    # FIXME: choice of names needs to be improved!
 
-    # list of forbidden names (with repeat)
+    # List of forbidden names (with repeat)
     forbidden_names = [var.info['name'] for var in forbidden_vars]
     log.debug(f"giving name to var, hints = {hints} type={math_type}")
     log.debug(f"forbidden names: {forbidden_names}")
@@ -142,7 +141,7 @@ def give_name(math_type,
     ######################
     # special math types #
     ######################
-    # subsets will be named with uppercase letters
+    # Subsets will be named with uppercase letters
     if math_type.node in ['SET', 'TYPE', 'PROP']:
         upper_case_name = True
     else:
@@ -153,9 +152,9 @@ def give_name(math_type,
         return get_new_hyp_from_forbidden_names(forbidden_names)
 
     ##################
-    # managing hints #
+    # Managing hints #
     ##################
-    # avoid bad name, e.g. for families where hints could be {E_i, i in I}
+    # Avoid bad hints, e.g. for families where hints could be {E_i, i in I}
     # All hints have to be acceptable variable names!
     alphabet_lower = "abcdefghijklmnopqrstuvwxyz"
     alphabet_upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -165,18 +164,20 @@ def give_name(math_type,
             hints.remove(hint)
 
     if upper_case_name:
-        hints = [hint[0].upper() for hint in hints]  # so each hint has only
-        # One uppercase letter
+        hints = [hint[0].upper() for hint in hints]
+        # Each hint is one uppercase letter
     else:
-        hints = [hint[0].lower() for hint in hints]  # so each hint has only
-        # One lowercase letter
+        hints = [hint[0].lower() for hint in hints]
+        # Each hint is one lowercase letter
 
     # Lower case: add main hint (in pole position)
     # according to math_type's name
+    # e.g. math_type is "X" -> hint[0] = 'x'
     if (not upper_case_name) and 'name' in math_type.info:
         type_name = math_type.info["name"]
         if type_name[0] in alphabet_upper:
             hint = type_name[0].lower()
+            # Insert iff hint is not already in hints
             insert_maybe(hints, hint, position=0)
 
     # Standard hints
@@ -193,6 +194,7 @@ def give_name(math_type,
     # First trial: use hints, maybe with primes if permitted #
     ##########################################################
     for potential_name in hints:
+        # Try each hints successively
         log.debug(f"trying {potential_name}...")
         if potential_name not in forbidden_names:
             new_name = potential_name
@@ -201,30 +203,31 @@ def give_name(math_type,
         # same math_type as the variable we want to name,
         # then try to use "x'"
         elif EXERCISE.USE_PRIMES_FOR_VARIABLES_NAMES:
-            # here potential_name are assumed to be the name of some variable
+            # Here potential_name are assumed to be the name of some variable
             name = potential_name
             index_ = forbidden_names.index(name)
             variable = forbidden_vars[index_]
             potential_name = name + "'"
-            log.debug(f"trying {potential_name}...")
+            log.debug(f"Trying {potential_name}...")
             if math_type == variable.math_type:
+                # Use "x'" only if "x" has the same type
                 if potential_name not in forbidden_names:
                     return potential_name
                 elif EXERCISE.USE_SECONDS_FOR_VARIABLES_NAMES:
-                    # try to use "x''"
+                    # Try to use "x''"
                     name = potential_name
                     index_ = forbidden_names.index(name)
                     variable = forbidden_vars[index_]
                     potential_name = name + "'"
-                    log.debug(f"trying {potential_name}...")
+                    log.debug(f"Trying {potential_name}...")
                     if math_type == variable.math_type \
                             and not potential_name.endswith("'''") \
                             and potential_name not in forbidden_names:
                         return potential_name
 
-    ########################################
-    # second trial: use alphabetical order #
-    ########################################
+    ########################################################
+    # Second trial: use alphabetical order from first hint #
+    ########################################################
     starting_name = hints[0]
     counter = 0
     potential_name = starting_name
@@ -245,9 +248,12 @@ def give_name(math_type,
     return potential_name + '_' + str(counter)
 
 
+#########
+# UTILS #
+#########
 def next_(letter: str) -> str:
     """
-    given a letter, return the next letter in the alphabet
+    Given a letter, return the next letter in the alphabet
     """
     lower_list = "abcdefghijklmnopqrstuvwxyz"
     upper_list = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -262,7 +268,7 @@ def next_(letter: str) -> str:
 
 def next_in_list(letter: str, letters: List[str]):
     """
-    given a letter that is certified to belongs to letters,
+    Given a letter that is certified to belongs to letters,
     provide the next letter ( mod len(letters) )
     """
     index = letters.index(letter) + 1
