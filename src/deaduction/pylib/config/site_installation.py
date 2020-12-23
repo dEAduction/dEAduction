@@ -76,3 +76,8 @@ def check():
             failed_checks.append( (pkg_name,pkg,exc,) )
         
     return failed_checks
+
+def has_package(name):
+    if not name in packages:
+        raise RuntimeError( _("No package {} found in configuration")
+                            .format(name) )
