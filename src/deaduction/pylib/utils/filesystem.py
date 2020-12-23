@@ -35,7 +35,7 @@ import requests
 import hashlib
 import gzip
 
-from .exceptions import ( FileCheckError
+from .exceptions import ( FileCheckError,
                           FileDontExistError,
                           FileNotDirectoryError)
 

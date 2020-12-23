@@ -31,14 +31,14 @@ from pathlib import Path
 ############################################
 # filesystem exceptions
 ############################################
-class FileCheckError:
+class FileCheckError(Exception):
     def __init__(self, path: Path, msg: str):
-        super.__init__(msg)
+        super().__init__(msg)
         self.path = path
 
 class FileDontExistError(FileCheckError):
     def __init__(self, path: Path ):
-        super.__init__( path, _("File {} not found").format(str(path)) )
+        super().__init__( path, _("File {} not found").format(str(path)) )
 
 class FileNotDirectoryError(FileCheckError):
     def __init__(self, path: Path):
