@@ -63,7 +63,8 @@ def save():
     global dict_
 
     log.info(_("Saving configuration file"))
-    toml.dump(dict_, CONFIG_FILE_PATH)
+    with open(str(USER_CONFIG_FILE_PATH), "w") as fhandle:
+        toml.dump(dict_, fhandle)
 
 def get(k: str):
     global dict_
