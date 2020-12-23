@@ -44,13 +44,15 @@ from tempfile import TemporaryFile
 import os.path
 #import git
 
-from . import exceptions as pkg_exc
+from .exceptions import (PackageCheckError)
 
 import tarfile
 import zipfile
 
 import deaduction.pylib.config.dirs as dirs
 from functools import partial
+
+from deaduction.pylib.utils.exceptions import (FileCheckError)
 
 
 log = logging.getLogger(__name__)
@@ -120,7 +122,7 @@ class ArchivePackage(Package):
 
             diff = list(hlist_dest.diff(hlist_ref))
             if len(diff) > 0:
-                raise pkg_exc.PackageCheckError(self, 
+                raise PackageCheckError(self, 
                                                 _("Found differences in files, reinstall."), 
                                                 diff )
 

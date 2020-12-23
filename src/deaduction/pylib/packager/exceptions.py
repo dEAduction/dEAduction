@@ -29,7 +29,7 @@ from gettext import gettext as _
 
 class PackageCheckError(RuntimeError):
     def __init__(self, pkg, msg, dbg_info=None):
-        super().__init__(_("Package {} check error: {}").format( pkg.name,
-                                                                 msg       ))
+        super().__init__(_("Package check error: {}").format(msg))
+                                                             
         self.dbg_info = dbg_info
 
