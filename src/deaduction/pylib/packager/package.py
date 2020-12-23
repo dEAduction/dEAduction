@@ -167,8 +167,8 @@ class ArchivePackage(Package):
             log.info(_("Extract file to {}").format(self.path))
 
             # Create destination folder
-            self.path.mkdir(exist_ok=True) # exist_ok=True → Don't bother if
-                                           # path already exists
+            #self.path.mkdir(exist_ok=True) # exist_ok=True → Don't bother if
+            #                               # path already exists
 
             # Get correct archiving module to extract the file
             archive_open_fkt    = { "tar": lambda x: tarfile.open(fileobj=x),
