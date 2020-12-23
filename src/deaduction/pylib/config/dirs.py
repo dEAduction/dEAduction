@@ -30,6 +30,7 @@ from   pathlib import Path
 from   gettext import gettext as _
 
 import deaduction.pylib.utils.filesystem as fs
+import os
 
 log = logging.getLogger(__name__)
 
@@ -44,7 +45,8 @@ icons    = (share / "graphical_resources" / "icons").resolve()
 
 # Home paths
 home     = Path.home()
-local    = (home / ".deaduction").resolve()
+local    = ( home / ".deaduction{}".format("-dev" if os.getenv("DEADUCTION_DEV_MODE", False)
+                                                  else "") ).resolve()
 
 ############################################
 # Utilities
