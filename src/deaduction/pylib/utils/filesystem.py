@@ -80,10 +80,12 @@ def check_dir(path: Path, exc=False, create=False):
     Checks that the directory pointed by path exists.
     Creates the folder if not existing.
     """
-    log.debug(_("Checking path: {}").format(str(path)))
+    log.info(_("Checking path: {}").format(str(path)))
 
     if (not path.exists()):
-        if create: path.mkdir()
+        if create:
+            log.info(_("→ Creating directory {}").format(str(path)))
+            path.mkdir()
         if exc: raise FileDontExistError(path)
 
     elif not path.is_dir():
