@@ -33,9 +33,7 @@ from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 import logging
 
-import deaduction.pylib.logger as logger
-from deaduction.pylib.mathobj import (MathObject,
-                                      display_math)
+from deaduction.pylib.mathobj import MathObject
 
 log = logging.getLogger(__name__)
 
