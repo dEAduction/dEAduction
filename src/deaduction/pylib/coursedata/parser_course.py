@@ -1,5 +1,7 @@
 """
-# parser_course.py : Parse lean course to extract pertinent data
+##################################################################
+# parser_course.py : Parse lean course to extract pertinent data #
+##################################################################
 
 1) A Lean file is parsed according to the grammar described in the "rules"
 string below.
@@ -11,7 +13,7 @@ course_history. This is some sort of idealized version of the file,
 retaining only the dEAduction-pertinent information. Specifically, it is a
 list that contains the following type of events:
 - course metadata
-- end_of_line (indispensable to specify positions of proofs),
+- end_of_line (indispensable to determine positions of proofs in the file),
 - opening and closing of namespaces (and their metadata),
 - statements (definitions, theorems, exercises) and their metadata.
 The variable 'data' is a dictionary which is used locally to collect
@@ -44,6 +46,7 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from typing import List, Tuple
 from pathlib import Path
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
@@ -53,6 +56,7 @@ import deaduction.pylib.logger as logger
 
 log = logging.getLogger(__name__)
 
+
 ############################
 # Some aspect of the rules #
 ############################
@@ -60,14 +64,14 @@ log = logging.getLogger(__name__)
 #           lean_statement includes variables definition,
 #           must end with ":=".
 
-# test somewhere else that core_proof does not contain "hypo_analysis"
+# Test somewhere else that core_proof does not contain "hypo_analysis"
 # it is important that ALL ends of lines are detected by the end_of_line node
 
 # Does not support proof-like 'begin ... end' string in a comment between
 # statement and proof
 # nor "lemma exercise." in a docstring comment
 
-# statements name must be followed by a space or end_of_line
+# Statements name must be followed by a space or end_of_line
 
 # metadata = starts with /- dEAduction,
 #           must end with a line starting with "-/".
@@ -84,18 +88,13 @@ log = logging.getLogger(__name__)
 # identifiers (lemma and namespace's names between '.') can contain only
 # letters, digits and '_'
 
-from typing import List, Tuple
-import logging
-
-import deaduction.pylib.logger as logger
-
-log = logging.getLogger(__name__)
-
 ##################
 # Lean Statement #
 ##################
-# the only purpose of this is to separate variables from the core statement
-# in Lean's lemmas
+# The only purpose of this small parser is to separate variables from the core
+# statement in Lean's lemmas
+# This is NOT the parser for Lean exercises files, just an independent parser
+# for statements!
 statement_rules = """
 statement = variables spaces ":" core_statement
     variables = variable*
@@ -118,10 +117,18 @@ statement_grammar = Grammar(statement_rules)
 
 class StatementVisitor(NodeVisitor):
 
-    def visit_statement(self, node, visited_children) -> Tuple[str, str]:
+    def visit_statement(self,
+                        node: str,
+                        visited_children: []) -> Tuple[str, str]:
+        """
+        Return data from statement.
+
+        :param visited_children:    list of data from children. The pertinent
+        children are variables and core_statement.
+        :return:                    pertinent visited children
+        """
         # filter spaces and ":" to keep just variables and core_statement
         visited_children = list(filter(my_filter, visited_children))
-        #log.debug(visited_children)
         return visited_children
 
     def visit_variables(selfself, node, visited_children):
@@ -131,15 +138,13 @@ class StatementVisitor(NodeVisitor):
         return node.text
 
     def generic_visit(self, node, visited_children):
-        #visited_children = filter(  lambda text: (text== ""),
-        # visited_children)
         return None
 
 
 visitor = StatementVisitor()
 
 
-def my_filter(text:str) -> bool:
+def my_filter(text: str) -> bool:
     return text not in [" ", ":", None, "\n", "\\n"]
 
 
@@ -150,17 +155,12 @@ def extract_core_statement(statement: str) -> Tuple[str, str]:
     - variables:    {X : Type} (A B C : set X)'
     - core:         'A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C)'
 
-    WARNING: core must be left as is, so that it might be negated by
-    DEAduction if needed
+    WARNING: core must be left as is, so that it might be manipulated by
+    DEAduction if needed (e.g. for negating the statement)
 
     """
     statement_tree = statement_grammar.parse(statement)
     variables, core_statement = visitor.visit(statement_tree)
-    # variables = variables.replace('\n', ' ')
-    # variables = variables.strip()
-    # core_statement = core_statement.replace('\n', ' ')
-    # core_statement = core_statement.strip()
-    # log.debug(f"Statement: {variables}, {core_statement}")
     return variables, core_statement
 
 
@@ -272,30 +272,69 @@ rules = course_rules + something_else_rules \
 lean_course_grammar = Grammar(rules)
 
 
-
 #############################################
-# visiting methods for each pertinent nodes #
+# Visiting methods for each pertinent nodes #
 #############################################
 class LeanCourseVisitor(NodeVisitor):
-    def visit_course(self, node, visited_children) -> Tuple[List[str], dict]:
+    def visit_course(self,
+                     node: str,
+                     visited_children: []) -> ([(str, dict)], dict):
+        """
+        Each 'visit_...' method returns the data obtained at some node of
+        the parsed tree. For instance, the "course =" line in the rules
+        indicates that pertinent children for course are
+            - initial (optional) metadata,
+            - any number of namespace_open_or_close and statements.
+        So in this method, visited_children will return data from
+        visit_metadata, visit_statement, and visit_namespace_open_or_close.
+        Note that each of these methods collects data from its own children.
+
+        :param node:                content of the node. Not pertinent here.
+        :param visited_children:    data returned by the 'visit_...' methods
+                                    from all children. The children are
+                                    determined by the parsing rules.
+        :return: a couple made of
+            - course_history, which is a list of events, each event is a couple
+            (name_of_event: str, data: dict)
+            - metadata: dict
+        """
         course_history, data = get_info(visited_children)
         data.setdefault("metadata", {})
         metadata = data.pop("metadata")
         return course_history, metadata
 
     #############
-    # statements #
+    # Statements #
     #############
     def visit_statement(self, node, visited_children):
         """
-        - collect the metadata from children in data['metadata'],
-        the lean_name and type of statement from data['exercise_name'] etc.
-        - create an event in the  course_history list with
+        - Collect the metadata from children in data['metadata'],
+        the lean_name and type of statement from data['exercise_name'].
+        - Create an event in the  course_history list with
             name    = 'exercise', 'definition' or 'theorem'
             content = metadata dictionary
-        - this event is placed BEFORE the children's events so that the
-        line number is OK
+        - This event is placed BEFORE the children's events so that the
+        line number is OK (and corresponds to the first line of the statement).
+
+        Keys in data dictionary will include, on top of any field defined by
+        the designer of the Lean file:
+        lean_name, pretty_name, lean_variables, lean_core_statement.
+
+        The pertinent (children of) children here are
+            - the statement_name,
+            - the lean_statement,
+            - the (optional) metadata
+
+        :param node:                content of the node. Not pertinent here.
+        :param visited_children:    data returned by the 'visit_...' methods
+                                    from all children. The children are
+                                    determined by the parsing rules.
+        :return: a couple made of
+            - course_history, which is a list of events, each event is a couple
+            (name_of_event: str, data: dict)
+            - metadata: dict
         """
+
         course_history, data = get_info(visited_children)
         data.setdefault("metadata", {})
         metadata = data.pop("metadata")
@@ -308,13 +347,13 @@ class LeanCourseVisitor(NodeVisitor):
         elif "theorem_name" in data.keys():
             event_name = "theorem"
             lean_name = data.pop("theorem_name")
-        else:  # this should not happen
+        else:  # This should not happen
             log.warning(f"no name found for statement with data "
                         f"{data} and metadata {metadata}")
         metadata["lean_name"] = lean_name
         metadata["lean_variables"] = data.pop("lean_variables")
         metadata["lean_core_statement"] = data.pop("lean_core_statement")
-        # compute automatic pretty_name if not found by parser
+        # Compute automatic pretty_name if not found by parser
         short_name = lean_name.split(".")[1]
         automatic_pretty_name = short_name.replace("_", " ").capitalize()
         metadata.setdefault("pretty_name", automatic_pretty_name)
@@ -324,12 +363,14 @@ class LeanCourseVisitor(NodeVisitor):
         return course_history, data
 
     def visit_begin_proof(self, node, visited_children):
-        """begin and end of proofs for exercises are collected and sotred in
+        """
+        Begin and end of proofs for exercises are collected and stored in
         the course_history in order to get the line number where dEAduction
-        should start the proof"""
+        should start the proof.
+        """
         course_history, data = get_info(visited_children)
         event = "begin_proof", None
-        course_history.insert(0, event)  # to get the good line number
+        course_history.insert(0, event)  # To get the good line number
         return course_history, data
 
     def visit_end_proof(self, node, visited_children):
@@ -339,24 +380,25 @@ class LeanCourseVisitor(NodeVisitor):
         return course_history, data
 
     ############
-    # metadata #
+    # Metadata #
     ############
     def visit_metadata(self, node, visited_children):
-        # return the joined data of all children
-        # NB : keys are changed from Lean-deaduction file format
-        # to PEP8 conventions,
-        # e.g. PrettyName -> pretty_name
+        """
+        Return the joined data of all children
+        NB : keys are changed from Lean-deaduction file format
+        to PEP8 conventions, e.g. PrettyName -> pretty_name
+        """
         course_history, metadata = get_info(visited_children)
         data = {"metadata": metadata}
         log.debug(f"got metadata {data}")
         return course_history, data
 
     def visit_metadata_field(self, node, visited_children):
-        # return the joined data of all children
+        """Return the joined data of all children."""
         course_history, data = get_info(visited_children)
-        # the following collect the metadata in the corresponding field
-        # this is the only info from children,
-        # so it is passed as data
+
+        # The following collects the metadata in the corresponding field.
+        # This is the only info from children, so it is passed as data.
         metadata = {}
         if "metadata_field_content" in data.keys():
             field_name = change_name(data["metadata_field_name"])
@@ -365,24 +407,45 @@ class LeanCourseVisitor(NodeVisitor):
         return course_history, metadata
 
     def visit_metadata_field_name(self, node, visited_children):
+        """
+        Collect metadata field name.
+        :param node: {text}, name of the field, collected at this level of the
+        parsed tree.
+        :param visited_children: data from children (none at this level).
+        :return: course_history and data.
+        """
         course_history, data = get_info(visited_children)
         data["metadata_field_name"] = node.text
         return course_history, data
 
     def visit_metadata_field_content(self, node, visited_children):
+        """
+        Collect metadata field content.
+        :param node: {text}, content of the field, collected at this level
+        of the parsed tree.
+        :param visited_children: data from children (none at this level).
+        :return: course_history and data.
+        """
         course_history, data = get_info(visited_children)
         data.setdefault("metadata_field_content", "")
         if data["metadata_field_content"]:
             data["metadata_field_content"] += " " + node.text.strip()
         else:
             data["metadata_field_content"] = node.text.strip()
-        # field content may spread on several lines
+        # NB: Field content may spread on several lines
         return course_history, data
 
     ##############
-    # namespaces #
+    # Namespaces #
     ##############
     def visit_open_namespace(self, node, visited_children):
+        """
+        visit a line in the Lean file opening a namespace, e.g.
+            "namespace set_theory"
+        collect name of the namespace,
+        and create an event in course_history.
+        """
+
         course_history, data = get_info(visited_children)
         name = data.pop("namespace_identifier")
         # get PrettyName or compute it if absent
@@ -396,7 +459,13 @@ class LeanCourseVisitor(NodeVisitor):
         return course_history, data
 
     def visit_close_namespace(self, node, visited_children):
-        # this can actually be the closing of a section
+        """
+        This corresponds to an "end" in the Lean file.
+        This method creates a "close_namespace" event in course_history.
+        This can actually be the closing of a section, but this will be
+        treated by course.py.
+        """
+
         course_history, data = get_info(visited_children)
         name = data.pop("namespace_identifier")
         event = "close_namespace", {"name": name}
@@ -404,31 +473,52 @@ class LeanCourseVisitor(NodeVisitor):
         return course_history, data
 
     ###############
-    # end of line #
+    # End of line #
     ###############
     def visit_end_of_line(self, node, visited_children):
+        """
+        Create an end_of_line event that will be collected in course_history
+        at higher levels of the tree.
+        """
         event = "end_of_line", None
-        return [event], {} # no data
+        return [event], {}  # No data here!
 
     ####################
-    # collecting names #
+    # Collecting names #
     ####################
     def visit_definition_name(self, node, visited_children):
+        """
+        Collect the definition name.
+        """
         course_history, data = get_info(visited_children)
         data["definition_name"] = node.text
         return course_history, data
 
     def visit_theorem_name(self, node, visited_children):
+        """
+        Collect the theorem name.
+        """
         course_history, data = get_info(visited_children)
         data["theorem_name"] = node.text
         return course_history, data
 
     def visit_exercise_name(self, node, visited_children):
+        """
+        Collect the exercise name.
+        """
         course_history, data = get_info(visited_children)
         data["exercise_name"] = node.text
         return course_history, data
 
     def visit_lean_statement(self, node, visited_children):
+        """
+        Get the statement string, and call extract_core_statement to split
+        it into lean_variables and core_statement. These data are put into
+        the data dictionary.
+
+        :param node: {text} file content corresponding to the statement
+        :param visited_children:
+        """
         course_history, data = get_info(visited_children)
         statement = node.text
         # split statement into variables / core
@@ -438,20 +528,29 @@ class LeanCourseVisitor(NodeVisitor):
         return course_history, data
 
     def visit_namespace_identifier(self, node, visited_children):
+        """
+        Get namespace's name from node.
+        """
         course_history, data = get_info(visited_children)
         data["namespace_identifier"] = node.text
         return course_history, data
 
     #################
-    # generic visit #
+    # Generic visit #
     #################
     def generic_visit(self, node, visited_children):
-        # just return the joined data of all children
+        # Just return the joined data of all children
         course_history, data = get_info(visited_children)
         return course_history, data
 
 
-def get_info(children: List[dict]):
+def get_info(children: List[Tuple[list, dict]]) -> Tuple[list, dict]:
+    """
+    Concatenate info from the children list.
+    :param children:    list of tuples (child_history, child_data) where
+                        child_history is a list, and child_data is a dict.
+    :return:            couple (course_history, concatenated_data)
+    """
     course_history = []
     data = {}
     for child_history, child_data in children:
@@ -478,7 +577,7 @@ def change_name(name: str) -> str:
     return name
 
 #########
-# tests #
+# Tests #
 #########
 
 if __name__ == "__main__":
