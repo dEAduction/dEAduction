@@ -1,7 +1,7 @@
 """
-# exercise.py : provide the class Exercise
-    
-    Provides the classes Statement, Definition, Theorem, Exercise
+##############################################################################
+# exercise.py : provide the classes Statement, Exercise, Definition, Theorem #
+##############################################################################
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -41,6 +41,9 @@ from deaduction.pylib.coursedata.utils import (find_suffix,
 
 log = logging.getLogger(__name__)
 
+##############################################
+# Lists of all instances of the Action class #
+##############################################
 LOGIC_BUTTONS = deaduction.pylib.actions.logic.__actions__
 # e.g. key = action_and, value = corresponding instance of the class Action
 PROOF_BUTTONS = deaduction.pylib.actions.proofs.__actions__
@@ -49,6 +52,10 @@ MAGIC_BUTTONS = deaduction.pylib.actions.magic.__actions__
 
 @dataclass
 class Statement:
+    """
+    A class for storing information about Lean's statements.
+    This is the parent class for classes Exercise, Definition, Theorem.
+    """
     lean_line:              int
     # line number of the lemma declaration in Lean file
     lean_name:              str
@@ -59,9 +66,9 @@ class Statement:
     # '(X : Type) (A : set X)'
     pretty_name:            str
     # 'Union d'intersections'
-    description:            str             = None  # todo: put in info
+    description:            str             = None
     # "L'union est distributive par rapport à l'intersection"
-    text_book_identifier:   str             = None  # todo: put in info
+    text_book_identifier:   str             = None
     lean_begin_line_number: int             = None
     # proof starts here...
     # this value is set to None until "begin" is found
@@ -80,9 +87,10 @@ class Statement:
     @classmethod
     def from_parser_data(cls, **data):
         """
-        Create a Statement instance from data
-        :param data: dictionary containing the relevant information:
-        keys in data will be transformed into attributes
+        Create a Statement instance from data.
+
+        :param data:    dictionary containing the relevant information:
+                        keys in data will be transformed into attributes.
         """
         attributes = cls.attributes()
         extract_data = {}
@@ -158,8 +166,11 @@ class Statement:
 
     def ugly_hierarchy(self):
         """
-        return the hierarchical list of lean namespaces ending with the
-        namespace containing self
+        Return the hierarchical list of lean namespaces ending with the
+        namespace containing self.
+        e.g.
+        'set_theory.unions_and_intersections.exercise.union_distributive_inter'
+        -> [set_theory, unions_and_intersections]
         """
         ugly_hierarchy = self.lean_name.split('.')[:-2]
         return ugly_hierarchy
@@ -168,14 +179,14 @@ class Statement:
     def caption(self) -> str:
         """
         Return a string that shows a simplified version of the statement
-        (e.g. to be displayed as a tooltip)
+        (e.g. to be displayed as a tooltip).
         """
-        if self.initial_proof_state is None:
+        if not self.initial_proof_state:
             text = self.lean_core_statement
-            return text
-        goal = self.initial_proof_state.goals[0]
-        target = goal.target
-        text = target.math_type.to_display(is_math_type=True)
+        else:
+            goal = self.initial_proof_state.goals[0]
+            target = goal.target
+            text = target.math_type.to_display(is_math_type=True)
         return text
 
 
@@ -191,27 +202,37 @@ class Theorem(Statement):
 
 @dataclass
 class Exercise(Theorem):
+    """
+    The class for storing exercises's info.
+    On top of the parent class info, the attributes stores
+    - the lists of buttons that will be available for this specific exercise
+        (in each three categories, resp. logic, proof and magic buttons)
+    - the list of statements that will be available for this specific exercise.
+    """
     available_logic:            List[Action]    = None
     available_magic:            List[Action]    = None
     available_proof:            List[Action]    = None
     available_statements:       List[Statement] = None
-    expected_vars_number:       Dict[str, int]  = None  # {'X': 3, 'A': 1}
+    expected_vars_number:       Dict[str, int]  = None  # e.g. {'X': 3, 'A': 1}
+    # FIXME: not used
     info:                       Dict[str, Any]  = None
     negate_statement:           bool            = False
+    # This is True if the negation of the statement must be proved.
 
     @classmethod
     def from_parser_data(cls, data: dict, statements: list):
         """
-        Create an Exercise from the raw data obtained by the parser
+        Create an Exercise from the raw data obtained by the parser.
         The main task is to determine
         - the list of available_statements,
-        - the list of available actions
-        from the metadata. Both lists are computed analogously.
+        - the list of available actions (corresponding to buttons of the UI)
+        from the metadata. Both lists are computed in roughly the same way.
 
-        :param statements: list of all Statement instances until the current
-        exercise
-        :param data: a dictionary whose keys =
-        fields parsed by the Course.from_file method
+        :param statements:  list of all Statement instances until the current
+                            exercise, from which the available_statements
+                            list will be extracted
+        :param data:        a dictionary whose keys are fields parsed by the
+                            Course.from_file method.
         """
 
         ########################
@@ -231,94 +252,38 @@ class Exercise(Theorem):
             except ValueError:
                 log.error(f"wrong format for ExpectedVarsNumber in exercise "
                           f"{data['lean_name']}")
-        # replace data with formatted data
+        # Replace data with formatted data
         data['expected_vars_number'] = expected_vars_number
 
         ###########################
-        # treatment of statements #
+        # Treatment of statements #
         ###########################
-        # default value = '$UNTIL_NOW'
-        # other pre-defined value = 'NONE'
-        # other possibility = macro defined in the Lean file
-        unsorted_statements = []
-        for statement_type in ['definition',
-                               'theorem',
-                               'exercise',
-                               'statement'
-                               ]:
-            field_name = 'available_' + statement_type + 's'
-            if 'available_statements' in data:
-                if data['available_statements'].endswith("NONE"):
-                    # If data['available_statements'].endswith("NONE")
-                    # then default value is '$NONE'
-                    data.setdefault(field_name, "$NONE")
-            elif (statement_type == 'statement'
-                  and 'available_statements' not in data.keys()
-                  ):
-                continue  # DO NOT add all statements!
-            # if not NONE then default value = UNTIL_NOW
-            data.setdefault(field_name, "$UNTIL_NOW")
-            # Now field_name is in data
-            if data[field_name].endswith("NONE"):
-                continue  # no statement of type statement_type
-
-            # (Step 1) substitute macros in string
-            string = substitute_macros(data[field_name], data)
-            # this is still a string containing
-            # (a) macro names that should either be '$ALL'
-            # or in data.keys() with values in Statements,
-            # and (b) usual names describing statements
-
-            statement_callable = make_statement_callable(statement_type,
-                                                         statements)
-            # this is the function that computes Statements from names
-            # we can now compute the available_actions:
-
-            # (Step 2) replace every word in string by the corresponding
-            # statement or list of statement
-            more_statements = extract_list(string, data, statement_callable)
-            unsorted_statements.extend(more_statements)
-
-        # finally sort statements: this is not optimised!!
-        data['available_statements'] = []
-        for item in statements:
-            if item in unsorted_statements:
-                data['available_statements'].append(item)
-
+        data['available_statements'] = extract_available_statements(data,
+                                                                    statements)
         names = [st.pretty_name for st in data['available_statements']]
         log.debug(f"Available statements: {names}")
 
         ########################
-        # treatment of buttons #
+        # Treatment of buttons #
         ########################
-        for action_type in ['logic', 'proof', 'magic']:
-            field_name = 'available_' + action_type
-            default_field_name = 'default_' + field_name
-            if field_name not in data.keys():
-                if default_field_name in data.keys():  # take default list
-                    data[field_name] = data[default_field_name]
-                else:  # take all buttons
-                    data[field_name] = '$ALL'  # not optimal
+        # The following modifies directly the data dict,
+        # i.e. substitutes the data field content corresponding to
+        # keys AvailableLogic, ...
+        # by the relevant list of Action buttons.
+        extract_available_buttons(data)
 
-            log.debug(f"processing data in {field_name}, {data[field_name]}")
-
-            string = substitute_macros(data[field_name], data)
-            # this is still a string with macro names that should either
-            # be '$ALL' or in data.keys() with values in Action
-            action_callable = make_action_callable(action_type)
-            # this is the function that computes Actions from names
-            # we can now compute the available_actions:
-            data[field_name] = extract_list(string, data, action_callable)
-
-        # to keep only the relevant data, the keys that appear as attributes
-        # in the class Exercise or in the parent class Statement
+        ######################################################################
+        # Extract the data corresponding to attributes of the Exercise class #
+        ######################################################################
+        # To keep only the relevant data, the keys that appear as attributes
+        # in the class Exercise or in the parent class Statement:
         # this removes the entry in 'data' corresponding to course_metadata
         extract_data = {}
         for attributes in [Statement.attributes(), cls.attributes()]:
             for attribute in attributes:
                 if attribute in data.keys():
                     extract_data[attribute] = data.pop(attribute)
-        # keep only the relevant data, i.e. the keys which corresponds to
+        # Keep only the relevant data, i.e. the keys which corresponds to
         # attribute of the class. The remaining information are put in the
         # info dictionary attribute
         for field_name in data:  # replace string by bool if needed
@@ -336,6 +301,10 @@ class Exercise(Theorem):
         # log.debug(f"Creating exercise with supplementary info"
         #          f" {extract_data['info']}")
         # log.debug(f"Creating exercise, line: {extract_data['lean_line']}")
+
+        #########################################
+        # Finally construct the Exercise object #
+        #########################################
         return cls(**extract_data)
 
     def current_name_space(self):
@@ -358,6 +327,107 @@ class Exercise(Theorem):
 #############
 # utilities #
 #############
+def extract_available_statements(data: dict, statements: list):
+    """
+    Extract from the statements list the sublist specified by the data dict.
+
+    :param data:        dict whose pertinent keys are
+                available_statements,
+                available_definitions,
+                available_theorems,
+                available_exercises
+                        and values are either 'NONE', 'UNTIL_NOW',
+                        a macro defined in the Lean file,
+                        with modifications using "+" or "-",
+                        or a (string) list of statement names
+    e.g.
+    $UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles
+
+    :param statements:  list of Statements
+    :return:
+    """
+    # Default value = '$UNTIL_NOW'
+    # Other pre-defined value = 'NONE'
+    # Other possibility = macro defined in the Lean file
+    unsorted_statements = []
+    for statement_type in ['definition',
+                           'theorem',
+                           'exercise',
+                           'statement'
+                           ]:
+        field_name = 'available_' + statement_type + 's'
+        if 'available_statements' in data:
+            if data['available_statements'].endswith("NONE"):
+                # If data['available_statements'].endswith("NONE")
+                # then default value is '$NONE'
+                data.setdefault(field_name, "$NONE")
+        elif (statement_type == 'statement'
+              and 'available_statements' not in data.keys()
+        ):
+            continue  # DO NOT add all statements!
+        # if not NONE then default value = UNTIL_NOW
+        data.setdefault(field_name, "$UNTIL_NOW")
+        # Now field_name is in data
+        if data[field_name].endswith("NONE"):
+            continue  # No statement of type statement_type
+
+        # (Step 1) Substitute macros in string
+        string = substitute_macros(data[field_name], data)
+        # this is still a string containing
+        # (a) macro names that should either be '$ALL'
+        # or in data.keys() with values in Statements, and
+        # (b) usual names describing statements.
+
+        statement_callable = make_statement_callable(statement_type,
+                                                     statements)
+        # This is the function that computes Statements from names
+        # We can now compute the available_actions:
+
+        # (Step 2) Replace every word in string by the corresponding
+        # statement or list of statements
+        more_statements = extract_list(string, data, statement_callable)
+        unsorted_statements.extend(more_statements)
+
+    # Finally sort unsorted_statements in the order given by statements:
+    # this is not optimised!!
+    available_statements = []
+    for item in statements:
+        if item in unsorted_statements:
+            available_statements.append(item)
+    return available_statements
+
+
+def extract_available_buttons(data: dict):
+    """
+    Extract from the LOGIC_BUTTONS, PROOF_BUTTONS, MAGIC_BUTTONS lists
+    the buttons specified in data.
+
+    :param data: dict with pertinent info corresponding to keys
+    data[''available_logic],
+    data[''available_proof],
+    data[''available_magic].
+
+    :return: no direct return, but modify the data dict.
+    """
+    for action_type in ['logic', 'proof', 'magic']:
+        field_name = 'available_' + action_type
+        default_field_name = 'default_' + field_name
+        if field_name not in data.keys():
+            if default_field_name in data.keys():  # Take default list
+                data[field_name] = data[default_field_name]
+            else:  # Take all buttons
+                data[field_name] = '$ALL'  # not optimal
+
+        log.debug(f"Processing data in {field_name}, {data[field_name]}")
+
+        string = substitute_macros(data[field_name], data)
+        # This is still a string with macro names that should either
+        # be '$ALL' or in data.keys() with values in Action
+        action_callable = make_action_callable(action_type)
+        # This is the function that computes Actions from names.
+        # We can now compute the available_actions:
+        data[field_name] = extract_list(string, data, action_callable)
+
 
 def make_action_callable(prefix) -> callable:
     """
@@ -394,12 +464,12 @@ def make_action_callable(prefix) -> callable:
     return action_callable
 
 
-def make_statement_callable(prefix, statements) -> callable:
+def make_statement_callable(prefix: str, statements) -> callable:
     """
     Construct the function corresponding to prefix
-    :param prefix: one of statement, definition, theorem, exercise
-    :param statements: list of instances of the Statement class
-    :return: a callable
+    :param prefix:      one of 'statement', 'definition', 'theorem', 'exercise'
+    :param statements:  list of instances of the Statement class
+    :return:            a callable
     """
     classes = {'statement': Statement,
                'definition': Definition,
@@ -421,13 +491,13 @@ def make_statement_callable(prefix, statements) -> callable:
             available_statements = []
             for statement in statements:
                 if class_ == Theorem:
-                    if isinstance(statement, Theorem) \
-                        and not isinstance(statement, Exercise):
+                    if (isinstance(statement, Theorem)
+                            and not isinstance(statement, Exercise)):
                         available_statements.append(statement)
-                        log.debug(f"considering {statement.pretty_name}...")
+                        log.debug(f"Considering {statement.pretty_name}...")
                 elif isinstance(statement, class_):
                     available_statements.append(statement)
-                    log.debug(f"considering {statement.pretty_name}...")
+                    log.debug(f"Considering {statement.pretty_name}...")
             return available_statements
 
         statement = None
