@@ -30,16 +30,20 @@ This file is part of d∃∀duction.
 import math
 import trio
 import traceback
+import tempfile
+import json
 
 import logging
 
-from subprocess import PIPE
-from queue      import Queue
+from subprocess    import PIPE
+from queue         import Queue
+from pathlib       import Path
 
-from .          import request
-from .          import response
+from .             import request
+from .             import response
+from .installation import LeanEnvironment
 
-import json
+from gettext       import gettext as _
 
 class LeanServer:
     ############################################
@@ -139,9 +143,10 @@ class LeanServer:
     ############################################
     # Class functions definitions
     ############################################
-    def __init__( self, nursery, max_reqs:int=1024 ):
+    def __init__( self, nursery, env: LeanEnvironment, max_reqs:int=1024 ):
         self.log                       = logging.getLogger("lean")
         self.nursery                   = nursery
+        self.env                       = env
 
         self.process                   = None
         self.buffer                    = ""
@@ -196,9 +201,15 @@ class LeanServer:
     async def start(self):
         await self.running_monitor.open()
         await self.pending_reqs.open()
+        
+        self.log.info(_("Preparing folder for launch"))
+        tmp_path = Path(tempfile.mkdtemp())
+        self.log.debug(_("Launch folder: {}").format(tmp_path))
+        self.env.write_lean_path(tmp_path / "leanpkg.path")
 
         self.process = await trio.open_process(
-            ["lean","--json","--server"], stdin=PIPE, stdout=PIPE
+            ["lean","--json","--server"], stdin=PIPE, stdout=PIPE,
+            cwd=str(tmp_path)
         )
         self.log.info("Started server")
 
