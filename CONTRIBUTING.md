@@ -1,28 +1,24 @@
 # CONTRIBUTING.md
 
-## git commit
+## Git commit messages
 
-The convention used here for `git commit` is heavily inspired from the
-[Angular project convention](
+Git commit messages follow the [Angular project convention](
     https://github.com/angular/angular/blob/master/CONTRIBUTING.md#commit
 ).
 
-### Type
+Commit types must be *one* of the following:
 
-The type of the commit **must** be one of the following:
-
-- **chores**: changes that do not affect the source-code nor the tools
-	(e.g. reorganize tree, rename files);
-- **docs**: documentation only changes ;
-- **feat**: a new feature ;
-- **fix**: a bug fix ;
-- **perf**: code changes that improve performance ;
-- **refactor**: a code change that neither fixes a bug nor adds a feature ;
-- **snippets**: add or modify code in `snippets/` ;
-- **style**: changes that do not affect the meaning of the code (white-space,
-  formatting, missing semi-colons) ;
-- **test**: add or modify tests ;
-- **tools**: tools only (e.g. git hooks) changes.
+- **chores**: Changes that do not affect the source-code nor the tools (e.g.
+  reorganize tree).
+- **doc**: Add or modify project or code documentation.
+- **feat**: Introduce a new feature.
+- **fix**: Fix a bug.
+- **ref::enhance**: Do not fix bugs or add features but enhance code.
+- **ref::opti**: Do not fix bugs or add features but improve performances.
+- **snippets**: Add or modify code in `/snippets/`.
+- **style**: Format code, change its style but do not affect its meaning.
+- **test**: Add or modify tests.
+- **tools**: Changes that only affect tools (e.g. envconfig).
 
 ## Installing the development environment
 
