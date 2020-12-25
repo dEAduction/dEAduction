@@ -78,7 +78,7 @@ def action_use_proof_methods(goal: Goal, l: [MathObject],
             choices.append(('4', _("Admit current sub-goal!")))
         raise MissingParametersError(InputType.Choice,
                                      choices,
-                                     title="Choose proof method",
+                                     title=_("Choose proof method"),
                                      output=_("Which proof method?")
                                      )
     # 2nd call, call the adequate proof method. len(user_input) = 1.
@@ -220,7 +220,7 @@ def action_new_object(goal: Goal, l: [MathObject],
                                                 "intermediate sub-goal")),
                               (_("Function"), _("Introduce a new "
                                                 "function"))],
-                             title="New object",
+                             title=_("New object"),
                              output=_("Choose what to introduce:"))
     # Choice = new object
     if user_input[0] == 0:
@@ -364,6 +364,7 @@ def apply_implicate_to_hyp(goal: Goal, l: [MathObject], user_input=None):
                                    h1))
 
     elif len(l) == 3:
+        h = get_new_hyp(goal)
         h_selected = l[-1].info["name"]
         x_selected = l[0].info["name"]
         y_selected = l[1].info["name"]
@@ -512,7 +513,7 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
     error = ""
 
     if not l:
-        raise WrongUserInput(error="no property selected")
+        raise WrongUserInput(error=_("no property selected"))
 
     # Now len(l) > 0
     prop = l[-1]  # property to be applied
