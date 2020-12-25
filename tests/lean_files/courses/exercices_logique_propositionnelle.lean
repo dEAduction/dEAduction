@@ -12,14 +12,16 @@ import structures2
 
 -- no Magic button ("compute")
 /- dEAduction
+DefaultAvailableProof
+    NONE
 DefaultAvailableMagic
-    $NONE
+    Assumption
 -/
 
 
--- logic names ['and', 'or', 'negate', 'implicate', 'iff', 'forall', 'exists', 'apply']
--- proofs names ['cbr', 'contrapose', 'absurdum', 'choice', 'new_object', 'assumption']
-
+-- logic names ['and', 'or', 'negate', 'implicate', 'iff', 'forall', 'exists']
+-- proofs names ['proof_methods', 'new_object', 'apply']
+-- magic names ['compute', 'assumption']
 
 
 local attribute [instance] classical.prop_decidable
@@ -51,7 +53,7 @@ Description
     "P => Q", on suppose P, et on montre Q.
 AvailableLogic
     implicate
-AvailableProof
+AvailableMagic
     assumption
 -/
 begin
@@ -68,7 +70,7 @@ Description
     Le bouton "ET" permet de découper une hypothèse
 AvailableLogic
     and implicate
-AvailableProof
+AvailableMagic
     assumption
 -/
 begin
@@ -85,7 +87,7 @@ Description
     Le bouton "ET" permet aussi de découper le but en deux buts distincts
 AvailableLogic
     and implicate
-AvailableProof
+AvailableMagic
     assumption
 -/
 begin
@@ -104,7 +106,7 @@ Description
     sélectionnant dans la liste...
 AvailableLogic
     and iff implicate
-AvailableProof
+AvailableMagic
     assumption
 -/
 begin
@@ -123,7 +125,7 @@ Description
     Pour démontrer "Q OU P", on doit démontrer soit P, soit Q.
 AvailableLogic
     and or implicate iff
-AvailableProof
+AvailableMagic
     assumption
 -/
 begin
@@ -142,7 +144,7 @@ Description
     c'est-à-dire de la forme "NON (...)".
 AvailableLogic
     and or negate implicate iff
-AvailableProof
+AvailableMagic
     assumption
 -/
 begin
@@ -160,7 +162,7 @@ Description
     propriété.
 AvailableLogic
     and or negate implicate iff
-AvailableProof
+AvailableMagic
     assumption
 -/
 begin
@@ -179,7 +181,9 @@ Description
 AvailableLogic
     and or negate implicate iff
 AvailableProof
-    use_proof_methods assumption
+    use_proof_methods
+AvailableMagic
+    assumption
 -/
 begin
     sorry
@@ -196,9 +200,11 @@ Description
     propriété "P" pour obtenir la propriété "Q". Attention, avant de
     l'actionner il faut sélectionner toutes les propriétés requises !
 AvailableLogic
-    and or negate implicate iff apply
+    and or negate implicate iff
 AvailableProof
-    use_proof_methods assumption
+    use_proof_methods apply
+AvailableMagic
+    assumption
 -/
 begin
     sorry
@@ -213,9 +219,11 @@ PrettyName
 Description
     Cette propriété permet de transformer une implication en une disjonction
 AvailableLogic
-    and or negate implicate iff apply
+    and or negate implicate iff
 AvailableProof
-    use_proof_methods assumption
+    use_proof_methods apply
+AvailableMagic
+    assumption
 -/
 begin
     sorry
@@ -233,9 +241,11 @@ Description
     le résultat de l'exercice précédent. Pour cela, il faudra introduire
     un nouvel objet, avant de lui appliquer le résultat précédent...
 AvailableLogic
-    and or negate implicate iff apply
+    and or negate implicate iff
 AvailableProof
-    use_proof_methods new_object  assumption
+    use_proof_methods new_object apply
+AvailableMagic
+    assumption
 -/
 begin
     sorry
