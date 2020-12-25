@@ -27,27 +27,82 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from deaduction.pylib.actions.actiondef import action
-
 from dataclasses import dataclass
-import gettext
-_ = gettext.gettext
-
-import deaduction.pylib.logger as logger
 import logging
+from deaduction.pylib.actions import (  WrongUserInput,
+                                        format_orelse)
+from deaduction.pylib.coursedata import Statement
+from deaduction.pylib.mathobj import (  Goal,
+                                        MathObject,
+                                        get_new_hyp)
 
 
-##
-# Squelette actions type de preuves
-##
+def rw_using_statement(goal: Goal, selected_objects: [MathObject],
+                      statement: Statement):
+    """
+    Return codes trying to use statement for rewriting. This should be
+    reserved to iff or equalities. This function is called by
+    action_definition, and by action_theorem in case the theorem is an iff
+    statement.
+    """
+    possible_codes = []
+    defi = statement.lean_name
+    if len(selected_objects) == 0:
+        possible_codes.append(f'rw {defi}')
+        possible_codes.append(f'simp_rw {defi}')
+        possible_codes.append(f'rw <- {defi}')
+        possible_codes.append(f'simp_rw <- {defi}')
 
-@action(_("Apply Definition"))
-def action_apply_definition(goal : Goal, selected_objects : [PropObj]):
-    defi = selected_objects[1].lean_data["name"]
-    if len(selected_objects) == 1:
-        return "defi {0}".format(defi)
-    elif len(selected_objects) == 2:
-        return "defi {0} at {1}".format(selected_objects[1].lean_data["name"], defi)
     else:
-        return "" #TODO : gestion erreur raise usererror
+        names = [item.info['name'] for item in selected_objects]
+        arguments = ' '.join(names)
+        possible_codes.append(f'rw {defi} at {arguments}')
+        possible_codes.append(f'simp_rw {defi} at {arguments}')
+        possible_codes.append(f'rw <- {defi} at {arguments}')
+        possible_codes.append(f'simp_rw <- {defi} at {arguments}')
 
+    return possible_codes
+
+
+def action_definition(goal : Goal,
+                      selected_objects : [MathObject],
+                      definition : Statement):
+    possible_codes = rw_using_statement(goal, selected_objects, definition)
+    return format_orelse(possible_codes)
+
+
+def action_theorem(goal : Goal, selected_objects : [MathObject], theorem : Statement):
+    possible_codes = []
+    # For an iff statement, use rewriting
+    proof_state = theorem.initial_proof_state
+    if proof_state and proof_state.goals[0].target.is_iff():
+        possible_codes = rw_using_statement(goal,
+                                            selected_objects,
+                                            theorem)
+    h = get_new_hyp(goal)
+    th = theorem.lean_name
+    if len(selected_objects) == 0:
+        possible_codes.append(f'apply {th}')
+        possible_codes.append(f'have {h} := @{th}')
+    else:
+        command = f'have {h} := {th}'
+        command_implicit = f'have {h} := @{th}'
+        names = [item.info['name'] for item in selected_objects]
+        arguments = ' '.join(names)
+        # up to 4 implicit arguments
+        possible_codes.append(f'apply {th} {arguments}')
+        possible_codes.append(f'apply @{th} {arguments}')
+        more_codes = [command + arguments,
+                      command_implicit + arguments,
+                      command + ' _ ' + arguments,
+                      command_implicit + ' _ ' + arguments,
+                      command + ' _ _ ' + arguments,
+                      command_implicit + ' _ _ ' + arguments,
+                      command + ' _ _ _ ' + arguments,
+                      command_implicit + ' _ _ _ ' + arguments,
+                      command + ' _ _ _ _ ' + arguments,
+                      command_implicit + ' _ _ _ _ ' + arguments
+                      ]
+        possible_codes.extend(more_codes)
+
+    return format_orelse(possible_codes)

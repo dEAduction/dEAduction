@@ -8,3 +8,6 @@ parsimonious>=0.8.1
 trio>=0.16.0
 requests>=2.25.1
 dictdiffer>=0.8.1
+requests>=2.24.0
+dictdiffer>=0.8.1
+toml>=0.10.1

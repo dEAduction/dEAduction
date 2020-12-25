@@ -27,39 +27,44 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-
 import deaduction.pylib.logger as logger
 import logging
 import inspect
 from dataclasses import dataclass
 
+
 @dataclass
 class Action:
     """
-    Associates data to a specific action function.
+    Associates data, name to a specific action function.
+    run is the specific action function.
     """
-    caption:str
-    run:any
+    caption: str
+    symbol: str
+    run: any
 
-def action(caption: str):
+
+def action(caption: str, symbol: str):
     """
-    Decorator used to reference the function as an available action,
-    plus creating the Action object containing the metadata.
+    Decorator used to reference the function as an available action
+    plus creating the Action object containing the metadata
+    and storing it in the dict mod.__actions__ as a value.
     """
     # Get caller module object.
-    # See https://stackoverflow.com/questions/1095543/get-name-of-calling-functions-module-in-python
+    # Allows to have access / create to the dict __actions__ of the
+    # current module.
     frm = inspect.stack()[1]
     mod = inspect.getmodule(frm[0])
 
     def wrap_action(func):
-        act = Action(caption,func)
-        
+        act = Action(caption, symbol, func)
+
         # Init the __actions__ object in the corresponding module if not
-        # existing, then add the function object. Identifier is taken from
-        # the function name.
+        # existing, then add the Action object.
+        # Identifier is taken from the function name.
         if not "__actions__" in mod.__dict__: mod.__actions__ = dict()
         mod.__actions__[func.__name__] = act
 
         return func
 
-    return wrap_action 
+    return wrap_action

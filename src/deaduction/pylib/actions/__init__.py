@@ -26,8 +26,27 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .actiondef import Action
+from .actiondef import (    Action,
+                            action)
 
-from .logic import action_negate, action_implicate, action_and, action_or, action_forall, action_exists
+from .exceptions import (   InputType,
+                            MissingParametersError,
+                            WrongUserInput)
 
-from .proofs import action_assumption, action_absurdum, action_cbr, action_contrapose, action_contradiction
+from .utils import (        get_new_hyp,
+                            get_new_var,
+                            format_orelse)
+
+from .logic import (        action_negate,
+                            action_implicate,
+                            action_and,
+                            action_or,
+                            action_forall,
+                            action_exists,
+                            apply_exists,
+                            apply_and,
+                            apply_or)
+
+from .proofs import (       action_apply,
+                            action_use_proof_methods,
+                            explain_how_to_apply)

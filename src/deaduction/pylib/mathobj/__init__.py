@@ -26,6 +26,13 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .PropObj import AnonymousPO, BoundVarPO, ProofStatePO, PropObj,\
-                    math_type_store
-from .proof_state import Goal, ProofState
+from .MathObject import     (MathObject,
+                             NO_MATH_TYPE)
+from .proof_state import    (Goal,
+                             ProofState,
+                             Proof
+                             )
+from .give_name import     (get_new_hyp,
+                            give_global_name,
+                            give_local_name,
+                            )

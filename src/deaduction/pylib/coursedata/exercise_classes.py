@@ -27,49 +27,103 @@ This file is part of dEAduction.
 """
 
 from dataclasses import dataclass
-from collections import OrderedDict
 from typing import List, Dict, Any
-import deaduction.pylib.logger as logger
 import logging
 
+import deaduction.pylib.logger as logger
 from deaduction.pylib.actions.actiondef import Action
 import deaduction.pylib.actions.logic
 import deaduction.pylib.actions.proofs
 import deaduction.pylib.actions.magic
+from deaduction.pylib.coursedata.utils import (find_suffix,
+                                               substitute_macros,
+                                               extract_list)
+
+log = logging.getLogger(__name__)
+
+LOGIC_BUTTONS = deaduction.pylib.actions.logic.__actions__
+# e.g. key = action_and, value = corresponding instance of the class Action
+PROOF_BUTTONS = deaduction.pylib.actions.proofs.__actions__
+MAGIC_BUTTONS = deaduction.pylib.actions.magic.__actions__
 
 
 @dataclass
 class Statement:
-    description: str     # "L'union est distributive par rapport à
-                         # l'intersection"
-    lean_line : int      # line number of the lemma declaration in Lean file
-    lean_name: str       # 'set_theory.unions_and_intersections.exercise
-                         # .union_distributive_inter'
-    lean_statement: str  # 'A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C)'
-    lean_variables: str  # '(X : Type) (A : set X)'
-    pretty_name: str     # 'Union d'intersections'
-    text_book_identifier: str
+    lean_line:              int
+    # line number of the lemma declaration in Lean file
+    lean_name:              str
+    # 'set_theory.unions_and_intersections.exercise.union_distributive_inter'
+    lean_core_statement:    str
+    # 'A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C)'
+    lean_variables:         str
+    # '(X : Type) (A : set X)'
+    pretty_name:            str
+    # 'Union d'intersections'
+    description:            str             = None  # todo: put in info
+    # "L'union est distributive par rapport à l'intersection"
+    text_book_identifier:   str             = None  # todo: put in info
+    lean_begin_line_number: int             = None
+    # proof starts here...
+    # this value is set to None until "begin" is found
+    lean_end_line_number:   int             = None
+    # ...and ends here
+
+    course:                 Any             = None
+    # the parent course
+
+    initial_proof_state:    Any             = None
+    # this is used when pre-processing
+
+    info:                   Dict[str, Any]  = None
+    # Any other (non-essential) information
 
     @classmethod
-    def from_parser_data(cls, data: dict):
+    def from_parser_data(cls, **data):
         """
-        Create a Statement from the raw data obtained by the parser
-
-        :param data: a dictionary whose keys =
-        fields parsed by the from_directory function
+        Create a Statement instance from data
+        :param data: dictionary containing the relevant information:
+        keys in data will be transformed into attributes
         """
-        log = logging.getLogger("Course initialisation")
-        if "PrettyName" not in data.keys() or data["PrettyName"] == None:
-            last_name = data["lean_name"].split(".")[-1]
-            data["PrettyName"] = last_name.replace("_", " ")
-            # automatic pretty_name if not provided
-        whole_namespace = ".".join(data["current_namespaces"])
-        data["lean_name"] = whole_namespace + "." + data["lean_name"]
+        attributes = cls.attributes()
+        extract_data = {}
+        for attribute in attributes:
+            if attribute in data.keys():
+                extract_data[attribute] = data.pop(attribute)
+        # extract_data = {attribute: data.setdefault(attribute, None)
+        #                for attribute in attributes}
+        # keep only the relevant data, i.e. the keys which corresponds to
+        # attribute of the class. The remaining information are put in the
+        # info dictionary attribute
+        for field_name in data:  # replace string by bool if needed
+            if data[field_name] == 'True':
+                data[field_name] = True
+            elif data[field_name] == 'False':
+                data[field_name] = False
 
-        return cls(data["Description"], data["lean_line"], data["lean_name"],
-                   data["lean_statement"], data["lean_variables"],
-                   data["PrettyName"], data["text_book_identifier"])
+        extract_data["info"] = data
+        return cls(**extract_data)
 
+    @classmethod
+    def attributes(cls):
+        """return the list of attributes of the class"""
+        return cls.__annotations__.keys()
+
+    @property
+    def statement_to_text(self):
+        """
+        if self has attribute 'initial_proof_state', then return a string
+        with a text version of initial goal. E.g.
+        Let X be a set.
+        Let A be a subset of X.
+        Let B be a subset of X.
+        Prove that X \\ (A ∪ B) = (X \\ A) ∩ (X \\ B).
+        """
+        if self.initial_proof_state is not None:
+            initial_goal = self.initial_proof_state.goals[0]
+            text = initial_goal.goal_to_text()
+        else:
+            text = ""
+        return text
 
     def pretty_hierarchy(self, outline):
         """
@@ -80,7 +134,7 @@ class Statement:
         outline will be present_course.outline, where present_course is the
         instance of Course which initiated self.
 
-        :param outline: A dictionnary in which keys are hierarchy levels (e.g. 
+        :param outline: A dictionary in which keys are hierarchy levels (e.g.
                 'rings_and_ideals') and values are their pretty names
                 (e.g. 'Rings and ideals').
         :return: The list of sections pretty names.
@@ -97,11 +151,32 @@ class Statement:
                 rmg_hierarchy = '.'.join(rmg_hierarchy.split('.')[:-1])
                 fkt(rmg_hierarchy)
 
-        name = '.'.join(self.lean_name.split('.')[:-1])
+        name = '.'.join(self.lean_name.split('.')[:-2])
         fkt(name)
 
         return pretty_hierarchy
 
+    def ugly_hierarchy(self):
+        """
+        return the hierarchical list of lean namespaces ending with the
+        namespace containing self
+        """
+        ugly_hierarchy = self.lean_name.split('.')[:-2]
+        return ugly_hierarchy
+
+    @property
+    def caption(self) -> str:
+        """
+        Return a string that shows a simplified version of the statement
+        (e.g. to be displayed as a tooltip)
+        """
+        if self.initial_proof_state is None:
+            text = self.lean_core_statement
+            return text
+        goal = self.initial_proof_state.goals[0]
+        target = goal.target
+        text = target.math_type.to_display(is_math_type=True)
+        return text
 
 
 @dataclass
@@ -116,198 +191,152 @@ class Theorem(Statement):
 
 @dataclass
 class Exercise(Theorem):
-    available_logic: List[Action]
-    available_magic: List[Action]
-    available_proof_techniques: List[Action]
-    available_statements: List[Statement]
-    expected_vars_number: Dict[str, int]  # {'X': 3, 'A': 1, 'B': 1}
-    lean_begin_line_number: int           # proof starts here...
-    lean_end_line_number: int             # ...and ends here
-
-    course: Any = None                    # the parent course
-
+    available_logic:            List[Action]    = None
+    available_magic:            List[Action]    = None
+    available_proof:            List[Action]    = None
+    available_statements:       List[Statement] = None
+    expected_vars_number:       Dict[str, int]  = None  # {'X': 3, 'A': 1}
+    info:                       Dict[str, Any]  = None
+    negate_statement:           bool            = False
 
     @classmethod
     def from_parser_data(cls, data: dict, statements: list):
         """
         Create an Exercise from the raw data obtained by the parser
+        The main task is to determine
+        - the list of available_statements,
+        - the list of available actions
+        from the metadata. Both lists are computed analogously.
 
         :param statements: list of all Statement instances until the current
         exercise
         :param data: a dictionary whose keys =
-        fields parsed by the from_directory function
-        TODO: change definitions into Definitions object
+        fields parsed by the Course.from_file method
         """
-        max_statement = 15
-        log = logging.getLogger("Course initialisation")
-        whole_namespace = ".".join(data["current_namespaces"])
-        data["lean_name"] = whole_namespace + "." + data["lean_name"]
-        if "PrettyName" not in data.keys():
-            data["PrettyName"] = data["lean_statement"].replace("_", " ")
-            # automatic pretty_name if not provided
+
+        ########################
+        # expected_vars_number #
+        # This is not used     #
+        ########################
         expected_vars_number = {}
-        for equality in data["ExpectedVarsNumber"].split(", "):
-            key, _, value = equality.partition("=")
-            expected_vars_number[key] = int(value)
-        lean_begin_line_number = data["begin"]
-        lean_end_line_number = data["end"]
+        if "expected_vars_number" in data.keys():
+            try:
+                for equality in data["expected_vars_number"].split(", "):
+                    key, _, value = equality.partition("=")
+                    key = key.strip()
+                    expected_vars_number[key] = int(value)
+            except AttributeError:
+                log.error(f"wrong format for ExpectedVarsNumber in exercise "
+                          f"{data['lean_name']}")
+            except ValueError:
+                log.error(f"wrong format for ExpectedVarsNumber in exercise "
+                          f"{data['lean_name']}")
+        # replace data with formatted data
+        data['expected_vars_number'] = expected_vars_number
+
         ###########################
         # treatment of statements #
         ###########################
-        annotated_statements = [(item, False) for item in statements]
-        # annotated_statements and statements must always have the same length
-        # the list of available statements will be those item for which
-        # (item, True) is in annotated_statements
-        prefix = {"Tools->Definitions": "definition", "Tools->Theorems":
-            "theorem", "Tools->Exercises": "exercise",
-                   'Tools->Statements': ""}
-        class_dict = {"Tools->Definitions": Definition, "Tools->Theorems":
-            Theorem, "Tools->Exercises": Exercise,
-                      'Tools->Statements': Statement}
-        for field in ["Tools->Definitions", "Tools->Theorems",
-                      "Tools->Exercises", "Tools->Statements"]:
-            if data[field] is None:
-                continue
-            log.debug(f"processing data in {field}, {data[field]}")
-            class_ = class_dict[field]
-            list_1 = data[field].split()
-            list_2 = []
-            # first step, replace macros, get a list of strings
-            # predefined macros:
-            # $UNTIL_NOW
-            # todo: implement $AS_PREVIOUSLY
-            for item in list_1:
-                item = item.strip()
-                if item in ["ALL", "$ALL"]:
-                    log.warning("$ALL macro not implemented, try '$UNTIL_NOW'")
-                    continue
-                elif item in ["UNTIL_NOW", "$UNTIL_NOW"]:
-                    list_2.append(item)
-                    continue
-                elif item.startswith("$"):
-                    macro_list = data[item].split(", ")
-                    list_2.extend(macro_list)
-                    continue
-                elif item.endswith(","):
-                    item = item[:-1]
-                if item.startswith("+"):
-                    item = item[1:]
-                list_2.append(item)
-            # second step, annotate statements
-            for item in list_2:
-                item = item.strip()  # remove spaces
-                if item in ["UNTIL_NOW", "$UNTIL_NOW"]:
-                    # turn all instances of the good class to True
-                    for i in range(len(statements)):
-                        item = statements[i]
-                        if isinstance(item, class_):
-                            new_item = (item, True)
-                            annotated_statements[i] = new_item
-                elif item.startswith("-"):
-                    # find item in statements and change annotation to False
-                    item = prefix[field] + "." + item[1:]
-                    index, nb = findsuffix(item,
-                                           [item.lean_name for item in
-                                            statements])
-                    if nb > 0:
-                        new_item = (statements[index], False)
-                        annotated_statements[index] = new_item
-                    else:
-                        log.warning(
-                            f"Cannot remove item {item} from statements")
-                else:
-                    # find item in statement and change annotation to True
-                    item = prefix[field] + "." + item
-                    index, nb = findsuffix(item, [item.lean_name for item in
-                                                  statements])
-                    if nb > 0:
-                        new_item = (statements[index], True)
-                        annotated_statements[index] = new_item
-                        if nb > 1:
-                            log.warning(f"Found >1 item {item} in statements")
-                    else:
-                        log.warning(f"Cannot find item {item} in statements")
-        # last step, extract the good list
-        available_statements = [item for (item, bool) in annotated_statements
-                                if bool]
-        ##############################
-        # treatment of logic buttons #
-        ##############################
-        post_data = {}
-        labels = {"Tools->Logic": "logic", "Tools->ProofTechniques": "proofs",
-                 "Tools->Magic": "magic"}
-        dicts = {"Tools->Logic": deaduction.pylib.actions.logic.__actions__,
-                 "Tools->ProofTechniques":
-                     deaduction.pylib.actions.proofs.__actions__,
-                 "Tools->Magic": deaduction.pylib.actions.magic.__actions__}
-        for field in labels.keys():
-            log.debug(f"processing data in {field}, {data[field]}")
-            if data[field] == None:
-                post_data[field] = None
-                continue
-            action_dict = dicts[field]
-            action_names = [item for (_1, _2, item) in
-                            [t.partition("action_") for t in
-                             action_dict.keys()]]
-            # action_names = list of labels for buttons,
-            # action_dict = keys = labels, values = action functions
-            log.debug(f"found {labels[field]} names {action_names}")
-            list_1 = data[field].split()
-            list_2 = []
-            # first step, replace macros
-            # prefefined macros:
-            # $ALL
-            for item in list_1:
-                item = item.strip()
-                if item in ["ALL", "$ALL"]:
-                    list_2 = action_names + list_2
-                    continue
-                if item.startswith("$"):
-                    macro_list = data[item].split(", ")
-                    list_2.extend(macro_list)
-                    continue
-                if item.endswith(","):
-                    item = item[:-1]
-                if item.startswith("+"):
-                    item = item[1:]
-                list_2.append(item)
-            #################################
-            # second step, remove the minus #
-            log.debug(f"list 2: {list_2}")
-            list_3 = []
-            for item in list_2:
-                item = item.strip()
-                if item.startswith("-"):
-                    item = item[1:]
-                    if item in list_3:
-                        list_3.remove(item)
-                    else:
-                        log.warning(f"Cannot remove item {item} from list")
-                    continue
-                list_3.append(item)
-            log.debug(f"list 3: {list_3}")
-            #################################
-            # end: get logic Actions
-            post_data[field] = []
-            for item in list_3:
-                if item not in action_names:
-                    log.warning(f"label {item} not in {labels[field]}  lists")
-                else:
-                    post_data[field].append(action_dict["action_" + item])
-        return cls(data["Description"],
-                   data["lean_line"],
-                   data["lean_name"],
-                   data["lean_statement"],
-                   data["lean_variables"], data["PrettyName"],
-                   data["text_book_identifier"],
-                   post_data["Tools->Logic"],
-                   post_data["Tools->Magic"],
-                   post_data["Tools->ProofTechniques"],
-                   available_statements,
-                   expected_vars_number,
-                   lean_begin_line_number,
-                   lean_end_line_number,
-                   )
+        # default value = '$UNTIL_NOW'
+        # other pre-defined value = 'NONE'
+        # other possibility = macro defined in the Lean file
+        unsorted_statements = []
+        for statement_type in ['definition',
+                               'theorem',
+                               'exercise',
+                               'statement'
+                               ]:
+            field_name = 'available_' + statement_type + 's'
+            if 'available_statements' in data:
+                if data['available_statements'].endswith("NONE"):
+                    # If data['available_statements'].endswith("NONE")
+                    # then default value is '$NONE'
+                    data.setdefault(field_name, "$NONE")
+            elif (statement_type == 'statement'
+                  and 'available_statements' not in data.keys()
+                  ):
+                continue  # DO NOT add all statements!
+            # if not NONE then default value = UNTIL_NOW
+            data.setdefault(field_name, "$UNTIL_NOW")
+            # Now field_name is in data
+            if data[field_name].endswith("NONE"):
+                continue  # no statement of type statement_type
+
+            # (Step 1) substitute macros in string
+            string = substitute_macros(data[field_name], data)
+            # this is still a string containing
+            # (a) macro names that should either be '$ALL'
+            # or in data.keys() with values in Statements,
+            # and (b) usual names describing statements
+
+            statement_callable = make_statement_callable(statement_type,
+                                                         statements)
+            # this is the function that computes Statements from names
+            # we can now compute the available_actions:
+
+            # (Step 2) replace every word in string by the corresponding
+            # statement or list of statement
+            more_statements = extract_list(string, data, statement_callable)
+            unsorted_statements.extend(more_statements)
+
+        # finally sort statements: this is not optimised!!
+        data['available_statements'] = []
+        for item in statements:
+            if item in unsorted_statements:
+                data['available_statements'].append(item)
+
+        names = [st.pretty_name for st in data['available_statements']]
+        log.debug(f"Available statements: {names}")
+
+        ########################
+        # treatment of buttons #
+        ########################
+        for action_type in ['logic', 'proof', 'magic']:
+            field_name = 'available_' + action_type
+            default_field_name = 'default_' + field_name
+            if field_name not in data.keys():
+                if default_field_name in data.keys():  # take default list
+                    data[field_name] = data[default_field_name]
+                else:  # take all buttons
+                    data[field_name] = '$ALL'  # not optimal
+
+            log.debug(f"processing data in {field_name}, {data[field_name]}")
+
+            string = substitute_macros(data[field_name], data)
+            # this is still a string with macro names that should either
+            # be '$ALL' or in data.keys() with values in Action
+            action_callable = make_action_callable(action_type)
+            # this is the function that computes Actions from names
+            # we can now compute the available_actions:
+            data[field_name] = extract_list(string, data, action_callable)
+
+        # to keep only the relevant data, the keys that appear as attributes
+        # in the class Exercise or in the parent class Statement
+        # this removes the entry in 'data' corresponding to course_metadata
+        extract_data = {}
+        for attributes in [Statement.attributes(), cls.attributes()]:
+            for attribute in attributes:
+                if attribute in data.keys():
+                    extract_data[attribute] = data.pop(attribute)
+        # keep only the relevant data, i.e. the keys which corresponds to
+        # attribute of the class. The remaining information are put in the
+        # info dictionary attribute
+        for field_name in data:  # replace string by bool if needed
+            if data[field_name] == 'True':
+                data[field_name] = True
+            elif data[field_name] == 'False':
+                data[field_name] = False
+
+        extract_data["info"] = data
+
+        # log.debug(f"available_logic: {extract_data['available_logic']}")
+        # log.debug(f"available_proof: {extract_data['available_proof']}")
+        # log.debug(f"available_statements: "
+        #           f"{len(extract_data['available_statements'])}")
+        # log.debug(f"Creating exercise with supplementary info"
+        #          f" {extract_data['info']}")
+        # log.debug(f"Creating exercise, line: {extract_data['lean_line']}")
+        return cls(**extract_data)
 
     def current_name_space(self):
         current_name_space, _, end = self.lean_name.partition(".exercise.")
@@ -326,23 +355,93 @@ class Exercise(Theorem):
         return statements[:index]
 
 
-def findsuffix(string, list):
+#############
+# utilities #
+#############
+
+def make_action_callable(prefix) -> callable:
     """
-    return the number of items in a list of strings that ends with the given,
-    and the index of the first matching item
-    :param string:
-    :param list:
-    :return:
+    Construct the function corresponding to prefix
+    :param prefix: one of logic, proof, magic
+    :return: a callable
     """
-    total = [item for item in list if item.endswith(string)]
-    nb = len(total)
-    index = -1
-    if nb > 0:
-        index = list.index(total[0])
-    return index, nb
+    if prefix == 'logic':
+        dictionary = LOGIC_BUTTONS
+    elif prefix == 'proof':
+        dictionary = PROOF_BUTTONS
+    elif prefix == 'magic':
+        dictionary = MAGIC_BUTTONS
+
+    def action_callable(name: str) -> [Action]:
+        """
+        Return list of actions corresponding to name, as given by the
+        LOGIC_BUTTON dict
+        e.g. 'and' -> [ LOGIC_BUTTONS['action_and'] ]
+        '$ALL' -> LOGIC_BUTTONS
+        """
+        log.debug(f"searching Action {name}")
+        if name in ['NONE', '$NONE']:
+            return []
+        if name in ['ALL', '$ALL']:
+            return dictionary.values()
+        if not name.startswith("action_"):
+            name = "action_" + name
+        action = None
+        if name in dictionary:
+            action = [dictionary[name]]
+        return action
+
+    return action_callable
+
+
+def make_statement_callable(prefix, statements) -> callable:
+    """
+    Construct the function corresponding to prefix
+    :param prefix: one of statement, definition, theorem, exercise
+    :param statements: list of instances of the Statement class
+    :return: a callable
+    """
+    classes = {'statement': Statement,
+               'definition': Definition,
+               'theorem': Theorem,
+               'exercise': Exercise}
+    class_ = classes[prefix]
+
+    def statement_callable(name: str) -> [Statement]:
+        """
+        Return Statement corresponding to name and prefix
+
+        e.g. "union_quelconque" (prefix = "definition)
+        ->  Statement whose name endswith definition.union_quelconque
+        """
+        log.debug(f"searching {prefix} {name}")
+        if name in ['NONE', '$NONE']:
+            return []
+        if name in ['$UNTIL_NOW', 'UNTIL_NOW']:
+            available_statements = []
+            for statement in statements:
+                if class_ == Theorem:
+                    if isinstance(statement, Theorem) \
+                        and not isinstance(statement, Exercise):
+                        available_statements.append(statement)
+                        log.debug(f"considering {statement.pretty_name}...")
+                elif isinstance(statement, class_):
+                    available_statements.append(statement)
+                    log.debug(f"considering {statement.pretty_name}...")
+            return available_statements
+
+        statement = None
+        name = prefix + '.' + name
+        index, nb = find_suffix(name, [item.lean_name for item in statements])
+        if nb > 0:
+            statement = [statements[index]]
+        return statement
+
+    return statement_callable
 
 
 if __name__ == "__main__":
-    print(deaduction.pylib.actions.logic.__actions__.keys())
-    print(deaduction.pylib.actions.proofs.__actions__.keys())
-    print(deaduction.pylib.actions.magic.__actions__.keys())
+    print(LOGIC_BUTTONS)
+    print(PROOF_BUTTONS)
+    print(LOGIC_BUTTONS.keys())
+    print(PROOF_BUTTONS.keys())

@@ -28,15 +28,40 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from deaduction.pylib.actions import WrongUserInput
+
 _VAR_NB = 0
+_FUN_NB = 0
+_CODE_NB = 0
+
 
 def get_new_var():
     global _VAR_NB
     _VAR_NB += 1
     return "x{0}".format(_VAR_NB)
 
+
+def get_new_fun():
+    global _FUN_NB
+    _FUN_NB += 1
+    return "f{0}".format(_FUN_NB)
+
+
+# OBSOLETE : see mathobj.give_name.get_new_hyp()
 def get_new_hyp():
     global _VAR_NB
     _VAR_NB += 1
     return "h{0}".format(_VAR_NB)
+
+
+def format_orelse(list_of_choices):
+    global _CODE_NB
+    if len(list_of_choices) == 0:
+        raise WrongUserInput
+    _CODE_NB += 1
+    if len(list_of_choices) == 1:
+        return list_of_choices[0]
+    else:
+        list_of_choices = map(lambda string: f'`[ {string}, trace \"EFFECTIVE CODE {_CODE_NB} : {string}\"]', list_of_choices)
+        return " <|> ".join(list_of_choices) + ", "
 

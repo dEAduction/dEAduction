@@ -65,7 +65,7 @@ class Exercise(Theorem):
     available_definitions:      List[Definition]
     available_logic:            list # todo: List[Action]
     available_magic:            list #List[Action]  # []
-    available_proof_techniques: list #List[Action]
+    available_proof: list #List[Action]
     available_theorems:         List[Theorem] # to be filled only when
     # beginning the proof of the exercise
     expected_vars_number:       Dict[str, int]  # {'X': 3, 'A': 1, 'B': 1}
