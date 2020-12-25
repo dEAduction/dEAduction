@@ -5,16 +5,27 @@
 
 Allow the user to choose a lean file, and pre-process all statements,
 sending them to Lean one by one to get their initial proof_state.
+Each initial proof state is stored in the statement.initial_proof_state
+attribute.
+
 The resulting course is stored in a '.pkl' file in the same directory
+
 If the corresponding '.pkl' file already exists, then
 - if the file_content was different, just erase the '.pkl' file
 - if not, read the stored course and keep the initial proof_states
 that are already stored there.
 
 Every 5 processed statements, Lean server is stopped and started again.
-This prevents the Lean serve from crashing because of messages of length
+This prevents the Lean server from crashing because of messages of length
 > 65535. The resulting course with partial pre-processing is also stored,
 to take into account the possibility of a crash.
+
+In practice, the software seldom succeeds in processing the whole content.
+As said before, however, the statements that have already been processed are
+still accessible. So in case of a crash, just run the soft again, and be
+patient...
+
+Finally the programme prints all statements.
 
 TODO: change the data to avoid saving the whole contents every 5 statements.
 
