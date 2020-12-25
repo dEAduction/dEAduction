@@ -227,11 +227,12 @@ metadata =  open_metadata
             metadata_field+
             close_metadata
             
-    metadata_field = metadata_field_name  end_of_line
-                    ((space+ metadata_field_content end_of_line) /end_of_line)+
+    metadata_field = metadata_field_name  end_of_line  metadata_field_content
         
         metadata_field_name = (!space !close_metadata any_char_but_eol)+ space*
-        metadata_field_content = !close_metadata any_char_but_eol*
+        metadata_field_content = ((space+ metadata_content_line end_of_line) 
+                                  /end_of_line)+
+        metadata_content_line = !close_metadata any_char_but_eol*
     open_metadata = "/-" space+ "dEAduction" space_or_eol+
     close_metadata = "-/"
 """
@@ -427,12 +428,28 @@ class LeanCourseVisitor(NodeVisitor):
         :return: course_history and data.
         """
         course_history, data = get_info(visited_children)
-        data.setdefault("metadata_field_content", "")
-        if data["metadata_field_content"]:
-            data["metadata_field_content"] += " " + node.text.strip()
-        else:
-            data["metadata_field_content"] = node.text.strip()
-        # NB: Field content may spread on several lines
+        data["metadata_field_content"] = ""
+        # If the metadata content spreads on several lines, then get_info
+        # gets only the last line...
+        for _, child_data in visited_children:
+            if 'metadata_content_line' in child_data:
+                more_content = child_data['metadata_content_line']
+                if data["metadata_field_content"]:
+                    data["metadata_field_content"] += " " + more_content
+                else:
+                    data["metadata_field_content"] = more_content
+        return course_history, data
+
+    def visit_metadata_content_line(self, node, visited_children):
+        """
+        Collect individual lines of metadata
+        :param node:
+        :param visited_children:
+        :return:
+        """
+        course_history, data = get_info(visited_children)
+        # NB: course_history may contain some EOL events
+        data["metadata_content_line"] = node.text.strip()
         return course_history, data
 
     ##############
@@ -571,7 +588,7 @@ def change_name(name: str) -> str:
     upper_case_alphabet = [chr(i) for i in range(65, 91)]
     for letter in upper_case_alphabet:
         name = name.replace(letter, '_' + letter.lower())
-    # finally remove the leading '_'
+    # Finally remove the leading '_'
     if name.startswith('_'):
         name = name[1:]
     return name

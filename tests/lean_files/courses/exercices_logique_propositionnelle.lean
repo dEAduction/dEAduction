@@ -177,7 +177,7 @@ R ∨ ¬ R
 PrettyName
     Le tiers exclu : l'une des deux propriétés "R" et "NON R" est vraie
 Description
-    Le mécanisme de preuve inclus le tiers exclu, de façon un peu cachéé...
+    Le mécanisme de preuve inclus le tiers exclu, de façon un peu cachée...
 AvailableLogic
     and or negate implicate iff
 AvailableProof

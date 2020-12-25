@@ -108,6 +108,8 @@ class Statement:
             elif data[field_name] == 'False':
                 data[field_name] = False
 
+        polish_data(extract_data)
+
         extract_data["info"] = data
         return cls(**extract_data)
 
@@ -293,6 +295,8 @@ class Exercise(Theorem):
                 data[field_name] = False
 
         extract_data["info"] = data
+
+        polish_data(extract_data)
 
         # log.debug(f"available_logic: {extract_data['available_logic']}")
         # log.debug(f"available_proof: {extract_data['available_proof']}")
@@ -508,6 +512,16 @@ def make_statement_callable(prefix: str, statements) -> callable:
         return statement
 
     return statement_callable
+
+
+def polish_data(data):
+    """
+    Make some formal smoothing.
+    """
+    if 'description' in data:
+        data['description'] = data['description'].capitalize()
+        if data['description'][-1].isalpha():
+            data['description'] += '.'
 
 
 if __name__ == "__main__":
