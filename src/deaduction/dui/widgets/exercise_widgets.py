@@ -57,7 +57,8 @@ from deaduction.config import          (_,
                                         EXERCISE)
 from deaduction.memory import           JOURNAL
 from deaduction.dui.utils import  (     replace_widget_layout,
-                                        ButtonsDialog)
+                                        ButtonsDialog,
+                                        IconStatusBar)
 from deaduction.dui.widgets import (    ActionButton,
                                         ActionButtonsWidget,
                                         LeanEditor,
@@ -424,7 +425,7 @@ class ExerciseMainWindow(QMainWindow):
         self.toolbar.undo_action.setEnabled(False)  # same
 
         # Status Bar
-        self.statusBar = QStatusBar()
+        self.statusBar = IconStatusBar(parent=self)
         self.setStatusBar(self.statusBar)
 
         # ──────────────── Signals and slots ─────────────── #
@@ -459,22 +460,26 @@ class ExerciseMainWindow(QMainWindow):
         super().closeEvent(event)
         self.window_closed.emit()
 
-    def display_status_bar_message(self,
-                                   event=None,
-                                   instruction=None):
+    def display_status_bar_message(self, event=None, instruction=None):
         """
-        Display an error message in the status bar.
+        Display a message in the status bar.
         :param event:       tuple of strings, (nature, content, details)
         :param instruction: 'erase' or None
         """
 
+        status_bar = self.statusBar
         if instruction == 'erase':
-            self.statusBar.showMessage("")
+            status_bar.set_message("")
+            status_bar.hide_icon()
         elif event:
-            nature, content, details = event
+            nature, message, details = event
             if details:
-                content += _(": ") + details
-            self.statusBar.showMessage(content)
+                message += _(": ") + details
+            if nature in ('error', 'lean_error'):
+                status_bar.show_error_icon()
+            else:
+                status_bar.hide_icon()
+            status_bar.set_message(message)
 
     @property
     def current_selection_as_mathobjects(self):
