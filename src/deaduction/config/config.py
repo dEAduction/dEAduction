@@ -41,9 +41,8 @@ log = logging.getLogger(__name__)
 #               Setting cwd to src/deaduction                    #
 # This assumes this file (config.py) is in src/deaduction/config #
 ##################################################################
-deaduction_directory = os.path.join(os.path.dirname(__file__)) + '/../'
-os.chdir(deaduction_directory)
-
+#deaduction_directory = os.path.join(os.path.dirname(__file__)) + '/../'
+#os.chdir(deaduction_directory)
 
 ################################
 # A class for global variables #

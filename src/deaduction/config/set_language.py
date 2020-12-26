@@ -28,6 +28,9 @@ from pathlib import Path
 
 from .config import user_config
 
+import deaduction.pylib.config.dirs as cdirs
+import deaduction.pylib.utils.filesystem as fs
+
 ################
 # Set language #
 ################
@@ -40,11 +43,13 @@ if available_languages == '':
 if select_language == '':
     select_language = 'en'
 
-language_dir_path = Path.cwd() / 'share/locales'
+#language_dir_path = Path.cwd() / 'share/locales'
+language_dir_path = fs.path_helper(cdirs.share / "locales")
+
 #gettext.bindtextdomain("deaduction", str(language_dir_path))
 #gettext.textdomain("deaduction")
 language = gettext.translation('deaduction',
-                         localedir=language_dir_path,
+                         localedir=str(language_dir_path),
                          languages=[select_language])
 language.install()
 _ = language.gettext

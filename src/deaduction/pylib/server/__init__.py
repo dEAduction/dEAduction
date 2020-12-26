@@ -39,7 +39,9 @@ from deaduction.pylib.lean.response import Message
 from deaduction.pylib.editing import LeanFile
 from deaduction.pylib.lean.request import SyncRequest
 from deaduction.pylib.lean.server import LeanServer
+from deaduction.pylib.lean.installation import LeanEnvironment
 
+import deaduction.pylib.config.site_installation as inst
 import deaduction.pylib.server.exceptions as exceptions
 
 from PySide2.QtCore import Signal, QObject
@@ -81,10 +83,12 @@ class ServerInterface(QObject):
 
         self.log = logging.getLogger("ServerInterface")
 
+        # Lean environment
+        self.lean_env: LeanEnvironment = LeanEnvironment(inst)
         # Lean attributes
-        self.lean_file: LeanFile      = None
-        self.lean_server: LeanServer  = LeanServer(nursery)
-        self.nursery: trio.Nursery    = nursery
+        self.lean_file: LeanFile       = None
+        self.lean_server: LeanServer   = LeanServer(nursery, self.lean_env)
+        self.nursery: trio.Nursery     = nursery
 
         # Set server callbacks
         self.lean_server.on_message_callback = self.__on_lean_message
@@ -92,18 +96,18 @@ class ServerInterface(QObject):
             self.__on_lean_state_change
 
         # Current exercise
-        self.exercise_current         = None
+        self.exercise_current          = None
 
-        # Current proof state + Event s
-        self.__proof_state_valid      = trio.Event()
-        self.__proof_receive_done     = trio.Event()
-        self.__proof_receive_error    = trio.Event() # Set if request failed
+        # Current proof state + Event  s
+        self.__proof_state_valid       = trio.Event()
+        self.__proof_receive_done      = trio.Event()
+        self.__proof_receive_error     = trio.Event() # Set if request failed
 
-        self.__tmp_hypo_analysis      = ""
-        self.__tmp_targets_analysis   = ""
-        self.__tmp_effective_code     = ""
+        self.__tmp_hypo_analysis       = ""
+        self.__tmp_targets_analysis    = ""
+        self.__tmp_effective_code      = ""
 
-        self.proof_state              = None
+        self.proof_state               = None
 
         # Errors memory channels
         self.error_send, self.error_recv = \

@@ -256,10 +256,11 @@ class LeanServer:
         self.log.info(_("Preparing folder for launch"))
         tmp_path = Path(tempfile.mkdtemp())
         self.log.debug(_("Launch folder: {}").format(tmp_path))
+
         self.env.write_lean_path(tmp_path / "leanpkg.path")
 
         self.process = await trio.open_process(
-            ["lean","--json","--server"], stdin=PIPE, stdout=PIPE,
+            [str(self.env.lean_bin),"--json","--server"], stdin=PIPE, stdout=PIPE,
             cwd=str(tmp_path)
         )
         self.log.info("Started server")

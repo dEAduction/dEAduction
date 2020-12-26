@@ -39,6 +39,10 @@ from deaduction.pylib import        logger
 from deaduction.pylib.server import ServerInterface
 from deaduction.config import _  # for translation
 
+import deaduction.pylib.config.environ           as cenv
+import deaduction.pylib.config.vars              as cvars
+import deaduction.pylib.config.dirs              as cdirs
+import deaduction.pylib.config.site_installation as inst
 
 log = logging.getLogger(__name__)
 
@@ -47,6 +51,11 @@ async def main():
     log.debug("starting...")
     test_language = _("Proof by contrapositive")
     log.debug(f"Language test: 'Proof by contrapositive' = '{test_language}'")
+
+    cvars.load()
+    cenv.init()
+    cdirs.init()
+    inst.init()
 
     start_exercise_dialog = StartExerciseDialog()
     start_exercise_dialog.show()
@@ -92,7 +101,7 @@ if __name__ == '__main__':
     # if suppress=False, only logs from modules in 'domains' will printed
     # if suppress=True, only logs NOT from modules in 'domains' will be printed
     logger.configure(debug=True,
-                     domains=['ServerInterface', 'deaduction.dui'],
+                     domains=['ServerInterface', 'deaduction.dui', 'lean'],
                      suppress=False)
 
     qtrio.run(main)
