@@ -29,6 +29,10 @@ add_dependency() {
     echo "Ok"
 }
 
+dbgshell() {
+    python -i shell.py
+}
+
 # Install/Update git hooks
 cp tools/git-hooks/commit-msg .git/hooks/
 
@@ -37,17 +41,19 @@ ENVPATH="$(pwd)/env"
 
 if [ ! -d $ENVPATH ] ; then
     echo "Installing python env."
-	python3 -m venv ${ENVPATH}
+	python3.8 -m venv ${ENVPATH}
 
     source "$ENVPATH/bin/activate"
 fi
 
 if [ -f "requirements.txt" ] ; then
     echo "Installing package dependencies"
-    pip install -r "requirements.txt"
+    pip install -r "requirements.txt" | while read r ; do [[ ${r} =~ '^Requirement already satisfied:' ]] && echo $r ; done
 else
     echo "No requirements.txt file !"
 fi
 
 source "$ENVPATH/bin/activate"
-export PYTHONPATH=$PYTHONPATH:"$(pwd)/src"
+export PYTHONPATH=$PYTHONPATH:"$(pwd)/src:$(pwd)"
+
+export DEADUCTION_DEV_MODE=1 # Enable deaduction dev mode
