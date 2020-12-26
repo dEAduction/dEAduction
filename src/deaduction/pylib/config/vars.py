@@ -38,15 +38,19 @@ import logging
 from . import dirs
 import toml
 
+import deaduction.pylib.utils.dict as udict
+
 FACTORY_CONFIG_FILE_PATH = (dirs.share / "config.toml").resolve()
 USER_CONFIG_FILE_PATH    = (dirs.local / "config.toml").resolve()
 
-dict_ = dict() # Contains loaded configuration
+__dict_factory = dict() # Loaded configuration from default config file
+__dict_user    = dict() # Loaded configuration from user config.
 
 log = logging.getLogger(__name__)
 
 def load():
-    global dict_
+    global __dict_factory
+    global __dict_user
 
     log.info(_("Loading configuration files"))
     log.debug(_("Factory config path: {}").format(FACTORY_CONFIG_FILE_PATH))
@@ -54,37 +58,40 @@ def load():
 
     # Load configuration file
     if FACTORY_CONFIG_FILE_PATH.exists():
-        dict_ = toml.load(str(FACTORY_CONFIG_FILE_PATH))
+        __dict_factory.update(toml.load(str(FACTORY_CONFIG_FILE_PATH)))
 
     if USER_CONFIG_FILE_PATH.exists():
-        dict_.update(toml.load(str(USER_CONFIG_FILE_PATH)))
+        __dict_user.update(toml.load(str(USER_CONFIG_FILE_PATH)))
 
 def save():
-    global dict_
+    global __dict_factory
+    global __dict_user
 
     log.info(_("Saving configuration file"))
     with open(str(USER_CONFIG_FILE_PATH), "w") as fhandle:
-        toml.dump(dict_, fhandle)
+        toml.dump(__dict_user, fhandle)
 
 def get(k: str):
-    global dict_
-
     """
     Return the wanted setting variable. dot get style,
     for example, calling the function with package.linux
     returns → _dict["package"]["linux"]
     """
+    global __dict_factory
+    global __dict_user
+    
+    # Try in user config
     try:
-        keys = list(k.split("."))
-        rp = dict_
-        for idx in range(0, len(keys)-1):
-            rp = rp[keys[idx]]
-        return rp[keys[-1]]
-    except KeyError as e : raise KeyError( "%s in %s" % (str(e), k))
+        return udict.dotget(__dict_user, k)
+    except KeyError:
+        try:
+            return udict.dotget(__dict_factory,k)
+        except KeyError as exc:
+            raise KeyError(_("Could not get config value: {}").format(
+                str(exc)
+            ))
 
 def set( k, v, if_not_exists=False ):
-    global dict_
-
     """
     Sets an item in a directory with a hierarchical path. Creates sub directories
     if needed
@@ -96,23 +103,7 @@ def set( k, v, if_not_exists=False ):
 
     :return: True if item was set, False otherwise
     """
+    global __dict_user
 
-    # Test cases :
-    # 1 : default case (no depth)
-    # 2 : subdict (2 levels of depth)
-    # 3 : Excepted dict value exception
-    # 5 : if_not_exists don't overwrite
+    udict.dotset(__dict_user, k, v, if_not_exists)
 
-    keys = list(k.split("."))
-    dst  = dict_ # Destination
-    for idx in range(0,len(keys)-1):
-        kp = keys[idx]
-        if not kp in dst : dst[kp] = dict()
-        dst = dst[kp]
-
-    # If key not in last subdict, so the item doesn't exist yet
-    klast = keys[-1]
-    if (not klast in dst) or (not if_not_exists) :
-        dst[klast] = v
-        return True
-    else : return False
