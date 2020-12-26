@@ -36,3 +36,4 @@ from .functions import (    replace_widget_layout,
                             read_pkl_course,
                             set_selectable )
 from .dialog_button import  ButtonsDialog
+from .status_bar import     IconStatusBar
