@@ -465,11 +465,12 @@ class LeanCourseVisitor(NodeVisitor):
 
         course_history, data = get_info(visited_children)
         name = data.pop("namespace_identifier")
-        # get PrettyName or compute it if absent
-        try:
+        pretty_name = ""
+        # Get PrettyName or compute it if absent
+        if 'metadata' in data:
             metadata = data.pop("metadata")
-            pretty_name = metadata["pretty_name"]
-        except KeyError:
+            pretty_name = metadata.get("pretty_name")
+        if not pretty_name:
             pretty_name = name.replace("_", " ").capitalize()
         event = "open_namespace", {"name": name, "pretty_name": pretty_name}
         course_history.insert(0, event)

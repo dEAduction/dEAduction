@@ -248,6 +248,7 @@ class Exercise(Theorem):
                     key, _, value = equality.partition("=")
                     key = key.strip()
                     expected_vars_number[key] = int(value)
+            # In case int(value) has no meaning:
             except AttributeError:
                 log.error(f"wrong format for ExpectedVarsNumber in exercise "
                           f"{data['lean_name']}")
