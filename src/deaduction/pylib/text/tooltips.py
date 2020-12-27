@@ -101,3 +101,8 @@ __buttons = {
     'magic_button_texts': _('Compute')
 }
 # sad thoughts for "¯\_(ツ)_/¯", I loved you so much...
+
+def get(k):
+    return __tooltips.get(k,None)       \
+        or __tooltips_apply.get(k,None) \
+        or __buttons[k]

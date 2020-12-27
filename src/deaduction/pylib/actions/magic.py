@@ -31,14 +31,16 @@ import logging
 import deaduction.pylib.logger as logger
 
 from deaduction.pylib.config.i18n import _
-from deaduction.config import tooltips_config
+#from deaduction.config import tooltips_config
+from deaduction.pylib.text import tooltips
+
 from deaduction.pylib.actions.actiondef import action
 from deaduction.pylib.actions import (format_orelse,
                                       WrongUserInput)
 from deaduction.pylib.mathobj import MathObject
 
 # turn logic_button_texts into a dictionary
-lbt = tooltips_config.get('magic_button_texts').split(', ')
+lbt = tooltips.get('magic_button_texts').split(', ')
 magic_list = ['action_compute']
 magic_button_texts = {}
 for key, value in zip(magic_list, lbt):

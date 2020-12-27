@@ -37,7 +37,7 @@ This file is part of dEAduction.
 
 import logging
 
-from deaduction.config            import (tooltips_config)
+from deaduction.pylib.text        import tooltips
 from deaduction.pylib.config.i18n import _
 from deaduction.pylib.actions     import (action,
                                           InputType,
@@ -63,7 +63,7 @@ action_list = ['action_and', 'action_or', 'action_negate',
 if cvars.get('display.use_logic_button_symbols'):
     logic_button_texts = cvars.get('display.logic_button_symbols')
 else:
-    logic_button_texts = tooltips_config.get('logic_button_texts')
+    logic_button_texts = tooltips.get('logic_button_texts')
 # turn logic_button_texts into a dictionary
 lbt = logic_button_texts.split(', ')
 logic_button_texts = {}
@@ -134,7 +134,7 @@ Here l contains exactly two properties
     return format_orelse(possible_codes)
 
 
-@action(tooltips_config.get('tooltip_and'),
+@action(tooltips.get('tooltip_and'),
         logic_button_texts['action_and'])
 def action_and(goal: Goal,
                selected_objects: [MathObject],
@@ -278,7 +278,7 @@ Construct a property 'P or Q' from property 'P' or property 'Q'
     return format_orelse(possible_codes)
             
 
-@action(tooltips_config.get('tooltip_or'),
+@action(tooltips.get('tooltip_or'),
         logic_button_texts['action_or'])
 def action_or(goal: Goal, l: [MathObject], user_input=[]) -> str:
     """
@@ -309,7 +309,7 @@ If a hypothesis of the form P OR Q has been previously selected:
 
 # NOT #
 
-@action(tooltips_config.get('tooltip_not'),
+@action(tooltips.get('tooltip_not'),
         logic_button_texts['action_negate'])
 def action_negate(goal: Goal, l: [MathObject]) -> str:
     """
@@ -397,7 +397,7 @@ def apply_implicate_to_hyp(goal: Goal, l: [MathObject]) -> str:
     return format_orelse(possible_codes)
 
 
-@action(tooltips_config.get('tooltip_implies'),
+@action(tooltips.get('tooltip_implies'),
         logic_button_texts['action_implicate'])
 def action_implicate(goal: Goal, l: [MathObject]) -> str:
     """
@@ -481,7 +481,7 @@ def construct_iff_on_hyp(goal: Goal, l: [MathObject]):
     return format_orelse(possible_codes)
 
 
-@action(tooltips_config.get('tooltip_iff'),
+@action(tooltips.get('tooltip_iff'),
         logic_button_texts['action_iff'])
 def action_iff(goal: Goal, l: [MathObject], user_input: [str] = []) -> str:
     """
@@ -527,7 +527,7 @@ def construct_forall(goal) -> str:
     return format_orelse(possible_codes)
 
 
-@action(tooltips_config.get('tooltip_forall'),
+@action(tooltips.get('tooltip_forall'),
         logic_button_texts['action_forall'])
 def action_forall(goal: Goal, l: [MathObject]) -> str:
     """
@@ -614,7 +614,7 @@ def construct_exists_on_hyp(goal: Goal, l: [MathObject]):
     return format_orelse(possible_codes)
 
 
-@action(tooltips_config.get('tooltip_exists'),
+@action(tooltips.get('tooltip_exists'),
         logic_button_texts['action_exists'])
 def action_exists(goal: Goal, l: [MathObject], user_input: [str] = []) -> str:
     """

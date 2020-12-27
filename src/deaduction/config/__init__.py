@@ -29,16 +29,15 @@ from .config        import (config,
                             EXERCISE,
                             SESSION)
 
-import deaduction.config.tooltips as tooltips
 from configparser import ConfigParser
 
-temp_config = ConfigParser()
-temp_config['TOOLTIPS'] = {}
-temp_config['TOOLTIPS'].update(tooltips.__tooltips)
-temp_config['TOOLTIPS'].update(tooltips.__tooltips_apply)
-temp_config['TOOLTIPS'].update(tooltips.__buttons)
+#temp_config = ConfigParser()
+#temp_config['TOOLTIPS'] = {}
+#temp_config['TOOLTIPS'].update(tooltips.__tooltips)
+#temp_config['TOOLTIPS'].update(tooltips.__tooltips_apply)
+#temp_config['TOOLTIPS'].update(tooltips.__buttons)
 
-tooltips_config = temp_config['TOOLTIPS']
+#tooltips_config = temp_config['TOOLTIPS']
 
 
 #########
