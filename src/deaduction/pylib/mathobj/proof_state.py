@@ -31,7 +31,7 @@ import logging
 from typing import List, Tuple, Any
 
 import deaduction.pylib.logger  as              logger
-from deaduction.config          import          _
+from deaduction.pylib.config.i18n import _
 
 from deaduction.pylib.mathobj.MathObject import MathObject
 from deaduction.pylib.mathobj.lean_analysis import \

@@ -72,7 +72,7 @@ __config_file_path = os.path.join(os.path.dirname(__file__)) + '/config.ini'
 config.read(__config_file_path)
 
 # in case no config file is found
-user_config = config['USER']
+#user_config = config['USER']
 
 # config for temporary parameters
-temp_config = configparser.ConfigParser()
+#temp_config = configparser.ConfigParser()

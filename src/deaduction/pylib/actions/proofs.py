@@ -28,7 +28,8 @@ This file is part of dEAduction.
 
 import logging
 
-from deaduction.config       import ( tooltips_config, _)
+from deaduction.config            import (tooltips_config)
+from deaduction.pylib.config.i18n import _
 
 import deaduction.pylib.actions.utils as utils
 from deaduction.pylib.actions import (InputType,

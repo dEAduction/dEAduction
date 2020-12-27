@@ -27,7 +27,9 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
-from .set_language import _
+
+from deaduction.pylib.config.i18n import _
+
 ########################################################################
 # set tooltips and text button HERE to enable translation with gettext #
 ########################################################################

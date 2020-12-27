@@ -37,7 +37,7 @@ from PySide2.QtWidgets import ( QHBoxLayout,
                                 QVBoxLayout,
                                 QWidget)
 
-from deaduction.config import _
+from deaduction.pylib.config.i18n import _
 
 class LeanEditor(QWidget):
 

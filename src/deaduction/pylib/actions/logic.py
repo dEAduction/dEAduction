@@ -37,17 +37,18 @@ This file is part of dEAduction.
 
 import logging
 
-from deaduction.config        import (tooltips_config,
-                                      _)
-from deaduction.pylib.actions import (action,
-                                      InputType,
-                                      MissingParametersError,
-                                      WrongUserInput,
-                                      format_orelse)
-from deaduction.pylib.mathobj import (MathObject,
-                                      Goal,
-                                      give_global_name,
-                                      get_new_hyp)
+from deaduction.config            import (tooltips_config)
+from deaduction.pylib.config.i18n import _
+from deaduction.pylib.actions     import (action,
+                                          InputType,
+                                          MissingParametersError,
+                                          WrongUserInput,
+                                          format_orelse)
+
+from deaduction.pylib.mathobj     import (MathObject,
+                                          Goal,
+                                          give_global_name,
+                                          get_new_hyp)
 
 import deaduction.pylib.config.vars as cvars
 
@@ -58,6 +59,7 @@ log = logging.getLogger("logic")  # uncomment to use
 action_list = ['action_and', 'action_or', 'action_negate',
                'action_implicate', 'action_iff', 'action_forall',
                'action_exists']
+
 if cvars.get('display.use_logic_button_symbols'):
     logic_button_texts = cvars.get('display.logic_button_symbols')
 else:

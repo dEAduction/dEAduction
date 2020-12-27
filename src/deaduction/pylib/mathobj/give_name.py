@@ -31,18 +31,14 @@ import deaduction.pylib.logger as logger
 from deaduction.pylib.mathobj import MathObject
 from deaduction.config.config import (EXERCISE)
 
+import deaduction.pylib.config.vars as cvars
+
 log = logging.getLogger(__name__)
 EXERCISE.PROPERTY_COUNTER = 1
-EXERCISE.USE_PRIMES_FOR_VARIABLES_NAMES = \
-    cvars.get('displa.use_primes_for_variables_names')
-EXERCISE.USE_SECONDS_FOR_VARIABLES_NAMES = \
-    cvars.get('display.use_seconds_for_variables_names')
-
 
 def get_new_hyp(goal):
     forbidden_names = goal.extract_vars_names()
     return get_new_hyp_from_forbidden_names(forbidden_names)
-
 
 def get_new_hyp_from_forbidden_names(forbidden_names: [str]):
     """Find a fresh name for a new property
@@ -182,7 +178,7 @@ def give_name(math_type,
         # If hint = "x" and this is already the name of a variable with the
         # same math_type as the variable we want to name,
         # then try to use "x'"
-        elif EXERCISE.USE_PRIMES_FOR_VARIABLES_NAMES:
+        elif cvars.get("display.use_primes_for_variables_names"):
             # here potential_name are assumed to be the name of some variable
             name = potential_name
             index_ = forbidden_names.index(name)
@@ -192,7 +188,7 @@ def give_name(math_type,
             if math_type == variable.math_type:
                 if potential_name not in forbidden_names:
                     return potential_name
-                elif EXERCISE.USE_SECONDS_FOR_VARIABLES_NAMES:
+                elif cvars.get('display.use_seconds_for_variables_names'):
                     name = potential_name
                     index_ = forbidden_names.index(name)
                     variable = forbidden_vars[index_]

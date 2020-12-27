@@ -25,16 +25,14 @@ This file is part of d∃∀duction.
 """
 
 from .config        import (config,
-                            temp_config,
-                            #write_config,
-                            #add_to_recent_courses,
-                            #get_recent_courses,
                             COURSE,
                             EXERCISE,
                             SESSION)
-from .set_language  import _
-import deaduction.config.tooltips as tooltips
 
+import deaduction.config.tooltips as tooltips
+from configparser import ConfigParser
+
+temp_config = ConfigParser()
 temp_config['TOOLTIPS'] = {}
 temp_config['TOOLTIPS'].update(tooltips.__tooltips)
 temp_config['TOOLTIPS'].update(tooltips.__tooltips_apply)

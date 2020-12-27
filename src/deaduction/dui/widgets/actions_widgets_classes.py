@@ -56,13 +56,13 @@ from PySide2.QtWidgets import ( QHBoxLayout,
 from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem)
 
-from deaduction.config           import   _
-from deaduction.pylib.actions    import   Action
-from deaduction.pylib.coursedata import ( Definition,
+from deaduction.pylib.config.i18n import   _
+from deaduction.pylib.actions     import   Action
+from deaduction.pylib.coursedata  import ( Definition,
                                           Exercise,
                                           Statement,
                                           Theorem)
-from deaduction.dui.utils        import   set_selectable
+from deaduction.dui.utils         import   set_selectable
 
 import deaduction.pylib.config.vars as cvars
 import deaduction.pylib.utils.filesystem as fs

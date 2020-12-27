@@ -48,20 +48,20 @@ __dict_user    = dict() # Loaded configuration from user config.
 
 log = logging.getLogger(__name__)
 
-def load():
-    global __dict_factory
-    global __dict_user
+#def load():
+#    global __dict_factory
+#    global __dict_user
+#
+#    log.info(_("Loading configuration files"))
+#    log.debug(_("Factory config path: {}").format(FACTORY_CONFIG_FILE_PATH))
+#    log.debug(_("User config path: {}").format(USER_CONFIG_FILE_PATH))
+#
+#    # Load configuration file
+if FACTORY_CONFIG_FILE_PATH.exists():
+    __dict_factory.update(toml.load(str(FACTORY_CONFIG_FILE_PATH)))
 
-    log.info(_("Loading configuration files"))
-    log.debug(_("Factory config path: {}").format(FACTORY_CONFIG_FILE_PATH))
-    log.debug(_("User config path: {}").format(USER_CONFIG_FILE_PATH))
-
-    # Load configuration file
-    if FACTORY_CONFIG_FILE_PATH.exists():
-        __dict_factory.update(toml.load(str(FACTORY_CONFIG_FILE_PATH)))
-
-    if USER_CONFIG_FILE_PATH.exists():
-        __dict_user.update(toml.load(str(USER_CONFIG_FILE_PATH)))
+if USER_CONFIG_FILE_PATH.exists():
+    __dict_user.update(toml.load(str(USER_CONFIG_FILE_PATH)))
 
 def save():
     global __dict_factory

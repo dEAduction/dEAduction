@@ -30,9 +30,9 @@ import logging
 
 import deaduction.pylib.logger as logger
 
-from deaduction.config import tooltips_config, _
+from deaduction.pylib.config.i18n import _
+from deaduction.config import tooltips_config
 from deaduction.pylib.actions.actiondef import action
-from deaduction.config import _
 from deaduction.pylib.actions import (format_orelse,
                                       WrongUserInput)
 from deaduction.pylib.mathobj import MathObject

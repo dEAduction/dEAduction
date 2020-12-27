@@ -51,7 +51,7 @@ from PySide2.QtWidgets import ( QHBoxLayout,
                                 QListWidget,
                                 QListWidgetItem)
 
-from   deaduction.config                 import   (_)
+from   deaduction.pylib.config.i18n      import   (_)
 from   deaduction.pylib.mathobj          import   MathObject
 from   deaduction.pylib.actions          import   explain_how_to_apply
 
@@ -90,8 +90,8 @@ class _TagIcon(QIcon):
         :param tag: One of '+', '=', '≠'.
         """
 
-        icons_base_dir = cvars.get('icons.icons_path')
-        icons_type = cvars.get('icons.icons_context')  # e.g. 'blue'
+        icons_base_dir = cvars.get('icons.path')
+        icons_type = cvars.get('icons.context')  # e.g. 'blue'
         icons_dir = path_helper(icons_base_dir) / icons_type
 
         if tag not in ['=', '+', '≠']:

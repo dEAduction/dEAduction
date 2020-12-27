@@ -27,32 +27,38 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-# File should be executed from dEAduction/src/deaduction
+from deaduction.pylib import logger
+#logger.configure(debug=True,
+#                 #domains=['ServerInterface', 'deaduction.dui'],
+#                 suppress=False)
+
+logger.configure(debug=True,
+                 domains=['lean'],
+                 suppress=True)
+
+import deaduction.pylib.config.vars as cvars
+
 import logging
 import qtrio
 import trio
 
-
 from deaduction.dui.widgets import  ( ExerciseMainWindow,
                                       StartExerciseDialog )
-from deaduction.pylib import        logger
 from deaduction.pylib.server import ServerInterface
-from deaduction.config import _  # for translation
+from deaduction.pylib.config.i18n import _
 
 import deaduction.pylib.config.environ           as cenv
-import deaduction.pylib.config.vars              as cvars
 import deaduction.pylib.config.dirs              as cdirs
 import deaduction.pylib.config.site_installation as inst
+import deaduction.pylib.config.i18n              as i18n
 
 log = logging.getLogger(__name__)
 
-
 async def main():
     log.debug("starting...")
-    test_language = _("Proof by contrapositive")
+    test_language = _("Proof by contradiction")
     log.debug(f"Language test: 'Proof by contrapositive' = '{test_language}'")
 
-    cvars.load()
     cenv.init()
     cdirs.init()
     inst.init()
@@ -100,8 +106,5 @@ if __name__ == '__main__':
     dui_only = ['deaduction.dui']
     # if suppress=False, only logs from modules in 'domains' will printed
     # if suppress=True, only logs NOT from modules in 'domains' will be printed
-    logger.configure(debug=True,
-                     domains=['ServerInterface', 'deaduction.dui', 'lean'],
-                     suppress=False)
 
     qtrio.run(main)
