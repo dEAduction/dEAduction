@@ -1,6 +1,6 @@
 """
 ########################################################
-# exercisewidget.py : provide the ExerciseWidget class #
+# exercise_widget.py : provide the ExerciseWidget class #
 ########################################################
 
 Author(s)      : - Kryzar <antoine@hugounet.com>
@@ -30,18 +30,14 @@ This file is part of d∃∀duction.
 from functools import           partial
 import logging
 from pathlib import Path
-import trio
 from typing import              Callable
 import qtrio
 
 from PySide2.QtCore import (    Signal,
                                 Slot,
-                                QEvent,
-                                Qt)
-from PySide2.QtGui import     ( QIcon,
-                                QFont )
+                                QEvent)
+from PySide2.QtGui import     ( QIcon)
 from PySide2.QtWidgets import ( QAction,
-                                QDesktopWidget,
                                 QGroupBox,
                                 QHBoxLayout,
                                 QInputDialog,
@@ -53,9 +49,8 @@ from PySide2.QtWidgets import ( QAction,
                                 QStatusBar)
 
 from deaduction.config import          (_,
-                                        user_config,
                                         EXERCISE)
-from deaduction.memory import           JOURNAL
+from deaduction.pylib.memory import     JOURNAL
 from deaduction.dui.utils import  (     replace_widget_layout,
                                         ButtonsDialog)
 from deaduction.dui.widgets import (    ActionButton,
@@ -66,12 +61,11 @@ from deaduction.dui.widgets import (    ActionButton,
                                         MathObjectWidget,
                                         MathObjectWidgetItem,
                                         TargetWidget)
-from deaduction.pylib.actions import (  Action,
-                                        action_apply,
+from deaduction.pylib.actions import (  action_apply,
                                         InputType,
                                         MissingParametersError,
                                         WrongUserInput)
-import deaduction.pylib.actions.generic as generic
+import deaduction.pylib.actions.generic as  generic
 from deaduction.pylib.coursedata import (   Definition,
                                             Exercise,
                                             Theorem)

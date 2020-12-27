@@ -1,7 +1,11 @@
 """
-# __init__.py : <#ShortDescription> #
+# __init__.py : Provide the Journal class
     
-    <#optionalLongDescription>
+The Journal class is designed
+(1) to keep track of all events occurring in the soft, and
+(2) to serve as a filter towards the status bar.
+
+It is instantiated exactly once.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -35,13 +39,14 @@ from deaduction.config import ( user_config,
 log = logging.getLogger(__name__)
 
 
-
 @dataclass
 class Journal:
     """
     A very simple journal, designed to keep track of every event that occurs
     in dEAduction. It has a single attribute, memory, which is a list of
-    events that are triples (nature, content, detail)
+    events that are triples (nature, content, detail). The main method is
+    "add_event", but methods are also provided to retrieve the last events
+    of a given nature,
     """
     memory: [tuple]
 
@@ -58,11 +63,11 @@ class Journal:
 
     def add_event(self, event: tuple, emw=None):
         """
-        Add an entry in the Journal.
+        Add an event entry in the Journal.
 
         :param event:   (nature, content, details)
-        :param emw:      ExerciseMainWindow instance, in which the event
-        will be displayed
+        :param emw:     ExerciseMainWindow instance, in which the event
+                        will be displayed
         """
         log.debug(f"New event: {event}")
         if event[0] not in self.event_natures:
@@ -80,10 +85,10 @@ class Journal:
         if self.__save_journal:  # fixme: should not be done each time!
             self.write_last_entry()
 
-    def get_last(self, nature='any'):
+    def get_last_event(self, nature='any'):
         """
         Return content and detail for last event of a given nature
-        :param nature:
+        :param nature: an element of the event_natures list
         :return:
         """
         if nature == 'any':
@@ -92,6 +97,7 @@ class Journal:
             else:
                 return None
 
+        # Search for the last event whose nature is "nature".
         for anti_idx in range(len(self.memory)):
             idx = len(self.memory) - anti_idx -1
             event = self.memory[idx]
