@@ -22,7 +22,7 @@ use_seconds_for_variables_names = true
 allow_proof_by_sorry = true
 
 [i18n]
-available_languages = "en, fr_FR"
+available_languages = ["en", "fr_FR"]
 select_language = "fr_FR"
 
 [journal]

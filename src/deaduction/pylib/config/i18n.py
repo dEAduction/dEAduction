@@ -46,7 +46,7 @@ def init():
     log.info("Init i18n")
 
     available_languages = cvars.get("i18n.available_languages", "en")
-    available_languages = available_languages.split(", ")
+    #available_languages = available_languages.split(", ")
 
     select_language     = cvars.get('i18n.select_language', "en")
 
