@@ -68,8 +68,8 @@ SESSION = Global()  # class for global variables whose lifetime = a session
 config = configparser.ConfigParser()
 
 # reading file config.ini, assuming it is in the same directory as config.py
-__config_file_path = os.path.join(os.path.dirname(__file__)) + '/config.ini'
-config.read(__config_file_path)
+#__config_file_path = os.path.join(os.path.dirname(__file__)) + '/config.ini'
+#config.read(__config_file_path)
 
 # in case no config file is found
 #user_config = config['USER']
