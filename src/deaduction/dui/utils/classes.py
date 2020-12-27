@@ -35,9 +35,10 @@ from PySide2.QtWidgets import ( QFrame,
                                 QTreeWidget,
                                 QTreeWidgetItem)
 
-from deaduction.config import ( add_to_recent_courses,
-                                get_recent_courses )
-
+#from deaduction.config import ( add_to_recent_courses,
+#                                get_recent_courses )
+from deaduction.pylib.config.course import ( add_to_recent_courses,
+                                             get_recent_courses )
 
 class DisclosureTriangle(QTreeWidget):
     """

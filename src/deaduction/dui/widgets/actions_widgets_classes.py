@@ -56,13 +56,16 @@ from PySide2.QtWidgets import ( QHBoxLayout,
 from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem)
 
-from deaduction.config           import   user_config, _
+from deaduction.config           import   _
 from deaduction.pylib.actions    import   Action
 from deaduction.pylib.coursedata import ( Definition,
                                           Exercise,
                                           Statement,
                                           Theorem)
 from deaduction.dui.utils        import   set_selectable
+
+import deaduction.pylib.config.vars as cvars
+import deaduction.pylib.utils.filesystem as fs
 
 log = logging.getLogger(__name__)
 
@@ -254,9 +257,10 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         # TODO: use mono font for lean name column (column 1)
 
         # Print icon (D for definition, T for theorem, etc)
-        icons_base_dir = user_config.get('icons_path')
-        icons_type = user_config.get('icons_letter_type')  # e.g. 'red'
-        icons_dir = Path(icons_base_dir) / icons_type
+        icons_base_dir = cvars.get("icons.path")
+        icons_type     = cvars.get("icons.letter_type")
+
+        icons_dir = fs.path_helper(icons_base_dir) / icons_type
         if isinstance(statement, Definition):
             path = icons_dir / 'd.png'
         elif isinstance(statement, Exercise):
@@ -350,10 +354,13 @@ class StatementsTreeWidget(QTreeWidget):
     # TODO: Put this in self.__init__
     # Config
     depth_of_unfold_statements = \
-                        user_config.getint('depth_of_unfold_statements')
+                        cvars.get("display.depth_of_unfold_statements")
+
     show_lean_name_for_statements = \
-                    user_config.getboolean('show_lean_name_for_statements')
-    tooltips_font_size = user_config.getint('tooltips_font_size')
+                    cvars.get("display.show_lean_name_for_statements")
+
+    tooltips_font_size = cvars.get('display.tooltips_font_size')
+
     # TODO: show lean names only when lean console is on
     # (even if show_lean_name_for_statements == TRUE)
 

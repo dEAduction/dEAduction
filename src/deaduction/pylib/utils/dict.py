@@ -60,7 +60,7 @@ def dotset( r, k, v, if_not_exists=False ):
         return True
     else : return False
 
-def dotget( r, k ):
+def dotget( r, k, default_value=None ):
     """
     Returns an object in a dictionnary, given its name
     hierarchy. for example, root.child.leaf
@@ -72,7 +72,11 @@ def dotget( r, k ):
         for idx in range(0, len(keys)-1):
             rp = rp[keys[idx]]
         return rp[keys[-1]]
-    except KeyError as e : raise KeyError( "%s in %s" % (str(e), k))
+    except KeyError as e :
+        if default_value is not None:
+            return default_value
+        else: 
+            raise KeyError( "%s in %s" % (str(e), k))
 
 def flatten( r ):
     """

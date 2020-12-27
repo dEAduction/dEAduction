@@ -1,3 +1,30 @@
+[icons]
+icons_path        = "$DEADUCTION_SHARE/graphical_resources/icons/letters"
+icons_letter_type = "trials"
+icons_context     = "blue"
+
+[display]
+depth_of_unfold_statements = 1
+show_lean_name_for_statements = False
+target_font_size = "24pt"
+context_font_size = "12pt"
+tooltips_font_size = 10
+
+logic_button_symbols = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃"
+use_logic_button_symbols = True
+
+display_detailed_errors_on_wui = True
+
+use_primes_for_variables_names = True
+use_seconds_for_variables_names = True
+
+[functionality]
+allow_proof_by_sorry = True
+
+[i18n]
+available_languages = en, fr_FR
+select_language = en
+
 #########################
 # All Plateform packages
 #########################

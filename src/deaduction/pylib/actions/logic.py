@@ -37,8 +37,7 @@ This file is part of dEAduction.
 
 import logging
 
-from deaduction.config        import (user_config,
-                                      tooltips_config,
+from deaduction.config        import (tooltips_config,
                                       _)
 from deaduction.pylib.actions import (action,
                                       InputType,
@@ -50,6 +49,8 @@ from deaduction.pylib.mathobj import (MathObject,
                                       give_global_name,
                                       get_new_hyp)
 
+import deaduction.pylib.config.vars as cvars
+
 log = logging.getLogger("logic")  # uncomment to use
 
 
@@ -57,8 +58,8 @@ log = logging.getLogger("logic")  # uncomment to use
 action_list = ['action_and', 'action_or', 'action_negate',
                'action_implicate', 'action_iff', 'action_forall',
                'action_exists']
-if user_config.getboolean('use_logic_button_symbols'):
-    logic_button_texts = user_config.get('logic_button_symbols')
+if cvars.get('display.use_logic_button_symbols'):
+    logic_button_texts = cvars.get('display.logic_button_symbols')
 else:
     logic_button_texts = tooltips_config.get('logic_button_texts')
 # turn logic_button_texts into a dictionary

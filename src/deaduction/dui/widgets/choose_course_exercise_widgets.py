@@ -59,7 +59,8 @@ from PySide2.QtWidgets import ( QApplication,
                                 QVBoxLayout,
                                 QWidget )
 
-from deaduction.config           import   add_to_recent_courses
+#from deaduction.config           import   add_to_recent_courses
+from deaduction.pylib.config.course import add_to_recent_courses
 from deaduction.dui.widgets      import ( MathObjectWidget,
                                           StatementsTreeWidget,
                                           StatementsTreeWidgetItem )

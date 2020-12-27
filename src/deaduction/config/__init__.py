@@ -26,10 +26,9 @@ This file is part of d∃∀duction.
 
 from .config        import (config,
                             temp_config,
-                            user_config,
-                            write_config,
-                            add_to_recent_courses,
-                            get_recent_courses,
+                            #write_config,
+                            #add_to_recent_courses,
+                            #get_recent_courses,
                             COURSE,
                             EXERCISE,
                             SESSION)

@@ -31,13 +31,14 @@ import logging
 from typing import List, Tuple, Any
 
 import deaduction.pylib.logger  as              logger
-from deaduction.config          import          _, user_config
+from deaduction.config          import          _
 
 from deaduction.pylib.mathobj.MathObject import MathObject
 from deaduction.pylib.mathobj.lean_analysis import \
                                                 lean_expr_with_type_grammar, \
                                                 LeanEntryVisitor
 
+import deaduction.pylib.config.vars as cvars
 
 log = logging.getLogger(__name__)
 
@@ -270,7 +271,7 @@ class Goal:
                     new_sentence = _("Let") + " " + name + ":" \
                                    + " " + name_type + "."
                 else:
-                    if user_config['select_language'] == 'fr_FR':
+                    if cvars.get('i18n.select_language') == 'fr_FR':
                         # indispensable pour la gestion des espacements
                         # (le "be" anglais n'a pas d'équivalent en français)
                         new_sentence = "Soit" + " " + name + " " \

@@ -38,10 +38,10 @@ from PySide2.QtWidgets import                   (QApplication,
 
 import deaduction.pylib.logger as               logger
 from deaduction.dui.utils import                (ButtonsDialog)
-from deaduction.config import                   (user_config,
-                                                write_config)
 from deaduction.pylib.coursedata.course import (Exercise,
                                                 Course)
+
+from deaduction.pylib.config.course import add_recent_courses
 
 log = logging.getLogger(__name__)
 
@@ -75,7 +75,9 @@ def select_course():
 
         # store course file name in config file
         add_recent_courses(course_path_str)
-        user_config['last_course'] = course_path_str
+
+        cvars.set("course.last_course", course_path_str)
+
         # fixme: the following line store the recent courses,
         #  but also all the tooltips...
         # write_config()
@@ -172,26 +174,3 @@ def pickled_items(filename):
                 yield pickle.load(f)
             except EOFError:
                 break
-
-
-def add_recent_courses(course_path: str):
-    """
-    Add course_path to the list of recent courses in user_config
-    NB: do not save this in config.ini; write_config() must be called for that
-    """
-    try:
-        max = user_config['max_recent_courses']
-    except KeyError:
-        max = 5
-    try:
-        recent_courses = user_config['recent_courses']
-    except KeyError:
-        recent_courses = ""
-    recent_courses_list = recent_courses.split(',')
-    if course_path not in recent_courses_list:
-        recent_courses_list.append(course_path)
-    if len(recent_courses_list) > max:
-        # remove oldest
-        recent_courses_list.pop(0)
-    recent_courses_string = ','.join(recent_courses_list)
-    user_config['recent_courses'] = recent_courses_string

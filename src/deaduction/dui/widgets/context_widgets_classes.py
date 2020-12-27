@@ -51,10 +51,13 @@ from PySide2.QtWidgets import ( QHBoxLayout,
                                 QListWidget,
                                 QListWidgetItem)
 
-from deaduction.config        import ( user_config,
-                                       _ )
-from deaduction.pylib.mathobj import   MathObject
-from deaduction.pylib.actions import   explain_how_to_apply
+from   deaduction.config                 import   (_)
+from   deaduction.pylib.mathobj          import   MathObject
+from   deaduction.pylib.actions          import   explain_how_to_apply
+
+from   deaduction.pylib.utils.filesystem import path_helper
+
+import deaduction.pylib.config.vars as cvars
 
 log = logging.getLogger(__name__)
 
@@ -87,9 +90,9 @@ class _TagIcon(QIcon):
         :param tag: One of '+', '=', '≠'.
         """
 
-        icons_base_dir = user_config.get('icons_path')
-        icons_type = user_config.get('icons_context')  # e.g. 'blue'
-        icons_dir = Path(icons_base_dir) / icons_type
+        icons_base_dir = cvars.get('icons.icons_path')
+        icons_type = cvars.get('icons.icons_context')  # e.g. 'blue'
+        icons_dir = path_helper(icons_base_dir) / icons_type
 
         if tag not in ['=', '+', '≠']:
             # TODO: catch the exception below?
@@ -292,7 +295,7 @@ class TargetWidget(QWidget):
         else:
             text = '…'
         target_label = QLabel(text)
-        size = user_config.get('target_font_size')
+        size = cvars.get('display.target_font_size')
         target_label.setStyleSheet(f'font-size: {size};')
 
         # ───────────────────── Layouts ──────────────────── #

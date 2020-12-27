@@ -71,7 +71,7 @@ def save():
     with open(str(USER_CONFIG_FILE_PATH), "w") as fhandle:
         toml.dump(__dict_user, fhandle)
 
-def get(k: str):
+def get(k: str, default_value=None):
     """
     Return the wanted setting variable. dot get style,
     for example, calling the function with package.linux
@@ -85,7 +85,7 @@ def get(k: str):
         return udict.dotget(__dict_user, k)
     except KeyError:
         try:
-            return udict.dotget(__dict_factory,k)
+            return udict.dotget(__dict_factory,k, default_value=default_value)
         except KeyError as exc:
             raise KeyError(_("Could not get config value: {}").format(
                 str(exc)

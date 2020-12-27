@@ -52,7 +52,6 @@ from PySide2.QtWidgets import ( QAction,
                                 QStatusBar)
 
 from deaduction.config import          (_,
-                                        user_config,
                                         EXERCISE)
 from deaduction.memory import           JOURNAL
 from deaduction.dui.utils import  (     replace_widget_layout,

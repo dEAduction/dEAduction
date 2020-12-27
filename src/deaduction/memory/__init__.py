@@ -29,8 +29,10 @@ import                  logging
 from dataclasses import dataclass
 import                  pickle
 import os
-from deaduction.config import ( user_config,
-                                _ )
+from deaduction.config import ( _ )
+
+import deaduction.pylib.config.vars as cvars
+import deaduction.pylib.config.dirs as cdirs
 
 log = logging.getLogger(__name__)
 
@@ -52,9 +54,8 @@ class Journal:
                      'message',
                      'user_input',
                      'various')
-    __save_journal = user_config.getboolean('save_journal')
-    __journal_file_name = os.path.join(
-        os.path.dirname(__file__)) + '/journal.pkl'
+    __save_journal = cvars.get('journal.save')
+    __journal_file_name = cdirs.local / 'journal.pkl'
 
     def add_event(self, event: tuple, emw=None):
         """

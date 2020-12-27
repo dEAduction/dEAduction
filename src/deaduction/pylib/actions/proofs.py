@@ -28,9 +28,7 @@ This file is part of dEAduction.
 
 import logging
 
-from deaduction.config       import (user_config,
-                                     tooltips_config,
-                                     _)
+from deaduction.config       import ( tooltips_config, _)
 
 import deaduction.pylib.actions.utils as utils
 from deaduction.pylib.actions import (InputType,
@@ -63,7 +61,7 @@ for key, value in zip(proof_list, lbt):
 def action_use_proof_methods(goal: Goal, l: [MathObject],
                             user_input: [str] = []) -> str:
     # parameters
-    allow_proof_by_sorry = user_config.getboolean('allow_proof_by_sorry')
+    allow_proof_by_sorry = cvars.get('functionality.allow_proof_by_sorry')
 
     # 1st call, choose proof method
     if not user_input:

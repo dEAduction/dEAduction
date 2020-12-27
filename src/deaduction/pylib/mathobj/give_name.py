@@ -29,15 +29,14 @@ import logging
 import deaduction.pylib.logger as logger
 
 from deaduction.pylib.mathobj import MathObject
-from deaduction.config.config import (user_config,
-                                      EXERCISE)
+from deaduction.config.config import (EXERCISE)
 
 log = logging.getLogger(__name__)
 EXERCISE.PROPERTY_COUNTER = 1
 EXERCISE.USE_PRIMES_FOR_VARIABLES_NAMES = \
-    user_config.getboolean('use_primes_for_variables_names')
+    cvars.get('displa.use_primes_for_variables_names')
 EXERCISE.USE_SECONDS_FOR_VARIABLES_NAMES = \
-    user_config.getboolean('use_seconds_for_variables_names')
+    cvars.get('display.use_seconds_for_variables_names')
 
 
 def get_new_hyp(goal):
