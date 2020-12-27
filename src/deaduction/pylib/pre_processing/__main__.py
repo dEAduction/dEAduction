@@ -25,9 +25,8 @@ As said before, however, the statements that have already been processed are
 still accessible. So in case of a crash, just run the soft again, and be
 patient...
 
-Finally the programme prints all statements.
-
-TODO: change the data to avoid saving the whole contents every 5 statements.
+Finally the programme prints all statements, so this can also be used to get
+the list of all statements in a given Lean (or pkl) course file.
 
 Author(s)      : - Frédéric Le Roux <frederic.le_roux@imj-prg.fr>
 
@@ -52,17 +51,21 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
+# TODO: change the data to avoid saving the whole contents every 5 statements.
 
 import logging
 import qtrio
 import trio
-import gettext
 import pickle
 from pathlib import Path
+from PySide2.QtWidgets import QFileDialog
+
 
 from deaduction.config import _
-from deaduction.dui.launcher import select_course
-from deaduction.pylib.coursedata import Exercise, Definition, Theorem
+from deaduction.pylib.coursedata import (Course,
+                                         Exercise,
+                                         Definition,
+                                         Theorem)
 from deaduction.pylib import logger
 from deaduction.pylib.server import ServerInterface
 
@@ -71,11 +74,11 @@ log = logging.getLogger(__name__)
 
 async def main():
     """
-    See file doc
+    See file doc.
     """
     # Choose course and parse it
     course = select_course()
-    # check for pkl file and, if it exists, find all unprocessed statements
+    # Check for pkl file and, if it exists, find all unprocessed statements
     course, unprocessed_statements, course_pkl_path = check_statements(course)
 
     if not unprocessed_statements:
@@ -114,6 +117,35 @@ async def main():
 
         # Checking
         read_data(course_pkl_path)
+
+
+def select_course():
+    """
+    Open a file dialog to choose a course lean file.
+
+    :return: TODO
+    """
+
+    course_path, ok = QFileDialog.getOpenFileName()
+
+    if ok:
+        course_path = Path(course_path)
+        course_path_str = str(course_path.resolve())
+        log.info(f'Selected course: {course_path_str}')
+
+        extension = course_path.suffix
+        # case of a standard Lean file
+        if extension == '.lean':
+            course = Course.from_file(course_path)
+        # case of a pre-processed .pkl file
+        elif extension == '.pkl':
+            [course] = pickled_items(course_path)
+        else:
+            log.error("Wrong file format")
+
+        return course
+    else:
+        return None
 
 
 def check_statements(course):
