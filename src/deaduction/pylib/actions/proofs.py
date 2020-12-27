@@ -552,7 +552,7 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
     if possible_codes:
         return format_orelse(possible_codes)
     else:
-        error = "I cannot apply this"  # fixme!!
+        error = _("I cannot apply this")  # fixme: be more precise
         raise WrongUserInput(error)
 
 

@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2020-12-25 18:00+0100\n"
-"PO-Revision-Date: 2020-12-25 18:00+0100\n"
+"POT-Creation-Date: 2020-12-27 16:56+0100\n"
+"PO-Revision-Date: 2020-12-27 16:56+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -149,19 +149,6 @@ msgstr "Calculer, CQFD"
 msgid "Proof by contrapositive"
 msgstr "Preuve par contraposée"
 
-#: dui/launcher/__init__.py:105
-msgid "Please select an exercise"
-msgstr "Choisissez un exercice"
-
-#: dui/launcher/__init__.py:106
-msgid "Selected exercise:"
-msgstr "Exercice choisi :"
-
-#: dui/launcher/__init__.py:126
-#: dui/widgets/choose_course_exercise_widgets.py:809
-msgid "Do you want to prove this statement or its negation?"
-msgstr "Voulez-vous démontrer cet énoncé ou bien sa négation ?"
-
 #: dui/widgets/actions_widgets_classes.py:479
 #: dui/widgets/actions_widgets_classes.py:484
 msgid "Statements"
@@ -217,9 +204,13 @@ msgstr "Cours"
 
 #: dui/widgets/choose_course_exercise_widgets.py:675
 #: dui/widgets/choose_course_exercise_widgets.py:747
-#: pylib/pre_processing/__main__.py:233 pylib/pre_processing/__main__.py:254
+#: pylib/pre_processing/__main__.py:265 pylib/pre_processing/__main__.py:286
 msgid "Exercise"
 msgstr "Exercice"
+
+#: dui/widgets/choose_course_exercise_widgets.py:809
+msgid "Do you want to prove this statement or its negation?"
+msgstr "Voulez-vous démontrer cet énoncé ou bien sa négation ?"
 
 #: dui/widgets/choose_course_exercise_widgets.py:816
 msgid "Prove statement"
@@ -245,65 +236,57 @@ msgstr "But"
 msgid "To be proved"
 msgstr "A démontrer"
 
-#: dui/widgets/exercise_widgets.py:96
+#: dui/widgets/exercise_widgets.py:91
 msgid "Toolbar"
 msgstr "Barre d’outils"
 
-#: dui/widgets/exercise_widgets.py:101
+#: dui/widgets/exercise_widgets.py:96
 msgid "Undo action"
 msgstr "Annuler l’action"
 
-#: dui/widgets/exercise_widgets.py:104
+#: dui/widgets/exercise_widgets.py:99
 msgid "Redo action"
 msgstr "Refaire l’action"
 
-#: dui/widgets/exercise_widgets.py:108
+#: dui/widgets/exercise_widgets.py:103
 msgid "Toggle L∃∀N"
 msgstr "Console L∃∀N"
 
-#: dui/widgets/exercise_widgets.py:197
+#: dui/widgets/exercise_widgets.py:192
 msgid "Actions (transform context and target)"
 msgstr "Actions (transforment le contexte et le but)"
 
-#: dui/widgets/exercise_widgets.py:198
+#: dui/widgets/exercise_widgets.py:193
 msgid "Context (objects and properties)"
 msgstr "Contexte (objets et propriétés)"
 
-#: dui/widgets/exercise_widgets.py:476 pylib/mathobj/proof_state.py:318
-msgid ": "
-msgstr " : "
-
-#: dui/widgets/exercise_widgets.py:544
+#: dui/widgets/exercise_widgets.py:539
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/widgets/exercise_widgets.py:547
+#: dui/widgets/exercise_widgets.py:542
 msgid "goals solved!"
 msgstr "buts atteints !"
 
-#: dui/widgets/exercise_widgets.py:677 dui/widgets/exercise_widgets.py:814
+#: dui/widgets/exercise_widgets.py:672 dui/widgets/exercise_widgets.py:809
 msgid "Error"
 msgstr "Erreur"
 
-#: dui/widgets/exercise_widgets.py:810
+#: dui/widgets/exercise_widgets.py:805
 msgid "Code from editor"
 msgstr "Code depuis l’éditeur"
 
-#: dui/widgets/exercise_widgets.py:869
+#: dui/widgets/exercise_widgets.py:864
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/widgets/exercise_widgets.py:870
+#: dui/widgets/exercise_widgets.py:865
 msgid "The proof is complete!"
 msgstr "La preuve est terminée !"
 
 #: dui/widgets/lean_editor.py:53
 msgid "Send to L∃∀N"
 msgstr "Envoyer à L∃∀N"
-
-#: memory/__init__.py:75
-msgid "request failed"
-msgstr "l’action a échoué"
 
 #: pylib/actions/logic.py:82
 msgid "target is not a conjunction 'P AND Q'"
@@ -538,6 +521,10 @@ msgstr "Appliquer"
 msgid "Enter element on which you want to apply:"
 msgstr "Entrer l’objet à utiliser :"
 
+#: pylib/actions/proofs.py:555
+msgid "I cannot apply this"
+msgstr "Je ne sais pas appliquer ceci"
+
 #: pylib/mathobj/display_data.py:44 pylib/mathobj/display_data.py:52
 #: pylib/mathobj/display_data.py:184 pylib/mathobj/display_data.py:196
 #: pylib/mathobj/display_data.py:197
@@ -750,11 +737,19 @@ msgstr "Hypothèse :"
 msgid "Hypotheses:"
 msgstr "Hypothèses :"
 
-#: pylib/pre_processing/__main__.py:243 pylib/pre_processing/__main__.py:257
+#: pylib/mathobj/proof_state.py:318
+msgid ": "
+msgstr " : "
+
+#: pylib/memory/__init__.py:80
+msgid "request failed"
+msgstr "l’action a échoué"
+
+#: pylib/pre_processing/__main__.py:275 pylib/pre_processing/__main__.py:289
 msgid "Definition:"
 msgstr "Définition :"
 
-#: pylib/pre_processing/__main__.py:260
+#: pylib/pre_processing/__main__.py:292
 msgid "Theorem:"
 msgstr "Théorème :"
 
@@ -765,6 +760,12 @@ msgstr "Etat de preuve reçu"
 #: pylib/server/__init__.py:234
 msgid "After request"
 msgstr "Après la requête"
+
+#~ msgid "Please select an exercise"
+#~ msgstr "Choisissez un exercice"
+
+#~ msgid "Selected exercise:"
+#~ msgstr "Exercice choisi :"
 
 #~ msgid "Computation"
 #~ msgstr "Calcul"

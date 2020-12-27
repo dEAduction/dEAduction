@@ -38,7 +38,7 @@ from deaduction.config import SESSION
 class ButtonsDialog(QDialog):
     """
     A class for displaying a dialog box with several choices displayed as
-    QPushButtons
+    QPushButtons.
     """
     def __init__(self,
                  choices,
