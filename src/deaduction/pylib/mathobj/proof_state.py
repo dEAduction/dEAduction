@@ -5,7 +5,7 @@
 
 The goal and proof_state classes are designed to reflect Lean's goals and
 proof states. A goal is essentially made of a context and a target. The
-context is a list of MathObject, and the target is a MathObject.
+context is a list of MathObjects, and the target is a MathObject.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr

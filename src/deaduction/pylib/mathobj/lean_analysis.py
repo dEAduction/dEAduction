@@ -3,8 +3,9 @@
 # lean_analysis.py: Provide methods to parse lean files #
 #########################################################
 
-This module transforms a string produced by Lean's tactic "hypo_analysis"
-or "goals_analysis" into a tree encoded by a list. See examples at the end.
+This module transforms a string produced by Lean's tactics "hypo_analysis"
+or "goals_analysis" into a tree encoded by a list. See example in the file
+comments.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -36,6 +37,33 @@ import logging
 from deaduction.pylib.mathobj import MathObject
 
 log = logging.getLogger(__name__)
+
+"""
+Example of Lean context and target, and the corresponding output of 
+hypo_analysis and targets_analysis:
+
+* The Lean context:
+XY : Type
+f : X → Y
+BB' : set Y
+x : X
+H2 : x ∈ f⁻¹⟮B⟯ ∪ (f⁻¹⟮B'⟯)
+⊢ x ∈ (f⁻¹⟮B ∪ B'⟯)
+
+* The output of hypo_analysis:
+context:
+¿¿¿object: LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.4965.24615¿]¿= TYPE
+¿¿¿object: LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.4965.24617¿]¿= TYPE
+¿¿¿object: LOCAL_CONSTANT¿[name: f¿/ identifier: 0._fresh.4965.24619¿]¿= FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.4965.24615¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.4965.24617¿]¿)
+¿¿¿object: LOCAL_CONSTANT¿[name: B¿/ identifier: 0._fresh.4965.24620¿]¿= SET¿(LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.4965.24617¿]¿)
+¿¿¿object: LOCAL_CONSTANT¿[name: B'¿/ identifier: 0._fresh.4965.24622¿]¿= SET¿(LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.4965.24617¿]¿)
+¿¿¿object: LOCAL_CONSTANT¿[name: x¿/ identifier: 0._fresh.4966.29549¿]¿= LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.4965.24615¿]
+¿¿¿property¿[pp_type: x ∈ f⁻¹⟮B⟯ ∪ (f⁻¹⟮B'⟯)¿]: LOCAL_CONSTANT¿[name: H2¿/ identifier: 0._fresh.4966.29572¿]¿= PROP_BELONGS¿[type: PROP¿]¿(LOCAL_CONSTANT¿[name: x¿/ identifier: 0._fresh.4966.29549¿]¿, SET_UNION¿[type: SET¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.4965.24615¿]¿)¿]¿(SET_INVERSE¿[type: SET¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.4965.24615¿]¿)¿]¿(LOCAL_CONSTANT¿[name: f¿/ identifier: 0._fresh.4965.24619¿]¿, LOCAL_CONSTANT¿[name: B¿/ identifier: 0._fresh.4965.24620¿]¿)¿, SET_INVERSE¿[type: SET¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.4965.24615¿]¿)¿]¿(LOCAL_CONSTANT¿[name: f¿/ identifier: 0._fresh.4965.24619¿]¿, LOCAL_CONSTANT¿[name: B'¿/ identifier: 0._fresh.4965.24622¿]¿)¿)¿)
+
+* The output of targets_analysis:
+targets:
+¿¿¿property¿[pp_type: x ∈ (f⁻¹⟮B ∪ B'⟯)¿]: METAVAR¿[name: _mlocal._fresh.4966.29573¿]¿= PROP_BELONGS¿[type: PROP¿]¿(LOCAL_CONSTANT¿[name: x¿/ identifier: 0._fresh.4966.29549¿]¿, SET_INVERSE¿[type: SET¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.4965.24615¿]¿)¿]¿(LOCAL_CONSTANT¿[name: f¿/ identifier: 0._fresh.4965.24619¿]¿, SET_UNION¿[type: SET¿(LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.4965.24617¿]¿)¿]¿(LOCAL_CONSTANT¿[name: B¿/ identifier: 0._fresh.4965.24620¿]¿, LOCAL_CONSTANT¿[name: B'¿/ identifier: 0._fresh.4965.24622¿]¿)¿)¿)
+"""
 
 ######################################################################
 # Rules for parsing strings provided by Lean's tactics hypo_analysis #
@@ -185,6 +213,7 @@ def concatenate(children):
 def pprint(essai: str):
     """
     Display the tree structure of a string formatted with "¿(", "¿)", "¿,".
+    For debugging only.
 
     :param essai: string to be displayed
     """

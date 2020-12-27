@@ -4,7 +4,7 @@
 ##############################################
 
 Contain the data for processing MathObject into a displayable format:
-latex, utf8, text, or lean (to be inserted in Lean code)
+latex, utf8, text, or lean (to be inserted in Lean code).
 
 The basic data for representing math objects is the latex_from_node dictionary.
 It associates, to each MathObject.node attribute, the shape to display, e.g.

@@ -41,6 +41,12 @@ EXERCISE.USE_SECONDS_FOR_VARIABLES_NAMES = \
 
 
 def get_new_hyp(goal) -> str:
+    """
+    Call get_new_hyp_from_forbidden_names with a list of forbidden names
+    that are the current goal's variables' names.
+    :param goal: current goal
+    :return:
+    """
     forbidden_names = goal.extract_vars_names()
     return get_new_hyp_from_forbidden_names(forbidden_names)
 
@@ -116,14 +122,19 @@ def give_name(math_type,
         - look if math_type has a name which starts with an uppercase letter,
         and if so add the corresponding lowercase letter as the main hint
         - if the hint is not in forbidden_names then it will be the name ; in
-        the opposite case we will try the letters in alphabetical order from the
-        hint.
+        the opposite case we will try the letters in alphabetical order from
+        the hint.
+
+    If EXERCISE.USE_PRIMES_FOR_VARIABLES_NAMES is True, then will try to use
+    prime: e.g. if hint = ["x"] but "x" is already used, if math_type equals
+    the math_type of x, then "x'" will be tried, and even "x''" if
+    EXERCISE.USE_SECONDS_FOR_VARIABLES_NAMES is True.
 
     Exception: if math_type = set xxx, (the variable denotes a subset),
     attribute an uppercase letter
 
     NB : if x : X but the property 'x belongs to A' is in context, then
-    math_type could be A.
+    math_type could be A for a better hinting.
 
     :param math_type:       PropObj type of new variable
     :param forbidden_vars:  list of variables that must be avoided

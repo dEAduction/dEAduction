@@ -3,7 +3,7 @@
 # display_data.py : data for displaying MathObject, used by display_math #
 ##########################################################################
 
-    This file provide dictionaries for converting MathObjects into strings:
+    This file provides dictionaries for converting MathObjects into strings:
     - latex_from_node, latex_from_quant_node, latex_from_constant_name
     - lean_from_node,
     - latex_to_utf8_dic,

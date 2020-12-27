@@ -4,8 +4,26 @@
 # and process it to extract the mathematical content.               #
 #####################################################################
     
-This files provides the python classe MathObject for encoding mathematical
+This files provides the python class MathObject for encoding mathematical
 objects and propositions.
+
+Examples:
+    - a function f : X → Y corresponds to  a MathObject with
+        node = 'LOCAL_CONSTANT'
+        info['name'] = 'f'
+        math_type = a MathObject with
+            node = FUNCTION,
+            children = [MathObject corresponding to X,
+                        MathObject corresponding to Y]
+    - a property H2 : x ∈ f⁻¹⟮B⟯ ∪ (f⁻¹⟮B'⟯) corresponds to a MathObject with
+    node = 'LOCAL_CONSTANT' and info['name']='H2', and math_type is a
+    MathObject with
+            node = 'PROP_BELONGS'
+            children = [MathObject corresponding to x,
+                        MathObject corresponding to f⁻¹⟮B⟯ ∪ (f⁻¹⟮B'⟯)]
+
+Note in particular that for a property, the math content of the property is
+actually stored in the math_type of the MathObject.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -315,12 +333,11 @@ class MathObject:
     def __eq__(self, other) -> bool:
         """
         Test if the two MathObjects code for the same mathematical objects,
-        by recursively testing nodes.
-        This is crucial for instance to compare a new context with the
-        previous one.
+        by recursively testing nodes. This is crucial for instance to
+        compare a new context with the previous one.
 
         Note that even for global variables we do NOT want to use identifiers,
-        since Lean change them every time the file is modified.
+        since Lean changes them every time the file is modified.
 
         We also want the method to identify properly two quantified
         expressions that have the same meaning, like '∀x, P(x)' and '∀y, P(y)'
@@ -415,7 +432,7 @@ class MathObject:
 
     def contains(self, other) -> int:
         """
-        Compute the number of copies of other contained in self
+        Compute the number of copies of other contained in self.
         """
         if MathObject.__eq__(self, other):
             counter = 1
@@ -476,7 +493,7 @@ class MathObject:
 
     def is_type(self, is_math_type=False) -> bool:
         """
-        Test if (math_type of) is a "universe"
+        Test if (math_type of) self is a "universe"
         """
         if is_math_type:
             math_type = self
@@ -486,7 +503,7 @@ class MathObject:
 
     def is_nat(self, is_math_type=False) -> bool:
         """
-        Test if (math_type of) is ℕ.
+        Test if (math_type of) self is ℕ.
         """
         if is_math_type:
             math_type = self
