@@ -39,25 +39,28 @@ def get_recent_courses() -> ([Path], [str], [int]):
     Return the list of (recent course, title) found in the user_config dict
     """
 
-    recent_courses = cvars.get("course.recent_courses", "")
-    titles         = cvars.get("course.recent_courses_titles", "")
-    numbers        = cvars.get("course.exercise_numbers", "")
+    recent_courses        = cvars.get("course.recent_courses", [])
+    courses_titles        = cvars.get("course.recent_courses_titles", [])
+    exercises_numbers     = cvars.get("course.exercise_numbers", [])
 
-    if recent_courses:
-        recent_courses_list = recent_courses.split(',')
-        courses_paths = list(map(Path, recent_courses_list))
-        courses_titles = titles.split(',')
-        exercises_numbers = [-1] * len(recent_courses_list)
-    else:
-        courses_paths = []
-        courses_titles = []
-        exercises_numbers = []
+    courses_paths         = list(map(Path, recent_courses))
+    exercises_numbers     = exercises_numbers or ([-1] * len(recent_courses))
 
-    if exercises_numbers:
-        try:
-            exercises_numbers = list(map(int, numbers.split(',')))
-        except ValueError:
-            pass
+    #if recent_courses:
+    #    recent_courses_list = recent_courses.split(',')
+    #    courses_paths = list(map(Path, recent_courses_list))
+    #    courses_titles = titles.split(',')
+    #    exercises_numbers = [-1] * len(recent_courses_list)
+    #else:
+    #    courses_paths = []
+    #    courses_titles = []
+    #    exercises_numbers = []
+
+    #if exercises_numbers:
+    #    try:
+    #        exercises_numbers = list(map(int, numbers.split(',')))
+    #    except ValueError:
+    #        pass
     return courses_paths, courses_titles, exercises_numbers
 
 
@@ -95,12 +98,14 @@ def add_to_recent_courses(course_path: Path,
 
     # Turn each list into a single string
     courses_paths_strings = [str(path.resolve()) for path in courses_paths]
-    courses_paths_string   = ','.join(courses_paths_strings)
-    courses_titles_string = ','.join(courses_titles)
-    exercises_numbers_string = ','.join(map(str, exercises_numbers))
-    cvars.set("course.recent_courses", courses_paths_string)
-    cvars.set("course.recent_courses_titles", courses_titles_string)
-    cvars.set("course.exercise_numbers", exercises_numbers_string)
+
+    #courses_paths_string   = ','.join(courses_paths_strings)
+    #courses_titles_string = ','.join(courses_titles)
+    #exercises_numbers_string = ','.join(map(str, exercises_numbers))
+
+    cvars.set("course.recent_courses"       , courses_paths_strings)
+    cvars.set("course.recent_courses_titles", courses_titles)
+    cvars.set("course.exercise_numbers"     , exercises_numbers)
 
     # Save config file
     cvars.save()
