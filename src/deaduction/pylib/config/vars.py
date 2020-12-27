@@ -107,3 +107,16 @@ def set( k, v, if_not_exists=False ):
 
     udict.dotset(__dict_user, k, v, if_not_exists)
 
+
+if __name__ == "__main__":
+    from pprint import pprint
+
+    print("############## Factory config ##############")
+    for k,v in __dict_factory.items():
+        print(f"→ {k} = ",end="")
+        pprint(v, indent=4)
+
+    print("\n############## User config ##############")
+    for k,v in __dict_user.items():
+        print(f"→ {k} = ",end="")
+        pprint(v, indent=4)
