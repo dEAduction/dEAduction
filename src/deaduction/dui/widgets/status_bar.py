@@ -44,7 +44,7 @@ class IconStatusBar(QStatusBar):
 
         # Icon
         self.iconWidget = QLabel(self)
-        icons_dir = Path('../../src/deaduction/share/graphical_resources'
+        icons_dir = Path('share/graphical_resources'
                          '/icons/')
         error_icon_path = icons_dir / 'error_devil2.png'
         self.error_pixmap = QPixmap(str(error_icon_path.resolve()))

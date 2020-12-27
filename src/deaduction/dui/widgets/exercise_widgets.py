@@ -61,6 +61,7 @@ from deaduction.dui.widgets import (    ActionButton,
                                         MathObjectWidget,
                                         MathObjectWidgetItem,
                                         TargetWidget)
+from .status_bar import                 IconStatusBar
 from deaduction.pylib.actions import (  action_apply,
                                         InputType,
                                         MissingParametersError,
@@ -418,7 +419,7 @@ class ExerciseMainWindow(QMainWindow):
         self.toolbar.undo_action.setEnabled(False)  # same
 
         # Status Bar
-        self.statusBar = QStatusBar()
+        self.statusBar = IconStatusBar(self)
         self.setStatusBar(self.statusBar)
 
         # ──────────────── Signals and slots ─────────────── #
@@ -453,22 +454,22 @@ class ExerciseMainWindow(QMainWindow):
         super().closeEvent(event)
         self.window_closed.emit()
 
-    def display_status_bar_message(self,
-                                   event=None,
-                                   instruction=None):
-        """
-        Display an error message in the status bar.
-        :param event:       tuple of strings, (nature, content, details)
-        :param instruction: 'erase' or None
-        """
-
-        if instruction == 'erase':
-            self.statusBar.showMessage("")
-        elif event:
-            nature, content, details = event
-            if details:
-                content += _(": ") + details
-            self.statusBar.showMessage(content)
+    # def display_status_bar_message(self,
+    #                                event=None,
+    #                                instruction=None):
+    #     """
+    #     Display an error message in the status bar.
+    #     :param event:       tuple of strings, (nature, content, details)
+    #     :param instruction: 'erase' or None
+    #     """
+    #
+    #     if instruction == 'erase':
+    #         self.statusBar.showMessage("")
+    #     elif event:
+    #         nature, content, details = event
+    #         if details:
+    #             content += _(": ") + details
+    #         self.statusBar.showMessage(content)
 
     @property
     def current_selection_as_mathobjects(self):
@@ -604,7 +605,7 @@ class ExerciseMainWindow(QMainWindow):
                          self.__apply_math_object_triggered]) as emissions:
             async for emission in emissions.channel:
                 # erase status bar
-                self.display_status_bar_message(instruction='erase')
+                self.statusBar.display_status_bar_message(instruction='erase')
 
                 if emission.is_from(self.lean_editor.editor_send_lean):
                     await self.process_async_signal(self.__server_send_editor_lean)
