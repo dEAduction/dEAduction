@@ -43,7 +43,8 @@ from PySide2.QtCore    import ( Signal,
                                 Slot)
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
-                                QIcon)
+                                QIcon,
+                                QFont)
 from PySide2.QtWidgets import ( QHBoxLayout,
                                 QVBoxLayout,
                                 QLabel,
@@ -219,6 +220,9 @@ class MathObjectWidget(QListWidget):
 
         # TODO: make self.items a property?
         self.items = []
+        # set fonts for maths display
+        if SESSION.math_font_name:
+            self.setFont(QFont(SESSION.math_font_name))
         for mathobject, tag in tagged_mathobjects:
             item = MathObjectWidgetItem(mathobject, tag)
             self.addItem(item)
@@ -297,6 +301,10 @@ class TargetWidget(QWidget):
         target_label = QLabel(text)
         size = cvars.get('display.target_font_size')
         target_label.setStyleSheet(f'font-size: {size};')
+        # Set fonts for maths display
+        if SESSION.math_font_name:
+            target_label.setFont(QFont(SESSION.math_font_name))
+
 
         # ───────────────────── Layouts ──────────────────── #
 

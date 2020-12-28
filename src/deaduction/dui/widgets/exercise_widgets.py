@@ -1,6 +1,6 @@
 """
 ########################################################
-# exercisewidget.py : provide the ExerciseWidget class #
+# exercise_widget.py : provide the ExerciseWidget class #
 ########################################################
 
 Author(s)      : - Kryzar <antoine@hugounet.com>
@@ -30,7 +30,6 @@ This file is part of d∃∀duction.
 from functools import           partial
 import logging
 from pathlib import Path
-import trio
 from typing import              Callable
 import qtrio
 
@@ -52,7 +51,7 @@ from PySide2.QtWidgets import ( QAction,
                                 QStatusBar)
 
 from deaduction.config import           EXERCISE
-from deaduction.memory import           JOURNAL
+from deaduction.pylib.memory import     JOURNAL
 
 from deaduction.dui.utils import  (     replace_widget_layout,
                                         ButtonsDialog)
@@ -64,12 +63,12 @@ from deaduction.dui.widgets import (    ActionButton,
                                         MathObjectWidget,
                                         MathObjectWidgetItem,
                                         TargetWidget)
-from deaduction.pylib.actions import (  Action,
-                                        action_apply,
+from .status_bar import                 IconStatusBar
+from deaduction.pylib.actions import (  action_apply,
                                         InputType,
                                         MissingParametersError,
                                         WrongUserInput)
-import deaduction.pylib.actions.generic as generic
+import deaduction.pylib.actions.generic as  generic
 from deaduction.pylib.coursedata import (   Definition,
                                             Exercise,
                                             Theorem)
@@ -420,7 +419,7 @@ class ExerciseMainWindow(QMainWindow):
         self.toolbar.undo_action.setEnabled(False)  # same
 
         # Status Bar
-        self.statusBar = QStatusBar()
+        self.statusBar = IconStatusBar(self)
         self.setStatusBar(self.statusBar)
 
         # ──────────────── Signals and slots ─────────────── #
@@ -455,22 +454,22 @@ class ExerciseMainWindow(QMainWindow):
         super().closeEvent(event)
         self.window_closed.emit()
 
-    def display_status_bar_message(self,
-                                   event=None,
-                                   instruction=None):
-        """
-        Display an error message in the status bar.
-        :param event:       tuple of strings, (nature, content, details)
-        :param instruction: 'erase' or None
-        """
-
-        if instruction == 'erase':
-            self.statusBar.showMessage("")
-        elif event:
-            nature, content, details = event
-            if details:
-                content += _(": ") + details
-            self.statusBar.showMessage(content)
+    # def display_status_bar_message(self,
+    #                                event=None,
+    #                                instruction=None):
+    #     """
+    #     Display an error message in the status bar.
+    #     :param event:       tuple of strings, (nature, content, details)
+    #     :param instruction: 'erase' or None
+    #     """
+    #
+    #     if instruction == 'erase':
+    #         self.statusBar.showMessage("")
+    #     elif event:
+    #         nature, content, details = event
+    #         if details:
+    #             content += _(": ") + details
+    #         self.statusBar.showMessage(content)
 
     @property
     def current_selection_as_mathobjects(self):
@@ -536,9 +535,14 @@ class ExerciseMainWindow(QMainWindow):
         if goals_counter_evolution < 0 and current_goals_counter != 0:
             if EXERCISE.last_action != 'undo':
                 log.info(f"Current goal solved!")
+                if goals_counter_evolution == -1:
+                    message = _('Current goal solved')
+                else:
+                    nb = str(-goals_counter_evolution)
+                    message = nb + ' ' + _('goals solved!')
                 QMessageBox.information(self,
                                         '',
-                                        _('Current goal solved'),
+                                        message,
                                         QMessageBox.Ok
                                         )
         EXERCISE.last_action = None
@@ -601,7 +605,7 @@ class ExerciseMainWindow(QMainWindow):
                          self.__apply_math_object_triggered]) as emissions:
             async for emission in emissions.channel:
                 # erase status bar
-                self.display_status_bar_message(instruction='erase')
+                self.statusBar.display_status_bar_message(instruction='erase')
 
                 if emission.is_from(self.lean_editor.editor_send_lean):
                     await self.process_async_signal(self.__server_send_editor_lean)

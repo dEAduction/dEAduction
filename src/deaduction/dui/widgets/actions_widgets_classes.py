@@ -54,7 +54,8 @@ from PySide2.QtWidgets import ( QHBoxLayout,
                                 QPushButton,
                                 QWidget)
 from PySide2.QtWidgets import ( QTreeWidget,
-                                QTreeWidgetItem)
+                                QTreeWidgetItem,
+                                QToolTip)
 
 from deaduction.pylib.config.i18n import   _
 from deaduction.pylib.actions     import   Action
@@ -271,6 +272,9 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
 
         # Set tooltip
         self.setToolTip(0, statement.caption)
+        # These tooltips contain maths
+        if SESSION.math_font_name:
+            QToolTip.setFont(SESSION.math_font_name)
 
 
 class StatementsTreeWidgetNode(QTreeWidgetItem):
