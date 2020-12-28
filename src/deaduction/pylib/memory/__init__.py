@@ -80,7 +80,7 @@ class Journal:
                 event = (nature, content, _("request failed"))
 
             # display event
-            emw.display_status_bar_message(event=event)
+            emw.statusBar.display_status_bar_message(event=event)
 
         if self.__save_journal:  # fixme: should not be done each time!
             self.write_last_entry()
