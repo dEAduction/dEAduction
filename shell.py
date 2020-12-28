@@ -33,7 +33,7 @@ import deaduction.pylib.config.site_installation as inst
 
 # Stuff init
 log.configure()
-cvars.load()
+#cvars.load()
 cenv.init()
 cdirs.init()
 inst.init()
