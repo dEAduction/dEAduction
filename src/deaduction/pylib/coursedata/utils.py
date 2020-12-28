@@ -57,9 +57,15 @@ def separate(string) -> []:
 
 
 def substitute_macros(string: str, macros: {}) -> str:
-    """ Recursively substitute, in string, keys of macro with their values,
-    if the values are strings
     """
+    Recursively substitute, in string, keys of macro with their values,
+    if the values are strings.
+
+    :param string:  str in which the substitution will tale place
+    :param macros:  dict[<macro_name>] = <macro content>
+    :return:        str
+    """
+
     for macro_name in macros:
         if isinstance(macros[macro_name], str):
             new_string = ""
@@ -83,12 +89,17 @@ def substitute_macros(string: str, macros: {}) -> str:
 
 def extract_list(string: str, macros: {}, search: callable) -> list:
     """
-    for each word in string,
+    For each word in string,
      add search(word) in the list,
      or remove it from the list if word begins by '-'
 
      search is a callable that returns a list of items
      (in practice, items will be instances of Action or Statement)
+
+     :param string:
+     :param macros:
+     :param search:
+     :return:
     """
     final_list = []
     initial_list = separate(string)

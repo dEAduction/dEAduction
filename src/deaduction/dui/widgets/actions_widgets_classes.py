@@ -273,8 +273,9 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         # Set tooltip
         self.setToolTip(0, statement.caption)
         # These tooltips contain maths
-        if SESSION.math_font_name:
-            QToolTip.setFont(SESSION.math_font_name)
+        # math_font_name = 'Default'  # FIXME!!
+        math_font_name = cvars.get('mathematics_font', 'Default')
+        QToolTip.setFont(math_font_name)
 
 
 class StatementsTreeWidgetNode(QTreeWidgetItem):

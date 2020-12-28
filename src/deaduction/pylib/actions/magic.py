@@ -31,13 +31,14 @@ import logging
 import deaduction.pylib.logger as logger
 
 from deaduction.pylib.config.i18n import _
-#from deaduction.config import tooltips_config
 from deaduction.pylib.text import tooltips
 
 from deaduction.pylib.actions.actiondef import action
 from deaduction.pylib.actions import (format_orelse,
+                                      solve1_wrap,
                                       WrongUserInput)
-from deaduction.pylib.mathobj import MathObject
+from deaduction.pylib.mathobj import (MathObject,
+                                      Goal)
 
 
 # Turn magic_button_texts into a dictionary
@@ -61,9 +62,9 @@ def action_compute(goal, selected_objects):
     # try_before = "try {apply div_pos}, " \
     #            + "try { all_goals {norm_num at *}}" \
     #             + ", "
-    #simplify_1 = "simp only " \
+    # simplify_1 = "simp only " \
     #             + "[*, ne.symm, ne.def, not_false_iff, lt_of_le_of_ne]"
-    #possible_code = [try_before + "linarith",
+    # possible_code = [try_before + "linarith",
     #                 try_before + simplify_1]
     # "finish" "norm_num *"
     # if user_config.getboolean('use_library_search_for_computations'):
@@ -80,6 +81,7 @@ def action_assumption(goal: Goal, l: [MathObject]) -> str:
     """
     Translate into string of lean code corresponding to the action
 
+    :param goal: current goal
     :param l: list of MathObject arguments preselected by the user
     :return: string of lean code
     """

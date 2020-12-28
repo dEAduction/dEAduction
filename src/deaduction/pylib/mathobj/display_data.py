@@ -1,7 +1,16 @@
 """
-# display_data.py : <#ShortDescription> #
-    
-    <#optionalLongDescription>
+##########################################################################
+# display_data.py : data for displaying MathObject, used by display_math #
+##########################################################################
+
+    This file provides dictionaries for converting MathObjects into strings:
+    - latex_from_node, latex_from_quant_node, latex_from_constant_name
+    - lean_from_node,
+    - latex_to_utf8_dic,
+    - latex_to_lean,
+    - text_from_node, text_from_quant_node
+
+    It also provides the function needs_paren.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -38,10 +47,9 @@ latex_from_node = {
     "PROP_IFF": (0, r" \Leftrightarrow ", 1),
     "PROP_NOT": (_("not") + " ", 0),
     "PROP_IMPLIES": (0, r" \Rightarrow ", 1),
-    # "QUANT_∀": (r"\forall", 1, r" \in ", 0, ", ", 2),
-    # "QUANT_∃": (r"\exists", 1, r" \in ", 0, ", ", 2),
-    "PROP_∃":  (0, " " + _("and") + " ", 1),  # ∃ (H : P), Q
-    # "QUANT_∃!": (r"\exists !",  1, r" \in ", 0, ", ", 2),
+    # "∃ (H : P), Q" is treated as "P and Q",
+    # and also handled by the 'AND' button
+    "PROP_∃":  (0, " " + _("and") + " ", 1),
     ###############
     # SET THEORY: #
     ###############
@@ -65,7 +73,7 @@ latex_from_node = {
     ############
     # NUMBERS: #
     ############
-    "COE": (0,),    # we do not want to see bindings
+    "COE": (0,),    # We do not want to see bindings
     "PROP_EQUAL": (0, " = ", 1),
     "PROP_EQUAL_NOT": (0, r" \neq ", 1),  # todo
     "PROP_<": (0, " < ", 1),
@@ -94,18 +102,18 @@ latex_from_quant_node = {
     "QUANT_∃!": (r"\exists !", 1, r" \in ", 0, ", ", 2)
 }
 
-# negative value = from end of children list
+# Negative value = from end of children list
 latex_from_constant_name = {
     "STANDARD_CONSTANT": (-1, " " + _("is") + " ", 0),
     "STANDARD_CONSTANT_NOT": (-1, " " + _("is not") + " ", 0),
     # NB: STANDARD_CONSTANT prevents supplementary arguments,
-    # do not use with a CONSTANT c s.t. APP(c, x) is a FUNCTION,
+    # Do not use with a CONSTANT c s.t. APP(c, x) is a FUNCTION,
     # or anything that can be applied (i.e. in APP(APP(c,x),...) )
     "symmetric_difference": (-2, r'\Delta', -1),
     "composition": (4, r'\circ', 5),  # APP(compo, X, Y, Z, g, f)
     "prod": (1, r'\times', 2),
     "Identite": ("Id",),
-    "ne": (2, r" \neq ", 3),  # Lean name for ≠  temporary
+    "ne": (2, r" \neq ", 3),  # Lean name for ≠
     "interval": ("\[", -2, ",", -1, "\]"),
     "majorant": (-1, " majorant de ", -2),
     "minorant": (-1, " minorant de ", -2),
@@ -129,12 +137,13 @@ lean_from_node = {  # todo: this has not been tested on Lean yet!
     "TYPE": ("Type",)
 }
 
+# Convert Latex command into utf8 symbols
 latex_to_utf8_dic = {
     r'\backslash': '\\',
     r'\Delta': '∆',
     r'\circ': '∘',
     r'\times': '×',
-    #    r'\in': '∈',       this is handled in the expand_from_shape method
+    #    r'\in': '∈',       This is handled in the expand_from_shape method
     r'\Leftrightarrow': '⇔',
     r'\Rightarrow': '⇒',
     r'\forall': '∀',
@@ -158,7 +167,7 @@ latex_to_utf8_dic = {
     r'\]': ']'
                     }
 
-# only those lean symbols that are not in the latex_to_utf8 dict
+# Only those lean symbols that are distinct from the latex_to_utf8 dict
 latex_to_lean_dic = {
     #'AND': 'and',
     #'OR': 'or',
@@ -178,18 +187,11 @@ text_from_node = {
     "PROP_IFF": (0, " " + _("if and only if") + " ", 1),
     "PROP_NOT": (_("the negation of") + " ", 0),
     "PROP_IMPLIES": (_("if") + " ", 0, " " + _("then") + " ", 1),
-    # "QUANT_∀": (_("for every") + " ", 1, " " + _("in") + " ", 0,
-    #             ", ", 2),
-    # "QUANT_∃": (_("there exists") + " ", 1, " " + _("in") + " ", 0,
-    #             " " + _("such that") + " ", 2),
-    # "QUANT_∃!": (_("there exists a unique") + " ", 1, " " + _("in") + " ", 0,
-    #             " " + _("such that") + " ", 2),
-    # "PROP_∃": ("*PROP_∃*",),
     ###############
     # SET THEORY: #
     ###############
     "PROP_INCLUDED": (0, " " + _("is included in") + " ", 1),
-    "PROP_BELONGS": (0, " ∈ ", 1),  # this special case is processed in
+    "PROP_BELONGS": (0, " ∈ ", 1),  # This special case is processed in
                                     # the function display_belongs_to
     "SET_INTER": (_("the intersection of") + " ", 0, " " + _("and") + " ", 1),
     "SET_UNION": (_("the union of") + " ", 0, " " + _("and") + " ", 1),
@@ -229,7 +231,7 @@ text_from_quant_node = {
     "PROP_∃": ("*PROP_∃*",)
 }
 
-# nodes of math objects that need instantiation of bound variables
+# Nodes of math objects that need instantiation of bound variables
 HAVE_BOUND_VARS = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_EXTENSION", "LAMBDA")
 INEQUALITIES = ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥", "PROP_EQUAL_NOT")
 
@@ -273,8 +275,9 @@ def needs_paren(parent, child, child_number) -> bool:
                     "PROP_≤", "PROP_≥", "PROP_<", "PROP_>"):
         return False
     elif p_node.startswith("QUANT"):
+        # for tuple as child_number, cf the descendant MathObject method
         if child_number in (0, 1, (0,), (1,), (2, 0)):
-            # no parentheses around the variable, the type, or the leading
+            # No parentheses around the variable, the type, or the leading
             # inequality
             return False
         elif c_node.startswith("QUANT"):

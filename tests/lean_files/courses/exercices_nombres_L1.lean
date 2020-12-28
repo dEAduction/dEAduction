@@ -32,7 +32,7 @@ Author
 Institution
     Université de France
 Title
-    Logique et inégalités
+    Logique Et Inégalités
 OpenQuestion
     True
 AvailableExercises

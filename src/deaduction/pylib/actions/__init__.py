@@ -35,7 +35,8 @@ from .exceptions import (   InputType,
 
 from .utils import (        get_new_hyp,
                             get_new_var,
-                            format_orelse)
+                            format_orelse,
+                            solve1_wrap)
 
 from .logic import (        action_negate,
                             action_implicate,

@@ -5,18 +5,28 @@
 
 Allow the user to choose a lean file, and pre-process all statements,
 sending them to Lean one by one to get their initial proof_state.
+Each initial proof state is stored in the statement.initial_proof_state
+attribute.
+
 The resulting course is stored in a '.pkl' file in the same directory
+
 If the corresponding '.pkl' file already exists, then
 - if the file_content was different, just erase the '.pkl' file
 - if not, read the stored course and keep the initial proof_states
 that are already stored there.
 
 Every 5 processed statements, Lean server is stopped and started again.
-This prevents the Lean serve from crashing because of messages of length
+This prevents the Lean server from crashing because of messages of length
 > 65535. The resulting course with partial pre-processing is also stored,
 to take into account the possibility of a crash.
 
-TODO: change the data to avoid saving the whole contents every 5 statements.
+In practice, the software seldom succeeds in processing the whole content.
+As said before, however, the statements that have already been processed are
+still accessible. So in case of a crash, just run the soft again, and be
+patient...
+
+Finally the programme prints all statements, so this can also be used to get
+the list of all statements in a given Lean (or pkl) course file.
 
 Author(s)      : - Frédéric Le Roux <frederic.le_roux@imj-prg.fr>
 
@@ -41,17 +51,21 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
+# TODO: change the data to avoid saving the whole contents every 5 statements.
 
 import logging
 import qtrio
 import trio
-import gettext
 import pickle
 from pathlib import Path
+from PySide2.QtWidgets import QFileDialog
+
 
 from deaduction.config import _
-from deaduction.dui.launcher import select_course
-from deaduction.pylib.coursedata import Exercise, Definition, Theorem
+from deaduction.pylib.coursedata import (Course,
+                                         Exercise,
+                                         Definition,
+                                         Theorem)
 from deaduction.pylib import logger
 from deaduction.pylib.server import ServerInterface
 
@@ -60,11 +74,11 @@ log = logging.getLogger(__name__)
 
 async def main():
     """
-    See file doc
+    See file doc.
     """
     # Choose course and parse it
     course = select_course()
-    # check for pkl file and, if it exists, find all unprocessed statements
+    # Check for pkl file and, if it exists, find all unprocessed statements
     course, unprocessed_statements, course_pkl_path = check_statements(course)
 
     if not unprocessed_statements:
@@ -105,6 +119,35 @@ async def main():
         read_data(course_pkl_path)
 
 
+def select_course():
+    """
+    Open a file dialog to choose a course lean file.
+
+    :return: TODO
+    """
+
+    course_path, ok = QFileDialog.getOpenFileName()
+
+    if ok:
+        course_path = Path(course_path)
+        course_path_str = str(course_path.resolve())
+        log.info(f'Selected course: {course_path_str}')
+
+        extension = course_path.suffix
+        # case of a standard Lean file
+        if extension == '.lean':
+            course = Course.from_file(course_path)
+        # case of a pre-processed .pkl file
+        elif extension == '.pkl':
+            [course] = pickled_items(course_path)
+        else:
+            log.error("Wrong file format")
+
+        return course
+    else:
+        return None
+
+
 def check_statements(course):
     """
     Check every statement of course for initial_proof_state attribute
@@ -117,14 +160,16 @@ def check_statements(course):
                 3) path for pkl version of the course (whether the file exists
                 or not)
     """
-    course_path = course.course_path
-    directory_name = course_path.parent
+    # get course_path relative to cwd
+    # (cwd is set be src/deaduction by config.py)
+    relative_course_path = course.relative_course_path
+    directory_name = relative_course_path.parent
     course_hash = hash(course.file_content)
 
     # search for pkl file, and compare contents
     # so that only unprocessed statements will be processed
     unprocessed_statements = []
-    filename = course_path.stem + '.pkl'
+    filename = relative_course_path.stem + '.pkl'
     course_pkl_path = directory_name.joinpath(Path(filename))
     log.debug(f"Checking for {course_pkl_path}")
     if course_pkl_path.exists():

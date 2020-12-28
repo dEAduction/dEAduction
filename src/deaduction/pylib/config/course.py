@@ -75,7 +75,7 @@ def add_to_recent_courses(course_path: Path,
 
     max_ = cvars.get("course.max_recent_courses", 5)
 
-    if course_type == ".pkl" and course_path_suffix == ".lean":
+    if course_type == ".pkl" and course_path.suffix == ".lean":
         course_path = course_path.with_suffix(".pkl")
     
     courses_paths, courses_titles, exercises_numbers = get_recent_courses()

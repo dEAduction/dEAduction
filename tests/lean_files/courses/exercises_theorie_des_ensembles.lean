@@ -4,6 +4,7 @@ import tactic
 -- dEAduction imports
 import structures2
 import notations_definitions
+import utils
 
 -- General principles :
 -- Type should be defined as parameters, in order to be implicit everywhere
@@ -23,11 +24,13 @@ import notations_definitions
 
 /- dEAduction
 Title
-    Théorie des ensembles
+    Théorie Des Ensembles
 Author
     Frédéric Le Roux
 Institution
     Université de France
+AvailableMagic
+    assumption
 -/
 
 
@@ -419,12 +422,7 @@ lemma exercise.produit_avec_intersection
 set.prod A (B ∩ C) = (set.prod A B) ∩ (set.prod A C)
 :=
 begin
-    --rw generalites.definition.egalite_deux_ensembles,
-    --intro z,
-    --have H, from definition.type_produit z,
-    --cases H with x Hx,
-    --cases Hx with y Hy,
-    --rw Hy,
+    sorry
 end
 
 

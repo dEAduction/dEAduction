@@ -1,9 +1,11 @@
 """
-# course.py : provide the class Course
-    
+########################################
+# course.py : provide the class Course #
+########################################
+
     Provide the class Course,
     and an instantiation method for Course object
-    by parsing a lean file
+    by parsing a lean file.
 
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -29,17 +31,18 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from collections import OrderedDict
-from dataclasses import dataclass
-from pathlib import Path
-from typing import List, Dict
+from collections import                     OrderedDict
+from dataclasses import                     dataclass
+from pathlib import                         Path
+from typing import                          List, Dict
+import os
 import logging
 
-import deaduction.pylib.logger as logger
-from deaduction.pylib.coursedata import (Exercise,
-                                         Definition,
-                                         Theorem,
-                                         Statement)
+import deaduction.pylib.logger as           logger
+from deaduction.pylib.coursedata import (   Exercise,
+                                            Definition,
+                                            Theorem,
+                                            Statement)
 import deaduction.pylib.coursedata.parser_course as parser_course
 
 log = logging.getLogger(__name__)
@@ -54,23 +57,24 @@ class Course:
     keyword "lemma"), structured into namespaces that corresponds to sections.
     Th attributes are:
     - the content of the corresponding Lean file,
-    - metadata (e.g. authors, institution, etc.)
+    - the course metadata (e.g. authors, institution, etc.)
     - the "outline" of the course, an ordered dict describing namespaces
-    - a list of all statements
+    - a list of all statements, Python object containing all information
+    related to a Lean statement.
     """
     file_content:           str
     metadata:               Dict[str, str]
     outline:                OrderedDict
     statements:             List[Statement]
-    course_path:            Path = None
-    # course_path is added after instantiation
+    relative_course_path:   Path = None
+    # Relative_course_path is added after instantiation.
 
-    # outline description:
+    # Outline description:
     #   keys = lean complete namespaces,
     #   values = corresponding plain language namespace
     #   e. g. section_dict["set_theory.unions_and_intersections"] =
     #   "Unions and intersections"
-    # statements is a list of all Statements, including exercises
+    # Statements is a list of all Statements, including exercises
 
     @property
     def title(self) -> str:
@@ -80,11 +84,9 @@ class Course:
         """
         if 'title' in self.metadata:
             title = self.metadata['title']
-        # elif self.outline:  # Return the title of the first section
-        #    first_key = list(self.outline)[0]
-        #    title = self.outline[first_key]
         else:  # Make a title from the course_path
-            title = str(self.course_path.stem).replace("_", " ").capitalize()
+            string_title = str(self.relative_course_path.stem)
+            title = string_title.replace("_", " ").title()
         return title
 
     @property
@@ -113,9 +115,9 @@ class Course:
         for field_name, field_content in self.metadata.items():
             print(f"{field_name}: {field_content}")
 
-    def exercises_list(self):
+    def exercises_list(self) -> List[Exercise]:
         """
-        extract all the exercises from the statements list
+        Extract all the exercises from the statements list.
         """
         statements = self.statements
         exercises = [item for item in statements
@@ -125,27 +127,64 @@ class Course:
     @classmethod
     def from_file(cls, course_path: Path):
         """
-        instantiate a Course object from the provided file
+        Instantiate a Course object from the provided file.
 
-        :param course_path: name of directory
-        :return: a Course instance
+        :param course_path:     path for file
+        :return:                a Course instance
         """
         log.info(f"Parsing file {str(course_path.resolve())}")
-        file_content = course_path.read_text()
-        course = Course.from_file_content(file_content)
-        course.course_path = course_path
+        file_content                = course_path.read_text()
+        course                      = Course.from_file_content(file_content)
+        course_path                 = course_path.resolve()
+        relative_course_path        = Path(os.path.relpath(course_path))
+        course.relative_course_path = relative_course_path
         return course
 
     @classmethod
     def from_file_content(cls, file_content: str):
         """
-        instantiate a Course object by parsing file_content
-        data fields to be parsed must start with "/- dEAduction"
-        and end with "-/"
+        Instantiate a Course object by parsing file_content.
+        Data fields to be parsed must start with "/- dEAduction"
+        and end with "-/": see the course rules in parser_course and the
+        comments in the same file for more details.
 
-        :param file_content: str to be parsed
-        :return: a Course instance
+        The file content is first transformed by the parser into a the
+        "course_history", a list of events. Each event is a tuple (name,
+        data) where data is a dictionary. The course history is some sort of
+        idealized version of the file, retaining only the dEAduction
+        pertinent information. Specifically, it is a list that contains the
+        following type of events:
+
+    - opening and closing of namespaces,
+    - statements (definitions, theorems, exercises) and their metadata
+    - beginning and ends of proofs,
+    - end_of_line (indispensable to determine positions of proofs in the file).
+
+    Specific examples of  events:
+
+    - ('open_namespace', {'name': 'generalites', 'pretty_name': 'Généralités'})
+    - ('close_namespace', {'name': 'generalites'})
+    - ('definition', {'lean_name': 'definition.inclusion',
+                      'lean_variables': '{A B : set X}',
+                      'lean_core_statement': 'A ⊆ B ↔ ∀ {x:X}, x ∈ A → x ∈ B',
+                      'pretty_name': 'Inclusion'})
+    - ('exercise', {'pretty_name': 'Union avec une intersection',
+                    'description': "L'union est distributive par rapport à
+                        l'intersection",
+                    'available_definitions': '$UNTIL_NOW
+                                        -union_quelconque_ensembles
+                                        -intersection_quelconque_ensembles',
+                    'lean_name': 'exercise.inter_distributive_union',
+                    'lean_variables': '',
+                    'lean_core_statement': 'A ∪ (B ∩ C)  = (A ∪ B) ∩ (A ∪ C)'})
+    - ('begin_proof', None)
+    - ('end_proof', None)
+    - ('end_of_line', None)  (most events are of this type!)
+
+        :param file_content:    str, to be parsed
+        :return:                a Course instance.
         """
+
         statements = []
         outline = {}
         begin_counter = 0
@@ -153,6 +192,8 @@ class Course:
         ########################
         # Parsimonious's magic #
         ########################
+        # Transform the file content into a list of events
+        # and a dict of metadata.
         course_tree = parser_course.lean_course_grammar.parse(file_content)
         visitor = parser_course.LeanCourseVisitor()
         course_history, course_metadata = visitor.visit(course_tree)
@@ -160,7 +201,7 @@ class Course:
         log.info(f"Course metadata: {course_metadata}")
 
         ##########################
-        # parsing course_history #
+        # Parsing course_history #
         ##########################
         line_counter = 1
         namespace = []
@@ -191,38 +232,38 @@ class Course:
                 begin_found = False
                 metadata = event_content
                 metadata["lean_line"] = line_counter
-                # log.debug(f"creating statement with lean_line {
-                # line_counter}")
+                # Change lean_name into the complete lean_name, taking
+                # namespaces into account:
                 if namespace:
                     metadata["lean_name"] = whole(namespace) + "." \
                                             + metadata["lean_name"]
 
                 if event_name == "exercise":
-                    # add values from course_metadata only if NOT already in
-                    # exercise metadata
+                    # Add values from course_metadata only if NOT already in
+                    # exercise metadata,
                     # so that global option like OpenQuestion may be modified
-                    # locally
+                    # locally in the exercise's metadata
                     for field_name in course_metadata:
                         metadata.setdefault(field_name,
                                             course_metadata[field_name])
-                    # log.info(f"creating exercise from data {metadata}")
+                    # Creating Exercise!
                     exercise = Exercise.from_parser_data(metadata, statements)
                     statements.append(exercise)
                 elif event_name == "definition":
-                    # log.info(f"creating definition from data {metadata}")
+                    # Creating definition
                     definition = Definition.from_parser_data(**metadata)
                     statements.append(definition)
                 elif event_name == "theorem":
-                    # log.info(f"creating theorem from data {metadata}")
+                    # Creating Theorem
                     theorem = Theorem.from_parser_data(**metadata)
                     statements.append(theorem)
 
+            # Add begin_proof and end_proof attributes in the least
+            # created statement, since this info was available at creation time
             elif event_name == "begin_proof":
                 st = statements[-1]
                 st.lean_begin_line_number = line_counter
                 begin_counter += 1
-                #log.debug(f"Proof of statement {st.pretty_name} begins at "
-                #          f"line {line_counter}")
                 begin_found = True
             elif event_name == "end_proof":
                 st = statements[-1]
@@ -230,23 +271,22 @@ class Course:
 
             continue
 
-        # Creating the course
+        #######################
+        # Creating the course #
+        #######################
         course = cls(file_content=file_content,
                      metadata=course_metadata,
                      outline=outline,
                      statements=statements)
 
-        # Test data for coherence
+        # Add reference to course in statements, and test data for coherence
         counter_exercises = 0
         counter = 0
-        for st in statements:  # add reference to the course
+        for st in statements:
             counter += 1
-            # XXX = st.pretty_hierarchy(outline)
-            # if not isinstance(st, Statement):
-            #    log.warning(f"Dubious statement n°{counter}: {st}")
             if isinstance(st, Exercise):
                 counter_exercises += 1
-            st.course = course  # this makes printing raw exercises slow
+            st.course = course  # This makes printing raw exercises slow
         log.info(f"{len(statements)} statements, including"
                  f" {counter_exercises} exercises found by parser")
         counter_lemma_exercises = file_content.count("lemma exercise.")

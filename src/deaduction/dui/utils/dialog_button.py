@@ -29,13 +29,16 @@ This file is part of d∃∀duction.
 import sys
 from PySide2.QtWidgets import   QApplication, QDialog, QLabel, QPushButton, \
                                 QVBoxLayout, QHBoxLayout
+from PySide2.QtGui import QFont
 from functools import partial
+
+import deaduction.pylib.config.vars as cvars
 
 
 class ButtonsDialog(QDialog):
     """
     A class for displaying a dialog box with several choices displayed as
-    QPushButtons
+    QPushButtons.
     """
     def __init__(self,
                  choices,
@@ -65,8 +68,10 @@ class ButtonsDialog(QDialog):
         # Display #
         layout = QVBoxLayout()
 
-        # title line
+        # Output line
         output_line = QLabel(output, self, StyleSheet='font-weight: bold;')
+        math_font_name = cvars.get('mathematics_font', 'Default')
+        output_line.setFont(QFont(math_font_name))
         output_layout = QHBoxLayout()
         output_layout.addWidget(output_line)
         output_layout.addStretch(1)

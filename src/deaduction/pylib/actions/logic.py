@@ -245,19 +245,19 @@ Construct a property 'P or Q' from property 'P' or property 'Q'
     P = l[0].math_type.to_display()
 
     if len(l) == 2:
-        if not (l[0].is_prop() and l[1].is_prop()):
+        if not (l[0].math_type.is_prop() and l[1].math_type.is_prop()):
             error = _("selected items are not properties")
             raise WrongUserInput(error)
         else:
             Q = l[1].info["name"]
     elif len(l) == 1:
-        if not l[0].is_prop():
+        if not l[0].math_type.is_prop():
             error = _("selected item is not a property")
             raise WrongUserInput(error)
         if len(user_input) == 0:
             raise MissingParametersError(InputType.Text,
-                    title=_("Obtain 'P OR Q'"),
-                    output=_("Enter the proposition you want to use:"))
+                        title=_("Obtain 'P OR Q'"),
+                        output=_("Enter the proposition you want to use:"))
         Q = user_input[0]
         user_input = user_input[1:]
         
@@ -506,10 +506,12 @@ introduce two subgoals, P⇒Q, and Q⇒P.
 
 def construct_forall(goal) -> str:
     possible_codes = []
-    math_object = goal.target.math_type
     if not goal.target.is_for_all():
         error = _("target is not a universal property '∀x, P(x)'")
         raise WrongUserInput(error)
+
+    math_object = goal.target.math_type
+    body = math_object.children[2]
     math_type = math_object.children[0]
     if math_type.node == "PRODUCT":
         [math_type_1, math_type_2] = math_type.children
@@ -518,12 +520,21 @@ def construct_forall(goal) -> str:
         possible_codes.append(f'rintro ⟨ {x}, {y} ⟩')
     else:
         x = give_global_name(goal=goal,
-                             math_type=goal.target.math_type.children[0],
+                             math_type=math_type,
                              )
-        # It is probably not a good idea to include Lean's bound variable name
-        # since it is not necessarily a smart name
-        # hints=[math_object.children[1].to_display()]
         possible_codes.append(f'intro {x}')
+
+    if body.is_implication(is_math_type=True):
+        # If math_object has the form
+        # ∀ x:X, (x R ... ==> ...)
+        # where R is some inequality relation
+        # then introduce the inequality on top of x
+        premise = body.children[0]  # children (2,0)
+        if premise.is_inequality(is_math_type=True):
+            h = get_new_hyp(goal)
+            # Add and_then intro h
+            possible_codes[0] += (f', intro {h}')
+
     return format_orelse(possible_codes)
 
 
@@ -545,7 +556,7 @@ introduce x and transform the target into P(x)
     # search for a universal property among l, beginning with last item
     l.reverse()
     for item in l:
-        if item.is_forall():
+        if item.is_for_all():
             # put item on last position
             l.remove(item)
             l.append(item)
@@ -601,10 +612,10 @@ def construct_exists_on_hyp(goal: Goal, l: [MathObject]):
     possible_codes = []
     x = l[0].info["name"]
     hx = l[1].info["name"]
-    if (not l[0].is_prop()) and l[1].is_prop():
+    if (not l[0].math_type.is_prop()) and l[1].math_type.is_prop():
         new_h = get_new_hyp(goal)
         possible_codes.append(f'have {new_h} := exists.intro {x} {hx}')
-    elif (not l[1].is_prop()) and l[0].is_prop():
+    elif (not l[1].math_type.is_prop()) and l[0].math_type.is_prop():
         x, hx = hx, x
         new_h = get_new_hyp(goal)
         possible_codes.append(f'have {new_h} := exists.intro {x} {hx}')
@@ -632,7 +643,7 @@ introduce a new x and add P(x) to the properties
         return construct_exists(goal, user_input)
     elif len(l) == 1 and user_input == []:
         h_selected = l[0]
-        if h_selected.is_prop():
+        if h_selected.math_type.is_prop():
             # try to apply property "exists x, P(x)" to get a new MathObject x
             if not h_selected.is_exists():
                 error = _("selection is not existential property '∃x, P(x)'")

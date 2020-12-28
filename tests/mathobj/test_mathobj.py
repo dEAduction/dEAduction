@@ -27,7 +27,6 @@ This file is part of d∃∀duction.
 import logging
 
 from deaduction.pylib.mathobj import ProofState
-from deaduction.config                      import _
 
 log = logging.getLogger(__name__)
 
