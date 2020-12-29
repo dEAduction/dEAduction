@@ -117,7 +117,3 @@ class Journal:
     def write_last_entry(self):
         with open(self.__journal_file_name, mode='ab') as output:
             pickle.dump(self.memory[-1], output, pickle.HIGHEST_PROTOCOL)
-
-
-# init
-JOURNAL = Journal([])

@@ -50,7 +50,7 @@ from PySide2.QtWidgets import ( QAction,
                                 QWidget)
 
 # from deaduction.config import           EXERCISE
-from deaduction.pylib.memory import     JOURNAL
+from deaduction.pylib.memory import     Journal
 from deaduction.pylib.config.i18n import _
 
 from deaduction.dui.utils import  (     replace_widget_layout,
@@ -409,6 +409,7 @@ class ExerciseMainWindow(QMainWindow):
         self.lean_editor        = LeanEditor()
         self.servint            = servint
         self.toolbar            = ExerciseToolbar()
+        self.journal            = Journal()
 
         # ─────────────────────── UI ─────────────────────── #
 
@@ -516,7 +517,7 @@ class ExerciseMainWindow(QMainWindow):
         # Display if a goal has been solved and user is not undoing
         if goals_counter_evolution < 0 and current_goals_counter != 0:
             # Get last action
-            last_action = JOURNAL.get_last_event()
+            last_action = self.journal.get_last_event()
             nature, content, detail = last_action
             if not (nature == 'history' and content == 'undo'):
             # if EXERCISE.last_action != 'undo':
@@ -594,7 +595,7 @@ class ExerciseMainWindow(QMainWindow):
                 self.statusBar.display_status_bar_message(instruction='erase')
                 if emission.is_from(self.lean_editor.editor_send_lean):
                     event = ('lean_editor', 'sent', '')
-                    JOURNAL.add_event(event=event, emw=self)
+                    self.journal.add_event(event=event, emw=self)
                     await self.process_async_signal(self.__server_send_editor_lean)
 
                 elif emission.is_from(self.toolbar.redo_action.triggered):
@@ -602,12 +603,12 @@ class ExerciseMainWindow(QMainWindow):
                     # signal proof_state_change of which
                     # self.update_goal is a slot
                     event = ('history', 'redo', '')
-                    JOURNAL.add_event(event=event, emw=self)
+                    self.journal.add_event(event=event, emw=self)
                     await self.process_async_signal(self.servint.history_redo)
 
                 elif emission.is_from(self.toolbar.undo_action.triggered):
                     event = ('history', 'undo', '')
-                    JOURNAL.add_event(event=event, emw=self)
+                    self.journal.add_event(event=event, emw=self)
                     await self.process_async_signal(self.servint.history_undo)
 
                 elif emission.is_from(self.window_closed):
@@ -617,20 +618,20 @@ class ExerciseMainWindow(QMainWindow):
                     # TODO: comment, what is emission.args[0]?
                     action_symbol = emission.args[0].action.symbol
                     event = ('action_button', action_symbol, '')
-                    JOURNAL.add_event(event=event, emw=self)
+                    self.journal.add_event(event=event, emw=self)
                     await self.process_async_signal(partial(
                             self.__server_call_action, emission.args[0]))
 
                 elif emission.is_from(self.__statement_triggered):
                     statement_name = emission.args[0].statement.pretty_name
                     event = ('statement', statement_name, '')
-                    JOURNAL.add_event(event=event, emw=self)
+                    self.journal.add_event(event=event, emw=self)
                     await self.process_async_signal(partial(
                             self.__server_call_statement, emission.args[0]))
 
                 elif emission.is_from(self.__apply_math_object_triggered):
                     event = ('action_button', 'doubleclic_apply', '')
-                    JOURNAL.add_event(event=event, emw=self)
+                    self.journal.add_event(event=event, emw=self)
                     await self.__server_call_apply(emission.args[0])
 
     # ──────────────── Template function ─────────────── #
@@ -673,7 +674,7 @@ class ExerciseMainWindow(QMainWindow):
             for error in e.errors:
                 details += "\n" + error.text
                 event = ('lean_error', error_message, details)
-            JOURNAL.add_event(event, self)
+            self.journal.add_event(event, self)
             # self.display_status_bar_message(content=error_message,
             #                                nature='error',
             #                                details=details)
@@ -817,7 +818,7 @@ class ExerciseMainWindow(QMainWindow):
         # msg_box.setStandardButtons(QMessageBox.Ok)
         # msg_box.exec_()
         event = ('error', error_message, details)
-        JOURNAL.add_event(event, self)
+        self.journal.add_event(event, self)
         # self.display_status_bar_message(message=error_message,
         #                                 nature='error',
         #                                 details=details)
