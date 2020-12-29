@@ -32,7 +32,7 @@ from typing import Union
 #from deaduction.config            import (tooltips_config)
 from deaduction.pylib.text        import tooltips
 from deaduction.pylib.config.i18n import _
-
+import deaduction.pylib.config.vars as cvars
 import deaduction.pylib.actions.utils as utils
 from deaduction.pylib.actions import (InputType,
                                       MissingParametersError,

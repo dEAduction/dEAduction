@@ -24,10 +24,10 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .config        import (config,
-                            COURSE,
-                            EXERCISE,
-                            SESSION)
+# from .config        import (EXERCISE)  # config,
+#                             COURSE,
+#                             EXERCISE,
+#                             SESSION)
 
 from configparser import ConfigParser
 

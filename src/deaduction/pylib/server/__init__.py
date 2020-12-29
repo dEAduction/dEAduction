@@ -32,7 +32,7 @@ This file is part of d∃∀duction.
 import trio
 import logging
 
-from deaduction.config import EXERCISE
+# from deaduction.config import EXERCISE
 from deaduction.pylib.coursedata.exercise_classes import Exercise
 from deaduction.pylib.mathobj.proof_state import ProofState
 from deaduction.pylib.lean.response import Message
@@ -348,7 +348,7 @@ class ServerInterface(QObject):
     # History
     ############################################
     async def history_undo(self):
-        EXERCISE.last_action = 'undo'
+        # EXERCISE.last_action = 'undo'
         self.lean_file.undo()
         await self.__update()
 

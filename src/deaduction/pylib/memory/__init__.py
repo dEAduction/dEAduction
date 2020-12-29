@@ -52,11 +52,14 @@ class Journal:
     """
     memory: [tuple]
 
-    event_natures = ('button',
+    event_natures = ('action_button',
                      'code',
                      'error',
-                     'lean_error'
+                     'history',
+                     'lean_error',
+                     'lean_editor',
                      'message',
+                     'statement'
                      'user_input',
                      'various')
     __save_journal = cvars.get('journal.save')
@@ -89,14 +92,14 @@ class Journal:
     def get_last_event(self, nature='any'):
         """
         Return content and detail for last event of a given nature
-        :param nature: an element of the event_natures list
-        :return:
+        :param nature:  an element of the event_natures list
+        :return:        triplet
         """
         if nature == 'any':
             if self.memory:
                 return self.memory[-1]
             else:
-                return None
+                return None, None, None
 
         # Search for the last event whose nature is "nature".
         for anti_idx in range(len(self.memory)):
@@ -105,7 +108,7 @@ class Journal:
             if event[0] == nature:
                 return event[1], event[2]  # content, details
 
-        return None
+        return None, None, None
 
     def write_file(self):
         with open(self.__journal_file_name, mode='ab') as output:

@@ -47,11 +47,11 @@ from PySide2.QtWidgets import ( QAction,
                                 QMessageBox,
                                 QToolBar,
                                 QVBoxLayout,
-                                QWidget,
-                                QStatusBar)
+                                QWidget)
 
-from deaduction.config import           EXERCISE
+# from deaduction.config import           EXERCISE
 from deaduction.pylib.memory import     JOURNAL
+from deaduction.pylib.config.i18n import _
 
 from deaduction.dui.utils import  (     replace_widget_layout,
                                         ButtonsDialog)
@@ -202,7 +202,6 @@ class ExerciseCentralWidget(QWidget):
         # (which will be called by double-click):
         apply_buttons = [button for button in self.proof_btns.buttons
                          if button.action.run == action_apply]
-
         if apply_buttons:
             self.action_apply_button = apply_buttons[0]
         else:
@@ -454,23 +453,6 @@ class ExerciseMainWindow(QMainWindow):
         super().closeEvent(event)
         self.window_closed.emit()
 
-    # def display_status_bar_message(self,
-    #                                event=None,
-    #                                instruction=None):
-    #     """
-    #     Display an error message in the status bar.
-    #     :param event:       tuple of strings, (nature, content, details)
-    #     :param instruction: 'erase' or None
-    #     """
-    #
-    #     if instruction == 'erase':
-    #         self.statusBar.showMessage("")
-    #     elif event:
-    #         nature, content, details = event
-    #         if details:
-    #             content += _(": ") + details
-    #         self.statusBar.showMessage(content)
-
     @property
     def current_selection_as_mathobjects(self):
         """
@@ -533,7 +515,11 @@ class ExerciseMainWindow(QMainWindow):
 
         # Display if a goal has been solved and user is not undoing
         if goals_counter_evolution < 0 and current_goals_counter != 0:
-            if EXERCISE.last_action != 'undo':
+            # Get last action
+            last_action = JOURNAL.get_last_event()
+            nature, content, detail = last_action
+            if not (nature == 'history' and content == 'undo'):
+            # if EXERCISE.last_action != 'undo':
                 log.info(f"Current goal solved!")
                 if goals_counter_evolution == -1:
                     message = _('Current goal solved')
@@ -545,7 +531,7 @@ class ExerciseMainWindow(QMainWindow):
                                         message,
                                         QMessageBox.Ok
                                         )
-        EXERCISE.last_action = None
+        # EXERCISE.last_action = None
 
         # Reset current context selection
         # Here we do not use empty_current_selection since Widgets may have
@@ -606,17 +592,22 @@ class ExerciseMainWindow(QMainWindow):
             async for emission in emissions.channel:
                 # erase status bar
                 self.statusBar.display_status_bar_message(instruction='erase')
-
                 if emission.is_from(self.lean_editor.editor_send_lean):
+                    event = ('lean_editor', 'sent', '')
+                    JOURNAL.add_event(event=event, emw=self)
                     await self.process_async_signal(self.__server_send_editor_lean)
 
                 elif emission.is_from(self.toolbar.redo_action.triggered):
                     # No need to call self.update_goal, this emits the
                     # signal proof_state_change of which
                     # self.update_goal is a slot
+                    event = ('history', 'redo', '')
+                    JOURNAL.add_event(event=event, emw=self)
                     await self.process_async_signal(self.servint.history_redo)
 
                 elif emission.is_from(self.toolbar.undo_action.triggered):
+                    event = ('history', 'undo', '')
+                    JOURNAL.add_event(event=event, emw=self)
                     await self.process_async_signal(self.servint.history_undo)
 
                 elif emission.is_from(self.window_closed):
@@ -624,14 +615,22 @@ class ExerciseMainWindow(QMainWindow):
 
                 elif emission.is_from(self.__action_triggered):
                     # TODO: comment, what is emission.args[0]?
+                    action_symbol = emission.args[0].action.symbol
+                    event = ('action_button', action_symbol, '')
+                    JOURNAL.add_event(event=event, emw=self)
                     await self.process_async_signal(partial(
                             self.__server_call_action, emission.args[0]))
 
                 elif emission.is_from(self.__statement_triggered):
+                    statement_name = emission.args[0].statement.pretty_name
+                    event = ('statement', statement_name, '')
+                    JOURNAL.add_event(event=event, emw=self)
                     await self.process_async_signal(partial(
                             self.__server_call_statement, emission.args[0]))
 
                 elif emission.is_from(self.__apply_math_object_triggered):
+                    event = ('action_button', 'doubleclic_apply', '')
+                    JOURNAL.add_event(event=event, emw=self)
                     await self.__server_call_apply(emission.args[0])
 
     # ──────────────── Template function ─────────────── #

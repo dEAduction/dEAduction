@@ -31,12 +31,13 @@ import logging
 import deaduction.pylib.logger as logger
 
 from deaduction.pylib.mathobj import MathObject
-from deaduction.config.config import (EXERCISE)
+# from deaduction.config.config import (EXERCISE)
 
 import deaduction.pylib.config.vars as cvars
 
 log = logging.getLogger(__name__)
-EXERCISE.PROPERTY_COUNTER = 1
+PROPERTY_COUNTER = 1
+
 
 def get_new_hyp(goal) -> str:
     """
@@ -54,18 +55,18 @@ def get_new_hyp_from_forbidden_names(forbidden_names: [str]) -> str:
     Find a fresh name for a new property.
     The name is 'Hn' where n is the least integer such that Hn has never
     been given by the present function, and Hn is not in the current context.
-    Makes use of the Python global var Global.PROPERTY_COUNTER.
+    Makes use of the Python global var PROPERTY_COUNTER.
 
     :param forbidden_names: list of names of variables in the context
     :return:                str, a fresh name
     """
-
-    counter = EXERCISE.PROPERTY_COUNTER
+    global PROPERTY_COUNTER
+    counter = PROPERTY_COUNTER
     potential_name = 'H' + str(counter)
     while potential_name in forbidden_names:
         counter += 1
         potential_name = 'H' + str(counter)
-    EXERCISE.PROPERTY_COUNTER = counter + 1
+    PROPERTY_COUNTER = counter + 1
     return potential_name
 
 
