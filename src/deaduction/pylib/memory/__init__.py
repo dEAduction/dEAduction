@@ -41,7 +41,6 @@ import deaduction.pylib.config.dirs as cdirs
 log = logging.getLogger(__name__)
 
 
-@dataclass
 class Journal:
     """
     A very simple journal, designed to keep track of every event that occurs
@@ -64,6 +63,9 @@ class Journal:
                      'various')
     __save_journal = cvars.get('journal.save')
     __journal_file_name = cdirs.local / 'journal.pkl'
+
+    def __init__(self):
+        self.memory = []
 
     def add_event(self, event: tuple, emw=None):
         """

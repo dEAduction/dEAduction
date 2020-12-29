@@ -69,15 +69,15 @@ def add_to_recent_courses(course_path: Path,
                           title: str = "",
                           exercise_number: int = -1):
     """
-    Add course_path to the list of recent courses in user_config
-    NB: do not save this in config.ini; write_config() must be called for that
+    Add course_path to the list of recent courses in cvars["course"]
     """
 
     max_ = cvars.get("course.max_recent_courses", 5)
 
     if course_type == ".pkl" and course_path.suffix == ".lean":
         course_path = course_path.with_suffix(".pkl")
-    
+
+    course_path = course_path.resolve()
     courses_paths, courses_titles, exercises_numbers = get_recent_courses()
     if course_path in courses_paths:
         # We want the course to appear in pole position
