@@ -51,14 +51,11 @@ class Journal:
     """
     memory: [tuple]
 
-    event_natures = ('action_button',
+    event_natures = ('button',
                      'code',
                      'error',
-                     'history',
                      'lean_error',
-                     'lean_editor',
                      'message',
-                     'statement'
                      'user_input',
                      'various')
     __save_journal = cvars.get('journal.save')

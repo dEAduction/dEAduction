@@ -517,9 +517,11 @@ class ExerciseMainWindow(QMainWindow):
         # Display if a goal has been solved and user is not undoing
         if goals_counter_evolution < 0 and current_goals_counter != 0:
             # Get last action
-            last_action = self.journal.get_last_event()
-            nature, content, detail = last_action
-            if not (nature == 'history' and content == 'undo'):
+            last_button = self.journal.get_last_event(nature='button')
+            last_journal_entry = self.journal.get_last_event()
+            log.debug(f'Last action: {last_button}')
+            if (last_button != ('history_undo', '')
+                    and last_journal_entry[0] not in ('error', 'lean_error')):
             # if EXERCISE.last_action != 'undo':
                 log.info(f"Current goal solved!")
                 if goals_counter_evolution == -1:
@@ -594,7 +596,7 @@ class ExerciseMainWindow(QMainWindow):
                 # erase status bar
                 self.statusBar.display_status_bar_message(instruction='erase')
                 if emission.is_from(self.lean_editor.editor_send_lean):
-                    event = ('lean_editor', 'sent', '')
+                    event = ('button', 'lean_editor', '')
                     self.journal.add_event(event=event, emw=self)
                     await self.process_async_signal(self.__server_send_editor_lean)
 
@@ -602,12 +604,12 @@ class ExerciseMainWindow(QMainWindow):
                     # No need to call self.update_goal, this emits the
                     # signal proof_state_change of which
                     # self.update_goal is a slot
-                    event = ('history', 'redo', '')
+                    event = ('button', 'history_redo', '')
                     self.journal.add_event(event=event, emw=self)
                     await self.process_async_signal(self.servint.history_redo)
 
                 elif emission.is_from(self.toolbar.undo_action.triggered):
-                    event = ('history', 'undo', '')
+                    event = ('button', 'history_undo', '')
                     self.journal.add_event(event=event, emw=self)
                     await self.process_async_signal(self.servint.history_undo)
 
@@ -617,20 +619,20 @@ class ExerciseMainWindow(QMainWindow):
                 elif emission.is_from(self.__action_triggered):
                     # TODO: comment, what is emission.args[0]?
                     action_symbol = emission.args[0].action.symbol
-                    event = ('action_button', action_symbol, '')
+                    event = ('button', action_symbol, '')
                     self.journal.add_event(event=event, emw=self)
                     await self.process_async_signal(partial(
                             self.__server_call_action, emission.args[0]))
 
                 elif emission.is_from(self.__statement_triggered):
                     statement_name = emission.args[0].statement.pretty_name
-                    event = ('statement', statement_name, '')
+                    event = ('button', 'statement', statement_name)
                     self.journal.add_event(event=event, emw=self)
                     await self.process_async_signal(partial(
                             self.__server_call_statement, emission.args[0]))
 
                 elif emission.is_from(self.__apply_math_object_triggered):
-                    event = ('action_button', 'doubleclic_apply', '')
+                    event = ('button', 'doubleclic_apply', '')
                     self.journal.add_event(event=event, emw=self)
                     await self.__server_call_apply(emission.args[0])
 
