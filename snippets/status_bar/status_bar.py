@@ -44,9 +44,8 @@ class IconStatusBar(QStatusBar):
 
         # Icon
         self.iconWidget = QLabel(self)
-        icons_dir = Path('../../src/deaduction/share/graphical_resources'
-                         '/icons/')
-        error_icon_path = icons_dir / 'error_devil2.png'
+        icons_base_dir = cvars.get("icons.path")
+        error_icon_path = fs.path_helper(icons_base_dir) / 'error_devil2.png'
         self.error_pixmap = QPixmap(str(error_icon_path.resolve()))
         self.iconWidget.setScaledContents(True)
         self.iconWidget.setMaximumSize(self.height(), self.height())

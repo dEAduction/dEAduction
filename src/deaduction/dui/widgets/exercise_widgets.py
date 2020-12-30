@@ -50,8 +50,11 @@ from PySide2.QtWidgets import ( QAction,
                                 QWidget)
 
 # from deaduction.config import           EXERCISE
-from deaduction.pylib.memory import     Journal
-from deaduction.pylib.config.i18n import _
+from deaduction.pylib.memory import         Journal
+from deaduction.pylib.config.i18n import    _
+import deaduction.pylib.config.vars      as cvars
+import deaduction.pylib.utils.filesystem as fs
+
 
 from deaduction.dui.utils import  (     replace_widget_layout,
                                         ButtonsDialog)
@@ -91,8 +94,8 @@ class ExerciseToolbar(QToolBar):
 
     def __init__(self):
         super().__init__(_('Toolbar'))
-
-        icons_dir = Path('share/graphical_resources/icons/')
+        icons_base_dir = cvars.get("icons.path")
+        icons_dir = fs.path_helper(icons_base_dir)
         self.undo_action = QAction(
                 QIcon(str((icons_dir / 'undo_action.png').resolve())),
                 _('Undo action'), self)

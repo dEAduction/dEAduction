@@ -34,6 +34,9 @@ from PySide2.QtWidgets import ( QMainWindow,
                                 QStatusBar,
                                 QApplication)
 
+import deaduction.pylib.config.vars              as cvars
+import deaduction.pylib.utils.filesystem as fs
+
 log = logging.getLogger(__name__)
 
 
@@ -44,9 +47,8 @@ class IconStatusBar(QStatusBar):
 
         # Icon
         self.iconWidget = QLabel(self)
-        icons_dir = Path('share/graphical_resources'
-                         '/icons/')
-        error_icon_path = icons_dir / 'error_devil2.png'
+        icons_base_dir = cvars.get("icons.path")
+        error_icon_path = fs.path_helper(icons_base_dir) / 'error_devil2.png'
         self.error_pixmap = QPixmap(str(error_icon_path.resolve()))
         self.iconWidget.setScaledContents(True)
         self.iconWidget.setMaximumSize(self.height(), self.height())

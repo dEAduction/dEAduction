@@ -1,7 +1,7 @@
 [icons]
-path        = "$DEADUCTION_SHARE/graphical_resources/icons/letters"
-letter_type = "trials"
-context     = "blue"
+path        = "$DEADUCTION_SHARE/graphical_resources/icons"
+letter_type = "letters/trials"
+context     = "letters/blue"
 
 [display]
 depth_of_unfold_statements = 1
