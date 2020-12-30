@@ -40,9 +40,12 @@ from .context_widgets_classes import (
 from .choose_course_exercise_widgets import (
         StartExerciseDialog)
 
-from .lean_editor import (
-        LeanEditor)
-
 from .exercise_widgets import (
         ExerciseCentralWidget,
         ExerciseMainWindow)
+
+from .lean_editor import (
+        LeanEditor)
+
+from .text_edit_logger import (
+        TextEditLogger)
