@@ -46,3 +46,6 @@ from .lean_editor import (
 from .exercise_widgets import (
         ExerciseCentralWidget,
         ExerciseMainWindow)
+
+from .text_edit_logger import (
+        TextEditLogger)
