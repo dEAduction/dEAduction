@@ -10,3 +10,4 @@ dictdiffer>=0.8.1
 requests>=2.24.0
 dictdiffer>=0.8.1
 toml>=0.10.1
+pep517>=0.9.1
