@@ -65,7 +65,7 @@ class YesNoDialog(QMessageBox):
     because open returns immediatly and the property yes will be False
     even if usr clicked on the Yes button. To set up texts (e.g.
     detailedText) it is recommanded to inherit this class and set valued
-    in __init__. See for example the class ReallyWantToQuit.
+    in __init__. See for example the class ReallyWantQuit.
 
     :property yes: Return self.__yes.
     :property no: Return not self.__yes.
@@ -109,7 +109,7 @@ class YesNoDialog(QMessageBox):
         return not self.__yes
 
 
-class WantToInstallMissingDependencies(YesNoDialog):
+class WantInstallMissingDependencies(YesNoDialog):
     """
     A YesNoDialog (see YesNoDialog docstring to know how to use this
     class) to ask if usr wants to install missing dependencies.
@@ -138,7 +138,7 @@ class WantToInstallMissingDependencies(YesNoDialog):
         self.setDefaultButton(QMessageBox.Yes)
 
 
-class ReallyWantToQuit(YesNoDialog):
+class ReallyWantQuit(YesNoDialog):
     """
     A YesNoDialog (see YesNoDialog docstring to know how to use this
     class, I insist, do it) to ask if usr *really* wants to quit. This
@@ -171,12 +171,33 @@ class ReallyWantToQuit(YesNoDialog):
 
 
 class InstallingMissingDependencies(QDialog):
-    # TODO: Docstring me
+    """
+    At start, dEaduction checks if missing dependencies are missing. If
+    some indeed are, usr is asked is they want to install them
+    (ReallyWantQuit). If they do, download begins and this dialog is
+    shown showing a logger of the installation.
+
+    When the download is completed, the 'Start dEAduction' button is
+    activated (method installation_completed) and usr may click on it.
+    If they do, the signal plz_start_deaduction is emitted. Furthermore,
+    the usr may want to quit (by clicking the 'Quit' button). If they do
+    so during the installation, they are asked for confirmation (see
+    __quit method) and if they confirm, the signal plz_quit is emitted.
+
+    The logger is displayed with the class TextEditLogger.
+    """
 
     plz_start_deaduction = Signal()
     plz_quit             = Signal()
 
     def __init__(self, log_format: str):
+        """
+        Init self with a logger formater (so specify the layout of the
+        log entries, see logging module documentation), e.g.
+        '%(asctime)s - %(levelname)s - %(message)s'.
+        """
+
+        :param log_format: Logger formatter for the log entries.
 
         super().__init__()
         self.setModal(True)
@@ -184,7 +205,7 @@ class InstallingMissingDependencies(QDialog):
         self.setWindowTitle(f"{_('Installing missing dependencies')}" \
                              " — d∃∀duction")
         self.__text_edit_logger = TextEditLogger(log_format)
-        self.__confirm_quit = True
+        self.__confirm_quit     = True
 
         # Buttons
         self.__quit_btn       = QPushButton(_('Quit'))
@@ -196,7 +217,7 @@ class InstallingMissingDependencies(QDialog):
 
         # Layouts
         self.__main_layout = QVBoxLayout()
-        btns_layout = QHBoxLayout()
+        btns_layout        = QHBoxLayout()
         btns_layout.addStretch()
         btns_layout.addWidget(self.__quit_btn)
         btns_layout.addWidget(self.__start_dead_btn)
@@ -206,25 +227,40 @@ class InstallingMissingDependencies(QDialog):
 
     @Slot()
     def installation_completed(self):
+        """
+        This function is to be called when dependencies are all
+        downloaded and the installation is completed:
+        - it indicates all went good;
+        - it allows usr to click on the 'Start dEAduction button';
+        - it sets self.__confirm_quit to False, which implies that if
+          usr wants to quit instead of starting dEAduction, confirmation
+          will *not* be asked.
+
+        It is recommanded (to comply with Qt's style) to connect this
+        method to a slot and not call it directly.
+        """
 
         self.__confirm_quit = False
         self.__text_edit_logger.setStyleSheet('background: SpringGreen;')
-
         self.__main_layout.insertWidget(1,
                 QLabel(_('Missing dependencies installed.')))
-
         self.__start_dead_btn.setEnabled(True)
         self.__start_dead_btn.setDefault(True)
-
         self.__start_dead_btn.clicked.connect(self.plz_start_deaduction)
 
     @Slot()
     def __quit(self):
+        """
+        This slot is called when usr clicks on the 'Quit' button. If
+        downloads and installation are not completed, confirmation is
+        asked by executing ReallyWantQuit dialog. In the end, if usr
+        really wants to quit, the signal plz_quit is emitted (here is
+        not the place to quit).
+        """
 
         if self.__confirm_quit:
-            rwtq = ReallyWantToQuit(_('All downloaded data will be lost.'))
+            rwtq = ReallyWantQuit(_('All downloaded data will be lost.'))
             rwtq.exec_()
-
             if rwtq.yes:
                 self.plz_quit.emit()
         else:
