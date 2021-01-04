@@ -47,8 +47,8 @@ from PySide2.QtWidgets import QApplication
 
 class YesNoDialog(QMessageBox):
     """
-    This class is a QMessageBox with two buttons: Yes and No. Usr will
-    be asked to make a choice (e.g. 'Do you want to install missing
+    This class is a modal QMessageBox with two buttons: Yes and No. Usr
+    will be asked to make a choice (e.g. 'Do you want to install missing
     dependencies ?'). Is usr clicks on the Yes (resp. No) button, the
     dialog is closed and the property yes is set to True (resp. False).
     This property is initialized to False and is only change if usr
@@ -77,6 +77,7 @@ class YesNoDialog(QMessageBox):
         """
 
         super().__init__()
+        self.setModal(True)
 
         self.__yes = False
         self.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
@@ -120,6 +121,9 @@ class WantToInstallMissingDependencies(YesNoDialog):
         """
         Init self with the list of missing dependencies (to be
         displayed).
+
+        :param missing_dependencies: List of missing dependencies to be
+                                     displayed.
         """
         # @Florian: If you want I can do some more formatting for the
         # list of dependencied
@@ -135,12 +139,26 @@ class WantToInstallMissingDependencies(YesNoDialog):
 
 
 class ReallyWantToQuit(YesNoDialog):
-    # TODO: Dosctring me
+    """
+    A YesNoDialog (see YesNoDialog docstring to know how to use this
+    class, I insist, do it) to ask if usr *really* wants to quit. This
+    is a generall class that may be used anywhere in the program. It is
+    initiated with an informative text and may also receive a
+    detailed text. See an example in
+    InstallingMissingDependencies.__quit for example.
+    """
 
     def __init__(self, informative_text: str, detailed_text: Optional[str]=None):
-        super().__init__()
+        """
+        Init self (see self docstring).
 
-        self.setModal(True)
+        :param informative_text: Qt's informativeText, e.g. 'All data
+                will be lost'.
+        :param detailed_text: Qt's detailedText, e.g. a detailed list of
+                stuff that usr does not necessarly need to know but may
+                whant to know.
+        """
+        super().__init__()
 
         self.setText(_('Do you really want to quit?'))
         self.setInformativeText(informative_text)
@@ -165,9 +183,7 @@ class InstallingMissingDependencies(QDialog):
 
         self.setWindowTitle(f"{_('Installing missing dependencies')}" \
                              " — d∃∀duction")
-
         self.__text_edit_logger = TextEditLogger(log_format)
-
         self.__confirm_quit = True
 
         # Buttons
