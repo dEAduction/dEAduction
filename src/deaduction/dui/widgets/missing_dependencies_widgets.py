@@ -109,9 +109,21 @@ class YesNoDialog(QMessageBox):
 
 
 class WantToInstallMissingDependencies(YesNoDialog):
-    # TODO: Docstring me
+    """
+    A YesNoDialog (see YesNoDialog docstring to know how to use this
+    class) to ask if usr wants to install missing dependencies.
+    dEaduction checks for missing dependencies at each start and this is
+    when this dialod may be shown.
+    """
 
     def __init__(self, missing_dependencies: [str]):
+        """
+        Init self with the list of missing dependencies (to be
+        displayed).
+        """
+        # @Florian: If you want I can do some more formatting for the
+        # list of dependencied
+
         super().__init__()
 
         self.setText(_('Missing dependencies'))
