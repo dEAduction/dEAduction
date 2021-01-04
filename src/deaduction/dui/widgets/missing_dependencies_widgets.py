@@ -26,11 +26,12 @@ This file is part of d∃∀duction.
 """
 # TODO: Docstring me
 
-from typing import Optional
+from typing    import Optional
 
 from PySide2.QtCore    import ( Signal,
                                 Slot )
 from PySide2.QtWidgets import ( QDialog,
+                                QLabel,
                                 QMessageBox,
                                 QPushButton,
                                 QHBoxLayout,
@@ -44,7 +45,30 @@ import sys
 from PySide2.QtWidgets import QApplication
 
 
-class WantToInstallMissingDependencies(QMessageBox):
+class YesNoDialog(QMessageBox):
+    # TODO: Docstring me
+
+    def __init__(self):
+        super().__init__()
+
+        self.__yes = False
+        self.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
+        self.button(QMessageBox.Yes).clicked.connect(self._set_yes_True)
+
+    @Slot()
+    def _set_yes_True(self):
+        self.__yes = True
+
+    @property
+    def yes(self):
+        return self.__yes
+
+    @property
+    def no(self):
+        return not self.__yes
+
+
+class WantToInstallMissingDependencies(YesNoDialog):
     # TODO: Docstring me
 
     def __init__(self, missing_dependencies: [str]):
@@ -55,81 +79,89 @@ class WantToInstallMissingDependencies(QMessageBox):
                                   ' to install them?'))
         self.setDetailedText('— ' + '\n— '.join(missing_dependencies))
         self.setIcon(QMessageBox.Warning)
-        self.setStandardButtons(QMessageBox.Cancel | QMessageBox.Yes)
         self.setDefaultButton(QMessageBox.Yes)
 
 
-class ReallyWantToQuit(QMessageBox):
+class ReallyWantToQuit(YesNoDialog):
     # TODO: Dosctring me
 
     def __init__(self, informative_text: str, detailed_text: Optional[str]=None):
         super().__init__()
 
         self.setModal(True)
-        self.__yes = False
 
         self.setText(_('Do you really want to quit?'))
         self.setInformativeText(informative_text)
         if detailed_text is not None:
             self.setDetailedText(detailed_text)
         self.setIcon(QMessageBox.Warning)
-        self.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
         self.setDefaultButton(QMessageBox.No)
 
-        self.button(QMessageBox.Yes).clicked.connect(self.__set_yes_True)
-
-    @Slot()
-    def __set_yes_True(self):
-        self.__yes = True
-
-    @property
-    def yes(self):
-        return self.__yes
+        self.button(QMessageBox.Yes).clicked.connect(self._set_yes_True)
 
 
 class InstallingMissingDependencies(QDialog):
     # TODO: Docstring me
 
-    usr_wants_start_deaduction = Signal()
+    plz_start_deaduction = Signal()
+    plz_quit             = Signal()
 
     def __init__(self, log_format: str):
 
         super().__init__()
-
         self.setModal(True)
-        self.setWindowTitle(f"{_('Installing dependencies')} — d∃∀duction")
 
-        text_edit_logger = TextEditLogger(log_format)
+        self.setWindowTitle(f"{_('Installing missing dependencies')}" \
+                             " — d∃∀duction")
 
-        self.__quit_btn = QPushButton(_('Quit'))
+        self.__text_edit_logger = TextEditLogger(log_format)
+
+        self.__confirm_quit = True
+
+        # Buttons
+        self.__quit_btn       = QPushButton(_('Quit'))
         self.__start_dead_btn = QPushButton(_('Start d∃∀duction'))
         self.__quit_btn.setAutoDefault(False)
         self.__start_dead_btn.setEnabled(False)
+        self.__quit_btn.clicked.connect(self.__quit)
+        self.__start_dead_btn.clicked.connect(self.plz_start_deaduction)
 
-        self.__start_dead_btn.clicked.connect(self.usr_wants_start_deaduction)
-        self.__quit_btn.clicked.connect(self.__quit_btn_clicked)
-
-        main_layout = QVBoxLayout()
+        # Layouts
+        self.__main_layout = QVBoxLayout()
         btns_layout = QHBoxLayout()
         btns_layout.addStretch()
         btns_layout.addWidget(self.__quit_btn)
         btns_layout.addWidget(self.__start_dead_btn)
-        main_layout.addWidget(text_edit_logger)
-        main_layout.addLayout(btns_layout)
-        self.setLayout(main_layout)
+        self.__main_layout.addWidget(self.__text_edit_logger)
+        self.__main_layout.addLayout(btns_layout)
+        self.setLayout(self.__main_layout)
 
-    def enable_startdeaduction_btn(self):
+    @Slot()
+    def installation_completed(self):
+
+        self.__confirm_quit = False
+        self.__text_edit_logger.setStyleSheet('background: SpringGreen;')
+
+        self.__main_layout.insertWidget(1,
+                QLabel(_('Missing dependencies installed.')))
+
         self.__start_dead_btn.setEnabled(True)
         self.__start_dead_btn.setDefault(True)
 
-    @Slot()
-    def __quit_btn_clicked(self):
-        rwtq = ReallyWantToQuit('')
-        rwtq.exec_()
+        self.__start_dead_btn.clicked.connect(self.plz_start_deaduction)
 
-        if rwtq.yes:
-            # Do something
-            pass
+    @Slot()
+    def __quit(self):
+
+        if self.__confirm_quit:
+            rwtq = ReallyWantToQuit(_('All downloaded data will be lost.'))
+            rwtq.exec_()
+
+            if rwtq.yes:
+                self.plz_quit.emit()
+        else:
+            self.plz_quit.emit()
+
 
 if __name__ == '__main__':
     app = QApplication()
