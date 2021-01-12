@@ -63,7 +63,7 @@ from deaduction.pylib.coursedata  import ( Definition,
                                            Exercise,
                                            Statement,
                                            Theorem)
-from deaduction.dui.functions     import   set_selectable
+from deaduction.dui.functions     import   set_item_selectable
 
 import deaduction.pylib.config.vars as cvars
 import deaduction.pylib.utils.filesystem as fs

@@ -31,7 +31,7 @@ import sys
 import logging
 from pathlib import Path
 
-from PySide2.QtGui import     ( QPixmap )
+from PySide2.QtGui     import   QPixmap
 from PySide2.QtWidgets import ( QMainWindow,
                                 QLabel,
                                 QStatusBar,

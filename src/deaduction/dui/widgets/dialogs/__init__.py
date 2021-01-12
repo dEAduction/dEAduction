@@ -37,5 +37,8 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import buttons_dialog
-import choose_coex_widgets
+from .buttons_dialog import *
+from .choose_coex_widgets import *
+from .missing_dependencies_dialogs import *
+from .yes_no_dialog import *
+from .really_want_quit import *

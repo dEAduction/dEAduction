@@ -48,13 +48,35 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import actions_widgets_classes
-import choose_course_exercise_widgets
-import context_widgets_classes
-import disclosure_triangle
-import exercise_widgets
-import horizontal_line
-import lean_editor
-import recent_courses_widgets
-import statusbar
-import text_edit_logger
+# Retourne une erreur dès le premier fichier
+# from . import actions_widgets_classes
+# from . import context_widgets_classes
+# from . import disclosure_triangle
+# from . import exercise_widgets
+# from . import horizontal_line
+# from . import lean_editor
+# from . import recent_courses_widgets
+# from . import icon_status_bar
+# from . import text_edit_logger
+
+# Retourne une erreur seulement à partir de icon_status_bar
+from .actions_widgets_classes import *
+from .context_widgets_classes import *
+from .disclosure_triangle import *
+from .exercise_widgets import *
+from .horizontal_line import *
+from .lean_editor import *
+from .recent_courses_widgets import *
+from .icon_status_bar import *
+from .text_edit_logger import *
+
+# Invalid syntax
+# import .actions_widgets_classes
+# import .context_widgets_classes
+# import .disclosure_triangle
+# import .exercise_widgets
+# import .horizontal_line
+# import .lean_editor
+# import .recent_courses_widgets
+# import .icon_status_bar
+# import .text_edit_logger

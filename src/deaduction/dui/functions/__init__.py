@@ -30,6 +30,6 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import read_pkl_course.py
-import replace_widget_layout.py
-import set_item_selectable.py 
+from .read_pkl_course import *
+from .replace_widget_layout import *
+from .set_item_selectable import *
