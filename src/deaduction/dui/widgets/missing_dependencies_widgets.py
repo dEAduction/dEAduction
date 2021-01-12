@@ -3,6 +3,11 @@
 # missing_dependencies_widgets.py : see below #
 ###############################################
 
+    Provide dialogs that ask usr if they want to install missing
+    dependencies. Provided classes:
+        - InstallingMissingDependencies,
+        - WantInstallMissingDependencies.
+
 Author(s)      : Kryzar <antoine@hugounet.com>
 Maintainers(s) : Kryzar <antoine@hugounet.com>
 Date           : December 2020
@@ -24,7 +29,6 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
-# TODO: Docstring me
 
 from typing    import Optional
 
@@ -72,38 +76,6 @@ class WantInstallMissingDependencies(YesNoDialog):
         self.setDetailedText('— ' + '\n— '.join(missing_dependencies))
         self.setIcon(QMessageBox.Warning)
         self.setDefaultButton(QMessageBox.Yes)
-
-
-class ReallyWantQuit(YesNoDialog):
-    """
-    A YesNoDialog (see YesNoDialog docstring to know how to use this
-    class, I insist, do it) to ask if usr *really* wants to quit. This
-    is a generall class that may be used anywhere in the program. It is
-    initiated with an informative text and may also receive a
-    detailed text. See an example in
-    InstallingMissingDependencies.__quit for example.
-    """
-
-    def __init__(self, informative_text: str, detailed_text: Optional[str]=None):
-        """
-        Init self (see self docstring).
-
-        :param informative_text: Qt's informativeText, e.g. 'All data
-                will be lost'.
-        :param detailed_text: Qt's detailedText, e.g. a detailed list of
-                stuff that usr does not necessarly need to know but may
-                whant to know.
-        """
-        super().__init__()
-
-        self.setText(_('Do you really want to quit?'))
-        self.setInformativeText(informative_text)
-        if detailed_text is not None:
-            self.setDetailedText(detailed_text)
-        self.setIcon(QMessageBox.Warning)
-        self.setDefaultButton(QMessageBox.No)
-
-        self.button(QMessageBox.Yes).clicked.connect(self._set_yes_True)
 
 
 class InstallingMissingDependencies(QDialog):
