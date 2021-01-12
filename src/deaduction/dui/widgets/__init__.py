@@ -1,7 +1,29 @@
 """
-############################################
-# __init__.py : provide dEAduction widgets #
-############################################
+######################################################
+# __init__.py : init file for deaduction.dui.widgets #
+######################################################
+
+    Provide deaduction.dui.widgets classes. Most of them inherit
+    QWidget but some inherit smaller classes used in widgets such as
+    items (QListItem, QTreeWidgetItem). Dialogs are provided in
+    deaduction.dui.widgets.dialogs. Provided classes:
+        - ActionButton,
+        - ActionButtonsWidget,
+        - DisclosureTriangle,
+        - ExerciseCentralWidget,
+        - ExerciseMainWindow,
+        - HorizontalLine,
+        - LeanEditor,
+        - MathObjectWidget,
+        - MathObjectWidgetItem,
+        - RecentCoursesLW,
+        - RecentCoursesLWI,
+        - StartExerciseDialog,
+        - StatementsTreeWidget,
+        - StatementsTreeWidgetItem,
+        - StatementsTreeWidgetNode,
+        - TargetWidget,
+        - TextEditLogger.
 
 Author(s)      : Kryzar <antoine@hugounet.com>
 Maintainers(s) : Kryzar <antoine@hugounet.com>
@@ -25,27 +47,12 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .actions_widgets_classes import (
-        ActionButton,
-        ActionButtonsWidget,
-        StatementsTreeWidgetItem,
-        StatementsTreeWidgetNode,
-        StatementsTreeWidget)
-
-from .context_widgets_classes import (
-        MathObjectWidgetItem,
-        MathObjectWidget,
-        TargetWidget)
-
-from .choose_course_exercise_widgets import (
-        StartExerciseDialog)
-
-from .lean_editor import (
-        LeanEditor)
-
-from .exercise_widgets import (
-        ExerciseCentralWidget,
-        ExerciseMainWindow)
-
-from .text_edit_logger import (
-        TextEditLogger)
+import actions_widgets_classes
+import choose_course_exercise_widgets
+import context_widgets_classes
+import disclosure_triangle
+import exercise_widgets
+import horizontal_line
+import lean_editor
+import recent_courses_widgets
+import text_edit_logger
