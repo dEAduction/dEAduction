@@ -1,7 +1,7 @@
 """
-#######################################################################
-# choose_course_exercise_widgets.py : course/exercise chooser widgets #
-#######################################################################
+############################################################
+# choose_coex_widgets.py : course/exercise chooser widgets #
+############################################################
 
     Provide StartExerciseDialog: the dialog used by the user to choose
     a course, then an exercise, and start the latter. 
@@ -833,23 +833,3 @@ if __name__ == '__main__':
     start_exercise_dialog.show()
 
     sys.exit(app.exec_())
-
-
-#         db         db
-#       d88           88
-#      888            888
-#     d88             888b
-#     888             d88P
-#     Y888b  /``````\8888
-#   ,----Y888        Y88P`````\
-#   |        ,'`\_/``\ |,,    |
-#    \,,,,-| | o | o / |  ```'
-#          |  """ """  |
-#         /             \
-#        |               \
-#        |  ,,,,----'''```|
-#        |``   @    @     |
-#         \,,    ___    ,,/
-#            \__|   |__/
-#               | | |
-#               \_|_/
