@@ -1,5 +1,8 @@
 """
-# status_bar.py : a status bar class
+##############################################
+# status_bar.py: Provide IconStatusBar class #
+##############################################
+
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -25,22 +28,24 @@ This file is part of d∃∀duction.
 """
 
 import sys
-
 import logging
 from pathlib import Path
+
 from PySide2.QtGui import     ( QPixmap )
 from PySide2.QtWidgets import ( QMainWindow,
                                 QLabel,
                                 QStatusBar,
                                 QApplication)
 
-import deaduction.pylib.config.vars              as cvars
+import deaduction.pylib.config.vars      as cvars
 import deaduction.pylib.utils.filesystem as fs
 
 log = logging.getLogger(__name__)
 
 
+# TODO: Put this in exercises widgets?
 class IconStatusBar(QStatusBar):
+    # TODO: Docstring me
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -91,7 +96,6 @@ class IconStatusBar(QStatusBar):
                 status_bar.set_message(message)
             else:
                 status_bar.hide_icon()
-
 
 
 if __name__ == '__main__':

@@ -29,7 +29,7 @@ This file is part of d∃∀duction.
 
 from functools import           partial
 import logging
-from pathlib import Path
+from pathlib import             Path
 from typing import              Callable
 import qtrio
 
@@ -49,38 +49,35 @@ from PySide2.QtWidgets import ( QAction,
                                 QVBoxLayout,
                                 QWidget)
 
-# from deaduction.config import           EXERCISE
-from deaduction.pylib.memory import         Journal
-from deaduction.pylib.config.i18n import    _
-import deaduction.pylib.config.vars      as cvars
-import deaduction.pylib.utils.filesystem as fs
-
-
-from deaduction.dui.utils import  (     replace_widget_layout,
-                                        ButtonsDialog)
-from deaduction.dui.widgets import (    ActionButton,
-                                        ActionButtonsWidget,
-                                        LeanEditor,
-                                        StatementsTreeWidget,
-                                        StatementsTreeWidgetItem,
-                                        MathObjectWidget,
-                                        MathObjectWidgetItem,
-                                        TargetWidget)
-from .status_bar import                 IconStatusBar
-from deaduction.pylib.actions import (  action_apply,
-                                        InputType,
-                                        MissingParametersError,
-                                        WrongUserInput)
-import deaduction.pylib.actions.generic as  generic
-from deaduction.pylib.coursedata import (   Definition,
-                                            Exercise,
-                                            Theorem)
+from deaduction.dui.functions import           replace_widget_layout
+from deaduction.dui.widgets import (           ActionButton,
+                                               ActionButtonsWidget,
+                                               IconStatusBar,
+                                               LeanEditor,
+                                               StatementsTreeWidget,
+                                               StatementsTreeWidgetItem,
+                                               MathObjectWidget,
+                                               MathObjectWidgetItem,
+                                               TargetWidget)
+from deaduction.dui.widgets.dialogs import     ButtonsDialog
+from deaduction.pylib.config.i18n import       _
+import deaduction.pylib.config.vars as         cvars
+from deaduction.pylib.memory import            Journal
+from deaduction.pylib.actions import (         action_apply,
+                                               InputType,
+                                               MissingParametersError,
+                                               WrongUserInput)
+import deaduction.pylib.actions.generic as     generic
+from deaduction.pylib.coursedata import (      Definition,
+                                               Exercise,
+                                               Theorem)
+from deaduction.pylib.mathobj import (         MathObject,
+                                               Goal,
+                                               ProofState,
+                                               Proof)
 from deaduction.pylib.server.exceptions import FailedRequestError
-from deaduction.pylib.mathobj import (  MathObject,
-                                        Goal,
-                                        ProofState,
-                                        Proof)
-from deaduction.pylib.server import     ServerInterface
+from deaduction.pylib.server import            ServerInterface
+import deaduction.pylib.utils.filesystem as    fs
 
 log = logging.getLogger(__name__)
 

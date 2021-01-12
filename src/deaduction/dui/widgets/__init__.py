@@ -13,6 +13,7 @@
         - ExerciseCentralWidget,
         - ExerciseMainWindow,
         - HorizontalLine,
+        - IconStatusBar,
         - LeanEditor,
         - MathObjectWidget,
         - MathObjectWidgetItem,
@@ -55,4 +56,5 @@ import exercise_widgets
 import horizontal_line
 import lean_editor
 import recent_courses_widgets
+import statusbar
 import text_edit_logger
