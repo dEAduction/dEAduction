@@ -1,10 +1,13 @@
 """
 ###############################################
-# missing_dependencies_widgets.py : see below #
+# missing_dependencies_dialogs.py : see below #
 ###############################################
 
     Provide dialogs that ask usr if they want to install missing
-    dependencies. Provided classes:
+    dependencies. At its start, dEAduction checks if some of its
+    dependencies are missing. If it's the case, usr is asked whether
+    they want to install them or not. The dialogs used for this are
+    written in this module. Provided classes:
         - InstallingMissingDependencies,
         - WantInstallMissingDependencies.
 
