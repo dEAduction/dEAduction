@@ -195,9 +195,10 @@ class InstallingMissingDependencies(QDialog):
         Init self with a logger formater (so specify the layout of the
         log entries, see logging module documentation), e.g.
         '%(asctime)s - %(levelname)s - %(message)s'.
-        """
 
         :param log_format: Logger formatter for the log entries.
+        """
+
 
         super().__init__()
         self.setModal(True)
