@@ -52,8 +52,8 @@ from PySide2.QtWidgets import ( QAction,
 from deaduction.dui.functions           import   replace_widget_layout
 from deaduction.dui.widgets             import ( ActionButton,
                                                  ActionButtonsWidget,
-                                                 IconStatusBar,
-                                                 LeanEditor,
+                                                 #IconStatusBar,
+                                                 #LeanEditor,
                                                  StatementsTreeWidget,
                                                  StatementsTreeWidgetItem,
                                                  MathObjectWidget,
@@ -78,6 +78,9 @@ from deaduction.pylib.mathobj           import ( MathObject,
 from deaduction.pylib.server.exceptions import   FailedRequestError
 from deaduction.pylib.server            import   ServerInterface
 import deaduction.pylib.utils.filesystem as      fs
+
+from .icon_status_bar import *
+from .lean_editor import *
 
 log = logging.getLogger(__name__)
 

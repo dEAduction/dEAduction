@@ -31,6 +31,8 @@ from PySide2.QtWidgets import QMessageBox
 
 from deaduction.pylib.config.i18n import _
 
+from .yes_no_dialog import *
+
 
 class ReallyWantQuit(YesNoDialog):
     """

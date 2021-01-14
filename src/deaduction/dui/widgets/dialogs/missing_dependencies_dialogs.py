@@ -44,8 +44,11 @@ from PySide2.QtWidgets import ( QDialog,
                                 QHBoxLayout,
                                 QVBoxLayout )
 
-from deaduction.dui.widgets       import TextEditLogger
+# from deaduction.dui.widgets       import TextEditLogger
 from deaduction.pylib.config.i18n import _
+
+from ..text_edit_logger import *
+from .yes_no_dialog import *
 
 # Tests only
 import sys
@@ -106,9 +109,10 @@ class InstallingMissingDependencies(QDialog):
         Init self with a logger formater (so specify the layout of the
         log entries, see logging module documentation), e.g.
         '%(asctime)s - %(levelname)s - %(message)s'.
-        """
 
         :param log_format: Logger formatter for the log entries.
+        """
+
 
         super().__init__()
         self.setModal(True)

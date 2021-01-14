@@ -65,9 +65,9 @@ from .context_widgets_classes import *
 from .disclosure_triangle import *
 from .exercise_widgets import *
 from .horizontal_line import *
-from .lean_editor import *
+#from .lean_editor import *
 from .recent_courses_widgets import *
-from .icon_status_bar import *
+#from .icon_status_bar import *
 from .text_edit_logger import *
 
 # Invalid syntax

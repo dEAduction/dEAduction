@@ -62,16 +62,20 @@ from PySide2.QtWidgets import ( QApplication,
 from deaduction.pylib.config.course import   add_to_recent_courses
 from deaduction.dui.functions       import ( read_pkl_course,
                                              replace_widget_layout )
-from deaduction.dui.widgets         import ( DisclosureTriangle,
-                                             HorizontalLine,
+from deaduction.dui.widgets         import ( #DisclosureTriangle,
+                                             # HorizontalLine,
                                              MathObjectWidget,
-                                             RecentCoursesLW,
-                                             RecentCoursesLWI,
+                                             # RecentCoursesLW,
+                                             # RecentCoursesLWI,
                                              StatementsTreeWidget,
                                              StatementsTreeWidgetItem )
 from deaduction.dui.widgets.dialogs import   ButtonsDialog
 from deaduction.pylib.coursedata    import ( Course,
                                              Exercise )
+
+from ..horizontal_line import *
+from ..disclosure_triangle import *
+from ..recent_courses_widgets import *
 
 log = logging.getLogger(__name__)
 
