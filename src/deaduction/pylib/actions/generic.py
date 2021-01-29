@@ -83,7 +83,7 @@ def action_theorem(goal : Goal, selected_objects : [MathObject], theorem : State
     h = get_new_hyp(goal)
     th = theorem.lean_name
     if len(selected_objects) == 0:
-        possible_codes.append(f'apply {th}')
+        possible_codes.append(f'apply {th}, no_meta_vars')
         possible_codes.append(f'have {h} := @{th}')
     else:
         command = f'have {h} := {th}'
@@ -91,8 +91,8 @@ def action_theorem(goal : Goal, selected_objects : [MathObject], theorem : State
         names = [item.info['name'] for item in selected_objects]
         arguments = ' '.join(names)
         # up to 4 implicit arguments
-        possible_codes.append(f'apply {th} {arguments}')
-        possible_codes.append(f'apply @{th} {arguments}')
+        possible_codes.append(f'apply {th} {arguments}, no_meta_vars')
+        possible_codes.append(f'apply @{th} {arguments}, no_meta_vars')
         more_codes = [command + arguments,
                       command_implicit + arguments,
                       command + ' _ ' + arguments,

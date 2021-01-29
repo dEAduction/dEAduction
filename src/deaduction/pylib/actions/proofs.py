@@ -257,7 +257,7 @@ def action_new_object(goal: Goal, l: [MathObject],
 def apply_implicate(goal: Goal, l: [MathObject]):
     possible_codes = []
     h_selected = l[0].info["name"]
-    possible_codes.append(f'apply {h_selected}')
+    possible_codes.append(f'apply {h_selected}, no_meta_vars')
     return possible_codes
 
 

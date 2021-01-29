@@ -44,9 +44,9 @@ class CodeForLean:
     - raw code is retrieved via the to_string method
     - an error_message can be added, to be displayed in case of Lean failure
     """
-    instruction: str = None  # instruction, iff combinator = "single"
+    instructions: [Any]   # [str or CodeForLean]
     combinator: str = 'single'  # one of "and_then", "or_else", "single"
-    children: Any = None  # instance of CodeForLean
+    #children: [Any] = None  # instance of CodeForLean
     error_message: str = ""
 
     # TODO: make properties to ensure that either instruction ≠ ""
@@ -58,53 +58,64 @@ class CodeForLean:
         """
         Create a CodeForLean with a single instruction
         """
-        return CodeForLean(instruction=instruction,
+        return CodeForLean(instructions=[instruction],
                            error_message=error_message)
 
     def or_else(self, other):
         """
         Combine 2 CodeForLean with an or_else combinator
 
-        :param other:   another instance of CodeForLean
+        :param other:   str or CodeForLean
         :return:        CodeForLean
         """
+        if isinstance(other, str):
+            other = CodeForLean.from_string(other)
+
         if self.is_or_else():
-            self.children.append(other)
+            self.instructions.append(other)
             return self
         else:
             return CodeForLean(combinator='or_else',
-                               children=[self, other])
+                               instructions=[self, other])
 
     def and_then(self, other):
         """
         Combine 2 CodeForLean with an and_then combinator
 
-        :param other:   another instance of CodeForLean
+        :param other:   str or CodeForLean
         :return:        CodeForLean
         """
+        if isinstance(other, str):
+            other = CodeForLean.from_string(other)
+
         if self.is_and_then():
-            self.children.append(other)
+            self.instructions.append(other)
             return self
         else:
             return CodeForLean(combinator='and_then',
-                               children=[self, other])
+                               instructions=[self, other])
 
     def and_finally(self, other):
         """
         Add other before each "or_else" combinator, so that whatever
         sequence of instruction that succeeds ends with other
+        e.g. and_finally ("A or_else B", "C")
+            -> "(A, C) or_else (B,C)"
 
         :param other:   another instance of CodeForLean
         :return:        CodeForLean
         """
+        if isinstance(other, str):
+            other = CodeForLean.from_string(other)
+
         if self.is_single() or self.is_and_then():
             # replace self by self and then other
             return self.and_then(other)
         elif self.is_or_else():
-            children = [piece_of_code.and_finally(other)
-                        for piece_of_code in self.children]
+            instructions = [piece_of_code.and_finally(other)
+                            for piece_of_code in self.instructions]
             return CodeForLean(combinator='or_else',
-                               children=children)
+                               instructions=instructions)
 
     def to_string(self) -> str:
         """
@@ -115,15 +126,16 @@ class CodeForLean:
         :return: string to be sent to Lean
         """
         # TODO: handle error_messages
-        if self.instruction:
-            return self.instruction
+        if self.is_single():
+            return self.instructions[0]
 
         elif self.is_and_then():
-            return ', '.join([child.to_string() for child in self.children])
+            return ', '.join([child.to_string() for child in
+                              self.instructions])
 
         elif self.is_or_else():
             strings = ['{' + child.to_string() + '}'
-                       for child in self.children]
+                       for child in self.instructions]
             return ' <|> '.join(strings)
 
     def add_trace_effective_code(self, num_effective_code):
@@ -133,6 +145,9 @@ class CodeForLean:
 
         :return:        CodeForLean
         """
+        # TODO: no need if no or_else
+        # Fixme: nested or_else's will entail bug
+
         if self.is_single() or self.is_and_then():
             # replace self by self and_then trace the code
             trace_string = f'trace \"EFFECTIVE CODE {num_effective_code}: ' \
@@ -140,10 +155,10 @@ class CodeForLean:
             trace_code = CodeForLean.from_string(trace_string)
             return self.and_then(trace_code)
         elif self.is_or_else():
-            children = [piece_of_code.add_trace_effective_code(
-                num_effective_code) for piece_of_code in self.children]
+            instructions = [piece_of_code.add_trace_effective_code(
+                num_effective_code) for piece_of_code in self.instructions]
             return CodeForLean(combinator='or_else',
-                               children=children)
+                               instructions=instructions)
 
     def add_error_message(self, error_message: str):
         self.error_message = error_message
@@ -198,8 +213,8 @@ def format_orelse(list_of_choices):
         return list_of_choices[0]
     else:
         list_of_choices = map(lambda
-                                  string: f'`[ {string}, trace \"EFFECTIVE CODE {_CODE_NB} : {string}\"]',
-                              list_of_choices)
+            string: f'`[ {string}, trace \"EFFECTIVE CODE {_CODE_NB} : {string}\"]',
+            list_of_choices)
         return " <|> ".join(list_of_choices)
 
 
