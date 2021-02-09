@@ -63,7 +63,7 @@ latex_from_node = {
     "SET_DIFF": (0, r" \backslash ", 1),
     "SET_DIFF_SYM": (0, r" \Delta ", 1),
     "SET_EMPTY": (r"\emptyset",),
-    "SET_FAMILY": (_("a family of subsets of") + " ", 1),
+    "SET_FAMILY": (0,  r" \to ", r'{\mathcal P}', "(", 1, ")"),
     "SET_IMAGE": (0, "(", 1, ")"),
     "SET_INVERSE": (0, r'^', '-1', '(', 1, ')'),
     "SET_PRODUCT": (0, r'\times', 1),
@@ -93,6 +93,7 @@ latex_from_node = {
     "PROP": (_("proposition"),),
     "TYPE": (_("set"),),
     "FUNCTION": (0, r" \to ", 1),
+    "SEQUENCE": (0, r" \to ", 1),
 }
 
 latex_from_quant_node = {
@@ -121,7 +122,9 @@ latex_from_constant_name = {
     "borne_inf": ("Inf", -2, " = ", -1),
     "est_majore": (-1, " majoré"),
     "est_minore": (-1, " minoré"),
-    "est_borne": (-1, " borné")
+    "est_borne": (-1, " borné"),
+    "limite": ("lim", -2, " = ", -1),
+    "abs": ('|', -1, '|')
 }
 
 # Lean formats that cannot be deduced from latex

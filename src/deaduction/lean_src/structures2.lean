@@ -101,7 +101,7 @@ match e with
                 -- if expr_f = `(Type )
                     | `(%%X → %%Y) :=
                     match X with
-                        | `(ℕ) := return ("SEQUENCE", [Y])
+                        | `(ℕ) := return ("SEQUENCE", [X, Y])
                         | _ := do
                         match Y with
                             | `(_root_.set %%Z) :=

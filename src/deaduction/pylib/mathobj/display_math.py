@@ -499,7 +499,7 @@ def display_constant(math_object, format_) -> list:
         if math_object.math_type.node == "SET_FAMILY":
             display = display_set_family(math_object, format_)
         elif math_object.math_type.node == "SEQUENCE":
-            display = "*SEQ*"  # todo
+            display = display_sequence(math_object, format_)
 
     return display
 
@@ -569,7 +569,7 @@ def display_lambda(math_object, format_="latex") -> list:
     if math_type.node == "SET_FAMILY":
         display = [r'\{', 2, ', ', 1, r' \in ', 0, r'\}']
     elif math_type.node == "SEQUENCE":
-        display = ['(', 2, ')', '_', 1, r' \in ', 0, '}']
+        display = ['(', 2, ')', '_', 1, r' \in ', 0]
         # todo: manage subscript
     elif body.node == "APPLICATION" and body.children[1] == var:
         # Object is of the form x -> f(x)
@@ -586,8 +586,22 @@ def display_lambda(math_object, format_="latex") -> list:
 
 # The following is not called directly, but via display_constant
 def display_sequence(math_object, format_="latex") -> list:
-    # TODO: on the model of display_set_family
-    pass
+    """
+    A sequence is encoded in Lean as an object u of type
+    nat -> X,
+    and Lean just display 'u'.
+    We compute a good name for an index in nat (e.g. 'n'),
+    and display "(u_n)_{n \in N}".
+    """
+
+    name = math_object.display_name
+    math_type_name = math_object.math_type_child_name(format_)
+    bound_var_type = math_object.math_type.children[0]
+    index_name = give_local_name(math_type=bound_var_type,
+                                 body=math_object)
+    display = [r"(", name, '_', index_name, ')', '_',
+               index_name, r" \in ", math_type_name]
+    return display
 
 
 def display_set_family(math_object, format_="latex") -> list:
@@ -597,12 +611,12 @@ def display_set_family(math_object, format_="latex") -> list:
     and Lean just display 'E'.
     We compute a good name for an index in I (e.g. 'i'),
     and display "{E_i, i in I}".
-
-    FIXME: this bound variable is not referenced anywhere, in particular
-     it will not appear in extract_local_vars.
     """
+
+    # FIXME:    this bound variable is not referenced anywhere, in particular
+    #           it will not appear in extract_local_vars.
+
     # First find a name for the bound var
-    # log.debug(f"Display set family")
     name = math_object.display_name
     math_type_name = math_object.math_type_child_name(format_)
     bound_var_type = math_object.math_type.children[0]
@@ -651,6 +665,10 @@ def display_math_type_of_local_constant(math_type,
             display = [_("a subset of") + " ", 0]
         else:
             display = [_("subset of") + " ", 0]
+    elif math_type.node == "SEQUENCE":
+        display = [_("a sequence in") + " ", 1]
+    elif math_type.node == "SET_FAMILY":
+        display = [_("a family of subsets of") + " ", 1]
     if display:
         raw_shape = Shape(display=display,
                           math_object=math_type,
