@@ -89,6 +89,9 @@ class IconStatusBar(QStatusBar):
             if nature in ('error', 'lean_error'):
                 status_bar.show_error_icon()
                 status_bar.set_message(message)
+            elif nature == 'success':
+                status_bar.hide_icon()
+                status_bar.set_message(message)
             else:
                 status_bar.hide_icon()
 

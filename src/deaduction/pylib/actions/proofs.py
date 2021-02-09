@@ -39,6 +39,8 @@ from deaduction.pylib.actions import (InputType,
                                       WrongUserInput,
                                       action,
                                       format_orelse,
+                                      CodeForLean,
+                                      get_new_var,
                                       solve1_wrap,
                                       apply_exists,
                                       apply_and,
@@ -126,7 +128,7 @@ def method_cbr(goal: Goal, l: [MathObject], user_input: [str] = []) -> str:
         possible_codes.append(
             f"cases (classical.em ({h0})) with {h1} {h2}")
 
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 def method_contrapose(goal: Goal, l: [MathObject]) -> str:
@@ -140,7 +142,7 @@ def method_contrapose(goal: Goal, l: [MathObject]) -> str:
     if len(l) == 0:
         if goal.target.math_type.node == "PROP_IMPLIES":
             possible_codes.append("contrapose")
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 def method_absurdum(goal: Goal, l: [MathObject]) -> str:
@@ -154,7 +156,7 @@ def method_absurdum(goal: Goal, l: [MathObject]) -> str:
     if len(l) == 0:
         new_h = get_new_hyp(goal)
         possible_codes.append(f'by_contradiction {new_h}')
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 def method_sorry(goal: Goal, l: [MathObject]) -> str:
@@ -162,7 +164,7 @@ def method_sorry(goal: Goal, l: [MathObject]) -> str:
     Close the current sub-goal by sending the 'sorry' code
     """
     possible_codes = ['sorry']
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 def introduce_fun(goal: Goal, l: [MathObject]) -> str:
@@ -196,7 +198,7 @@ and add ∀ a ∈ A, P(a, f(a)) to the properties
                 possible_codes.append(f'cases classical.axiom_of_choice {h} '
                                       f'with {f} {hf}, dsimp at {hf}, '
                                       f'dsimp at {f}')
-                return format_orelse(possible_codes)
+                return CodeForLean.or_else_from_list(possible_codes)
     raise WrongUserInput
 
 
@@ -230,9 +232,15 @@ def action_new_object(goal: Goal, l: [MathObject],
         else:  # send code
             x = utils.get_new_var()  # fixme: ask the user for a name
             h = get_new_hyp(goal)
-            possible_codes.append(
-                f"let {x} := {user_input[1]}, "
-                f"have {h} : {x} = {user_input[1]}, refl, ")
+            possible_codes = CodeForLean.from_string(f"let {x} := "
+                                                     f"{user_input[1]}")
+            possible_codes = possible_codes.and_then(f"have {h} : {x} = "
+                                                     f"{user_input[1]}")
+            possible_codes = possible_codes.and_then("refl")
+            if goal.target.is_for_all():
+                # name = goal.target.children[1].display_name()
+                possible_codes.add_error_message(_("You might try the ∀ "
+                                                   "button..."))
 
     # Choice = new sub-goal
     elif user_input[0] == 1:
@@ -242,12 +250,14 @@ def action_new_object(goal: Goal, l: [MathObject],
                                          output=_("Introduce new subgoal:"))
         else:
             h = get_new_hyp(goal)
-            possible_codes.append(f"have {h} : ({user_input[1]}),")
+            possible_codes = CodeForLean.from_string(f"have {h} : ("
+                                                     f"{user_input[1]})")
 
     # Choice = new function
     elif user_input[0] == 2:
         return introduce_fun(goal, l)
-    return format_orelse(possible_codes)
+    return possible_codes
+
 
 
 #########
@@ -342,6 +352,8 @@ def apply_implicate_to_hyp(goal: Goal, l: [MathObject], user_input=None):
         #  For the moment, the first have is tried many time by Lean,
         #  which is highly inefficient
         if inequality:
+            # TODO: search if inequality is not already in context, and if so,
+            #  use it instead of re-proving (which leads to duplication)
             # Add type indication
             math_type = inequality.children[1].math_type
             variable = inequality.children[0]
@@ -485,7 +497,7 @@ def apply_function(goal: Goal, l: [MathObject]):
                     hints=[Y.info["name"].lower()])
             possible_codes.append(f'set {y} := {f} {x} with {new_h}')
         l = l[1:]
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 @action(tooltips.get('tooltip_apply'),
@@ -549,7 +561,7 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
         if prop.is_or():
             possible_codes.append(apply_or(goal, l, user_input))
     if possible_codes:
-        return format_orelse(possible_codes)
+        return CodeForLean.or_else_from_list(possible_codes)
     else:
         error = _("I cannot apply this")  # fixme: be more precise
         raise WrongUserInput(error)

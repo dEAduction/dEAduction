@@ -35,6 +35,7 @@ from deaduction.pylib.text import tooltips
 
 from deaduction.pylib.actions.actiondef import action
 from deaduction.pylib.actions import (format_orelse,
+                                      CodeForLean,
                                       solve1_wrap,
                                       WrongUserInput)
 from deaduction.pylib.mathobj import (MathObject,
@@ -72,7 +73,7 @@ def action_compute(goal, selected_objects):
     possible_code = [solve1_wrap("norm_num at *"),
                      solve1_wrap("try {norm_num at *}, compute_n 10")]
 
-    return format_orelse(possible_code)
+    return CodeForLean.or_else_from_list(possible_code)
 
 
 @action(tooltips.get('tooltip_assumption'),
@@ -93,7 +94,7 @@ def action_assumption(goal: Goal, l: [MathObject]) -> str:
     if len(l) == 0:
         possible_codes.append('assumption')
         possible_codes.append('contradiction')
-        if goal.target.is_equality():
+        if goal.target.is_equality() or goal.target.is_iff():
             if goal.target.math_type.children[0] == \
                     goal.target.math_type.children[1]:
                 possible_codes.append('refl')
@@ -133,6 +134,7 @@ def action_assumption(goal: Goal, l: [MathObject]) -> str:
         # Search for specific prop
         for prop in goal.context:
             math_type = prop.math_type
+            # conclude from "x in emptyset"
             if (math_type.node == "PROP_BELONGS"
                     and math_type.children[1].node == "SET_EMPTY"):
                 H2 = prop.info['name']
@@ -151,4 +153,4 @@ def action_assumption(goal: Goal, l: [MathObject]) -> str:
         # Do not remove above test, since norm_num may solve some
         # not-so-trivial goal, e.g. implications
         possible_codes.append(solve1_wrap('norm_num at *'))
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)

@@ -43,6 +43,7 @@ from deaduction.pylib.actions     import (action,
                                           InputType,
                                           MissingParametersError,
                                           WrongUserInput,
+                                          CodeForLean,
                                           format_orelse)
 
 from deaduction.pylib.mathobj     import (MathObject,
@@ -105,7 +106,7 @@ Split the target 'P AND Q' into two sub-goals
             code = ""
         possible_codes.append(f'{code}split')
 
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 def apply_and(goal, l):
@@ -118,7 +119,7 @@ Here l contains exactly one conjunction property
     h1 = get_new_hyp(goal)
     h2 = get_new_hyp(goal)
     possible_codes.append(f'cases {h_selected} with {h1} {h2}')
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 def construct_and_hyp(goal, selected_objects: [MathObject]):
@@ -131,7 +132,7 @@ Here l contains exactly two properties
     h2 = selected_objects[1].info["name"]
     new_h = get_new_hyp(goal)
     possible_codes.append(f'have {new_h} := and.intro {h1} {h2}')
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 @action(tooltips.get('tooltip_and'),
@@ -196,7 +197,7 @@ When target is a disjunction 'P OR Q', choose to prove either P or Q
         code = ["left", "right"][i]
         possible_codes.append(code)
 
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 def apply_or(goal, l: [MathObject], user_input: [str]) -> str:
@@ -229,7 +230,7 @@ Engage in a proof by cases by applying a property 'P OR Q'
     h1 = get_new_hyp(goal)
     h2 = get_new_hyp(goal)
     possible_codes[0] += f'cases {h_selected} with {h1} {h2}'
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 def construct_or_on_hyp(goal: Goal, l: [MathObject], user_input: [str] = []):
@@ -275,7 +276,7 @@ Construct a property 'P or Q' from property 'P' or property 'Q'
         possible_codes.append(f'have {new_h} := @or.inr ({Q}) _ ({hP})')
     else:
         raise WrongUserInput("unexpected error")
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
             
 
 @action(tooltips.get('tooltip_or'),
@@ -335,7 +336,7 @@ do the same to the hypothesis.
             raise WrongUserInput(error)
         h_selected = l[0].info["name"]
         possible_codes.append(f'push_neg at {h_selected}')
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 # IMPLICATION #
@@ -348,14 +349,14 @@ def construct_implicate(goal: Goal):
 
     h = get_new_hyp(goal)
     possible_codes.append(f'intro {h}')
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 def apply_implicate(goal: Goal, l: [MathObject]):
     possible_codes = []
     h_selected = l[0].info["name"]
     possible_codes.append(f'apply {h_selected}')
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 def apply_implicate_to_hyp(goal: Goal, l: [MathObject]) -> str:
@@ -394,7 +395,7 @@ def apply_implicate_to_hyp(goal: Goal, l: [MathObject]) -> str:
 
     possible_codes = implicit_codes + explicit_codes
 
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 @action(tooltips.get('tooltip_implies'),
@@ -444,7 +445,7 @@ def construct_iff(goal: Goal, user_input: [str]):
         possible_codes.append(f'{code}split')
     else:
         raise WrongUserInput(error=_("undocumented error"))
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 def destruct_iff_on_hyp(goal: Goal, l: [MathObject]):
@@ -460,7 +461,7 @@ def destruct_iff_on_hyp(goal: Goal, l: [MathObject]):
     h1 = get_new_hyp(goal)
     h2 = get_new_hyp(goal)
     possible_codes.append(f'cases (iff_def.mp {h}) with {h1} {h2}')
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 def construct_iff_on_hyp(goal: Goal, l: [MathObject]):
@@ -478,7 +479,7 @@ def construct_iff_on_hyp(goal: Goal, l: [MathObject]):
     h1 = l[0].info["name"]
     h2 = l[1].info["name"]
     possible_codes.append(f'have {new_h} := iff.intro {h1} {h2}')
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 @action(tooltips.get('tooltip_iff'),
@@ -505,7 +506,6 @@ introduce two subgoals, P⇒Q, and Q⇒P.
 # FOR ALL #
 
 def construct_forall(goal) -> str:
-    possible_codes = []
     if not goal.target.is_for_all():
         error = _("target is not a universal property '∀x, P(x)'")
         raise WrongUserInput(error)
@@ -517,12 +517,16 @@ def construct_forall(goal) -> str:
         [math_type_1, math_type_2] = math_type.children
         x = give_global_name(goal=goal, math_type=math_type_1)
         y = give_global_name(goal=goal, math_type=math_type_2)
-        possible_codes.append(f'rintro ⟨ {x}, {y} ⟩')
+        possible_codes = CodeForLean.from_string(f'rintro ⟨ {x}, {y} ⟩')
+        name = f"({x},{y})"
     else:
         x = give_global_name(goal=goal,
                              math_type=math_type,
                              )
-        possible_codes.append(f'intro {x}')
+        possible_codes = CodeForLean.from_string(f'intro {x}')
+        name = f"{x}"
+    possible_codes.add_success_message(_("Object") + " " + name + " "
+                                       + _("added to the context"))
 
     if body.is_implication(is_math_type=True):
         # If math_object has the form
@@ -533,9 +537,9 @@ def construct_forall(goal) -> str:
         if premise.is_inequality(is_math_type=True):
             h = get_new_hyp(goal)
             # Add and_then intro h
-            possible_codes[0] += (f', intro {h}')
+            possible_codes = possible_codes.and_then(f'intro {h}')
 
-    return format_orelse(possible_codes)
+    return possible_codes
 
 
 @action(tooltips.get('tooltip_forall'),
@@ -580,7 +584,7 @@ def construct_exists(goal, user_input: [str]) -> str:
     x = user_input[0]
     possible_codes.append(f'use {x}, dsimp')
     possible_codes.append(f'use {x}')
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 def apply_exists(goal: Goal, l: [MathObject]) -> str:
@@ -600,7 +604,7 @@ def apply_exists(goal: Goal, l: [MathObject]) -> str:
             f'rcases {h_name} with ⟨ {x}, ⟨ {hx}, {h_name} ⟩ ⟩')
     else:
         possible_codes.append(f'cases {h_name} with {x} {hx}')
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 def construct_exists_on_hyp(goal: Goal, l: [MathObject]):
@@ -622,7 +626,7 @@ def construct_exists_on_hyp(goal: Goal, l: [MathObject]):
     else:
         error = _("I cannot build an existential property with this")
         raise WrongUserInput(error)
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 @action(tooltips.get('tooltip_exists'),

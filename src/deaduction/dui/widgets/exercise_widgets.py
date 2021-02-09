@@ -457,6 +457,17 @@ class ExerciseMainWindow(QMainWindow):
         super().closeEvent(event)
         self.window_closed.emit()
 
+    def display_success_message(self, lean_code):
+        """
+        Extract success message from lean_code and send it to the status bar.
+        """
+
+        success_message = lean_code.extract_success_message()
+        if success_message:
+            event = 'success', success_message, ""
+            self.journal.add_event(event, emw=self)
+            # self.display_status_bar_message(event)
+
     @property
     def current_selection_as_mathobjects(self):
         """
@@ -537,7 +548,6 @@ class ExerciseMainWindow(QMainWindow):
                                         message,
                                         QMessageBox.Ok
                                         )
-        # EXERCISE.last_action = None
 
         # Reset current context selection
         # Here we do not use empty_current_selection since Widgets may have
@@ -628,9 +638,10 @@ class ExerciseMainWindow(QMainWindow):
                             self.__server_call_action, emission.args[0]))
 
                 elif emission.is_from(self.__statement_triggered):
-                    statement_name = emission.args[0].statement.pretty_name
-                    event = ('button', 'statement', statement_name)
-                    self.journal.add_event(event=event, emw=self)
+                    if hasattr(emission.args[0], 'statement'):
+                        statement_name = emission.args[0].statement.pretty_name
+                        event = ('button', 'statement', statement_name)
+                        self.journal.add_event(event=event, emw=self)
                     await self.process_async_signal(partial(
                             self.__server_call_statement, emission.args[0]))
 
@@ -659,30 +670,21 @@ class ExerciseMainWindow(QMainWindow):
             await process_function()
         except FailedRequestError as e:
             # Display an error message
-            # TODO: make it a separate class
-            # # message_box = QMessageBox(self)
-            # # message_box.setIcon(QMessageBox.Critical)
-            # # message_box.setWindowTitle(_('Action not understood'))
-            # # message_box.setText(_('Action not understood'))
-            #
-            # detailed = ""
-            # for error in e.errors:
-            #     rel_line_number = error.pos_line \
-            #                       - self.exercise.lean_begin_line_number
-            #     detailed += f'* at {rel_line_number}: {error.text}\n'
-            #
-            # message_box.setDetailedText(detailed)
-            # message_box.setStandardButtons(QMessageBox.Ok)
-            # message_box.exec_()
-            error_message = _('Error')
-            details = ""
-            for error in e.errors:
-                details += "\n" + error.text
-                event = ('lean_error', error_message, details)
+            # First search if lean_code contains some error_message
+            error_message = ""
+            # lean_code may be empty if code comes from Lean editor
+            if e.lean_code:
+                error_message = e.lean_code.error_message
+            if error_message:
+                event = 'lean_error', error_message, ""
+                # self.display_status_bar_message(event)
+            else:
+                error_message = _('Error')
+                details = ""
+                for error in e.errors:
+                    details += "\n" + error.text
+                    event = ('lean_error', error_message, details)
             self.journal.add_event(event, self)
-            # self.display_status_bar_message(content=error_message,
-            #                                nature='error',
-            #                                details=details)
 
             # Abort and go back to last goal
             await self.servint.history_undo()
@@ -710,8 +712,8 @@ class ExerciseMainWindow(QMainWindow):
         we redo one loop iteration, feeding the action with the new input.
 
         Another exception that can occur is the WrongUserInput exception. At
-        this point, the user entered some wrong data, we display an error box
-        and stop.
+        this point, the user entered some wrong data, we display an error
+        in the status bar and stop.
 
         Note the usage of the try .. else statement.
 
@@ -729,12 +731,14 @@ class ExerciseMainWindow(QMainWindow):
         while True:
             try:
                 if not user_input:
-                    code = action.run(self.current_goal,
-                            self.current_selection_as_mathobjects)
+                    lean_code = action.run(
+                        self.current_goal,
+                        self.current_selection_as_mathobjects)
                 else:
-                    code = action.run(self.current_goal,
-                            self.current_selection_as_mathobjects,
-                            user_input)
+                    lean_code = action.run(
+                        self.current_goal,
+                        self.current_selection_as_mathobjects,
+                        user_input)
             except MissingParametersError as e:
                 if e.input_type == InputType.Text:
                     choice, ok = QInputDialog.getText(action_btn,
@@ -753,8 +757,8 @@ class ExerciseMainWindow(QMainWindow):
                 self.empty_current_selection()
                 break
             else:
-                log.info("Code sent to lean: " + code)
-                await self.servint.code_insert(action.symbol, code)
+                await self.servint.code_insert(action.symbol, lean_code)
+                self.display_success_message(lean_code)
                 break
 
     async def __server_call_apply(self, item: MathObjectWidgetItem):
@@ -788,15 +792,20 @@ class ExerciseMainWindow(QMainWindow):
                 statement = item.statement
 
                 if isinstance(statement, Definition):
-                    code = generic.action_definition(self.current_goal,
-                            self.current_selection_as_mathobjects, statement)
+                    lean_code = generic.action_definition(
+                        self.current_goal,
+                        self.current_selection_as_mathobjects,
+                        statement)
                 elif isinstance(statement, Theorem):
-                    code = generic.action_theorem(self.current_goal,
-                            self.current_selection_as_mathobjects, statement)
+                    lean_code = generic.action_theorem(
+                        self.current_goal,
+                        self.current_selection_as_mathobjects,
+                        statement)
 
                 log.debug(f'Calling statement {item.statement.pretty_name}')
-                log.debug("Code sent to Lean: " + code)
-                await self.servint.code_insert(statement.pretty_name, code)
+                await self.servint.code_insert(statement.pretty_name,
+                                               lean_code)
+                self.display_success_message(lean_code)
             except WrongUserInput as e:
                 self.empty_current_selection()
                 self.display_WrongUserInput(e)
@@ -813,20 +822,9 @@ class ExerciseMainWindow(QMainWindow):
     def display_WrongUserInput(self, e):
         error_message = _("Error")
         details = e.error
-        # msg_box = QMessageBox(self)
-        # msg_box.setIcon(QMessageBox.Critical)
-        # msg_box.setWindowTitle(_('Action not understood'))
-        # msg_box.setText(_("don't know what to do with your input!"))
-        # display_errors = user_config['display_detailed_errors_on_WUI']
-        # if details and display_errors:
-        #     msg_box.setDetailedText(details)
-        # msg_box.setStandardButtons(QMessageBox.Ok)
-        # msg_box.exec_()
         event = ('error', error_message, details)
         self.journal.add_event(event, self)
-        # self.display_status_bar_message(message=error_message,
-        #                                 nature='error',
-        #                                 details=details)
+
 
     #########
     # Slots #

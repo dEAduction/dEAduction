@@ -30,6 +30,7 @@ This file is part of dEAduction.
 from dataclasses import dataclass
 import logging
 from deaduction.pylib.actions import (  WrongUserInput,
+                                        CodeForLean,
                                         format_orelse)
 from deaduction.pylib.coursedata import Statement
 from deaduction.pylib.mathobj import (  Goal,
@@ -68,7 +69,7 @@ def action_definition(goal : Goal,
                       selected_objects : [MathObject],
                       definition : Statement):
     possible_codes = rw_using_statement(goal, selected_objects, definition)
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)
 
 
 def action_theorem(goal : Goal, selected_objects : [MathObject], theorem : Statement):
@@ -108,4 +109,4 @@ def action_theorem(goal : Goal, selected_objects : [MathObject], theorem : State
                       ]
         possible_codes.extend(more_codes)
 
-    return format_orelse(possible_codes)
+    return CodeForLean.or_else_from_list(possible_codes)

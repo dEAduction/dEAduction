@@ -33,7 +33,8 @@ from .exceptions import (   InputType,
                             MissingParametersError,
                             WrongUserInput)
 
-from .utils import (        get_new_hyp,
+from .utils import (        CodeForLean,
+                            get_new_hyp,
                             get_new_var,
                             format_orelse,
                             solve1_wrap)

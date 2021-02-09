@@ -40,6 +40,7 @@ from deaduction.pylib.editing import LeanFile
 from deaduction.pylib.lean.request import SyncRequest
 from deaduction.pylib.lean.server import LeanServer
 from deaduction.pylib.lean.installation import LeanEnvironment
+from deaduction.pylib.actions import CodeForLean
 
 import deaduction.pylib.config.site_installation as inst
 import deaduction.pylib.server.exceptions as exceptions
@@ -206,7 +207,19 @@ class ServerInterface(QObject):
     ############################################
     # Update
     ############################################
-    async def __update(self):
+    async def __update(self, **kwargs):
+        """
+        Call Lean server to update the proof_state.
+
+        :param kwargs: parameter lean_code expected, or empty.
+        This parameter is provided for a usual call, but not, for instance,
+        when called by history_undo or history_redo.
+        :return:
+        """
+        if "lean_code" in kwargs:
+            lean_code = kwargs["lean_code"]
+        else:
+            lean_code = ""
         first_line_of_change = self.lean_file.first_line_of_last_change
         self.log.debug(f"Updating, checking errors from line "
                        f"{first_line_of_change}, and context at "
@@ -264,7 +277,7 @@ class ServerInterface(QObject):
             pass
 
         if errlist:
-            raise exceptions.FailedRequestError(errlist)
+            raise exceptions.FailedRequestError(errlist, lean_code)
 
     ############################################
     # Exercise initialisation
@@ -383,12 +396,13 @@ class ServerInterface(QObject):
     ############################################
     # Code management
     ############################################
-    async def code_insert(self, label: str, code: str):
+    async def code_insert(self, label: str, lean_code: CodeForLean):
         """
         Inserts code in the Lean virtual file.
         """
-
+        code = lean_code.to_string()
         code = code.strip()
+        self.log.info("Code sent to Lean: " + code)
 
         if not code.endswith(","):
             code += ","
@@ -396,17 +410,14 @@ class ServerInterface(QObject):
         if not code.endswith("\n"):
             code += "\n"
 
-        # if code.find("EFFECTIVE CODE") == -1:  # not used
-        #     self.__tmp_effective_code = "IRRELEVANT"
-
         self.lean_file.insert(label=label, add_txt=code)
-        await self.__update()
+        await self.__update(lean_code=lean_code)
 
     async def code_set(self, label: str, code: str):
         """
         Sets the code for the current exercise
         """
-
+        self.log.info("Code sent to Lean: " + code)
         if not code.endswith(","):
             code += ","
 

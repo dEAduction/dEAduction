@@ -29,8 +29,9 @@ from pprint import pformat
 
 
 class FailedRequestError(Exception):
-    def __init__(self, errors):
+    def __init__(self, errors, lean_code):
         super().__init__(f"Failed request to server with errors : \n"
                          f"{pformat(errors, indent=4)}")
 
         self.errors = errors
+        self.lean_code = lean_code
