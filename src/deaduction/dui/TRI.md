@@ -1,0 +1,35 @@
+# Actuel
+## dui.widgets
+ActionButton
+ActionButtonsWidget
+DisclosureTriangle
+ExerciseCentralWidget
+ExerciseMainWindow
+ExerciseToolBar
+HorizontalLine
+IconStatusBar
+LeanEditor
+MathObjectWidget
+MathObjectWidgetItem
+RecentCoursesLW
+RecentCoursesLWI
+StatementsTreeWidget
+StatementsTreeWidgetItem
+StatementsTreeWidgetNode
+TargetWidget
+TextEditLogger
+
+## dui.widgets.dialogs
+ButtonsDialog
+InstallingMissingDependencies,
+ReallyWantQuit
+StartExerciseDialog
+WantInstallMissingDependencies.
+YesNoDialog
+
+## dui.functions
+read_pkl_course
+replace_widget_layout
+set_item_selectable
+
+# Proposition
