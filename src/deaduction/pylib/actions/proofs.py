@@ -324,6 +324,15 @@ def inequality_from_pattern_matching(math_object: MathObject,
 def apply_implicate_to_hyp(goal: Goal, l: [MathObject], user_input=None):
     """
     Try to apply last selected property on the other ones.
+    - if only one item has been selected, then the user should have been
+    asked on what to apply the selected property. A corresponding "local
+    constant" is then created and added to the selection.
+    - If the last selected property has the shape "∀x>0, P(x)"
+    (or variations), then deaduction first asks Lean to get P(x) directly by
+    automatically deriving the inequality "x>0" ; if this fails, then we
+    will get only "x>0 => P(x)".
+
+
     :param l: list of 1-3 MathObjects
     :param user_input: in case of 1 MathObject, list of 1 str
     :return:
@@ -412,11 +421,14 @@ def apply_substitute(goal: Goal, l: [MathObject], user_input: [int]):
                 f'Replace by {left_term.to_display()}')]
             
     if len(l) == 1:
+        # If the user has chosen a direction, apply substitution
+        # else if both directions make sense, ask the user for a choice
+        # else try direct way and then reverse way.
         h = l[0].info["name"]
-        if len(user_input) > 0 and user_input[0] <= 1:
+        if len(user_input) > 0:
             if user_input[0] == 1:
                 possible_codes.append(f'rw <- {h}')
-            else:
+            elif user_input[0] == 0:
                 possible_codes.append(f'rw {h}')
         else:
             if goal.target.math_type.contains(left_term) and \
@@ -434,10 +446,10 @@ def apply_substitute(goal: Goal, l: [MathObject], user_input: [int]):
     if len(l) == 2:
         h = l[0].info["name"]
         heq = l[-1].info["name"]
-        if len(user_input) > 0 and user_input[0] <= 1:
+        if len(user_input) > 0:
             if user_input[0] == 1:
                 possible_codes.append(f'rw <- {heq} at {h}')
-            else:
+            elif user_input[0] == 0:
                 possible_codes.append(f'rw {heq} at {h}')
         else:     
             if l[0].math_type.contains(left_term) and \
