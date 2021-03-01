@@ -44,6 +44,7 @@ from deaduction.pylib.actions     import (action,
                                           InputType,
                                           MissingParametersError,
                                           WrongUserInput,
+                                          LeanCombinator,
                                           CodeForLean
                                           )
 
@@ -554,9 +555,10 @@ introduce two subgoals, P⇒Q, and Q⇒P.
 ###########
 
 def construct_forall(goal) -> CodeForLean:
-    if not goal.target.is_for_all():
-        error = _("target is not a universal property '∀x, P(x)'")
-        raise WrongUserInput(error)
+    """
+    Here goal.target is assumed to be a universal property "∀ x:X, ...",
+    and variable x is introduced.
+    """
 
     math_object = goal.target.math_type
     body = math_object.children[2]
@@ -590,6 +592,31 @@ def construct_forall(goal) -> CodeForLean:
     return possible_codes
 
 
+def inequality_from_pattern_matching(math_object: MathObject,
+                                     variable: MathObject) -> MathObject:
+    """
+    Check if math_object.math_type has the form
+    ∀ x:X, (x R ... ==> ...)
+    where R is some inequality relation, and if this statement may be
+    applied to variable. If so, return inequality with x replaced by variable
+    """
+    inequality = None
+    if math_object.is_for_all():
+        math_type, var, body = math_object.math_type.children
+        # NB: following line does not work because of coercions
+        # if var.math_type == variable.math_type:
+        if body.is_implication(is_math_type=True):
+            premise = body.children[0]  # children (2,0)
+            if (premise.is_inequality(is_math_type=True) and
+                    var == premise.children[0]):
+                children = [variable, premise.children[1]]
+                inequality = MathObject(node=premise.node,
+                                        info={},
+                                        children=children,
+                                        math_type=premise.math_type)
+    return inequality
+
+
 def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
     """
     Try to apply last selected property on the other ones.
@@ -600,16 +627,66 @@ def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
     :return:
     """
 
-    # TODO: take into account inequalities, for several variables (cf
-    #  proofs.py)
+    universal_property = l[-1]  # The property to be applied
+    inequality_counter = 0
+    # Variable_names will contain the list of variables and proofs of
+    # inequalities that will be passed to universal_property
+    variable_names = []
+    code = CodeForLean.empty_code()
+    for potential_var in l[:-1]:
+        # TODO: replace by pattern matching
+        # Check for "∀x>0" (and variations)
+        inequality = inequality_from_pattern_matching(universal_property,
+                                                      potential_var)
+        variable_names.append(potential_var.info['name'])
+        if inequality:
+            inequality_counter += 1
+            inequality_name = get_new_hyp(goal)
+            variable_names.append(inequality_name)
+            # TODO: search if inequality is not already in context, and if so,
+            #  use it instead of re-proving (which leads to duplication)
+            # Add type indication to the variable in inequality
+            math_type = inequality.children[1].math_type
+            # Even if variable is not used explicitly, this affects inequality:
+            variable = inequality.children[0]
+            variable = add_type_indication(variable, math_type)
+            display_inequality = inequality.to_display(
+                is_math_type=False,
+                format_='lean')
+            # Code I: state corresponding inequality #
+            code = code.and_then(f"have {inequality_name}: "
+                                 f"{display_inequality}")
+            code = code.and_then("rotate")
 
-    implication = l[-1]
+
+    # Code II: Apply universal_property #
     hypo_name = get_new_hyp(goal)
-    variable_names = [variable.info['name'] for variable in l[:-1]]
+    code = code.and_then(have(universal_property,
+                              hypo_name=hypo_name,
+                              variable_names=variable_names)
+                         )
+    code = code.and_then("rotate")  # back to first inequality
 
-    return have(implication, variable_names, hypo_name)
+    # Code III: try to solve inequalities # e.g.
+    #   iterate 2 { solve1 {try {norm_num at *}, try {compute_n 10}} <|>
+    #               rotate},   rotate,
+    more_code = CodeForLean.empty_code()
+    if inequality_counter:
+        more_code1 = CodeForLean.from_string("norm_num at *")
+        more_code1 = more_code1.single_combinator("try")
+        more_code2 = CodeForLean.from_string("compute_n 1")
+        more_code2 = more_code2.single_combinator("try")
+        # Try to solve1 inequality by norm_num, maybe followed by compute:
+        more_code = more_code1.and_then(more_code2)
+        more_code = more_code.single_combinator("solve1")
+        # If it fails, rotate to next inequality
+        more_code = more_code.or_else("rotate")
+        # Do this for all inequalities
+        more_code = more_code.single_combinator(f"iterate {inequality_counter}")
+        # Finally come back to first inequality
+        more_code = more_code.and_then("rotate")
 
-
+    return code.and_then(more_code)
 
 
 @action(tooltips.get('tooltip_forall'),
@@ -627,10 +704,18 @@ def action_forall(goal: Goal, l: [MathObject], user_input: [str] = []) \
     """
 
     if len(l) == 0:
-        return construct_forall(goal)
+        if not goal.target.is_for_all():
+            error = _("target is not a universal property '∀x, P(x)'")
+            raise WrongUserInput(error)
+        else:
+            return construct_forall(goal)
 
     elif len(l) == 1:  # Ask user for item
-        if len(user_input) == 0:
+        if not l[0].is_for_all():
+            error = _("selected property is not a universal property '∀x, "
+                      "P(x)'")
+            raise WrongUserInput(error)
+        elif len(user_input) == 0:
             raise MissingParametersError(InputType.Text,
                                          title=_("Apply a universal property"),
                                          output=_(
@@ -644,13 +729,13 @@ def action_forall(goal: Goal, l: [MathObject], user_input: [str] = []) \
                                        children=[],
                                        math_type=None)
             l.insert(0, potential_var)
-            # Now len(l) == 2 so next test will be positive
-
-    # search for a universal property among l, beginning with last item
+            # Now len(l) == 2
+    # From now on len(l) ≥ 2
+    # Search for a universal property among l, beginning with last item
     l.reverse()
     for item in l:
         if item.is_for_all():
-            # put item on last position
+            # Put item on last position
             l.remove(item)
             l.reverse()
             l.append(item)

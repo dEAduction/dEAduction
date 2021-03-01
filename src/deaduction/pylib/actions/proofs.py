@@ -296,29 +296,29 @@ def have(for_all: MathObject,
     return possible_codes
 
 
-def inequality_from_pattern_matching(math_object: MathObject,
-                                     variable: MathObject):
-    """
-    Check if math_object.math_type has the form
-    ∀ x:X, (x R ... ==> ...)
-    where R is some inequality relation, and if this statement may be
-    applied to variable. If so, return inequality with x replaced by variable
-    """
-    inequality = None
-    if math_object.is_for_all():
-        math_type, var, body = math_object.math_type.children
-        # NB: following line does not work because of coercions
-        # if var.math_type == variable.math_type:
-        if body.is_implication(is_math_type=True):
-            premise = body.children[0]  # children (2,0)
-            if (premise.is_inequality(is_math_type=True) and
-                    var == premise.children[0]):
-                children = [variable, premise.children[1]]
-                inequality = MathObject(node=premise.node,
-                                        info={},
-                                        children=children,
-                                        math_type=premise.math_type)
-    return inequality
+# def inequality_from_pattern_matching(math_object: MathObject,
+#                                      variable: MathObject):
+#     """
+#     Check if math_object.math_type has the form
+#     ∀ x:X, (x R ... ==> ...)
+#     where R is some inequality relation, and if this statement may be
+#     applied to variable. If so, return inequality with x replaced by variable
+#     """
+#     inequality = None
+#     if math_object.is_for_all():
+#         math_type, var, body = math_object.math_type.children
+#         # NB: following line does not work because of coercions
+#         # if var.math_type == variable.math_type:
+#         if body.is_implication(is_math_type=True):
+#             premise = body.children[0]  # children (2,0)
+#             if (premise.is_inequality(is_math_type=True) and
+#                     var == premise.children[0]):
+#                 children = [variable, premise.children[1]]
+#                 inequality = MathObject(node=premise.node,
+#                                         info={},
+#                                         children=children,
+#                                         math_type=premise.math_type)
+#     return inequality
 
 
 def apply_implicate_to_hyp(goal: Goal, l: [MathObject], user_input=None):

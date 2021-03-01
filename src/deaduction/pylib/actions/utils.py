@@ -35,13 +35,17 @@ from enum import IntEnum
 from deaduction.pylib.actions import WrongUserInput
 
 
-class LeanCombinator(IntEnum):
+class LeanCombinator(str):
     """
     Class clarifying combinators for CodeForLean
     """
-    single = 0
-    and_then = 1
-    or_else = 2
+    single =    "single"
+    and_then =  "and_then"
+    or_else =   "or_else"
+    try_ =      "try"
+    solve1 =    "solve1"
+    focus =     "focus"
+    iterate =   "iterate"
 
 
 @dataclass()
@@ -57,7 +61,7 @@ class CodeForLean:
     (depending of the effective code in case of or_else combinator)
     """
     instructions:    [Any]   # [str or CodeForLean]
-    combinator:      LeanCombinator = LeanCombinator.single
+    combinator:      str = LeanCombinator.single
     error_message:   str = ""
     success_message: str = ""
 
@@ -137,6 +141,8 @@ class CodeForLean:
             other = CodeForLean.from_string(other)
         if self.is_empty():
             return other
+        elif other == "" or other.is_empty():
+            return self
         elif self.is_and_then():
             self.instructions.append(other)
             self.success_message = success_message
@@ -145,6 +151,18 @@ class CodeForLean:
             return CodeForLean(combinator=LeanCombinator.and_then,
                                instructions=[self, other],
                                success_message=success_message)
+
+    def single_combinator(self, combinator_type, success_message=""):
+        """
+        Add the "try" combinator at the top of self.
+
+        :return: CodeForLean
+        """
+        if isinstance(self, str):
+            self_ = CodeForLean.from_string(self)
+        return CodeForLean(combinator=combinator_type,
+                           instructions=[self],
+                           success_message=success_message)
 
     def and_finally(self, other):
         """
@@ -198,6 +216,11 @@ class CodeForLean:
             strings = ['`[ ' + string + ']'
                        for string in strings if string != ""]
             return ' <|> '.join(strings)
+        else:
+            return self.combinator \
+                + " {" \
+                + self.instructions[0].to_raw_string(exclude_no_meta_vars) \
+                + " }"
 
     def add_trace_effective_code(self, num_effective_code):
         """
@@ -212,13 +235,13 @@ class CodeForLean:
 
         if self.is_empty():
             return self
-        elif self.is_single() or self.is_and_then():
+        elif not self.is_or_else():
             # replace self by self and_then trace the code
             trace_string = f'trace \"EFFECTIVE CODE {num_effective_code}: ' \
                            f'{self.to_raw_string(exclude_no_meta_vars=True)}\"'
             # trace_code = CodeForLean.from_string(trace_string)
             return self.and_then(trace_string)
-        elif self.is_or_else():
+        else:
             instructions = [piece_of_code.add_trace_effective_code(
                 num_effective_code) for piece_of_code in self.instructions]
             return CodeForLean(combinator=LeanCombinator.or_else,
@@ -232,13 +255,13 @@ class CodeForLean:
         no_meta_vars_str = "no_meta_vars"
         if self.is_empty():
             return self
-        elif self.is_single() or self.is_and_then():
+        elif not self.is_or_else():
             # replace self by self and_then no_meta_vars
             if self.contains_apply():
                 return self.and_then(no_meta_vars_str)
             else:
                 return self
-        elif self.is_or_else():
+        else:
             instructions = [piece_of_code.add_no_meta_vars()
                             for piece_of_code in self.instructions]
             return CodeForLean(combinator=LeanCombinator.or_else,
@@ -306,7 +329,7 @@ class CodeForLean:
         elif self.is_single():
             string = self.instructions[0]
             return string.find("apply") != -1
-        elif self.is_and_then() or self.is_or_else():
+        else:
             return True in [instruction.contains_apply() for instruction in
                             self.instructions]
 
