@@ -1,20 +1,13 @@
 """
-###############################################################
-# exercise_widget.py : provide classes for the exercise stage #
-###############################################################
+##############################################################
+# exercise_main_window.py : Provide ExerciseMainWindow class #
+##############################################################
 
-    Provide classes:
-        - ExerciseToolbar,
-        - ExerciseCentralWidget,
-        - ExerciseMainWindow.
+Author(s)      : Kryzar <antoine@hugounet.com>
+Maintainers(s) : Kryzar <antoine@hugounet.com>
+Date           : March 2021
 
-Author(s)      : - Kryzar <antoine@hugounet.com>
-                 - Florian Dupeyron <florian.dupeyron@mugcat.fr>
-Maintainers(s) : - Kryzar <antoine@hugounet.com>
-                 - Florian Dupeyron <florian.dupeyron@mugcat.fr>
-Date           : July 2020
-
-Copyright (c) 2020 the dEAduction team
+Copyright (c) 2021 the dEAduction team
 
 This file is part of d∃∀duction.
 
@@ -32,44 +25,27 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from functools import           partial
-import logging
-from pathlib import             Path
-from typing import              Callable
-import qtrio
+from functools import partial
+import                logging
+from typing import    Callable
+import                qtrio
 
 from PySide2.QtCore import (    Signal,
                                 Slot,
-                                QEvent,
-                                Qt)
-from PySide2.QtGui import       QIcon
-from PySide2.QtWidgets import ( QAction,
-                                QDesktopWidget,
-                                QGroupBox,
-                                QHBoxLayout,
-                                QInputDialog,
+                                QEvent )
+from PySide2.QtWidgets import ( QInputDialog,
                                 QMainWindow,
-                                QMessageBox,
-                                QToolBar,
-                                QVBoxLayout,
-                                QWidget)
+                                QMessageBox )
 
-from deaduction.dui.utils               import   replace_widget_layout
-from deaduction.dui.stages.exercise     import   IconStatusBar
 from deaduction.dui.elements            import ( ActionButton,
-                                                 ActionButtonsWidget,
                                                  LeanEditor,
-                                                 StatementsTreeWidget,
                                                  StatementsTreeWidgetItem,
                                                  MathObjectWidget,
-                                                 MathObjectWidgetItem,
-                                                 TargetWidget)
+                                                 MathObjectWidgetItem )
 from deaduction.dui.parents             import   ButtonsDialog
 from deaduction.pylib.config.i18n       import   _
-import deaduction.pylib.config.vars     as       cvars
 from deaduction.pylib.memory            import   Journal
-from deaduction.pylib.actions           import ( action_apply,
-                                                 InputType,
+from deaduction.pylib.actions           import ( InputType,
                                                  MissingParametersError,
                                                  WrongUserInput)
 import deaduction.pylib.actions.generic as       generic
@@ -82,250 +58,12 @@ from deaduction.pylib.mathobj           import ( MathObject,
                                                  Proof)
 from deaduction.pylib.server.exceptions import   FailedRequestError
 from deaduction.pylib.server            import   ServerInterface
-import deaduction.pylib.utils.filesystem as      fs
+
+from .exercise_main_window_widgets      import ( ExerciseCentralWidget,
+                                                 ExerciseStatusBar,
+                                                 ExerciseToolBar )
 
 log = logging.getLogger(__name__)
-
-
-###########
-# Widgets #
-###########
-
-
-class ExerciseToolbar(QToolBar):
-
-    def __init__(self):
-        super().__init__(_('Toolbar'))
-        icons_base_dir = cvars.get("icons.path")
-        icons_dir = fs.path_helper(icons_base_dir)
-        self.undo_action = QAction(
-                QIcon(str((icons_dir / 'undo_action.png').resolve())),
-                _('Undo action'), self)
-        self.redo_action = QAction(
-                QIcon(str((icons_dir / 'redo_action.png').resolve())),
-                _('Redo action'), self)
-
-        self.toggle_lean_editor_action = QAction(
-                QIcon(str((icons_dir / 'lean_editor.png').resolve())),
-                _('Toggle L∃∀N'), self)
-
-        self.addAction(self.undo_action)
-        self.addAction(self.redo_action)
-        self.addAction(self.toggle_lean_editor_action)
-
-
-# 
-class ExerciseCentralWidget(QWidget):
-    """
-    Main / central / biggest widget in the exercise window. Self is to
-    be instantiated as the central widget of d∃∀duction, more
-    specifically as ExerciseMainWindow.centralWidget(). This widgets
-    contains many crucial children widgets:
-        - the target widget (self.target_wgt);
-        - the 'context area' widgets:
-            - the objects widget (self.objects_wgt) for math. objects
-              (e.g. f:X->Y a function);
-            - the properties widget (self.props_wgt) for math.
-              properties (e.g. f is continuous);
-        - the 'action area' widgets:
-            - the logic buttons (self.logic_btns);
-            - the proof buttons (self.proof_btns);
-            - the magic buttons (self.magic_btns), if any
-            - the statements tree (self.statements_tree, see
-              StatementsTreeWidget.__doc__).
-
-    All of these are instantiated in self.__init__ as widget classes
-    defined elsewhere (mainly actions_widgets_classes.py and
-    context_widgets_classes.py) and properly arranged in layouts.
-
-    Self is instantiated with only an instance of the class Exercise.
-    However, when this happens, it does not have a context nor a target
-    (L∃∀N has not yet been called, see ExerciseMainWindow.__init__!):
-    empty widgets are displayed for context elements. Once L∃∀N has been
-    successfully called and sent back a goal (an instance of the class
-    Goal contains a target, objects and properties, see
-    deaduction.pylib.mathobj.Goal), context elements widgets are changed
-    with the method update_goal. Note that neither the exercise (used in
-    self.__init__) nor the goal are kept as class attributes!
-
-    :attribute logic_btns ActionButtonsWidget: Logic buttons available
-        for this exercise.
-    :attribute objects_wgt MathObjectWidget: Widget for context
-        objects (e.g. f:X->Y a function).
-    :attribute proof_btns ActionButtonsWidget: Proof buttons
-        available for this exercise.
-    :attribute props_wgt MathObjectWidget: Widget for context
-        properties (e.g. f is continuous).
-    :attribute statements_tree StatementsTreeWidget: Tree widget for
-        statements (theorems, definitions, past exercises) available to
-        this exercise.
-    :attribute target_wgt TargetWidget: Widget to display the context
-        target.
-
-    :property actions_buttons [ActionButtons]: A list of all objects
-        and properties (instances of the class MathObjectWidgetItem).
-    :property context_items [MathObjectWidgetItems]: A list of all
-        objects and properties (instances of the class
-        MathObjectWidgetItem).
-    """
-
-    def __init__(self, exercise: Exercise):
-        """
-        Init self with an instance of the class Exercise. See
-        self.__doc__.
-
-        :param exercise: The instance of the Exercise class representing
-            the exercise to be solved by the user.
-        """
-
-        super().__init__()
-
-        # ───────────── Init layouts and boxes ───────────── #
-        # I wish none of these were class atributes, but we need at
-        # least self.__main_lyt and self.__context_lyt in the method
-        # self.update_goal.
-
-        self.__main_lyt     = QVBoxLayout()
-        self.__context_lyt  = QVBoxLayout()
-        context_actions_lyt = QHBoxLayout()
-        actions_lyt         = QVBoxLayout()
-        action_btns_lyt     = QVBoxLayout()
-
-        action_btns_lyt.setContentsMargins(0, 0, 0, 0)
-        action_btns_lyt.setSpacing(0)
-
-        actions_gb = QGroupBox(_('Actions (transform context and target)'))
-        context_gb = QGroupBox(_('Context (objects and properties)'))
-
-        # ──────────────── Init Actions area ─────────────── #
-
-        self.logic_btns = ActionButtonsWidget(exercise.available_logic)
-        self.proof_btns = ActionButtonsWidget(exercise.available_proof)
-        self.magic_btns = ActionButtonsWidget(exercise.available_magic)
-
-        # Search for ActionButton corresponding to action_apply
-        # (which will be called by double-click):
-        apply_buttons = [button for button in self.proof_btns.buttons
-                         if button.action.run == action_apply]
-        if apply_buttons:
-            self.action_apply_button = apply_buttons[0]
-        else:
-            log.warning("Action_apply_button not found")
-
-        statements           = exercise.available_statements
-        outline              = exercise.course.outline
-        self.statements_tree = StatementsTreeWidget(statements, outline)
-
-        # ─────── Init goal (Context area and target) ────── #
-
-        self.objects_wgt = MathObjectWidget()
-        self.props_wgt   = MathObjectWidget()
-        self.target_wgt  = TargetWidget()
-
-        # ───────────── Put widgets in layouts ───────────── #
-
-        # Actions
-        action_btns_lyt.addWidget(self.logic_btns)
-        action_btns_lyt.addWidget(self.proof_btns)
-        if exercise.available_magic:
-            action_btns_lyt.addWidget(self.magic_btns)
-        actions_lyt.addLayout(action_btns_lyt)
-        actions_lyt.addWidget(self.statements_tree)
-        actions_gb.setLayout(actions_lyt)
-
-        # Context
-        self.__context_lyt.addWidget(self.objects_wgt)
-        self.__context_lyt.addWidget(self.props_wgt)
-        context_gb.setLayout(self.__context_lyt)
-
-        # https://i.kym-cdn.com/photos/images/original/001/561/446/27d.jpg
-        context_actions_lyt.addWidget(context_gb)
-        context_actions_lyt.addWidget(actions_gb)
-        self.__main_lyt.addWidget(self.target_wgt)
-        self.__main_lyt.addLayout(context_actions_lyt)
-
-        self.setLayout(self.__main_lyt)
-
-    ##############
-    # Properties #
-    ##############
-
-    @property
-    def actions_buttons(self) -> [ActionButton]:
-        """
-        Do not delete! A list of all logic buttons and proof
-        buttons (instances of the class ActionButton).
-        """
-
-        return self.logic_btns.buttons \
-                + self.proof_btns.buttons \
-                + self.magic_btns.buttons
-
-    ###########
-    # Methods #
-    ###########
-
-    def freeze(self, yes=True):
-        """
-        Freeze interface (inactive widgets, gray appearance, etc) if
-        yes:
-            - disable objects and properties;
-            - disable all buttons;
-        unfreeze it otherwise.
-
-        :param yes: See above.
-        """
-
-        to_freeze = [self.objects_wgt,
-                     self.props_wgt,
-                     self.logic_btns,
-                     self.proof_btns,
-                     self.magic_btns,
-                     self.statements_tree]
-        for widget in to_freeze:
-            widget.setEnabled(not yes)
-
-    def update_goal(self, new_goal: Goal, goal_count: str = ''):
-        """
-        Change goal widgets (self.objects_wgts, self.props_wgt and
-        self.target_wgt) to new widgets, corresponding to new_goal.
-
-        :param new_goal: The goal to update self to.
-        :param goal_count: a string indicating the goal_count state,
-        e.g. "  2 / 3" means the goal number 2 out of 3 is currently being
-        studied
-        """
-
-        # Init context (objects and properties). Get them as two list of
-        # (MathObject, str), the str being the tag of the prop. or obj.
-        new_context    = new_goal.tag_and_split_propositions_objects()
-        new_target     = new_goal.target
-        new_target_tag = '='  # new_target.future_tags[1]
-        new_objects    = new_context[0]
-        new_props      = new_context[1]
-
-        new_objects_wgt = MathObjectWidget(new_objects)
-        new_props_wgt   = MathObjectWidget(new_props)
-        new_target_wgt  = TargetWidget(new_target, new_target_tag, goal_count)
-
-        # Replace in the layouts
-        replace_widget_layout(self.__context_lyt,
-                              self.objects_wgt, new_objects_wgt)
-        replace_widget_layout(self.__context_lyt,
-                              self.props_wgt, new_props_wgt)
-        replace_widget_layout(self.__main_lyt,
-                              self.target_wgt, new_target_wgt, True)
-
-        # Set the attributes to the new values
-        self.objects_wgt  = new_objects_wgt
-        self.props_wgt    = new_props_wgt
-        self.target_wgt   = new_target_wgt
-        self.current_goal = new_goal
-
-
-###############
-# Main window #
-###############
 
 
 class ExerciseMainWindow(QMainWindow):
@@ -407,14 +145,14 @@ class ExerciseMainWindow(QMainWindow):
 
         # ─────────────────── Attributes ─────────────────── #
 
-        self.exercise           = exercise
-        self.current_goal       = None
-        self.current_selection  = []
-        self.ecw                = ExerciseCentralWidget(exercise)
-        self.lean_editor        = LeanEditor()
-        self.servint            = servint
-        self.toolbar            = ExerciseToolbar()
-        self.journal            = Journal()
+        self.exercise          = exercise
+        self.current_goal      = None
+        self.current_selection = []
+        self.ecw               = ExerciseCentralWidget(exercise)
+        self.lean_editor       = LeanEditor()
+        self.servint           = servint
+        self.toolbar           = ExerciseToolBar()
+        self.journal           = Journal()
 
         # ─────────────────────── UI ─────────────────────── #
 
@@ -424,7 +162,7 @@ class ExerciseMainWindow(QMainWindow):
         self.toolbar.undo_action.setEnabled(False)  # same
 
         # Status Bar
-        self.statusBar = IconStatusBar(self)
+        self.statusBar = ExerciseStatusBar(self)
         self.setStatusBar(self.statusBar)
 
         # ──────────────── Signals and slots ─────────────── #

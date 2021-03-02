@@ -25,10 +25,4 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .exercise_widgets import (
-    ExerciseToolBar,
-    ExerciseCentralWidget,
-    ExerciseMainWindow )
-
-from .icon_status_bar import (
-    IconStatusBar )
+from .exercise_main_window import ExerciseMainWindow
