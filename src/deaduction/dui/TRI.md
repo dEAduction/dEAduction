@@ -35,20 +35,20 @@ set_item_selectable
 Philosophie générale. La nouvelle organisation est sémentique pour
 l'utilisation (de dEAduction) plutôt que sémentique pour le code ; on ne
 regroupe plus les classes par commun parent (p. ex. `QWidget`). L'utilisation
-est divisée en *phases* (`dui.phases`) : phase de choix d'exercice
-(`dui.startex`), phase durant laquelle usr fait son exercice (`dui.emw`, pour
-*exercise main window*), etc. Tout ne rentre pas dans les *phases* et il y a
+est divisée en étapes (*stages*) (`dui.stages`) : stage de choix d'exercice
+(`dui.startex`), stage durant laquelle usr fait son exercice (`dui.emw`, pour
+*exercise main window*), etc. Tout ne rentre pas dans les *stages* et il y a
 d'autres modules.
 
 ## dui.elements
 
 Éléments d'interfaces utilisés à l'intérieur d'autres plus gros éléments
 d'interface (p. ex. la liste des cours est un *element* de la fenêtre
-d'exercice) qui sont utilisés dans plusieurs *phases* (voir `dui.phases`)
+d'exercice) qui sont utilisés dans plusieurs *stages* (voir `dui.stages`)
 différentes, voire même dans un autre module que `dui`. Ici, « utilisation » ne
 veut pas forcément dire « instanciation » : la plupart de ces types ne seront
 importés que pour signer une fonction. À la création d'un élément d'interface,
-il est préférable de le laisser si possible dans sa phase correspondante et de
+il est préférable de le laisser si possible dans sa stage correspondante et de
 ne pas trop charger `dui.elements`.
 
 - ActionButton
@@ -82,9 +82,9 @@ générales ou abstraites pour être utilisées ailleurs.
 - TextEditLogger
 - YesNoDialog
 
-## dui.phases
+## dui.stages
 
-### dui.phases.emw
+### dui.stages.exercise
 
 Phase durant laquelle usr fait l'exercice.
 
@@ -93,20 +93,20 @@ Phase durant laquelle usr fait l'exercice.
 - ExerciseToolBar
 - IconStatusBar
 
-### dui.phases.missdep
+### dui.stages.missing_dependencies
 
 Phase de gestion des dépendances manquantes.
 
 - WantInstallMissingDependencies
 - InstallingMissingDependencies
 
-### dui.phases.quitdead
+### dui.stages.quit_deaduction
 
 Phase de sortie (quit) de dEAduction.
 
 - ReallyWantQuit
 
-### dui.phases.startex
+### dui.stages.start_exercise
 
 Phase de choix et démarrage d'un nouvel exercice (au lancement de dEAduction
 comme à la fin d'un exercice).
