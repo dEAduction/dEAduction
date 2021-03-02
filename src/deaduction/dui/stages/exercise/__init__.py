@@ -25,7 +25,7 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .exercise_widget import (
+from .exercise_widgets import (
     ExerciseToolBar,
     ExerciseCentralWidget,
     ExerciseMainWindow )
