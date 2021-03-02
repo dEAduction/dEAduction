@@ -1,7 +1,12 @@
 """
-########################################################
-# exercise_widget.py : provide the ExerciseWidget class #
-########################################################
+###############################################################
+# exercise_widget.py : provide classes for the exercise stage #
+###############################################################
+
+    Provide classes:
+        - ExerciseToolbar,
+        - ExerciseCentralWidget,
+        - ExerciseMainWindow.
 
 Author(s)      : - Kryzar <antoine@hugounet.com>
                  - Florian Dupeyron <florian.dupeyron@mugcat.fr>

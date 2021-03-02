@@ -3,7 +3,6 @@
 # status_bar.py: Provide IconStatusBar class #
 ##############################################
 
-
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Created       : 12 2020 (creation)
