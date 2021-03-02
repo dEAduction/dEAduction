@@ -54,17 +54,17 @@ from PySide2.QtWidgets import ( QAction,
                                 QVBoxLayout,
                                 QWidget)
 
-from deaduction.dui.functions           import   replace_widget_layout
-from deaduction.dui.widgets             import ( ActionButton,
+from deaduction.dui.utils               import   replace_widget_layout
+from deaduction.dui.stages.exercise     import   IconStatusBar
+from deaduction.dui.elements            import ( ActionButton,
                                                  ActionButtonsWidget,
-                                                 IconStatusBar,
                                                  LeanEditor,
                                                  StatementsTreeWidget,
                                                  StatementsTreeWidgetItem,
                                                  MathObjectWidget,
                                                  MathObjectWidgetItem,
                                                  TargetWidget)
-from deaduction.dui.widgets.dialogs     import   ButtonsDialog
+from deaduction.dui.parents             import   ButtonsDialog
 from deaduction.pylib.config.i18n       import   _
 import deaduction.pylib.config.vars     as       cvars
 from deaduction.pylib.memory            import   Journal
