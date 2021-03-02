@@ -67,9 +67,9 @@ from deaduction.dui.elements        import ( MathObjectWidget,
 from deaduction.dui.parents         import ( DisclosureTriangle,
                                              ButtonsDialog )
 from deaduction.dui.utils           import ( read_pkl_course,
+                                             replace_widget_layout,
                                              HorizontalLine )
-from deaduction.pylib.config.course import ( add_to_recent_courses
-                                             replace_widget_layout )
+from deaduction.pylib.config.course import   add_to_recent_courses
 from deaduction.pylib.coursedata    import ( Course,
                                              Exercise )
 
