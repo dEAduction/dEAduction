@@ -59,17 +59,17 @@ from PySide2.QtWidgets import ( QApplication,
                                 QVBoxLayout,
                                 QWidget )
 
-from deaduction.pylib.config.course import   add_to_recent_courses
-from deaduction.dui.functions       import ( read_pkl_course,
-                                             replace_widget_layout )
-from deaduction.dui.widgets         import ( DisclosureTriangle,
-                                             HorizontalLine,
-                                             MathObjectWidget,
+from deaduction.dui.elements        import ( MathObjectWidget,
                                              RecentCoursesLW,
                                              RecentCoursesLWI,
                                              StatementsTreeWidget,
                                              StatementsTreeWidgetItem )
-from deaduction.dui.widgets.dialogs import   ButtonsDialog
+from deaduction.dui.parents         import ( DisclosureTriangle,
+                                             ButtonsDialog )
+from deaduction.dui.utils           import ( read_pkl_course,
+                                             HorizontalLine )
+from deaduction.pylib.config.course import ( add_to_recent_courses
+                                             replace_widget_layout )
 from deaduction.pylib.coursedata    import ( Course,
                                              Exercise )
 
