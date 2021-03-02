@@ -33,8 +33,8 @@ import logging
 import qtrio
 import trio
 
-from deaduction.dui.widgets                      import ExerciseMainWindow
-from deaduction.dui.widgets.dialogs              import StartExerciseDialog
+from deaduction.dui.stages.exercise              import ExerciseMainWindow
+from deaduction.dui.stages.start_exercise        import StartExerciseDialog
 from deaduction.pylib                            import logger
 from deaduction.pylib.server                     import ServerInterface
 from deaduction.pylib.config.i18n                import _
