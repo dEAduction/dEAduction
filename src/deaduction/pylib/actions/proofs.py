@@ -44,7 +44,11 @@ from deaduction.pylib.actions import (InputType,
                                       solve1_wrap,
                                       apply_exists,
                                       apply_and,
-                                      apply_or)
+                                      apply_or,
+                                      apply_implicate,
+                                      apply_implicate_to_hyp,
+                                      apply_forall,
+                                      have_new_property)
 from deaduction.pylib.mathobj import (MathObject,
                                       Goal,
                                       get_new_hyp,
@@ -259,149 +263,9 @@ def action_new_object(goal: Goal, l: [MathObject],
     return possible_codes
 
 
-
 #########
 # APPLY #
 #########
-
-def apply_implicate(goal: Goal, l: [MathObject]):
-    possible_codes = []
-    h_selected = l[0].info["name"]
-    possible_codes.append(f'apply {h_selected}')
-    return possible_codes
-
-
-def have(for_all: MathObject,
-         variable_name: str,
-         hypo_name) -> [str]:
-    # TODO: adapt for more than 1 variable
-    h_selected = for_all.info["name"]
-    x_selected = variable_name
-    h = hypo_name
-    possible_codes = []
-    # try with up to 4 implicit parameters
-    possible_codes.append(f'have {h} := {h_selected} {x_selected}')
-    possible_codes.append(f'have {h} := {h_selected} _ {x_selected}')
-    possible_codes.append(f'have {h} := {h_selected} _ _ {x_selected}')
-    possible_codes.append(f'have {h} := {h_selected} _ _ _ {x_selected}')
-    possible_codes.append(f'have {h} := {h_selected} _ _ _ _ {x_selected}')
-
-    possible_codes.append(f'have {h} := @{h_selected} {x_selected}')
-    possible_codes.append(f'have {h} := @{h_selected} _ {x_selected}')
-    possible_codes.append(f'have {h} := @{h_selected} _ _ {x_selected}')
-    possible_codes.append(f'have {h} := @{h_selected} _ _ _ {x_selected}')
-    possible_codes.append(
-        f'have {h} := @{h_selected} _ _ _ _ {x_selected}')
-
-    return possible_codes
-
-
-# def inequality_from_pattern_matching(math_object: MathObject,
-#                                      variable: MathObject):
-#     """
-#     Check if math_object.math_type has the form
-#     ∀ x:X, (x R ... ==> ...)
-#     where R is some inequality relation, and if this statement may be
-#     applied to variable. If so, return inequality with x replaced by variable
-#     """
-#     inequality = None
-#     if math_object.is_for_all():
-#         math_type, var, body = math_object.math_type.children
-#         # NB: following line does not work because of coercions
-#         # if var.math_type == variable.math_type:
-#         if body.is_implication(is_math_type=True):
-#             premise = body.children[0]  # children (2,0)
-#             if (premise.is_inequality(is_math_type=True) and
-#                     var == premise.children[0]):
-#                 children = [variable, premise.children[1]]
-#                 inequality = MathObject(node=premise.node,
-#                                         info={},
-#                                         children=children,
-#                                         math_type=premise.math_type)
-#     return inequality
-
-
-def apply_implicate_to_hyp(goal: Goal, l: [MathObject], user_input=None):
-    """
-    Try to apply last selected property on the other ones.
-    - if only one item has been selected, then the user should have been
-    asked on what to apply the selected property. A corresponding "local
-    constant" is then created and added to the selection.
-    - If the last selected property has the shape "∀x>0, P(x)"
-    (or variations), then deaduction first asks Lean to get P(x) directly by
-    automatically deriving the inequality "x>0" ; if this fails, then we
-    will get only "x>0 => P(x)".
-
-
-    :param l: list of 1-3 MathObjects
-    :param user_input: in case of 1 MathObject, list of 1 str
-    :return:
-    """
-    possible_codes = []
-    if len(l) == 1 and user_input:
-        item = user_input[0]
-        item = add_type_indication(item)  # e.g. (0:ℝ)
-        potential_var = MathObject(node="LOCAL_CONSTANT",
-                                   info={'name': item},
-                                   children=[],
-                                   math_type=None)
-        l.insert(0,potential_var)
-        # Now len(l) == 2 so next test will be positive
-    if len(l) == 2:
-        math_object = l[-1]
-        potential_var = l[0]
-        # TODO: replace by pattern matching
-        # Check for "∀x>0" (and variations)
-        inequality = inequality_from_pattern_matching(math_object,
-                                                      potential_var)
-        h1 = get_new_hyp(goal)
-        # TODO: structure this into:
-        #  (1) try { have <INEQ>, by <compute> , and_then (have.. or_else ...)
-        #  (2) or_else {(have.. or_else ...)}
-        #  For the moment, the first have is tried many time by Lean,
-        #  which is highly inefficient
-        if inequality:
-            # TODO: search if inequality is not already in context, and if so,
-            #  use it instead of re-proving (which leads to duplication)
-            # Add type indication
-            math_type = inequality.children[1].math_type
-            variable = inequality.children[0]
-            variable = add_type_indication(variable, math_type)
-            h2 = get_new_hyp(goal)
-            display_inequality = inequality.to_display(
-                is_math_type=False,
-                format_='lean')
-            code = f"have {h1} : {display_inequality}, "
-            code += "by { try {norm_num at *}, try {compute_n 10}}"
-            code = "try { " + code + "}, "
-            # Then apply to h2 instead of x
-            new_codes = have(math_object, h1, h2)
-            possible_codes = [code + other_code
-                              for other_code in new_codes]
-            # And try this combination before standard "have"
-        possible_codes.extend(have(math_object,
-                                   potential_var.info['name'],
-                                   h1))
-
-    elif len(l) == 3:
-        h = get_new_hyp(goal)
-        h_selected = l[-1].info["name"]
-        x_selected = l[0].info["name"]
-        y_selected = l[1].info["name"]
-        # try to apply "forall x,y , P(x,y)" to x and y
-        possible_codes.append(
-            f'have {h} := {h_selected} {x_selected} {y_selected}')
-        possible_codes.append(
-            f'have {h} := {h_selected} _ {x_selected} {y_selected}')
-        possible_codes.append(
-            f'have {h} := {h_selected} _ _ {x_selected} {y_selected}')
-        possible_codes.append(
-            f'have {h} := {h_selected} _ _ _ {x_selected} {y_selected}')
-        possible_codes.append(
-            f'have {h} := {h_selected} _ _ _ _ {x_selected} {y_selected}')
-
-    return possible_codes
-
 
 def apply_substitute(goal: Goal, l: [MathObject], user_input: [int]):
     """
@@ -477,6 +341,8 @@ def apply_function(goal: Goal, l: [MathObject]):
     l, which can be:
     - an equality
     - an object x (then create the new object f(x) )
+
+    l should have length at least 2
     """
     log.debug('Applying function')
     possible_codes = []
@@ -525,6 +391,8 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
     - apply_function, if item is a function
     - apply_susbtitute, if item can_be_used_for_substitution
     - apply_implicate, if item is an implication or a universal property
+        (or call action_forall if l[-1] is a universal property and none of
+        the other actions apply)
     - apply_exists, if item is an existential property
 
     :param l:   list of MathObject arguments preselected by the user
@@ -540,18 +408,21 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
 
     # Now len(l) > 0
     prop = l[-1]  # property to be applied
-    # If user wants to apply a function
+
+    # (1)   If user wants to apply a function
+    #       (note this is exclusive of other types of applications)
     if prop.is_function():
         return apply_function(goal, l)
 
-    # Determines which kind of property the user wants to apply
+    # (2) If rewriting is possible
     if prop.can_be_used_for_substitution():
-        if len(l) == 1 or (len(l) > 1 and l[0].math_type.is_prop()):
-            possible_codes.extend(apply_substitute(goal, l, user_input))
+        # if len(l) == 1 or (len(l) > 1 and l[0].math_type.is_prop()):
+        possible_codes.extend(apply_substitute(goal, l, user_input))
 
     # todo: allow apply_implicate_hyp even when property is not explicitly
     #  an implication
-    if prop.is_implication() and len(l) == 1:
+    # (3) If
+    if prop.can_be_used_for_implication() and len(l) == 1:
         possible_codes.extend(apply_implicate(goal, l))
     if prop.is_for_all() and len(l) == 1:
         if len(user_input) != 1:

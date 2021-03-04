@@ -366,7 +366,7 @@ def apply_implicate(goal: Goal, l: [MathObject]) -> CodeForLean:
     return CodeForLean.from_string(f'apply {h_selected}')
 
 
-def have(arrow: MathObject, variable_names: [str], hypo_name) -> CodeForLean:
+def have_new_property(arrow: MathObject, variable_names: [str], hypo_name) -> CodeForLean:
     """
 
     :param arrow:           a MathObject which is either an implication or a
@@ -419,7 +419,7 @@ def apply_implicate_to_hyp(goal: Goal, l: [MathObject]) -> CodeForLean:
     hypo_name = get_new_hyp(goal)
     variable_names = [variable.info['name'] for variable in l[:-1]]
 
-    return have(implication, variable_names, hypo_name)
+    return have_new_property(implication, variable_names, hypo_name)
 
 
 @action(tooltips.get('tooltip_implies'),
@@ -452,7 +452,7 @@ def action_implicate(goal: Goal, l: [MathObject]) -> CodeForLean:
             return apply_implicate(goal, l)
     elif len(l) == 2:
         if not l[-1].can_be_used_for_implication():
-            if not l[0].is_implication():
+            if not l[0].can_be_used_for_implication():
                 raise WrongUserInput(error=_(
                     "selected properties are not implications 'P ⇒ Q'"
                                             ))
@@ -623,7 +623,7 @@ def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
     The last property should be a universal property
     (or equivalent to such after unfolding definitions)
 
-    :param l: list of MathObjects
+    :param l: list of MathObjects of length ≥ 2
     :return:
     """
 
@@ -658,16 +658,15 @@ def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
                                  f"{display_inequality}")
             code = code.and_then("rotate")
 
-
     # Code II: Apply universal_property #
     hypo_name = get_new_hyp(goal)
-    code = code.and_then(have(universal_property,
-                              hypo_name=hypo_name,
-                              variable_names=variable_names)
+    code = code.and_then(have_new_property(universal_property,
+                                           hypo_name=hypo_name,
+                                           variable_names=variable_names)
                          )
     code = code.and_then("rotate")  # back to first inequality
 
-    # Code III: try to solve inequalities # e.g.
+    # Code III: try to solve inequalities #     e.g.:
     #   iterate 2 { solve1 {try {norm_num at *}, try {compute_n 10}} <|>
     #               rotate},   rotate,
     more_code = CodeForLean.empty_code()
