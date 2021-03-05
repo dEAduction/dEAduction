@@ -1,11 +1,11 @@
 """
-######################################################
-# __init__.py : __init__.py for deaduction.dui.utils #
-######################################################
+#######################################################
+# set_selectable.py : Provide set_selectable function #
+#######################################################
 
 Author(s)      : Kryzar <antoine@hugounet.com>
 Maintainers(s) : Kryzar <antoine@hugounet.com>
-Date           : March 2021
+Date           : January 2021
 
 Copyright (c) 2021 the dEAduction team
 
@@ -25,7 +25,21 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .horizontal_line       import HorizontalLine
-from .read_pkl_course       import read_pkl_course
-from .replace_widget_layout import replace_widget_layout
-from .set_item_selectable   import set_item_selectable
+from PySide2.QtCore import Qt
+
+
+def set_item_selectable(self, yes: bool = True):
+    """
+    This method is made for QTreeWidgetItem but probably works for other
+    items as well. Make self to be selectable if yes or unselectable
+    otherwise.  There is no built-in method for this so we use flags as
+    if we are in 1980 (thanks Florian).
+
+    :param yes: See above.
+    """
+
+    if yes:
+        new_flags = self.flags() & Qt.ItemIsSelectable
+    else:
+        new_flags = self.flags() & ~Qt.ItemIsSelectable
+    self.setFlags(new_flags)

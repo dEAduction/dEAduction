@@ -27,7 +27,23 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from deaduction.pylib import logger
+
+
+import logging
+import qtrio
+import trio
+
+from deaduction.dui.stages.exercise              import ExerciseMainWindow
+from deaduction.dui.stages.start_exercise        import StartExerciseDialog
+from deaduction.pylib                            import logger
+from deaduction.pylib.server                     import ServerInterface
+from deaduction.pylib.config.i18n                import _
+import deaduction.pylib.config.dirs              as     cdirs
+import deaduction.pylib.config.environ           as     cenv
+import deaduction.pylib.config.i18n              as     i18n
+import deaduction.pylib.config.site_installation as     inst
+import deaduction.pylib.config.vars              as     cvars
+
 #logger.configure(debug=True,
 #                 #domains=['ServerInterface', 'deaduction.dui'],
 #                 suppress=False)
@@ -35,22 +51,6 @@ from deaduction.pylib import logger
 logger.configure(debug=True,
                  domains=['lean'],
                  suppress=True)
-
-import deaduction.pylib.config.vars as cvars
-
-import logging
-import qtrio
-import trio
-
-from deaduction.dui.widgets import  ( ExerciseMainWindow,
-                                      StartExerciseDialog )
-from deaduction.pylib.server import ServerInterface
-from deaduction.pylib.config.i18n import _
-
-import deaduction.pylib.config.environ           as cenv
-import deaduction.pylib.config.dirs              as cdirs
-import deaduction.pylib.config.site_installation as inst
-import deaduction.pylib.config.i18n              as i18n
 
 log = logging.getLogger(__name__)
 

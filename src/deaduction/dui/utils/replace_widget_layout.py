@@ -1,13 +1,13 @@
 """
-######################################
-# functions.py : utilities functions #
-######################################
+#####################################################################
+# replace_widget_layout.py : Provide replace_widget_layout function #
+#####################################################################
 
 Author(s)      : Kryzar <antoine@hugounet.com>
 Maintainers(s) : Kryzar <antoine@hugounet.com>
-Date           : July 2020
+Date           : January 2021
 
-Copyright (c) 2020 the dEAduction team
+Copyright (c) 2021 the dEAduction team
 
 This file is part of d∃∀duction.
 
@@ -25,34 +25,13 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pathlib import Path
-import pickle
-
 from PySide2.QtCore    import   Qt
 from PySide2.QtWidgets import ( QLayout,
-                                QTreeWidgetItem,
                                 QWidget)
-
-from deaduction.pylib.coursedata import Course
-
-
-# TODO: Put this function somewhere else (course classmethod?)
-def read_pkl_course(course_path: Path) -> Course:
-    """
-    Extract an instance of the class Course from a .pkl file.
-
-    :param course_path: The path of the course we want to instanciate.
-    :return: The instance of the Course class.
-    """
-
-    with course_path.open(mode='rb') as input:
-        course = pickle.load(input)
-
-    return course
 
 
 def replace_widget_layout(layout: QLayout, old: QWidget, new: QWidget,
-                          recursive: bool=True):
+                          recursive: bool = True):
     """
     Replace an old widget by a new one in a layout.
 
@@ -67,24 +46,3 @@ def replace_widget_layout(layout: QLayout, old: QWidget, new: QWidget,
             ~Qt.FindChildrenRecursively
     layout.replaceWidget(old, new, flag)
     old.deleteLater()
-
-
-def set_selectable(self, yes: bool=True):
-    """
-    Make self to be selectable if yes or unselectable otherwise.
-    There is no built-in method for this so we use flags as if we
-    are in 1980 (thanks Florian).
-
-    :param yes: See above.
-    """
-
-    if yes:
-        new_flags = self.flags() &  Qt.ItemIsSelectable
-    else:
-        new_flags = self.flags() & ~Qt.ItemIsSelectable
-    self.setFlags(new_flags)
-
-
-QTreeWidgetItem.set_selectable = set_selectable
-
-

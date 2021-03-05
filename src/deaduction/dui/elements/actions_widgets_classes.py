@@ -60,10 +60,10 @@ from PySide2.QtWidgets import ( QTreeWidget,
 from deaduction.pylib.config.i18n import   _
 from deaduction.pylib.actions     import   Action
 from deaduction.pylib.coursedata  import ( Definition,
-                                          Exercise,
-                                          Statement,
-                                          Theorem)
-from deaduction.dui.utils         import   set_selectable
+                                           Exercise,
+                                           Statement,
+                                           Theorem)
+from deaduction.dui.utils         import   set_item_selectable
 
 import deaduction.pylib.config.vars as cvars
 import deaduction.pylib.utils.filesystem as fs

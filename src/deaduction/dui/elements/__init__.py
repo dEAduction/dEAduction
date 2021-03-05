@@ -1,7 +1,7 @@
 """
-######################################################
-# __init__.py : __init__.py for deaduction.dui.utils #
-######################################################
+#############################################
+# __init__.py : for deaduction.dui.elements #
+#############################################
 
 Author(s)      : Kryzar <antoine@hugounet.com>
 Maintainers(s) : Kryzar <antoine@hugounet.com>
@@ -25,7 +25,21 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .horizontal_line       import HorizontalLine
-from .read_pkl_course       import read_pkl_course
-from .replace_widget_layout import replace_widget_layout
-from .set_item_selectable   import set_item_selectable
+from .actions_widgets_classes import (
+    ActionButton,
+    ActionButtonsWidget,
+    StatementsTreeWidgetNode,
+    StatementsTreeWidgetItem,
+    StatementsTreeWidget )
+
+from .context_widgets_classes import (
+    MathObjectWidget,
+    MathObjectWidgetItem,
+    TargetWidget )
+
+from .lean_editor import (
+    LeanEditor )
+
+from .recent_courses_widgets import (
+    RecentCoursesLW,
+    RecentCoursesLWI )

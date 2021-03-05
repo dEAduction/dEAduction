@@ -1,7 +1,15 @@
 """
 ###############################################
-# missing_dependencies_widgets.py : see below #
+# missing_dependencies_dialogs.py : see below #
 ###############################################
+
+    Provide dialogs that ask usr if they want to install missing
+    dependencies. At its start, dEAduction checks if some of its
+    dependencies are missing. If it's the case, usr is asked whether
+    they want to install them or not. The dialogs used for this are
+    written in this module. Provided classes:
+        - InstallingMissingDependencies,
+        - WantInstallMissingDependencies.
 
 Author(s)      : Kryzar <antoine@hugounet.com>
 Maintainers(s) : Kryzar <antoine@hugounet.com>
@@ -24,7 +32,6 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
-# TODO: Docstring me
 
 from typing    import Optional
 
@@ -37,76 +44,12 @@ from PySide2.QtWidgets import ( QDialog,
                                 QHBoxLayout,
                                 QVBoxLayout )
 
-from deaduction.dui.widgets       import TextEditLogger
+from deaduction.dui.parents       import TextEditLogger
 from deaduction.pylib.config.i18n import _
 
 # Tests only
 import sys
 from PySide2.QtWidgets import QApplication
-
-
-class YesNoDialog(QMessageBox):
-    """
-    This class is a modal QMessageBox with two buttons: Yes and No. Usr
-    will be asked to make a choice (e.g. 'Do you want to install missing
-    dependencies ?'). Is usr clicks on the Yes (resp. No) button, the
-    dialog is closed and the property yes is set to True (resp. False).
-    This property is initialized to False and is only change if usr
-    clicks on the Yes button.
-
-    This dialog is to be used with the exec_ method this way:
-    >>> ynd = YesNoDialog()
-    >>> ynd.setText('Voulez-vous coucher avec moi ce soir ?')
-    >>> ynd.exec_()
-    >>> if ynd.yes:
-    >>>     self.buy_condoms()
-
-    The same code with the open method instead of exec_ will NOT work
-    because open returns immediatly and the property yes will be False
-    even if usr clicked on the Yes button. To set up texts (e.g.
-    detailedText) it is recommanded to inherit this class and set valued
-    in __init__. See for example the class ReallyWantQuit.
-
-    :property yes: Return self.__yes.
-    :property no: Return not self.__yes.
-    """
-
-    def __init__(self):
-        """
-        Init self (see self docstring).
-        """
-
-        super().__init__()
-        self.setModal(True)
-
-        self.__yes = False
-        self.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
-        self.button(QMessageBox.Yes).clicked.connect(self._set_yes_True)
-
-    @Slot()
-    def _set_yes_True(self):
-        """
-        Set self.__yes to True. This slot is called when the Yes button
-        is clicked on by usr.
-        """
-
-        self.__yes = True
-
-    @property
-    def yes(self):
-        """
-        Return self.__yes.
-        """
-
-        return self.__yes
-
-    @property
-    def no(self):
-        """
-        Return not self.__yes.
-        """
-
-        return not self.__yes
 
 
 class WantInstallMissingDependencies(YesNoDialog):
@@ -136,38 +79,6 @@ class WantInstallMissingDependencies(YesNoDialog):
         self.setDetailedText('— ' + '\n— '.join(missing_dependencies))
         self.setIcon(QMessageBox.Warning)
         self.setDefaultButton(QMessageBox.Yes)
-
-
-class ReallyWantQuit(YesNoDialog):
-    """
-    A YesNoDialog (see YesNoDialog docstring to know how to use this
-    class, I insist, do it) to ask if usr *really* wants to quit. This
-    is a generall class that may be used anywhere in the program. It is
-    initiated with an informative text and may also receive a
-    detailed text. See an example in
-    InstallingMissingDependencies.__quit for example.
-    """
-
-    def __init__(self, informative_text: str, detailed_text: Optional[str]=None):
-        """
-        Init self (see self docstring).
-
-        :param informative_text: Qt's informativeText, e.g. 'All data
-                will be lost'.
-        :param detailed_text: Qt's detailedText, e.g. a detailed list of
-                stuff that usr does not necessarly need to know but may
-                whant to know.
-        """
-        super().__init__()
-
-        self.setText(_('Do you really want to quit?'))
-        self.setInformativeText(informative_text)
-        if detailed_text is not None:
-            self.setDetailedText(detailed_text)
-        self.setIcon(QMessageBox.Warning)
-        self.setDefaultButton(QMessageBox.No)
-
-        self.button(QMessageBox.Yes).clicked.connect(self._set_yes_True)
 
 
 class InstallingMissingDependencies(QDialog):

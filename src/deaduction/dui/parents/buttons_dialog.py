@@ -1,7 +1,7 @@
 """
-################################################
-# dialog_button.py : a dialog box with buttons #
-################################################
+###################################################
+# buttons_dialog.py : provide ButtonsDialog class #
+###################################################
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr

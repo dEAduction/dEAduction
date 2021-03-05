@@ -1,7 +1,7 @@
 """
-#######################################################################
-# choose_course_exercise_widgets.py : course/exercise chooser widgets #
-#######################################################################
+############################################################
+# choose_coex_widgets.py : course/exercise chooser widgets #
+############################################################
 
     Provide StartExerciseDialog: the dialog used by the user to choose
     a course, then an exercise, and start the latter. 
@@ -59,20 +59,19 @@ from PySide2.QtWidgets import ( QApplication,
                                 QVBoxLayout,
                                 QWidget )
 
-#from deaduction.config           import   add_to_recent_courses
-from deaduction.pylib.config.course import add_to_recent_courses
-from deaduction.dui.widgets      import ( MathObjectWidget,
-                                          StatementsTreeWidget,
-                                          StatementsTreeWidgetItem )
-from deaduction.dui.utils        import ( DisclosureTriangle,
-                                          HorizontalLine,
-                                          RecentCoursesLW,
-                                          RecentCoursesLWI,
-                                          read_pkl_course,
-                                          replace_widget_layout,
-                                          ButtonsDialog)
-from deaduction.pylib.coursedata import ( Course,
-                                          Exercise )
+from deaduction.dui.elements        import ( MathObjectWidget,
+                                             RecentCoursesLW,
+                                             RecentCoursesLWI,
+                                             StatementsTreeWidget,
+                                             StatementsTreeWidgetItem )
+from deaduction.dui.parents         import ( DisclosureTriangle,
+                                             ButtonsDialog )
+from deaduction.dui.utils           import ( read_pkl_course,
+                                             replace_widget_layout,
+                                             HorizontalLine )
+from deaduction.pylib.config.course import   add_to_recent_courses
+from deaduction.pylib.coursedata    import ( Course,
+                                             Exercise )
 
 log = logging.getLogger(__name__)
 
@@ -833,23 +832,3 @@ if __name__ == '__main__':
     start_exercise_dialog.show()
 
     sys.exit(app.exec_())
-
-
-#         db         db
-#       d88           88
-#      888            888
-#     d88             888b
-#     888             d88P
-#     Y888b  /``````\8888
-#   ,----Y888        Y88P`````\
-#   |        ,'`\_/``\ |,,    |
-#    \,,,,-| | o | o / |  ```'
-#          |  """ """  |
-#         /             \
-#        |               \
-#        |  ,,,,----'''```|
-#        |``   @    @     |
-#         \,,    ___    ,,/
-#            \__|   |__/
-#               | | |
-#               \_|_/
