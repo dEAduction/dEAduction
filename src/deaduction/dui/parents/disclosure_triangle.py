@@ -31,6 +31,8 @@ from PySide2.QtCore    import   Qt
 from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem)
 
+from deaduction.dui.utils import set_selectable
+
 
 class DisclosureTriangle(QTreeWidget):
     """
