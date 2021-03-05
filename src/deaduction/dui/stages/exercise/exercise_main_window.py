@@ -42,7 +42,7 @@ from deaduction.dui.elements            import ( ActionButton,
                                                  StatementsTreeWidgetItem,
                                                  MathObjectWidget,
                                                  MathObjectWidgetItem )
-from deaduction.dui.parents             import   ButtonsDialog
+from deaduction.dui.primitives          import   ButtonsDialog
 from deaduction.pylib.config.i18n       import   _
 from deaduction.pylib.memory            import   Journal
 from deaduction.pylib.actions           import ( InputType,
@@ -59,7 +59,7 @@ from deaduction.pylib.mathobj           import ( MathObject,
 from deaduction.pylib.server.exceptions import   FailedRequestError
 from deaduction.pylib.server            import   ServerInterface
 
-from .exercise_main_window_widgets      import ( ExerciseCentralWidget,
+from ._exercise_main_window_widgets     import ( ExerciseCentralWidget,
                                                  ExerciseStatusBar,
                                                  ExerciseToolBar )
 

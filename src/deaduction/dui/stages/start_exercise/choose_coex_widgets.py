@@ -64,7 +64,7 @@ from deaduction.dui.elements        import ( MathObjectWidget,
                                              RecentCoursesLWI,
                                              StatementsTreeWidget,
                                              StatementsTreeWidgetItem )
-from deaduction.dui.parents         import ( DisclosureTriangle,
+from deaduction.dui.primitives      import ( DisclosureTriangle,
                                              ButtonsDialog )
 from deaduction.dui.utils           import ( read_pkl_course,
                                              replace_widget_layout,
