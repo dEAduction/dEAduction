@@ -41,9 +41,11 @@ from pathlib import   Path
 from typing  import ( Dict,
                       Optional )
 
-from PySide2.QtCore    import ( Signal,
+from PySide2.QtCore    import ( Qt,
+                                Signal,
                                 Slot )
-from PySide2.QtGui     import   QFont
+from PySide2.QtGui     import ( QFont,
+                                QPixmap )
 from PySide2.QtWidgets import ( QApplication,
                                 QCheckBox,
                                 QDialog,
@@ -78,7 +80,6 @@ log = logging.getLogger(__name__)
 
 class AbstractCoExChooser(QWidget):
     """
-
     This class was made for technical purposes and is not to be used
     outside this file. In StartExerciseDialog, both the course chooser
     and the exercise chooser have the same structure:
@@ -600,7 +601,7 @@ class ExerciseChooser(AbstractCoExChooser):
             self.__code_wgt.hide()
 
 
-class StartExerciseDialog(QDialog):
+class AbstractStartCoExDialog(QDialog):
     """
     The course and exercise chooser (inherits QDialog). This is the
     first widget activated / shown when launching d∃∀duction as it is
@@ -639,7 +640,7 @@ class StartExerciseDialog(QDialog):
 
     exercise_chosen = Signal(Exercise)
 
-    def __init__(self):
+    def __init__(self, title: str = None, widget: QWidget = None):
         """
         Init self by setting up the layouts, the buttons and the tab
         widget (see self docstring).
@@ -647,7 +648,8 @@ class StartExerciseDialog(QDialog):
 
         super().__init__()
 
-        self.setWindowTitle(_('Choose course and exercise — d∃∀duction'))
+        if title:
+            self.setWindowTitle(title)
         self.setMinimumWidth(450)
         self.setMinimumHeight(550)
 
@@ -680,6 +682,8 @@ class StartExerciseDialog(QDialog):
         buttons_lyt.addWidget(self.__start_ex_btn)
 
         main_layout = QVBoxLayout()
+        if widget:
+            main_layout.addWidget(widget)
         main_layout.addWidget(self.__tabwidget)
         main_layout.addLayout(buttons_lyt)
 
@@ -786,6 +790,34 @@ class StartExerciseDialog(QDialog):
         self.accept()  # Fuck you and I'll see you tomorrow!
 
 
+class StartCoExDialogStartup(AbstractStartCoExDialog):
+
+    def __init__(self):
+
+        title = _('Choose course and exercise — d∃∀duction')
+        super().__init__(title=title, widget=None)
+
+
+class StartCoExDialogExerciseFinished(AbstractStartCoExDialog):
+
+    def __init__(self):
+
+        widget = QWidget()
+        lyt = QHBoxLayout()
+        lbl = QLabel(_('Congratulations, exercise finished!'))
+        img = QLabel()
+        pixmap = QPixmap('confetti.png')
+        pixmap = pixmap.scaledToHeight(110, Qt.SmoothTransformation)
+        img.setPixmap(pixmap)
+        lyt.addWidget(img)
+        lyt.addStretch()
+        lyt.addWidget(lbl)
+        widget.setLayout(lyt)
+        title = _('Exercise finished — d∃∀duction')
+
+        super().__init__(title=title, widget=widget)
+
+
 def check_negate_statement(exercise) -> bool:
     """
     If needed, ask the user to choose between proving the statement
@@ -793,8 +825,8 @@ def check_negate_statement(exercise) -> bool:
     accordingly.
     :param exercise:    Exercise
     :return:            True if choice has been made, else False
-
     """
+
     ok = True  # default value
     open_question = exercise.info.setdefault('open_question', False)
     if ('negate_statement' in exercise.info
@@ -828,7 +860,9 @@ def check_negate_statement(exercise) -> bool:
 if __name__ == '__main__':
     app = QApplication()
 
-    start_exercise_dialog = StartExerciseDialog()
-    start_exercise_dialog.show()
+    # start_coex_dialog_startup = StartCoExDialogStartup()
+    # start_coex_dialog_startup.show()
+    start_coex_dialog_exercise_finished = StartCoExDialogExerciseFinished()
+    start_coex_dialog_exercise_finished.show()
 
     sys.exit(app.exec_())
