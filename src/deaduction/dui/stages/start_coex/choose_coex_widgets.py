@@ -251,26 +251,26 @@ class CourseChooser(AbstractCoExChooser):
 
         super().__init__(browser_layout)
 
-    def set_preview(self):
+    def set_preview(self, course: Course):
         """
-        Set course preview. See AbstractCoExChooser.set_preview docstring.
-        Course to be previewed is self.__course. Here, there is no main_widget.
-        Course metadata are displayed in the disclosure triangle by passing
-        them as details in super().set_preview. When a course is selected
-        (either by browsing course files or clicking on a recent course in
+        Set course preview course being previewed given as an argument. See
+        AbstractCoExChooser.set_preview docstring. Course metadata is displayed
+        in the disclosure triangle by passing them as details in
+        super().set_preview. When a course is selected (either by browsing
+        course files or clicking on a recent course in
         self.__recent_courses_wgt), the signal course_chosen is emitted with
-        the course.  It is received in StartExerciseDialog, which then
+        the course. It is received in StartExerciseDialog, which then
         instanciates an ExerciseChooser for this course and the view is set to
         the exercise chooser.
         """
 
         # Title, subtitle, etc
-        title       = self.__course.title
-        subtitle    = self.__course.subtitle
-        description = self.__course.description
+        title       = course.title
+        subtitle    = course.subtitle
+        description = course.description
 
         # Details
-        details = self.__course.metadata
+        details = course.metadata
         # Remove title, subtitle and description from details
         # TODO: Prevent user for using a 'Path' attribute (in the course
         # file) when writing a course.
@@ -286,7 +286,7 @@ class CourseChooser(AbstractCoExChooser):
                             details=details, description=description,
                             expand_details=True)
 
-        self.course_chosen.emit(self.__course)
+        self.course_chosen.emit(course)
 
     #########
     # Slots #
@@ -308,11 +308,11 @@ class CourseChooser(AbstractCoExChooser):
         # TODO: Stop using exec_, not recommended by documentation
         if dialog.exec_():
             course_path = Path(dialog.selectedFiles()[0])
-            self.__course = Course.from_file(course_path)
+            course = Course.from_file(course_path)
 
-            title = self.__course.title
+            title = course.title
             self.__recent_courses_wgt.add_browsed_course(course_path, title)
-            self.set_preview()
+            self.set_preview(course)
 
     @Slot(RecentCoursesLWI, bool)
     def __recent_course_clicked(self, course_item: RecentCoursesLWI):
@@ -326,14 +326,14 @@ class CourseChooser(AbstractCoExChooser):
         """
 
         course_path = course_item.course_path
-        self.__course = Course.from_file(course_path)
-        self.set_preview()
+        course = Course.from_file(course_path)
+        self.set_preview(course)
 
 
 class ExerciseChooser(AbstractCoExChooser):
     """
-    The exercise chooser. This widget is activated / shown when a course
-    has been chosen by the user (signal
+    The exercise chooser. This widget is activated / shown when a course has
+    been chosen by usr (signal
     StartExerciseDialog.__course_chooser.course_chosen).
     - The browser area is made of the course's StatementsTreeWidget
       displaying only the exercises (e.g. no theorems).
@@ -363,14 +363,13 @@ class ExerciseChooser(AbstractCoExChooser):
 
     def __init__(self, course: Course):
         """
-        See AbstractCoExChooser.__init__ docstring. Here, the browser
-        layout is only made of the course's StatementsTreeWidget
-        displaying only the exercises (e.g. no theorems). The course
-        file type is stored as a class private attribute and will be
-        used by set_preview to determine if an exercise is to be
-        previewed with its goal or not (see self docstring).
+        See AbstractCoExChooser.__init__ docstring. Here, the browser layout is
+        only made of the course's StatementsTreeWidget displaying only the
+        exercises (e.g. no theorems). The course file type is used by
+        set_preview to determine if an exercise is to be previewed with its
+        goal or not (see self docstring).
 
-        :param course: The course in which the user chooses an exercise.
+        :param course: The course in which usr chooses an exercise.
         """
 
         browser_layout = QVBoxLayout()
@@ -553,7 +552,7 @@ class ExerciseChooser(AbstractCoExChooser):
     @Slot()
     def toggle_text_mode(self):
         """
-        Toggle the text mode for the previewed goal (see self docstring). 
+        Toggle the text mode for the previewed goal (see self docstring).
         """
 
         if self.__text_mode_checkbox.isChecked():
@@ -582,15 +581,16 @@ class AbstractStartCoExDialog(QDialog):
     StartExerciseDialog is divided in two main sub-widgets (presented in
     a QTabWidget): the course chooser (self.__course_chooser) and the
     exercise chooser (self.__exercise_chooser), see those choosers
-    docstrings. At first, only the course chooser is enabled. When usr
-    selects a course (either by browsing files or clicking on the recent
-    courses list), the course is kept as self.__course_choser.__course
-    and previewed with self.__course_choser.set_preview.  An
-    ExerciseChooser object is instanciated (self.__exercise_chooser) in
-    a new tab and usr browses exercises. When usr clicks on an exercise,
-    this exercise is kept as self.__exercise_chooser.__exercise and is
-    previewed by callind self.__exercise_chooser.set_preview. Once usr
-    confirms their choice of exercice, they click on the 'Start
+    docstrings. At first, only the course chooser is enabled: usr
+    browses courses. When usr selects a course, the course is previewed
+    by calling the method self.__course_choser.set_preview, with the
+    course as argument. An ExerciseChooser object is instanciated
+    (self.__exercise_chooser) in a new tab and usr browses exercises.
+    When usr clicks on an exercise, this exercise is kept as is
+    previewed by calling self.__exercise_chooser.set_preview with the
+    exercise as argument (and the exercise is kept in
+    self.__exercise_chooser.__exercise, accessible with a property).
+    Once usr confirms their choice of exercice, they click on the 'Start
     exercise' button, which closes the dialog and sends a signal to
     launch the exercice main window.
 
