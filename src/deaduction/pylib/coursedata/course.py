@@ -35,6 +35,7 @@ from collections import                     OrderedDict
 from dataclasses import                     dataclass
 from pathlib import                         Path
 from typing import                          List, Dict
+import pickle
 import os
 import logging
 
@@ -129,15 +130,24 @@ class Course:
         """
         Instantiate a Course object from the provided file.
 
-        :param course_path:     path for file
+        :param course_path:     path for file, either a'.lean' or a '.pkl' file
         :return:                a Course instance
         """
-        log.info(f"Parsing file {str(course_path.resolve())}")
-        file_content                = course_path.read_text()
-        course                      = Course.from_file_content(file_content)
-        course_path                 = course_path.resolve()
-        relative_course_path        = Path(os.path.relpath(course_path))
-        course.relative_course_path = relative_course_path
+
+        course_filetype = course_path.suffix
+
+        if course_filetype == '.lean':
+            log.info(f"Parsing file {str(course_path.resolve())}")
+            file_content = course_path.read_text()
+            course = Course.from_file_content(file_content)
+            course_path = course_path.resolve()
+            relative_course_path = Path(os.path.relpath(course_path))
+            course.relative_course_path = relative_course_path
+        elif course_filetype == '.pkl':
+            with course_path.open(mode='rb') as input:
+                course = pickle.load(input)
+
+        course.filetype = course_filetype
         return course
 
     @classmethod
