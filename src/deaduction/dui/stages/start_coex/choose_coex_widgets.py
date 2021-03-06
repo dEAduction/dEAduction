@@ -140,8 +140,8 @@ class AbstractCoExChooser(QWidget):
                     description: str = None, expand_details: bool = False):
         # TODO: Make widget a QLayout instead?
         """
-        Set the preview area of the choosze (given something (course or
-        exercise) has been chosen). The preview area is made of a title,
+        Set the preview area of the choosen course or exercise (given
+        something has been chosen). The preview area is made of a title,
         a substitle, details, a description and a main widget. This
         widget is of course specific to CourseChooser or ExerciseChooser
         and defined when the set_preview method is redefined in
@@ -254,16 +254,15 @@ class CourseChooser(AbstractCoExChooser):
     def set_preview(self):
         """
         Set course preview. See AbstractCoExChooser.set_preview
-        docstring.  Here, there is no main_widget. Course metadata are
-        displayed in the disclosure triangle by passing them as details
-        in super().set_preview.  When a course is selected (either by
-        browsing course files or clicking on a recent course in
-        self.__recent_courses_wgt), the signal course_chosen is emitted
-        with the course (and additional info). It is received in
-        StartExerciseDialog, which then instanciates an ExerciseChooser
-        for this course.
-
-        :param Course: Course to be previewed.
+        docstring. Course to be previewed is self.__course (instanciated
+        with self.__instanciate_courser). Here, there is no main_widget.
+        Course metadata are displayed in the disclosure triangle by
+        passing them as details in super().set_preview. When a course is
+        selected (either by browsing course files or clicking on a
+        recent course in self.__recent_courses_wgt), the signal
+        course_chosen is emitted with the course (and additional info).
+        It is received in StartExerciseDialog, which then instanciates
+        an ExerciseChooser for this course.
         """
 
         # Title, subtitle, etc
@@ -294,7 +293,7 @@ class CourseChooser(AbstractCoExChooser):
     def __instanciate_course(self, course_path: Path):
         """
         Given a course path, instanciate a Course object and save the
-        course and its file type ('.lean' or '.pkl') ass private class
+        course and its file type ('.lean' or '.pkl') as private class
         atributes.
 
         :param course_path: The course-file path of the course we want
@@ -313,7 +312,7 @@ class CourseChooser(AbstractCoExChooser):
     #########
     # Slots #
     #########
-   
+
     @Slot()
     def __browse_courses(self):
         """
@@ -333,8 +332,7 @@ class CourseChooser(AbstractCoExChooser):
             self.__instanciate_course(course_path)
 
             title = self.__course.title
-            self.__recent_courses_wgt.add_browsed_course(
-                    course_path, title)
+            self.__recent_courses_wgt.add_browsed_course(course_path, title)
             self.set_preview()
 
     @Slot(RecentCoursesLWI, bool)
@@ -343,9 +341,9 @@ class CourseChooser(AbstractCoExChooser):
         This method is called when the user clicks on an item in
         self.__recent_courses_wgt. It sends the corresponding
         RecentCoursesLWI and this method instanciates a Course object
-        from it and passes it to set_preview. 
+        from it and passes it to set_preview.
 
-        :course_item: The REcentCoursesLWI the user clicked on.
+        :course_item: The RecentCoursesLWI the user clicked on.
         """
 
         course_path = course_item.course_path
@@ -378,7 +376,7 @@ class ExerciseChooser(AbstractCoExChooser):
         - or a single list with all these informations (this is called
           the text mode and it is toggle with a checkbox).
     """
-    
+
     # This signal is emitted when an exercise is being previewed. It is
     # received in the instance ofStartExerciseDialog and the Start
     # exercise button is enabled and set to default.
@@ -494,7 +492,7 @@ class ExerciseChooser(AbstractCoExChooser):
             ########
             # Rest #
             ########
-            
+
             # Checkbox
             self.__text_mode_checkbox = QCheckBox(_('Text mode'))
             self.__text_mode_checkbox.clicked.connect(self.toggle_text_mode)
@@ -619,15 +617,17 @@ class AbstractStartCoExDialog(QDialog):
     StartExerciseDialog is divided in two main sub-widgets (presented in
     a QTabWidget): the course chooser (self.__course_chooser) and the
     exercise chooser (self.__exercise_chooser), see those choosers
-    docstrings. At first, only the course chooser is enabled. When the
-    user selects a course (either by browsing files or clicking on the
-    recent courses list), the signal self.__course_chooser.course_chosen
-    is emitted and the slot __set_course is called (with the
-    corresponding courses and other data). An ExerciseChooser object is
-    instanciated (self.__exercise_chooser) in a new tab and the user can
-    browse exercises and preview them. Once the user chose a course,
-    they click on the 'Start exercise' button, which closes the dialog
-    and launches the exercise main window.
+    docstrings. At first, only the course chooser is enabled. When usr
+    selects a course (either by browsing files or clicking on the recent
+    courses list), the course is kept as self.__course_choser.__course
+    and previewed with self.__course_choser.set_preview.  An
+    ExerciseChooser object is instanciated (self.__exercise_chooser) in
+    a new tab and usr browses exercises. When usr clicks on an exercise,
+    this exercise is kept as self.__exercise_chooser.__exercise and is
+    previewed by callind self.__exercise_chooser.set_preview. Once usr
+    confirms their choice of exercice, they click on the 'Start
+    exercise' button, which closes the dialog and sends a signal to
+    launch the exercice main window.
 
     The communication between this class, the two choosers and the rest
     of the program can be tricky and the actual solution is
@@ -703,7 +703,7 @@ class AbstractStartCoExDialog(QDialog):
         This method is called when an exercise item is clicked on in the
         exercise chooser and therefore is being previewed.  Its goal is
         to enable the 'Start exercise' button which may have been
-        disabled until then.  The corresponding signal is
+        disabled until then. The corresponding signal is
         self.__exercise_chooser.exercise_previewed. However note that it
         is not connected in self.__init__. Indeed, when self is
         instanciated, self.__exercise_chooser is a simple QWidget and
@@ -728,11 +728,11 @@ class AbstractStartCoExDialog(QDialog):
     @Slot(Course, str)
     def __preview_exercises(self, course: Course, course_filetype: str):
         """
-        This method is called when the user chose a course an the signal
-        self.__course_chooser.course_chosen is emitted. It instanciates
-        an ExerciseChooser object for the corresponding course, puts it
-        in the second tab and activates the tab. Furthermore, this
-        method connects the signal
+        This method is called when the user chose a course and the
+        signal self.__course_chooser.course_chosen is emitted. It
+        instanciates an ExerciseChooser object for the corresponding
+        course, puts it in the second tab and activates the tab.
+        Furthermore, this method connects the signal
         self.__exercise_chooser.exercise_previewed to the slot
         self.__enable_start_ex_btn (see __enable_start_ex_btn for the
         why).
@@ -765,24 +765,21 @@ class AbstractStartCoExDialog(QDialog):
         exercise = self.__exercise_chooser.exercise
 
         # check if exercise must be negated (e.g. in an open question)
-        ok = check_negate_statement(exercise)
-        if not ok:
+        if not check_negate_statement(exercise):
             return
 
         # Save course_path, title, and exercise number
         # in user_config's previous_courses_list
         # TODO: Rename the list recent_courses_list?
-        course_type     = self.__exercise_chooser.course_filetype
-        course          = exercise.course
-        course_path     = course.relative_course_path
-        title           = course.title
+        course_type = self.__exercise_chooser.course_filetype
+        course      = exercise.course
+        course_path = course.relative_course_path
+        title       = course.title
         if exercise in course.statements:
             exercise_number = course.statements.index(exercise)
         else:
             exercise_number = -1
-        add_to_recent_courses(course_path,
-                              course_type,
-                              title,
+        add_to_recent_courses(course_path, course_type, title,
                               exercise_number)
 
         # Send exercise_chosen signal and close dialog
@@ -807,7 +804,7 @@ class StartCoExDialogExerciseFinished(AbstractStartCoExDialog):
         lbl = QLabel(_('Congratulations, exercise finished!'))
         img = QLabel()
         pixmap = QPixmap('confetti.png')
-        pixmap = pixmap.scaledToHeight(110, Qt.SmoothTransformation)
+        pixmap = pixmap.scaledToHeight(100, Qt.SmoothTransformation)
         img.setPixmap(pixmap)
         lyt.addWidget(img)
         lyt.addStretch()
