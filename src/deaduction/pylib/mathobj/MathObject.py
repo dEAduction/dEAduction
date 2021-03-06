@@ -614,6 +614,17 @@ class MathObject:
 
         return math_type.node == "PROP_IFF"
 
+    def is_not(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is a negation.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+
+        return math_type.node in ("PROP_NOT", "PROP_NOT_BELONGS")
+
     def is_false(self, is_math_type=False) -> bool:
         """
         Test if (math_type of) self is 'contradiction'.

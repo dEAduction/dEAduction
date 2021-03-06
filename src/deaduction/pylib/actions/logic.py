@@ -330,11 +330,11 @@ do the same to the hypothesis.
     possible_codes = []
 
     if len(l) == 0:
-        if goal.target.math_type.node != "PROP_NOT":
+        if not goal.target.math_type.is_not():
             raise WrongUserInput(error=_("target is not a negation 'NOT P'"))
         possible_codes.append('push_neg')
     if len(l) == 1:
-        if l[0].math_type.node != "PROP_NOT":
+        if not l[0].math_type.is_not():
             error = _("selected property is not a negation 'NOT P'")
             raise WrongUserInput(error)
         h_selected = l[0].info["name"]
@@ -628,7 +628,7 @@ def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
     """
 
     universal_property = l[-1]  # The property to be applied
-    inequality_counter = 0
+    unsolved_inequality_counter = 0
     # Variable_names will contain the list of variables and proofs of
     # inequalities that will be passed to universal_property
     variable_names = []
@@ -640,23 +640,27 @@ def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
                                                       potential_var)
         variable_names.append(potential_var.info['name'])
         if inequality:
-            inequality_counter += 1
-            inequality_name = get_new_hyp(goal)
-            variable_names.append(inequality_name)
-            # TODO: search if inequality is not already in context, and if so,
-            #  use it instead of re-proving (which leads to duplication)
-            # Add type indication to the variable in inequality
-            math_type = inequality.children[1].math_type
-            # Even if variable is not used explicitly, this affects inequality:
-            variable = inequality.children[0]
-            variable = add_type_indication(variable, math_type)
-            display_inequality = inequality.to_display(
-                is_math_type=False,
-                format_='lean')
-            # Code I: state corresponding inequality #
-            code = code.and_then(f"have {inequality_name}: "
-                                 f"{display_inequality}")
-            code = code.and_then("rotate")
+            math_types = [p.math_type for p in goal.context]
+            if inequality in math_types:
+                index = math_types.index(inequality)
+                inequality_name = goal.context[index].info('name')
+                variable_names.append(inequality_name)
+            else:
+                inequality_name = get_new_hyp(goal)
+                variable_names.append(inequality_name)
+                unsolved_inequality_counter += 1
+                # Add type indication to the variable in inequality
+                math_type = inequality.children[1].math_type
+                # Variable is not used explicitly, but this affects inequality:
+                variable = inequality.children[0]
+                variable = add_type_indication(variable, math_type)
+                display_inequality = inequality.to_display(
+                    is_math_type=False,
+                    format_='lean')
+                # Code I: state corresponding inequality #
+                code = code.and_then(f"have {inequality_name}: "
+                                     f"{display_inequality}")
+                code = code.and_then("rotate")
 
     # Code II: Apply universal_property #
     hypo_name = get_new_hyp(goal)
@@ -670,7 +674,7 @@ def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
     #   iterate 2 { solve1 {try {norm_num at *}, try {compute_n 10}} <|>
     #               rotate},   rotate,
     more_code = CodeForLean.empty_code()
-    if inequality_counter:
+    if unsolved_inequality_counter:
         more_code1 = CodeForLean.from_string("norm_num at *")
         more_code1 = more_code1.single_combinator("try")
         more_code2 = CodeForLean.from_string("compute_n 1")
@@ -681,7 +685,9 @@ def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
         # If it fails, rotate to next inequality
         more_code = more_code.or_else("rotate")
         # Do this for all inequalities
-        more_code = more_code.single_combinator(f"iterate {inequality_counter}")
+        # fixme: replace iterate by an actual repetition (to get pertinent
+        #  effective code)
+        more_code = more_code.single_combinator(f"iterate {unsolved_inequality_counter}")
         # Finally come back to first inequality
         more_code = more_code.and_then("rotate")
 

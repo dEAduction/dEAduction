@@ -229,9 +229,13 @@ class CodeForLean:
 
         :return:        CodeForLean
         """
-        # TODO: no need if no or_else (and first level of recursion)
-        # todo trace only before each or_else combinator
-        # Fixme: nested or_else's will entail bug
+        # todo: take into account all possibilities, allowing as many "trace
+        #  effective code" as needed. e.g.:
+        #  - try { , and_then TEC ...} (and 'try' may be removed if EC)
+        #  - or_else -> add TEC after each child
+        #  - solve1 {...} : Ø
+
+
 
         if self.is_empty():
             return self
@@ -246,6 +250,19 @@ class CodeForLean:
                 num_effective_code) for piece_of_code in self.instructions]
             return CodeForLean(combinator=LeanCombinator.or_else,
                                instructions=instructions)
+
+    def get_effective_code(self, traces: str) -> Any:
+        """
+        This function construct a Lean code that can be substituted to self
+        in the virtual file, producing the same effect on the proof state as
+        self.
+
+        :param traces: list of traces of effective codes sent by Lean
+        :return: string or CodeForLean that can effectively replace self
+        """
+
+        # TODO
+        pass
 
     def add_no_meta_vars(self):
         """
