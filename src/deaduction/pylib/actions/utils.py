@@ -110,6 +110,30 @@ class CodeForLean:
                                error_message=error_message,
                                success_message=global_success_message)
 
+    @classmethod
+    def and_then_from_list(cls,
+                          instructions: Union[str, List[Any]],
+                          error_message: str = '',
+                          global_success_message: str = ""):
+        """
+        Create an or_else CodeForLean from a (list of) strings or CodeForLean
+        """
+        if isinstance(instructions, str):
+            instructions = [instructions]
+        elif isinstance(instructions, CodeForLean):
+            instructions = [instructions]
+        for i in range(len(instructions)):
+            if isinstance(instructions[i], str):
+                instructions[i] = CodeForLean.from_string(instructions[i])
+        # From now on instructions is a list of CodeForLean
+        if len(instructions) == 1:
+            return instructions[0]
+        else:
+            return CodeForLean(instructions=instructions,
+                               combinator=LeanCombinator.and_then,
+                               error_message=error_message,
+                               success_message=global_success_message)
+
     def or_else(self, other, success_message=""):
         """
         Combine 2 CodeForLean with an or_else combinator

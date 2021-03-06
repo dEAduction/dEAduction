@@ -114,28 +114,28 @@ Split the target 'P AND Q' into two sub-goals
 
 def apply_and(goal, l):
     """
-Destruct a property 'P and Q'
-Here l contains exactly one conjunction property
+    Destruct a property 'P and Q'
+    Here l contains exactly one conjunction property
     """
-    possible_codes = []
+
     h_selected = l[0].info["name"]
     h1 = get_new_hyp(goal)
     h2 = get_new_hyp(goal)
-    possible_codes.append(f'cases {h_selected} with {h1} {h2}')
-    return CodeForLean.or_else_from_list(possible_codes)
+    code_ = f'cases {h_selected} with {h1} {h2}'
+    return CodeForLean.from_string(code_)
 
 
 def construct_and_hyp(goal, selected_objects: [MathObject]):
     """
-Construct 'P AND Q' from properties P and Q
-Here l contains exactly two properties
+    Construct 'P AND Q' from properties P and Q
+    Here l contains exactly two properties
     """
-    possible_codes = []
+
     h1 = selected_objects[0].info["name"]
     h2 = selected_objects[1].info["name"]
     new_h = get_new_hyp(goal)
-    possible_codes.append(f'have {new_h} := and.intro {h1} {h2}')
-    return CodeForLean.or_else_from_list(possible_codes)
+    code_ = f'have {new_h} := and.intro {h1} {h2}'
+    return CodeForLean.from_string(code_)
 
 
 @action(tooltips.get('tooltip_and'),
@@ -203,9 +203,9 @@ When target is a disjunction 'P OR Q', choose to prove either P or Q
     return CodeForLean.or_else_from_list(possible_codes)
 
 
-def apply_or(goal, l: [MathObject], user_input: [str]) -> str:
+def apply_or(goal, l: [MathObject], user_input: [str]) -> CodeForLean:
     """
-Engage in a proof by cases by applying a property 'P OR Q'
+    Engage in a proof by cases by applying a property 'P OR Q'
     """
     possible_codes = []
     if not l[0].is_or():
@@ -223,17 +223,19 @@ Engage in a proof by cases by applying a property 'P OR Q'
                                      choices=choices,
                                      title=_("Choose case"),
                                      output=_("Which case to assume first?"))
-
-    if len(user_input) == 1:
+    elif len(user_input) == 1:
         if user_input[0] == 1:
-            possible_codes.append(f'rw or.comm at {h_selected}, ')
+            # If user wants the second property first, then first permute
+            code_ = f'rw or.comm at {h_selected}'
+            code_ = CodeForLean.from_string(code_)
         else:
-            possible_codes.append("")
+            code_ = CodeForLean.empty_code()
 
     h1 = get_new_hyp(goal)
     h2 = get_new_hyp(goal)
-    possible_codes[0] += f'cases {h_selected} with {h1} {h2}'
-    return CodeForLean.or_else_from_list(possible_codes)
+    # Destruct the disjunction
+    code_ = code_.and_then(f'cases {h_selected} with {h1} {h2}')
+    return code_
 
 
 def construct_or_on_hyp(goal: Goal, l: [MathObject], user_input: [str] = []):
@@ -643,7 +645,7 @@ def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
             math_types = [p.math_type for p in goal.context]
             if inequality in math_types:
                 index = math_types.index(inequality)
-                inequality_name = goal.context[index].info('name')
+                inequality_name = goal.context[index].display_name()
                 variable_names.append(inequality_name)
             else:
                 inequality_name = get_new_hyp(goal)
@@ -685,9 +687,10 @@ def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
         # If it fails, rotate to next inequality
         more_code = more_code.or_else("rotate")
         # Do this for all inequalities
-        # fixme: replace iterate by an actual repetition (to get pertinent
-        #  effective code)
-        more_code = more_code.single_combinator(f"iterate {unsolved_inequality_counter}")
+        #   more_code = more_code.single_combinator(f"iterate
+        #   {unsolved_inequality_counter}") --> replaced by explicit iteration
+        code_list = [more_code] * unsolved_inequality_counter
+        more_code = CodeForLean.and_then_from_list(code_list)
         # Finally come back to first inequality
         more_code = more_code.and_then("rotate")
 
@@ -720,7 +723,7 @@ def action_forall(goal: Goal, l: [MathObject], user_input: [str] = []) \
             error = _("selected property is not a universal property '∀x, "
                       "P(x)'")
             raise WrongUserInput(error)
-        elif len(user_input) == 0:
+        elif not user_input:
             raise MissingParametersError(InputType.Text,
                                          title=_("Apply a universal property"),
                                          output=_(
@@ -729,6 +732,8 @@ def action_forall(goal: Goal, l: [MathObject], user_input: [str] = []) \
         else:
             item = user_input[0]
             item = add_type_indication(item)  # e.g. (0:ℝ)
+            if item[0] != '(':
+                item = '(' + item + ')'
             potential_var = MathObject(node="LOCAL_CONSTANT",
                                        info={'name': item},
                                        children=[],
@@ -769,24 +774,23 @@ def construct_exists(goal, user_input: [str]) -> str:
     return CodeForLean.or_else_from_list(possible_codes)
 
 
-def apply_exists(goal: Goal, l: [MathObject]) -> str:
-    possible_codes = []
-
+def apply_exists(goal: Goal, l: [MathObject]) -> CodeForLean:
     h_selected = l[0].math_type
     h_name = l[0].info["name"]
     x = give_global_name(goal=goal, math_type=h_selected.children[0],
                          hints=[h_selected.children[1].to_display()])
     hx = get_new_hyp(goal)
-    if h_selected.node == 'QUANT_∃!':
-        # we have to add the "simp" tactic to avoid appearance of lambda expr
-        possible_codes.append(f'cases {h_name} with {x} {hx}, simp at {hx}')
 
     if h_selected.children[2].node == "PROP_∃":
-        possible_codes.append(
-            f'rcases {h_name} with ⟨ {x}, ⟨ {hx}, {h_name} ⟩ ⟩')
+        code_ = f'rcases {h_name} with ⟨ {x}, ⟨ {hx}, {h_name} ⟩ ⟩'
     else:
-        possible_codes.append(f'cases {h_name} with {x} {hx}')
-    return CodeForLean.or_else_from_list(possible_codes)
+        code_ = f'cases {h_name} with {x} {hx}'
+    code_ = CodeForLean.from_string(code_)
+    if h_selected.node == 'QUANT_∃!':
+        # We have to add the "simp" tactic to avoid appearance of lambda expr
+        code_ = code_.and_then(f'simp at {hx}')
+
+    return code_
 
 
 def construct_exists_on_hyp(goal: Goal, l: [MathObject]):
