@@ -251,14 +251,6 @@ class CourseChooser(AbstractCoExChooser):
 
         super().__init__(browser_layout)
 
-    def set_course(course: Course):
-        # TODO: Docstring me
-
-        self.__course          = course
-        self.__course_filetype = '.lean'  # TODO: Change this
-
-        self.set_preview()
-
     def set_preview(self):
         """
         Set course preview. See AbstractCoExChooser.set_preview
@@ -649,8 +641,7 @@ class AbstractStartCoExDialog(QDialog):
 
     exercise_chosen = Signal(Exercise)
 
-    def __init__(self, title: Optional[str], widget: Optional[QWidget],
-                 preselected_exercise: Optional[Exercise]):
+    def __init__(self, title: Optional[str], widget: Optional[QWidget]):
         """
         Init self by setting up the layouts, the buttons and the tab
         widget (see self docstring).
@@ -701,17 +692,7 @@ class AbstractStartCoExDialog(QDialog):
 
         # ───────────────────── Others ───────────────────── #
 
-        if not preselected_exercise:
-            self.__tabwidget.setTabEnabled(1, False)
-        else:
-            self.set_preselected_exercise(exercise)
-
-    def set_preselected_exercise(exercise: Exercise):
-        # TODO: Docstring me
-
-        course = exercise.course
-        self.__course_chooser.set_course(course)
-        self.__exercise_chooser.set_preview(exercise)
+        self.__tabwidget.setTabEnabled(1, False)
 
     #########
     # Slots #
@@ -812,7 +793,7 @@ class StartCoExDialogStartup(AbstractStartCoExDialog):
     def __init__(self):
 
         title = _('Choose course and exercise — d∃∀duction')
-        super().__init__(title=title, widget=None, preselected_exercise=None)
+        super().__init__(title=title, widget=None)
 
 
 class StartCoExDialogExerciseFinished(AbstractStartCoExDialog):
@@ -833,7 +814,7 @@ class StartCoExDialogExerciseFinished(AbstractStartCoExDialog):
         title = _('Exercise finished — d∃∀duction')
 
         # TODO: Change exercise=None
-        super().__init__(title=title, widget=widget, preselected_exercise=None)
+        super().__init__(title=title, widget=widget)
 
 
 def check_negate_statement(exercise) -> bool:
