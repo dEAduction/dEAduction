@@ -135,9 +135,9 @@ class AbstractCoExChooser(QWidget):
 
         self.setLayout(self.__main_layout)
 
-    def set_preview(self, main_widget: QWidget = None, title: str = None,
-                    subtitle: str = None, details: Dict[str, str] = None,
-                    description: str = None, expand_details: bool = False):
+    def set_preview(self, main_widget: Optional[QWidget], title: Optional[str],
+                    subtitle: Optional[str], details: Optional[Dict[str, str]],
+                    description: Optional[str], expand_details: Optional[bool]):
         # TODO: Make widget a QLayout instead?
         """
         Set the preview area of the choosen course or exercise (given
@@ -503,8 +503,8 @@ class ExerciseChooser(AbstractCoExChooser):
         description = exercise.description
 
         super().set_preview(main_widget=main_widget, title=title,
-                            description=description,
-                            expand_details=False)
+                            subtitle=None, details=None,
+                            description=description, expand_details=False)
 
         self.exercise_previewed.emit()
 
@@ -605,7 +605,8 @@ class AbstractStartCoExDialog(QDialog):
 
     exercise_chosen = Signal(Exercise)
 
-    def __init__(self, title: Optional[str], widget: Optional[QWidget]):
+    def __init__(self, title: Optional[str], widget: Optional[QWidget],
+                 exercise: Optional[Exercise]):
         """
         Init self by setting up the layouts, the buttons and the tab
         widget (see self docstring).
@@ -657,12 +658,15 @@ class AbstractStartCoExDialog(QDialog):
         # ───────────────────── Others ───────────────────── #
 
         self.__tabwidget.setTabEnabled(1, False)
+        if exercise:
+            self.__preset_exercise(exercise)
 
     def __preset_exercise(exercise: Exercise):
         # TODO: Docstring me
 
         self.__course_chooser.set_preview(exercise.course)
         self.__exercise_chooser.set_preview(exercise)
+        self.__tabwidget.setTabVisible(1, True)
 
     #########
     # Slots #
@@ -761,7 +765,7 @@ class StartCoExDialogStartup(AbstractStartCoExDialog):
     def __init__(self):
 
         title = _('Choose course and exercise — d∃∀duction')
-        super().__init__(title=title, widget=None)
+        super().__init__(title=title, widget=None, exercise=None)
 
 
 class StartCoExDialogExerciseFinished(AbstractStartCoExDialog):
@@ -782,7 +786,7 @@ class StartCoExDialogExerciseFinished(AbstractStartCoExDialog):
         title = _('Exercise finished — d∃∀duction')
 
         # TODO: Change exercise=None
-        super().__init__(title=title, widget=widget)
+        super().__init__(title=title, widget=widget, exercise=None)
 
 
 def check_negate_statement(exercise) -> bool:
