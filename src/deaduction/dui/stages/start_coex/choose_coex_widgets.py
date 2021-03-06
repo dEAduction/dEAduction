@@ -658,6 +658,12 @@ class AbstractStartCoExDialog(QDialog):
 
         self.__tabwidget.setTabEnabled(1, False)
 
+    def __preset_exercise(exercise: Exercise):
+        # TODO: Docstring me
+
+        self.__course_chooser.set_preview(exercise.course)
+        self.__exercise_chooser.set_preview(exercise)
+
     #########
     # Slots #
     #########
