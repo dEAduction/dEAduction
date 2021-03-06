@@ -251,6 +251,14 @@ class CourseChooser(AbstractCoExChooser):
 
         super().__init__(browser_layout)
 
+    def set_course(course: Course):
+        # TODO: Docstring me
+
+        self.__course          = course
+        self.__course_filetype = '.lean'  # TODO: Change this
+
+        self.set_preview()
+
     def set_preview(self):
         """
         Set course preview. See AbstractCoExChooser.set_preview
@@ -262,7 +270,8 @@ class CourseChooser(AbstractCoExChooser):
         recent course in self.__recent_courses_wgt), the signal
         course_chosen is emitted with the course (and additional info).
         It is received in StartExerciseDialog, which then instanciates
-        an ExerciseChooser for this course.
+        an ExerciseChooser for this course and the view is set to the
+        exercise chooser.
         """
 
         # Title, subtitle, etc
