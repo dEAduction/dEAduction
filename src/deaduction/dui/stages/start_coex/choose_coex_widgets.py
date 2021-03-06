@@ -649,7 +649,8 @@ class AbstractStartCoExDialog(QDialog):
 
     exercise_chosen = Signal(Exercise)
 
-    def __init__(self, title: str = None, widget: QWidget = None):
+    def __init__(self, title: Optional[str], widget: Optional[QWidget],
+                 preselected_exercise: Optional[Exercise]):
         """
         Init self by setting up the layouts, the buttons and the tab
         widget (see self docstring).
@@ -700,7 +701,17 @@ class AbstractStartCoExDialog(QDialog):
 
         # ───────────────────── Others ───────────────────── #
 
-        self.__tabwidget.setTabEnabled(1, False)
+        if not preselected_exercise:
+            self.__tabwidget.setTabEnabled(1, False)
+        else:
+            self.set_preselected_exercise(exercise)
+
+    def set_preselected_exercise(exercise: Exercise):
+        # TODO: Docstring me
+
+        course = exercise.course
+        self.__course_chooser.set_course(course)
+        self.__exercise_chooser.set_preview(exercise)
 
     #########
     # Slots #
@@ -801,7 +812,7 @@ class StartCoExDialogStartup(AbstractStartCoExDialog):
     def __init__(self):
 
         title = _('Choose course and exercise — d∃∀duction')
-        super().__init__(title=title, widget=None)
+        super().__init__(title=title, widget=None, preselected_exercise=None)
 
 
 class StartCoExDialogExerciseFinished(AbstractStartCoExDialog):
@@ -821,7 +832,8 @@ class StartCoExDialogExerciseFinished(AbstractStartCoExDialog):
         widget.setLayout(lyt)
         title = _('Exercise finished — d∃∀duction')
 
-        super().__init__(title=title, widget=widget)
+        # TODO: Change exercise=None
+        super().__init__(title=title, widget=widget, preselected_exercise=None)
 
 
 def check_negate_statement(exercise) -> bool:
@@ -866,8 +878,11 @@ def check_negate_statement(exercise) -> bool:
 if __name__ == '__main__':
     app = QApplication()
 
+    # Test StartCoExDialogStartup
     # start_coex_dialog_startup = StartCoExDialogStartup()
     # start_coex_dialog_startup.show()
+
+    # Test StartCoExDialogExerciseFinished
     start_coex_dialog_exercise_finished = StartCoExDialogExerciseFinished()
     start_coex_dialog_exercise_finished.show()
 
