@@ -563,8 +563,10 @@ def construct_forall(goal) -> CodeForLean:
     """
 
     math_object = goal.target.math_type
-    body = math_object.children[2]
     math_type = math_object.children[0]
+    variable = math_object.children[1]
+    body = math_object.children[2]
+    hint = variable.display_name  # not optimal
     if math_type.node == "PRODUCT":
         [math_type_1, math_type_2] = math_type.children
         x = give_global_name(goal=goal, math_type=math_type_1)
@@ -574,6 +576,7 @@ def construct_forall(goal) -> CodeForLean:
     else:
         x = give_global_name(goal=goal,
                              math_type=math_type,
+                             hints=[hint]
                              )
         possible_codes = CodeForLean.from_string(f'intro {x}')
         name = f"{x}"
@@ -645,7 +648,7 @@ def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
             math_types = [p.math_type for p in goal.context]
             if inequality in math_types:
                 index = math_types.index(inequality)
-                inequality_name = goal.context[index].display_name()
+                inequality_name = goal.context[index].display_name
                 variable_names.append(inequality_name)
             else:
                 inequality_name = get_new_hyp(goal)

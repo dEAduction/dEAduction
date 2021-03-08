@@ -124,7 +124,8 @@ latex_from_constant_name = {
     "est_minore": (-1, " minoré"),
     "est_borne": (-1, " borné"),
     "limite": ("lim", -2, " = ", -1),
-    "abs": ('|', -1, '|')
+    "abs": ('|', -1, '|'),
+    "max": ("Max", "(", -2, ",", -1, ")")
 }
 
 # Lean formats that cannot be deduced from latex

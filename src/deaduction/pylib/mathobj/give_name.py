@@ -168,7 +168,9 @@ def give_name(math_type,
     # All hints have to be acceptable variable names!
     alphabet_lower = "abcdefghijklmnopqrstuvwxyz"
     alphabet_upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    alphabet = alphabet_lower + alphabet_upper
+    alphabet_greek = "αβγδεζηθικλμνξοπρςστυφχψω" \
+                     + "ΓΔΘΛΞΠΣΦΨΩ"
+    alphabet = alphabet_lower + alphabet_upper + alphabet_greek
     for hint in hints:
         if hint not in alphabet:
             hints.remove(hint)
@@ -188,7 +190,7 @@ def give_name(math_type,
         if type_name[0] in alphabet_upper:
             hint = type_name[0].lower()
             # Insert iff hint is not already in hints
-            insert_maybe(hints, hint, position=0)
+            insert_maybe(hints, hint, position=1)
 
     # Standard hints
     standard_hints = ['A'] if math_type.node.startswith('SET') \

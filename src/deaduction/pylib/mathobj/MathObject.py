@@ -211,6 +211,8 @@ class MathObject:
             # NB: info["name"] is given by structures.lean,
             # but may be inadequate (e.g. two distinct variables sharing the
             # same name)
+            # This lean name is saved in info['lean_name'],
+            # and info['name'] = "NO NAME" until proper naming
             bound_var_type, bound_var, local_context = children
             new_info = {'name': "NO NAME",
                         'lean_name': bound_var.info['name'],
