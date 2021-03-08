@@ -318,9 +318,8 @@ class Exercise(Theorem):
 
     def all_statements_until(self, statements: List[str]) -> List[str]:
         """
-        provide the list of all statements in outline until the namespace
-        containing self
-        :param outline: outline of the course, as described in the Course class
+        provide the list of all statements until self
+
         TODO: turn this into a @property to be accessed by
         exercise.all_statements_until
         """
@@ -328,6 +327,25 @@ class Exercise(Theorem):
         index = statements.index(name)
         return statements[:index]
 
+    def is_last(self) -> bool:
+        """
+        Check if self is the last exercise in the statements list of
+        self.Course.
+        """
+        return self.next_exercise() is None
+
+    def next_exercise(self):
+        """
+        Return next Exercise in the statements list of self.Course, or None
+        if self is the last exercise in the list.
+        """
+
+        statements = self.course.statements
+        index = statements.index(self)
+        for statement in statements[index+1:]:
+            if isinstance(statement, Exercise):
+                return statement
+        return None
 
 #############
 # utilities #
