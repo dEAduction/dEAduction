@@ -122,8 +122,7 @@ class ServerInterface(QObject):
         # be progressively modified into an effective code which is devoid
         # of or_else combinator, according to the "EFFECTIVE CODE" messages
         # sent by Lean.
-        self.__tmp_effective_code      = None
-        self.__tmp_has_or_else         = False
+        self.__tmp_effective_code      = CodeForLean.empty_code()
         self.proof_state               = None
 
         # Errors memory channels
@@ -198,7 +197,7 @@ class ServerInterface(QObject):
 
         elif txt.startswith("EFFECTIVE CODE") \
             and line == self.lean_file.last_line_of_inner_content \
-                and self.__tmp_has_or_else:
+                and self.__tmp_effective_code.has_or_else():
             # txt may contain several lines
             for txt_line in txt.splitlines():
                 if not txt_line.startswith("EFFECTIVE CODE"):
@@ -206,11 +205,11 @@ class ServerInterface(QObject):
                     # TODO: treat these messages
                     continue
                 self.log.info(f"Got {txt_line}")
-                codes = get_effective_code_numbers(txt_line)
+                node_nb, code_nb = get_effective_code_numbers(txt_line)
                 # Modify __tmp_effective_code by selecting the effective
                 # or_else alternative according to codes
                 self.__tmp_effective_code, found = \
-                    self.__tmp_effective_code.select_or_else(codes)
+                    self.__tmp_effective_code.select_or_else(node_nb, code_nb)
                 if found:
                     self.log.debug("(selecting effective code)")
 
@@ -265,10 +264,8 @@ class ServerInterface(QObject):
 
         if lean_code:
             self.__tmp_effective_code = deepcopy(lean_code)
-            self.__tmp_has_or_else = lean_code.has_or_else()
         else:
-            self.__tmp_effective_code = None
-            self.__tmp_has_or_else = False
+            self.__tmp_effective_code = CodeForLean.empty_code()
 
         self.lean_file_changed.emit()  # will update the lean text editor
 

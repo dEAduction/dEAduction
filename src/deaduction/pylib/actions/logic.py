@@ -332,11 +332,11 @@ do the same to the hypothesis.
     possible_codes = []
 
     if len(l) == 0:
-        if not goal.target.math_type.is_not():
+        if not goal.target.is_not():
             raise WrongUserInput(error=_("target is not a negation 'NOT P'"))
         possible_codes.append('push_neg')
     if len(l) == 1:
-        if not l[0].math_type.is_not():
+        if not l[0].is_not():
             error = _("selected property is not a negation 'NOT P'")
             raise WrongUserInput(error)
         h_selected = l[0].info["name"]

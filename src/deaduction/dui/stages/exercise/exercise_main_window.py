@@ -59,7 +59,7 @@ from deaduction.pylib.mathobj           import ( MathObject,
 from deaduction.pylib.server.exceptions import   FailedRequestError
 from deaduction.pylib.server            import   ServerInterface
 
-from .exercise_main_window_widgets      import ( ExerciseCentralWidget,
+from ._exercise_main_window_widgets      import ( ExerciseCentralWidget,
                                                  ExerciseStatusBar,
                                                  ExerciseToolBar )
 
