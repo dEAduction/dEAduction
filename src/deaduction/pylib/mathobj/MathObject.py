@@ -211,6 +211,8 @@ class MathObject:
             # NB: info["name"] is given by structures.lean,
             # but may be inadequate (e.g. two distinct variables sharing the
             # same name)
+            # This lean name is saved in info['lean_name'],
+            # and info['name'] = "NO NAME" until proper naming
             bound_var_type, bound_var, local_context = children
             new_info = {'name': "NO NAME",
                         'lean_name': bound_var.info['name'],
@@ -614,6 +616,17 @@ class MathObject:
 
         return math_type.node == "PROP_IFF"
 
+    def is_not(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is a negation.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+
+        return math_type.node in ("PROP_NOT", "PROP_NOT_BELONGS")
+
     def is_false(self, is_math_type=False) -> bool:
         """
         Test if (math_type of) self is 'contradiction'.
@@ -651,7 +664,8 @@ class MathObject:
             return None
 
     # Determine some important classes of MathObjects
-    def can_be_used_for_substitution(self, is_math_type=False) -> bool:
+    def can_be_used_for_substitution(self, is_math_type=False) -> (bool,
+                                                                   Any):
         """
         Determines if a proposition can be used as a basis for substituting,
         i.e. is of the form
@@ -663,6 +677,10 @@ class MathObject:
         This is a recursive function: in case self is a universal quantifier,
         self can_be_used_for_substitution iff the body of self
         can_be_used_for_substitution.
+
+        :return: a couple containing
+            - the result of the test (a boolean)
+            - the equality or iff, so that the two terms may be retrieved
         """
         if is_math_type:
             math_type = self
@@ -670,14 +688,14 @@ class MathObject:
             math_type = self.math_type
         if math_type.is_equality(is_math_type=True) \
                 or math_type.is_iff(is_math_type=True):
-            return True
+            return True, math_type
         elif math_type.is_for_all(is_math_type=True):
             # NB : ∀ var : type, body
             body = math_type.children[2]
             # Recursive call
             return body.can_be_used_for_substitution(is_math_type=True)
         else:
-            return False
+            return False, None
 
     def can_be_used_for_implication(self, is_math_type=False) -> bool:
         """

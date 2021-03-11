@@ -168,7 +168,9 @@ def give_name(math_type,
     # All hints have to be acceptable variable names!
     alphabet_lower = "abcdefghijklmnopqrstuvwxyz"
     alphabet_upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    alphabet = alphabet_lower + alphabet_upper
+    alphabet_greek = "αβγδεζηθικλμνξοπρςστυφχψω" \
+                     + "ΓΔΘΛΞΠΣΦΨΩ"
+    alphabet = alphabet_lower + alphabet_upper + alphabet_greek
     for hint in hints:
         if hint not in alphabet:
             hints.remove(hint)
@@ -180,7 +182,9 @@ def give_name(math_type,
         hints = [hint[0].lower() for hint in hints]
         # Each hint is one lowercase letter
 
-    # Lower case: add main hint (in pole position)
+    # Lower case: add main hint
+    # fixme: in some case main hint must be added in pole position,
+    #  but not always...
     # according to math_type's name
     # e.g. math_type is "X" -> hint[0] = 'x'
     if (not upper_case_name) and 'name' in math_type.info:
@@ -188,6 +192,8 @@ def give_name(math_type,
         if type_name[0] in alphabet_upper:
             hint = type_name[0].lower()
             # Insert iff hint is not already in hints
+            # position = 0 --> pole position
+            # position = 1 --> second position
             insert_maybe(hints, hint, position=0)
 
     # Standard hints
@@ -288,10 +294,9 @@ def next_in_list(letter: str, letters: List[str]):
 
 
 def insert_maybe(L: list, item, position=None):
-    """Insert in a list if item is not already in"""
+    """Insert or displace item in a list at the given position"""
     if item in L:
-        return
-    else:
-        if position is None:
-            position = len(L)
-        L.insert(position, item)
+        L.remove(item)
+    if position is None:
+        position = len(L)
+    L.insert(position, item)

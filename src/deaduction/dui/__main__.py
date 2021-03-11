@@ -91,12 +91,13 @@ async def main():
 if __name__ == '__main__':
     # list of names of modules whose logs should not be printed
     all_domains = ['lean',
-               'ServerInterface',
-               'Course',
-               'deaduction.dui',
-               'deaduction.pylib.coursedata',
-               'deaduction.pylib.mathobj'
-               ]
+                   'ServerInterface',
+                   'Course',
+                   'deaduction.dui',
+                   'deaduction.pylib.coursedata',
+                   'deaduction.pylib.mathobj',
+                   'LeanServer'
+                   ]
     domains = ['lean',
                'ServerInterface',
                'Course',

@@ -36,6 +36,7 @@ This file is part of dEAduction.
 """
 
 import logging
+from typing import Union
 
 from deaduction.pylib.text        import tooltips
 from deaduction.pylib.config.i18n import _
@@ -43,13 +44,15 @@ from deaduction.pylib.actions     import (action,
                                           InputType,
                                           MissingParametersError,
                                           WrongUserInput,
-                                          CodeForLean,
-                                          format_orelse)
+                                          LeanCombinator,
+                                          CodeForLean
+                                          )
 
 from deaduction.pylib.mathobj     import (MathObject,
                                           Goal,
                                           give_global_name,
-                                          get_new_hyp)
+                                          get_new_hyp,
+                                          NUMBER_SETS_LIST)
 
 import deaduction.pylib.config.vars as cvars
 
@@ -111,28 +114,28 @@ Split the target 'P AND Q' into two sub-goals
 
 def apply_and(goal, l):
     """
-Destruct a property 'P and Q'
-Here l contains exactly one conjunction property
+    Destruct a property 'P and Q'
+    Here l contains exactly one conjunction property
     """
-    possible_codes = []
+
     h_selected = l[0].info["name"]
     h1 = get_new_hyp(goal)
     h2 = get_new_hyp(goal)
-    possible_codes.append(f'cases {h_selected} with {h1} {h2}')
-    return CodeForLean.or_else_from_list(possible_codes)
+    code_ = f'cases {h_selected} with {h1} {h2}'
+    return CodeForLean.from_string(code_)
 
 
 def construct_and_hyp(goal, selected_objects: [MathObject]):
     """
-Construct 'P AND Q' from properties P and Q
-Here l contains exactly two properties
+    Construct 'P AND Q' from properties P and Q
+    Here l contains exactly two properties
     """
-    possible_codes = []
+
     h1 = selected_objects[0].info["name"]
     h2 = selected_objects[1].info["name"]
     new_h = get_new_hyp(goal)
-    possible_codes.append(f'have {new_h} := and.intro {h1} {h2}')
-    return CodeForLean.or_else_from_list(possible_codes)
+    code_ = f'have {new_h} := and.intro {h1} {h2}'
+    return CodeForLean.from_string(code_)
 
 
 @action(tooltips.get('tooltip_and'),
@@ -200,9 +203,9 @@ When target is a disjunction 'P OR Q', choose to prove either P or Q
     return CodeForLean.or_else_from_list(possible_codes)
 
 
-def apply_or(goal, l: [MathObject], user_input: [str]) -> str:
+def apply_or(goal, l: [MathObject], user_input: [str]) -> CodeForLean:
     """
-Engage in a proof by cases by applying a property 'P OR Q'
+    Engage in a proof by cases by applying a property 'P OR Q'
     """
     possible_codes = []
     if not l[0].is_or():
@@ -220,17 +223,19 @@ Engage in a proof by cases by applying a property 'P OR Q'
                                      choices=choices,
                                      title=_("Choose case"),
                                      output=_("Which case to assume first?"))
-
-    if len(user_input) == 1:
+    elif len(user_input) == 1:
         if user_input[0] == 1:
-            possible_codes.append(f'rw or.comm at {h_selected}, ')
+            # If user wants the second property first, then first permute
+            code_ = f'rw or.comm at {h_selected}'
+            code_ = CodeForLean.from_string(code_)
         else:
-            possible_codes.append("")
+            code_ = CodeForLean.empty_code()
 
     h1 = get_new_hyp(goal)
     h2 = get_new_hyp(goal)
-    possible_codes[0] += f'cases {h_selected} with {h1} {h2}'
-    return CodeForLean.or_else_from_list(possible_codes)
+    # Destruct the disjunction
+    code_ = code_.and_then(f'cases {h_selected} with {h1} {h2}')
+    return code_
 
 
 def construct_or_on_hyp(goal: Goal, l: [MathObject], user_input: [str] = []):
@@ -327,11 +332,11 @@ do the same to the hypothesis.
     possible_codes = []
 
     if len(l) == 0:
-        if goal.target.math_type.node != "PROP_NOT":
+        if not goal.target.math_type.is_not():
             raise WrongUserInput(error=_("target is not a negation 'NOT P'"))
         possible_codes.append('push_neg')
     if len(l) == 1:
-        if l[0].math_type.node != "PROP_NOT":
+        if not l[0].math_type.is_not():
             error = _("selected property is not a negation 'NOT P'")
             raise WrongUserInput(error)
         h_selected = l[0].info["name"]
@@ -339,46 +344,50 @@ do the same to the hypothesis.
     return CodeForLean.or_else_from_list(possible_codes)
 
 
+###############
 # IMPLICATION #
-
-def construct_implicate(goal: Goal):
-    possible_codes = []
-
-    if goal.target.math_type.node != "PROP_IMPLIES":
+###############
+def construct_implicate(goal: Goal) -> CodeForLean:
+    """
+    Here the target is assumed to be an implication P ⇒ Q, P is added to the
+    context, and the target becomes Q.
+    """
+    if not goal.target.is_implication():
         raise WrongUserInput(error=_("target is not an implication 'P ⇒ Q'"))
+    else:
+        h = get_new_hyp(goal)
+        return CodeForLean.from_string(f'intro {h}')
 
-    h = get_new_hyp(goal)
-    possible_codes.append(f'intro {h}')
-    return CodeForLean.or_else_from_list(possible_codes)
 
-
-def apply_implicate(goal: Goal, l: [MathObject]):
-    possible_codes = []
+def apply_implicate(goal: Goal, l: [MathObject]) -> CodeForLean:
+    """
+    Here l contains a single property which is an implication P ⇒ Q; if the
+    target is Q then it will be replaced by P.
+    """
     h_selected = l[0].info["name"]
-    possible_codes.append(f'apply {h_selected}')
-    return CodeForLean.or_else_from_list(possible_codes)
+    return CodeForLean.from_string(f'apply {h_selected}')
 
 
-def apply_implicate_to_hyp(goal: Goal, l: [MathObject]) -> str:
-    """
-    Try to apply last selected property on the other ones.
-    The last property should be an implcation or a universal property
-    (or equivalent to such after unfolding definitions)
-
-    :param l: list of 2 or 3 MathObjects
-    :return:
+def have_new_property(arrow: MathObject, variable_names: [str], hypo_name) -> CodeForLean:
     """
 
-    # todo: raise errors if wrong type?
-    possible_codes = []
-    h_selected = l[-1].info["name"]
-    h = get_new_hyp(goal)
+    :param arrow:           a MathObject which is either an implication or a
+                            universal property
+    :param variable_names:  a list of names of variables (or properties) to
+                            which "arrow" will be applied
+    :param hypo_name:       a fresh name for the new property
+
+    return:                 Lean Code to produce the wanted new property,
+                            taking into account implicit parameters
+    """
+
+    h = hypo_name
+    h_selected = arrow.info["name"]
 
     command = f'have {h} := {h_selected}'
     command_explicit = f'have {h} := @{h_selected}'
 
-    names = [item.info['name'] for item in l[:-1]]
-    arguments = ' '.join(names)
+    arguments = ' '.join(variable_names)
 
     # try with up to 4 implicit parameters
     implicit_codes = [command + ' ' + arguments,
@@ -398,28 +407,68 @@ def apply_implicate_to_hyp(goal: Goal, l: [MathObject]) -> str:
     return CodeForLean.or_else_from_list(possible_codes)
 
 
+def apply_implicate_to_hyp(goal: Goal, l: [MathObject]) -> CodeForLean:
+    """
+    Try to apply last selected property on the other ones.
+    The last property should be an implication
+    (or equivalent to such after unfolding definitions)
+
+    :param l: list of MathObjects
+    :return:
+    """
+
+    implication = l[-1]
+    hypo_name = get_new_hyp(goal)
+    variable_names = [variable.info['name'] for variable in l[:-1]]
+
+    return have_new_property(implication, variable_names, hypo_name)
+
+
 @action(tooltips.get('tooltip_implies'),
         logic_button_texts['action_implicate'])
-def action_implicate(goal: Goal, l: [MathObject]) -> str:
+def action_implicate(goal: Goal, l: [MathObject]) -> CodeForLean:
     """
-    Translate into string of lean code corresponding to the action
-
-    If the target is of the form P ⇒ Q:
-introduce the hypothesis P in the properties and transform the target into Q.
+    Three cases:
+    (1) No property selected:
+        If the target is of the form P ⇒ Q: introduce the hypothesis P in
+        the properties and transform the target into Q.
+    (2) A single selected property, of the form P ⇒ Q: If the target was Q,
+    it is replaced by P
+    (3) Exactly two selected property, on of which is an implication P ⇒ Q
+    and the other is P: Add Q to the context
 
     :param l:   list of MathObject arguments preselected by the user
     :return:    string of lean code
     """
     if len(l) == 0:
-        return construct_implicate(goal)
+        if not goal.target.is_implication():
+            raise WrongUserInput(
+                error=_("target is not an implication 'P ⇒ Q'"))
+        else:
+            return construct_implicate(goal)
     if len(l) == 1:
-        return apply_implicate(goal, l)
-    if len(l) == 2:
+        if not l[0].can_be_used_for_implication():
+            raise WrongUserInput(
+                error=_("selected property is not an implication 'P ⇒ Q'"))
+        else:
+            return apply_implicate(goal, l)
+    elif len(l) == 2:
+        if not l[-1].can_be_used_for_implication():
+            if not l[0].can_be_used_for_implication():
+                raise WrongUserInput(error=_(
+                    "selected properties are not implications 'P ⇒ Q'"
+                                            ))
+            else:  # l[0] is an implication but not l[1]: permute
+                l.reverse()
         return apply_implicate_to_hyp(goal, l)
+    # TODO: treat the case of more properties, including the possibility of
+    #  P, Q and 'P and Q ⇒ R'
     raise WrongUserInput(error=_("does not apply to more than two properties"))
 
 
-## IFF ##
+#######
+# IFF #
+#######
 
 def construct_iff(goal: Goal, user_input: [str]):
     possible_codes = []
@@ -503,16 +552,21 @@ introduce two subgoals, P⇒Q, and Q⇒P.
     raise WrongUserInput(error=_("does not apply to more than two properties"))
 
 
+###########
 # FOR ALL #
+###########
 
-def construct_forall(goal) -> str:
-    if not goal.target.is_for_all():
-        error = _("target is not a universal property '∀x, P(x)'")
-        raise WrongUserInput(error)
+def construct_forall(goal) -> CodeForLean:
+    """
+    Here goal.target is assumed to be a universal property "∀ x:X, ...",
+    and variable x is introduced.
+    """
 
     math_object = goal.target.math_type
-    body = math_object.children[2]
     math_type = math_object.children[0]
+    variable = math_object.children[1]
+    body = math_object.children[2]
+    hint = variable.display_name  # not optimal
     if math_type.node == "PRODUCT":
         [math_type_1, math_type_2] = math_type.children
         x = give_global_name(goal=goal, math_type=math_type_1)
@@ -522,6 +576,7 @@ def construct_forall(goal) -> str:
     else:
         x = give_global_name(goal=goal,
                              math_type=math_type,
+                             hints=[hint]
                              )
         possible_codes = CodeForLean.from_string(f'intro {x}')
         name = f"{x}"
@@ -542,33 +597,168 @@ def construct_forall(goal) -> str:
     return possible_codes
 
 
+def inequality_from_pattern_matching(math_object: MathObject,
+                                     variable: MathObject) -> MathObject:
+    """
+    Check if math_object.math_type has the form
+    ∀ x:X, (x R ... ==> ...)
+    where R is some inequality relation, and if this statement may be
+    applied to variable. If so, return inequality with x replaced by variable
+    """
+    inequality = None
+    if math_object.is_for_all():
+        math_type, var, body = math_object.math_type.children
+        # NB: following line does not work because of coercions
+        # if var.math_type == variable.math_type:
+        if body.is_implication(is_math_type=True):
+            premise = body.children[0]  # children (2,0)
+            if (premise.is_inequality(is_math_type=True) and
+                    var == premise.children[0]):
+                children = [variable, premise.children[1]]
+                inequality = MathObject(node=premise.node,
+                                        info={},
+                                        children=children,
+                                        math_type=premise.math_type)
+    return inequality
+
+
+def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
+    """
+    Try to apply last selected property on the other ones.
+    The last property should be a universal property
+    (or equivalent to such after unfolding definitions)
+
+    :param l: list of MathObjects of length ≥ 2
+    :return:
+    """
+
+    universal_property = l[-1]  # The property to be applied
+    unsolved_inequality_counter = 0
+    # Variable_names will contain the list of variables and proofs of
+    # inequalities that will be passed to universal_property
+    variable_names = []
+    code = CodeForLean.empty_code()
+    for potential_var in l[:-1]:
+        # TODO: replace by pattern matching
+        # Check for "∀x>0" (and variations)
+        inequality = inequality_from_pattern_matching(universal_property,
+                                                      potential_var)
+        variable_names.append(potential_var.info['name'])
+        if inequality:
+            math_types = [p.math_type for p in goal.context]
+            if inequality in math_types:
+                index = math_types.index(inequality)
+                inequality_name = goal.context[index].display_name
+                variable_names.append(inequality_name)
+            else:
+                inequality_name = get_new_hyp(goal)
+                variable_names.append(inequality_name)
+                unsolved_inequality_counter += 1
+                # Add type indication to the variable in inequality
+                math_type = inequality.children[1].math_type
+                # Variable is not used explicitly, but this affects inequality:
+                variable = inequality.children[0]
+                variable = add_type_indication(variable, math_type)
+                display_inequality = inequality.to_display(
+                    is_math_type=False,
+                    format_='lean')
+                # Code I: state corresponding inequality #
+                code = code.and_then(f"have {inequality_name}: "
+                                     f"{display_inequality}")
+                code = code.and_then("rotate")
+
+    # Code II: Apply universal_property #
+    hypo_name = get_new_hyp(goal)
+    code = code.and_then(have_new_property(universal_property,
+                                           hypo_name=hypo_name,
+                                           variable_names=variable_names)
+                         )
+    code = code.and_then("rotate")  # back to first inequality
+
+    # Code III: try to solve inequalities #     e.g.:
+    #   iterate 2 { solve1 {try {norm_num at *}, try {compute_n 10}} <|>
+    #               rotate},   rotate,
+    more_code = CodeForLean.empty_code()
+    if unsolved_inequality_counter:
+        more_code1 = CodeForLean.from_string("norm_num at *")
+        more_code1 = more_code1.try_()
+        more_code2 = CodeForLean.from_string("compute_n 1")
+        more_code2 = more_code2.try_()
+        # Try to solve1 inequality by norm_num, maybe followed by compute:
+        more_code = more_code1.and_then(more_code2)
+        more_code = more_code.single_combinator("solve1")
+        # If it fails, rotate to next inequality
+        more_code = more_code.or_else("rotate")
+        # Do this for all inequalities
+        #   more_code = more_code.single_combinator(f"iterate
+        #   {unsolved_inequality_counter}") --> replaced by explicit iteration
+        code_list = [more_code] * unsolved_inequality_counter
+        more_code = CodeForLean.and_then_from_list(code_list)
+        # Finally come back to first inequality
+        more_code = more_code.and_then("rotate")
+
+    return code.and_then(more_code)
+
+
 @action(tooltips.get('tooltip_forall'),
         logic_button_texts['action_forall'])
-def action_forall(goal: Goal, l: [MathObject]) -> str:
+def action_forall(goal: Goal, l: [MathObject], user_input: [str] = []) \
+                                                            -> CodeForLean:
     """
-    Translate into string of lean code corresponding to the action
-    
-    If the target is of the form ∀ x, P(x):
-introduce x and transform the target into P(x)
+    (1) If no selection and target is of the form ∀ x, P(x):
+        introduce x and transform the target into P(x)
+    (2) If a single universal property is selected, ask user for an object
+        to which the property will be applied
+    (3) If 2 or more items are selected, one of which is a universal
+        property, try to apply it to the other selected items
 
-    :param l:   list of MathObject arguments preselected by the user
-    :return:    string of lean code
     """
+
     if len(l) == 0:
-        return construct_forall(goal)
+        if not goal.target.is_for_all():
+            error = _("target is not a universal property '∀x, P(x)'")
+            raise WrongUserInput(error)
+        else:
+            return construct_forall(goal)
 
-    # search for a universal property among l, beginning with last item
+    elif len(l) == 1:  # Ask user for item
+        if not l[0].is_for_all():
+            error = _("selected property is not a universal property '∀x, "
+                      "P(x)'")
+            raise WrongUserInput(error)
+        elif not user_input:
+            raise MissingParametersError(InputType.Text,
+                                         title=_("Apply a universal property"),
+                                         output=_(
+                                             "Enter element on which you "
+                                             "want to apply:"))
+        else:
+            item = user_input[0]
+            item = add_type_indication(item)  # e.g. (0:ℝ)
+            if item[0] != '(':
+                item = '(' + item + ')'
+            potential_var = MathObject(node="LOCAL_CONSTANT",
+                                       info={'name': item},
+                                       children=[],
+                                       math_type=None)
+            l.insert(0, potential_var)
+            # Now len(l) == 2
+    # From now on len(l) ≥ 2
+    # Search for a universal property among l, beginning with last item
     l.reverse()
     for item in l:
         if item.is_for_all():
-            # put item on last position
+            # Put item on last position
             l.remove(item)
+            l.reverse()
             l.append(item)
-            return apply_implicate_to_hyp(goal, l)
+            return apply_forall(goal, l)
     raise WrongUserInput(error=_("no universal property among selected"))
 
 
+##########
 # EXISTS #
+##########
 
 def construct_exists(goal, user_input: [str]) -> str:
     possible_codes = []
@@ -587,24 +777,23 @@ def construct_exists(goal, user_input: [str]) -> str:
     return CodeForLean.or_else_from_list(possible_codes)
 
 
-def apply_exists(goal: Goal, l: [MathObject]) -> str:
-    possible_codes = []
-
+def apply_exists(goal: Goal, l: [MathObject]) -> CodeForLean:
     h_selected = l[0].math_type
     h_name = l[0].info["name"]
     x = give_global_name(goal=goal, math_type=h_selected.children[0],
                          hints=[h_selected.children[1].to_display()])
     hx = get_new_hyp(goal)
-    if h_selected.node == 'QUANT_∃!':
-        # we have to add the "simp" tactic to avoid appearance of lambda expr
-        possible_codes.append(f'cases {h_name} with {x} {hx}, simp at {hx}')
 
     if h_selected.children[2].node == "PROP_∃":
-        possible_codes.append(
-            f'rcases {h_name} with ⟨ {x}, ⟨ {hx}, {h_name} ⟩ ⟩')
+        code_ = f'rcases {h_name} with ⟨ {x}, ⟨ {hx}, {h_name} ⟩ ⟩'
     else:
-        possible_codes.append(f'cases {h_name} with {x} {hx}')
-    return CodeForLean.or_else_from_list(possible_codes)
+        code_ = f'cases {h_name} with {x} {hx}'
+    code_ = CodeForLean.from_string(code_)
+    if h_selected.node == 'QUANT_∃!':
+        # We have to add the "simp" tactic to avoid appearance of lambda expr
+        code_ = code_.and_then(f'simp at {hx}')
+
+    return code_
 
 
 def construct_exists_on_hyp(goal: Goal, l: [MathObject]):
@@ -659,3 +848,57 @@ introduce a new x and add P(x) to the properties
     elif len(l) == 2:
         return construct_exists_on_hyp(goal, l)
     raise WrongUserInput(error=_("does not apply to more than two properties"))
+
+
+#########
+# utils #
+#########
+
+def which_number_set(string: str):
+    """
+    Return 'ℕ', 'ℤ', 'ℚ', 'ℝ' if string represents a number, else None
+    """
+    ind = -1
+    if '.' in string or '/' in string:
+        ind = 2  # at least Q
+    string = string.replace('.', '')
+    string = string.replace('/', '')
+    if not string.isdigit():
+        return None
+    else:
+        return NUMBER_SETS_LIST[ind]
+
+
+def add_type_indication(item: Union[str, MathObject],
+                        math_type: MathObject=None) -> Union[str, MathObject]:
+    """
+    Add type indication for Lean. e.g.
+    '0' -> (0:ℝ)
+    'x' -> (x:ℝ)
+    :param item:        either a string (provided by user in TextDialog) or
+    MathObject
+    :param math_type:   math_type indication to add. If None, largest number
+    set used in current context will be indicated
+    :return: either     string or MathObject, with type indication in name
+    """
+    if math_type:
+        number_type = math_type.which_number_set(is_math_type=True)
+    if isinstance(item, str):
+        number_set = which_number_set(item)
+        if number_set and ':' not in item:
+            if not math_type:
+                MathObject.add_numbers_set(number_set)
+                # Add type indication = largest set of numbers among used
+                number_type = MathObject.number_sets[-1]
+            item = f"({item}:{number_type})"  # e.g. (0:ℝ)
+        return item
+    else:
+        if not math_type:
+            number_type = MathObject.number_sets[-1]
+        if hasattr(item, 'info'):
+            name = item.display_name
+            # Do not put 2 type indications!!
+            if (':' not in name
+                    and hasattr(item, 'info')):
+                item.info['name'] = f"({name}:{number_type})"
+        return item
