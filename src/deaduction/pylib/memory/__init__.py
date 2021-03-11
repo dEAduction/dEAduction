@@ -56,7 +56,7 @@ class Journal:
                      'effective_code'
                      'error',
                      'lean_error',
-                     'message',
+                     'success',
                      'user_input',
                      'various')
     __save_journal = cvars.get('journal.save')

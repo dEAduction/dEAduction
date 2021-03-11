@@ -372,7 +372,7 @@ class ExerciseMainWindow(QMainWindow):
                     break
 
                 elif emission.is_from(self.__action_triggered):
-                    # TODO: comment, what is emission.args[0]?
+                    # emission.args[0] is the ActionButton triggered by user
                     action_symbol = emission.args[0].action.symbol
                     event = ('button', action_symbol, '')
                     self.journal.add_event(event=event, emw=self)
@@ -380,6 +380,8 @@ class ExerciseMainWindow(QMainWindow):
                             self.__server_call_action, emission.args[0]))
 
                 elif emission.is_from(self.__statement_triggered):
+                    # emission.args[0] is the StatementTreeWidgetItem
+                    # triggered by user
                     if hasattr(emission.args[0], 'statement'):
                         statement_name = emission.args[0].statement.pretty_name
                         event = ('button', 'statement', statement_name)
