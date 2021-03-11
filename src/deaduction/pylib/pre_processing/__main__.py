@@ -53,6 +53,12 @@ This file is part of d∃∀duction.
 """
 # TODO: change the data to avoid saving the whole contents every 5 statements.
 
+import deaduction.pylib.config.dirs              as     cdirs
+import deaduction.pylib.config.environ           as     cenv
+import deaduction.pylib.config.i18n              as     i18n
+import deaduction.pylib.config.site_installation as     inst
+import deaduction.pylib.config.vars              as     cvars
+
 import logging
 import qtrio
 import trio
@@ -61,7 +67,7 @@ from pathlib import Path
 from PySide2.QtWidgets import QFileDialog
 
 
-from deaduction.config import _
+from deaduction.pylib.config.i18n import _
 from deaduction.pylib.coursedata import (Course,
                                          Exercise,
                                          Definition,
@@ -76,6 +82,11 @@ async def main():
     """
     See file doc.
     """
+
+    cenv.init()
+    cdirs.init()
+    inst.init()
+
     # Choose course and parse it
     course = select_course()
     # Check for pkl file and, if it exists, find all unprocessed statements
