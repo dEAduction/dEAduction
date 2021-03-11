@@ -224,17 +224,23 @@ def action_new_object(goal: Goal, l: [MathObject],
                              output=_("Choose what to introduce:"))
     # Choice = new object
     if user_input[0] == 0:
-        if len(user_input) == 1:  # ask for new object
+        if len(user_input) == 1:  # ask for name
             raise MissingParametersError(InputType.Text,
                                          title="+",
-                                         output=_("Introduce new object:"))
+                                         output=_("Name your object:"))
+        if len(user_input) == 2:  # ask for new object
+            raise MissingParametersError(InputType.Text,
+                                         title="+",
+                                         output=_("Introduce a new object ("
+                                                  "e.g. 0, f(2), ...)"))
         else:  # send code
-            x = utils.get_new_var()  # fixme: ask the user for a name
+            # x = utils.get_new_var()  # fixme: ask the user for a name
+            x = user_input[1]
             h = get_new_hyp(goal)
             possible_codes = CodeForLean.from_string(f"let {x} := "
-                                                     f"{user_input[1]}")
+                                                     f"{user_input[2]}")
             possible_codes = possible_codes.and_then(f"have {h} : {x} = "
-                                                     f"{user_input[1]}")
+                                                     f"{user_input[2]}")
             possible_codes = possible_codes.and_then("refl")
             if goal.target.is_for_all():
                 # name = goal.target.children[1].display_name()
