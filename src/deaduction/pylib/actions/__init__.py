@@ -37,8 +37,8 @@ from .utils import (        LeanCombinator,
                             CodeForLean,
                             get_new_hyp,
                             get_new_var,
-                            format_orelse,
-                            solve1_wrap)
+                            solve1_wrap,
+                            get_effective_code_numbers)
 
 from .logic import (        action_negate,
                             action_implicate,

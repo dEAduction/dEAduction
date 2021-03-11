@@ -30,8 +30,7 @@ This file is part of dEAduction.
 from dataclasses import dataclass
 import logging
 from deaduction.pylib.actions import (  WrongUserInput,
-                                        CodeForLean,
-                                        format_orelse)
+                                        CodeForLean)
 from deaduction.pylib.coursedata import Statement
 from deaduction.pylib.mathobj import (  Goal,
                                         MathObject,

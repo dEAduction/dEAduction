@@ -95,8 +95,9 @@ if __name__ == '__main__':
                'Course',
                'deaduction.dui',
                'deaduction.pylib.coursedata',
-               'deaduction.pylib.mathobj'
-               ]
+               'deaduction.pylib.mathobj',
+               'LeanServer'
+                    ]
     domains = ['lean',
                'ServerInterface',
                'Course',

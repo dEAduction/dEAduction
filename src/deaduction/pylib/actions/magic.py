@@ -34,8 +34,7 @@ from deaduction.pylib.config.i18n import _
 from deaduction.pylib.text import tooltips
 
 from deaduction.pylib.actions.actiondef import action
-from deaduction.pylib.actions import (format_orelse,
-                                      CodeForLean,
+from deaduction.pylib.actions import (CodeForLean,
                                       solve1_wrap,
                                       WrongUserInput)
 from deaduction.pylib.mathobj import (MathObject,
@@ -70,10 +69,13 @@ def action_compute(goal, selected_objects):
     # "finish" "norm_num *"
     # if user_config.getboolean('use_library_search_for_computations'):
     #     possible_code.append('library_search')
-    possible_code = [solve1_wrap("norm_num at *"),
-                     solve1_wrap("try {norm_num at *}, compute_n 10")]
-
-    return CodeForLean.or_else_from_list(possible_code)
+    code1 = CodeForLean.from_string("norm_num at *").solve1()
+    code2 = CodeForLean.from_string("compute_n 10")
+    code3 = CodeForLean.from_string("norm_num at *").try_().and_then(code2)
+    possible_code = code1.or_else(code3)
+    #possible_code = [solve1_wrap("norm_num at *"),
+    #                 solve1_wrap("try {norm_num at *}, compute_n 10")]
+    return possible_code
 
 
 @action(tooltips.get('tooltip_assumption'),

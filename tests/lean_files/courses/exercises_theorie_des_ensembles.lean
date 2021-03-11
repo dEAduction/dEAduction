@@ -24,7 +24,7 @@ import utils
 
 /- dEAduction
 Title
-    Théorie Des Ensembles
+    Théorie des ensembles
 Author
     Frédéric Le Roux
 Institution
@@ -635,14 +635,14 @@ PrettyName
 -/
 
 /-
-def injective {X Y : Type} (f₀ : X → Y) := ∀ x y : X, (f₀ x = f₀ y → x = y)
+def injective {X Y : Type} (f₀ : X → Y) := ∀ x x' : X, (f₀ x = f₀ x' → x = x')
 def surjective {X Y : Type} (f₀ : X → Y) := ∀ y : Y, ∃ x : X, y = f₀ x
 def composition {X Y Z : Type} (g₀ : Y → Z) (f₀ : X → Y) := λx:X, g₀ (f₀ x)
 def Identite {X : Type} := λ x:X, x
 -/
 
 lemma definition.injectivite :
-injective f ↔ ∀ x y : X, (f x = f y → x = y)
+injective f ↔ ∀ x x' : X, (f x = f x' → x = x')
 :=
 /- dEAduction
 PrettyName
@@ -765,6 +765,17 @@ lemma exercise.surjective_ssi_inverse_droite : (surjective f) ↔
 /- dEAduction
 PrettyName
     (*) Surjectivité et inverse à droite
+-/
+begin
+    sorry
+end
+
+lemma exercise.surjective_si_compo_avec_injective_est_surjective :
+(surjective (composition g f)) ∧ (injective g) → surjective f
+:=
+/- dEAduction
+PrettyName
+    Surjectivité si compo avec injective donne surjective
 -/
 begin
     sorry
@@ -1063,6 +1074,19 @@ end difference_et_difference_symetrique
 variable (f: X → Y)
 
 namespace applications
+
+lemma exercise.exercice_applications_0
+(A B : set X) (f: X → Y) (H: injective f):
+f ''(A ∩ B) = f '' A ∩ f '' B
+:=
+/- dEAduction
+PrettyName
+    Image directe d'une intersection, II
+-/
+begin
+    sorry
+end
+
 
 lemma exercise.exercice_applications_1
 (A B : set X) :

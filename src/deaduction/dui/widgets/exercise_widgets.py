@@ -440,6 +440,8 @@ class ExerciseMainWindow(QMainWindow):
         self.servint.proof_state_change.connect(self.update_proof_state)
         self.servint.lean_file_changed.connect(self.__update_lean_editor)
         self.servint.proof_no_goals.connect(self.fireworks)
+        self.servint.effective_code_received.connect(
+                                                self.servint.history_replace)
         self.servint.nursery.start_soon(self.server_task)  # Start server task
 
     ###########
@@ -670,7 +672,7 @@ class ExerciseMainWindow(QMainWindow):
             await process_function()
         except FailedRequestError as e:
             # Display an error message
-            # First search if lean_code contains some error_message
+            # First, search if lean_code contains some error_message
             error_message = ""
             # lean_code may be empty if code comes from Lean editor
             if e.lean_code:
@@ -941,8 +943,8 @@ class ExerciseMainWindow(QMainWindow):
         Return the current proof history, an instance of the Proof class
         """
         lean_file = self.servint.lean_file
-        proof = Proof([(entry.misc_info["ProofState"], None) \
-                 for entry in lean_file.history[:lean_file.target_idx+1]])
+        proof = Proof([(entry.misc_info["ProofState"], None)
+                    for entry in lean_file.history[:lean_file.target_idx+1]])
         return proof
 
     def count_goals(self) -> (int, int, int):

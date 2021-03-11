@@ -681,9 +681,9 @@ def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
     more_code = CodeForLean.empty_code()
     if unsolved_inequality_counter:
         more_code1 = CodeForLean.from_string("norm_num at *")
-        more_code1 = more_code1.single_combinator("try")
+        more_code1 = more_code1.try_()
         more_code2 = CodeForLean.from_string("compute_n 1")
-        more_code2 = more_code2.single_combinator("try")
+        more_code2 = more_code2.try_()
         # Try to solve1 inequality by norm_num, maybe followed by compute:
         more_code = more_code1.and_then(more_code2)
         more_code = more_code.single_combinator("solve1")
