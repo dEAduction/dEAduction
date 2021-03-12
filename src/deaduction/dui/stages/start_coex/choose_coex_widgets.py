@@ -661,12 +661,12 @@ class AbstractStartCoExDialog(QDialog):
         if exercise:
             self.__preset_exercise(exercise)
 
-    def __preset_exercise(exercise: Exercise):
+    def __preset_exercise(self, exercise: Exercise):
         # TODO: Docstring me
 
         self.__course_chooser.set_preview(exercise.course)
         self.__exercise_chooser.set_preview(exercise)
-        self.__tabwidget.setTabVisible(1, True)
+        self.__goto_exercise()
 
     #########
     # Slots #
@@ -770,7 +770,7 @@ class StartCoExDialogStartup(AbstractStartCoExDialog):
 
 class StartCoExDialogExerciseFinished(AbstractStartCoExDialog):
 
-    def __init__(self):
+    def __init__(self, finished_exercise: Optional[Exercise]):
 
         widget = QWidget()
         lyt = QHBoxLayout()
@@ -785,8 +785,10 @@ class StartCoExDialogExerciseFinished(AbstractStartCoExDialog):
         widget.setLayout(lyt)
         title = _('Exercise finished — d∃∀duction')
 
-        # TODO: Change exercise=None
-        super().__init__(title=title, widget=widget, exercise=None)
+        next_exercise = finished_exercise.next_exercise()
+
+        super().__init__(title=title, widget=widget,
+                         exercise=next_exercise)
 
 
 def check_negate_statement(exercise) -> bool:
@@ -836,7 +838,12 @@ if __name__ == '__main__':
     # start_coex_dialog_startup.show()
 
     # Test StartCoExDialogExerciseFinished
-    start_coex_dialog_exercise_finished = StartCoExDialogExerciseFinished()
+    course_path = Path('../../../../../tests/lean_files/courses/' \
+                       'exercices_logique_propositionnelle.pkl')
+    course = Course.from_file(course_path)
+    finished_exercise = course.exercises_list()[0]
+
+    start_coex_dialog_exercise_finished = StartCoExDialogExerciseFinished(finished_exercise)
     start_coex_dialog_exercise_finished.show()
 
     sys.exit(app.exec_())
