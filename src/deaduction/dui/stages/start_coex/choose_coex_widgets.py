@@ -796,10 +796,8 @@ class StartCoExDialogExerciseFinished(AbstractStartCoExDialog):
         widget.setLayout(lyt)
         title = _('Exercise finished — d∃∀duction')
 
-        next_exercise = finished_exercise.next_exercise()
-
         super().__init__(title=title, widget=widget,
-                         exercise=next_exercise)
+                         exercise=finished_exercise)
 
 
 def check_negate_statement(exercise) -> bool:
