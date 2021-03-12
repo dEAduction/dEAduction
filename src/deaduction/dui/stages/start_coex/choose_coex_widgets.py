@@ -251,6 +251,13 @@ class CourseChooser(AbstractCoExChooser):
 
         super().__init__(browser_layout)
 
+    def add_browsed_course(self, course: Course):
+        # TODO: Docstring me
+
+        course_path  = course.relative_course_path
+        course_title = course.title
+        self.__recent_courses_wgt.add_browsed_course(course_path, course_title)
+
     def set_preview(self, course: Course):
         """
         Set course preview course being previewed given as an argument. See
@@ -377,6 +384,7 @@ class ExerciseChooser(AbstractCoExChooser):
                                               course.outline)
         exercises_tree.resizeColumnToContents(0)
         browser_layout.addWidget(exercises_tree)
+        self.__exercises_tree = exercises_tree
 
         exercises_tree.itemClicked.connect(self.__set_preview_from_click)
 
@@ -501,6 +509,8 @@ class ExerciseChooser(AbstractCoExChooser):
         # TODO: Add subtitle, task…
         title       = exercise.pretty_name
         description = exercise.description
+
+        self.__exercises_tree.goto_statement(exercise)
 
         super().set_preview(main_widget=main_widget, title=title,
                             subtitle=None, details=None,
@@ -667,6 +677,7 @@ class AbstractStartCoExDialog(QDialog):
         self.__course_chooser.set_preview(exercise.course)
         self.__exercise_chooser.set_preview(exercise)
         self.__goto_exercise()
+        self.__course_chooser.add_browsed_course(exercise.course)
 
     #########
     # Slots #
