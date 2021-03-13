@@ -680,12 +680,23 @@ class AbstractStartCoExDialog(QDialog):
             self.__preset_exercise(exercise)
 
     def __preset_exercise(self, exercise: Exercise):
-        # TODO: Docstring me
+        """
+        Preset / preview the Exercise exercise as if usr had chose
+        exercise.course and then previewed exercise by clicking on it.
+        This is useful in StartCoExDialogExerciseFinished to display the
+        exercise that was just finished by usr. On top of previewing
+        exercise and its course, usr's clicks are emulated by adding the
+        Course as a browsed course in
+        self.__course_chooser.__recent_courses_wgt and selecting the
+        exercise in self.__exercise_chooser.__exercises_tree. The code
+        for this is not very smart so if you want to enhance it, do it
+        (see CONTRIBUTING.md file).
+        """
 
         self.__course_chooser.set_preview(exercise.course)
+        self.__course_chooser.add_browsed_course(exercise.course)
         self.__exercise_chooser.set_preview(exercise)
         self.__goto_exercise()
-        self.__course_chooser.add_browsed_course(exercise.course)
 
     #########
     # Slots #
