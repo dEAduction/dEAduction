@@ -583,34 +583,32 @@ class ExerciseChooser(AbstractCoExChooser):
 
 class AbstractStartCoExDialog(QDialog):
     """
-    The course and exercise chooser (inherits QDialog). This is the
-    first widget activated / shown when launching d∃∀duction as it is
-    the one which allows the user to:
-    1. choose a course (from a file or from recent courses' list);
-    2. browse / preview the exercises for the chosen course;
-    3. start the chosen exercise (launchs the ExerciseMainWindow).
+    The base class course and exercise chooser (inherits QDialog); it is
+    inherited by StartCoExDialogStartup and
+    StartCoExDialogExerciseFinished, which are the classes instanciated
+    elsewhere in the program. This abstract class was made because
+    StartCoExDialogStartup and StartCoExDialogExerciseFinished are
+    almost the same — this class could almost be instanciated as is
+    (e.g. StartCoExDialogStartup definition is very small).
 
-    This class is to be instanciated in deaduction.dui.__main__.py. The
-    dialog is opened with QDialog.open and qtrio waits for the signal
-    self.exercise_chosen to be emitted with the corresponding exercise.
-    Once it is done, the program proceeds on launching the main exercise
-    window.
+    AbstractStartCoExDialog is divided in two main sub-widgets
+    (presented in a QTabWidget): the course chooser
+    (self.__course_chooser) and the exercise chooser
+    (self.__exercise_chooser), see those choosers docstrings. At first,
+    only the course chooser is enabled: usr browses courses. When usr
+    selects a course, the course is previewed by calling the method
+    self.__course_choser.set_preview, with the course as argument. An
+    ExerciseChooser object is instanciated (self.__exercise_chooser) in
+    a new tab and usr browses exercises.  When usr clicks on an
+    exercise, this exercise is kept as is previewed by calling
+    self.__exercise_chooser.set_preview with the exercise as argument
+    (and the exercise is kept in self.__exercise_chooser.__exercise,
+    accessible with a property).  Once usr confirms their choice of
+    exercice, they click on the 'Start exercise' button, which closes
+    the dialog and sends a signal to launch the exercice main window.
 
-    StartExerciseDialog is divided in two main sub-widgets (presented in
-    a QTabWidget): the course chooser (self.__course_chooser) and the
-    exercise chooser (self.__exercise_chooser), see those choosers
-    docstrings. At first, only the course chooser is enabled: usr
-    browses courses. When usr selects a course, the course is previewed
-    by calling the method self.__course_choser.set_preview, with the
-    course as argument. An ExerciseChooser object is instanciated
-    (self.__exercise_chooser) in a new tab and usr browses exercises.
-    When usr clicks on an exercise, this exercise is kept as is
-    previewed by calling self.__exercise_chooser.set_preview with the
-    exercise as argument (and the exercise is kept in
-    self.__exercise_chooser.__exercise, accessible with a property).
-    Once usr confirms their choice of exercice, they click on the 'Start
-    exercise' button, which closes the dialog and sends a signal to
-    launch the exercice main window.
+    This class also has a __preset_exercise method allowing to preset /
+    preview a given exercise (see its docstring for specifics).
 
     The communication between this class, the two choosers and the rest
     of the program can be tricky and the actual solution is
@@ -627,7 +625,14 @@ class AbstractStartCoExDialog(QDialog):
                  exercise: Optional[Exercise]):
         """
         Init self by setting up the layouts, the buttons and the tab
-        widget (see self docstring).
+        widget (see self docstring). 
+
+        :param title: Optional window title.
+        :param widget: Optional QWidget to be displayed on top of the
+            CoEx chooser (e.g. a congratulations widget in
+            StartCoExDialogExerciseFinished).
+        :param exercise: Optional Exercise to be preset / previewed
+            (e.g. finished exercise in StartCoExDialogExerciseFinished).
         """
 
         super().__init__()
@@ -791,8 +796,26 @@ class AbstractStartCoExDialog(QDialog):
 
 
 class StartCoExDialogStartup(AbstractStartCoExDialog):
+    """
+    The CoEx chooser when starting up d∃∀duction (see
+    AbstractStartCoExDialog docstring) This is the first widget
+    activated / shown when launching d∃∀duction as it is the one which
+    allows the user to:
+    1. choose a course (from a file or from recent courses' list);
+    2. browse / preview the exercises for the chosen course;
+    3. start the chosen exercise (launchs the ExerciseMainWindow).
+
+    This class is to be instanciated in deaduction.dui.__main__.py. The
+    dialog is opened with QDialog.open and qtrio waits for the signal
+    self.exercise_chosen to be emitted with the corresponding exercise.
+    Once it is done, the program proceeds on launching the main exercise
+    window.
+    """
 
     def __init__(self):
+        """
+        Init self.
+        """
 
         title = _('Choose course and exercise — d∃∀duction')
         super().__init__(title=title, widget=None, exercise=None)
