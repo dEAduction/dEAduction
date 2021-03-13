@@ -895,8 +895,8 @@ if __name__ == '__main__':
     app = QApplication()
 
     # Test StartCoExDialogStartup
-    # start_coex_dialog_startup = StartCoExDialogStartup()
-    # start_coex_dialog_startup.show()
+    start_coex_dialog_startup = StartCoExDialogStartup()
+    start_coex_dialog_startup.show()
 
     # Test StartCoExDialogExerciseFinished
     course_path = Path('../../../../../tests/lean_files/courses/' \
