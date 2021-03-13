@@ -835,20 +835,19 @@ class StartCoExDialogExerciseFinished(AbstractStartCoExDialog):
         :param finisehd_exercise: Exercise that usr just finished.
         """
 
-        widget = QWidget()
-        lyt = QHBoxLayout()
-        lbl = QLabel(_('Congratulations, exercise finished!'))
-        img = QLabel()
-        pixmap = QPixmap('confetti.png')
-        pixmap = pixmap.scaledToHeight(100, Qt.SmoothTransformation)
+        congrats_wgt = QWidget()
+        lyt          = QHBoxLayout()
+        img          = QLabel()
+        pixmap       = QPixmap('confetti.png')
+        pixmap       = pixmap.scaledToHeight(100, Qt.SmoothTransformation)
         img.setPixmap(pixmap)
         lyt.addWidget(img)
         lyt.addStretch()
-        lyt.addWidget(lbl)
-        widget.setLayout(lyt)
+        lyt.addWidget(QLabel(_('Congratulations, exercise finished!')))
+        congrats_wgt.setLayout(lyt)
         title = _('Exercise finished — d∃∀duction')
 
-        super().__init__(title=title, widget=widget,
+        super().__init__(title=title, widget=congrats_wgt,
                          exercise=finished_exercise)
 
 
