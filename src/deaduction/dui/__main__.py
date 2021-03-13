@@ -34,7 +34,7 @@ import qtrio
 import trio
 
 from deaduction.dui.stages.exercise              import ExerciseMainWindow
-from deaduction.dui.stages.start_exercise        import StartExerciseDialog
+from deaduction.dui.stages.start_coex            import StartCoExStartup
 from deaduction.pylib                            import logger
 from deaduction.pylib.server                     import ServerInterface
 from deaduction.pylib.config.i18n                import _
@@ -63,11 +63,11 @@ async def main():
     cdirs.init()
     inst.init()
 
-    start_exercise_dialog = StartExerciseDialog()
-    start_exercise_dialog.show()
+    start_coex_startup = StartCoExStartup()
+    start_coex_startup.show()
 
     async with qtrio.enter_emissions_channel(signals=[
-            start_exercise_dialog.exercise_chosen]) as emissions:
+            start_coex_startup.exercise_chosen]) as emissions:
         emission = await emissions.channel.receive()
         exercise = emission.args[0]
 
