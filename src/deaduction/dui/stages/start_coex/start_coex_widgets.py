@@ -822,8 +822,18 @@ class StartCoExDialogStartup(AbstractStartCoExDialog):
 
 
 class StartCoExDialogExerciseFinished(AbstractStartCoExDialog):
+    """
+    The CoEx chooser after usr just finished an exercise. It displays a
+    congratulation message and a CoEx chooser with the finished exercise
+    being preset / previewed. See AbstractStartCoExDialog docstring.
+    """
 
-    def __init__(self, finished_exercise: Optional[Exercise]):
+    def __init__(self, finished_exercise: Exercise):
+        """
+        Init self.
+
+        :param finisehd_exercise: Exercise that usr just finished.
+        """
 
         widget = QWidget()
         lyt = QHBoxLayout()
