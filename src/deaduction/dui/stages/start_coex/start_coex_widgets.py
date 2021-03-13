@@ -3,11 +3,12 @@
 # choose_coex_widgets.py : course/exercise chooser widgets #
 ############################################################
 
-    Provide StartExerciseDialog: the dialog used by the user to choose
-    a course, then an exercise, and start the latter. 
+    Provide StartCoExStartup and StartCoExExerciseFinished: dialogs used
+    by usr at the start-up of the program and after an exercise is
+    finisehd to choose, preview and start an exercise.
 
-    The class to be used elsewhere in the program is
-    StartExerciseDialog (inherits QDialog). The other classes
+    The classes to be used elsewhere in the program are StartCoExStartup
+    and StartCoExExerciseFinished (inherits QDialog). The other classes
     (AbstractCoExChooser, CourseChooser, ExerciseChooser) are meant to
     be used in this file only, for technical purposes.
 
@@ -581,17 +582,17 @@ class ExerciseChooser(AbstractCoExChooser):
             self.__code_wgt.hide()
 
 
-class AbstractStartCoExDialog(QDialog):
+class AbstractStartCoEx(QDialog):
     """
     The base class course and exercise chooser (inherits QDialog); it is
-    inherited by StartCoExDialogStartup and
-    StartCoExDialogExerciseFinished, which are the classes instanciated
+    inherited by StartCoExStartup and
+    StartCoExExerciseFinished, which are the classes instanciated
     elsewhere in the program. This abstract class was made because
-    StartCoExDialogStartup and StartCoExDialogExerciseFinished are
+    StartCoExStartup and StartCoExExerciseFinished are
     almost the same — this class could almost be instanciated as is
-    (e.g. StartCoExDialogStartup definition is very small).
+    (e.g. StartCoExStartup definition is very small).
 
-    AbstractStartCoExDialog is divided in two main sub-widgets
+    AbstractStartCoEx is divided in two main sub-widgets
     (presented in a QTabWidget): the course chooser
     (self.__course_chooser) and the exercise chooser
     (self.__exercise_chooser), see those choosers docstrings. At first,
@@ -630,9 +631,9 @@ class AbstractStartCoExDialog(QDialog):
         :param title: Optional window title.
         :param widget: Optional QWidget to be displayed on top of the
             CoEx chooser (e.g. a congratulations widget in
-            StartCoExDialogExerciseFinished).
+            StartCoExExerciseFinished).
         :param exercise: Optional Exercise to be preset / previewed
-            (e.g. finished exercise in StartCoExDialogExerciseFinished).
+            (e.g. finished exercise in StartCoExExerciseFinished).
         """
 
         super().__init__()
@@ -688,7 +689,7 @@ class AbstractStartCoExDialog(QDialog):
         """
         Preset / preview the Exercise exercise as if usr had chose
         exercise.course and then previewed exercise by clicking on it.
-        This is useful in StartCoExDialogExerciseFinished to display the
+        This is useful in StartCoExExerciseFinished to display the
         exercise that was just finished by usr. On top of previewing
         exercise and its course, usr's clicks are emulated by adding the
         Course as a browsed course in
@@ -795,10 +796,10 @@ class AbstractStartCoExDialog(QDialog):
         self.accept()  # Fuck you and I'll see you tomorrow!
 
 
-class StartCoExDialogStartup(AbstractStartCoExDialog):
+class StartCoExStartup(AbstractStartCoEx):
     """
     The CoEx chooser when starting up d∃∀duction (see
-    AbstractStartCoExDialog docstring) This is the first widget
+    AbstractStartCoEx docstring) This is the first widget
     activated / shown when launching d∃∀duction as it is the one which
     allows the user to:
     1. choose a course (from a file or from recent courses' list);
@@ -821,11 +822,11 @@ class StartCoExDialogStartup(AbstractStartCoExDialog):
         super().__init__(title=title, widget=None, exercise=None)
 
 
-class StartCoExDialogExerciseFinished(AbstractStartCoExDialog):
+class StartCoExExerciseFinished(AbstractStartCoEx):
     """
     The CoEx chooser after usr just finished an exercise. It displays a
     congratulation message and a CoEx chooser with the finished exercise
-    being preset / previewed. See AbstractStartCoExDialog docstring.
+    being preset / previewed. See AbstractStartCoEx docstring.
     """
 
     def __init__(self, finished_exercise: Exercise):
@@ -894,17 +895,17 @@ def check_negate_statement(exercise) -> bool:
 if __name__ == '__main__':
     app = QApplication()
 
-    # Test StartCoExDialogStartup
-    start_coex_dialog_startup = StartCoExDialogStartup()
+    # Test StartCoExStartup
+    start_coex_dialog_startup = StartCoExStartup()
     start_coex_dialog_startup.show()
 
-    # Test StartCoExDialogExerciseFinished
+    # Test StartCoExExerciseFinished
     course_path = Path('../../../../../tests/lean_files/courses/' \
                        'exercices_logique_propositionnelle.pkl')
     course = Course.from_file(course_path)
     finished_exercise = course.exercises_list()[0]
 
-    start_coex_dialog_exercise_finished = StartCoExDialogExerciseFinished(finished_exercise)
+    start_coex_dialog_exercise_finished = StartCoExExerciseFinished(finished_exercise)
     start_coex_dialog_exercise_finished.show()
 
     sys.exit(app.exec_())
