@@ -252,7 +252,15 @@ class CourseChooser(AbstractCoExChooser):
         super().__init__(browser_layout)
 
     def add_browsed_course(self, course: Course):
-        # TODO: Docstring me
+        """
+        Add the Course course to the list of recent courses
+        (self.__recent_courses_wgt) as if usr had chose this course by
+        clicking on the 'Browse file' button and browsing files. This is
+        useful in the method AbstractCoExChooser.__preset_exercise to
+        preset / preview an exercise.
+
+        :param course: Course to be added to the recent courses list.
+        """
 
         course_path  = course.relative_course_path
         course_title = course.title
@@ -805,8 +813,9 @@ def check_negate_statement(exercise) -> bool:
     If needed, ask the user to choose between proving the statement
     or its negation. Change the attribute exercise.negate_statement
     accordingly.
-    :param exercise:    Exercise
-    :return:            True if choice has been made, else False
+
+    :param exercise: Exercise.
+    :return: True if choice has been made, else False.
     """
 
     ok = True  # default value
