@@ -1,8 +1,8 @@
 # CONTRIBUTING.md
 
 Hello and welcome! Contributing to d∃∀duction is the best way to help
-d∃∀duction. We are a small team, we do not know what we are doing. d∃∀duction
-is a free software (see [Annex A]()): everybody has access to the code-base and
+d∃∀duction. We are a small team, we don't know what we're doing. d∃∀duction is
+a free software (see [Annex A]()): everybody has access to the code-base and
 can participate! This document tells you what you can do to help and how you
 can do it.
 
@@ -11,13 +11,32 @@ can do it.
 > Abstract: In this section, you will learn about the project's architecture, tools
 and work environment.
 
-## Project architecture
+## Architecture overview
 
 There are two repositories:
 [deaduction](https://github.com/dEAduction/dEAduction) (contains all the source
 code and tools) and
 [deaduction-lean](https://github.com/dEAduction/dEAduction-lean) (contains
 L∃∀N code and exercises files).
+
+### dEAduction repository
+
+- `bugs`: * &#x1F534;**TODO**
+- `docs`: contains documentation.
+- `snippets`: contains
+    [snippets](https://en.wikipedia.org/wiki/Snippet_(programming), which are
+    small standalone pieces of code demonstrating a feature before actually
+    coding it in `src`.
+- `src`: the project's source code — as of now, everything is in
+    the Python3 module `src/deaduction`.
+    - `deaduction.config`: &#x1F534;**TODO**
+    - `deaduction.dui`: user interface code (using Python3 and PySide2).
+    - `deaduction.lean_src`: &#x1F534;**TODO**
+    - `deaduction.memory`: &#x1F534;**TODO**
+    - `deaduction.pylib`: &#x1F534;**TODO**
+    - `deaduction.share`: &#x1F534;**TODO**
+- `tests`: &#x1F534;**TODO**
+- `tools`: &#x1F534;**TODO**
 
 # Guidelines
 ## Git commit messages
@@ -61,9 +80,9 @@ types.
 - `snippet`: Changes that affect snippets. Following sub-types may be used:
 `snippet::chores`, `snippet::dev`, `snippet::doc`, `snippet::feat`,
 `snippet::fix`, `snippet::revert`, `snippet::ref`.
-- `tool`: Changes that affect development tools and environment. Following
-sub-types may be used: `tool::chores`, `tool::dev`, `tool::doc`, `tool::feat`,
-`tool::fix`, `tool::revert`, `tool::ref`.
+- `tools`: Changes that affect development tools and environment. Following
+sub-types may be used: `tools::chores`, `tools::dev`, `tools::doc`,
+`tools::feat`, `tools::fix`, `tools::revert`, `tools::ref`.
 - `test`: Changes that affect testing. Following sub-types may be used:
 `test::chores`, `test::dev`, `test::doc`, `test::feat`, `test::fix`,
 `test::revert`, `test::ref`.
