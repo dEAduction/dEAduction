@@ -6,8 +6,21 @@ is a free software (see [Annex A]()): everybody has access to the code-base and
 can participate! This document tells you what you can do to help and how you
 can do it.
 
-## Guidelines
-### Git commit messages
+# Get started
+
+> Abstract: In this section, you will learn about the project's architecture, tools
+and work environment.
+
+## Project architecture
+
+There are two repositories:
+[deaduction](https://github.com/dEAduction/dEAduction) (contains all the source
+code and tools) and
+[deaduction-lean](https://github.com/dEAduction/dEAduction-lean) (contains
+L∃∀N code and exercises files).
+
+# Guidelines
+## Git commit messages
 
 > Note: This convention is strongly inspired from the Angular project Commit
 Message Format
