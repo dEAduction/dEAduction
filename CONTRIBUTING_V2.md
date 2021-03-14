@@ -1,5 +1,11 @@
 # CONTRIBUTING.md
 
+Hello and welcome! Contributing to d∃∀duction is the best way to help
+d∃∀duction. We are a small team, we do not know what we are doing. d∃∀duction
+is a free software (see [Annex A]()): everybody has access to the code-base and
+can participate! This document tells you what you can do to help and how you
+can do it.
+
 ## Guidelines
 ### Git commit messages
 
