@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2021-03-13 23:02+0100\n"
-"PO-Revision-Date: 2021-03-13 23:10+0100\n"
+"POT-Creation-Date: 2021-03-14 15:25+0100\n"
+"PO-Revision-Date: 2021-03-14 15:26+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: dui/__main__.py:59 pylib/actions/proofs.py:76
+#: dui/__main__.py:59 pylib/actions/proofs.py:76 pylib/text/tooltips.py:67
 msgid "Proof by contradiction"
 msgstr "Preuve par l’absurde"
 
@@ -362,11 +362,11 @@ msgid "target is not an equality, an inequality, nor a contradiction"
 msgstr ""
 "le but n’est pas ni une égalité, ni une inégalité, ni une contradiction"
 
-#: pylib/actions/proofs.py:74
+#: pylib/actions/proofs.py:74 pylib/text/tooltips.py:65
 msgid "Case-based reasoning"
 msgstr "Raisonnement par cas"
 
-#: pylib/actions/proofs.py:75
+#: pylib/actions/proofs.py:75 pylib/text/tooltips.py:66
 msgid "Proof by contrapositive"
 msgstr "Preuve par contraposée"
 
@@ -783,128 +783,138 @@ msgid "After request"
 msgstr "Après la requête"
 
 #: pylib/text/tooltips.py:39
-msgid ""
-"• Split a property 'P AND Q' into the two properties 'P', 'Q'\n"
-"• Inversely, assembles 'P' and 'Q' to get 'P AND Q'"
-msgstr ""
-"• Sépare une propriété ‘P ET Q’ en deux propriétés ‘P’, ‘Q’\n"
-"• Inversement, assemble ‘P’, ‘Q’ pour obtenir ‘P ET Q’"
+msgid "Split a property 'P AND Q' into the two properties 'P', 'Q'"
+msgstr "Sépare une propriété ‘P ET Q’ en deux propriétés ‘P’, ‘Q’"
+
+#: pylib/text/tooltips.py:40
+msgid "Conversely, assemble 'P' and 'Q' to get 'P AND Q'"
+msgstr "Inversement, assemble ‘P’, ‘Q’ pour obtenir ‘P ET Q’"
+
+#: pylib/text/tooltips.py:42
+msgid "Prove 'P OR Q' by proving either 'P' or 'Q'"
+msgstr "Prouve ‘P OU Q’ en choisissant de prouver ‘P’ ou bien ‘Q’"
 
 #: pylib/text/tooltips.py:43
-msgid ""
-"• Prove 'P OR Q' by proving either 'P' or 'Q'\n"
-"• Use the property 'P OR Q' by splitting the cases when P is True and Q is "
-"True"
-msgstr ""
-"• Démontre ‘P OU Q’ en démontrant soit ‘P’, soit ‘Q’\n"
-"• Utilise la propriété ‘P OU Q’ en séparant le cas où P est vrai et le cas "
-"où Q est vrai"
+msgid "Use property 'P OR Q' by splitting cases"
+msgstr "Utilise la propriété ‘P OU Q’ en distinguant les cas"
 
-#: pylib/text/tooltips.py:47
+#: pylib/text/tooltips.py:45
 msgid "Try to simplify the property 'NOT P'"
 msgstr "Essaie de simplifier la propriété ‘NON P’"
 
-#: pylib/text/tooltips.py:49
+#: pylib/text/tooltips.py:47
 msgid "Prove 'P ⇒ Q' by assuming 'P', and proving 'Q'"
 msgstr "Démontre ‘P ⇒ Q’ en supposant ‘P’, et en démontrant ‘Q’"
 
-#: pylib/text/tooltips.py:51
+#: pylib/text/tooltips.py:48
+msgid "From 'P' and 'P ⇒ Q' get 'Q'"
+msgstr "De 'P' et 'P ⇒ Q' déduit 'Q'"
+
+#: pylib/text/tooltips.py:50
 msgid "Split 'P ⇔ Q' into two implications"
 msgstr "Sépare ‘P ⇔ Q’ en deux implications"
+
+#: pylib/text/tooltips.py:51
+msgid "From 'P ⇒ Q' and 'Q ⇒ P' get 'P ⇔ Q'"
+msgstr "De 'P ⇒ Q' et 'Q ⇒ P' déduit 'P ⇔ Q'"
 
 #: pylib/text/tooltips.py:53
 msgid "Prove '∀ a, P(a)' by introducing 'a'"
 msgstr "Démontre ‘∀ a, P(a)’ en introduisant ‘a’"
 
-#: pylib/text/tooltips.py:55
-msgid ""
-"• Prove '∃ a, P(a)' by specifying some 'a' and proving P(a)\n"
-"• Apply '∃ a, P(a)' to get an 'a' satisfying 'P(a)'"
-msgstr ""
-"• Démontre ‘∃ a, P(a)’ en spécifiant un ‘a’ et en démontrant P(a)\n"
-"• Applique ‘∃ a, P(a)’ pour obtenir un ‘a’ et la propriété P(a)"
+#: pylib/text/tooltips.py:54
+msgid "From some 'a' and '∀ a, P(a)' get 'P(a)'"
+msgstr "D’un objet ‘a’ et ‘∀ a, P(a)’ déduit ‘P(a)’"
 
-#: pylib/text/tooltips.py:59
-msgid ""
-"• Apply to a property '∀ a, P(a)' and some 'a' to get 'P(a)' \n"
-"• Apply a property 'P ⇒ Q' to 'P' to get 'Q'\n"
-"• Apply an equality or a logical equivalence to substitute in another "
-"property\n"
-"• Apply a function to an element or an equality"
-msgstr ""
-"• Appliquer une propriété ‘∀ a, P(a)’ à un élément ‘a’ pour obtenir ‘P(a)’ \n"
-"• Appliquer une propriété ‘P ⇒ Q’ à une propriété ‘P’ pour obtenir ‘Q’\n"
-"• Appliquer une égalité ou une équivalence logique pour substituer dans une "
-"autre propriété\n"
-"• Appliquer une fonction à un élément ou à une égalité"
+#: pylib/text/tooltips.py:56
+msgid "Prove '∃ a, P(a)' by specifying some 'a'"
+msgstr "Prouve ‘∃ a, P(a)’ en choisissant ‘a’ et en prouvant ‘P(a)’"
 
-#: pylib/text/tooltips.py:65
-msgid ""
-"Choose some specific proof method: \n"
-"• Case-based reasoning\n"
-"• Proof by contrapositive\n"
-"• Proof by contradiction"
+#: pylib/text/tooltips.py:57
+msgid "From '∃ a, P(a)' get an 'a' and 'P(a)'"
+msgstr "De ‘∃ a, P(a)’ obtient un ‘a’ et la propriété ‘P(a)’"
+
+#: pylib/text/tooltips.py:58
+msgid "From some 'a' and 'P(a)' get '∃ a, P(a)'"
+msgstr "D’un objet ‘a’ et ‘P(a)’ déduit ‘∃ a, P(a)’"
+
+#: pylib/text/tooltips.py:60
+msgid "Apply an equality or an iff to substitute in another property"
 msgstr ""
-"Choisissez une méthode de preuve: \n"
-"• Preuve par cas\n"
-"• Preuve par contraposition\n"
-"• Preuve par l’absurde"
+"Appliquer une égalité ou un « si et seulement si » pour substituer dans une "
+"propriété sélectionnée"
+
+#: pylib/text/tooltips.py:61
+msgid "Apply a function to an element or an equality"
+msgstr "Appliquer une fonction à un élément ou à une égalité"
+
+#: pylib/text/tooltips.py:62
+msgid "(... try it to find other uses)"
+msgstr "(… essayer pour trouver d’autres usages)"
+
+#: pylib/text/tooltips.py:64
+msgid "Choose some specific proof method:"
+msgstr "Choisir une méthode de preuve :"
+
+#: pylib/text/tooltips.py:69
+msgid "Create a new object (e.g. 'f(a)' from 'f' and 'a'"
+msgstr "Créer un nouvel objet (par ex. ‘f(a)’, ‘ε/2’, …)"
+
+#: pylib/text/tooltips.py:70
+msgid "Create a new subgoal (a lemma)"
+msgstr "Créer un nouveau but (un lemme intermédiaire)"
 
 #: pylib/text/tooltips.py:71
-msgid ""
-"• Create a new object (e.g. 'f(a)' from 'f' and 'a')\n"
-"• Create a new subgoal (a lemma) which will be proved, and added to the "
-"context\n"
-"• From a property '∀ a ∈ A, ∃ b ∈ B, P(a,b)', create a new function from A "
-"to B"
+msgid "Create a function from A to B from property '∀ a ∈ A, ∃ b ∈ B, P(a,b)'"
 msgstr ""
-"• Créer un nouvel objet (par exemple ‘f(a)’ à partir de 'f' et de ‘a’)\n"
-"• Créer un nouveau but (un lemme) qui sera démontré, puis ajouté au "
-"contexte\n"
-"• Utiliser une propriété ‘∀ a ∈ A, ∃ b ∈ B, P(a,b)’, pour créer une nouvelle "
-"fonction de A dans B"
+"A partir d’une propriété ‘∀ a ∈ A, ∃ b ∈ B, P(a,b)’, obtenir une fonction de "
+"A dans B"
 
-#: pylib/text/tooltips.py:77
+#: pylib/text/tooltips.py:73
 msgid "Terminate the proof when the target is obvious from the context"
 msgstr "Conclut la preuve lorsque le but est évident à partir du contexte"
 
+#: pylib/text/tooltips.py:75
+msgid "Terminate the proof when target results from manipulating numbers"
+msgstr ""
+"Conclut la preuve lorsque le but s’obtient en manipulant des égalités ou "
+"inégalités de nombres"
+
 #: pylib/text/tooltips.py:81
-msgid "Terminate the proof when target results from 'easy' computations"
-msgstr "Conclut la preuve lorsque le but se déduit de « calculs faciles »"
+msgid "apply this function to a selected object or equality"
+msgstr "appliquer cette fonction à un élément ou à une égalité sélectionnée"
 
-#: pylib/text/tooltips.py:88
-msgid "apply function to a selected object or equality"
-msgstr "appliquer cette fonction à un élément ou à une égalité"
+#: pylib/text/tooltips.py:83
+msgid "apply this implication to a selected property, or to modify the goal"
+msgstr ""
+"appliquer cette implication à une propriété sélectionnée, ou pour "
+"transformer le but"
 
-#: pylib/text/tooltips.py:90
-msgid "apply to a selected property, or to modify the goal"
-msgstr "appliquer à une propriété sélectionnée, ou pour transformer le but"
-
-#: pylib/text/tooltips.py:92
-msgid "substitute in a selected property"
+#: pylib/text/tooltips.py:85
+msgid "use to substitute in a selected property"
 msgstr "substituer dans une propriété sélectionnée"
 
-#: pylib/text/tooltips.py:94
-msgid "apply to a selected object"
-msgstr "appliquer à un objet sélectionné"
+#: pylib/text/tooltips.py:87
+msgid "apply this property to a selected object"
+msgstr "appliquer cette propriété à un objet sélectionné"
 
-#: pylib/text/tooltips.py:96
+#: pylib/text/tooltips.py:89
 msgid "get a new object in the context"
 msgstr "obtenir un nouvel objet dans le contexte"
 
-#: pylib/text/tooltips.py:98
+#: pylib/text/tooltips.py:91
 msgid "split into two properties"
 msgstr "séparer en deux propriétés"
 
-#: pylib/text/tooltips.py:103
+#: pylib/text/tooltips.py:96
 msgid "AND, OR, NOT, ⇒, ⇔, ∀, ∃"
 msgstr "ET, OU, NON, ⇒, ⇔, ∀, ∃"
 
-#: pylib/text/tooltips.py:104
+#: pylib/text/tooltips.py:97
 msgid "Apply, Proof Methods, New Object"
 msgstr "Appliquer, Méthodes de Preuve, Nouvel Objet"
 
-#: pylib/text/tooltips.py:105
+#: pylib/text/tooltips.py:98
 msgid "Compute, QED"
 msgstr "Calculer, CQFD"
 
@@ -951,6 +961,60 @@ msgstr ""
 #: pylib/utils/filesystem.py:238
 msgid "Download from {} to {}"
 msgstr ""
+
+#~ msgid ""
+#~ "• Prove 'P OR Q' by proving either 'P' or 'Q'\n"
+#~ "• Use the property 'P OR Q' by splitting the cases when P is True and Q "
+#~ "is True"
+#~ msgstr ""
+#~ "• Démontre ‘P OU Q’ en démontrant soit ‘P’, soit ‘Q’\n"
+#~ "• Utilise la propriété ‘P OU Q’ en séparant le cas où P est vrai et le "
+#~ "cas où Q est vrai"
+
+#~ msgid ""
+#~ "• Prove '∃ a, P(a)' by specifying some 'a' and proving P(a)\n"
+#~ "• Apply '∃ a, P(a)' to get an 'a' satisfying 'P(a)'"
+#~ msgstr ""
+#~ "• Démontre ‘∃ a, P(a)’ en spécifiant un ‘a’ et en démontrant P(a)\n"
+#~ "• Applique ‘∃ a, P(a)’ pour obtenir un ‘a’ et la propriété P(a)"
+
+#~ msgid ""
+#~ "• Apply to a property '∀ a, P(a)' and some 'a' to get 'P(a)' \n"
+#~ "• Apply a property 'P ⇒ Q' to 'P' to get 'Q'\n"
+#~ "• Apply an equality or a logical equivalence to substitute in another "
+#~ "property\n"
+#~ "• Apply a function to an element or an equality"
+#~ msgstr ""
+#~ "• Appliquer une propriété ‘∀ a, P(a)’ à un élément ‘a’ pour obtenir "
+#~ "‘P(a)’ \n"
+#~ "• Appliquer une propriété ‘P ⇒ Q’ à une propriété ‘P’ pour obtenir ‘Q’\n"
+#~ "• Appliquer une égalité ou une équivalence logique pour substituer dans "
+#~ "une autre propriété\n"
+#~ "• Appliquer une fonction à un élément ou à une égalité"
+
+#~ msgid ""
+#~ "Choose some specific proof method: \n"
+#~ "• Case-based reasoning\n"
+#~ "• Proof by contrapositive\n"
+#~ "• Proof by contradiction"
+#~ msgstr ""
+#~ "Choisissez une méthode de preuve: \n"
+#~ "• Preuve par cas\n"
+#~ "• Preuve par contraposition\n"
+#~ "• Preuve par l’absurde"
+
+#~ msgid ""
+#~ "• Create a new object (e.g. 'f(a)' from 'f' and 'a')\n"
+#~ "• Create a new subgoal (a lemma) which will be proved, and added to the "
+#~ "context\n"
+#~ "• From a property '∀ a ∈ A, ∃ b ∈ B, P(a,b)', create a new function from "
+#~ "A to B"
+#~ msgstr ""
+#~ "• Créer un nouvel objet (par exemple ‘f(a)’ à partir de 'f' et de ‘a’)\n"
+#~ "• Créer un nouveau but (un lemme) qui sera démontré, puis ajouté au "
+#~ "contexte\n"
+#~ "• Utiliser une propriété ‘∀ a ∈ A, ∃ b ∈ B, P(a,b)’, pour créer une "
+#~ "nouvelle fonction de A dans B"
 
 #~ msgid "Introduce new object:"
 #~ msgstr "Introduire un nouvel objet"
@@ -999,15 +1063,6 @@ msgstr ""
 
 #~ msgid "Target solved!"
 #~ msgstr "La preuve est terminée !"
-
-#~ msgid "Choose some specific proof method"
-#~ msgstr "Choisir une méthode de preuve"
-
-#~ msgid ""
-#~ "From a property '∀ a ∈ A, ∃ b ∈ B, P(a,b)', get a function from A to B"
-#~ msgstr ""
-#~ "A partir d’une propriété ‘∀ a ∈ A, ∃ b ∈ B, P(a,b)’, obtenir une fonction "
-#~ "de A dans B"
 
 #~ msgid "Reductio ad absurdum"
 #~ msgstr "Preuve par l’absurde"
