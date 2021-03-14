@@ -46,7 +46,8 @@ Commit type *must* be one of the following:
 code.
 - `dev`: Work in progress for new features; changes that are part of
 its development though not introducing it. A series of `dev` commits end with a
-`feat` commit.
+`feat` commit. Following sub-types may be used: `doc::chores`, `doc::dev`,
+`doc::doc`, `doc::feat`, `doc::fix`, `doc::revert`, `doc::ref`.
 - `doc`: Changes that affect documentation (including repository
 documentation, code comments and docstrings, file headers).
 - `feat`: Changes that introduce a completed new feature. When developing
@@ -60,6 +61,9 @@ types.
 - `snippet`: Changes that affect snippets. Following sub-types may be used:
 `snippet::chores`, `snippet::dev`, `snippet::doc`, `snippet::feat`,
 `snippet::fix`, `snippet::revert`, `snippet::ref`.
+- `tool`: Changes that affect development tools and environment. Following
+sub-types may be used: `tool::chores`, `tool::dev`, `tool::doc`, `tool::feat`,
+`tool::fix`, `tool::revert`, `tool::ref`.
 - `test`: Changes that affect testing. Following sub-types may be used:
 `test::chores`, `test::dev`, `test::doc`, `test::feat`, `test::fix`,
 `test::revert`, `test::ref`.
