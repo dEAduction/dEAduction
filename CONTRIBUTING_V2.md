@@ -39,7 +39,10 @@ L∃∀N code and exercises files).
 - `tools`: &#x1F534;**TODO**
 
 # Guidelines
+
 ## Git commit messages
+
+### Specifications
 
 > Note: This convention is strongly inspired from the Angular project Commit
 Message Format
@@ -48,49 +51,67 @@ Message Format
 > Note: Words like must, may, etc, are to be understood as specified in the
 [RFC 2119 specification](https://tools.ietf.org/html/rfc2119).
 
-Commit messages consist of a mandatory **header** and an optional **body**. The
-commit header is what you put between the marks in the command `git commit -m
-""`. It is the most informative part of the commit and its structure follows
-some rules. The body is everything after the header and a blank line, its
-structure is free.  Most commit messages only have a header, which *must* have
-the following structure:
+Commit messages consist of a mandatory header and an optional body. The
+commit header is what you put between the quotation marks in the command `git
+commit -m ""`. It is the most informative part of the commit and its structure
+follows some rules. The body is everything after the header and a blank line,
+its structure is free.  Most commit messages only have a header, which *must*
+have the following structure:
 
 ```
-<type>(<scope>): <summary>
+part/type(scope): Summary
 ```
+Part is mandatory and *must* be one of:
 
-Commit type *must* be one of the following:
+Part       | Definition
+-----------|-------------------------------------------------------------------
+`code`     | Changes affecting the code-base.
+`doc`      | Changes affecting the documentation (including comments and docstrings).
+`snippets` | Changes affecting the snippets.
+`tests`    | Changes affecting the tests.
+`tools`    | Changes affecting the tools and the development environment.
+| &#x1F534;**TODO**: RAJOUTER PART TOOLTIPS
 
-- `chores`:	Changes in the code-base that do not affect the meaning of the
-code.
-- `dev`: Work in progress for new features; changes that are part of
-its development though not introducing it. A series of `dev` commits end with a
-`feat` commit. Following sub-types may be used: `doc::chores`, `doc::dev`,
-`doc::doc`, `doc::feat`, `doc::fix`, `doc::revert`, `doc::ref`.
-- `doc`: Changes that affect documentation (including repository
-documentation, code comments and docstrings, file headers).
-- `feat`: Changes that introduce a completed new feature. When developing
-it, the last commit *must* be the only one to use this type, all other *must*
-use dev.
-- `fix`: Fix problems in the code-base.
-- `revert`: Revert to a previous commit or remove a feature. Commits
-preparing a revert *must* use sub-types (e.g. `revert::dev`) and not direct
-types.
-- `ref`: Refactor code.
-- `snippet`: Changes that affect snippets. Following sub-types may be used:
-`snippet::chores`, `snippet::dev`, `snippet::doc`, `snippet::feat`,
-`snippet::fix`, `snippet::revert`, `snippet::ref`.
-- `tools`: Changes that affect development tools and environment. Following
-sub-types may be used: `tools::chores`, `tools::dev`, `tools::doc`,
-`tools::feat`, `tools::fix`, `tools::revert`, `tools::ref`.
-- `test`: Changes that affect testing. Following sub-types may be used:
-`test::chores`, `test::dev`, `test::doc`, `test::feat`, `test::fix`,
-`test::revert`, `test::ref`.
+Type is also mandatory and *must* be one of:
 
-Together with the scope, the commit type help you identify which commits in the
-git log are the most relevant to you.  The scope helps identifying which are of
-the project are changed. Precision is up to you; use it if helpful. Finally,
-the summary *should* be the shortest possible sentence describing the commit.
+Type     | Definition
+---------|---------------------------------------------------------------------
+`chores` | Changes affecting that do not affect the meaning of what is changed (e.g. changing a filename).
+`dev`    | Work in progress for new features; changes that are part of its development though not introducing it. A series of `dev` commits end with a `feat` commit.
+`feat`   | Changes that introduce a completed new feature. When developing it, the last commit *must* be the only one to use this type, all other *must* use dev.
+`fix`    | Fix bugs and problems.
+`revert` | Revert to a previous commit, feature or state of the project.
+`ref`    | Refactoring.
+
+Scope is optional, it is the (precise) part that was changed (e.g. a class,
+function or module name or a combination of all that). Precision is up to you,
+use it if necessary. In doubt, use a scope.  Finally, the summary *should* be
+the shortest possible sentence describing the commit. It *should* begin with a
+capital letter and *must not* end with a period.  The combination of the
+mandatory part and type, and optionally the scope, help you identify which
+commits in the git log are most relevant to you. The scope helps identifying
+which parts of the project are changed.
 
 The body of the commit message *may* be used to provide additional information
 about the changes, such as technical explanations.
+
+### Examples
+
+If you finish writing the first part of the function `my_function`, but this
+function is not ready, you should use the type `dev`. Since this function is
+part of the code-base, you must use the part `code`. This is a good commit
+message:
+
+`code/dev: Finish first part of my_function`.
+
+However you can be more precise using a scope. If the function is part of the
+module `dui.utils`, this commit message is better:
+
+`code/dev(dui.utils): Finish first part of my_function`.
+
+If you fix in the script `envconfig` (the one that sets up the virtual
+environment), the header should be:
+
+`tools/fix(envconfig):`,
+
+we leave it to you to imagine a summary.
