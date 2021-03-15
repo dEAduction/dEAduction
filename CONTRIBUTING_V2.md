@@ -11,32 +11,12 @@ can do it.
 > Abstract: In this section, you will learn about the project's architecture, tools
 and work environment.
 
-## Architecture overview
-
 There are two repositories:
 [deaduction](https://github.com/dEAduction/dEAduction) (contains all the source
 code and tools) and
 [deaduction-lean](https://github.com/dEAduction/dEAduction-lean) (contains
-L∃∀N code and exercises files).
-
-### dEAduction repository
-
-- `bugs`: * &#x1F534;**TODO**
-- `docs`: contains documentation.
-- `snippets`: contains
-    [snippets](https://en.wikipedia.org/wiki/Snippet_(programming), which are
-    small standalone pieces of code demonstrating a feature before actually
-    coding it in `src`.
-- `src`: the project's source code — as of now, everything is in
-    the Python3 module `src/deaduction`.
-    - `deaduction.config`: &#x1F534;**TODO**
-    - `deaduction.dui`: user interface code (using Python3 and PySide2).
-    - `deaduction.lean_src`: &#x1F534;**TODO**
-    - `deaduction.memory`: &#x1F534;**TODO**
-    - `deaduction.pylib`: &#x1F534;**TODO**
-    - `deaduction.share`: &#x1F534;**TODO**
-- `tests`: &#x1F534;**TODO**
-- `tools`: &#x1F534;**TODO**
+L∃∀N code and exercises files). To know more about each directory, module or
+file, simply open its `__init__.py` or `README.md`.
 
 # Guidelines
 
