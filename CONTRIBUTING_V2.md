@@ -8,17 +8,12 @@ to help and how you can do it.
 
 ## Get started
 
-> Abstract: In this section, you will learn about the project's architecture, tools
-and work environment.
-
 There are two repositories:
 [deaduction](https://github.com/dEAduction/dEAduction) (contains all the source
 code and tools) and
 [deaduction-lean](https://github.com/dEAduction/dEAduction-lean) (contains
 L∃∀N code and exercises files). To know more about each directory, module or
 file, simply open its `__init__.py` or `README.md`.
-
-### Dependencies and development environment
 
 d∃∀duction is written in Python3 (&#x1F534;**TODO** lien) and L∃∀N (L∃∀N is a
 proof assistant able to understand mathematical expressions and prove
