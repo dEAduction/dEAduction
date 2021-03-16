@@ -75,6 +75,16 @@ which parts of the project are changed.
 The body of the commit message *may* be used to provide additional information
 about the changes, such as technical explanations.
 
+There is one exception to these rules: merge messages. Merge commit messages
+*must* have the following structure:
+
+```
+merge: repoA/branchA -> repoB/branchB
+```
+
+where `repoA` and `repoB` are remote names (if one of them is a copy on your
+own computer, use `local`) and the merge is from `branchA` to `branchB`.
+
 ### Examples
 
 If you finish writing the first part of the function `my_function`, but this
@@ -82,16 +92,34 @@ function is not ready, you should use the type `dev`. Since this function is
 part of the code-base, you must use the part `code`. This is a good commit
 message:
 
-`code/dev: Finish first part of my_function`.
+```
+code/dev: Finish first part of my_function
+```
 
 However you can be more precise using a scope. If the function is part of the
 module `dui.utils`, this commit message is better:
 
-`code/dev(dui.utils): Finish first part of my_function`.
+```
+code/dev(dui.utils): Finish first part of my_function
+```
 
 If you fix in the script `envconfig` (the one that sets up the virtual
-environment), the header should be:
+environment), the header (we leave it to you to imagine a summary) should be:
 
-`tools/fix(envconfig):`,
+```
+tools/fix(envconfig):
+```
 
-we leave it to you to imagine a summary.
+Now if you wish to merge the branch `dev/the_new_feature` from Github (repo's
+name is `origin`) to your computer, the commit message *must* be:
+
+```
+merge: origin/dev/the_new_feature -> local/dev/the_new_feature
+```
+
+and if you want to merge the branch `the_new_feature` to the branch `master` on
+your computer, the commit mesage *must* be:
+
+```
+merge: local/dev/the_new_feature -> local/master
+```
