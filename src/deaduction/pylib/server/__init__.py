@@ -72,7 +72,7 @@ class ServerInterface(QObject):
     update_started     = Signal()
     update_ended       = Signal()
 
-    proof_no_goals     = Signal()
+    proof_no_goals     = Signal(Exercise)
 
     lean_file_changed  = Signal()
 
@@ -191,7 +191,7 @@ class ServerInterface(QObject):
         # Filter message text, record if not ignored message
         if msg.text.startswith(LEAN_NOGOALS_TEXT):
             if hasattr(self.proof_no_goals, "emit"):
-                self.proof_no_goals.emit()
+                self.proof_no_goals.emit(self.exercise_current)
                 self.__proof_receive_done.set()  # Done receiving
 
         elif msg.text.startswith(LEAN_UNRESOLVED_TEXT):

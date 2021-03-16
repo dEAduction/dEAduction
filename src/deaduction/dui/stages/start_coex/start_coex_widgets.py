@@ -44,7 +44,8 @@ from typing  import ( Dict,
 
 from PySide2.QtCore    import ( Qt,
                                 Signal,
-                                Slot )
+                                Slot,
+                                QEvent)
 from PySide2.QtGui     import ( QFont,
                                 QPixmap )
 from PySide2.QtWidgets import ( QApplication,
@@ -793,6 +794,7 @@ class AbstractStartCoEx(QDialog):
 
         # Send exercise_chosen signal and close dialog
         self.exercise_chosen.emit(exercise)
+        log.debug("Exercise chosen, closing window")
         self.accept()  # Fuck you and I'll see you tomorrow!
 
 
@@ -813,6 +815,8 @@ class StartCoExStartup(AbstractStartCoEx):
     window.
     """
 
+    window_closed                   = Signal()
+
     def __init__(self):
         """
         Init self.
@@ -821,6 +825,17 @@ class StartCoExStartup(AbstractStartCoEx):
         title = _('Choose course and exercise — d∃∀duction')
         super().__init__(title=title, widget=None, exercise=None)
 
+    def closeEvent(self, event: QEvent):
+        """
+        Overload native Qt closeEvent method — which is called when self
+        is closed — to send the signal self.window_closed.
+
+        :param event: Some Qt mandatory thing.
+        """
+
+        super().closeEvent(event)
+        self.window_closed.emit()
+
 
 class StartCoExExerciseFinished(AbstractStartCoEx):
     """
@@ -828,6 +843,8 @@ class StartCoExExerciseFinished(AbstractStartCoEx):
     congratulation message and a CoEx chooser with the finished exercise
     being preset / previewed. See AbstractStartCoEx docstring.
     """
+
+    window_closed                   = Signal()
 
     def __init__(self, finished_exercise: Exercise):
         """
@@ -850,6 +867,17 @@ class StartCoExExerciseFinished(AbstractStartCoEx):
 
         super().__init__(title=title, widget=congrats_wgt,
                          exercise=finished_exercise)
+
+    def closeEvent(self, event: QEvent):
+        """
+        Overload native Qt closeEvent method — which is called when self
+        is closed — to send the signal self.window_closed.
+
+        :param event: Some Qt mandatory thing.
+        """
+
+        super().closeEvent(event)
+        self.window_closed.emit()
 
 
 def check_negate_statement(exercise) -> bool:

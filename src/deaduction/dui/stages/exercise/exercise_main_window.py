@@ -608,6 +608,8 @@ class ExerciseMainWindow(QMainWindow):
                                 _('The proof is complete!'),
                                 QMessageBox.Ok
                                 )
+        # Disconnect signal
+        self.servint.proof_no_goals = Signal()
         # make fake target to display message
         no_more_goal_text = "No more goal"
         target = self.current_goal.target
