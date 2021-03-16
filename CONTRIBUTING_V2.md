@@ -4,7 +4,7 @@ Hello and welcome! Contributing to d∃∀duction is the best way to help
 d∃∀duction. We are a small team, we don't know what we're doing. d∃∀duction is
 a free software  &#x1F534;**TODO** (lien free software): everybody has access
 to the code-base and can participate! This document tells you what you can do
-to help and how you can do it.
+to help, how you can do it and what to expect.
 
 ## Get started
 
@@ -71,13 +71,58 @@ feel free to open one. Here are contribution ideas, in order of preference:
 - **Translate user interface**.
 - **Write documentation**: many modules, classes or functions are undocumented,
     but they should be. You can also contribute to d∃∀duction's user manual.
+    Contributions and feed-back to *this* document would also be very much
+    appreciated.
 - **Create exercises**.
 
 (&#x1F534;**TODO** ajouter issues avec tag first contribution)
 
+In any case, every contribution proposition should have its issue, whether we
+or you created it. To save you time, you should never work on a contribution
+which was not approved (there would be a risk of it being rejected)!
+
 ### How do?
 
+You first need to fork (&#x1F534;**TODO** lien c'est quoi une fourchette)
+d∃∀duction's repository and create a new branch for your single contribution
+(do not use a branch for more than one thing), see branches guidelines
+(&#x1F534;**TODO** lien). Do not do your modifications on the `master` branch.
+You can now begin writing your contribution!
+
+Remember to commit often; in doubt commit. On top of that, keep your fork
+up-to-date with upstream (that is, with d∃∀duction's branch you forked from).
+
+At any stage, do feel free to discuss your contribution's development with the
+core team. This should be done publicly, in the contribution proposition's
+issue.
+
+When you think your contribution is finished, push it to your online fork.
+Signal it in the contribution proposition's Github issue so we can review it,
+discuss it and test it. After potential modifications and if we approve your
+contribution, we will tell you that your contribution is ready for
+pull-request! At that point, you just do the pull request and we accept it.
+
 ### What to expect?
+
+To summarize, here is how you should contribute:
+1. Choose an existing issue or open one with a contribution idea.
+2. In this issue, inform us dummies that you would like to contribute so we can
+   discuss.
+3. Make your fork, create your new branch, code, keep up-to-date and push your
+   contribution proposal once you think it is ready.
+4. In the contribution's proposal issue, inform us apes that you think your
+   contribution is ready so we can discuss and potentially ask you to make some
+   changes.
+5. If we approve the final version of the contribution proposition, you may do
+   a pull request. We should accept it after a final review.
+
+If you follow these steps, your contribution proposition should be accepted!
+You shall then be credited as a d∃∀duction's contributor. Nevertheless,
+respecting the above stages by nowise means that your contribution proposal
+*will* be accepted. Those stages ensure that your contribution fits in
+d∃∀duction's codebase as much as possible, but we may reject it if necessary.
+Finally, you will not get any kind of financial retribution. We are poor
+anyway.
 
 ## Guidelines
 
