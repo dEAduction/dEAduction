@@ -221,7 +221,7 @@ class MathObjectWidget(QListWidget):
         # TODO: make self.items a property?
         self.items = []
         # set fonts for maths display
-        math_font_name = cvars.get('mathematics_font', 'Default')
+        math_font_name = cvars.get('display.mathematics_font', 'Default')
         self.setFont(QFont(math_font_name))
         for mathobject, tag in tagged_mathobjects:
             item = MathObjectWidgetItem(mathobject, tag)
@@ -302,7 +302,7 @@ class TargetWidget(QWidget):
         size = cvars.get('display.target_font_size')
         target_label.setStyleSheet(f'font-size: {size};')
         # Set fonts for maths display
-        math_font_name = cvars.get('mathematics_font', 'Default')
+        math_font_name = cvars.get('display.mathematics_font', 'Default')
         target_label.setFont(QFont(math_font_name))
 
 
