@@ -65,12 +65,12 @@ Type     | Definition
 
 Scope is optional, it is the (precise) part that was changed (e.g. a class,
 function or module name or a combination of all that). Precision is up to you,
-use it if necessary. In doubt, use a scope.  Finally, the summary *should* be
+use it if necessary. In doubt, use a scope. Finally, the summary *should* be
 the shortest possible sentence describing the commit. It *should* begin with a
-capital letter and *must not* end with a period.  The combination of the
-mandatory part and type, and optionally the scope, help you identify which
-commits in the git log are most relevant to you. The scope helps identifying
-which parts of the project are changed.
+capital letter and *must not* end with a period, it *should* also be in present
+tense. The combination of the mandatory part and type, and optionally the
+scope, help you identify which commits in the git log are most relevant to you.
+The scope helps identifying which parts of the project are changed.
 
 The body of the commit message *may* be used to provide additional information
 about the changes, such as technical explanations.
