@@ -1,4 +1,4 @@
-# Contributing to d∃∀duction (`CONTRIBUTING.md`)
+# Contributing to d∃∀duction
 
 Hello and welcome! Contributing to d∃∀duction is the best way to help
 d∃∀duction. We are a small team, we don't know what we're doing. d∃∀duction is
@@ -6,7 +6,7 @@ a free software  &#x1F534;**TODO** (lien free software): everybody has access
 to the code-base and can participate! This document tells you what you can do
 to help and how you can do it.
 
-# Get started
+## Get started
 
 > Abstract: In this section, you will learn about the project's architecture, tools
 and work environment.
@@ -18,7 +18,7 @@ code and tools) and
 L∃∀N code and exercises files). To know more about each directory, module or
 file, simply open its `__init__.py` or `README.md`.
 
-## Dependencies and development environment
+### Dependencies and development environment
 
 d∃∀duction is written in Python3 (&#x1F534;**TODO** lien) and L∃∀N (L∃∀N is a
 proof assistant able to understand mathematical expressions and prove
@@ -49,11 +49,11 @@ source envconfig
 
 This will also make sure everything is up-to-date.
 
-# Guidelines
+## Guidelines
 
-## Git commit messages
+### Git commit messages
 
-### Specifications
+#### Specifications
 
 > Note: This convention is strongly inspired from the Angular project Commit
 Message Format
@@ -116,7 +116,7 @@ merge: repoA/branchA -> repoB/branchB
 where `repoA` and `repoB` are remote names (if one of them is a copy on your
 own computer, use `local`) and the merge is from `branchA` to `branchB`.
 
-### Examples
+#### Examples
 
 If you finish writing the first part of the function `my_function`, but this
 function is not ready, you should use the type `dev`. Since this function is
@@ -154,5 +154,3 @@ your computer, the commit mesage *must* be:
 ```
 merge: local/dev/the_new_feature -> local/master
 ```
-
-# Contribute to this document
