@@ -1,10 +1,10 @@
-# CONTRIBUTING.md
+# Contributing to d∃∀duction (`CONTRIBUTING.md`)
 
 Hello and welcome! Contributing to d∃∀duction is the best way to help
 d∃∀duction. We are a small team, we don't know what we're doing. d∃∀duction is
-a free software (see [Annex A]()): everybody has access to the code-base and
-can participate! This document tells you what you can do to help and how you
-can do it.
+a free software  &#x1F534;**TODO** (lien free software): everybody has access
+to the code-base and can participate! This document tells you what you can do
+to help and how you can do it.
 
 # Get started
 
@@ -17,6 +17,37 @@ code and tools) and
 [deaduction-lean](https://github.com/dEAduction/dEAduction-lean) (contains
 L∃∀N code and exercises files). To know more about each directory, module or
 file, simply open its `__init__.py` or `README.md`.
+
+## Dependencies and development environment
+
+d∃∀duction is written in Python3 (&#x1F534;**TODO** lien) and L∃∀N (L∃∀N is a
+proof assistant able to understand mathematical expressions and prove
+statements to be true or false, &#x1F534;**TODO** liens). The graphical
+interface uses the module PySide2 (Qt for Python) and communication between the
+user interface and L∃∀N uses two modules called Trio and Qtrio
+(&#x1F534;**TODO** lien). A good experience in Python3 is *recommended*, as
+well as basic terminal usage, but you do not need to be advanced in anything to
+contribute. The version control system (&#x1F534;**TODO** liens) we use is Git
+(&#x1F534;**TODO** liens). Some experience in Git is necessary but you can
+rapidly learn it from scratch (&#x1F534;**TODO** lien tuto).
+
+A very important thing is *virtual environments* (&#x1F534;**TODO** lien). A
+virtual environment is an isolated environment in a project directory in which
+all dependencies versions are frozen until manually changed (they can remain
+unchanged if we chose to). It is very easy to determine whether or not you are
+in the virtual environment of your project directory: there should be a `(env)`
+in front of your shell prompt, like in this screenshot:
+
+![venv screenshot](docs/CONTRIBUTING-images/veng.png)
+
+To setup d∃∀duction's virtual environment, open a terminal at the repository's
+root and run the command
+
+```
+source envconfig
+```
+
+This will also make sure everything is up-to-date.
 
 # Guidelines
 
@@ -123,3 +154,5 @@ your computer, the commit mesage *must* be:
 ```
 merge: local/dev/the_new_feature -> local/master
 ```
+
+# Contribute to this document
