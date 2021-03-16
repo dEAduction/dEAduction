@@ -1,10 +1,10 @@
 # Contributing to d∃∀duction
 
 Hello and welcome! Contributing to d∃∀duction is the best way to help
-d∃∀duction. We are a small team, we don't know what we're doing. d∃∀duction is
-a free software  &#x1F534;**TODO** (lien free software): everybody has access
-to the code-base and can participate! This document tells you what you can do
-to help, how you can do it and what to expect.
+d∃∀duction. We are a small team of dumb devs, we don't know what we're doing.
+d∃∀duction is a free software &#x1F534;**TODO** (lien free software):
+everybody has access to the code-base and can participate! This document tells
+you what you can do to help, how you can do it and what to expect.
 
 ## Get started
 
