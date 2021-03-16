@@ -8,6 +8,8 @@ to help and how you can do it.
 
 ## Get started
 
+### Project overview
+
 There are two repositories:
 [deaduction](https://github.com/dEAduction/dEAduction) (contains all the source
 code and tools) and
@@ -43,6 +45,37 @@ source envconfig
 ```
 
 This will also make sure everything is up-to-date.
+
+### Contribuer en pratique (fork, PR, etc)
+
+### What to expect when you contribute
+
+## What do?
+
+There are many different things you can do to help, and you do not need to be a
+programming wizard. Quality is *much* more helpful than quantity, there is no
+small contribution. You should always browse issues (&#x1F534;**TODO** lien)
+first to know what you can do. If you think you can work on an issue, reply to
+it first so we can discuss more precisely how we work together. Note that
+issues include many things, such as new features proposals, bug reports, code
+refactoring and discussions. If you wish to develop a new feature, open an
+issue first (see issues guidelines (&#x1F534;**TODO** lien vers la §) so we can
+discuss it.
+
+That being said, not all good contribution ideas are in the issues (we are
+often too lazy to open an issue when we see code that should be refactored). Do
+feel free to open one. Here are contribution ideas, in order of preference:
+- **Refactor code**: yeah, please help us. d∃∀duction needs a strong code-base
+    and as of now it is rather weak.
+- **Report stuff**: bugs, refactoring suggestions, user interface suggestions,
+    new features proposals, etc (see issues guidelines (&#x1F534;**TODO** lien
+    vers la §).
+- **Translate user interface**.
+- **Write documentation**: many modules, classes or functions are undocumented,
+    but they should be. You can also contribute to d∃∀duction's user manual.
+- **Create exercises**.
+
+(&#x1F534;**TODO** ajouter issues avec tag first contribution)
 
 ## Guidelines
 
