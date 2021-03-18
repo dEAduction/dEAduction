@@ -126,6 +126,143 @@ anyway.
 
 ## Guidelines
 
+### Code documentation
+
+As you will see in this section, d∃∀duction's code documentation may be long to
+write and needs maintenance. **Documentation is however as essential as your
+code**. It may be never useful for the author but *will* be for any person
+discovering your code in order to maintain it understand it for their own
+needs. When writing documentation, you should always assume that the reader is
+not familiar with your code and has very few time to understand it. The writer
+should do most of the work, so that the reader can efficiently and fastly
+understand the essence and utility of your code by reading its documentation a
+single time. Documentation should not only tell what a piece of code does, it
+*must* tell why it exists, why it is *necessary*, where it is used and how it
+is used (provide examples if necessary). Context of the code is almost as
+important as the code.
+
+#### Functions and methods signatures
+
+All functions and methods *must* be
+[annotated](https://www.python.org/dev/peps/pep-3107/#syntax), using the
+[`typing` module](https://docs.python.org/3/library/typing.html) if necessary.
+For example, this is correct:
+
+```python3
+def factorial(n: int) -> int:
+    return 1 if n == 1 else n * factorial(n - 1)
+```
+
+but this is not:
+
+```python3
+def factorial(n):
+    return 1 if n == 1 else n * factorial(n - 1)
+```
+
+Non function or method annotations *may* be provided.
+
+#### Function and methods docstrings
+
+All functions and methods *must* be documented: you *must* provide a
+[docstring](https://www.python.org/dev/peps/pep-0257/) *should* provide
+comments. Functions and methods docstrings *must* have the following format:
+
+```python3
+"""
+Summary (what does it do, why is it useful, why is it there, why should we not
+delete it).
+
+:param param_1: description of param_1
+…
+:param param_2: description of param_2
+:return: what does it return (if applicable)
+"""
+```
+
+Here is an example from the codebase, with the method annotated:
+
+```python3
+ def set_preview(self, main_widget: Optional[QWidget], title: Optional[str],
+                subtitle: Optional[str], details: Optional[Dict[str, str]],
+                description: Optional[str], expand_details: Optional[bool]):
+    """
+    Set the preview area of the choosen course or exercise (given
+    something has been chosen). The preview area is made of a title,
+    a substitle, details, a description and a main widget. This
+    widget is of course specific to CourseChooser or ExerciseChooser
+    and defined when the set_preview method is redefined in
+    CourseChooser or ExerciseChooser. Visually, the preview area
+    looks like this:
+
+    |----------------------------|
+    | title (big)                |
+    | subtitle (small, italic)   |
+    | |> Details:                |
+    |     …: …                   |
+    |     …: …                   |
+    |                            |
+    | description .............. |
+    | .......................... |
+    | .......................... |
+    |                            |
+    | |------------------------| |
+    | |      main_widget       | |
+    | |------------------------| |
+    |----------------------------|
+
+    :param main_widget: The main widget of the preview (nothing for
+        the course, goal preview for the exercise).
+    :param title: Course or exercise title.
+    :param subtitle: Course or exercise subtitle.
+    :param details: Other data for the course or exercise such as
+        the course's year, teacher, school, etc.
+    :param description: The course or exercise description.
+    :param exapand_details: Tell if the 'Details' disclosure tree is
+        expanded at __init__ (True) or not (False).
+    """
+```
+
+#### Classes docstrings
+
+All classes *must* be documented as well: you *must* provide a docstring and
+*should* provide comments. Classes docstrings follow the same rules as
+functions and methods docstrings, except that public class attributes must be
+written in the class docstring using a `:attribute attribute_name: Attribute
+description` syntax. Here is an example from the codebase:
+
+```python3
+class ExerciseMainWindow(QMainWindow):
+    """
+    This class is responsible for both:
+        - managing the whole interface for exercises;
+        - communicating with a so-called server interface (self.servint, not
+          instantiated in this class): a middle man between the interface and
+          L∃∀N.
+
+    … docstring continues …
+
+    Finally, all of this uses asynchronous processes (keywords async and
+    await) using trio and qtrio.
+
+    :attribute exercise Exercise: The instance of the Exercise class
+        representing the exercise to be solved by the user, instantiated
+        in deaduction.dui.__main__.py.
+    :attribute current_goal Goal: The current goal, which contains the
+        tagged target, tagged math. objects and tagged math. properties.
+    :attribute current_selection [MathObjectWidgetItem]: The ordered of
+        currently selected math. objects and properties by the user.
+    :attribute ecw ExerciseCentralWidget: The instance of
+        ExerciseCentralWidget instantiated in self.__init__, see
+        ExerciseCentraiWidget.__doc__.
+    :attribute lean_editor LeanEditor: A text editor to live-edit lean
+        code.
+    :attribute servint ServerInterface: The instance of ServerInterface
+        for the session, instantiated in deaduction.dui.__main__.py.
+    :attribute toolbar QToolBar: The toolbar.
+    """
+```
+
 ### Git commit messages
 
 #### Specifications
@@ -289,6 +426,3 @@ the following exceptions.
     ordered. Finally, relative imports *may* be used in some cases; they follow
     the same rules as regular imports and *must* be grouped after the last
     group of regular imports and a blank line.
-
-#### Signatures and docstrings
-
