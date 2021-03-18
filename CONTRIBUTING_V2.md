@@ -1,17 +1,12 @@
 # Contributing to d∃∀duction
 
 Hello and welcome! Contributing to d∃∀duction is the best way to help. It is a
-free software (see [What is free
-software?](https://www.gnu.org/philosophy/free-sw.html) and
-[How to Contribute to Open
-Source](https://opensource.guide/how-to-contribute/)) software): everybody has
+free software : everybody has
 access to the code-base and can participate! We are a small team of dumb devs,
 we don't know what we're doing. This document tells you what you can do to
 help, how you can do it and what to expect.
 
 ## Get started
-
-### Overview
 
 The d∃∀duction project has two repositories:
 [deaduction](https://github.com/dEAduction/dEAduction) (contains all the source
@@ -37,62 +32,20 @@ It is very easy to determine whether or not you are in the virtual environment
 of your project directory: there should be a `(env)` in front of your shell
 prompt.
 
-To setup d∃∀duction's virtual environment, open a terminal at the repository's
-root and run the command
+To setup d∃∀duction's virtual environment and make sure every dependency is
+up-to-date, open a terminal at the repository's root and run the following
+command:
 
 ```bash
 source envconfig
 ```
 
-This will also make sure everything is up-to-date.
-
-### Resources
-
-*Note: feel free to suggest new resources*.
-
-#### For Python (version 3)
-
-- The [official documentation](https://docs.python.org/3/).
-
-There are dozens of online tutorials, if you are new to Python, be sure to
-choose one which covers classes (with heritage and usual decorators).
-
-- A [guide](https://realpython.com/python-virtual-environments-a-primer/) to
-    virtual environments.
-- Python properties, [how tu use them and
-    why](https://www.programiz.com/python-programming/property), this is
-    defintely worth reading if you want to Python the Python way. Properties
-    make the code stronger and nicer to read. Unfortunately, we did not use
-    them enough in the code-base, but you should still do it if relevant.
-- Python [thematic tutorials from ZetCode](https://zetcode.com/all/#python) are
-    always great.
-
-#### For L∃∀N
-
-- The [official documentation](https://leanprover.github.io/documentation/).
-- The [Natural number
-    game](https://wwwf.imperial.ac.uk/%7Ebuzzard/xena/natural_number_game/) to
-    learn L∃∀N by using it, no experience needed.
-
-#### For PySide2 / Qt for Python
-
-- The [official
-    documentation](https://doc.qt.io/qtforpython/quickstart.html).
-- This excellent [tutorial](http://zetcode.com/gui/pyqt5/), perfect if you want
-    to learn from scratch. (To make it work, simply replace all occurences of
-    `PyQt5` by `PySide2`; there are some other minor problems but you will make
-    it.)
-
-#### For Trio and QTrio
-
-- Trio's [official documentation](https://trio.readthedocs.io/en/stable/).
-- QTrio's [repository](https://github.com/altendky/qtrio).
-
-#### For Git
-
-- The [official documentation](https://git-scm.com/doc).
-- The (free) book [*Pro Git*](https://git-scm.com/book/en/v2) is a complete and
-    rigourous way of becoming proficient in Git.
+A list of online sources is available at the end of this document. They do not
+cover everything but are all useful to this project. Do not read them if you do
+not need or want to. One thing needs to be cristal clear: **you do not need to
+be proficient everywhere to contribute**. In fact, nobody in the core team
+is. You just need to know the things that are relevant to *you* and what you
+want to do.
 
 ## Contributing
 
@@ -478,3 +431,61 @@ Inside a group or a single statement, imports *must* be alphabetically
 ordered. Finally, relative imports *may* be used in some cases; they follow
 the same rules as regular imports and *must* be grouped after the last
 group of regular imports and a blank line.
+
+## Resources
+
+*Note: feel free to suggest new resources*.
+
+### For Python (version 3)
+
+- The [official documentation](https://docs.python.org/3/).
+
+    There are dozens of online tutorials, if you are new to Python, be sure to
+    choose one which covers classes (with heritage and usual decorators).
+
+- A [guide](https://realpython.com/python-virtual-environments-a-primer/) to
+    virtual environments.
+- Python properties, [how tu use them and
+    why](https://www.programiz.com/python-programming/property), this is
+    defintely worth reading if you want to Python the Python way. Properties
+    make the code stronger and nicer to read. Unfortunately, we did not use
+    them enough in the code-base, but you should still do it if relevant.
+- Python [thematic tutorials from ZetCode](https://zetcode.com/all/#python) are
+    always great.
+
+### For L∃∀N
+
+- The [official documentation](https://leanprover.github.io/documentation/).
+- The [Natural number
+    game](https://wwwf.imperial.ac.uk/%7Ebuzzard/xena/natural_number_game/) to
+    learn L∃∀N by using it, no experience needed.
+
+### For PySide2 / Qt for Python
+
+- The [official
+    documentation](https://doc.qt.io/qtforpython/quickstart.html).
+- This excellent [tutorial](http://zetcode.com/gui/pyqt5/), perfect if you want
+    to learn from scratch. (To make it work, simply replace all occurences of
+    `PyQt5` by `PySide2`; there are some other minor problems but you will make
+    it.)
+
+### For Trio and QTrio
+
+- Trio's [official documentation](https://trio.readthedocs.io/en/stable/).
+- QTrio's [repository](https://github.com/altendky/qtrio).
+
+### For Git
+
+- The [official documentation](https://git-scm.com/doc).
+- The (free) book [*Pro Git*](https://git-scm.com/book/en/v2) is a complete and
+    rigourous way of becoming proficient in Git.
+
+### On free software
+
+- GNU's article [What is free
+    software?](https://www.gnu.org/philosophy/free-sw.html) covers the basics in a
+    rigourous way.
+- The page [How to Contribute to Open
+    Source](https://opensource.guide/how-to-contribute/)) is a great introduction
+    to free software in practice if you never contributed before. It will tell you
+    what to expect from this first experience.
