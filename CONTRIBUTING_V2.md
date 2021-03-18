@@ -1,10 +1,9 @@
 # Contributing to d∃∀duction
 
 Hello and welcome! Contributing to d∃∀duction is the best way to help. It is a
-free software : everybody has
-access to the code-base and can participate! We are a small team of dumb devs,
-we don't know what we're doing. This document tells you what you can do to
-help, how you can do it and what to expect.
+free software : everybody has access to the code-base and can participate! We
+are a small team of dumb devs, we don't know what we're doing. This document
+tells you what you can do, what to expect, and helps you do it.
 
 ## Get started
 
@@ -42,7 +41,7 @@ source envconfig
 
 A list of online sources is available at the end of this document. They do not
 cover everything but are all useful to this project. Do not read them if you do
-not need or want to. One thing needs to be cristal clear: **you do not need to
+not need or want to. One thing needs to be crystal clear: **you do not need to
 be proficient everywhere to contribute**. In fact, nobody in the core team
 is. You just need to know the things that are relevant to *you* and what you
 want to do.
