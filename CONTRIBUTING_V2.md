@@ -229,3 +229,66 @@ your computer, the commit mesage *must* be:
 ```
 merge: local/dev/the_new_feature -> local/master
 ```
+
+### Python code guidelines
+
+#### Modified PEP 8
+
+d∃∀duction's Python code follows the [PEP 8 convention](https://pep8.org), with
+the following exceptions.
+- **Consecutive lines with `=` operators**: `=` operators on a series of
+    consecutive non blank lines *must* be vertically aligned. Example:
+    ```python3
+    my_int             = 10
+    my_string          = 'd∃∀duction'
+    my_bigger_variable = 'Code is read much more often than it is written.'
+
+    other_int    = 2
+    other_string = 'free software'
+    ```
+- **Import statements**: PEP 8 tells us that
+    > Imports must be grouped in the following order:
+    > 
+    >   1. standard library imports
+    >   2. related third party imports
+    >   3. local application/library specific imports
+    >
+    > You must put a blank line between each group of imports.
+
+    We add the following rule: `import` statements *must* be vertically
+    aligned. Example:
+
+    ```python3
+    from functools import partial
+    import                logging
+    from typing import    Callable
+    import                qtrio
+
+    from PySide2.QtCore import (    Signal,
+                                    Slot,
+                                    QEvent )
+    from PySide2.QtWidgets import ( QInputDialog,
+                                    QMainWindow,
+                                    QMessageBox )
+
+    from deaduction.dui.elements            import ( ActionButton,
+                                                     LeanEditor,
+                                                     StatementsTreeWidgetItem,
+                                                     MathObjectWidget,
+                                                     MathObjectWidgetItem )
+    from deaduction.dui.primitives          import   ButtonsDialog
+    from deaduction.pylib.config.i18n       import   _
+    from deaduction.pylib.memory            import   Journal
+    from deaduction.pylib.actions           import ( InputType,
+                                                     MissingParametersError,
+                                                     WrongUserInput)
+    import deaduction.pylib.actions.generic as       generic
+    ```
+
+    Inside a group or a single statement, imports *must* be alphabetically
+    ordered. Finally, relative imports *may* be used in some cases; they follow
+    the same rules as regular imports and *must* be grouped after the last
+    group of regular imports and a blank line.
+
+#### Signatures and docstrings
+
