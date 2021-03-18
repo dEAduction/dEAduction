@@ -1,12 +1,17 @@
 # Contributing to d∃∀duction
 
-Hello and welcome! Contributing to d∃∀duction is the best way to help
-d∃∀duction. We are a small team of dumb devs, we don't know what we're doing.
-d∃∀duction is a free software &#x1F534;**TODO** (lien free software):
-everybody has access to the code-base and can participate! This document tells
-you what you can do to help, how you can do it and what to expect.
+Hello and welcome! Contributing to d∃∀duction is the best way to help. It is a
+free software (see [What is free
+software?](https://www.gnu.org/philosophy/free-sw.html) and
+[How to Contribute to Open
+Source](https://opensource.guide/how-to-contribute/)) software): everybody has
+access to the code-base and can participate! We are a small team of dumb devs,
+we don't know what we're doing. This document tells you what you can do to
+help, how you can do it and what to expect.
 
 ## Get started
+
+### Overview
 
 The d∃∀duction project has two repositories:
 [deaduction](https://github.com/dEAduction/dEAduction) (contains all the source
@@ -15,38 +20,81 @@ code and tools) and
 code and exercises files). To know more about each directory, module or file,
 simply open its `__init__.py` or `README.md`.
 
-d∃∀duction is written in Python3 (&#x1F534;**TODO** lien) and L∃∀N (L∃∀N is a
-proof assistant able to understand mathematical expressions and prove
-statements to be true or false, &#x1F534;**TODO** liens). The graphical
-interface uses the module PySide2 (Qt for Python) and communication between the
-user interface and L∃∀N uses two modules called Trio and Qtrio
-(&#x1F534;**TODO** lien). A good experience in Python3 is *recommended*, as
-well as basic terminal usage, but you do not need to be advanced in anything to
-contribute. The version control system (&#x1F534;**TODO** liens) we use is Git
-(&#x1F534;**TODO** liens). Some experience in Git is necessary but you can
-rapidly learn it from scratch (&#x1F534;**TODO** lien tuto).
+The software d∃∀duction is written in Python3 and L∃∀N (a proof assistant able
+to understand mathematical expressions and prove statements to be true or
+false). The graphical interface uses the module PySide2 (Qt for Python) and
+communication between the user interface and L∃∀N uses two modules called Trio
+and Qtrio. A good experience in Python3 is *recommended*, as well as basic
+terminal usage, but you do not need to be advanced in anything to contribute.
+The version control system we use is Git. Some experience in Git is necessary
+but you can rapidly learn it from scratch (you should feel at ease using git
+branches).
 
-A very important thing is *virtual environments* (&#x1F534;**TODO** lien). A
-virtual environment is an isolated environment in a project directory in which
-all dependencies versions are frozen until manually changed (they can remain
-unchanged if we chose to). It is very easy to determine whether or not you are
-in the virtual environment of your project directory: there should be a `(env)`
-in front of your shell prompt, like in this screenshot:
-
-![venv screenshot](docs/CONTRIBUTING-images/veng.png)
+A very important thing is *virtual environments*. A virtual environment is an
+isolated environment in a project directory in which all dependencies versions
+are frozen until manually changed (they can remain unchanged if we chose to).
+It is very easy to determine whether or not you are in the virtual environment
+of your project directory: there should be a `(env)` in front of your shell
+prompt.
 
 To setup d∃∀duction's virtual environment, open a terminal at the repository's
 root and run the command
 
-```
+```bash
 source envconfig
 ```
 
 This will also make sure everything is up-to-date.
 
-## Contributing
+### Resources
 
-(&#x1F534;**TODO** intro pour cette §)
+*Note: feel free to suggest new resources*.
+
+#### For Python (version 3)
+
+- The [official documentation](https://docs.python.org/3/).
+
+There are dozens of online tutorials, if you are new to Python, be sure to
+choose one which covers classes (with heritage and usual decorators).
+
+- A [guide](https://realpython.com/python-virtual-environments-a-primer/) to
+    virtual environments.
+- Python properties, [how tu use them and
+    why](https://www.programiz.com/python-programming/property), this is
+    defintely worth reading if you want to Python the Python way. Properties
+    make the code stronger and nicer to read. Unfortunately, we did not use
+    them enough in the code-base, but you should still do it if relevant.
+- Python [thematic tutorials from ZetCode](https://zetcode.com/all/#python) are
+    always great.
+
+#### For L∃∀N
+
+- The [official documentation](https://leanprover.github.io/documentation/).
+- The [Natural number
+    game](https://wwwf.imperial.ac.uk/%7Ebuzzard/xena/natural_number_game/) to
+    learn L∃∀N by using it, no experience needed.
+
+#### For PySide2 / Qt for Python
+
+- The [official
+    documentation](https://doc.qt.io/qtforpython/quickstart.html).
+- This excellent [tutorial](http://zetcode.com/gui/pyqt5/), perfect if you want
+    to learn from scratch. (To make it work, simply replace all occurences of
+    `PyQt5` by `PySide2`; there are some other minor problems but you will make
+    it.)
+
+#### For Trio and QTrio
+
+- Trio's [official documentation](https://trio.readthedocs.io/en/stable/).
+- QTrio's [repository](https://github.com/altendky/qtrio).
+
+#### For Git
+
+- The [official documentation](https://git-scm.com/doc).
+- The (free) book [*Pro Git*](https://git-scm.com/book/en/v2) is a complete and
+    rigourous way of becoming proficient in Git.
+
+## Contributing
 
 ### What do?
 
@@ -120,7 +168,7 @@ If you follow these steps, your contribution proposition should be accepted!
 You shall then be credited as a d∃∀duction's contributor. Nevertheless,
 respecting the above stages by nowise means that your contribution proposal
 *will* be accepted. Those stages ensure that your contribution fits in
-d∃∀duction's codebase as much as possible, but we may reject it if necessary.
+d∃∀duction's code-base as much as possible, but we may reject it if necessary.
 Finally, you will not get any kind of financial retribution. We are poor
 anyway.
 
@@ -180,7 +228,7 @@ delete it).
 """
 ```
 
-Here is an example from the codebase, with the method annotated:
+Here is an example from the code-base, with the method annotated:
 
 ```python3
  def set_preview(self, main_widget: Optional[QWidget], title: Optional[str],
@@ -229,7 +277,7 @@ All classes *must* be documented as well: you *must* provide a docstring and
 *should* provide comments. Classes docstrings follow the same rules as
 functions and methods docstrings, except that public class attributes must be
 written in the class docstring using a `:attribute attribute_name: Attribute
-description` syntax. Here is an example from the codebase:
+description` syntax. Here is an example from the code-base:
 
 ```python3
 class ExerciseMainWindow(QMainWindow):
