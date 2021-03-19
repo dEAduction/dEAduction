@@ -12,7 +12,7 @@
 Provide any useful information. If helpful, provide any useful media (e.g.
 screenshots or code). -->
 
-### How to reproduce
+### How to reproduce the bug
 
 <!-- How to reproduce your issue, step by step. Private-checklist:
 - [ ] ordered list of steps.
@@ -23,17 +23,20 @@ screenshots or code). -->
 ### Environment
 
 - OS and OS version: <!-- (e.g. Windows, macOS, Linux) -->
+- d∃∀duction version (or commit ID): 
 
 ### Checklist
 
 <!-- Do not check an item if you did not do it, do not lie. -->
 
-- [ ] My issue deals with one and only one issue (if you have multiple issues,
-    please open multiple issues).
-- [ ] I have restarted d∃∀duction to see if it helps.
-- [ ] I've checked if anyone else reported this problem before by browsing
-    [other issues](https://github.com/dEAduction/dEAduction/issues).
-- [ ] I correctly labeled my issue (see commented rules below).
+1. [ ] d∃∀duction is up-to-date.
+2. [ ] I have restarted d∃∀duction to see if it helps.
+3. [ ] I've checked if anyone else reported this problem before by browsing
+   [other issues](https://github.com/dEAduction/dEAduction/issues)
+   (&#x1F534;**TODO** ajouter label).
+4. [ ] This issue deals with one and only one issue (if you have multiple
+   issues, please open multiple issues).
+5. [ ] I correctly labeled my issue (see commented rules below).
 
   <!-- Issue labels rules
   Include one and only one of the following Area labels:
