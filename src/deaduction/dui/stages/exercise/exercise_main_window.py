@@ -390,6 +390,9 @@ class ExerciseMainWindow(QMainWindow):
                     self.journal.add_event(event=event, emw=self)
                     await self.__server_call_apply(emission.args[0])
 
+            # End of async for loop: close emissions channel
+            # log.debug("Closing emissions.channel")
+            # await emissions.aclose()
     # ──────────────── Template function ─────────────── #
 
     async def process_async_signal(self, process_function: Callable):
@@ -609,7 +612,7 @@ class ExerciseMainWindow(QMainWindow):
                                 QMessageBox.Ok
                                 )
         # Disconnect signal
-        self.servint.proof_no_goals = Signal()
+        # self.servint.proof_no_goals = Signal()
         # make fake target to display message
         no_more_goal_text = "No more goal"
         target = self.current_goal.target
@@ -618,6 +621,7 @@ class ExerciseMainWindow(QMainWindow):
                                         children=[],
                                       )
         self.ecw.update_goal(self.current_goal, goal_count='')
+
 
     @Slot(MathObjectWidgetItem)
     def process_context_click(self, item: MathObjectWidgetItem):

@@ -189,17 +189,17 @@ class ServerInterface(QObject):
     ############################################
     def __filter_error(self, msg: Message):
         # Filter message text, record if not ignored message
-        if msg.text.startswith(LEAN_NOGOALS_TEXT):
-            if hasattr(self.proof_no_goals, "emit"):
-                self.proof_no_goals.emit(self.exercise_current)
-                self.__proof_receive_done.set()  # Done receiving
 
-        elif msg.text.startswith(LEAN_UNRESOLVED_TEXT):
+        if msg.text.startswith(LEAN_UNRESOLVED_TEXT):
             pass
         # ignore messages that do not concern current proof
         elif msg.pos_line < self.lean_file.first_line_of_last_change \
                 or msg.pos_line > self.lean_file.last_line_of_inner_content:
             pass
+        elif msg.text.startswith(LEAN_NOGOALS_TEXT):
+            if hasattr(self.proof_no_goals, "emit"):
+                self.proof_no_goals.emit(self.exercise_current)
+                self.__proof_receive_done.set()  # Done receiving
         else:
             self.error_send.send_nowait(msg)
             self.__proof_receive_done.set()  # Done receiving

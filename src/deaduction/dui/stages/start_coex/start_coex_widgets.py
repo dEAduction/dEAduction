@@ -127,12 +127,13 @@ class AbstractCoExChooser(QWidget):
 
         self.__preview_wgt = QLabel(_('No preview yet.'))
         self.__preview_wgt.setStyleSheet('color: gray;')
-        spacer             = QSpacerItem(1, 5)
+        spacer1             = QSpacerItem(1, 5)
+        spacer2             = QSpacerItem(1, 5)
         self.__main_layout = QVBoxLayout()
         self.__main_layout.addLayout(browser_layout)
-        self.__main_layout.addItem(spacer)
+        self.__main_layout.addItem(spacer1)
         self.__main_layout.addWidget(HorizontalLine())
-        self.__main_layout.addItem(spacer)
+        self.__main_layout.addItem(spacer2)
         self.__main_layout.addWidget(self.__preview_wgt)
 
         self.setLayout(self.__main_layout)
@@ -928,12 +929,12 @@ if __name__ == '__main__':
     start_coex_dialog_startup.show()
 
     # Test StartCoExExerciseFinished
-    course_path = Path('../../../../../tests/lean_files/courses/' \
-                       'exercices_logique_propositionnelle.pkl')
-    course = Course.from_file(course_path)
-    finished_exercise = course.exercises_list()[0]
-
-    start_coex_dialog_exercise_finished = StartCoExExerciseFinished(finished_exercise)
-    start_coex_dialog_exercise_finished.show()
+    # course_path = Path('../../../../../tests/lean_files/courses/' \
+    #                    'exercices_logique_propositionnelle.pkl')
+    # course = Course.from_file(course_path)
+    # finished_exercise = course.exercises_list()[0]
+    #
+    # start_coex_dialog_exercise_finished = StartCoExExerciseFinished(finished_exercise)
+    # start_coex_dialog_exercise_finished.show()
 
     sys.exit(app.exec_())

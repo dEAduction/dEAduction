@@ -63,30 +63,39 @@ async def main():
     cdirs.init()
     inst.init()
 
+    exercise = None
     start_coex_startup = StartCoExStartup()
     start_coex_startup.show()
 
     async with qtrio.enter_emissions_channel(signals=[
-            start_coex_startup.exercise_chosen]) as emissions:
+            start_coex_startup.exercise_chosen,
+            start_coex_startup.window_closed]) as emissions:
         emission = await emissions.channel.receive()
-        exercise = emission.args[0]
+        if emission.is_from(start_coex_startup.exercise_chosen):
+            exercise = emission.args[0]
+        elif emission.is_from(start_coex_startup.window_closed):
+            log.debug("Chooser window closed by user")
+            # await emissions.aclose() Inutile ?
+
+    log.debug("Chooser finished")
 
     # Init and start server
-    async with trio.open_nursery() as nursery:
-        servint = ServerInterface(nursery)
-        await servint.start()
-        ex_main_window = ExerciseMainWindow(exercise, servint)
+    if exercise:
+        async with trio.open_nursery() as nursery:
+            servint = ServerInterface(nursery)
+            await servint.start()
+            ex_main_window = ExerciseMainWindow(exercise, servint)
 
-        # Show main window, and wait for the "window_closed" signal to happen,
-        # so that we can stop the program execution properly.
-        try:
-            async with qtrio.enter_emissions_channel(
-                    signals=[ex_main_window.window_closed]) as emissions:
-                ex_main_window.show()
-                await emissions.channel.receive()
-        finally:
-            servint.stop() # Good job, buddy 
-
+            # Show main window, and wait for the "window_closed" signal to happen,
+            # so that we can stop the program execution properly.
+            try:
+                async with qtrio.enter_emissions_channel(
+                        signals=[ex_main_window.window_closed]) as emissions:
+                    ex_main_window.show()
+                    await emissions.channel.receive()
+                    # await emissions.aclose()
+            finally:
+                servint.stop()  # Good job, buddy
 
 if __name__ == '__main__':
     # list of names of modules whose logs should not be printed
@@ -108,3 +117,4 @@ if __name__ == '__main__':
     # if suppress=True, only logs NOT from modules in 'domains' will be printed
 
     qtrio.run(main)
+    log.debug("qtrio finished")

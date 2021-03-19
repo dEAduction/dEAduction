@@ -9,7 +9,7 @@ show_lean_name_for_statements = false
 target_font_size = "24pt"
 context_font_size = "12pt"
 tooltips_font_size = 10
-mathematics_font = "Menlo"
+mathematics_font = "Defaults"
 
 logic_button_symbols = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃"
 use_logic_button_symbols = true
