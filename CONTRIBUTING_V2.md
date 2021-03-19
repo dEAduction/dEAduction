@@ -366,6 +366,9 @@ your computer, the commit mesage *must* be:
 merge: local/dev/the_new_feature -> local/master
 ```
 
+Beware that any non-compliant commit message *will* be rejected by the git
+hook.
+
 ### Github issues
 
 ### Python code (modified PEP 8)
