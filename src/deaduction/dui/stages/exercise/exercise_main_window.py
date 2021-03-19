@@ -160,6 +160,7 @@ class ExerciseMainWindow(QMainWindow):
         self.addToolBar(self.toolbar)
         self.toolbar.redo_action.setEnabled(False)  # No history at beginning
         self.toolbar.undo_action.setEnabled(False)  # same
+        self.toolbar.rewind.setEnabled(False)  # same
 
         # Status Bar
         self.statusBar = ExerciseStatusBar(self)
@@ -341,9 +342,10 @@ class ExerciseMainWindow(QMainWindow):
 
         async with qtrio.enter_emissions_channel(
                 signals=[self.lean_editor.editor_send_lean,
-                         self.toolbar.redo_action.triggered,
                          self.window_closed,
+                         self.toolbar.redo_action.triggered,
                          self.toolbar.undo_action.triggered,
+                         self.toolbar.rewind.triggered,
                          self.__action_triggered,
                          self.__statement_triggered,
                          self.__apply_math_object_triggered]) as emissions:
@@ -367,6 +369,11 @@ class ExerciseMainWindow(QMainWindow):
                     event = ('button', 'history_undo', '')
                     self.journal.add_event(event=event, emw=self)
                     await self.process_async_signal(self.servint.history_undo)
+
+                elif emission.is_from(self.toolbar.rewind.triggered):
+                    event = ('button', 'history_rewind', '')
+                    self.journal.add_event(event=event, emw=self)
+                    await self.process_async_signal(self.servint.history_rewind)
 
                 elif emission.is_from(self.window_closed):
                     break
@@ -437,6 +444,8 @@ class ExerciseMainWindow(QMainWindow):
             self.freeze(False)
             # Required because history is always changed with signals
             self.toolbar.undo_action.setEnabled(
+                    not self.servint.lean_file.history_at_beginning)
+            self.toolbar.rewind.setEnabled(
                     not self.servint.lean_file.history_at_beginning)
             self.toolbar.redo_action.setEnabled(
                     not self.servint.lean_file.history_at_end)

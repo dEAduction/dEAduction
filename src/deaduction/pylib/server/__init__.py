@@ -412,6 +412,10 @@ class ServerInterface(QObject):
         self.lean_file.redo()
         await self.__update()
 
+    async def history_rewind(self):
+        self.lean_file.rewind()
+        await self.__update()
+
     def history_replace(self, code):
         """
         Replace last entry in the lean_file by code without calling Lean.

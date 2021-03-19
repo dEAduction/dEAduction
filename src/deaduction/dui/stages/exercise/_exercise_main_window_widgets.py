@@ -341,6 +341,9 @@ class ExerciseToolBar(QToolBar):
         super().__init__(_('Toolbar'))
         icons_base_dir = cvars.get("icons.path")
         icons_dir = fs.path_helper(icons_base_dir)
+        self.rewind = QAction(
+                QIcon(str((icons_dir / 'goback-begining.png').resolve())),
+                _('Go back to beginning of proof'), self)
         self.undo_action = QAction(
                 QIcon(str((icons_dir / 'undo_action.png').resolve())),
                 _('Undo action'), self)
@@ -352,6 +355,7 @@ class ExerciseToolBar(QToolBar):
                 QIcon(str((icons_dir / 'lean_editor.png').resolve())),
                 _('Toggle L∃∀N'), self)
 
+        self.addAction(self.rewind)
         self.addAction(self.undo_action)
         self.addAction(self.redo_action)
         self.addAction(self.toggle_lean_editor_action)

@@ -283,6 +283,12 @@ class LeanFile:
         if self.target_idx >= len(self.history):
             self.target_idx = len(self.history) - 1
 
+    def rewind(self):
+        """
+        Moves the history cursor at the beginning
+        """
+        self.target_idx = 0
+
     def history_lbl(self):
         """
         Generator to retrieve the list of history labels.
