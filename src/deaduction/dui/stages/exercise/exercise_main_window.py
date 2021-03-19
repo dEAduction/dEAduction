@@ -123,7 +123,7 @@ class ExerciseMainWindow(QMainWindow):
     :attribute toolbar QToolBar: The toolbar.
     """
 
-    window_closed                   = Signal()
+    window_closed                   = Signal(bool)
     __action_triggered              = Signal(ActionButton)
     __apply_math_object_triggered   = Signal(MathObjectWidget)
     __statement_triggered           = Signal(StatementsTreeWidgetItem)
@@ -153,6 +153,7 @@ class ExerciseMainWindow(QMainWindow):
         self.servint           = servint
         self.toolbar           = ExerciseToolBar()
         self.journal           = Journal()
+        self.cqfd              = False
 
         # ─────────────────────── UI ─────────────────────── #
 
@@ -195,7 +196,7 @@ class ExerciseMainWindow(QMainWindow):
         """
 
         super().closeEvent(event)
-        self.window_closed.emit()
+        self.window_closed.emit(self.cqfd)
 
     def display_success_message(self, lean_code):
         """
@@ -621,6 +622,7 @@ class ExerciseMainWindow(QMainWindow):
                                         children=[],
                                       )
         self.ecw.update_goal(self.current_goal, goal_count='')
+        self.cqfd = True
 
 
     @Slot(MathObjectWidgetItem)

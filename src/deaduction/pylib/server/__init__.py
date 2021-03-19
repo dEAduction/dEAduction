@@ -99,9 +99,10 @@ class ServerInterface(QObject):
         # Current exercise
         self.exercise_current          = None
 
-        # Current proof state + Event  s
+        # Current proof state + Events
+        self.file_invalidated        = trio.Event()
         self.__proof_state_valid       = trio.Event()
-        self.__proof_receive_done      = trio.Event()
+        self.proof_receive_done      = trio.Event()
         self.__proof_receive_error     = trio.Event() # Set if request failed
 
         self.__tmp_hypo_analysis       = ""
@@ -125,7 +126,7 @@ class ServerInterface(QObject):
     ############################################
     def __check_receive_state(self):
         if self.__tmp_targets_analysis and self.__tmp_hypo_analysis:
-            self.__proof_receive_done.set()
+            self.proof_receive_done.set()
 
     def __on_lean_message(self, msg: Message):
         """
@@ -194,15 +195,15 @@ class ServerInterface(QObject):
             pass
         # ignore messages that do not concern current proof
         elif msg.pos_line < self.lean_file.first_line_of_last_change \
-                or msg.pos_line > self.lean_file.last_line_of_inner_content:
+                or msg.pos_line > self.lean_file.last_line_of_inner_content+1:
             pass
         elif msg.text.startswith(LEAN_NOGOALS_TEXT):
             if hasattr(self.proof_no_goals, "emit"):
                 self.proof_no_goals.emit(self.exercise_current)
-                self.__proof_receive_done.set()  # Done receiving
+                self.proof_receive_done.set()  # Done receiving
         else:
             self.error_send.send_nowait(msg)
-            self.__proof_receive_done.set()  # Done receiving
+            self.proof_receive_done.set()  # Done receiving
 
     ############################################
     # Update
@@ -234,15 +235,17 @@ class ServerInterface(QObject):
                           content=self.lean_file.contents)
 
         # Invalidate events
-        self.__proof_receive_done   = trio.Event()
-        self.__tmp_hypo_analysis    = ""
-        self.__tmp_targets_analysis = ""
-        self.__tmp_effective_code   = ""
+        self.file_invalidated    = trio.Event()
+        self.proof_receive_done       = trio.Event()
+        self.__tmp_hypo_analysis        = ""
+        self.__tmp_targets_analysis     = ""
+        self.__tmp_effective_code       = ""
 
         resp = await self.lean_server.send(req)
-        if resp.message == "file invalidated":
 
-            await self.__proof_receive_done.wait()
+        if resp.message == "file invalidated":
+            self.file_invalidated.set()
+            await self.proof_receive_done.wait()
 
             self.log.debug(_("Proof State received"))
             # next line removed by FLR

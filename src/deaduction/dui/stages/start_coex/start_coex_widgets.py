@@ -818,13 +818,13 @@ class StartCoExStartup(AbstractStartCoEx):
 
     window_closed                   = Signal()
 
-    def __init__(self):
+    def __init__(self, exercise: Exercise = None):
         """
         Init self.
         """
 
         title = _('Choose course and exercise — d∃∀duction')
-        super().__init__(title=title, widget=None, exercise=None)
+        super().__init__(title=title, widget=None, exercise=exercise)
 
     def closeEvent(self, event: QEvent):
         """
