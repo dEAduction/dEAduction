@@ -33,7 +33,9 @@
 	- status::on hold
 	- status::ready for PR
 	- status::ready for review
-	- status::wontdo
+- Approvation
+	- approved::yes
+	- approved::undecided yet
+	- approved::no
 - help wanted
 - good first issue
-- test issue
