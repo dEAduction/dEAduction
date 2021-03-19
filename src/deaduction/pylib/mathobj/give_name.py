@@ -124,7 +124,7 @@ def give_name(math_type,
         the opposite case we will try the letters in alphabetical order from
         the hint.
 
-    If EXERCISE.USE_PRIMES_FOR_VARIABLES_NAMES is True, then will try to use
+    If display.use_primes_for_variables_names is True, then will try to use
     prime: e.g. if hint = ["x"] but "x" is already used, if math_type equals
     the math_type of x, then "x'" will be tried, and even "x''" if
     EXERCISE.USE_SECONDS_FOR_VARIABLES_NAMES is True.

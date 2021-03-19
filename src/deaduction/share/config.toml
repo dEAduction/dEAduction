@@ -4,6 +4,7 @@ letter_type = "letters/trials"
 context     = "letters/blue"
 
 [display]
+target_display_on_top = false
 depth_of_unfold_statements = 1
 show_lean_name_for_statements = false
 target_font_size = "24pt"
@@ -28,6 +29,10 @@ select_language = "fr_FR"
 
 [journal]
 save=false
+
+[logs]
+display_level = "info"
+domains = "all"
 
 #########################
 # All Plateform packages

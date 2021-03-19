@@ -188,8 +188,15 @@ class ExerciseCentralWidget(QWidget):
         # https://i.kym-cdn.com/photos/images/original/001/561/446/27d.jpg
         context_actions_lyt.addWidget(context_gb)
         context_actions_lyt.addWidget(actions_gb)
-        self.__main_lyt.addWidget(self.target_wgt)
-        self.__main_lyt.addLayout(context_actions_lyt)
+
+        target_display_on_top = cvars.get('display.target_display_on_top',
+                                          True)
+        if target_display_on_top:
+            self.__main_lyt.addWidget(self.target_wgt)
+            self.__main_lyt.addLayout(context_actions_lyt)
+        else:
+            self.__main_lyt.addLayout(context_actions_lyt)
+            self.__main_lyt.addWidget(self.target_wgt)
 
         self.setLayout(self.__main_lyt)
 
