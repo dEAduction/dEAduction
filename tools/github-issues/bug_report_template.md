@@ -50,12 +50,8 @@ screenshots or code). -->
    - area::tools
    - area::ui
 
-   Include one and only one of the following Type labels
-   - type::bug
-   - type::maintenance
-   - type::question
-   - type::refactor
-   - type::suggestion
+   Include the following Type label:
+   - type::bug report
    -->
 
 <!-- THANK YOU, for taking the time to write this issue! -->

@@ -36,7 +36,9 @@ usefulness and relevance. Private-checklist:
    - area::tools
    - area::ui
 
-   Also include the following Type label: type::suggestion.	
+   Also include one and only one of the following Type labels:
+   - type::suggestion::new feature
+   - type::suggestion::refactoring
    -->
 
 <!-- THANK YOU, for taking the time to write this issue! -->

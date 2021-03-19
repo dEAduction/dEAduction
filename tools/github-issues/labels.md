@@ -1,4 +1,5 @@
 # To be put by issue opener
+One and only one per category.
 - Area
 	- area::code
 	- area::courses files
@@ -11,13 +12,13 @@
 	- area::tools
 	- area::ui
 - Type
-	- type::bug
-	- type::maintenance
-	- type::question
-	- type::refactor
-	- type::suggestion
+	- type::bug report
+	- type::discussion
+	- type::suggestion::new feature
+	- type::suggestion::refactoring
 
 # To be put by core-team
+One and only one per category.
 - Priority
 	- priority::critical
 	- priority::high
