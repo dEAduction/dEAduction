@@ -489,3 +489,5 @@ group of regular imports and a blank line.
     Source](https://opensource.guide/how-to-contribute/)) is a great introduction
     to free software in practice if you never contributed before. It will tell you
     what to expect from this first experience.
+- A [collection](https://github.com/devspace/awesome-github-templates) of github
+    issues and pull requests templates.
