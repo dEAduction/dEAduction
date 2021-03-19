@@ -44,15 +44,21 @@ import deaduction.pylib.config.i18n              as     i18n
 import deaduction.pylib.config.site_installation as     inst
 import deaduction.pylib.config.vars              as     cvars
 
-#logger.configure(debug=True,
-#                 #domains=['ServerInterface', 'deaduction.dui'],
-#                 suppress=False)
+# (non-exhaustive) list of logger domains:
+# ['lean', 'ServerInterface', 'Course', 'deaduction.dui',
+#  'deaduction.pylib.coursedata', 'deaduction.pylib.mathobj', 'LeanServer']
 
-logger.configure(debug=True,
-                 domains=['lean'],
-                 suppress=True)
+###################
+# Configuring log #
+###################
+# Change your own settings in .deaduction-dev/config.toml
+log_domains = cvars.get("logs.domains", [""])
+log_level = cvars.get("logs.display_level", "info")
+logger.configure(domains=log_domains,
+                 display_level=log_level)
 
 log = logging.getLogger(__name__)
+
 
 async def main():
     log.debug("starting...")

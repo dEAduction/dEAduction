@@ -32,7 +32,7 @@ save=false
 
 [logs]
 display_level = "info"
-domains = "all"
+domains = [""]
 
 #########################
 # All Plateform packages
