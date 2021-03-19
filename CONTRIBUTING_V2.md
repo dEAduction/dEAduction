@@ -14,15 +14,14 @@ code and tools) and
 code and exercises files). To know more about each directory, module or file,
 simply open its `__init__.py` or `README.md`.
 
-The software d∃∀duction is written in Python3 and L∃∀N (a proof assistant able
-to understand mathematical expressions and prove statements to be true or
-false). The graphical interface uses the module PySide2 (Qt for Python) and
-communication between the user interface and L∃∀N uses two modules called Trio
-and Qtrio. A good experience in Python3 is *recommended*, as well as basic
-terminal usage, but you do not need to be advanced in anything to contribute.
-The version control system we use is Git. Some experience in Git is necessary
-but you can rapidly learn it from scratch (you should feel at ease using git
-branches).
+d∃∀duction is written in Python3 and L∃∀N (a proof assistant able to understand
+mathematical expressions and prove statements to be true or false). The
+graphical interface uses the module PySide2 (Qt for Python) and communication
+between the user interface and L∃∀N uses two modules called Trio and Qtrio. A
+good experience in Python3 is *recommended*, as well as basic terminal usage,
+but you do not need to be advanced in anything to contribute.  The version
+control system we use is Git. Some experience in Git is necessary but you can
+rapidly learn it from scratch (you should feel at ease using git branches).
 
 A very important thing is *virtual environments*. A virtual environment is an
 isolated environment in a project directory in which all dependencies versions
@@ -282,11 +281,11 @@ its structure is free.  Most commit messages only have a header, which *must*
 have the following structure:
 
 ```
-part/type(scope): Summary
+area::type(scope): Summary
 ```
-Part is mandatory and *must* be one of:
+Area is mandatory and *must* be one of:
 
-Part       | Definition
+Area       | Definition
 -----------|-------------------------------------------------------------------
 `code`     | Changes affecting the code-base.
 `doc`      | Changes affecting the documentation (including comments and docstrings).
@@ -311,7 +310,7 @@ function or module name or a combination of all that). Precision is up to you,
 use it if necessary. In doubt, use a scope. Finally, the summary *should* be
 the shortest possible sentence describing the commit. It *should* begin with a
 capital letter and *must not* end with a period, it *should* also be in present
-tense. The combination of the mandatory part and type, and optionally the
+tense. The combination of the mandatory area and type, and optionally the
 scope, help you identify which commits in the git log are most relevant to you.
 The scope helps identifying which parts of the project are changed.
 
@@ -332,7 +331,7 @@ own computer, use `local`) and the merge is from `branchA` to `branchB`.
 
 If you finish writing the first part of the function `my_function`, but this
 function is not ready, you should use the type `dev`. Since this function is
-part of the code-base, you must use the part `code`. This is a good commit
+part of the code-base, you must use the area `code`. This is a good commit
 message:
 
 ```
@@ -367,7 +366,9 @@ your computer, the commit mesage *must* be:
 merge: local/dev/the_new_feature -> local/master
 ```
 
-### Python code guidelines (modified PEP 8)
+### Github issues
+
+### Python code (modified PEP 8)
 
 d∃∀duction's Python code follows the [PEP 8 convention](https://pep8.org), with
 the following exceptions.
