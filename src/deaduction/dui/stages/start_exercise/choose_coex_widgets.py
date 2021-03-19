@@ -124,12 +124,13 @@ class AbstractCoExChooser(QWidget):
 
         self.__preview_wgt = QLabel(_('No preview yet.'))
         self.__preview_wgt.setStyleSheet('color: gray;')
-        spacer             = QSpacerItem(1, 5)
+        spacer1             = QSpacerItem(1, 5)
+        spacer2             = QSpacerItem(1, 5)
         self.__main_layout = QVBoxLayout()
         self.__main_layout.addLayout(browser_layout)
-        self.__main_layout.addItem(spacer)
+        self.__main_layout.addItem(spacer1)
         self.__main_layout.addWidget(HorizontalLine())
-        self.__main_layout.addItem(spacer)
+        self.__main_layout.addItem(spacer2)
         self.__main_layout.addWidget(self.__preview_wgt)
 
         self.setLayout(self.__main_layout)
