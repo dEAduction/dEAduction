@@ -392,10 +392,14 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
     test for last selected item l[-1], and call functions accordingly:
     - apply_function, if item is a function
     - apply_susbtitute, if item can_be_used_for_substitution
+    ONLY if the option expanded_apply_button is set:
     - apply_implicate, if item is an implication or a universal property
         (or call action_forall if l[-1] is a universal property and none of
         the other actions apply)
     - apply_exists, if item is an existential property
+    - apply_and
+    - apply_or
+    ...
 
     :param l:   list of MathObject arguments preselected by the user
     :return:    string of lean code
@@ -418,14 +422,6 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
             error = _("select an object on which you want to apply the "
                      "function")
             raise WrongUserInput(error=error)
-        # if len(l) == 1 and not user_input:
-        #     function_name = l[0].info('name')
-        #     title = _(f"Apply function") + " " + function_name
-        #     output = _("Enter element on which you want to apply the "
-        #                "function:")
-        #     raise MissingParametersError(InputType.Text,
-        #                                  title=title,
-        #                                  output=output)
         else:
             return apply_function(goal, l)
 
@@ -436,34 +432,39 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
     if test:
         codes = codes.or_else(apply_substitute(goal, l, user_input, equality))
 
-    # todo: allow apply_implicate_hyp even when property is not explicitly
-    #  an implication
-    # (3) If property is an implication (or a universal implication)
-    if prop.can_be_used_for_implication() and len(l) == 1:
-        # Apply to the target
-        codes = codes.or_else(apply_implicate(goal, l))
-    elif prop.is_implication() or prop.is_for_all():
-        if len(l) > 1:
-            # In this case implication and 'forall' are applied the same way
-            codes = codes.or_else(apply_implicate_to_hyp(goal, l))
+    expanded_apply_button = cvars.get('expanded_apply_button', False)
+    if expanded_apply_button:
+        # What follows applies only if expanded_apply_button
+        # (4) Other easy applications
+        if len(l) == 1 and user_can_apply(l[0]):
+            if prop.is_exists():
+                codes = codes.or_else(apply_exists(goal, l))
+            if prop.is_and():
+                codes = codes.or_else(apply_and(goal, l))
+            if prop.is_or():
+                codes = codes.or_else(apply_or(goal, l, user_input))
 
-    # (4) Other easy applications
-    if len(l) == 1 and user_can_apply(l[0]):
-        if prop.is_exists():
-            codes = codes.or_else(apply_exists(goal, l))
-        if prop.is_and():
-            codes = codes.or_else(apply_and(goal, l))
-        if prop.is_or():
-            codes = codes.or_else(apply_or(goal, l, user_input))
     if codes:
         return codes
-    # Lastly, if nothing else but forall may be applied we do not know on what
-    # to apply: ask user (as treated in action_forall)
-    elif prop.is_for_all() and len(l) == 1:
-        return action_forall(goal, l, user_input)
     else:
         error = _("I cannot apply this")  # fixme: be more precise
         raise WrongUserInput(error)
+
+    # The following would allow to use the apply button instead of for_all
+    # or implicate
+    # # (3) If property is an implication (or a universal implication)
+    # if prop.can_be_used_for_implication() and len(l) == 1:
+    #     # Apply to the target
+    #     codes = codes.or_else(apply_implicate(goal, l))
+    # elif prop.is_implication() or prop.is_for_all():
+    #     if len(l) > 1:
+    #         # In this case implication and 'forall' are applied the same way
+    #         codes = codes.or_else(apply_implicate_to_hyp(goal, l))
+
+    # # Lastly, if nothing else but forall may be applied we do not know on what
+    # # to apply: ask user (as treated in action_forall)
+    # elif prop.is_for_all() and len(l) == 1:
+    #     return action_forall(goal, l, user_input)
 
 
 ################################
