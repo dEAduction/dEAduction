@@ -1,31 +1,24 @@
-<!-- Any text between such tags will not appear on the issue, you do not need
-to delete it. Any such text is meant as a memo for you. -->
+<!-- Any text between such tags will not appear on the issue. -->
 <!-- Be sure to have a clear, precise, concise title. -->
 
 ### Description
 
-<!--
-A *clear*, *precise*, *concise* description of what the problem is. Include at
-least:
-- [ ] Expected behavior / what you wanted to do;
-- [ ] what happened instead;
+<!-- A clear, precise, concise description of your bug. Private-checklist:
+- [ ] expected behavior / what you wanted to do;
+- [ ] what happened instead / what was the bug;
 - [ ] error message (if any);
-- [ ] if you are a developper, commit ID and which branch you are on.
+- [ ] if you are a developper, commit ID and which branch you were on.
 
-If helpful, provide any useful media (e.g. screenshots or code). Provide any
-useful information.
--->
+Provide any useful information. If helpful, provide any useful media (e.g.
+screenshots or code). -->
 
 ### How to reproduce
 
-<!--
-- [ ] How to reproduce your issue, step by step:
-1. …
-2. …
-…
+<!-- How to reproduce your issue, step by step. Private-checklist:
+- [ ] ordered list of steps.
 
-If helpful, provide any useful media (e.g. screenshots or code).
--->
+Provide any useful information. If helpful, provide any useful media (e.g.
+screenshots or code). -->
 
 ### Environment
 
