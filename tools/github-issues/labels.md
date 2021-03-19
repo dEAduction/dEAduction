@@ -1,0 +1,39 @@
+# To be put by issue opener
+- Area
+	- area::code
+	- area::courses files
+	- area::docs
+	- area::guidelines
+	- area::install
+	- area::snippets
+	- area::teaching
+	- area::tests
+	- area::tools
+	- area::ui
+- Type
+	- type::bug
+	- type::maintenance
+	- type::question
+	- type::refactor
+	- type::suggestion
+
+# To be put by core-team
+- Priority
+	- priority::critical
+	- priority::high
+	- priority::low
+	- priority::medium
+- Status
+	- status::abandoned
+	- status::closed
+	- status::discussion needed
+	- status::duplicate
+	- status::in progress
+	- status::info needed
+	- status::on hold
+	- status::ready for PR
+	- status::ready for review
+	- status::wontdo
+- help wanted
+- good first issue
+- test issue
