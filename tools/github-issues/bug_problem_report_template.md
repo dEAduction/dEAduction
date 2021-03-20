@@ -48,17 +48,13 @@ leave this section empty. -->
    labels:
    - area::code
    - area::courses files
-   - area::docs
-   - area::guidelines
+   - area::doc
    - area::install
    - area::snippets
    - area::teaching
    - area::tests
    - area::tools
    - area::ui
-
-   Include the following Type label:
-   - type::bug
    -->
 
 <!-- THANK YOU, for taking the time to write this issue! -->

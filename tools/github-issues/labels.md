@@ -3,8 +3,7 @@ One and only one per category.
 - Area labels:
 	- area::code
 	- area::courses files
-	- area::docs
-	- area::guidelines
+	- area::doc
 	- area::install
 	- area::snippets
 	- area::teaching
@@ -14,10 +13,10 @@ One and only one per category.
 - Type labels:
 	- type::bug
 	- type::discussion
+	- type::enhancement
 	- type::new feature
+	- type::question
 	- type::refactor
-- One Approbation label (see others below):
-	- approved::new
 
 # To be put by core-team
 One and only one per category.
@@ -27,16 +26,15 @@ One and only one per category.
 	- priority::low
 	- priority::medium
 - Status labels:
-	- status::abandoned
 	- status::closed
-	- status::discussion needed
 	- status::duplicate
 	- status::in progress
-	- status::info needed
 	- status::on hold
 	- status::ready for PR
 	- status::ready for review
-- Approbation labels (see one other above):
+	- status::wontfix
+- Approbation labels:
+	- approved::new
 	- approved::no
 	- approved::undecided
 	- approved::yes
