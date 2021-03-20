@@ -524,12 +524,13 @@ class ExerciseMainWindow(QMainWindow):
         item.mark_user_selected(True)
 
         # Put double-clicked item on last position in current_selection
+        # NB: DO NOT add item to selection since the  process_context_click
+        # will already do this
         if item in self.current_selection:
             self.current_selection.remove(item)
-        self.current_selection.append(item)
 
-        await self.process_async_signal(partial(self.__server_call_action,
-                                                self.ecw.action_apply_button))
+        # Emulate click on 'apply' button
+        self.ecw.action_apply_button.animateClick(msec=500)
 
     async def __server_call_statement(self, item: StatementsTreeWidgetItem):
         """
