@@ -1,6 +1,6 @@
 # To be put by issue opener
 One and only one per category.
-- Area
+- Area labels:
 	- area::code
 	- area::courses files
 	- area::docs
@@ -11,20 +11,22 @@ One and only one per category.
 	- area::tests
 	- area::tools
 	- area::ui
-- Type
-	- type::bug report
+- Type labels:
+	- type::bug
 	- type::discussion
-	- type::suggestion::new feature
-	- type::suggestion::refactoring
+	- type::new feature
+	- type::refactor
+- One Approvation label (see others below):
+	- approved::new
 
 # To be put by core-team
 One and only one per category.
-- Priority
+- Priority labels:
 	- priority::critical
 	- priority::high
 	- priority::low
 	- priority::medium
-- Status
+- Status labels:
 	- status::abandoned
 	- status::closed
 	- status::discussion needed
@@ -34,9 +36,9 @@ One and only one per category.
 	- status::on hold
 	- status::ready for PR
 	- status::ready for review
-- Approvation
-	- approved::yes
-	- approved::undecided yet
+- Approvation labels (see one other above):
 	- approved::no
+	- approved::undecided
+	- approved::yes
 - help wanted
 - good first issue

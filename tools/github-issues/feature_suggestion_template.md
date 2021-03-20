@@ -36,9 +36,12 @@ usefulness and relevance. Private-checklist:
    - area::tools
    - area::ui
 
-   Also include one and only one of the following Type labels:
-   - type::suggestion::new feature
-   - type::suggestion::refactoring
+   Include one and only one of the following Type labels:
+   - type::new feature
+   - type::refactor
+
+   Finally, include the following Approvation label:
+   - approved::new
    -->
 
 <!-- THANK YOU, for taking the time to write this issue! -->

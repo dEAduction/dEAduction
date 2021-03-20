@@ -51,7 +51,7 @@ screenshots or code). -->
    - area::ui
 
    Include the following Type label:
-   - type::bug report
+   - type::bug
    -->
 
 <!-- THANK YOU, for taking the time to write this issue! -->
