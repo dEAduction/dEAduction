@@ -37,6 +37,7 @@ from deaduction.dui.stages.exercise              import ExerciseMainWindow
 from deaduction.dui.stages.start_coex            import StartCoExStartup, \
                                             StartCoExExerciseFinished
 
+from deaduction.pylib.coursedata                 import Exercise
 from deaduction.pylib                            import logger
 from deaduction.pylib.server                     import ServerInterface
 import deaduction.pylib.config.dirs              as     cdirs
@@ -77,11 +78,11 @@ async def main():
             start_coex_startup.exercise_chosen,
             start_coex_startup.window_closed]) as emissions:
         emission = await emissions.channel.receive()
-        if emission.is_from(start_coex_startup.exercise_chosen):
-            chosen_exercise = emission.args[0]
-        elif emission.is_from(start_coex_startup.window_closed):
+        if emission.is_from(start_coex_startup.window_closed):
             # d∃∀duction will stop.
             log.debug("Chooser window closed by user")
+        elif len(emission.args) > 0 and isinstance(emission.args[0], Exercise):
+            chosen_exercise = emission.args[0]
 
     #################
     # Infinite loop #
@@ -129,12 +130,13 @@ async def main():
                    start_coex_startup.window_closed]
         async with qtrio.enter_emissions_channel(signals=signals) as emissions:
             emission = await emissions.channel.receive()
-            if emission.is_from(start_coex_startup.exercise_chosen):
-                chosen_exercise = emission.args[0]
-            elif emission.is_from(start_coex_startup.window_closed):
+            if emission.is_from(start_coex_startup.window_closed):
                 chosen_exercise = None
                 log.debug("Chooser window closed by user")
                 # d∃∀duction will stop.
+            elif len(emission.args) > 0 and isinstance(emission.args[0],
+                                                       Exercise):
+                chosen_exercise = emission.args[0]
 
 if __name__ == '__main__':
     qtrio.run(main)
