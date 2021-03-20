@@ -8,7 +8,6 @@ assignees: ''
 ---
 
 <!-- Any text between such tags will not appear on the issue. -->
-<!-- Be sure to have a clear, precise, concise title. -->
 
 ### Body
 

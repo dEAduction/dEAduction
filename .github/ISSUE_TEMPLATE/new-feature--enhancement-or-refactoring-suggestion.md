@@ -8,26 +8,23 @@ assignees: ''
 ---
 
 <!-- Any text between such tags will not appear on the issue. -->
-<!-- Be sure to have a clear, precise, concise title. -->
 
 ### Feature, enhancement or refactor description
 
-<!-- A clear, precise, concise description of your feature, enhancement or
-refactor suggestion and its usefulness and relevance. Private-checklist:
-- [ ] rigorous description of the suggestion, how it should be / look like when
-  finished (provide drawings or schemes if relevant);
-- [ ] why is it useful / why is it worth coding;
--->
+<!-- A clear, precise, concise description of your suggestion. Tell how it
+should be / look when finished. -->
 
-### Implementation ideas
+### Why is it usefull
 
-<!-- Appreciated but optional. Do feel free to provide any implementation
-idea, proof or concept, snippet, etc. This will make things easier. Delete the
+<!-- Tell us why this suggestion is useful and worth coding. -->
+
+### Implementation ideas, difficulties we may face
+
+<!-- Appreciated but optional. Do feel free to provide any implementation idea,
+proof or concept, snippet, etc and what difficulties we may face. Delete the
 title if you leave this section empty. -->
 
 ### Submission checklist
-
-<!-- Do not check an item if you did not do it. -->
 
 1. [ ] d∃∀duction is up-to-date and this feature does not exist in the latest
    version.
