@@ -37,8 +37,7 @@ leave this section empty. -->
 
 1. [ ] d∃∀duction is up-to-date and this bug is in the latest version.
 2. [ ] I've checked that no-one reported this problem by browsing [other
-   issues](https://github.com/dEAduction/dEAduction/issues) (&#x1F534;**TODO**
-   ajouter label).
+   issues](https://github.com/dEAduction/dEAduction/issues).
 3. [ ] This issue deals with one and only one issue (if you have multiple
    issues, please open multiple issues).
 4. [ ] I correctly labeled my issue (see commented rules below).

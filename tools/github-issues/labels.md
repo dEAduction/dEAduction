@@ -26,7 +26,6 @@ One and only one per category.
 	- priority::low
 	- priority::medium
 - Status labels:
-	- status::closed
 	- status::duplicate
 	- status::in progress
 	- status::on hold
