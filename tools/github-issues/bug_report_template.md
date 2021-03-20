@@ -25,6 +25,12 @@ screenshots or code). -->
 - OS and OS version: <!-- (e.g. Windows, macOS, Linux) -->
 - d∃∀duction version (or commit ID): 
 
+### Fix ideas
+
+<!-- Appreciated but optional. Do feel free to provide any fix idea, proof or
+concept, snippet, etc. This will make things easier. Delete the title if you
+leave this section empty. -->
+
 ### Submission checklist
 
 <!-- Do not check an item if you did not do it. -->
@@ -36,6 +42,7 @@ screenshots or code). -->
 3. [ ] This issue deals with one and only one issue (if you have multiple
    issues, please open multiple issues).
 4. [ ] I correctly labeled my issue (see commented rules below).
+5. [ ] I want to fix this bug. (Check if yo do, no judgement if you do not!)
 
    <!-- Issues labels rules. Include one and only one of the following Area
    labels:

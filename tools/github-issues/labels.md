@@ -16,7 +16,7 @@ One and only one per category.
 	- type::discussion
 	- type::new feature
 	- type::refactor
-- One Approvation label (see others below):
+- One Approbation label (see others below):
 	- approved::new
 
 # To be put by core-team
@@ -36,7 +36,7 @@ One and only one per category.
 	- status::on hold
 	- status::ready for PR
 	- status::ready for review
-- Approvation labels (see one other above):
+- Approbation labels (see one other above):
 	- approved::no
 	- approved::undecided
 	- approved::yes

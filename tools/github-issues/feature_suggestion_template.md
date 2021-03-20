@@ -10,6 +10,12 @@ usefulness and relevance. Private-checklist:
 - [ ] why is it useful / why is it worth coding;
 -->
 
+### Implementation ideas
+
+<!-- Appreciated but optional. Do feel free to provide any implementation
+idea, proof or concept, snippet, etc. This will make things easier. Delete the
+title if you leave this section empty. -->
+
 ### Submission checklist
 
 <!-- Do not check an item if you did not do it. -->
@@ -22,6 +28,8 @@ usefulness and relevance. Private-checklist:
 3. [ ] This issue deals with one and only one issue (if you have multiple
    issues, please open multiple issues).
 4. [ ] I correctly labeled my issue (see commented rules below).
+5. [ ] I want to implement this feature. (Check if yo do, no judgement if you
+   do not!)
 
    <!-- Issues labels rules. Include one and only one of the following Area
    labels:
@@ -40,7 +48,7 @@ usefulness and relevance. Private-checklist:
    - type::new feature
    - type::refactor
 
-   Finally, include the following Approvation label:
+   Finally, include the following Approbation label:
    - approved::new
    -->
 
