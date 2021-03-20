@@ -58,9 +58,10 @@ log = logging.getLogger(__name__)
 
 
 async def main():
-    log.debug("starting...")
-    test_language = _("Proof by contradiction")
-    log.debug(f"Language test: 'Proof by contrapositive' = '{test_language}'")
+    log.info("Starting...")
+    # test_language = _("Proof by contradiction")
+    # log.debug(f"Language test: 'Proof by contrapositive' = '{
+    # test_language}'")
 
     #################################################################
     # Init environment variables, directories, and install packages #
@@ -84,9 +85,6 @@ async def main():
             exercise = emission.args[0]
         elif emission.is_from(start_coex_startup.window_closed):
             log.debug("Chooser window closed by user")
-            # await emissions.aclose() Inutile ?
-
-    log.debug("Chooser finished")
 
     #################
     # Infinite loop #
@@ -106,13 +104,15 @@ async def main():
                     emission = await emissions.channel.receive()
                     cqfd = emission.args[0]
                     log.debug("Exercise window closed by user")
-                    if cqfd :
+                    if cqfd:
                         log.info("Exercise solved")
             finally:
                 log.debug("Waiting for lean's response before stopping...")
                 await servint.file_invalidated.wait()
                 servint.stop()  # Good job, buddy
+                # TODO: close the nursery!
                 log.debug("Server stopped!")
+                nursery.cancel_scope.cancel()
 
         #############################
         # Launch new chooser window #

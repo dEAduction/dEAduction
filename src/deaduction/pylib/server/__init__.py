@@ -100,9 +100,9 @@ class ServerInterface(QObject):
         self.exercise_current          = None
 
         # Current proof state + Events
-        self.file_invalidated        = trio.Event()
+        self.file_invalidated          = trio.Event()
         self.__proof_state_valid       = trio.Event()
-        self.proof_receive_done      = trio.Event()
+        self.__proof_receive_done      = trio.Event()
         self.__proof_receive_error     = trio.Event() # Set if request failed
 
         self.__tmp_hypo_analysis       = ""
@@ -126,7 +126,7 @@ class ServerInterface(QObject):
     ############################################
     def __check_receive_state(self):
         if self.__tmp_targets_analysis and self.__tmp_hypo_analysis:
-            self.proof_receive_done.set()
+            self.__proof_receive_done.set()
 
     def __on_lean_message(self, msg: Message):
         """
@@ -200,10 +200,10 @@ class ServerInterface(QObject):
         elif msg.text.startswith(LEAN_NOGOALS_TEXT):
             if hasattr(self.proof_no_goals, "emit"):
                 self.proof_no_goals.emit(self.exercise_current)
-                self.proof_receive_done.set()  # Done receiving
+                self.__proof_receive_done.set()  # Done receiving
         else:
             self.error_send.send_nowait(msg)
-            self.proof_receive_done.set()  # Done receiving
+            self.__proof_receive_done.set()  # Done receiving
 
     ############################################
     # Update
@@ -235,8 +235,8 @@ class ServerInterface(QObject):
                           content=self.lean_file.contents)
 
         # Invalidate events
-        self.file_invalidated    = trio.Event()
-        self.proof_receive_done       = trio.Event()
+        self.file_invalidated           = trio.Event()
+        self.__proof_receive_done       = trio.Event()
         self.__tmp_hypo_analysis        = ""
         self.__tmp_targets_analysis     = ""
         self.__tmp_effective_code       = ""
@@ -245,7 +245,7 @@ class ServerInterface(QObject):
 
         if resp.message == "file invalidated":
             self.file_invalidated.set()
-            await self.proof_receive_done.wait()
+            await self.__proof_receive_done.wait()
 
             self.log.debug(_("Proof State received"))
             # next line removed by FLR
