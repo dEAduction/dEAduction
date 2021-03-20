@@ -9,10 +9,10 @@ should be / look when finished. -->
 
 <!-- Tell us why this suggestion is useful and worth coding. -->
 
-### Implementation ideas
+### Implementation ideas, difficulties we may face
 
-<!-- Appreciated but optional. Do feel free to provide any implementation
-idea, proof or concept, snippet, etc. This will make things easier. Delete the
+<!-- Appreciated but optional. Do feel free to provide any implementation idea,
+proof or concept, snippet, etc and what difficulties we may face. Delete the
 title if you leave this section empty. -->
 
 ### Submission checklist
