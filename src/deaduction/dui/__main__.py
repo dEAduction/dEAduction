@@ -5,6 +5,8 @@
 
 Author(s)      : - Kryzar <antoine@hugounet.com>
                  - Florian Dupeyron <florian.dupeyron@mugcat.fr>
+                 - Frédéric Le Roux <frederic.le-roux@imj-prg.fr>
+
 Maintainers(s) : - Kryzar <antoine@hugounet.com>
                  - Florian Dupeyron <florian.dupeyron@mugcat.fr>
 Date           : July 2020
@@ -27,8 +29,6 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-
-
 import logging
 import qtrio
 import trio
@@ -39,16 +39,9 @@ from deaduction.dui.stages.start_coex            import StartCoExStartup, \
 
 from deaduction.pylib                            import logger
 from deaduction.pylib.server                     import ServerInterface
-from deaduction.pylib.config.i18n                import _
 import deaduction.pylib.config.dirs              as     cdirs
 import deaduction.pylib.config.environ           as     cenv
-import deaduction.pylib.config.i18n              as     i18n
 import deaduction.pylib.config.site_installation as     inst
-import deaduction.pylib.config.vars              as     cvars
-
-#logger.configure(debug=True,
-#                 #domains=['ServerInterface', 'deaduction.dui'],
-#                 suppress=False)
 
 logger.configure(debug=True,
                  domains=['lean'],
@@ -58,10 +51,13 @@ log = logging.getLogger(__name__)
 
 
 async def main():
+    """
+    Main event loop. Alternatively launch the two main windows, i.e.
+        - Course/Exercise chooser window,
+        - Exercise window
+    """
+
     log.info("Starting...")
-    # test_language = _("Proof by contradiction")
-    # log.debug(f"Language test: 'Proof by contrapositive' = '{
-    # test_language}'")
 
     #################################################################
     # Init environment variables, directories, and install packages #
@@ -73,7 +69,7 @@ async def main():
     #############################################################
     # Launch first chooser window  and wait for chosen exercise #
     #############################################################
-    exercise = None
+    chosen_exercise = None
     start_coex_startup = StartCoExStartup()
     start_coex_startup.show()
 
@@ -82,27 +78,31 @@ async def main():
             start_coex_startup.window_closed]) as emissions:
         emission = await emissions.channel.receive()
         if emission.is_from(start_coex_startup.exercise_chosen):
-            exercise = emission.args[0]
+            chosen_exercise = emission.args[0]
         elif emission.is_from(start_coex_startup.window_closed):
+            # d∃∀duction will stop.
             log.debug("Chooser window closed by user")
 
     #################
     # Infinite loop #
     #################
-    while exercise:
+    while chosen_exercise:
         async with trio.open_nursery() as nursery:
+            # Start Lean server.
             servint = ServerInterface(nursery)
             await servint.start()
-            ex_main_window = ExerciseMainWindow(exercise, servint)
 
             # Show main window, and wait for the "window_closed" signal to
             # happen, so that we can stop the program execution properly.
+            ex_main_window = ExerciseMainWindow(chosen_exercise, servint)
             try:
-                async with qtrio.enter_emissions_channel(
-                        signals=[ex_main_window.window_closed]) as emissions:
+                # Wait for exercise window closed.
+                signals = [ex_main_window.window_closed]
+                async with qtrio.enter_emissions_channel(signals=signals) \
+                        as emissions:
                     ex_main_window.show()
                     emission = await emissions.channel.receive()
-                    cqfd = emission.args[0]
+                    cqfd = emission.args[0]  # True iff exercise solved
                     log.debug("Exercise window closed by user")
                     if cqfd:
                         log.info("Exercise solved")
@@ -118,42 +118,24 @@ async def main():
         # Launch new chooser window #
         #############################
         if cqfd:
-            start_coex_startup = StartCoExExerciseFinished(exercise)
+            # Display fireworks inside course/exercise chooser.
+            start_coex_startup = StartCoExExerciseFinished(chosen_exercise)
         else:
-            start_coex_startup = StartCoExStartup(exercise)
+            start_coex_startup = StartCoExStartup(chosen_exercise)
         start_coex_startup.show()
 
-        async with qtrio.enter_emissions_channel(signals=[
-                start_coex_startup.exercise_chosen,
-                start_coex_startup.window_closed]) as emissions:
+        # Wait for either chooser window closed or exercise chosen.
+        signals = [start_coex_startup.exercise_chosen,
+                   start_coex_startup.window_closed]
+        async with qtrio.enter_emissions_channel(signals=signals) as emissions:
             emission = await emissions.channel.receive()
             if emission.is_from(start_coex_startup.exercise_chosen):
-                exercise = emission.args[0]
+                chosen_exercise = emission.args[0]
             elif emission.is_from(start_coex_startup.window_closed):
-                exercise = None
+                chosen_exercise = None
                 log.debug("Chooser window closed by user")
-
-        log.debug("Chooser finished")
-
+                # d∃∀duction will stop.
 
 if __name__ == '__main__':
-    # list of names of modules whose logs should not be printed
-    all_domains = ['lean',
-               'ServerInterface',
-               'Course',
-               'deaduction.dui',
-               'deaduction.pylib.coursedata',
-               'deaduction.pylib.mathobj'
-               ]
-    domains = ['lean',
-               'ServerInterface',
-               'Course',
-               'deaduction.pylib.coursedata',
-               'deaduction.pylib.mathobj'
-               ]
-    dui_only = ['deaduction.dui']
-    # if suppress=False, only logs from modules in 'domains' will printed
-    # if suppress=True, only logs NOT from modules in 'domains' will be printed
-
     qtrio.run(main)
     log.debug("qtrio finished")
