@@ -63,12 +63,15 @@ latex_from_node = {
     "SET_DIFF": (0, r" \backslash ", 1),
     "SET_DIFF_SYM": (0, r" \Delta ", 1),
     "SET_EMPTY": (r"\emptyset",),
+    "SET_EXTENSION1": (r'\{', 0, r'\}'),
+    "SET_EXTENSION2": (r'\{', 0, 1, r'\}'),
+    "SET_EXTENSION3": (r'\{', 0, 1, 2, r'\}'),
     "SET_FAMILY": (0,  r" \to ", r'{\mathcal P}', "(", 1, ")"),
     "SET_IMAGE": (0, "(", 1, ")"),
     "SET_INVERSE": (0, r'^', '-1', '(', 1, ')'),
     "SET_PRODUCT": (0, r'\times', 1),
     "COUPLE": ('(', 0, ',', 1, ')'),
-    "SET_EXTENSION": (r'\{', 1, r' \in ', 0, ' | ', 2, r'\}'),
+    "SET_INTENSION": (r'\{', 1, r' \in ', 0, ' | ', 2, r'\}'),
     # FIXME: instantiate set extensions
     ############
     # NUMBERS: #

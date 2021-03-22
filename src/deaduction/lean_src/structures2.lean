@@ -79,6 +79,9 @@ match e with
 | `(%%f '' %%A) := return ("SET_IMAGE", [f,A])
 | `(%%f  ⁻¹' %%A) := return ("SET_INVERSE", [f,A])
 | `(∅) := return ("SET_EMPTY", [])
+| `({%%x, %%x', %%x''}) := return ("SET_EXTENSION3", [x, x', x''])
+| `({%%x, %%x'}) := return ("SET_EXTENSION2", [x, x'])
+| `({%%x}) := return ("SET_EXTENSION1", [x])
 | `(_root_.set %%X) := return ("SET", [X])
 | `(set.prod %%A %%B) := return ("SET_PRODUCT", [A, B])
 | `(prod.mk %%x %%y) := return ("COUPLE", [x, y])
@@ -86,8 +89,8 @@ match e with
 | `(@set_of %%X %%P) := match P with
     | (lam name binder type body) :=
             do (var_, inst_body) ← instanciate P,
-                return ("SET_EXTENSION",[X, var_, inst_body])
-    | _ := return ("SET_EXTENSION", [X, P])
+                return ("SET_INTENSION",[X, var_, inst_body])
+    | _ := return ("SET_INTENSION", [X, P])
     end
 | (pi name binder type body) := do
     let is_arr := is_arrow e,
