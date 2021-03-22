@@ -119,7 +119,7 @@ class LeanServer:
 
     class RunningMonitor:
         """
-        Class used to monitor lean server runnig state
+        Class used to monitor lean server running state
         """
 
         def __init__( self, max_listeners=4, log=None ):

@@ -123,7 +123,8 @@ class ExerciseMainWindow(QMainWindow):
     :attribute toolbar QToolBar: The toolbar.
     """
 
-    window_closed                   = Signal(bool)
+    window_closed                   = Signal()
+    change_exercise                 = Signal()
     __action_triggered              = Signal(ActionButton)
     __apply_math_object_triggered   = Signal(MathObjectWidget)
     __statement_triggered           = Signal(StatementsTreeWidgetItem)
@@ -194,9 +195,9 @@ class ExerciseMainWindow(QMainWindow):
 
         :param event: Some Qt mandatory thing.
         """
-
+        log.debug("emw.closeEvent")
         super().closeEvent(event)
-        self.window_closed.emit(self.cqfd)
+        self.window_closed.emit()
 
     def display_success_message(self, lean_code):
         """
@@ -607,22 +608,29 @@ class ExerciseMainWindow(QMainWindow):
         - replace the target by a message "Proof complete"
         """
         # TODO: make it a separate class
-        QMessageBox.information(self,
-                                _('Target solved'),
-                                _('The proof is complete!'),
-                                QMessageBox.Ok
-                                )
-        # Disconnect signal
-        # self.servint.proof_no_goals = Signal()
-        # make fake target to display message
+        if not self.cqfd:
+            title = _('Target solved')
+            text = _('The proof is complete!')
+            msg_box = QMessageBox(parent=self)
+            msg_box.setText(text)
+            msg_box.setWindowTitle(title)
+            button_ok = msg_box.addButton('Back to exercise',
+                                          QMessageBox.YesRole)
+            # button_beginning = msg_box.addButton('To beginning of exercise',
+            #                                      QMessageBox.AcceptRole)
+            button_change = msg_box.addButton('Change exercise',
+                                              QMessageBox.YesRole)
+            button_change.clicked.connect(self.change_exercise)
+            msg_box.exec()
+            self.cqfd = True
+
         no_more_goal_text = "No more goal"
         target = self.current_goal.target
-        target.math_type = MathObject(  node=no_more_goal_text,
-                                        info={},
-                                        children=[],
+        target.math_type = MathObject(node=no_more_goal_text,
+                                      info={},
+                                      children=[],
                                       )
         self.ecw.update_goal(self.current_goal, goal_count='')
-        self.cqfd = True
 
 
     @Slot(MathObjectWidgetItem)
