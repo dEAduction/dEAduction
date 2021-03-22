@@ -32,12 +32,13 @@ This file is part of d∃∀duction.
 import logging
 import qtrio
 import trio
+from PySide2.QtCore import (                     QObject,
+                                                 Signal,
+                                                 Slot)
 
 from deaduction.dui.stages.exercise              import ExerciseMainWindow
-from deaduction.dui.stages.start_coex            import StartCoExStartup, \
-                                            StartCoExExerciseFinished
+from deaduction.dui.stages.start_coex            import StartCoExStartup
 
-from deaduction.pylib.coursedata                 import Exercise
 from deaduction.pylib                            import logger
 from deaduction.pylib.server                     import ServerInterface
 import deaduction.pylib.config.dirs              as     cdirs
@@ -51,13 +52,129 @@ logger.configure(debug=True,
 log = logging.getLogger(__name__)
 
 
-async def main():
+###############################################
+# Container class, managing signals and slots #
+###############################################
+class Container(QObject):
     """
-    Main event loop. Alternatively launch the two main windows, i.e.
-        - Course/Exercise chooser window,
-        - Exercise window
+    This class  is responsible for keeping the memory of open windows
+    (chooser window and exercise window), launching the windows when needed,
+    and connecting relevant signals (when windows are closed, when a new
+    exercise is chosen, or when user want to change exercise) to the
+    corresponding launching methods. Note that in PyQt signals have to be
+    hosted by a QObject.
     """
 
+    close_chooser_window = Signal()
+    close_exercise_window = Signal()
+
+    def __init__(self, nursery):
+        super().__init__()
+
+        self.exercise_window        = None
+        self.chooser_window         = None
+        self.servint                = None
+        self.exercise               = None
+        self.nursery                = nursery
+
+    @Slot()
+    def choose_exercise(self):
+        """
+        Launch chooser window and connect signals.
+        """
+
+        log.debug("Choosing new exercise")
+        if not self.chooser_window:
+            # Start chooser window
+            self.chooser_window = StartCoExStartup(exercise=self.exercise)
+
+            # Connect signals
+            self.chooser_window.exercise_chosen.connect(self.start_exercise)
+            self.chooser_window.window_closed.connect(
+                                                self.close_chooser_window)
+            # Show window
+            self.chooser_window.show()
+
+    @Slot()
+    def start_exercise(self, exercise):
+        """
+        Just a synchronous front-end to the async method solve_exercise
+        (apparently slots may not be asynchronous functions)
+        """
+        self.chooser_window = None  # So that exiting d∃∀duction works
+        self.exercise = exercise
+        if self.exercise_window:
+            self.exercise_window.close()
+
+        self.nursery.start_soon(self.solve_exercise)
+
+    async def solve_exercise(self):
+        """
+        Launch exercise window, start lean server, and connect signals.
+        """
+
+        log.debug(f"Starting exercise {self.exercise.pretty_name}")
+
+        # Start Lean server
+        self.servint = ServerInterface(self.nursery)
+        await self.servint.start()
+
+        # Start exercise window
+        self.exercise_window = ExerciseMainWindow(self.exercise, self.servint)
+
+        # Connect signals
+        self.exercise_window.window_closed.connect(self.close_exercise_window)
+        self.exercise_window.change_exercise.connect(self.choose_exercise)
+
+        # Show window
+        self.exercise_window.show()
+
+
+##############################################################
+# Main event loop: init container and wait for window closed #
+##############################################################
+async def main():
+    """
+    """
+    async with trio.open_nursery() as nursery:
+        # Create container
+        container = Container(nursery)
+        # Choose first exercise
+        container.choose_exercise()
+
+        # Main loop that just listen to closing windows signals,
+        # and quit if there is no more open windows.
+        signals = [container.close_chooser_window,
+                   container.close_exercise_window]
+        try:
+            async with qtrio.enter_emissions_channel(signals=signals) as \
+                    emissions:
+                async for emission in emissions.channel:
+                    if emission.is_from(container.close_chooser_window):
+                        # Remember that there is no more chooser window:
+                        container.chooser_window = None
+                        log.debug("No more chooser window")
+                    elif emission.is_from(container.close_exercise_window):
+                        # Remember that there is no more exercise window:
+                        container.exercise_window = None
+                        log.debug("No more exercise window")
+
+                    # Quit if no more open window:
+                    if not (container.chooser_window or
+                            container.exercise_window):
+                        log.debug("Closing d∃∀duction")
+                        break
+        finally:
+            # Finally closing d∃∀duction
+            if container.servint:
+                await container.servint.file_invalidated.wait()
+                container.servint.stop()  # Good job, buddy
+                log.info("Lean server stopped!")
+            if container.nursery:
+                container.nursery.cancel_scope.cancel()
+
+
+if __name__ == '__main__':
     log.info("Starting...")
 
     #################################################################
@@ -67,77 +184,5 @@ async def main():
     cdirs.init()
     inst.init()
 
-    #############################################################
-    # Launch first chooser window  and wait for chosen exercise #
-    #############################################################
-    chosen_exercise = None
-    start_coex_startup = StartCoExStartup()
-    start_coex_startup.show()
-
-    async with qtrio.enter_emissions_channel(signals=[
-            start_coex_startup.exercise_chosen,
-            start_coex_startup.window_closed]) as emissions:
-        emission = await emissions.channel.receive()
-        if emission.is_from(start_coex_startup.window_closed):
-            # d∃∀duction will stop.
-            log.debug("Chooser window closed by user")
-        elif len(emission.args) > 0 and isinstance(emission.args[0], Exercise):
-            chosen_exercise = emission.args[0]
-
-    #################
-    # Infinite loop #
-    #################
-    while chosen_exercise:
-        async with trio.open_nursery() as nursery:
-            # Start Lean server.
-            servint = ServerInterface(nursery)
-            await servint.start()
-
-            # Show main window, and wait for the "window_closed" signal to
-            # happen, so that we can stop the program execution properly.
-            ex_main_window = ExerciseMainWindow(chosen_exercise, servint)
-            try:
-                # Wait for exercise window closed.
-                signals = [ex_main_window.window_closed]
-                async with qtrio.enter_emissions_channel(signals=signals) \
-                        as emissions:
-                    ex_main_window.show()
-                    emission = await emissions.channel.receive()
-                    cqfd = emission.args[0]  # True iff exercise solved
-                    log.debug("Exercise window closed by user")
-                    if cqfd:
-                        log.info("Exercise solved")
-            finally:
-                log.debug("Waiting for lean's response before stopping...")
-                await servint.file_invalidated.wait()
-                servint.stop()  # Good job, buddy
-                # TODO: close the nursery!
-                log.debug("Server stopped!")
-                nursery.cancel_scope.cancel()
-
-        #############################
-        # Launch new chooser window #
-        #############################
-        if cqfd:
-            # Display fireworks inside course/exercise chooser.
-            start_coex_startup = StartCoExExerciseFinished(chosen_exercise)
-        else:
-            start_coex_startup = StartCoExStartup(chosen_exercise)
-        start_coex_startup.show()
-
-        # Wait for either chooser window closed or exercise chosen.
-        signals = [start_coex_startup.exercise_chosen,
-                   start_coex_startup.window_closed]
-        async with qtrio.enter_emissions_channel(signals=signals) as emissions:
-            emission = await emissions.channel.receive()
-            if emission.is_from(start_coex_startup.window_closed):
-                chosen_exercise = None
-                log.debug("Chooser window closed by user")
-                # d∃∀duction will stop.
-            elif len(emission.args) > 0 and isinstance(emission.args[0],
-                                                       Exercise):
-                chosen_exercise = emission.args[0]
-
-if __name__ == '__main__':
     qtrio.run(main)
     log.debug("qtrio finished")

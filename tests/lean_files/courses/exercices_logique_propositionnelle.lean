@@ -3,6 +3,7 @@ import tactic
 
 -- dEAduction imports
 import structures2
+import utils
 
 -- General principles :
 -- Type should be defined as parameters, in order to be implicit everywhere
@@ -12,6 +13,8 @@ import structures2
 
 -- no Magic button ("compute")
 /- dEAduction
+Title
+    Logique propositionnelle (tutorial)
 DefaultAvailableProof
     NONE
 DefaultAvailableMagic

@@ -340,6 +340,13 @@ class ExerciseToolBar(QToolBar):
                 QIcon(str((icons_dir / 'lean_editor.png').resolve())),
                 _('Toggle L∃∀N'), self)
 
+        self.change_exercise_action = QAction(
+                QIcon(str((icons_dir / 'change_exercise.png').resolve())),
+                _('Change exercise'), self)
+
+
         self.addAction(self.undo_action)
         self.addAction(self.redo_action)
         self.addAction(self.toggle_lean_editor_action)
+        self.addSeparator()
+        self.addAction(self.change_exercise_action)

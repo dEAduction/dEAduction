@@ -182,6 +182,8 @@ class ExerciseMainWindow(QMainWindow):
         self.servint.proof_state_change.connect(self.update_proof_state)
         self.servint.lean_file_changed.connect(self.__update_lean_editor)
         self.servint.proof_no_goals.connect(self.fireworks)
+        self.toolbar.change_exercise_action.triggered.connect(
+                                                    self.change_exercise)
         self.servint.nursery.start_soon(self.server_task)  # Start server task
 
     ###########
@@ -195,7 +197,6 @@ class ExerciseMainWindow(QMainWindow):
 
         :param event: Some Qt mandatory thing.
         """
-        log.debug("emw.closeEvent")
         super().closeEvent(event)
         self.window_closed.emit()
 
@@ -342,7 +343,7 @@ class ExerciseMainWindow(QMainWindow):
         async with qtrio.enter_emissions_channel(
                 signals=[self.lean_editor.editor_send_lean,
                          self.toolbar.redo_action.triggered,
-                         self.window_closed,
+                         # self.window_closed,
                          self.toolbar.undo_action.triggered,
                          self.__action_triggered,
                          self.__statement_triggered,
