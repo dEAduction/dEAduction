@@ -119,17 +119,6 @@ is labeled with [`status::ready for
 PR`](https://github.com/dEAduction/dEAduction/issues?q=is%3Aopen+is%3Aissue+label%3A%22status%3A%3Aready+for+PR%22+);
 you just do the pull request and we accept it.
 
-> Summary:
-> 1. Choose an existing issue or open one with a contribution idea. In this
->    issue, inform us that you would like to contribute so we can discuss.
-> 2. Make your fork, create your new branch, code, keep up-to-date and push your
->    contribution proposal once you think it is ready.
-> 3. In the contribution's proposal issue, inform us apes that you think your
->    contribution is ready so we can discuss and potentially ask you to make some
->    changes.
-> 4. If we approve the final version of the contribution proposition, you may do
->    a pull request. We should accept it after a final review.
-
 Notes:
 - Do *not* do your modifications directly on the `master` branch.
 - Remember to commit often; in doubt commit. On top of that, keep your fork
@@ -156,7 +145,7 @@ anyway.
 
 In order to contribute, it is necessary to set-up d∃∀duction's development
 environment. This includes a Python virtual environment, a Python linter (file
-[`.flake8](.flake8)), git hooks, etc. To set it up and make sure every
+[`.flake8`](.flake8)), git hooks, etc. To set it up and make sure every
 dependency is up-to-date, open a terminal at the repository's root and run the
 following command:
 
@@ -423,9 +412,9 @@ hook.
 d∃∀duction's Python code follows the [PEP 8 convention](https://pep8.org), with
 the following exceptions.
 
-#### Consevutive lines with `=` operators
+#### Consecutive lines with `=` operators
 
-Occufences of `=` operator on a series of consecutive non blank lines *must* be
+Occurrences of `=` operator on a series of consecutive non blank lines *must* be
 vertically aligned. Example:
 
 ```python3
