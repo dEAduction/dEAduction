@@ -19,8 +19,10 @@ any modification.
 * [Guidelines](#guidelines)
    * [Code documentation](#code-documentation)
       * [Functions and methods signatures](#functions-and-methods-signatures)
-      * [Function and methods docstrings](#function-and-methods-docstrings)
+      * [Functions and methods docstrings](#functions-and-methods-docstrings)
       * [Classes docstrings](#classes-docstrings)
+      * [Comments style](#comments-style)
+   * [Python file headers](#python-file-headers)
    * [Git commit messages](#git-commit-messages)
       * [Specifications](#specifications)
       * [Examples](#examples)
@@ -193,7 +195,7 @@ def factorial(n):
     return 1 if n == 1 else n * factorial(n - 1)
 ```
 
-#### Function and methods docstrings
+#### Functions and methods docstrings
 
 All functions and methods *must* be documented: you *must* provide a
 [docstring](https://www.python.org/dev/peps/pep-0257/) *should* provide
@@ -214,6 +216,32 @@ delete it).
 See
 [Examples](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/start_coex/start_coex_widgets.py).
 
+#### Comments style
+
+Comments follow the PEP 8 convention. If necessary and the result if not
+bloated, you *may* use so-called *section comments*:
+
+```python3
+###################
+# Section comment #
+###################
+```
+
+and *separator comments*:
+
+```python3
+# ──────────────── Separator comment ─────────────── #
+```
+
+Both those types of comments *must* have a blank line just before and right
+after them.
+
+> If you are using vim / neovim, consider using the addon
+[UltiSnips](https://github.com/sirver/UltiSnips) to effeciently add headers.
+Ready-to-use snippets are available in
+[`tools/vimconfig/UltiSnips/python.snippets/deaduction.snippets`](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/tools/vimconfig/UltiSnips/python.snippets/deaduction.snippets).
+
+
 #### Classes docstrings
 
 All classes *must* be documented as well: you *must* provide a docstring and
@@ -222,6 +250,53 @@ functions and methods docstrings, except that public class attributes must be
 written in the class docstring using a `:attribute attribute_name: Attribute
 description` syntax. See
 [Examples](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/exercise/exercise_main_window.py).
+
+### Python file headers
+
+Files headers *must* have the following structure:
+
+```python3 
+"""
+##################################
+# <filename> : Short description #
+##################################
+    
+    (optional long description)
+
+Author(s)    : - Name <mail@website.com>
+Maintainer(s): - Name <mail@website.com>
+Created      : Creation date
+Repo         : https://github.com/dEAduction/dEAduction
+
+Copyright (c) Year the dEAduction team
+
+This file is part of dEAduction.
+
+    dEAduction is free software: you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free
+    Software Foundation, either version 3 of the License, or (at your option)
+    any later version.
+
+    dEAduction is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+    more details.
+
+    You should have received a copy of the GNU General Public License along
+    with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
+"""
+```
+
+See
+[example](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/missing_dependencies/missing_dependencies_dialogs.py).
+Non Python files *must* also have this header, simply get rid of the doctring
+`"""` marks.
+
+> If you are using vim / neovim, consider using the addon
+[UltiSnips](https://github.com/sirver/UltiSnips) to effeciently add headers.
+Ready-to-use snippets are available in
+[`tools/vimconfig/UltiSnips/python.snippets/deaduction.snippets`](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/tools/vimconfig/UltiSnips/python.snippets/deaduction.snippets).
+
 
 ### Git commit messages
 
