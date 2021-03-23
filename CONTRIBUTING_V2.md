@@ -1,63 +1,84 @@
 # Contributing to d∃∀duction
 
-Hello and welcome! Contributing to d∃∀duction is the best way to help. It is a
-free software : everybody has access to the code-base and can participate! We
-are a small team of dumb devs, we don't know what we're doing. This document
-tells you what you can do, what to expect, and helps you do it.
+Hello and welcome! Contributing to d∃∀duction is the best way to help. Since it
+free software : everybody can access to the code-base and participate! We are a
+small team of dumb devs, we don't know what we're doing. This document tells
+you what you can do, how you can do it and what to expect. Feel free to suggest
+any modification.
 
-## Get started
+---
+
+# Table of Contents
+
+* [Get started](#get-started)
+   * [Overview](#overview)
+   * [Prerequisites](#prerequisites)
+* [Contributing](#contributing)
+   * [What do?](#what-do)
+   * [How do?](#how-do)
+   * [Setting-up the development environment](#setting-up-the-development-environment)
+   * [What to expect?](#what-to-expect)
+* [Guidelines](#guidelines)
+   * [Code documentation](#code-documentation)
+      * [Functions and methods signatures](#functions-and-methods-signatures)
+      * [Function and methods docstrings](#function-and-methods-docstrings)
+      * [Classes docstrings](#classes-docstrings)
+   * [Git commit messages](#git-commit-messages)
+      * [Specifications](#specifications)
+      * [Examples](#examples)
+   * [Github issues](#github-issues)
+   * [Python code (modified PEP 8)](#python-code-modified-pep-8)
+         * [Consevutive lines with = operators](#consevutive-lines-with--operators)
+* [Resources](#resources)
+   * [For Python (version 3)](#for-python-version-3)
+   * [For L∃∀N](#for-ln)
+   * [For PySide2 / Qt for Python](#for-pyside2--qt-for-python)
+   * [For Trio and QTrio](#for-trio-and-qtrio)
+   * [For Git](#for-git)
+   * [On free software](#on-free-software)
+
+---
+
+# Get started
+
+## Overview
 
 The d∃∀duction project has two repositories:
-[deaduction](https://github.com/dEAduction/dEAduction) (contains all the source
-code and tools) and
-[deaduction-lean](https://github.com/dEAduction/dEAduction-lean) (contains L∃∀N
-code and exercises files). To know more about each directory, module or file,
-simply open its `__init__.py` or `README.md`.
+[deaduction](https://github.com/dEAduction/dEAduction) (Python source code and
+tools) and [deaduction-lean](https://github.com/dEAduction/dEAduction-lean)
+(L∃∀N code and exercises files). To know more about each directory, module or
+file, simply open its `__init__.py` or `README.md`.
 
-d∃∀duction is written in Python3 and L∃∀N (a proof assistant able to understand
-mathematical expressions and prove statements to be true or false). The
-graphical interface uses the module PySide2 (Qt for Python) and communication
-between the user interface and L∃∀N uses two modules called Trio and Qtrio. A
-good experience in Python3 is *recommended*, as well as basic terminal usage,
-but you do not need to be advanced in anything to contribute.  The version
-control system we use is Git. Some experience in Git is necessary but you can
-rapidly learn it from scratch (you should feel at ease using git branches).
+d∃∀duction is written in Python3 and L∃∀N (a proof assistant). The graphical
+interface uses PySide2 (Qt for Python) and communication between the user
+interface and L∃∀N uses Trio and Qtrio. The version control system we use is Git.
 
-A very important thing is *virtual environments*. A virtual environment is an
-isolated environment in a project directory in which all dependencies versions
-are frozen until manually changed (they can remain unchanged if we chose to).
-It is very easy to determine whether or not you are in the virtual environment
-of your project directory: there should be a `(env)` in front of your shell
-prompt.
+## Prerequisites
 
-To setup d∃∀duction's virtual environment and make sure every dependency is
-up-to-date, open a terminal at the repository's root and run the following
-command:
+A good experience in Python3 is *recommended*, as well as basic terminal usage.
+Some experience in Git is necessary but you can rapidly learn it from scratch
+(you should feel at ease using git branches). L∃∀N experience is useful only if
+you directly work on the L∃∀N side of the project, otherwise you do not need
+it. Finally, **you do not need to be a programming wizard to contribute**. In
+fact, nobody is in the core-team. You just need to know the things that are
+relevant to *you* and what you want to do.
 
-```bash
-source envconfig
-```
+A list of online resources is available at the end of this document. They do
+not cover everything but are all useful to this project. Do not read them if
+you do not need or want to. 
 
-A list of online sources is available at the end of this document. They do not
-cover everything but are all useful to this project. Do not read them if you do
-not need or want to. One thing needs to be crystal clear: **you do not need to
-be proficient everywhere to contribute**. In fact, nobody in the core team
-is. You just need to know the things that are relevant to *you* and what you
-want to do.
+---
 
-## Contributing
+# Contributing
 
-### What do?
+## What do?
 
-There are many different things you can do to help, and you do not need to be a
-programming wizard. Quality is *much* more helpful than quantity, there is no
-small contribution. You should always browse issues (&#x1F534;**TODO** lien)
-first to know what you can do. If you think you can work on an issue, reply to
-it first so we can discuss more precisely how we work together. Note that
-issues include many things, such as new features proposals, bug reports, code
-refactoring and discussions. If you wish to develop a new feature, open an
-issue first (see issues guidelines (&#x1F534;**TODO** lien vers la §) so we can
-discuss it.
+You should always browse issues (&#x1F534;**TODO** lien) first to know what you
+can do. If you think you can work on an issue, reply to it first so we can
+discuss more precisely how we work together. Note that issues include many
+things, such as new features proposals, bug reports, code refactoring and
+discussions. If you wish to develop a new feature, open an issue first (see
+issues guidelines (&#x1F534;**TODO** lien vers la §) so we can discuss it.
 
 That being said, not all good contribution ideas are in the issues (we are
 often too lazy to open an issue when we see code that should be refactored). Do
@@ -80,7 +101,7 @@ In any case, every contribution proposition should have its issue, whether we
 or you created it. To save you time, you should never work on a contribution
 which was not approved (there would be a risk of it being rejected)!
 
-### How do?
+## How do?
 
 You first need to fork (&#x1F534;**TODO** lien c'est quoi une fourchette)
 d∃∀duction's repository and create a new branch for your single contribution
@@ -101,7 +122,24 @@ discuss it and test it. After potential modifications and if we approve your
 contribution, we will tell you that your contribution is ready for
 pull-request! At that point, you just do the pull request and we accept it.
 
-### What to expect?
+## Setting-up the development environment
+
+A very important thing is *virtual environments*. A virtual environment is an
+isolated environment in a project directory in which all dependencies versions
+are frozen until manually changed (they can remain unchanged if we chose to).
+It is very easy to determine whether or not you are in the virtual environment
+of your project directory: there should be a `(env)` in front of your shell
+prompt.
+
+To setup d∃∀duction's virtual environment and make sure every dependency is
+up-to-date, open a terminal at the repository's root and run the following
+command:
+
+```bash
+source envconfig
+```
+
+## What to expect?
 
 To summarize, here is how you should contribute:
 1. Choose an existing issue or open one with a contribution idea.
@@ -123,9 +161,11 @@ d∃∀duction's code-base as much as possible, but we may reject it if necessar
 Finally, you will not get any kind of financial retribution. We are poor
 anyway.
 
-## Guidelines
+---
 
-### Code documentation
+# Guidelines
+
+## Code documentation
 
 As you will see in this section, d∃∀duction's code documentation may be long to
 write and needs maintenance. **Documentation is however as essential as your
@@ -140,7 +180,7 @@ single time. Documentation should not only tell what a piece of code does, it
 is used (provide examples if necessary). Context of the code is almost as
 important as the code.
 
-#### Functions and methods signatures
+### Functions and methods signatures
 
 All functions and methods *must* be
 [annotated](https://www.python.org/dev/peps/pep-3107/#syntax), using the
@@ -161,7 +201,7 @@ def factorial(n):
 
 Non function or method annotations *may* be provided.
 
-#### Function and methods docstrings
+### Function and methods docstrings
 
 All functions and methods *must* be documented: you *must* provide a
 [docstring](https://www.python.org/dev/peps/pep-0257/) *should* provide
@@ -222,7 +262,7 @@ Here is an example from the code-base, with the method annotated:
     """
 ```
 
-#### Classes docstrings
+### Classes docstrings
 
 All classes *must* be documented as well: you *must* provide a docstring and
 *should* provide comments. Classes docstrings follow the same rules as
@@ -262,9 +302,9 @@ class ExerciseMainWindow(QMainWindow):
     """
 ```
 
-### Git commit messages
+## Git commit messages
 
-#### Specifications
+### Specifications
 
 > Note: This convention is strongly inspired from the Angular project Commit
 Message Format
@@ -327,7 +367,7 @@ merge: repoA/branchA -> repoB/branchB
 where `repoA` and `repoB` are remote names (if one of them is a copy on your
 own computer, use `local`) and the merge is from `branchA` to `branchB`.
 
-#### Examples
+### Examples
 
 If you finish writing the first part of the function `my_function`, but this
 function is not ready, you should use the type `dev`. Since this function is
@@ -369,9 +409,9 @@ merge: local/dev/the_new_feature -> local/master
 Beware that any non-compliant commit message *will* be rejected by the git
 hook.
 
-### Github issues
+## Github issues
 
-### Python code (modified PEP 8)
+## Python code (modified PEP 8)
 
 d∃∀duction's Python code follows the [PEP 8 convention](https://pep8.org), with
 the following exceptions.
@@ -435,11 +475,13 @@ ordered. Finally, relative imports *may* be used in some cases; they follow
 the same rules as regular imports and *must* be grouped after the last
 group of regular imports and a blank line.
 
-## Resources
+---
+
+# Resources
 
 *Note: feel free to suggest new resources*.
 
-### For Python (version 3)
+## For Python (version 3)
 
 - The [official documentation](https://docs.python.org/3/).
 
@@ -456,14 +498,14 @@ group of regular imports and a blank line.
 - Python [thematic tutorials from ZetCode](https://zetcode.com/all/#python) are
     always great.
 
-### For L∃∀N
+## For L∃∀N
 
 - The [official documentation](https://leanprover.github.io/documentation/).
 - The [Natural number
     game](https://wwwf.imperial.ac.uk/%7Ebuzzard/xena/natural_number_game/) to
     learn L∃∀N by using it, no experience needed.
 
-### For PySide2 / Qt for Python
+## For PySide2 / Qt for Python
 
 - The [official
     documentation](https://doc.qt.io/qtforpython/quickstart.html).
@@ -472,18 +514,18 @@ group of regular imports and a blank line.
     `PyQt5` by `PySide2`; there are some other minor problems but you will make
     it.)
 
-### For Trio and QTrio
+## For Trio and QTrio
 
 - Trio's [official documentation](https://trio.readthedocs.io/en/stable/).
 - QTrio's [repository](https://github.com/altendky/qtrio).
 
-### For Git
+## For Git
 
 - The [official documentation](https://git-scm.com/doc).
 - The (free) book [*Pro Git*](https://git-scm.com/book/en/v2) is a complete and
     rigourous way of becoming proficient in Git.
 
-### On free software
+## On free software
 
 - GNU's article [What is free
     software?](https://www.gnu.org/philosophy/free-sw.html) covers the basics in a
