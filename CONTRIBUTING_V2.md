@@ -6,9 +6,7 @@ small team of dumb devs, we don't know what we're doing. This document tells
 you what you can do, how you can do it and what to expect. Feel free to suggest
 any modification.
 
----
-
-# Table of Contents
+#### Table of contents
 
 * [Get started](#get-started)
    * [Overview](#overview)
@@ -27,10 +25,10 @@ any modification.
       * [Specifications](#specifications)
       * [Examples](#examples)
    * [Git branch names](#git-branch-names)
-   * [Github issues](#github-issues)
-   * [Python code (modified PEP 8)](#python-code-modified-pep-8)
+   * [Python code (modified PEP 8) and linting](#python-code-modified-pep-8-and-linting)
       * [Consecutive lines with = operators](#consecutive-lines-with--operators)
-* [Resources](#resources)
+      * [Import statements](#import-statements)
+* [Resources (bonus)](#resources-bonus)
    * [For Python (version 3)](#for-python-version-3)
    * [For L∃∀N](#for-ln)
    * [For PySide2 / Qt for Python](#for-pyside2--qt-for-python)
@@ -38,11 +36,10 @@ any modification.
    * [For Git](#for-git)
    * [On free software](#on-free-software)
 
----
 
-# Get started
+## Get started
 
-## Overview
+### Overview
 
 The d∃∀duction project has two repositories:
 [deaduction](https://github.com/dEAduction/dEAduction) (Python source code and
@@ -54,7 +51,7 @@ d∃∀duction is written in Python3 and L∃∀N (a proof assistant). The graph
 interface uses PySide2 (Qt for Python) and communication between the user
 interface and L∃∀N uses Trio and Qtrio. The version control system we use is Git.
 
-## Prerequisites
+### Prerequisites
 
 A good experience in Python3 is *recommended*, as well as basic terminal usage.
 Some experience in Git is necessary but you can rapidly learn it from scratch
@@ -64,15 +61,15 @@ it. Finally, **you do not need to be a programming wizard to contribute**. In
 fact, nobody is in the core-team. You just need to know the things that are
 relevant to *you* and what you want to do.
 
-A list of online resources is available at the end of this document. They do
-not cover everything but are all useful to this project. Do not read them if
-you do not need or want to. 
+A [list](#resources-bonus) of online resources is available at the end of this
+document. They do not cover everything but are all useful to this project. Do
+not read them if you do not need or want to. 
 
----
 
-# Contributing
 
-## What do?
+## Contributing
+
+### What do?
 
 Consider working on an existing issue
 [issue](https://github.com/dEAduction/dEAduction/issues); if you want to
@@ -101,7 +98,7 @@ first issue`](https://github.com/dEAduction/dEAduction/issues?q=is%3Aopen+is%3Ai
 > Beware of the [contribution guidelines](#guidelines) for code, commit
 messages, etc.
 
-## Contribution process
+### Contribution process
 
 To contribute, you first need to
 [fork](https://docs.github.com/en/github/getting-started-with-github/fork-a-repo)
@@ -132,7 +129,7 @@ Notes:
   overwhelmed, spend some time inquiring on the internet or contact us (with
   precise questions).
 
-## What to expect?
+### What to expect?
 
 If you follow these steps, your contribution proposition should be accepted!
 You shall then be credited as a d∃∀duction's contributor. Nevertheless,
@@ -142,7 +139,7 @@ d∃∀duction's code-base as much as possible, but we may reject it if necessar
 Finally, you will not get any kind of financial retribution. We are poor
 anyway.
 
-## Setting-up the development environment
+### Setting-up the development environment
 
 In order to contribute, it is necessary to set-up d∃∀duction's development
 environment. This includes a Python virtual environment, a Python linter (file
@@ -158,11 +155,11 @@ You should now have a `(env)` in front of your terminal prompt. It is *highly*
 recommended to set up the development environment at the very beginning of
 every development session.
 
----
 
-# Guidelines
 
-## Code documentation
+## Guidelines
+
+### Code documentation
 
 As you will see in this section, d∃∀duction's code documentation may be long to
 write and needs maintenance. **Documentation is however as essential as your
@@ -177,7 +174,7 @@ single time. Documentation should not only tell what a piece of code does, it
 is used (provide examples if necessary). Context of the code is almost as
 important as the code.
 
-### Functions and methods signatures
+#### Functions and methods signatures
 
 All functions and methods *must* be
 [annotated](https://www.python.org/dev/peps/pep-3107/#syntax), using the
@@ -196,7 +193,7 @@ def factorial(n):
     return 1 if n == 1 else n * factorial(n - 1)
 ```
 
-### Function and methods docstrings
+#### Function and methods docstrings
 
 All functions and methods *must* be documented: you *must* provide a
 [docstring](https://www.python.org/dev/peps/pep-0257/) *should* provide
@@ -217,7 +214,7 @@ delete it).
 See
 [Examples](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/start_coex/start_coex_widgets.py).
 
-### Classes docstrings
+#### Classes docstrings
 
 All classes *must* be documented as well: you *must* provide a docstring and
 *should* provide comments. Classes docstrings follow the same rules as
@@ -226,9 +223,9 @@ written in the class docstring using a `:attribute attribute_name: Attribute
 description` syntax. See
 [Examples](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/exercise/exercise_main_window.py).
 
-## Git commit messages
+### Git commit messages
 
-### Specifications
+#### Specifications
 
 > This convention is strongly inspired from the Angular project Commit
 Message Format
@@ -248,7 +245,7 @@ area::type(scope): Summary
 Argument `area` is mandatory and *must* be one of:
 
 `area`     | Definition
------------|-------------------------------------------------------------------
+--|-
 `code`     | Changes affecting the code-base.
 `doc`      | Changes affecting the documentation (including comments and docstrings).
 `snippets` | Changes affecting the snippets.
@@ -259,7 +256,7 @@ Argument `area` is mandatory and *must* be one of:
 Argument `type` is also mandatory and *must* be one of:
 
 `type`   | Definition
----------|---------------------------------------------------------------------
+|
 `chores` | Changes affecting that do not affect the meaning of what is changed (e.g. changing a filename).
 `dev`    | Work in progress for new features; changes that are part of its development though not introducing it. A series of `dev` commits end with a `feat` commit.
 `feat`   | Changes that introduce a completed new feature. When developing it, the last commit *must* be the only one to use this type, all other *must* use dev.
@@ -289,7 +286,7 @@ merge: repoA/branchA -> repoB/branchB
 where `repoA` and `repoB` are remote names (if one of them is a copy on your
 own computer, use `local`) and the merge is from `branchA` to `branchB`.
 
-### Examples
+#### Examples
 
 If you finish writing the first part of the function `my_function`, but this
 function is not ready, you should use the type `dev`. Since this function is
@@ -331,7 +328,7 @@ merge: local/dev/the_new_feature -> local/master
 Beware that any non-compliant commit message *will* be rejected by the git
 hook.
 
-## Git branch names
+### Git branch names
 
 Branch names *must* have the following structure:
 
@@ -347,7 +344,7 @@ case.
 
 > A branch should host a *single* new feature, fix, etc.
 
-## Python code (modified PEP 8) and linting
+### Python code (modified PEP 8) and linting
 
 d∃∀duction's Python code follows the [PEP 8 convention](https://pep8.org), with
 the adjustments hereunder. You *should* check your Python code syntax using the
@@ -370,7 +367,7 @@ flake8 my_module.py
   up](#setting-up-the-development-environment) and to be in the Python virtual
   environment.
 
-### Consecutive lines with `=` operators
+#### Consecutive lines with `=` operators
 
 Occurrences of `=` operator on a series of consecutive non blank lines *must* be
 vertically aligned. See example:
@@ -384,7 +381,7 @@ other_int    = 2
 other_string = 'free software'
 ```
 
-### Import statements
+#### Import statements
 
 As PEP 8 says,
 > Imports must be grouped in the following order:
@@ -402,13 +399,13 @@ rules as regular imports and *must* be grouped after the last group of regular
 imports and a blank line.
 See [Example](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/exercise/exercise_main_window.py).
 
----
 
-# Resources
+
+## Resources (bonus)
 
 > Feel free to suggest new resources*.
 
-## For Python (version 3)
+### For Python (version 3)
 
 - The [official documentation](https://docs.python.org/3/).
 
@@ -425,14 +422,14 @@ See [Example](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/d
 - Python [thematic tutorials from ZetCode](https://zetcode.com/all/#python) are
     always great.
 
-## For L∃∀N
+### For L∃∀N
 
 - The [official documentation](https://leanprover.github.io/documentation/).
 - The [Natural number
     game](https://wwwf.imperial.ac.uk/%7Ebuzzard/xena/natural_number_game/) to
     learn L∃∀N by using it, no experience needed.
 
-## For PySide2 / Qt for Python
+### For PySide2 / Qt for Python
 
 - The [official
     documentation](https://doc.qt.io/qtforpython/quickstart.html).
@@ -441,18 +438,18 @@ See [Example](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/d
     `PyQt5` by `PySide2`; there are some other minor problems but you will make
     it.)
 
-## For Trio and QTrio
+### For Trio and QTrio
 
 - Trio's [official documentation](https://trio.readthedocs.io/en/stable/).
 - QTrio's [repository](https://github.com/altendky/qtrio).
 
-## For Git
+### For Git
 
 - The [official documentation](https://git-scm.com/doc).
 - The (free) book [*Pro Git*](https://git-scm.com/book/en/v2) is a complete and
     rigourous way of becoming proficient in Git.
 
-## On free software
+### On free software
 
 - GNU's article [What is free
     software?](https://www.gnu.org/philosophy/free-sw.html) covers the basics in a
