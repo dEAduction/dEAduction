@@ -10,7 +10,7 @@ any modification.
 
 * [Get started](#get-started)
    * [Overview](#overview)
-   * [Prerequisites](#prerequisites)
+   * [What should I know?](#what-should-i-know)
 * [Contributing](#contributing)
    * [What do?](#what-do)
    * [Contribution process](#contribution-process)
@@ -53,15 +53,15 @@ d∃∀duction is written in Python3 and L∃∀N (a proof assistant). The graph
 interface uses PySide2 (Qt for Python) and communication between the user
 interface and L∃∀N uses Trio and Qtrio. The version control system we use is Git.
 
-### Prerequisites
+### What should I know?
 
-A good experience in Python3 is *recommended*, as well as basic terminal usage.
-Some experience in Git is necessary but you can rapidly learn it from scratch
-(you should feel at ease using git branches). L∃∀N experience is useful only if
-you directly work on the L∃∀N side of the project, otherwise you do not need
-it. Finally, **you do not need to be a programming wizard to contribute**. In
-fact, nobody is in the core-team. You just need to know the things that are
-relevant to *you* and what you want to do.
+Not much. A good experience in Python3 is *recommended*, as well as basic
+terminal usage.  Some experience in Git is necessary but you can rapidly learn
+it from scratch (you should feel at ease using git branches). L∃∀N experience
+is useful only if you directly work on the L∃∀N side of the project, otherwise
+you do not need it. Finally, **you do not need to be a programming wizard to
+contribute**. In fact, nobody is in the core-team. You just need to know the
+things that are relevant to *you* and what you want to do.
 
 A [list](#resources-bonus) of online resources is available at the end of this
 document. They do not cover everything but are all useful to this project. Do
