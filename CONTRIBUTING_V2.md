@@ -196,8 +196,6 @@ def factorial(n):
     return 1 if n == 1 else n * factorial(n - 1)
 ```
 
-Non function or method annotations *may* be provided.
-
 ### Function and methods docstrings
 
 All functions and methods *must* be documented: you *must* provide a
@@ -216,48 +214,8 @@ delete it).
 """
 ```
 
-Here is an example from the code-base, with the method annotated:
-
-```python3
- def set_preview(self, main_widget: Optional[QWidget], title: Optional[str],
-                subtitle: Optional[str], details: Optional[Dict[str, str]],
-                description: Optional[str], expand_details: Optional[bool]):
-    """
-    Set the preview area of the choosen course or exercise (given
-    something has been chosen). The preview area is made of a title,
-    a substitle, details, a description and a main widget. This
-    widget is of course specific to CourseChooser or ExerciseChooser
-    and defined when the set_preview method is redefined in
-    CourseChooser or ExerciseChooser. Visually, the preview area
-    looks like this:
-
-    |----------------------------|
-    | title (big)                |
-    | subtitle (small, italic)   |
-    | |> Details:                |
-    |     …: …                   |
-    |     …: …                   |
-    |                            |
-    | description .............. |
-    | .......................... |
-    | .......................... |
-    |                            |
-    | |------------------------| |
-    | |      main_widget       | |
-    | |------------------------| |
-    |----------------------------|
-
-    :param main_widget: The main widget of the preview (nothing for
-        the course, goal preview for the exercise).
-    :param title: Course or exercise title.
-    :param subtitle: Course or exercise subtitle.
-    :param details: Other data for the course or exercise such as
-        the course's year, teacher, school, etc.
-    :param description: The course or exercise description.
-    :param exapand_details: Tell if the 'Details' disclosure tree is
-        expanded at __init__ (True) or not (False).
-    """
-```
+See
+[Examples](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/start_coex/start_coex_widgets.py).
 
 ### Classes docstrings
 
@@ -265,39 +223,8 @@ All classes *must* be documented as well: you *must* provide a docstring and
 *should* provide comments. Classes docstrings follow the same rules as
 functions and methods docstrings, except that public class attributes must be
 written in the class docstring using a `:attribute attribute_name: Attribute
-description` syntax. Here is an example from the code-base:
-
-```python3
-class ExerciseMainWindow(QMainWindow):
-    """
-    This class is responsible for both:
-        - managing the whole interface for exercises;
-        - communicating with a so-called server interface (self.servint, not
-          instantiated in this class): a middle man between the interface and
-          L∃∀N.
-
-    … docstring continues …
-
-    Finally, all of this uses asynchronous processes (keywords async and
-    await) using trio and qtrio.
-
-    :attribute exercise Exercise: The instance of the Exercise class
-        representing the exercise to be solved by the user, instantiated
-        in deaduction.dui.__main__.py.
-    :attribute current_goal Goal: The current goal, which contains the
-        tagged target, tagged math. objects and tagged math. properties.
-    :attribute current_selection [MathObjectWidgetItem]: The ordered of
-        currently selected math. objects and properties by the user.
-    :attribute ecw ExerciseCentralWidget: The instance of
-        ExerciseCentralWidget instantiated in self.__init__, see
-        ExerciseCentraiWidget.__doc__.
-    :attribute lean_editor LeanEditor: A text editor to live-edit lean
-        code.
-    :attribute servint ServerInterface: The instance of ServerInterface
-        for the session, instantiated in deaduction.dui.__main__.py.
-    :attribute toolbar QToolBar: The toolbar.
-    """
-```
+description` syntax. See
+[Examples](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/exercise/exercise_main_window.py).
 
 ## Git commit messages
 
@@ -435,7 +362,7 @@ version:
 
 To lint your Python module, simply run the terminal command:
 
-```shell
+```bash
 flake8 my_module.py
 ```
 
@@ -446,7 +373,7 @@ flake8 my_module.py
 ### Consecutive lines with `=` operators
 
 Occurrences of `=` operator on a series of consecutive non blank lines *must* be
-vertically aligned. Example:
+vertically aligned. See example:
 
 ```python3
 my_int             = 10
@@ -456,6 +383,7 @@ my_bigger_variable = 'Code is read much more often than it is written.'
 other_int    = 2
 other_string = 'free software'
 ```
+
 ### Import statements
 
 As PEP 8 says,
@@ -468,39 +396,11 @@ As PEP 8 says,
 > You must put a blank line between each group of imports.
 
 We add the following rule: `import` statements *must* be vertically aligned.
-Example:
-
-```python3
-from functools import partial
-import                logging
-from typing import    Callable
-import                qtrio
-
-from PySide2.QtCore import (    Signal,
-                                Slot,
-                                QEvent )
-from PySide2.QtWidgets import ( QInputDialog,
-                                QMainWindow,
-                                QMessageBox )
-
-from deaduction.dui.elements            import ( ActionButton,
-                                                 LeanEditor,
-                                                 StatementsTreeWidgetItem,
-                                                 MathObjectWidget,
-                                                 MathObjectWidgetItem )
-from deaduction.dui.primitives          import   ButtonsDialog
-from deaduction.pylib.config.i18n       import   _
-from deaduction.pylib.memory            import   Journal
-from deaduction.pylib.actions           import ( InputType,
-                                                 MissingParametersError,
-                                                 WrongUserInput)
-import deaduction.pylib.actions.generic as       generic
-```
-
-Inside a group or a single statement, imports *must* be alphabetically
-ordered. Finally, relative imports *may* be used in some cases; they follow
-the same rules as regular imports and *must* be grouped after the last
-group of regular imports and a blank line.
+Inside a group or a single statement, imports *must* be alphabetically ordered.
+Finally, relative imports *may* be used in some cases; they follow the same
+rules as regular imports and *must* be grouped after the last group of regular
+imports and a blank line.
+See [Example](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/exercise/exercise_main_window.py).
 
 ---
 
