@@ -15,9 +15,9 @@ any modification.
    * [Prerequisites](#prerequisites)
 * [Contributing](#contributing)
    * [What do?](#what-do)
-   * [How do?](#how-do)
-   * [Setting-up the development environment](#setting-up-the-development-environment)
+   * [Contribution process](#contribution-process)
    * [What to expect?](#what-to-expect)
+   * [Setting-up the development environment](#setting-up-the-development-environment)
 * [Guidelines](#guidelines)
    * [Code documentation](#code-documentation)
       * [Functions and methods signatures](#functions-and-methods-signatures)
@@ -73,21 +73,16 @@ you do not need or want to.
 
 ## What do?
 
-You should always browse issues (&#x1F534;**TODO** lien) first to know what you
-can do. If you think you can work on an issue, reply to it first so we can
-discuss more precisely how we work together. Note that issues include many
-things, such as new features proposals, bug reports, code refactoring and
-discussions. If you wish to develop a new feature, open an issue first (see
-issues guidelines (&#x1F534;**TODO** lien vers la §) so we can discuss it.
-
-That being said, not all good contribution ideas are in the issues (we are
-often too lazy to open an issue when we see code that should be refactored). Do
-feel free to open one. Here are contribution ideas, in order of preference:
+Consider working on an existing issue
+[issue](https://github.com/dEAduction/dEAduction/issues); if you want to
+develop a new feature, open an issue first so we can discuss it. If you chose
+to work on an issue, reply to it first so we can discuss more precisely how we
+work together. Otherwise, here are new-issue contribution ideas, in order of
+preference:
 - **Refactor code**: yeah, please help us. d∃∀duction needs a strong code-base
     and as of now it is rather weak.
 - **Report stuff**: bugs, refactoring suggestions, user interface suggestions,
-    new features proposals, etc (see issues guidelines (&#x1F534;**TODO** lien
-    vers la §).
+    new features proposals, etc.
 - **Translate user interface**.
 - **Write documentation**: many modules, classes or functions are undocumented,
     but they should be. You can also contribute to d∃∀duction's user manual.
@@ -95,32 +90,64 @@ feel free to open one. Here are contribution ideas, in order of preference:
     appreciated.
 - **Create exercises**.
 
-(&#x1F534;**TODO** ajouter issues avec tag first contribution)
+Issues that are best-suited for first contributions have the label [`good first
+issue`][https://github.com/dEAduction/dEAduction/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).
 
 In any case, every contribution proposition should have its issue, whether we
 or you created it. To save you time, you should never work on a contribution
 which was not approved (there would be a risk of it being rejected)!
 
-## How do?
+## Contribution process
 
-You first need to fork (&#x1F534;**TODO** lien c'est quoi une fourchette)
-d∃∀duction's repository and create a new branch for your single contribution
-(do not use a branch for more than one thing), see branches guidelines
-(&#x1F534;**TODO** lien). Do not do your modifications on the `master` branch.
-You can now begin writing your contribution!
+To contribute, you first need to
+[fork](https://docs.github.com/en/github/getting-started-with-github/fork-a-repo)
+d∃∀duction's repository and create a new branch (see branches guidelines
+(&#x1F534;**TODO** lien) for your contribution (do not use a branch for more
+than one thing). You can begin development on this branch. At this point, your
+fork and d∃∀duction's repository are two distinct projects.
 
-Remember to commit often; in doubt commit. On top of that, keep your fork
-up-to-date with upstream (that is, with d∃∀duction's branch you forked from).
-
-At any stage, do feel free to discuss your contribution's development with the
-core team. This should be done publicly, in the contribution proposition's
-issue.
-
-When you think your contribution is finished, push it to your online fork.
+When you think your contribution is ready, git push it to your online fork.
 Signal it in the contribution proposition's Github issue so we can review it,
-discuss it and test it. After potential modifications and if we approve your
-contribution, we will tell you that your contribution is ready for
-pull-request! At that point, you just do the pull request and we accept it.
+discuss it and test it; it will be labeled with [`status::ready for
+review`](https://github.com/dEAduction/dEAduction/issues?q=is%3Aopen+is%3Aissue+label%3A%22status%3A%3Aready+for+review%22+).
+After potential modifications and if we approve your contribution, we will tell
+you that your contribution is ready for pull-request! At that point, your issue
+is labeled with [`status::ready for
+PR`](https://github.com/dEAduction/dEAduction/issues?q=is%3Aopen+is%3Aissue+label%3A%22status%3A%3Aready+for+PR%22+);
+you just do the pull request and we accept it.
+
+Notes:
+- Do *not* do your modifications directly on the `master` branch.
+- Remember to commit often; in doubt commit. On top of that, keep your fork
+  up-to-date with upstream (that is, with d∃∀duction's branch you forked from).
+- At any stage, do feel free to discuss your contribution's development with
+  the core team. This should be done publicly, in the contribution
+  proposition's issue.
+
+> This section is a basic outline of the contribution process. If you feel
+  overwhelmed, spend some time inquiring on the internet or contact us (with
+  precise questions).
+
+Summary:
+1. Choose an existing issue or open one with a contribution idea. In this
+   issue, inform us that you would like to contribute so we can discuss.
+2. Make your fork, create your new branch, code, keep up-to-date and push your
+   contribution proposal once you think it is ready.
+3. In the contribution's proposal issue, inform us apes that you think your
+   contribution is ready so we can discuss and potentially ask you to make some
+   changes.
+4. If we approve the final version of the contribution proposition, you may do
+   a pull request. We should accept it after a final review.
+
+## What to expect?
+
+If you follow these steps, your contribution proposition should be accepted!
+You shall then be credited as a d∃∀duction's contributor. Nevertheless,
+respecting the above stages by nowise means that your contribution proposal
+*will* be accepted. Those stages ensure that your contribution fits in
+d∃∀duction's code-base as much as possible, but we may reject it if necessary.
+Finally, you will not get any kind of financial retribution. We are poor
+anyway.
 
 ## Setting-up the development environment
 
@@ -138,28 +165,6 @@ command:
 ```bash
 source envconfig
 ```
-
-## What to expect?
-
-To summarize, here is how you should contribute:
-1. Choose an existing issue or open one with a contribution idea.
-2. In this issue, inform us dummies that you would like to contribute so we can
-   discuss.
-3. Make your fork, create your new branch, code, keep up-to-date and push your
-   contribution proposal once you think it is ready.
-4. In the contribution's proposal issue, inform us apes that you think your
-   contribution is ready so we can discuss and potentially ask you to make some
-   changes.
-5. If we approve the final version of the contribution proposition, you may do
-   a pull request. We should accept it after a final review.
-
-If you follow these steps, your contribution proposition should be accepted!
-You shall then be credited as a d∃∀duction's contributor. Nevertheless,
-respecting the above stages by nowise means that your contribution proposal
-*will* be accepted. Those stages ensure that your contribution fits in
-d∃∀duction's code-base as much as possible, but we may reject it if necessary.
-Finally, you will not get any kind of financial retribution. We are poor
-anyway.
 
 ---
 
