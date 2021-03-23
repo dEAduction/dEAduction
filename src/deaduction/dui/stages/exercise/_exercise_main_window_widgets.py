@@ -277,11 +277,12 @@ class ExerciseStatusBar(QStatusBar):
         # Icon
         self.iconWidget = QLabel(self)
         icons_base_dir = cvars.get("icons.path")
-        error_icon_path = fs.path_helper(icons_base_dir) / 'error_devil2.png'
+        error_icon_path = fs.path_helper(icons_base_dir) / 'no-entry-sign.png'
+        success_icon_path = fs.path_helper(icons_base_dir) / 'checked.png'
         self.error_pixmap = QPixmap(str(error_icon_path.resolve()))
+        self.success_pixmap = QPixmap(str(success_icon_path.resolve()))
         self.iconWidget.setScaledContents(True)
         self.iconWidget.setMaximumSize(self.height(), self.height())
-        self.iconWidget.setPixmap(self.error_pixmap)
 
         # Message
         self.messageWidget = QLabel("", self)
@@ -292,6 +293,11 @@ class ExerciseStatusBar(QStatusBar):
         self.iconWidget.hide()
 
     def show_error_icon(self):
+        self.iconWidget.setPixmap(self.error_pixmap)
+        self.iconWidget.show()
+
+    def show_success_icon(self):
+        self.iconWidget.setPixmap(self.success_pixmap)
         self.iconWidget.show()
 
     def hide_icon(self):
@@ -317,6 +323,9 @@ class ExerciseStatusBar(QStatusBar):
                 message += ": " + details
             if nature in ('error', 'lean_error'):
                 status_bar.show_error_icon()
+                status_bar.set_message(message)
+            elif nature == 'success':
+                status_bar.show_success_icon()
                 status_bar.set_message(message)
             else:
                 status_bar.hide_icon()

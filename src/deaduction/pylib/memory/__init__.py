@@ -56,6 +56,7 @@ class Journal:
                      'effective_code'
                      'error',
                      'lean_error',
+                     'success',
                      'message',
                      'user_input',
                      'various')

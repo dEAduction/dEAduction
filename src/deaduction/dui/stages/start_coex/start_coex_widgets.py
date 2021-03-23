@@ -795,7 +795,7 @@ class AbstractStartCoEx(QDialog):
 
         # Send exercise_chosen signal and close dialog
         self.exercise_chosen.emit(exercise)
-        log.debug("Exercise chosen, closing window")
+        # log.debug("Exercise chosen, closing window")
         self.accept()  # Fuck you and I'll see you tomorrow!
 
 
