@@ -24,7 +24,8 @@ any modification.
       * [Comments style](#comments-style)
    * [Python file headers](#python-file-headers)
    * [Git commit messages](#git-commit-messages)
-      * [Specifications](#specifications)
+      * [Specifications (non-merge commits)](#specifications-non-merge-commits)
+      * [Specifications (merge commits)](#specifications-merge-commits)
       * [Examples](#examples)
    * [Git branch names](#git-branch-names)
    * [Python code (modified PEP 8) and linting](#python-code-modified-pep-8-and-linting)
@@ -59,28 +60,26 @@ Not much. A good experience in Python3 is *recommended*, as well as basic
 terminal usage.  Some experience in Git is necessary but you can rapidly learn
 it from scratch (you should feel at ease using git branches). L∃∀N experience
 is useful only if you directly work on the L∃∀N side of the project, otherwise
-you do not need it. Finally, **you do not need to be a programming wizard to
-contribute**. In fact, nobody is in the core-team. You just need to know the
-things that are relevant to *you* and what you want to do.
+you do not need it. **You do not need to be a programming wizard to
+contribute**. In fact, nobody is in the core-team; you just need the things
+that are relevant to *you*.
 
 A [list](#resources-bonus) of online resources is available at the end of this
 document. They do not cover everything but are all useful to this project. Do
 not read them if you do not need or want to. 
 
 
-
 ## Contributing
 
 ### What do?
 
-Consider working on an existing issue
-[issue](https://github.com/dEAduction/dEAduction/issues); if you want to
-develop a new feature, open an issue first so we can discuss it. If you chose
-to work on an issue, reply to it first so we can discuss more precisely how we
-work together. Otherwise, here are new-issue contribution ideas, in order of
+Consider working on an existing
+[issue](https://github.com/dEAduction/dEAduction/issues); in that case add a
+comment so we can discuss. If you want to develop a new feature, open an issue
+first so we can discuss it. Here are new-issue contribution ideas, in order of
 preference:
-- **Refactor code**: yeah, please help us. d∃∀duction needs a strong code-base
-    and as of now it is rather weak.
+- **Refactor code**: please help us. d∃∀duction needs a strong code-base and as
+    of now it is rather weak.
 - **Report stuff**: bugs, refactoring suggestions, user interface suggestions,
     new features proposals, etc.
 - **Translate user interface**.
@@ -90,46 +89,44 @@ preference:
     appreciated.
 - **Create exercises**.
 
-In any case, every contribution proposition should have its issue, whether we
-or you created it. To save you time, you should never work on a contribution
-which was not approved (there would be a risk of it being rejected)!
+In any case, every contribution should have its issue, whether we or you
+created it. To save you time, you should never work on a contribution that was
+not discussed (there would be a risk of it being rejected)!
 
 > Issues that are best-suited for first contributions have the label [`good
 first issue`](https://github.com/dEAduction/dEAduction/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).
 
-> Beware of the [contribution guidelines](#guidelines) for code, commit
-messages, etc.
+Finally, please respect the [contribution guidelines](#guidelines) for code,
+commit messages, etc.
 
 ### Contribution process
 
 To contribute, you first need to
 [fork](https://docs.github.com/en/github/getting-started-with-github/fork-a-repo)
-d∃∀duction's repository and create a new branch (see branches
-[guidelines](#git-branch-names) for your contribution (do not use a branch for
-more than one thing). You can begin development on this branch. At this point,
-your fork and d∃∀duction's repository are two distinct projects.
+d∃∀duction's repository and create a new git branch (see branches
+[guidelines](#git-branch-names), do *not* develop on the `master` branch) for
+your contribution (do not use a branch for more than one thing).
+
+> At this point, your fork and d∃∀duction's repository are two distinct
+  projects.
 
 When you think your contribution is ready, git push it to your online fork.
-Signal it in the contribution proposition's Github issue so we can review it,
-discuss it and test it; it will be labeled with [`status::ready for
+Signal it in the contribution proposition's Github issue so core-team members
+can review it, discuss it and test it; it will be labeled with [`status::ready
+for
 review`](https://github.com/dEAduction/dEAduction/issues?q=is%3Aopen+is%3Aissue+label%3A%22status%3A%3Aready+for+review%22+).
-After potential modifications and if we approve your contribution, we will tell
-you that your contribution is ready for pull-request! At that point, your issue
-is labeled with [`status::ready for
+After potential modifications and *if* the same core-team members approve your
+contribution, they will label it with [`status::ready for
 PR`](https://github.com/dEAduction/dEAduction/issues?q=is%3Aopen+is%3Aissue+label%3A%22status%3A%3Aready+for+PR%22+);
-you just do the pull request and we accept it.
+you just do the pull request and your contribution is integrated to
+d∃∀duction's code-base.
 
-Notes:
-- Do *not* do your modifications directly on the `master` branch.
-- Remember to commit often; in doubt commit. On top of that, keep your fork
+At any stage, do feel free to discuss your contribution's development with the
+core team. This should be done publicly, in the contribution proposition's
+issue.
+
+> Remember to commit often; in doubt commit. On top of that, keep your fork
   up-to-date with upstream (that is, with d∃∀duction's branch you forked from).
-- At any stage, do feel free to discuss your contribution's development with
-  the core team. This should be done publicly, in the contribution
-  proposition's issue.
-
-> This section is a basic outline of the contribution process. If you feel
-  overwhelmed, spend some time inquiring on the internet or contact us (with
-  precise questions).
 
 ### What to expect?
 
@@ -138,16 +135,15 @@ You shall then be credited as a d∃∀duction's contributor. Nevertheless,
 respecting the above stages by nowise means that your contribution proposal
 *will* be accepted. Those stages ensure that your contribution fits in
 d∃∀duction's code-base as much as possible, but we may reject it if necessary.
-Finally, you will not get any kind of financial retribution. We are poor
-anyway.
+Mind that you will not get any kind of financial retribution.
 
 ### Setting-up the development environment
 
 In order to contribute, it is necessary to set-up d∃∀duction's development
 environment. This includes a Python virtual environment, a Python linter (file
-[`.flake8`](.flake8)), git hooks, etc. To set it up and make sure every
-dependency is up-to-date, open a terminal at the repository's root and run the
-following command:
+[`.flake8`](.flake8)), git hooks, environment variables, etc. To set it up and
+make sure every dependency is up-to-date, open a terminal at the repository's
+root and run the following command:
 
 ```bash
 source envconfig
@@ -155,8 +151,8 @@ source envconfig
 
 You should now have a `(env)` in front of your terminal prompt. It is *highly*
 recommended to set up the development environment at the very beginning of
-every development session.
-
+every development session. The code will not run if this environment is not set
+up.
 
 
 ## Guidelines
@@ -164,17 +160,17 @@ every development session.
 ### Code documentation
 
 As you will see in this section, d∃∀duction's code documentation may be long to
-write and needs maintenance. **Documentation is however as essential as your
-code**. It may be never useful for the author but *will* be for any person
-discovering your code in order to maintain it understand it for their own
-needs. When writing documentation, you should always assume that the reader is
-not familiar with your code and has very few time to understand it. The writer
-should do most of the work, so that the reader can efficiently and fastly
-understand the essence and utility of your code by reading its documentation a
-single time. Documentation should not only tell what a piece of code does, it
-*must* tell why it exists, why it is *necessary*, where it is used and how it
-is used (provide examples if necessary). Context of the code is almost as
-important as the code.
+write and needs be maintained when the code is changed. But **Documentation is
+as essential as your code**. It may be never useful for the author but *will*
+be for any person discovering your code in order to maintain it understand it
+for their own needs. As Guido said, *code is read much more often than it is
+written*. When writing documentation, you should always assume that the reader
+is not familiar with your code and has very few time and skill to understand
+it. The writer should do most of the work, so that the reader can efficiently
+understand the essence and utility of your code in a single reading.
+Documentation should not only tell what a piece of code does, it *must* tell
+why it exists, why it is *necessary*, where it is used and how it is used
+(provide examples if necessary).
 
 #### Functions and methods signatures
 
@@ -199,7 +195,8 @@ def factorial(n):
 
 All functions and methods *must* be documented: you *must* provide a
 [docstring](https://www.python.org/dev/peps/pep-0257/) *should* provide
-comments. Functions and methods docstrings *must* have the following format:
+comments (see comments style [guidelines](#comments-style)). Functions and
+methods docstrings *must* have the following format:
 
 ```python3
 """
@@ -213,12 +210,24 @@ delete it).
 """
 ```
 
-See
-[Examples](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/start_coex/start_coex_widgets.py).
+[Here](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/start_coex/start_coex_widgets.py)
+are examples.
+
+
+#### Classes docstrings
+
+All functions and methods *must* be documented: you *must* provide a
+[docstring](https://www.python.org/dev/peps/pep-0257/) *should* provide
+comments (see comments style [guidelines](#comments-style)). Classes docstrings
+follow the same rules as functions and methods docstrings, except that public
+class attributes must be written in the class docstring using a `:attribute
+attribute_name: Attribute description` syntax. See
+[Here](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/exercise/exercise_main_window.py)
+are examples.
 
 #### Comments style
 
-Comments follow the PEP 8 convention. If necessary and the result if not
+Comments also follow the PEP 8 convention. If necessary and the result if not
 bloated, you *may* use so-called *section comments*:
 
 ```python3
@@ -241,15 +250,6 @@ after them.
 Ready-to-use snippets are available in
 [`tools/vimconfig/UltiSnips/python.snippets/deaduction.snippets`](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/tools/vimconfig/UltiSnips/python.snippets/deaduction.snippets).
 
-
-#### Classes docstrings
-
-All classes *must* be documented as well: you *must* provide a docstring and
-*should* provide comments. Classes docstrings follow the same rules as
-functions and methods docstrings, except that public class attributes must be
-written in the class docstring using a `:attribute attribute_name: Attribute
-description` syntax. See
-[Examples](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/exercise/exercise_main_window.py).
 
 ### Python file headers
 
@@ -300,7 +300,7 @@ Ready-to-use snippets are available in
 
 ### Git commit messages
 
-#### Specifications
+#### Specifications (non-merge commits)
 
 > This convention is strongly inspired from the Angular project Commit
 Message Format
@@ -320,7 +320,7 @@ area::type(scope): Summary
 Argument `area` is mandatory and *must* be one of:
 
 `area`     | Definition
---|-
+-----------|-------------------------------------------------------------------------------------------------------------------
 `code`     | Changes affecting the code-base.
 `doc`      | Changes affecting the documentation (including comments and docstrings).
 `snippets` | Changes affecting the snippets.
@@ -331,7 +331,7 @@ Argument `area` is mandatory and *must* be one of:
 Argument `type` is also mandatory and *must* be one of:
 
 `type`   | Definition
-|
+---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------
 `chores` | Changes affecting that do not affect the meaning of what is changed (e.g. changing a filename).
 `dev`    | Work in progress for new features; changes that are part of its development though not introducing it. A series of `dev` commits end with a `feat` commit.
 `feat`   | Changes that introduce a completed new feature. When developing it, the last commit *must* be the only one to use this type, all other *must* use dev.
@@ -339,20 +339,21 @@ Argument `type` is also mandatory and *must* be one of:
 `revert` | Revert to a previous commit, feature or state of the project.
 `ref`    | Refactoring.
 
-Scope is optional, it is the (precise) part that was changed (e.g. a class,
-function or module name or a combination of all that). Precision is up to you,
-use it if necessary. In doubt, use a scope. Finally, the summary *should* be
-the shortest possible sentence describing the commit. It *should* begin with a
-capital letter and *must not* end with a period, it *should* also be in present
-tense. The combination of the mandatory area and type, and optionally the
-scope, help you identify which commits in the git log are most relevant to you.
-The scope helps identifying which parts of the project are changed.
+Scope is optional and the precise part of the code-base that was changed (e.g.
+a class, function or module name or a combination of all that). Precision is up
+to you, use it if necessary (in doubt, use it). Finally, the summary *should*
+be the shortest possible sentence describing the commit. It *should* begin with
+a capital letter and *must not* end with a period, it *should* also be in
+present tense. The combination of the mandatory area and type, and optionally
+the scope, help you identify which commits in the git log are most relevant to
+you.  The scope helps identifying which parts of the project are changed.
 
 The body of the commit message *may* be used to provide additional information
 about the changes, such as technical explanations.
 
-There is one exception to these rules: merge messages. Merge commit messages
-*must* have the following structure:
+#### Specifications (merge commits)
+
+Merge commit messages have a different structure:
 
 ```
 merge: repoA/branchA -> repoB/branchB
@@ -478,7 +479,7 @@ See [Example](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/d
 
 ## Resources (bonus)
 
-> Feel free to suggest new resources*.
+> Feel free to suggest new resources.
 
 ### For Python (version 3)
 
@@ -487,6 +488,7 @@ See [Example](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/d
     There are dozens of online tutorials, if you are new to Python, be sure to
     choose one which covers classes (with heritage and usual decorators).
 
+- [The zen of Python](https://www.python.org/dev/peps/pep-0020/#the-zen-of-python).
 - A [guide](https://realpython.com/python-virtual-environments-a-primer/) to
     virtual environments.
 - Python properties, [how tu use them and
@@ -530,8 +532,6 @@ See [Example](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/d
     software?](https://www.gnu.org/philosophy/free-sw.html) covers the basics in a
     rigourous way.
 - The page [How to Contribute to Open
-    Source](https://opensource.guide/how-to-contribute/)) is a great introduction
+    Source](https://opensource.guide/how-to-contribute/) is a great introduction
     to free software in practice if you never contributed before. It will tell you
     what to expect from this first experience.
-- A [collection](https://github.com/devspace/awesome-github-templates) of github
-    issues and pull requests templates.
