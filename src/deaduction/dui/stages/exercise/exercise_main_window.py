@@ -197,7 +197,6 @@ class ExerciseMainWindow(QMainWindow):
 
         :param event: Some Qt mandatory thing.
         """
-        log.debug("emw.closeEvent")
         super().closeEvent(event)
         self.window_closed.emit()
 
@@ -344,7 +343,6 @@ class ExerciseMainWindow(QMainWindow):
         async with qtrio.enter_emissions_channel(
                 signals=[self.lean_editor.editor_send_lean,
                          self.toolbar.redo_action.triggered,
-                         # self.window_closed,
                          self.toolbar.undo_action.triggered,
                          self.__action_triggered,
                          self.__statement_triggered,
@@ -370,9 +368,6 @@ class ExerciseMainWindow(QMainWindow):
                     self.journal.add_event(event=event, emw=self)
                     await self.process_async_signal(self.servint.history_undo)
 
-                elif emission.is_from(self.window_closed):
-                    break
-
                 elif emission.is_from(self.__action_triggered):
                     # TODO: comment, what is emission.args[0]?
                     action_symbol = emission.args[0].action.symbol
@@ -394,9 +389,6 @@ class ExerciseMainWindow(QMainWindow):
                     self.journal.add_event(event=event, emw=self)
                     await self.__server_call_apply(emission.args[0])
 
-            # End of async for loop: close emissions channel
-            # log.debug("Closing emissions.channel")
-            # await emissions.aclose()
     # ──────────────── Template function ─────────────── #
 
     async def process_async_signal(self, process_function: Callable):
@@ -608,6 +600,8 @@ class ExerciseMainWindow(QMainWindow):
         As of now,
         - display a dialog when the target is successfully solved,
         - replace the target by a message "Proof complete"
+        Note that the dialog is displayed only the first time the signal is
+        triggered, thanks to the flag self.cqdf.
         """
         # TODO: make it a separate class
         if not self.cqfd:

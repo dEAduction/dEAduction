@@ -39,6 +39,7 @@ from PySide2.QtCore import (                     QObject,
 from deaduction.dui.stages.exercise              import ExerciseMainWindow
 from deaduction.dui.stages.start_coex            import StartCoExStartup
 
+from deaduction.pylib.coursedata                 import Exercise
 from deaduction.pylib                            import logger
 from deaduction.pylib.server                     import ServerInterface
 import deaduction.pylib.config.dirs              as     cdirs
@@ -60,7 +61,7 @@ class Container(QObject):
     This class  is responsible for keeping the memory of open windows
     (chooser window and exercise window), launching the windows when needed,
     and connecting relevant signals (when windows are closed, when a new
-    exercise is chosen, or when user want to change exercise) to the
+    exercise is chosen, or when user wants to change exercise) to the
     corresponding launching methods. Note that in PyQt signals have to be
     hosted by a QObject.
     """
@@ -71,16 +72,17 @@ class Container(QObject):
     def __init__(self, nursery):
         super().__init__()
 
-        self.exercise_window        = None
-        self.chooser_window         = None
-        self.servint                = None
-        self.exercise               = None
-        self.nursery                = nursery
+        self.exercise_window:   ExerciseMainWindow       = None
+        self.chooser_window:    StartCoExStartup         = None
+        self.servint:           ServerInterface          = None
+        self.exercise:          Exercise                 = None
+        self.nursery:           trio.Nursery             = nursery
 
     @Slot()
     def choose_exercise(self):
         """
-        Launch chooser window and connect signals.
+        Launch chooser window and connect signals. This is the first method
+        that will be called by main().
         """
 
         log.debug("Choosing new exercise")
@@ -103,12 +105,13 @@ class Container(QObject):
     def start_exercise(self, exercise):
         """
         Just a synchronous front-end to the async method solve_exercise
-        (apparently slots may not be asynchronous functions)
+        (apparently slots may not be asynchronous functions).
         """
         self.chooser_window = None  # So that exiting d∃∀duction works
         self.exercise = exercise
         if self.exercise_window:
-            # Close window but do not tell main()!!
+            # Close window but do not tell main() since a new exercise
+            # window will be launched immediately!!
             self.exercise_window.window_closed.disconnect()
             self.exercise_window.close()
 
@@ -141,6 +144,11 @@ class Container(QObject):
 ##############################################################
 async def main():
     """
+    This is the main loop. It opens a trio.nursery, instantiate a Container
+    for signals and slots, and call the Container.choose_exercise method.
+    Then it listens to signals emitted when windows are closed, and decides
+    to quit when all windows are closed. Quitting implies stopping the lean
+    server that may be running and closing the trio's nursery.
     """
     async with trio.open_nursery() as nursery:
         # Create container
@@ -156,15 +164,15 @@ async def main():
             async with qtrio.enter_emissions_channel(signals=signals) as \
                     emissions:
                 async for emission in emissions.channel:
-                    # log.debug("Signal received")
+                    log.debug("Signal received")
                     if emission.is_from(container.close_chooser_window):
                         # Remember that there is no more chooser window:
                         container.chooser_window = None
-                        # log.debug("No more chooser window")
+                        log.debug("No more chooser window")
                     elif emission.is_from(container.close_exercise_window):
                         # Remember that there is no more exercise window:
                         container.exercise_window = None
-                        # log.debug("No more exercise window")
+                        log.debug("No more exercise window")
 
                     # Quit if no more open window:
                     if not (container.chooser_window or
