@@ -90,12 +90,15 @@ preference:
     appreciated.
 - **Create exercises**.
 
-Issues that are best-suited for first contributions have the label [`good first
-issue`][https://github.com/dEAduction/dEAduction/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).
-
 In any case, every contribution proposition should have its issue, whether we
 or you created it. To save you time, you should never work on a contribution
 which was not approved (there would be a risk of it being rejected)!
+
+> Issues that are best-suited for first contributions have the label [`good
+first issue`](https://github.com/dEAduction/dEAduction/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).
+
+> Beware of the [contribution guidelines](#guidelines) for code, commit
+messages, etc.
 
 ## Contribution process
 
@@ -116,6 +119,17 @@ is labeled with [`status::ready for
 PR`](https://github.com/dEAduction/dEAduction/issues?q=is%3Aopen+is%3Aissue+label%3A%22status%3A%3Aready+for+PR%22+);
 you just do the pull request and we accept it.
 
+> Summary:
+> 1. Choose an existing issue or open one with a contribution idea. In this
+>    issue, inform us that you would like to contribute so we can discuss.
+> 2. Make your fork, create your new branch, code, keep up-to-date and push your
+>    contribution proposal once you think it is ready.
+> 3. In the contribution's proposal issue, inform us apes that you think your
+>    contribution is ready so we can discuss and potentially ask you to make some
+>    changes.
+> 4. If we approve the final version of the contribution proposition, you may do
+>    a pull request. We should accept it after a final review.
+
 Notes:
 - Do *not* do your modifications directly on the `master` branch.
 - Remember to commit often; in doubt commit. On top of that, keep your fork
@@ -127,17 +141,6 @@ Notes:
 > This section is a basic outline of the contribution process. If you feel
   overwhelmed, spend some time inquiring on the internet or contact us (with
   precise questions).
-
-Summary:
-1. Choose an existing issue or open one with a contribution idea. In this
-   issue, inform us that you would like to contribute so we can discuss.
-2. Make your fork, create your new branch, code, keep up-to-date and push your
-   contribution proposal once you think it is ready.
-3. In the contribution's proposal issue, inform us apes that you think your
-   contribution is ready so we can discuss and potentially ask you to make some
-   changes.
-4. If we approve the final version of the contribution proposition, you may do
-   a pull request. We should accept it after a final review.
 
 ## What to expect?
 
@@ -151,20 +154,17 @@ anyway.
 
 ## Setting-up the development environment
 
-A very important thing is *virtual environments*. A virtual environment is an
-isolated environment in a project directory in which all dependencies versions
-are frozen until manually changed (they can remain unchanged if we chose to).
-It is very easy to determine whether or not you are in the virtual environment
-of your project directory: there should be a `(env)` in front of your shell
-prompt.
-
-To setup d∃∀duction's virtual environment and make sure every dependency is
-up-to-date, open a terminal at the repository's root and run the following
-command:
+In order to contribute, it is necessary to set-up d∃∀duction's development
+environment. This includes a Python virtual environment, a Python linter (file
+[`.flake8](.flake8)), git hooks, etc. To set it up and make sure every
+dependency is up-to-date, open a terminal at the repository's root and run the
+following command:
 
 ```bash
 source envconfig
 ```
+
+You should now have a `(env)` in front of your terminal prompt.
 
 ---
 
@@ -413,6 +413,8 @@ merge: local/dev/the_new_feature -> local/master
 
 Beware that any non-compliant commit message *will* be rejected by the git
 hook.
+
+## Git branch names
 
 ## Github issues
 
