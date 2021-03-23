@@ -94,6 +94,10 @@ class Container(QObject):
                                                 self.close_chooser_window)
             # Show window
             self.chooser_window.show()
+        else:
+            # Focus on chooser window
+            self.chooser_window.raise_()
+            self.chooser_window.activateWindow()
 
     @Slot()
     def start_exercise(self, exercise):
@@ -104,6 +108,8 @@ class Container(QObject):
         self.chooser_window = None  # So that exiting d∃∀duction works
         self.exercise = exercise
         if self.exercise_window:
+            # Close window but do not tell main()!!
+            self.exercise_window.window_closed.disconnect()
             self.exercise_window.close()
 
         self.nursery.start_soon(self.solve_exercise)
@@ -150,20 +156,23 @@ async def main():
             async with qtrio.enter_emissions_channel(signals=signals) as \
                     emissions:
                 async for emission in emissions.channel:
+                    # log.debug("Signal received")
                     if emission.is_from(container.close_chooser_window):
                         # Remember that there is no more chooser window:
                         container.chooser_window = None
-                        log.debug("No more chooser window")
+                        # log.debug("No more chooser window")
                     elif emission.is_from(container.close_exercise_window):
                         # Remember that there is no more exercise window:
                         container.exercise_window = None
-                        log.debug("No more exercise window")
+                        # log.debug("No more exercise window")
 
                     # Quit if no more open window:
                     if not (container.chooser_window or
                             container.exercise_window):
                         log.debug("Closing d∃∀duction")
                         break
+                # log.debug("Out of async for loop")
+            # log.debug("Out of async with")
         finally:
             # Finally closing d∃∀duction
             if container.servint:

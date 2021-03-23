@@ -197,6 +197,7 @@ class ExerciseMainWindow(QMainWindow):
 
         :param event: Some Qt mandatory thing.
         """
+        log.debug("emw.closeEvent")
         super().closeEvent(event)
         self.window_closed.emit()
 
