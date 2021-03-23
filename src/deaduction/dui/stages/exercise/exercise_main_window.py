@@ -197,7 +197,9 @@ class ExerciseMainWindow(QMainWindow):
 
         :param event: Some Qt mandatory thing.
         """
+
         super().closeEvent(event)
+        self.lean_editor.close()
         self.window_closed.emit()
 
     def display_success_message(self, lean_code):
@@ -627,7 +629,6 @@ class ExerciseMainWindow(QMainWindow):
                                       children=[],
                                       )
         self.ecw.update_goal(self.current_goal, goal_count='')
-
 
     @Slot(MathObjectWidgetItem)
     def process_context_click(self, item: MathObjectWidgetItem):
