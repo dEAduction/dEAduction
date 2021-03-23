@@ -26,9 +26,10 @@ any modification.
    * [Git commit messages](#git-commit-messages)
       * [Specifications](#specifications)
       * [Examples](#examples)
+   * [Git branch names](#git-branch-names)
    * [Github issues](#github-issues)
    * [Python code (modified PEP 8)](#python-code-modified-pep-8)
-         * [Consevutive lines with = operators](#consevutive-lines-with--operators)
+      * [Consecutive lines with = operators](#consecutive-lines-with--operators)
 * [Resources](#resources)
    * [For Python (version 3)](#for-python-version-3)
    * [For L∃∀N](#for-ln)
@@ -300,12 +301,9 @@ class ExerciseMainWindow(QMainWindow):
 
 ### Specifications
 
-> Note: This convention is strongly inspired from the Angular project Commit
+> This convention is strongly inspired from the Angular project Commit
 Message Format
 [guidelines](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#commit).
-
-> Note: Words like must, may, etc, are to be understood as specified in the
-[RFC 2119 specification](https://tools.ietf.org/html/rfc2119).
 
 Commit messages consist of a mandatory header and an optional body. The
 commit header is what you put between the quotation marks in the command `git
@@ -317,9 +315,10 @@ have the following structure:
 ```
 area::type(scope): Summary
 ```
-Area is mandatory and *must* be one of:
 
-Area       | Definition
+Argument `area` is mandatory and *must* be one of:
+
+`area`     | Definition
 -----------|-------------------------------------------------------------------
 `code`     | Changes affecting the code-base.
 `doc`      | Changes affecting the documentation (including comments and docstrings).
@@ -328,9 +327,9 @@ Area       | Definition
 `tools`    | Changes affecting the tools and the development environment.
 | &#x1F534;**TODO**: RAJOUTER PART TOOLTIPS
 
-Type is also mandatory and *must* be one of:
+Argument `type` is also mandatory and *must* be one of:
 
-Type     | Definition
+`type`   | Definition
 ---------|---------------------------------------------------------------------
 `chores` | Changes affecting that do not affect the meaning of what is changed (e.g. changing a filename).
 `dev`    | Work in progress for new features; changes that are part of its development though not introducing it. A series of `dev` commits end with a `feat` commit.
@@ -405,12 +404,28 @@ hook.
 
 ## Git branch names
 
+Branch names *must* have the following structure:
+
+```
+area::type/name
+```
+
+Arguments `area` and `type` are mandatory and follow the same rules as in the
+git commit message [guidelines](#git-commit-messages). Argument `name` is
+mandatory is a description of what you are doing on this branch. It should be
+as short as possible and words must be separated by an hyphen (-). Use lower
+case.
+
+> A branch should host a *single* new feature, fix, etc.
+
 ## Github issues
 
 ## Python code (modified PEP 8)
 
 d∃∀duction's Python code follows the [PEP 8 convention](https://pep8.org), with
 the following exceptions.
+
+(&#x1F534;**TODO** ajouter flake8)
 
 #### Consecutive lines with `=` operators
 
@@ -475,7 +490,7 @@ group of regular imports and a blank line.
 
 # Resources
 
-*Note: feel free to suggest new resources*.
+> Feel free to suggest new resources*.
 
 ## For Python (version 3)
 
