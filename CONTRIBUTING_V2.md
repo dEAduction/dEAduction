@@ -105,10 +105,10 @@ messages, etc.
 
 To contribute, you first need to
 [fork](https://docs.github.com/en/github/getting-started-with-github/fork-a-repo)
-d∃∀duction's repository and create a new branch (see branches guidelines
-(&#x1F534;**TODO** lien) for your contribution (do not use a branch for more
-than one thing). You can begin development on this branch. At this point, your
-fork and d∃∀duction's repository are two distinct projects.
+d∃∀duction's repository and create a new branch (see branches
+[guidelines](#git-branch-names) for your contribution (do not use a branch for
+more than one thing). You can begin development on this branch. At this point,
+your fork and d∃∀duction's repository are two distinct projects.
 
 When you think your contribution is ready, git push it to your online fork.
 Signal it in the contribution proposition's Github issue so we can review it,
@@ -154,7 +154,9 @@ following command:
 source envconfig
 ```
 
-You should now have a `(env)` in front of your terminal prompt.
+You should now have a `(env)` in front of your terminal prompt. It is *highly*
+recommended to set up the development environment at the very beginning of
+every development session.
 
 ---
 
@@ -325,7 +327,7 @@ Argument `area` is mandatory and *must* be one of:
 `snippets` | Changes affecting the snippets.
 `tests`    | Changes affecting the tests.
 `tools`    | Changes affecting the tools and the development environment.
-| &#x1F534;**TODO**: RAJOUTER PART TOOLTIPS
+`dui`      | Changes that affect d∃∀duction's user interface (e.g. texts, tooltips) but do not have to do with how the code is.
 
 Argument `type` is also mandatory and *must* be one of:
 
@@ -418,16 +420,30 @@ case.
 
 > A branch should host a *single* new feature, fix, etc.
 
-## Github issues
-
-## Python code (modified PEP 8)
+## Python code (modified PEP 8) and linting
 
 d∃∀duction's Python code follows the [PEP 8 convention](https://pep8.org), with
-the following exceptions.
+the adjustments hereunder. You *should* check your Python code syntax using the
+project's
+[linter](https://sourcelevel.io/blog/what-is-a-linter-and-why-your-team-should-use-it),
+that is a slightly modified [flake8](https://flake8.pycqa.org/en/latest/#)
+version:
+- E201: whitespace after ‘(‘;
+- E202: whitespace before ‘)’;
+- E203: whitespace before ‘:’;
+- E221: multiple spaces before operator.
 
-(&#x1F534;**TODO** ajouter flake8)
+To lint your Python module, simply run the terminal command:
 
-#### Consecutive lines with `=` operators
+```shell
+flake8 my_module.py
+```
+
+> Be sure to have the development environment properly [set
+  up](#setting-up-the-development-environment) and to be in the Python virtual
+  environment.
+
+### Consecutive lines with `=` operators
 
 Occurrences of `=` operator on a series of consecutive non blank lines *must* be
 vertically aligned. Example:
@@ -440,9 +456,9 @@ my_bigger_variable = 'Code is read much more often than it is written.'
 other_int    = 2
 other_string = 'free software'
 ```
-**Import statements**
+### Import statements
 
-PEP 8 tells us that
+As PEP 8 says,
 > Imports must be grouped in the following order:
 > 
 >   1. standard library imports
@@ -451,8 +467,8 @@ PEP 8 tells us that
 >
 > You must put a blank line between each group of imports.
 
-We add the following rule: `import` statements *must* be vertically
-aligned. Example:
+We add the following rule: `import` statements *must* be vertically aligned.
+Example:
 
 ```python3
 from functools import partial
