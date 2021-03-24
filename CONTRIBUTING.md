@@ -293,7 +293,7 @@ area::type/name
 ```
 
 Arguments `area` and `type` (both mandatory) follow the same
-[rules](#git-commit-message) as the git commit message. Argument `name`
+[rules](#git-commit-messages) as the git commit message. Argument `name`
 (mandatory) is a description of what you are doing on this branch. It should be
 as short as possible and words must be separated by an hyphen (-). Use lower
 case.
@@ -410,13 +410,7 @@ convention](https://pep8.org), with the adjustments hereinafter. You *should*
 check your Python code syntax using the project's
 [linter](https://sourcelevel.io/blog/what-is-a-linter-and-why-your-team-should-use-it),
 that is a slightly modified [flake8](https://flake8.pycqa.org/en/latest/#)
-version:
-- E201: whitespace after ‘(‘;
-- E202: whitespace before ‘)’;
-- E203: whitespace before ‘:’;
-- E221: multiple spaces before operator.
-
-To lint your Python module, simply run the terminal command:
+version. To lint your Python module, simply run the terminal command:
 
 ```bash
 flake8 my_module.py
@@ -460,7 +454,7 @@ from my_module import (MyClass,
 ```
 
 [Here](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/exercise/exercise_main_window.py)
-are example.
+are examples.
 
 Relative imports *may* be used in some cases (avoid them as much as you
 possibly can); they follow the same rules as regular imports and *must* be
