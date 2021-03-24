@@ -476,6 +476,7 @@ choose one which covers classes (with heritage and usual decorators).
 ### For L∃∀N
 
 - The [official documentation](https://leanprover.github.io/documentation/).
+- The [Lean and mathlib community page](https://leanprover-community.github.io/), a good starting point.
 - The [Natural number
     game](https://wwwf.imperial.ac.uk/%7Ebuzzard/xena/natural_number_game/) to
     learn L∃∀N by using it, no experience needed.
