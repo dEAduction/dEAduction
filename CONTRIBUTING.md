@@ -324,10 +324,11 @@ Argument `area` (mandatory) *must* be one of:
 -----------|-------------------------------------------------------------------------------------------------------------------
 `code`     | Changes affecting the codebase.
 `doc`      | Changes affecting the documentation (including comments and docstrings).
+`dui`      | Changes that affect d∃∀duction's user interface (e.g. texts, tooltips) but have nothing to do with how the code is.
+`other`    | Changes that do not go in any other category, please try not using it.
 `snippets` | Changes affecting the snippets.
 `tests`    | Changes affecting the tests.
 `tools`    | Changes affecting the tools and the development environment.
-`dui`      | Changes that affect d∃∀duction's user interface (e.g. texts, tooltips) but have nothing to do with how the code is.
 
 Argument `type` (mandatory) *must* be one of:
 
@@ -337,8 +338,8 @@ Argument `type` (mandatory) *must* be one of:
 `dev`    | Work in progress for new features; changes that are part of its development though not introducing it. A series of `dev` commits ends with a `feat` commit.
 `feat`   | Changes that introduce a completed new feature. When developing it, the last commit *must* be the only one to use this type, all other *must* use dev.
 `fix`    | Fix bugs and problems.
-`revert` | Revert to a previous commit, feature or state of the project.
 `ref`    | Refactoring.
+`revert` | Revert to a previous commit, feature or state of the project.
 
 Scope (optional) is the precise part of the codebase that was changed (e.g. a
 class, function or module name or a combination of all that). Precision is up
