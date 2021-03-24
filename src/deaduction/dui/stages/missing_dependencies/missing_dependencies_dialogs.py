@@ -44,7 +44,7 @@ from PySide2.QtWidgets import ( QDialog,
                                 QHBoxLayout,
                                 QVBoxLayout )
 
-from deaduction.dui.parents       import TextEditLogger
+from deaduction.dui.primitives    import TextEditLogger
 from deaduction.pylib.config.i18n import _
 
 # Tests only

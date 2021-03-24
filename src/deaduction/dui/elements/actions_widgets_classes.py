@@ -474,7 +474,7 @@ class StatementsTreeWidget(QTreeWidget):
             self.__doc__. 
         """
 
-        #TODO: get rid of self._init_tree ?
+        # TODO: get rid of self._init_tree ?
 
         super().__init__()
         self._init_tree(statements, outline)
@@ -501,3 +501,24 @@ class StatementsTreeWidget(QTreeWidget):
         """
 
         self.addTopLevelItem(item)
+
+    def goto_statement(self, statement: Statement):
+        """
+        Go to to the Statement statement (as if usr clicked on it).
+
+        :param statement: Statement to go to.
+        """
+
+        # Thanks @mcosta from https://forum.qt.io/topic/54640/
+        # how-to-traverse-all-the-items-of-qlistwidget-qtreewidget/3
+        def traverse_node(item: StatementsTreeWidgetItem):
+            # Do something with item
+            if isinstance(item, StatementsTreeWidgetItem):
+                if item.statement == statement:
+                    item.setSelected(True)
+            for i in range(0, item.childCount()):
+                traverse_node(item.child(i))
+
+        for i in range(self.topLevelItemCount()):
+            item = self.topLevelItem(i)
+            traverse_node(item)

@@ -42,7 +42,7 @@ from deaduction.dui.elements            import ( ActionButton,
                                                  StatementsTreeWidgetItem,
                                                  MathObjectWidget,
                                                  MathObjectWidgetItem )
-from deaduction.dui.parents             import   ButtonsDialog
+from deaduction.dui.primitives          import   ButtonsDialog
 from deaduction.pylib.config.i18n       import   _
 from deaduction.pylib.memory            import   Journal
 from deaduction.pylib.actions           import ( InputType,
@@ -59,7 +59,7 @@ from deaduction.pylib.mathobj           import ( MathObject,
 from deaduction.pylib.server.exceptions import   FailedRequestError
 from deaduction.pylib.server            import   ServerInterface
 
-from ._exercise_main_window_widgets      import ( ExerciseCentralWidget,
+from ._exercise_main_window_widgets     import ( ExerciseCentralWidget,
                                                  ExerciseStatusBar,
                                                  ExerciseToolBar )
 
@@ -124,6 +124,7 @@ class ExerciseMainWindow(QMainWindow):
     """
 
     window_closed                   = Signal()
+    change_exercise                 = Signal()
     __action_triggered              = Signal(ActionButton)
     __apply_math_object_triggered   = Signal(MathObjectWidget)
     __statement_triggered           = Signal(StatementsTreeWidgetItem)
@@ -153,6 +154,7 @@ class ExerciseMainWindow(QMainWindow):
         self.servint           = servint
         self.toolbar           = ExerciseToolBar()
         self.journal           = Journal()
+        self.cqfd              = False
 
         # ─────────────────────── UI ─────────────────────── #
 
@@ -183,6 +185,8 @@ class ExerciseMainWindow(QMainWindow):
         self.servint.proof_no_goals.connect(self.fireworks)
         self.servint.effective_code_received.connect(
                                                 self.servint.history_replace)
+        self.toolbar.change_exercise_action.triggered.connect(
+                                                    self.change_exercise)
         self.servint.nursery.start_soon(self.server_task)  # Start server task
 
     ###########
@@ -198,6 +202,7 @@ class ExerciseMainWindow(QMainWindow):
         """
 
         super().closeEvent(event)
+        self.lean_editor.close()
         self.window_closed.emit()
 
     def display_success_message(self, lean_code):
@@ -342,7 +347,6 @@ class ExerciseMainWindow(QMainWindow):
 
         async with qtrio.enter_emissions_channel(
                 signals=[self.lean_editor.editor_send_lean,
-                         self.window_closed,
                          self.toolbar.redo_action.triggered,
                          self.toolbar.undo_action.triggered,
                          self.toolbar.rewind.triggered,
@@ -615,19 +619,31 @@ class ExerciseMainWindow(QMainWindow):
         As of now,
         - display a dialog when the target is successfully solved,
         - replace the target by a message "Proof complete"
+        Note that the dialog is displayed only the first time the signal is
+        triggered, thanks to the flag self.cqdf.
         """
         # TODO: make it a separate class
-        QMessageBox.information(self,
-                                _('Target solved'),
-                                _('The proof is complete!'),
-                                QMessageBox.Ok
-                                )
-        # make fake target to display message
+        if not self.cqfd:
+            title = _('Target solved')
+            text = _('The proof is complete!')
+            msg_box = QMessageBox(parent=self)
+            msg_box.setText(text)
+            msg_box.setWindowTitle(title)
+            button_ok = msg_box.addButton('Back to exercise',
+                                          QMessageBox.YesRole)
+            # button_beginning = msg_box.addButton('To beginning of exercise',
+            #                                      QMessageBox.AcceptRole)
+            button_change = msg_box.addButton('Change exercise',
+                                              QMessageBox.YesRole)
+            button_change.clicked.connect(self.change_exercise)
+            msg_box.exec()
+            self.cqfd = True
+
         no_more_goal_text = "No more goal"
         target = self.current_goal.target
-        target.math_type = MathObject(  node=no_more_goal_text,
-                                        info={},
-                                        children=[],
+        target.math_type = MathObject(node=no_more_goal_text,
+                                      info={},
+                                      children=[],
                                       )
         self.ecw.update_goal(self.current_goal, goal_count='')
 

@@ -82,7 +82,7 @@ class RecentCoursesLW(QListWidget):
         item = RecentCoursesLWI(course_path, displayed_title)
         self.insertItem(0, item)
         self.setItemSelected(item, True)
-    
+
 
 class RecentCoursesLWI(QListWidgetItem):
     """

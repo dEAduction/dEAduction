@@ -104,7 +104,8 @@ class ServerInterface(QObject):
         # Current exercise
         self.exercise_current          = None
 
-        # Current proof state + Event  s
+        # Current proof state + Events
+        self.file_invalidated          = trio.Event()
         self.__proof_state_valid       = trio.Event()
 
         # __proof_receive_done is set when enough information have been
@@ -130,9 +131,15 @@ class ServerInterface(QObject):
             trio.open_memory_channel(max_buffer_size=1024)
 
     async def start(self):
+        """
+        Asynchronously start the Lean server.
+        """
         await self.lean_server.start()
 
     def stop(self):
+        """
+        Stop the Lean server.
+        """
         self.lean_server.stop()
 
     ############################################
@@ -161,11 +168,11 @@ class ServerInterface(QObject):
         - messages providing the successful effective codes that will be
         used to replace the "or else" sequences of instructions.
         After relevant messages, the __check_receive_state method is called
-        to check if all awaited messages have been received
+        to check if all awaited messages have been received.
         """
 
         txt = msg.text
-        self.log.debug("Lean message: " + txt)
+        # self.log.debug("Lean message: " + txt)
         line = msg.pos_line
         severity = msg.severity
 
@@ -229,6 +236,12 @@ class ServerInterface(QObject):
     # Message filtering
     ############################################
     def __filter_error(self, msg: Message):
+        """
+        Filter error messages from Lean,
+        - according to position (i.e. ignore messages that do not correspond
+         to the new part of the virtual file),
+        - ignore "proof uses sorry" messages.
+        """
         # Filter message text, record if not ignored message
         if msg.text.startswith(LEAN_NOGOALS_TEXT):
             if hasattr(self.proof_no_goals, "emit"):
@@ -250,11 +263,6 @@ class ServerInterface(QObject):
     async def __update(self, lean_code=None):
         """
         Call Lean server to update the proof_state.
-
-        :param kwargs: may contain parameter lean_code, and then also
-        begin_code_counter and end_code_counter.
-        These parameters are provided for a usual call, but not, for instance,
-        when called by history_undo or history_redo.
         """
 
         first_line_of_change = self.lean_file.first_line_of_last_change
@@ -276,12 +284,15 @@ class ServerInterface(QObject):
                           content=self.lean_file.contents)
 
         # Invalidate events
-        self.__proof_receive_done   = trio.Event()
-        self.__tmp_hypo_analysis    = ""
-        self.__tmp_targets_analysis = ""
+        self.file_invalidated           = trio.Event()
+        self.__proof_receive_done       = trio.Event()
+        self.__tmp_hypo_analysis        = ""
+        self.__tmp_targets_analysis     = ""
 
         resp = await self.lean_server.send(req)
+
         if resp.message == "file invalidated":
+            self.file_invalidated.set()
 
             #########################################
             # Waiting for all pieces of information #
@@ -360,11 +371,8 @@ class ServerInterface(QObject):
             negation = " not( " + lean_core_statement + " )"
             lemma_line = exercise.lean_line - 1
             rough_core_content = "\n".join(lines[lemma_line:begin_line]) + "\n"
-            # self.log.debug(rough_core_content.find(lean_core_statement))
             new_core_content = rough_core_content.replace(
                                     lean_core_statement, negation)
-            # self.log.debug(f"New core content:{new_core_content}")
-            # self.log.debug(f"Lean_core_statement:{lean_core_statement}")
             virtual_file_preamble = "\n".join(lines[:lemma_line]) \
                                     + "\n" + new_core_content
         else:
@@ -386,7 +394,7 @@ class ServerInterface(QObject):
 
     async def exercise_set(self, exercise: Exercise):
         """
-        Initialise the virtual_file from exercise
+        Initialise the virtual_file from exercise.
 
         :param exercise:        The exercise to be set
         :return:                virtual_file
@@ -405,14 +413,23 @@ class ServerInterface(QObject):
     # History
     ############################################
     async def history_undo(self):
+        """
+        Go one step forward in history in the lean_file.
+        """
         self.lean_file.undo()
         await self.__update()
 
     async def history_redo(self):
+        """
+        Go one step backward in history in the lean_file.
+        """
         self.lean_file.redo()
         await self.__update()
 
     async def history_rewind(self):
+        """
+        Go to beginning of history in the lean_file.
+        """
         self.lean_file.rewind()
         await self.__update()
 

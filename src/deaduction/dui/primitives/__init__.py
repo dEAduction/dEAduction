@@ -1,7 +1,7 @@
 """
-########################################################
-# __init__.py : __init__.py for deaduction.dui.parents #
-########################################################
+###########################################################
+# __init__.py : __init__.py for deaduction.dui.primitives #
+###########################################################
 
 Author(s)      : Kryzar <antoine@hugounet.com>
 Maintainers(s) : Kryzar <antoine@hugounet.com>
