@@ -50,7 +50,8 @@ tools) and [deaduction-lean](https://github.com/dEAduction/dEAduction-lean)
 (L∃∀N code and exercise files). To learn more about each directory, module or
 file, simply open its `__init__.py` or `README.md`.
 
-d∃∀duction is written in Python3 and L∃∀N (a proof assistant). The graphical
+d∃∀duction is written in Python3 and [L∃∀N](https://leanprover-community.github.io/)
+(a proof assistant). The graphical
 interface uses PySide2 (Qt for Python). Communication between the user
 interface and L∃∀N uses Trio and Qtrio. The version control system we use is
 Git.
