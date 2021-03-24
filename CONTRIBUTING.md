@@ -71,13 +71,16 @@ document.
 ### What do?
 
 Preferably consider working on an existing
-[issue](https://github.com/dEAduction/dEAduction/issues). Then add a comment so
-we can discuss. If you rather want to do something else, open an issue first so
-that we can discuss it. Here are contribution ideas, in order of priority:
+[issue](https://github.com/dEAduction/dEAduction/issues) (check-out issue
+labels). If so, comment so we can discuss! For instance, you could contribute
+to work-in-progress [new
+features](https://github.com/dEAduction/dEAduction/issues?q=is%3Aopen+is%3Aissue+label%3A%22type%3A%3Anew+feature%22).
+If you rather want to do something else, open an issue first so that we can
+discuss it. Here are contribution ideas, in order of priority:
 - **Refactor code**: please help us. d∃∀duction needs a strong codebase and as
    of now it is rather weak.
-- **Report stuff**: bugs, suggestions, user interface suggestions, new features
-   proposals, etc.
+- **Report stuff, suggest improvements**: report bugs, suggest new features,
+    fundamental changes, enhancements…
 - **Translate the user interface**.
 - **Write documentation**: many modules, classes or functions still lack
    documentation ; you can contribute to its elaboration. You can also
