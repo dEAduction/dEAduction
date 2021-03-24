@@ -1,8 +1,8 @@
 # Contributing to d∃∀duction
 
-Hello and welcome! Contributing to d∃∀duction is the best way to help to grow.
-Since it is free software, everybody can access the codebase and participate!
-We are a small team, we don't know what we're doing. This document aims to
+Hello and welcome! Contributing to d∃∀duction is the best way to help. We are a
+small team, we don't know what we're doing. We made d∃∀duction free software so
+that everybody can access the codebase and participate! This document aims to
 explain what you can do, how you can do it and what you can expect. Feel free
 to suggest any modification.
 
@@ -60,32 +60,28 @@ Git.
 Not much. A good experience in Python3 is *recommended*, as well as basic
 terminal usage. Some experience in Git is *necessary* but you can rapidly learn
 it from scratch (you should feel at ease using git branches). L∃∀N experience
-is useful if you directly work on the L∃∀N side of the project, but is not
-needed otherwise. **You do not need to be a programming wizard to contribute**.
-In fact, nobody is in the core-team; you just need the things that are relevant
-to *you*.
+is only useful for the L∃∀N side of the project. **You do not need to be a
+programming wizard to contribute**! In the core-team, nobody is.
 
 A [list](#resources-bonus) of online resources is available at the end of this
 document.
-
 
 ## Contributing
 
 ### What do?
 
-Consider working on an existing
-[issue](https://github.com/dEAduction/dEAduction/issues)? Then add a comment so
+Preferably consider working on an existing
+[issue](https://github.com/dEAduction/dEAduction/issues). Then add a comment so
 we can discuss. If you rather want to do something else, open an issue first so
-that we can discuss it. Here are new-issue contribution ideas, in order of
-priority:
+that we can discuss it. Here are contribution ideas, in order of priority:
 - **Refactor code**: please help us. d∃∀duction needs a strong codebase and as
-    of now it is rather weak.
-- **Report stuff**: bugs, refactoring suggestions, user interface suggestions,
-    new features proposals, etc.
+   of now it is rather weak.
+- **Report stuff**: bugs, suggestions, user interface suggestions, new features
+   proposals, etc.
 - **Translate the user interface**.
 - **Write documentation**: many modules, classes or functions still lack
-    documentation ; you can contribute to its elaboration. You can also
-    contribute to the d∃∀duction user manual.
+   documentation ; you can contribute to its elaboration. You can also
+   contribute to the d∃∀duction user manual.
 - **Create exercises**.
 
 In any case, each contribution should have its issue, whether we or you created
@@ -116,15 +112,15 @@ request*](https://docs.github.com/en/github/collaborating-with-issues-and-pull-r
 for your contribution to be integrated into d∃∀duction's codebase.
 
 At any stage, do feel free to discuss the advancement of your contribution with
-the core team. This should be done publicly, in the issue of the contribution.
+core-team members. This should be done publicly, in the issue of the
+contribution.
 
 ### What to expect?
 
 If you follow these steps, your contribution proposition should be approved!
 You will then be credited as a d∃∀duction's contributor. Nevertheless,
 respecting the above stages does not by any way mean that your contribution
-proposal *will* be accepted. Those stages ensure that your contribution fits in
-the d∃∀duction's codebase as much as possible.
+proposal *will* be accepted.
 
 ### Setting up the development environment
 
@@ -138,7 +134,7 @@ root and run the following command:
 source envconfig
 ```
 
-You should now have a `(env)` in front of your terminal prompt. It is *highly*
+This should add `(env)` in front of your terminal prompt. It is *highly*
 recommended to set up the development environment at the very beginning of
 every development session. The code will not run if this environment is not set
 up.
@@ -208,14 +204,15 @@ All functions and methods *must* have a
 [docstring](https://www.python.org/dev/peps/pep-0257/). Class docstrings follow
 the same rules as function and method docstrings, except that public class
 attributes must be written in the class docstring using a `:attribute
-attribute_name: Attribute description` syntax. See
+attribute_name: Attribute description` syntax.
 [Here](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/exercise/exercise_main_window.py)
 are examples.
 
 #### Comment style
 
-Comments also follow the PEP 8 convention. If the result is not bloated, you
-*may* use the so-called *section comments*:
+Comments also follow the [PEP 8 convention (¶
+Comments)](https://pep8.org/#comments). If the result is not bloated, you *may*
+use the so-called *section comments*:
 
 ```python3
 ###################
@@ -232,10 +229,10 @@ and *separator comments*:
 Both those types of comments *must* have a blank line just before and right
 after them.
 
-> If you use vim, consider the addon
+> If you use Vim, consider the addon
 [UltiSnips](https://github.com/sirver/UltiSnips) to efficiently add headers.
 Ready-to-use snippets are available in
-[`tools/vimconfig/UltiSnips/python.snippets/deaduction.snippets`](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/tools/vimconfig/UltiSnips/python.snippets/deaduction.snippets).
+[`tools/Vimconfig/UltiSnips/python.snippets/deaduction.snippets`](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/tools/Vimconfig/UltiSnips/python.snippets/deaduction.snippets).
 
 
 ### Python file headers
@@ -279,10 +276,10 @@ See
 Non Python files *must* also have this header, simply get rid of the doctring
 `"""` marks.
 
-> If you use vim, consider the addon
+> If you use Vim, consider the addon
 [UltiSnips](https://github.com/sirver/UltiSnips) to efficiently add headers.
 Ready-to-use snippets are available in
-[`tools/vimconfig/UltiSnips/python.snippets/deaduction.snippets`](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/tools/vimconfig/UltiSnips/python.snippets/deaduction.snippets).
+[`tools/Vimconfig/UltiSnips/python.snippets/deaduction.snippets`](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/tools/Vimconfig/UltiSnips/python.snippets/deaduction.snippets).
 
 ### Git commit messages
 
@@ -292,18 +289,17 @@ Ready-to-use snippets are available in
 Message Format
 [guidelines](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#commit).
 
-Commit messages consist of a mandatory header and an optional body. The
+Commit messages consist of a header (mandatory) and a body (optional). The
 commit header is what you put between the quotation marks in the command `git
-commit -m ""`. It is the most informative part of the commit and its structure
-follows some rules. The body is everything after the header and a blank line,
-its structure is free.  Most commit messages only have a header, which *must*
-have the following structure:
+commit -m ""`. The body is everything after the header and a blank line, its
+structure is free. Most commit messages only have a header, which *must* have
+the following structure:
 
 ```
 area::type(scope): Summary
 ```
 
-Argument `area` is mandatory and *must* be one of:
+Argument `area` (mandatory) *must* be one of:
 
 `area`     | Definition
 -----------|-------------------------------------------------------------------------------------------------------------------
@@ -314,7 +310,7 @@ Argument `area` is mandatory and *must* be one of:
 `tools`    | Changes affecting the tools and the development environment.
 `dui`      | Changes that affect d∃∀duction's user interface (e.g. texts, tooltips) but have nothing to do with how the code is.
 
-Argument `type` is also mandatory and *must* be one of:
+Argument `type` (mandatory) *must* be one of:
 
 `type`   | Definition
 ---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -325,15 +321,11 @@ Argument `type` is also mandatory and *must* be one of:
 `revert` | Revert to a previous commit, feature or state of the project.
 `ref`    | Refactoring.
 
-Scope (optional) is the precise part of the codebase that was changed (e.g.  a
+Scope (optional) is the precise part of the codebase that was changed (e.g. a
 class, function or module name or a combination of all that). Precision is up
-to you, use it if necessary (in doubt, use it). Finally, the summary *should*
-be the shortest possible sentence describing the commit. It *should* begin with
-a capital letter and *must not* end with a period, it *should* also be written
-using present tense. The combination of the mandatory area and type, and
-optionally the scope, help you identify which commits in the git log are most
-relevant to you.  The scope helps identifying which parts of the project are
-changed.
+to you. The summary (mandatory) *should* be the shortest possible sentence
+describing the commit. It *should* begin with a capital letter and *must not*
+end with a period, it *should* also be written using present tense.
 
 The body of the commit message *may* be used to provide additional information
 about the changes, such as technical explanations.
@@ -382,7 +374,7 @@ merge: origin/dev/the_new_feature -> local/dev/the_new_feature
 ```
 
 and if you want to merge the branch `the_new_feature` with the branch `master`
-on your computer, the commit mesage *must* be:
+on your computer, the commit message *must* be:
 
 ```
 merge: local/dev/the_new_feature -> local/master
@@ -430,10 +422,13 @@ flake8 my_module.py
   up](#setting-up-the-development-environment) and to be in the Python virtual
   environment.
 
+> If you use Vim, consider the addon
+[ALE](https://github.com/dense-analysis/ale) to have an integrated linter.
+
 #### Consecutive lines with `=` operators
 
 Occurrences of `=` operator on a series of consecutive non blank lines *must* be
-vertically aligned. See example:
+vertically aligned. Example:
 
 ```python3
 my_int             = 10
@@ -446,23 +441,14 @@ other_string = 'free software'
 
 #### Import statements
 
-As PEP 8 states,
-> Imports must be grouped in the following order:
-> 
->   1. standard library imports
->   2. related third party imports
->   3. local application/library specific imports
->
-> You must put a blank line between each group of imports.
-
-We add the following rule: `import` statements *must* be vertically aligned.
-Inside a group or a single statement, imports *must* be alphabetically ordered.
-Finally, relative imports *may* be used in some cases; they follow the same
-rules as regular imports and *must* be grouped after the last group of regular
-imports and a blank line.
-See [Example](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/exercise/exercise_main_window.py).
-
-
+Import statements follow the [PEP 8 convention (imports
+¶)](https://pep8.org/#imports). Additionally, `import` statements *must* be
+vertically aligned.  Inside a group or a single statement, imports *must* be
+alphabetically ordered. Relative imports *may* be used in some cases (avoid
+them as much as you possibly can); they follow the same rules as regular
+imports and *must* be grouped after the last group of regular imports and a
+blank line. See
+[Example](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/exercise/exercise_main_window.py).
 
 ## Resources (bonus)
 
