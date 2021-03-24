@@ -230,7 +230,8 @@ and *separator comments*:
 ```
 
 Both those types of comments *must* have a blank line just before and right
-after them.
+after them. They are good for titles but bad for explanations. Use as few words
+as possible.
 
 > If you use Vim, consider the addon
 [UltiSnips](https://github.com/sirver/UltiSnips) to efficiently add headers.
