@@ -22,23 +22,22 @@ to suggest any modification.
       * [Function and method docstrings](#function-and-method-docstrings)
       * [Class docstrings](#class-docstrings)
       * [Comment style](#comment-style)
-   * [Python file headers](#python-file-headers)
+   * [File headers](#file-headers)
+   * [Git branch names](#git-branch-names)
    * [Git commit messages](#git-commit-messages)
       * [Specifications (non-merge commits)](#specifications-non-merge-commits)
       * [Specifications (merge commits)](#specifications-merge-commits)
       * [Examples](#examples)
-   * [Git branch names](#git-branch-names)
    * [Python code (modified PEP 8) and linting](#python-code-modified-pep-8-and-linting)
       * [Consecutive lines with = operators](#consecutive-lines-with--operators)
       * [Import statements](#import-statements)
 * [Resources (bonus)](#resources-bonus)
-   * [For Python (version 3)](#for-python-version-3)
+   * [For Git](#for-git)
    * [For L∃∀N](#for-ln)
    * [For PySide2 / Qt for Python](#for-pyside2--qt-for-python)
+   * [For Python (version 3)](#for-python-version-3)
    * [For Trio and QTrio](#for-trio-and-qtrio)
-   * [For Git](#for-git)
    * [On free software](#on-free-software)
-
 
 ## Get started
 
@@ -235,8 +234,7 @@ after them.
 Ready-to-use snippets are available in
 [`tools/Vimconfig/UltiSnips/python.snippets/deaduction.snippets`](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/tools/Vimconfig/UltiSnips/python.snippets/deaduction.snippets).
 
-
-### Python file headers
+### File headers
 
 File headers *must* have the following structure:
 
@@ -281,6 +279,22 @@ Non Python files *must* also have this header, simply get rid of the doctring
 [UltiSnips](https://github.com/sirver/UltiSnips) to efficiently add headers.
 Ready-to-use snippets are available in
 [`tools/Vimconfig/UltiSnips/python.snippets/deaduction.snippets`](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/tools/Vimconfig/UltiSnips/python.snippets/deaduction.snippets).
+
+### Git branch names
+
+Branch names *must* have the following structure:
+
+```
+area::type/name
+```
+
+Arguments `area` and `type` (both mandatory) follow the same
+[rules](#git-commit-message) as the git commit message. Argument `name`
+(mandatory) is a description of what you are doing on this branch. It should be
+as short as possible and words must be separated by an hyphen (-). Use lower
+case.
+
+> A branch should host a *single* new feature, fix, etc.
 
 ### Git commit messages
 
@@ -384,22 +398,6 @@ merge: local/dev/the_new_feature -> local/master
 Beware that any non-compliant commit message *will* be rejected by the git
 hook.
 
-### Git branch names
-
-Branch names *must* have the following structure:
-
-```
-area::type/name
-```
-
-Arguments `area` and `type` (both mandatory) follow the same
-[rules](#git-commit-message) as the git commit message. Argument `name`
-(mandatory) is a description of what you are doing on this branch. It should be
-as short as possible and words must be separated by an hyphen (-). Use lower
-case.
-
-> A branch should host a *single* new feature, fix, etc.
-
 ### Python code (modified PEP 8) and linting
 
 The Python code of d∃∀duction's follows the [PEP 8
@@ -442,18 +440,53 @@ other_string = 'free software'
 
 #### Import statements
 
-Import statements follow the [PEP 8 convention (imports
-¶)](https://pep8.org/#imports). Additionally, `import` statements *must* be
-vertically aligned.  Inside a group or a single statement, imports *must* be
-alphabetically ordered. Relative imports *may* be used in some cases (avoid
-them as much as you possibly can); they follow the same rules as regular
-imports and *must* be grouped after the last group of regular imports and a
-blank line. See
-[Example](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/exercise/exercise_main_window.py).
+As PEP 8 states, imports should be grouped in the following order:
+1. standard library imports,
+2. related third party imports,
+3. local application/library specific imports.
+
+Items in a given `import` statement *must* be on different lines, vertically
+aligned, alphabetically ordered.
+
+```python3
+from my_module import (MyClass,
+                       MyOtherClass,
+                       this_function)
+```
+
+[Here](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/exercise/exercise_main_window.py)
+are example.
+
+Relative imports *may* be used in some cases (avoid them as much as you
+possibly can); they follow the same rules as regular imports and *must* be
+grouped after the last group of regular imports and a blank line.
 
 ## Resources (bonus)
 
 > Feel free to suggest new resources.
+
+### For Git
+
+- The [official documentation](https://git-scm.com/doc).
+- The (free) book [*Pro Git*](https://git-scm.com/book/en/v2) is a complete and
+    rigourous way of becoming proficient in Git.
+
+### For L∃∀N
+
+- The [official documentation](https://leanprover.github.io/documentation/).
+- The [Lean and mathlib community page](https://leanprover-community.github.io/), a good starting point.
+- The [Natural number
+    game](https://wwwf.imperial.ac.uk/%7Ebuzzard/xena/natural_number_game/) to
+    learn L∃∀N by using it, no experience needed.
+
+### For PySide2 / Qt for Python
+
+- The [official
+    documentation](https://doc.qt.io/qtforpython/quickstart.html).
+- This excellent [tutorial](http://zetcode.com/gui/pyqt5/), perfect if you want
+    to learn from scratch. (To make it work, simply replace all occurences of
+    `PyQt5` by `PySide2`; there are some other minor problems but you will make
+    it.)
 
 ### For Python (version 3)
 
@@ -473,33 +506,10 @@ choose one which covers classes (with heritage and usual decorators).
 - Python [thematic tutorials from ZetCode](https://zetcode.com/all/#python) are
     always great.
 
-### For L∃∀N
-
-- The [official documentation](https://leanprover.github.io/documentation/).
-- The [Lean and mathlib community page](https://leanprover-community.github.io/), a good starting point.
-- The [Natural number
-    game](https://wwwf.imperial.ac.uk/%7Ebuzzard/xena/natural_number_game/) to
-    learn L∃∀N by using it, no experience needed.
-
-### For PySide2 / Qt for Python
-
-- The [official
-    documentation](https://doc.qt.io/qtforpython/quickstart.html).
-- This excellent [tutorial](http://zetcode.com/gui/pyqt5/), perfect if you want
-    to learn from scratch. (To make it work, simply replace all occurences of
-    `PyQt5` by `PySide2`; there are some other minor problems but you will make
-    it.)
-
 ### For Trio and QTrio
 
 - Trio's [official documentation](https://trio.readthedocs.io/en/stable/).
 - QTrio's [repository](https://github.com/altendky/qtrio).
-
-### For Git
-
-- The [official documentation](https://git-scm.com/doc).
-- The (free) book [*Pro Git*](https://git-scm.com/book/en/v2) is a complete and
-    rigourous way of becoming proficient in Git.
 
 ### On free software
 
