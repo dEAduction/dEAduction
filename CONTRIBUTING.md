@@ -302,11 +302,11 @@ case.
 
 ### Git commit messages
 
-#### Specifications (non-merge commits)
-
 > This convention is strongly inspired from the Angular project Commit
 Message Format
 [guidelines](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#commit).
+
+#### Specifications (non-merge commits)
 
 Commit messages consist of a header (mandatory) and a body (optional). The
 commit header is what you put between the quotation marks in the command `git
@@ -461,8 +461,6 @@ possibly can); they follow the same rules as regular imports and *must* be
 grouped after the last group of regular imports and a blank line.
 
 ## Resources (bonus)
-
-> Feel free to suggest new resources.
 
 ### For Git
 
