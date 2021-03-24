@@ -56,27 +56,28 @@ log = logging.getLogger(__name__)
 ###############################################
 # Container class, managing signals and slots #
 ###############################################
+
 class Container(QObject):
     """
-    This class  is responsible for keeping the memory of open windows
-    (chooser window and exercise window), launching the windows when needed,
-    and connecting relevant signals (when windows are closed, when a new
-    exercise is chosen, or when user wants to change exercise) to the
-    corresponding launching methods. Note that in PyQt signals have to be
-    hosted by a QObject.
+    This class is responsible for keeping the memory of open windows
+    (CoEx starter and exercise window), launching the windows when
+    needed, and connecting relevant signals (when windows are closed,
+    when a new exercise is chosen, or when user wants to change
+    exercise) to the corresponding launching methods. Note that in PyQt
+    signals have to be hosted by a QObject.
     """
 
-    close_chooser_window = Signal()
+    close_chooser_window  = Signal()
     close_exercise_window = Signal()
 
     def __init__(self, nursery):
         super().__init__()
 
-        self.exercise_window:   ExerciseMainWindow       = None
-        self.chooser_window:    StartCoExStartup         = None
-        self.servint:           ServerInterface          = None
-        self.exercise:          Exercise                 = None
-        self.nursery:           trio.Nursery             = nursery
+        self.exercise_window: ExerciseMainWindow = None
+        self.chooser_window:  StartCoExStartup   = None
+        self.servint:         ServerInterface    = None
+        self.exercise:        Exercise           = None
+        self.nursery:         trio.Nursery       = nursery
 
     @Slot()
     def choose_exercise(self):
@@ -107,6 +108,7 @@ class Container(QObject):
         Just a synchronous front-end to the async method solve_exercise
         (apparently slots may not be asynchronous functions).
         """
+
         self.chooser_window = None  # So that exiting d∃∀duction works
         self.exercise = exercise
         if self.exercise_window:
@@ -142,6 +144,7 @@ class Container(QObject):
 ##############################################################
 # Main event loop: init container and wait for window closed #
 ##############################################################
+
 async def main():
     """
     This is the main loop. It opens a trio.nursery, instantiate a Container
@@ -150,6 +153,7 @@ async def main():
     to quit when all windows are closed. Quitting implies stopping the lean
     server that may be running and closing the trio's nursery.
     """
+
     async with trio.open_nursery() as nursery:
         # Create container
         container = Container(nursery)
@@ -197,6 +201,7 @@ if __name__ == '__main__':
     #################################################################
     # Init environment variables, directories, and install packages #
     #################################################################
+
     cenv.init()
     cdirs.init()
     inst.init()

@@ -39,43 +39,43 @@ import logging
 from functools import partial
 from gettext import   gettext as _
 from pathlib import   Path
-from typing  import ( Dict,
-                      Optional )
+from typing  import  (Dict,
+                      Optional)
 
-from PySide2.QtCore    import ( Qt,
-                                Signal,
-                                Slot,
-                                QEvent)
-from PySide2.QtGui     import ( QFont,
-                                QPixmap )
-from PySide2.QtWidgets import ( QApplication,
-                                QCheckBox,
-                                QDialog,
-                                QFileDialog,
-                                QHBoxLayout,
-                                QLabel,
-                                QLayout,
-                                QLineEdit,
-                                QSpacerItem,
-                                QPushButton,
-                                QTabWidget,
-                                QTextEdit,
-                                QVBoxLayout,
-                                QWidget )
+from PySide2.QtCore    import (Qt,
+                               Signal,
+                               Slot,
+                               QEvent)
+from PySide2.QtGui     import (QFont,
+                               QPixmap)
+from PySide2.QtWidgets import (QApplication,
+                               QCheckBox,
+                               QDialog,
+                               QFileDialog,
+                               QHBoxLayout,
+                               QLabel,
+                               QLayout,
+                               QLineEdit,
+                               QSpacerItem,
+                               QPushButton,
+                               QTabWidget,
+                               QTextEdit,
+                               QVBoxLayout,
+                               QWidget)
 
-from deaduction.dui.elements        import ( MathObjectWidget,
-                                             RecentCoursesLW,
-                                             RecentCoursesLWI,
-                                             StatementsTreeWidget,
-                                             StatementsTreeWidgetItem )
-from deaduction.dui.primitives      import ( DisclosureTriangle,
-                                             ButtonsDialog )
-from deaduction.dui.utils           import ( read_pkl_course,
-                                             replace_widget_layout,
-                                             HorizontalLine )
-from deaduction.pylib.config.course import   add_to_recent_courses
-from deaduction.pylib.coursedata    import ( Course,
-                                             Exercise )
+from deaduction.dui.elements        import (MathObjectWidget,
+                                            RecentCoursesLW,
+                                            RecentCoursesLWI,
+                                            StatementsTreeWidget,
+                                            StatementsTreeWidgetItem)
+from deaduction.dui.primitives      import (DisclosureTriangle,
+                                            ButtonsDialog)
+from deaduction.dui.utils           import (read_pkl_course,
+                                            replace_widget_layout,
+                                            HorizontalLine)
+from deaduction.pylib.config.course import  add_to_recent_courses
+from deaduction.pylib.coursedata    import (Course,
+                                             Exercise)
 
 log = logging.getLogger(__name__)
 
@@ -623,6 +623,7 @@ class AbstractStartCoEx(QDialog):
     """
 
     exercise_chosen = Signal(Exercise)
+    window_closed = Signal()
 
     def __init__(self, title: Optional[str], widget: Optional[QWidget],
                  exercise: Optional[Exercise]):
@@ -816,8 +817,6 @@ class StartCoExStartup(AbstractStartCoEx):
     window.
     """
 
-    window_closed                   = Signal()
-
     def __init__(self, exercise: Exercise = None):
         """
         Init self.
@@ -844,8 +843,6 @@ class StartCoExExerciseFinished(AbstractStartCoEx):
     congratulation message and a CoEx chooser with the finished exercise
     being preset / previewed. See AbstractStartCoEx docstring.
     """
-
-    window_closed                   = Signal()
 
     def __init__(self, finished_exercise: Exercise):
         """
