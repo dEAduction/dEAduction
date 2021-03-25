@@ -37,7 +37,6 @@ This file is part of d∃∀duction.
 import sys
 import logging
 from functools import partial
-from gettext import   gettext as _
 from pathlib import   Path
 from typing  import  (Dict,
                       Optional)
@@ -63,6 +62,7 @@ from PySide2.QtWidgets import (QApplication,
                                QVBoxLayout,
                                QWidget)
 
+from deaduction.pylib.config.i18n   import _
 from deaduction.dui.elements        import (MathObjectWidget,
                                             RecentCoursesLW,
                                             RecentCoursesLWI,

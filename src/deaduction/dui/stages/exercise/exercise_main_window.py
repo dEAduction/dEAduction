@@ -629,11 +629,11 @@ class ExerciseMainWindow(QMainWindow):
             msg_box = QMessageBox(parent=self)
             msg_box.setText(text)
             msg_box.setWindowTitle(title)
-            button_ok = msg_box.addButton('Back to exercise',
+            button_ok = msg_box.addButton(_('Back to exercise'),
                                           QMessageBox.YesRole)
             # button_beginning = msg_box.addButton('To beginning of exercise',
             #                                      QMessageBox.AcceptRole)
-            button_change = msg_box.addButton('Change exercise',
+            button_change = msg_box.addButton(_('Change exercise'),
                                               QMessageBox.YesRole)
             button_change.clicked.connect(self.change_exercise)
             msg_box.exec()

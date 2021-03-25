@@ -50,12 +50,12 @@ __tooltips = {
         "• "+_("Split 'P ⇔ Q' into two implications") + "\n"
     + "• " + _("From 'P ⇒ Q' and 'Q ⇒ P' get 'P ⇔ Q'"),
     'tooltip_forall':
-    "• " + _("""Prove '∀ a, P(a)' by introducing 'a'""") + "\n"
-    + "• " + _("""From some 'a' and '∀ a, P(a)' get 'P(a)'"""),
+    "• " + _("""Prove '∀ x, P(x)' by introducing 'x'""") + "\n"
+    + "• " + _("""From some 'x' and '∀ x, P(x)' get 'P(x)'"""),
     'tooltip_exists':
-    "• " + _("""Prove '∃ a, P(a)' by specifying some 'a'""") + "\n"
-    + "• " + _("""From '∃ a, P(a)' get an 'a' and 'P(a)'""") + "\n"
-    + "• " + _("""From some 'a' and 'P(a)' get '∃ a, P(a)'"""),
+    "• " + _("""Prove '∃ x, P(x)' by specifying some 'x'""") + "\n"
+    + "• " + _("""From '∃ x, P(x)' get an 'x' and 'P(x)'""") + "\n"
+    + "• " + _("""From some 'x' and 'P(x)' get '∃ x, P(x)'"""),
     'tooltip_apply':
     "• " + _("Apply an equality or an iff to substitute in another property")
     + "\n" + "• " + _("""Apply a function to an element or an equality""")
@@ -66,9 +66,10 @@ __tooltips = {
     + "• " + _("Proof by contrapositive") + "\n"
     + "• " + _("Proof by contradiction"),
     'tooltip_new_object':
-    "• " + _("Create a new object (e.g. 'f(a)' from 'f' and 'a'") + "\n"
+    "• " + _("Create a new object (e.g. 'f(x)' from 'f' and 'x'") + "\n"
     + "• " + _("Create a new subgoal (a lemma)") + "\n" + "• "
-    + _("Create a function from A to B from property '∀ a ∈ A, ∃ b ∈ B, P(a,b)'"),
+    + _("Create a function from X to Y from property '∀ x ∈ X, ∃ y ∈ Y, P(x,"
+        "y)'"),
     'tooltip_assumption':
         _("Terminate the proof when the target is obvious from the context"),
     'tooltip_compute':

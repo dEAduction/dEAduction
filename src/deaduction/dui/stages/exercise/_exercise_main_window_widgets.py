@@ -141,7 +141,8 @@ class ExerciseCentralWidget(QWidget):
         action_btns_lyt.setContentsMargins(0, 0, 0, 0)
         action_btns_lyt.setSpacing(0)
 
-        actions_gb = QGroupBox(_('Actions (transform context and target)'))
+        actions_gb = QGroupBox(_('Actions and statements (transform context '
+                                 'and target)'))
         context_gb = QGroupBox(_('Context (objects and properties)'))
 
         # ──────────────── Init Actions area ─────────────── #
