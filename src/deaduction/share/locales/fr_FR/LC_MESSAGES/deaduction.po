@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: 2021-03-25 13:55+0100\n"
-"PO-Revision-Date: 2021-03-25 17:07+0100\n"
+"PO-Revision-Date: 2021-03-25 22:52+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -845,7 +845,7 @@ msgstr "Démontre ‘∀ x, P(x)’ en introduisant ‘x’"
 
 #: pylib/text/tooltips.py:54
 msgid "From some 'x' and '∀ x, P(x)' get 'P(x)'"
-msgstr "D’un objet ‘x’ et ‘∀ x, Px)’, déduit ‘P(x)’"
+msgstr "D’un objet ‘x’ et ‘∀ x, P(x)’, déduit ‘P(x)’"
 
 #: pylib/text/tooltips.py:56
 msgid "Prove '∃ x, P(x)' by specifying some 'x'"
