@@ -156,13 +156,11 @@ class Container(QObject):
     def quit_deaduction(self):
         if self.exercise_window:
             self.exercise_window.close()
-            # Just in case signal was disconnected
-            if self.exercise_window:
-                self.close_exercise_window.emit()
+            # Just in case signal is disconnected
+            self.close_exercise_window.emit()
         if self.chooser_window:
             self.chooser_window.close()
-            if self.chooser_window:
-                self.close_chooser_window.emit()
+            self.close_chooser_window.emit()
 
 
 ##############################################################

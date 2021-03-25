@@ -63,6 +63,7 @@ from PySide2.QtWidgets import (QApplication,
                                QWidget)
 
 from deaduction.pylib.config.i18n   import _
+import deaduction.pylib.config.vars  as    cvars
 from deaduction.dui.elements        import (MathObjectWidget,
                                             RecentCoursesLW,
                                             RecentCoursesLWI,
@@ -498,9 +499,11 @@ class ExerciseChooser(AbstractCoExChooser):
                 # Somehow this works…
                 lyt.setContentsMargins(0, 0, 0, 0)
 
-            self.__text_mode_checkbox.setChecked(False)
-            self.__friendly_wgt.show()
-            self.__code_wgt.hide()
+            # Toggle text mode if needed
+            text_mode  = cvars.get('display.text_mode_in_chooser_window',
+                                   False)
+            self.__text_mode_checkbox.setChecked(text_mode)
+            self.toggle_text_mode()
 
             main_widget_lyt.addWidget(self.__friendly_wgt)
             main_widget_lyt.addWidget(self.__code_wgt)
@@ -559,7 +562,7 @@ class ExerciseChooser(AbstractCoExChooser):
         When the user selects an exercise in the course's exercises
         tree, the signal itemClicked is emitted and this slot is called.
         One cannot directly call set_preview because at first we must be
-        sure that the clicked item was an exercise item and not a nod
+        sure that the clicked item was an exercise item and not a node
         (e.g. a course section).
 
         :param item: The clicked item (exercise item or nod item) in the
@@ -582,6 +585,10 @@ class ExerciseChooser(AbstractCoExChooser):
         else:
             self.__friendly_wgt.show()
             self.__code_wgt.hide()
+
+        cvars.set('display.text_mode_in_chooser_window',
+                  self.__text_mode_checkbox.isChecked())
+        # NB: cvars will ba saved only when (and if) exercise starts
 
 
 class AbstractStartCoEx(QDialog):

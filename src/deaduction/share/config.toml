@@ -4,6 +4,7 @@ letter_type = "letters/trials"
 context     = "letters/blue"
 
 [display]
+text_mode_in_chooser_window = false
 target_display_on_top = false
 depth_of_unfold_statements = 1
 show_lean_name_for_statements = false
