@@ -149,6 +149,7 @@ class ExerciseMainWindow(QMainWindow):
         self.exercise          = exercise
         self.current_goal      = None
         self.current_selection = []
+        self.target_selected   = False
         self.ecw               = ExerciseCentralWidget(exercise)
         self.lean_editor       = LeanEditor()
         self.servint           = servint
@@ -303,13 +304,15 @@ class ExerciseMainWindow(QMainWindow):
         # destroyed and re-created by "self.ecw.update_goal" just below
         self.current_selection = []
 
-        # Update UI and attributes
+        # Update UI and attributes. Target stay selected if it was.
         self.ecw.update_goal(new_goal, goal_count)
+        self.ecw.target_wgt.mark_user_selected(self.target_selected)
         self.current_goal = new_goal
 
         # Reconnect Context area signals and slots
         self.ecw.objects_wgt.itemClicked.connect(self.process_context_click)
         self.ecw.props_wgt.itemClicked.connect(self.process_context_click)
+        self.ecw.target_wgt.mouseReleaseEvent = self.process_target_click
         if hasattr(self.ecw, "action_apply_button"):
             self.ecw.objects_wgt.apply_math_object_triggered.connect(
                 self.__apply_math_object_triggered)
@@ -657,9 +660,12 @@ class ExerciseMainWindow(QMainWindow):
         :item: The math. object or property user just clicked on.
         """
 
-        # One clicked, one does not want the item to remain visually
+        # Once clicked, one does not want the item to remain visually
         # selected
         item.setSelected(False)
+        # Un-select target
+        self.ecw.target_wgt.mark_user_selected(False)
+        self.target_selected = False
 
         if item not in self.current_selection:
             item.mark_user_selected(True)
@@ -667,6 +673,18 @@ class ExerciseMainWindow(QMainWindow):
         else:
             item.mark_user_selected(False)
             self.current_selection.remove(item)
+
+    @Slot()
+    def process_target_click(self, event):
+        """
+        Select or unselect target. Current context selection is emptied.
+        """
+
+        self.target_selected = not self.target_selected
+        self.ecw.target_wgt.mark_user_selected(self.target_selected)
+
+        # Un-select context items
+        self.empty_current_selection()
 
     @Slot()
     def __update_lean_editor(self):
