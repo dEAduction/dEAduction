@@ -122,6 +122,8 @@ async def main():
                                        unprocessed_statements,
                                        course_pkl_path
                                        )
+        except UnicodeDecodeError:
+            log.error("UnicodeDecodeError")
         finally:
             servint.stop()  # Good job, buddy
             save_objects([course], course_pkl_path)
@@ -223,20 +225,28 @@ async def get_all_proof_states(servint,
     counter = 0
     for statement in statements_to_process:
         counter += 1
-        await servint.exercise_set(statement)
-        # proof_state is now stored as servint.proof_state
-        log.info(f"Got proof state of statement "
-                 f"{statement.pretty_name}, n"
-                 f"°{counter}")
-        statement.initial_proof_state = servint.proof_state
+        try:
+            await servint.exercise_set(statement)
+            # proof_state is now stored as servint.proof_state
+            log.info(f"Got proof state of statement "
+                     f"{statement.pretty_name}, n"
+                     f"°{counter}")
+            statement.initial_proof_state = servint.proof_state
 
         # stop and restart server every 5 exercises to avoid
         # too long messages that entail crashing
-        if counter % 5 == 0:
+        except(UnicodeDecodeError):
             servint.stop()
             log.info("Saving temporary file...")
             save_objects([course], course_pkl_path)
             await servint.start()
+            await servint.exercise_set(statement)
+            # proof_state is now stored as servint.proof_state
+            log.info(f"Got proof state of statement "
+                     f"{statement.pretty_name}, n"
+                     f"°{counter}")
+            statement.initial_proof_state = servint.proof_state
+
 
 
 def save_objects(objects: list, filename):
@@ -313,9 +323,7 @@ def print_goal(course):
 
 
 if __name__ == '__main__':
-    logger.configure(debug=True,
-                     domains="pre_processing",
-                     suppress=False)
+    logger.configure()
     log.debug("starting pre-processing...")
     qtrio.run(main)
 

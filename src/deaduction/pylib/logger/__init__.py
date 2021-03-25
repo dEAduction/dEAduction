@@ -81,7 +81,7 @@ class Color_Formatter(logging.Formatter):
 # Logger procedures
 ############################################
 def configure(display_level: str = "debug",
-              domains: [str] = []):
+              domains: [str] = ['']):
     """
     Configures the logging module for use with d∃∀duction.
 
