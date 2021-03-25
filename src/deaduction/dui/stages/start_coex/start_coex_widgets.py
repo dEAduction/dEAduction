@@ -624,6 +624,7 @@ class AbstractStartCoEx(QDialog):
 
     exercise_chosen = Signal(Exercise)
     window_closed = Signal()
+    quit_deaduction = Signal()
 
     def __init__(self, title: Optional[str], widget: Optional[QWidget],
                  exercise: Optional[Exercise]):
@@ -656,11 +657,14 @@ class AbstractStartCoEx(QDialog):
         # ───────────────────── Buttons ──────────────────── #
 
         self.__quit_btn     = QPushButton(_('Quit'))
+        # self.__quit_btn.setDefault(False)
+        self.__quit_btn.setAutoDefault(False)
         self.__start_ex_btn = QPushButton(_('Start exercise'))
 
-        self.__quit_btn.setEnabled(False)
+        # self.__quit_btn.setEnabled(False)
         self.__start_ex_btn.setEnabled(False)
 
+        self.__quit_btn.clicked.connect(self.quit_deaduction)
         self.__start_ex_btn.clicked.connect(self.__start_exercise)
 
         # ───────────────────── Layouts ──────────────────── #

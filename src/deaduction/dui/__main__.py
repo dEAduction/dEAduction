@@ -105,6 +105,8 @@ class Container(QObject):
             self.chooser_window.exercise_chosen.connect(self.start_exercise)
             self.chooser_window.window_closed.connect(
                                                 self.close_chooser_window)
+            self.chooser_window.quit_deaduction.connect(self.quit_deaduction)
+
             # Show window
             self.chooser_window.show()
         else:
@@ -149,6 +151,18 @@ class Container(QObject):
 
         # Show window
         self.exercise_window.show()
+
+    @Slot()
+    def quit_deaduction(self):
+        if self.exercise_window:
+            self.exercise_window.close()
+            # Just in case signal was disconnected
+            if self.exercise_window:
+                self.close_exercise_window.emit()
+        if self.chooser_window:
+            self.chooser_window.close()
+            if self.chooser_window:
+                self.close_chooser_window.emit()
 
 
 ##############################################################
