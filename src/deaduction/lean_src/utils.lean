@@ -14,7 +14,8 @@ meta def tactic.interactive.target_no_meta_vars : tactic unit :=
 meta def tactic.interactive.context_no_meta_vars : tactic (list unit) :=
 do 
    context ← tactic.local_context,
-   context.mmap (tactic.interactive.generic_no_meta_vars "context")
+   context_type ← context.mmap (λ h, tactic.infer_type h),
+   context_type.mmap (λ h, tactic.interactive.generic_no_meta_vars "context" h)
 
 /- no_meta_vars succeeds if all goals are accomplished, 
 otherwise fails if there are metavariables either in the context or in the target-/
@@ -24,6 +25,14 @@ do
       `[ tactic.interactive.context_no_meta_vars,
          tactic.interactive.target_no_meta_vars ]
       
+
+open interactive (parse)
+open tactic
+open lean.parser (ident)
+
+/- -/
+meta def tactic.interactive.no_meta_vars_test (id: parse ident): (tactic unit) :=
+do e ← get_local id, et ← infer_type e,  trace et
 
 
 ------------------------------------------------

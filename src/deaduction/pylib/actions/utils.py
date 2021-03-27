@@ -375,7 +375,7 @@ class CodeForLean:
             return self
         elif not self.is_or_else():
             # replace self by self and_then no_meta_vars
-            if self.contains_apply():
+            if self.could_have_meta_vars():
                 return self.and_then(no_meta_vars_str)
             else:
                 return self
@@ -454,15 +454,16 @@ class CodeForLean:
         else:
             return True in [code_.has_or_else() for code_ in self.instructions]
 
-    def contains_apply(self) -> bool:
+    def could_have_meta_vars(self) -> bool:
         if self.is_empty():
             return False
         elif self.is_single_string():
             string = self.instructions[0]
-            return string.find("apply") != -1
+            return string.find("apply") != -1 or string.find("have") != -1
         else:
-            return True in [instruction.contains_apply() for instruction in
-                            self.instructions]
+            return True in [instruction.could_have_meta_vars() for
+                            instruction in self.instructions]
+
 
 _VAR_NB = 0
 _FUN_NB = 0
