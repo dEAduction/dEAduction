@@ -23,7 +23,7 @@ Examples:
                         MathObject corresponding to f⁻¹⟮B⟯ ∪ (f⁻¹⟮B'⟯)]
 
 Note in particular that for a property, the math content of the property is
-actually stored in the math_type of the MathObject.
+actually stored in the math_type attribute of the MathObject.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -76,12 +76,12 @@ class MathObject:
     and properties ("a belongs to A", ...)
     NB : When instancing, math_type and item in the children list must be
     instances of MathObject (except for the constant NO_MATH_TYPE)
-
     """
+
     node              : str   # e.g. "LOCAL_CONSTANT", "FUNCTION", "QUANT_∀"
     info              : dict  # e.g. "name", "id", "pp_type"
     children          : list  # list of MathObjects
-    math_type         : Any = field(repr=False)  # Another MathObject
+    math_type         : Any = field(repr=False)  # necessary with @dataclass
     _math_type        : Any = field(init=False,
                                     repr=False,
                                     default=None)
@@ -343,9 +343,9 @@ class MathObject:
 
         We also want the method to identify properly two quantified
         expressions that have the same meaning, like '∀x, P(x)' and '∀y, P(y)'
-        even if the bounds var are distinct.
+        even if the bound variables are distinct.
 
-        WARNING: this should probably not be used for bound variables
+        WARNING: this should probably not be used for bound variables.
         """
 
         # Successively test for
@@ -827,8 +827,8 @@ def cut_spaces(string: str) -> str:
     return string
 
 
-##########
-# essais #
-##########
+#########
+# trials #
+#########
 if __name__ == '__main__':
     logger.configure()

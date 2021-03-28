@@ -25,11 +25,12 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from typing import Optional
+from typing                       import Optional
 
-from PySide2.QtWidgets import QMessageBox
+from PySide2.QtWidgets            import QMessageBox
 
 from deaduction.pylib.config.i18n import _
+from deaduction.dui.primitives    import YesNoDialog
 
 
 class ReallyWantQuit(YesNoDialog):

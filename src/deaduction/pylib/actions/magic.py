@@ -107,6 +107,9 @@ def action_assumption(goal: Goal, l: [MathObject]) -> str:
             # congruence closure, solves e.g. (a=b, b=c : f a = f c)
             possible_codes.append('cc')
         # possible_codes.append('apply iff.symm, assumption')
+        elif goal.target.is_inequality():
+            # try to permute members of the goal equality
+            possible_codes.append('apply ne.symm, assumption')
 
         # Try some symmetry rules
         if goal.target.is_iff():
