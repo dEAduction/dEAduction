@@ -47,7 +47,7 @@ section empty. -->
 3. [ ] This issue deals with one and only one issue (if you have multiple
    issues, please open multiple issues).
 4. [ ] I correctly labeled my issue (see commented rules below).
-5. [ ] I want to fix this bug. (Check if yo do, no judgement if you do not!)
+5. [ ] I want to fix this bug. (Check if you do, no judgement if you do not!)
 
    <!-- Include one and only one of the following Area labels:
    - area::code
@@ -63,4 +63,5 @@ section empty. -->
 
 ### Misc
 
-<!-- Optional. Additional info. -->
+<!-- Optional. Additional info. Delete the title if you leave this section
+empty.-->

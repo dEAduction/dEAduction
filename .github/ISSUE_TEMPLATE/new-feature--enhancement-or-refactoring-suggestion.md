@@ -54,4 +54,5 @@ section empty. -->
 
 ### Misc
 
-<!-- Optional. Additional info. -->
+<!-- Optional. Additional info. Delete the title if you leave this section
+empty.-->
