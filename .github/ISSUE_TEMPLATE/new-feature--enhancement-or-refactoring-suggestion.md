@@ -11,18 +11,17 @@ assignees: ''
 
 ### Feature, enhancement or refactor description
 
-<!-- A clear, precise, concise description of your suggestion. Tell how it
-should be / look when finished. -->
+<!-- Clear, precise, concise description of your suggestion. -->
 
-### Why is it usefull
+### Why is it useful
 
-<!-- Tell us why this suggestion is useful and worth coding. -->
+<!-- Why this suggestion is useful and worth coding. -->
 
 ### Implementation ideas, difficulties we may face
 
-<!-- Appreciated but optional. Do feel free to provide any implementation idea,
-proof or concept, snippet, etc and what difficulties we may face. Delete the
-title if you leave this section empty. -->
+<!-- Appreciated but optional. Any implementation idea, proof or concept,
+snippet, etc; what difficulties we may face. Delete the title if you leave this
+section empty. -->
 
 ### Submission checklist
 
@@ -36,8 +35,7 @@ title if you leave this section empty. -->
 5. [ ] I want to implement this suggestion. (Check if yo do, no judgement if
    you do not!)
 
-   <!-- Issues labels rules. Include one and only one of the following Area
-   labels:
+   <!-- Include one and only one of the following Area labels:
    - area::code
    - area::courses files
    - area::doc
@@ -54,4 +52,6 @@ title if you leave this section empty. -->
    - type::refactor
    -->
 
-<!-- THANK YOU, for taking the time to write this issue! -->
+### Misc
+
+<!-- Optional. Additional info. -->
