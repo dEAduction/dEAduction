@@ -62,8 +62,16 @@ from deaduction.pylib.server            import   ServerInterface
 from ._exercise_main_window_widgets     import ( ExerciseCentralWidget,
                                                  ExerciseStatusBar,
                                                  ExerciseToolBar )
+import deaduction.pylib.config.vars      as      cvars
 
 log = logging.getLogger(__name__)
+
+# TODO:
+# add parameter self.target_selected to
+# every action (generic, logic, proofs, magic)
+# Add if not user_selected and not self.target_selected:
+#     error = _("select item on which to perform the action")
+#     raise WrongUserInput(error)
 
 
 class ExerciseMainWindow(QMainWindow):
@@ -149,7 +157,9 @@ class ExerciseMainWindow(QMainWindow):
         self.exercise          = exercise
         self.current_goal      = None
         self.current_selection = []
-        self.target_selected   = False
+        self.selectable_target = not cvars.get(
+                            'functionality.target_selected_by_default', False)
+        self._target_selected   = False
         self.ecw               = ExerciseCentralWidget(exercise)
         self.lean_editor       = LeanEditor()
         self.servint           = servint
@@ -189,6 +199,18 @@ class ExerciseMainWindow(QMainWindow):
         self.toolbar.change_exercise_action.triggered.connect(
                                                     self.change_exercise)
         self.servint.nursery.start_soon(self.server_task)  # Start server task
+
+    @property
+    def target_selected(self):
+        if self.selectable_target:
+            return self._target_selected
+        else:
+            # Target is selected by default if current_selection is empty
+            return not self.current_selection
+
+    @target_selected.setter
+    def target_selected(self, target_selected):
+        self._target_selected = target_selected
 
     ###########
     # Methods #
@@ -312,7 +334,9 @@ class ExerciseMainWindow(QMainWindow):
         # Reconnect Context area signals and slots
         self.ecw.objects_wgt.itemClicked.connect(self.process_context_click)
         self.ecw.props_wgt.itemClicked.connect(self.process_context_click)
-        self.ecw.target_wgt.mouseReleaseEvent = self.process_target_click
+
+        if self.selectable_target:
+            self.ecw.target_wgt.mouseReleaseEvent = self.process_target_click
         if hasattr(self.ecw, "action_apply_button"):
             self.ecw.objects_wgt.apply_math_object_triggered.connect(
                 self.__apply_math_object_triggered)
@@ -600,6 +624,9 @@ class ExerciseMainWindow(QMainWindow):
         for item in self.current_selection:
             item.mark_user_selected(False)
         self.current_selection = []
+        if not self.selectable_target:
+            self.ecw.target_wgt.mark_user_selected(self.target_selected)
+
 
     @Slot()
     def freeze(self, yes=True):
@@ -673,6 +700,10 @@ class ExerciseMainWindow(QMainWindow):
         else:
             item.mark_user_selected(False)
             self.current_selection.remove(item)
+
+        if not self.current_selection and not self.selectable_target:
+            # Target is automatically selected if current_selection is empty
+            self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
     @Slot()
     def process_target_click(self, event):

@@ -21,6 +21,7 @@ use_primes_for_variables_names = true
 use_seconds_for_variables_names = true
 
 [functionality]
+target_selected_by_default = false
 allow_proof_by_sorry = true
 expanded_apply_button = false
 
