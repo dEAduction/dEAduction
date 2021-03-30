@@ -673,13 +673,13 @@ def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
                                            hypo_name=hypo_name,
                                            variable_names=variable_names)
                          )
-    code = code.and_then("rotate")  # back to first inequality
 
     # Code III: try to solve inequalities #     e.g.:
     #   iterate 2 { solve1 {try {norm_num at *}, try {compute_n 10}} <|>
     #               rotate},   rotate,
     more_code = CodeForLean.empty_code()
     if unsolved_inequality_counter:
+        code = code.and_then("rotate")  # back to first inequality
         more_code1 = CodeForLean.from_string("norm_num at *")
         more_code1 = more_code1.try_()
         more_code2 = CodeForLean.from_string("compute_n 1")
