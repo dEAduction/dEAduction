@@ -517,12 +517,14 @@ class ExerciseMainWindow(QMainWindow):
                 if not user_input:
                     lean_code = action.run(
                         self.current_goal,
-                        self.current_selection_as_mathobjects)
+                        self.current_selection_as_mathobjects,
+                        target_selected=self.target_selected)
                 else:
                     lean_code = action.run(
                         self.current_goal,
                         self.current_selection_as_mathobjects,
-                        user_input)
+                        user_input,
+                        target_selected=self.target_selected)
             except MissingParametersError as e:
                 if e.input_type == InputType.Text:
                     choice, ok = QInputDialog.getText(action_btn,
@@ -580,12 +582,14 @@ class ExerciseMainWindow(QMainWindow):
                     lean_code = generic.action_definition(
                         self.current_goal,
                         self.current_selection_as_mathobjects,
-                        statement)
+                        statement,
+                        self.target_selected)
                 elif isinstance(statement, Theorem):
                     lean_code = generic.action_theorem(
                         self.current_goal,
                         self.current_selection_as_mathobjects,
-                        statement)
+                        statement,
+                        self.target_selected)
 
                 log.debug(f'Calling statement {item.statement.pretty_name}')
                 await self.servint.code_insert(statement.pretty_name,

@@ -31,7 +31,8 @@ from .actiondef import (    Action,
 
 from .exceptions import (   InputType,
                             MissingParametersError,
-                            WrongUserInput)
+                            WrongUserInput,
+                            test_selection)
 
 from .utils import (        LeanCombinator,
                             CodeForLean,

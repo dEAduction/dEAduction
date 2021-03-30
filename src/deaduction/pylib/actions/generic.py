@@ -30,7 +30,8 @@ This file is part of dEAduction.
 from dataclasses import dataclass
 import logging
 from deaduction.pylib.actions import (  WrongUserInput,
-                                        CodeForLean)
+                                        CodeForLean,
+                                        test_selection)
 from deaduction.pylib.coursedata import Statement
 from deaduction.pylib.mathobj import (  Goal,
                                         MathObject,
@@ -64,14 +65,32 @@ def rw_using_statement(goal: Goal, selected_objects: [MathObject],
     return possible_codes
 
 
-def action_definition(goal : Goal,
-                      selected_objects : [MathObject],
-                      definition : Statement):
+def action_definition(goal: Goal,
+                      selected_objects: [MathObject],
+                      definition: Statement,
+                      target_selected: bool = True
+                      ):
+    """
+    Apply definition to rewrite selected object or target.
+    """
+
+    test_selection(selected_objects, target_selected)
+
     possible_codes = rw_using_statement(goal, selected_objects, definition)
     return CodeForLean.or_else_from_list(possible_codes)
 
 
-def action_theorem(goal : Goal, selected_objects : [MathObject], theorem : Statement):
+def action_theorem(goal: Goal,
+                   selected_objects: [MathObject],
+                   theorem: Statement,
+                   target_selected: bool = True
+                   ):
+    """
+    Apply theorem on selected objects or target.
+    """
+
+    test_selection(selected_objects, target_selected)
+
     possible_codes = []
     # For an iff statement, use rewriting
     # fixme: test for iff or equality is removed since it works only with
