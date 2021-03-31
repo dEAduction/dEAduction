@@ -1,7 +1,7 @@
 # Contributing to d∃∀duction
 
 Hello and welcome! Contributing to d∃∀duction is the best way to help. We are a
-small team, we don't know what we're doing. We made d∃∀duction free software so
+small team, we don't know what we are doing. We made d∃∀duction free software so
 that everybody can access the codebase and participate! This document aims to
 explain what you can do, how you can do it and what you can expect. Feel free
 to suggest any modification.
@@ -10,11 +10,11 @@ to suggest any modification.
 
 * [Get started](#get-started)
    * [Overview](#overview)
-   * [What should I know?](#what-should-i-know)
+   * [What you should know](#what-you-should-know)
 * [Contributing](#contributing)
-   * [What do?](#what-do)
+   * [What you can do](#what-you-can-do)
    * [Contribution process](#contribution-process)
-   * [What to expect?](#what-to-expect)
+   * [What you can expect](#what-you-can-expect)
    * [Setting up the development environment](#setting-up-the-development-environment)
 * [Guidelines](#guidelines)
    * [Code documentation](#code-documentation)
@@ -55,7 +55,7 @@ interface uses PySide2 (Qt for Python). Communication between the user
 interface and L∃∀N uses Trio and Qtrio. The version control system we use is
 Git.
 
-### What should I know?
+### What you should know
 
 Not much. A good experience in Python3 is *recommended*, as well as basic
 terminal usage. Some experience in Git is *necessary* but you can rapidly learn
@@ -68,28 +68,28 @@ document.
 
 ## Contributing
 
-### What do?
+### What you can do
 
 Preferably consider working on an existing
 [issue](https://github.com/dEAduction/dEAduction/issues) (check-out issue
-labels). If so, comment so we can discuss! For instance, you could contribute
-to work-in-progress [new
+labels). If you decide to do so, write a comment so we can talk about it. For
+instance, you could contribute to work-in-progress [new
 features](https://github.com/dEAduction/dEAduction/issues?q=is%3Aopen+is%3Aissue+label%3A%22type%3A%3Anew+feature%22).
-If you rather want to do something else, open an issue first so that we can
+If you would rather do something else, start by opening an issue so we can
 discuss it. Here are contribution ideas, in order of priority:
-- **Refactor code**: please help us. d∃∀duction needs a strong codebase and as
-   of now it is rather weak.
+- **Refactor code**: we really need help on that. d∃∀duction needs a strong
+  codebase and as of now it is rather weak.
 - **Report stuff, suggest improvements**: report bugs, suggest new features,
-    fundamental changes, enhancements…
+  fundamental changes, enhancements…
 - **Translate the user interface**.
 - **Write documentation**: many modules, classes or functions still lack
-   documentation ; you can contribute to its elaboration. You can also
-   contribute to the d∃∀duction user manual.
+  documentation ; you can contribute to its elaboration or to the d∃∀duction
+  user manual.
 - **Create exercises**.
 
-In any case, each contribution should have its issue, whether we or you created
-that issue. To save you time, you should never work on a contribution that was
-not discussed (there would be a risk of it being rejected)!
+In any case, each contribution should have its own issue. Please note that to
+avoid wasting your time, you should never work on a contribution that hasn't
+been discusses with us.
 
 > Issues that are best-suited for first contributions have the label [`good
 first issue`](https://github.com/dEAduction/dEAduction/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).
@@ -109,21 +109,20 @@ your contribution (do not use a branch for more than one thing).
   projects.
 
 When you think your contribution is ready, git push it to your online fork.
-Then, tell us about it in the issue; core-team members will review your
+Then let us know about it in the issue; core-team members will review your
 contribution proposal. After potential modifications and approval, do a [*pull
 request*](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests)
 for your contribution to be integrated into d∃∀duction's codebase.
 
-At any stage, do feel free to discuss the advancement of your contribution with
-core-team members. This should be done publicly, in the issue of the
-contribution.
+You should feel free to discuss the advancement of your contribution with us at
+any point. (This should be done publicly, in the issue of the contribution.)
 
-### What to expect?
+### What you can expect
 
 If you follow these steps, your contribution proposition should be approved!
 You will then be credited as a d∃∀duction's contributor. Nevertheless,
-respecting the above stages does not by any way mean that your contribution
-proposal *will* be accepted.
+respecting the above stages does not guarantee that your contribution proposal
+will necessarily be accepted.
 
 ### Setting up the development environment
 
@@ -139,8 +138,7 @@ source envconfig
 
 This should add `(env)` in front of your terminal prompt. It is *highly*
 recommended to set up the development environment at the very beginning of
-every development session. The code will not run if this environment is not set
-up.
+every development session, otherwise the code will not run.
 
 
 ## Guidelines
@@ -148,16 +146,16 @@ up.
 ### Code documentation
 
 As will be shown in this section, the d∃∀duction's code documentation may be
-long to write and needs be maintained when the code is changed. But **the
+long to write and needs be to maintained when the code is changed. But **the
 documentation is as essential as the code**. It might prove useless for the
 author but it is essential for any person discovering your code. As Guido said,
 *code is read much more often than it is written*. When writing documentation,
 you should always assume that the reader is not familiar with your code and has
 very little time and skill to understand it. The writer should do most of the
 work, so that the reader can efficiently understand the essence and utility of
-your code in a single reading. Documentation should not only tell what a piece
-of code does, but also why it exists, why it is necessary, where it is used and
-how, and provide examples if necessary.
+the code in one reading. Documentation should not only tell what a piece of
+code does, but also why it exists, why it is necessary, where it is used and
+how, and provide examples if needed.
 
 #### Function and method signatures
 
@@ -198,7 +196,7 @@ delete it).
 ```
 
 [Here](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/start_coex/start_coex_widgets.py)
-are examples.
+are a few examples.
 
 
 #### Class docstrings
@@ -209,13 +207,13 @@ the same rules as function and method docstrings, except that public class
 attributes must be written in the class docstring using a `:attribute
 attribute_name: Attribute description` syntax.
 [Here](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/exercise/exercise_main_window.py)
-are examples.
+are a few examples.
 
 #### Comment style
 
 Comments also follow the [PEP 8 convention (¶
-Comments)](https://pep8.org/#comments). If the result is not bloated, you *may*
-use the so-called *section comments*:
+Comments)](https://pep8.org/#comments). If the result is not bloated, you may
+use the *section comments*:
 
 ```python3
 ###################
@@ -230,10 +228,10 @@ and *separator comments*:
 ```
 
 Both those types of comments *must* have a blank line just before and right
-after them. They are good for titles but bad for explanations. Use as few words
+after them. They are good for titles but bad for explanations so be as succinct
 as possible.
 
-> If you use Vim, consider the addon
+> If you use Vim, consider using the addon
 [UltiSnips](https://github.com/sirver/UltiSnips) to efficiently add headers.
 Ready-to-use snippets are available in
 [`tools/Vimconfig/UltiSnips/python.snippets/deaduction.snippets`](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/tools/Vimconfig/UltiSnips/python.snippets/deaduction.snippets).
@@ -279,7 +277,7 @@ See
 Non Python files *must* also have this header, simply get rid of the doctring
 `"""` marks.
 
-> If you use Vim, consider the addon
+> If you use Vim, consider using the addon
 [UltiSnips](https://github.com/sirver/UltiSnips) to efficiently add headers.
 Ready-to-use snippets are available in
 [`tools/Vimconfig/UltiSnips/python.snippets/deaduction.snippets`](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/tools/Vimconfig/UltiSnips/python.snippets/deaduction.snippets).
@@ -295,7 +293,7 @@ area::type/name
 Arguments `area` and `type` (both mandatory) follow the same
 [rules](#git-commit-messages) as the git commit message. Argument `name`
 (mandatory) is a description of what you are doing on this branch. It should be
-as short as possible and words must be separated by an hyphen (-). Use lower
+as short as possible and words must be separated by a hyphen (-). Use lower
 case.
 
 > A branch should host a *single* new feature, fix, etc.
@@ -309,10 +307,10 @@ Message Format
 #### Specifications (non-merge commits)
 
 Commit messages consist of a header (mandatory) and a body (optional). The
-commit header is what you put between the quotation marks in the command `git
-commit -m ""`. The body is everything after the header and a blank line, its
-structure is free. Most commit messages only have a header, which *must* have
-the following structure:
+commit header is what you put in between the quotation marks in the command
+`git commit -m ""`. The body is everything that comes after the header (a blank
+line), it doesn't have a specific structure. Most commit messages only have a
+header, which *must* have the following structure:
 
 ```
 area::type(scope): Summary
@@ -321,11 +319,11 @@ area::type(scope): Summary
 Argument `area` (mandatory) *must* be one of:
 
 `area`     | Definition
------------|-------------------------------------------------------------------------------------------------------------------
+-----------|-----------------------------------------------------------------------------------------------------------------------
 `code`     | Changes affecting the codebase.
 `doc`      | Changes affecting the documentation (including comments and docstrings).
-`dui`      | Changes that affect d∃∀duction's user interface (e.g. texts, tooltips) but have nothing to do with how the code is.
-`other`    | Changes that do not go in any other category, please try not using it.
+`dui`      | Changes affecting only d∃∀duction's user interface (e.g. texts, tooltips) but have nothing to do with the code itself.
+`other`    | Changes that do not go in any other category, please avoid using it.
 `snippets` | Changes affecting the snippets.
 `tests`    | Changes affecting the tests.
 `tools`    | Changes affecting the tools and the development environment.
@@ -333,21 +331,21 @@ Argument `area` (mandatory) *must* be one of:
 Argument `type` (mandatory) *must* be one of:
 
 `type`   | Definition
----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------
-`chores` | Changes that do not affect the meaning of what is changed (e.g. changing a filename).
+---------|------------------------------------------------------------------------------------------------------------------------------------------------------------
+`chores` | Changes not affecting the meaning of what is changed (e.g. changing a filename).
 `dev`    | Work in progress for new features; changes that are part of its development though not introducing it. A series of `dev` commits ends with a `feat` commit.
-`feat`   | Changes that introduce a completed new feature. When developing it, the last commit *must* be the only one to use this type, all other *must* use dev.
+`feat`   | Introduce a completed new feature. When developing it, the last commit *must* be the only one to use this type, all other *must* use dev.
 `fix`    | Fix bugs and problems.
 `ref`    | Refactoring.
 `revert` | Revert to a previous commit, feature or state of the project.
 
 Scope (optional) is the precise part of the codebase that was changed (e.g. a
 class, function or module name or a combination of all that). Precision is up
-to you. The summary (mandatory) *should* be the shortest possible sentence
-describing the commit. It *should* begin with a capital letter and *must not*
-end with a period, it *should* also be written using present tense.
+to you. The summary (mandatory) should be the shortest possible sentence
+describing the commit. It should begin with a capital letter and *must not*
+end with a period, it should also be written using present tense.
 
-The body of the commit message *may* be used to provide additional information
+The body of the commit message may be used to provide additional information
 about the changes, such as technical explanations.
 
 #### Specifications (merge commits)
@@ -365,25 +363,25 @@ own computer, use `local`) and the merge is from `branchA` to `branchB`.
 
 If you finished writing the first part of the function `my_function`, but this
 function is not ready, you should use the type `dev`. Since this function is
-part of the codebase, you must use the area `code`. This is a good commit
-message:
+part of the codebase, you must use the area `code`. Here is an example of a
+good commit message:
 
 ```
-code/dev: Finish first part of my_function
+code::dev: Finish first part of my_function
 ```
 
-However you can be more precise using a scope. If the function is part of the
-module `dui.utils`, this commit message is better:
+However you can be more precise by using a scope. If the function is part of
+the module `dui.utils`, this commit message is better:
 
 ```
-code/dev(dui.utils): Finish first part of my_function
+code::dev(dui.utils): Finish first part of my_function
 ```
 
 If you fixed the script `envconfig` (the one that sets up the virtual
 environment), the header (we leave it to you to imagine a summary) should be:
 
 ```
-tools/fix(envconfig):
+tools::fix(envconfig):
 ```
 
 Now if you wish to merge the branch `dev/the_new_feature` from Github (repo's
@@ -400,14 +398,14 @@ on your computer, the commit message *must* be:
 merge: local/dev/the_new_feature -> local/master
 ```
 
-Beware that any non-compliant commit message *will* be rejected by the git
+Please note that any non-compliant commit message will be rejected by the git
 hook.
 
 ### Python code (modified PEP 8) and linting
 
-The Python code of d∃∀duction's follows the [PEP 8
-convention](https://pep8.org), with the adjustments hereinafter. You *should*
-check your Python code syntax using the project's
+The Python code of d∃∀duction follows the [PEP 8 convention](https://pep8.org),
+with the adjustments hereinafter. You should check your Python code syntax
+using the project's
 [linter](https://sourcelevel.io/blog/what-is-a-linter-and-why-your-team-should-use-it),
 that is a slightly modified [flake8](https://flake8.pycqa.org/en/latest/#)
 version. To lint your Python module, simply run the terminal command:
@@ -420,7 +418,7 @@ flake8 my_module.py
   up](#setting-up-the-development-environment) and to be in the Python virtual
   environment.
 
-> If you use Vim, consider the addon
+> If you use Vim, consider using the addon
 [ALE](https://github.com/dense-analysis/ale) to have an integrated linter.
 
 #### Consecutive lines with `=` operators
@@ -454,9 +452,9 @@ from my_module import (MyClass,
 ```
 
 [Here](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/exercise/exercise_main_window.py)
-are examples.
+are a few examples.
 
-Relative imports *may* be used in some cases (avoid them as much as you
+Relative imports may be used in some cases (avoid them as much as you
 possibly can); they follow the same rules as regular imports and *must* be
 grouped after the last group of regular imports and a blank line.
 
@@ -465,8 +463,8 @@ grouped after the last group of regular imports and a blank line.
 ### For Git
 
 - The [official documentation](https://git-scm.com/doc).
-- The (free) book [*Pro Git*](https://git-scm.com/book/en/v2) is a complete and
-    rigourous way of becoming proficient in Git.
+- The (free) book [*Pro Git*](https://git-scm.com/book/en/v2), complete and
+    rigorous, a short way of becoming proficient in Git.
 
 ### For L∃∀N
 
@@ -482,8 +480,8 @@ grouped after the last group of regular imports and a blank line.
     documentation](https://doc.qt.io/qtforpython/quickstart.html).
 - This excellent [tutorial](http://zetcode.com/gui/pyqt5/), perfect if you want
     to learn from scratch. (To make it work, simply replace all occurences of
-    `PyQt5` by `PySide2`; there are some other minor problems but you will make
-    it.)
+    `PyQt5` by `PySide2`; there are some other minor problems but you should
+    manage.)
 
 ### For Python (version 3)
 
@@ -492,14 +490,15 @@ grouped after the last group of regular imports and a blank line.
 There are dozens of online tutorials. If you are new to Python, be sure to
 choose one which covers classes (with heritage and usual decorators).
 
-- [The zen of Python](https://www.python.org/dev/peps/pep-0020/#the-zen-of-python).
+- The [zen of Python](https://www.python.org/dev/peps/pep-0020/#the-zen-of-python).
 - A [guide](https://realpython.com/python-virtual-environments-a-primer/) to
     virtual environments.
 - Python properties, [how tu use them and
     why](https://www.programiz.com/python-programming/property), this is
-    defintely worth reading if you want to Python the Python way. Properties
-    make the code stronger and nicer to read. Unfortunately, we did not use
-    them enough in the codebase, but you should still do it if relevant.
+    definitely worth reading if you want to Python the
+    [pythonic](https://en.wiktionary.org/wiki/Pythonic) way. Properties make
+    the code stronger and nicer to read. Unfortunately, we did not use them
+    enough in the codebase, but you should still do it if relevant.
 - Python [thematic tutorials from ZetCode](https://zetcode.com/all/#python) are
     always great.
 
