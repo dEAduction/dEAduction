@@ -335,8 +335,8 @@ class ExerciseMainWindow(QMainWindow):
         self.ecw.objects_wgt.itemClicked.connect(self.process_context_click)
         self.ecw.props_wgt.itemClicked.connect(self.process_context_click)
 
-        if self.selectable_target:
-            self.ecw.target_wgt.mouseReleaseEvent = self.process_target_click
+        # if self.selectable_target:
+        self.ecw.target_wgt.mouseReleaseEvent = self.process_target_click
         if hasattr(self.ecw, "action_apply_button"):
             self.ecw.objects_wgt.apply_math_object_triggered.connect(
                 self.__apply_math_object_triggered)
