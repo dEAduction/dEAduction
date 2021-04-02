@@ -309,9 +309,10 @@ class ExerciseStatusBar(QStatusBar):
         self.messageWidget = QLabel("", self)
 
         # Insert icon and message
-        self.insertWidget(0,self.iconWidget)
+        self.insertWidget(0, self.iconWidget)
         self.insertWidget(1, self.messageWidget)
-        self.iconWidget.hide()
+        self.show_success_icon()  # Trick: the status bar adapt its height
+        self.hide_icon()
 
     def show_error_icon(self):
         self.iconWidget.setPixmap(self.error_pixmap)
