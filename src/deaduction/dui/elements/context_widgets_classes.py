@@ -190,6 +190,9 @@ class MathObjectWidgetItem(QListWidgetItem):
 
         self.setBackground(QBrush(QColor('limegreen')) if yes else QBrush())
 
+    def has_math_object(self, math_object: MathObject) -> bool:
+        return self.mathobject is MathObject
+
 
 class MathObjectWidget(QListWidget):
     """
@@ -239,6 +242,18 @@ class MathObjectWidget(QListWidget):
         """
         item.setSelected(False)
         self.apply_math_object_triggered.emit(item)
+
+    def math_object_widget_item(self, math_object) -> MathObjectWidgetItem:
+        """
+        Return MathObjectWidgetItem whose mathobject is Math_object.
+        """
+
+        items = [item for item in self.items if item.has_math_object(
+                 math_object)]
+        if items:
+            return items[0]
+        else:
+            return None
 
 
 MathObjectWidget.apply_math_object_triggered = Signal(MathObjectWidget)

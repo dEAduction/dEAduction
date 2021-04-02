@@ -214,6 +214,19 @@ class ExerciseCentralWidget(QWidget):
                 + self.proof_btns.buttons \
                 + self.magic_btns.buttons
 
+    def action_button(self, symbol) -> ActionButton:
+        """
+        Return the ActionButton whose symbol is symbol.
+        :param symbol: Symbol of som ActionButton, which is displayed on the
+        button.
+        """
+        buttons = [button for button in self.actions_buttons if
+                   button.has_symbol(symbol)]
+        if buttons:
+            return buttons[0]
+        else:
+            return None
+
     ###########
     # Methods #
     ###########

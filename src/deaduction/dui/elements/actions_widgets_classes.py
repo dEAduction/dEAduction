@@ -139,6 +139,11 @@ class ActionButton(QPushButton):
 
         self.action_triggered.emit(self)
 
+    def has_symbol(self, symbol) -> bool:
+        """
+        Test if symbol is the symbol of (the action associated to) self.
+        """
+        return self.action.symbol == symbol
 
 # We wish to have an ActionButton class attribute called
 # action_triggered and defined as Signal(ActionButton). At first, one
@@ -276,6 +281,9 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         # math_font_name = 'Default'  # FIXME!!
         math_font_name = cvars.get('mathematics_font', 'Default')
         QToolTip.setFont(math_font_name)
+
+    def has_pretty_name(self, pretty_name: str) -> bool:
+        return self.statement.pretty_name == pretty_name
 
 
 class StatementsTreeWidgetNode(QTreeWidgetItem):
@@ -522,3 +530,32 @@ class StatementsTreeWidget(QTreeWidget):
         for i in range(self.topLevelItemCount()):
             item = self.topLevelItem(i)
             traverse_node(item)
+
+    def StatementWidgetItem(self, pretty_name: str) \
+            -> StatementsTreeWidgetItem:
+        """
+        Return the StatementsTreeWidgetItem whose statement's pretty name is
+        pretty_name.
+        """
+
+        items = []
+
+        def traverse_node(item: StatementsTreeWidgetItem):
+            if isinstance(item, StatementsTreeWidgetItem):
+                if item.statement.pretty_name == pretty_name:
+                    items.append(item)
+            for i in range(0, item.childCount()):
+                traverse_node(item.child(i))
+
+        for i in range(self.topLevelItemCount()):
+            item = self.topLevelItem(i)
+            traverse_node(item)
+
+        if len(items) > 1:
+            log.warning(f"Found more than one statement with pretty name "
+                        f"{pretty_name}")
+        if items:
+            return items[0]
+        else:
+            return None
+
