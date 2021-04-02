@@ -32,7 +32,9 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from enum import IntEnum
+from enum                         import IntEnum
+
+from deaduction.pylib.config.i18n import _
 
 
 class InputType(IntEnum):
@@ -56,3 +58,8 @@ class WrongUserInput(Exception):
         super().__init__(f"Wrong user input with error: {error}")
         self.error = error
 
+
+def test_selection(item_selected, selected_target, action="to perform action"):
+    if not (item_selected or selected_target):
+        error = _("select item on which " + action)
+        raise WrongUserInput(error)

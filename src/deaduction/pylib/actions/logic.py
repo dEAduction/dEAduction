@@ -44,6 +44,7 @@ from deaduction.pylib.actions     import (action,
                                           InputType,
                                           MissingParametersError,
                                           WrongUserInput,
+                                          test_selection,
                                           LeanCombinator,
                                           CodeForLean
                                           )
@@ -79,7 +80,7 @@ for key, value in zip(action_list, lbt):
 # AND #
 #######
 
-def construct_and(goal: Goal, user_input: [str]):
+def construct_and(goal: Goal, user_input: [str]) -> CodeForLean:
     """
 Split the target 'P AND Q' into two sub-goals
     """
@@ -112,20 +113,20 @@ Split the target 'P AND Q' into two sub-goals
     return CodeForLean.or_else_from_list(possible_codes)
 
 
-def apply_and(goal, l):
+def apply_and(goal, selected_objects) -> CodeForLean:
     """
     Destruct a property 'P and Q'
     Here l contains exactly one conjunction property
     """
 
-    h_selected = l[0].info["name"]
+    h_selected = selected_objects[0].info["name"]
     h1 = get_new_hyp(goal)
     h2 = get_new_hyp(goal)
     code_ = f'cases {h_selected} with {h1} {h2}'
     return CodeForLean.from_string(code_)
 
 
-def construct_and_hyp(goal, selected_objects: [MathObject]):
+def construct_and_hyp(goal, selected_objects: [MathObject]) -> CodeForLean:
     """
     Construct 'P AND Q' from properties P and Q
     Here l contains exactly two properties
@@ -142,8 +143,9 @@ def construct_and_hyp(goal, selected_objects: [MathObject]):
         logic_button_texts['action_and'])
 def action_and(goal: Goal,
                selected_objects: [MathObject],
-               user_input: [str] = []
-               ) -> str:
+               user_input: [str] = [],
+               target_selected: bool = True
+               ) -> CodeForLean:
     """
     Translate into string of lean code corresponding to the action
 
@@ -154,9 +156,13 @@ If a hypothesis of the form P AND Q has been previously selected:
 If two hypothesis P, then Q, have been previously selected:
     add the new hypothesis P AND Q to the properties.
 
+    :param target_selected: bool
     :param selected_objects:   list of MathObject preselected by user
     :return:    string of lean code
     """
+
+    test_selection(selected_objects, target_selected)
+
     if len(selected_objects) == 0:
         return construct_and(goal, user_input)
     if len(selected_objects) == 1:
@@ -175,7 +181,7 @@ If two hypothesis P, then Q, have been previously selected:
 
 
 # OR #
-def construct_or(goal: Goal, user_input: [str]) -> str:
+def construct_or(goal: Goal, user_input: [str]) -> CodeForLean:
     """
 When target is a disjunction 'P OR Q', choose to prove either P or Q
     """
@@ -238,7 +244,8 @@ def apply_or(goal, l: [MathObject], user_input: [str]) -> CodeForLean:
     return code_
 
 
-def construct_or_on_hyp(goal: Goal, l: [MathObject], user_input: [str] = []):
+def construct_or_on_hyp(goal: Goal, l: [MathObject], user_input: [str] = [])\
+        -> CodeForLean:
     """
 Construct a property 'P or Q' from property 'P' or property 'Q'
     """
@@ -286,7 +293,10 @@ Construct a property 'P or Q' from property 'P' or property 'Q'
 
 @action(tooltips.get('tooltip_or'),
         logic_button_texts['action_or'])
-def action_or(goal: Goal, l: [MathObject], user_input=[]) -> str:
+def action_or(goal: Goal,
+              selected_objects: [MathObject],
+              user_input=[],
+              target_selected: bool = True) -> CodeForLean:
     """
 Translate into string of lean code corresponding to the action
 
@@ -301,15 +311,17 @@ If a hypothesis of the form P OR Q has been previously selected:
     :return:    string of lean code
     """
 
-    if len(l) == 0:
+    test_selection(selected_objects, target_selected)
+
+    if len(selected_objects) == 0:
         return construct_or(goal, user_input)
-    if len(l) == 1:
-        if l[0].is_or():
-            return apply_or(goal, l, user_input)
+    if len(selected_objects) == 1:
+        if selected_objects[0].is_or():
+            return apply_or(goal, selected_objects, user_input)
         else:
-            return construct_or_on_hyp(goal, l, user_input)
-    if len(l) == 2:
-        return construct_or_on_hyp(goal, l, user_input)
+            return construct_or_on_hyp(goal, selected_objects, user_input)
+    if len(selected_objects) == 2:
+        return construct_or_on_hyp(goal, selected_objects, user_input)
     raise WrongUserInput(error=_("does not apply to more than two properties"))
 
 
@@ -317,7 +329,9 @@ If a hypothesis of the form P OR Q has been previously selected:
 
 @action(tooltips.get('tooltip_not'),
         logic_button_texts['action_negate'])
-def action_negate(goal: Goal, l: [MathObject]) -> str:
+def action_negate(goal: Goal,
+                  selected_objects: [MathObject],
+                  target_selected: bool = True) -> CodeForLean:
     """
     Translate into string of lean code corresponding to the action
     
@@ -329,17 +343,20 @@ do the same to the hypothesis.
     :param l:   list of MathObject arguments preselected by the user
     :return:    string of lean code
     """
+
+    test_selection(selected_objects, target_selected)
+
     possible_codes = []
 
-    if len(l) == 0:
+    if len(selected_objects) == 0:
         if not goal.target.is_not():
             raise WrongUserInput(error=_("target is not a negation 'NOT P'"))
         possible_codes.append('push_neg')
-    if len(l) == 1:
-        if not l[0].is_not():
+    if len(selected_objects) == 1:
+        if not selected_objects[0].is_not():
             error = _("selected property is not a negation 'NOT P'")
             raise WrongUserInput(error)
-        h_selected = l[0].info["name"]
+        h_selected = selected_objects[0].info["name"]
         possible_codes.append(f'push_neg at {h_selected}')
     return CodeForLean.or_else_from_list(possible_codes)
 
@@ -368,7 +385,8 @@ def apply_implicate(goal: Goal, l: [MathObject]) -> CodeForLean:
     return CodeForLean.from_string(f'apply {h_selected}')
 
 
-def have_new_property(arrow: MathObject, variable_names: [str], hypo_name) -> CodeForLean:
+def have_new_property(arrow: MathObject, variable_names: [str], hypo_name) \
+        -> CodeForLean:
     """
 
     :param arrow:           a MathObject which is either an implication or a
@@ -426,7 +444,9 @@ def apply_implicate_to_hyp(goal: Goal, l: [MathObject]) -> CodeForLean:
 
 @action(tooltips.get('tooltip_implies'),
         logic_button_texts['action_implicate'])
-def action_implicate(goal: Goal, l: [MathObject]) -> CodeForLean:
+def action_implicate(goal: Goal,
+                     selected_objects: [MathObject],
+                     target_selected: bool = True) -> CodeForLean:
     """
     Three cases:
     (1) No property selected:
@@ -440,27 +460,30 @@ def action_implicate(goal: Goal, l: [MathObject]) -> CodeForLean:
     :param l:   list of MathObject arguments preselected by the user
     :return:    string of lean code
     """
-    if len(l) == 0:
+
+    test_selection(selected_objects, target_selected)
+
+    if len(selected_objects) == 0:
         if not goal.target.is_implication():
             raise WrongUserInput(
                 error=_("target is not an implication 'P ⇒ Q'"))
         else:
             return construct_implicate(goal)
-    if len(l) == 1:
-        if not l[0].can_be_used_for_implication():
+    if len(selected_objects) == 1:
+        if not selected_objects[0].can_be_used_for_implication():
             raise WrongUserInput(
                 error=_("selected property is not an implication 'P ⇒ Q'"))
         else:
-            return apply_implicate(goal, l)
-    elif len(l) == 2:
-        if not l[-1].can_be_used_for_implication():
-            if not l[0].can_be_used_for_implication():
+            return apply_implicate(goal, selected_objects)
+    elif len(selected_objects) == 2:
+        if not selected_objects[-1].can_be_used_for_implication():
+            if not selected_objects[0].can_be_used_for_implication():
                 raise WrongUserInput(error=_(
                     "selected properties are not implications 'P ⇒ Q'"
                                             ))
             else:  # l[0] is an implication but not l[1]: permute
-                l.reverse()
-        return apply_implicate_to_hyp(goal, l)
+                selected_objects.reverse()
+        return apply_implicate_to_hyp(goal, selected_objects)
     # TODO: treat the case of more properties, including the possibility of
     #  P, Q and 'P and Q ⇒ R'
     raise WrongUserInput(error=_("does not apply to more than two properties"))
@@ -470,7 +493,7 @@ def action_implicate(goal: Goal, l: [MathObject]) -> CodeForLean:
 # IFF #
 #######
 
-def construct_iff(goal: Goal, user_input: [str]):
+def construct_iff(goal: Goal, user_input: [str]) -> CodeForLean:
     possible_codes = []
     if goal.target.math_type.node != "PROP_IFF":
         raise WrongUserInput(error=_("target is not an iff property 'P ⇔ Q'"))
@@ -497,7 +520,7 @@ def construct_iff(goal: Goal, user_input: [str]):
     return CodeForLean.or_else_from_list(possible_codes)
 
 
-def destruct_iff_on_hyp(goal: Goal, l: [MathObject]):
+def destruct_iff_on_hyp(goal: Goal, l: [MathObject]) -> CodeForLean:
     """
     Split a property 'P iff Q' into two implications.
     len(l) should be 1.
@@ -513,7 +536,7 @@ def destruct_iff_on_hyp(goal: Goal, l: [MathObject]):
     return CodeForLean.or_else_from_list(possible_codes)
 
 
-def construct_iff_on_hyp(goal: Goal, l: [MathObject]):
+def construct_iff_on_hyp(goal: Goal, l: [MathObject]) -> CodeForLean:
     """
     Construct property 'P iff Q' from both implications.
     len(l) should be 2.
@@ -533,7 +556,10 @@ def construct_iff_on_hyp(goal: Goal, l: [MathObject]):
 
 @action(tooltips.get('tooltip_iff'),
         logic_button_texts['action_iff'])
-def action_iff(goal: Goal, l: [MathObject], user_input: [str] = []) -> str:
+def action_iff(goal: Goal,
+               selected_objects: [MathObject],
+               user_input: [str] = [],
+               target_selected: bool = True) -> CodeForLean:
     """
     Translate into string of lean code corresponding to the action
     
@@ -543,12 +569,15 @@ introduce two subgoals, P⇒Q, and Q⇒P.
     :param l:   list of MathObject arguments preselected by the user
     :return:    string of lean code
     """
-    if len(l) == 0:
+
+    test_selection(selected_objects, target_selected)
+
+    if len(selected_objects) == 0:
         return construct_iff(goal, user_input)
-    if len(l) == 1:
-        return destruct_iff_on_hyp(goal, l)
-    if len(l) == 2:
-        return construct_iff_on_hyp(goal, l)
+    if len(selected_objects) == 1:
+        return destruct_iff_on_hyp(goal, selected_objects)
+    if len(selected_objects) == 2:
+        return construct_iff_on_hyp(goal, selected_objects)
     raise WrongUserInput(error=_("does not apply to more than two properties"))
 
 
@@ -702,8 +731,10 @@ def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
 
 @action(tooltips.get('tooltip_forall'),
         logic_button_texts['action_forall'])
-def action_forall(goal: Goal, l: [MathObject], user_input: [str] = []) \
-                                                            -> CodeForLean:
+def action_forall(goal: Goal,
+                  selected_objects: [MathObject],
+                  user_input: [str] = [],
+                  target_selected: bool = True) -> CodeForLean:
     """
     (1) If no selection and target is of the form ∀ x, P(x):
         introduce x and transform the target into P(x)
@@ -714,15 +745,17 @@ def action_forall(goal: Goal, l: [MathObject], user_input: [str] = []) \
 
     """
 
-    if len(l) == 0:
+    test_selection(selected_objects, target_selected)
+
+    if len(selected_objects) == 0:
         if not goal.target.is_for_all():
             error = _("target is not a universal property '∀x, P(x)'")
             raise WrongUserInput(error)
         else:
             return construct_forall(goal)
 
-    elif len(l) == 1:  # Ask user for item
-        if not l[0].is_for_all():
+    elif len(selected_objects) == 1:  # Ask user for item
+        if not selected_objects[0].is_for_all():
             error = _("selected property is not a universal property '∀x, "
                       "P(x)'")
             raise WrongUserInput(error)
@@ -741,18 +774,18 @@ def action_forall(goal: Goal, l: [MathObject], user_input: [str] = []) \
                                        info={'name': item},
                                        children=[],
                                        math_type=None)
-            l.insert(0, potential_var)
+            selected_objects.insert(0, potential_var)
             # Now len(l) == 2
     # From now on len(l) ≥ 2
     # Search for a universal property among l, beginning with last item
-    l.reverse()
-    for item in l:
+    selected_objects.reverse()
+    for item in selected_objects:
         if item.is_for_all():
             # Put item on last position
-            l.remove(item)
-            l.reverse()
-            l.append(item)
-            return apply_forall(goal, l)
+            selected_objects.remove(item)
+            selected_objects.reverse()
+            selected_objects.append(item)
+            return apply_forall(goal, selected_objects)
     raise WrongUserInput(error=_("no universal property among selected"))
 
 
@@ -760,7 +793,7 @@ def action_forall(goal: Goal, l: [MathObject], user_input: [str] = []) \
 # EXISTS #
 ##########
 
-def construct_exists(goal, user_input: [str]) -> str:
+def construct_exists(goal, user_input: [str]) -> CodeForLean:
     possible_codes = []
 
     if not goal.target.is_exists():
@@ -796,7 +829,7 @@ def apply_exists(goal: Goal, l: [MathObject]) -> CodeForLean:
     return code_
 
 
-def construct_exists_on_hyp(goal: Goal, l: [MathObject]):
+def construct_exists_on_hyp(goal: Goal, l: [MathObject]) -> CodeForLean:
     """
     Try to construct an existence property from some object and some property
     Here len(l) = 2
@@ -820,7 +853,10 @@ def construct_exists_on_hyp(goal: Goal, l: [MathObject]):
 
 @action(tooltips.get('tooltip_exists'),
         logic_button_texts['action_exists'])
-def action_exists(goal: Goal, l: [MathObject], user_input: [str] = []) -> str:
+def action_exists(goal: Goal,
+                  selected_objects: [MathObject],
+                  user_input: [str] = [],
+                  target_selected: bool = True) -> CodeForLean:
     """
     Translate into string of lean code corresponding to the action
     
@@ -832,21 +868,24 @@ introduce a new x and add P(x) to the properties
     :param l:   list of MathObject arguments preselected by the user
     :return:    string of lean code
     """
-    if len(l) == 0:
+
+    test_selection(selected_objects, target_selected)
+
+    if len(selected_objects) == 0:
         return construct_exists(goal, user_input)
-    elif len(l) == 1 and user_input == []:
-        h_selected = l[0]
+    elif len(selected_objects) == 1 and user_input == []:
+        h_selected = selected_objects[0]
         if h_selected.math_type.is_prop():
             # try to apply property "exists x, P(x)" to get a new MathObject x
             if not h_selected.is_exists():
                 error = _("selection is not existential property '∃x, P(x)'")
                 raise WrongUserInput(error)
             else:
-                return apply_exists(goal, l)
+                return apply_exists(goal, selected_objects)
         else:  # h_selected is not a property : get an existence property
-            return construct_exists(goal, [l[0].info["name"]])
-    elif len(l) == 2:
-        return construct_exists_on_hyp(goal, l)
+            return construct_exists(goal, [selected_objects[0].info["name"]])
+    elif len(selected_objects) == 2:
+        return construct_exists_on_hyp(goal, selected_objects)
     raise WrongUserInput(error=_("does not apply to more than two properties"))
 
 

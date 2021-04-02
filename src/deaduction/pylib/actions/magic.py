@@ -36,7 +36,8 @@ from deaduction.pylib.text import tooltips
 from deaduction.pylib.actions.actiondef import action
 from deaduction.pylib.actions import (CodeForLean,
                                       solve1_wrap,
-                                      WrongUserInput)
+                                      WrongUserInput,
+                                      test_selection)
 from deaduction.pylib.mathobj import (MathObject,
                                       Goal)
 
@@ -51,7 +52,9 @@ for key, value in zip(magic_list, lbt):
 
 @action(tooltips.get('tooltip_compute'),
         magic_button_texts['compute'])
-def action_compute(goal, selected_objects):
+def action_compute(goal,
+                   selected_objects,
+                   target_selected: bool = True):
     target = goal.target
     if not (target.is_equality()
             or target.is_inequality()
@@ -80,7 +83,9 @@ def action_compute(goal, selected_objects):
 
 @action(tooltips.get('tooltip_assumption'),
         magic_button_texts['assumption'])
-def action_assumption(goal: Goal, l: [MathObject]) -> str:
+def action_assumption(goal: Goal,
+                      selected_objects: [MathObject],
+                      target_selected: bool = True) -> CodeForLean:
     """
     Translate into string of lean code corresponding to the action
 
@@ -154,9 +159,9 @@ def action_assumption(goal: Goal, l: [MathObject]) -> str:
             code += f"exact set.not_mem_empty _ {H2}"
             possible_codes.append(code)
 
-    if len(l) == 1:
-        possible_codes.append(solve1_wrap(f'apply {l[0].info["name"]}'))
-
+    if len(selected_objects) == 1:
+        possible_codes.append(solve1_wrap(
+            f'apply {selected_objects[0].info["name"]}'))
     if (goal.target.is_equality()
             or goal.target.is_inequality()
             or goal.target.is_false()):

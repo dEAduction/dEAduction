@@ -167,7 +167,7 @@ latex_to_utf8_dic = {
     r'\neq': '≠',
     r'\leq': '≤',
     r'\geq': '≥',
-    r'{\mathcal P}': '𝒫',
+    r'{\mathcal P}': 'P',
     r'\{': '{',
     r'\}': '}',
     r'\[': '[',

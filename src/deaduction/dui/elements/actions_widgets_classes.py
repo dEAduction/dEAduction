@@ -279,7 +279,7 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         self.setToolTip(0, statement.caption)
         # These tooltips contain maths
         # math_font_name = 'Default'  # FIXME!!
-        math_font_name = cvars.get('mathematics_font', 'Default')
+        math_font_name = cvars.get('display.mathematics_font', 'Default')
         QToolTip.setFont(math_font_name)
 
     def has_pretty_name(self, pretty_name: str) -> bool:
@@ -372,7 +372,7 @@ class StatementsTreeWidget(QTreeWidget):
     show_lean_name_for_statements = \
                     cvars.get("display.show_lean_name_for_statements")
 
-    tooltips_font_size = cvars.get('display.tooltips_font_size')
+    tooltips_font_size = cvars.get('display.tooltips_font_size', 10)
 
     # TODO: show lean names only when lean console is on
     # (even if show_lean_name_for_statements == TRUE)

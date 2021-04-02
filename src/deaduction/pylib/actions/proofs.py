@@ -36,6 +36,7 @@ import deaduction.pylib.actions.utils as utils
 from deaduction.pylib.actions import (InputType,
                                       MissingParametersError,
                                       WrongUserInput,
+                                      test_selection,
                                       action,
                                       CodeForLean,
                                       apply_exists,
@@ -65,7 +66,8 @@ for key, value in zip(proof_list, lbt):
 @action(tooltips.get('tooltip_proof_methods'),
         proof_button_texts['proof_methods'])
 def action_use_proof_methods(goal: Goal, l: [MathObject],
-                            user_input: [str] = []) -> str:
+                             user_input: [str] = [],
+                             target_selected: bool = True) -> str:
     # parameters
     allow_proof_by_sorry = cvars.get('functionality.allow_proof_by_sorry')
 
@@ -204,7 +206,8 @@ and add ∀ a ∈ A, P(a, f(a)) to the properties
 @action(tooltips.get('tooltip_new_object'),
         proof_button_texts['new_object'])
 def action_new_object(goal: Goal, l: [MathObject],
-                      user_input: [str] = []) -> str:
+                      user_input: [str] = [],
+                      target_selected: bool = True) -> str:
     """
     Introduce new object / sub-goal / function
 
@@ -382,7 +385,10 @@ def apply_function(goal: Goal, l: [MathObject]):
 
 @action(tooltips.get('tooltip_apply'),
         proof_button_texts['action_apply'])
-def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
+def action_apply(goal: Goal,
+                 selected_objects: [MathObject],
+                 user_input: [str] = [],
+                 target_selected: bool = True):
     """
     Translate into string of lean code corresponding to the action
     Function explain_how_to_apply should reflect the actions
@@ -407,42 +413,47 @@ def action_apply(goal: Goal, l: [MathObject], user_input: [str] = []):
 
     # fixme: rewrite to provide meaningful error messages
 
-    if not l:
+    if not selected_objects:
         raise WrongUserInput(error=_("no property selected"))
 
     # Now len(l) > 0
-    prop = l[-1]  # property to be applied
+    prop = selected_objects[-1]  # property to be applied
 
     # (1)   If user wants to apply a function
     #       (note this is exclusive of other types of applications)
     if prop.is_function():
-        if len(l) == 1:
+        if len(selected_objects) == 1:
             # TODO: ask user for element on which to apply the function
             #   (plus new name, cf apply_forall)
             error = _("select an object on which you want to apply the "
                      "function")
             raise WrongUserInput(error=error)
         else:
-            return apply_function(goal, l)
+            return apply_function(goal, selected_objects)
 
     codes = CodeForLean.empty_code()
     error = ""
     # (2) If rewriting is possible
     test, equality = prop.can_be_used_for_substitution()
     if test:
-        codes = codes.or_else(apply_substitute(goal, l, user_input, equality))
+        codes = codes.or_else(apply_substitute(goal,
+                                               selected_objects,
+                                               user_input,
+                                               equality))
 
     expanded_apply_button = cvars.get('expanded_apply_button', False)
     if expanded_apply_button:
         # What follows applies only if expanded_apply_button
         # (4) Other easy applications
-        if len(l) == 1 and user_can_apply(l[0]):
+        if len(selected_objects) == 1 and user_can_apply(selected_objects[0]):
             if prop.is_exists():
-                codes = codes.or_else(apply_exists(goal, l))
+                codes = codes.or_else(apply_exists(goal, selected_objects))
             if prop.is_and():
-                codes = codes.or_else(apply_and(goal, l))
+                codes = codes.or_else(apply_and(goal, selected_objects))
             if prop.is_or():
-                codes = codes.or_else(apply_or(goal, l, user_input))
+                codes = codes.or_else(apply_or(goal,
+                                               selected_objects,
+                                               user_input))
 
     if codes:
         return codes

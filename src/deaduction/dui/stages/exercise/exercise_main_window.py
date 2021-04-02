@@ -62,6 +62,7 @@ from deaduction.pylib.server            import   ServerInterface
 from ._exercise_main_window_widgets     import ( ExerciseCentralWidget,
                                                  ExerciseStatusBar,
                                                  ExerciseToolBar )
+import deaduction.pylib.config.vars      as      cvars
 
 log = logging.getLogger(__name__)
 
@@ -149,6 +150,9 @@ class ExerciseMainWindow(QMainWindow):
         self.exercise          = exercise
         self.current_goal      = None
         self.current_selection = []
+        self.selectable_target = not cvars.get(
+                            'functionality.target_selected_by_default', False)
+        self._target_selected   = False
         self.ecw               = ExerciseCentralWidget(exercise)
         self.lean_editor       = LeanEditor()
         self.servint           = servint
@@ -188,6 +192,18 @@ class ExerciseMainWindow(QMainWindow):
         self.toolbar.change_exercise_action.triggered.connect(
                                                     self.change_exercise)
         self.servint.nursery.start_soon(self.server_task)  # Start server task
+
+    @property
+    def target_selected(self):
+        if self.selectable_target:
+            return self._target_selected
+        else:
+            # Target is selected by default if current_selection is empty
+            return not self.current_selection
+
+    @target_selected.setter
+    def target_selected(self, target_selected):
+        self._target_selected = target_selected
 
     ###########
     # Methods #
@@ -303,13 +319,17 @@ class ExerciseMainWindow(QMainWindow):
         # destroyed and re-created by "self.ecw.update_goal" just below
         self.current_selection = []
 
-        # Update UI and attributes
+        # Update UI and attributes. Target stay selected if it was.
         self.ecw.update_goal(new_goal, goal_count)
+        self.ecw.target_wgt.mark_user_selected(self.target_selected)
         self.current_goal = new_goal
 
         # Reconnect Context area signals and slots
         self.ecw.objects_wgt.itemClicked.connect(self.process_context_click)
         self.ecw.props_wgt.itemClicked.connect(self.process_context_click)
+
+        # if self.selectable_target:
+        self.ecw.target_wgt.mouseReleaseEvent = self.process_target_click
         if hasattr(self.ecw, "action_apply_button"):
             self.ecw.objects_wgt.apply_math_object_triggered.connect(
                 self.__apply_math_object_triggered)
@@ -490,12 +510,14 @@ class ExerciseMainWindow(QMainWindow):
                 if not user_input:
                     lean_code = action.run(
                         self.current_goal,
-                        self.current_selection_as_mathobjects)
+                        self.current_selection_as_mathobjects,
+                        target_selected=self.target_selected)
                 else:
                     lean_code = action.run(
                         self.current_goal,
                         self.current_selection_as_mathobjects,
-                        user_input)
+                        user_input,
+                        target_selected=self.target_selected)
             except MissingParametersError as e:
                 if e.input_type == InputType.Text:
                     choice, ok = QInputDialog.getText(action_btn,
@@ -553,12 +575,14 @@ class ExerciseMainWindow(QMainWindow):
                     lean_code = generic.action_definition(
                         self.current_goal,
                         self.current_selection_as_mathobjects,
-                        statement)
+                        statement,
+                        self.target_selected)
                 elif isinstance(statement, Theorem):
                     lean_code = generic.action_theorem(
                         self.current_goal,
                         self.current_selection_as_mathobjects,
-                        statement)
+                        statement,
+                        self.target_selected)
 
                 log.debug(f'Calling statement {item.statement.pretty_name}')
                 await self.servint.code_insert(statement.pretty_name,
@@ -597,6 +621,9 @@ class ExerciseMainWindow(QMainWindow):
         for item in self.current_selection:
             item.mark_user_selected(False)
         self.current_selection = []
+        if not self.selectable_target:
+            self.ecw.target_wgt.mark_user_selected(self.target_selected)
+
 
     @Slot()
     def freeze(self, yes=True):
@@ -657,9 +684,12 @@ class ExerciseMainWindow(QMainWindow):
         :item: The math. object or property user just clicked on.
         """
 
-        # One clicked, one does not want the item to remain visually
+        # Once clicked, one does not want the item to remain visually
         # selected
         item.setSelected(False)
+        # Un-select target
+        self.ecw.target_wgt.mark_user_selected(False)
+        self.target_selected = False
 
         if item not in self.current_selection:
             item.mark_user_selected(True)
@@ -667,6 +697,22 @@ class ExerciseMainWindow(QMainWindow):
         else:
             item.mark_user_selected(False)
             self.current_selection.remove(item)
+
+        if not self.current_selection and not self.selectable_target:
+            # Target is automatically selected if current_selection is empty
+            self.ecw.target_wgt.mark_user_selected(self.target_selected)
+
+    @Slot()
+    def process_target_click(self, event):
+        """
+        Select or unselect target. Current context selection is emptied.
+        """
+
+        self.target_selected = not self.target_selected
+        self.ecw.target_wgt.mark_user_selected(self.target_selected)
+
+        # Un-select context items
+        self.empty_current_selection()
 
     @Slot()
     def __update_lean_editor(self):
