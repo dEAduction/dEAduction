@@ -10,34 +10,24 @@ assignees: ''
 <!-- Any text between such tags will not appear on the issue. -->
 
 ### Bug description
-
 <!-- Clear, precise, concise description of your bug. Include:
 - [ ] expected behavior / what you wanted to do;
 - [ ] what happened instead / what was the bug;
 - [ ] error message (if any);
 - [ ] if you are a developper, commit ID and which branch you were on.
-
-Provide any useful information. If helpful, provide any useful media (e.g.
-screenshots or code). -->
+Provide any useful information. If helpful, provide any useful media (e.g.  screenshots or code). -->
 
 ### How to reproduce the bug
-
 <!-- How to reproduce your issue, step by step. Include:
 - [ ] ordered list of steps.
-
-Provide any useful information. If helpful, provide any useful media (e.g.
-screenshots or code). -->
+Provide any useful information. If helpful, provide any useful media (e.g.  screenshots or code). -->
 
 ### Environment
-
 - OS and OS version:
 - d∃∀duction version (or commit ID): 
 
 ### Fix ideas
-
-<!-- Appreciated but optional. Any implementation idea, proof or concept,
-snippet, etc; what difficulties we may face. Delete the title if you leave this
-section empty. -->
+<!-- Appreciated but optional. Any implementation idea, proof or concept, snippet, etc; what difficulties we may face. Delete the title if you leave this section empty. -->
 
 ### Submission checklist
 
@@ -62,6 +52,4 @@ section empty. -->
    -->
 
 ### Misc
-
-<!-- Optional. Additional info. Delete the title if you leave this section
-empty.-->
+<!-- Optional. Additional info. Delete the title if you leave this section empty.-->

@@ -36,6 +36,4 @@ assignees: ''
    -->
 
 ### Misc
-
-<!-- Optional. Additional info. Delete the title if you leave this section
-empty.-->
+<!-- Optional. Additional info. Delete the title if you leave this section empty.-->

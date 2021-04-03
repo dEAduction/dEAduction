@@ -10,18 +10,13 @@ assignees: ''
 <!-- Any text between such tags will not appear on the issue. -->
 
 ### Feature, enhancement or refactor description
-
 <!-- Clear, precise, concise description of your suggestion. -->
 
 ### Why is it useful
-
 <!-- Why this suggestion is useful and worth coding. -->
 
 ### Implementation ideas, difficulties we may face
-
-<!-- Appreciated but optional. Any implementation idea, proof or concept,
-snippet, etc; what difficulties we may face. Delete the title if you leave this
-section empty. -->
+<!-- Appreciated but optional. Any implementation idea, proof or concept, snippet, etc; what difficulties we may face. Delete the title if you leave this section empty. -->
 
 ### Submission checklist
 
@@ -47,12 +42,11 @@ section empty. -->
    - area::ui
 
    Include one and only one of the following Type labels:
-   - type::new feature
+   - type::chores
    - type::enhancement
+   - type::new feature
    - type::refactor
    -->
 
 ### Misc
-
-<!-- Optional. Additional info. Delete the title if you leave this section
-empty.-->
+<!-- Optional. Additional info. Delete the title if you leave this section empty.-->
