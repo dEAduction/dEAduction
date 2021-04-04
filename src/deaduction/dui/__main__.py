@@ -138,9 +138,16 @@ class Container(QObject):
 
         log.debug(f"Starting exercise {self.exercise.pretty_name}")
 
+        # Stop Lean server if running
+        if self.servint:
+            await self.servint.file_invalidated.wait()
+            self.servint.stop()
+            log.info("Lean server stopped!")
+
         # Start Lean server
         self.servint = ServerInterface(self.nursery)
         await self.servint.start()
+        log.info("Lean server started")
 
         # Start exercise window
         self.exercise_window = ExerciseMainWindow(self.exercise, self.servint)
