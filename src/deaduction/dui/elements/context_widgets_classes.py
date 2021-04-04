@@ -190,6 +190,9 @@ class MathObjectWidgetItem(QListWidgetItem):
 
         self.setBackground(QBrush(QColor('limegreen')) if yes else QBrush())
 
+    def has_math_object(self, math_object: MathObject) -> bool:
+        return self.mathobject is MathObject
+
 
 class MathObjectWidget(QListWidget):
     """
@@ -221,7 +224,7 @@ class MathObjectWidget(QListWidget):
         # TODO: make self.items a property?
         self.items = []
         # set fonts for maths display
-        math_font_name = cvars.get('mathematics_font', 'Default')
+        math_font_name = cvars.get('display.mathematics_font', 'Default')
         self.setFont(QFont(math_font_name))
         for mathobject, tag in tagged_mathobjects:
             item = MathObjectWidgetItem(mathobject, tag)
@@ -239,6 +242,18 @@ class MathObjectWidget(QListWidget):
         """
         item.setSelected(False)
         self.apply_math_object_triggered.emit(item)
+
+    def math_object_widget_item(self, math_object) -> MathObjectWidgetItem:
+        """
+        Return MathObjectWidgetItem whose mathobject is Math_object.
+        """
+
+        items = [item for item in self.items if item.has_math_object(
+                 math_object)]
+        if items:
+            return items[0]
+        else:
+            return None
 
 
 MathObjectWidget.apply_math_object_triggered = Signal(MathObjectWidget)
@@ -298,22 +313,39 @@ class TargetWidget(QWidget):
             text = target.math_type.to_display(is_math_type=True)
         else:
             text = '…'
-        target_label = QLabel(text)
-        size = cvars.get('display.target_font_size')
-        target_label.setStyleSheet(f'font-size: {size};')
-        # Set fonts for maths display
-        math_font_name = cvars.get('mathematics_font', 'Default')
-        target_label.setFont(QFont(math_font_name))
+        self.target_label = QLabel(text)
 
+        size = cvars.get('display.target_font_size')
+        self.target_label.unselected_style = f'font-size: {size};'
+        self.target_label.selected_style = self.target_label.unselected_style \
+            + f'background-color: limegreen;'
+        self.target_label.setStyleSheet(self.target_label.unselected_style)
+
+        # Set fonts for maths display
+        math_font_name = cvars.get('display.mathematics_font', 'Default')
+        self.target_label.setFont(QFont(math_font_name))
 
         # ───────────────────── Layouts ──────────────────── #
 
         central_layout = QVBoxLayout()
         central_layout.addWidget(caption_label)
-        central_layout.addWidget(target_label)
+        central_layout.addWidget(self.target_label)
 
         main_layout = QHBoxLayout()
         main_layout.addStretch()
         main_layout.addLayout(central_layout)
         main_layout.addStretch()
         self.setLayout(main_layout)
+
+    def mark_user_selected(self, yes: bool=True):
+        """
+        Change self's background to green if yes or to normal color
+        (e.g. white in light mode) if not yes.
+
+        :param yes: See paragraph above.
+        """
+        if yes:
+            self.target_label.setStyleSheet(self.target_label.selected_style)
+        else:
+            self.target_label.setStyleSheet(self.target_label.unselected_style)
+

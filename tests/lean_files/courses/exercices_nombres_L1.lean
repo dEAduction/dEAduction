@@ -7,6 +7,7 @@ import data.real.basic
 -- dEAduction imports
 import structures2
 import compute
+import utils
 
 -- General principles :
 -- Type should be defined as parameters, in order to be implicit everywhere
@@ -32,7 +33,7 @@ Author
 Institution
     Université de France
 Title
-    Logique Et Inégalités
+    Logique et inégalités
 OpenQuestion
     True
 AvailableExercises
@@ -241,9 +242,7 @@ begin
 end
 
 
-lemma exercise.vraiment_plus_petit : ∃ m:ℤ,
-∀ n:ℤ,
-m ≤ n
+lemma exercise.vraiment_plus_petit : ∃ m:ℤ, ∀ n:ℤ, m ≤ n
 :=
 /- dEAduction
 PrettyName

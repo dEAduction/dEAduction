@@ -4,12 +4,14 @@ letter_type = "letters/trials"
 context     = "letters/blue"
 
 [display]
+text_mode_in_chooser_window = false
+target_display_on_top = false
 depth_of_unfold_statements = 1
 show_lean_name_for_statements = false
 target_font_size = "24pt"
 context_font_size = "12pt"
 tooltips_font_size = 10
-mathematics_font = "Default"
+mathematics_font = "Defaults"
 
 logic_button_symbols = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃"
 use_logic_button_symbols = true
@@ -20,7 +22,9 @@ use_primes_for_variables_names = true
 use_seconds_for_variables_names = true
 
 [functionality]
+target_selected_by_default = false
 allow_proof_by_sorry = true
+expanded_apply_button = false
 
 [i18n]
 available_languages = ["en", "fr_FR"]
@@ -28,6 +32,10 @@ select_language = "fr_FR"
 
 [journal]
 save=false
+
+[logs]
+display_level = "info"
+domains = [""]
 
 #########################
 # All Plateform packages

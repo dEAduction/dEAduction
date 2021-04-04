@@ -31,12 +31,15 @@ from .actiondef import (    Action,
 
 from .exceptions import (   InputType,
                             MissingParametersError,
-                            WrongUserInput)
+                            WrongUserInput,
+                            test_selection)
 
-from .utils import (        get_new_hyp,
+from .utils import (        LeanCombinator,
+                            CodeForLean,
+                            get_new_hyp,
                             get_new_var,
-                            format_orelse,
-                            solve1_wrap)
+                            solve1_wrap,
+                            get_effective_code_numbers)
 
 from .logic import (        action_negate,
                             action_implicate,
@@ -46,7 +49,11 @@ from .logic import (        action_negate,
                             action_exists,
                             apply_exists,
                             apply_and,
-                            apply_or)
+                            apply_or,
+                            apply_implicate,
+                            apply_implicate_to_hyp,
+                            apply_forall,
+                            have_new_property)
 
 from .proofs import (       action_apply,
                             action_use_proof_methods,

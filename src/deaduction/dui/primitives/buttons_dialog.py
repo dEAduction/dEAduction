@@ -1,7 +1,7 @@
 """
-################################################
-# dialog_button.py : a dialog box with buttons #
-################################################
+###################################################
+# buttons_dialog.py : provide ButtonsDialog class #
+###################################################
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -70,7 +70,7 @@ class ButtonsDialog(QDialog):
 
         # Output line
         output_line = QLabel(output, self, StyleSheet='font-weight: bold;')
-        math_font_name = cvars.get('mathematics_font', 'Default')
+        math_font_name = cvars.get('display.mathematics_font', 'Default')
         output_line.setFont(QFont(math_font_name))
         output_layout = QHBoxLayout()
         output_layout.addWidget(output_line)

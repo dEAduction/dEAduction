@@ -1,16 +1,13 @@
 """
-##################
-# __init__.py :  #
-##################
-
-    This directory provides utilities functions to be used anywhere in
-    dui/.
+######################################################
+# __init__.py : __init__.py for deaduction.dui.utils #
+######################################################
 
 Author(s)      : Kryzar <antoine@hugounet.com>
 Maintainers(s) : Kryzar <antoine@hugounet.com>
-Date           : July 2020
+Date           : March 2021
 
-Copyright (c) 2020 the dEAduction team
+Copyright (c) 2021 the dEAduction team
 
 This file is part of d∃∀duction.
 
@@ -28,11 +25,7 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .classes   import    ( DisclosureTriangle,
-                            HorizontalLine,
-                            RecentCoursesLW,
-                            RecentCoursesLWI )
-from .functions import (    replace_widget_layout,
-                            read_pkl_course,
-                            set_selectable )
-from .dialog_button import  ButtonsDialog
+from .horizontal_line       import HorizontalLine
+from .read_pkl_course       import read_pkl_course
+from .replace_widget_layout import replace_widget_layout
+from .set_selectable        import set_selectable

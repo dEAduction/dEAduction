@@ -76,23 +76,21 @@ class Color_Formatter(logging.Formatter):
 
         return f"{pref}{msg}{suff}"
 
+
 ############################################
 # Logger procedures
 ############################################
-def configure(debug: bool = False,
-              domains: [str] = [],
-              suppress = True):
+def configure(display_level: str = "debug",
+              domains: [str] = ['']):
     """
     Configures the logging module for use with d∃∀duction.
 
-    :param suppress: if True, the names in domains will be rejected
-                        if False, they will be accepted
     :param domains: list of names of loggers
-    :param debug: enable debug messages
+    :param display_level: one of "debug", "info", "warning"
     """
 
     root          = logging.getLogger("") # Get the root logger
-    force_color   = bool(os.getenv("DEADUCTION_USE_COLOR",False))
+    force_color   = bool(os.getenv("DEADUCTION_USE_COLOR", False))
 
     # Creating basic handler and format
     ft            = Color_Formatter('%(levelname)-9s %(name)-15s: %(message)s')
@@ -104,14 +102,20 @@ def configure(debug: bool = False,
     # set filter
     def filter(record):
         test = [record.name.startswith(domain) for domain in domains]
-        return (not suppress) == (True in test)
+        return True in test
     sh.addFilter(filter)
 
     root.addHandler(sh)
 
     # Set message level
-    if debug: root.setLevel(logging.DEBUG)
-    else    : root.setLevel(logging.INFO )
+    if display_level == "debug":
+        root.setLevel(logging.DEBUG)
+    elif display_level == "info":
+        root.setLevel(logging.INFO )
+    elif display_level == "warning":
+        root.setLevel(logging.WARNING)
+    else:
+        root.setLevel(logging.DEBUG)
 
 ############################################
 # Tests

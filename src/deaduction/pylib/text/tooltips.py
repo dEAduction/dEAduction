@@ -36,67 +36,61 @@ from deaduction.pylib.config.i18n import _
 # Logic and proof Buttons tooltips
 __tooltips = {
     'tooltip_and':
-        _("""• Split a property 'P AND Q' into the two properties 'P', 'Q'
-• Inversely, assembles 'P' and 'Q' to get 'P AND Q'"""
-          ),
+    "• " + _("Split a property 'P AND Q' into the two properties 'P', 'Q'")
+    + "\n" + "• " + _("Conversely, assemble 'P' and 'Q' to get 'P AND Q'"),
     'tooltip_or':
-        _("""• Prove 'P OR Q' by proving either 'P' or 'Q'
-• Use the property 'P OR Q' by splitting the cases when P is True and Q is True"""
-          ),
+    "• " + _("Prove 'P OR Q' by proving either 'P' or 'Q'") + "\n"
+    + "• " + _("Use property 'P OR Q' by splitting cases"),
     'tooltip_not':
         _("""Try to simplify the property 'NOT P'"""),
     'tooltip_implies':
-        _("""Prove 'P ⇒ Q' by assuming 'P', and proving 'Q'"""),
+        "• " + _("""Prove 'P ⇒ Q' by assuming 'P', and proving 'Q'""") + "\n"
+    + "• " + _("""From 'P' and 'P ⇒ Q' get 'Q'"""),
     'tooltip_iff':
-        _("""Split 'P ⇔ Q' into two implications"""),
+        "• "+_("Split 'P ⇔ Q' into two implications") + "\n"
+    + "• " + _("From 'P ⇒ Q' and 'Q ⇒ P' get 'P ⇔ Q'"),
     'tooltip_forall':
-        _("""Prove '∀ a, P(a)' by introducing 'a'"""),
+    "• " + _("""Prove '∀ x, P(x)' by introducing 'x'""") + "\n"
+    + "• " + _("""From some 'x' and '∀ x, P(x)' get 'P(x)'"""),
     'tooltip_exists':
-        _("""• Prove '∃ a, P(a)' by specifying some 'a' and proving P(a)
-• Apply '∃ a, P(a)' to get an 'a' satisfying 'P(a)'"""
-          ),
+    "• " + _("""Prove '∃ x, P(x)' by specifying some 'x'""") + "\n"
+    + "• " + _("""From '∃ x, P(x)' get an 'x' and 'P(x)'""") + "\n"
+    + "• " + _("""From some 'x' and 'P(x)' get '∃ x, P(x)'"""),
     'tooltip_apply':
-        _("""• Apply to a property '∀ a, P(a)' and some 'a' to get 'P(a)' 
-• Apply a property 'P ⇒ Q' to 'P' to get 'Q'
-• Apply an equality or a logical equivalence to substitute in another property
-• Apply a function to an element or an equality"""
-          ),
+    "• " + _("Apply an equality or an iff to substitute in another property")
+    + "\n" + "• " + _("""Apply a function to an element or an equality""")
+    + "\n" + "• " + _("""(... try it to find other uses)"""),
     'tooltip_proof_methods':
-        _("""Choose some specific proof method: 
-• Case-based reasoning
-• Proof by contrapositive
-• Proof by contradiction"""
-          ),
+        _("""Choose some specific proof method:""") + "\n"
+    + "• " + _("Case-based reasoning") + "\n"
+    + "• " + _("Proof by contrapositive") + "\n"
+    + "• " + _("Proof by contradiction"),
     'tooltip_new_object':
-        _("""• Create a new object (e.g. 'f(a)' from 'f' and 'a')
-• Create a new subgoal (a lemma) which will be proved, and added to the context
-• From a property '∀ a ∈ A, ∃ b ∈ B, P(a,b)', create a new function from A to B"""
-          ),
+    "• " + _("Create a new object (e.g. 'f(x)' from 'f' and 'x'") + "\n"
+    + "• " + _("Create a new subgoal (a lemma)") + "\n" + "• "
+    + _("Create a function from X to Y from property '∀ x ∈ X, ∃ y ∈ Y, P(x,"
+        "y)'"),
     'tooltip_assumption':
-        _(
-            """Terminate the proof when the target is obvious from the context"""
-        ),
+        _("Terminate the proof when the target is obvious from the context"),
     'tooltip_compute':
-        _(
-            "Terminate the proof when target results from 'easy' computations"
-        )
+        _("Terminate the proof when target results from manipulating numbers")
 }
 # decentralized apply buttons
 # this phrase will be preceded by "double click to "
 __tooltips_apply = {
     'tooltip_apply_function':
-        _("""apply function to a selected object or equality"""),
+    _("""apply this function to a selected object or equality"""),
     'tooltip_apply_implication':
-        _("""apply to a selected property, or to modify the goal"""),
+    _("apply this implication to a selected property, or to modify the goal"),
     'tooltip_apply_substitute':
-        _("""substitute in a selected property"""),
+    _("""use to substitute in a selected property"""),
     'tooltip_apply_for_all':
-        _("""apply to a selected object"""),
+    _("""apply this property to a selected object"""),
     'tooltip_apply_exists':
-        _("""get a new object in the context"""),
+    _("""get a new object in the context"""),
     'tooltip_apply_and':
-        _("""split into two properties""")
-}  # TODO
+    _("""split into two properties""")
+}
 
 # Text for buttons
 __buttons = {

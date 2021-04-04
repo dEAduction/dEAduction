@@ -18,13 +18,13 @@ import utils
 -- logic names ['and', 'or', 'negate', 'implicate', 'iff', 'forall', 'exists']
 -- proofs names ['use_proof_methods', 'new_object', 'apply', 'assumption']
 -- magic names ['compute']
--- proof methods names ['cbr', 'contrapose', 'absurdum', 'sorry']
+-- proof methods names ['cbr', 'contrapose', 'absurdum', 'todo']
 
 
 
 /- dEAduction
 Title
-    Théorie Des Ensembles
+    Théorie des ensembles
 Author
     Frédéric Le Roux
 Institution
@@ -123,7 +123,7 @@ end
 -- (A ≠ ∅) ↔ ∃ x : X, x ∈ A
 -- :=
 -- begin
---     sorry
+--     todo
 -- end
 
 lemma definition.ensemble_extension {X: Type}  {P : X → Prop} {x:X} :
@@ -157,7 +157,7 @@ PrettyName
     Transitivité de l'inclusion
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -234,7 +234,7 @@ PrettyName
     Un ensemble contient son intersection avec un autre
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -256,7 +256,7 @@ ExpectedVarsNumber
     X=3, A=1, B=1
 -/
 begin
-    sorry
+    todo
 end
 
 -- NB: 'ExpectedVarsNumber' is not implemented yet
@@ -273,7 +273,7 @@ AvailableDefinitions
     $UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -320,7 +320,7 @@ AvailableDefinitions
     $UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.complement_union_deux :
@@ -334,7 +334,7 @@ AvailableDefinitions
     $UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.complement_union_quelconque :
@@ -346,7 +346,7 @@ Description
     Le complémentaire d'une réunion quelconque égale l'intersection des complémentaires
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -360,7 +360,7 @@ Description
     Si A est inclus dans B, alors le complémentaire de A contient le complémentaire de B
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.inclusion_complement_II :
@@ -373,7 +373,7 @@ Description
     Si A est inclus dans B, alors le complémentaire de A contient le complémentaire de B
 -/
 begin
-    sorry
+    todo
 end
 
 /- Autres : différence-/
@@ -400,7 +400,7 @@ PrettyName
     Element d'un produit cartésien de deux ensembles
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -413,7 +413,7 @@ PrettyName
     Produit cartésien de deux parties
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -422,7 +422,7 @@ lemma exercise.produit_avec_intersection
 set.prod A (B ∩ C) = (set.prod A B) ∩ (set.prod A C)
 :=
 begin
-    sorry
+    todo
 end
 
 
@@ -459,19 +459,19 @@ PrettyName
 -/
 lemma definition.image_directe (y : Y) : y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y :=
 begin
-    sorry
+    todo
 end
 
 lemma definition.image_reciproque (x:X) : x ∈ f  ⁻¹' B ↔ f(x) ∈ B :=
 begin
-    sorry
+    todo
 end
 
 lemma definition.composition {x:X}:
 composition g f x = g (f x)
 :=
 begin
-    sorry,
+    todo,
 end
 
 lemma definition.egalite_fonctions (f' : X → Y) :
@@ -513,7 +513,7 @@ PrettyName
     Image de l'image réciproque
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.reciproque_de_image : A ⊆ f ⁻¹' (f '' A) :=
@@ -522,7 +522,7 @@ PrettyName
     Image réciproque de l'image
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.image_reciproque_inter :  f ⁻¹'  (B∩B') = f ⁻¹'  (B) ∩ f ⁻¹'  (B') :=
@@ -531,7 +531,7 @@ PrettyName
     Image réciproque d'une intersection de deux ensembles
 -/
 begin
-    sorry
+    todo
 end
 
 lemma  exercise.image_reciproque_union  : f ⁻¹' (B ∪ B') = f ⁻¹' B ∪ f ⁻¹' B'
@@ -541,7 +541,7 @@ PrettyName
     Image réciproque d'une union de deux ensembles
 -/
 begin
-    sorry
+    todo
 end
 
 -- set_option pp.width 100
@@ -553,7 +553,7 @@ PrettyName
     Image réciproque d'une intersection quelconque
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.image_reciproque_union_quelconque :
@@ -564,7 +564,7 @@ PrettyName
     Image réciproque d'une union quelconque
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.image_inter_inclus_inter_images :
@@ -575,7 +575,7 @@ PrettyName
     Image d'une intersection
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -587,7 +587,7 @@ PrettyName
     Image réciproque du complémentaire, inclusion
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.reciproque_complementaire_II :
@@ -598,7 +598,7 @@ PrettyName
     Image réciproque du complémentaire, égalité
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercices.image_reciproque.composition
@@ -607,7 +607,7 @@ lemma exercices.image_reciproque.composition
 ((composition g f) )⁻¹' C = f ⁻¹' (g ⁻¹' C)
 :=
 begin
-    sorry
+    todo
 end
 
 end exercices
@@ -635,14 +635,14 @@ PrettyName
 -/
 
 /-
-def injective {X Y : Type} (f₀ : X → Y) := ∀ x y : X, (f₀ x = f₀ y → x = y)
+def injective {X Y : Type} (f₀ : X → Y) := ∀ x x' : X, (f₀ x = f₀ x' → x = x')
 def surjective {X Y : Type} (f₀ : X → Y) := ∀ y : Y, ∃ x : X, y = f₀ x
 def composition {X Y Z : Type} (g₀ : Y → Z) (f₀ : X → Y) := λx:X, g₀ (f₀ x)
 def Identite {X : Type} := λ x:X, x
 -/
 
 lemma definition.injectivite :
-injective f ↔ ∀ x y : X, (f x = f y → x = y)
+injective f ↔ ∀ x x' : X, (f x = f x' → x = x')
 :=
 /- dEAduction
 PrettyName
@@ -673,7 +673,7 @@ PrettyName
     ∃! : existence et unicité
 -/
 begin
-    sorry
+    todo
 end
 
 lemma definition.bijectivite :
@@ -711,7 +711,7 @@ PrettyName
     Composition d'injections
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.composition_surjections
@@ -723,7 +723,7 @@ PrettyName
     Composition de surjections
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.injective_si_compo_injective
@@ -735,7 +735,7 @@ PrettyName
     Injective si composition injective
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.surjective_si_coompo_surjective
@@ -747,7 +747,7 @@ PrettyName
     Surjective si composition surjective
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.injective_ssi_inverse_gauche : (injective f) ↔
@@ -757,7 +757,7 @@ PrettyName
     (x) Injectivité et inverse à gauche
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.surjective_ssi_inverse_droite : (surjective f) ↔
@@ -767,7 +767,18 @@ PrettyName
     (*) Surjectivité et inverse à droite
 -/
 begin
-    sorry
+    todo
+end
+
+lemma exercise.surjective_si_compo_avec_injective_est_surjective :
+(surjective (composition g f)) ∧ (injective g) → surjective f
+:=
+/- dEAduction
+PrettyName
+    Surjectivité si compo avec injective donne surjective
+-/
+begin
+    todo
 end
 
 
@@ -779,7 +790,7 @@ PrettyName
     (**) "Bijectif" équivaut à "injectif et surjectif"
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.bijective_ssi_inverse :
@@ -791,7 +802,7 @@ PrettyName
     (**) Bijectivité et existence d'une application réciproque
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.unicite_inverse :
@@ -803,7 +814,7 @@ PrettyName
     (+) Unicité de la réciproque d'une application bijective
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -864,7 +875,7 @@ PrettyName
     Caractérisation de l'inclusion par l'intersection
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.complement_intersection_2
@@ -876,7 +887,7 @@ PrettyName
     Complémentaire d'une intersection
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -889,7 +900,7 @@ PrettyName
     Quand l'intersection égale l'union
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.exercice_ensembles_4a
@@ -901,7 +912,7 @@ PrettyName
     Caractérisation par intersection avec A et son complémentaire, I
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.exercice_ensembles_4b
@@ -913,7 +924,7 @@ PrettyName
     Caractérisaton par intersection avec A et son complémentaire, II
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -926,7 +937,7 @@ PrettyName
     Même union et même intersection
 -/
 begin
-    sorry
+    todo
 end
 
 --def diff {X : Type} (A B : set X) := {x ∈ A | ¬ x ∈ B}
@@ -991,7 +1002,7 @@ PrettyName
     Différence symétrique I
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -1004,7 +1015,7 @@ PrettyName
     (*) Différence symétrique II
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -1017,7 +1028,7 @@ PrettyName
     (**) Différence symétrique III
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -1028,7 +1039,7 @@ PrettyName
     (+) Différence symétrique VI
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -1040,7 +1051,7 @@ PrettyName
     (+) Différence symétrique V
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.difference_symetrique_6
@@ -1052,7 +1063,7 @@ PrettyName
     (+) Différence symétrique VI
 -/
 begin
-    sorry
+    todo
 end
 
 end exercices
@@ -1064,6 +1075,75 @@ variable (f: X → Y)
 
 namespace applications
 
+lemma exercise.exercice_image_intersection_2
+(A B : set X) (f: X → Y) (H: injective f):
+f ''(A ∩ B) = f '' A ∩ f '' B
+:=
+/- dEAduction
+PrettyName
+    Image directe d'une intersection, II
+-/
+begin
+    todo
+end
+
+lemma exercise.exercice_image_intersection_3
+(f: X → Y)  (H : ∀ A B : set X, f ''(A ∩ B) = f '' A ∩ f '' B) :
+injective f
+:=
+/- dEAduction
+PrettyName
+    Image directe d'une intersection, caractérisation de l'injectivité
+-/
+begin    
+    todo
+end
+
+
+lemma exercise.image_de_reciproque_2
+(B : set Y)  (H: surjective f) : f '' (f ⁻¹' B)  = B :=
+/- dEAduction
+PrettyName
+    Image de l'image réciproque, cas surjectif
+-/
+begin
+    todo
+end
+
+lemma exercise.image_de_reciproque_3
+(f: X → Y) (H : ∀ B : set Y, f '' (f ⁻¹' B)  = B )  :
+ surjective f :=
+/- dEAduction
+PrettyName
+    Image de l'image réciproque, caractérisation de la surjectivité
+-/
+begin
+    todo
+end
+
+lemma exercise.reciproque_de_image_2
+(A : set X)  (f: X → Y)  (H: injective f) : A = f ⁻¹' (f '' A) :=
+/- dEAduction
+PrettyName
+    Image réciproque de l'image, cas injectif
+-/
+begin
+    todo
+end
+
+lemma exercise.reciproque_de_image_3
+(f: X → Y) (H : ∀ A : set X, A = f ⁻¹' (f '' A)) :
+injective f :=
+/- dEAduction
+PrettyName
+    Image réciproque de l'image, caractérisation de l'injectivité
+-/
+begin
+    todo
+end
+
+
+
 lemma exercise.exercice_applications_1
 (A B : set X) :
 A ⊆ B → f '' A ⊆ f '' B
@@ -1073,7 +1153,7 @@ PrettyName
     Image directe et inclusion
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.exercice_applications_2
@@ -1085,7 +1165,7 @@ PrettyName
     Image d'une union
 -/
 begin
-    sorry
+    todo
 end
 
 open applications_II.definitions
@@ -1098,7 +1178,7 @@ PrettyName
     (+) Factorisation I
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -1111,7 +1191,7 @@ PrettyName
     (+) Factorisation II
 -/
 begin
-    sorry
+    todo
 end
 
 

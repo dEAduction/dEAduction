@@ -1,13 +1,13 @@
 """
-############################################
-# __init__.py : provide dEAduction widgets #
-############################################
+############################################################################
+# __init__.py : __init__.py for deaduction.dui.stages.missing_dependencies #
+############################################################################
 
 Author(s)      : Kryzar <antoine@hugounet.com>
 Maintainers(s) : Kryzar <antoine@hugounet.com>
-Date           : July 2020
+Date           : March 2021
 
-Copyright (c) 2020 the dEAduction team
+Copyright (c) 2021 the dEAduction team
 
 This file is part of d∃∀duction.
 
@@ -25,27 +25,6 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .actions_widgets_classes import (
-        ActionButton,
-        ActionButtonsWidget,
-        StatementsTreeWidgetItem,
-        StatementsTreeWidgetNode,
-        StatementsTreeWidget)
-
-from .context_widgets_classes import (
-        MathObjectWidgetItem,
-        MathObjectWidget,
-        TargetWidget)
-
-from .choose_course_exercise_widgets import (
-        StartExerciseDialog)
-
-from .lean_editor import (
-        LeanEditor)
-
-from .exercise_widgets import (
-        ExerciseCentralWidget,
-        ExerciseMainWindow)
-
-from .text_edit_logger import (
-        TextEditLogger)
+from .missing_dependencies_dialogs import (
+    InstallingMissingDependencies,
+    WantInstallMissingDependencies )

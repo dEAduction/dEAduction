@@ -60,9 +60,9 @@ from PySide2.QtWidgets import ( QTreeWidget,
 from deaduction.pylib.config.i18n import   _
 from deaduction.pylib.actions     import   Action
 from deaduction.pylib.coursedata  import ( Definition,
-                                          Exercise,
-                                          Statement,
-                                          Theorem)
+                                           Exercise,
+                                           Statement,
+                                           Theorem)
 from deaduction.dui.utils         import   set_selectable
 
 import deaduction.pylib.config.vars as cvars
@@ -139,6 +139,11 @@ class ActionButton(QPushButton):
 
         self.action_triggered.emit(self)
 
+    def has_symbol(self, symbol) -> bool:
+        """
+        Test if symbol is the symbol of (the action associated to) self.
+        """
+        return self.action.symbol == symbol
 
 # We wish to have an ActionButton class attribute called
 # action_triggered and defined as Signal(ActionButton). At first, one
@@ -274,8 +279,11 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         self.setToolTip(0, statement.caption)
         # These tooltips contain maths
         # math_font_name = 'Default'  # FIXME!!
-        math_font_name = cvars.get('mathematics_font', 'Default')
+        math_font_name = cvars.get('display.mathematics_font', 'Default')
         QToolTip.setFont(math_font_name)
+
+    def has_pretty_name(self, pretty_name: str) -> bool:
+        return self.statement.pretty_name == pretty_name
 
 
 class StatementsTreeWidgetNode(QTreeWidgetItem):
@@ -364,7 +372,7 @@ class StatementsTreeWidget(QTreeWidget):
     show_lean_name_for_statements = \
                     cvars.get("display.show_lean_name_for_statements")
 
-    tooltips_font_size = cvars.get('display.tooltips_font_size')
+    tooltips_font_size = cvars.get('display.tooltips_font_size', 10)
 
     # TODO: show lean names only when lean console is on
     # (even if show_lean_name_for_statements == TRUE)
@@ -474,7 +482,7 @@ class StatementsTreeWidget(QTreeWidget):
             self.__doc__. 
         """
 
-        #TODO: get rid of self._init_tree ?
+        # TODO: get rid of self._init_tree ?
 
         super().__init__()
         self._init_tree(statements, outline)
@@ -501,3 +509,53 @@ class StatementsTreeWidget(QTreeWidget):
         """
 
         self.addTopLevelItem(item)
+
+    def goto_statement(self, statement: Statement):
+        """
+        Go to to the Statement statement (as if usr clicked on it).
+
+        :param statement: Statement to go to.
+        """
+
+        # Thanks @mcosta from https://forum.qt.io/topic/54640/
+        # how-to-traverse-all-the-items-of-qlistwidget-qtreewidget/3
+        def traverse_node(item: StatementsTreeWidgetItem):
+            # Do something with item
+            if isinstance(item, StatementsTreeWidgetItem):
+                if item.statement == statement:
+                    item.setSelected(True)
+            for i in range(0, item.childCount()):
+                traverse_node(item.child(i))
+
+        for i in range(self.topLevelItemCount()):
+            item = self.topLevelItem(i)
+            traverse_node(item)
+
+    def StatementWidgetItem(self, pretty_name: str) \
+            -> StatementsTreeWidgetItem:
+        """
+        Return the StatementsTreeWidgetItem whose statement's pretty name is
+        pretty_name.
+        """
+
+        items = []
+
+        def traverse_node(item: StatementsTreeWidgetItem):
+            if isinstance(item, StatementsTreeWidgetItem):
+                if item.statement.pretty_name == pretty_name:
+                    items.append(item)
+            for i in range(0, item.childCount()):
+                traverse_node(item.child(i))
+
+        for i in range(self.topLevelItemCount()):
+            item = self.topLevelItem(i)
+            traverse_node(item)
+
+        if len(items) > 1:
+            log.warning(f"Found more than one statement with pretty name "
+                        f"{pretty_name}")
+        if items:
+            return items[0]
+        else:
+            return None
+

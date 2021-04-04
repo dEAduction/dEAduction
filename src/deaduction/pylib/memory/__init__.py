@@ -52,10 +52,11 @@ class Journal:
     memory: [tuple]
 
     event_natures = ('button',
-                     'code',
+                     'code_sent',
+                     'effective_code'
                      'error',
                      'lean_error',
-                     'message',
+                     'success',
                      'user_input',
                      'various')
     __save_journal = cvars.get('journal.save')
@@ -77,12 +78,15 @@ class Journal:
             log.warning(f"Unexpected event: {event[0]}")
         self.memory.append(event)
 
+        # Display event in the status bar
         if emw:
             nature, content, details = event
             if nature == 'lean_error':
                 event = (nature, content, _("request failed"))
 
-            # display event
+            if nature == 'code_sent':
+                event = (nature, '...', '')
+            # Display event in the status bar
             emw.statusBar.display_status_bar_message(event=event)
 
         if self.__save_journal:  # fixme: should not be done each time!
