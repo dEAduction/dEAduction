@@ -1,11 +1,11 @@
 """
-###########################################################
-# __init__.py : __init__.py for deaduction.dui.primitives #
-###########################################################
+####################################
+# __init__.py : DUI interface ! :D #
+####################################
 
-Author(s)      : Kryzar <antoine@hugounet.com>
-Maintainers(s) : Kryzar <antoine@hugounet.com>
-Date           : March 2021
+Author(s)      : Florian Dupeyron <florian.dupeyron@mugcat.fr>
+Maintainers(s) : Florian Dupeyron <florian.dupeyron@mugcat.fr>
+Date           : January 2021
 
 Copyright (c) 2021 the dEAduction team
 
@@ -24,8 +24,3 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
-
-from .buttons_dialog      import ButtonsDialog
-from .disclosure_triangle import DisclosureTriangle
-from .text_edit_logger    import TextEditLogger, TextEditLoggerHandler
-from .yes_no_dialog       import YesNoDialog

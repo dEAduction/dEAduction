@@ -33,6 +33,11 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
+import logging
+from   logging.handlers import (QueueHandler,
+                                QueueListener)
+
+from queue import Queue
 from typing    import Optional
 
 from PySide2.QtCore    import ( Signal,
@@ -44,8 +49,12 @@ from PySide2.QtWidgets import ( QDialog,
                                 QHBoxLayout,
                                 QVBoxLayout )
 
-from deaduction.dui.primitives    import TextEditLogger
+from deaduction.dui.primitives    import ( TextEditLogger,
+                                           TextEditLoggerHandler,
+                                           YesNoDialog )
 from deaduction.pylib.config.i18n import _
+
+from deaduction.dui.stages.quit_deaduction import ( ReallyWantQuit )
 
 # Tests only
 import sys
@@ -101,7 +110,7 @@ class InstallingMissingDependencies(QDialog):
     plz_start_deaduction = Signal()
     plz_quit             = Signal()
 
-    def __init__(self, log_format: str):
+    def __init__(self, log_format: str = '%(asctime)s - %(levelname)s - %(message)s'):
         """
         Init self with a logger formater (so specify the layout of the
         log entries, see logging module documentation), e.g.
@@ -110,13 +119,12 @@ class InstallingMissingDependencies(QDialog):
         :param log_format: Logger formatter for the log entries.
         """
 
-
         super().__init__()
         self.setModal(True)
 
         self.setWindowTitle(f"{_('Installing missing dependencies')}" \
                              " — d∃∀duction")
-        self.__text_edit_logger = TextEditLogger(log_format)
+        self.__text_edit_logger = TextEditLogger()
         self.__confirm_quit     = True
 
         # Buttons
@@ -136,6 +144,24 @@ class InstallingMissingDependencies(QDialog):
         self.__main_layout.addWidget(self.__text_edit_logger)
         self.__main_layout.addLayout(btns_layout)
         self.setLayout(self.__main_layout)
+
+        # Logging facilities, avoid some segfault and thread-related nastyness
+        self.__text_edit_logger_handler = TextEditLoggerHandler(self.__text_edit_logger, log_format)
+        self.__log_queue     = Queue(-1)
+        self.__queue_handler = QueueHandler(self.__log_queue)
+        self.__queue_listener= QueueListener(self.__log_queue, self.__text_edit_logger_handler)
+
+    def log_attach(self, log_obj: logging.Logger):
+        log_obj.addHandler(self.__queue_handler)
+
+    def log_dettach(self, log_obj: logging.Logger):
+        log_obj.removeHandler(self.__queue_handler)
+
+    def log_start(self):
+        self.__queue_listener.start()
+
+    def log_stop(self):
+        self.__queue_listener.stop()
 
     @Slot()
     def installation_completed(self):

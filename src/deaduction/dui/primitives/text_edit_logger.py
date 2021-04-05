@@ -30,7 +30,6 @@ import logging
 from PySide2.QtGui     import QFontDatabase
 from PySide2.QtWidgets import QTextEdit
 
-
 class TextEditLogger(QTextEdit, logging.Handler):
     """
     This class was made to display log entries from a logging module
@@ -53,7 +52,7 @@ class TextEditLogger(QTextEdit, logging.Handler):
     (in another widget TODO: which?) to display downloads logger.
     """
 
-    def __init__(self, log_format: str):
+    def __init__(self):
         """
         Init self with a log entry format (log_format). specifying which
         info to display and in what way, for example: '%(asctime)s -
@@ -61,12 +60,7 @@ class TextEditLogger(QTextEdit, logging.Handler):
 
         :param log_format: Log entries format.
         """
-
-        logging.Handler.__init__(self)
         QTextEdit.__init__(self)
-
-        # logging.Handler
-        self.setFormatter(logging.Formatter(log_format))
 
         # QTextEdit
         self.setReadOnly(True)
@@ -74,6 +68,15 @@ class TextEditLogger(QTextEdit, logging.Handler):
         self.setMinimumWidth(600)
         font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
         self.setFont(font)
+
+class TextEditLoggerHandler(logging.Handler):
+    def __init__(self, log_obj: TextEditLogger, log_format: str):
+        logging.Handler.__init__(self)
+
+        self.log_obj = log_obj
+
+        self.setFormatter(logging.Formatter(log_format))
+        self.createLock()
 
     def emit(self, record):
         """
@@ -83,5 +86,7 @@ class TextEditLogger(QTextEdit, logging.Handler):
         implemented by subclasses and so raises a NotImplementedError.'.
         """
 
+        self.acquire()
         log_message = self.format(record)
-        self.append(log_message)
+        self.log_obj.append(log_message)
+        self.release()
