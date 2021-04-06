@@ -348,7 +348,7 @@ class ServerInterface(QObject):
         If exercise.negate_statement, then the statement is replaced by its
         negation.
 
-        Then a virtual file is instanciated.
+        Then a virtual file is instantiated.
 
         :param exercise: Exercise
         """
@@ -383,6 +383,13 @@ class ServerInterface(QObject):
                                  "targets_analysis,\n" \
                                  + end_of_file
 
+        # FIXME: the following is a trick to ensure that the begin_line of
+        #  distinct exercises are sufficiently far apart, so that deaduction
+        #  cannot mistake Lean's responses to a previous exercise for the
+        #  awaited responses.
+        # Add 100 lines per exercise number in the preamble
+        virtual_file_preamble += "\n" * 100 * exercise.exercise_number
+        self.log.debug(f"File preamble: {virtual_file_preamble}")
         virtual_file = LeanFile(file_name=exercise.lean_name,
                                 preamble=virtual_file_preamble,
                                 afterword=virtual_file_afterword)
@@ -485,7 +492,7 @@ class ServerInterface(QObject):
 
     async def code_set(self, label: str, code: str):
         """
-        Sets the code for the current exercise
+        Sets the code for the current exercise.
         """
         self.log.info("Code sent to Lean: " + code)
         if not code.endswith(","):
