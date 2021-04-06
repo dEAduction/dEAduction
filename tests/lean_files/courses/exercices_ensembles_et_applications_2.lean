@@ -141,7 +141,6 @@ begin
     refl
 end
 
-
 lemma definition.paire {X: Type} {x x' x'':X} :
  x'' ∈ ({x, x'}:set X) ↔ ( x'' = x ∨ x'' = x')
 :=
@@ -193,12 +192,24 @@ begin
     sorry
 end
 
-lemma theorem.image_directe (f: X → Y) {A: set X} {x : X} : x ∈ A → f x ∈ f '' A :=
+lemma theorem.image_directe :
+∀ (f: X → Y), ∀ {A: set X}, ∀ {x : X}, x ∈ A → f x ∈ f '' A :=
 begin
     sorry
 end
 
-
+lemma exercise.image_singleton :
+ ∀ {x:X},  f '' {x} = {f(x)} 
+:=
+/- dEAduction
+PrettyName
+    Image d'un singleton
+-/
+begin
+   -- intro x,
+   -- exact image_singleton,
+   sorry,
+end
 
 
 lemma definition.image_reciproque (x:X) : x ∈ f  ⁻¹' B ↔ f(x) ∈ B :=

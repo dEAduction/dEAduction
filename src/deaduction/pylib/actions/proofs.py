@@ -205,45 +205,45 @@ and add ∀ a ∈ A, P(a, f(a)) to the properties
 
 @action(tooltips.get('tooltip_new_object'),
         proof_button_texts['new_object'])
-def action_new_object(goal: Goal, l: [MathObject],
-                      user_input: [str] = [],
+def action_new_object(goal: Goal,
+                      selected_objects: [MathObject],
+                      user_input: [str] = None,
                       target_selected: bool = True) -> str:
     """
     Introduce new object / sub-goal / function
-
-    :param l: list of MathObject arguments preselected by the user
-    :return: string of lean code
     """
     possible_codes = []
     # Choose between object/sub-goal/function
-    if len(user_input) == 0:
+    if not user_input:
         raise MissingParametersError(InputType.Choice,
                              [(_("Object"), _("Introduce a new object")),
                               (_("Goal"), _("Introduce a new "
-                                                "intermediate sub-goal")),
+                                            "intermediate sub-goal")),
                               (_("Function"), _("Introduce a new "
                                                 "function"))],
                              title=_("New object"),
                              output=_("Choose what to introduce:"))
     # Choice = new object
     if user_input[0] == 0:
-        if len(user_input) == 1:  # ask for name
+        if len(user_input) == 1:  # Ask for name
             raise MissingParametersError(InputType.Text,
                                          title="+",
                                          output=_("Name your object:"))
-        if len(user_input) == 2:  # ask for new object
+        if len(user_input) == 2:  # Ask for new object
             raise MissingParametersError(InputType.Text,
                                          title="+",
-                                         output=_("Introduce a new object ("
-                                                  "e.g. 0, f(2), ...)"))
-        else:  # send code
-            # x = utils.get_new_var()  # fixme: ask the user for a name
-            x = user_input[1]
-            h = get_new_hyp(goal)
-            possible_codes = CodeForLean.from_string(f"let {x} := "
-                                                     f"{user_input[2]}")
-            possible_codes = possible_codes.and_then(f"have {h} : {x} = "
-                                                     f"{user_input[2]}")
+                                         output=_("Introduce a new object")
+                                         + "(" + _("e.g.")
+                                         + "0, {1}, f(2), ...)")
+        else:  # Send code
+            name = user_input[1]
+            new_hypo_name = get_new_hyp(goal)
+            new_object = user_input[2]
+            possible_codes = CodeForLean.from_string(f"let {name} := "
+                                                     f"{new_object}")
+            possible_codes = possible_codes.and_then(f"have {new_hypo_name} "
+                                                     f": {name} = "
+                                                     f"{new_object}")
             possible_codes = possible_codes.and_then("refl")
             if goal.target.is_for_all():
                 # name = goal.target.children[1].display_name()
@@ -257,13 +257,13 @@ def action_new_object(goal: Goal, l: [MathObject],
                                          title="+",
                                          output=_("Introduce new subgoal:"))
         else:
-            h = get_new_hyp(goal)
-            possible_codes = CodeForLean.from_string(f"have {h} : ("
+            new_hypo_name = get_new_hyp(goal)
+            possible_codes = CodeForLean.from_string(f"have {new_hypo_name} : ("
                                                      f"{user_input[1]})")
 
     # Choice = new function
     elif user_input[0] == 2:
-        return introduce_fun(goal, l)
+        return introduce_fun(goal, selected_objects)
     return possible_codes
 
 
