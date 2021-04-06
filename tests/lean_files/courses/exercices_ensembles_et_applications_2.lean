@@ -79,6 +79,10 @@ PrettyName
 -- COURSE DEFINITIONS --
 ------------------------
 lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, x ∈ A → x ∈ B :=
+/- dEAduction
+AutoSteps
+  ∀, →
+-/
 begin
     exact iff.rfl
 end
@@ -91,6 +95,16 @@ PrettyName
 -/
 begin
      exact set.ext_iff
+end
+
+lemma theorem.double_inclusion (A A' : set X) :
+(A ⊆ A' ∧ A' ⊆ A) → A = A' :=
+/- dEAduction
+PrettyName
+    Egalité de deux ensembles : double inclusion
+-/
+begin
+    exact set.subset.antisymm_iff.mpr
 end
 
 lemma definition.ensemble_vide
@@ -133,17 +147,6 @@ lemma definition.paire {X: Type} {x x' x'':X} :
 :=
 begin
     refl
-end
-
-
-lemma theorem.double_inclusion (A A' : set X) :
-(A ⊆ A' ∧ A' ⊆ A) → A = A' :=
-/- dEAduction
-PrettyName
-    Double inclusion
--/
-begin
-    exact set.subset.antisymm_iff.mpr
 end
 
 end generalites
@@ -190,7 +193,7 @@ begin
     sorry
 end
 
-lemma theorem.image_directe {x : X} : x ∈ A → f x ∈ f '' A :=
+lemma theorem.image_directe (f: X → Y) {A: set X} {x : X} : x ∈ A → f x ∈ f '' A :=
 begin
     sorry
 end
@@ -289,16 +292,12 @@ lemma exercise.image_directe_et_inclusion_III
 begin
   intro A,
   intro B,
-  intro H4,
+  intro H2,
   rw ensembles_et_applications.definitions.generalites.definition.inclusion,
   intro x,
-  intro H5,
-  set y := f x with H6,
-  have H14 := ensembles_et_applications.definitions.applications.theorem.image_directe  H5,
-  hypo_analysis,
-  rotate, rotate,
-  target_no_meta_vars,
-
+  intro H3,
+  have H6 := @ensembles_et_applications.definitions.applications.theorem.image_directe,
+  have H7 := @H6 _ _ _ _ f,
 end
 
 lemma exercise.image_directe_et_inclusion_IV :
@@ -426,6 +425,49 @@ begin
 end
 
 end image_reciproque_de_image
+
+
+
+namespace image_intersection
+/- dEAduction
+PrettyName
+  Image de l'intersection
+-/
+
+
+lemma exercise.image_directe_et_intersection_I :
+∀ A B: set X, f '' (A ∩ B) ⊆ f '' (A) ∩ f '' (B) 
+:=
+begin
+  sorry
+end
+
+lemma exercise.image_directe_et_intersection_II :
+∀ A B: set X,  f '' (A) ∩ f '' (B) ⊆ f '' (A ∩ B)
+:=
+begin
+  sorry
+end
+
+lemma exercise.image_directe_et_intersection_III
+(H : injective f) :
+∀ A B: set X,  f '' (A) ∩ f '' (B) ⊆ f '' (A ∩ B)
+:=
+begin
+  sorry
+end
+
+lemma exercise.image_directe_et_intersection_IV :
+(injective f) ↔ 
+( ∀ A B: set X, f '' (A) ∩ f '' (B) = f '' (A ∩ B)  )
+:=
+begin
+  sorry
+end
+
+end image_intersection
+
+
 
 namespace egalites
 /- dEAduction
