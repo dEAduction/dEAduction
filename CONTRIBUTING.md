@@ -313,7 +313,7 @@ line), it doesn't have a specific structure. Most commit messages only have a
 header, which *must* have the following structure:
 
 ```
-area::type(scope): Summary
+area::type(scope)> Summary
 ```
 
 Argument `area` (mandatory) *must* be one of:
@@ -353,7 +353,7 @@ about the changes, such as technical explanations.
 Merge commit messages have a different structure:
 
 ```
-merge: repoA/branchA -> repoB/branchB
+merge> repoA/branchA -> repoB/branchB
 ```
 
 where `repoA` and `repoB` are remote names (if one of them is a copy on your
@@ -367,35 +367,35 @@ part of the codebase, you must use the area `code`. Here is an example of a
 good commit message:
 
 ```
-code::dev: Finish first part of my_function
+code::dev> Finish first part of my_function
 ```
 
 However you can be more precise by using a scope. If the function is part of
 the module `dui.utils`, this commit message is better:
 
 ```
-code::dev(dui.utils): Finish first part of my_function
+code::dev(dui.utils)> Finish first part of my_function
 ```
 
 If you fixed the script `envconfig` (the one that sets up the virtual
 environment), the header (we leave it to you to imagine a summary) should be:
 
 ```
-tools::fix(envconfig):
+tools::fix(envconfig)>
 ```
 
 Now if you wish to merge the branch `dev/the_new_feature` from Github (repo's
 name is `origin`) to your computer, the commit message *must* be:
 
 ```
-merge: origin/dev/the_new_feature -> local/dev/the_new_feature
+merge> origin/dev/the_new_feature -> local/dev/the_new_feature
 ```
 
 and if you want to merge the branch `the_new_feature` with the branch `master`
 on your computer, the commit message *must* be:
 
 ```
-merge: local/dev/the_new_feature -> local/master
+merge> local/dev/the_new_feature -> local/master
 ```
 
 Please note that any non-compliant commit message will be rejected by the git
