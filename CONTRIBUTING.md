@@ -195,7 +195,7 @@ delete it).
 """
 ```
 
-[Here](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/start_coex/start_coex_widgets.py)
+[Here](https://github.com/dEAduction/dEAduction/tree/master/src/deaduction/dui/stages/start_coex/start_coex_widgets.py)
 are a few examples.
 
 
@@ -206,7 +206,7 @@ All functions and methods *must* have a
 the same rules as function and method docstrings, except that public class
 attributes must be written in the class docstring using a `:attribute
 attribute_name: Attribute description` syntax.
-[Here](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/exercise/exercise_main_window.py)
+[Here](https://github.com/dEAduction/dEAduction/tree/master/src/deaduction/dui/stages/exercise/exercise_main_window.py)
 are a few examples.
 
 #### Comment style
@@ -234,7 +234,7 @@ as possible.
 > If you use Vim, consider using the addon
 [UltiSnips](https://github.com/sirver/UltiSnips) to efficiently add headers.
 Ready-to-use snippets are available in
-[`tools/Vimconfig/UltiSnips/python.snippets/deaduction.snippets`](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/tools/Vimconfig/UltiSnips/python.snippets/deaduction.snippets).
+[`tools/Vimconfig/UltiSnips/python.snippets/deaduction.snippets`](https://github.com/dEAduction/dEAduction/tree/master/tools/Vimconfig/UltiSnips/python.snippets/deaduction.snippets).
 
 ### File headers
 
@@ -273,14 +273,14 @@ This file is part of dEAduction.
 ```
 
 See
-[example](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/missing_dependencies/missing_dependencies_dialogs.py).
+[example](https://github.com/dEAduction/dEAduction/tree/master/src/deaduction/dui/stages/missing_dependencies/missing_dependencies_dialogs.py).
 Non Python files *must* also have this header, simply get rid of the doctring
 `"""` marks.
 
 > If you use Vim, consider using the addon
 [UltiSnips](https://github.com/sirver/UltiSnips) to efficiently add headers.
 Ready-to-use snippets are available in
-[`tools/Vimconfig/UltiSnips/python.snippets/deaduction.snippets`](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/tools/Vimconfig/UltiSnips/python.snippets/deaduction.snippets).
+[`tools/Vimconfig/UltiSnips/python.snippets/deaduction.snippets`](https://github.com/dEAduction/dEAduction/tree/master/tools/Vimconfig/UltiSnips/python.snippets/deaduction.snippets).
 
 ### Git branch names
 
@@ -451,7 +451,7 @@ from my_module import (MyClass,
                        this_function)
 ```
 
-[Here](https://github.com/dEAduction/dEAduction/blob/dev/start-coex/src/deaduction/dui/stages/exercise/exercise_main_window.py)
+[Here](https://github.com/dEAduction/dEAduction/tree/master/src/deaduction/dui/stages/exercise/exercise_main_window.py)
 are a few examples.
 
 Relative imports may be used in some cases (avoid them as much as you
