@@ -33,10 +33,12 @@ class MyMenu(QMenu):
 
         super().__init__()
 
+        @Slot()
+        def slut(action):
+            action.slot(selection_function())
+
         for action in actions:
-            @Slot()
-            def slut(): action.slot(selection_function())
-            action.triggered.connect(slut)
+            action.triggered.connect(partial(slut, action))
             self.addAction(action)
 
 
