@@ -3,7 +3,7 @@
 ## Authors
 - [Marguerite Bin](https://github.com/m-bin) ;
 - [Florian Dupeyron](https://github.com/fdmysterious) ;
-- [Antoine Hugounet](https://github.com/kryzar) ;
+- [Antoine Leudiere](https://github.com/kryzar) ;
 - [Frédéric Le Roux](https://github.com/FredericLeRoux) (BDFL).
 
 ## License

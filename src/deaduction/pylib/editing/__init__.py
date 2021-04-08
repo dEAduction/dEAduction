@@ -1,4 +1,3 @@
-
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 from diff_match_patch import diff_match_patch
@@ -37,16 +36,16 @@ class LeanFile:
                           patch_backward=None,
                           patch_forward=None,
                           cursor_pos=0,
-                          misc_info=dict )
+                          misc_info=dict() )
         ]  # List[HistoryEntry]
 
         self.idx          = 0         # Current position in history
         self.target_idx   = 0         # Targeted position in history
 
-        self.__txt          = init_txt  # Text at current position in history
+        self.__txt        = init_txt  # Text at current position in history
 
-        self.preamble     = ""        # Text inserted before content
-        self.afterword    = ""        # Text inserted after content
+        self.preamble     = preamble   # Text inserted before content
+        self.afterword    = afterword  # Text inserted after content
 
         # Virtual cursor managment
         # /!\ IMPORTANT NOTE /!\
@@ -57,7 +56,7 @@ class LeanFile:
         #     ...
         # in fact, retrieving current_pos calls a property function that
         # updates the cache state according to position in history.
-        self.current_pos  = 0
+        self.current_pos = 0
 
     ################################
     # Apply history modifications
@@ -69,7 +68,7 @@ class LeanFile:
         """
 
         ddir = int(self.target_idx > self.idx) - \
-            int(self.target_idx < self.idx)
+               int(self.target_idx < self.idx)
 
         # Update cursor position
         if self.target_idx != self.idx:
@@ -107,7 +106,7 @@ class LeanFile:
         """
 
         self.__update()
-        self.__current_pos = max(min(x, len(self.__txt) - 1), 0)
+        self.__current_pos = max(min(x, len(self.__txt)), 0)
 
     def cursor_move_up(self, nlines: int):
         """
@@ -116,13 +115,13 @@ class LeanFile:
         :param nlines: number of lines to move up
         """
 
-        idx    = self.current_pos
+        idx = self.current_pos
         while (idx > 0) and nlines >= 0:
             idx -= 1
             if self.__txt[idx] == "\n":
                 nlines -= 1
 
-        if idx > 0 :
+        if idx > 0:
             idx += 1  # Not at beginning of document, put the cursor
             # after the newline character
 
@@ -173,7 +172,7 @@ class LeanFile:
     ################################
     # Actions
     ################################
-    def insert( self, lbl, add_txt, move_cursor=True ):
+    def insert(self, label, add_txt, move_cursor=True):
         """
         Inserts text at cursor position, and update cursor position.
 
@@ -184,14 +183,13 @@ class LeanFile:
         """
 
         current_pos = self.current_pos
-        next_txt = self.__txt[:current_pos + 1]   \
-            + add_txt                  \
-            + self.__txt[current_pos + 1:]
+        next_txt = self.__txt[:current_pos] \
+            + add_txt              \
 
         if move_cursor:
             current_pos += len(add_txt)
 
-        self.state_add(lbl, next_txt, current_pos)
+        self.state_add(label, next_txt, current_pos)
 
     def state_add(self,
                   label: str, next_txt: str,
@@ -205,7 +203,7 @@ class LeanFile:
         """
 
         # Compute forward diff
-        forward_diff  = dmp.patch_make(self.__txt, next_txt)
+        forward_diff = dmp.patch_make(self.__txt, next_txt)
         backward_diff = dmp.patch_make(next_txt, self.__txt)
 
         # Compute cursor position
@@ -220,11 +218,13 @@ class LeanFile:
         hist_entry.patch_forward = forward_diff
 
         # Add new state element in history
-        self.history.append( HistoryEntry(label=label,
-                                          patch_backward=backward_diff,
-                                          patch_forward=None,
-                                          cursor_pos=current_pos,
-                                          misc_info=dict()))
+        self.history.append(HistoryEntry(label=label,
+                                         patch_backward=backward_diff,
+                                         patch_forward=None,
+                                         cursor_pos=current_pos,
+                                         misc_info=dict()))
+
+        line_number = first_distinct_line(self.__txt, next_txt)
 
         # Modify history indexes, text buffer, and cursor position
         self.target_idx  = len(self.history) - 1
@@ -232,6 +232,10 @@ class LeanFile:
         self.__txt       = next_txt
 
         self.current_pos = current_pos
+
+        # Keep the number of the first line of last change in misc_info
+        self.state_info_attach(first_line_of_last_change=line_number)
+
 
     def state_info_attach(self, **kwargs):
         """
@@ -247,6 +251,18 @@ class LeanFile:
         self.__update()
         entry = self.history[self.idx]
         entry.misc_info.update(kwargs)
+
+    def get_info(self, info_name: str):
+        """
+        return info in misc_info of current history_entry (or None)
+        """
+        self.__update()
+        entry_dict = self.history[self.idx].misc_info
+        if info_name in entry_dict:
+            return entry_dict[info_name]
+        else:
+            return None
+
 
     ################################
     # History control
@@ -267,6 +283,12 @@ class LeanFile:
         if self.target_idx >= len(self.history):
             self.target_idx = len(self.history) - 1
 
+    def rewind(self):
+        """
+        Moves the history cursor at the beginning
+        """
+        self.target_idx = 0
+
     def history_lbl(self):
         """
         Generator to retrieve the list of history labels.
@@ -275,9 +297,18 @@ class LeanFile:
         # FIXME(florian): Find another generator to explore history ?
         return map(lambda x: x.label, self.history)
 
+    @property
+    def history_at_beginning(self):
+        return self.target_idx == 0
+
+    @property
+    def history_at_end(self):
+        return self.target_idx == (len(self.history) - 1)
+
     ################################
     # Get file contents
     ################################
+
     @property
     def contents(self):
         """
@@ -288,7 +319,7 @@ class LeanFile:
         return self.preamble + self.__txt + self.afterword
 
     @property
-    def inner_text(self):
+    def inner_contents(self):
         """
         Retrieve the inner text
         """
@@ -321,3 +352,58 @@ class LeanFile:
             idx += 1
 
         return (line, col,)
+
+    @property
+    def first_line_of_inner_content(self):
+        """
+        return number of the line where proof begins (just after "begin")
+        """
+        text = self.preamble
+        line_number = text.count("\n") + 1
+        return line_number
+
+    @property
+    def last_line_of_inner_content(self):
+        """
+        return the number of the last line of inner content
+        """
+        text = self.preamble + self.inner_contents
+        line_number = text.count("\n")
+        return line_number
+
+    @property
+    def current_line_of_file(self):
+        """
+        return the line number where code has been inserted in the whole
+        file (with preamble)
+        """
+        text = self.preamble
+        line_in_vf, _ = self.linecol
+        line_number = text.count("\n") + line_in_vf
+        return line_number
+
+    @property
+    def first_line_of_last_change(self):
+        """
+        Return the number of the first line at which the current content
+        differs from the previous one (taking into account the preamble)
+        """
+        line_number = self.get_info("first_line_of_last_change")
+        if line_number is None:
+            return self.first_line_of_inner_content
+        else:
+            return self.first_line_of_inner_content + (line_number - 1)
+
+
+def first_distinct_line(txt1: str, txt2: str) -> int:
+    """
+    Compute the first line at which the two given strings are distinct
+    (first line = 1)
+    """
+    txt1 = txt1.splitlines()
+    txt2 = txt2.splitlines()
+    counter = 0
+    while counter < min(len(txt1), len(txt2)) \
+            and txt1[counter] == txt2[counter]:
+        counter += 1
+    return counter + 1  # first line = 1, not 0

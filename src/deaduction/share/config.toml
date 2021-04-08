@@ -1,0 +1,90 @@
+[icons]
+path        = "$DEADUCTION_SHARE/graphical_resources/icons"
+letter_type = "letters/trials"
+context     = "letters/blue"
+
+[display]
+text_mode_in_chooser_window = false
+target_display_on_top = false
+depth_of_unfold_statements = 1
+show_lean_name_for_statements = false
+target_font_size = "24pt"
+context_font_size = "12pt"
+tooltips_font_size = 10
+mathematics_font = "Defaults"
+
+logic_button_symbols = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃"
+use_logic_button_symbols = true
+
+display_detailed_errors_on_wui = true
+
+use_primes_for_variables_names = true
+use_seconds_for_variables_names = true
+
+[functionality]
+target_selected_by_default = false
+allow_proof_by_sorry = true
+expanded_apply_button = false
+
+[i18n]
+available_languages = ["en", "fr_FR"]
+select_language = "fr_FR"
+
+[journal]
+save=false
+
+[logs]
+display_level = "info"
+domains = [""]
+
+#########################
+# All Plateform packages
+#########################
+[package.all.mathlib]
+type="archive"
+path="$DEADUCTION_HOME/mathlib"
+
+archive_url="https://oleanstorage.azureedge.net/mathlib/158e84ae35cbed47282545f318fb33c0ed483761.tar.xz"
+archive_checksum="a6dcc73a42db7340dcf47c1050c1d9803a279b51"
+archive_hlist="$DEADUCTION_SHARE/hlists/mathlib.hlist"
+archive_root=""
+archive_type="tar"
+
+#########################
+# Linux packages
+#########################
+[package.linux.lean]
+type="archive"
+path="$DEADUCTION_HOME/lean"
+
+archive_url="https://github.com/leanprover-community/lean/releases/download/v3.16.5/lean-3.16.5-linux.tar.gz"
+archive_checksum="cab50923b2ee48190cebf2f7aa55007a9b8b4f69"
+archive_hlist="$DEADUCTION_SHARE/hlists/lean-3.16.5-linux.hlist"
+archive_root="lean-3.16.5-linux"
+archive_type="tar"
+
+#########################
+# Windows packages
+#########################
+[package.windows.lean]
+type="archive"
+path="$DEADUCTION_HOME/lean"
+
+archive_url="https://github.com/leanprover-community/lean/releases/download/v3.16.5/lean-3.16.5-windows.zip"
+archive_checksum="a606dd675d5fa88faa7931dd38ad682d0bca6181"
+archive_hlist="$DEADUCTION_SHARE/hlists/lean-3.16.5-windows.hlist"
+archive_root="lean-3.16.5-windows"
+archive_type="zip"
+
+#########################
+# OSX Packages
+#########################
+[package.darwin.lean]
+type="archive"
+path="$DEADUCTION_HOME/lean"
+
+archive_url="https://github.com/leanprover-community/lean/releases/download/v3.16.5/lean-3.16.5-darwin.zip"
+archive_checksum="cb2ca352e6f03ea944174618326fe21fe7ba6607"
+archive_hlist="$DEADUCTION_SHARE/hlists/lean-3.16.5-darwin.hlist"
+archive_root="lean-3.16.5-darwin"
+archive_type="zip"
