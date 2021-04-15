@@ -58,6 +58,7 @@ from deaduction.pylib.coursedata        import   Exercise
 from deaduction.pylib.mathobj           import   Goal
 import deaduction.pylib.config.vars      as      cvars
 import deaduction.pylib.utils.filesystem as      fs
+from deaduction.pylib.memory            import   JournalEvent, EventNature
 
 log = logging.getLogger(__name__)
 
@@ -298,7 +299,7 @@ class ExerciseStatusBar(QStatusBar):
         # Icon
         self.iconWidget = QLabel(self)
         icons_base_dir = cvars.get("icons.path")
-        error_icon_path = fs.path_helper(icons_base_dir) / 'no-entry-sign.png'
+        error_icon_path = fs.path_helper(icons_base_dir) / 'cancel.png'
         success_icon_path = fs.path_helper(icons_base_dir) / 'checked.png'
         self.error_pixmap = QPixmap(str(error_icon_path.resolve()))
         self.success_pixmap = QPixmap(str(success_icon_path.resolve()))
@@ -311,8 +312,12 @@ class ExerciseStatusBar(QStatusBar):
         # Insert icon and message
         self.insertWidget(0, self.iconWidget)
         self.insertWidget(1, self.messageWidget)
-        self.show_success_icon()  # Trick: the status bar adapt its height
+        self.show_success_icon()  # Trick: the status bar adapts its height
         self.hide_icon()
+
+        # Verbose mode
+        self.display_success_messages = cvars.get(
+            'display.display_success_messages', True)
 
     def show_error_icon(self):
         self.iconWidget.setPixmap(self.error_pixmap)
@@ -328,29 +333,28 @@ class ExerciseStatusBar(QStatusBar):
     def set_message(self, message: str):
         self.messageWidget.setText(message)
 
-    def display_status_bar_message(self, event=None, instruction=None):
+    def erase(self):
+        self.set_message("")
+        self.hide_icon()
+
+    def display_message(self, event: JournalEvent):
         """
-        Display a message in the status bar.
-        :param event:       tuple of strings, (nature, content, details)
-        :param instruction: 'erase' or None
+        Display a message in the status bar. Two kinds of messages are
+        considered: error or success.
         """
 
-        status_bar = self
-        if instruction == 'erase':
-            status_bar.set_message("")
-            status_bar.hide_icon()
-        elif event:
-            nature, message, details = event
-            if details:
-                message += ": " + details
-            if nature in ('error', 'lean_error'):
-                status_bar.show_error_icon()
-                status_bar.set_message(message)
-            elif nature == 'success':
-                status_bar.show_success_icon()
-                status_bar.set_message(message)
-            else:
-                status_bar.hide_icon()
+        nature, message = event.nature, event.content
+        # Capitalize first char but do not un-capitalize the remaining
+        message = message[0].capitalize() + message[1:]
+
+        if event.is_error():
+            self.show_error_icon()
+            self.set_message(message)
+        elif event.is_success() and self.display_success_messages:
+            self.show_success_icon()
+            self.set_message(message)
+        else:
+            self.hide_icon()
 
 
 class ExerciseToolBar(QToolBar):

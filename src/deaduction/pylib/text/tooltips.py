@@ -95,8 +95,10 @@ __tooltips_apply = {
 # Text for buttons
 __buttons = {
     'logic_button_texts': _("AND, OR, NOT, ⇒, ⇔, ∀, ∃"),
-    'proof_button_texts': _("Apply, Proof Methods, New Object"),
-    'magic_button_texts': _('Compute, QED')
+    'proof_button_texts': _("Apply")
+                          + ", " + _("Proof Methods")
+                          + ", " + _("New Object"),
+    'magic_button_texts': _('Compute') + ', ' + _('QED')
 }
 # Sad thoughts for "¯\_(ツ)_/¯", I loved you so much...
 

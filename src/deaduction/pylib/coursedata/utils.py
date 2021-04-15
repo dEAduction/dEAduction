@@ -130,7 +130,7 @@ def extract_list(string: str, macros: {}, search: callable) -> list:
                         log.debug(f"removing {len(diff_list)} item(s)")
                         final_list.remove(item)
             else:
-                log.debug(f"adding {len(diff_list)} item(s)")
+                # log.debug(f"adding {len(diff_list)} item(s)")
                 final_list.extend(diff_list)
         else:
             log.warning(f"Found no item for {word} in metadata")

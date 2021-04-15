@@ -391,7 +391,7 @@ class LeanCourseVisitor(NodeVisitor):
         """
         course_history, metadata = get_info(visited_children)
         data = {"metadata": metadata}
-        log.debug(f"got metadata {data}")
+        # log.debug(f"got metadata {data}")
         return course_history, data
 
     def visit_metadata_field(self, node, visited_children):

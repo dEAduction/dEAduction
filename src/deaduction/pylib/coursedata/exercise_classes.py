@@ -38,6 +38,7 @@ import deaduction.pylib.actions.magic
 from deaduction.pylib.coursedata.utils import (find_suffix,
                                                substitute_macros,
                                                extract_list)
+from deaduction.pylib.coursedata.auto_steps import AutoStep
 
 log = logging.getLogger(__name__)
 
@@ -80,6 +81,9 @@ class Statement:
 
     initial_proof_state:    Any             = None
     # this is used when pre-processing
+
+    auto_steps: str                         = ''
+    auto_test: str                         = ''
 
     info:                   Dict[str, Any]  = None
     # Any other (non-essential) information
@@ -191,6 +195,30 @@ class Statement:
             text = target.math_type.to_display(is_math_type=True)
         return text
 
+    @property
+    def refined_auto_steps(self) -> [AutoStep]:
+        """
+        Turn the raw string parsed from the lean file into a
+        :return:
+        """
+        if not self.auto_steps:
+            if not self.auto_test:
+                return ''
+            else:
+                self.auto_steps = self.auto_test
+        auto_steps = self.auto_steps.replace('\\n', ' ')
+        auto_steps_strings = auto_steps.split(',')
+        auto_steps = []
+        for string in auto_steps_strings:
+            auto_steps.append(AutoStep.from_string(string))
+        return auto_steps
+
+    def has_name(self, lean_name):
+        return self.lean_name.endswith(lean_name)
+
+    def has_pretty_name(self, pretty_name):
+        return self.pretty_name.__contains__(pretty_name)
+
 
 @dataclass
 class Definition(Statement):
@@ -270,7 +298,7 @@ class Exercise(Theorem):
         data['available_statements'] = extract_available_statements(data,
                                                                     statements)
         names = [st.pretty_name for st in data['available_statements']]
-        log.debug(f"Available statements: {names}")
+        # log.debug(f"Available statements: {names}")
 
         ########################
         # Treatment of buttons #
@@ -449,7 +477,7 @@ def extract_available_buttons(data: dict):
             else:  # Take all buttons
                 data[field_name] = '$ALL'  # not optimal
 
-        log.debug(f"Processing data in {field_name}, {data[field_name]}")
+        # log.debug(f"Processing data in {field_name}, {data[field_name]}")
 
         string = substitute_macros(data[field_name], data)
         # This is still a string with macro names that should either
@@ -480,7 +508,7 @@ def make_action_callable(prefix) -> callable:
         e.g. 'and' -> [ LOGIC_BUTTONS['action_and'] ]
         '$ALL' -> LOGIC_BUTTONS
         """
-        log.debug(f"searching Action {name}")
+        # log.debug(f"searching Action {name}")
         if name in ['NONE', '$NONE']:
             return []
         if name in ['ALL', '$ALL']:
@@ -515,7 +543,7 @@ def make_statement_callable(prefix: str, statements) -> callable:
         e.g. "union_quelconque" (prefix = "definition)
         ->  Statement whose name endswith definition.union_quelconque
         """
-        log.debug(f"searching {prefix} {name}")
+        # log.debug(f"searching {prefix} {name}")
         if name in ['NONE', '$NONE']:
             return []
         if name in ['$UNTIL_NOW', 'UNTIL_NOW']:
@@ -525,10 +553,10 @@ def make_statement_callable(prefix: str, statements) -> callable:
                     if (isinstance(statement, Theorem)
                             and not isinstance(statement, Exercise)):
                         available_statements.append(statement)
-                        log.debug(f"Considering {statement.pretty_name}...")
+                        # log.debug(f"Considering {statement.pretty_name}...")
                 elif isinstance(statement, class_):
                     available_statements.append(statement)
-                    log.debug(f"Considering {statement.pretty_name}...")
+                    # log.debug(f"Considering {statement.pretty_name}...")
             return available_statements
 
         statement = None

@@ -389,7 +389,7 @@ class ServerInterface(QObject):
         #  awaited responses.
         # Add 100 lines per exercise number in the preamble
         virtual_file_preamble += "\n" * 100 * exercise.exercise_number
-        self.log.debug(f"File preamble: {virtual_file_preamble}")
+        # self.log.debug(f"File preamble: {virtual_file_preamble}")
         virtual_file = LeanFile(file_name=exercise.lean_name,
                                 preamble=virtual_file_preamble,
                                 afterword=virtual_file_afterword)

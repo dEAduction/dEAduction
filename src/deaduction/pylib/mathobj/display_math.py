@@ -136,7 +136,7 @@ class Shape:
                             structured string, to be transform into a string by
                             the structured_display_to_string function
         """
-        log.debug(f"Computing shape of {math_object}")
+        # log.debug(f"Computing shape of {math_object}")
         if format_ not in ["latex", 'utf8', "lean"]:
             return shape_error(f"unknown format = {format_}")
 

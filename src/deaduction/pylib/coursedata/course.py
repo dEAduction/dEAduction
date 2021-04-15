@@ -116,7 +116,8 @@ class Course:
         for field_name, field_content in self.metadata.items():
             print(f"{field_name}: {field_content}")
 
-    def exercises_list(self) -> List[Exercise]:
+    @property
+    def exercises(self) -> List[Exercise]:
         """
         Extract all the exercises from the statements list.
         """
@@ -207,7 +208,7 @@ class Course:
         course_tree = parser_course.lean_course_grammar.parse(file_content)
         visitor = parser_course.LeanCourseVisitor()
         course_history, course_metadata = visitor.visit(course_tree)
-        log.debug(f"course history: {course_history}")
+        # log.debug(f"course history: {course_history}")
         log.info(f"Course metadata: {course_metadata}")
 
         ##########################
@@ -218,19 +219,20 @@ class Course:
         for event_name, event_content in course_history:
             if event_name == "end_of_line":
                 line_counter += 1
-                log.debug(f"Parsing line {line_counter}")
+                # log.debug(f"Parsing line {line_counter}")
 
             elif event_name == "open_namespace":
                 namespace.append(event_content["name"])
                 outline[whole(namespace)] = event_content["pretty_name"]
-                log.debug(f"namespace {whole(namespace)}")
+                # log.debug(f"namespace {whole(namespace)}")
             elif event_name == "close_namespace":
                 name = event_content["name"]
                 if namespace and name == namespace[-1]:
-                    log.debug(f"closing namespace {name}")
+                    # log.debug(f"closing namespace {name}")
                     namespace.pop()
                 else:
-                    log.debug(f"(just closing section(?) {name})")
+                    pass
+                    # log.debug(f"(just closing section(?) {name})")
 
             ##############
             # statements #
@@ -307,6 +309,19 @@ class Course:
             log.warning(f"Found only {begin_counter} 'begin' for "
                         f"{len(statements)} statements")
         return course
+
+    def statement_from_name(self, name: str) -> Statement:
+        """
+        Return the first Statement whose Lean name ends with name.
+        """
+        # Try Lean names
+        statements = [st for st in self.statements if st.has_name(name)]
+        if statements:
+            return statements[0]
+        # Try pretty names
+        statements = [st for st in self.statements if st.has_pretty_name(name)]
+        if statements:
+            return statements[0]
 
 
 def whole(namespace_list: List[str]):

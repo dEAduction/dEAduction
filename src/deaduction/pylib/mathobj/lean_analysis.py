@@ -139,7 +139,7 @@ class LeanEntryVisitor(NodeVisitor):
         info['math_type'] = tail
         math_object = MathObject.from_info_and_children(info=info,
                                                         children=[])
-        log.debug(f"Creating global var MathObject {math_object}")
+        # log.debug(f"Creating global var MathObject {math_object}")
         return math_object
 
     def visit_node_name(self, node, visited_children):

@@ -4,16 +4,26 @@
 # translate actions into lean code                         #
 ############################################################
     
-Every function action_* takes 2 arguments,
-- goal (of class Goal)
-- a list of ProofStatePO precedently selected by the user
-and returns lean code as a string
+Every function action_* takes the following arguments:
+- goal: the current goal, of class Goal
+- selected_objects: a list of MathObject previously selected by the user
+- target_selected: a boolean that indicates if target is selected.
+The following alternative is assumed:
+either target_selected is True,
+or selected_objects is non empty.
 
-Some take an optional argument:
-- user_input, a list of 
+Some of these functions take an optional argument:
+- user_input, an object reflecting a choice made by the user inside a
+previous call of the same function.
+
+Most of these functions are just switches that call other more
+specialised functions, according to the number and nature of
+selected_objects. All these auxiliary functions occurs immmediately before the
+function action_* in the present file.
 
 Author(s)     : - Marguerite Bin <bin.marguerite@gmail.com>
 Maintainer(s) : - Marguerite Bin <bin.marguerite@gmail.com>
+                - Frédéric Le Roux <frederic.le-rxou@imj-prg.fr>
 Created       : July 2020 (creation)
 Repo          : https://github.com/dEAduction/dEAduction
 
@@ -45,7 +55,6 @@ from deaduction.pylib.actions     import (action,
                                           MissingParametersError,
                                           WrongUserInput,
                                           test_selection,
-                                          LeanCombinator,
                                           CodeForLean
                                           )
 
@@ -57,7 +66,7 @@ from deaduction.pylib.mathobj     import (MathObject,
 
 import deaduction.pylib.config.vars as cvars
 
-log = logging.getLogger("logic")  # uncomment to use
+log = logging.getLogger("logic")
 
 
 # Get buttons symbols from config file
@@ -69,7 +78,7 @@ if cvars.get('display.use_logic_button_symbols'):
     logic_button_texts = cvars.get('display.logic_button_symbols')
 else:
     logic_button_texts = tooltips.get('logic_button_texts')
-# turn logic_button_texts into a dictionary
+# Turn logic_button_texts into a dictionary
 lbt = logic_button_texts.split(', ')
 logic_button_texts = {}
 for key, value in zip(action_list, lbt):
@@ -82,68 +91,74 @@ for key, value in zip(action_list, lbt):
 
 def construct_and(goal: Goal, user_input: [str]) -> CodeForLean:
     """
-Split the target 'P AND Q' into two sub-goals
+Split the target 'P AND Q' into two sub-goals.
     """
     possible_codes = []
 
     if not goal.target.is_and():
         raise WrongUserInput(error=_("target is not a conjunction 'P AND Q'"))
-    left = goal.target.math_type.children[0].to_display()
-    right = goal.target.math_type.children[1].to_display()
-    choices = [(_("Left"), left), (_("Right"), right)]
 
     if not user_input:
+        # User choice
+        left = goal.target.math_type.children[0].to_display()
+        right = goal.target.math_type.children[1].to_display()
+        choices = [(_("Left"), left), (_("Right"), right)]
         raise MissingParametersError(
             InputType.Choice,
             choices,
             title=_("Choose sub-goal"),
             output=_("Which property to prove first?"))
-
-    if len(user_input) == 1:
+    else:
         if user_input[0] == 1:
+            # Prove second property first
             if goal.target.math_type.node == "PROP_∃":
                 # In this case, first rw target as a conjunction
-                code = "rw exists_prop, rw and.comm, "
+                code = CodeForLean.and_then_from_list(["rw exists_prop",
+                                                       "rw and.comm"])
             else:
-                code = "rw and.comm, "
+                code = CodeForLean.from_string("rw and.comm")
         else:
-            code = ""
-        possible_codes.append(f'{code}split')
+            code = CodeForLean.empty_code()
+        code = code.and_then("split")
 
-    return CodeForLean.or_else_from_list(possible_codes)
+    return code
 
 
 def apply_and(goal, selected_objects) -> CodeForLean:
     """
-    Destruct a property 'P and Q'
-    Here l contains exactly one conjunction property
+    Destruct a property 'P and Q'.
+    Here selected_objects is assumed to contain exactly one conjunction
+    property.
     """
 
-    h_selected = selected_objects[0].info["name"]
+    selected_hypo = selected_objects[0].info["name"]
     h1 = get_new_hyp(goal)
     h2 = get_new_hyp(goal)
-    code_ = f'cases {h_selected} with {h1} {h2}'
-    return CodeForLean.from_string(code_)
+    code = f'cases {selected_hypo} with {h1} {h2}'
+    return CodeForLean.from_string(code)
 
 
 def construct_and_hyp(goal, selected_objects: [MathObject]) -> CodeForLean:
     """
-    Construct 'P AND Q' from properties P and Q
-    Here l contains exactly two properties
+    Construct 'P AND Q' from properties P and Q.
+    Here selected_objects is assumed to contain exactly two properties.
     """
 
     h1 = selected_objects[0].info["name"]
     h2 = selected_objects[1].info["name"]
-    new_h = get_new_hyp(goal)
-    code_ = f'have {new_h} := and.intro {h1} {h2}'
-    return CodeForLean.from_string(code_)
+    new_hypo_name = get_new_hyp(goal)
+    code = f'have {new_hypo_name} := and.intro {h1} {h2}'
+    code = CodeForLean.from_string(code)
+    code.add_success_message(_("conjunction {} added to the context").
+                             format(new_hypo_name))
+    return code
 
 
 @action(tooltips.get('tooltip_and'),
         logic_button_texts['action_and'])
 def action_and(goal: Goal,
                selected_objects: [MathObject],
-               user_input: [str] = [],
+               user_input: [str] = None,
                target_selected: bool = True
                ) -> CodeForLean:
     """
@@ -155,10 +170,6 @@ If a hypothesis of the form P AND Q has been previously selected:
     creates two new hypothesis P, and Q.
 If two hypothesis P, then Q, have been previously selected:
     add the new hypothesis P AND Q to the properties.
-
-    :param target_selected: bool
-    :param selected_objects:   list of MathObject preselected by user
-    :return:    string of lean code
     """
 
     test_selection(selected_objects, target_selected)
@@ -180,21 +191,21 @@ If two hypothesis P, then Q, have been previously selected:
     raise WrongUserInput(error=_("does not apply to more than two properties"))
 
 
+######
 # OR #
+######
+
 def construct_or(goal: Goal, user_input: [str]) -> CodeForLean:
     """
-When target is a disjunction 'P OR Q', choose to prove either P or Q
+    Assuming target is a disjunction 'P OR Q', choose to prove either P or Q.
     """
     possible_codes = []
-
-    if not goal.target.is_or():
-        raise WrongUserInput(error=_("target is not a disjunction 'P OR Q'"))
 
     left = goal.target.math_type.children[0].to_display()
     right = goal.target.math_type.children[1].to_display()
     choices = [(_("Left"), left), (_("Right"), right)]
 
-    if len(user_input) == 0:
+    if not user_input:
         raise MissingParametersError(InputType.Choice,
                                      choices,
                                      title=_("Choose new goal"),
@@ -209,83 +220,96 @@ When target is a disjunction 'P OR Q', choose to prove either P or Q
     return CodeForLean.or_else_from_list(possible_codes)
 
 
-def apply_or(goal, l: [MathObject], user_input: [str]) -> CodeForLean:
+def apply_or(goal,
+             selected_objects: [MathObject],
+             user_input: [str]) -> CodeForLean:
     """
-    Engage in a proof by cases by applying a property 'P OR Q'
+    Assuming selected_objects is one disjunction 'P OR Q',
+    engage in a proof by cases.
     """
-    possible_codes = []
-    if not l[0].is_or():
-        raise WrongUserInput(error=_("Selected property is not "
-                                     "a disjunction 'P OR Q'"))
 
-    h_selected = l[0].info["name"]
+    # if not selected_objects[0].is_or():
+    #     raise WrongUserInput(error=_("Selected property is not "
+    #                                  "a disjunction 'P OR Q'"))
 
-    left = l[0].math_type.children[0].to_display()
-    right = l[0].math_type.children[1].to_display()
-    choices = [(_("Left"), left), (_("Right"), right)]
+    selected_hypo = selected_objects[0].info["name"]
+    code = CodeForLean.empty_code()
 
-    if len(user_input) == 0:
+    if not user_input:
+        left = selected_objects[0].math_type.children[0].to_display()
+        right = selected_objects[0].math_type.children[1].to_display()
+        choices = [(_("Left"), left), (_("Right"), right)]
         raise MissingParametersError(InputType.Choice,
                                      choices=choices,
                                      title=_("Choose case"),
                                      output=_("Which case to assume first?"))
-    elif len(user_input) == 1:
+    else:  # len(user_input) == 1
         if user_input[0] == 1:
             # If user wants the second property first, then first permute
-            code_ = f'rw or.comm at {h_selected}'
-            code_ = CodeForLean.from_string(code_)
-        else:
-            code_ = CodeForLean.empty_code()
+            code = f'rw or.comm at {selected_hypo}'
+            code = CodeForLean.from_string(code)
 
     h1 = get_new_hyp(goal)
     h2 = get_new_hyp(goal)
     # Destruct the disjunction
-    code_ = code_.and_then(f'cases {h_selected} with {h1} {h2}')
-    return code_
+    code = code.and_then(f'cases {selected_hypo} with {h1} {h2}')
+    code.add_success_message(_("proof by cases: we first assume {}").
+                             format(h1))
+    return code
 
 
-def construct_or_on_hyp(goal: Goal, l: [MathObject], user_input: [str] = [])\
-        -> CodeForLean:
+def construct_or_on_hyp(goal: Goal,
+                        selected_property: [MathObject],
+                        user_input: [str] = None) -> CodeForLean:
     """
-Construct a property 'P or Q' from property 'P' or property 'Q'
+    Construct a property 'P or Q' from property 'P' or property 'Q'.
+    Here we assume selected_object contains 1 or 2 items.
     """
-
+    if not user_input:
+        user_input = []
     possible_codes = []
-    if len(l) > 2:
-        error = _("does not apply to more than two properties")
-        raise WrongUserInput(error)
-    hP = l[0].info["name"]
-    P = l[0].math_type.to_display()
+    first_hypo_name = selected_property[0].info["name"]
+    hypo = selected_property[0].math_type.to_display()
 
-    if len(l) == 2:
-        if not (l[0].math_type.is_prop() and l[1].math_type.is_prop()):
+    if len(selected_property) == 2:
+        if not (selected_property[0].math_type.is_prop()
+                and selected_property[1].math_type.is_prop()):
             error = _("selected items are not properties")
             raise WrongUserInput(error)
         else:
-            Q = l[1].info["name"]
-    elif len(l) == 1:
-        if not l[0].math_type.is_prop():
+            second_selected_property = selected_property[1].info["name"]
+    elif len(selected_property) == 1:
+        if not selected_property[0].math_type.is_prop():
             error = _("selected item is not a property")
             raise WrongUserInput(error)
-        if len(user_input) == 0:
-            raise MissingParametersError(InputType.Text,
-                        title=_("Obtain 'P OR Q'"),
-                        output=_("Enter the proposition you want to use:"))
-        Q = user_input[0]
-        user_input = user_input[1:]
+        if not user_input:
+            raise MissingParametersError(
+                InputType.Text,
+                title=_("Obtain 'P OR Q'"),
+                output=_("Enter the proposition you want to use:"))
+        else:
+            second_selected_property = user_input[0]
+            user_input = user_input[1:]
         
-    if len(user_input) == 0:
+    if not user_input:
         raise MissingParametersError(
             InputType.Choice,
-            [(_("Left"), f'({P}) OR ({Q})'), (_('Right'), f'({Q}) OR ({P})')],
+            [(_("Left"),
+              f'({hypo}) OR ({second_selected_property})'),
+             (_('Right'),
+              f'({second_selected_property}) OR ({hypo})')],
             title=_("Choose side"),
-            output=_(f'On which side do you want') + f' {P} ?')
+            output=_(f'On which side do you want') + f' {hypo} ?')
     
-    new_h = get_new_hyp(goal)
+    new_hypo_name = get_new_hyp(goal)
     if user_input[0] == 0:
-        possible_codes.append(f'have {new_h} := @or.inl _ ({Q}) ({hP})')
+        possible_codes.append(f'have {new_hypo_name} := '
+                              f'@or.inl _ ({second_selected_property}) '
+                              f'({first_hypo_name})')
     elif user_input[0] == 1:
-        possible_codes.append(f'have {new_h} := @or.inr ({Q}) _ ({hP})')
+        possible_codes.append(f'have {new_hypo_name} := '
+                              f'@or.inr ({second_selected_property}) _ '
+                              f'({first_hypo_name})')
     else:
         raise WrongUserInput("unexpected error")
     return CodeForLean.or_else_from_list(possible_codes)
@@ -295,38 +319,39 @@ Construct a property 'P or Q' from property 'P' or property 'Q'
         logic_button_texts['action_or'])
 def action_or(goal: Goal,
               selected_objects: [MathObject],
-              user_input=[],
+              user_input=None,
               target_selected: bool = True) -> CodeForLean:
     """
-Translate into string of lean code corresponding to the action
-
-If the target is of the form P OR Q:
-    tranform the target in P (or Q) accordingly to the user's choice.
-If a hypothesis of the form P OR Q has been previously selected:
-    transform the current goal into two subgoals,
-        one with P as a hypothesis,
-        and another with Q as a hypothesis.
-
-    :param l:   list of MathObject arguments preselected by the user
-    :return:    string of lean code
+    If the target is of the form P OR Q:
+        transform the target in P (or Q) according to the user's choice.
+    If a hypothesis of the form P OR Q has been previously selected:
+        transform the current goal into two subgoals,
+            one with P as a hypothesis,
+            and another with Q as a hypothesis.
     """
 
     test_selection(selected_objects, target_selected)
 
     if len(selected_objects) == 0:
-        return construct_or(goal, user_input)
-    if len(selected_objects) == 1:
+        if not goal.target.is_or():
+            raise WrongUserInput(
+                error=_("target is not a disjunction 'P OR Q'"))
+        else:
+            return construct_or(goal, user_input)
+    elif len(selected_objects) == 1:
         if selected_objects[0].is_or():
             return apply_or(goal, selected_objects, user_input)
         else:
             return construct_or_on_hyp(goal, selected_objects, user_input)
-    if len(selected_objects) == 2:
+    elif len(selected_objects) == 2:
         return construct_or_on_hyp(goal, selected_objects, user_input)
-    raise WrongUserInput(error=_("does not apply to more than two properties"))
+    else:  # More than 2 selected objects
+        raise WrongUserInput(error=_("does not apply to more than two "
+                                     "properties"))
 
-
+#######
 # NOT #
-
+#######
 @action(tooltips.get('tooltip_not'),
         logic_button_texts['action_negate'])
 def action_negate(goal: Goal,
@@ -336,29 +361,29 @@ def action_negate(goal: Goal,
     Translate into string of lean code corresponding to the action
     
     If no hypothesis has been previously selected:
-transform the target in an equivalent one which has its negations 'pushed'.
+        transform the target in an equivalent one with its negations 'pushed'.
     If a hypothesis has been previously selected:
-do the same to the hypothesis.
-
-    :param l:   list of MathObject arguments preselected by the user
-    :return:    string of lean code
+        do the same to the hypothesis.
     """
 
     test_selection(selected_objects, target_selected)
 
-    possible_codes = []
-
     if len(selected_objects) == 0:
         if not goal.target.is_not():
             raise WrongUserInput(error=_("target is not a negation 'NOT P'"))
-        possible_codes.append('push_neg')
-    if len(selected_objects) == 1:
+        code = CodeForLean.from_string('push_neg')
+        code.add_success_message(_("negation pushed on target"))
+    elif len(selected_objects) == 1:
         if not selected_objects[0].is_not():
             error = _("selected property is not a negation 'NOT P'")
             raise WrongUserInput(error)
-        h_selected = selected_objects[0].info["name"]
-        possible_codes.append(f'push_neg at {h_selected}')
-    return CodeForLean.or_else_from_list(possible_codes)
+        selected_hypo = selected_objects[0].info["name"]
+        code = CodeForLean.from_string(f'push_neg at {selected_hypo}')
+        code.add_success_message(_(f"negation pushed on property "
+                                   f"{selected_hypo}"))
+    else:
+        raise WrongUserInput(error=_('negate only one property at a time'))
+    return code
 
 
 ###############
@@ -372,21 +397,28 @@ def construct_implicate(goal: Goal) -> CodeForLean:
     if not goal.target.is_implication():
         raise WrongUserInput(error=_("target is not an implication 'P ⇒ Q'"))
     else:
-        h = get_new_hyp(goal)
-        return CodeForLean.from_string(f'intro {h}')
+        new_hypo_name = get_new_hyp(goal)
+        code = CodeForLean.from_string(f'intro {new_hypo_name}')
+        code.add_success_message(_("property {} added to the context").
+                                 format(new_hypo_name))
+        return code
 
 
-def apply_implicate(goal: Goal, l: [MathObject]) -> CodeForLean:
+def apply_implicate(goal: Goal, selected_object: [MathObject]) -> CodeForLean:
     """
-    Here l contains a single property which is an implication P ⇒ Q; if the
-    target is Q then it will be replaced by P.
+    Here selected_object contains a single property which is an implication
+    P ⇒ Q; if the target is Q then it will be replaced by P.
     """
-    h_selected = l[0].info["name"]
-    return CodeForLean.from_string(f'apply {h_selected}')
+    selected_hypo = selected_object[0].info["name"]
+    code = CodeForLean.from_string(f'apply {selected_hypo}')
+    code.add_success_message(_("target modified using implication {}").
+                             format(selected_hypo))
+    return code
 
 
-def have_new_property(arrow: MathObject, variable_names: [str], hypo_name) \
-        -> CodeForLean:
+def have_new_property(arrow: MathObject,
+                      variable_names: [str],
+                      new_hypo_name: str) -> CodeForLean:
     """
 
     :param arrow:           a MathObject which is either an implication or a
@@ -399,11 +431,10 @@ def have_new_property(arrow: MathObject, variable_names: [str], hypo_name) \
                             taking into account implicit parameters
     """
 
-    h = hypo_name
-    h_selected = arrow.info["name"]
+    selected_hypo = arrow.info["name"]
 
-    command = f'have {h} := {h_selected}'
-    command_explicit = f'have {h} := @{h_selected}'
+    command = f'have {new_hypo_name} := {selected_hypo}'
+    command_explicit = f'have {new_hypo_name} := @{selected_hypo}'
 
     arguments = ' '.join(variable_names)
 
@@ -422,24 +453,26 @@ def have_new_property(arrow: MathObject, variable_names: [str], hypo_name) \
 
     possible_codes = implicit_codes + explicit_codes
 
-    return CodeForLean.or_else_from_list(possible_codes)
+    code = CodeForLean.or_else_from_list(possible_codes)
+    code.add_success_message(_("Property {} added to the context").
+                             format(new_hypo_name))
+    return code
 
 
-def apply_implicate_to_hyp(goal: Goal, l: [MathObject]) -> CodeForLean:
+def apply_implicate_to_hyp(goal: Goal,
+                           selected_objects: [MathObject]) -> CodeForLean:
     """
     Try to apply last selected property on the other ones.
     The last property should be an implication
     (or equivalent to such after unfolding definitions)
-
-    :param l: list of MathObjects
-    :return:
     """
 
-    implication = l[-1]
-    hypo_name = get_new_hyp(goal)
-    variable_names = [variable.info['name'] for variable in l[:-1]]
+    implication = selected_objects[-1]
+    new_hypo_name = get_new_hyp(goal)
+    variable_names = [variable.info['name'] for variable in
+                      selected_objects[:-1]]
 
-    return have_new_property(implication, variable_names, hypo_name)
+    return have_new_property(implication, variable_names, new_hypo_name)
 
 
 @action(tooltips.get('tooltip_implies'),
@@ -456,9 +489,6 @@ def action_implicate(goal: Goal,
     it is replaced by P
     (3) Exactly two selected property, on of which is an implication P ⇒ Q
     and the other is P: Add Q to the context
-
-    :param l:   list of MathObject arguments preselected by the user
-    :return:    string of lean code
     """
 
     test_selection(selected_objects, target_selected)
@@ -494,15 +524,16 @@ def action_implicate(goal: Goal,
 #######
 
 def construct_iff(goal: Goal, user_input: [str]) -> CodeForLean:
-    possible_codes = []
-    if goal.target.math_type.node != "PROP_IFF":
-        raise WrongUserInput(error=_("target is not an iff property 'P ⇔ Q'"))
-
-    left = goal.target.math_type.children[0].to_display()
-    right = goal.target.math_type.children[1].to_display()
-    choices = [("⇒", f'({left}) ⇒ ({right})'), ("⇐", f'({right}) ⇒ ({left})')]
+    """
+    Assuming target is an iff, split into two implications.
+    """
+    code = CodeForLean.empty_code()
 
     if not user_input:
+        left = goal.target.math_type.children[0].to_display()
+        right = goal.target.math_type.children[1].to_display()
+        choices = [("⇒", f'({left}) ⇒ ({right})'),
+                   ("⇐", f'({right}) ⇒ ({left})')]
         raise MissingParametersError(
             InputType.Choice,
             choices,
@@ -511,47 +542,64 @@ def construct_iff(goal: Goal, user_input: [str]) -> CodeForLean:
 
     elif len(user_input) == 1:
         if user_input[0] == 1:
-            code = "rw iff.comm, "
-        else:
-            code = ""
-        possible_codes.append(f'{code}split')
+            code = CodeForLean.from_string("rw iff.comm")
+        code = code.and_then("split")
     else:
         raise WrongUserInput(error=_("undocumented error"))
-    return CodeForLean.or_else_from_list(possible_codes)
+    code.add_success_message(_("begin proof of first implication"))
+    return code
 
 
-def destruct_iff_on_hyp(goal: Goal, l: [MathObject]) -> CodeForLean:
+def destruct_iff(goal: Goal) -> CodeForLean:
+    """
+    Check if target is a conjunction of two implications (but not if these
+    implications are logical inverses). If so, return code that builds the
+    equivalent iff statement. If not, return None.
+    """
+
+    code = None
+    target = goal.target
+    if target.is_and():
+        left = target.math_type.children[0]
+        right = target.math_type.children[1]
+        if left.is_implication(is_math_type=True) \
+                and right.is_implication(is_math_type=True):
+            code = CodeForLean.from_string("apply iff_def.mp")
+    return code
+
+
+def destruct_iff_on_hyp(goal: Goal,
+                        selected_objects: [MathObject]) -> CodeForLean:
     """
     Split a property 'P iff Q' into two implications.
-    len(l) should be 1.
+    len(selected_objects) should be 1.
     """
     possible_codes = []
-    if l[0].math_type.node != "PROP_IFF":
-        error = _("selected property is not an iff property 'P ⇔ Q'")
-        raise WrongUserInput(error)
-    h = l[0].info["name"]
+    hypo_name = selected_objects[0].info["name"]
     h1 = get_new_hyp(goal)
     h2 = get_new_hyp(goal)
-    possible_codes.append(f'cases (iff_def.mp {h}) with {h1} {h2}')
-    return CodeForLean.or_else_from_list(possible_codes)
+    possible_codes.append(f'cases (iff_def.mp {hypo_name}) with {h1} {h2}')
+    code = CodeForLean.or_else_from_list(possible_codes)
+    code.add_success_message(_("property {} split into {} and {}").
+                             format(hypo_name, h1, h2))
+    return code
 
 
-def construct_iff_on_hyp(goal: Goal, l: [MathObject]) -> CodeForLean:
+def construct_iff_on_hyp(goal: Goal,
+                         selected_objects: [MathObject]) -> CodeForLean:
     """
     Construct property 'P iff Q' from both implications.
-    len(l) should be 2.
+    len(selected_objects) should be 2.
     """
-    possible_codes = []
 
-    if not (l[0].math_type.is_prop() and l[1].math_type.is_prop()):
-        error = _("selected items should both be implications")
-        raise WrongUserInput(error)
-
-    new_h = get_new_hyp(goal)
-    h1 = l[0].info["name"]
-    h2 = l[1].info["name"]
-    possible_codes.append(f'have {new_h} := iff.intro {h1} {h2}')
-    return CodeForLean.or_else_from_list(possible_codes)
+    new_hypo_name = get_new_hyp(goal)
+    h1 = selected_objects[0].info["name"]
+    h2 = selected_objects[1].info["name"]
+    code_string = f'have {new_hypo_name} := iff.intro {h1} {h2}'
+    code = CodeForLean.from_string(code_string)
+    code.add_success_message(_("Property {} added to the context").
+                             format(new_hypo_name))
+    return code
 
 
 @action(tooltips.get('tooltip_iff'),
@@ -561,23 +609,43 @@ def action_iff(goal: Goal,
                user_input: [str] = [],
                target_selected: bool = True) -> CodeForLean:
     """
-    Translate into string of lean code corresponding to the action
-    
-    If the target is of the form P ⇔ Q:
-introduce two subgoals, P⇒Q, and Q⇒P.
-
-    :param l:   list of MathObject arguments preselected by the user
-    :return:    string of lean code
+    Three cases:
+    (1) No selected property:
+        If the target is of the form P ⇔ Q:
+            introduce two subgoals, P⇒Q, and Q⇒P.
+        If target is of the form (P → Q) ∧ (Q → P):
+            replace by P ↔ Q
+    (2) 1 selected property, which is an iff P ⇔ Q:
+        split it into two implications P⇒Q, and Q⇒P.
+    (3) 2 properties:
+        try to obtain P ⇔ Q.
     """
 
     test_selection(selected_objects, target_selected)
 
     if len(selected_objects) == 0:
-        return construct_iff(goal, user_input)
+        if goal.target.math_type.node != "PROP_IFF":
+            code = destruct_iff(goal)
+            if code:
+                return code
+            else:
+                raise WrongUserInput(
+                    error=_("target is not an iff property 'P ⇔ Q'"))
+        else:
+            return construct_iff(goal, user_input)
     if len(selected_objects) == 1:
-        return destruct_iff_on_hyp(goal, selected_objects)
+        if selected_objects[0].math_type.node != "PROP_IFF":
+            error = _("selected property is not an iff property 'P ⇔ Q'")
+            raise WrongUserInput(error)
+        else:
+            return destruct_iff_on_hyp(goal, selected_objects)
     if len(selected_objects) == 2:
-        return construct_iff_on_hyp(goal, selected_objects)
+        if not (selected_objects[0].math_type.is_prop()
+                and selected_objects[1].math_type.is_prop()):
+            error = _("selected items should both be implications")
+            raise WrongUserInput(error)
+        else:
+            return construct_iff_on_hyp(goal, selected_objects)
     raise WrongUserInput(error=_("does not apply to more than two properties"))
 
 
@@ -609,8 +677,8 @@ def construct_forall(goal) -> CodeForLean:
                              )
         possible_codes = CodeForLean.from_string(f'intro {x}')
         name = f"{x}"
-    possible_codes.add_success_message(_("Object") + " " + name + " "
-                                       + _("added to the context"))
+    possible_codes.add_success_message(_("Object {} added to the context").
+                                       format(name))
 
     if body.is_implication(is_math_type=True):
         # If math_object has the form
@@ -697,10 +765,10 @@ def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
                 code = code.and_then("rotate")
 
     # Code II: Apply universal_property #
-    hypo_name = get_new_hyp(goal)
+    new_hypo_name = get_new_hyp(goal)
     code = code.and_then(have_new_property(universal_property,
-                                           hypo_name=hypo_name,
-                                           variable_names=variable_names)
+                                           variable_names,
+                                           new_hypo_name)
                          )
 
     # Code III: try to solve inequalities #     e.g.:
@@ -726,6 +794,8 @@ def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
         # Finally come back to first inequality
         more_code = more_code.and_then("rotate")
 
+    code.add_success_message(_("Property {} added to the context").
+                             format(new_hypo_name))
     return code.and_then(more_code)
 
 
@@ -794,96 +864,117 @@ def action_forall(goal: Goal,
 ##########
 
 def construct_exists(goal, user_input: [str]) -> CodeForLean:
-    possible_codes = []
+    """
+    Assuming the target is an existential property '∃ x, P(x)', prove it by
+    providing a witness x and proving P(x).
+    """
 
-    if not goal.target.is_exists():
-        error = _("target is not existential property '∃x, P(x)'")
-        raise WrongUserInput(error)
-    if len(user_input) != 1:
+    if not user_input:
         raise MissingParametersError(InputType.Text,
                                      title=_("Exist"),
                                      output=_(
                                          "Enter element you want to use:"))
     x = user_input[0]
-    possible_codes.append(f'use {x}, dsimp')
-    possible_codes.append(f'use {x}')
-    return CodeForLean.or_else_from_list(possible_codes)
+    code = CodeForLean.from_string(f'use {x}, dsimp')
+    code = code.or_else(f'use {x}')
+    code.add_success_message(_("now prove {} suits our needs").format(x))
+    return code
 
 
-def apply_exists(goal: Goal, l: [MathObject]) -> CodeForLean:
-    h_selected = l[0].math_type
-    h_name = l[0].info["name"]
-    x = give_global_name(goal=goal, math_type=h_selected.children[0],
-                         hints=[h_selected.children[1].to_display()])
-    hx = get_new_hyp(goal)
+def apply_exists(goal: Goal, selected_object: [MathObject]) -> CodeForLean:
+    """
+    Apply a property '∃ x, P(x)' to get an x with property P(x).
+    """
 
-    if h_selected.children[2].node == "PROP_∃":
-        code_ = f'rcases {h_name} with ⟨ {x}, ⟨ {hx}, {h_name} ⟩ ⟩'
+    selected_hypo = selected_object[0].math_type
+    hypo_name = selected_object[0].info["name"]
+    x = give_global_name(goal=goal, math_type=selected_hypo.children[0],
+                         hints=[selected_hypo.children[1].to_display()])
+    new_hypo_name = get_new_hyp(goal)
+
+    if selected_hypo.children[2].node == "PROP_∃":
+        code = f'rcases {hypo_name} with ' \
+                f'⟨ {x}, ⟨ {new_hypo_name}, {hypo_name} ⟩ ⟩'
     else:
-        code_ = f'cases {h_name} with {x} {hx}'
-    code_ = CodeForLean.from_string(code_)
-    if h_selected.node == 'QUANT_∃!':
+        code = f'cases {hypo_name} with {x} {new_hypo_name}'
+    code = CodeForLean.from_string(code)
+    if selected_hypo.node == 'QUANT_∃!':
         # We have to add the "simp" tactic to avoid appearance of lambda expr
-        code_ = code_.and_then(f'simp at {hx}')
+        code = code.and_then(f'simp at {new_hypo_name}')
+    code.add_success_message(_("new object {} with property {}").
+                             format(x, new_hypo_name))
+    return code
 
-    return code_
 
-
-def construct_exists_on_hyp(goal: Goal, l: [MathObject]) -> CodeForLean:
+def construct_exists_on_hyp(goal: Goal,
+                            selected_objects: [MathObject]) -> CodeForLean:
     """
     Try to construct an existence property from some object and some property
     Here len(l) = 2
     """
 
-    possible_codes = []
-    x = l[0].info["name"]
-    hx = l[1].info["name"]
-    if (not l[0].math_type.is_prop()) and l[1].math_type.is_prop():
-        new_h = get_new_hyp(goal)
-        possible_codes.append(f'have {new_h} := exists.intro {x} {hx}')
-    elif (not l[1].math_type.is_prop()) and l[0].math_type.is_prop():
+    x = selected_objects[0].info["name"]
+    hx = selected_objects[1].info["name"]
+    if (not selected_objects[0].math_type.is_prop()) \
+            and selected_objects[1].math_type.is_prop():
+        new_hypo = get_new_hyp(goal)
+        code_string = f'have {new_hypo} := exists.intro {x} {hx}'
+    elif (not selected_objects[1].math_type.is_prop()) \
+            and selected_objects[0].math_type.is_prop():
         x, hx = hx, x
-        new_h = get_new_hyp(goal)
-        possible_codes.append(f'have {new_h} := exists.intro {x} {hx}')
+        new_hypo = get_new_hyp(goal)
+        code_string = f'have {new_hypo} := exists.intro {x} {hx}'
     else:
         error = _("I cannot build an existential property with this")
         raise WrongUserInput(error)
-    return CodeForLean.or_else_from_list(possible_codes)
+    code = CodeForLean.from_string(code_string)
+    code.add_success_message(_("get new existential property {}").
+                             format(new_hypo))
+    return code
 
 
 @action(tooltips.get('tooltip_exists'),
         logic_button_texts['action_exists'])
 def action_exists(goal: Goal,
                   selected_objects: [MathObject],
-                  user_input: [str] = [],
+                  user_input: [str] = None,
                   target_selected: bool = True) -> CodeForLean:
     """
-    Translate into string of lean code corresponding to the action
-    
-    If target is of form ∃ x, P(x):
-ask the user to enter a specific x and transform the target into P(x).
-    If a hypothesis of form ∃ x, P(x) has been previously selected:
-introduce a new x and add P(x) to the properties
-
-    :param l:   list of MathObject arguments preselected by the user
-    :return:    string of lean code
+    Three cases:
+    (1) If target is of form ∃ x, P(x):
+        - if no selection, ask the user to enter a witness x and transform
+        the target into P(x).
+        - if some selection, use it as a witness for existence.
+    (2) If a hypothesis of form ∃ x, P(x) has been previously selected:
+        introduce a new x and add P(x) to the properties.
+    (3) If some 'x' and a property P(x) have been selected:
+        get property '∃ x, P(x)'
     """
 
     test_selection(selected_objects, target_selected)
 
     if len(selected_objects) == 0:
-        return construct_exists(goal, user_input)
-    elif len(selected_objects) == 1 and user_input == []:
-        h_selected = selected_objects[0]
-        if h_selected.math_type.is_prop():
-            # try to apply property "exists x, P(x)" to get a new MathObject x
-            if not h_selected.is_exists():
+        if not goal.target.is_exists():
+            error = _("target is not existential property '∃x, P(x)'")
+            raise WrongUserInput(error)
+        else:
+            return construct_exists(goal, user_input)
+    elif len(selected_objects) == 1 and not user_input:
+        selected_hypo = selected_objects[0]
+        if selected_hypo.math_type.is_prop():
+            # Try to apply property "exists x, P(x)" to get a new MathObject x
+            if not selected_hypo.is_exists():
                 error = _("selection is not existential property '∃x, P(x)'")
                 raise WrongUserInput(error)
             else:
                 return apply_exists(goal, selected_objects)
         else:  # h_selected is not a property : get an existence property
-            return construct_exists(goal, [selected_objects[0].info["name"]])
+            if not goal.target.is_exists():
+                error = _("target is not existential property '∃x, P(x)'")
+                raise WrongUserInput(error)
+            else:
+                object_name = selected_objects[0].info["name"]
+                return construct_exists(goal, [object_name])
     elif len(selected_objects) == 2:
         return construct_exists_on_hyp(goal, selected_objects)
     raise WrongUserInput(error=_("does not apply to more than two properties"))

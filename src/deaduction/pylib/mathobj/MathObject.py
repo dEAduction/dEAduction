@@ -161,6 +161,9 @@ class MathObject:
         else:
             return child.descendant(remaining)
 
+    def has_name(self, name: str):
+        return self.display_name == name
+
     # Main creation method #
     @classmethod
     def from_info_and_children(cls, info: {}, children: []):
@@ -300,7 +303,7 @@ class MathObject:
             # Prevents for (badly) renaming vars several times
             # log.debug("no bound vars")
             return
-        log.debug(f"Naming bound vars in {self}")
+        # log.debug(f"Naming bound vars in {self}")
         self.has_unnamed_bound_vars = False
         if not forbidden_vars:
             forbidden_vars = []
@@ -318,7 +321,7 @@ class MathObject:
             # Bound vars have no math_type indication
             # but we need one for further proper naming
             bound_var.math_type = bound_var_type
-            log.debug(f"giving name {name}")
+            # log.debug(f"giving name {name}")
 
             children = [local_context]
             # Prevent further bound vars in the expression to take the same

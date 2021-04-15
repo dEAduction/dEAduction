@@ -62,7 +62,7 @@ def action(caption: str, symbol: str):
         # Init the __actions__ object in the corresponding module if not
         # existing, then add the Action object.
         # Identifier is taken from the function name.
-        if not "__actions__" in mod.__dict__: mod.__actions__ = dict()
+        if "__actions__" not in mod.__dict__: mod.__actions__ = dict()
         mod.__actions__[func.__name__] = act
 
         return func

@@ -1,0 +1,86 @@
+@startuml
+actor "exercise_main_window" as emw
+participant actions
+participant "servint\n(ServerInterface)" as servint
+participant "lean_file\n (LeanFile)" as lean_file
+participant "Lean server" as lean_server
+participant journal
+
+note across #lime : //User click on a logic button//
+
+note over emw : __server_call_actions()
+group Compute lean_code
+	activate emw
+	emw -> actions  : DeadProofState, selection
+	actions --> emw : MissingParametersError?
+	emw -> actions : user_input
+	actions --[#red]> emw :  **WrongUser Input?**
+	note left #red : break 
+end
+emw -> servint --++ :  lean_code (CodeForLean)
+activate servint
+group Modify virtual Lean file
+	note over servint : code_insert()
+	servint -> lean_file : code_string
+	note over lean_file : insert()
+	note over lean_file : state_add()
+end
+servint -> servint : lean_code
+note over servint : __update()
+servint o-> emw 
+note right #aqua : lean_file_changed
+note left : __update_lean_editor()
+note over servint #aqua : update_started
+
+servint -> lean_server : request
+lean_server -> servint : response
+group Process Lean server's messages
+	lean_server o--> servint : 
+	note right #aqua : on_message_callback
+	note left : __on_lean_message()
+	servint --[#red]> servint
+	note left #red : Error ?
+	note over servint
+	__filter_error() :
+	- // target solved ?//
+	- // Lean error  ?//
+	//-> emit proof_receive_done//
+	end note
+
+	note over servint 
+	- //receive hypo_analysis, target_analysis//
+	- //receive effective_code//
+	end note
+	servint o--> journal
+	note left #aqua : effective_code_received ?
+	servint o--> servint
+	note over servint : history_replace(code)
+	servint -> lean_file
+	note over lean_file
+	- undo()
+	- insert(code)
+	end note
+end
+servint o-> servint
+note left #aqua : __proof_receive_done
+
+note over servint #red
+if error :
+FailedRequestError
+end note
+emw --[#red]> lean_file
+note over lean_file #red : history_undo()
+create ProofState
+servint -> ProofState : hypo_analysis, target_analysis
+note over ProofState : instantiate new proof_state
+
+group Update UI
+	servint o-> emw --++
+	note right #aqua : proof_state_change
+	note left : update_proof_state()
+	note over servint #aqua : update_ended
+	note over emw : update_goal
+	emw -> journal
+	note over journal : close_step()
+end
+@enduml

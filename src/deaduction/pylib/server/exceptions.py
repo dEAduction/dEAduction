@@ -25,13 +25,21 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pprint import pformat
+from pprint import                        pformat
+from deaduction.pylib.config.i18n import _
+from deaduction.pylib.memory import EventNature, JournalEvent
 
 
 class FailedRequestError(Exception):
     def __init__(self, errors, lean_code):
         super().__init__(f"Failed request to server with errors : \n"
                          f"{pformat(errors, indent=4)}")
+        if lean_code and lean_code.error_message:
+            self.message = lean_code.error_message
+        else:
+            self.message = _('Error')
 
-        self.errors = errors
-        self.lean_code = lean_code
+        details = ""
+        for error in errors:
+            details += "\n" + error.text
+        self.info = {'details': details}

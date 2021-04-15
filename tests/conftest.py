@@ -31,7 +31,63 @@ from pathlib import Path
 import os
 import logging
 
+import ctypes
+import logging
+import qtrio
+import threading
+import trio
+import pytest
+
+from PySide2.QtCore import ( QObject,
+                             Signal,
+                             Slot  )
+
+from deaduction.dui.stages.exercise              import ExerciseMainWindow
+from deaduction.dui.stages.start_coex            import StartCoExStartup
+
+from deaduction.dui.stages.missing_dependencies  import (InstallingMissingDependencies,
+                                                         WantInstallMissingDependencies )
+
+from deaduction.pylib.coursedata                 import Exercise
+from deaduction.pylib                            import logger
+from deaduction.pylib.server                     import ServerInterface
+
+import deaduction.pylib.config.dirs              as     cdirs
+import deaduction.pylib.config.environ           as     cenv
+import deaduction.pylib.config.site_installation as     inst
+import deaduction.pylib.config.vars              as     cvars
+
+from deaduction.pylib.coursedata import Exercise
+from deaduction.dui.__main__ import Container
 log = logging.getLogger(__name__)
+
+
+
+async def essai():
+    pass
+
+
+@pytest.fixture
+async def container(nursery, exercise):  # NB: nursery is pytest-trio fixture
+    cenv.init()
+    cdirs.init()
+    inst.init()
+    container = Container(nursery, exercise)
+    return container
+
+
+@pytest.fixture()
+async def exercise_main_window(qbot, container: Container):
+    container.start_exercise(container.exercise)
+    container.nursery.start_soon(container.solve_exercise)
+    return container.exercise_window
+
+
+@pytest.fixture
+def exercises(course):
+    exercises = (statement for statement in course.statements if isinstance(
+        statement, Exercise))
+    return exercises
 
 
 @pytest.fixture

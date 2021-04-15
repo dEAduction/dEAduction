@@ -37,7 +37,7 @@ def select_exercise(course: Course):
         user-selected exercise from course.
     """
 
-    exercises_list = course.exercises_list()
+    exercises_list = course.exercises
     exercise_from_id = {ex.pretty_name: ex for ex in exercises_list}
 
     # See the example in the link below for the syntax:

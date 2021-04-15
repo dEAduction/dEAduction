@@ -44,8 +44,10 @@ from deaduction.dui.elements            import ( ActionButton,
                                                  MathObjectWidgetItem )
 from deaduction.dui.primitives          import   ButtonsDialog
 from deaduction.pylib.config.i18n       import   _
-from deaduction.pylib.memory            import   Journal
+from deaduction.pylib.memory            import ( Journal,
+                                                 EventNature)
 from deaduction.pylib.actions           import ( InputType,
+                                                 CodeForLean,
                                                  MissingParametersError,
                                                  WrongUserInput)
 import deaduction.pylib.actions.generic as       generic
@@ -55,7 +57,7 @@ from deaduction.pylib.coursedata        import ( Definition,
 from deaduction.pylib.mathobj           import ( MathObject,
                                                  Goal,
                                                  ProofState,
-                                                 Proof)
+                                                 Proof )
 from deaduction.pylib.server.exceptions import   FailedRequestError
 from deaduction.pylib.server            import   ServerInterface
 
@@ -122,6 +124,11 @@ class ExerciseMainWindow(QMainWindow):
     :attribute servint ServerInterface: The instance of ServerInterface
         for the session, instantiated in deaduction.dui.__main__.py.
     :attribute toolbar QToolBar: The toolbar.
+    :attribute journal Journal: used to store the list of all events
+    occurring in the interface, both practical and logical.
+    :attribute cqfd bool: initialised to False, becomes True the first time
+    target is solved.
+
     """
 
     window_closed                   = Signal()
@@ -129,6 +136,7 @@ class ExerciseMainWindow(QMainWindow):
     __action_triggered              = Signal(ActionButton)
     __apply_math_object_triggered   = Signal(MathObjectWidget)
     __statement_triggered           = Signal(StatementsTreeWidgetItem)
+    ui_updated                      = Signal()
 
     def __init__(self, exercise: Exercise, servint: ServerInterface):
         """
@@ -150,7 +158,7 @@ class ExerciseMainWindow(QMainWindow):
         self.exercise          = exercise
         self.current_goal      = None
         self.current_selection = []
-        self.selectable_target = not cvars.get(
+        self.target_selected_by_default = cvars.get(
                             'functionality.target_selected_by_default', False)
         self._target_selected   = False
         self.ecw               = ExerciseCentralWidget(exercise)
@@ -171,6 +179,7 @@ class ExerciseMainWindow(QMainWindow):
         # Status Bar
         self.statusBar = ExerciseStatusBar(self)
         self.setStatusBar(self.statusBar)
+        self.journal.display_message = self.statusBar.display_message
 
         # ──────────────── Signals and slots ─────────────── #
 
@@ -189,13 +198,14 @@ class ExerciseMainWindow(QMainWindow):
         self.servint.proof_no_goals.connect(self.fireworks)
         self.servint.effective_code_received.connect(
                                                 self.servint.history_replace)
+        self.servint.effective_code_received.connect(self.store_effective_code)
         self.toolbar.change_exercise_action.triggered.connect(
                                                     self.change_exercise)
         self.servint.nursery.start_soon(self.server_task)  # Start server task
 
     @property
     def target_selected(self):
-        if self.selectable_target:
+        if not self.target_selected_by_default:
             return self._target_selected
         else:
             # Target is selected by default if current_selection is empty
@@ -220,17 +230,6 @@ class ExerciseMainWindow(QMainWindow):
         super().closeEvent(event)
         self.lean_editor.close()
         self.window_closed.emit()
-
-    def display_success_message(self, lean_code):
-        """
-        Extract success message from lean_code and send it to the status bar.
-        """
-
-        success_message = lean_code.extract_success_message()
-        if success_message:
-            event = 'success', success_message, ""
-            self.journal.add_event(event, emw=self)
-            # self.display_status_bar_message(event)
 
     @property
     def current_selection_as_mathobjects(self):
@@ -263,11 +262,14 @@ class ExerciseMainWindow(QMainWindow):
         :param new_goal: The new goal to update / set the interface to.
         """
 
+        self.journal.store_proof_state(self.servint.proof_state)
+
         # Init context (objects and properties). Get them as two list of
         # (MathObject, str), the str being the tag of the prop. or obj.
 
         # get old goal and set tags
-        # TODO: make a separate method get_old_goal(lean_file)
+        # TODO: move this to journal.close_steps
+
         lean_file = self.servint.lean_file
 
         if lean_file.idx > 0:
@@ -280,7 +282,7 @@ class ExerciseMainWindow(QMainWindow):
             if 'ProofState' in entry_info.keys():
                 previous_proof_state = entry_info['ProofState']
                 old_goal = previous_proof_state.goals[0]
-                Goal.compare(new_goal, old_goal)  # set tags
+                Goal.compare(new_goal, old_goal)  # Set tags
             else:
                 log.warning(f"No proof state found for previous step")
 
@@ -289,29 +291,30 @@ class ExerciseMainWindow(QMainWindow):
         current_goal_number, \
         current_goals_counter, \
         goals_counter_evolution \
-                = self.count_goals()
+            = self.count_goals()
         goal_count = f'  {current_goal_number} / {total_goals_counter}'
 
         # Display if a goal has been solved and user is not undoing
         if goals_counter_evolution < 0 and current_goals_counter != 0:
             # Get last action
-            last_button = self.journal.get_last_event(nature='button')
+            last_button = self.journal.get_last_event(
+                                                    nature=EventNature.button)
             last_journal_entry = self.journal.get_last_event()
             log.debug(f'Last action: {last_button}')
-            if (last_button != ('history_undo', '')
-                    and last_journal_entry[0] not in ('error', 'lean_error')):
-            # if EXERCISE.last_action != 'undo':
+            if last_button != ('history_undo', '') \
+                    and not last_journal_entry.is_error():
                 log.info(f"Current goal solved!")
                 if goals_counter_evolution == -1:
                     message = _('Current goal solved')
                 else:
                     nb = str(-goals_counter_evolution)
                     message = nb + ' ' + _('goals solved!')
-                QMessageBox.information(self,
-                                        '',
-                                        message,
-                                        QMessageBox.Ok
-                                        )
+                if not self.cqfd:
+                    QMessageBox.information(self,
+                                            '',
+                                            message,
+                                            QMessageBox.Ok
+                                            )
 
         # Reset current context selection
         # Here we do not use empty_current_selection since Widgets may have
@@ -328,13 +331,14 @@ class ExerciseMainWindow(QMainWindow):
         self.ecw.objects_wgt.itemClicked.connect(self.process_context_click)
         self.ecw.props_wgt.itemClicked.connect(self.process_context_click)
 
-        # if self.selectable_target:
         self.ecw.target_wgt.mouseReleaseEvent = self.process_target_click
         if hasattr(self.ecw, "action_apply_button"):
             self.ecw.objects_wgt.apply_math_object_triggered.connect(
                 self.__apply_math_object_triggered)
             self.ecw.props_wgt.apply_math_object_triggered.connect(
                 self.__apply_math_object_triggered)
+
+        self.ui_updated.emit()
 
     ##################################
     # Async tasks and server methods #
@@ -374,29 +378,24 @@ class ExerciseMainWindow(QMainWindow):
                          self.__statement_triggered,
                          self.__apply_math_object_triggered]) as emissions:
             async for emission in emissions.channel:
-                # erase status bar
-                self.statusBar.display_status_bar_message(instruction='erase')
+                self.statusBar.erase()
                 if emission.is_from(self.lean_editor.editor_send_lean):
-                    event = ('button', 'lean_editor', '')
-                    self.journal.add_event(event=event, emw=self)
+                    self.journal.store_button('lean_editor')
                     await self.process_async_signal(self.__server_send_editor_lean)
 
                 elif emission.is_from(self.toolbar.redo_action.triggered):
                     # No need to call self.update_goal, this emits the
                     # signal proof_state_change of which
                     # self.update_goal is a slot
-                    event = ('button', 'history_redo', '')
-                    self.journal.add_event(event=event, emw=self)
+                    self.journal.store_button('history_redo')
                     await self.process_async_signal(self.servint.history_redo)
 
                 elif emission.is_from(self.toolbar.undo_action.triggered):
-                    event = ('button', 'history_undo', '')
-                    self.journal.add_event(event=event, emw=self)
+                    self.journal.store_button('history_undo')
                     await self.process_async_signal(self.servint.history_undo)
 
                 elif emission.is_from(self.toolbar.rewind.triggered):
-                    event = ('button', 'history_rewind', '')
-                    self.journal.add_event(event=event, emw=self)
+                    self.journal.store_button('history_rewind')
                     await self.process_async_signal(self.servint.history_rewind)
 
                 elif emission.is_from(self.window_closed):
@@ -405,8 +404,7 @@ class ExerciseMainWindow(QMainWindow):
                 elif emission.is_from(self.__action_triggered):
                     # emission.args[0] is the ActionButton triggered by user
                     action_symbol = emission.args[0].action.symbol
-                    event = ('button', action_symbol, '')
-                    self.journal.add_event(event=event, emw=self)
+                    self.journal.store_button(action_symbol)
                     await self.process_async_signal(partial(
                             self.__server_call_action, emission.args[0]))
 
@@ -414,15 +412,13 @@ class ExerciseMainWindow(QMainWindow):
                     # emission.args[0] is the StatementTreeWidgetItem
                     # triggered by user
                     if hasattr(emission.args[0], 'statement'):
-                        statement_name = emission.args[0].statement.pretty_name
-                        event = ('button', 'statement', statement_name)
-                        self.journal.add_event(event=event, emw=self)
+                        statement_name = emission.args[0].statement.lean_name
+                        self.journal.store_statement(statement_name)
                     await self.process_async_signal(partial(
                             self.__server_call_statement, emission.args[0]))
 
                 elif emission.is_from(self.__apply_math_object_triggered):
-                    event = ('button', 'doubleclic_apply', '')
-                    self.journal.add_event(event=event, emw=self)
+                    self.journal.store_button('doubleclick_apply')
                     await self.__server_call_apply(emission.args[0])
 
     # ──────────────── Template function ─────────────── #
@@ -443,23 +439,8 @@ class ExerciseMainWindow(QMainWindow):
 
         try:
             await process_function()
-        except FailedRequestError as e:
-            # Display an error message
-            # First, search if lean_code contains some error_message
-            error_message = ""
-            # lean_code may be empty if code comes from Lean editor
-            if e.lean_code:
-                error_message = e.lean_code.error_message
-            if error_message:
-                event = 'lean_error', error_message, ""
-                # self.display_status_bar_message(event)
-            else:
-                error_message = _('Error')
-                details = ""
-                for error in e.errors:
-                    details += "\n" + error.text
-                    event = ('lean_error', error_message, details)
-            self.journal.add_event(event, self)
+        except FailedRequestError as error:
+            self.journal.store_failed_request_error(error)
 
             # Abort and go back to last goal
             await self.servint.history_undo()
@@ -477,7 +458,10 @@ class ExerciseMainWindow(QMainWindow):
     # ─────────────── Specific functions ─────────────── #
     # To be called as process_function in the above
 
-    async def __server_call_action(self, action_btn: ActionButton):
+    async def __server_call_action(self,
+                                   action_btn: ActionButton,
+                                   auto_selection=None,
+                                   auto_user_input=None):
         """
         Call the action corresponding to the action_btn
 
@@ -499,23 +483,31 @@ class ExerciseMainWindow(QMainWindow):
         """
 
         action     = action_btn.action
-        user_input = []
         log.debug(f'Calling action {action.symbol}')
         # Send action and catch exception when user needs to:
         #   - choose A or B when having to prove (A OR B) ;
         #   - enter an element when clicking on 'exists' button.
+        #   - and so on.
+        if auto_selection:
+            selection = auto_selection
+        else:
+            selection = self.current_selection_as_mathobjects
+        if auto_user_input:
+            user_input = auto_user_input
+        else:
+            user_input = []
 
         while True:
             try:
                 if not user_input:
                     lean_code = action.run(
                         self.current_goal,
-                        self.current_selection_as_mathobjects,
+                        selection,
                         target_selected=self.target_selected)
                 else:
                     lean_code = action.run(
                         self.current_goal,
-                        self.current_selection_as_mathobjects,
+                        selection,
                         user_input,
                         target_selected=self.target_selected)
             except MissingParametersError as e:
@@ -531,39 +523,46 @@ class ExerciseMainWindow(QMainWindow):
                     user_input.append(choice)
                 else:
                     break
-            except WrongUserInput as e:
-                self.display_WrongUserInput(e)
+            except WrongUserInput as error:
+                self.journal.store_wrong_user_input(error)
                 self.empty_current_selection()
                 break
             else:
+                self.journal.store_selection(selection)
+                self.journal.store_user_input(user_input)
+                self.journal.store_lean_code(lean_code)
+                # Update lean_file and call Lean server
                 await self.servint.code_insert(action.symbol, lean_code)
-                self.display_success_message(lean_code)
                 break
 
     async def __server_call_apply(self, item: MathObjectWidgetItem):
         """
         This function is called when user double-click on an item in the
         context area The item is added to the end of the current_selection, and
-        the action corresponding to the "apply" button is called
+        the action corresponding to the "apply" button is called.
         """
 
         item.mark_user_selected(True)
-
         # Put double-clicked item on last position in current_selection
         # NB: DO NOT add item to selection since the  process_context_click
         # will already do this
         if item in self.current_selection:
             self.current_selection.remove(item)
-
         # Emulate click on 'apply' button
         self.ecw.action_apply_button.animateClick(msec=500)
 
-    async def __server_call_statement(self, item: StatementsTreeWidgetItem):
+    async def __server_call_statement(self,
+                                      item: StatementsTreeWidgetItem,
+                                      auto_selection = None):
         """
         This function is called when the user clicks on a Statement he wants to
         apply. The statement can be either a Definition or a Theorem. the code
         is then inserted to the server.
         """
+        if auto_selection:
+            selection = auto_selection
+        else:
+            selection = self.current_selection_as_mathobjects
 
         # Do nothing if user clicks on a node
         if isinstance(item, StatementsTreeWidgetItem):
@@ -574,39 +573,37 @@ class ExerciseMainWindow(QMainWindow):
                 if isinstance(statement, Definition):
                     lean_code = generic.action_definition(
                         self.current_goal,
-                        self.current_selection_as_mathobjects,
+                        selection,
                         statement,
                         self.target_selected)
                 elif isinstance(statement, Theorem):
                     lean_code = generic.action_theorem(
                         self.current_goal,
-                        self.current_selection_as_mathobjects,
+                        selection,
                         statement,
                         self.target_selected)
 
+            except WrongUserInput as error:
+                self.journal.store_wrong_user_input(error)
+                self.empty_current_selection()
+
+            else:
                 log.debug(f'Calling statement {item.statement.pretty_name}')
+                # todo: add lean_code and selection event
+                self.journal.store_selection(selection)
+                self.journal.store_lean_code(lean_code)
+                # Update lean_file and call Lean server
                 await self.servint.code_insert(statement.pretty_name,
                                                lean_code)
-                self.display_success_message(lean_code)
-            except WrongUserInput as e:
-                self.empty_current_selection()
-                self.display_WrongUserInput(e)
 
     async def __server_send_editor_lean(self):
         """
         Send the L∃∀N code written in the L∃∀N editor widget to the
         server interface.
         """
-
+        self.journal.store_lean_editor()
         await self.servint.code_set(_('Code from editor'),
                                     self.lean_editor.code_get())
-
-    def display_WrongUserInput(self, e):
-        error_message = _("Error")
-        details = e.error
-        event = ('error', error_message, details)
-        self.journal.add_event(event, self)
-
 
     #########
     # Slots #
@@ -621,9 +618,8 @@ class ExerciseMainWindow(QMainWindow):
         for item in self.current_selection:
             item.mark_user_selected(False)
         self.current_selection = []
-        if not self.selectable_target:
+        if self.target_selected_by_default:
             self.ecw.target_wgt.mark_user_selected(self.target_selected)
-
 
     @Slot()
     def freeze(self, yes=True):
@@ -645,7 +641,7 @@ class ExerciseMainWindow(QMainWindow):
         """
         As of now,
         - display a dialog when the target is successfully solved,
-        - replace the target by a message "Proof complete"
+        - replace the target by a message "No more goal"
         Note that the dialog is displayed only the first time the signal is
         triggered, thanks to the flag self.cqdf.
         """
@@ -698,14 +694,14 @@ class ExerciseMainWindow(QMainWindow):
             item.mark_user_selected(False)
             self.current_selection.remove(item)
 
-        if not self.current_selection and not self.selectable_target:
+        if not self.current_selection and self.target_selected_by_default:
             # Target is automatically selected if current_selection is empty
             self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
     @Slot()
     def process_target_click(self, event):
         """
-        Select or unselect target. Current context selection is emptied.
+        Select or un-select target. Current context selection is emptied.
         """
 
         self.target_selected = not self.target_selected
@@ -735,6 +731,10 @@ class ExerciseMainWindow(QMainWindow):
         # Weird that this methods only does this.
         # TODO: maybe delete it to only have self.update_goal?
         self.update_goal(proofstate.goals[0])
+
+    @Slot(CodeForLean)
+    def store_effective_code(self, effective_lean_code):
+        self.journal.store_effective_code(effective_lean_code)
 
     ###################
     # Logical methods #

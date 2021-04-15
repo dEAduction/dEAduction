@@ -81,6 +81,90 @@ def action_compute(goal,
     return possible_code
 
 
+def solve_equality(prop: MathObject) -> CodeForLean:
+    """
+    Assuming prop is an equality or an iff, return a list of tactics trying to 
+    solve prop as a target.
+    """
+
+    code = CodeForLean.empty_code()
+
+    if prop.math_type.children[0] == prop.math_type.children[1]:
+        code = code.or_else('refl')
+    # try to use associativity and commutativity
+    code = code.or_else('ac_reflexivity')
+    # try to permute members of the goal equality
+    code = code.or_else('apply eq.symm, assumption')
+    # congruence closure, solves e.g. (a=b, b=c : f a = f c)
+    code = code.or_else('cc')
+    return code
+
+
+def solve_target(prop):
+    """
+    Try to solve 'prop' as a target, without splitting conjunctions.    
+    """
+    
+    code = CodeForLean.empty_code()
+    # if len(l) == 0:
+    code = code.or_else('assumption')
+    code = code.or_else('contradiction')
+
+    # (1) Equality, inequality, iff
+    if prop.is_equality() or prop.is_iff():
+        code = code.or_else(solve_equality(prop))
+    elif prop.is_inequality():
+        # try to permute members of the goal equality
+        code = code.or_else('apply ne.symm, assumption')
+
+    # (2) Try some symmetry rules
+    if prop.is_iff():
+        code = code.or_else('apply iff.symm, assumption')
+    elif prop.is_and():  # todo: change to "id_and_like"
+        code = code.or_else('apply and.symm, assumption')
+    # The following will be tried only after context splitting:
+    #     code = code.or_else('split, assumption, assumption')
+    elif prop.is_or():
+        code = code.or_else('apply or.symm, assumption')
+        # The following is too much?
+        code = code.or_else('left, assumption')
+        code = code.or_else('right, assumption')
+
+    return code
+
+
+def search_specific_prop(goal):
+    """Search context for some specific properties to conclude the proof."""
+
+    for prop in goal.context:
+        math_type = prop.math_type
+        # Conclude from "x in empty set"
+        if (math_type.node == "PROP_BELONGS"
+                and math_type.children[1].node == "SET_EMPTY"):
+            hypo = prop.info['name']
+            if goal.target.node != "PROP_FALSE":
+                more_code = CodeForLean.from_string("exfalso")
+            else:
+                more_code = CodeForLean.empty_code()
+            more_code = more_code.and_then(f"exact set.not_mem_empty _ {hypo}")
+
+            return more_code
+    return None
+
+
+def split_conjunctions_in_context(goal):
+    code = CodeForLean.empty_code()
+    counter = 0
+    for prop in goal.context:
+        if prop.is_and():
+            name = prop.info['name']
+            h0 = f"H_aux_{counter}"  # these hypotheses will disappear
+            h1 = f"H_aux_{counter + 1}"  # so names are unimportant
+            code = code.and_then(f"cases {name} with {h0} {h1}")
+            counter += 2
+    return code
+
+
 @action(tooltips.get('tooltip_assumption'),
         magic_button_texts['assumption'])
 def action_assumption(goal: Goal,
@@ -94,78 +178,43 @@ def action_assumption(goal: Goal,
     :return: string of lean code
     """
 
-    # NB: this button should either solve the goal or fail.
-    # For this we wrap the non "solve-or-fail" tactics
-    # into the combinator "solve1"
+    # (1) First trials
+    target = goal.target
+    improved_assumption = solve_target(target)
+    codes = [improved_assumption]
 
-    possible_codes = []
-    # if len(l) == 0:
-    possible_codes.append('assumption')
-    possible_codes.append('contradiction')
-
-    # (1) Equality, inequality, iff
-    if goal.target.is_equality() or goal.target.is_iff():
-        if goal.target.math_type.children[0] == \
-                goal.target.math_type.children[1]:
-            possible_codes.append('refl')
-        # try to use associativity and commutativity
-        possible_codes.append('ac_reflexivity')
-        # try to permute members of the goal equality
-        possible_codes.append('apply eq.symm, assumption')
-        # congruence closure, solves e.g. (a=b, b=c : f a = f c)
-        possible_codes.append('cc')
-    # possible_codes.append('apply iff.symm, assumption')
-    elif goal.target.is_inequality():
-        # try to permute members of the goal equality
-        possible_codes.append('apply ne.symm, assumption')
-
-    # (2) Try some symmetry rules
-    if goal.target.is_iff():
-        possible_codes.append('apply iff.symm, assumption')
-    elif goal.target.is_and():  # todo: change to "id_and_like"
-        possible_codes.append('apply and.symm, assumption')
-        possible_codes.append('split, assumption, assumption')
-    elif goal.target.is_or():
-        possible_codes.append('apply or.symm, assumption')
-        # The following is too much?
-        # possible_codes.append('left, assumption')
-        # possible_codes.append('right, assumption')
-
-    # (3) Conjunctions: try to split hypotheses
-    code = ""
-    counter = 0
-    for prop in goal.context:
-        if prop.is_and():
-            name = prop.info['name']
-            H0 = f"H_aux_{counter}"  # these hypotheses will disappear
-            H1 = f"H_aux_{counter + 1}"  # so names are unimportant
-            code += f"cases {name} with {H0} {H1}, "
-            counter += 2
-    if code:
-        code += 'assumption'
-        possible_codes.append(code)
-
-    # (4) Search for specific prop
-    for prop in goal.context:
-        math_type = prop.math_type
-        # Conclude from "x in empty set"
-        if (math_type.node == "PROP_BELONGS"
-                and math_type.children[1].node == "SET_EMPTY"):
-            H2 = prop.info['name']
-            if goal.target.node != "PROP_FALSE":
-                code = "exfalso, "
-            else:
-                code = ""
-            code += f"exact set.not_mem_empty _ {H2}"
-            possible_codes.append(code)
-
+    # (2) Use user selection
     if len(selected_objects) == 1:
-        possible_codes.append(solve1_wrap(
-            f'apply {selected_objects[0].info["name"]}'))
+        apply_user = CodeForLean.from_string(
+                                f'apply {selected_objects[0].info["name"]}')
+        codes.append(apply_user.solve1())
+
+    # (3) Conjunctions: try to split hypotheses once
+    # TODO: recursive splitting in hypo
+    # And then retry many things (in improved_assumption_2).
+    split_conj = split_conjunctions_in_context(goal)
+
+    improved_assumption_2 = improved_assumption
+    # Split target
+    if target.is_and():
+        # TODO: recursive splitting in target, and_then for each subgoal
+        #  apply improved_assumption
+        split_code = CodeForLean.from_string('split, assumption, assumption')
+        improved_assumption_2 = improved_assumption_2.or_else(split_code)
+
+    # Try norm_num
     if (goal.target.is_equality()
             or goal.target.is_inequality()
             or goal.target.is_false()):
         # Do not remove above test, since norm_num may solve some
         # not-so-trivial goal, e.g. implications
-        possible_codes.append(solve1_wrap('norm_num at *'))
-    return CodeForLean.or_else_from_list(possible_codes)
+        norm_num_code = CodeForLean.from_string('norm_num at *').solve1()
+        improved_assumption_2 = improved_assumption_2.or_else(norm_num_code)
+
+    # Try specific properties
+    improved_assumption_2 = improved_assumption_2.or_else(
+        search_specific_prop(goal))
+    more_code = split_conj.and_then(improved_assumption_2)
+    codes.append(more_code)
+
+    return CodeForLean.or_else_from_list(codes)

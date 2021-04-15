@@ -392,7 +392,7 @@ class ExerciseChooser(AbstractCoExChooser):
         """
 
         browser_layout = QVBoxLayout()
-        exercises_tree = StatementsTreeWidget(course.exercises_list(),
+        exercises_tree = StatementsTreeWidget(course.exercises,
                                               course.outline)
         exercises_tree.resizeColumnToContents(0)
         browser_layout.addWidget(exercises_tree)

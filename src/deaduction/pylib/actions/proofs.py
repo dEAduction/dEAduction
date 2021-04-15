@@ -1,9 +1,9 @@
 """
-# proofs.py : #ShortDescription #
-    
-    (#optionalLongDescription)
+###################################################
+# proofs.py : provide lean code for proof buttons #
+###################################################
 
-Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
+Author(s)     : Marguerite Bin <bin.marguerite@gmail.com>
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Created       : 07 2020 (creation)
 Repo          : https://github.com/dEAduction/dEAduction
@@ -41,10 +41,7 @@ from deaduction.pylib.actions import (InputType,
                                       CodeForLean,
                                       apply_exists,
                                       apply_and,
-                                      apply_or,
-                                      apply_implicate,
-                                      apply_implicate_to_hyp,
-                                      action_forall)
+                                      apply_or)
 from deaduction.pylib.mathobj import (MathObject,
                                       Goal,
                                       get_new_hyp,
@@ -54,6 +51,8 @@ from deaduction.pylib.mathobj import (MathObject,
 
 log = logging.getLogger(__name__)
 
+# Parameters
+allow_proof_by_sorry = cvars.get('functionality.allow_proof_by_sorry')
 
 # Turn proof_button_texts into a dictionary
 proof_list = ['action_apply', 'proof_methods', 'new_object']
@@ -65,11 +64,10 @@ for key, value in zip(proof_list, lbt):
 
 @action(tooltips.get('tooltip_proof_methods'),
         proof_button_texts['proof_methods'])
-def action_use_proof_methods(goal: Goal, l: [MathObject],
+def action_use_proof_methods(goal: Goal,
+                             selected_objects: [MathObject],
                              user_input: [str] = [],
-                             target_selected: bool = True) -> str:
-    # parameters
-    allow_proof_by_sorry = cvars.get('functionality.allow_proof_by_sorry')
+                             target_selected: bool = True) -> CodeForLean:
 
     # 1st call, choose proof method
     if not user_input:
@@ -87,28 +85,29 @@ def action_use_proof_methods(goal: Goal, l: [MathObject],
     else:
         method = user_input[0] + 1
         if method == 1:
-            # if len(user_input) > 1:
-            #     del user_input[0]   # we do not need this user_input anymore
-            #     # but we need the next choice
-            return method_cbr(goal, l, user_input)
+            return method_cbr(goal, selected_objects, user_input)
         if method == 2:
-            return method_contrapose(goal, l)
+            return method_contrapose(goal, selected_objects)
         if method == 3:
-            return method_absurdum(goal, l)
+            return method_absurdum(goal, selected_objects)
         if method == 4:
-            return method_sorry(goal, l)
+            return method_sorry(goal, selected_objects)
     raise WrongUserInput
 
 
-def method_cbr(goal: Goal, l: [MathObject], user_input: [str] = []) -> str:
+def method_cbr(goal: Goal,
+               selected_objects: [MathObject],
+               user_input: [str] = []) -> CodeForLean:
     """
-    Translate into string of lean code corresponding to the action
-    
-    :param l: list of MathObject arguments preselected by the user
-    :return: string of lean code
+    Engage in a proof by cases.
+    - If selection is empty, then ask the user to choose a property
+    - If a disjunction is selected, use this disjunction for the proof by cases
+    _ If anything else is selected try to discuss on this property
+    (useful only in propositional calculus?)
+    In any case, ask the user which case she wants to prove first.
     """
-    possible_codes = []
-    if len(l) == 0:
+
+    if len(selected_objects) == 0:
         # NB: user_input[1] contains the needed property
         if len(user_input) == 1:
             raise MissingParametersError(
@@ -120,70 +119,70 @@ def method_cbr(goal: Goal, l: [MathObject], user_input: [str] = []) -> str:
             h0 = user_input[1]
             h1 = get_new_hyp(goal)
             h2 = get_new_hyp(goal)
-            possible_codes.append(
-                f"cases (classical.em ({h0})) with {h1} {h2}")
+            code = CodeForLean.from_string(f"cases (classical.em ({h0})) "
+                                           f"with {h1} {h2}")
     else:
-        h0 = l[0].info['name']
-        h1 = get_new_hyp(goal)
-        h2 = get_new_hyp(goal)
-        possible_codes.append(
-            f"cases (classical.em ({h0})) with {h1} {h2}")
+        prop = selected_objects[0]
+        if prop.is_or():
+            code = apply_or(goal, selected_objects, user_input)
+        else:
+            h0 = prop.info['name']
+            h1 = get_new_hyp(goal)
+            h2 = get_new_hyp(goal)
+            code = CodeForLean.from_string(f"cases (classical.em ({h0})) "
+                                           f"with {h1} {h2}")
 
-    return CodeForLean.or_else_from_list(possible_codes)
+    return code
 
 
-def method_contrapose(goal: Goal, l: [MathObject]) -> str:
+def method_contrapose(goal: Goal,
+                      selected_objects: [MathObject]) -> CodeForLean:
     """
-    Translate into string of lean code corresponding to the action
-    
-    :param l: list of MathObject arguments preselected by the user
-    :return: string of lean code
+    If target is an implication, turn it to its contrapose.
     """
-    possible_codes = []
-    if len(l) == 0:
+    if len(selected_objects) == 0:
         if goal.target.math_type.node == "PROP_IMPLIES":
-            possible_codes.append("contrapose")
-    return CodeForLean.or_else_from_list(possible_codes)
+            code = CodeForLean.from_string("contrapose")
+            return code
+        else:
+            error = _('Proof by contrapositive only applies when target is '
+                      'an implication')
+    else:
+        error = _('Proof by contrapositive only applies to target')
+    raise WrongUserInput(error)
 
 
-def method_absurdum(goal: Goal, l: [MathObject]) -> str:
+def method_absurdum(goal: Goal, selected_objects: [MathObject]) -> CodeForLean:
     """
-    Translate into string of lean code corresponding to the action
-    
-    :param l: list of MathObject arguments preselected by the user
-    :return: string of lean code
+    If no selection, engage in a proof by contradiction.
     """
-    possible_codes = []
-    if len(l) == 0:
-        new_h = get_new_hyp(goal)
-        possible_codes.append(f'by_contradiction {new_h}')
-    return CodeForLean.or_else_from_list(possible_codes)
+    if len(selected_objects) == 0:
+        new_hypo = get_new_hyp(goal)
+        code = CodeForLean.from_string(f'by_contradiction {new_hypo}')
+        return code
+    else:
+        error = _('Proof by contradiction only applies to target')
+    raise WrongUserInput(error)
 
 
-def method_sorry(goal: Goal, l: [MathObject]) -> str:
+def method_sorry(goal: Goal, selected_objects: [MathObject]) -> CodeForLean:
     """
-    Close the current sub-goal by sending the 'sorry' code
+    Close the current sub-goal by sending the 'sorry' code.
     """
-    possible_codes = ['sorry']
-    return CodeForLean.or_else_from_list(possible_codes)
+    return CodeForLean.from_string('sorry')
 
 
-def introduce_fun(goal: Goal, l: [MathObject]) -> str:
+def introduce_fun(goal: Goal, selected_objects: [MathObject]) -> CodeForLean:
     """
-    Translate into string of lean code corresponding to the action
-
-If a hypothesis of form ∀ a ∈ A, ∃ b ∈ B, P(a,b) has been previously selected:
-use the axiom of choice to introduce a new function f : A → B
-and add ∀ a ∈ A, P(a, f(a)) to the properties
-
-    :param l: list of MathObject arguments preselected by the user
-    :return: string of lean code
+    If a hypothesis of form ∀ a ∈ A, ∃ b ∈ B, P(a,b) has been previously
+    selected: use the axiom of choice to introduce a new function f : A → B
+    and add ∀ a ∈ A, P(a, f(a)) to the properties.
     """
-    possible_codes = []
-    if len(l) == 1:
-        h = l[0].info["name"]
-        # finding expected math_type for the new function
-        universal_property = l[0]
+    error = _('select a property "∀ x, ∃ y, P(x,y)" to get a function')
+    if len(selected_objects) == 1:
+        h = selected_objects[0].info["name"]
+        # Finding expected math_type for the new function
+        universal_property = selected_objects[0]
         if universal_property.is_for_all():
             source_type = universal_property.math_type.children[0]
             exist_property = universal_property.math_type.children[2]
@@ -196,11 +195,14 @@ and add ∀ a ∈ A, P(a, f(a)) to the properties
 
                 hf = get_new_hyp(goal)
                 f = give_global_name(math_type, goal)
-                possible_codes.append(f'cases classical.axiom_of_choice {h} '
-                                      f'with {f} {hf}, dsimp at {hf}, '
-                                      f'dsimp at {f}')
-                return CodeForLean.or_else_from_list(possible_codes)
-    raise WrongUserInput
+                code = CodeForLean.from_string(f'cases '
+                                               f'classical.axiom_of_choice '
+                                               f'{h} with {f} {hf}, '
+                                               f'dsimp at {hf}, '
+                                               f'dsimp at {f}')
+                code.add_error_message(error)
+                return code
+    raise WrongUserInput(error)
 
 
 @action(tooltips.get('tooltip_new_object'),
@@ -208,7 +210,7 @@ and add ∀ a ∈ A, P(a, f(a)) to the properties
 def action_new_object(goal: Goal,
                       selected_objects: [MathObject],
                       user_input: [str] = None,
-                      target_selected: bool = True) -> str:
+                      target_selected: bool = True) -> CodeForLean:
     """
     Introduce new object / sub-goal / function
     """
@@ -246,7 +248,8 @@ def action_new_object(goal: Goal,
                                                      f"{new_object}")
             possible_codes = possible_codes.and_then("refl")
             if goal.target.is_for_all():
-                # name = goal.target.children[1].display_name()
+                # User might want to prove an existential property "∀x..."
+                # and mistake "new object" for introduction of the relevant x.
                 possible_codes.add_error_message(_("You might try the ∀ "
                                                    "button..."))
 
@@ -258,8 +261,8 @@ def action_new_object(goal: Goal,
                                          output=_("Introduce new subgoal:"))
         else:
             new_hypo_name = get_new_hyp(goal)
-            possible_codes = CodeForLean.from_string(f"have {new_hypo_name} : ("
-                                                     f"{user_input[1]})")
+            possible_codes = CodeForLean.from_string(f"have {new_hypo_name}:"
+                                                     f" ({user_input[1]})")
 
     # Choice = new function
     elif user_input[0] == 2:

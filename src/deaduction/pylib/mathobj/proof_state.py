@@ -34,14 +34,12 @@ from dataclasses import dataclass
 import logging
 from typing import List, Tuple, Any
 
-import deaduction.pylib.logger  as              logger
+import deaduction.pylib.logger as logger
 from deaduction.pylib.config.i18n import _
 
-from deaduction.pylib.mathobj.MathObject import MathObject
-from deaduction.pylib.mathobj.lean_analysis import \
-                                                lean_expr_with_type_grammar, \
-                                                LeanEntryVisitor
-
+from .MathObject import MathObject
+from .lean_analysis import ( lean_expr_with_type_grammar,
+                             LeanEntryVisitor )
 import deaduction.pylib.config.vars as cvars
 
 log = logging.getLogger(__name__)
@@ -110,6 +108,18 @@ class Goal:
         target = LeanEntryVisitor().visit(tree)
         return cls(context, target)
 
+    def math_object_from_name(self, name: str) -> MathObject:
+        """
+        Return the MathObject whose name is name.
+        """
+        if name == "target":
+            return self.target
+        else:
+            math_objects = [math_object for math_object in self.context if
+                            math_object.has_name(name)]
+            if math_objects:
+                return math_objects[0]
+
     def compare(self, old_goal):
         """
         Compare the new goal to the old one, and tag the target and the
@@ -149,8 +159,8 @@ class Goal:
         permuted_new_tags    = [None] * len(old_context)
 
         log.info("Comparing and tagging old goal and new goal")
-        log.debug(old_context)
-        log.debug(new_context)
+        # log.debug(old_context)
+        # log.debug(new_context)
         old_names = [math_object_old.info["name"]
                      for math_object_old in old_context]
         new_index = 0
@@ -178,8 +188,9 @@ class Goal:
                     permuted_new_tags[old_index] = "≠"
 
             if old_index is not None:
-                old_context[old_index] = None  # will not be considered
-                # anymore
+                # Will not be considered anymore:
+                old_names[old_index]   = None
+                old_context[old_index] = None
             new_index += 1
 
         # (5) Remove 'None' entries
@@ -395,6 +406,25 @@ class ProofState:
                                              target_analysis=other_string_goal)
             goals.append(other_goal)
         return cls(goals, (hypo_analysis, targets_analysis))
+
+
+@dataclass
+class ProofStep:
+    """
+    Class to store data associated to a step in proof.
+    """
+    proof_state: ProofState
+    property_counter: int
+    goal_change_messages: [str]
+    button: str = None  # Symbol of button clicked, if any
+    statement: str = None  # Lean name of statement
+    success_message: str = None
+    error_message: str = None
+
+    @property
+    def goal(self):
+        return self.proof_state.goals[0]
+
 
 
 @dataclass

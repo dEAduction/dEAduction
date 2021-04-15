@@ -531,7 +531,7 @@ class StatementsTreeWidget(QTreeWidget):
             item = self.topLevelItem(i)
             traverse_node(item)
 
-    def StatementWidgetItem(self, pretty_name: str) \
+    def from_name(self, lean_name: str) \
             -> StatementsTreeWidgetItem:
         """
         Return the StatementsTreeWidgetItem whose statement's pretty name is
@@ -542,7 +542,7 @@ class StatementsTreeWidget(QTreeWidget):
 
         def traverse_node(item: StatementsTreeWidgetItem):
             if isinstance(item, StatementsTreeWidgetItem):
-                if item.statement.pretty_name == pretty_name:
+                if item.statement.has_name(lean_name):
                     items.append(item)
             for i in range(0, item.childCount()):
                 traverse_node(item.child(i))
@@ -550,10 +550,6 @@ class StatementsTreeWidget(QTreeWidget):
         for i in range(self.topLevelItemCount()):
             item = self.topLevelItem(i)
             traverse_node(item)
-
-        if len(items) > 1:
-            log.warning(f"Found more than one statement with pretty name "
-                        f"{pretty_name}")
         if items:
             return items[0]
         else:

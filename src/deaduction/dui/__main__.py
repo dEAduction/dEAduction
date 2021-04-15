@@ -62,7 +62,8 @@ import deaduction.pylib.config.vars              as     cvars
 # Configuring log #
 ###################
 # Change your own settings in .deaduction-dev/config.toml
-log_domains = cvars.get("logs.domains", [""])
+log_domains = cvars.get("logs.domains", "")
+log_domains = ["deaduction", "__main__", 'ServerInterface']
 log_level = cvars.get("logs.display_level", "info")
 logger.configure(domains=log_domains,
                  display_level=log_level)
@@ -123,6 +124,7 @@ class Install_Dependencies_Stage(QObject):
     def plz_start_deaduction(self):
         self.start_deaduction.emit()
 
+
 async def site_installation_check(nursery):
     missing_packages = inst.check()
     
@@ -141,6 +143,7 @@ async def site_installation_check(nursery):
                         break
                 inst_stg.stop()
 
+
 ###############################################
 # Container class, managing signals and slots #
 ###############################################
@@ -152,19 +155,26 @@ class Container(QObject):
     when a new exercise is chosen, or when user wants to change
     exercise) to the corresponding launching methods. Note that in PyQt
     signals have to be hosted by a QObject.
+
+    :attribute exercises: list of exercises to be launched one after another
+    without asking user. Useful for testing.
     """
 
     close_chooser_window  = Signal()
     close_exercise_window = Signal()
+    server_started        = Signal()
+    test_complete         = Signal()  # For testing only
 
-    def __init__(self, nursery):
+    def __init__(self, nursery, exercise=None):
         super().__init__()
 
         self.exercise_window: ExerciseMainWindow = None
         self.chooser_window:  StartCoExStartup   = None
         self.servint:         ServerInterface    = None
-        self.exercise:        Exercise           = None
+        self.exercise:        Exercise           = exercise
         self.nursery:         trio.Nursery       = nursery
+        self.exercises:       [Exercise]         = []
+        self.auto_test:       bool               = False
 
     @Slot()
     def choose_exercise(self):
@@ -232,6 +242,42 @@ class Container(QObject):
         # Connect signals
         self.exercise_window.window_closed.connect(self.close_exercise_window)
         self.exercise_window.change_exercise.connect(self.choose_exercise)
+
+        # Show window
+        self.exercise_window.show()
+
+    async def test_exercise(self):
+        """
+        Launch exercise window, start lean server, and connect signals
+        for testing self.exercise. Very much like solve_exercise, except for
+        - setting auto_steps,
+        - connecting proof_no_goal signal to test_complete.
+        """
+
+        # TODO: box for cancelling auto_test (reprendre la main)
+        log.debug(f"Preparing {self.exercise.pretty_name} for test")
+
+        # Stop Lean server if running
+        if self.servint:
+            await self.servint.file_invalidated.wait()
+            self.servint.stop()
+            log.info("Lean server stopped!")
+
+        # Start Lean server
+        self.servint = ServerInterface(self.nursery)
+        await self.servint.start()
+        log.info("Lean server started")
+        self.server_started.emit()
+
+        # Start exercise window and add auto_steps
+        self.exercise_window = ExerciseMainWindow(self.exercise, self.servint)
+        # self.exercise_window.auto_steps = self.exercise.refined_auto_steps
+
+        # Connect signals
+        self.exercise_window.window_closed.connect(self.close_exercise_window)
+        self.servint.proof_no_goals.connect(self.test_complete)
+        # The following avoid QMessageBox in firework and when goal solved
+        self.exercise_window.cqfd = True
 
         # Show window
         self.exercise_window.show()
@@ -305,7 +351,6 @@ async def main():
 
 if __name__ == '__main__':
     log.info("Starting...")
-
     #################################################################
     # Init environment variables, directories, and install packages #
     #################################################################

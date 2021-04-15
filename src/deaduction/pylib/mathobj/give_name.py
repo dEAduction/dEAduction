@@ -89,9 +89,9 @@ def give_local_name(math_type: MathObject,
 
     additional_forbidden_vars = body.extract_local_vars()
     names = [var.info['name'] for var in forbidden_vars]
-    log.debug(f'Giving name to bound var, a priori forbidden names ={names}')
+    # log.debug(f'Giving name to bound var, a priori forbidden names ={names}')
     more_names = [var.info['name'] for var in additional_forbidden_vars]
-    log.debug(f'Additional forbidden names ={more_names}')
+    # log.debug(f'Additional forbidden names ={more_names}')
     forbidden_vars.extend(additional_forbidden_vars)
     return give_name(math_type, forbidden_vars, hints)
 
@@ -145,8 +145,8 @@ def give_name(math_type,
 
     # List of forbidden names (with repeat)
     forbidden_names = [var.info['name'] for var in forbidden_vars]
-    log.debug(f"giving name to var, hints = {hints} type={math_type}")
-    log.debug(f"forbidden names: {forbidden_names}")
+    # log.debug(f"giving name to var, hints = {hints} type={math_type}")
+    # log.debug(f"forbidden names: {forbidden_names}")
 
     ######################
     # special math types #
@@ -211,7 +211,7 @@ def give_name(math_type,
     ##########################################################
     for potential_name in hints:
         # Try each hints successively
-        log.debug(f"trying {potential_name}...")
+        # log.debug(f"trying {potential_name}...")
         if potential_name not in forbidden_names:
             new_name = potential_name
             return new_name
@@ -224,7 +224,7 @@ def give_name(math_type,
             index_ = forbidden_names.index(name)
             variable = forbidden_vars[index_]
             potential_name = name + "'"
-            log.debug(f"Trying {potential_name}...")
+            # log.debug(f"Trying {potential_name}...")
             if math_type == variable.math_type:
                 # Use "x'" only if "x" has the same type
                 if potential_name not in forbidden_names:
@@ -234,7 +234,7 @@ def give_name(math_type,
                     index_ = forbidden_names.index(name)
                     variable = forbidden_vars[index_]
                     potential_name = name + "'"
-                    log.debug(f"Trying {potential_name}...")
+                    # log.debug(f"Trying {potential_name}...")
                     if math_type == variable.math_type \
                             and not potential_name.endswith("'''") \
                             and potential_name not in forbidden_names:
