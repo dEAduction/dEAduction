@@ -320,7 +320,7 @@ async def main():
                     if emission.is_from(container.test_complete) \
                             and container.exercises:  # Test next exercise
                         log.debug("Test complete -> next exercise")
-                        log.debug(f"{len(Container.exercises)} exercises "
+                        log.debug(f"{len(container.exercises)} exercises "
                                   f"remaining to test")
                         # Close window
                         container.exercise_window.window_closed.disconnect()
