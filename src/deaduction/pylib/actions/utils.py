@@ -152,6 +152,8 @@ class CodeForLean:
         :param other:   str or CodeForLean
         :return:        CodeForLean
         """
+        if other is None:
+            return self
         if isinstance(other, str):
             other = CodeForLean.from_string(other)
         if other.success_message == "":

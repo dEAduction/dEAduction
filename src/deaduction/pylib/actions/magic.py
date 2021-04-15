@@ -42,6 +42,8 @@ from deaduction.pylib.mathobj import (MathObject,
                                       Goal)
 
 
+log = logging.getLogger("magic")
+
 # Turn magic_button_texts into a dictionary
 lbt = tooltips.get('magic_button_texts').split(', ')
 magic_list = ['compute', 'assumption']
@@ -149,7 +151,7 @@ def search_specific_prop(goal):
             more_code = more_code.and_then(f"exact set.not_mem_empty _ {hypo}")
 
             return more_code
-    return None
+    return CodeForLean.empty_code()
 
 
 def split_conjunctions_in_context(goal):
@@ -194,7 +196,7 @@ def action_assumption(goal: Goal,
     # And then retry many things (in improved_assumption_2).
     split_conj = split_conjunctions_in_context(goal)
 
-    improved_assumption_2 = improved_assumption
+    improved_assumption_2 = solve_target(target)
     # Split target
     if target.is_and():
         # TODO: recursive splitting in target, and_then for each subgoal

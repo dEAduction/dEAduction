@@ -262,7 +262,7 @@ begin
   sorry
 end
 
-lemma exercise.test_assumption_and
+lemma exercise.test_assumption_split_and
 (P Q R: Prop) (H: P ∧ Q) (H': R):
 P ∧ R
 :=
@@ -271,8 +271,7 @@ AutoTest
     CQFD
 -/
 begin
-   `[ cases H with H_aux_0 H_aux_1, `[ assumption, trace "EFFECTIVE CODE n°32.0"] <|> `[ contradiction, trace "EFFECTIVE CODE n°32.1"] <|> `[ apply and.symm, assumption, trace "EFFECTIVE CODE n°32.2"], no_meta_vars, trace "EFFECTIVE CODE n°30.1"]
-
+  sorry
 end
 
 lemma exercise.test_assumption_norm_num

@@ -122,6 +122,7 @@ def coex_from_argv() -> (Optional[Path], Course, Exercise, bool):
             exercise_like = exercise_like[:-2]
         elif  argv[-1] in ("--from", '++'):
             all_from_this_one = True
+        log.debug('Searching course and exercise...')
         course, exercise = select_exercise(course_path, exercise_like)
     elif course_path:
         course = select_course(course_path)
@@ -346,7 +347,7 @@ async def main():
 
 
 if __name__ == '__main__':
-    log.info("Starting...")
+    log.info("Starting autotest...")
     #################################################################
     # Init environment variables, directories, and install packages #
     #################################################################
