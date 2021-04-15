@@ -320,6 +320,8 @@ async def main():
                     if emission.is_from(container.test_complete) \
                             and container.exercises:  # Test next exercise
                         log.debug("Test complete -> next exercise")
+                        log.debug(f"{len(Container.exercises)} exercises "
+                                  f"remaining to test")
                         # Close window
                         container.exercise_window.window_closed.disconnect()
                         container.exercise_window.close()
@@ -348,9 +350,8 @@ async def main():
 
 if __name__ == '__main__':
     log.info("Starting autotest...")
-    #################################################################
-    # Init environment variables, directories, and install packages #
-    #################################################################
+    log.info("Run with '-d ../../../tests/autotest_exercises/' to test all "
+             "exercises")
 
     cenv.init()
     cdirs.init()
