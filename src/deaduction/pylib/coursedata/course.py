@@ -141,14 +141,14 @@ class Course:
             log.info(f"Parsing file {str(course_path.resolve())}")
             file_content = course_path.read_text()
             course = Course.from_file_content(file_content)
-            course_path = course_path.resolve()
-            relative_course_path = Path(os.path.relpath(course_path))
-            course.relative_course_path = relative_course_path
         elif course_filetype == '.pkl':
             with course_path.open(mode='rb') as input:
                 course = pickle.load(input)
 
         course.filetype = course_filetype
+        course_path = course_path.resolve()
+        relative_course_path = Path(os.path.relpath(course_path))
+        course.relative_course_path = relative_course_path
         return course
 
     @classmethod
