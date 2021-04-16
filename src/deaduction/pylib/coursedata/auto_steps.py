@@ -128,6 +128,10 @@ class AutoStep:
     button:     str
     statement:  str
     user_input: [str]
+    error_type: int  # 0 = WrongUserInput, 1 = FailedRequestError
+    error_msg: str
+    success_msg: str
+
 
     @classmethod
     def from_string(cls, string):
@@ -136,10 +140,15 @@ class AutoStep:
         The string should contain a button symbol (e.g. '∀')
         xor a statement name (e.g. 'definition.inclusion')
         """
+
         string.replace("\\n", " ")
         button = None
         statement = None
         button_or_statement_rank = None
+        error_type = None
+        error_msg = None
+        success_msg = None
+
         # Split at spaces and remove unnecessary spaces
         items = [item.strip() for item in string.split(' ') if item]
         for item in items:
@@ -156,13 +165,27 @@ class AutoStep:
                 button = alternative_symbols[item]
                 button_or_statement_rank = items.index(item)
                 break
+            elif item in ('WrongUserInput', 'WUI'):
+                error_type = 0
+            elif item in ('FailedRequestError', 'FRE'):
+                error_type = 1
+            elif item.startswith('error='):
+                error_msg = item[len('error='):]
+            elif item.startswith('e='):
+                error_msg = item[len('e='):]
+            elif item.startswith('success='):
+                success_msg = item[len('success='):]
+            elif item.startswith('s='):
+                success_msg = item[len('s='):]
+
         if not button and not statement:
             return None
 
         selection = items[:button_or_statement_rank]
         user_input = items[button_or_statement_rank+1:]
 
-        return cls(selection, button, statement, user_input)
+        return cls(selection, button, statement, user_input,
+                   error_type, error_msg, success_msg)
 
 
 if __name__ == '__main__':

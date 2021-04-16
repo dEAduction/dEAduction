@@ -225,7 +225,7 @@ async def auto_test(container: Container):
                 with trio.move_on_after(5):
                     # Not clear to me why deaduction may not have
                     # finished constructing goal, but this happens.
-                    # So we give it 1 more second to complete the
+                    # So we give it a few more seconds to complete the
                     # construction.
                     while not selection:
                         if name.startswith('@O'):
