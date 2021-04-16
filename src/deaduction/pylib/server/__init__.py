@@ -338,7 +338,7 @@ class ServerInterface(QObject):
     ############################################
     # Exercise initialisation
     ############################################
-    def __file_from_exercise(self, exercise):
+    def __file_from_exercise(self, statement):
         """
         Create a virtual file from exercise. Concretely, this consists in
         - separating the part of the file before the proof into a preamble,
@@ -350,26 +350,26 @@ class ServerInterface(QObject):
 
         Then a virtual file is instantiated.
 
-        :param exercise: Exercise
+        :param statement: Statement (most of the time an Exercise)
         """
-        file_content = exercise.course.file_content
+        file_content = statement.course.file_content
         lines        = file_content.splitlines()
-        begin_line   = exercise.lean_begin_line_number
+        begin_line   = statement.lean_begin_line_number
 
         # Construct short end of file by closing all open namespaces
         end_of_file = "end\n"
-        namespaces = exercise.ugly_hierarchy()
+        namespaces = statement.ugly_hierarchy()
         while namespaces:
             namespace = namespaces.pop()
             end_of_file += "end " + namespace + "\n"
         end_of_file += "end course"
 
         # Replace statement by negation if required
-        if (hasattr(exercise, 'negate_statement')
-                and exercise.negate_statement):
-            lean_core_statement = exercise.lean_core_statement
+        if (hasattr(statement, 'negate_statement')
+                and statement.negate_statement):
+            lean_core_statement = statement.lean_core_statement
             negation = " not( " + lean_core_statement + " )"
-            lemma_line = exercise.lean_line - 1
+            lemma_line = statement.lean_line - 1
             rough_core_content = "\n".join(lines[lemma_line:begin_line]) + "\n"
             new_core_content = rough_core_content.replace(
                                     lean_core_statement, negation)
@@ -388,9 +388,10 @@ class ServerInterface(QObject):
         #  cannot mistake Lean's responses to a previous exercise for the
         #  awaited responses.
         # Add 100 lines per exercise number in the preamble
-        virtual_file_preamble += "\n" * 100 * exercise.exercise_number
+        if isinstance(statement, Exercise):
+            virtual_file_preamble += "\n" * 100 * statement.exercise_number
         # self.log.debug(f"File preamble: {virtual_file_preamble}")
-        virtual_file = LeanFile(file_name=exercise.lean_name,
+        virtual_file = LeanFile(file_name=statement.lean_name,
                                 preamble=virtual_file_preamble,
                                 afterword=virtual_file_afterword)
 
