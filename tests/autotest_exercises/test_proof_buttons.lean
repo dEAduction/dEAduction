@@ -183,8 +183,11 @@ end generalites
 ---------------------------
 namespace tests_proof_buttons
 
--- Case base reasoning --
+-------------------
+-- Proof methods --
+-------------------
 
+-- Case base reasoning --
 lemma exercise.test_case_base_reasoning
 (P: Prop):
 P ∨ ¬ P :=
@@ -249,6 +252,10 @@ begin
   sorry
 end
 
+-----------------
+-- Now objects --
+-----------------
+
 lemma exercise.test_introduce_new_object
 (x: X):
 ∃ y: X, y=x
@@ -290,7 +297,54 @@ AutoTest
 begin
   sorry
 end
+
+-----------
+-- Apply --
+-----------
+lemma exercise.test_apply_equality
+(x y : X) (f: X → Y) (H: x = y):
+f(x) = f(y) :=
+/- dEAduction
+AutoTest
+    H f apply,
+    CQFD
+-/
+begin
+  sorry
+end
+
+
+lemma exercise.test_apply_equality2
+(A B: set X) (x y : X) (f: X → Y) (H: x = y) (H': x ∈ A) (H'': A =B):
+y ∈ B :=
+/- dEAduction
+AutoTest
+    H' H apply,
+    @O9 H' apply,
+    CQFD
+-/
+begin
+  sorry
+end
+
+
+lemma exercise.test_apply_error
+(A B: set X) (x y : X) (f: X → Y) (H: x = y) (H': x ∈ A) (H'': A =B):
+y ∈ B :=
+/- dEAduction
+AutoTest
+    H apply,
+-/
+begin
+  sorry
+end
+
 end tests_proof_buttons
+
+
+
+
+
 
 
 end theorie_des_ensembles

@@ -428,8 +428,8 @@ def action_apply(goal: Goal,
         if len(selected_objects) == 1:
             # TODO: ask user for element on which to apply the function
             #   (plus new name, cf apply_forall)
-            error = _("select an object on which you want to apply the "
-                     "function")
+            error = _("select an element or an equality on which to "
+                      "apply the function")
             raise WrongUserInput(error=error)
         else:
             return apply_function(goal, selected_objects)
@@ -458,7 +458,7 @@ def action_apply(goal: Goal,
                                                selected_objects,
                                                user_input))
 
-    if codes:
+    if not codes.is_empty():
         return codes
     else:
         error = _("I cannot apply this")  # fixme: be more precise

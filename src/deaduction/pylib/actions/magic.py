@@ -137,7 +137,7 @@ def solve_target(prop):
 
 def search_specific_prop(goal):
     """Search context for some specific properties to conclude the proof."""
-
+    more_code = CodeForLean.empty_code()
     for prop in goal.context:
         math_type = prop.math_type
         # Conclude from "x in empty set"
@@ -150,8 +150,7 @@ def search_specific_prop(goal):
                 more_code = CodeForLean.empty_code()
             more_code = more_code.and_then(f"exact set.not_mem_empty _ {hypo}")
 
-            return more_code
-    return CodeForLean.empty_code()
+    return more_code
 
 
 def split_conjunctions_in_context(goal):
@@ -214,8 +213,9 @@ def action_assumption(goal: Goal,
         improved_assumption_2 = improved_assumption_2.or_else(norm_num_code)
 
     # Try specific properties
-    improved_assumption_2 = improved_assumption_2.or_else(
-        search_specific_prop(goal))
+    more_assumptions = search_specific_prop(goal)
+    if not more_assumptions.is_empty():
+        improved_assumption_2 = improved_assumption_2.or_else(more_assumptions)
     more_code = split_conj.and_then(improved_assumption_2)
     codes.append(more_code)
 
