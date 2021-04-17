@@ -20,15 +20,11 @@ This file is part of d∃∀duction.
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
     You should have received a copy of the GNU General Public License
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from typing import (Callable,
-                    Dict,
-                    Optional)
-
+from typing import (Callable, Dict, Optional)
 import requests
 from   pathlib import Path
 import tempfile
@@ -115,16 +111,92 @@ class ArchivePackage(Package):
         self.archive_type     = archive_type
 
     def _check_files(self):
+        """
+        For dict differ:
+            * Non existing file:
+                [('add', '', [(PosixPath('lib/lean/library/tools/debugger/default.lean'), ('556dcaa5ae2481d30712ecce863dc7ac3c8cfc0f', '644'))])]
+
+            * Modified file (not the same hash):
+                [('change', [PosixPath('lib/lean/library/tools/debugger/default.lean')], (('23e56aa980901f09eb093a31711e505ec5b99542', '644'), ('556dcaa5ae2481d30712ecce863dc7ac3c8cfc0f', '644')))]
+
+            * Modified permissions:
+                [('change', [PosixPath('lib/lean/library/tools/debugger/default.lean')], (('556dcaa5ae2481d30712ecce863dc7ac3c8cfc0f', '744'), ('556dcaa5ae2481d30712ecce863dc7ac3c8cfc0f', '644')))]
+
+            * File that shouldn't exixt:
+                [('remove', '', [(PosixPath('bin/prout'), ('da39a3ee5e6b4b0d3255bfef95601890afd80709', '644'))]]
+
+            Example dict differ:
+                [('change',
+                  [PosixPath('lib/lean/library/tools/debugger/default.lean')],
+                  (('556dcaa5ae2481d30712ecce863dc7ac3c8cfc0f', '744'),
+                   ('556dcaa5ae2481d30712ecce863dc7ac3c8cfc0f', '644'))),
+                 ('remove',
+                  '',
+                  [(PosixPath('bin/prout'),
+                    ('da39a3ee5e6b4b0d3255bfef95601890afd80709', '644')),
+                   (PosixPath('bin/prout2'),
+                    ('da39a3ee5e6b4b0d3255bfef95601890afd80709', '644'))])]
+
+                → File lib/lean/library/tools/debugger/default.lean has changed permissions
+                → File bin/prout and bin/prout2 shouldn't exist in the folder
+                → This example illustrates how changes of the same category are grouped
+                  in the result from dictdiffer.
+
+            Another example
+                [('change',
+                  [PosixPath('lib/lean/library/tools/debugger/default.lean')],
+                  (('556dcaa5ae2481d30712ecce863dc7ac3c8cfc0f', '744'),
+                   ('556dcaa5ae2481d30712ecce863dc7ac3c8cfc0f', '644'))),
+                 ('add',
+                  '',
+                  [(PosixPath('bin/leanpkg'),
+                    ('6f96e5ae74c7b26e9bd72a3b8c8ed71be8bfb8ca', '755')),
+                   (PosixPath('bin/lean'),
+                    ('430051c09e3d8604edf110c93d8829ce6def4a24', '755'))]),
+                 ('remove',
+                  '',
+                  [(PosixPath('bin/prout'),
+                    ('da39a3ee5e6b4b0d3255bfef95601890afd80709', '644')),
+                   (PosixPath('bin/prout2'),
+                    ('da39a3ee5e6b4b0d3255bfef95601890afd80709', '644'))])]
+        """
+
         if self.archive_hlist is not None:
             log.info(_("Checking files for {}").format(self.path))
             hlist_ref  = fs.HashList.from_file(self.archive_hlist)
             hlist_dest = fs.HashList.from_path(self.path)
 
-            diff = list(hlist_dest.diff(hlist_ref))
-            if len(diff) > 0:
-                raise PackageCheckError(self, 
-                                                _("Found differences in files, reinstall."), 
-                                                diff )
+            diff       = list(hlist_dest.diff(hlist_ref))
+
+            for dd in diff:
+                # Shape: ('add', '', [ (path, data), (path, data), ... ] )
+                if   dd[0] == "add":
+                    raise PackageCheckError( self, _("Missing files {}, reinstalling package!").format(dd[2]))
+
+                # Shape: ('remove', '', [ (path, data), (path, data), ... ] )
+                elif dd[0] == "remove":
+                    log.warning(_("Additional file {} found in directory").format(str(path)))
+
+                # Shape: ('change', [path], (data_now, data_orig))
+                elif dd[0] == "change":
+                    path                = dd[1][0]
+                    data_now            = dd[2][0]
+                    data_orig           = dd[2][1]
+
+                    hash_now,perm_now   = data_now
+                    hash_orig,perm_orig = data_orig
+
+                    # Compare hashes
+                    if hash_now != hash_orig:
+                        raise PackageCheckError( self, _("File {} is invalid, reinstalling package").format(str(path)) )
+
+                    # Change permissions
+                    else: 
+                        log.warning(_("File {} has permissions {}, excepted {}, updating").format(str(path), perm_now, perm_orig))
+                        (self.path / path).chmod(int(perm_orig,8))
+
+                else:
+                    raise PackageCheckError( self, _("Uknown dict differ {}, reinstalling package").format(dd) )
 
     def check(self):
         self._check_folder()
@@ -154,6 +226,7 @@ class ArchivePackage(Package):
             the destination, else, it is only the component given by
             archive_root that is moved.
         """
+        self.remove()
 
         log.info(_("Installing package {} from archive").format(self.path))
         with TemporaryFile() as fhandle:
@@ -192,6 +265,12 @@ class ArchivePackage(Package):
                 log.info(_("→ Move {} to {}").format(tpath, self.path))
                 shutil.move(str(tpath), str(self.path))
 
+
+        try:
+            self.check()
+        except PackageCheckError as e:
+            log.error(_("Failed to install Package to {}: {}").format(str(self.path), str(e)))
+            raise e
 
         log.info(_("Installed Package to {}").format(self.path))
 
