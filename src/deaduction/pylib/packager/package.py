@@ -175,7 +175,8 @@ class ArchivePackage(Package):
 
                 # Shape: ('remove', '', [ (path, data), (path, data), ... ] )
                 elif dd[0] == "remove":
-                    log.warning(_("Additional file {} found in directory").format(str(path)))
+                    log.warning(_("Additional file {} found in "
+                                  "directory").format(str(self.path)))
 
                 # Shape: ('change', [path], (data_now, data_orig))
                 elif dd[0] == "change":
