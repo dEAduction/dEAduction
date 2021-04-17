@@ -221,6 +221,12 @@ class Exercise(Theorem):
     negate_statement:           bool            = False
     # This is True if the negation of the statement must be proved.
 
+    @property
+    def exercise_number(self) -> int:
+        exercises = [statement for statement in self.course.statements
+                     if isinstance(statement, Exercise)]
+        return exercises.index(self)
+
     @classmethod
     def from_parser_data(cls, data: dict, statements: list):
         """
@@ -347,6 +353,7 @@ class Exercise(Theorem):
             if isinstance(statement, Exercise):
                 return statement
         return None
+
 
 #############
 # utilities #

@@ -338,9 +338,9 @@ class FolderPackage(Package):
 
             diff = list(hlist_dest.diff(hlist_ref))
             if len(diff) > 0:
-                raise pkg_exc.PackageCheckError(self, 
-                                                _("Found differences in files, reinstall."), 
-                                                diff )
+                raise PackageCheckError(self,
+                                        _("Found differences in files, reinstall."),
+                                        diff)
 
     def check(self):
         self._check_folder()
