@@ -266,6 +266,12 @@ class ArchivePackage(Package):
                 shutil.move(str(tpath), str(self.path))
 
 
+        try:
+            self.check()
+        except PackageCheckError as e:
+            log.error(_("Failed to install Package to {}: {}").format(str(self.path), str(e)))
+            raise e
+
         log.info(_("Installed Package to {}").format(self.path))
 
 # ┌────────────────────────────────────────┐
