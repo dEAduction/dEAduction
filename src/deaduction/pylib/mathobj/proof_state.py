@@ -32,7 +32,7 @@ This file is part of dEAduction.
 
 from dataclasses import dataclass
 import logging
-from typing import List, Tuple, Any
+from typing import List, Tuple, Any, Optional
 
 import deaduction.pylib.logger as logger
 from deaduction.pylib.config.i18n import _
@@ -413,18 +413,27 @@ class ProofStep:
     """
     Class to store data associated to a step in proof.
     """
-    proof_state: ProofState
-    property_counter: int
-    goal_change_messages: [str]
-    button: str = None  # Symbol of button clicked, if any
-    statement: str = None  # Lean name of statement
-    success_message: str = None
-    error_message: str = None
+    proof_state: Optional[ProofState] = None
+    property_counter: int          = 0
+    goal_change_messages: [str]    = []
+    button: Optional[str]          = None  # Symbol of button clicked, if any
+    statement: Optional[str]       = None  # Lean name of statement
+    error_type: Optional[int]      = None  # 1 = WrongUserInput,
+                                           # 2 = FailedRequestError
+    error_message: Optional[int]   = None
+    success_message: Optional[int] = None
 
     @property
     def goal(self):
         return self.proof_state.goals[0]
 
+    def clear(self):
+        self.proof_state      = None
+        self.button           = None
+        self.statement        = None
+        self.error_type       = None
+        self.error_message    = None
+        self.success_message  = None
 
 
 @dataclass

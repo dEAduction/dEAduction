@@ -208,6 +208,9 @@ async def auto_test(container: Container):
             emissions:
         async for emission in emissions.channel:
             log.debug("ui_updated received")
+            # TODO: test for errors and mssages
+            #  use proof_step
+
             step = auto_steps[0]
             log.debug(f"auto_step found: {step}")
             if not step:
