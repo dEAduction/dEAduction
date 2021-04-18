@@ -178,6 +178,7 @@ class Container(QObject):
         self.nursery:         trio.Nursery       = nursery
         self.exercises:       [Exercise]         = []
         self.auto_test:       bool               = False
+        self.report:          [[str]]            = []
 
     @Slot()
     def choose_exercise(self):

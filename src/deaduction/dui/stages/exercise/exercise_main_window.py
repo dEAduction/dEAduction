@@ -29,6 +29,7 @@ from functools import partial
 import                logging
 from typing import    Callable
 import                qtrio
+from copy import      deepcopy
 
 from PySide2.QtCore import (    Signal,
                                 Slot,
@@ -57,6 +58,7 @@ from deaduction.pylib.coursedata        import ( Definition,
 from deaduction.pylib.mathobj           import ( MathObject,
                                                  Goal,
                                                  ProofState,
+                                                 ProofStep,
                                                  Proof )
 from deaduction.pylib.server.exceptions import   FailedRequestError
 from deaduction.pylib.server            import   ServerInterface
@@ -136,6 +138,7 @@ class ExerciseMainWindow(QMainWindow):
     __action_triggered              = Signal(ActionButton)
     __apply_math_object_triggered   = Signal(MathObjectWidget)
     __statement_triggered           = Signal(StatementsTreeWidgetItem)
+    proof_step_updated              = Signal()
     ui_updated                      = Signal()
 
     def __init__(self, exercise: Exercise, servint: ServerInterface):
@@ -155,18 +158,20 @@ class ExerciseMainWindow(QMainWindow):
 
         # ─────────────────── Attributes ─────────────────── #
 
-        self.exercise          = exercise
-        self.current_goal      = None
-        self.current_selection = []
         self.target_selected_by_default = cvars.get(
                             'functionality.target_selected_by_default', False)
-        self._target_selected   = False
-        self.ecw               = ExerciseCentralWidget(exercise)
-        self.lean_editor       = LeanEditor()
-        self.servint           = servint
-        self.toolbar           = ExerciseToolBar()
-        self.journal           = Journal()
-        self.cqfd              = False
+        self.exercise            = exercise
+        self.current_goal        = None
+        self.current_selection   = []
+        self._target_selected    = False
+        self.ecw                 = ExerciseCentralWidget(exercise)
+        self.lean_editor         = LeanEditor()
+        self.servint             = servint
+        self.toolbar             = ExerciseToolBar()
+        self.journal             = Journal()
+        self.proof_step          = ProofStep()
+        self.previous_proof_step = None
+        self.cqfd                = False
 
         # ─────────────────────── UI ─────────────────────── #
 
@@ -262,13 +267,11 @@ class ExerciseMainWindow(QMainWindow):
         :param new_goal: The new goal to update / set the interface to.
         """
 
-        self.journal.store_proof_state(self.servint.proof_state)
-
         # Init context (objects and properties). Get them as two list of
         # (MathObject, str), the str being the tag of the prop. or obj.
 
         # get old goal and set tags
-        # TODO: move this to journal.close_steps
+        # TODO: move this to a more appropriate place
 
         lean_file = self.servint.lean_file
 
@@ -295,26 +298,21 @@ class ExerciseMainWindow(QMainWindow):
         goal_count = f'  {current_goal_number} / {total_goals_counter}'
 
         # Display if a goal has been solved and user is not undoing
-        if goals_counter_evolution < 0 and current_goals_counter != 0:
-            # Get last action
-            last_button = self.journal.get_last_event(
-                                                    nature=EventNature.button)
-            last_journal_entry = self.journal.get_last_event()
-            log.debug(f'Last action: {last_button}')
-            if last_button != ('history_undo', '') \
-                    and not last_journal_entry.is_error():
+        if goals_counter_evolution < 0 and current_goals_counter != 0 \
+                and not self.cqfd:
+            if not self.previous_proof_step.is_undo() \
+                    and not self.previous_proof_step.is_error():
                 log.info(f"Current goal solved!")
                 if goals_counter_evolution == -1:
                     message = _('Current goal solved')
                 else:
                     nb = str(-goals_counter_evolution)
                     message = nb + ' ' + _('goals solved!')
-                if not self.cqfd:
-                    QMessageBox.information(self,
-                                            '',
-                                            message,
-                                            QMessageBox.Ok
-                                            )
+                QMessageBox.information(self,
+                                        '',
+                                        message,
+                                        QMessageBox.Ok
+                                        )
 
         # Reset current context selection
         # Here we do not use empty_current_selection since Widgets may have
@@ -380,22 +378,21 @@ class ExerciseMainWindow(QMainWindow):
             async for emission in emissions.channel:
                 self.statusBar.erase()
                 if emission.is_from(self.lean_editor.editor_send_lean):
-                    self.journal.store_button('lean_editor')
                     await self.process_async_signal(self.__server_send_editor_lean)
 
                 elif emission.is_from(self.toolbar.redo_action.triggered):
                     # No need to call self.update_goal, this emits the
                     # signal proof_state_change of which
                     # self.update_goal is a slot
-                    self.journal.store_button('history_redo')
+                    self.proof_step.button = 'history_redo'
                     await self.process_async_signal(self.servint.history_redo)
 
                 elif emission.is_from(self.toolbar.undo_action.triggered):
-                    self.journal.store_button('history_undo')
+                    self.proof_step.button = 'history_undo'
                     await self.process_async_signal(self.servint.history_undo)
 
                 elif emission.is_from(self.toolbar.rewind.triggered):
-                    self.journal.store_button('history_rewind')
+                    self.proof_step.button = 'history_rewind'
                     await self.process_async_signal(self.servint.history_rewind)
 
                 elif emission.is_from(self.window_closed):
@@ -403,8 +400,7 @@ class ExerciseMainWindow(QMainWindow):
 
                 elif emission.is_from(self.__action_triggered):
                     # emission.args[0] is the ActionButton triggered by user
-                    action_symbol = emission.args[0].action.symbol
-                    self.journal.store_button(action_symbol)
+                    self.proof_step.button = emission.args[0]
                     await self.process_async_signal(partial(
                             self.__server_call_action, emission.args[0]))
 
@@ -412,13 +408,12 @@ class ExerciseMainWindow(QMainWindow):
                     # emission.args[0] is the StatementTreeWidgetItem
                     # triggered by user
                     if hasattr(emission.args[0], 'statement'):
-                        statement_name = emission.args[0].statement.lean_name
-                        self.journal.store_statement(statement_name)
+                        self.proof_step.statement = emission.args[0]
                     await self.process_async_signal(partial(
                             self.__server_call_statement, emission.args[0]))
 
                 elif emission.is_from(self.__apply_math_object_triggered):
-                    self.journal.store_button('doubleclick_apply')
+                    self.proof_step.button = self.ecw.action_apply_button
                     await self.__server_call_apply(emission.args[0])
 
     # ──────────────── Template function ─────────────── #
@@ -440,6 +435,8 @@ class ExerciseMainWindow(QMainWindow):
         try:
             await process_function()
         except FailedRequestError as error:
+            self.proof_step.error_type = 2
+            self.proof_step.error_message = error.message
             self.journal.store_failed_request_error(error)
 
             # Abort and go back to last goal
@@ -526,6 +523,9 @@ class ExerciseMainWindow(QMainWindow):
             except WrongUserInput as error:
                 self.journal.store_wrong_user_input(error)
                 self.empty_current_selection()
+                self.proof_step.error_type = 1
+                self.proof_step.error_message = error.message
+                self.update_proof_state(self.previous_proof_step.proof_state)
                 break
             else:
                 self.journal.store_selection(selection)
@@ -584,14 +584,16 @@ class ExerciseMainWindow(QMainWindow):
                         self.target_selected)
 
             except WrongUserInput as error:
-                self.journal.store_wrong_user_input(error)
+                self.proof_step.error_type = 1
                 self.empty_current_selection()
+                self.proof_step.error_type = 1
+                self.proof_step.error_message = error.message
+                self.update_proof_state(self.previous_proof_step.proof_state)
 
             else:
                 log.debug(f'Calling statement {item.statement.pretty_name}')
-                # todo: add lean_code and selection event
-                self.journal.store_selection(selection)
-                self.journal.store_lean_code(lean_code)
+                self.proof_step.selection = selection
+                self.proof_step.lean_code = lean_code
                 # Update lean_file and call Lean server
                 await self.servint.code_insert(statement.pretty_name,
                                                lean_code)
@@ -601,7 +603,6 @@ class ExerciseMainWindow(QMainWindow):
         Send the L∃∀N code written in the L∃∀N editor widget to the
         server interface.
         """
-        self.journal.store_lean_editor()
         await self.servint.code_set(_('Code from editor'),
                                     self.lean_editor.code_get())
 
@@ -730,11 +731,23 @@ class ExerciseMainWindow(QMainWindow):
 
         # Weird that this methods only does this.
         # TODO: maybe delete it to only have self.update_goal?
-        self.update_goal(proofstate.goals[0])
+        if self.previous_proof_step:
+            previous_proof_state = self.previous_proof_step.proof_state
+        else:
+            previous_proof_state = None
+        self.proof_step.proof_state = proofstate
+        self.previous_proof_step = deepcopy(self.proof_step)
+        self.proof_step.clear()
+        self.proof_step_updated.emit()
+
+        if proofstate is not previous_proof_state:
+            self.update_goal(proofstate.goals[0])
+        else:
+            self.ui_updated.emit()
 
     @Slot(CodeForLean)
     def store_effective_code(self, effective_lean_code):
-        self.journal.store_effective_code(effective_lean_code)
+        self.proof_step.effective_code = effective_lean_code
 
     ###################
     # Logical methods #

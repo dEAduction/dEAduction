@@ -413,28 +413,81 @@ class ProofStep:
     """
     Class to store data associated to a step in proof.
     """
+
+    # ──────────────── Proof memory ─────────────── #
+    property_counter: int             = 0
+    goal_change_messages: [str]       = None
+
+    # ──────────────── Input ─────────────── #
+    selection: [Any]                  = None
+    user_input: [Any]                 = None
+    button: Optional[Any]             = None  # ActionButton or str
+    statement: Optional[Any]          = None  # Statement
+    lean_code: Any                    = None  # CodeForLean
+
+    # ──────────────── Output ─────────────── #
+    effective_code: str               = None
+    error_type: Optional[int]         = None  # 1 = WUI, 2 = FRE
+    error_message: Optional[int]      = None
+    success_message: Optional[int]    = None
     proof_state: Optional[ProofState] = None
-    property_counter: int          = 0
-    goal_change_messages: [str]    = []
-    button: Optional[str]          = None  # Symbol of button clicked, if any
-    statement: Optional[str]       = None  # Lean name of statement
-    error_type: Optional[int]      = None  # 1 = WrongUserInput,
-                                           # 2 = FailedRequestError
-    error_message: Optional[int]   = None
-    success_message: Optional[int] = None
 
     @property
     def goal(self):
         return self.proof_state.goals[0]
 
     def clear(self):
-        self.proof_state      = None
-        self.button           = None
-        self.statement        = None
-        self.error_type       = None
-        self.error_message    = None
-        self.success_message  = None
+        self.selection  = None
+        self.user_input = None
+        self.button     = None
+        self.statement  = None
+        self.lean_code  = None
 
+        self.effective_code: str  = ''
+        self.error_type           = None
+        self.error_message: str   = ''
+        self.success_message: str = ''
+        self.proof_state          = None
+
+    def is_undo(self):
+        return self.button == 'history_undo'
+
+    def is_error(self):
+        return self.error_type
+
+    def compare(self, auto_test) -> str:
+        report = ''
+        success = True
+        # Case of error
+        if self.is_error():
+            error_nb = self.error_type
+            error_type = auto_test.error_dic[error_nb]
+            if not auto_test.error_type:
+                report = f"unexpected {error_type}"
+                success = False
+            elif auto_test.error_type != error_nb:
+                expected_error = auto_test.error_dic[auto_test.error_type]
+                report = f"unexpected {error_type}, expected {expected_error}"
+                success = False
+
+        # Error msg
+        error_msg = self.error_message
+        if error_msg:
+            find = error_msg.find(auto_test.error_msg)
+            if find == -1:
+                report += f'\nUnexpected error msg: {error_msg}, ' \
+                          f'expected: {auto_test.error_msg}'
+                success = False
+        # Success msg
+        success_msg = self.success_message
+        if success_msg:
+            find = success_msg.find(auto_test.success_msg)
+            if find == -1:
+                report += f'\nUnexpected success msg: {success_msg}, ' \
+                          f'expected: {auto_test.success_msg}'
+                success = False
+
+        return report, success
 
 @dataclass
 class Proof:
