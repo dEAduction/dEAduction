@@ -124,6 +124,7 @@ class AutoStep:
     A class to store one step of proof in deaduction, simulating selection,
     choice of button or statement, and user input.
     """
+    raw_string: str
     selection:  [str]
     button:     str
     statement:  str
@@ -132,6 +133,7 @@ class AutoStep:
     error_msg: str
     success_msg: str
 
+    error_dic = {1: 'WrongUserInput', 2: 'FailedRequestError'}
 
     @classmethod
     def from_string(cls, string):
@@ -146,8 +148,8 @@ class AutoStep:
         statement = None
         button_or_statement_rank = None
         error_type = None
-        error_msg = None
-        success_msg = None
+        error_msg = ""
+        success_msg = ""
 
         # Split at spaces and remove unnecessary spaces
         items = [item.strip() for item in string.split(' ') if item]
@@ -156,35 +158,39 @@ class AutoStep:
                     or item.startswith('theorem'):
                 statement = item
                 button_or_statement_rank = items.index(item)
-                break
-            if item in BUTTONS_SYMBOLS:
+            elif item in BUTTONS_SYMBOLS:
                 button = item
                 button_or_statement_rank = items.index(item)
-                break
             elif item in alternative_symbols:
                 button = alternative_symbols[item]
                 button_or_statement_rank = items.index(item)
-                break
             elif item in ('WrongUserInput', 'WUI'):
-                error_type = 0
-            elif item in ('FailedRequestError', 'FRE'):
                 error_type = 1
+                items[items.index(item)] = ''  # item is not user_input
+            elif item in ('FailedRequestError', 'FRE'):
+                error_type = 2
+                items[items.index(item)] = ''
             elif item.startswith('error='):
-                error_msg = item[len('error='):]
+                error_msg = item[len('error='):].replace('_', ' ')
+                items[items.index(item)] = ''
             elif item.startswith('e='):
-                error_msg = item[len('e='):]
+                error_msg = item[len('e='):].replace('_', ' ')
+                items[items.index(item)] = ''
             elif item.startswith('success='):
-                success_msg = item[len('success='):]
+                success_msg = item[len('success='):].replace('_', ' ')
+                items[items.index(item)] = ''
             elif item.startswith('s='):
-                success_msg = item[len('s='):]
+                success_msg = item[len('s='):].replace('_', ' ')
+                items[items.index(item)] = ''
 
         if not button and not statement:
             return None
 
         selection = items[:button_or_statement_rank]
-        user_input = items[button_or_statement_rank+1:]
+        user_input = [item for item in items[button_or_statement_rank+1:]
+                      if item]  # Remove if item = ''
 
-        return cls(selection, button, statement, user_input,
+        return cls(string, selection, button, statement, user_input,
                    error_type, error_msg, success_msg)
 
 
