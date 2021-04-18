@@ -187,6 +187,48 @@ def get_exercises(course: Optional[Course],
             exercises = [exercise]
     return exercises
 
+def find_selection(auto_step, emw):
+    auto_selection = []
+    # First trial
+    # TODO: make emw properties
+    #  and function find_selection(AutoStep, prop, obj)
+    properties = [item.mathobject
+                  for item in emw.ecw.props_wgt.items]
+    objects = [item.mathobject
+               for item in emw.ecw.objects_wgt.items]
+    goal = emw.servint.proof_state.goals[0]
+    for name in auto_step.selection:
+        selection = None
+        with trio.move_on_after(5):
+            # Not clear to me why deaduction may not have
+            # finished constructing goal, but this happens.
+            # So we give it a few more seconds to complete the
+            # construction.
+            while not selection:
+                if name.startswith('@O'):
+                    selection = objects[int(name[2:]) - 1]
+                elif name.startswith('@P'):
+                    selection = properties[int(name[2:]) - 1]
+                else:
+                    if name.startswith('@'):  # (unwanted @)
+                        name = name[1:]
+                    selection = goal.math_object_from_name(name)
+                if not selection:
+                    # Next trial
+                    properties = [item.mathobject for item in
+                                  emw.ecw.props_wgt.items]
+                    objects = [item.mathobject for item in
+                               emw.ecw.objects_wgt.items]
+                    goal = emw.servint.proof_state.goals[0]
+
+        if selection:
+            auto_selection.append(selection)
+        else:
+            log.debug("Bad selection in auto_step")
+            quit()
+
+    return auto_selection
+
 
 async def auto_test(container: Container):
     """
@@ -199,86 +241,73 @@ async def auto_test(container: Container):
     """
 
     # Auto-steps loop
+    # TODO: return a report message
     exercise = container.exercise
     log.info(f"Testing exercise {exercise.pretty_name}")
     auto_steps = exercise.refined_auto_steps
     emw = container.exercise_window
-
-    async with qtrio.enter_emissions_channel(signals=[emw.ui_updated]) as \
+    signals = [emw.proof_step_updated, emw.ui_updated]
+    test_success = True
+    steps_counter = 0
+    async with qtrio.enter_emissions_channel(signals=signals) as \
             emissions:
+        reports = [f'Exercise {exercise.pretty_name}']
+        container.report.append(reports)
         async for emission in emissions.channel:
-            log.debug("ui_updated received")
-            # TODO: test for errors and mssages
-            #  use proof_step
+            # Check result #
+            if emission.is_from(emw.proof_step_updated) and steps_counter:
+                step = auto_steps[steps_counter-1]
+                report, step_success = emw.previous_proof_step.compare(step)
+                test_success = test_success and step_success
+                if not report:
+                    report = f'Success with {step.raw_string}'
 
-            step = auto_steps[0]
-            log.debug(f"auto_step found: {step}")
-            if not step:
-                log.debug("Found 'None' step, giving up")
-                emw.close()
-                break
+                report = f"Step {steps_counter}: " + report
+                reports.append(report)
 
-            # Collect selection from e.g. 'H1', 'x', '@p2', '@O3'
-            auto_selection = []
-            properties = [item.mathobject for item in emw.ecw.props_wgt.items]
-            objects = [item.mathobject for item in emw.ecw.objects_wgt.items]
-            goal = emw.servint.proof_state.goals[0]
-            for name in step.selection:
-                selection = None
-                with trio.move_on_after(5):
-                    # Not clear to me why deaduction may not have
-                    # finished constructing goal, but this happens.
-                    # So we give it a few more seconds to complete the
-                    # construction.
-                    while not selection:
-                        if name.startswith('@O'):
-                            selection = objects[int(name[2:])-1]
-                        elif name.startswith('@P'):
-                            selection = properties[int(name[2:])-1]
-                        else:
-                            if name.startswith('@'):  # @ should not be here but...
-                                name = name[1:]
-                            selection = goal.math_object_from_name(name)
-                        if not selection:
-                            properties = [item.mathobject for item in
-                                          emw.ecw.props_wgt.items]
-                            objects = [item.mathobject for item in
-                                       emw.ecw.objects_wgt.items]
-                            goal = emw.servint.proof_state.goals[0]
+            # Apply next step #
+            elif emission.is_from(emw.ui_updated):
+                log.debug("ui_updated received")
 
-                if selection:
-                    auto_selection.append(selection)
+                step = auto_steps[steps_counter]
+                steps_counter += 1
+                log.debug(f"auto_step found: {step}")
+                if not step:
+                    log.debug("Found 'None' step, giving up")
+                    emw.close()
+                    break
+
+                auto_selection = find_selection(step, emw)
+
+                selection_names = [item.display_name
+                                   for item in auto_selection]
+                log.debug(f"Selection: {selection_names}")
+                auto_user_input = [int(item) if item.isdecimal() else item
+                                   for item in step.user_input]
+
+                if step.button:  # Auto step is a button step
+                    action_btn = emw.ecw.action_button(step.button)
+                    log.debug(f"Button: {action_btn}")
+                    await emw.process_async_signal(partial(
+                        emw.__server_call_action,
+                        action_btn, auto_selection,
+                        auto_user_input))
+
+                elif step.statement:  # Auto step is a statement step
+                    statement_widget = emw.ecw.statements_tree.from_name(
+                        step.statement)
+                    log.debug(f"Statement: {statement_widget}")
+                    await emw.process_async_signal(partial(
+                        emw.__server_call_statement,
+                        statement_widget,
+                        auto_selection))
                 else:
-                    log.debug("Bad selection in auto_step")
-                    quit()
+                    log.warning("Auto-step loop: empty step")
 
-            selection_names = [item.display_name for item in auto_selection]
-            log.debug(f"Selection: {selection_names}")
-            auto_user_input = [int(item) if item.isdecimal() else item
-                               for item in step.user_input]
-
-            if step.button:  # Auto step is a button step
-                action_btn = emw.ecw.action_button(step.button)
-                log.debug(f"Button: {action_btn}")
-                await emw.process_async_signal(partial(
-                    emw.__server_call_action,
-                    action_btn, auto_selection,
-                    auto_user_input))
-
-            elif step.statement:  # Auto step is a statement step
-                statement_widget = emw.ecw.statements_tree.from_name(
-                    step.statement)
-                log.debug(f"Statement: {statement_widget}")
-                await emw.process_async_signal(partial(
-                    emw.__server_call_statement,
-                    statement_widget,
-                    auto_selection))
-            else:
-                log.warning("Auto-step loop: empty step")
-
-            auto_steps = auto_steps[1:]
-            if not auto_steps:
-                break
+                if steps_counter == len(auto_steps):
+                    break
+    log.debug(f"Auto_test successfull: {test_success}")
+    reports.insert(0, test_success)
 
 
 async def main():
@@ -342,6 +371,17 @@ async def main():
                         break
 
         finally:
+            print("================================================")
+            global_success = False not in [exo_report[0] for
+                                           exo_report in container.report]
+            print(f"Global success : {global_success}")
+            for exo_report in container.report:
+                success = "success" if exo_report[0] else "FAILURE"
+                print(exo_report[1] + ": " + success)
+                for step_report in exo_report[2:]:
+                    print(step_report)
+
+
             # Finally closing d∃∀duction
             if container.servint:
                 await container.servint.file_invalidated.wait()
