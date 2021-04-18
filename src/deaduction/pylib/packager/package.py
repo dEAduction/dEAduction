@@ -76,7 +76,9 @@ class Package:
         if not str(self.path).startswith(str(dirs.local)):
             raise RuntimeError( _("invalid directory, must be "
                                   "in $HOME/.deaduction folder !!!"))
-        shutil.rmtree(str(self.path.resolve()))
+
+        if self.path.exists(): # remove only if path exists
+            shutil.rmtree(str(self.path.resolve()))
 
     ############################################
     # Protected utilities functions
