@@ -30,6 +30,8 @@ This file is part of d∃∀duction.
 """
 
 import ctypes
+from sys import argv
+from pathlib import Path
 import logging
 import qtrio
 import threading
@@ -53,6 +55,7 @@ import deaduction.pylib.config.dirs              as     cdirs
 import deaduction.pylib.config.environ           as     cenv
 import deaduction.pylib.config.site_installation as     inst
 import deaduction.pylib.config.vars              as     cvars
+from deaduction.pylib.autotest import                   select_exercise
 
 # (non-exhaustive) list of logger domains:
 # ['lean', 'ServerInterface', 'Course', 'deaduction.dui',
@@ -275,7 +278,7 @@ class Container(QObject):
 
         # Start exercise window and add auto_steps
         self.exercise_window = ExerciseMainWindow(self.exercise, self.servint)
-        # self.exercise_window.auto_steps = self.exercise.refined_auto_steps
+        self.exercise_window.test_mode = True
 
         # Connect signals
         self.exercise_window.window_closed.connect(self.close_exercise_window)
@@ -297,10 +300,34 @@ class Container(QObject):
             self.close_chooser_window.emit()
 
 
+def exercise_from_argv() -> Exercise:
+    """
+    Try to build Exercise object from arguments.
+    """
+    course_path = None
+    exercise_like = None
+    exercise = None
+
+    for arg in argv[1:]:
+        if arg.startswith("--course="):
+            course_path = arg[len("--course="):]
+        elif arg == "-c":
+            course_path = argv[argv.index(arg)+1]
+        elif arg.startswith("--exercise="):
+            exercise_like = arg[len("--exercise="):]
+        elif arg == "-e":
+            exercise_like = argv[argv.index(arg)+1]
+
+    if course_path and exercise_like:
+        log.debug('Searching course and exercise...')
+        course, exercise = select_exercise(course_path, exercise_like)
+
+    return exercise
+
+
 ##############################################################
 # Main event loop: init container and wait for window closed #
 ##############################################################
-
 async def main():
     """
     This is the main loop. It opens a trio.nursery, instantiate a Container
@@ -315,9 +342,13 @@ async def main():
 
         # Create container
         container = Container(nursery)
-        # Choose first exercise
-        container.choose_exercise()
 
+        # Choose first exercise
+        exercise = exercise_from_argv()
+        if not exercise:
+            container.choose_exercise()
+        else:
+            container.start_exercise(exercise)
         # Main loop that just listen to closing windows signals,
         # and quit if there is no more open windows.
         signals = [container.close_chooser_window,
