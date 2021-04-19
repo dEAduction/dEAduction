@@ -64,14 +64,14 @@ class CodeForLean:
     - Basic tactics are defined via the from_string method
     - Combined tactics are defined via the or_else and and_then methods
     - raw code is retrieved via the to_string method
-    - an error_message can be added, to be displayed in case of Lean failure
-    - a success_message can be added, to be displayed in case of success
+    - an error_msg can be added, to be displayed in case of Lean failure
+    - a success_msg can be added, to be displayed in case of success
     (depending of the effective code in case of or_else combinator)
     """
     instructions:    [Any]   # [str or CodeForLean]
     combinator:             str = LeanCombinator.single_string
-    error_message:          str = ""
-    success_message:        str = ""
+    error_msg:          str = ""
+    success_msg:        str = ""
     # The following is used to store the number of an or_else instructions
     or_else_node_number:   Optional[int] = None
 
@@ -79,29 +79,29 @@ class CodeForLean:
     or_else_node_counter = 0
 
     @classmethod
-    def empty_code(cls, error_message: str = ''):
+    def empty_code(cls, error_msg: str = ''):
         """
         Create an empty code, useful to initialize a sequence of codes
         """
         return CodeForLean(instructions=[],
-                           error_message=error_message)
+                           error_msg=error_msg)
 
     @classmethod
     def from_string(cls,
                     instruction: str,
-                    error_message: str = '',
-                    success_message: str = ""):
+                    error_msg: str = '',
+                    success_msg: str = ""):
         """
         Create a CodeForLean with a single instruction
         """
         return CodeForLean(instructions=[instruction],
-                           error_message=error_message)
+                           error_msg=error_msg)
 
     @classmethod
     def or_else_from_list(cls,
                           instructions: Union[str, List[Any]],
-                          error_message: str = '',
-                          global_success_message: str = ""):
+                          error_msg: str = '',
+                          global_success_msg: str = ""):
         """
         Create an or_else CodeForLean from a (list of) strings or CodeForLean
         """
@@ -118,14 +118,14 @@ class CodeForLean:
         else:
             return CodeForLean(instructions=instructions,
                                combinator=LeanCombinator.or_else,
-                               error_message=error_message,
-                               success_message=global_success_message)
+                               error_msg=error_msg,
+                               success_msg=global_success_msg)
 
     @classmethod
     def and_then_from_list(cls,
                           instructions: Union[str, List[Any]],
-                          error_message: str = '',
-                          global_success_message: str = ""):
+                          error_msg: str = '',
+                          global_success_msg: str = ""):
         """
         Create an or_else CodeForLean from a (list of) strings or CodeForLean
         """
@@ -142,10 +142,10 @@ class CodeForLean:
         else:
             return CodeForLean(instructions=instructions,
                                combinator=LeanCombinator.and_then,
-                               error_message=error_message,
-                               success_message=global_success_message)
+                               error_msg=error_msg,
+                               success_msg=global_success_msg)
 
-    def or_else(self, other, success_message=""):
+    def or_else(self, other, success_msg=""):
         """
         Combine 2 CodeForLean with an or_else combinator.
 
@@ -156,8 +156,8 @@ class CodeForLean:
             return self
         if isinstance(other, str):
             other = CodeForLean.from_string(other)
-        if other.success_message == "":
-            other.success_message = success_message
+        if other.success_msg == "":
+            other.success_msg = success_msg
         if self.is_empty():
             return other
         elif self.is_or_else():
@@ -167,7 +167,7 @@ class CodeForLean:
             return CodeForLean(combinator=LeanCombinator.or_else,
                                instructions=[self, other])
 
-    def and_then(self, other, success_message=""):
+    def and_then(self, other, success_msg=""):
         """
         Combine 2 CodeForLean with an and_then combinator.
 
@@ -182,14 +182,14 @@ class CodeForLean:
             return self
         elif self.is_and_then():
             self.instructions.append(other)
-            self.success_message = success_message
+            self.success_msg = success_msg
             return self
         else:
             return CodeForLean(combinator=LeanCombinator.and_then,
                                instructions=[self, other],
-                               success_message=success_message)
+                               success_msg=success_msg)
 
-    def single_combinator(self, combinator_type, success_message=""):
+    def single_combinator(self, combinator_type, success_msg=""):
         """
         Add a (single) combinator at the top of self.
 
@@ -203,15 +203,15 @@ class CodeForLean:
         #     self_ = CodeForLean.from_string(self)
         return CodeForLean(combinator=combinator_type,
                            instructions=[self],
-                           success_message=success_message)
+                           success_msg=success_msg)
 
-    def try_(self, success_message=""):
+    def try_(self, success_msg=""):
         """
         Turn self into
                             "self <|> skip",
         which is equivalent to
                             "try {self}"
-        but will allow to retrieve an "effective code" message in case of
+        but will allow to retrieve an "effective code" msg in case of
         failure. (Note that this instruction always succeeds.)
 
         :return: CodeForLean
@@ -221,12 +221,12 @@ class CodeForLean:
         skip = CodeForLean.from_string("skip")
         return CodeForLean(combinator=LeanCombinator.or_else,
                            instructions=[self, skip],
-                           success_message=success_message)
+                           success_msg=success_msg)
 
-    def solve1(self, success_message=""):
+    def solve1(self, success_msg=""):
         return CodeForLean(combinator=LeanCombinator.solve1,
                            instructions=[self],
-                           success_message=success_message)
+                           success_msg=success_msg)
 
     # def and_finally(self, other):
     #     """
@@ -261,7 +261,7 @@ class CodeForLean:
         :return: a string understandable by the Lean parser
         """
 
-        # TODO: handle error_messages
+        # TODO: handle error_msgs
         if self.is_empty():
             return ""
         elif self.is_single_string():
@@ -301,7 +301,7 @@ class CodeForLean:
         which will be used by the select_or_else method.
 
         :return: two instances of CodeForLean, the first contains the trace
-        messages, the second is self with marked or_else node.
+        msgs, the second is self with marked or_else node.
         """
 
         if self.is_single_string():
@@ -326,8 +326,8 @@ class CodeForLean:
 
         self_with_trace = CodeForLean(combinator=self.combinator,
                                       instructions=instructions2,
-                                      error_message=self.error_message,
-                                      success_message=self.success_message)
+                                      error_msg=self.error_msg,
+                                      success_msg=self.success_msg)
 
         return self, self_with_trace
 
@@ -361,8 +361,8 @@ class CodeForLean:
                     found = True
             new_code = CodeForLean(instructions=new_instructions,
                                    combinator=self.combinator,
-                                   error_message=self.error_message,
-                                   success_message=self.success_message,
+                                   error_msg=self.error_msg,
+                                   success_msg=self.success_msg,
                                    or_else_node_number=self.or_else_node_number)
 
             return new_code, found
@@ -403,32 +403,32 @@ class CodeForLean:
         string = code2.to_raw_string()
         return code1, string
 
-    def extract_success_message(self, effective_code=""):
+    def extract_success_msg(self, effective_code=""):
         """
-        Extract the success message, if any, corresponding to the effective
+        Extract the success msg, if any, corresponding to the effective
         code.
 
         :param effective_code:  Lean's result of the "trace effective code"
                                 instruction
-        :return:                success message to be displayed
+        :return:                success msg to be displayed
         """
-        success_message = ""
-        # First try specific success_message corresponding to effective_code
+        success_msg = ""
+        # First try specific success_msg corresponding to effective_code
         # (if provided)
         if self.is_or_else() and effective_code:
             for instruction in self.instructions:
                 if instruction.to_raw_string().startswith(effective_code):
-                    success_message = instruction.success_message
-        #  Send global success_message if no specific message has been found
-        if not success_message:
-            success_message = self.success_message
-        return success_message
+                    success_msg = instruction.success_msg
+        #  Send global success_msg if no specific msg has been found
+        if not success_msg:
+            success_msg = self.success_msg
+        return success_msg
 
-    def add_error_message(self, error_message: str):
-        self.error_message = error_message
+    def add_error_msg(self, error_msg: str):
+        self.error_msg = error_msg
 
-    def add_success_message(self, success_message: str):
-        self.success_message = success_message
+    def add_success_msg(self, success_msg: str):
+        self.success_msg = success_msg
 
     def is_empty(self):
         return self.instructions == []
@@ -511,11 +511,11 @@ def get_effective_code_numbers(trace_effective_code: str) -> (int, int):
 if __name__ == '__main__':
     code = CodeForLean.from_string('assumption')
     code = code.and_then(CodeForLean.from_string("toto").try_())
-    code.add_success_message("CQFD!")
+    code.add_success_msg("CQFD!")
     code2 = CodeForLean.or_else_from_list(['apply H', 'Great !'])
     code = code.or_else(code2)
-    code = code.or_else('goodbye', success_message="I am leaving!")
-    code.add_success_message("Success!")
+    code = code.or_else('goodbye', success_msg="I am leaving!")
+    code.add_success_msg("Success!")
     # code = code.add_trace_effective_code(42)
     # code = code.add_no_meta_vars()
 

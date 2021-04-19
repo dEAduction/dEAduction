@@ -33,6 +33,7 @@ This file is part of dEAduction.
 from dataclasses import dataclass
 import logging
 from typing import List, Tuple, Any, Optional
+from copy import copy
 
 import deaduction.pylib.logger as logger
 from deaduction.pylib.config.i18n import _
@@ -40,6 +41,7 @@ from deaduction.pylib.config.i18n import _
 from .MathObject import MathObject
 from .lean_analysis import ( lean_expr_with_type_grammar,
                              LeanEntryVisitor )
+# from deaduction.pylib.coursedata import AutoStep
 import deaduction.pylib.config.vars as cvars
 
 log = logging.getLogger(__name__)
@@ -412,10 +414,13 @@ class ProofState:
 class ProofStep:
     """
     Class to store data associated to a step in proof.
+    The step starts with user inputs, and ends with Lean's responses.
     """
 
     # ──────────────── Proof memory ─────────────── #
     property_counter: int             = 0
+    current_goal_number: int          = 1
+    total_goals_counter: int          = 1
     goal_change_messages: [str]       = None
 
     # ──────────────── Input ─────────────── #
@@ -426,36 +431,58 @@ class ProofStep:
     lean_code: Any                    = None  # CodeForLean
 
     # ──────────────── Output ─────────────── #
-    effective_code: str               = None
-    error_type: Optional[int]         = None  # 1 = WUI, 2 = FRE
-    error_message: Optional[int]      = None
-    success_message: Optional[int]    = None
-    proof_state: Optional[ProofState] = None
+    effective_code                    = None  # CodeForLean
+    error_type: Optional[int]         = 0  # 1 = WUI, 2 = FRE
+    error_msg: str                = ''
+    # success_message: Optional[int]    = None
+    proof_state                       = None
+
+    @classmethod
+    def next(cls, proof_step):
+        """
+        Instantiate a copy of proof_step by duplicating attributes that
+        should be pass to the next proof_step.
+        """
+
+        pf = proof_step
+        npf = ProofStep(property_counter=pf.property_counter,
+                        goal_change_messages=copy(pf.goal_change_messages),
+                        )
+        return npf
+
+    @property
+    def success_msg(self):
+        if self.effective_code:
+            return self.effective_code.success_msg
+        elif self.lean_code:
+            return self.lean_code.success_msg
+        else:
+            return ''
 
     @property
     def goal(self):
         return self.proof_state.goals[0]
 
-    def clear(self):
-        self.selection  = None
-        self.user_input = None
-        self.button     = None
-        self.statement  = None
-        self.lean_code  = None
-
-        self.effective_code: str  = ''
-        self.error_type           = None
-        self.error_message: str   = ''
-        self.success_message: str = ''
-        self.proof_state          = None
+    # def clear(self):
+    #     self.selection  = None
+    #     self.user_input = None
+    #     self.button     = None
+    #     self.statement  = None
+    #     self.lean_code  = None
+    #
+    #     self.effective_code: str  = ''
+    #     self.error_type           = None
+    #     self.error_message: str   = ''
+    #     self.success_message: str = ''
+    #     self.proof_state          = None
 
     def is_undo(self):
         return self.button == 'history_undo'
 
     def is_error(self):
-        return self.error_type
+        return bool(self.error_type)
 
-    def compare(self, auto_test) -> str:
+    def compare(self, auto_test) -> (str, bool):
         report = ''
         success = True
         # Case of error
@@ -464,14 +491,16 @@ class ProofStep:
             error_type = auto_test.error_dic[error_nb]
             if not auto_test.error_type:
                 report = f"unexpected {error_type}"
+                report += f", error msg: {self.error_msg}"
                 success = False
             elif auto_test.error_type != error_nb:
                 expected_error = auto_test.error_dic[auto_test.error_type]
                 report = f"unexpected {error_type}, expected {expected_error}"
+                report += f", error msg: {self.error_msg}"
                 success = False
 
         # Error msg
-        error_msg = self.error_message
+        error_msg = self.error_msg
         if error_msg:
             find = error_msg.find(auto_test.error_msg)
             if find == -1:

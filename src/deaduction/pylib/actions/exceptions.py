@@ -35,7 +35,7 @@ This file is part of dEAduction.
 from enum                         import IntEnum
 
 from deaduction.pylib.config.i18n import _
-from deaduction.pylib.memory import EventNature, JournalEvent
+
 
 class InputType(IntEnum):
     """

@@ -149,7 +149,7 @@ def construct_and_hyp(goal, selected_objects: [MathObject]) -> CodeForLean:
     new_hypo_name = get_new_hyp(goal)
     code = f'have {new_hypo_name} := and.intro {h1} {h2}'
     code = CodeForLean.from_string(code)
-    code.add_success_message(_("conjunction {} added to the context").
+    code.add_success_msg(_("conjunction {} added to the context").
                              format(new_hypo_name))
     return code
 
@@ -253,7 +253,7 @@ def apply_or(goal,
     h2 = get_new_hyp(goal)
     # Destruct the disjunction
     code = code.and_then(f'cases {selected_hypo} with {h1} {h2}')
-    code.add_success_message(_("proof by cases: we first assume {}").
+    code.add_success_msg(_("proof by cases: we first assume {}").
                              format(h1))
     return code
 
@@ -372,14 +372,14 @@ def action_negate(goal: Goal,
         if not goal.target.is_not():
             raise WrongUserInput(error=_("target is not a negation 'NOT P'"))
         code = CodeForLean.from_string('push_neg')
-        code.add_success_message(_("negation pushed on target"))
+        code.add_success_msg(_("negation pushed on target"))
     elif len(selected_objects) == 1:
         if not selected_objects[0].is_not():
             error = _("selected property is not a negation 'NOT P'")
             raise WrongUserInput(error)
         selected_hypo = selected_objects[0].info["name"]
         code = CodeForLean.from_string(f'push_neg at {selected_hypo}')
-        code.add_success_message(_(f"negation pushed on property "
+        code.add_success_msg(_(f"negation pushed on property "
                                    f"{selected_hypo}"))
     else:
         raise WrongUserInput(error=_('negate only one property at a time'))
@@ -399,7 +399,7 @@ def construct_implicate(goal: Goal) -> CodeForLean:
     else:
         new_hypo_name = get_new_hyp(goal)
         code = CodeForLean.from_string(f'intro {new_hypo_name}')
-        code.add_success_message(_("property {} added to the context").
+        code.add_success_msg(_("property {} added to the context").
                                  format(new_hypo_name))
         return code
 
@@ -411,7 +411,7 @@ def apply_implicate(goal: Goal, selected_object: [MathObject]) -> CodeForLean:
     """
     selected_hypo = selected_object[0].info["name"]
     code = CodeForLean.from_string(f'apply {selected_hypo}')
-    code.add_success_message(_("target modified using implication {}").
+    code.add_success_msg(_("target modified using implication {}").
                              format(selected_hypo))
     return code
 
@@ -454,7 +454,7 @@ def have_new_property(arrow: MathObject,
     possible_codes = implicit_codes + explicit_codes
 
     code = CodeForLean.or_else_from_list(possible_codes)
-    code.add_success_message(_("Property {} added to the context").
+    code.add_success_msg(_("Property {} added to the context").
                              format(new_hypo_name))
     return code
 
@@ -546,7 +546,7 @@ def construct_iff(goal: Goal, user_input: [str]) -> CodeForLean:
         code = code.and_then("split")
     else:
         raise WrongUserInput(error=_("undocumented error"))
-    code.add_success_message(_("begin proof of first implication"))
+    code.add_success_msg(_("begin proof of first implication"))
     return code
 
 
@@ -580,7 +580,7 @@ def destruct_iff_on_hyp(goal: Goal,
     h2 = get_new_hyp(goal)
     possible_codes.append(f'cases (iff_def.mp {hypo_name}) with {h1} {h2}')
     code = CodeForLean.or_else_from_list(possible_codes)
-    code.add_success_message(_("property {} split into {} and {}").
+    code.add_success_msg(_("property {} split into {} and {}").
                              format(hypo_name, h1, h2))
     return code
 
@@ -597,7 +597,7 @@ def construct_iff_on_hyp(goal: Goal,
     h2 = selected_objects[1].info["name"]
     code_string = f'have {new_hypo_name} := iff.intro {h1} {h2}'
     code = CodeForLean.from_string(code_string)
-    code.add_success_message(_("Property {} added to the context").
+    code.add_success_msg(_("Property {} added to the context").
                              format(new_hypo_name))
     return code
 
@@ -677,7 +677,7 @@ def construct_forall(goal) -> CodeForLean:
                              )
         possible_codes = CodeForLean.from_string(f'intro {x}')
         name = f"{x}"
-    possible_codes.add_success_message(_("Object {} added to the context").
+    possible_codes.add_success_msg(_("Object {} added to the context").
                                        format(name))
 
     if body.is_implication(is_math_type=True):
@@ -794,7 +794,7 @@ def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
         # Finally come back to first inequality
         more_code = more_code.and_then("rotate")
 
-    code.add_success_message(_("Property {} added to the context").
+    code.add_success_msg(_("Property {} added to the context").
                              format(new_hypo_name))
     return code.and_then(more_code)
 
@@ -877,7 +877,7 @@ def construct_exists(goal, user_input: [str]) -> CodeForLean:
     x = user_input[0]
     code = CodeForLean.from_string(f'use {x}, dsimp')
     code = code.or_else(f'use {x}')
-    code.add_success_message(_("now prove {} suits our needs").format(x))
+    code.add_success_msg(_("now prove {} suits our needs").format(x))
     return code
 
 
@@ -901,7 +901,7 @@ def apply_exists(goal: Goal, selected_object: [MathObject]) -> CodeForLean:
     if selected_hypo.node == 'QUANT_∃!':
         # We have to add the "simp" tactic to avoid appearance of lambda expr
         code = code.and_then(f'simp at {new_hypo_name}')
-    code.add_success_message(_("new object {} with property {}").
+    code.add_success_msg(_("new object {} with property {}").
                              format(x, new_hypo_name))
     return code
 
@@ -928,7 +928,7 @@ def construct_exists_on_hyp(goal: Goal,
         error = _("I cannot build an existential property with this")
         raise WrongUserInput(error)
     code = CodeForLean.from_string(code_string)
-    code.add_success_message(_("get new existential property {}").
+    code.add_success_msg(_("get new existential property {}").
                              format(new_hypo))
     return code
 

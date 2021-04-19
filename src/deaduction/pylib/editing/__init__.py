@@ -1,6 +1,41 @@
+"""
+##################
+# __init__.py :  #
+##################
+
+Author(s)      : - Florian Dupeyron <florian.dupeyron@mugcat.fr>
+
+Maintainers(s) : - Florian Dupeyron <florian.dupeyron@mugcat.fr>
+Date           : July 2020
+
+Copyright (c) 2020 the dEAduction team
+
+This file is part of d∃∀duction.
+
+    d∃∀duction is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    d∃∀duction is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
+"""
+
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 from diff_match_patch import diff_match_patch
+from pickle import ( dump, HIGHEST_PROTOCOL )
+
+import deaduction.pylib.config.dirs as cdirs
+import deaduction.pylib.config.vars as cvars
+
+from deaduction.pylib.mathobj import    Proof, ProofStep
+from deaduction.pylib.coursedata import AutoStep
 
 dmp = diff_match_patch()
 
@@ -20,7 +55,7 @@ class HistoryEntry:
     misc_info: Dict[str, any]
 
 
-class LeanFile:
+class VirtualFile:
     """
     Class used to store a virtual, editable lean file, with editing
     history managment.
@@ -37,7 +72,7 @@ class LeanFile:
                           patch_forward=None,
                           cursor_pos=0,
                           misc_info=dict() )
-        ]  # List[HistoryEntry]
+                            ]         # List[HistoryEntry]
 
         self.idx          = 0         # Current position in history
         self.target_idx   = 0         # Targeted position in history
@@ -47,7 +82,7 @@ class LeanFile:
         self.preamble     = preamble   # Text inserted before content
         self.afterword    = afterword  # Text inserted after content
 
-        # Virtual cursor managment
+        # Virtual cursor management
         # /!\ IMPORTANT NOTE /!\
         # if you want to use the current_pos attribute in one of the class
         # functions, please do not refer to it directly, but retrieve it
@@ -236,7 +271,6 @@ class LeanFile:
         # Keep the number of the first line of last change in misc_info
         self.state_info_attach(first_line_of_last_change=line_number)
 
-
     def state_info_attach(self, **kwargs):
         """
         Attach info to the last history entry.
@@ -262,7 +296,6 @@ class LeanFile:
             return entry_dict[info_name]
         else:
             return None
-
 
     ################################
     # History control
@@ -407,3 +440,67 @@ def first_distinct_line(txt1: str, txt2: str) -> int:
             and txt1[counter] == txt2[counter]:
         counter += 1
     return counter + 1  # first line = 1, not 0
+
+
+class LeanFile(VirtualFile):
+
+    @property
+    def current_proof_step(self) -> ProofStep:
+        return self.history[self.target_idx].misc_info.get('proof_step')
+
+    @property
+    def previous_proof_step(self) -> Optional[ProofStep]:
+        if self.target_idx > 0:
+            return self.history[self.target_idx-1].misc_info.get('proof_step')
+        else:
+            return None
+
+    @property
+    def button(self):
+        proof_step = self.current_proof_step
+        if proof_step:
+            return proof_step.button
+
+    @property
+    def statement(self):
+        proof_step = self.current_proof_step
+        if proof_step:
+            return proof_step.statement
+
+    @property
+    def selection(self):
+        proof_step = self.current_proof_step
+        if proof_step:
+            return proof_step.selection
+
+    @property
+    def proof(self):  # Proof
+        """
+        Return the current proof history, an instance of the Proof class
+        """
+
+        proof = Proof([(entry.misc_info["ProofState"], None) for entry in
+                       self.history[:self.target_idx + 1]])
+        return proof
+
+    def save_exercise_for_autotest(self, emw):
+        """
+
+        :param emw: ExerciseMainWindow instance
+        """
+        save = cvars.get('functionality.save_solved_exercises_for_autotest',
+                         False)
+        if not save:
+            return
+
+        proof_steps = [entry.misc_info["proof_step"] for entry in self.history]
+        auto_steps = [AutoStep.from_proof_step(step) for step in proof_steps]
+
+        exercise = emw.exercise
+        exercise.__refined_auto_steps = auto_steps
+        filename = 'test_' + exercise.lean_short_name + '.pkl'
+        file_path = cdirs.local / 'tests' / filename
+        with open(file_path, mode='ab') as output:
+            dump(exercise, output, HIGHEST_PROTOCOL)
+
+

@@ -31,9 +31,10 @@ from .MathObject import     (MathObject,
                              NUMBER_SETS_LIST)
 from .proof_state import    (Goal,
                              ProofState,
-                             ProofStep,
-                             Proof
+                             Proof,
+                             ProofStep
                              )
+# from .proof_step import     ProofStep
 from .give_name import     (get_new_hyp,
                             give_global_name,
                             give_local_name,

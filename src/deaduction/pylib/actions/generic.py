@@ -32,14 +32,14 @@ import logging
 from deaduction.pylib.actions import (  WrongUserInput,
                                         CodeForLean,
                                         test_selection)
-from deaduction.pylib.coursedata import Statement
+# from deaduction.pylib.coursedata import Statement
 from deaduction.pylib.mathobj import (  Goal,
                                         MathObject,
                                         get_new_hyp)
 
 
 def rw_using_statement(goal: Goal, selected_objects: [MathObject],
-                      statement: Statement):
+                      statement):
     """
     Return codes trying to use statement for rewriting. This should be
     reserved to iff or equalities. This function is called by
@@ -67,7 +67,7 @@ def rw_using_statement(goal: Goal, selected_objects: [MathObject],
 
 def action_definition(goal: Goal,
                       selected_objects: [MathObject],
-                      definition: Statement,
+                      definition,
                       target_selected: bool = True
                       ):
     """
@@ -82,7 +82,7 @@ def action_definition(goal: Goal,
 
 def action_theorem(goal: Goal,
                    selected_objects: [MathObject],
-                   theorem: Statement,
+                   theorem,
                    target_selected: bool = True
                    ):
     """

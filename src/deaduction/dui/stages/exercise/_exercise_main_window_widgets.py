@@ -58,7 +58,6 @@ from deaduction.pylib.coursedata        import   Exercise
 from deaduction.pylib.mathobj           import   Goal
 import deaduction.pylib.config.vars      as      cvars
 import deaduction.pylib.utils.filesystem as      fs
-from deaduction.pylib.memory            import   JournalEvent, EventNature
 
 log = logging.getLogger(__name__)
 
@@ -337,20 +336,26 @@ class ExerciseStatusBar(QStatusBar):
         self.set_message("")
         self.hide_icon()
 
-    def display_message(self, event: JournalEvent):
+    def display_message(self, proof_step):
         """
         Display a message in the status bar. Two kinds of messages are
         considered: error or success.
         """
 
-        nature, message = event.nature, event.content
+        log.debug(f"Display msg: "
+                  f"{proof_step.error_msg, proof_step.success_msg}")
+        if proof_step.is_error():
+            message = proof_step.error_msg
+        else:
+            message = proof_step.success_msg
         # Capitalize first char but do not un-capitalize the remaining
-        message = message[0].capitalize() + message[1:]
+        if message:
+            message = message[0].capitalize() + message[1:]
 
-        if event.is_error():
+        if proof_step.is_error():
             self.show_error_icon()
             self.set_message(message)
-        elif event.is_success() and self.display_success_messages:
+        elif proof_step.success_msg and self.display_success_messages:
             self.show_success_icon()
             self.set_message(message)
         else:

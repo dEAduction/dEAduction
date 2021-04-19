@@ -200,7 +200,7 @@ def introduce_fun(goal: Goal, selected_objects: [MathObject]) -> CodeForLean:
                                                f'{h} with {f} {hf}, '
                                                f'dsimp at {hf}, '
                                                f'dsimp at {f}')
-                code.add_error_message(error)
+                code.add_error_msg(error)
                 return code
     raise WrongUserInput(error)
 
@@ -250,7 +250,7 @@ def action_new_object(goal: Goal,
             if goal.target.is_for_all():
                 # User might want to prove an existential property "∀x..."
                 # and mistake "new object" for introduction of the relevant x.
-                possible_codes.add_error_message(_("You might try the ∀ "
+                possible_codes.add_error_msg(_("You might try the ∀ "
                                                    "button..."))
 
     # Choice = new sub-goal
@@ -414,7 +414,7 @@ def action_apply(goal: Goal,
     :return:    string of lean code
     """
 
-    # fixme: rewrite to provide meaningful error messages
+    # fixme: rewrite to provide meaningful error msgs
 
     if not selected_objects:
         raise WrongUserInput(error=_("no property selected"))

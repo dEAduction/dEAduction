@@ -27,15 +27,14 @@ This file is part of d∃∀duction.
 
 from pprint import                        pformat
 from deaduction.pylib.config.i18n import _
-from deaduction.pylib.memory import EventNature, JournalEvent
 
 
 class FailedRequestError(Exception):
     def __init__(self, errors, lean_code):
         super().__init__(f"Failed request to server with errors : \n"
                          f"{pformat(errors, indent=4)}")
-        if lean_code and lean_code.error_message:
-            self.message = lean_code.error_message
+        if lean_code and lean_code.error_msg:
+            self.message = lean_code.error_msg
         else:
             self.message = _('Error')
 

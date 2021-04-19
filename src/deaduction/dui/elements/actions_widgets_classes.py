@@ -139,6 +139,10 @@ class ActionButton(QPushButton):
 
         self.action_triggered.emit(self)
 
+    @property
+    def symbol(self):
+        return self.action.symbol
+
     def has_symbol(self, symbol) -> bool:
         """
         Test if symbol is the symbol of (the action associated to) self.

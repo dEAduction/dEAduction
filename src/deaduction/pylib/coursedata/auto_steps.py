@@ -34,7 +34,7 @@ from dataclasses import dataclass
 import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.config.i18n import _
 
-
+from deaduction.pylib.mathobj import ProofStep
 import deaduction.pylib.actions.logic
 import deaduction.pylib.actions.proofs
 import deaduction.pylib.actions.magic
@@ -133,7 +133,7 @@ class AutoStep:
     error_msg: str
     success_msg: str
 
-    error_dic = {1: 'WrongUserInput', 2: 'FailedRequestError'}
+    error_dic = {0: '', 1: 'WrongUserInput', 2: 'FailedRequestError'}
 
     @classmethod
     def from_string(cls, string):
@@ -147,7 +147,7 @@ class AutoStep:
         button = None
         statement = None
         button_or_statement_rank = None
-        error_type = None
+        error_type = 0
         error_msg = ""
         success_msg = ""
 
@@ -192,6 +192,62 @@ class AutoStep:
 
         return cls(string, selection, button, statement, user_input,
                    error_type, error_msg, success_msg)
+
+    @classmethod
+    def from_proof_step(cls, proof_step: ProofStep, emw):
+        """
+        Convert proof_step to the corresponding auto_step, e.g. for use as
+        with auto_test.
+        
+        :param proof_step: instance of ProofStep 
+        :param emw:         ExerciseMainWindow
+        :return: 
+        """
+
+        # Selection: [str]
+        selection = []
+        if proof_step.selection:
+            for item in proof_step.selection:
+                if item in emw.objects:
+                    item_str = "@O" + str(emw.objects.index(item))
+                else:
+                    item_str = "@P" + str(emw.properties.index(item))
+                selection.append(item_str)
+
+        # Button: '∧', '∨', '¬', '⇒', '⇔', '∀', '∃', 'compute', 'CQFD',
+        #         'proof_methods', 'new_objects', 'apply'
+        button = ''
+        if proof_step.button:
+            button = proof_step.button.symbol \
+                if hasattr(proof_step.button, 'symbol') \
+                else proof_step.button
+
+        # Statement: short Lean name
+        statement = ''
+        if proof_step.statement:
+            statement = proof_step.statement.lean_short_name
+
+        # User input: int
+        user_input = []
+        if proof_step.user_input:
+            user_input = [str(item) for item in proof_step.user_input]
+
+        error_msg = proof_step.error_msg
+        if error_msg:
+            error_msg = 'error=' + error_msg
+        success_msg = proof_step.success_msg
+        if success_msg:
+            success_msg = 'success=' + success_msg
+
+        string = ' '.join(selection) + ' ' \
+                 + button + statement + ' ' \
+                 + ' '.join(user_input) + ' ' \
+                 + AutoStep.error_dic[proof_step.error_type] + ' ' \
+                 + error_msg + ' ' + success_msg
+
+        return cls(string, selection, button, statement, user_input,
+                   proof_step.error_type, proof_step.error_msg,
+                   proof_step.success_msg)
 
 
 if __name__ == '__main__':

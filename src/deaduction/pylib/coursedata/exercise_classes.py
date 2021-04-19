@@ -27,7 +27,7 @@ This file is part of dEAduction.
 """
 
 from dataclasses import dataclass
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import logging
 
 import deaduction.pylib.logger as logger
@@ -83,7 +83,8 @@ class Statement:
     # this is used when pre-processing
 
     auto_steps: str                         = ''
-    auto_test: str                         = ''
+    auto_test: str                          = ''
+    __refined_auto_steps: Optional[AutoStep]= None
 
     info:                   Dict[str, Any]  = None
     # Any other (non-essential) information
@@ -121,6 +122,15 @@ class Statement:
     def attributes(cls):
         """return the list of attributes of the class"""
         return cls.__annotations__.keys()
+
+    @property
+    def lean_short_name(self):
+        """
+        Keep only the last two parts, e.g.
+        'set_theory.unions_and_intersections.exercise.union_distributive_inter'
+        -> # 'exercise.union_distributive_inter'
+        """
+        return '.'.join(self.lean_name.split('.')[-2:])
 
     @property
     def statement_to_text(self):
@@ -201,6 +211,9 @@ class Statement:
         Turn the raw string parsed from the lean file into a
         :return:
         """
+        if self.__refined_auto_steps:
+            return self.__refined_auto_steps
+
         if not self.auto_steps:
             if not self.auto_test:
                 return ''
@@ -211,6 +224,8 @@ class Statement:
         auto_steps = []
         for string in auto_steps_strings:
             auto_steps.append(AutoStep.from_string(string))
+
+        self.__refined_auto_steps = auto_steps
         return auto_steps
 
     def has_name(self, lean_name):

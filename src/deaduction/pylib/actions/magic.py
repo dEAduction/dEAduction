@@ -35,7 +35,6 @@ from deaduction.pylib.text import tooltips
 
 from deaduction.pylib.actions.actiondef import action
 from deaduction.pylib.actions import (CodeForLean,
-                                      solve1_wrap,
                                       WrongUserInput,
                                       test_selection)
 from deaduction.pylib.mathobj import (MathObject,
