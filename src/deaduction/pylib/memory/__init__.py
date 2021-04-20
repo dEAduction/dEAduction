@@ -81,12 +81,14 @@ class Journal:
         self.memory = []
 
     def store(self, proof_step: ProofStep, emw):
+        # TODO: add time
         self.memory.append(proof_step)
         display = AutoStep.from_proof_step(proof_step, emw)
         log.debug(f"Storing proof_step {display}")
 
     def save(self):
-        with open(self.__journal_file_name, mode='ab') as output:
+        # TODO: add time in the filename
+        with open(self.__journal_file_name, mode='w') as output:
             pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
 
     # def write_last_entry(self):
