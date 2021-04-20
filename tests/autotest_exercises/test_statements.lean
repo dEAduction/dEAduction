@@ -161,8 +161,8 @@ AutoTest
     →, definition.inclusion, ∀, →,
     @P1 ∧,
     @P2 @P3 definition.inclusion,
-    @P2 @P1 →,
-    @P3 @P4 →,
+    @P1 @P2 →,
+    @P4 @P3 →,
     CQFD
 -/
 begin
@@ -193,8 +193,8 @@ A ⊆ B
 :=
 /- dEAduction
 AutoTest
-    H1 definition.inclusion,
-    definition.inclusion,
+    H1 definition.inclusion success=H1,
+    definition.inclusion success=appliquée_au_but,
     CQFD
 -/
 begin
@@ -207,7 +207,7 @@ A = A'
 :=
 /- dEAduction
 AutoTest
-    theorem.double_inclusion,
+    theorem.double_inclusion success=théorème_appliqué,
     CQFD
 -/
 begin
@@ -221,7 +221,7 @@ A = A'
 :=
 /- dEAduction
 AutoTest
-    H1 theorem.double_inclusion,
+    H1 theorem.double_inclusion success=théorème_appliqué,
     CQFD
 -/
 begin

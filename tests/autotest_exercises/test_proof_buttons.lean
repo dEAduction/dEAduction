@@ -63,6 +63,8 @@ notation [parsing_only]  P ` ssi ` Q := P ↔ Q
 notation [parsing_only]  x ` dans ` A := x ∈ A
 notation [parsing_only]  x ` appartient ` A := x ∈ A
 notation [parsing_only]  A ` inter ` B := A ∩ B
+
+
 notation [parsing_only]  A ` intersection ` B := A ∩ B
 notation [parsing_only]  A ` union ` B := A ∪ B
 notation [parsing_only]  A ` inclus ` B := A ⊆ B
@@ -159,19 +161,13 @@ AutoStep
     →, @P1 ∧
 -/
 begin
-    intro H1,
-    rw definition.inclusion,
-    intros x H2,
-    cases H1 with H3 H4,
-    rw definition.inclusion at H3 H4,
-    have H5 := H3 H2,
-    have H6 := H4 H5,
-    assumption,
+    sorry
 end
 
 example (x y:X) (H : x ≠ y) : y ≠ x :=  
 begin
-    apply ne.symm, assumption,
+    apply ne.symm,
+    assumption,
 end
  
 end generalites
@@ -245,8 +241,7 @@ lemma exercise.test_sorry
 P :=
 /- dEAduction
 AutoTest
-    proof_methods 3,
-    CQFD
+    proof_methods 3
 -/
 begin
   sorry
@@ -320,25 +315,36 @@ y ∈ B :=
 /- dEAduction
 AutoTest
     H' H apply,
-    @O9 H' apply,
+    H' H'' apply,
     CQFD
 -/
 begin
   sorry
 end
 
-
-lemma exercise.test_apply_error
+lemma exercise.test_apply_error_1
 (A B: set X) (x y : X) (f: X → Y) (H: x = y) (H': x ∈ A) (H'': A =B):
 y ∈ B :=
 /- dEAduction
 AutoTest
-    H apply,
+    H' apply WUI error=appliquer_ceci,
+    proof_methods 3
 -/
 begin
   sorry
 end
 
+lemma exercise.test_apply_error_2
+(A B: set X) (x y : X) (f: X → Y) (H: x = y) (H': x ∈ A) (H'': A =B):
+y ∈ B :=
+/- dEAduction
+AutoTest
+    CQFD FRE error=pas_conclure,
+    proof_methods 3
+-/
+begin
+  sorry
+end
 end tests_proof_buttons
 
 
