@@ -213,6 +213,18 @@ class ExerciseMainWindow(QMainWindow):
         return self.servint.lean_file
 
     @property
+    def objects(self):
+        return [item.mathobject for item in self.ecw.objects_wgt.items]
+
+    @property
+    def properties(self):
+        return [item.mathobject for item in self.ecw.props_wgt.items]
+
+    @property
+    def goal(self):
+        return self.servint.proof_state.goals[0]
+
+    @property
     def target_selected(self):
         if not self.target_selected_by_default:
             return self._target_selected

@@ -187,16 +187,17 @@ def get_exercises(course: Optional[Course],
             exercises = [exercise]
     return exercises
 
+
 def find_selection(auto_step, emw):
     auto_selection = []
     # First trial
     # TODO: make emw properties
     #  and function find_selection(AutoStep, prop, obj)
-    properties = [item.mathobject
-                  for item in emw.ecw.props_wgt.items]
-    objects = [item.mathobject
-               for item in emw.ecw.objects_wgt.items]
-    goal = emw.servint.proof_state.goals[0]
+    # properties = [item.mathobject
+    #               for item in emw.ecw.props_wgt.items]
+    # objects = [item.mathobject
+    #            for item in emw.ecw.objects_wgt.items]
+    # goal = emw.servint.proof_state.goals[0]
     for name in auto_step.selection:
         selection = None
         with trio.move_on_after(5):
@@ -206,20 +207,20 @@ def find_selection(auto_step, emw):
             # construction.
             while not selection:
                 if name.startswith('@O'):
-                    selection = objects[int(name[2:]) - 1]
+                    selection = emw.objects[int(name[2:]) - 1]
                 elif name.startswith('@P'):
-                    selection = properties[int(name[2:]) - 1]
+                    selection = emw.properties[int(name[2:]) - 1]
                 else:
                     if name.startswith('@'):  # (unwanted @)
                         name = name[1:]
-                    selection = goal.math_object_from_name(name)
-                if not selection:
-                    # Next trial
-                    properties = [item.mathobject for item in
-                                  emw.ecw.props_wgt.items]
-                    objects = [item.mathobject for item in
-                               emw.ecw.objects_wgt.items]
-                    goal = emw.servint.proof_state.goals[0]
+                    selection = emw.goal.math_object_from_name(name)
+                # if not selection:
+                #     # Next trial
+                #     properties = [item.mathobject for item in
+                #                   emw.ecw.props_wgt.items]
+                #     objects = [item.mathobject for item in
+                #                emw.ecw.objects_wgt.items]
+                #     goal = emw.servint.proof_state.goals[0]
 
         if selection:
             auto_selection.append(selection)
