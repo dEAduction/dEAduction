@@ -421,7 +421,7 @@ class ProofStep:
     property_counter: int             = 0
     current_goal_number: int          = 1
     total_goals_counter: int          = 1
-    goal_change_messages: [str]       = None
+    goal_change_msgs: [str]       = None
 
     # ──────────────── Input ─────────────── #
     selection: [Any]                  = None
@@ -433,8 +433,8 @@ class ProofStep:
     # ──────────────── Output ─────────────── #
     effective_code                    = None  # CodeForLean
     error_type: Optional[int]         = 0  # 1 = WUI, 2 = FRE
-    error_msg: str                = ''
-    # success_message: Optional[int]    = None
+    error_msg: str                    = ''
+    # success_msg: Optional[int]      = None
     proof_state                       = None
 
     @classmethod
@@ -446,13 +446,15 @@ class ProofStep:
 
         pf = proof_step
         npf = ProofStep(property_counter=pf.property_counter,
-                        goal_change_messages=copy(pf.goal_change_messages),
+                        goal_change_msgs=copy(pf.goal_change_msgs),
                         )
         return npf
 
     @property
     def success_msg(self):
-        if self.effective_code:
+        if self.is_error():
+            return ''
+        elif self.effective_code:
             return self.effective_code.success_msg
         elif self.lean_code:
             return self.lean_code.success_msg
@@ -508,7 +510,7 @@ class ProofStep:
                           f'expected: {auto_test.error_msg}'
                 success = False
         # Success msg
-        success_msg = self.success_message
+        success_msg = self.success_msg
         if success_msg:
             find = success_msg.find(auto_test.success_msg)
             if find == -1:
