@@ -158,25 +158,34 @@ class CodeForLean:
             other = CodeForLean.from_string(other)
         if other.success_msg == "":
             other.success_msg = success_msg
+        if other.error_msg:
+            self.error_msg = other.error_msg
         if self.is_empty():
             return other
-        elif self.is_or_else():
+        elif self.is_or_else() \
+                and not self.success_msg and not other.success_msg:
             self.instructions.append(other)
             return self
         else:
             return CodeForLean(combinator=LeanCombinator.or_else,
-                               instructions=[self, other])
+                               instructions=[self, other],
+                               error_msg=self.error_msg)
 
     def and_then(self, other, success_msg=""):
         """
         Combine 2 CodeForLean with an and_then combinator.
 
-        :param other:   str or CodeForLean
-        :return:        CodeForLean
+        :param other:       str or CodeForLean
+        :param success_msg: str
+        :return:            CodeForLean
         """
+        if not success_msg:
+            success_msg = self.success_msg
         if isinstance(other, str):
             other = CodeForLean.from_string(other)
         if self.is_empty():
+            if not other.success_msg:
+                other.add_success_msg(success_msg)
             return other
         elif other == "" or other.is_empty():
             return self
@@ -342,7 +351,7 @@ class CodeForLean:
         :param alternative_number: number of successful alternative of this
         node
         :return: (1) a CodeForLean which is the modified self,
-        (2) A boolean which tells if or_else node has been found
+                 (2) A boolean which tells if or_else node has been found
         """
 
         if self.is_single_string():
@@ -385,7 +394,9 @@ class CodeForLean:
             instructions = [piece_of_code.add_no_meta_vars()
                             for piece_of_code in self.instructions]
             return CodeForLean(combinator=LeanCombinator.or_else,
-                               instructions=instructions)
+                               instructions=instructions,
+                               success_msg=self.success_msg,
+                               error_msg=self.error_msg)
 
     def to_decorated_string(self):
         """
@@ -425,9 +436,19 @@ class CodeForLean:
         return success_msg
 
     def add_error_msg(self, error_msg: str):
+        """
+        Add error_message to self, and if self.is_or_else, also add it to
+        all the alternatives.
+        """
+        if self.is_or_else():
+            for code in self.instructions:
+                code.add_error_msg(error_msg)
         self.error_msg = error_msg
 
     def add_success_msg(self, success_msg: str):
+        if self.is_or_else():
+            for code in self.instructions:
+                code.add_success_msg(success_msg)
         self.success_msg = success_msg
 
     def is_empty(self):
