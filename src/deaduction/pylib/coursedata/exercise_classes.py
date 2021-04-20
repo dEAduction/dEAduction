@@ -30,6 +30,7 @@ from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
 import logging
 
+from deaduction.pylib.config.i18n import _
 import deaduction.pylib.logger as logger
 from deaduction.pylib.actions.actiondef import Action
 import deaduction.pylib.actions.logic
@@ -233,6 +234,24 @@ class Statement:
 
     def has_pretty_name(self, pretty_name):
         return self.pretty_name.__contains__(pretty_name)
+
+    def is_definition(self):
+        return isinstance(self, Definition)
+
+    def is_theorem(self):
+        return isinstance(self, Theorem)
+
+    def is_exercise(self):
+        return isinstance(self, Exercise)
+
+    @property
+    def type(self):
+        if self.is_definition():
+            return _('definition')
+        elif self.is_theorem():
+            return _('theorem')
+        elif self.is_exercise():
+            return _('exercise')
 
 
 @dataclass
