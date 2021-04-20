@@ -36,37 +36,38 @@ from deaduction.pylib.mathobj import MathObject
 import deaduction.pylib.config.vars as cvars
 
 log = logging.getLogger(__name__)
-PROPERTY_COUNTER = 1
 
 
-def get_new_hyp(goal) -> str:
+def get_new_hyp(proof_step) -> str:
     """
     Call get_new_hyp_from_forbidden_names with a list of forbidden names
     that are the current goal's variables' names.
-    :param goal: current goal
-    :return:
+    :param proof_step: current proof_step, contains goal and property_counter
+    :return: name for a new property, like 'H3'.
     """
-    forbidden_names = goal.extract_vars_names()
-    return get_new_hyp_from_forbidden_names(forbidden_names)
+    forbidden_names = proof_step.goal.extract_vars_names()
+    return get_new_hyp_from_forbidden_names(proof_step,
+                                            forbidden_names)
 
 
-def get_new_hyp_from_forbidden_names(forbidden_names: [str]) -> str:
+def get_new_hyp_from_forbidden_names(proof_step,
+                                     forbidden_names: [str]) -> str:
     """
     Find a fresh name for a new property.
     The name is 'Hn' where n is the least integer such that Hn has never
     been given by the present function, and Hn is not in the current context.
     Makes use of the Python global var PROPERTY_COUNTER.
 
+    :param proof_step: current proof_step
     :param forbidden_names: list of names of variables in the context
     :return:                str, a fresh name
     """
-    global PROPERTY_COUNTER
-    counter = PROPERTY_COUNTER
+    counter = proof_step.property_counter
     potential_name = 'H' + str(counter)
     while potential_name in forbidden_names:
         counter += 1
         potential_name = 'H' + str(counter)
-    PROPERTY_COUNTER = counter + 1
+    proof_step.property_counter = counter + 1
     return potential_name
 
 
@@ -96,8 +97,8 @@ def give_local_name(math_type: MathObject,
     return give_name(math_type, forbidden_vars, hints)
 
 
-def give_global_name(math_type:MathObject,
-                     goal,
+def give_global_name(math_type: MathObject,
+                     proof_step,
                      hints: [str] = []) -> str:
     """
     Attribute a name to a global variable. See give_name below.
@@ -108,13 +109,14 @@ def give_global_name(math_type:MathObject,
     :param hints:       a list of hints for the future name
     :return:            a name for the new variable
     """
-    forbidden_vars = goal.extract_vars()
-    return give_name(math_type, forbidden_vars, hints)
+    forbidden_vars = proof_step.goal.extract_vars()
+    return give_name(math_type, forbidden_vars, hints, proof_step)
 
 
 def give_name(math_type,
               forbidden_vars: [MathObject],
-              hints: [str] = []) -> str:
+              hints: [str]=[],
+              proof_step=None) -> str:
     """
     Provide a name for a new variable.
     Roughly speaking,
@@ -138,6 +140,7 @@ def give_name(math_type,
     :param math_type:       PropObj type of new variable
     :param forbidden_vars:  list of variables that must be avoided
     :param hints:           a hint for the future name
+    :param proof_step:      current proof_step, useful only for naming props.
     :return:                a name for the new variable
     """
 
@@ -159,7 +162,7 @@ def give_name(math_type,
 
     # Properties are named 'Hn' where n is an integer
     if math_type.is_prop():
-        return get_new_hyp_from_forbidden_names(forbidden_names)
+        return get_new_hyp_from_forbidden_names(proof_step, forbidden_names)
 
     ##################
     # Managing hints #

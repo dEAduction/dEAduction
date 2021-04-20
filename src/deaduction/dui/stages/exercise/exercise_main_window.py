@@ -275,6 +275,22 @@ class ExerciseMainWindow(QMainWindow):
 
         return msg
 
+    def simulate_click(self, action_button, connected=False):
+        if not connected:
+            action_button.action_triggered.disconnect(self.__action_triggered)
+        action_button.animateClick(100)
+        if not connected:
+            action_button.action_triggered.connect(self.__action_triggered)
+
+    def simulate_statement(self, statement_item):
+        pass
+
+    def simulate(self, proof_step: ProofStep):
+        if isinstance(proof_step.button, ActionButton):
+            self.simulate_click(proof_step.button)
+        elif isinstance(proof_step.statement_item, StatementsTreeWidgetItem):
+            pass
+
     def update_goal(self, new_goal: Goal):
         """
         Change widgets (target, math. objects and properties) to
@@ -410,6 +426,8 @@ class ExerciseMainWindow(QMainWindow):
                     # signal proof_state_change of which
                     # self.update_goal is a slot
                     self.proof_step.button = 'history_redo'
+                    proof_step = self.lean_file.current_proof_step
+                    self.simulate(proof_step)
                     await self.process_async_signal(self.servint.history_redo)
 
                 elif emission.is_from(self.toolbar.undo_action.triggered):
@@ -433,7 +451,7 @@ class ExerciseMainWindow(QMainWindow):
                     # emission.args[0] is the StatementTreeWidgetItem
                     # triggered by user
                     if hasattr(emission.args[0], 'statement'):
-                        self.proof_step.statement = emission.args[0]
+                        self.proof_step.statement_item = emission.args[0]
                     await self.process_async_signal(partial(
                             self.__server_call_statement, emission.args[0]))
 
@@ -515,6 +533,7 @@ class ExerciseMainWindow(QMainWindow):
         else:
             selection = self.current_selection_as_mathobjects
         self.proof_step.selection = selection
+
         if auto_user_input:
             user_input = auto_user_input
         else:
@@ -524,12 +543,12 @@ class ExerciseMainWindow(QMainWindow):
             try:
                 if not user_input:
                     lean_code = action.run(
-                        self.current_goal,
+                        self.previous_proof_step,
                         selection,
                         target_selected=self.target_selected)
                 else:
                     lean_code = action.run(
-                        self.current_goal,
+                        self.previous_proof_step,
                         selection,
                         user_input,
                         target_selected=self.target_selected)
@@ -593,8 +612,8 @@ class ExerciseMainWindow(QMainWindow):
             selection = auto_selection
         else:
             selection = self.current_selection_as_mathobjects
-
         self.proof_step.selection = selection
+
         # Do nothing if user clicks on a node
         if isinstance(item, StatementsTreeWidgetItem):
             try:
@@ -603,13 +622,13 @@ class ExerciseMainWindow(QMainWindow):
 
                 if isinstance(statement, Definition):
                     lean_code = generic.action_definition(
-                        self.current_goal,
+                        self.previous_proof_step,
                         selection,
                         statement,
                         self.target_selected)
                 elif isinstance(statement, Theorem):
                     lean_code = generic.action_theorem(
-                        self.current_goal,
+                        self.previous_proof_step,
                         selection,
                         statement,
                         self.target_selected)
@@ -772,7 +791,8 @@ class ExerciseMainWindow(QMainWindow):
 
         # Store current proof_step in the lean_file (for logical memory)
         # and in the journal (for comprehensive memory)
-        self.lean_file.state_info_attach(proof_step=self.proof_step)
+        if not self.proof_step.is_history_move():
+            self.lean_file.state_info_attach(proof_step=self.proof_step)
         self.journal.store(self.proof_step, self)
 
         # Pass proof_step to previous_proof_step, and create a new proof_step

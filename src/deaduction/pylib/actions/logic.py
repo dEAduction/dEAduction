@@ -89,11 +89,12 @@ for key, value in zip(action_list, lbt):
 # AND #
 #######
 
-def construct_and(goal: Goal, user_input: [str]) -> CodeForLean:
+def construct_and(proof_step, user_input: [str]) -> CodeForLean:
     """
 Split the target 'P AND Q' into two sub-goals.
     """
     possible_codes = []
+    goal = proof_step.goal
 
     if not goal.target.is_and():
         raise WrongUserInput(error=_("target is not a conjunction 'P AND Q'"))
@@ -124,7 +125,7 @@ Split the target 'P AND Q' into two sub-goals.
     return code
 
 
-def apply_and(goal, selected_objects) -> CodeForLean:
+def apply_and(proof_step, selected_objects) -> CodeForLean:
     """
     Destruct a property 'P and Q'.
     Here selected_objects is assumed to contain exactly one conjunction
@@ -132,13 +133,14 @@ def apply_and(goal, selected_objects) -> CodeForLean:
     """
 
     selected_hypo = selected_objects[0].info["name"]
-    h1 = get_new_hyp(goal)
-    h2 = get_new_hyp(goal)
+    h1 = get_new_hyp(proof_step)
+    h2 = get_new_hyp(proof_step)
     code = f'cases {selected_hypo} with {h1} {h2}'
     return CodeForLean.from_string(code)
 
 
-def construct_and_hyp(goal, selected_objects: [MathObject]) -> CodeForLean:
+def construct_and_hyp(proof_step, selected_objects: [MathObject]) \
+                      -> CodeForLean:
     """
     Construct 'P AND Q' from properties P and Q.
     Here selected_objects is assumed to contain exactly two properties.
@@ -146,17 +148,17 @@ def construct_and_hyp(goal, selected_objects: [MathObject]) -> CodeForLean:
 
     h1 = selected_objects[0].info["name"]
     h2 = selected_objects[1].info["name"]
-    new_hypo_name = get_new_hyp(goal)
+    new_hypo_name = get_new_hyp(proof_step)
     code = f'have {new_hypo_name} := and.intro {h1} {h2}'
     code = CodeForLean.from_string(code)
     code.add_success_msg(_("conjunction {} added to the context").
-                             format(new_hypo_name))
+                         format(new_hypo_name))
     return code
 
 
 @action(tooltips.get('tooltip_and'),
         logic_button_texts['action_and'])
-def action_and(goal: Goal,
+def action_and(proof_step,
                selected_objects: [MathObject],
                user_input: [str] = None,
                target_selected: bool = True
@@ -173,21 +175,22 @@ If two hypothesis P, then Q, have been previously selected:
     """
 
     test_selection(selected_objects, target_selected)
+    goal = proof_step.goal
 
     if len(selected_objects) == 0:
-        return construct_and(goal, user_input)
+        return construct_and(proof_step, user_input)
     if len(selected_objects) == 1:
         if not selected_objects[0].is_and():
             raise WrongUserInput(error=_("selected property is not "
                                          "a conjunction 'P AND Q'"))
         else:
-            return apply_and(goal, selected_objects)
+            return apply_and(proof_step, selected_objects)
     if len(selected_objects) == 2:
         if not (selected_objects[0].math_type.is_prop and
                 selected_objects[1].math_type.is_prop):
             raise WrongUserInput(error=_("selected items are not properties"))
         else:
-            return construct_and_hyp(goal, selected_objects)
+            return construct_and_hyp(proof_step, selected_objects)
     raise WrongUserInput(error=_("does not apply to more than two properties"))
 
 
@@ -195,11 +198,12 @@ If two hypothesis P, then Q, have been previously selected:
 # OR #
 ######
 
-def construct_or(goal: Goal, user_input: [str]) -> CodeForLean:
+def construct_or(proof_step, user_input: [str]) -> CodeForLean:
     """
     Assuming target is a disjunction 'P OR Q', choose to prove either P or Q.
     """
     possible_codes = []
+    goal = proof_step.goal
 
     left = goal.target.math_type.children[0].to_display()
     right = goal.target.math_type.children[1].to_display()
@@ -220,7 +224,7 @@ def construct_or(goal: Goal, user_input: [str]) -> CodeForLean:
     return CodeForLean.or_else_from_list(possible_codes)
 
 
-def apply_or(goal,
+def apply_or(proof_step,
              selected_objects: [MathObject],
              user_input: [str]) -> CodeForLean:
     """
@@ -249,8 +253,8 @@ def apply_or(goal,
             code = f'rw or.comm at {selected_hypo}'
             code = CodeForLean.from_string(code)
 
-    h1 = get_new_hyp(goal)
-    h2 = get_new_hyp(goal)
+    h1 = get_new_hyp(proof_step)
+    h2 = get_new_hyp(proof_step)
     # Destruct the disjunction
     code = code.and_then(f'cases {selected_hypo} with {h1} {h2}')
     code.add_success_msg(_("proof by cases: we first assume {}").
@@ -258,7 +262,7 @@ def apply_or(goal,
     return code
 
 
-def construct_or_on_hyp(goal: Goal,
+def construct_or_on_hyp(proof_step,
                         selected_property: [MathObject],
                         user_input: [str] = None) -> CodeForLean:
     """
@@ -301,7 +305,7 @@ def construct_or_on_hyp(goal: Goal,
             title=_("Choose side"),
             output=_(f'On which side do you want') + f' {hypo} ?')
     
-    new_hypo_name = get_new_hyp(goal)
+    new_hypo_name = get_new_hyp(proof_step)
     if user_input[0] == 0:
         possible_codes.append(f'have {new_hypo_name} := '
                               f'@or.inl _ ({second_selected_property}) '
@@ -317,7 +321,7 @@ def construct_or_on_hyp(goal: Goal,
 
 @action(tooltips.get('tooltip_or'),
         logic_button_texts['action_or'])
-def action_or(goal: Goal,
+def action_or(proof_step,
               selected_objects: [MathObject],
               user_input=None,
               target_selected: bool = True) -> CodeForLean:
@@ -331,30 +335,32 @@ def action_or(goal: Goal,
     """
 
     test_selection(selected_objects, target_selected)
+    goal = proof_step.goal
 
     if len(selected_objects) == 0:
         if not goal.target.is_or():
             raise WrongUserInput(
                 error=_("target is not a disjunction 'P OR Q'"))
         else:
-            return construct_or(goal, user_input)
+            return construct_or(proof_step, user_input)
     elif len(selected_objects) == 1:
         if selected_objects[0].is_or():
-            return apply_or(goal, selected_objects, user_input)
+            return apply_or(proof_step, selected_objects, user_input)
         else:
-            return construct_or_on_hyp(goal, selected_objects, user_input)
+            return construct_or_on_hyp(proof_step, selected_objects, user_input)
     elif len(selected_objects) == 2:
-        return construct_or_on_hyp(goal, selected_objects, user_input)
+        return construct_or_on_hyp(proof_step, selected_objects, user_input)
     else:  # More than 2 selected objects
         raise WrongUserInput(error=_("does not apply to more than two "
                                      "properties"))
+
 
 #######
 # NOT #
 #######
 @action(tooltips.get('tooltip_not'),
         logic_button_texts['action_negate'])
-def action_negate(goal: Goal,
+def action_negate(proof_step,
                   selected_objects: [MathObject],
                   target_selected: bool = True) -> CodeForLean:
     """
@@ -367,6 +373,7 @@ def action_negate(goal: Goal,
     """
 
     test_selection(selected_objects, target_selected)
+    goal = proof_step.goal
 
     if len(selected_objects) == 0:
         if not goal.target.is_not():
@@ -389,22 +396,22 @@ def action_negate(goal: Goal,
 ###############
 # IMPLICATION #
 ###############
-def construct_implicate(goal: Goal) -> CodeForLean:
+def construct_implicate(proof_step) -> CodeForLean:
     """
     Here the target is assumed to be an implication P ⇒ Q, P is added to the
     context, and the target becomes Q.
     """
-    if not goal.target.is_implication():
+    if not proof_step.goal.target.is_implication():
         raise WrongUserInput(error=_("target is not an implication 'P ⇒ Q'"))
     else:
-        new_hypo_name = get_new_hyp(goal)
+        new_hypo_name = get_new_hyp(proof_step)
         code = CodeForLean.from_string(f'intro {new_hypo_name}')
         code.add_success_msg(_("property {} added to the context").
-                                 format(new_hypo_name))
+                             format(new_hypo_name))
         return code
 
 
-def apply_implicate(goal: Goal, selected_object: [MathObject]) -> CodeForLean:
+def apply_implicate(proof_step, selected_object: [MathObject]) -> CodeForLean:
     """
     Here selected_object contains a single property which is an implication
     P ⇒ Q; if the target is Q then it will be replaced by P.
@@ -412,7 +419,7 @@ def apply_implicate(goal: Goal, selected_object: [MathObject]) -> CodeForLean:
     selected_hypo = selected_object[0].info["name"]
     code = CodeForLean.from_string(f'apply {selected_hypo}')
     code.add_success_msg(_("target modified using implication {}").
-                             format(selected_hypo))
+                         format(selected_hypo))
     return code
 
 
@@ -425,7 +432,7 @@ def have_new_property(arrow: MathObject,
                             universal property
     :param variable_names:  a list of names of variables (or properties) to
                             which "arrow" will be applied
-    :param hypo_name:       a fresh name for the new property
+    :param new_hypo_name:   a fresh name for the new property
 
     return:                 Lean Code to produce the wanted new property,
                             taking into account implicit parameters
@@ -459,7 +466,7 @@ def have_new_property(arrow: MathObject,
     return code
 
 
-def apply_implicate_to_hyp(goal: Goal,
+def apply_implicate_to_hyp(proof_step,
                            selected_objects: [MathObject]) -> CodeForLean:
     """
     Try to apply last selected property on the other ones.
@@ -468,7 +475,7 @@ def apply_implicate_to_hyp(goal: Goal,
     """
 
     implication = selected_objects[-1]
-    new_hypo_name = get_new_hyp(goal)
+    new_hypo_name = get_new_hyp(proof_step)
     variable_names = [variable.info['name'] for variable in
                       selected_objects[:-1]]
 
@@ -477,7 +484,7 @@ def apply_implicate_to_hyp(goal: Goal,
 
 @action(tooltips.get('tooltip_implies'),
         logic_button_texts['action_implicate'])
-def action_implicate(goal: Goal,
+def action_implicate(proof_step,
                      selected_objects: [MathObject],
                      target_selected: bool = True) -> CodeForLean:
     """
@@ -492,19 +499,20 @@ def action_implicate(goal: Goal,
     """
 
     test_selection(selected_objects, target_selected)
+    goal = proof_step.goal
 
     if len(selected_objects) == 0:
         if not goal.target.is_implication():
             raise WrongUserInput(
                 error=_("target is not an implication 'P ⇒ Q'"))
         else:
-            return construct_implicate(goal)
+            return construct_implicate(proof_step)
     if len(selected_objects) == 1:
         if not selected_objects[0].can_be_used_for_implication():
             raise WrongUserInput(
                 error=_("selected property is not an implication 'P ⇒ Q'"))
         else:
-            return apply_implicate(goal, selected_objects)
+            return apply_implicate(proof_step, selected_objects)
     elif len(selected_objects) == 2:
         if not selected_objects[-1].can_be_used_for_implication():
             if not selected_objects[0].can_be_used_for_implication():
@@ -513,7 +521,7 @@ def action_implicate(goal: Goal,
                                             ))
             else:  # l[0] is an implication but not l[1]: permute
                 selected_objects.reverse()
-        return apply_implicate_to_hyp(goal, selected_objects)
+        return apply_implicate_to_hyp(proof_step, selected_objects)
     # TODO: treat the case of more properties, including the possibility of
     #  P, Q and 'P and Q ⇒ R'
     raise WrongUserInput(error=_("does not apply to more than two properties"))
@@ -523,10 +531,12 @@ def action_implicate(goal: Goal,
 # IFF #
 #######
 
-def construct_iff(goal: Goal, user_input: [str]) -> CodeForLean:
+def construct_iff(proof_step, user_input: [str]) -> CodeForLean:
     """
     Assuming target is an iff, split into two implications.
     """
+
+    goal = proof_step.goal
     code = CodeForLean.empty_code()
 
     if not user_input:
@@ -550,13 +560,14 @@ def construct_iff(goal: Goal, user_input: [str]) -> CodeForLean:
     return code
 
 
-def destruct_iff(goal: Goal) -> CodeForLean:
+def destruct_iff(proof_step) -> CodeForLean:
     """
     Check if target is a conjunction of two implications (but not if these
     implications are logical inverses). If so, return code that builds the
     equivalent iff statement. If not, return None.
     """
 
+    goal = proof_step.goal
     code = None
     target = goal.target
     if target.is_and():
@@ -568,7 +579,7 @@ def destruct_iff(goal: Goal) -> CodeForLean:
     return code
 
 
-def destruct_iff_on_hyp(goal: Goal,
+def destruct_iff_on_hyp(proof_step,
                         selected_objects: [MathObject]) -> CodeForLean:
     """
     Split a property 'P iff Q' into two implications.
@@ -576,8 +587,8 @@ def destruct_iff_on_hyp(goal: Goal,
     """
     possible_codes = []
     hypo_name = selected_objects[0].info["name"]
-    h1 = get_new_hyp(goal)
-    h2 = get_new_hyp(goal)
+    h1 = get_new_hyp(proof_step)
+    h2 = get_new_hyp(proof_step)
     possible_codes.append(f'cases (iff_def.mp {hypo_name}) with {h1} {h2}')
     code = CodeForLean.or_else_from_list(possible_codes)
     code.add_success_msg(_("property {} split into {} and {}").
@@ -585,14 +596,14 @@ def destruct_iff_on_hyp(goal: Goal,
     return code
 
 
-def construct_iff_on_hyp(goal: Goal,
+def construct_iff_on_hyp(proof_step,
                          selected_objects: [MathObject]) -> CodeForLean:
     """
     Construct property 'P iff Q' from both implications.
     len(selected_objects) should be 2.
     """
 
-    new_hypo_name = get_new_hyp(goal)
+    new_hypo_name = get_new_hyp(proof_step)
     h1 = selected_objects[0].info["name"]
     h2 = selected_objects[1].info["name"]
     code_string = f'have {new_hypo_name} := iff.intro {h1} {h2}'
@@ -604,7 +615,7 @@ def construct_iff_on_hyp(goal: Goal,
 
 @action(tooltips.get('tooltip_iff'),
         logic_button_texts['action_iff'])
-def action_iff(goal: Goal,
+def action_iff(proof_step,
                selected_objects: [MathObject],
                user_input: [str] = [],
                target_selected: bool = True) -> CodeForLean:
@@ -622,30 +633,31 @@ def action_iff(goal: Goal,
     """
 
     test_selection(selected_objects, target_selected)
+    goal = proof_step.goal
 
     if len(selected_objects) == 0:
         if goal.target.math_type.node != "PROP_IFF":
-            code = destruct_iff(goal)
+            code = destruct_iff(proof_step)
             if code:
                 return code
             else:
                 raise WrongUserInput(
                     error=_("target is not an iff property 'P ⇔ Q'"))
         else:
-            return construct_iff(goal, user_input)
+            return construct_iff(proof_step, user_input)
     if len(selected_objects) == 1:
         if selected_objects[0].math_type.node != "PROP_IFF":
             error = _("selected property is not an iff property 'P ⇔ Q'")
             raise WrongUserInput(error)
         else:
-            return destruct_iff_on_hyp(goal, selected_objects)
+            return destruct_iff_on_hyp(proof_step, selected_objects)
     if len(selected_objects) == 2:
         if not (selected_objects[0].math_type.is_prop()
                 and selected_objects[1].math_type.is_prop()):
             error = _("selected items should both be implications")
             raise WrongUserInput(error)
         else:
-            return construct_iff_on_hyp(goal, selected_objects)
+            return construct_iff_on_hyp(proof_step, selected_objects)
     raise WrongUserInput(error=_("does not apply to more than two properties"))
 
 
@@ -653,12 +665,13 @@ def action_iff(goal: Goal,
 # FOR ALL #
 ###########
 
-def construct_forall(goal) -> CodeForLean:
+def construct_forall(proof_step) -> CodeForLean:
     """
     Here goal.target is assumed to be a universal property "∀ x:X, ...",
     and variable x is introduced.
     """
 
+    goal = proof_step.goal
     math_object = goal.target.math_type
     math_type = math_object.children[0]
     variable = math_object.children[1]
@@ -666,12 +679,12 @@ def construct_forall(goal) -> CodeForLean:
     hint = variable.display_name  # not optimal
     if math_type.node == "PRODUCT":
         [math_type_1, math_type_2] = math_type.children
-        x = give_global_name(goal=goal, math_type=math_type_1)
-        y = give_global_name(goal=goal, math_type=math_type_2)
+        x = give_global_name(proof_step=proof_step, math_type=math_type_1)
+        y = give_global_name(proof_step=proof_step, math_type=math_type_2)
         possible_codes = CodeForLean.from_string(f'rintro ⟨ {x}, {y} ⟩')
         name = f"({x},{y})"
     else:
-        x = give_global_name(goal=goal,
+        x = give_global_name(proof_step=proof_step,
                              math_type=math_type,
                              hints=[hint]
                              )
@@ -687,7 +700,7 @@ def construct_forall(goal) -> CodeForLean:
         # then introduce the inequality on top of x
         premise = body.children[0]  # children (2,0)
         if premise.is_inequality(is_math_type=True):
-            h = get_new_hyp(goal)
+            h = get_new_hyp(proof_step)
             # Add and_then intro h
             possible_codes = possible_codes.and_then(f'intro {h}')
 
@@ -719,7 +732,7 @@ def inequality_from_pattern_matching(math_object: MathObject,
     return inequality
 
 
-def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
+def apply_forall(proof_step, l: [MathObject]) -> CodeForLean:
     """
     Try to apply last selected property on the other ones.
     The last property should be a universal property
@@ -729,6 +742,7 @@ def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
     :return:
     """
 
+    goal = proof_step.goal
     universal_property = l[-1]  # The property to be applied
     unsolved_inequality_counter = 0
     # Variable_names will contain the list of variables and proofs of
@@ -748,7 +762,7 @@ def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
                 inequality_name = goal.context[index].display_name
                 variable_names.append(inequality_name)
             else:
-                inequality_name = get_new_hyp(goal)
+                inequality_name = get_new_hyp(proof_step)
                 variable_names.append(inequality_name)
                 unsolved_inequality_counter += 1
                 # Add type indication to the variable in inequality
@@ -765,7 +779,7 @@ def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
                 code = code.and_then("rotate")
 
     # Code II: Apply universal_property #
-    new_hypo_name = get_new_hyp(goal)
+    new_hypo_name = get_new_hyp(proof_step)
     code = code.and_then(have_new_property(universal_property,
                                            variable_names,
                                            new_hypo_name)
@@ -801,7 +815,7 @@ def apply_forall(goal: Goal, l: [MathObject]) -> CodeForLean:
 
 @action(tooltips.get('tooltip_forall'),
         logic_button_texts['action_forall'])
-def action_forall(goal: Goal,
+def action_forall(proof_step,
                   selected_objects: [MathObject],
                   user_input: [str] = [],
                   target_selected: bool = True) -> CodeForLean:
@@ -816,13 +830,14 @@ def action_forall(goal: Goal,
     """
 
     test_selection(selected_objects, target_selected)
+    goal = proof_step.goal
 
     if len(selected_objects) == 0:
         if not goal.target.is_for_all():
             error = _("target is not a universal property '∀x, P(x)'")
             raise WrongUserInput(error)
         else:
-            return construct_forall(goal)
+            return construct_forall(proof_step)
 
     elif len(selected_objects) == 1:  # Ask user for item
         if not selected_objects[0].is_for_all():
@@ -855,7 +870,7 @@ def action_forall(goal: Goal,
             selected_objects.remove(item)
             selected_objects.reverse()
             selected_objects.append(item)
-            return apply_forall(goal, selected_objects)
+            return apply_forall(proof_step, selected_objects)
     raise WrongUserInput(error=_("no universal property among selected"))
 
 
@@ -863,7 +878,7 @@ def action_forall(goal: Goal,
 # EXISTS #
 ##########
 
-def construct_exists(goal, user_input: [str]) -> CodeForLean:
+def construct_exists(proof_step, user_input: [str]) -> CodeForLean:
     """
     Assuming the target is an existential property '∃ x, P(x)', prove it by
     providing a witness x and proving P(x).
@@ -881,16 +896,17 @@ def construct_exists(goal, user_input: [str]) -> CodeForLean:
     return code
 
 
-def apply_exists(goal: Goal, selected_object: [MathObject]) -> CodeForLean:
+def apply_exists(proof_step, selected_object: [MathObject]) -> CodeForLean:
     """
     Apply a property '∃ x, P(x)' to get an x with property P(x).
     """
 
     selected_hypo = selected_object[0].math_type
     hypo_name = selected_object[0].info["name"]
-    x = give_global_name(goal=goal, math_type=selected_hypo.children[0],
+    x = give_global_name(proof_step=proof_step,
+                         math_type=selected_hypo.children[0],
                          hints=[selected_hypo.children[1].to_display()])
-    new_hypo_name = get_new_hyp(goal)
+    new_hypo_name = get_new_hyp(proof_step)
 
     if selected_hypo.children[2].node == "PROP_∃":
         code = f'rcases {hypo_name} with ' \
@@ -902,11 +918,11 @@ def apply_exists(goal: Goal, selected_object: [MathObject]) -> CodeForLean:
         # We have to add the "simp" tactic to avoid appearance of lambda expr
         code = code.and_then(f'simp at {new_hypo_name}')
     code.add_success_msg(_("new object {} with property {}").
-                             format(x, new_hypo_name))
+                         format(x, new_hypo_name))
     return code
 
 
-def construct_exists_on_hyp(goal: Goal,
+def construct_exists_on_hyp(proof_step,
                             selected_objects: [MathObject]) -> CodeForLean:
     """
     Try to construct an existence property from some object and some property
@@ -917,12 +933,12 @@ def construct_exists_on_hyp(goal: Goal,
     hx = selected_objects[1].info["name"]
     if (not selected_objects[0].math_type.is_prop()) \
             and selected_objects[1].math_type.is_prop():
-        new_hypo = get_new_hyp(goal)
+        new_hypo = get_new_hyp(proof_step)
         code_string = f'have {new_hypo} := exists.intro {x} {hx}'
     elif (not selected_objects[1].math_type.is_prop()) \
             and selected_objects[0].math_type.is_prop():
         x, hx = hx, x
-        new_hypo = get_new_hyp(goal)
+        new_hypo = get_new_hyp(proof_step)
         code_string = f'have {new_hypo} := exists.intro {x} {hx}'
     else:
         error = _("I cannot build an existential property with this")
@@ -935,7 +951,7 @@ def construct_exists_on_hyp(goal: Goal,
 
 @action(tooltips.get('tooltip_exists'),
         logic_button_texts['action_exists'])
-def action_exists(goal: Goal,
+def action_exists(proof_step,
                   selected_objects: [MathObject],
                   user_input: [str] = None,
                   target_selected: bool = True) -> CodeForLean:
@@ -952,13 +968,14 @@ def action_exists(goal: Goal,
     """
 
     test_selection(selected_objects, target_selected)
+    goal = proof_step.goal
 
     if len(selected_objects) == 0:
         if not goal.target.is_exists():
             error = _("target is not existential property '∃x, P(x)'")
             raise WrongUserInput(error)
         else:
-            return construct_exists(goal, user_input)
+            return construct_exists(proof_step, user_input)
     elif len(selected_objects) == 1 and not user_input:
         selected_hypo = selected_objects[0]
         if selected_hypo.math_type.is_prop():
@@ -967,16 +984,16 @@ def action_exists(goal: Goal,
                 error = _("selection is not existential property '∃x, P(x)'")
                 raise WrongUserInput(error)
             else:
-                return apply_exists(goal, selected_objects)
+                return apply_exists(proof_step, selected_objects)
         else:  # h_selected is not a property : get an existence property
             if not goal.target.is_exists():
                 error = _("target is not existential property '∃x, P(x)'")
                 raise WrongUserInput(error)
             else:
                 object_name = selected_objects[0].info["name"]
-                return construct_exists(goal, [object_name])
+                return construct_exists(proof_step, [object_name])
     elif len(selected_objects) == 2:
-        return construct_exists_on_hyp(goal, selected_objects)
+        return construct_exists_on_hyp(proof_step, selected_objects)
     raise WrongUserInput(error=_("does not apply to more than two properties"))
 
 

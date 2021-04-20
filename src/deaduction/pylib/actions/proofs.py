@@ -64,7 +64,7 @@ for key, value in zip(proof_list, lbt):
 
 @action(tooltips.get('tooltip_proof_methods'),
         proof_button_texts['proof_methods'])
-def action_use_proof_methods(goal: Goal,
+def action_use_proof_methods(proof_step,
                              selected_objects: [MathObject],
                              user_input: [str] = [],
                              target_selected: bool = True) -> CodeForLean:
@@ -85,17 +85,17 @@ def action_use_proof_methods(goal: Goal,
     else:
         method = user_input[0] + 1
         if method == 1:
-            return method_cbr(goal, selected_objects, user_input)
+            return method_cbr(proof_step, selected_objects, user_input)
         if method == 2:
-            return method_contrapose(goal, selected_objects)
+            return method_contrapose(proof_step, selected_objects)
         if method == 3:
-            return method_absurdum(goal, selected_objects)
+            return method_absurdum(proof_step, selected_objects)
         if method == 4:
-            return method_sorry(goal, selected_objects)
+            return method_sorry(proof_step, selected_objects)
     raise WrongUserInput
 
 
-def method_cbr(goal: Goal,
+def method_cbr(proof_step,
                selected_objects: [MathObject],
                user_input: [str] = []) -> CodeForLean:
     """
@@ -117,29 +117,32 @@ def method_cbr(goal: Goal,
                                         )
         else:
             h0 = user_input[1]
-            h1 = get_new_hyp(goal)
-            h2 = get_new_hyp(goal)
+            h1 = get_new_hyp(proof_step)
+            h2 = get_new_hyp(proof_step)
             code = CodeForLean.from_string(f"cases (classical.em ({h0})) "
                                            f"with {h1} {h2}")
     else:
         prop = selected_objects[0]
         if prop.is_or():
-            code = apply_or(goal, selected_objects, user_input)
+            code = apply_or(proof_step, selected_objects, user_input)
         else:
             h0 = prop.info['name']
-            h1 = get_new_hyp(goal)
-            h2 = get_new_hyp(goal)
+            h1 = get_new_hyp(proof_step)
+            h2 = get_new_hyp(proof_step)
             code = CodeForLean.from_string(f"cases (classical.em ({h0})) "
                                            f"with {h1} {h2}")
 
     return code
 
 
-def method_contrapose(goal: Goal,
+def method_contrapose(proof_step,
                       selected_objects: [MathObject]) -> CodeForLean:
     """
     If target is an implication, turn it to its contrapose.
     """
+
+    goal = proof_step.goal
+
     if len(selected_objects) == 0:
         if goal.target.math_type.node == "PROP_IMPLIES":
             code = CodeForLean.from_string("contrapose")
@@ -152,12 +155,12 @@ def method_contrapose(goal: Goal,
     raise WrongUserInput(error)
 
 
-def method_absurdum(goal: Goal, selected_objects: [MathObject]) -> CodeForLean:
+def method_absurdum(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     """
     If no selection, engage in a proof by contradiction.
     """
     if len(selected_objects) == 0:
-        new_hypo = get_new_hyp(goal)
+        new_hypo = get_new_hyp(proof_step)
         code = CodeForLean.from_string(f'by_contradiction {new_hypo}')
         return code
     else:
@@ -165,19 +168,22 @@ def method_absurdum(goal: Goal, selected_objects: [MathObject]) -> CodeForLean:
     raise WrongUserInput(error)
 
 
-def method_sorry(goal: Goal, selected_objects: [MathObject]) -> CodeForLean:
+def method_sorry(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     """
     Close the current sub-goal by sending the 'sorry' code.
     """
     return CodeForLean.from_string('sorry')
 
 
-def introduce_fun(goal: Goal, selected_objects: [MathObject]) -> CodeForLean:
+def introduce_fun(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     """
     If a hypothesis of form ∀ a ∈ A, ∃ b ∈ B, P(a,b) has been previously
     selected: use the axiom of choice to introduce a new function f : A → B
     and add ∀ a ∈ A, P(a, f(a)) to the properties.
     """
+
+    goal = proof_step.goal
+
     error = _('select a property "∀ x, ∃ y, P(x,y)" to get a function')
     if len(selected_objects) == 1:
         h = selected_objects[0].info["name"]
@@ -193,8 +199,9 @@ def introduce_fun(goal: Goal, selected_objects: [MathObject]) -> CodeForLean:
                                        children=[source_type, target_type],
                                        math_type=NO_MATH_TYPE)
 
-                hf = get_new_hyp(goal)
-                f = give_global_name(math_type, goal)
+                hf = get_new_hyp(proof_step)
+                f = give_global_name(math_type=math_type,
+                                     proof_step=proof_step)
                 code = CodeForLean.from_string(f'cases '
                                                f'classical.axiom_of_choice '
                                                f'{h} with {f} {hf}, '
@@ -207,13 +214,16 @@ def introduce_fun(goal: Goal, selected_objects: [MathObject]) -> CodeForLean:
 
 @action(tooltips.get('tooltip_new_object'),
         proof_button_texts['new_object'])
-def action_new_object(goal: Goal,
+def action_new_object(proof_step,
                       selected_objects: [MathObject],
                       user_input: [str] = None,
                       target_selected: bool = True) -> CodeForLean:
     """
     Introduce new object / sub-goal / function
     """
+
+    goal = proof_step.goal
+
     possible_codes = []
     # Choose between object/sub-goal/function
     if not user_input:
@@ -239,7 +249,7 @@ def action_new_object(goal: Goal,
                                          + "0, {1}, f(2), ...)")
         else:  # Send code
             name = user_input[1]
-            new_hypo_name = get_new_hyp(goal)
+            new_hypo_name = get_new_hyp(proof_step)
             new_object = user_input[2]
             possible_codes = CodeForLean.from_string(f"let {name} := "
                                                      f"{new_object}")
@@ -260,13 +270,13 @@ def action_new_object(goal: Goal,
                                          title="+",
                                          output=_("Introduce new subgoal:"))
         else:
-            new_hypo_name = get_new_hyp(goal)
+            new_hypo_name = get_new_hyp(proof_step)
             possible_codes = CodeForLean.from_string(f"have {new_hypo_name}:"
                                                      f" ({user_input[1]})")
 
     # Choice = new function
     elif user_input[0] == 2:
-        return introduce_fun(goal, selected_objects)
+        return introduce_fun(proof_step, selected_objects)
     return possible_codes
 
 
@@ -274,11 +284,14 @@ def action_new_object(goal: Goal,
 # APPLY #
 #########
 
-def apply_substitute(goal: Goal, l: [MathObject], user_input: [int], equality):
+def apply_substitute(proof_step, l: [MathObject], user_input: [int], equality):
     """
     Try to rewrite the goal or the first selected property using the last
     selected property
     """
+
+    goal = proof_step.goal
+
     possible_codes = []
     heq = l[-1]
     left_term = equality.children[0]
@@ -345,7 +358,7 @@ def apply_substitute(goal: Goal, l: [MathObject], user_input: [int], equality):
     return code_
 
 
-def apply_function(goal: Goal, selected_objects: [MathObject]):
+def apply_function(proof_step, selected_objects: [MathObject]):
     """
     Apply l[-1], which is assumed to be a function f, to previous elements of
     l, which can be:
@@ -366,8 +379,8 @@ def apply_function(goal: Goal, selected_objects: [MathObject]):
     f = function.info["name"]
     Y = selected_objects[-1].math_type.children[1]
     
-    while (len(selected_objects) != 1):
-        new_h = get_new_hyp(goal)
+    while len(selected_objects) != 1:
+        new_h = get_new_hyp(proof_step)
         
         # if function applied to a property, presumed to be an equality
         if selected_objects[0].math_type.is_prop():
@@ -378,9 +391,9 @@ def apply_function(goal: Goal, selected_objects: [MathObject]):
         # create new element y and new equality y=f(x)
         else:
             x = selected_objects[0].info["name"]
-            y = give_global_name(goal=goal,
-                    math_type=Y,
-                    hints=[Y.info["name"].lower()])
+            y = give_global_name(proof_step =proof_step,
+                                 math_type=Y,
+                                 hints=[Y.info["name"].lower()])
             codes = codes.or_else(f'set {y} := {f} {x} with {new_h}')
         selected_objects = selected_objects[1:]
 
@@ -389,7 +402,7 @@ def apply_function(goal: Goal, selected_objects: [MathObject]):
 
 @action(tooltips.get('tooltip_apply'),
         proof_button_texts['action_apply'])
-def action_apply(goal: Goal,
+def action_apply(proof_step,
                  selected_objects: [MathObject],
                  user_input: [str] = [],
                  target_selected: bool = True):
@@ -430,14 +443,14 @@ def action_apply(goal: Goal,
                       "apply the function")
             raise WrongUserInput(error=error)
         else:
-            return apply_function(goal, selected_objects)
+            return apply_function(proof_step, selected_objects)
 
     codes = CodeForLean.empty_code()
     error = ""
     # (2) If rewriting is possible
     test, equality = prop.can_be_used_for_substitution()
     if test:
-        codes = codes.or_else(apply_substitute(goal,
+        codes = codes.or_else(apply_substitute(proof_step,
                                                selected_objects,
                                                user_input,
                                                equality))
@@ -448,11 +461,12 @@ def action_apply(goal: Goal,
         # (4) Other easy applications
         if len(selected_objects) == 1 and user_can_apply(selected_objects[0]):
             if prop.is_exists():
-                codes = codes.or_else(apply_exists(goal, selected_objects))
+                codes = codes.or_else(apply_exists(proof_step,
+                                                   selected_objects))
             if prop.is_and():
-                codes = codes.or_else(apply_and(goal, selected_objects))
+                codes = codes.or_else(apply_and(proof_step, selected_objects))
             if prop.is_or():
-                codes = codes.or_else(apply_or(goal,
+                codes = codes.or_else(apply_or(proof_step,
                                                selected_objects,
                                                user_input))
 
@@ -467,16 +481,16 @@ def action_apply(goal: Goal,
     # # (3) If property is an implication (or a universal implication)
     # if prop.can_be_used_for_implication() and len(l) == 1:
     #     # Apply to the target
-    #     codes = codes.or_else(apply_implicate(goal, l))
+    #     codes = codes.or_else(apply_implicate(proof_step, l))
     # elif prop.is_implication() or prop.is_for_all():
     #     if len(l) > 1:
     #         # In this case implication and 'forall' are applied the same way
-    #         codes = codes.or_else(apply_implicate_to_hyp(goal, l))
+    #         codes = codes.or_else(apply_implicate_to_hyp(proof_step, l))
 
     # # Lastly, if nothing else but forall may be applied we do not know on what
     # # to apply: ask user (as treated in action_forall)
     # elif prop.is_for_all() and len(l) == 1:
-    #     return action_forall(goal, l, user_input)
+    #     return action_forall(proof_step, l, user_input)
 
 
 ################################
@@ -532,9 +546,9 @@ def explain_how_to_apply(math_object: MathObject, dynamic=False, long=False) \
 
     return captions
 
-
-# @action(_("Proof by induction"))
-# def action_induction(goal : Goal, l : [MathObject]):
+# TODO:
+#  @action(_("Proof by induction"))
+# def action_induction(proof_step, l : [MathObject]):
 #    raise WrongUserInput
 
 

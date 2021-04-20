@@ -76,7 +76,7 @@ def rw_using_statement(goal: Goal, selected_objects: [MathObject],
     return codes
 
 
-def action_definition(goal: Goal,
+def action_definition(proof_step,
                       selected_objects: [MathObject],
                       definition,
                       target_selected: bool = True
@@ -87,12 +87,12 @@ def action_definition(goal: Goal,
 
     test_selection(selected_objects, target_selected)
 
-    codes = rw_using_statement(goal, selected_objects, definition)
+    codes = rw_using_statement(proof_step.goal, selected_objects, definition)
     codes.add_error_msg(_("unable to apply definition"))
     return codes
 
 
-def action_theorem(goal: Goal,
+def action_theorem(proof_step,
                    selected_objects: [MathObject],
                    theorem,
                    target_selected: bool = True
@@ -107,9 +107,11 @@ def action_theorem(goal: Goal,
     #  test for iff or equality is removed since it works only with
     #  pkl files
 
+    goal = proof_step.goal
+
     codes = rw_using_statement(goal, selected_objects, theorem)
 
-    h = get_new_hyp(goal)
+    h = get_new_hyp(proof_step)
     th = theorem.lean_name
     if len(selected_objects) == 0:
         codes = codes.or_else(f'apply {th}',

@@ -53,9 +53,16 @@ for key, value in zip(magic_list, lbt):
 
 @action(tooltips.get('tooltip_compute'),
         magic_button_texts['compute'])
-def action_compute(goal,
+def action_compute(proof_step,
                    selected_objects,
                    target_selected: bool = True):
+    """
+    If the target is an equality, an inequality (or 'False'), then send
+    tactics trying to prove the goal by (mainly linearly) computing.
+    """
+
+    goal = proof_step.goal
+
     target = goal.target
     if not (target.is_equality()
             or target.is_inequality()
@@ -134,8 +141,11 @@ def solve_target(prop):
     return code
 
 
-def search_specific_prop(goal):
+def search_specific_prop(proof_step):
     """Search context for some specific properties to conclude the proof."""
+
+    goal = proof_step.goal
+
     more_code = CodeForLean.empty_code()
     for prop in goal.context:
         math_type = prop.math_type
@@ -152,7 +162,10 @@ def search_specific_prop(goal):
     return more_code
 
 
-def split_conjunctions_in_context(goal):
+def split_conjunctions_in_context(proof_step):
+
+    goal = proof_step.goal
+
     code = CodeForLean.empty_code()
     counter = 0
     for prop in goal.context:
@@ -167,16 +180,14 @@ def split_conjunctions_in_context(goal):
 
 @action(tooltips.get('tooltip_assumption'),
         magic_button_texts['assumption'])
-def action_assumption(goal: Goal,
+def action_assumption(proof_step,
                       selected_objects: [MathObject],
                       target_selected: bool = True) -> CodeForLean:
     """
-    Translate into string of lean code corresponding to the action
-
-    :param goal: current goal
-    :param l: list of MathObject arguments preselected by the user
-    :return: string of lean code
+    Translate into string of lean code corresponding to the action.
     """
+
+    goal = proof_step.goal
 
     # (1) First trials
     target = goal.target
@@ -192,7 +203,7 @@ def action_assumption(goal: Goal,
     # (3) Conjunctions: try to split hypotheses once
     # TODO: recursive splitting in hypo
     # And then retry many things (in improved_assumption_2).
-    split_conj = split_conjunctions_in_context(goal)
+    split_conj = split_conjunctions_in_context(proof_step)
 
     improved_assumption_2 = solve_target(target)
     # Split target
@@ -212,7 +223,7 @@ def action_assumption(goal: Goal,
         improved_assumption_2 = improved_assumption_2.or_else(norm_num_code)
 
     # Try specific properties
-    more_assumptions = search_specific_prop(goal)
+    more_assumptions = search_specific_prop(proof_step)
     if not more_assumptions.is_empty():
         improved_assumption_2 = improved_assumption_2.or_else(more_assumptions)
     more_code = split_conj.and_then(improved_assumption_2)
