@@ -493,14 +493,17 @@ class LeanFile(VirtualFile):
         if not save:
             return
 
-        proof_steps = [entry.misc_info["proof_step"] for entry in self.history]
-        auto_steps = [AutoStep.from_proof_step(step) for step in proof_steps]
+        proof_steps = [entry.misc_info["proof_step"] for entry in
+                       self.history[:-1]]  # Last proof_step is missing
+        auto_steps = [AutoStep.from_proof_step(step, emw) for step in
+                      proof_steps]
 
         exercise = emw.exercise
         exercise.__refined_auto_steps = auto_steps
-        filename = 'test_' + exercise.lean_short_name + '.pkl'
-        file_path = cdirs.local / 'tests' / filename
-        with open(file_path, mode='ab') as output:
+        filename = ('test_' + exercise.lean_short_name).replace('.', '_') \
+            + '.pkl'
+        file_path = cdirs.share / 'tests' / filename
+        with open(file_path, mode='wb') as output:
             dump(exercise, output, HIGHEST_PROTOCOL)
 
 
