@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2021-04-12 23:50+0200\n"
-"PO-Revision-Date: 2021-04-12 23:52+0200\n"
+"POT-Creation-Date: 2021-04-20 11:23+0200\n"
+"PO-Revision-Date: 2021-04-20 11:26+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -19,12 +19,12 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: dui/elements/actions_widgets_classes.py:493
-#: dui/elements/actions_widgets_classes.py:498
+#: dui/elements/actions_widgets_classes.py:497
+#: dui/elements/actions_widgets_classes.py:502
 msgid "Statements"
 msgstr "Enoncés"
 
-#: dui/elements/actions_widgets_classes.py:493
+#: dui/elements/actions_widgets_classes.py:497
 msgid "L∃∀N name"
 msgstr "Nom L∃∀N"
 
@@ -48,60 +48,60 @@ msgstr "A démontrer"
 msgid "Send to L∃∀N"
 msgstr "Envoyer à L∃∀N"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:145
+#: dui/stages/exercise/_exercise_main_window_widgets.py:144
 msgid "Actions and statements (transform context and target)"
 msgstr "Actions et énoncés (transforment le contexte et le but)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:147
+#: dui/stages/exercise/_exercise_main_window_widgets.py:146
 msgid "Context (objects and properties)"
 msgstr "Contexte (objets et propriétés)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:364
+#: dui/stages/exercise/_exercise_main_window_widgets.py:369
 msgid "Toolbar"
 msgstr "Barre d’outils"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:369
+#: dui/stages/exercise/_exercise_main_window_widgets.py:374
 msgid "Go back to beginning of proof"
 msgstr "Retour au début de la preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:372
+#: dui/stages/exercise/_exercise_main_window_widgets.py:377
 msgid "Undo action"
 msgstr "Annuler l’action"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:375
+#: dui/stages/exercise/_exercise_main_window_widgets.py:380
 msgid "Redo action"
 msgstr "Refaire l’action"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:379
+#: dui/stages/exercise/_exercise_main_window_widgets.py:384
 msgid "Toggle L∃∀N"
 msgstr "Console L∃∀N"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:383
-#: dui/stages/exercise/exercise_main_window.py:659
+#: dui/stages/exercise/_exercise_main_window_widgets.py:388
+#: dui/stages/exercise/exercise_main_window.py:689
 msgid "Change exercise"
 msgstr "Changer d’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:308
+#: dui/stages/exercise/exercise_main_window.py:332
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:311
+#: dui/stages/exercise/exercise_main_window.py:335
 msgid "goals solved!"
 msgstr "buts atteints !"
 
-#: dui/stages/exercise/exercise_main_window.py:605
+#: dui/stages/exercise/exercise_main_window.py:635
 msgid "Code from editor"
 msgstr "Code depuis l’éditeur"
 
-#: dui/stages/exercise/exercise_main_window.py:650
+#: dui/stages/exercise/exercise_main_window.py:680
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:651
+#: dui/stages/exercise/exercise_main_window.py:681
 msgid "The proof is complete!"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/exercise_main_window.py:655
+#: dui/stages/exercise/exercise_main_window.py:685
 msgid "Back to exercise"
 msgstr "Retour à l’exercice"
 
@@ -203,6 +203,50 @@ msgstr "Démontrer la négation"
 #: pylib/actions/exceptions.py:68
 msgid "select at least one object, one property or the target"
 msgstr "sélectionner au moins un objet, une propriété ou bien le but"
+
+#: pylib/actions/generic.py:55
+msgid "definition applied to target"
+msgstr "définition appliquée au but"
+
+#: pylib/actions/generic.py:56 pylib/actions/generic.py:116
+msgid "theorem applied to target"
+msgstr "théorème appliqué au but"
+
+#: pylib/actions/generic.py:57
+msgid "exercise applied to target"
+msgstr "exercice appliqué au but"
+
+#: pylib/actions/generic.py:66
+msgid "definition applied to"
+msgstr "définition appliquée à"
+
+#: pylib/actions/generic.py:67
+msgid "theorem applied to"
+msgstr "théorème appliqué à"
+
+#: pylib/actions/generic.py:68
+msgid "exercise applied to"
+msgstr "exercice appliqué à"
+
+#: pylib/actions/generic.py:91
+msgid "unable to apply definition"
+msgstr "La définition n’a pas pu être appliquée"
+
+#: pylib/actions/generic.py:118
+msgid "theorem added to the context"
+msgstr "théorème ajouté au contexte"
+
+#: pylib/actions/generic.py:139 pylib/coursedata/exercise_classes.py:252
+msgid "theorem"
+msgstr "théorème"
+
+#: pylib/actions/generic.py:139
+msgid "applied to"
+msgstr "appliqué à"
+
+#: pylib/actions/generic.py:143
+msgid "unable to apply theorem"
+msgstr "Le théorème n’a pas pu être appliqué"
 
 #: pylib/actions/logic.py:99
 msgid "target is not a conjunction 'P AND Q'"
@@ -418,10 +462,14 @@ msgstr "le but n’est pas une propriété existentielle ‘∃x, P(x)’"
 msgid "selection is not existential property '∃x, P(x)'"
 msgstr "l’objet sélectionné n’est pas une propriété existentielle ’∃x, P(x)’"
 
-#: pylib/actions/magic.py:62
+#: pylib/actions/magic.py:63
 msgid "target is not an equality, an inequality, nor a contradiction"
 msgstr ""
 "le but n’est pas ni une égalité, ni une inégalité, ni une contradiction"
+
+#: pylib/actions/magic.py:221
+msgid "I don't know how to conclude"
+msgstr "Je ne sais pas comment conclure"
 
 #: pylib/actions/proofs.py:74 pylib/text/tooltips.py:65
 msgid "Case-based reasoning"
@@ -531,15 +579,17 @@ msgstr "Préciser le sens de substitution"
 msgid "Choose which expression you want to replace"
 msgstr "Choisissez quelle expression remplacer"
 
-#: pylib/actions/proofs.py:420
+#: pylib/actions/proofs.py:418
 msgid "no property selected"
 msgstr "pas de propriété sélectionnée"
 
-#: pylib/actions/proofs.py:431
-msgid "select an object on which you want to apply the function"
+#: pylib/actions/proofs.py:429
+#, fuzzy
+#| msgid "select an object on which you want to apply the function"
+msgid "select an element or an equality on which to apply the function"
 msgstr "sélectionnez un objet sur lequel appliquer la fonction"
 
-#: pylib/actions/proofs.py:464
+#: pylib/actions/proofs.py:462
 msgid "I cannot apply this"
 msgstr "Je ne sais pas appliquer ceci"
 
@@ -582,6 +632,14 @@ msgstr "CQFD"
 #: pylib/coursedata/auto_steps.py:117 pylib/text/tooltips.py:101
 msgid "Compute"
 msgstr "Calculer"
+
+#: pylib/coursedata/exercise_classes.py:250
+msgid "definition"
+msgstr "définition"
+
+#: pylib/coursedata/exercise_classes.py:254
+msgid "exercise"
+msgstr "exercice"
 
 #: pylib/lean/server.py:256
 msgid "Preparing folder for launch"
@@ -775,39 +833,39 @@ msgstr "une suite dans"
 msgid "belongs to"
 msgstr "appartient à"
 
-#: pylib/mathobj/proof_state.py:273
+#: pylib/mathobj/proof_state.py:275
 msgid "Assume that"
 msgstr "Supposons que"
 
-#: pylib/mathobj/proof_state.py:280 pylib/mathobj/proof_state.py:289
+#: pylib/mathobj/proof_state.py:282 pylib/mathobj/proof_state.py:291
 msgid "Let"
 msgstr "Soit"
 
-#: pylib/mathobj/proof_state.py:289
+#: pylib/mathobj/proof_state.py:291
 msgid "be"
 msgstr " "
 
-#: pylib/mathobj/proof_state.py:302 pylib/mathobj/proof_state.py:335
+#: pylib/mathobj/proof_state.py:304 pylib/mathobj/proof_state.py:337
 msgid "Prove that"
 msgstr "Démontrer que"
 
-#: pylib/mathobj/proof_state.py:304 pylib/mathobj/proof_state.py:337
+#: pylib/mathobj/proof_state.py:306 pylib/mathobj/proof_state.py:339
 msgid "Then"
 msgstr "Alors"
 
-#: pylib/mathobj/proof_state.py:310 pylib/mathobj/proof_state.py:323
+#: pylib/mathobj/proof_state.py:312 pylib/mathobj/proof_state.py:325
 msgid "True or False?"
 msgstr "Vrai ou faux ?"
 
-#: pylib/mathobj/proof_state.py:325
+#: pylib/mathobj/proof_state.py:327
 msgid "Hypothesis:"
 msgstr "Hypothèse :"
 
-#: pylib/mathobj/proof_state.py:327
+#: pylib/mathobj/proof_state.py:329
 msgid "Hypotheses:"
 msgstr "Hypothèses :"
 
-#: pylib/mathobj/proof_state.py:332
+#: pylib/mathobj/proof_state.py:334
 msgid ": "
 msgstr " : "
 
@@ -887,7 +945,7 @@ msgstr "Etat de preuve reçu"
 msgid "After request"
 msgstr "Après la requête"
 
-#: pylib/server/exceptions.py:40
+#: pylib/server/exceptions.py:39
 msgid "Error"
 msgstr "Erreur"
 

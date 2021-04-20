@@ -29,40 +29,51 @@ This file is part of dEAduction.
 
 from dataclasses import dataclass
 import logging
+
+from deaduction.pylib.config.i18n import _
 from deaduction.pylib.actions import (  WrongUserInput,
                                         CodeForLean,
                                         test_selection)
-# from deaduction.pylib.coursedata import Statement
 from deaduction.pylib.mathobj import (  Goal,
                                         MathObject,
                                         get_new_hyp)
 
 
 def rw_using_statement(goal: Goal, selected_objects: [MathObject],
-                      statement):
+                       statement) -> CodeForLean:
     """
     Return codes trying to use statement for rewriting. This should be
     reserved to iff or equalities. This function is called by
     action_definition, and by action_theorem in case the theorem is an iff
     statement.
     """
-    possible_codes = []
-    defi = statement.lean_name
-    if len(selected_objects) == 0:
-        possible_codes.append(f'rw {defi}')
-        possible_codes.append(f'simp_rw {defi}')
-        possible_codes.append(f'rw <- {defi}')
-        possible_codes.append(f'simp_rw <- {defi}')
+    codes = CodeForLean.empty_code()
 
+    defi = statement.lean_name
+
+    if len(selected_objects) == 0:
+        target_msg = _('definition applied to target') \
+            if statement.is_definition() else _('theorem applied to target') \
+            if statement.is_theorem() else _('exercise applied to target')
+        codes = codes.or_else(f'rw {defi}')
+        codes = codes.or_else(f'simp_rw {defi}')
+        codes = codes.or_else(f'rw <- {defi}')
+        codes = codes.or_else(f'simp_rw <- {defi}')
+        codes.add_success_msg(target_msg)
     else:
         names = [item.info['name'] for item in selected_objects]
         arguments = ' '.join(names)
-        possible_codes.append(f'rw {defi} at {arguments}')
-        possible_codes.append(f'simp_rw {defi} at {arguments}')
-        possible_codes.append(f'rw <- {defi} at {arguments}')
-        possible_codes.append(f'simp_rw <- {defi} at {arguments}')
+        context_msg = _('definition applied to') \
+            if statement.is_definition() else _('theorem applied to') \
+            if statement.is_theorem() else _('exercise applied to')
+        context_msg += ' ' + arguments
+        codes = codes.or_else(f'rw {defi} at {arguments}')
+        codes = codes.or_else(f'simp_rw {defi} at {arguments}')
+        codes = codes.or_else(f'rw <- {defi} at {arguments}')
+        codes = codes.or_else(f'simp_rw <- {defi} at {arguments}')
+        codes.add_success_msg(context_msg)
 
-    return possible_codes
+    return codes
 
 
 def action_definition(goal: Goal,
@@ -76,8 +87,9 @@ def action_definition(goal: Goal,
 
     test_selection(selected_objects, target_selected)
 
-    possible_codes = rw_using_statement(goal, selected_objects, definition)
-    return CodeForLean.or_else_from_list(possible_codes)
+    codes = rw_using_statement(goal, selected_objects, definition)
+    codes.add_error_msg(_("unable to apply definition"))
+    return codes
 
 
 def action_theorem(goal: Goal,
@@ -91,40 +103,43 @@ def action_theorem(goal: Goal,
 
     test_selection(selected_objects, target_selected)
 
-    possible_codes = []
-    # For an iff statement, use rewriting
-    # fixme: test for iff or equality is removed since it works only with
+    # TODO: For an iff statement, use rewriting
+    #  test for iff or equality is removed since it works only with
     #  pkl files
-    proof_state = theorem.initial_proof_state
-    # if proof_state and ( proof_state.goals[0].target.is_iff()
-    #                      or proof_state.goals[0].target.is_equality() ):
-    possible_codes = rw_using_statement(goal,
-                                        selected_objects,
-                                        theorem)
+
+    codes = rw_using_statement(goal, selected_objects, theorem)
+
     h = get_new_hyp(goal)
     th = theorem.lean_name
     if len(selected_objects) == 0:
-        possible_codes.append(f'apply {th}')
-        possible_codes.append(f'have {h} := @{th}')
+        codes = codes.or_else(f'apply {th}',
+                              success_msg=_('theorem applied to target'))
+        codes = codes.or_else(f'have {h} := @{th}',
+                              success_msg=_('theorem added to the context'))
     else:
         command = f'have {h} := {th}'
         command_implicit = f'have {h} := @{th}'
         names = [item.info['name'] for item in selected_objects]
         arguments = ' '.join(names)
         # up to 4 implicit arguments
-        possible_codes.append(f'apply {th} {arguments}')
-        possible_codes.append(f'apply @{th} {arguments}')
-        more_codes = [command + arguments,
-                      command_implicit + arguments,
-                      command + ' _ ' + arguments,
-                      command_implicit + ' _ ' + arguments,
-                      command + ' _ _ ' + arguments,
-                      command_implicit + ' _ _ ' + arguments,
-                      command + ' _ _ _ ' + arguments,
-                      command_implicit + ' _ _ _ ' + arguments,
-                      command + ' _ _ _ _ ' + arguments,
-                      command_implicit + ' _ _ _ _ ' + arguments
-                      ]
-        possible_codes.extend(more_codes)
+        more_codes = [f'apply {th} {arguments}',
+                      f'apply @{th} {arguments}']
+        more_codes += [command + arguments,
+                       command_implicit + arguments,
+                       command + ' _ ' + arguments,
+                       command_implicit + ' _ ' + arguments,
+                       command + ' _ _ ' + arguments,
+                       command_implicit + ' _ _ ' + arguments,
+                       command + ' _ _ _ ' + arguments,
+                       command_implicit + ' _ _ _ ' + arguments,
+                       command + ' _ _ _ _ ' + arguments,
+                       command_implicit + ' _ _ _ _ ' + arguments
+                       ]
+        more_codes = CodeForLean.or_else_from_list(more_codes)
+        context_msg = _('theorem') + ' ' + _('applied to') + ' ' + arguments
+        more_codes.add_success_msg(context_msg)
+        codes = codes.or_else(more_codes)
 
-    return CodeForLean.or_else_from_list(possible_codes)
+        codes.add_error_msg(_("unable to apply theorem"))
+
+    return codes

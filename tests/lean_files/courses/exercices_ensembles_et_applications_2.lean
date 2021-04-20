@@ -9,7 +9,7 @@ Title
 Institution
     Université du monde
 AvailableProof
-    use_proof_methods new_object apply 
+    use_proof_methods new_object apply
 AvailableMagic
     assumption
 -/
@@ -135,7 +135,7 @@ begin
 end
 
 lemma definition.singleton {X: Type} {x x':X} :
- x' ∈ ({x}:set X) ↔ x' = x 
+ x' ∈ ({x}:set X) ↔ x' = x
 :=
 begin
     refl
@@ -193,17 +193,19 @@ begin
 end
 
 lemma theorem.image_directe :
-∀ (f: X → Y), ∀ {A: set X}, ∀ {x : X}, x ∈ A → f x ∈ f '' A :=
+∀ (f: X → Y), ∀ (A: set X), ∀ (x : X), x ∈ A → f x ∈ f '' A :=
 begin
     sorry
 end
 
 lemma exercise.image_singleton :
- ∀ {x:X},  f '' {x} = {f(x)} 
+ ∀ {x:X},  f '' {x} = {f(x)}
 :=
 /- dEAduction
 PrettyName
     Image d'un singleton
+AutoSteps
+  ∀, CQFD
 -/
 begin
    -- intro x,
@@ -290,7 +292,7 @@ begin
 end
 
 lemma exercise.image_directe_et_inclusion_II :
-∀ A B: set X,  f '' (A) ⊆ f '' (B) → A ⊆ B 
+∀ A B: set X,  f '' (A) ⊆ f '' (B) → A ⊆ B
 :=
 begin
   sorry
@@ -298,7 +300,7 @@ end
 
 lemma exercise.image_directe_et_inclusion_III
 (H : injective f) :
-∀ A B: set X,  f '' (A) ⊆ f '' (B) → A ⊆ B 
+∀ A B: set X,  f '' (A) ⊆ f '' (B) → A ⊆ B
 :=
 begin
   intro A,
@@ -312,7 +314,7 @@ begin
 end
 
 lemma exercise.image_directe_et_inclusion_IV :
-(injective f) ↔ 
+(injective f) ↔
 ( ∀ A B: set X,  f '' (A) ⊆ f '' (B) → A ⊆ B )
 :=
 begin
@@ -336,7 +338,7 @@ begin
 end
 
 lemma exercise.image_reciproque_et_inclusion_II :
-∀ A' B': set Y,  f ⁻¹' (A') ⊆ f ⁻¹' (B') → A' ⊆ B' 
+∀ A' B': set Y,  f ⁻¹' (A') ⊆ f ⁻¹' (B') → A' ⊆ B'
 :=
 begin
   sorry
@@ -344,14 +346,14 @@ end
 
 lemma exercise.image_reciproque_et_inclusion_III
 (H : surjective f) :
-∀ A' B': set Y,  f ⁻¹' (A') ⊆ f ⁻¹' (B') → A' ⊆ B' 
+∀ A' B': set Y,  f ⁻¹' (A') ⊆ f ⁻¹' (B') → A' ⊆ B'
 :=
 begin
   sorry
 end
 
 lemma exercise.image_reciproque_et_inclusion_IV :
-(surjective f) ↔ 
+(surjective f) ↔
 ( ∀ A' B': set Y,  f ⁻¹' (A') ⊆ f ⁻¹' (B') → A' ⊆ B' )
 :=
 begin
@@ -374,7 +376,7 @@ begin
 end
 
 lemma exercise.image_de_image_reciproque_II :
-∀ A' : set Y, A' ⊆ f '' (f ⁻¹' (A')) 
+∀ A' : set Y, A' ⊆ f '' (f ⁻¹' (A'))
 :=
 begin
   sorry
@@ -382,14 +384,14 @@ end
 
 lemma exercise.image_de_image_reciproque_III
 (H : surjective f) :
-∀ A' : set Y, A' ⊆ f '' (f ⁻¹' (A')) 
+∀ A' : set Y, A' ⊆ f '' (f ⁻¹' (A'))
 :=
 begin
   sorry
 end
 
 lemma exercise.image_de_image_reciproque_IV :
-(surjective f) ↔ 
+(surjective f) ↔
 ( ∀ A' : set Y, A' ⊆ f '' (f ⁻¹' (A')) )
 :=
 begin
@@ -428,7 +430,7 @@ begin
 end
 
 lemma exercise.image_reciproque_de_image_IV :
-(injective f) ↔ 
+(injective f) ↔
 ( ∀ A : set X, f ⁻¹' (f '' (A)) ⊆ A )
 :=
 begin
@@ -447,7 +449,7 @@ PrettyName
 
 
 lemma exercise.image_directe_et_intersection_I :
-∀ A B: set X, f '' (A ∩ B) ⊆ f '' (A) ∩ f '' (B) 
+∀ A B: set X, f '' (A ∩ B) ⊆ f '' (A) ∩ f '' (B)
 :=
 begin
   sorry
@@ -469,7 +471,7 @@ begin
 end
 
 lemma exercise.image_directe_et_intersection_IV :
-(injective f) ↔ 
+(injective f) ↔
 ( ∀ A B: set X, f '' (A) ∩ f '' (B) = f '' (A ∩ B)  )
 :=
 begin
@@ -487,21 +489,21 @@ PrettyName
 -/
 
 lemma exercise.egalite_I :
-∀ A B : set X, f '' ( A ∪ B) = f '' (A) ∪ f '' (B) 
+∀ A B : set X, f '' ( A ∪ B) = f '' (A) ∪ f '' (B)
 :=
 begin
   sorry
 end
 
 lemma exercise.egalite_II :
-∀ A' B' : set Y, f ⁻¹' ( A' ∩ B') = f ⁻¹' (A') ∩ f ⁻¹' (B') 
+∀ A' B' : set Y, f ⁻¹' ( A' ∩ B') = f ⁻¹' (A') ∩ f ⁻¹' (B')
 :=
 begin
   sorry
 end
 
 lemma exercise.egalite_III :
-∀ A' B' : set Y, f ⁻¹' ( A' ∪ B') = f ⁻¹' (A') ∪ f ⁻¹' (B') 
+∀ A' B' : set Y, f ⁻¹' ( A' ∪ B') = f ⁻¹' (A') ∪ f ⁻¹' (B')
 :=
 begin
   sorry

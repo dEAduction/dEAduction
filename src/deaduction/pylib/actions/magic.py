@@ -217,5 +217,6 @@ def action_assumption(goal: Goal,
         improved_assumption_2 = improved_assumption_2.or_else(more_assumptions)
     more_code = split_conj.and_then(improved_assumption_2)
     codes.append(more_code)
-
-    return CodeForLean.or_else_from_list(codes)
+    code = CodeForLean.or_else_from_list(codes)
+    code.add_error_msg(_("I don't know how to conclude"))
+    return code

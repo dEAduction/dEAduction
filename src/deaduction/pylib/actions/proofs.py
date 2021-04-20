@@ -345,7 +345,7 @@ def apply_substitute(goal: Goal, l: [MathObject], user_input: [int], equality):
     return code_
 
 
-def apply_function(goal: Goal, l: [MathObject]):
+def apply_function(goal: Goal, selected_objects: [MathObject]):
     """
     Apply l[-1], which is assumed to be a function f, to previous elements of
     l, which can be:
@@ -356,34 +356,35 @@ def apply_function(goal: Goal, l: [MathObject]):
     """
 
     log.debug('Applying function')
-    possible_codes = []
+    codes = CodeForLean.empty_code()
 
     # let us check the input is indeed a function
-    function = l[-1]
+    function = selected_objects[-1]
     # if function.math_type.node != "FUNCTION":
     #    raise WrongUserInput
     
     f = function.info["name"]
-    Y = l[-1].math_type.children[1]
+    Y = selected_objects[-1].math_type.children[1]
     
-    while (len(l) != 1):
+    while (len(selected_objects) != 1):
         new_h = get_new_hyp(goal)
         
         # if function applied to a property, presumed to be an equality
-        if l[0].math_type.is_prop():
-            h = l[0].info["name"]
-            possible_codes.append(f'have {new_h} := congr_arg {f} {h}')
+        if selected_objects[0].math_type.is_prop():
+            h = selected_objects[0].info["name"]
+            codes = codes.or_else(f'have {new_h} := congr_arg {f} {h}')
             
         # if function applied to element x:
         # create new element y and new equality y=f(x)
         else:
-            x = l[0].info["name"]
+            x = selected_objects[0].info["name"]
             y = give_global_name(goal=goal,
                     math_type=Y,
                     hints=[Y.info["name"].lower()])
-            possible_codes.append(f'set {y} := {f} {x} with {new_h}')
-        l = l[1:]
-    return CodeForLean.or_else_from_list(possible_codes)
+            codes = codes.or_else(f'set {y} := {f} {x} with {new_h}')
+        selected_objects = selected_objects[1:]
+
+    return codes
 
 
 @action(tooltips.get('tooltip_apply'),
@@ -409,9 +410,6 @@ def action_apply(goal: Goal,
     - apply_and
     - apply_or
     ...
-
-    :param l:   list of MathObject arguments preselected by the user
-    :return:    string of lean code
     """
 
     # fixme: rewrite to provide meaningful error msgs
