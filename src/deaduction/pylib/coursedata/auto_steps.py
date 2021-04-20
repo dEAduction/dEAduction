@@ -224,8 +224,8 @@ class AutoStep:
 
         # Statement: short Lean name
         statement = ''
-        if proof_step.statement:
-            statement = proof_step.statement.lean_short_name
+        if proof_step.statement:  # This is a TreeWidgetItem
+            statement = proof_step.statement.statement.lean_short_name
 
         # User input: int
         user_input = []
