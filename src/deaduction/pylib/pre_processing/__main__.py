@@ -53,12 +53,8 @@ This file is part of d∃∀duction.
 """
 # TODO: change the data to avoid saving the whole contents every 5 statements.
 
-import deaduction.pylib.config.dirs              as     cdirs
-import deaduction.pylib.config.environ           as     cenv
-import deaduction.pylib.config.i18n              as     i18n
-import deaduction.pylib.config.site_installation as     inst
-import deaduction.pylib.config.vars              as     cvars
-
+from sys import argv
+from typing import Optional
 import logging
 import qtrio
 import trio
@@ -66,6 +62,11 @@ import pickle
 from pathlib import Path
 from PySide2.QtWidgets import QFileDialog
 
+
+import deaduction.pylib.config.dirs              as     cdirs
+import deaduction.pylib.config.environ           as     cenv
+import deaduction.pylib.config.site_installation as     inst
+import deaduction.pylib.config.vars              as     cvars
 
 from deaduction.pylib.config.i18n import _
 from deaduction.pylib.coursedata import (Course,
@@ -76,89 +77,6 @@ from deaduction.pylib import logger
 from deaduction.pylib.server import ServerInterface
 
 log = logging.getLogger(__name__)
-
-
-async def main():
-    """
-    See file doc.
-    """
-
-    cenv.init()
-    cdirs.init()
-    inst.init()
-
-    # Choose course and parse it
-    course = select_course()
-    # Check for pkl file and, if it exists, find all unprocessed statements
-    course, unprocessed_statements, course_pkl_path = check_statements(course)
-
-    if not unprocessed_statements:
-        log.info("pkl fle is up_to_date with all initial_proof_states")
-        # Checking
-        read_data(course_pkl_path)
-        return
-    else:
-        log.info(f"Still {len(unprocessed_statements)} statements to process")
-
-    # confirm before processing file
-    print("Processing? (y/n)")
-    answer = input()
-    if answer == 'y':
-        pass
-    else:
-        print('Quitting')
-        return
-
-    #########################
-    # Init and start server #
-    #########################
-    async with trio.open_nursery() as nursery:
-        servint = ServerInterface(nursery)
-        await servint.start()
-        try:
-            log.info("Pre-processing course...")
-            await get_all_proof_states(servint,
-                                       course,
-                                       unprocessed_statements,
-                                       course_pkl_path
-                                       )
-        except UnicodeDecodeError:
-            log.error("UnicodeDecodeError")
-        finally:
-            servint.stop()  # Good job, buddy
-            save_objects([course], course_pkl_path)
-
-        # Checking
-        read_data(course_pkl_path)
-
-
-def select_course():
-    """
-    Open a file dialog to choose a course lean file.
-
-    :return: TODO
-    """
-
-    course_path, ok = QFileDialog.getOpenFileName()
-
-    if ok:
-        course_path = Path(course_path)
-        course_path_str = str(course_path.resolve())
-        log.info(f'Selected course: {course_path_str}')
-
-        extension = course_path.suffix
-        # case of a standard Lean file
-        if extension == '.lean':
-            course = Course.from_file(course_path)
-        # case of a pre-processed .pkl file
-        elif extension == '.pkl':
-            [course] = pickled_items(course_path)
-        else:
-            log.error("Wrong file format")
-
-        return course
-    else:
-        return None
 
 
 def check_statements(course):
@@ -248,7 +166,6 @@ async def get_all_proof_states(servint,
             statement.initial_proof_state = servint.proof_state
 
 
-
 def save_objects(objects: list, filename):
     with filename.open(mode='wb') as output:  # Overwrites any existing file
         for obj in objects:
@@ -322,8 +239,147 @@ def print_goal(course):
                               to_prove=to_prove))
 
 
+def get_courses_from_dir(dir_path: Path):
+    lean_files = [file for file in dir_path.iterdir()
+                  if file.suffix == '.lean']
+    log.info(f"looking for deaduction-Lean files in {dir_path.name}")
+    log.info(f" found {len(lean_files)} files")
+
+    courses = [select_course(file) for file in lean_files]
+    return courses
+
+
+def select_course(course_path=None) -> Course:
+    """
+    Select a course from a Path, a path string, or by opening a QFileDialog.
+    :param course_path: a Path, a string, or None.
+    :return: a instance of Course.
+    """
+
+    course = None
+    if not course_path:
+        course_path, ok = QFileDialog.getOpenFileName()
+        if not ok:
+            quit()
+    if isinstance(course_path, str):
+        if not course_path.endswith('.lean') \
+        and not course_path.endswith('.pkl'):
+            course_path += '.lean'
+        course_path = Path(course_path)
+
+    course_path_str = str(course_path.resolve())
+    log.info(f'Selected course: {course_path_str}')
+
+    extension = course_path.suffix
+    # case of a standard Lean file
+    if extension == '.lean':
+        course = Course.from_file(course_path)
+    # case of a pre-processed .pkl file
+    elif extension == '.pkl':
+        [course] = pickled_items(course_path)
+    else:
+        log.error("Wrong file format")
+
+    return course
+
+
+def coex_from_argv() -> (Optional[Path], Course, Exercise, bool):
+    """
+    Try to build Course and Exercise object from arguments.
+    """
+    dir_path = None
+    course_path = None
+    course = None
+
+    for arg in argv[1:]:
+        if arg.startswith('--directory='):
+            dir_path = arg[len("--directory="):]
+        elif arg == '-d':
+            dir_path = argv[argv.index(arg)+1]
+        elif arg.startswith("--course="):
+            course_path = arg[len("--course="):]
+        elif arg == "-c":
+            course_path = argv[argv.index(arg)+1]
+
+    if dir_path:
+        dir_path = Path(dir_path)
+        return dir_path, None
+    elif course_path:
+        course = select_course(course_path)
+
+    return None, course
+
+
+async def main():
+    """
+    See file doc.
+    """
+
+    cenv.init()
+    cdirs.init()
+    inst.init()
+
+    #############################################
+    # Search course or directory from arguments #
+    #############################################
+    dir_, course = coex_from_argv()
+    if dir_:
+        courses = get_courses_from_dir(dir_)
+    elif course:
+        courses = [course]
+    else:
+        course = select_course()
+        courses = [course]
+
+    # Process each course
+    for course in courses:
+        # Check for pkl file and, if it exists, find all unprocessed statements
+        course, unprocessed_statements, course_pkl_path \
+            = check_statements(course)
+
+        if not unprocessed_statements:
+            log.info("pkl fle is up_to_date with all initial_proof_states")
+            # Checking
+            read_data(course_pkl_path)
+            return
+        else:
+            log.info(f"Still {len(unprocessed_statements)} "
+                     f"statements to process")
+
+        # confirm before processing file
+        print("Processing? (y/n)")
+        answer = input()
+        if answer == 'y':
+            pass
+        else:
+            print('Quitting')
+            return
+
+        #########################
+        # Init and start server #
+        #########################
+        async with trio.open_nursery() as nursery:
+            servint = ServerInterface(nursery)
+            await servint.start()
+            try:
+                log.info("Pre-processing course...")
+                await get_all_proof_states(servint,
+                                           course,
+                                           unprocessed_statements,
+                                           course_pkl_path
+                                           )
+            except UnicodeDecodeError:
+                log.error("UnicodeDecodeError")
+            finally:
+                servint.stop()  # Good job, buddy
+                save_objects([course], course_pkl_path)
+
+            # Checking
+            read_data(course_pkl_path)
+
+
 if __name__ == '__main__':
-    logger.configure()
+    logger.configure(domains=['lean', 'ServerInterface', '__main__'])
     log.debug("starting pre-processing...")
     qtrio.run(main)
 
