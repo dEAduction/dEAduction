@@ -283,7 +283,6 @@ class ExerciseMainWindow(QMainWindow):
         since this would modify history.
         """
 
-        log.debug(f"Simulating proof_step {proof_step}")
         # Light target on/off as needed
         if proof_step.selection:
             self.ecw.target_wgt.mark_user_selected(False)
@@ -297,10 +296,8 @@ class ExerciseMainWindow(QMainWindow):
         # Check button or statement
         if isinstance(proof_step.button, ActionButton):
             await proof_step.button.simulate(duration=0.3)
-            log.debug(f"Simulate button {proof_step.button.symbol}")
         elif isinstance(proof_step.statement_item, StatementsTreeWidgetItem):
             await proof_step.statement_item.simulate(duration=0.3)
-            log.debug("Simulate statement")
         # Light off selection synchronously
         for item in self.ecw.props_wgt.items:
             item.mark_user_selected(False)
@@ -312,26 +309,6 @@ class ExerciseMainWindow(QMainWindow):
 
         :param new_goal: The new goal to update / set the interface to.
         """
-
-        # Init context (objects and properties). Get them as two list of
-        # (MathObject, str), the str being the tag of the prop. or obj.
-
-        # get old goal and set tags
-        # lean_file = self.servint.lean_file
-        #
-        # if lean_file.idx > 0:
-        #     # NB : when idx = 0, old_goal = new_goal : nothing is new
-        #     previous_idx = lean_file.idx - 1
-        #     entry = lean_file.history[previous_idx]
-        #     entry_info = entry.misc_info
-        #     log.debug(f'Proof step n°{lean_file.idx}')
-        #
-        #     if 'ProofState' in entry_info.keys():
-        #         previous_proof_state = entry_info['ProofState']
-        #         old_goal = previous_proof_state.goals[0]
-        #         Goal.compare(new_goal, old_goal)  # Set tags
-        #     else:
-        #         log.warning(f"No proof state found for previous step")
 
         # Get previous goal and set tags
         # NB: here we need the previous goal in the logical order, which is
@@ -809,7 +786,7 @@ class ExerciseMainWindow(QMainWindow):
         # Display messages
         if not self.proof_step.is_history_move():
             self.statusBar.display_message(self.proof_step)
-        else:
+        elif self.proof_step.is_redo():
             self.statusBar.display_message(self.lean_file.current_proof_step)
 
         # Store current proof_step in the lean_file (for logical memory)
