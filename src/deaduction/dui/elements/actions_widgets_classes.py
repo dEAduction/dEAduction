@@ -42,6 +42,7 @@ This file is part of d∃∀duction.
 import              logging
 from pathlib import Path
 from typing import  Dict
+from trio import sleep
 
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
@@ -148,6 +149,20 @@ class ActionButton(QPushButton):
         Test if symbol is the symbol of (the action associated to) self.
         """
         return self.action.symbol == symbol
+
+    async def simulate(self, duration=0.3):
+        """
+        This method simulate user pushing self. It is asynchrone since we
+        must wait a small duration before unchecking button, so that the
+        checking is visible. This is called when redoing.
+        """
+
+        self.setCheckable(True)
+        self.setChecked(True)
+        await sleep(duration)
+        self.setChecked(False)
+        self.setCheckable(False)
+
 
 # We wish to have an ActionButton class attribute called
 # action_triggered and defined as Signal(ActionButton). At first, one
@@ -288,6 +303,17 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
 
     def has_pretty_name(self, pretty_name: str) -> bool:
         return self.statement.pretty_name == pretty_name
+
+    async def simulate(self, duration=0.3):
+        """
+        This method simulate user selecting statement. It is asynchrone
+        since we must wait a small duration so that the checking is visible.
+        This is called when redoing.
+        """
+
+        self.setBackground(0, QBrush(QColor('blue')))
+        await sleep(duration)
+        self.setBackground(0, QBrush())
 
 
 class StatementsTreeWidgetNode(QTreeWidgetItem):
