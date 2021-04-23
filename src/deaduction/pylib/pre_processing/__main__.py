@@ -143,27 +143,26 @@ async def get_all_proof_states(servint,
     counter = 0
     for statement in statements_to_process:
         counter += 1
-        try:
-            await servint.exercise_set(statement)
-            # proof_state is now stored as servint.proof_state
-            log.info(f"Got proof state of statement "
-                     f"{statement.pretty_name}, n"
-                     f"°{counter}")
-            statement.initial_proof_state = servint.proof_state
+        await servint.exercise_set(statement)
+        # proof_state is now stored as servint.proof_state
+        log.info(f"Got proof state of statement "
+                 f"{statement.pretty_name}, n"
+                 f"°{counter}")
+        statement.initial_proof_state = servint.proof_state
 
         # stop and restart server every 5 exercises to avoid
         # too long messages that entail crashing
-        except(UnicodeDecodeError):
-            servint.stop()
+        if (counter % 5) == 0:
+            # servint.stop()
             log.info("Saving temporary file...")
             save_objects([course], course_pkl_path)
-            await servint.start()
-            await servint.exercise_set(statement)
-            # proof_state is now stored as servint.proof_state
-            log.info(f"Got proof state of statement "
-                     f"{statement.pretty_name}, n"
-                     f"°{counter}")
-            statement.initial_proof_state = servint.proof_state
+            # await servint.start()
+            # await servint.exercise_set(statement)
+            # # proof_state is now stored as servint.proof_state
+            # log.info(f"Got proof state of statement "
+            #          f"{statement.pretty_name}, n"
+            #          f"°{counter}")
+            # statement.initial_proof_state = servint.proof_state
 
 
 def save_objects(objects: list, filename):
@@ -186,12 +185,13 @@ def read_data(filename):
     print("Reading file:")
     [stored_course] = pickled_items(filename)
 
-    print("Text version ? (t)")
-    answer = input()
-    if answer == 't':
-        print_text_version(stored_course)
-    else:
-        print_goal(stored_course)
+    # print("Text version ? (t)")
+    # answer = input()
+    # if answer == 't':
+    #     print_text_version(stored_course)
+    # else:
+    #     print_goal(stored_course)
+    print_goal(stored_course)
 
 
 def print_text_version(course):
@@ -341,7 +341,7 @@ async def main():
             log.info("pkl fle is up_to_date with all initial_proof_states")
             # Checking
             read_data(course_pkl_path)
-            return
+            continue
         else:
             log.info(f"Still {len(unprocessed_statements)} "
                      f"statements to process")
