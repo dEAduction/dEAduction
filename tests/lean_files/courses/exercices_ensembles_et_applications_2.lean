@@ -120,7 +120,7 @@ lemma theorem.ensemble_non_vide
 (A ≠ ∅) ↔ ∃ x : X, x ∈ A
 :=
 begin
-    sorry
+    todo
 end
 
 lemma definition.ensemble_comprehension {X: Type}  {P : X → Prop} {x:X} :
@@ -189,13 +189,13 @@ variables {f: X → Y} {B B': set Y}
 
 lemma definition.image_directe (y : Y) : y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y :=
 begin
-    sorry
+    todo
 end
 
 lemma theorem.image_directe :
 ∀ (f: X → Y), ∀ (A: set X), ∀ (x : X), x ∈ A → f x ∈ f '' A :=
 begin
-    sorry
+    todo
 end
 
 lemma exercise.image_singleton :
@@ -210,13 +210,13 @@ AutoSteps
 begin
    -- intro x,
    -- exact image_singleton,
-   sorry,
+   todo,
 end
 
 
 lemma definition.image_reciproque (x:X) : x ∈ f  ⁻¹' B ↔ f(x) ∈ B :=
 begin
-    sorry
+    todo
 end
 lemma definition.injectivite :
 injective f ↔ ∀ x x' : X, (f x = f x' → x = x')
@@ -288,14 +288,14 @@ lemma exercise.image_directe_et_inclusion_I :
 ∀ A B: set X, A ⊆ B → f '' (A) ⊆ f '' (B)
 :=
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_directe_et_inclusion_II :
 ∀ A B: set X,  f '' (A) ⊆ f '' (B) → A ⊆ B
 :=
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_directe_et_inclusion_III
@@ -303,14 +303,7 @@ lemma exercise.image_directe_et_inclusion_III
 ∀ A B: set X,  f '' (A) ⊆ f '' (B) → A ⊆ B
 :=
 begin
-  intro A,
-  intro B,
-  intro H2,
-  rw ensembles_et_applications.definitions.generalites.definition.inclusion,
-  intro x,
-  intro H3,
-  have H6 := @ensembles_et_applications.definitions.applications.theorem.image_directe,
-  have H7 := @H6 _ _ _ _ f,
+    todo
 end
 
 lemma exercise.image_directe_et_inclusion_IV :
@@ -318,7 +311,7 @@ lemma exercise.image_directe_et_inclusion_IV :
 ( ∀ A B: set X,  f '' (A) ⊆ f '' (B) → A ⊆ B )
 :=
 begin
-  sorry
+  todo
 end
 
 end image_directe
@@ -334,14 +327,14 @@ lemma exercise.image_reciproque_et_inclusion_I :
 ∀ A' B': set Y, A'⊆B' → f ⁻¹' (A') ⊆ f ⁻¹' (B')
 :=
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_reciproque_et_inclusion_II :
 ∀ A' B': set Y,  f ⁻¹' (A') ⊆ f ⁻¹' (B') → A' ⊆ B'
 :=
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_reciproque_et_inclusion_III
@@ -349,7 +342,7 @@ lemma exercise.image_reciproque_et_inclusion_III
 ∀ A' B': set Y,  f ⁻¹' (A') ⊆ f ⁻¹' (B') → A' ⊆ B'
 :=
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_reciproque_et_inclusion_IV :
@@ -357,7 +350,7 @@ lemma exercise.image_reciproque_et_inclusion_IV :
 ( ∀ A' B': set Y,  f ⁻¹' (A') ⊆ f ⁻¹' (B') → A' ⊆ B' )
 :=
 begin
-  sorry
+  todo
 end
 
 end image_reciproque
@@ -372,14 +365,14 @@ lemma exercise.image_de_image_reciproque_I :
 ∀ A' : set Y, f '' (f ⁻¹' (A')) ⊆ A'
 :=
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_de_image_reciproque_II :
 ∀ A' : set Y, A' ⊆ f '' (f ⁻¹' (A'))
 :=
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_de_image_reciproque_III
@@ -387,7 +380,7 @@ lemma exercise.image_de_image_reciproque_III
 ∀ A' : set Y, A' ⊆ f '' (f ⁻¹' (A'))
 :=
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_de_image_reciproque_IV :
@@ -395,7 +388,7 @@ lemma exercise.image_de_image_reciproque_IV :
 ( ∀ A' : set Y, A' ⊆ f '' (f ⁻¹' (A')) )
 :=
 begin
-  sorry
+  todo
 end
 
 end image_de_image_reciproque
@@ -411,14 +404,14 @@ lemma exercise.image_reciproque_de_image_I :
 ∀ A : set X, A ⊆ f ⁻¹' (f '' (A))
 :=
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_reciproque_de_image_II :
 ∀ A : set X, f ⁻¹' (f '' (A)) ⊆ A
 :=
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_reciproque_de_image_III
@@ -426,7 +419,7 @@ lemma exercise.image_reciproque_de_image_III
 ∀ A : set X, f ⁻¹' (f '' (A)) ⊆ A
 :=
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_reciproque_de_image_IV :
@@ -434,7 +427,7 @@ lemma exercise.image_reciproque_de_image_IV :
 ( ∀ A : set X, f ⁻¹' (f '' (A)) ⊆ A )
 :=
 begin
-  sorry
+  todo
 end
 
 end image_reciproque_de_image
@@ -452,14 +445,14 @@ lemma exercise.image_directe_et_intersection_I :
 ∀ A B: set X, f '' (A ∩ B) ⊆ f '' (A) ∩ f '' (B)
 :=
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_directe_et_intersection_II :
 ∀ A B: set X,  f '' (A) ∩ f '' (B) ⊆ f '' (A ∩ B)
 :=
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_directe_et_intersection_III
@@ -467,7 +460,7 @@ lemma exercise.image_directe_et_intersection_III
 ∀ A B: set X,  f '' (A) ∩ f '' (B) ⊆ f '' (A ∩ B)
 :=
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_directe_et_intersection_IV :
@@ -475,7 +468,7 @@ lemma exercise.image_directe_et_intersection_IV :
 ( ∀ A B: set X, f '' (A) ∩ f '' (B) = f '' (A ∩ B)  )
 :=
 begin
-  sorry
+  todo
 end
 
 end image_intersection
@@ -492,21 +485,21 @@ lemma exercise.egalite_I :
 ∀ A B : set X, f '' ( A ∪ B) = f '' (A) ∪ f '' (B)
 :=
 begin
-  sorry
+  todo
 end
 
 lemma exercise.egalite_II :
 ∀ A' B' : set Y, f ⁻¹' ( A' ∩ B') = f ⁻¹' (A') ∩ f ⁻¹' (B')
 :=
 begin
-  sorry
+  todo
 end
 
 lemma exercise.egalite_III :
 ∀ A' B' : set Y, f ⁻¹' ( A' ∪ B') = f ⁻¹' (A') ∪ f ⁻¹' (B')
 :=
 begin
-  sorry
+  todo
 end
 
 

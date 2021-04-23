@@ -18,7 +18,7 @@ import utils
 -- logic names ['and', 'or', 'negate', 'implicate', 'iff', 'forall', 'exists']
 -- proofs names ['use_proof_methods', 'new_object', 'apply', 'assumption']
 -- magic names ['compute']
--- proof methods names ['cbr', 'contrapose', 'absurdum', 'todo']
+-- proof methods names ['cbr', 'contrapose', 'absurdum', 'sorry']
 
 
 
