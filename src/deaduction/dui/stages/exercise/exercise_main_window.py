@@ -284,8 +284,11 @@ class ExerciseMainWindow(QMainWindow):
         """
 
         log.debug(f"Simulating proof_step {proof_step}")
-        # Light off target
-        self.ecw.target_wgt.mark_user_selected(False)
+        # Light target on/off as needed
+        if proof_step.selection:
+            self.ecw.target_wgt.mark_user_selected(False)
+        else:
+            self.ecw.target_wgt.mark_user_selected(True)
         # Light on selection
         for math_object in proof_step.selection:
             for item in self.ecw.props_wgt.items:
@@ -803,7 +806,11 @@ class ExerciseMainWindow(QMainWindow):
         else:
             previous_proof_state = None
 
-        self.statusBar.display_message(self.proof_step)
+        # Display messages
+        if not self.proof_step.is_history_move():
+            self.statusBar.display_message(self.proof_step)
+        else:
+            self.statusBar.display_message(self.lean_file.current_proof_step)
 
         # Store current proof_step in the lean_file (for logical memory)
         # and in the journal (for comprehensive memory)
