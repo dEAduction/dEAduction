@@ -275,21 +275,32 @@ class ExerciseMainWindow(QMainWindow):
 
         return msg
 
-    def simulate_click(self, action_button, connected=False):
-        if not connected:
-            action_button.action_triggered.disconnect(self.__action_triggered)
-        action_button.animateClick(100)
-        if not connected:
-            action_button.action_triggered.connect(self.__action_triggered)
+    async def simulate(self, proof_step: ProofStep):
+        """
+        This method simulate proof_step by selecting the selection and
+        checking button or statement stored in proof_step.This is called
+        when reding. Note that the corresponding actions are NOT called,
+        since this would modify history.
+        """
 
-    def simulate_statement(self, statement_item):
-        pass
-
-    def simulate(self, proof_step: ProofStep):
+        log.debug(f"Simulating proof_step {proof_step}")
+        # Light off target
+        self.ecw.target_wgt.mark_user_selected(False)
+        # Light on selection
+        for math_object in proof_step.selection:
+            for item in self.ecw.props_wgt.items:
+                if item.mathobject == math_object:
+                    item.mark_user_selected(True)
+        # Check button or statement
         if isinstance(proof_step.button, ActionButton):
-            self.simulate_click(proof_step.button)
+            await proof_step.button.simulate(duration=0.3)
+            log.debug(f"Simulate button {proof_step.button.symbol}")
         elif isinstance(proof_step.statement_item, StatementsTreeWidgetItem):
-            pass
+            await proof_step.statement_item.simulate(duration=0.3)
+            log.debug("Simulate statement")
+        # Light off selection synchronously
+        for item in self.ecw.props_wgt.items:
+            item.mark_user_selected(False)
 
     def update_goal(self, new_goal: Goal):
         """
@@ -418,6 +429,7 @@ class ExerciseMainWindow(QMainWindow):
                          self.__apply_math_object_triggered]) as emissions:
             async for emission in emissions.channel:
                 self.statusBar.erase()
+
                 if emission.is_from(self.lean_editor.editor_send_lean):
                     await self.process_async_signal(self.__server_send_editor_lean)
 
@@ -426,8 +438,10 @@ class ExerciseMainWindow(QMainWindow):
                     # signal proof_state_change of which
                     # self.update_goal is a slot
                     self.proof_step.button = 'history_redo'
-                    proof_step = self.lean_file.current_proof_step
-                    self.simulate(proof_step)
+                    proof_step = self.lean_file.next_proof_step
+                    # Avoid exceeding end of history
+                    self.toolbar.setEnabled(False)
+                    await self.simulate(proof_step)
                     await self.process_async_signal(self.servint.history_redo)
 
                 elif emission.is_from(self.toolbar.undo_action.triggered):
@@ -530,9 +544,10 @@ class ExerciseMainWindow(QMainWindow):
         #   - and so on.
         if auto_selection:
             selection = auto_selection
+            self.proof_step.selection = selection
         else:
             selection = self.current_selection_as_mathobjects
-        self.proof_step.selection = selection
+            self.proof_step.selection = selection
 
         if auto_user_input:
             user_input = auto_user_input
@@ -610,9 +625,10 @@ class ExerciseMainWindow(QMainWindow):
         """
         if auto_selection:
             selection = auto_selection
+            self.proof_step.selection = selection
         else:
             selection = self.current_selection_as_mathobjects
-        self.proof_step.selection = selection
+            self.proof_step.selection = selection
 
         # Do nothing if user clicks on a node
         if isinstance(item, StatementsTreeWidgetItem):
@@ -791,9 +807,14 @@ class ExerciseMainWindow(QMainWindow):
 
         # Store current proof_step in the lean_file (for logical memory)
         # and in the journal (for comprehensive memory)
-        if not self.proof_step.is_history_move():
+        # We do NOT want to modify the attached context if we are moving in
+        # history or recovering from an error. On particular, note that the
+        # attached proof_step never corresponds to a history move.
+        if not self.proof_step.is_history_move()\
+                and not self.proof_step.is_error():
             self.lean_file.state_info_attach(proof_step=self.proof_step)
-        self.journal.store(self.proof_step, self)
+        if not self.test_mode:
+            self.journal.store(self.proof_step, self)
 
         # Pass proof_step to previous_proof_step, and create a new proof_step
         self.previous_proof_step = copy(self.proof_step)

@@ -445,13 +445,20 @@ def first_distinct_line(txt1: str, txt2: str) -> int:
 class LeanFile(VirtualFile):
 
     @property
+    def previous_proof_step(self) -> Optional[ProofStep]:
+        if self.target_idx > 0:
+            return self.history[self.target_idx-1].misc_info.get('proof_step')
+        else:
+            return None
+
+    @property
     def current_proof_step(self) -> ProofStep:
         return self.history[self.target_idx].misc_info.get('proof_step')
 
     @property
-    def previous_proof_step(self) -> Optional[ProofStep]:
-        if self.target_idx > 0:
-            return self.history[self.target_idx-1].misc_info.get('proof_step')
+    def next_proof_step(self) -> Optional[ProofStep]:
+        if self.target_idx < len(self.history)-1:
+            return self.history[self.target_idx+1].misc_info.get('proof_step')
         else:
             return None
 

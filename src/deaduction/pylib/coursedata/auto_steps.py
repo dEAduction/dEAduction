@@ -207,11 +207,11 @@ class AutoStep:
         # Selection: [str]
         selection = []
         if proof_step.selection:
-            for item in proof_step.selection:
-                if item in emw.objects:
-                    item_str = "@O" + str(emw.objects.index(item))
+            for math_object in proof_step.selection:
+                if math_object in emw.objects:
+                    item_str = "@O" + str(emw.objects.index(math_object))
                 else:
-                    item_str = "@P" + str(emw.properties.index(item))
+                    item_str = "@P" + str(emw.properties.index(math_object))
                 selection.append(item_str)
 
         # Button: '∧', '∨', '¬', '⇒', '⇔', '∀', '∃', 'compute', 'CQFD',
@@ -224,8 +224,8 @@ class AutoStep:
 
         # Statement: short Lean name
         statement = ''
-        if proof_step.statement:  # This is a TreeWidgetItem
-            statement = proof_step.statement.statement.lean_short_name
+        if proof_step.statement_item:  # This is a TreeWidgetItem
+            statement = proof_step.statement_item.statement.lean_short_name
 
         # User input: int
         user_input = []

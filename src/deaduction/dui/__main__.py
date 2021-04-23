@@ -67,14 +67,15 @@ from deaduction.pylib.autotest import                   select_exercise
 # Change your own settings in .deaduction-dev/config.toml
 log_domains = cvars.get("logs.domains", "")
 
-log_domains = ["deaduction", "__main__", 'ServerInterface', 'magic']
+log_domains = ["deaduction", "__main__", 'ServerInterface']
 log_level = cvars.get("logs.display_level", 'info')
-# log_domains = ""
+# log_domains = ['lean', 'ServerInterface']
 log_level = 'debug'
 logger.configure(domains=log_domains,
                  display_level=log_level)
 
 log = logging.getLogger(__name__)
+
 
 ############################
 # Check dependencies stage #

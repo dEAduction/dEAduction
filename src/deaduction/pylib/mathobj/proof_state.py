@@ -418,24 +418,23 @@ class ProofStep:
     """
 
     # ──────────────── Proof memory ─────────────── #
-    property_counter: int             = 0
-    current_goal_number: int          = 1
-    total_goals_counter: int          = 1
-    goal_change_msgs: [str]       = None
+    property_counter: int    = 0
+    current_goal_number: int = 1
+    total_goals_counter: int = 1
+    goal_change_msgs: [str]  = None
 
     # ──────────────── Input ─────────────── #
-    selection: [Any]                  = None
-    user_input: [Any]                 = None
-    button: Optional[Any]             = None  # ActionButton or str
-    statement: Optional[Any]          = None  # Statement
-    lean_code: Any                    = None  # CodeForLean
+    selection      = None  # [MathObject]
+    user_input     = None  # [str]
+    button         = None  # ActionButton or str
+    statement_item = None  # StatementsTreeWidgetItem
+    lean_code      = None  # CodeForLean
 
     # ──────────────── Output ─────────────── #
-    effective_code                    = None  # CodeForLean
-    error_type: Optional[int]         = 0  # 1 = WUI, 2 = FRE
-    error_msg: str                    = ''
-    # success_msg: Optional[int]      = None
-    proof_state                       = None
+    effective_code            = None  # CodeForLean
+    error_type: Optional[int] = 0  # 1 = WUI, 2 = FRE
+    error_msg: str            = ''
+    proof_state               = None
 
     @classmethod
     def next(cls, proof_step):
@@ -465,26 +464,29 @@ class ProofStep:
     def goal(self):
         return self.proof_state.goals[0]
 
-    # def clear(self):
-    #     self.selection  = None
-    #     self.user_input = None
-    #     self.button     = None
-    #     self.statement  = None
-    #     self.lean_code  = None
-    #
-    #     self.effective_code: str  = ''
-    #     self.error_type           = None
-    #     self.error_message: str   = ''
-    #     self.success_message: str = ''
-    #     self.proof_state          = None
-
     def is_undo(self):
         return self.button == 'history_undo'
+
+    def is_redo(self):
+        return self.button == 'history_redo'
+
+    def is_rewind(self):
+        return self.button == 'history_rewind'
+
+    def is_history_move(self):
+        return self.is_undo() or self.is_redo() or self.is_rewind()
 
     def is_error(self):
         return bool(self.error_type)
 
     def compare(self, auto_test) -> (str, bool):
+        """
+        Compare self to an auto_test, and write a report if unexpected
+        happened.
+
+        :return: a string containing a written report, and a bool which is
+        True iff everything is OK.
+        """
         report = ''
         success = True
         # Case of error
