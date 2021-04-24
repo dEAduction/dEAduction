@@ -193,7 +193,7 @@ class Shape:
         node = math_object.node
         display = []
         shape = None
-        if node == "No more goal":
+        if node == "NO_MORE_GOAL":
             display = _("All goals reached!")
         elif node == "APPLICATION":
             # This one returns a shape, to handle supplementary children

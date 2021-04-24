@@ -210,8 +210,10 @@ class AutoStep:
             for math_object in proof_step.selection:
                 if math_object in emw.objects:
                     item_str = "@O" + str(emw.objects.index(math_object))
-                else:
+                elif math_object in emw.properties:
                     item_str = "@P" + str(emw.properties.index(math_object))
+                else:
+                    item_str = "NOT_FOUND"
                 selection.append(item_str)
 
         # Button: '∧', '∨', '¬', '⇒', '⇔', '∀', '∃', 'compute', 'CQFD',
