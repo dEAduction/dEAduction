@@ -207,13 +207,19 @@ def find_selection(auto_step, emw):
             # construction.
             while not selection:
                 if name.startswith('@O'):
-                    selection = emw.objects[int(name[2:]) - 1]
+                    try:
+                        selection = emw.objects[int(name[2:]) - 1]
+                    except IndexError:
+                        pass
                 elif name.startswith('@P'):
-                    selection = emw.properties[int(name[2:]) - 1]
+                    try:
+                        selection = emw.properties[int(name[2:]) - 1]
+                    except IndexError:
+                        pass
                 else:
                     if name.startswith('@'):  # (unwanted @)
                         name = name[1:]
-                    selection = emw.goal.math_object_from_name(name)
+                    selection = emw.current_goal.math_object_from_name(name)
                 # if not selection:
                 #     # Next trial
                 #     properties = [item.mathobject for item in
@@ -258,7 +264,7 @@ async def auto_test(container: Container):
             # Check result #
             if emission.is_from(emw.proof_step_updated) and steps_counter:
                 step = auto_steps[steps_counter-1]
-                report, step_success = emw.previous_proof_step.compare(step)
+                report, step_success = emw.displayed_proof_step.compare(step)
                 test_success = test_success and step_success
                 if not report:
                     report = f'Success with {step.raw_string}'
