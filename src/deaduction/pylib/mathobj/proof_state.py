@@ -414,23 +414,28 @@ class ProofStep:
     """
     Class to store data associated to a step in proof.
     The step starts with user inputs, and ends with Lean's responses.
+    Note that the proof_state attribute is used both for storing the
+    proof_state at the beginning of the step, which is used by logical
+    action to compute the pertinent Lean Code,
+    and for storing the proof_state at the end of the step, to be stored in
+    Journal and lean_file's history.
     """
 
     # ──────────────── Proof memory ─────────────── #
     property_counter: int    = 0
-    current_goal_number: int = 1
-    total_goals_counter: int = 1
-    goal_change_msgs: [str]  = None
+    current_goal_number: int = 1  # Current number of goal in the proof history
+    total_goals_counter: int = 1  # Total number of goals in the proof history
+    goal_change_msgs: [str]  = None  # TODO e.g. "Second case: we assume x∈A".
 
     # ──────────────── Input ─────────────── #
     selection      = None  # [MathObject]
     user_input     = None  # [str]
-    button         = None  # ActionButton or str
+    button         = None  # ActionButton or str, e.g. "history_undo".
     statement_item = None  # StatementsTreeWidgetItem
     lean_code      = None  # CodeForLean
 
     # ──────────────── Output ─────────────── #
-    effective_code            = None  # CodeForLean
+    effective_code            = None  # CodeForLean that proved effective
     error_type: Optional[int] = 0  # 1 = WUI, 2 = FRE
     error_msg: str            = ''
     proof_state               = None
@@ -506,7 +511,7 @@ class ProofStep:
     def compare(self, auto_test) -> (str, bool):
         """
         Compare self to an auto_test, and write a report if unexpected
-        happened.
+        happened. This is used for auto_test.
 
         :return: a string containing a written report, and a bool which is
         True iff everything is OK.

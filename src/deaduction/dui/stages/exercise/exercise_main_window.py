@@ -29,7 +29,7 @@ from functools import partial
 import                logging
 from typing import    Callable
 import                qtrio
-from copy import      copy
+from copy import      copy, deepcopy
 
 from PySide2.QtCore import (    Signal,
                                 Slot,
@@ -127,10 +127,20 @@ class ExerciseMainWindow(QMainWindow):
         for the session, instantiated in deaduction.dui.__main__.py.
     :attribute toolbar QToolBar: The toolbar.
     :attribute journal Journal: used to store the list of all events
-    occurring in the interface, both practical and logical.
-    :attribute cqfd bool: initialised to False, becomes True the first time
-    target is solved.
-
+        occurring in the interface, both practical and logical.
+    :attribute exercise_solved bool: initialised to False, becomes True the
+        first time target is solved.
+    :attribute test_mode bool: True when auto testing.
+    :attribute proof_step ProofStep: this class store all the data of the
+        current proof step : user selection, button or statement triggered,
+        user_input, CodeForLean, success or error msgs, and proof_state. It
+        also stores memories of the proof, in particular the goal counters.
+    :attribute displayed_proof_step ProofStep: This contains data of the
+        ProofStep that was previously displayed by the ui. This ProofStep is
+        not necessarily the previous proof step in the logical order,
+        in case of undoing: the logically previous step is stored in the
+        lean_file and may be retrieved using the logically_previous_proof_step
+         property.
     """
 
     window_closed                   = Signal()
@@ -160,19 +170,19 @@ class ExerciseMainWindow(QMainWindow):
 
         self.target_selected_by_default = cvars.get(
                             'functionality.target_selected_by_default', False)
-        self.exercise            = exercise
-        self.current_goal        = None
-        self.current_selection   = []
-        self._target_selected    = False
-        self.ecw                 = ExerciseCentralWidget(exercise)
-        self.lean_editor         = LeanEditor()
-        self.servint             = servint
-        self.toolbar             = ExerciseToolBar()
-        self.journal             = Journal()
-        self.proof_step          = ProofStep()
-        self.previous_proof_step = None
-        self.cqfd                = False
-        self.test_mode           = False  # Useful for auto_test
+        self.exercise             = exercise
+        self.current_goal         = None
+        self.current_selection    = []
+        self._target_selected     = False
+        self.ecw                  = ExerciseCentralWidget(exercise)
+        self.lean_editor          = LeanEditor()
+        self.servint              = servint
+        self.toolbar              = ExerciseToolBar()
+        self.journal              = Journal()
+        self.proof_step           = ProofStep()
+        self.displayed_proof_step = None
+        self.exercise_solved      = False
+        self.test_mode            = False
 
         # ─────────────────────── UI ─────────────────────── #
 
@@ -208,24 +218,40 @@ class ExerciseMainWindow(QMainWindow):
                                                     self.change_exercise)
         self.servint.nursery.start_soon(self.server_task)  # Start server task
 
+    ###########
+    # Methods #
+    ###########
+
     @property
     def lean_file(self):
+        """ Virtual file containing the Lean code and its history."""
         return self.servint.lean_file
 
     @property
+    def logically_previous_proof_step(self):
+        """
+        The previous proof step in the logical order is always stored in the
+        previous entry of lean_file's history. This is NOT the proof step
+        that was previously displayed by the ui in case of history undo or
+        rewind (which is stored in self.displayed_proof_step).
+        """
+        return self.lean_file.previous_proof_step
+
+    @property
     def objects(self):
+        """ MathObject's instances displayed as objects"""
         return [item.mathobject for item in self.ecw.objects_wgt.items]
 
     @property
     def properties(self):
+        """ MathObject's instances displayed as properties"""
         return [item.mathobject for item in self.ecw.props_wgt.items]
 
     @property
-    def goal(self):
-        return self.servint.proof_state.goals[0]
-
-    @property
     def target_selected(self):
+        """
+        Boolean, True iff target is selected.
+        """
         if not self.target_selected_by_default:
             return self._target_selected
         else:
@@ -235,10 +261,6 @@ class ExerciseMainWindow(QMainWindow):
     @target_selected.setter
     def target_selected(self, target_selected):
         self._target_selected = target_selected
-
-    ###########
-    # Methods #
-    ###########
 
     def closeEvent(self, event: QEvent):
         """
@@ -278,9 +300,9 @@ class ExerciseMainWindow(QMainWindow):
     async def simulate(self, proof_step: ProofStep):
         """
         This method simulate proof_step by selecting the selection and
-        checking button or statement stored in proof_step.This is called
-        when reding. Note that the corresponding actions are NOT called,
-        since this would modify history.
+        checking button or statement stored in proof_step. This is called
+        when redoing. Note that the corresponding actions are NOT called,
+        since this would modify history of the lean_file.
         """
 
         # Light target on/off as needed
@@ -309,42 +331,19 @@ class ExerciseMainWindow(QMainWindow):
 
         :param new_goal: The new goal to update / set the interface to.
         """
+        if new_goal is self.current_goal:  # No update needed
+            self.ui_updated.emit()
+            return
 
         # Get previous goal and set tags
-        # NB: here we need the previous goal in the logical order, which is
-        # NOT the one in self.previous_proof_step in case of history undo/redo,
-        # but the one attached in the virtual lean_file.
-
-        # TODO: attach the goal counters to the proof_step in the lean_file.
-        log.debug(f"Logically previous ps: {self.lean_file.previous_proof_step}")
-        if self.lean_file.previous_proof_step:
-            previous_goal = self.lean_file.previous_proof_step.goal
+        if self.logically_previous_proof_step:
+            # Fixme: not when undoing history ?
+            previous_goal = self.logically_previous_proof_step.goal
             Goal.compare(new_goal, previous_goal)  # Set tags
 
-        # Count of goals
-        total_goals_counter, \
-        current_goal_number, \
-        current_goals_counter, \
-        goals_counter_evolution \
-            = self.count_goals()
-        goal_count = f'  {current_goal_number} / {total_goals_counter}'
-
-        # Display if a goal has been solved and user is not undoing
-        if goals_counter_evolution < 0 and current_goals_counter != 0 \
-                and not self.test_mode:
-            if not self.previous_proof_step.is_undo() \
-                    and not self.previous_proof_step.is_error():
-                log.info(f"Current goal solved!")
-                if goals_counter_evolution == -1:
-                    message = _('Current goal solved')
-                else:
-                    nb = str(-goals_counter_evolution)
-                    message = nb + ' ' + _('goals solved!')
-                QMessageBox.information(self,
-                                        '',
-                                        message,
-                                        QMessageBox.Ok
-                                        )
+        # Goal count to be displayed next to the target
+        goal_count = f'  {self.proof_step.current_goal_number} / ' \
+                     f'{self.proof_step.total_goals_counter}'
 
         # Reset current context selection
         # Here we do not use empty_current_selection since Widgets may have
@@ -368,7 +367,7 @@ class ExerciseMainWindow(QMainWindow):
             self.ecw.props_wgt.apply_math_object_triggered.connect(
                 self.__apply_math_object_triggered)
 
-        self.ui_updated.emit()
+        self.ui_updated.emit()  # This signal is used for autotest.
 
     ##################################
     # Async tasks and server methods #
@@ -393,6 +392,7 @@ class ExerciseMainWindow(QMainWindow):
         specific methods for those signals accordingly. Async / await
         processes are used in accordance to what is done in the server
         interface. This method is called in self.__init__.
+        The user actions are stored in self.proof_step.
         """
 
         self.freeze()
@@ -413,15 +413,16 @@ class ExerciseMainWindow(QMainWindow):
                 if emission.is_from(self.lean_editor.editor_send_lean):
                     await self.process_async_signal(self.__server_send_editor_lean)
 
-                elif emission.is_from(self.toolbar.redo_action.triggered):
+                elif emission.is_from(self.toolbar.redo_action.triggered)\
+                        and not self.lean_file.history_at_end:
                     # No need to call self.update_goal, this emits the
                     # signal proof_state_change of which
-                    # self.update_goal is a slot
+                    # self.update_goal is a slot.
+                    # The UI simulate the redone step if possible.
                     self.proof_step.button = 'history_redo'
                     proof_step = self.lean_file.next_proof_step
-                    # Avoid exceeding end of history
-                    self.toolbar.setEnabled(False)
-                    await self.simulate(proof_step)
+                    if proof_step:
+                        await self.simulate(proof_step)
                     await self.process_async_signal(self.servint.history_redo)
 
                 elif emission.is_from(self.toolbar.undo_action.triggered):
@@ -474,13 +475,16 @@ class ExerciseMainWindow(QMainWindow):
         except FailedRequestError as error:
             self.proof_step.error_type = 2
             self.proof_step.error_msg = error.message
-            # self.journal.store_failed_request_error(error)
 
             # Abort and go back to last goal
-            await self.servint.history_undo()
+            await self.servint.history_delete()
 
         finally:
-            self.freeze(False)
+            if not self.lean_file.current_proof_step.no_more_goal:
+                self.freeze(False)
+            else:  # If no more goals, disable actions but enable toolbar
+                self.ecw.freeze(True)
+                self.toolbar.setEnabled(True)
             # Required because history is always changed with signals
             self.toolbar.undo_action.setEnabled(
                     not self.servint.lean_file.history_at_beginning)
@@ -522,7 +526,7 @@ class ExerciseMainWindow(QMainWindow):
         #   - choose A or B when having to prove (A OR B) ;
         #   - enter an element when clicking on 'exists' button.
         #   - and so on.
-        if auto_selection:
+        if auto_selection:  # For autotest
             selection = auto_selection
             self.proof_step.selection = selection
         else:
@@ -538,12 +542,12 @@ class ExerciseMainWindow(QMainWindow):
             try:
                 if not user_input:
                     lean_code = action.run(
-                        self.previous_proof_step,
-                        selection,
+                        self.proof_step,
+                        selection,  # (TODO: selection is stored in proof_step)
                         target_selected=self.target_selected)
                 else:
                     lean_code = action.run(
-                        self.previous_proof_step,
+                        self.proof_step,
                         selection,
                         user_input,
                         target_selected=self.target_selected)
@@ -561,18 +565,14 @@ class ExerciseMainWindow(QMainWindow):
                 else:
                     break
             except WrongUserInput as error:
-                # self.journal.store_wrong_user_input(error)
                 self.proof_step.user_input = user_input
                 self.proof_step.error_type = 1
                 self.proof_step.error_msg = error.message
 
                 self.empty_current_selection()
-                self.update_proof_state(self.previous_proof_step.proof_state)
+                self.update_proof_state(self.displayed_proof_step.proof_state)
                 break
             else:
-                # self.journal.store_selection(selection)
-                # self.journal.store_user_input(user_input)
-                # self.journal.store_lean_code(lean_code)
                 self.proof_step.lean_code = lean_code
                 self.proof_step.user_input = user_input
                 # Update lean_file and call Lean server
@@ -618,13 +618,13 @@ class ExerciseMainWindow(QMainWindow):
 
                 if isinstance(statement, Definition):
                     lean_code = generic.action_definition(
-                        self.previous_proof_step,
+                        self.proof_step,
                         selection,
                         statement,
                         self.target_selected)
                 elif isinstance(statement, Theorem):
                     lean_code = generic.action_theorem(
-                        self.previous_proof_step,
+                        self.proof_step,
                         selection,
                         statement,
                         self.target_selected)
@@ -633,7 +633,7 @@ class ExerciseMainWindow(QMainWindow):
                 self.empty_current_selection()
                 self.proof_step.error_type = 1
                 self.proof_step.error_msg = error.message
-                self.update_proof_state(self.previous_proof_step.proof_state)
+                self.update_proof_state(self.displayed_proof_step.proof_state)
 
             else:
                 log.debug(f'Calling statement {item.statement.pretty_name}')
@@ -691,7 +691,11 @@ class ExerciseMainWindow(QMainWindow):
         triggered, thanks to the flag self.cqdf.
         """
         # TODO: make it a separate class
-        if not self.cqfd:
+
+        # Display msg_box unless redoing or test mode
+        # (Previously was: Display unless exercise already solved)
+        # if not self.exercise_solved:
+        if not self.proof_step.is_redo() and not self.test_mode:
             title = _('Target solved')
             text = _('The proof is complete!')
             msg_box = QMessageBox(parent=self)
@@ -699,24 +703,27 @@ class ExerciseMainWindow(QMainWindow):
             msg_box.setWindowTitle(title)
             button_ok = msg_box.addButton(_('Back to exercise'),
                                           QMessageBox.YesRole)
-            # button_beginning = msg_box.addButton('To beginning of exercise',
-            #                                      QMessageBox.AcceptRole)
             button_change = msg_box.addButton(_('Change exercise'),
                                               QMessageBox.YesRole)
             button_change.clicked.connect(self.change_exercise)
             msg_box.exec()
-            self.cqfd = True
+            self.exercise_solved = True
 
-            # Save exercise with autotest
+            # Save exercise for autotest
             self.lean_file.save_exercise_for_autotest(self)
 
-        no_more_goal_text = "No more goal"
-        target = self.current_goal.target
+        self.proof_step.no_more_goal = True
+        # Artificially create a final proof_state by replacing target by a msg
+        # (We do not get the final proof_state from Lean).
+        proof_state = deepcopy(self.proof_step.proof_state)
+        no_more_goal_text = "NO_MORE_GOAL"
+        target = proof_state.goals[0].target
         target.math_type = MathObject(node=no_more_goal_text,
                                       info={},
                                       children=[],
                                       )
-        self.ecw.update_goal(self.current_goal, goal_count='')
+        # Update proof_step and UI
+        self.update_proof_state(proof_state)
 
     @Slot(MathObjectWidgetItem)
     def process_context_click(self, item: MathObjectWidgetItem):
@@ -771,83 +778,76 @@ class ExerciseMainWindow(QMainWindow):
     def update_proof_state(self, proofstate: ProofState):
         """
         Update self (attributes, interface) to the new proof state,
-        which includes the new goal.
+        which includes the new goal. This is also where self.proof_step is
+        updated and stored both in the journal and in lean_file's history if
+        this is adequate.
 
         :proofstate: The proofstate one wants to update self to.
         """
 
-        # Store proof_state, and retreive previous proof_state
-        self.proof_step.proof_state = proofstate
-        if self.previous_proof_step:
-            previous_proof_state = self.previous_proof_step.proof_state
-        else:
-            previous_proof_state = None
-
-        # Display messages
+        # ─────────── Display msgs (no msg when undoing) ────────── #
         if not self.proof_step.is_history_move():
             self.statusBar.display_message(self.proof_step)
         elif self.proof_step.is_redo():
             self.statusBar.display_message(self.lean_file.current_proof_step)
 
+        # ───────────── Store data ──────────── #
+        # Store proof_state in proof_step
+        self.proof_step.proof_state = proofstate
+
         # Store current proof_step in the lean_file (for logical memory)
         # and in the journal (for comprehensive memory)
         # We do NOT want to modify the attached context if we are moving in
-        # history or recovering from an error. On particular, note that the
-        # attached proof_step never corresponds to a history move.
+        # history or recovering from an error.
         if not self.proof_step.is_history_move()\
                 and not self.proof_step.is_error():
+            # log.debug("Attaching proof_step to history")
             self.lean_file.state_info_attach(proof_step=self.proof_step)
         if not self.test_mode:
             self.journal.store(self.proof_step, self)
 
-        # Pass proof_step to previous_proof_step, and create a new proof_step
-        self.previous_proof_step = copy(self.proof_step)
-        self.proof_step = ProofStep.next(self.proof_step)
-        self.proof_step_updated.emit()
+        # ─────────────── Update goals counters ─────────────── #
+        delta = self.lean_file.current_number_of_goals \
+                - self.lean_file.previous_number_of_goals
+        if delta > 0:  # A new goal has appeared
+            self.proof_step.total_goals_counter += delta
+        elif delta < 0:  # A goal has been solved
+            self.proof_step.current_goal_number -= delta
+            if self.proof_step.current_goal_number and not self.test_mode \
+                    and self.lean_file.current_number_of_goals \
+                    and not self.proof_step.is_error() \
+                    and not self.proof_step.is_undo():
+                log.info(f"Current goal solved!")
+                if delta == -1:
+                    message = _('Current goal solved')
+                else:  # Several goals solved at once ??
+                    nb = str(-delta)
+                    message = nb + ' ' + _('goals solved!')
+                QMessageBox.information(self,
+                                        '',
+                                        message,
+                                        QMessageBox.Ok
+                                        )
 
-        if proofstate is not previous_proof_state:
-            self.update_goal(proofstate.goals[0])
-        else:
-            self.ui_updated.emit()
+        # ─────────────── End of proof_step ─────────────── #
+        # Pass proof_step to displayed_proof_step, and create a new proof_step
+        # with same goals data as logically previous proof step.
+        # Note that we also keep the proof_state because it is needed by the
+        # logical actions to compute the pertinent Lean code.
+        self.displayed_proof_step = copy(self.proof_step)
+        # LOGICAL proof_step is always in lean_file's history
+        self.proof_step = ProofStep.next(self.lean_file.current_proof_step)
+
+        self.proof_step_updated.emit()  # Received in auto_test
+
+        # ─────────────── Update goal on ui ─────────────── #
+        # if proofstate is not displayed_proof_state:
+        #     self.update_goal(proofstate.goals[0])
+        # else:
+        #     self.ui_updated.emit()
+        self.update_goal(proofstate.goals[0])
 
     @Slot(CodeForLean)
     def store_effective_code(self, effective_lean_code):
         self.proof_step.effective_code = effective_lean_code
 
-    ###################
-    # Logical methods #
-    ###################
-    # The following methods are closer to the logical aspect of deaduction:
-    # - the proof method essentially returns the sequence of successive
-    # ProofState from the beginning of the proof until the current ProofState.
-    # This sequence is obtained from the information attached to the lean_file
-    # which provides a reliable account of the proof history.
-    # This sequence is an instance of the Proof class, from proof_state.py
-    # - the count_goals method then applies the count_goals_from_proof method
-    # to the Proof instance, to get information on the proof history:
-    # essentially
-    #       - the total number of goals that have been examined during
-    #       the proof history,
-    #       - the number of the goal that the user is currently trying to prove
-
-    def proof(self) -> Proof:
-        """
-        Return the current proof history, an instance of the Proof class
-        """
-        lean_file = self.servint.lean_file
-        proof = Proof([(entry.misc_info["ProofState"], None)
-                    for entry in lean_file.history[:lean_file.target_idx+1]])
-        return proof
-
-    def count_goals(self) -> (int, int, int):
-        """
-        Compute and return three values:
-            - total_goals_counter : total number of goals during Proof history
-            - current_goal_number = number of the goal under study
-            - current_goals_counter = number of goals at end of Proof
-            - goals_counter_evolution = last evolution :
-                > 0 means that new goal has appeared
-                < 0 means that a goal has been solved
-        """
-        proof = self.proof()
-        return proof.count_goals_from_proof()
