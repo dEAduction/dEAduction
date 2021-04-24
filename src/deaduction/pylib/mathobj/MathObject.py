@@ -413,8 +413,8 @@ class MathObject:
                 elif self.info['name'] != other.info['name']:
                     # None is a bound var
                     equal = False
-                    log.debug(f"distinct names "
-                              f"{self.info['name'], other.info['name']}")
+                    #log.debug(f"distinct names "
+                    #          f"{self.info['name'], other.info['name']}")
         # Recursively test for math_types
         elif self.math_type != other.math_type:
             log.debug(f"distinct types {self.math_type}")

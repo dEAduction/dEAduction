@@ -410,7 +410,6 @@ class ProofState:
         return cls(goals, (hypo_analysis, targets_analysis))
 
 
-@dataclass
 class ProofStep:
     """
     Class to store data associated to a step in proof.
@@ -435,6 +434,25 @@ class ProofStep:
     error_type: Optional[int] = 0  # 1 = WUI, 2 = FRE
     error_msg: str            = ''
     proof_state               = None
+    no_more_goal              = False
+
+    def __init__(self,
+                 goal_change_msgs=None,
+                 property_counter=0,
+                 current_goal_number=1,
+                 total_goals_counter=1,
+                 proof_state=None):
+        self.property_counter    = property_counter
+        self.current_goal_number = current_goal_number
+        self.total_goals_counter = total_goals_counter
+        if goal_change_msgs:
+            self.goal_change_msgs = goal_change_msgs
+        else:
+            self.goal_change_msgs = []
+
+        self.proof_state = proof_state
+        self.selection = []
+        self.user_input = []
 
     @classmethod
     def next(cls, proof_step):
@@ -446,6 +464,9 @@ class ProofStep:
         pf = proof_step
         npf = ProofStep(property_counter=pf.property_counter,
                         goal_change_msgs=copy(pf.goal_change_msgs),
+                        current_goal_number=pf.current_goal_number,
+                        total_goals_counter=pf.total_goals_counter,
+                        proof_state=pf.proof_state
                         )
         return npf
 
@@ -462,7 +483,10 @@ class ProofStep:
 
     @property
     def goal(self):
-        return self.proof_state.goals[0]
+        if self.proof_state:
+            return self.proof_state.goals[0]
+        else:
+            return None
 
     def is_undo(self):
         return self.button == 'history_undo'
@@ -522,6 +546,7 @@ class ProofStep:
 
         return report, success
 
+
 @dataclass
 class Proof:
     """
@@ -548,7 +573,10 @@ class Proof:
             - goals_counter_evolution = last evolution :
                 > 0 means that new goal has appeared
                 < 0 means that a goal has been solved
+        This method is deprecated, computation is done iteratively at each
+        step of the proof.
         """
+
         total_goals_counter = 0
         current_goal_number = 1
         current_goals_counter = 0
