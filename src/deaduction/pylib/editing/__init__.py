@@ -322,6 +322,14 @@ class VirtualFile:
         """
         self.target_idx = 0
 
+    def delete(self):
+        """
+        Delete last step of history.
+        """
+        self.undo()
+        self.__update()
+        del self.history[self.target_idx + 1:]
+
     def history_lbl(self):
         """
         Generator to retrieve the list of history labels.
@@ -472,13 +480,24 @@ class LeanFile(VirtualFile):
     def statement(self):
         proof_step = self.current_proof_step
         if proof_step:
-            return proof_step.statement
+            return proof_step.statement_item
 
     @property
     def selection(self):
         proof_step = self.current_proof_step
         if proof_step:
             return proof_step.selection
+
+    @property
+    def current_number_of_goals(self):
+        return len(self.current_proof_step.proof_state.goals)
+
+    @property
+    def previous_number_of_goals(self):
+        if self.previous_proof_step:
+            return len(self.previous_proof_step.proof_state.goals)
+        else:
+            return 1
 
     @property
     def proof(self):  # Proof

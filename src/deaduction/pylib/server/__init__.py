@@ -441,10 +441,18 @@ class ServerInterface(QObject):
         self.lean_file.rewind()
         await self.__update()
 
+    async def history_delete(self):
+        """
+        Delete last step of history in the lean_file. Called when FailedRequest
+        Error.
+        """
+        self.lean_file.delete()
+        await self.__update()
+
     def history_replace(self, code):
         """
         Replace last entry in the lean_file by code without calling Lean.
-        WARNING: code should be an effective code whhich is equivalent,
+        WARNING: code should be an effective code which is equivalent,
         from the Lean viewpoint, to last code entry.
         NB: this method does NOT call self.__update().
 
