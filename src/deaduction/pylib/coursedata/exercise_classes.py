@@ -229,6 +229,10 @@ class Statement:
         self.__refined_auto_steps = auto_steps
         return auto_steps
 
+    @refined_auto_steps.setter
+    def refined_auto_steps(self, refined_auto_steps) -> [AutoStep]:
+        self.__refined_auto_steps = refined_auto_steps
+
     def has_name(self, lean_name):
         return self.lean_name.endswith(lean_name)
 
