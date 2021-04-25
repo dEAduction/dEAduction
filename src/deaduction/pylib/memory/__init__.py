@@ -84,7 +84,7 @@ class Journal:
         # TODO: add time
         self.memory.append(proof_step)
         display = AutoStep.from_proof_step(proof_step, emw)
-        # log.debug(f"Storing proof_step {display}")
+        log.debug(f"Storing proof_step {display}")
 
     def save(self):
         # TODO: add time in the filename

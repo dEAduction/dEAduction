@@ -303,6 +303,7 @@ class ExerciseMainWindow(QMainWindow):
         checking button or statement stored in proof_step. This is called
         when redoing. Note that the corresponding actions are NOT called,
         since this would modify history of the lean_file.
+        The method is asynchroneous
         """
 
         # Light target on/off as needed
@@ -311,8 +312,8 @@ class ExerciseMainWindow(QMainWindow):
         else:
             self.ecw.target_wgt.mark_user_selected(True)
         # Light on selection
-        for math_object in proof_step.selection:
-            for item in self.ecw.props_wgt.items:
+        for item in self.ecw.props_wgt.items + self.ecw.objects_wgt.items:
+            for math_object in proof_step.selection:
                 if item.mathobject == math_object:
                     item.mark_user_selected(True)
         # Check button or statement

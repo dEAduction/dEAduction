@@ -207,7 +207,11 @@ class AutoStep:
         # Selection: [str]
         selection = []
         if proof_step.selection:
+            # log.debug("Analysing selection...")
             for math_object in proof_step.selection:
+                # log.debug(f"Searching {math_object.display_name}")
+                # log.debug(f"in {[mo.display_name for mo in emw.objects]}")
+                # log.debug(f"& {[mo.display_name for mo in emw.properties]}")
                 if math_object in emw.objects:
                     item_str = "@O" + str(emw.objects.index(math_object))
                 elif math_object in emw.properties:
@@ -229,6 +233,8 @@ class AutoStep:
         if proof_step.statement_item:  # This is a TreeWidgetItem
             statement = proof_step.statement_item.statement.lean_short_name
 
+        if not (button or statement):
+            log.warning("No button nor statement found in this proof step")
         # User input: int
         user_input = []
         if proof_step.user_input:
@@ -236,16 +242,23 @@ class AutoStep:
 
         error_msg = proof_step.error_msg
         if error_msg:
-            error_msg = 'error=' + error_msg
+            error_msg = 'error=' + error_msg.replace(' ', '_')
         success_msg = proof_step.success_msg
         if success_msg:
-            success_msg = 'success=' + success_msg
+            success_msg = 'success=' + success_msg.replace(' ', '_')
 
-        string = ' '.join(selection) + ' ' \
-                 + button + statement + ' ' \
-                 + ' '.join(user_input) + ' ' \
-                 + AutoStep.error_dic[proof_step.error_type] + ' ' \
-                 + error_msg + ' ' + success_msg
+        # Computing string
+        string = ''
+        if selection:
+            string = ' '.join(selection) + ' '
+        string += button + statement
+        if user_input:
+            string += ' ' + ' '.join(user_input)
+        if proof_step.is_error():
+            string += ' ' + AutoStep.error_dic[proof_step.error_type]
+            string += ' ' + error_msg
+        if success_msg:
+            string += ' ' + success_msg
 
         return cls(string, selection, button, statement, user_input,
                    proof_step.error_type, proof_step.error_msg,

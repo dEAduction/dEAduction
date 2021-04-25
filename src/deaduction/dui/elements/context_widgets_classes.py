@@ -311,7 +311,7 @@ class TargetWidget(QWidget):
         # the .math_type is for.
         # 'is_math_type=True' triggers the bound variables naming
         if target:
-            log.debug("updating target")
+            # log.debug("updating target")
             text = target.math_type.to_display(is_math_type=True)
         else:
             text = '…'

@@ -80,8 +80,8 @@ class MathObject:
 
     node              : str   # e.g. "LOCAL_CONSTANT", "FUNCTION", "QUANT_∀"
     info              : dict  # e.g. "name", "id", "pp_type"
-    children          : list  # list of MathObjects
-    math_type         : Any = field(repr=False)  # necessary with @dataclass
+    children          : list  # List of MathObjects
+    math_type         : Any = field(repr=False)  # Necessary with @dataclass
     _math_type        : Any = field(init=False,
                                     repr=False,
                                     default=None)

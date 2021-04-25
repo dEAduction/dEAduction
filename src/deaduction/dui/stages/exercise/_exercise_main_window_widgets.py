@@ -342,8 +342,8 @@ class ExerciseStatusBar(QStatusBar):
         considered: error or success.
         """
 
-        log.debug(f"Display msg: "
-                  f"{proof_step.error_msg, proof_step.success_msg}")
+        #log.debug(f"Display msg: "
+        #          f"{proof_step.error_msg, proof_step.success_msg}")
         if proof_step.is_error():
             message = proof_step.error_msg
         else:
