@@ -213,11 +213,11 @@ class AutoStep:
                 # log.debug(f"in {[mo.display_name for mo in emw.objects]}")
                 # log.debug(f"& {[mo.display_name for mo in emw.properties]}")
                 if math_object in emw.objects:
-                    item_str = "@O" + str(emw.objects.index(math_object))
+                    item_str = "@O" + str(emw.objects.index(math_object)+1)
                 elif math_object in emw.properties:
-                    item_str = "@P" + str(emw.properties.index(math_object))
+                    item_str = "@P" + str(emw.properties.index(math_object)+1)
                 else:
-                    item_str = "NOT_FOUND"
+                    item_str = math_object.display_name
                 selection.append(item_str)
 
         # Button: '∧', '∨', '¬', '⇒', '⇔', '∀', '∃', 'compute', 'CQFD',
@@ -234,7 +234,8 @@ class AutoStep:
             statement = proof_step.statement_item.statement.lean_short_name
 
         if not (button or statement):
-            log.warning("No button nor statement found in this proof step")
+            return None
+
         # User input: int
         user_input = []
         if proof_step.user_input:

@@ -57,6 +57,7 @@ from sys import argv
 from functools import partial
 from typing import Optional
 from pathlib import Path
+import pickle
 
 from deaduction.pylib.coursedata                 import Course, Exercise
 from deaduction.pylib                            import logger
@@ -114,7 +115,6 @@ def coex_from_argv() -> (Optional[Path], Course, Exercise, bool):
 
     if dir_path:
         dir_path = Path(dir_path)
-        return dir_path, None, None, None
 
     if course_path and exercise_like:
         if exercise_like.endswith('++'):
@@ -124,22 +124,66 @@ def coex_from_argv() -> (Optional[Path], Course, Exercise, bool):
             all_from_this_one = True
         log.debug('Searching course and exercise...')
         course, exercise = select_exercise(course_path, exercise_like)
+    elif exercise_like:
+        exercise = exercise_from_pkl(exercise_like, dir_path)
+        dir_path = None
     elif course_path:
         course = select_course(course_path)
 
-    return None, course, exercise, all_from_this_one
+    return dir_path, course, exercise, all_from_this_one
+
+
+def exercise_from_pkl(exercise_like, dir_path):
+    """
+    Get exercise from a pkl file in cdirs.share / 'tests'
+.
+    :param exercise_like: str name of exercise, or file_path
+    :return:
+    """
+    if isinstance(exercise_like, str):
+        if not exercise_like.endswith('.pkl'):
+            exercise_like += '.pkl'
+        if not dir_path:
+            file_path = cdirs.share / 'tests' / exercise_like
+        else:
+            file_path = dir_path / exercise_like
+    else:
+        file_path = exercise_like
+
+    [exercise] = pickled_items(file_path)
+    # log.debug(f"Pickled object {type(exercise)}")
+    return exercise
+
+
+def pickled_items(filename):
+    """ Unpickle a file of pickled data. """
+    with filename.open(mode="rb") as input:
+        while True:
+            try:
+                yield pickle.load(input)
+            except EOFError:
+                break
 
 
 def get_exercises_from_dir(dir_path: Path):
-    test_files = [file for file in dir_path.iterdir()
-                  if (file.suffix == '.lean' or file.suffix == '.pkl')
-                  and file.name.startswith('test')]
+    test_course_files = [file for file in dir_path.iterdir()
+                         if (file.suffix == '.lean' or file.suffix == '.pkl')
+                         and file.name.startswith('test')
+                         and not file.name.startswith('test_exercise')]
+
+    test_exercise_files = [file for file in dir_path.iterdir()
+                           if file.suffix == '.pkl'
+                           and file.name.startswith('test_exercise')]
+
+    nb_files = len(test_course_files) + len(test_exercise_files)
     log.info(f"looking for deaduction test files in {dir_path.name}")
-    log.info(f" found {len(test_files)} files")
-    log.info(f"Files names must start with 'test'")
+    log.info(f" found {nb_files} files")
+    # log.debug(f"{test_course_files}{test_exercise_files}")
+    if not nb_files:
+        log.info(f"Files names must start with 'test'")
 
     exercises = []
-    for course_file in test_files:
+    for course_file in test_course_files:
         course = select_course(course_file)
         exo_for_this_course = []
         for exo in course.exercises:
@@ -148,6 +192,15 @@ def get_exercises_from_dir(dir_path: Path):
         print(f"{len(exo_for_this_course)} exercises found for test in this "
               f"course")
         exercises.extend(exo_for_this_course)
+
+    for exercise_file in test_exercise_files:
+        exercise = exercise_from_pkl(exercise_file, None)
+        if exercise.refined_auto_steps:
+            log.debug(f"Adding {exercise.pretty_name}")
+            exercises.append(exercise)
+        else:
+            log.warning(f"No auto_step found in {exercise.pretty_name}")
+
     return exercises
 
 
@@ -248,10 +301,15 @@ async def auto_test(container: Container):
     """
 
     # Auto-steps loop
-    # TODO: return a report message
     exercise = container.exercise
     log.info(f"Testing exercise {exercise.pretty_name}")
     auto_steps = exercise.refined_auto_steps
+    log.debug('auto_steps:')
+    total_string = 'AutoTest\n'
+    for step in auto_steps:
+        total_string += '    ' + step.raw_string + ',\n'
+    log.debug(total_string)
+
     emw = container.exercise_window
     signals = [emw.proof_step_updated, emw.ui_updated]
     test_success = True
@@ -268,6 +326,8 @@ async def auto_test(container: Container):
                 test_success = test_success and step_success
                 if not report:
                     report = f'Success with {step.raw_string}'
+                else:
+                    report = f'{step.raw_string}' + report
 
                 report = f"Step {steps_counter}: " + report
                 reports.append(report)
@@ -324,11 +384,14 @@ async def main():
     #############################
     # Choose course and exercise #
     #############################
+    exercises = None
     dir_, course, exercise, all_from_this_one = coex_from_argv()
     if dir_:
         exercises = get_exercises_from_dir(dir_)
-    else:
+    elif course:
         exercises = get_exercises(course, exercise, all_from_this_one)
+    elif exercise:
+        exercises = [exercise]
 
     if not exercises:
         quit()
