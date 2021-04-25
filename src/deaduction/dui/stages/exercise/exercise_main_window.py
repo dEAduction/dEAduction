@@ -708,23 +708,23 @@ class ExerciseMainWindow(QMainWindow):
                                               QMessageBox.YesRole)
             button_change.clicked.connect(self.change_exercise)
             msg_box.exec()
-            self.exercise_solved = True
-
-            # Save exercise for autotest
-            self.lean_file.save_exercise_for_autotest(self)
 
         self.proof_step.no_more_goal = True
         # Artificially create a final proof_state by replacing target by a msg
         # (We do not get the final proof_state from Lean).
         proof_state = deepcopy(self.proof_step.proof_state)
-        no_more_goal_text = "NO_MORE_GOAL"
         target = proof_state.goals[0].target
-        target.math_type = MathObject(node=no_more_goal_text,
+        target.math_type = MathObject(node="NO_MORE_GOAL",
                                       info={},
                                       children=[],
                                       )
         # Update proof_step and UI
         self.update_proof_state(proof_state)
+
+        if not self.exercise_solved:
+            self.exercise_solved = True
+            if not self.test_mode:  # Save exercise for auto-test
+                self.lean_file.save_exercise_for_autotest(self)
 
     @Slot(MathObjectWidgetItem)
     def process_context_click(self, item: MathObjectWidgetItem):
