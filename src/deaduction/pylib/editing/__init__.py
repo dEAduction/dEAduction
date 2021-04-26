@@ -532,7 +532,7 @@ class LeanFile(VirtualFile):
         exercise.refined_auto_steps = auto_steps
         filename = ('test_' + exercise.lean_short_name).replace('.', '_') \
             + '.pkl'
-        file_path = cdirs.share / 'tests' / filename
+        file_path = cdirs.test_exercises / filename
 
         total_string = 'AutoTest\n'
         for step in auto_steps:
