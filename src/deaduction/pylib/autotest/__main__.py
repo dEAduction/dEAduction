@@ -95,7 +95,7 @@ log = logging.getLogger(__name__)
 def exercise_from_pkl(exercise_like, dir_path):
     """
     Get exercise from exercise_like which should be a pkl file in dir_path,
-    or in cdirs.share / 'tests' if dir_path is None.
+    or in cdirs.test_exercises if dir_path is None.
 .
     :param dir_path: a Path, or None
     :param exercise_like: str name of exercise, or file_path
@@ -105,7 +105,7 @@ def exercise_from_pkl(exercise_like, dir_path):
         if not exercise_like.endswith('.pkl'):
             exercise_like += '.pkl'
         if not dir_path:
-            file_path = cdirs.share / 'tests' / exercise_like
+            file_path = cdirs.test_exercises / exercise_like
         else:
             file_path = dir_path / exercise_like
     else:
@@ -514,8 +514,6 @@ async def main():
 
 if __name__ == '__main__':
     log.info("Starting autotest...")
-    log.info("Run with '-d ../../../tests/autotest_exercises/' to test all "
-             "exercises")
 
     cenv.init()
     cdirs.init()
