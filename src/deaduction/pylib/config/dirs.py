@@ -40,8 +40,10 @@ log = logging.getLogger(__name__)
 pkg_dir  = (Path(__file__) / "../../../").resolve()
 
 # Share paths
-share    = (pkg_dir / "share").resolve()
-icons    = (share / "graphical_resources" / "icons").resolve()
+share          = (pkg_dir / "share").resolve()
+icons          = (share / "graphical_resources" / "icons").resolve()
+courses        = (share / "courses").resolve()
+test_exercises = (share / "test_exercises").resolve()
 
 # Home paths
 home     = Path.home()
