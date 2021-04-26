@@ -268,7 +268,8 @@ class ExerciseMainWindow(QMainWindow):
 
         :param event: Some Qt mandatory thing.
         """
-        self.journal.save_exercise_with_proof_steps(emw=self)
+        if not self.test_mode:
+            self.journal.save_exercise_with_proof_steps(emw=self)
         super().closeEvent(event)
         self.lean_editor.close()
         self.window_closed.emit()

@@ -91,9 +91,8 @@ for key, value in zip(action_list, lbt):
 
 def construct_and(proof_step, user_input: [str]) -> CodeForLean:
     """
-Split the target 'P AND Q' into two sub-goals.
+    Split the target 'P AND Q' into two sub-goals.
     """
-    possible_codes = []
     goal = proof_step.goal
 
     if not goal.target.is_and():
@@ -121,7 +120,7 @@ Split the target 'P AND Q' into two sub-goals.
         else:
             code = CodeForLean.empty_code()
         code = code.and_then("split")
-
+        code.add_success_msg(_('Let us prove the first property'))
     return code
 
 
@@ -135,8 +134,10 @@ def apply_and(proof_step, selected_objects) -> CodeForLean:
     selected_hypo = selected_objects[0].info["name"]
     h1 = get_new_hyp(proof_step)
     h2 = get_new_hyp(proof_step)
-    code = f'cases {selected_hypo} with {h1} {h2}'
-    return CodeForLean.from_string(code)
+    code = CodeForLean.from_string(f'cases {selected_hypo} with {h1} {h2}')
+    code.add_success_msg(_("split properties {} and {}").
+                         format(h1, h2))
+    return code
 
 
 def construct_and_hyp(proof_step, selected_objects: [MathObject]) \
@@ -202,7 +203,6 @@ def construct_or(proof_step, user_input: [str]) -> CodeForLean:
     """
     Assuming target is a disjunction 'P OR Q', choose to prove either P or Q.
     """
-    possible_codes = []
     goal = proof_step.goal
 
     left = goal.target.math_type.children[0].to_display()
@@ -215,13 +215,17 @@ def construct_or(proof_step, user_input: [str]) -> CodeForLean:
                                      title=_("Choose new goal"),
                                      output=_("Which property will you "
                                               "prove?"))
-
+    code = None
     if len(user_input) == 1:
         i = user_input[0]
-        code = ["left", "right"][i]
-        possible_codes.append(code)
+        if i==0:
+            code = CodeForLean.from_string("left")
+            code.add_success_msg(_("target replaced by the left alternative"))
+        else:
+            code = CodeForLean.from_string("right")
+            code.add_success_msg(_("target replaced by the right alternative"))
 
-    return CodeForLean.or_else_from_list(possible_codes)
+    return code
 
 
 def apply_or(proof_step,
@@ -316,7 +320,10 @@ def construct_or_on_hyp(proof_step,
                               f'({first_hypo_name})')
     else:
         raise WrongUserInput("unexpected error")
-    return CodeForLean.or_else_from_list(possible_codes)
+    code = CodeForLean.or_else_from_list(possible_codes)
+    code.add_success_msg(_('property {} added to the context').
+                         format(new_hypo_name))
+    return code
             
 
 @action(tooltips.get('tooltip_or'),
@@ -462,7 +469,7 @@ def have_new_property(arrow: MathObject,
 
     code = CodeForLean.or_else_from_list(possible_codes)
     code.add_success_msg(_("Property {} added to the context").
-                             format(new_hypo_name))
+                         format(new_hypo_name))
     return code
 
 
@@ -576,6 +583,7 @@ def destruct_iff(proof_step) -> CodeForLean:
         if left.is_implication(is_math_type=True) \
                 and right.is_implication(is_math_type=True):
             code = CodeForLean.from_string("apply iff_def.mp")
+            code.add_success_msg(_("target replaced by iff property"))
     return code
 
 
@@ -608,7 +616,7 @@ def construct_iff_on_hyp(proof_step,
     h2 = selected_objects[1].info["name"]
     code_string = f'have {new_hypo_name} := iff.intro {h1} {h2}'
     code = CodeForLean.from_string(code_string)
-    code.add_success_msg(_("Property {} added to the context").
+    code.add_success_msg(_("Logical equivalence {} added to the context").
                              format(new_hypo_name))
     return code
 
