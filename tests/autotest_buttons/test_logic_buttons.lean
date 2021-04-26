@@ -238,7 +238,7 @@ lemma exercise.test_construct_or_right
 /- dEAduction
 AutoTest
     ∨ 0,
-    CQFD,
+    CQFD
 -/
 begin
   sorry
@@ -249,7 +249,7 @@ lemma exercise.test_construct_or_left
 /- dEAduction
 AutoTest
     ∨ 1,
-    CQFD,
+    CQFD
 -/
 begin
   sorry
@@ -291,7 +291,7 @@ P ∨ Q :=
 /- dEAduction
 AutoTest
     H1 ∨ Q 0,
-    CQFD,
+    CQFD
 -/
 begin
   sorry
@@ -303,7 +303,7 @@ P ∨ Q :=
 /- dEAduction
 AutoTest
     H1 ∨ P 1,
-    CQFD,
+    CQFD
 -/
 begin
   sorry

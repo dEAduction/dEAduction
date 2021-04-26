@@ -224,8 +224,9 @@ class Statement:
         auto_steps_strings = auto_steps.split(',')
         auto_steps = []
         for string in auto_steps_strings:
-            auto_steps.append(AutoStep.from_string(string))
-
+            if string is not None:
+                auto_steps.append(AutoStep.from_string(string))
+        auto_steps = [step for step in auto_steps if step]
         self.__refined_auto_steps = auto_steps
         return auto_steps
 
