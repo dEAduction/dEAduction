@@ -32,11 +32,11 @@ from diff_match_patch import diff_match_patch
 from pickle import ( dump, HIGHEST_PROTOCOL )
 import logging
 
-import deaduction.pylib.config.dirs as cdirs
-import deaduction.pylib.config.vars as cvars
+import deaduction.pylib.config.dirs as        cdirs
+import deaduction.pylib.config.vars as        cvars
+from deaduction.pylib.utils.filesystem import check_dir
 
 from deaduction.pylib.mathobj import    Proof, ProofStep
-from deaduction.pylib.coursedata import AutoStep
 
 dmp = diff_match_patch()
 
@@ -522,10 +522,8 @@ class LeanFile(VirtualFile):
         if not save:
             return
 
-        proof_steps = [entry.misc_info.get("proof_step") for entry in
-                       self.history]
-        auto_steps = [AutoStep.from_proof_step(step, emw) for step in
-                      proof_steps]
+        auto_steps = [entry.misc_info.get("proof_step").auto_step
+                      for entry in self.history]
         auto_steps = [step for step in auto_steps if step is not None]
 
         exercise = emw.exercise
@@ -533,13 +531,14 @@ class LeanFile(VirtualFile):
         filename = ('test_' + exercise.lean_short_name).replace('.', '_') \
             + '.pkl'
         file_path = cdirs.test_exercises / filename
+        check_dir(cdirs.test_exercises, create=True)
 
         total_string = 'AutoTest\n'
         for step in auto_steps:
             total_string += '    ' + step.raw_string + ',\n'
         print(total_string)
 
-        # log.debug(f"Saving auto_steps in {file_path}")
+        log.debug(f"Saving auto_steps in {file_path}")
         with open(file_path, mode='wb') as output:
             dump(exercise, output, HIGHEST_PROTOCOL)
 

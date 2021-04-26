@@ -44,6 +44,7 @@ share          = (pkg_dir / "share").resolve()
 icons          = (share / "graphical_resources" / "icons").resolve()
 courses        = (share / "courses").resolve()
 test_exercises = (share / "test_exercises").resolve()
+journal        = (share / "journal").resolve()
 
 # Home paths
 home     = Path.home()

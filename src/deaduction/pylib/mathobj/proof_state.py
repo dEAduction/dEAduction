@@ -426,6 +426,7 @@ class ProofStep:
     current_goal_number: int = 1  # Current number of goal in the proof history
     total_goals_counter: int = 1  # Total number of goals in the proof history
     goal_change_msgs: [str]  = None  # TODO e.g. "Second case: we assume x∈A".
+    time                     = None
 
     # ──────────────── Input ─────────────── #
     selection      = None  # [MathObject]
@@ -563,42 +564,9 @@ class Proof:
     the last step of the proof. This piece of info is displayed in the UI.
     """
 
-    # TODO: keep the memory of Action in the history of the lean_file
     # TODO: implement a display_tree method
-    # NOT TODO: implement a write_up_proof method ??
 
-    steps: [(ProofState, Any)]  # A proof is a list of proof states.
-
-    def count_goals_from_proof(self):
-        """
-        Compute and return four values:
-            - total_goals_counter : total number of goals during Proof history
-            - current_goal_number = number of the goal under study
-            - current_goals_counter = number of goals at end of Proof
-            - goals_counter_evolution = last evolution :
-                > 0 means that new goal has appeared
-                < 0 means that a goal has been solved
-        This method is deprecated, computation is done iteratively at each
-        step of the proof.
-        """
-
-        total_goals_counter = 0
-        current_goal_number = 1
-        current_goals_counter = 0
-        goals_counter_evolution = 0
-        for proof_state, _ in self.steps:
-            new_counter = len(proof_state.goals)
-            goals_counter_evolution = new_counter - current_goals_counter
-            if goals_counter_evolution > 0:  # New goals have appeared
-                total_goals_counter += goals_counter_evolution
-            elif goals_counter_evolution < 0:  # Some goals have been solved
-                current_goal_number -= goals_counter_evolution
-            current_goals_counter = new_counter
-
-        return (total_goals_counter,
-                current_goal_number,
-                current_goals_counter,
-                goals_counter_evolution)
+    steps: [ProofStep]  # A proof is a sequence of proof steps.
 
 
 def print_proof_state(goal: Goal):

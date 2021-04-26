@@ -218,6 +218,7 @@ class AutoStep:
                     item_str = "@P" + str(emw.properties.index(math_object)+1)
                 else:
                     item_str = math_object.display_name
+                    log.debug(f"Object {item_str} not found")
                 selection.append(item_str)
 
         # Button: '∧', '∨', '¬', '⇒', '⇔', '∀', '∃', 'compute', 'CQFD',

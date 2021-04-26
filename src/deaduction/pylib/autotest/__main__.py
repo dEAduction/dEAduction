@@ -51,6 +51,7 @@ This file is part of d∃∀duction.
 """
 
 import logging
+import time
 import qtrio
 import trio
 from sys import argv
@@ -267,33 +268,33 @@ def find_selection(auto_step, emw):
     # goal = emw.servint.proof_state.goals[0]
     for name in auto_step.selection:
         selection = None
-        with trio.move_on_after(5):
-            # Not clear to me why deaduction may not have
-            # finished constructing goal, but this happens.
-            # So we give it a few more seconds to complete the
-            # construction.
-            while not selection:
-                if name.startswith('@O'):
-                    try:
-                        selection = emw.objects[int(name[2:]) - 1]
-                    except IndexError:
-                        pass
-                elif name.startswith('@P'):
-                    try:
-                        selection = emw.properties[int(name[2:]) - 1]
-                    except IndexError:
-                        pass
-                else:
-                    if name.startswith('@'):  # (unwanted @)
-                        name = name[1:]
-                    selection = emw.current_goal.math_object_from_name(name)
-                # if not selection:
-                #     # Next trial
-                #     properties = [item.mathobject for item in
-                #                   emw.ecw.props_wgt.items]
-                #     objects = [item.mathobject for item in
-                #                emw.ecw.objects_wgt.items]
-                #     goal = emw.servint.proof_state.goals[0]
+        # Not clear to me why deaduction may not have
+        # finished constructing goal, but this happens.
+        # So we give it a few more seconds to complete the
+        # construction.
+        t = time.time() + 5
+        while not selection and time.time() < t:
+            if name.startswith('@O'):
+                try:
+                    selection = emw.objects[int(name[2:]) - 1]
+                except IndexError:
+                    pass
+            elif name.startswith('@P'):
+                try:
+                    selection = emw.properties[int(name[2:]) - 1]
+                except IndexError:
+                    pass
+            else:
+                if name.startswith('@'):  # (unwanted @)
+                    name = name[1:]
+                selection = emw.current_goal.math_object_from_name(name)
+            # if not selection:
+            #     # Next trial
+            #     properties = [item.mathobject for item in
+            #                   emw.ecw.props_wgt.items]
+            #     objects = [item.mathobject for item in
+            #                emw.ecw.objects_wgt.items]
+            #     goal = emw.servint.proof_state.goals[0]
 
         if selection:
             auto_selection.append(selection)

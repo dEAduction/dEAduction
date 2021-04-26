@@ -45,8 +45,7 @@ from deaduction.dui.elements            import ( ActionButton,
                                                  MathObjectWidgetItem )
 from deaduction.dui.primitives          import   ButtonsDialog
 from deaduction.pylib.config.i18n       import   _
-from deaduction.pylib.memory            import ( Journal,
-                                                 EventNature)
+from deaduction.pylib.memory            import ( Journal )
 from deaduction.pylib.actions           import ( InputType,
                                                  CodeForLean,
                                                  MissingParametersError,
@@ -54,12 +53,12 @@ from deaduction.pylib.actions           import ( InputType,
 import deaduction.pylib.actions.generic as       generic
 from deaduction.pylib.coursedata        import ( Definition,
                                                  Exercise,
-                                                 Theorem)
+                                                 Theorem,
+                                                 AutoStep)
 from deaduction.pylib.mathobj           import ( MathObject,
                                                  Goal,
                                                  ProofState,
-                                                 ProofStep,
-                                                 Proof )
+                                                 ProofStep )
 from deaduction.pylib.server.exceptions import   FailedRequestError
 from deaduction.pylib.server            import   ServerInterface
 
@@ -269,7 +268,7 @@ class ExerciseMainWindow(QMainWindow):
 
         :param event: Some Qt mandatory thing.
         """
-
+        self.journal.save_exercise_with_proof_steps(emw=self)
         super().closeEvent(event)
         self.lean_editor.close()
         self.window_closed.emit()
@@ -786,26 +785,27 @@ class ExerciseMainWindow(QMainWindow):
         :proofstate: The proofstate one wants to update self to.
         """
 
+        proof_step = self.proof_step
         # ─────────── Display msgs (no msg when undoing) ────────── #
-        if not self.proof_step.is_history_move():
-            self.statusBar.display_message(self.proof_step)
-        elif self.proof_step.is_redo():
+        if not proof_step.is_history_move():
+            self.statusBar.display_message(proof_step)
+        elif proof_step.is_redo():
             self.statusBar.display_message(self.lean_file.current_proof_step)
 
         # ───────────── Store data ──────────── #
         # Store proof_state in proof_step
-        self.proof_step.proof_state = proofstate
+        proof_step.proof_state = proofstate
 
         # Store current proof_step in the lean_file (for logical memory)
         # and in the journal (for comprehensive memory)
         # We do NOT want to modify the attached context if we are moving in
         # history or recovering from an error.
-        if not self.proof_step.is_history_move()\
-                and not self.proof_step.is_error():
+        if not proof_step.is_history_move()\
+                and not proof_step.is_error():
             # log.debug("Attaching proof_step to history")
-            self.lean_file.state_info_attach(proof_step=self.proof_step)
+            self.lean_file.state_info_attach(proof_step=proof_step)
         if not self.test_mode:
-            self.journal.store(self.proof_step, self)
+            self.journal.store(proof_step, self)
 
         # ─────────────── Update goals counters ─────────────── #
         delta = self.lean_file.current_number_of_goals \
@@ -813,11 +813,11 @@ class ExerciseMainWindow(QMainWindow):
         if delta > 0:  # A new goal has appeared
             self.proof_step.total_goals_counter += delta
         elif delta < 0:  # A goal has been solved
-            self.proof_step.current_goal_number -= delta
-            if self.proof_step.current_goal_number and not self.test_mode \
+            proof_step.current_goal_number -= delta
+            if proof_step.current_goal_number and not self.test_mode \
                     and self.lean_file.current_number_of_goals \
-                    and not self.proof_step.is_error() \
-                    and not self.proof_step.is_undo():
+                    and not proof_step.is_error() \
+                    and not proof_step.is_undo():
                 log.info(f"Current goal solved!")
                 if delta == -1:
                     message = _('Current goal solved')
@@ -831,11 +831,13 @@ class ExerciseMainWindow(QMainWindow):
                                         )
 
         # ─────────────── End of proof_step ─────────────── #
+        # Store auto_step
+        proof_step.auto_step = AutoStep.from_proof_step(proof_step, emw=self)
         # Pass proof_step to displayed_proof_step, and create a new proof_step
         # with same goals data as logically previous proof step.
         # Note that we also keep the proof_state because it is needed by the
         # logical actions to compute the pertinent Lean code.
-        self.displayed_proof_step = copy(self.proof_step)
+        self.displayed_proof_step = copy(proof_step)
         # LOGICAL proof_step is always in lean_file's history
         self.proof_step = ProofStep.next(self.lean_file.current_proof_step)
 
