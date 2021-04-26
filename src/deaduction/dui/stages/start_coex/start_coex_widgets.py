@@ -62,8 +62,9 @@ from PySide2.QtWidgets import (QApplication,
                                QVBoxLayout,
                                QWidget)
 
-from deaduction.pylib.config.i18n   import _
-import deaduction.pylib.config.vars  as    cvars
+from deaduction.pylib.config.i18n   import  _
+import deaduction.pylib.config.vars  as     cvars
+import deaduction.pylib.config.dirs  as     cdirs
 from deaduction.dui.elements        import (MathObjectWidget,
                                             RecentCoursesLW,
                                             RecentCoursesLWI,
@@ -76,7 +77,7 @@ from deaduction.dui.utils           import (read_pkl_course,
                                             HorizontalLine)
 from deaduction.pylib.config.course import  add_to_recent_courses
 from deaduction.pylib.coursedata    import (Course,
-                                             Exercise)
+                                            Exercise)
 
 log = logging.getLogger(__name__)
 
@@ -320,7 +321,7 @@ class CourseChooser(AbstractCoExChooser):
         set_preview is called.
         """
 
-        dialog = QFileDialog()
+        dialog = QFileDialog(directory=str(cdirs.courses))
         dialog.setFileMode(QFileDialog.ExistingFile)
         dialog.setNameFilter('*.lean *.pkl')
 
