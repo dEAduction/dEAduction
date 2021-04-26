@@ -29,20 +29,17 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
-import                  logging
-from dataclasses import dataclass
-import                  pickle
-import os
-from typing import Any, Dict, Callable
-import trio
+import logging
+import pickle
+import time
 
 from deaduction.pylib.config.i18n import _
 
-import deaduction.pylib.config.vars as cvars
-import deaduction.pylib.config.dirs as cdirs
+import deaduction.pylib.config.vars as        cvars
+import deaduction.pylib.config.dirs as        cdirs
+from deaduction.pylib.utils.filesystem import check_dir
 
-from deaduction.pylib.mathobj import    ProofStep
-from deaduction.pylib.coursedata import AutoStep
+from deaduction.pylib.mathobj import          ProofStep
 
 log = logging.getLogger(__name__)
 
@@ -81,16 +78,43 @@ class Journal:
         self.memory = []
 
     def store(self, proof_step: ProofStep, emw):
-        # TODO: add time
+        proof_step.time = time.localtime(time.time())
         self.memory.append(proof_step)
-        display = AutoStep.from_proof_step(proof_step, emw)
-        log.debug(f"Storing proof_step {display}")
+        # display = AutoStep.from_proof_step(proof_step, emw)
+        # log.debug(f"Storing proof_step {display}")
 
-    def save(self):
-        # TODO: add time in the filename
-        with open(self.__journal_file_name, mode='w') as output:
-            pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
+    def save_exercise_with_proof_steps(self, emw):
+        """
+        Incorporate journal as auto_steps attribute to emw.exercise,
+        and save this to cdirs.journal.
+        :param emw: ExerciseMainWindow instance
+        """
 
-    # def write_last_entry(self):
-    #     with open(self.__journal_file_name, mode='ab') as output:
-    #         pickle.dump(self.memory[-1], output, pickle.HIGHEST_PROTOCOL)
+        save = cvars.get('journal.save', False)
+        if not save:
+            return
+
+        # Building auto_steps
+        auto_steps = [proof_step.auto_step for proof_step in self.memory
+                      if proof_step.auto_step is not None]
+
+        # Saving
+        date = time.strftime("%d%b%Hh%M")
+        exercise = emw.exercise
+        exercise.refined_auto_steps = auto_steps
+        filename = 'journal_' \
+                   + exercise.lean_short_name.replace('.', '_') \
+                   + date \
+                   + '.pkl'
+        check_dir(cdirs.journal, create=True)
+        file_path = cdirs.journal / filename
+
+        total_string = 'ProofSteps\n'
+        for step in auto_steps:
+            total_string += '    ' + step.raw_string + ',\n'
+        print(total_string)
+
+        log.debug(f"Saving auto_steps in {file_path}")
+        with open(file_path, mode='wb') as output:
+            pickle.dump(exercise, output, pickle.HIGHEST_PROTOCOL)
+
