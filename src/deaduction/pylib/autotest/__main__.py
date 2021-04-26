@@ -87,6 +87,44 @@ from deaduction.pylib.autotest import ( select_course,
 
 log = logging.getLogger(__name__)
 
+#######################
+# Choice of exercises #
+#######################
+
+
+def exercise_from_pkl(exercise_like, dir_path):
+    """
+    Get exercise from exercise_like which should be a pkl file in dir_path,
+    or in cdirs.share / 'tests' if dir_path is None.
+.
+    :param dir_path: a Path, or None
+    :param exercise_like: str name of exercise, or file_path
+    :return:
+    """
+    if isinstance(exercise_like, str):
+        if not exercise_like.endswith('.pkl'):
+            exercise_like += '.pkl'
+        if not dir_path:
+            file_path = cdirs.share / 'tests' / exercise_like
+        else:
+            file_path = dir_path / exercise_like
+    else:
+        file_path = exercise_like
+
+    [exercise] = pickled_items(file_path)
+    # log.debug(f"Pickled object {type(exercise)}")
+    return exercise
+
+
+def pickled_items(filename):
+    """ Unpickle a file of pickled data. """
+    with filename.open(mode="rb") as input:
+        while True:
+            try:
+                yield pickle.load(input)
+            except EOFError:
+                break
+
 
 def coex_from_argv() -> (Optional[Path], Course, Exercise, bool):
     """
@@ -133,38 +171,6 @@ def coex_from_argv() -> (Optional[Path], Course, Exercise, bool):
     return dir_path, course, exercise, all_from_this_one
 
 
-def exercise_from_pkl(exercise_like, dir_path):
-    """
-    Get exercise from a pkl file in cdirs.share / 'tests'
-.
-    :param exercise_like: str name of exercise, or file_path
-    :return:
-    """
-    if isinstance(exercise_like, str):
-        if not exercise_like.endswith('.pkl'):
-            exercise_like += '.pkl'
-        if not dir_path:
-            file_path = cdirs.share / 'tests' / exercise_like
-        else:
-            file_path = dir_path / exercise_like
-    else:
-        file_path = exercise_like
-
-    [exercise] = pickled_items(file_path)
-    # log.debug(f"Pickled object {type(exercise)}")
-    return exercise
-
-
-def pickled_items(filename):
-    """ Unpickle a file of pickled data. """
-    with filename.open(mode="rb") as input:
-        while True:
-            try:
-                yield pickle.load(input)
-            except EOFError:
-                break
-
-
 def get_exercises_from_dir(dir_path: Path):
     test_course_files = [file for file in dir_path.iterdir()
                          if (file.suffix == '.lean' or file.suffix == '.pkl')
@@ -204,7 +210,7 @@ def get_exercises_from_dir(dir_path: Path):
     return exercises
 
 
-def get_exercises(course: Optional[Course],
+def get_exercises_from_course(course: Optional[Course],
                   exercise: Optional[Exercise],
                   all_from_this_one: bool) -> [Exercise]:
     """
@@ -241,7 +247,15 @@ def get_exercises(course: Optional[Course],
     return exercises
 
 
+############################
+# Auto-testing an exercise #
+############################
+
 def find_selection(auto_step, emw):
+    """
+    Convert the data in auto_step.selection into MathObjects instances.
+    This is used by the async auto_step function.
+    """
     auto_selection = []
     # First trial
     # TODO: make emw properties
@@ -294,7 +308,8 @@ async def auto_test(container: Container):
     """
     Test the Exercise's instance container.exercise by listening to
     deaduction signals and simulating user pressing buttons according to
-    the instructions found in exercise.auto_test.
+    the instructions found in exercise.auto_test. The function assumes that
+    the ExerciseMainWindow has been launched.
 
     Note that just one exercise is tested, this function is not in charge of
     processing to the next exercise to be tested.
@@ -353,21 +368,31 @@ async def auto_test(container: Container):
                                    for item in step.user_input]
 
                 if step.button:  # Auto step is a button step
-                    action_btn = emw.ecw.action_button(step.button)
-                    log.debug(f"Button: {action_btn}")
-                    await emw.process_async_signal(partial(
-                        emw.__server_call_action,
-                        action_btn, auto_selection,
-                        auto_user_input))
+                    if step.button.endswith('undo'):
+                        await emw.process_async_signal(
+                                                emw.servint.history_undo)
+                    elif step.button.endswith('redo'):
+                        await emw.process_async_signal(
+                                                emw.servint.history_redo)
+                    elif step.button.endswith('rewind'):
+                        await emw.process_async_signal(
+                                                    emw.servint.history_rewind)
+                    else:
+                        action_btn = emw.ecw.action_button(step.button)
+                        log.debug(f"Button: {action_btn}")
+                        await emw.process_async_signal(partial(
+                                                    emw.__server_call_action,
+                                                    action_btn, auto_selection,
+                                                    auto_user_input))
 
                 elif step.statement:  # Auto step is a statement step
                     statement_widget = emw.ecw.statements_tree.from_name(
                         step.statement)
                     log.debug(f"Statement: {statement_widget}")
                     await emw.process_async_signal(partial(
-                        emw.__server_call_statement,
-                        statement_widget,
-                        auto_selection))
+                                                emw.__server_call_statement,
+                                                statement_widget,
+                                                auto_selection))
                 else:
                     log.warning("Auto-step loop: empty step")
 
@@ -377,19 +402,43 @@ async def auto_test(container: Container):
     reports.insert(0, test_success)
 
 
+#############
+# Main loop #
+#############
+
 async def main():
     """
+    Select exercises to be tested, launch ExerciseMainWindow and Lean
+    server, and then call auto_test successively on each exercise. The
+    exercise in initialized by the Container.test_exercise method.
+
+    The loop first collect a collection of exercises from arguments.
+    Arguments may include
+    1) a directory,
+    2) a file path to a course, maybe with with the name of some exercise,
+    3) or a file path to an individual exercise in a pkl file.
+
+    - In the first case, it will collect all exercises with autotest data in
+    all courses in the directory, as well ass all individual pkl
+    test_exercises.
+    - In the second case it will collect the individual exercise if
+    specified, or all the exercises from this one, or all exercises in the
+    specified course if no exercise is specified.
+    - In the last case it will collect the specified exercise.
     """
 
-    #############################
-    # Choose course and exercise #
-    #############################
+    # ─────────────── Choose exercises ─────────────── #
     exercises = None
     dir_, course, exercise, all_from_this_one = coex_from_argv()
+    # dir: Path
+    # course : Course
+    # exercise: Exercise
+    # all_from_this_one: bool
     if dir_:
         exercises = get_exercises_from_dir(dir_)
     elif course:
-        exercises = get_exercises(course, exercise, all_from_this_one)
+        exercises = get_exercises_from_course(course, exercise,
+                                              all_from_this_one)
     elif exercise:
         exercises = [exercise]
 
@@ -398,6 +447,7 @@ async def main():
     else:
         log.debug(f"Found {len(exercises)} with AutoTest metadata")
 
+    # ─────────────── Testing exercises ─────────────── #
     async with trio.open_nursery() as nursery:
         # Create container and enter test mode
         container = Container(nursery)
@@ -428,10 +478,12 @@ async def main():
                         container.exercise_window.window_closed.disconnect()
                         container.exercise_window.close()
                         if container.exercises:
+                            # Test next exercise
                             container.exercise = container.exercises[0]
                             container.exercises = container.exercises[1:]
                             await container.test_exercise()
                             container.nursery.start_soon(auto_test, container)
+
                         else:
                             log.debug("No more exercises to test!")
                             break
@@ -450,7 +502,6 @@ async def main():
                 print(exo_report[1] + ": " + success)
                 for step_report in exo_report[2:]:
                     print(step_report)
-
 
             # Finally closing d∃∀duction
             if container.servint:
