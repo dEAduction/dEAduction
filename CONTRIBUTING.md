@@ -298,6 +298,10 @@ case.
 
 > A branch should host a *single* new feature, fix, etc.
 
+Notice that we use a `/` instead of a `:` as in the git commit messages
+convention.  That's because `:` [are not allowed in a branch
+name](https://wincent.com/wiki/Legal_Git_branch_names)
+
 ### Git commit messages
 
 > This convention is strongly inspired from the Angular project Commit
