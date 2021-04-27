@@ -379,6 +379,8 @@ async def auto_test(container: Container):
                         await emw.process_async_signal(
                                                     emw.servint.history_rewind)
                     else:
+                        # e.g. Nouvel_Objet -> Nouvel Objet
+                        step.button = step.button.replace('_', ' ')
                         action_btn = emw.ecw.action_button(step.button)
                         log.debug(f"Button: {action_btn}")
                         await emw.process_async_signal(partial(
