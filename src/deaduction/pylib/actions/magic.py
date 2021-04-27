@@ -230,4 +230,4 @@ def action_assumption(proof_step,
     codes.append(more_code)
     code = CodeForLean.or_else_from_list(codes)
     code.add_error_msg(_("I don't know how to conclude"))
-    return code
+    return code.solve1()
