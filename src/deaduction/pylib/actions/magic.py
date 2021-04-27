@@ -229,5 +229,6 @@ def action_assumption(proof_step,
     more_code = split_conj.and_then(improved_assumption_2)
     codes.append(more_code)
     code = CodeForLean.or_else_from_list(codes)
+    code = code.solve1()
     code.add_error_msg(_("I don't know how to conclude"))
-    return code.solve1()
+    return code

@@ -121,6 +121,8 @@ def method_cbr(proof_step,
             h2 = get_new_hyp(proof_step)
             code = CodeForLean.from_string(f"cases (classical.em ({h0})) "
                                            f"with {h1} {h2}")
+            code.add_success_msg(_("proof by cases: we first assume {}").
+                                 format(h1))
     else:
         prop = selected_objects[0]
         if prop.is_or():
@@ -131,8 +133,8 @@ def method_cbr(proof_step,
             h2 = get_new_hyp(proof_step)
             code = CodeForLean.from_string(f"cases (classical.em ({h0})) "
                                            f"with {h1} {h2}")
-    code.add_success_msg(_("proof by cases: we first assume {}").
-                             format(h1))
+            code.add_success_msg(_("proof by cases: we first assume {}").
+                                 format(h1))
     return code
 
 
