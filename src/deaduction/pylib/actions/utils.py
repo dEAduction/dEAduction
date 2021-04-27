@@ -95,7 +95,8 @@ class CodeForLean:
         Create a CodeForLean with a single instruction
         """
         return CodeForLean(instructions=[instruction],
-                           error_msg=error_msg)
+                           error_msg=error_msg,
+                           success_msg=success_msg)
 
     @classmethod
     def or_else_from_list(cls,
