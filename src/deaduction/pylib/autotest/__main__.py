@@ -347,6 +347,7 @@ async def auto_test(container: Container):
 
                 report = f"Step {steps_counter}: " + report
                 if not emw.displayed_proof_step.success_msg \
+                        and emw.displayed_proof_step.button \
                         and not emw.displayed_proof_step.button.is_cqfd() \
                         and not emw.displayed_proof_step.is_error():
                     report += "(no success msg)"

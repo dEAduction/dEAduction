@@ -162,8 +162,11 @@ def give_name(math_type,
 
     # Properties are named 'Hn' where n is an integer
     if math_type.is_prop():
-        return get_new_hyp_from_forbidden_names(proof_step, forbidden_names)
-
+        if proof_step:  # For global prop names (-> H1, H2, ...)
+            return get_new_hyp_from_forbidden_names(proof_step,
+                                                    forbidden_names)
+        else:  # For local prop names
+            pass
     ##################
     # Managing hints #
     ##################
