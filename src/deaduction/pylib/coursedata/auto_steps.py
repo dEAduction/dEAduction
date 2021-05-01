@@ -113,7 +113,8 @@ alternative_symbols = {'→': '⇒',
                        'proof_methods': _('Proof Methods'),
                        'new_object': _('New Object'),
                        'apply': _('Apply'),
-                       'assumption': _('QED'),
+                       'assumption': _('Goal!'),
+                       "CQFD": _('Goal!'),
                        'compute': _('Compute')
                        }
 

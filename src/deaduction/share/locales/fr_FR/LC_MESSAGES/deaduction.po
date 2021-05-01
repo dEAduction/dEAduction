@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2021-04-27 22:38+0200\n"
-"PO-Revision-Date: 2021-04-27 22:38+0200\n"
+"POT-Creation-Date: 2021-05-01 14:19+0200\n"
+"PO-Revision-Date: 2021-05-01 14:19+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -320,7 +320,8 @@ msgstr "Choisissez le cas"
 msgid "Which case to assume first?"
 msgstr "Quel cas voulez-vous étudier en premier ?"
 
-#: pylib/actions/logic.py:264 pylib/actions/proofs.py:134
+#: pylib/actions/logic.py:264 pylib/actions/proofs.py:124
+#: pylib/actions/proofs.py:136
 msgid "proof by cases: we first assume {}"
 msgstr "preuve par disjonction de cas : nous supposons d’abord {}"
 
@@ -489,7 +490,7 @@ msgstr "l’objet sélectionné n’est pas une propriété existentielle ’∃
 msgid "target is not an equality, an inequality, nor a contradiction"
 msgstr "le but n’est pas une égalité, ni une inégalité, ni une contradiction"
 
-#: pylib/actions/magic.py:232
+#: pylib/actions/magic.py:233
 msgid "I don't know how to conclude"
 msgstr "Je ne sais pas comment conclure"
 
@@ -525,134 +526,134 @@ msgstr "Preuve par disjonction de cas"
 msgid "Enter the property you want to discriminate on:"
 msgstr "Entrez la propriété sur laquelle la preuve par cas sera fondée :"
 
-#: pylib/actions/proofs.py:150
+#: pylib/actions/proofs.py:152
 msgid "Target replaced by contrapositive"
 msgstr "le but est remplacé par sa contraposée"
 
-#: pylib/actions/proofs.py:153
+#: pylib/actions/proofs.py:155
 msgid "Proof by contraposition only applies when target is an implication"
 msgstr ""
 "La preuve par contraposée n’est pas possible, le but n’est pas une "
 "implication"
 
-#: pylib/actions/proofs.py:156
+#: pylib/actions/proofs.py:158
 msgid "Proof by contraposition only applies to target"
 msgstr "La preuve par contraposée ne s’applique qu’au but"
 
-#: pylib/actions/proofs.py:167
+#: pylib/actions/proofs.py:169
 msgid "Negation of target added to the context"
 msgstr "La négation du but est ajoutée au contexte"
 
-#: pylib/actions/proofs.py:170
+#: pylib/actions/proofs.py:172
 msgid "Proof by contradiction only applies to target"
 msgstr "La preuve par l’absurde ne s’applique qu’au but"
 
-#: pylib/actions/proofs.py:190
+#: pylib/actions/proofs.py:192
 msgid "select a property \"∀ x, ∃ y, P(x,y)\" to get a function"
 msgstr ""
 "sélectionner une propriété du type « ∀ x, ∃ y, P(x,y) » pour obtenir une "
 "fonction"
 
-#: pylib/actions/proofs.py:191
+#: pylib/actions/proofs.py:193
 msgid "function {} and property {} added to the context"
 msgstr "La fonction {} et la propriété {} sont ajoutées au contexte"
 
-#: pylib/actions/proofs.py:237
+#: pylib/actions/proofs.py:239
 msgid "Object"
 msgstr "Objet"
 
-#: pylib/actions/proofs.py:237 pylib/actions/proofs.py:253
+#: pylib/actions/proofs.py:239 pylib/actions/proofs.py:255
 msgid "Introduce a new object"
 msgstr "Introduire un nouvel objet"
 
-#: pylib/actions/proofs.py:238
+#: pylib/actions/proofs.py:240
 msgid "Goal"
 msgstr "But"
 
-#: pylib/actions/proofs.py:238
+#: pylib/actions/proofs.py:240
 msgid "Introduce a new intermediate sub-goal"
 msgstr "Introduire un but intermédiaire"
 
-#: pylib/actions/proofs.py:240
+#: pylib/actions/proofs.py:242
 msgid "Function"
 msgstr "Fonction"
 
-#: pylib/actions/proofs.py:240
+#: pylib/actions/proofs.py:242
 msgid "Introduce a new function"
 msgstr "Introduire une nouvelle fonction"
 
-#: pylib/actions/proofs.py:242
+#: pylib/actions/proofs.py:244
 msgid "New object"
 msgstr "Nouvel Objet"
 
-#: pylib/actions/proofs.py:243
+#: pylib/actions/proofs.py:245
 msgid "Choose what to introduce:"
 msgstr "Choisissez :"
 
-#: pylib/actions/proofs.py:249
+#: pylib/actions/proofs.py:251
 msgid "Name your object:"
 msgstr "Choisir une notation pour l’objet :"
 
-#: pylib/actions/proofs.py:254
+#: pylib/actions/proofs.py:256
 msgid "e.g."
 msgstr "par ex."
 
-#: pylib/actions/proofs.py:264
+#: pylib/actions/proofs.py:266
 msgid "New object {} added to the context"
 msgstr "Nouvel objet {} ajouté au contexte"
 
-#: pylib/actions/proofs.py:269
+#: pylib/actions/proofs.py:271
 msgid "You might try the ∀ button..."
 msgstr "Vous pouvez essayer le boutton ‘∀’…"
 
-#: pylib/actions/proofs.py:276
+#: pylib/actions/proofs.py:278
 msgid "Introduce new subgoal:"
 msgstr "Introduire un but intermédiaire"
 
-#: pylib/actions/proofs.py:281
+#: pylib/actions/proofs.py:283
 msgid "New target will be added to the context after being proved"
 msgstr "Le nouveau but sera ajouté au contexte quand il aura été démontré"
 
-#: pylib/actions/proofs.py:305 pylib/actions/proofs.py:307
+#: pylib/actions/proofs.py:307 pylib/actions/proofs.py:309
 msgid "{} replaced by {}"
 msgstr "{} remplacé par {}"
 
-#: pylib/actions/proofs.py:321 pylib/actions/proofs.py:325
-#: pylib/actions/proofs.py:339 pylib/actions/proofs.py:343
+#: pylib/actions/proofs.py:323 pylib/actions/proofs.py:327
+#: pylib/actions/proofs.py:341 pylib/actions/proofs.py:345
 msgid "in target"
 msgstr "dans le but"
 
-#: pylib/actions/proofs.py:336 pylib/actions/proofs.py:370
+#: pylib/actions/proofs.py:338 pylib/actions/proofs.py:372
 msgid "Precision of substitution"
 msgstr "Préciser le sens de substitution"
 
-#: pylib/actions/proofs.py:337 pylib/actions/proofs.py:371
+#: pylib/actions/proofs.py:339 pylib/actions/proofs.py:373
 msgid "Choose which expression you want to replace"
 msgstr "Choisissez quelle expression remplacer"
 
-#: pylib/actions/proofs.py:353 pylib/actions/proofs.py:359
-#: pylib/actions/proofs.py:377 pylib/actions/proofs.py:381
+#: pylib/actions/proofs.py:355 pylib/actions/proofs.py:361
+#: pylib/actions/proofs.py:379 pylib/actions/proofs.py:383
 msgid "in {}"
 msgstr "dans {}"
 
-#: pylib/actions/proofs.py:422
+#: pylib/actions/proofs.py:424
 msgid "function {} applied to {}"
 msgstr "la fonction {} a été appliquée à {}"
 
-#: pylib/actions/proofs.py:430
+#: pylib/actions/proofs.py:432
 msgid "new objet {} added to the context"
 msgstr "Nouvel objet {} ajouté au contexte"
 
-#: pylib/actions/proofs.py:466
+#: pylib/actions/proofs.py:468
 msgid "no property selected"
 msgstr "pas de propriété sélectionnée"
 
-#: pylib/actions/proofs.py:477
+#: pylib/actions/proofs.py:479
 msgid "select an element or an equality on which to apply the function"
 msgstr ""
 "sélectionnez un élément ou une égalité sur laquelle appliquer la fonction"
 
-#: pylib/actions/proofs.py:511
+#: pylib/actions/proofs.py:513
 msgid "I cannot apply this"
 msgstr "Je ne sais pas appliquer ceci"
 
@@ -688,11 +689,12 @@ msgstr "Nouvel Objet"
 msgid "Apply"
 msgstr "Appliquer"
 
-#: pylib/coursedata/auto_steps.py:116 pylib/text/tooltips.py:101
-msgid "QED"
-msgstr "CQFD"
+#: pylib/coursedata/auto_steps.py:116 pylib/coursedata/auto_steps.py:117
+#: pylib/text/tooltips.py:101
+msgid "Goal!"
+msgstr "But !"
 
-#: pylib/coursedata/auto_steps.py:117 pylib/text/tooltips.py:101
+#: pylib/coursedata/auto_steps.py:118 pylib/text/tooltips.py:101
 msgid "Compute"
 msgstr "Calculer"
 
@@ -1187,6 +1189,9 @@ msgstr "Progression : {:03d}%"
 #: pylib/utils/filesystem.py:238
 msgid "Download from {} to {}"
 msgstr "Téléchargé depuis {} vers {}"
+
+#~ msgid "QED"
+#~ msgstr "CQFD"
 
 #~ msgid "new element {} added to the context"
 #~ msgstr "nouvel objetobjet {} ajouté au contexte"

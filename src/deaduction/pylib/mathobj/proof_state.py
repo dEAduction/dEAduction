@@ -41,7 +41,6 @@ from deaduction.pylib.config.i18n import _
 from .MathObject import MathObject
 from .lean_analysis import ( lean_expr_with_type_grammar,
                              LeanEntryVisitor )
-# from deaduction.pylib.coursedata import AutoStep
 import deaduction.pylib.config.vars as cvars
 
 log = logging.getLogger(__name__)
@@ -508,6 +507,12 @@ class ProofStep:
 
     def is_error(self):
         return bool(self.error_type)
+
+    def is_cqfd(self):
+        return hasattr(self.button, 'symbol') and \
+               self.button.symbol == _("goal!")
+        # NB: this should be action_assumption.symbol,
+        # but unable to import this here
 
     def compare(self, auto_test) -> (str, bool):
         """
