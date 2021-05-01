@@ -302,7 +302,7 @@ lemma exercise.image_directe_et_inclusion_III
 (H : injective f) :
 ∀ A B: set X,  f '' (A) ⊆ f '' (B) → A ⊆ B
 :=
-\- dEAduction
+/- dEAduction
 AutoTest
     ∀ success=objet_A_ajouté_au_contexte,
     ∀ success=objet_B_ajouté_au_contexte,
@@ -341,7 +341,7 @@ AutoTest
     CQFD FailedRequestError error=Je_ne_sais_pas_comment_conclure,
     @P6 @P8 Appliquer,
     CQFD
--\
+-/
 begin
     todo
 end
