@@ -75,6 +75,8 @@ from deaduction.pylib.coursedata import (Course,
                                          Theorem)
 from deaduction.pylib import logger
 from deaduction.pylib.server import ServerInterface
+from deaduction.pylib.pre_processing import ServerInterfaceAllStatements
+
 
 log = logging.getLogger(__name__)
 
@@ -152,7 +154,7 @@ async def get_all_proof_states(servint,
 
         # stop and restart server every 5 exercises to avoid
         # too long messages that entail crashing
-        if (counter % 5) == 0:
+        if (counter % 100) == 0:
             # servint.stop()
             log.info("Saving temporary file...")
             save_objects([course], course_pkl_path)
@@ -378,8 +380,56 @@ async def main():
             read_data(course_pkl_path)
 
 
+async def main_alt():
+    """
+    See file doc.
+    """
+
+    cenv.init()
+    cdirs.init()
+    inst.init()
+
+    #############################################
+    # Search course or directory from arguments #
+    #############################################
+    dir_, course = coex_from_argv()
+    if dir_:
+        courses = get_courses_from_dir(dir_)
+    elif course:
+        courses = [course]
+    else:
+        course = select_course()
+        courses = [course]
+
+    # Process each course
+    for course in courses:
+        async with trio.open_nursery() as nursery:
+            servint = ServerInterfaceAllStatements(nursery)
+            await servint.start()
+            await servint.set_statements(course)
+            servint.stop()
+
+        log.debug("Got all proof states, saving")
+        # Save pkl course file
+        relative_course_path = course.relative_course_path
+        directory_name = relative_course_path.parent
+        course_hash = hash(course.file_content)
+
+        # search for pkl file, and compare contents
+        # so that only unprocessed statements will be processed
+        unprocessed_statements = []
+        filename = relative_course_path.stem + '.pkl'
+        course_pkl_path = directory_name.joinpath(Path(filename))
+
+        save_objects([course], course_pkl_path)
+
+        print("===================================")
+        print_goal(course)
+
+
+
 if __name__ == '__main__':
-    logger.configure(domains=['lean', 'ServerInterface', '__main__'])
+    logger.configure(domains=['ServerInterface', '__main__'])
     log.debug("starting pre-processing...")
-    qtrio.run(main)
+    qtrio.run(main_alt)
 
