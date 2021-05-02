@@ -280,7 +280,7 @@ class ServerInterface(QObject):
         if hasattr(self.update_started, "emit"):
             self.update_started.emit()
 
-        req = SyncRequest(file_name=self.lean_file.file_name,
+        req = SyncRequest(file_name="deaduction_lean",
                           content=self.lean_file.contents)
 
         # Invalidate events
