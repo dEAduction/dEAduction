@@ -287,7 +287,7 @@ Ready-to-use snippets are available in
 Branch names *must* have the following structure:
 
 ```
-area::type/name
+area+type/name
 ```
 
 Arguments `area` and `type` (both mandatory) follow the same
@@ -298,7 +298,7 @@ case.
 
 > A branch should host a *single* new feature, fix, etc.
 
-Notice that we use a `/` instead of a `:` as in the git commit messages
+Notice that we use a `+` instead of a `::` as in the git commit messages
 convention.  That's because `:` [are not allowed in a branch
 name](https://wincent.com/wiki/Legal_Git_branch_names)
 
