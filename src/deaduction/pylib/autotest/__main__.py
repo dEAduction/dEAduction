@@ -59,6 +59,7 @@ from functools import partial
 from typing import Optional
 from pathlib import Path
 import pickle
+import argparse
 
 from deaduction.pylib.coursedata                 import Course, Exercise
 from deaduction.pylib                            import logger
@@ -87,6 +88,15 @@ from deaduction.pylib.autotest import ( select_course,
 #                  display_level=log_level)
 
 log = logging.getLogger(__name__)
+arg_parser = argparse.ArgumentParser("Start deaduction in test mode")
+arg_parser.add_argument('--directory', '-d', help="Path for directory")
+arg_parser.add_argument('--course', '-c', help="Course filename")
+arg_parser.add_argument('--exercise', '-e', help="Exercise (piece of) name")
+arg_parser.add_argument('--more', '-m',
+                        action='store_true',
+                        help="If some exercise is specified, test all "\
+                             "exercise from this one",
+                        )
 
 #######################
 # Choice of exercises #
@@ -131,26 +141,15 @@ def coex_from_argv() -> (Optional[Path], Course, Exercise, bool):
     """
     Try to build Course and Exercise object from arguments.
     """
-    dir_path = None
-    course_path = None
-    exercise_like = None
     course = None
     exercise = None
-    all_from_this_one = False
 
-    for arg in argv[1:]:
-        if arg.startswith('--directory='):
-            dir_path = arg[len("--directory="):]
-        elif arg == '-d':
-            dir_path = argv[argv.index(arg)+1]
-        elif arg.startswith("--course="):
-            course_path = arg[len("--course="):]
-        elif arg == "-c":
-            course_path = argv[argv.index(arg)+1]
-        elif arg.startswith("--exercise="):
-            exercise_like = arg[len("--exercise="):]
-        elif arg == "-e":
-            exercise_like = argv[argv.index(arg)+1]
+    args = arg_parser.parse_args(argv[1:])
+    dir_path = args.directory
+    course_path = args.course
+    exercise_like = args.exercise
+    all_from_this_one = args.more
+    # print(args)
 
     if dir_path:
         dir_path = Path(dir_path)

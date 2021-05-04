@@ -36,6 +36,7 @@ import logging
 import qtrio
 import threading
 import trio
+import argparse
 
 from PySide2.QtCore import ( QObject,
                              Signal,
@@ -75,6 +76,15 @@ logger.configure(domains=log_domains,
                  display_level=log_level)
 
 log = logging.getLogger(__name__)
+
+###########################
+# Configuring args parser #
+###########################
+
+arg_parser = argparse.ArgumentParser("Start deaduction graphical interface "
+                                     "for Lean theorem prover")
+arg_parser.add_argument('--course', '-c', help="Course filename")
+arg_parser.add_argument('--exercise', '-e', help="Exercise (piece of) name")
 
 
 ############################
@@ -305,19 +315,10 @@ def exercise_from_argv() -> Exercise:
     """
     Try to build Exercise object from arguments.
     """
-    course_path = None
-    exercise_like = None
     exercise = None
-
-    for arg in argv[1:]:
-        if arg.startswith("--course="):
-            course_path = arg[len("--course="):]
-        elif arg == "-c":
-            course_path = argv[argv.index(arg)+1]
-        elif arg.startswith("--exercise="):
-            exercise_like = arg[len("--exercise="):]
-        elif arg == "-e":
-            exercise_like = argv[argv.index(arg)+1]
+    args = arg_parser.parse_args(argv[1:])
+    course_path = args.course
+    exercise_like = args.exercise
 
     if course_path and exercise_like:
         log.debug('Searching course and exercise...')
