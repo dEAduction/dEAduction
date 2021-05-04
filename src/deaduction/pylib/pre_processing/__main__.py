@@ -59,6 +59,7 @@ import logging
 import qtrio
 import trio
 import pickle
+import argparse
 from pathlib import Path
 from PySide2.QtWidgets import QFileDialog
 
@@ -80,6 +81,10 @@ from deaduction.pylib.pre_processing import ServerInterfaceAllStatements
 
 log = logging.getLogger(__name__)
 
+arg_parser = argparse.ArgumentParser("Start deaduction pre-processing to "
+                                     "turn '.lean' files into '.pkl'")
+arg_parser.add_argument('--directory', '-d', help="Path for directory")
+arg_parser.add_argument('--course', '-c', help="Course filename")
 
 def check_statements(course):
     """
@@ -289,19 +294,11 @@ def coex_from_argv() -> (Optional[Path], Course, Exercise, bool):
     """
     Try to build Course and Exercise object from arguments.
     """
-    dir_path = None
-    course_path = None
     course = None
 
-    for arg in argv[1:]:
-        if arg.startswith('--directory='):
-            dir_path = arg[len("--directory="):]
-        elif arg == '-d':
-            dir_path = argv[argv.index(arg)+1]
-        elif arg.startswith("--course="):
-            course_path = arg[len("--course="):]
-        elif arg == "-c":
-            course_path = argv[argv.index(arg)+1]
+    args = arg_parser.parse_args(argv[1:])
+    dir_path = args.directory
+    course_path = args.course
 
     if dir_path:
         dir_path = Path(dir_path)
