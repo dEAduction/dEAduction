@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2021-05-06 18:32+0200\n"
-"PO-Revision-Date: 2021-05-06 18:33+0200\n"
+"POT-Creation-Date: 2021-05-06 23:00+0200\n"
+"PO-Revision-Date: 2021-05-06 23:01+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -77,31 +77,31 @@ msgid "Toggle L∃∀N"
 msgstr "Console L∃∀N"
 
 #: dui/stages/exercise/_exercise_main_window_widgets.py:388
-#: dui/stages/exercise/exercise_main_window.py:707
+#: dui/stages/exercise/exercise_main_window.py:709
 msgid "Change exercise"
 msgstr "Changer d’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:651
+#: dui/stages/exercise/exercise_main_window.py:653
 msgid "Code from editor"
 msgstr "Code depuis l’éditeur"
 
-#: dui/stages/exercise/exercise_main_window.py:700
+#: dui/stages/exercise/exercise_main_window.py:702
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:701
+#: dui/stages/exercise/exercise_main_window.py:703
 msgid "The proof is complete!"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/exercise_main_window.py:705
+#: dui/stages/exercise/exercise_main_window.py:707
 msgid "Back to exercise"
 msgstr "Retour à l’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:824
+#: dui/stages/exercise/exercise_main_window.py:826
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:827
+#: dui/stages/exercise/exercise_main_window.py:829
 msgid "goals solved!"
 msgstr "buts atteints !"
 
@@ -935,10 +935,20 @@ msgid ": "
 msgstr " : "
 
 #: pylib/mathobj/proof_state.py:513
-#, fuzzy
-#| msgid "Goal!"
 msgid "goal!"
 msgstr "But !"
+
+#: pylib/mathobj/proof_state.py:576
+msgid "ERROR:"
+msgstr "ERREUR :"
+
+#: pylib/mathobj/proof_state.py:580
+msgid "Success:"
+msgstr "Succès :"
+
+#: pylib/memory/__init__.py:129
+msgid "Step n°{} "
+msgstr "Etape n°{} "
 
 #: pylib/packager/exceptions.py:32
 msgid "Package check error: {}"
