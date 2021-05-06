@@ -594,6 +594,8 @@ class ExerciseMainWindow(QMainWindow):
         if item in self.current_selection:
             self.current_selection.remove(item)
         # Emulate click on 'apply' button
+        log.debug(f"Apply {item.mathobject.display_name} with selection "
+                  f"{[item.display_name for item in self.current_selection_as_mathobjects]}")
         self.ecw.action_apply_button.animateClick(msec=500)
 
     async def __server_call_statement(self,

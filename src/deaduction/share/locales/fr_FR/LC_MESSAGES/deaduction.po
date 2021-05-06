@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2021-05-01 14:19+0200\n"
-"PO-Revision-Date: 2021-05-01 14:19+0200\n"
+"POT-Creation-Date: 2021-05-06 18:32+0200\n"
+"PO-Revision-Date: 2021-05-06 18:33+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -172,7 +172,7 @@ msgstr "Cours"
 
 #: dui/stages/start_coex/start_coex_widgets.py:682
 #: dui/stages/start_coex/start_coex_widgets.py:775
-#: pylib/pre_processing/__main__.py:203 pylib/pre_processing/__main__.py:224
+#: pylib/pre_processing/__main__.py:210 pylib/pre_processing/__main__.py:231
 msgid "Exercise"
 msgstr "Exercice"
 
@@ -275,8 +275,8 @@ msgid "Let us prove the first property"
 msgstr "Démontrons la première propriété"
 
 #: pylib/actions/logic.py:138
-msgid "split properties {} and {}"
-msgstr "propriété séparée en deux propriétés {} et {}"
+msgid "split property {} into {} and {}"
+msgstr "propriété {} découpée en {} et {}"
 
 #: pylib/actions/logic.py:155
 msgid "conjunction {} added to the context"
@@ -898,41 +898,47 @@ msgstr "une suite dans"
 msgid "belongs to"
 msgstr "appartient à"
 
-#: pylib/mathobj/proof_state.py:275
+#: pylib/mathobj/proof_state.py:274
 msgid "Assume that"
 msgstr "Supposons que"
 
-#: pylib/mathobj/proof_state.py:282 pylib/mathobj/proof_state.py:291
+#: pylib/mathobj/proof_state.py:281 pylib/mathobj/proof_state.py:290
 msgid "Let"
 msgstr "Soit"
 
-#: pylib/mathobj/proof_state.py:291
+#: pylib/mathobj/proof_state.py:290
 msgid "be"
 msgstr " "
 
-#: pylib/mathobj/proof_state.py:304 pylib/mathobj/proof_state.py:337
+#: pylib/mathobj/proof_state.py:303 pylib/mathobj/proof_state.py:336
 msgid "Prove that"
 msgstr "Démontrer que"
 
-#: pylib/mathobj/proof_state.py:306 pylib/mathobj/proof_state.py:339
+#: pylib/mathobj/proof_state.py:305 pylib/mathobj/proof_state.py:338
 msgid "Then"
 msgstr "Alors"
 
-#: pylib/mathobj/proof_state.py:312 pylib/mathobj/proof_state.py:325
+#: pylib/mathobj/proof_state.py:311 pylib/mathobj/proof_state.py:324
 msgid "True or False?"
 msgstr "Vrai ou faux ?"
 
-#: pylib/mathobj/proof_state.py:327
+#: pylib/mathobj/proof_state.py:326
 msgid "Hypothesis:"
 msgstr "Hypothèse :"
 
-#: pylib/mathobj/proof_state.py:329
+#: pylib/mathobj/proof_state.py:328
 msgid "Hypotheses:"
 msgstr "Hypothèses :"
 
-#: pylib/mathobj/proof_state.py:334
+#: pylib/mathobj/proof_state.py:333
 msgid ": "
 msgstr " : "
+
+#: pylib/mathobj/proof_state.py:513
+#, fuzzy
+#| msgid "Goal!"
+msgid "goal!"
+msgstr "But !"
 
 #: pylib/packager/exceptions.py:32
 msgid "Package check error: {}"
@@ -994,19 +1000,25 @@ msgstr ""
 msgid "Uknown package type {}, excepted {}"
 msgstr ""
 
-#: pylib/pre_processing/__main__.py:213 pylib/pre_processing/__main__.py:227
+#: pylib/pre_processing/__main__.py:220 pylib/pre_processing/__main__.py:234
 msgid "Definition:"
 msgstr "Définition :"
 
-#: pylib/pre_processing/__main__.py:230
+#: pylib/pre_processing/__main__.py:237
 msgid "Theorem:"
 msgstr "Théorème :"
 
-#: pylib/pre_processing/server_course.py:301 pylib/server/__init__.py:302
+#: pylib/pre_processing/server_course.py:256
+#, fuzzy
+#| msgid "Proof State received"
+msgid "All proof states received"
+msgstr "Etat de preuve reçu"
+
+#: pylib/server/__init__.py:302
 msgid "Proof State received"
 msgstr "Etat de preuve reçu"
 
-#: pylib/pre_processing/server_course.py:305 pylib/server/__init__.py:306
+#: pylib/server/__init__.py:306
 msgid "After request"
 msgstr "Après la requête"
 

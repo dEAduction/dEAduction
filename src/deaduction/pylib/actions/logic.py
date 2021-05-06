@@ -135,8 +135,8 @@ def apply_and(proof_step, selected_objects) -> CodeForLean:
     h1 = get_new_hyp(proof_step)
     h2 = get_new_hyp(proof_step)
     code = CodeForLean.from_string(f'cases {selected_hypo} with {h1} {h2}')
-    code.add_success_msg(_("split properties {} and {}").
-                         format(h1, h2))
+    code.add_success_msg(_("split property {} into {} and {}").
+                         format(selected_hypo, h1, h2))
     return code
 
 
