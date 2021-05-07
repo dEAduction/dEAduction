@@ -64,7 +64,7 @@ class ProofStep:
     property_counter: int    = 0
     current_goal_number: int = 1  # Current number of goal in the proof history
     total_goals_counter: int = 1  # Total number of goals in the proof history
-    new_goals: [NewGoal]  = None  # TODO e.g. "Second case: we assume x∈A".
+    new_goals: [NewGoal]     = None  # TODO e.g. "Second case: we assume x∈A".
     time                     = None
 
     # ──────────────── Input ─────────────── #

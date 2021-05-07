@@ -59,7 +59,6 @@ from deaduction.pylib.actions     import (action,
                                           )
 
 from deaduction.pylib.mathobj     import (MathObject,
-                                          Goal,
                                           give_global_name,
                                           get_new_hyp,
                                           NUMBER_SETS_LIST)

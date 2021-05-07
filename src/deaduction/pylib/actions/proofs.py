@@ -32,7 +32,6 @@ from typing import Union
 from deaduction.pylib.text        import tooltips
 from deaduction.pylib.config.i18n import _
 import deaduction.pylib.config.vars as cvars
-import deaduction.pylib.actions.utils as utils
 from deaduction.pylib.actions import (InputType,
                                       MissingParametersError,
                                       WrongUserInput,
@@ -43,7 +42,6 @@ from deaduction.pylib.actions import (InputType,
                                       apply_and,
                                       apply_or)
 from deaduction.pylib.mathobj import (MathObject,
-                                      Goal,
                                       get_new_hyp,
                                       give_global_name,
                                       NO_MATH_TYPE,

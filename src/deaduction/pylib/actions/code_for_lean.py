@@ -489,32 +489,32 @@ class CodeForLean:
                             instruction in self.instructions]
 
 
-_VAR_NB = 0
-_FUN_NB = 0
-
-
-def get_new_var():
-    global _VAR_NB
-    _VAR_NB += 1
-    return "x{0}".format(_VAR_NB)
-
-
-def get_new_fun():
-    global _FUN_NB
-    _FUN_NB += 1
-    return "f{0}".format(_FUN_NB)
-
-
-# OBSOLETE : see mathobj.give_name.get_new_hyp()
-def get_new_hyp():
-    global _VAR_NB
-    _VAR_NB += 1
-    return "h{0}".format(_VAR_NB)
-
-
-def solve1_wrap(string: str) -> str:
-    # (obsolete)
-    return "solve1 {" + string + "}"
+# _VAR_NB = 0
+# _FUN_NB = 0
+#
+#
+# def get_new_var():
+#     global _VAR_NB
+#     _VAR_NB += 1
+#     return "x{0}".format(_VAR_NB)
+#
+#
+# def get_new_fun():
+#     global _FUN_NB
+#     _FUN_NB += 1
+#     return "f{0}".format(_FUN_NB)
+#
+#
+# # OBSOLETE : see mathobj.give_name.get_new_hyp()
+# def get_new_hyp():
+#     global _VAR_NB
+#     _VAR_NB += 1
+#     return "h{0}".format(_VAR_NB)
+#
+#
+# def solve1_wrap(string: str) -> str:
+#     # (obsolete)
+#     return "solve1 {" + string + "}"
 
 
 def get_effective_code_numbers(trace_effective_code: str) -> (int, int):
