@@ -569,7 +569,15 @@ def construct_iff(proof_step, user_input: [str]) -> CodeForLean:
     else:
         raise WrongUserInput(error=_("Undocumented error"))
     code.add_success_msg(_("Iff split in two implications"))
-    code.add_conjunction(target, left, right)
+    impl1 = MathObject(info={},
+                       node="PROP_IMPLIES",
+                       children = [left, right],
+                       math_type="PROP")
+    impl2 = MathObject(info={},
+                       node="PROP_IMPLIES",
+                       children = [right, left],
+                       math_type="PROP")
+    code.add_conjunction(target, impl1, impl2)
     return code
 
 
