@@ -482,7 +482,8 @@ class ExerciseMainWindow(QMainWindow):
             await self.servint.history_delete()
 
         finally:
-            if not self.lean_file.current_proof_step.no_more_goal:
+            if self.lean_file.current_proof_step \
+                    and not self.lean_file.current_proof_step.no_more_goal:
                 self.freeze(False)
             else:  # If no more goals, disable actions but enable toolbar
                 self.ecw.freeze(True)

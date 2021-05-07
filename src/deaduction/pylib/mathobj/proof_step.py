@@ -98,7 +98,7 @@ class NewGoal:
                 target = self.new_target
             else:
                 target = self.new_target.to_display(is_math_type=True)
-            msg = _("Proof of {}").format(target) + " ..."
+            msg = _("Proof of {}").format(target)
         elif self.node_type == 'or':
             if self.counter == 1:
                 msg = _("Fist case:")
@@ -111,7 +111,7 @@ class NewGoal:
             msg += " " + _("assuming {}").format(hypo)
         elif self.node_type == 'subgoal':
             msg = _("Proof of new subgoal {}").format(self.new_target)
-        msg += + " ..."
+        msg += " ..."
         return msg
 
 

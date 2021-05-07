@@ -400,7 +400,7 @@ def action_negate(proof_step,
         code.add_success_msg(_(f"Negation pushed on property "
                                    f"{selected_hypo}"))
     else:
-        raise WrongUserInput(error=_('Negate only one property at a time'))
+        raise WrongUserInput(error=_('Only one property at a time'))
     return code
 
 

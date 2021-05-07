@@ -291,7 +291,7 @@ class ServerInterface(QObject):
 
         resp = await self.lean_server.send(req)
 
-        if resp.message == "file invalidated":
+        if resp and resp.message == "file invalidated":
             self.file_invalidated.set()
 
             #########################################
