@@ -33,7 +33,8 @@ from .proof_state import    (Goal,
                              ProofState
                              )
 from .proof_step import     (Proof,
-                             ProofStep)
+                             ProofStep,
+                             NewGoal)
 
 from .give_name import     (get_new_hyp,
                             give_global_name,

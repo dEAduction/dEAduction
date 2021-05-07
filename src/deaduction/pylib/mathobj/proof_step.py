@@ -27,7 +27,7 @@ This file is part of d∃∀duction.
 """
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Union
 from copy import copy
 import logging
 
@@ -43,10 +43,76 @@ log = logging.getLogger(__name__)
 class NewGoal:
     node_type:  str  # 'or', 'and'
     counter:    int  # 1st or 2nd case / target
-    old_hypo:   Optional[MathObject]  # e.g. 'P or Q'
-    old_target: Optional[MathObject]  # e.g. 'P and Q'
-    new_hypo:   Optional[MathObject]  # e.g. 'P'
-    new_target: Optional[MathObject]  # e.g. 'P'
+    old_hypo:   Optional[Union[MathObject, str]]    # e.g. 'P or Q'
+    old_target: Optional[Union[MathObject, str]]  # e.g. 'P and Q'
+    new_hypo:   Optional[Union[MathObject, str]]  # e.g. 'P'
+    new_target: Optional[Union[MathObject, str]]  # e.g. 'P'
+
+    @classmethod
+    def from_lean_code(cls, lean_code):  # Type: (NewGoal, NewGoal)
+        """
+        If lean_code will create new goals, return them.
+        """
+        more_goals = None
+        if lean_code.conjunction:
+            p_and_q, p, q = lean_code.conjunction
+            new_goal1 = NewGoal('and', 1,
+                                old_hypo=None,
+                                old_target=p_and_q,
+                                new_hypo=None,
+                                new_target=p)
+            new_goal2 = NewGoal('and', 2,
+                                old_hypo=None,
+                                old_target=p_and_q,
+                                new_hypo=None,
+                                new_target=q)
+            more_goals = [new_goal2, new_goal1]  # Mind the order: pile!
+        elif lean_code.disjunction:
+            p_or_q, p, q = lean_code.disjunction
+            new_goal1 = NewGoal('or', 1,
+                                old_hypo=p_or_q,
+                                old_target=None,
+                                new_hypo=p,
+                                new_target=None)
+            new_goal2 = NewGoal('or', 2,
+                                old_hypo=p_or_q,
+                                old_target=None,
+                                new_hypo=q,
+                                new_target=None)
+            more_goals = [new_goal2, new_goal1]
+        elif lean_code.subgoal:
+            subgoal = lean_code.subgoal
+            new_goal = NewGoal('subgoal', 1,
+                               old_hypo=None,
+                               old_target=None,
+                               new_hypo=None,
+                               new_target=subgoal)
+            more_goals = [new_goal]
+        return more_goals
+
+    @property
+    def msg(self):
+        msg = ""
+        if self.node_type == 'and':
+            if isinstance(self.new_target, str):
+                target = self.new_target
+            else:
+                target = self.new_target.to_display(is_math_type=True)
+            msg = _("Proof of {}").format(target) + " ..."
+        elif self.node_type == 'or':
+            if self.counter == 1:
+                msg = _("Fist case:")
+            elif self.counter == 2:
+                msg=_("Second case:")
+            if isinstance(self.new_hypo, str):
+                hypo = self.new_hypo
+            else:
+                hypo = self.new_hypo.to_display(is_math_type=True)
+            msg += " " + _("assuming {}").format(hypo)
+        elif self.node_type == 'subgoal':
+            msg = _("Proof of new subgoal {}").format(self.new_target)
+        msg += + " ..."
+        return msg
 
 
 class ProofStep:
@@ -82,7 +148,7 @@ class ProofStep:
     no_more_goal              = False
 
     def __init__(self,
-                 goal_change_msgs=None,
+                 new_goals=None,
                  property_counter=0,
                  current_goal_number=1,
                  total_goals_counter=1,
@@ -90,10 +156,10 @@ class ProofStep:
         self.property_counter    = property_counter
         self.current_goal_number = current_goal_number
         self.total_goals_counter = total_goals_counter
-        if goal_change_msgs:
-            self.goal_change_msgs = goal_change_msgs
+        if new_goals:
+            self.new_goals = new_goals
         else:
-            self.goal_change_msgs = []
+            self.new_goals = []
 
         self.proof_state = proof_state
         self.selection = []
@@ -108,7 +174,7 @@ class ProofStep:
 
         pf = proof_step
         npf = ProofStep(property_counter=pf.property_counter,
-                        goal_change_msgs=copy(pf.goal_change_msgs),
+                        new_goals=copy(pf.new_goals),
                         current_goal_number=pf.current_goal_number,
                         total_goals_counter=pf.total_goals_counter,
                         proof_state=pf.proof_state
@@ -132,6 +198,17 @@ class ProofStep:
             return self.proof_state.goals[0]
         else:
             return None
+
+    def add_new_goals(self):
+        if not self.lean_code:
+            self.new_goals.append(None)
+        else:
+            if self.new_goals and (self.lean_code.conjunction
+                                   or self.lean_code.disjunction):
+                # Last goal is replaced by first new goal
+                self.new_goals.pop()
+            more_goals = NewGoal.from_lean_code(self.lean_code)
+            self.new_goals.extend(more_goals)
 
     def is_undo(self):
         return self.button == 'history_undo'
@@ -205,12 +282,12 @@ class ProofStep:
         button = ""
         statement = ""
         history_move = ""
-        if self.button:
+        if self.is_history_move():
+            history_move = self.button.replace("_", " ")
+        elif self.button and hasattr(self.button, 'symbol'):
             button = self.button.symbol
         elif self.statement_item:
             statement = self.statement_item.statement.pretty_name
-        elif self.is_history_move():
-            history_move = self.button.replace("_", " ")
 
         if self.is_error():
             error_msg = _("ERROR:") + " " + self.error_msg

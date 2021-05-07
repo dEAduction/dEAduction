@@ -58,7 +58,8 @@ from deaduction.pylib.coursedata        import ( Definition,
 from deaduction.pylib.mathobj           import ( MathObject,
                                                  Goal,
                                                  ProofState,
-                                                 ProofStep )
+                                                 ProofStep,
+                                                 NewGoal)
 from deaduction.pylib.server.exceptions import   FailedRequestError
 from deaduction.pylib.server            import   ServerInterface
 
@@ -712,6 +713,7 @@ class ExerciseMainWindow(QMainWindow):
             msg_box.exec()
 
         self.proof_step.no_more_goal = True
+        self.proof_step.new_goals = []
         # Artificially create a final proof_state by replacing target by a msg
         # (We do not get the final proof_state from Lean).
         proof_state = deepcopy(self.proof_step.proof_state)
@@ -789,12 +791,6 @@ class ExerciseMainWindow(QMainWindow):
         """
 
         proof_step = self.proof_step
-        # ─────────── Display msgs (no msg when undoing) ────────── #
-        if not proof_step.is_history_move():
-            self.statusBar.display_message(proof_step)
-        elif proof_step.is_redo():
-            self.statusBar.display_message(self.lean_file.current_proof_step)
-
         # ───────────── Store data ──────────── #
         # Store proof_state in proof_step
         proof_step.proof_state = proofstate
@@ -810,28 +806,39 @@ class ExerciseMainWindow(QMainWindow):
         if not self.test_mode:
             self.journal.store(proof_step, self)
 
-        # ─────────────── Update goals counters ─────────────── #
-        delta = self.lean_file.current_number_of_goals \
-                - self.lean_file.previous_number_of_goals
-        if delta > 0:  # A new goal has appeared
-            self.proof_step.total_goals_counter += delta
-        elif delta < 0:  # A goal has been solved
-            proof_step.current_goal_number -= delta
-            if proof_step.current_goal_number and not self.test_mode \
-                    and self.lean_file.current_number_of_goals \
-                    and not proof_step.is_error() \
-                    and not proof_step.is_undo():
-                log.info(f"Current goal solved!")
-                if delta == -1:
-                    message = _('Current goal solved')
-                else:  # Several goals solved at once ??
-                    nb = str(-delta)
-                    message = nb + ' ' + _('goals solved!')
-                QMessageBox.information(self,
-                                        '',
-                                        message,
-                                        QMessageBox.Ok
-                                        )
+        # ─────────────── Update goals counter ─────────────── #
+        if not proof_step.is_error():  # Wrong delta if error (and no need)
+            delta = self.lean_file.current_number_of_goals \
+                    - self.lean_file.previous_number_of_goals
+            if delta > 0:  # A new goal has appeared
+                proof_step.total_goals_counter += delta
+                proof_step.add_new_goals()  # Manage goal msgs
+
+            elif delta < 0:  # A goal has been solved
+                proof_step.current_goal_number -= delta
+                if proof_step.new_goals:
+                    proof_step.new_goals.pop()  # Remove last goal msg
+                if proof_step.current_goal_number and not self.test_mode \
+                        and self.lean_file.current_number_of_goals \
+                        and not proof_step.is_error() \
+                        and not proof_step.is_undo():
+                    log.info(f"Current goal solved!")
+                    if delta == -1:
+                        message = _('Current goal solved')
+                    else:  # Several goals solved at once ??
+                        nb = str(-delta)
+                        message = nb + ' ' + _('goals solved!')
+                    QMessageBox.information(self,
+                                            '',
+                                            message,
+                                            QMessageBox.Ok
+                                            )
+
+        # ─────────── Display msgs (no msg when undoing) ────────── #
+        if not proof_step.is_history_move():
+            self.statusBar.manage_msgs(proof_step)
+        elif proof_step.is_redo():
+            self.statusBar.manage_msgs(self.lean_file.current_proof_step)
 
         # ─────────────── End of proof_step ─────────────── #
         # Store auto_step
