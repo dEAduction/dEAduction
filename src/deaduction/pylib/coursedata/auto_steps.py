@@ -113,7 +113,8 @@ alternative_symbols = {'→': '⇒',
                        'proof_methods': _('Proof Methods'),
                        'new_object': _('New Object'),
                        'apply': _('Apply'),
-                       'assumption': _('QED'),
+                       'assumption': _('Goal!'),
+                       "CQFD": _('Goal!'),
                        'compute': _('Compute')
                        }
 
@@ -227,7 +228,7 @@ class AutoStep:
         if proof_step.button:
             button = proof_step.button.symbol \
                 if hasattr(proof_step.button, 'symbol') \
-                else proof_step.button
+                else proof_step.button.replace(' ', '_')
 
         # Statement: short Lean name
         statement = ''
@@ -244,9 +245,11 @@ class AutoStep:
 
         error_msg = proof_step.error_msg
         if error_msg:
+            error_msg = error_msg.split(',')[0]  # No ',' allowed in AutoStep
             error_msg = 'error=' + error_msg.replace(' ', '_')
         success_msg = proof_step.success_msg
         if success_msg:
+            success_msg = success_msg.split(',')[0]
             success_msg = 'success=' + success_msg.replace(' ', '_')
 
         # Computing string

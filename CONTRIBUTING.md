@@ -317,7 +317,7 @@ line), it doesn't have a specific structure. Most commit messages only have a
 header, which *must* have the following structure:
 
 ```
-area::type(scope)> Summary
+area(scope)::type> Summary
 ```
 
 Argument `area` (mandatory) *must* be one of:
@@ -343,11 +343,11 @@ Argument `type` (mandatory) *must* be one of:
 `ref`    | Refactoring.
 `revert` | Revert to a previous commit, feature or state of the project.
 
-Scope (optional) is the precise part of the codebase that was changed (e.g. a
-class, function or module name or a combination of all that). Precision is up
-to you. The summary (mandatory) should be the shortest possible sentence
-describing the commit. It should begin with a capital letter and *must not*
-end with a period, it should also be written using present tense.
+Argument `scope` (optional) is the precise part of the codebase that was
+changed (e.g. a class, function or module name or a combination of all that).
+Precision is up to you. The summary (mandatory) should be the shortest possible
+sentence describing the commit. It should begin with a capital letter and *must
+not* end with a period, it should also be written using present tense.
 
 The body of the commit message may be used to provide additional information
 about the changes, such as technical explanations.
@@ -378,14 +378,14 @@ However you can be more precise by using a scope. If the function is part of
 the module `dui.utils`, this commit message is better:
 
 ```
-code::dev(dui.utils)> Finish first part of my_function
+code(dui.utils)::dev> Finish first part of my_function
 ```
 
 If you fixed the script `envconfig` (the one that sets up the virtual
 environment), the header (we leave it to you to imagine a summary) should be:
 
 ```
-tools::fix(envconfig)>
+tools(envconfig)::fix>
 ```
 
 Now if you wish to merge the branch `dev/the_new_feature` from Github (repo's

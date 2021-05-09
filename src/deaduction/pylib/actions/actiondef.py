@@ -40,7 +40,7 @@ class Action:
     run is the specific action function.
     """
     caption: str
-    symbol: str
+    symbol: str  # Will be the text of the corresponding button
     run: any
 
 

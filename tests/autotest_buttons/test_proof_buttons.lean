@@ -339,7 +339,7 @@ lemma exercise.test_apply_error_2
 y ∈ B :=
 /- dEAduction
 AutoTest
-    CQFD FRE error=pas_conclure,
+    CQFD FRE error=pas_comment_conclure,
     proof_methods 3
 -/
 begin

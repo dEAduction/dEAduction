@@ -44,29 +44,11 @@ from deaduction.pylib.mathobj import          ProofStep
 log = logging.getLogger(__name__)
 
 
-class EventNature(str):
-    """Class clarifying the nature of journal's events."""
-    button =               'button'
-    statement =            'statement'
-    context_selection =    'context selection'
-    user_input =           'user input'
-    effective_code =       'effective code'
-    lean_code =            'Lean code'
-    code_from_editor =     'code from editor'
-    wrong_user_input =     'WrongUserInput'
-    failed_request_error = 'FailedRequestError'
-    success_message =      'success message'
-    new_proof_state =      'new proof state'
-    other =                'other'
-
-
 class Journal:
     """
     A class to record events in the memory attribute. The events occuring
-    during a given proof step are temporary stored in the new_events attribute,
-    and stored in memory only by the update_events() method. This allow
-    global information process, e.g. to call the display in a StatusBar. The
-    display is handled by the display_message attribute.
+    during a proof step are stored in the proof_step attribute of
+    ExerciseMainWindow, and then stored in Journal.memory.
     """
 
     memory:     [ProofStep]
@@ -115,6 +97,38 @@ class Journal:
         print(total_string)
 
         log.debug(f"Saving auto_steps in {file_path}")
-        with open(file_path, mode='wb') as output:
+        with open(file_path, mode='xb') as output:
             pickle.dump(exercise, output, pickle.HIGHEST_PROTOCOL)
+
+        file_path = file_path.with_suffix('.txt')
+        log.debug(f"Saving journal in {file_path}")
+        txt = self.display()
+        print(txt)
+        with open(file_path, mode='xt') as output:
+            output.write(txt)
+
+    def display(self):
+        display_txt = ""
+        step_counter = 0
+        time_deltas = [0]
+        for counter in range(len(self.memory)):
+            if counter < len(self.memory) -1 :
+                t2 = self.memory[counter+1].time
+                t1 = self.memory[counter].time
+                # Time diff in seconds
+                delta = (t2.tm_min - t1.tm_min)*60 + t2.tm_sec - t1.tm_sec
+                time_deltas.append(delta)
+        time_deltas.append(0)
+        for step, time_delta in zip(self.memory, time_deltas):
+            step_txt = step.display()
+            time_display = "#" * int(time_delta/10)
+            time_display2 = str(step.time.tm_min) + "'" + str(step.time.tm_sec)
+            step_counter += 1
+            more_txt = "------------------------------------\n"
+            more_txt += time_display + "\n"
+            more_txt += _("Step n°{} ").format(step_counter) \
+                + "(" + time_display2 + ")" + "\n"
+            more_txt += step_txt
+            display_txt += more_txt
+        return display_txt
 

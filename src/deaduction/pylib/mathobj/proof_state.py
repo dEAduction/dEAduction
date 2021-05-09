@@ -41,7 +41,6 @@ from deaduction.pylib.config.i18n import _
 from .MathObject import MathObject
 from .lean_analysis import ( lean_expr_with_type_grammar,
                              LeanEntryVisitor )
-# from deaduction.pylib.coursedata import AutoStep
 import deaduction.pylib.config.vars as cvars
 
 log = logging.getLogger(__name__)
@@ -509,6 +508,12 @@ class ProofStep:
     def is_error(self):
         return bool(self.error_type)
 
+    def is_cqfd(self):
+        return hasattr(self.button, 'symbol') and \
+               self.button.symbol == _("goal!")
+        # NB: this should be action_assumption.symbol,
+        # but unable to import this here
+
     def compare(self, auto_test) -> (str, bool):
         """
         Compare self to an auto_test, and write a report if unexpected
@@ -551,6 +556,48 @@ class ProofStep:
                 success = False
 
         return report, success
+
+    def display(self) -> str:
+        """Construct a string representation of self."""
+
+        selection = " ".join([item.display_name for item in self.selection])
+        user_input = " ".join([str(item) for item in self.user_input])
+        button = ""
+        statement = ""
+        history_move = ""
+        if self.button:
+            button = self.button.symbol
+        elif self.statement_item:
+            statement = self.statement_item.statement.pretty_name
+        elif self.is_history_move():
+            history_move = self.button.replace("_", " ")
+
+        if self.is_error():
+            error_msg = _("ERROR:") + " " + self.error_msg
+            success_msg = ""
+        else:
+            error_msg = ""
+            success_msg = _("Success:") + " " + self.success_msg
+
+        goal = self.proof_state.goals[0]
+        goal_txt = goal.print_goal(to_prove=False)
+
+        action_txt =  button + statement + history_move
+        selection_txt = ""
+        if selection:
+            selection_txt = selection + " "
+        user_input_txt = ""
+        if user_input:
+            user_input_txt = " " + user_input
+
+
+        txt = selection_txt + action_txt + user_input_txt + "\n" \
+              + error_msg + success_msg + "\n" \
+              + goal_txt + "\n"
+
+        return txt
+
+
 
 
 @dataclass

@@ -98,11 +98,12 @@ __buttons = {
     'proof_button_texts': _("Apply")
                           + ", " + _("Proof Methods")
                           + ", " + _("New Object"),
-    'magic_button_texts': _('Compute') + ', ' + _('QED')
+    'magic_button_texts': _('Compute') + ', ' + _('Goal!')
 }
 # Sad thoughts for "¯\_(ツ)_/¯", I loved you so much...
 
+
 def get(k):
-    return __tooltips.get(k,None)       \
-        or __tooltips_apply.get(k,None) \
+    return __tooltips.get(k, None)       \
+        or __tooltips_apply.get(k, None) \
         or __buttons[k]

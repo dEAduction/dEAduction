@@ -72,7 +72,7 @@ def action_use_proof_methods(proof_step,
     # 1st call, choose proof method
     if not user_input:
         choices = [('1', _("Case-based reasoning")),
-                   ('2', _("Proof by contrapositive")),
+                   ('2', _("Proof by contraposition")),
                    ('3', _("Proof by contradiction"))]
         if allow_proof_by_sorry:
             choices.append(('4', _("Admit current sub-goal!")))
@@ -121,6 +121,8 @@ def method_cbr(proof_step,
             h2 = get_new_hyp(proof_step)
             code = CodeForLean.from_string(f"cases (classical.em ({h0})) "
                                            f"with {h1} {h2}")
+            code.add_success_msg(_("proof by cases: we first assume {}").
+                                 format(h1))
     else:
         prop = selected_objects[0]
         if prop.is_or():
@@ -131,7 +133,8 @@ def method_cbr(proof_step,
             h2 = get_new_hyp(proof_step)
             code = CodeForLean.from_string(f"cases (classical.em ({h0})) "
                                            f"with {h1} {h2}")
-
+            code.add_success_msg(_("proof by cases: we first assume {}").
+                                 format(h1))
     return code
 
 
@@ -146,12 +149,13 @@ def method_contrapose(proof_step,
     if len(selected_objects) == 0:
         if goal.target.math_type.node == "PROP_IMPLIES":
             code = CodeForLean.from_string("contrapose")
+            code.add_success_msg(_("Target replaced by contrapositive"))
             return code
         else:
-            error = _('Proof by contrapositive only applies when target is '
+            error = _('Proof by contraposition only applies when target is '
                       'an implication')
     else:
-        error = _('Proof by contrapositive only applies to target')
+        error = _('Proof by contraposition only applies to target')
     raise WrongUserInput(error)
 
 
@@ -162,6 +166,7 @@ def method_absurdum(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     if len(selected_objects) == 0:
         new_hypo = get_new_hyp(proof_step)
         code = CodeForLean.from_string(f'by_contradiction {new_hypo}')
+        code.add_success_msg(_("Negation of target added to the context"))
         return code
     else:
         error = _('Proof by contradiction only applies to target')
@@ -185,6 +190,7 @@ def introduce_fun(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     goal = proof_step.goal
 
     error = _('select a property "∀ x, ∃ y, P(x,y)" to get a function')
+    success = _("function {} and property {} added to the context")
     if len(selected_objects) == 1:
         h = selected_objects[0].info["name"]
         # Finding expected math_type for the new function
@@ -208,6 +214,8 @@ def introduce_fun(proof_step, selected_objects: [MathObject]) -> CodeForLean:
                                                f'dsimp at {hf}, '
                                                f'dsimp at {f}')
                 code.add_error_msg(error)
+                success = success.format(f, hf)
+                code.add_success_msg(success)
                 return code
     raise WrongUserInput(error)
 
@@ -224,7 +232,7 @@ def action_new_object(proof_step,
 
     goal = proof_step.goal
 
-    possible_codes = []
+    codes = []
     # Choose between object/sub-goal/function
     if not user_input:
         raise MissingParametersError(InputType.Choice,
@@ -251,17 +259,16 @@ def action_new_object(proof_step,
             name = user_input[1]
             new_hypo_name = get_new_hyp(proof_step)
             new_object = user_input[2]
-            possible_codes = CodeForLean.from_string(f"let {name} := "
+            codes = CodeForLean.from_string(f"let {name} := {new_object}")
+            codes = codes.and_then(f"have {new_hypo_name} : {name} = "
                                                      f"{new_object}")
-            possible_codes = possible_codes.and_then(f"have {new_hypo_name} "
-                                                     f": {name} = "
-                                                     f"{new_object}")
-            possible_codes = possible_codes.and_then("refl")
+            codes = codes.and_then("refl")
+            codes.add_success_msg(_("New object {} added to the context").
+                                  format(name))
             if goal.target.is_for_all():
-                # User might want to prove an existential property "∀x..."
+                # User might want to prove a universal property "∀x..."
                 # and mistake "new object" for introduction of the relevant x.
-                possible_codes.add_error_msg(_("You might try the ∀ "
-                                                   "button..."))
+                codes.add_error_msg(_("You might try the ∀ button..."))
 
     # Choice = new sub-goal
     elif user_input[0] == 1:
@@ -271,13 +278,14 @@ def action_new_object(proof_step,
                                          output=_("Introduce new subgoal:"))
         else:
             new_hypo_name = get_new_hyp(proof_step)
-            possible_codes = CodeForLean.from_string(f"have {new_hypo_name}:"
+            codes = CodeForLean.from_string(f"have {new_hypo_name}:"
                                                      f" ({user_input[1]})")
-
+            codes.add_success_msg(_("New target will be added to the context "
+                                    "after being proved"))
     # Choice = new function
     elif user_input[0] == 2:
         return introduce_fun(proof_step, selected_objects)
-    return possible_codes
+    return codes
 
 
 #########
@@ -287,15 +295,19 @@ def action_new_object(proof_step,
 def apply_substitute(proof_step, l: [MathObject], user_input: [int], equality):
     """
     Try to rewrite the goal or the first selected property using the last
-    selected property
+    selected property.
     """
 
     goal = proof_step.goal
 
-    possible_codes = []
+    codes = CodeForLean.empty_code()
     heq = l[-1]
     left_term = equality.children[0]
     right_term = equality.children[1]
+    success1 = ' ' + _("{} replaced by {}").format(left_term.to_display(),
+                                             right_term.to_display()) + ' '
+    success2 = ' ' + _("{} replaced by {}").format(right_term.to_display(),
+                                             left_term.to_display()) + ' '
     choices = [(left_term.to_display(),
                 f'Replace by {right_term.to_display()}'),
                (right_term.to_display(),
@@ -304,13 +316,18 @@ def apply_substitute(proof_step, l: [MathObject], user_input: [int], equality):
     if len(l) == 1:
         # If the user has chosen a direction, apply substitution
         # else if both directions make sense, ask the user for a choice
-        # else try direct way and then reverse way.
+        # else try direct way or else reverse way.
         h = l[0].info["name"]
         if len(user_input) > 0:
             if user_input[0] == 1:
-                possible_codes.append(f'rw <- {h}')
+                success_msg = success2 + _("in target")
+                more_code = CodeForLean.from_string(f'rw <- {h}',
+                                                    success_msg=success_msg)
             elif user_input[0] == 0:
-                possible_codes.append(f'rw {h}')
+                success_msg = success1 + _("in target")
+                more_code = CodeForLean.from_string(f'rw {h}',
+                                                    success_msg=success_msg)
+            codes = codes.or_else(more_code)
         else:
             if goal.target.math_type.contains(left_term) and \
                     goal.target.math_type.contains(right_term):
@@ -321,18 +338,31 @@ def apply_substitute(proof_step, l: [MathObject], user_input: [int], equality):
                     title=_("Precision of substitution"),
                     output=_("Choose which expression you want to replace"))
             else:
-                possible_codes.append(f'rw {h}')
-                possible_codes.append(f'rw <- {h}')
-    
+                msg2 = success2 + _("in target")
+                more_code2 = CodeForLean.from_string(f'rw <- {h}',
+                                                     success_msg=msg2)
+                codes = codes.or_else(more_code2)
+                msg1 = success1 + _("in target")
+                more_code1 = CodeForLean.from_string(f'rw {h}',
+                                                     success_msg=msg1)
+                codes = codes.or_else(more_code1)
+
     if len(l) == 2:
         h = l[0].info["name"]
         heq_name = l[-1].info["name"]
         if len(user_input) > 0:
             if user_input[0] == 1:
-                possible_codes.append(f'rw <- {heq_name} at {h}')
+                success_msg = success2 + _("in {}").format(h)
+                more_code = CodeForLean.from_string(f'rw <- {heq_name} at {h}',
+                                                    success_msg=success_msg)
+                codes = codes.or_else(more_code)
+
             elif user_input[0] == 0:
-                possible_codes.append(f'rw {heq_name} at {h}')
-        else:     
+                success_msg = success1 + _("in {}").format(h)
+                more_code = CodeForLean.from_string(f'rw {heq_name} at {h}',
+                                                    success_msg=success_msg)
+                codes = codes.or_else(more_code)
+        else:
             if l[0].math_type.contains(left_term) and \
                     l[0].math_type.contains(right_term):
                     
@@ -341,21 +371,26 @@ def apply_substitute(proof_step, l: [MathObject], user_input: [int], equality):
                     choices, 
                     title=_("Precision of substitution"),
                     output=_("Choose which expression you want to replace"))
-                
-        possible_codes.append(f'rw <- {heq_name} at {h}')
-        possible_codes.append(f'rw {heq_name} at {h}')
 
-        h, heq_name = heq_name, h
-        possible_codes.append(f'rw <- {heq_name} at {h}')
-        possible_codes.append(f'rw {heq_name} at {h}')
+        # h, heq_name = heq_name, h
+        # codes = codes.or_else(f'rw <- {heq_name} at {h}')
+        # codes = codes.or_else(f'rw {heq_name} at {h}')
 
-    code_ = CodeForLean.or_else_from_list(possible_codes)
+        msg2 = success2 + _("in {}").format(h)
+        more_code2 = CodeForLean.from_string(f'rw <- {heq_name} at {h}',
+                                             success_msg=msg2)
+        codes = codes.or_else(more_code2)
+        msg1 = success1 + _("in {}").format(h)
+        more_code1 = CodeForLean.from_string(f'rw {heq_name} at {h}',
+                                             success_msg=msg1)
+        codes = codes.or_else(more_code1)
+
     if heq.is_for_all():
         # if property is, e.g. "∀n, u n = c"
         # there is a risk of meta vars if Lean does not know to which n
         # applying the equality
-        code_ = code_.and_then('no_meta_vars')
-    return code_
+        codes = codes.and_then('no_meta_vars')
+    return codes
 
 
 def apply_function(proof_step, selected_objects: [MathObject]):
@@ -386,7 +421,7 @@ def apply_function(proof_step, selected_objects: [MathObject]):
         if selected_objects[0].math_type.is_prop():
             h = selected_objects[0].info["name"]
             codes = codes.or_else(f'have {new_h} := congr_arg {f} {h}')
-            
+            codes.add_success_msg(_("function {} applied to {}").format(f, h))
         # if function applied to element x:
         # create new element y and new equality y=f(x)
         else:
@@ -394,7 +429,9 @@ def apply_function(proof_step, selected_objects: [MathObject]):
             y = give_global_name(proof_step =proof_step,
                                  math_type=Y,
                                  hints=[Y.info["name"].lower()])
-            codes = codes.or_else(f'set {y} := {f} {x} with {new_h}')
+            msg = _("new objet {} added to the context").format(y)
+            codes = codes.or_else(f'set {y} := {f} {x} with {new_h}',
+                                  success_msg=msg)
         selected_objects = selected_objects[1:]
 
     return codes

@@ -302,6 +302,46 @@ lemma exercise.image_directe_et_inclusion_III
 (H : injective f) :
 ∀ A B: set X,  f '' (A) ⊆ f '' (B) → A ⊆ B
 :=
+/- dEAduction
+AutoTest
+    ∀ success=objet_A_ajouté_au_contexte,
+    ∀ success=objet_B_ajouté_au_contexte,
+    ⇒ success=propriété_H0_ajoutée_au_contexte,
+    Nouvel Objet 0 A' f '' A,
+    history_undo,
+    definition.inclusion success=définition_appliquée_au_but,
+    ∀ success=objet_x_ajouté_au_contexte,
+    ⇒ success=propriété_H1_ajoutée_au_contexte,
+    Nouvel Objet 1 f(x) dans B FailedRequestError error=Erreur,
+    Nouvel Objet 1 f(x) in B FailedRequestError error=Erreur,
+    Nouvel Objet 1 f(x) \in B FailedRequestError error=Erreur,
+    Nouvel Objet 1 f(x) dans f(A) FailedRequestError error=Erreur,
+    Nouvel Objet 1 f(x) dans f '' A,
+    history_undo,
+    @O6 @O4 Appliquer,
+    history_undo,
+    history_redo,
+    history_undo,
+    @O4 @O3 @O6 theorem.image_directe success=théorème_appliqué_à_f_A_x,
+    @O3 @O4 @P3 theorem.image_directe FailedRequestError error=Le_théorème_n’a_pas_pu_être_appliqué,
+    history_undo,
+    history_redo,
+    @O4 theorem.image_directe success=théorème_appliqué_à_f,
+    history_undo,
+    @O4 @O3 theorem.image_directe success=théorème_appliqué_à_f_A,
+    history_undo,
+    @P3 @P4 ⇒ success=propriété_H3_ajoutée_au_contexte,
+    @P2 definition.inclusion success=définition_appliquée_à_H0,
+    @P5 @P2 ⇒ success=propriété_H4_ajoutée_au_contexte,
+    @P1 definition.injectivite success=définition_appliquée_à_H,
+    @P6 definition.image_directe success=définition_appliquée_à_H4,
+    @P6 ∃ success=nouvel_objet_x'_vérifiant_la_propriété_H5,
+    @P6 ∧ success=split_properties_H6_and_H7,
+    @P7 @P1 ⇒ success=propriété_H8_ajoutée_au_contexte,
+    CQFD FailedRequestError error=Je_ne_sais_pas_comment_conclure,
+    @P6 @P8 Appliquer,
+    CQFD
+-/
 begin
     todo
 end

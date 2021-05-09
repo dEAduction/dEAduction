@@ -1,59 +1,126 @@
 #!/bin/bash
-#####################################
-# Simple convenional commit checker #
-#####################################
-# Florian Dupeyron
-# June 2020
+# Commit messages checker
+# See convention at 
+# https://github.com/dEAduction/dEAduction/blob/master/CONTRIBUTING.md#git-commit-messages
+# Created: 2020 june, Florian Dupeyron
+# Updated: 2021 may, Kryzar
+# Don't forget to chmod +x this file.
 
 msg=$(cat $1) # Hook paremeter is a path to a temoprary file containing the
               # Commit msg
 
-##################################
-# Constants
-##################################
-regex='([a-zA-Z]+)(\(([^()]+)\))?[:][ ]*(.*)'
-regex_msg='^[a-z].*'
+# ┌───────┐
+# │ Regex │
+# └───────┘
+# See https://www.regextester.com/
 
-#word_reg='[a-zA-Z0-9_-]+'
-word_reg='[a-zA-Z0-9_\-]+'
-regex_merge="((${word_reg}/)+${word_reg}) -> ((${word_reg}/)+${word_reg})"
+areas="^(code|doc|dui|other|snippets|tests|tools)$"
+types="^(chores|dev|feat|fix|ref|revert)$"
 
-# group 1 : task type
-# group 2 : scope (with parentheses)
-# group 3 : scope (without parentheses)
-# group 4 : message
+# ─────────────────────── Standard commit message ──────────────────────
+regex_standard="([a-z]+)(\(([^()]+)\))?::([a-z]+)> ([A-Z].*)"
+# area(scope)::type> Summary
+# group 1: area
+# group 2: (scope)
+# group 3: scope
+# group 4: type
+# group 5: Summary
+# area::type> Summary
+# group 1: area
+# group 2:
+# group 3:
+# group 4: type
+# group 5: Summary
+scope_reg='[^ ][^(^\n]+[^ ]'
+summary_reg='^[A-Z].*'
 
-# Tasks types regex
-tasks="^(chores|docs|feat|fix|perf|refactor|style|snippet[s]?|test|tools|merge)$"
+# ──────────────────────── Merge commit message ────────────────────────
+remote_reg='[a-zA-Z]+'
+branch_reg='[a-zA-Z0-9_\-\+\/]+'
+regex_merge="merge: (${remote_reg})\/(${branch_reg}) -> (${remote_reg})\/(${branch_reg})"
+# merge: remote1/branch1 -> remote2/branch2
+# group 1: remote1
+# group 2: branch1
+# group 3: remote2
+# group 4: branch2
 
+# ┌────────────────────┐
+# │ Printing functions │
+# └────────────────────┘
+
+ESC_BLUE=$(tput setaf 4)
 ESC_BOLD=$(tput bold)
-ESC_RED=$(tput setaf 1)
 ESC_GREEN=$(tput setaf 2)
+ESC_RED=$(tput setaf 1)
 ESC_RESET=$(tput sgr0)
+ESC_YELLOW=$(tput setaf 3)
+
+show_standard_format() {
+    echo \
+"\
+┌── Standard commit message
+│     ${ESC_BOLD}area(scope)::type> Summary${ESC_RESET}
+│ 
+│ ${ESC_BOLD}area${ESC_RESET} (mandatory) is one of:
+│ ${ESC_BLUE}code${ESC_RESET}      Changes affecting the codebase.
+│ ${ESC_BLUE}doc${ESC_RESET}       Changes affecting the documentation (including comments and
+│           docstrings).
+│ ${ESC_BLUE}dui${ESC_RESET}       Changes affecting only d∃∀duction's user interface (e.g. texts,
+│           tooltips) but have nothing to do with the code itself.
+│ ${ESC_BLUE}other${ESC_RESET}     Changes that do not go in any other category, please avoid using it.
+│ ${ESC_BLUE}snippets${ESC_RESET}  Changes affecting the snippets.
+│ ${ESC_BLUE}tests${ESC_RESET}     Changes affecting the tests.
+│ ${ESC_BLUE}tools${ESC_RESET}     Changes affecting the tools and the development environment.
+│ 
+│ ${ESC_BOLD}type${ESC_RESET} (mandatory) is one of:
+│ ${ESC_BLUE}chores${ESC_RESET}  Changes not affecting the meaning of what is changed (e.g. changing a
+│         filename).
+│ ${ESC_BLUE}dev${ESC_RESET}     Work in progress for new features; changes that are part of its
+│         development though not introducing it. A series of dev commits ends
+│         with a feat commit.
+│ ${ESC_BLUE}feat${ESC_RESET}    Introduce a completed new feature. When developing it, the last commit
+│         must be the only one to use this type, all other must use dev.
+│ ${ESC_BLUE}fix${ESC_RESET}     Fix bugs and problems.
+│ ${ESC_BLUE}ref${ESC_RESET}     Refactoring.
+│ ${ESC_BLUE}revert${ESC_RESET}  Revert to a previous commit, feature or state of the project.
+│ 
+│ ${ESC_BOLD}scope${ESC_RESET} (optional) is the precise part of the commit that was changed. No spaces
+│ or parenthesis surrounding scope.
+│ 
+│ ${ESC_BOLD}Summary${ESC_RESET} (mandatory) is a summary of what was changed. Start with a capital
+│ letter.
+└──"
+}
+
+show_merge_format() {
+    remote_list=$(git remote | sed 's/^/— /g')"\n— local"
+
+    echo \
+"\
+┌── Merge commit message
+│     ${ESC_BOLD}merge: remote1/branch1 -> remote2/branch2${ESC_RESET}
+│ 
+│ ${ESC_BOLD}remote1${ESC_BOLD} and ${ESC_BOLD}remote2${ESC_RESET} (mandatory) are one of:
+│ ${remote_list}
+│ 
+│ ${ESC_BOLD}branch1${ESC_RESET} (mandatory) is the branch you merge from.
+│ ${ESC_BOLD}branch2${ESC_RESET} (mandatory) is the branch you merge to.
+└──"
+}
 
 show_help() {
-    echo "Please follow the following format :
+    if [ $1 = 'standard' ] ; then
+        show_standard_format
+    elif [ $1 = 'merge' ] ; then
+        show_merge_format
+    else
+        show_standard_format
+        show_merge_format
+    fi
 
-    task_type(optional scope): message
-
-    task_type can be one of :
-        - chores	: changes that do not affect the source-code nor the tools
-	(e.g. reorganize tree, rename files);
-        - docs		: documentation only changes ;
-        - feat		: a new feature ;
-        - fix		: a bug fix ;
-        - perf		: a code change that improves performance ;
-        - refactor	: a code change that neither fixes a bug nor adds a feature ;
-        - snippets  : add or modify code in snippets/ ;
-        - style		: changes that do not affect the meaning of the code
-        (white-space, formatting, missing semi-colons) ;
-        - test		: adding missing tests or correcting existing tests ;
-        - tools		: tools only (e.g. git hooks) changes.
-
-        message must start with a low case verb in the imperative form.
-        
-        ${ESC_BOLD}There is no space before : after the task_type !${ESC_RESET}
-"
+    echo ""
+    echo "See full spec:
+https://github.com/dEAduction/dEAduction/blob/master/CONTRIBUTING.md#git-commit-messages"
 }
 
 
@@ -69,53 +136,82 @@ show_good() {
     echo ""
 }
 
-##################################
-# Checking script
-##################################
-[[ -z $msg ]] && show_bad "Please give a message to check" && exit 1
+# ┌─────────────────┐
+# │ Checking script │
+# └─────────────────┘
 
-if [[ $msg =~ ${regex} ]] ; then
+[[ -z $msg ]] && show_bad "There is no commit message, please write one." && exit 1
+
+# Check standard messages
+if [[ $msg =~ ${regex_standard} ]] ; then
     # Get infos
-    task_type=${BASH_REMATCH[1]}
+    area=${BASH_REMATCH[1]}
+    scope_group=${BASH_REMATCH[2]}
     scope=${BASH_REMATCH[3]}
-    msg=${BASH_REMATCH[4]}
+    type_=${BASH_REMATCH[4]}
+    summary=${BASH_REMATCH[5]}
 
-    echo "Analysis of commit message :
-    > Type of task : ${task_type}
-    > Scope        : ${scope}
-    > Message      : ${msg}"
+    # Print infos
+    echo "Commit message analysis:
+area:    ${area}
+scope:   ${scope}
+type:    ${type_}
+Summary: ${summary}"
 
-    # Check task type
-    if [[ ! ${task_type} =~ ${tasks} ]] ; then
-        show_bad "Uknown task type : $task_type"
-        show_help
+    # Check area value
+    if [[ ! ${area} =~ ${areas} ]] ; then
+        show_bad "Incorrect area: ${area}"
+        show_help 'standard'
         exit 1
     fi
 
-    # Check for merge
-    if [[ ${task_type} == "merge" ]] ; then
-        if [[ ! ${msg} =~ ${regex_merge} ]] ; then
-            remote_list=$(git remote | sed 's/^/    > /g')"\n    > local"
-
-            show_bad "Invalid merge message. Merge message must be :\n    merge: remote1/branch -> remote2/branch
-                     \n\nRemote can be one of :\n\n${remote_list}"
-            exit 1
-        fi
-    # Check message
-    else
-        if [[ ! ${msg} =~ ${regex_msg} ]] ; then
-            show_bad "Message must start with a low case letter"
-            show_help
+    # Check scope
+    if [ ! ${scope_group} = "" ] ; then
+        if [[ ! ${scope} =~ ${scope_reg} ]] ; then
+            show_bad "Incorrect scope: ${scope}"
+            show_help 'standard'
             exit 1
         fi
     fi
 
+    # Check type value
+    if [[ ! ${type_} =~ ${types} ]] ; then
+        show_bad "Incorrect type: ${type_}"
+        show_help 'standard'
+        exit 1
+    fi
+
+    # Check Summary
+    if [[ ! ${summary} =~ ${summary_reg} ]] ; then
+        show_bad "Summary must start with a capital letter."
+        show_help 'standard'
+        exit 1
+    fi
+
     # Confirmation
-    show_good "Message follows conventional commit standards !"
+    show_good "Valid standard commit message!"
+    exit 0
+# Check merge messages
+elif [[ $msg =~ ${regex_merge} ]] ; then
+    # Get infos
+    remote1=${BASH_REMATCH[1]}
+    branch1=${BASH_REMATCH[2]}
+    remote2=${BASH_REMATCH[3]}
+    branch2=${BASH_REMATCH[4]}
+
+    # Print infos
+    echo "Merge commit message analysis:
+remote1: ${remote1}
+branch1: ${branch1}
+remote2: ${remote2}
+branch2: ${branch2}"
+
+    # Confirmation, no test for the moment
+    # TODO: write tests on remote and branch names
+    show_good "Valid standard commit message!"
     exit 0
 else
-    show_bad "Message doesn't respect the conventional commit format."
-
-    show_help
+    show_bad "Invalid commit message format, please try again."
+    show_help 'all'
     exit 1
 fi

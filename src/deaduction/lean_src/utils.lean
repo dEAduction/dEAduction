@@ -53,17 +53,17 @@ end tactic
 
 
 -- Tests
-open tactic.interactive
-example : ∃ x : ℕ, x = 0 :=
-begin
-   no_meta_vars,
-   existsi _,
-   context_no_meta_vars,
-   have H: 0=0,
-   {refl, trace "toto", no_meta_vars},
+-- open tactic.interactive
+-- example : ∃ x : ℕ, x = 0 :=
+-- begin
+--    no_meta_vars,
+--    existsi _,
+--    context_no_meta_vars,
+--    have H: 0=0,
+--    {refl, trace "toto", no_meta_vars},
    -- no_meta_vars,
-   sorry
-end
+--    sorry
+-- end
 
 
 example (H1 : ∀ x:ℕ, x=0) (y:ℕ) : y = 0 :=
