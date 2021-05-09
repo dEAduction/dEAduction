@@ -397,9 +397,10 @@ class ExerciseChooser(AbstractCoExChooser):
                                               course.outline)
         exercises_tree.resizeColumnToContents(0)
         browser_layout.addWidget(exercises_tree)
-        self.__exercises_tree = exercises_tree
+        self.exercises_tree = exercises_tree
 
         exercises_tree.itemClicked.connect(self.__set_preview_from_click)
+
 
         super().__init__(browser_layout)
 
@@ -525,7 +526,7 @@ class ExerciseChooser(AbstractCoExChooser):
         title       = exercise.pretty_name
         description = exercise.description
 
-        self.__exercises_tree.goto_statement(exercise)
+        self.exercises_tree.goto_statement(exercise)
 
         super().set_preview(main_widget=main_widget, title=title,
                             subtitle=None, details=None,
@@ -709,7 +710,7 @@ class AbstractStartCoEx(QDialog):
         exercise and its course, usr's clicks are emulated by adding the
         Course as a browsed course in
         self.__course_chooser.__recent_courses_wgt and selecting the
-        exercise in self.__exercise_chooser.__exercises_tree. The code
+        exercise in self.__exercise_chooser.exercises_tree. The code
         for this is not very smart so if you want to enhance it, do it
         (see CONTRIBUTING.md file).
         """
@@ -776,6 +777,8 @@ class AbstractStartCoEx(QDialog):
 
         self.__exercise_chooser.exercise_previewed.connect(
                 self.__enable_start_ex_btn)
+        self.__exercise_chooser.exercises_tree.itemDoubleClicked.connect(
+            self.__start_exercise)
 
     @Slot()
     def __start_exercise(self):
