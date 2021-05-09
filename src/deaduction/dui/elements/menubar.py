@@ -3,6 +3,11 @@
 # menubar.py : Provide menubar stuff #
 ######################################
 
+    Provide following classes:
+    — MenuBar,
+    — MenuBarAction,
+    — MenuBarMenu.
+
 Author(s)      : Kryzar <hg4fpchw@anonaddy.me>
 Maintainers(s) : Kryzar <hg4fpchw@anonaddy.me>
 Date           : May 2021
