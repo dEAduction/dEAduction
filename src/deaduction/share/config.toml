@@ -32,7 +32,7 @@ available_languages = ["en", "fr_FR"]
 select_language = "fr_FR"
 
 [journal]
-save=false
+save=true
 
 [logs]
 display_level = "info"
