@@ -397,12 +397,14 @@ class ExerciseChooser(AbstractCoExChooser):
                                               course.outline)
         exercises_tree.resizeColumnToContents(0)
         browser_layout.addWidget(exercises_tree)
-        self.exercises_tree = exercises_tree
+        self.__exercises_tree = exercises_tree
 
         exercises_tree.itemClicked.connect(self.__set_preview_from_click)
 
-
         super().__init__(browser_layout)
+
+    def exercises_tree_double_clicked_connect(self, slot):
+        self.__exercises_tree.itemDoubleClicked.connect(slot)
 
     def set_preview(self, exercise: Exercise):
         """
@@ -526,7 +528,7 @@ class ExerciseChooser(AbstractCoExChooser):
         title       = exercise.pretty_name
         description = exercise.description
 
-        self.exercises_tree.goto_statement(exercise)
+        self.__exercises_tree.goto_statement(exercise)
 
         super().set_preview(main_widget=main_widget, title=title,
                             subtitle=None, details=None,
@@ -777,7 +779,7 @@ class AbstractStartCoEx(QDialog):
 
         self.__exercise_chooser.exercise_previewed.connect(
                 self.__enable_start_ex_btn)
-        self.__exercise_chooser.exercises_tree.itemDoubleClicked.connect(
+        self.__exercise_chooser.exercises_tree_double_clicked_connect(
             self.__start_exercise)
 
     @Slot()
