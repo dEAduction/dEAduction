@@ -242,7 +242,7 @@ class Goal:
     def goal_to_text(self,
                      format_="utf8",
                      to_prove=True,
-                     text_depth=1,
+                     text_depth=5,
                      open_problem=False) -> str:
         """
         Compute a readable version of the goal as the statement of an
