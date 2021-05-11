@@ -197,6 +197,48 @@ text_from_node = {
     ###############
     # SET THEORY: #
     ###############
+    # "PROP_INCLUDED": (0, " " + _("is included in") + " ", 1),
+    # "PROP_BELONGS": (0, " ∈ ", 1),  # This special case is processed in
+                                    # the function display_belongs_to
+    # "SET_INTER": (_("the intersection of") + " ", 0, " " + _("and") + " ",
+    # 1),
+    # "SET_UNION": (_("the union of") + " ", 0, " " + _("and") + " ", 1),
+    # "SET_INTER+": (_("the intersection of the sets") + " ", 0),
+    # "SET_UNION+": (_("the union of the sets") + " ", 0),
+    # "SET_COMPLEMENT": (_("the complement of ") + " ", 0),
+    # "SET_EMPTY": (_("the empty set"),),
+    "SET_FAMILY": (_("a family of subsets of") + " ", 1),
+    # "SET_IMAGE": (_("the image under") + " ", 0, " " + _("of") + " ", 1),
+    # "SET_INVERSE": (_("the inverse image under") + " ", 0, " " + _("of") +
+    # " ", 1),
+    ############
+    # NUMBERS: #
+    ############
+    # "PROP_EQUAL": (0, " " + _("equals") + " ", 1),
+    # "PROP_EQUAL_NOT": (0, " " + _("is different from") + " ", 1),
+    # "PROP_<": (0, " " + _("is less than") + " ", 1),
+    # "PROP_>": (0, " " + _("is greater than") + " ", 1),
+    # "PROP_≤": (0, " " + _("is less than or equal to") + " ", 1),
+    # "PROP_≥": (0, " " + _("is greater than or equal to") + " ", 1),
+    ##################
+    # GENERAL TYPES: #
+    ##################
+    "SET": ("P(", 0, ")"),
+    "PROP": (_("a proposition"),),
+    "TYPE": (_("a set"),),
+    "FUNCTION": (_("a function from") + " ", 0, " " + _("to") + " ", 1),
+}
+
+text_from_all_nodes = {
+    "PROP_AND": (0, " " + _("and") + " ", 1),
+    "PROP_OR": (0, " " + _("or") + " ", 1),
+    "PROP_FALSE": (_("Contradiction"), ),
+    "PROP_IFF": (0, " " + _("if and only if") + " ", 1),
+    "PROP_NOT": (_("the negation of") + " ", 0),
+    "PROP_IMPLIES": (_("if") + " ", 0, " " + _("then") + " ", 1),
+    ###############
+    # SET THEORY: #
+    ###############
     "PROP_INCLUDED": (0, " " + _("is included in") + " ", 1),
     "PROP_BELONGS": (0, " ∈ ", 1),  # This special case is processed in
                                     # the function display_belongs_to

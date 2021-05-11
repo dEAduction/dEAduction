@@ -35,6 +35,11 @@ This file is part of d∃∀duction.
 
 import                          logging
 
+from functools import partial
+from PySide2.QtCore import    ( Signal,
+                                Slot,
+                                QTimer)
+
 from PySide2.QtGui import     ( QIcon,
                                 QPixmap )
 from PySide2.QtWidgets import ( QAction,
@@ -315,7 +320,7 @@ class ExerciseStatusBar(QStatusBar):
         self.hide_icon()
 
         # Verbose mode
-        self.display_success_messages = cvars.get(
+        self.display_success_msgs = cvars.get(
             'display.display_success_messages', True)
 
     def show_error_icon(self):
@@ -329,37 +334,62 @@ class ExerciseStatusBar(QStatusBar):
     def hide_icon(self):
         self.iconWidget.hide()
 
-    def set_message(self, message: str):
-        self.messageWidget.setText(message)
+    def set_message(self, msg: str):
+        self.messageWidget.setText(msg)
 
     def erase(self):
         self.set_message("")
         self.hide_icon()
 
-    def display_message(self, proof_step):
+    @Slot()
+    def show_normal_msg(self, msg):
+        log.debug("StatusBar: show " + msg)
+        self.hide_icon()
+        self.set_message(msg)
+
+    def manage_msgs(self, proof_step):
         """
-        Display a message in the status bar. Two kinds of messages are
-        considered: error or success.
+        Display a message in the status bar. Three kinds of messages are
+        considered: new goal, error or success.
+        - New goal msgs are normal msgs, i.e. they will remain in the status
+        bar unless they are hidden temporarily by a temporary msg.
+        e.g. "First case: we assume a in A".
+        - success and error msgs are temporary msgs.
         """
 
         #log.debug(f"Display msg: "
         #          f"{proof_step.error_msg, proof_step.success_msg}")
         if proof_step.is_error():
-            message = proof_step.error_msg
+            tmp_msg = proof_step.error_msg
         else:
-            message = proof_step.success_msg
+            tmp_msg = proof_step.success_msg
         # Capitalize first char but do not un-capitalize the remaining
-        if message:
-            message = message[0].capitalize() + message[1:]
+        if tmp_msg:  # Fixme: remove and capitalize msgs correctly!
+            tmp_msg = tmp_msg[0].capitalize() + tmp_msg[1:]
 
         if proof_step.is_error():
+            log.debug("StatusBar: " + tmp_msg)
             self.show_error_icon()
-            self.set_message(message)
-        elif proof_step.success_msg and self.display_success_messages:
+            self.set_message(tmp_msg)
+        elif proof_step.success_msg and self.display_success_msgs:
+            log.debug("StatusBar: " + tmp_msg)
             self.show_success_icon()
-            self.set_message(message)
+            self.set_message(tmp_msg)
         else:
             self.hide_icon()
+            tmp_msg = ""
+
+        if proof_step.new_goals:
+            new_goal = proof_step.new_goals[-1]
+            if new_goal:
+                # Set QTimer for normal msg
+                if tmp_msg:
+                    log.debug("StatusBar timer " + new_goal.msg)
+                    timer = QTimer(self)
+                    func = partial(self.show_normal_msg, new_goal.msg)
+                    timer.singleShot(3000, func)  # 3000 = 3sec
+                else:  # Show immediately
+                    self.show_normal_msg(new_goal.msg)
 
 
 class ExerciseToolBar(QToolBar):
@@ -386,7 +416,6 @@ class ExerciseToolBar(QToolBar):
         self.change_exercise_action = QAction(
                 QIcon(str((icons_dir / 'change_exercise.png').resolve())),
                 _('Change exercise'), self)
-
 
         self.addAction(self.rewind)
         self.addAction(self.undo_action)

@@ -34,11 +34,8 @@ from .exceptions import (   InputType,
                             WrongUserInput,
                             test_selection)
 
-from .utils import (        LeanCombinator,
+from .code_for_lean import (LeanCombinator,
                             CodeForLean,
-                            get_new_hyp,
-                            get_new_var,
-                            solve1_wrap,
                             get_effective_code_numbers)
 
 from .logic import (        action_negate,
