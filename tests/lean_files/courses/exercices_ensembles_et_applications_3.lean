@@ -120,17 +120,6 @@ begin
     sorry
 end
 
-lemma definition.ensemble_comprehension {X: Type}  {P : X → Prop} {x:X} :
- x ∈ {x | P x} ↔ P x
-:=
-/- dEAduction
-PrettyName
-    Ensemble en compréhension
--/
-begin
-    refl
-end
-
 end generalites
 
 ---------------
@@ -178,12 +167,12 @@ begin
 end
 
 lemma theorem.image_directe :
-∀ {A: set X}, ∀ {x : X}, x ∈ A → f x ∈ f '' A
+∀ f: X→Y, ∀{A: set X}, ∀{x: X},
+ (x ∈ A → f x ∈ f '' A)
 :=
 begin
     sorry
 end
-
 
 lemma definition.image_reciproque (x:X) :
 x ∈ f  ⁻¹' B ↔ f(x) ∈ B
