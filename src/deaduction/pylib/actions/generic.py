@@ -27,7 +27,6 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from dataclasses import dataclass
 import logging
 
 from deaduction.pylib.config.i18n import _

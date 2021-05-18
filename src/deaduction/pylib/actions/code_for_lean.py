@@ -68,10 +68,13 @@ class CodeForLean:
     - a success_msg can be added, to be displayed in case of success
     (depending of the effective code in case of or_else combinator)
     """
-    instructions:    [Any]   # [str or CodeForLean]
-    combinator:             str = LeanCombinator.single_string
-    error_msg:          str = ""
-    success_msg:        str = ""
+    instructions: [Any]   # [str or CodeForLean]
+    combinator:   str = LeanCombinator.single_string
+    error_msg:    str = ""
+    success_msg:  str = ""
+    conjunction       = None  # type: (Union[MathObject, str])
+    disjunction       = None  # type: (Union[MathObject, str])
+    subgoal           = None  # type: (Union[MathObject, str])
     # The following is used to store the number of an or_else instructions
     or_else_node_number:   Optional[int] = None
 
@@ -452,6 +455,39 @@ class CodeForLean:
                 code.add_success_msg(success_msg)
         self.success_msg = success_msg
 
+    def add_conjunction(self, p_and_q, p=None, q=None):
+        """
+        Indicate that self will split a target conjunction 'P and Q',
+        and store 'P and Q', 'P', 'Q'. If not provided, P and Q are computed
+        as the children of p_and_q.
+        """
+        if not p:
+            p = p_and_q.children[0]
+        if not q:
+            q = p_and_q.children[1]
+        self.conjunction = (p_and_q, p, q)
+
+    def add_disjunction(self, p_or_q, p=None, q=None):
+        """
+        Indicate that self will split a target disjunction 'P or Q',
+        and store 'P and Q', 'P', 'Q'. If not provided, P and Q are computed
+        as the children of p_or_q.
+        """
+        if not p:
+            p = p_or_q.children[0]
+        if not q:
+            q = p_or_q.children[1]
+        self.disjunction = (p_or_q, p, q)
+
+    def add_subgoal(self, subgoal):
+        """
+        Indicate that self will split a target disjunction 'P or Q',
+        and store 'P and Q', 'P', 'Q'. If not provided, P and Q are computed
+        as the children of p_or_q.
+        :param subgoal: str or MathObject
+        """
+        self.subgoal = subgoal
+
     def is_empty(self):
         return self.instructions == []
 
@@ -489,32 +525,32 @@ class CodeForLean:
                             instruction in self.instructions]
 
 
-_VAR_NB = 0
-_FUN_NB = 0
-
-
-def get_new_var():
-    global _VAR_NB
-    _VAR_NB += 1
-    return "x{0}".format(_VAR_NB)
-
-
-def get_new_fun():
-    global _FUN_NB
-    _FUN_NB += 1
-    return "f{0}".format(_FUN_NB)
-
-
-# OBSOLETE : see mathobj.give_name.get_new_hyp()
-def get_new_hyp():
-    global _VAR_NB
-    _VAR_NB += 1
-    return "h{0}".format(_VAR_NB)
-
-
-def solve1_wrap(string: str) -> str:
-    # (obsolete)
-    return "solve1 {" + string + "}"
+# _VAR_NB = 0
+# _FUN_NB = 0
+#
+#
+# def get_new_var():
+#     global _VAR_NB
+#     _VAR_NB += 1
+#     return "x{0}".format(_VAR_NB)
+#
+#
+# def get_new_fun():
+#     global _FUN_NB
+#     _FUN_NB += 1
+#     return "f{0}".format(_FUN_NB)
+#
+#
+# # OBSOLETE : see mathobj.give_name.get_new_hyp()
+# def get_new_hyp():
+#     global _VAR_NB
+#     _VAR_NB += 1
+#     return "h{0}".format(_VAR_NB)
+#
+#
+# def solve1_wrap(string: str) -> str:
+#     # (obsolete)
+#     return "solve1 {" + string + "}"
 
 
 def get_effective_code_numbers(trace_effective_code: str) -> (int, int):

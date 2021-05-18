@@ -32,7 +32,6 @@ from typing import Union
 from deaduction.pylib.text        import tooltips
 from deaduction.pylib.config.i18n import _
 import deaduction.pylib.config.vars as cvars
-import deaduction.pylib.actions.utils as utils
 from deaduction.pylib.actions import (InputType,
                                       MissingParametersError,
                                       WrongUserInput,
@@ -43,7 +42,6 @@ from deaduction.pylib.actions import (InputType,
                                       apply_and,
                                       apply_or)
 from deaduction.pylib.mathobj import (MathObject,
-                                      Goal,
                                       get_new_hyp,
                                       give_global_name,
                                       NO_MATH_TYPE,
@@ -121,20 +119,16 @@ def method_cbr(proof_step,
             h2 = get_new_hyp(proof_step)
             code = CodeForLean.from_string(f"cases (classical.em ({h0})) "
                                            f"with {h1} {h2}")
-            code.add_success_msg(_("proof by cases: we first assume {}").
-                                 format(h1))
+            code.add_success_msg(_("Proof by cases"))
+            code.add_disjunction(h0, h1, h2)  # Strings, not MathObject
     else:
         prop = selected_objects[0]
-        if prop.is_or():
-            code = apply_or(proof_step, selected_objects, user_input)
+        if not prop.is_or():
+            error = _("Selected property is not a disjunction")
+            raise WrongUserInput(error)
         else:
-            h0 = prop.info['name']
-            h1 = get_new_hyp(proof_step)
-            h2 = get_new_hyp(proof_step)
-            code = CodeForLean.from_string(f"cases (classical.em ({h0})) "
-                                           f"with {h1} {h2}")
-            code.add_success_msg(_("proof by cases: we first assume {}").
-                                 format(h1))
+            code = apply_or(proof_step, selected_objects, user_input)
+
     return code
 
 
@@ -282,6 +276,7 @@ def action_new_object(proof_step,
                                                      f" ({user_input[1]})")
             codes.add_success_msg(_("New target will be added to the context "
                                     "after being proved"))
+            codes.add_subgoal(user_input[1])
     # Choice = new function
     elif user_input[0] == 2:
         return introduce_fun(proof_step, selected_objects)

@@ -506,9 +506,10 @@ async def main():
             print(f"Global success : {global_success}")
             for exo_report in container.report:
                 success = "success" if exo_report[0] else "FAILURE"
-                print(exo_report[1] + ": " + success)
-                for step_report in exo_report[2:]:
-                    print(step_report)
+                if len(exo_report) > 1:
+                    print(exo_report[1] + ": " + success)
+                    for step_report in exo_report[2:]:
+                        print(step_report)
 
             # Finally closing d∃∀duction
             if container.servint:
