@@ -12,6 +12,8 @@ AvailableProof
     use_proof_methods new_object apply 
 AvailableMagic
     assumption
+AvailableExercises
+  UNTIL_NOW -image_directe_et_inclusion_II -image_reciproque_et_inclusion_II -image_directe_et_intersection_II
 -/
 
 local attribute [instance] classical.prop_decidable
@@ -159,7 +161,7 @@ namespace applications
 variables  {A A': set X}
 variables {f: X → Y} {B B': set Y}
 
-lemma definition.image_directe (y : Y) : 
+lemma definition.image_directe (y : Y) :
 y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y
 :=
 begin
@@ -265,7 +267,7 @@ begin
 end
 
 lemma exercise.image_directe_et_inclusion_II :
-∀ A B: set X,  f '' (A) ⊆ f '' (B) → A ⊆ B 
+∀ A B: set X,  f '' (A) ⊆ f '' (B) → A ⊆ B
 :=
 /- dEAduction
 PrettyName
