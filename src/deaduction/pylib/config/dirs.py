@@ -48,7 +48,7 @@ courses        = (share / "courses").resolve()
 # Home paths
 home     = Path.home()
 local    = ( home / ".deaduction{}".format("-dev" if os.getenv("DEADUCTION_DEV_MODE", False)                                                  else "") ).resolve()
-journal        = (local / "deaduction_journal").resolve()
+journal        = (home / ".local" / "deaduction_journal").resolve()
 test_exercises = (local / "test_exercises").resolve()
 
 
