@@ -36,6 +36,7 @@ from pathlib import Path
 from PySide2.QtWidgets import ( QListWidget,
                                 QListWidgetItem)
 
+from deaduction.pylib.config.i18n   import  _
 from deaduction.pylib.config.course import get_recent_courses
 
 
@@ -78,7 +79,7 @@ class RecentCoursesLW(QListWidget):
         :param course_title: The course title of the browsed course.
         """
 
-        displayed_title = f'(browsed) {course_title}'
+        displayed_title = '(' + _('browsed') + ') ' + course_title
         item = RecentCoursesLWI(course_path, displayed_title)
         self.insertItem(0, item)
         self.setItemSelected(item, True)
