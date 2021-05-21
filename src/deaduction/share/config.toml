@@ -5,7 +5,7 @@ context     = "letters/blue"
 
 [display]
 display_success_messages = true
-text_mode_in_chooser_window = false
+text_mode_in_chooser_window = true
 target_display_on_top = false
 depth_of_unfold_statements = 1
 show_lean_name_for_statements = false
@@ -32,7 +32,7 @@ available_languages = ["en", "fr_FR"]
 select_language = "fr_FR"
 
 [journal]
-save=false
+save=true
 
 [logs]
 display_level = "info"
