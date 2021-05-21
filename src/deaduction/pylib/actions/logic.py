@@ -763,6 +763,9 @@ def apply_forall(proof_step, l: [MathObject]) -> CodeForLean:
     :param l: list of MathObjects of length ≥ 2
     :return:
     """
+    # FIXME: return error msg if user try to apply "forall x:X, P(x)"
+    #  to some object of wrong type (e.g. implication)
+    #  For the moment "forall x, P->Q" works with "P->Q" and button forall
 
     goal = proof_step.goal
     universal_property = l[-1]  # The property to be applied
