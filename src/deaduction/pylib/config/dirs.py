@@ -43,13 +43,14 @@ pkg_dir  = (Path(__file__) / "../../../").resolve()
 share          = (pkg_dir / "share").resolve()
 icons          = (share / "graphical_resources" / "icons").resolve()
 courses        = (share / "courses").resolve()
-test_exercises = (share / "test_exercises").resolve()
-journal        = (share / "journal").resolve()
+
 
 # Home paths
 home     = Path.home()
-local    = ( home / ".deaduction{}".format("-dev" if os.getenv("DEADUCTION_DEV_MODE", False)
-                                                  else "") ).resolve()
+local    = ( home / ".deaduction{}".format("-dev" if os.getenv("DEADUCTION_DEV_MODE", False)                                                  else "") ).resolve()
+journal        = (local / "deaduction_journal").resolve()
+test_exercises = (local / "test_exercises").resolve()
+
 
 ############################################
 # Utilities
