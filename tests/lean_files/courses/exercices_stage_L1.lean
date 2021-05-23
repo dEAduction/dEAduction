@@ -29,6 +29,8 @@ Author
     Camille Lichère
 Institution
     Université de France
+AvailableProof
+    ALL -new_object
 AvailableMagic
     assumption
 -/
@@ -203,13 +205,13 @@ begin
     todo
 end
 
-lemma exercise.intersection_inclus_union 
+lemma exercise.ensemble_inclus_union
 (A B : set X) :
-A ∩ B ⊆ A ∪ B
+B ⊆ A ∪ B
 :=
 /- dEAduction
 PrettyName
-    Intersection inclus dans l'union
+    Ensemble inclus dans l'union
 Description
     Le bouton ∨ ("ou"), permet notamment de montrer un but de la forme "P ou Q" en choisissant si on veut montrer "P" ou "Q".
 -/
@@ -217,13 +219,13 @@ begin
     todo
 end
 
-lemma exercise.bouton_ou
+lemma exercise.ensemble_inclus_intersection
 (A B : set X) :
-A ⊆ A ∩ B  → (A ∪ B) ⊆ B
+A ⊆ A ∩ B  → (A ∪ B) = B
 :=
 /- dEAduction
 PrettyName
-    Exercice bouton ou
+    Ensemble inclus dans l'intersection
 Description
     Le bouton ∨ ("ou") permet également, appliqué à une hypothèse du type "P ou Q" de faire une disjonction de cas selon si on a "P" ou "Q".
 -/
@@ -231,16 +233,15 @@ begin
     todo
 end
 
-lemma exercise.inter_distributive_union 
-(A B C : set X): 
-A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C) 
+lemma exercise.inter_distributive_union
+(A B C : set X):
+A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C)
 :=
 /- dEAduction
 PrettyName
     Union avec une intersection
 Description
     Le bouton ↔ (équivalence), permet notamment de scinder "P ↔ Q" en deux implications "P → Q" et "Q → P".
-
 -/
 begin
     todo

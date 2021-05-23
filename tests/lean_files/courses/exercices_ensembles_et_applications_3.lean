@@ -9,9 +9,11 @@ Title
 Institution
     Université du monde
 AvailableProof
-    use_proof_methods new_object apply 
+    use_proof_methods new_object apply
 AvailableMagic
     assumption
+AvailableExercises
+  UNTIL_NOW -image_directe_et_inclusion_II -image_reciproque_et_inclusion_II -image_directe_et_intersection_II
 -/
 
 local attribute [instance] classical.prop_decidable
@@ -159,27 +161,6 @@ namespace applications
 variables  {A A': set X}
 variables {f: X → Y} {B B': set Y}
 
-lemma definition.image_directe (y : Y) : 
-y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y
-:=
-begin
-    sorry
-end
-
-lemma theorem.image_directe :
-∀ f: X→Y, ∀{A: set X}, ∀{x: X},
- (x ∈ A → f x ∈ f '' A)
-:=
-begin
-    sorry
-end
-
-lemma definition.image_reciproque (x:X) :
-x ∈ f  ⁻¹' B ↔ f(x) ∈ B
-:=
-begin
-    sorry
-end
 lemma definition.injectivite :
 injective f ↔ ∀ x x' : X, (f x = f x' → x = x')
 :=
@@ -200,6 +181,28 @@ PrettyName
 -/
 begin
     refl,
+end
+
+lemma definition.image_directe (y : Y) :
+y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y
+:=
+begin
+    sorry
+end
+
+lemma theorem.image_directe :
+∀ f: X→Y, ∀{A: set X}, ∀{x: X},
+ (x ∈ A → f x ∈ f '' A)
+:=
+begin
+    sorry
+end
+
+lemma definition.image_reciproque (x:X) :
+x ∈ f  ⁻¹' B ↔ f(x) ∈ B
+:=
+begin
+    sorry
 end
 
 end applications
@@ -265,7 +268,7 @@ begin
 end
 
 lemma exercise.image_directe_et_inclusion_II :
-∀ A B: set X,  f '' (A) ⊆ f '' (B) → A ⊆ B 
+∀ A B: set X,  f '' (A) ⊆ f '' (B) → A ⊆ B
 :=
 /- dEAduction
 PrettyName
@@ -310,7 +313,7 @@ begin
 end
 
 lemma exercise.image_reciproque_et_inclusion_II :
-∀ A' B': set Y,  f ⁻¹' (A') ⊆ f ⁻¹' (B') → A' ⊆ B' 
+∀ A' B': set Y,  f ⁻¹' (A') ⊆ f ⁻¹' (B') → A' ⊆ B'
 :=
 /- dEAduction
 PrettyName
@@ -410,7 +413,7 @@ PrettyName
 
 
 lemma exercise.image_directe_et_intersection_I :
-∀ A B: set X, f '' (A ∩ B) ⊆ f '' (A) ∩ f '' (B) 
+∀ A B: set X, f '' (A ∩ B) ⊆ f '' (A) ∩ f '' (B)
 :=
 /- dEAduction
 PrettyName
@@ -454,7 +457,7 @@ PrettyName
 -/
 
 lemma exercise.egalite_I :
-∀ A B : set X, f '' ( A ∪ B) = f '' (A) ∪ f '' (B) 
+∀ A B : set X, f '' ( A ∪ B) = f '' (A) ∪ f '' (B)
 :=
 /- dEAduction
 PrettyName
@@ -465,7 +468,7 @@ begin
 end
 
 lemma exercise.egalite_II :
-∀ A' B' : set Y, f ⁻¹' ( A' ∩ B') = f ⁻¹' (A') ∩ f ⁻¹' (B') 
+∀ A' B' : set Y, f ⁻¹' ( A' ∩ B') = f ⁻¹' (A') ∩ f ⁻¹' (B')
 :=
 /- dEAduction
 PrettyName
@@ -476,7 +479,7 @@ begin
 end
 
 lemma exercise.egalite_III :
-∀ A' B' : set Y, f ⁻¹' ( A' ∪ B') = f ⁻¹' (A') ∪ f ⁻¹' (B') 
+∀ A' B' : set Y, f ⁻¹' ( A' ∪ B') = f ⁻¹' (A') ∪ f ⁻¹' (B')
 :=
 /- dEAduction
 PrettyName

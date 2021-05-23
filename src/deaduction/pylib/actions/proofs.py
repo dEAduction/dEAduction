@@ -556,6 +556,14 @@ def explain_how_to_apply(math_object: MathObject, dynamic=False, long=False) \
     """
     captions = []  # default value
 
+    if math_object.is_function():
+        captions.append(tooltips.get('tooltip_apply_function'))
+    elif math_object.can_be_used_for_substitution()[0]:
+        captions.append(tooltips.get('tooltip_apply_substitute'))
+
+    return captions
+
+    #TODO: include this when extended apply button
     # the following 4 cases are mutually exclusive
     if math_object.is_function():
         captions.append(tooltips.get('tooltip_apply_function'))
@@ -569,7 +577,7 @@ def explain_how_to_apply(math_object: MathObject, dynamic=False, long=False) \
     elif math_object.is_and():
         captions.append(tooltips.get('tooltip_apply_and'))
 
-    # additional line
+    # Additional line
     if math_object.can_be_used_for_implication():
         captions.append(tooltips.get('tooltip_apply_implication'))
 

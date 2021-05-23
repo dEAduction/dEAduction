@@ -54,12 +54,13 @@ __tooltips = {
     + "• " + _("""From some 'x' and '∀ x, P(x)' get 'P(x)'"""),
     'tooltip_exists':
     "• " + _("""Prove '∃ x, P(x)' by specifying some 'x'""") + "\n"
-    + "• " + _("""From '∃ x, P(x)' get an 'x' and 'P(x)'""") + "\n"
-    + "• " + _("""From some 'x' and 'P(x)' get '∃ x, P(x)'"""),
+    + "• " + _("""From '∃ x, P(x)' get an 'x' and 'P(x)'"""),
+    # + "\n"
+    # + "• " + _("""From some 'x' and 'P(x)' get '∃ x, P(x)'"""),
     'tooltip_apply':
     "• " + _("Apply an equality or an iff to substitute in another property")
-    + "\n" + "• " + _("""Apply a function to an element or an equality""")
-    + "\n" + "• " + _("""(... try it to find other uses)"""),
+    + "\n" + "• " + _("""Apply a function to an element or an equality"""),
+    # + "\n" + "• " + _("""(... try it to find other uses)"""),
     'tooltip_proof_methods':
         _("""Choose some specific proof method:""") + "\n"
     + "• " + _("Case-based reasoning") + "\n"
