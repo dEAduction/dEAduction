@@ -158,7 +158,7 @@ class MenuBarAction(QAction):
         :param tooltip: Tooltip of the action.
         """
         super().__init__(parent_qmw)
-        self.setTitle(title)
+        self.setText(title)
         if tooltip:
             self.setToolTip(tooltip)
 
