@@ -185,6 +185,7 @@ class ExerciseMainWindow(QMainWindow):
         self.displayed_proof_step = None
         self.exercise_solved      = False
         self.test_mode            = False
+        self.double_clicked_item  = None
 
         # ─────────────────────── UI ─────────────────────── #
 
@@ -452,7 +453,16 @@ class ExerciseMainWindow(QMainWindow):
 
                 elif emission.is_from(self.__action_triggered):
                     # emission.args[0] is the ActionButton triggered by user
-                    self.proof_step.button = emission.args[0]
+                    button = emission.args[0]
+                    self.proof_step.button = button
+                    if button == self.ecw.action_apply_button \
+                            and self.double_clicked_item:
+                        # Make sure item is marked and added to selection
+                        item = self.double_clicked_item
+                        if item in self.current_selection:
+                            self.current_selection.remove(item)
+                        self.current_selection.append(item)  # Item is last
+                        self.double_clicked_item = None
                     await self.process_async_signal(partial(
                             self.__server_call_action, emission.args[0]))
 
@@ -465,8 +475,9 @@ class ExerciseMainWindow(QMainWindow):
                             self.__server_call_statement, emission.args[0]))
 
                 elif emission.is_from(self.__apply_math_object_triggered):
-                    self.proof_step.button = self.ecw.action_apply_button
-                    await self.__server_call_apply(emission.args[0])
+                    self.double_clicked_item = emission.args[0]
+                    # Emulate click on 'apply' button:
+                    self.ecw.action_apply_button.animateClick(msec=500)
 
     # ──────────────── Template function ─────────────── #
 
@@ -494,7 +505,8 @@ class ExerciseMainWindow(QMainWindow):
             await self.servint.history_delete()
 
         finally:
-            if not self.lean_file.current_proof_step.no_more_goal:
+            if self.lean_file.current_proof_step \
+                    and not self.lean_file.current_proof_step.no_more_goal:
                 self.freeze(False)
             else:  # If no more goals, disable actions but enable toolbar
                 self.ecw.freeze(True)
@@ -592,24 +604,6 @@ class ExerciseMainWindow(QMainWindow):
                 # Update lean_file and call Lean server
                 await self.servint.code_insert(action.symbol, lean_code)
                 break
-
-    async def __server_call_apply(self, item: MathObjectWidgetItem):
-        """
-        This function is called when user double-click on an item in the
-        context area The item is added to the end of the current_selection, and
-        the action corresponding to the "apply" button is called.
-        """
-
-        item.mark_user_selected(True)
-        # Put double-clicked item on last position in current_selection
-        # NB: DO NOT add item to selection since the  process_context_click
-        # will already do this
-        if item in self.current_selection:
-            self.current_selection.remove(item)
-        # Emulate click on 'apply' button
-        log.debug(f"Apply {item.mathobject.display_name} with selection "
-                  f"{[item.display_name for item in self.current_selection_as_mathobjects]}")
-        self.ecw.action_apply_button.animateClick(msec=500)
 
     async def __server_call_statement(self,
                                       item: StatementsTreeWidgetItem,
@@ -725,6 +719,7 @@ class ExerciseMainWindow(QMainWindow):
             msg_box.exec()
 
         self.proof_step.no_more_goal = True
+        self.proof_step.new_goals = []
         # Artificially create a final proof_state by replacing target by a msg
         # (We do not get the final proof_state from Lean).
         proof_state = deepcopy(self.proof_step.proof_state)
@@ -761,7 +756,7 @@ class ExerciseMainWindow(QMainWindow):
         if item not in self.current_selection:
             item.mark_user_selected(True)
             self.current_selection.append(item)
-        else:
+        elif item is not self.double_clicked_item:
             item.mark_user_selected(False)
             self.current_selection.remove(item)
 
@@ -802,12 +797,6 @@ class ExerciseMainWindow(QMainWindow):
         """
 
         proof_step = self.proof_step
-        # ─────────── Display msgs (no msg when undoing) ────────── #
-        if not proof_step.is_history_move():
-            self.statusBar.display_message(proof_step)
-        elif proof_step.is_redo():
-            self.statusBar.display_message(self.lean_file.current_proof_step)
-
         # ───────────── Store data ──────────── #
         # Store proof_state in proof_step
         proof_step.proof_state = proofstate
@@ -823,28 +812,39 @@ class ExerciseMainWindow(QMainWindow):
         if not self.test_mode:
             self.journal.store(proof_step, self)
 
-        # ─────────────── Update goals counters ─────────────── #
-        delta = self.lean_file.current_number_of_goals \
-                - self.lean_file.previous_number_of_goals
-        if delta > 0:  # A new goal has appeared
-            self.proof_step.total_goals_counter += delta
-        elif delta < 0:  # A goal has been solved
-            proof_step.current_goal_number -= delta
-            if proof_step.current_goal_number and not self.test_mode \
-                    and self.lean_file.current_number_of_goals \
-                    and not proof_step.is_error() \
-                    and not proof_step.is_undo():
-                log.info(f"Current goal solved!")
-                if delta == -1:
-                    message = _('Current goal solved')
-                else:  # Several goals solved at once ??
-                    nb = str(-delta)
-                    message = nb + ' ' + _('goals solved!')
-                QMessageBox.information(self,
-                                        '',
-                                        message,
-                                        QMessageBox.Ok
-                                        )
+        # ─────────────── Update goals counter ─────────────── #
+        if not proof_step.is_error():  # Wrong delta if error (and no need)
+            delta = self.lean_file.current_number_of_goals \
+                    - self.lean_file.previous_number_of_goals
+            if delta > 0:  # A new goal has appeared
+                proof_step.total_goals_counter += delta
+                proof_step.add_new_goals()  # Manage goal msgs
+
+            elif delta < 0:  # A goal has been solved
+                proof_step.current_goal_number -= delta
+                if proof_step.new_goals:
+                    proof_step.new_goals.pop()  # Remove last goal msg
+                if proof_step.current_goal_number and not self.test_mode \
+                        and self.lean_file.current_number_of_goals \
+                        and not proof_step.is_error() \
+                        and not proof_step.is_undo():
+                    log.info(f"Current goal solved!")
+                    if delta == -1:
+                        message = _('Current goal solved')
+                    else:  # Several goals solved at once ??
+                        nb = str(-delta)
+                        message = nb + ' ' + _('goals solved!')
+                    QMessageBox.information(self,
+                                            '',
+                                            message,
+                                            QMessageBox.Ok
+                                            )
+
+        # ─────────── Display msgs (no msg when undoing) ────────── #
+        if not proof_step.is_history_move():
+            self.statusBar.manage_msgs(proof_step)
+        elif proof_step.is_redo():
+            self.statusBar.manage_msgs(self.lean_file.current_proof_step)
 
         # ─────────────── End of proof_step ─────────────── #
         # Store auto_step

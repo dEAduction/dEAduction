@@ -280,16 +280,18 @@ class ServerInterface(QObject):
         if hasattr(self.update_started, "emit"):
             self.update_started.emit()
 
-        req = SyncRequest(file_name="deaduction_lean",
-                          content=self.lean_file.contents)
-
         # Invalidate events
-        self.file_invalidated           = trio.Event()
-        self.__proof_receive_done       = trio.Event()
-        self.__tmp_hypo_analysis        = ""
-        self.__tmp_targets_analysis     = ""
+        self.file_invalidated = trio.Event()
+        self.__proof_receive_done = trio.Event()
+        self.__tmp_hypo_analysis = ""
+        self.__tmp_targets_analysis = ""
 
-        resp = await self.lean_server.send(req)
+        resp = None
+        # Loop in case Lean's answer is None, which happens...
+        while not resp:
+            req = SyncRequest(file_name="deaduction_lean",
+                              content=self.lean_file.contents)
+            resp = await self.lean_server.send(req)
 
         if resp.message == "file invalidated":
             self.file_invalidated.set()

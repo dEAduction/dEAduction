@@ -37,7 +37,7 @@ summary_reg='^[A-Z].*'
 # ──────────────────────── Merge commit message ────────────────────────
 remote_reg='[a-zA-Z]+'
 branch_reg='[a-zA-Z0-9_\-\+\/]+'
-regex_merge="merge: (${remote_reg})\/(${branch_reg}) -> (${remote_reg})\/(${branch_reg})"
+regex_merge="merge> (${remote_reg})\/(${branch_reg}) -> (${remote_reg})\/(${branch_reg})"
 # merge: remote1/branch1 -> remote2/branch2
 # group 1: remote1
 # group 2: branch1

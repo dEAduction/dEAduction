@@ -224,6 +224,7 @@ def print_text_version(course):
 
 def print_goal(course):
     counter = 0
+    to_prove = False
     for st in course.statements:
         print("-------------------------")
         if isinstance(st, Exercise):
@@ -242,8 +243,10 @@ def print_goal(course):
         else:
             open_problem = False
         goal = st.initial_proof_state.goals[0]
-        print(goal.print_goal(open_problem=open_problem,
-                              to_prove=to_prove))
+        print(goal.goal_to_text(format_='utf8',
+                                to_prove=to_prove,
+                                text_depth=5,
+                                open_problem=open_problem))
 
 
 def get_courses_from_dir(dir_path: Path):

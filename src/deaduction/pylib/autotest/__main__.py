@@ -257,6 +257,7 @@ def find_selection(auto_step, emw):
     This is used by the async auto_step function.
     """
     auto_selection = []
+    success = True
     # First trial
     # TODO: make emw properties
     #  and function find_selection(AutoStep, prop, obj)
@@ -299,9 +300,10 @@ def find_selection(auto_step, emw):
             auto_selection.append(selection)
         else:
             log.debug("Bad selection in auto_step")
-            quit()
+            success = False
+            break
 
-    return auto_selection
+    return auto_selection, success
 
 
 async def auto_test(container: Container):
@@ -364,8 +366,10 @@ async def auto_test(container: Container):
                     emw.close()
                     break
 
-                auto_selection = find_selection(step, emw)
-
+                auto_selection, success = find_selection(step, emw)
+                if not success:
+                    # Quit this exercise
+                    container.exercise_window.close()
                 selection_names = [item.display_name
                                    for item in auto_selection]
                 log.debug(f"Selection: {selection_names}")
@@ -506,9 +510,10 @@ async def main():
             print(f"Global success : {global_success}")
             for exo_report in container.report:
                 success = "success" if exo_report[0] else "FAILURE"
-                print(exo_report[1] + ": " + success)
-                for step_report in exo_report[2:]:
-                    print(step_report)
+                if len(exo_report) > 1:
+                    print(exo_report[1] + ": " + success)
+                    for step_report in exo_report[2:]:
+                        print(step_report)
 
             # Finally closing d∃∀duction
             if container.servint:

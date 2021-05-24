@@ -403,6 +403,9 @@ class ExerciseChooser(AbstractCoExChooser):
 
         super().__init__(browser_layout)
 
+    def exercises_tree_double_clicked_connect(self, slot):
+        self.__exercises_tree.itemDoubleClicked.connect(slot)
+
     def set_preview(self, exercise: Exercise):
         """
         Set exercise preview. See AbstractCoExChooser.set_preview
@@ -709,7 +712,7 @@ class AbstractStartCoEx(QDialog):
         exercise and its course, usr's clicks are emulated by adding the
         Course as a browsed course in
         self.__course_chooser.__recent_courses_wgt and selecting the
-        exercise in self.__exercise_chooser.__exercises_tree. The code
+        exercise in self.__exercise_chooser.exercises_tree. The code
         for this is not very smart so if you want to enhance it, do it
         (see CONTRIBUTING.md file).
         """
@@ -776,6 +779,8 @@ class AbstractStartCoEx(QDialog):
 
         self.__exercise_chooser.exercise_previewed.connect(
                 self.__enable_start_ex_btn)
+        self.__exercise_chooser.exercises_tree_double_clicked_connect(
+            self.__start_exercise)
 
     @Slot()
     def __start_exercise(self):

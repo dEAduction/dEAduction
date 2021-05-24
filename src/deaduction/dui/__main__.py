@@ -29,14 +29,13 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import ctypes
 from sys import argv
-from pathlib import Path
 import logging
 import qtrio
 import threading
 import trio
 import argparse
+import os
 
 from PySide2.QtCore import ( QObject,
                              Signal,
@@ -67,11 +66,12 @@ from deaduction.pylib.autotest import                   select_exercise
 ###################
 # Change your own settings in .deaduction-dev/config.toml
 log_domains = cvars.get("logs.domains", "")
-
-log_domains = ["deaduction", "__main__", 'ServerInterface']
 log_level = cvars.get("logs.display_level", 'info')
-# log_domains = ['lean', 'ServerInterface']
-log_level = 'debug'
+
+if os.getenv("DEADUCTION_DEV_MODE", False):
+    log_level = 'debug'
+    log_domains = ["deaduction", "__main__", 'ServerInterface']
+
 logger.configure(domains=log_domains,
                  display_level=log_level)
 
