@@ -32,7 +32,7 @@ class ContextMenu(QMenu):
         for action in actions:
             self.addAction(action)
 
-    def set_availability(self, current_selection: [MathObject]) -> bool:
+    def set_availability(self, current_selection: [MathObject]):
         for action in self.actions:
             if action.is_available(current_selection):
                 action.setEnabled(True)
