@@ -39,6 +39,9 @@ from PySide2.QtWidgets import (QAction,
                                QMenu,
                                QMenuBar)
 
+from .menu_outline import (create_menu_recursively,
+                           MenuOutlineType)
+
 # ┌─────────┐
 # │ MenuBar │
 # └─────────┘
@@ -52,49 +55,8 @@ class MenuBar(QMenuBar):
     outline of the menu (see MenuBar.__init__ docstring) and it is
     set-up.
     """
-    def __init__(self, parent_qmw: QMainWindow, outline: List):
+    def __init__(self, parent_qmw: QMainWindow, outline: MenuOutlineType):
         """
-        Init the menubar, by giving it an outline of the menu. Such an
-        outline has the following structure:
-
-        Instance of QMenuBar
-        ├── Menu1
-        │   ├── SubMenu1
-        │   └── SubMenu2
-        │       ├── Action121
-        │       ├── Action122
-        │       └── SubSubMenu121
-        │           └── Action1211
-        ├── Menu2
-        │   ├── Action21
-        │   ├── Action22
-        │   └── SubMenu21
-        │       └── Action211
-        └── Menu3
-            └── Action31
-
-        Each menu (any sub…submenu is considered a menu) is represented
-        by Tuple[str, List[Union[MenuBarAction, Tuple]]]]:
-            — the `str` is the title of the menu,
-            — the `List` is composed of actions (`MenuBarAction`) and
-            submenus (`Tuple`).
-        In the above example, Menu2 would be:
-        Menu2 = ('Menu2', [Action21,
-                           Action22,
-                           ('SubSubMenu21', [Action211])])
-        See snippets/menubar for a full (but crappy) example.
-
-        Note that self is considered as a QMenu. This outline is set up
-        recursively by the inner function create_menu_recursively. This
-        function first goes through each menu in self (a List). It sees
-        that no element in this list is an action (tested with
-        `isinstance(child, Action)`). Therefore all those items are
-        menus, and the function calls itself on this menus. This goes on
-        until the function find some element in some menu which is an
-        action. At this point, all the hierarchy for *this* action has
-        been set up and the function adds the action and returns. All
-        paths are independent.
-
         So, to set use this class,
         1. go to its parent instance QMainWindow,
         2. crate menus and actions beforehand,
@@ -110,18 +72,6 @@ class MenuBar(QMenuBar):
         :param outline: Outline of the menu to be set-up.
         """
         super().__init__()
-
-        def create_menu_recursively(current: QMenu,
-                                    children: List[Union[QAction,
-                                    Tuple[str, List]]]):
-            for child in children:
-                if isinstance(child, QAction):
-                    current.addAction(child)
-                else:  # child is of type List[Union[…
-                    title, childrenchildren = child
-                    menu = MenuBarMenu(parent_qmw, title)
-                    current.addMenu(menu)
-                    create_menu_recursively(menu, childrenchildren)
         create_menu_recursively(self, outline)
 
 

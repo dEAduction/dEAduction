@@ -45,6 +45,9 @@ from .menubar import (
     MenuBarAction,
     MenuBarMenu)
 
+from .menu_outline import (
+    MenuOutlineType)
+
 from .recent_courses_widgets import (
     RecentCoursesLW,
     RecentCoursesLWI)
