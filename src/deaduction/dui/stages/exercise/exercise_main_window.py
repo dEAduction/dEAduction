@@ -43,9 +43,9 @@ from deaduction.dui.elements            import (ActionButton,
                                                 StatementsTreeWidgetItem,
                                                 MathObjectWidget,
                                                 MathObjectWidgetItem,
+                                                Menu,
                                                 MenuBar,
-                                                MenuBarAction,
-                                                MenuBarMenu)
+                                                MenuAction)
 from deaduction.dui.primitives          import  ButtonsDialog
 from deaduction.pylib.config.i18n       import  _
 from deaduction.pylib.memory            import (Journal)
@@ -224,9 +224,9 @@ class ExerciseMainWindow(QMainWindow):
 
     def __init_menubar(self):
         """
-        Create ExerciseMainWindow's menubar. Relevant classes are MenuBar,
-        MenuBarAction and MenuBarMenu, from deaduction.dui.elements. This is
-        done is this function in order not to bloat __init__.
+        Create ExerciseMainWindow's menubar. Relevant classes are
+        MenuBar, MenuAction and Menu, from deaduction.dui.elements. This
+        is done is this function in order not to bloat __init__.
         """
         pass
 
