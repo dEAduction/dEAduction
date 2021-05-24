@@ -40,13 +40,12 @@ from .context_widgets_classes import (
 from .lean_editor import (
     LeanEditor)
 
-from .menubar import (
+from .menus import (
+    Menu,
+    MenuAction,
     MenuBar,
-    MenuBarAction,
-    MenuBarMenu)
+    MOWContextMenu)
 
-from .menu_outline import (
-    MenuOutlineType)
 
 from .recent_courses_widgets import (
     RecentCoursesLW,
