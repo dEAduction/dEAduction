@@ -100,7 +100,7 @@ def action_theorem(proof_step,
     Apply theorem on selected objects or target.
     """
 
-    test_selection(selected_objects, target_selected)
+    # test_selection(selected_objects, target_selected)
 
     # TODO: For an iff statement, use rewriting
     #  test for iff or equality is removed since it works only with
