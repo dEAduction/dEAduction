@@ -469,6 +469,10 @@ grouped after the last group of regular imports and a blank line.
 - The [official documentation](https://git-scm.com/doc).
 - The (free) book [*Pro Git*](https://git-scm.com/book/en/v2), complete and
     rigorous, a short way of becoming proficient in Git.
+- A good branches
+    [workflow](https://nvie.com/posts/a-successful-git-branching-model/).
+- A short [guide](http://oss-watch.ac.uk/resources/pullrequest) on pull
+    requests.
 
 ### For L∃∀N
 
