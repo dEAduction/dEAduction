@@ -50,7 +50,7 @@ log = logging.getLogger(__name__)
 # Some configuration variables
 ############################################
 CHUNK_SIZE = 4096
-HASH_REGEX = re.compile(r"^((?:.+)\/(?:[^\/]+)) ([a-zA-Z0-9]+)$")
+HASH_REGEX = re.compile(r"^((?:.+)\/(?:[^\/]+)) ([a-zA-Z0-9]+) ([0-9]{3})$")
 
 
 ############################################
@@ -64,13 +64,21 @@ def path_helper(pp: Path):
     return Path(os.path.expandvars(str(pp))).resolve()
 
 ############################################
-# Hashing
+# Hashing and permissions
 ############################################
 def file_hash(fp: Path):
     hh = hashlib.sha1()
     hh.update(fp.read_bytes())
 
     return hh.hexdigest()
+
+def file_permissions_octal(fp: Path):
+    """
+    Return a file's permissions as
+    an octal string.
+    """
+
+    return "{:03o}".format(fp.stat().st_mode & 0x1FF)
 
 ############################################
 # Checking utilities
@@ -107,8 +115,8 @@ class HashList:
         path = Path(path).resolve()
 
         with gzip.open(str(path), "wb") as fhandle:
-            for pp, hh in self.files.items():
-                line = f"{str(pp)} {str(hh)}\n".encode("utf8")
+            for pp, (hh,zz) in self.files.items():
+                line = f"{str(pp)} {str(hh)} {str(zz)}\n".encode("utf8")
                 fhandle.write(line)
 
     def diff(self, other):
@@ -128,9 +136,11 @@ class HashList:
         for fp in path.rglob("*"):  # File path
             if fp.is_file():
                 hh     = file_hash(fp)
+                zz     = file_permissions_octal(fp)
 
                 fpr    = fp.relative_to(path)  # File Path Relative
-                r[fpr] = hh
+                r[fpr] = (hh,zz)
+
             elif not fp.is_dir():
                 log.warning(_("Ignoring non regular file {}").format(str(fp)))
 
@@ -169,8 +179,9 @@ class HashList:
                     if mt:
                         path  = Path(mt.group(1))
                         hash_ = mt.group(2)
+                        perm_ = mt.group(3)
 
-                        r[path] = hash_
+                        r[path] = (hash_, perm_)
 
                     else:
                         log.warning(_("Cannot parse line: {}")
