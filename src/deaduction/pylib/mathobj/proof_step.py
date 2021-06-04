@@ -1,7 +1,11 @@
 """
-# proof_step.py : <#ShortDescription> #
-    
-    <#optionalLongDescription>
+###############################################
+# proof_step.py : provide the ProofStep class #
+###############################################
+
+The ProofStep class is used to store all pieces of information concerning
+one step of a proof. This includes context selection and action, Lean Code,
+success or error msg, resulting proofstate, and so on.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -41,6 +45,12 @@ log = logging.getLogger(__name__)
 
 @dataclass()
 class NewGoal:
+    """
+    This class allows to store the creation of a new goal. In particular,
+    the msg property provides a msg thta can be displayed and gives
+    information about the resulting branching of the proof,
+    e.g. First case/ second case, proof of first implication, ...
+    """
     node_type:  str  # 'or', 'and', 'iff'
     counter:    int  # 1st or 2nd case / target
     old_hypo:   Optional[Union[MathObject, str]]    # e.g. 'P or Q'
@@ -293,7 +303,8 @@ class ProofStep:
         return report, success
 
     def display(self) -> str:
-        """Construct a string representation of self."""
+        """Construct a string representation of the proof step, including
+        action, context and target."""
 
         selection = " ".join([item.display_name for item in self.selection])
         user_input = " ".join([str(item) for item in self.user_input])

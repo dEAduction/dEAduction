@@ -1,11 +1,17 @@
 """
 # __init__.py : Provide the Journal class
     
-The Journal class is designed
-(1) to keep track of all events occurring in the soft, and
-(2) to serve as a filter towards the status bar.
+The Journal class is designed to keep track of all events occurring in the
+current proof. It is instantiated exactly once for a given proof. If the
+journal.save parameter in the config file is True, then the journal content
+is saved when the exercise window is closed.
 
-It is instantiated exactly once.
+The content is saved under two format:
+(1) a 'pkl' file containing an instance of the Exercise class, with the
+proof_steps saved in the refined_auto_step attribute. This file can be used
+fo autotests.
+(2) a 'txt' file which contains the logs of the proof, in which the successive
+proof steps are presented, with context, target, and actions.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -46,7 +52,7 @@ log = logging.getLogger(__name__)
 
 class Journal:
     """
-    A class to record events in the memory attribute. The events occuring
+    A class to record events in the memory attribute. The events occurring
     during a proof step are stored in the proof_step attribute of
     ExerciseMainWindow, and then stored in Journal.memory.
     """
@@ -67,8 +73,11 @@ class Journal:
 
     def save_exercise_with_proof_steps(self, emw):
         """
-        Incorporate journal as auto_steps attribute to emw.exercise,
-        and save this to cdirs.journal.
+        (1) Incorporate journal as auto_steps attribute to emw.exercise,
+        and save this to cdirs.journal as a 'pkl' file.
+        (2) Compute a text version of each proof step, and save the result
+        in a 'txt' file.
+
         :param emw: ExerciseMainWindow instance
         """
 
@@ -108,6 +117,10 @@ class Journal:
             output.write(txt)
 
     def display(self):
+        """
+        Compute a txt version of the proof stored in journal.memory.
+        :return:
+        """
         display_txt = ""
         step_counter = 0
         time_deltas = [0]
@@ -120,7 +133,8 @@ class Journal:
                 time_deltas.append(delta)
         time_deltas.append(0)
         for step, time_delta in zip(self.memory, time_deltas):
-            step_txt = step.display()
+            # Compute display of the proof step:
+            step_txt = step.display()  # ProofStep.display()
             time_display = "#" * int(time_delta/10)
             time_display2 = str(step.time.tm_min) + "'" + str(step.time.tm_sec)
             step_counter += 1
