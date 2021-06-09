@@ -1,7 +1,11 @@
 """
-# proof_step.py : <#ShortDescription> #
-    
-    <#optionalLongDescription>
+###############################################
+# proof_step.py : provide the ProofStep class #
+###############################################
+
+The ProofStep class is used to store all pieces of information concerning
+one step of a proof. This includes context selection and action, Lean Code,
+success or error msg, resulting proofstate, and so on.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -41,6 +45,12 @@ log = logging.getLogger(__name__)
 
 @dataclass()
 class NewGoal:
+    """
+    This class allows to store the creation of a new goal. In particular,
+    the msg property provides a msg thta can be displayed and gives
+    information about the resulting branching of the proof,
+    e.g. First case/ second case, proof of first implication, ...
+    """
     node_type:  str  # 'or', 'and', 'iff'
     counter:    int  # 1st or 2nd case / target
     old_hypo:   Optional[Union[MathObject, str]]    # e.g. 'P or Q'
@@ -135,13 +145,13 @@ class NewGoal:
 
 class ProofStep:
     """
-    Class to store data associated to a step in proof.
+    Class to store data associated to one step in the proof.
     The step starts with user inputs, and ends with Lean's responses.
     Note that the proof_state attribute is used both for storing the
     proof_state at the beginning of the step, which is used by logical
     action to compute the pertinent Lean Code,
     and for storing the proof_state at the end of the step, to be stored in
-    Journal and lean_file's history.
+    Journal and lean_file's history (and passed to the next proof_step).
     """
 
     # ──────────────── Proof memory ─────────────── #
@@ -252,7 +262,7 @@ class ProofStep:
     def compare(self, auto_test) -> (str, bool):
         """
         Compare self to an auto_test, and write a report if unexpected
-        happened. This is used for auto_test.
+        events happened. This is used for auto_test.
 
         :return: a string containing a written report, and a bool which is
         True iff everything is OK.
@@ -293,7 +303,8 @@ class ProofStep:
         return report, success
 
     def display(self) -> str:
-        """Construct a string representation of self."""
+        """Construct a string representation of the proof step, including
+        action, context and target."""
 
         selection = " ".join([item.display_name for item in self.selection])
         user_input = " ".join([str(item) for item in self.user_input])
@@ -324,7 +335,6 @@ class ProofStep:
         user_input_txt = ""
         if user_input:
             user_input_txt = " " + user_input
-
 
         txt = selection_txt + action_txt + user_input_txt + "\n" \
               + error_msg + success_msg + "\n" \

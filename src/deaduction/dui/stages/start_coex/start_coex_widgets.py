@@ -780,7 +780,13 @@ class AbstractStartCoEx(QDialog):
         self.__exercise_chooser.exercise_previewed.connect(
                 self.__enable_start_ex_btn)
         self.__exercise_chooser.exercises_tree_double_clicked_connect(
-            self.__start_exercise)
+            # self.__start_exercise)
+            self.__process_double_click)
+
+    @Slot()
+    def __process_double_click(self, tree_item):
+        if isinstance(tree_item, StatementsTreeWidgetItem):
+            self.__start_ex_btn.animateClick()
 
     @Slot()
     def __start_exercise(self):

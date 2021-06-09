@@ -12,10 +12,13 @@ msg=$(cat $1) # Hook paremeter is a path to a temoprary file containing the
 # ┌───────┐
 # │ Regex │
 # └───────┘
-
-# Commit types
-regex_standard='([a-z]+)(\(([^()]+)\))?::([a-z]+)> ([A-Z].*)'
 # See https://www.regextester.com/
+
+areas="^(code|doc|dui|other|snippets|tests|tools)$"
+types="^(chores|dev|feat|fix|ref|revert)$"
+
+# ─────────────────────── Standard commit message ──────────────────────
+regex_standard="([a-z]+)(\(([^()]+)\))?::([a-z]+)> ([A-Z].*)"
 # area(scope)::type> Summary
 # group 1: area
 # group 2: (scope)
@@ -28,14 +31,18 @@ regex_standard='([a-z]+)(\(([^()]+)\))?::([a-z]+)> ([A-Z].*)'
 # group 3:
 # group 4: type
 # group 5: Summary
-word_reg='[a-zA-Z0-9_\-]+'
-regex_merge="((${word_reg}/)+${word_reg}) -> ((${word_reg}/)+${word_reg})"
-
-# Standard commit message components
-areas="^(code|doc|dui|other|snippets|tests|tools)$"
 scope_reg='[^ ][^(^\n]+[^ ]'
 summary_reg='^[A-Z].*'
-types="^(chores|dev|feat|fix|ref|revert)$"
+
+# ──────────────────────── Merge commit message ────────────────────────
+remote_reg='[a-zA-Z]+'
+branch_reg='[a-zA-Z0-9_\-\+\/]+'
+regex_merge="merge> (${remote_reg})\/(${branch_reg}) -> (${remote_reg})\/(${branch_reg})"
+# merge: remote1/branch1 -> remote2/branch2
+# group 1: remote1
+# group 2: branch1
+# group 3: remote2
+# group 4: branch2
 
 # ┌────────────────────┐
 # │ Printing functions │
@@ -48,59 +55,74 @@ ESC_RED=$(tput setaf 1)
 ESC_RESET=$(tput sgr0)
 ESC_YELLOW=$(tput setaf 3)
 
-show_help_standard() {
-    echo "Please follow the following commit message format:
-
-    ${ESC_BOLD}area(scope)::type> Summary${ESC_RESET}
-
-${ESC_BOLD}area${ESC_RESET} (mandatory) is one of:
-${ESC_BLUE}code${ESC_RESET}      Changes affecting the codebase.
-${ESC_BLUE}doc${ESC_RESET}       Changes affecting the documentation (including comments and
-          docstrings).
-${ESC_BLUE}dui${ESC_RESET}       Changes affecting only d∃∀duction's user interface (e.g. texts,
-          tooltips) but have nothing to do with the code itself.
-${ESC_BLUE}other${ESC_RESET}     Changes that do not go in any other category, please avoid using it.
-${ESC_BLUE}snippets${ESC_RESET}  Changes affecting the snippets.
-${ESC_BLUE}tests${ESC_RESET}     Changes affecting the tests.
-${ESC_BLUE}tools${ESC_RESET}     Changes affecting the tools and the development environment.
-
-${ESC_BOLD}type${ESC_RESET} (mandatory) is one of:
-${ESC_BLUE}chores${ESC_RESET}  Changes not affecting the meaning of what is changed (e.g. changing a
-        filename).
-${ESC_BLUE}dev${ESC_RESET}     Work in progress for new features; changes that are part of its
-        development though not introducing it. A series of dev commits ends
-        with a feat commit.
-${ESC_BLUE}feat${ESC_RESET}    Introduce a completed new feature. When developing it, the last commit
-        must be the only one to use this type, all other must use dev.
-${ESC_BLUE}fix${ESC_RESET}     Fix bugs and problems.
-${ESC_BLUE}ref${ESC_RESET}     Refactoring.
-${ESC_BLUE}revert${ESC_RESET}  Revert to a previous commit, feature or state of the project.
-
-${ESC_BOLD}scope${ESC_RESET} (optional) is the precise part of the commit that was changed. No spaces
-or parenthesis surrounding scope.
-
-${ESC_BOLD}Summary${ESC_RESET} (mandatory) is a summary of what was changed. Start with a capital
-letter.
-
-See full spec at:
-https://github.com/dEAduction/dEAduction/blob/master/CONTRIBUTING.md#git-commit-messages"
+show_standard_format() {
+    echo \
+"\
+┌── Standard commit message
+│     ${ESC_BOLD}area(scope)::type> Summary${ESC_RESET}
+│ 
+│ ${ESC_BOLD}area${ESC_RESET} (mandatory) is one of:
+│ ${ESC_BLUE}code${ESC_RESET}      Changes affecting the codebase.
+│ ${ESC_BLUE}doc${ESC_RESET}       Changes affecting the documentation (including comments and
+│           docstrings).
+│ ${ESC_BLUE}dui${ESC_RESET}       Changes affecting only d∃∀duction's user interface (e.g. texts,
+│           tooltips) but have nothing to do with the code itself.
+│ ${ESC_BLUE}other${ESC_RESET}     Changes that do not go in any other category, please avoid using it.
+│ ${ESC_BLUE}snippets${ESC_RESET}  Changes affecting the snippets.
+│ ${ESC_BLUE}tests${ESC_RESET}     Changes affecting the tests.
+│ ${ESC_BLUE}tools${ESC_RESET}     Changes affecting the tools and the development environment.
+│ 
+│ ${ESC_BOLD}type${ESC_RESET} (mandatory) is one of:
+│ ${ESC_BLUE}chores${ESC_RESET}  Changes not affecting the meaning of what is changed (e.g. changing a
+│         filename).
+│ ${ESC_BLUE}dev${ESC_RESET}     Work in progress for new features; changes that are part of its
+│         development though not introducing it. A series of dev commits ends
+│         with a feat commit.
+│ ${ESC_BLUE}feat${ESC_RESET}    Introduce a completed new feature. When developing it, the last commit
+│         must be the only one to use this type, all other must use dev.
+│ ${ESC_BLUE}fix${ESC_RESET}     Fix bugs and problems.
+│ ${ESC_BLUE}ref${ESC_RESET}     Refactoring.
+│ ${ESC_BLUE}revert${ESC_RESET}  Revert to a previous commit, feature or state of the project.
+│ 
+│ ${ESC_BOLD}scope${ESC_RESET} (optional) is the precise part of the commit that was changed. No spaces
+│ or parenthesis surrounding scope.
+│ 
+│ ${ESC_BOLD}Summary${ESC_RESET} (mandatory) is a summary of what was changed. Start with a capital
+│ letter.
+└──"
 }
 
-show_help_merge() {
+show_merge_format() {
     remote_list=$(git remote | sed 's/^/— /g')"\n— local"
-    echo "Please follow the following merge message format:
 
-    ${ESC_BOLD}merge: remote1/branch1 -> remote2/branch2${ESC_RESET}
+    echo \
+"\
+┌── Merge commit message
+│     ${ESC_BOLD}merge: remote1/branch1 -> remote2/branch2${ESC_RESET}
+│ 
+│ ${ESC_BOLD}remote1${ESC_BOLD} and ${ESC_BOLD}remote2${ESC_RESET} (mandatory) are one of:
+│ ${remote_list}
+│ 
+│ ${ESC_BOLD}branch1${ESC_RESET} (mandatory) is the branch you merge from.
+│ ${ESC_BOLD}branch2${ESC_RESET} (mandatory) is the branch you merge to.
+└──"
+}
 
-${ESC_BOLD}remote1${ESC_BOLD} and ${ESC_BOLD}remote2${ESC_RESET} (mandatory) are one of:
-${remote_list}
+show_help() {
+    if [ $1 = 'standard' ] ; then
+        show_standard_format
+    elif [ $1 = 'merge' ] ; then
+        show_merge_format
+    else
+        show_standard_format
+        show_merge_format
+    fi
 
-${ESC_BOLD}branch1${ESC_RESET} (mandatory) is the branch you merge from.
-${ESC_BOLD}branch2${ESC_RESET} (mandatory) is the branch you merge to.
-
-See full spec at:
+    echo ""
+    echo "See full spec:
 https://github.com/dEAduction/dEAduction/blob/master/CONTRIBUTING.md#git-commit-messages"
 }
+
 
 show_bad() {
     echo ""
@@ -129,6 +151,7 @@ if [[ $msg =~ ${regex_standard} ]] ; then
     type_=${BASH_REMATCH[4]}
     summary=${BASH_REMATCH[5]}
 
+    # Print infos
     echo "Commit message analysis:
 area:    ${area}
 scope:   ${scope}
@@ -138,7 +161,7 @@ Summary: ${summary}"
     # Check area value
     if [[ ! ${area} =~ ${areas} ]] ; then
         show_bad "Incorrect area: ${area}"
-        show_help_standard
+        show_help 'standard'
         exit 1
     fi
 
@@ -146,7 +169,7 @@ Summary: ${summary}"
     if [ ! ${scope_group} = "" ] ; then
         if [[ ! ${scope} =~ ${scope_reg} ]] ; then
             show_bad "Incorrect scope: ${scope}"
-            show_help_standard
+            show_help 'standard'
             exit 1
         fi
     fi
@@ -154,28 +177,41 @@ Summary: ${summary}"
     # Check type value
     if [[ ! ${type_} =~ ${types} ]] ; then
         show_bad "Incorrect type: ${type_}"
-        show_help_standard
+        show_help 'standard'
         exit 1
     fi
 
     # Check Summary
     if [[ ! ${summary} =~ ${summary_reg} ]] ; then
         show_bad "Summary must start with a capital letter."
-        show_help_standard
+        show_help 'standard'
         exit 1
     fi
 
     # Confirmation
-    show_good "Valid commit message!"
+    show_good "Valid standard commit message!"
     exit 0
 # Check merge messages
 elif [[ $msg =~ ${regex_merge} ]] ; then
-    show_bad "Invalid merge message, please try again."
-    show_help_merge
+    # Get infos
+    remote1=${BASH_REMATCH[1]}
+    branch1=${BASH_REMATCH[2]}
+    remote2=${BASH_REMATCH[3]}
+    branch2=${BASH_REMATCH[4]}
 
-    exit 1
+    # Print infos
+    echo "Merge commit message analysis:
+remote1: ${remote1}
+branch1: ${branch1}
+remote2: ${remote2}
+branch2: ${branch2}"
+
+    # Confirmation, no test for the moment
+    # TODO: write tests on remote and branch names
+    show_good "Valid standard commit message!"
+    exit 0
 else
     show_bad "Invalid commit message format, please try again."
-    show_help_standard
+    show_help 'all'
     exit 1
 fi

@@ -334,7 +334,7 @@ class ExerciseMainWindow(QMainWindow):
         :param new_goal: The new goal to update / set the interface to.
         """
         if new_goal is self.current_goal:  # No update needed
-            self.ui_updated.emit()
+            self.ui_updated.emit()  # This signal is used by autotest
             return
 
         # Get previous goal and set tags
@@ -369,7 +369,7 @@ class ExerciseMainWindow(QMainWindow):
             self.ecw.props_wgt.apply_math_object_triggered.connect(
                 self.__apply_math_object_triggered)
 
-        self.ui_updated.emit()  # This signal is used for autotest.
+        self.ui_updated.emit()  # This signal is used by the autotest module.
 
     ##################################
     # Async tasks and server methods #
@@ -821,11 +821,7 @@ class ExerciseMainWindow(QMainWindow):
                     else:  # Several goals solved at once ??
                         nb = str(-delta)
                         message = nb + ' ' + _('goals solved!')
-                    QMessageBox.information(self,
-                                            '',
-                                            message,
-                                            QMessageBox.Ok
-                                            )
+                    QMessageBox.information(self, '', message, QMessageBox.Ok)
 
         # ─────────── Display msgs (no msg when undoing) ────────── #
         if not proof_step.is_history_move():

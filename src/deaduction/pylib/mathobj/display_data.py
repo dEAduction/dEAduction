@@ -309,10 +309,13 @@ def needs_paren(parent, child, child_number) -> bool:
 
     p_node = parent.node
     c_node = child.node
-    if c_node in NATURE_LEAVES_LIST + \
-            ("SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
-             "PROP_EQUAL_NOT", "PROP_≤", "PROP_≥", "PROP_<", "PROP_>"
-             "PROP_INCLUDED", "SET_UNION+", "SET_INTER+"):
+    if c_node in NATURE_LEAVES_LIST:
+        return False
+    if p_node == 'PROP_NOT':
+        return True
+    if c_node in ("SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
+                  "PROP_EQUAL_NOT", "PROP_≤", "PROP_≥", "PROP_<", "PROP_>"
+                  "PROP_INCLUDED", "SET_UNION+", "SET_INTER+"):
         return False
     elif c_node == "APPLICATION":
         return False
