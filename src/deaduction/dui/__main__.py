@@ -48,6 +48,7 @@ from deaduction.dui.stages.missing_dependencies  import (InstallingMissingDepend
                                                          WantInstallMissingDependencies )
 
 from deaduction.pylib.coursedata                 import Exercise
+from deaduction.pylib.mathobj                    import MathObject
 from deaduction.pylib                            import logger
 from deaduction.pylib.server                     import ServerInterface
 
@@ -248,6 +249,9 @@ class Container(QObject):
             await self.servint.file_invalidated.wait()
             self.servint.stop()
             log.info("Lean server stopped!")
+            # ─────────────────── Most Important ─────────────────── #
+            #  Re-initialisation of MathObject.Variables
+            MathObject.clear()
 
         # Start Lean server
         self.servint = ServerInterface(self.nursery)

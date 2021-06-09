@@ -164,6 +164,16 @@ class MathObject:
     def has_name(self, name: str):
         return self.display_name == name
 
+    @classmethod
+    def clear(cls):
+        """Re-initialise various class variables, in particular the
+        Variables dict. It is crucial that this method is called when Lean
+        server is stopped, because in the next session Lean could
+        re-attributes an identifier that is in Variables, entailing chaos."""
+        cls.Variables = {}
+        cls.number_sets = []
+        cls.bound_var_number = 0
+
     # Main creation method #
     @classmethod
     def from_info_and_children(cls, info: {}, children: []):

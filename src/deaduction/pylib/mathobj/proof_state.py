@@ -164,7 +164,6 @@ class Goal:
         # log.debug(new_context)
         old_names = [math_object_old.info["name"]
                      for math_object_old in old_context]
-        new_index = 0
         for math_object in new_context:
             name = math_object.info["name"]
 
@@ -192,7 +191,6 @@ class Goal:
                 # Will not be considered anymore:
                 old_names[old_index]   = None
                 old_context[old_index] = None
-            new_index += 1
 
         # (5) Remove 'None' entries
         clean_permuted_new_context = [item for item in permuted_new_context

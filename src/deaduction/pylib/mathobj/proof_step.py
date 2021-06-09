@@ -145,13 +145,13 @@ class NewGoal:
 
 class ProofStep:
     """
-    Class to store data associated to a step in proof.
+    Class to store data associated to one step in the proof.
     The step starts with user inputs, and ends with Lean's responses.
     Note that the proof_state attribute is used both for storing the
     proof_state at the beginning of the step, which is used by logical
     action to compute the pertinent Lean Code,
     and for storing the proof_state at the end of the step, to be stored in
-    Journal and lean_file's history.
+    Journal and lean_file's history (and passed to the next proof_step).
     """
 
     # ──────────────── Proof memory ─────────────── #
@@ -262,7 +262,7 @@ class ProofStep:
     def compare(self, auto_test) -> (str, bool):
         """
         Compare self to an auto_test, and write a report if unexpected
-        happened. This is used for auto_test.
+        events happened. This is used for auto_test.
 
         :return: a string containing a written report, and a bool which is
         True iff everything is OK.
@@ -335,7 +335,6 @@ class ProofStep:
         user_input_txt = ""
         if user_input:
             user_input_txt = " " + user_input
-
 
         txt = selection_txt + action_txt + user_input_txt + "\n" \
               + error_msg + success_msg + "\n" \
