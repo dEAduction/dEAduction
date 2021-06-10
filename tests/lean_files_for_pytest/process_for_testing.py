@@ -48,7 +48,7 @@ import logging
 import qtrio
 import trio
 import gettext
-import pickle
+import pickle5 as pickle
 import os
 from pathlib import Path
 

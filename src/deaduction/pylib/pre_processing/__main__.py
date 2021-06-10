@@ -58,7 +58,7 @@ from typing import Optional
 import logging
 import qtrio
 import trio
-import pickle
+import pickle5 as pickle
 import argparse
 from pathlib import Path
 from PySide2.QtWidgets import QFileDialog

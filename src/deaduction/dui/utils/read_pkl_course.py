@@ -26,7 +26,7 @@ This file is part of d∃∀duction.
 """
 
 from pathlib import Path
-import pickle
+import pickle5 as pickle
 
 from deaduction.pylib.coursedata import Course
 

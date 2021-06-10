@@ -58,7 +58,7 @@ from sys import argv
 from functools import partial
 from typing import Optional
 from pathlib import Path
-import pickle
+import pickle5 as pickle
 import argparse
 
 from deaduction.pylib.coursedata                 import Course, Exercise

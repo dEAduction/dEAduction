@@ -27,7 +27,7 @@ This file is part of d∃∀duction.
 """
 
 import logging
-import pickle
+import pickle5 as pickle
 from pathlib import Path
 from typing import Any
 

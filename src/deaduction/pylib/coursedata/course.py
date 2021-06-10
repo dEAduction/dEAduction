@@ -35,7 +35,7 @@ from collections import                     OrderedDict
 from dataclasses import                     dataclass
 from pathlib import                         Path
 from typing import                          List, Dict
-import pickle
+import pickle5 as pickle
 import os
 import logging
 
