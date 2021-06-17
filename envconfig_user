@@ -1,0 +1,48 @@
+#!/bin/bash
+#####################
+# Env config script #
+#####################
+
+# Original Author : Florian Dupeyron <florian.dupeyron@mugcat.fr>
+# Date            : June 2020
+
+# Copyright (c) 2020 the dEAduction team.
+# 
+# This file is part of dEAduction.
+# 
+#     dEAduction is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+# 
+#     dEAduction is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License
+#     along with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
+
+cd $DEADUCTION_DIR
+
+# Install python env
+ENVPATH="$(pwd)/env"
+
+if [ ! -d $ENVPATH ] ; then
+    echo "Installing python env."
+	  $PYTHON_FOR_DEADUCTION -m venv ${ENVPATH}
+fi
+
+if [ -f $ENVPATH/bin/activate ] ; then
+   source "$ENVPATH/bin/activate"
+fi
+
+if [ -f "requirements.txt" ] ; then
+    echo "Installing package dependencies"
+    $PYTHON_FOR_DEADUCTION -m ensurepip
+    $PYTHON_FOR_DEADUCTION -m pip install -r "requirements.txt" | while read r ; do [[ ${r} =~ '^Requirement already satisfied:' ]] && echo $r ; done
+else
+    echo "No requirements.txt file !"
+fi
+
+export PYTHONPATH=$PYTHONPATH:"$(pwd)/src:$(pwd)"
