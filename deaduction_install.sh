@@ -214,7 +214,7 @@ cd src/deaduction
 
 $PYTHON_FOR_DEADUCTION -m dui" > ../deaduction_launcher.sh
 
-chmod u+x deaduction_launcher.sh
+chmod u+x ../deaduction_launcher.sh
 
 echo ">>> You can now try to start deaduction by executing"
 echo "deaduction_launcher.sh"
