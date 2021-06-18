@@ -152,14 +152,13 @@ if [ $FOUND_GIT == 1 ]; then
   echo "Do you want to use git to install deaduction? (y/n)"
   echo "(This is necessary for developers, and convenient for frequent updating)"
   read RESPONSE
-  WITH_GIT=2
-  while [ $WITH_GIT == 2 ]; do
-    if [ "$RESPONSE" == "y" ]; then
-      WITH_GIT=1
-    elif [ "$RESPONSE" == "n" ]; then
-      WITH_GIT=0
-    fi
-  done
+  if [ "$RESPONSE" == "y" ]; then
+    WITH_GIT=1
+  elif [ "$RESPONSE" == "n" ]; then
+    WITH_GIT=0
+  else
+    abort "Wrong answer. Try again."
+  fi
 fi
 
 # TODO: choose location
