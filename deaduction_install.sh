@@ -123,7 +123,7 @@ if [ $FOUND_BREW == 1 ]; then
   else
     echo "gmp not found"
     # TODO: The following will NOT work on new Mac M1
-    abort "--> Try typing 'brew install gmp' and rerun this script"
+    abort "--> Try typing 'brew install gmp' and then rerun this script."
   fi
 elif [ -d /usr/local/Cellar/gmp ]; then
     echo "(/usr/local/Cellar/gmp found, should be OK)"
@@ -143,14 +143,14 @@ if which git &> /dev/null; then
 else
   echo "(git not found: see https://git-scm.com/book/fr/v2/D%C3%A9marrage-rapide-Installation-de-Git if needed)"
   FOUND_GIT=0
+  # TODO: handle git installation
   echo "If you want to use git to keep deaduction up-to-date,"
   echo "stop this script and install git, then launch this script again"
-  continue ">>> Do you want to go on? (y/n)"
 fi
 
 if [ $FOUND_GIT == 1 ]; then
   echo "Do you want to use git to install deaduction? (y/n)"
-  echo "(This is necessary for developers, and allow easy updating)"
+  echo "(This is necessary for developers, and convenient for frequent updating)"
   read RESPONSE
   WITH_GIT=2
   while [ $WITH_GIT == 2 ]; do
@@ -163,22 +163,44 @@ if [ $FOUND_GIT == 1 ]; then
 fi
 
 # TODO: choose location
-# TODO: tester curl?
+# TODO: tester si curl existe?
+
+  echo ">>> Deaduction will be installed inside a directory named 'dEAduction/'"
+  echo ">>> in the current directory."
+  continue ">>> Proceed with download? (y/n)"
 
 ############
 # DOWNLOAD #
 ############
 if [ $WITH_GIT == 0 ]; then
-  abort "this method is not supported yet!"
+  echo "Downloading zip archive..."
+  mkdir tmp
+  curl -L https://github.com/dEAduction/dEAduction/zipball/master/ --output tmp/deaduction.zip
+  # Test zip archive
+  if unzip -t tmp/deaduction.zip > /dev/null; then
+    echo "(Zip archive is OK)";
+  else
+    abort "Corrupted zip archive. Try again."
+  fi
+  echo "Unzipping..."
+  # Dirty solution to get dir name
+  DIR_NAME=$(unzip -l tmp/deaduction.zip | head -n5 | tail -n1 | awk '{print $4}')
+  unzip tmp/deaduction.zip
+  rm tmp/deaduction.zip
+  mv $DIR_NAME dEAduction
+else
+  echo "Downloading with git..."
+  git clone https://github.com/dEAduction/dEAduction.git
 fi
 
-echo "Downloading with git..."
-# git clone https://github.com/dEAduction/dEAduction.git
+# Deaduction content has been extracted to directory dEAduction
 cd dEAduction
 
 #########################
 # WRITING LAUNCH SCRIPT #
 #########################
+# The following will write a script with adequate name for the python cmd
+# and store it in deaduction_launcher.sh
 
 echo -e "#!/bin/bash
 
@@ -191,11 +213,11 @@ source envconfig_user
 export PYTHONPATH=\$PYTHONPATH:\"$(pwd)/src\"
 cd src/deaduction
 
-$PYTHON_FOR_DEADUCTION -m dui" > deaduction_launcher.sh
+$PYTHON_FOR_DEADUCTION -m dui" > ../deaduction_launcher.sh
 
 chmod u+x deaduction_launcher.sh
 
 echo ">>> You can now try to start deaduction by executing"
 echo "deaduction_launcher.sh"
-echo "(The launcher can be put in any directory)"
-
+echo "(The launcher can be put anywhere,"
+echo "e.g. in your Applications/ directory)"
