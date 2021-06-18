@@ -41,9 +41,11 @@ ENVPATH="$(pwd)/env"
 
 if [ ! -d $ENVPATH ] ; then
     echo "Installing python env."
-	python3.8 -m venv ${ENVPATH}
+	  python3.8 -m venv ${ENVPATH}
+fi
 
-    source "$ENVPATH/bin/activate"
+if [ -f $ENVPATH/bin/activate ] ; then
+   source "$ENVPATH/bin/activate"
 fi
 
 if [ -f "requirements.txt" ] ; then
@@ -53,7 +55,6 @@ else
     echo "No requirements.txt file !"
 fi
 
-source "$ENVPATH/bin/activate"
 export PYTHONPATH=$PYTHONPATH:"$(pwd)/src:$(pwd)"
 
 export DEADUCTION_DEV_MODE=1 # Enable deaduction dev mode

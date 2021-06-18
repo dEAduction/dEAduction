@@ -51,6 +51,17 @@ else
   abort "Deaduction works only on Linux and MacOs."
 fi
 
+# Machine hardware name
+CPU="$(/usr/bin/uname -m)"
+if [[ "$CPU" == "arm64" ]]; then
+  echo "WARNING: Brew has some issues on the new mac M1 (as of 06/21)"
+  echo "which may affect gmp install"
+  echo "see e.g. https://www.wisdomgeek.com/development/installing-intel-based-packages-using-homebrew-on-the-m1-mac/"
+  echo "and specifically https://leanprover-community.github.io/archive/stream/113489-new-members/topic/M1.20macs.html"
+fi
+
+
+
 ##########
 # PYTHON #
 ##########
@@ -124,7 +135,9 @@ if [ $FOUND_BREW == 1 ]; then
     echo "Found gmp !"
   else
     echo "gmp not found"
-    # TODO: The following will NOT work on new Mac M1
+    if [[ "$CPU" == "arm64" ]]; then
+      echo "(WARNING: see above issue for brew and gmp on Mac M1)"
+    fi
     abort "--> Try typing 'brew install gmp' and then rerun this script."
   fi
 elif [ -d /usr/local/Cellar/gmp ]; then
