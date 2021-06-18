@@ -4,6 +4,8 @@ set -u
 # DEADUCTION INSTALLACTION SCRIPT
 # INSPIRED BY HOMEBREW,
 # https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+# execute with:
+# /bin/bash -c "$(curl -L https://raw.githubusercontent.com/dEAduction/dEAduction/master/deaduction_install.sh)"
 
 abort() {
   printf "%s\n" "Aborted: $@"
@@ -220,3 +222,5 @@ echo ">>> You can now try to start deaduction by executing"
 echo "deaduction_launcher.sh"
 echo "(The launcher can be put anywhere,"
 echo "e.g. in your Applications/ directory)"
+echo "First execution will download Lean and the Mathlib,"
+echo "and create a virtual env for Python (be patient...)"
