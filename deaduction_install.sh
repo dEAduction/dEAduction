@@ -71,37 +71,36 @@ echo "Deaduction nees python ≥ 3.7"
 if which python; then
   echo "python ->"
   python --version
+  python -c 'import sys; exit(1) if (sys.version_info.major < 3 \
+  or sys.version_info.minor < 7) \
+  else exit(0)'
+  if [ $? == 0 ]; then
+    echo ">>> (the command python will work)"
+    #  CMD_PYTHON="python"
+    #  echo "using python cmd"
+  fi
 else
-  echo "(the command 'python' does not work)"
+  echo "(the command 'python' will not work)"
 fi
+
 if which python3; then
   echo "python3 ->"
   python3 --version
-else
-  echo "(the command 'python3' does not work)"
-fi
-
-echo ">>> Type the command that should be used to launch python"
-echo ">>> or RETURN to abort"
-python -c 'import sys; exit(1) if (sys.version_info.major < 3 \
-or sys.version_info.minor < 7) \
-else exit(0)'
-if [ $? == 0 ]; then
-  echo ">>> (python is OK)"
-#  CMD_PYTHON="python"
-#  echo "using python cmd"
-else
   python3 -c 'import sys; exit(1) if (sys.version_info.major < 3 \
 or sys.version_info.minor < 7) \
 else exit(0)'
   if [ $? == 0 ]; then
-#    CMD_PYTHON="python3"
-#    echo "using python3 cmd"
-  echo ">>> (python3 is OK)"
-  else echo "WARNING: Deaduction needs python ≥ 3.7 (neither python nor
-  python3 will work)"
+    #    CMD_PYTHON="python3"
+    #    echo "using python3 cmd"
+    echo ">>> (the command python3 will work)"
   fi
+else
+  echo "(the command 'python3' will not work)"
 fi
+
+echo ">>> Type the command that should be used to launch python"
+echo ">>> or RETURN to abort (e.g. if you need to install or update python)"
+
 # User's choice
 read PYTHON_FOR_DEADUCTION
 # Test this cmd:
