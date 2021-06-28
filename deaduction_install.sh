@@ -25,7 +25,7 @@ continue() {
 }
 
 # Check old deaduction
-if [ -d .deaduction ]; then
+if [ -d "$HOME".deaduction ]; then
   echo "(Deaduction has already been installed on this computer)"
   continue "Do you want to proceed anyway? (y/n)"
 fi
@@ -68,10 +68,18 @@ fi
 # Check the python and python3 commands, success if one refer
 # to python ≥ 3.7
 echo "Deaduction nees python ≥ 3.7"
-echo "python ->"
-python --version
-echo "python3 ->"
-python3 --version
+if which python; then
+  echo "python ->"
+  python --version
+else
+  echo "(the command 'python' does not work)"
+fi
+if which python3; then
+  echo "python3 ->"
+  python3 --version
+else
+  echo "(the command 'python3' does not work)"
+fi
 
 echo ">>> Type the command that should be used to launch python"
 echo ">>> or RETURN to abort"
@@ -115,40 +123,41 @@ fi
 echo "Python command: $PYTHON_FOR_DEADUCTION"
 
 
-########
-# Brew #
-########
-if which brew > /dev/null; then
-  echo "(Found Homebrew... in case of problem try brew update?)"
-  FOUND_BREW=1
-else
-  echo "(Homebrew not found: see https://docs.brew.sh/Installation if needed)"
-  FOUND_BREW=0
-fi
-
-#######
-# gmp #
-#######
-echo "Testing gmp (Gnu MultiPrecision, needed by Lean)"
-if [ $FOUND_BREW == 1 ]; then
-  if brew info gmp &> /dev/null; then
-    echo "Found gmp !"
+#################
+# Brew (Mac OS) #
+#################
+if [ $DEADUCTION_ON_LINUX == 0 ]; then
+  if which brew > /dev/null; then
+    echo "(Found Homebrew... in case of problem try brew update?)"
+    FOUND_BREW=1
   else
-    echo "gmp not found"
-    if [[ "$CPU" == "arm64" ]]; then
-      echo "(WARNING: see above issue for brew and gmp on Mac M1)"
-    fi
-    abort "--> Try typing 'brew install gmp' and then rerun this script."
+    echo "(Homebrew not found: see https://docs.brew.sh/Installation if needed)"
+    FOUND_BREW=0
   fi
-elif [ -d /usr/local/Cellar/gmp ]; then
-    echo "(/usr/local/Cellar/gmp found, should be OK)"
-else
-    echo "gmp not found"
-    # TODO: The following will NOT work on new Mac M1
-    abort "--> Try installing Homebrew, then typing 'brew install gmp', and
-    finally run this script again..."
-fi
 
+################
+# gmp (Mac OS) #
+################
+  echo "Testing gmp (Gnu MultiPrecision, needed by Lean)"
+  if [ $FOUND_BREW == 1 ]; then
+    if brew info gmp &> /dev/null; then
+      echo "Found gmp !"
+    else
+      echo "gmp not found"
+      if [[ "$CPU" == "arm64" ]]; then
+        echo "(WARNING: see above issue for brew and gmp on Mac M1)"
+      fi
+      abort "--> Try typing 'brew install gmp' and then rerun this script."
+    fi
+  elif [ -d /usr/local/Cellar/gmp ]; then
+      echo "(/usr/local/Cellar/gmp found, should be OK)"
+  else
+      echo "gmp not found"
+      # TODO: The following will NOT work on new Mac M1
+      abort "--> Try installing Homebrew, then typing 'brew install gmp', and
+      finally run this script again..."
+  fi
+fi
 #######
 # git #
 #######
