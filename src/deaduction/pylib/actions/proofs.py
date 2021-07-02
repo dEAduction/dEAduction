@@ -40,7 +40,9 @@ from deaduction.pylib.actions import (InputType,
                                       CodeForLean,
                                       apply_exists,
                                       apply_and,
-                                      apply_or)
+                                      apply_or,
+                                      apply_substitute)
+
 from deaduction.pylib.mathobj import (MathObject,
                                       get_new_hyp,
                                       give_global_name,
@@ -287,107 +289,6 @@ def action_new_object(proof_step,
 # APPLY #
 #########
 
-def apply_substitute(proof_step, l: [MathObject], user_input: [int], equality):
-    """
-    Try to rewrite the goal or the first selected property using the last
-    selected property.
-    """
-
-    goal = proof_step.goal
-
-    codes = CodeForLean.empty_code()
-    heq = l[-1]
-    left_term = equality.children[0]
-    right_term = equality.children[1]
-    success1 = ' ' + _("{} replaced by {}").format(left_term.to_display(),
-                                             right_term.to_display()) + ' '
-    success2 = ' ' + _("{} replaced by {}").format(right_term.to_display(),
-                                             left_term.to_display()) + ' '
-    choices = [(left_term.to_display(),
-                f'Replace by {right_term.to_display()}'),
-               (right_term.to_display(),
-                f'Replace by {left_term.to_display()}')]
-            
-    if len(l) == 1:
-        # If the user has chosen a direction, apply substitution
-        # else if both directions make sense, ask the user for a choice
-        # else try direct way or else reverse way.
-        h = l[0].info["name"]
-        if len(user_input) > 0:
-            if user_input[0] == 1:
-                success_msg = success2 + _("in target")
-                more_code = CodeForLean.from_string(f'rw <- {h}',
-                                                    success_msg=success_msg)
-            elif user_input[0] == 0:
-                success_msg = success1 + _("in target")
-                more_code = CodeForLean.from_string(f'rw {h}',
-                                                    success_msg=success_msg)
-            codes = codes.or_else(more_code)
-        else:
-            if goal.target.math_type.contains(left_term) and \
-                    goal.target.math_type.contains(right_term):
-                
-                raise MissingParametersError(
-                    InputType.Choice,
-                    choices, 
-                    title=_("Precision of substitution"),
-                    output=_("Choose which expression you want to replace"))
-            else:
-                msg2 = success2 + _("in target")
-                more_code2 = CodeForLean.from_string(f'rw <- {h}',
-                                                     success_msg=msg2)
-                codes = codes.or_else(more_code2)
-                msg1 = success1 + _("in target")
-                more_code1 = CodeForLean.from_string(f'rw {h}',
-                                                     success_msg=msg1)
-                codes = codes.or_else(more_code1)
-
-    if len(l) == 2:
-        h = l[0].info["name"]
-        heq_name = l[-1].info["name"]
-        if len(user_input) > 0:
-            if user_input[0] == 1:
-                success_msg = success2 + _("in {}").format(h)
-                more_code = CodeForLean.from_string(f'rw <- {heq_name} at {h}',
-                                                    success_msg=success_msg)
-                codes = codes.or_else(more_code)
-
-            elif user_input[0] == 0:
-                success_msg = success1 + _("in {}").format(h)
-                more_code = CodeForLean.from_string(f'rw {heq_name} at {h}',
-                                                    success_msg=success_msg)
-                codes = codes.or_else(more_code)
-        else:
-            if l[0].math_type.contains(left_term) and \
-                    l[0].math_type.contains(right_term):
-                    
-                raise MissingParametersError(
-                    InputType.Choice,
-                    choices, 
-                    title=_("Precision of substitution"),
-                    output=_("Choose which expression you want to replace"))
-
-        # h, heq_name = heq_name, h
-        # codes = codes.or_else(f'rw <- {heq_name} at {h}')
-        # codes = codes.or_else(f'rw {heq_name} at {h}')
-
-        msg2 = success2 + _("in {}").format(h)
-        more_code2 = CodeForLean.from_string(f'rw <- {heq_name} at {h}',
-                                             success_msg=msg2)
-        codes = codes.or_else(more_code2)
-        msg1 = success1 + _("in {}").format(h)
-        more_code1 = CodeForLean.from_string(f'rw {heq_name} at {h}',
-                                             success_msg=msg1)
-        codes = codes.or_else(more_code1)
-
-    if heq.is_for_all():
-        # if property is, e.g. "∀n, u n = c"
-        # there is a risk of meta vars if Lean does not know to which n
-        # applying the equality
-        codes = codes.and_then('no_meta_vars')
-    return codes
-
-
 def apply_function(proof_step, selected_objects: [MathObject]):
     """
     Apply l[-1], which is assumed to be a function f, to previous elements of
@@ -479,13 +380,14 @@ def action_apply(proof_step,
 
     codes = CodeForLean.empty_code()
     error = ""
+    # Tha following has been replaced by the equal button
     # (2) If rewriting is possible
-    test, equality = prop.can_be_used_for_substitution()
-    if test:
-        codes = codes.or_else(apply_substitute(proof_step,
-                                               selected_objects,
-                                               user_input,
-                                               equality))
+    # test, equality = prop.can_be_used_for_substitution()
+    # if test:
+    #     codes = codes.or_else(apply_substitute(proof_step,
+    #                                            selected_objects,
+    #                                            user_input,
+    #                                            equality))
 
     expanded_apply_button = cvars.get('expanded_apply_button', False)
     if expanded_apply_button:
@@ -558,8 +460,9 @@ def explain_how_to_apply(math_object: MathObject, dynamic=False, long=False) \
 
     if math_object.is_function():
         captions.append(tooltips.get('tooltip_apply_function'))
-    elif math_object.can_be_used_for_substitution()[0]:
-        captions.append(tooltips.get('tooltip_apply_substitute'))
+    # Substitution transfered to 'equal' button
+    # elif math_object.can_be_used_for_substitution()[0]:
+    #    captions.append(tooltips.get('tooltip_apply_substitute'))
 
     return captions
 

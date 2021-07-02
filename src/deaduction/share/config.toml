@@ -14,7 +14,7 @@ context_font_size = "12pt"
 tooltips_font_size = 10
 mathematics_font = "Defaults"
 
-logic_button_symbols = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃"
+logic_button_symbols = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃, ="
 use_logic_button_symbols = true
 
 display_detailed_errors_on_wui = true

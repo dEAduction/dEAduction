@@ -50,7 +50,8 @@ from .logic import (        action_negate,
                             apply_implicate,
                             apply_implicate_to_hyp,
                             apply_forall,
-                            have_new_property)
+                            have_new_property,
+                            apply_substitute)
 
 from .proofs import (       action_apply,
                             action_use_proof_methods,

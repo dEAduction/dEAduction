@@ -57,6 +57,8 @@ __tooltips = {
     + "• " + _("""From '∃ x, P(x)' get an 'x' and 'P(x)'"""),
     # + "\n"
     # + "• " + _("""From some 'x' and 'P(x)' get '∃ x, P(x)'"""),
+    'tooltip_equal':
+    "• " + _("""Use an equality to substitute one term with the other"""),
     'tooltip_apply':
     "• " + _("Apply an equality or an iff to substitute in another property")
     + "\n" + "• " + _("""Apply a function to an element or an equality"""),
@@ -95,7 +97,7 @@ __tooltips_apply = {
 
 # Text for buttons
 __buttons = {
-    'logic_button_texts': _("AND, OR, NOT, ⇒, ⇔, ∀, ∃"),
+    'logic_button_texts': _("AND, OR, NOT, ⇒, ⇔, ∀, ∃, ="),
     'proof_button_texts': _("Apply")
                           + ", " + _("Proof Methods")
                           + ", " + _("New Object"),

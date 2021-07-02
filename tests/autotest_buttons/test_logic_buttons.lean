@@ -549,6 +549,23 @@ begin
   sorry
 end  
 
+----------------
+--- equality ---
+----------------
+
+lemma exercise.test_apply_equality2
+(A B: set X) (x y : X) (f: X → Y) (H: x = y) (H': x ∈ A) (H'': A =B):
+y ∈ B :=
+/- dEAduction
+AutoTest
+    H' H =,
+    H' H'' =,
+    CQFD
+-/
+begin
+  sorry
+end
+
 
 
 /- The following exo does not work. Pb= 

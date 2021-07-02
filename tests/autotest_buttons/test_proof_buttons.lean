@@ -296,26 +296,13 @@ end
 -----------
 -- Apply --
 -----------
+
 lemma exercise.test_apply_equality
 (x y : X) (f: X → Y) (H: x = y):
 f(x) = f(y) :=
 /- dEAduction
 AutoTest
     H f apply,
-    CQFD
--/
-begin
-  sorry
-end
-
-
-lemma exercise.test_apply_equality2
-(A B: set X) (x y : X) (f: X → Y) (H: x = y) (H': x ∈ A) (H'': A =B):
-y ∈ B :=
-/- dEAduction
-AutoTest
-    H' H apply,
-    H' H'' apply,
     CQFD
 -/
 begin
