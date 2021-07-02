@@ -69,7 +69,7 @@ fi
 # to python ≥ 3.7
 echo "Deaduction nees python ≥ 3.7"
 if which python; then
-  echo "python ->"
+  echo "corresponds to the following version:"
   python --version
   python -c 'import sys; exit(1) if (sys.version_info.major < 3 \
   or sys.version_info.minor < 7) \
@@ -84,7 +84,7 @@ else
 fi
 
 if which python3; then
-  echo "python3 ->"
+  echo "corresponds to the following version:"
   python3 --version
   python3 -c 'import sys; exit(1) if (sys.version_info.major < 3 \
 or sys.version_info.minor < 7) \
