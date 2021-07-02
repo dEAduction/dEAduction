@@ -108,6 +108,16 @@ def set( k, v, if_not_exists=False ):
     udict.dotset(__dict_user, k, v, if_not_exists)
 
 
+def copy():
+    global __dict_user
+    return __dict_user.copy()
+
+
+def restore(initial_cvars):
+    global __dict_user
+    __dict_user = initial_cvars
+
+
 if __name__ == "__main__":
     from pprint import pprint
 
