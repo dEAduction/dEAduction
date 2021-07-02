@@ -50,12 +50,27 @@ import deaduction.pylib.config.vars      as      cvars
 ######################
 
 CONFIGS = dict()
-CONFIGS["Display"] = [("display.target_display_on_top", []),  # bool
-                      ("display.target_font_size", [])]       # str
-CONFIGS["Logic"] = []
-CONFIGS['Functionalities'] = []
+CONFIGS["Display"] = [("display.target_display_on_top", None),  # bool
+                      ("display.target_font_size", None),
+                      ("display.context_font_size", None),
+                      ('display.tooltips_font_size', None),
+                      ('display.mathematics_font', None),
+                      ('display.use_logic_button_symbols', None)]       # str
+CONFIGS["Logic"] = [
+    ('logic.color_for_used_properties', ['None', 'red', 'blue', 'purple']),
+    ('logic.color_for_dummy_variables', ['None', 'red', 'blue', 'purple'])]
+CONFIGS['Functionalities'] = [
+    ('functionality.target_selected_by_default', None),
+    ('functionality.allow_proof_by_sorry', None),
+    ('functionality.expanded_apply_button', None),
+    ('functionality.allow_forall_with_implicit_universal_prop', None),
+    ('functionality.treat_intersections_as_ands', None),
+    ('functionality.treat_unions_as_ors', None)]
+
 CONFIGS["Language"] = [("i18n.select_language", ["en", "fr_FR"])]
-CONFIGS["Advanced"] = []
+CONFIGS["Advanced"] = [
+    ('journal.save', None),
+    ('logs.display_level', ['error', 'info', 'debug'])]
 
 # Also serves as for translations
 PRETTY_NAMES = {
@@ -66,7 +81,7 @@ PRETTY_NAMES = {
     'Advanced': _("Advanced"),
     "en": "English",
     'fr_FR': "Français",
-    'target_display_on_top': _('target_display_on_top')}
+    'target_display_on_top': _('Target display on top')}
 
 
 class ConfigMainWindow(QDialog):
@@ -105,6 +120,7 @@ class ConfigMainWindow(QDialog):
         """
         Restore initial values and close window.
         """
+        # TODO: less radical method, keep track of modified vars
         self.cvars.restore(self.__initial_cvars)
         self.reject()
 
@@ -139,10 +155,10 @@ class ConfigWindow(QDialog):
         layout = QFormLayout()
         for setting, setting_list in settings:
             setting_initial_value = cvars.get(setting)
+            print(setting, setting_list, setting_initial_value)
             title = PRETTY_NAMES[setting] if setting in PRETTY_NAMES \
                 else get_pretty_name(setting)
             title = title + _(":")
-            more_layout = None
             # ───────── Case of choice into a list: combo box ─────────
             if setting_list:
                 pretty_setting_list = [PRETTY_NAMES[setting]
@@ -177,7 +193,10 @@ class ConfigWindow(QDialog):
                     widget.setText(initial_string)
 
                 widget.textChanged.connect(self.line_edit_changed)
+            else:
+                widget = None
 
+            print("Adding wdgt", widget)
             layout.addRow(title, widget)
 
         self.setLayout(layout)
