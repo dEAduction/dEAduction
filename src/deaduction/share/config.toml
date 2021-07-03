@@ -39,10 +39,8 @@ treat_unions_as_ors = false
 available_languages = ["en", "fr_FR"]
 select_language = "fr_FR"
 
-[journal]
-save=false
-
 [logs]
+save_journal = false
 display_level = "info"
 domains = [""]
 

@@ -69,7 +69,7 @@ CONFIGS['Functionalities'] = [
 
 CONFIGS["Language"] = [("i18n.select_language", ["en", "fr_FR"])]
 CONFIGS["Advanced"] = [
-    ('journal.save', None),
+    ('logs.save_journal', None),
     ('logs.display_level', ['error', 'info', 'debug'])]
 
 # Also serves as for translations
@@ -94,7 +94,8 @@ class ConfigMainWindow(QDialog):
         super().__init__()
         self.cvars = cvars
         # Save cvars for cancellation
-        self.__initial_cvars = self.cvars.copy()
+        # self.__initial_cvars = self.cvars.copy()
+        self.windows = []  # List of sub-windows, one for each tab
 
         self.setWindowTitle(_("Preferences"))
         layout = QVBoxLayout()
@@ -103,6 +104,7 @@ class ConfigMainWindow(QDialog):
         for tab_name in CONFIGS:
             window = ConfigWindow(tab_name)
             tabs.addTab(window, tab_name)
+            self.windows.append(window)
         layout.addWidget(tabs)
         self.button_box = QDialogButtonBox()
         self.button_box.setStandardButtons(QDialogButtonBox.Ok |
@@ -120,8 +122,12 @@ class ConfigMainWindow(QDialog):
         """
         Restore initial values and close window.
         """
-        # TODO: less radical method, keep track of modified vars
-        self.cvars.restore(self.__initial_cvars)
+        for window in self.windows:
+            initial_settings = window.initial_settings
+            for setting in initial_settings:
+                value = initial_settings[setting]
+                cvars.set(setting, value)
+        # self.cvars.restore(self.__initial_cvars)
         self.reject()
 
     def OK(self):
@@ -151,11 +157,14 @@ class ConfigWindow(QDialog):
 
     def __init__(self, name):
         super().__init__()
+        self.initial_settings = dict()
         settings = CONFIGS.get(name)
         layout = QFormLayout()
         for setting, setting_list in settings:
             setting_initial_value = cvars.get(setting)
             print(setting, setting_list, setting_initial_value)
+            if setting_initial_value:
+                self.initial_settings[setting] = setting_initial_value
             title = PRETTY_NAMES[setting] if setting in PRETTY_NAMES \
                 else get_pretty_name(setting)
             title = title + _(":")
@@ -181,7 +190,8 @@ class ConfigWindow(QDialog):
             elif isinstance(setting_initial_value, bool):
                 widget = QCheckBox()
                 widget.setting = setting
-
+                if setting_initial_value:
+                    widget.setChecked(setting_initial_value)
                 widget.toggled.connect(self.check_box_changed)
 
             # ───────── Case of str: QLineEdit ─────────

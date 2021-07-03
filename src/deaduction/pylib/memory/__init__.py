@@ -81,7 +81,7 @@ class Journal:
         :param emw: ExerciseMainWindow instance
         """
 
-        save = cvars.get('journal.save', False)
+        save = cvars.get('logs.save_journal', False)
         if not save:
             return
 
