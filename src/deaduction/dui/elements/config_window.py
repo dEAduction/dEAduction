@@ -28,7 +28,7 @@ import sys
 
 from PySide2.QtCore import (    Signal,
                                 Slot,
-                                QEvent )
+                                QEvent)
 from PySide2.QtWidgets import ( QApplication,
                                 QDialog,
                                 QTabWidget,
@@ -50,27 +50,34 @@ import deaduction.pylib.config.vars      as      cvars
 ######################
 
 CONFIGS = dict()
-CONFIGS["Display"] = [("display.target_display_on_top", None),  # bool
-                      ("display.target_font_size", None),
-                      ("display.context_font_size", None),
-                      ('display.tooltips_font_size', None),
-                      ('display.mathematics_font', None),
-                      ('display.use_logic_button_symbols', None)]       # str
+# Each valeu of CONFIGS is a list of tuples:
+# (1) srt: ref in cvars,
+# (2) list of predefined values (or None),
+# (3) bool: False if freeze (not implemented yet)
+CONFIGS["Display"] = [("display.target_display_on_top", None, True),  # bool
+                      ("display.target_font_size", None, True),
+                      ("display.context_font_size", None, True),
+                      ('display.tooltips_font_size', None, True),
+                      ('display.mathematics_font', None, True),
+                      ('display.use_logic_button_symbols', None, True)]       # str
 CONFIGS["Logic"] = [
-    ('logic.color_for_used_properties', ['None', 'red', 'blue', 'purple']),
-    ('logic.color_for_dummy_variables', ['None', 'red', 'blue', 'purple'])]
+    ('logic.color_for_used_properties', ['None', 'red', 'blue', 'purple'],
+     False),
+    ('logic.color_for_dummy_variables', ['None', 'red', 'blue', 'purple'],
+     False)]
 CONFIGS['Functionalities'] = [
-    ('functionality.target_selected_by_default', None),
-    ('functionality.allow_proof_by_sorry', None),
-    ('functionality.expanded_apply_button', None),
-    ('functionality.allow_forall_with_implicit_universal_prop', None),
-    ('functionality.treat_intersections_as_ands', None),
-    ('functionality.treat_unions_as_ors', None)]
+    ('functionality.target_selected_by_default', None, True),
+    ('functionality.allow_proof_by_sorry', None, True),
+    ('functionality.expanded_apply_button', None, False),
+    ('functionality.automatic_intro_of_variables_and_hypotheses', None, False),
+    ('functionality.allow_forall_with_implicit_universal_prop', None, False),
+    ('functionality.treat_intersections_as_ands', None, False),
+    ('functionality.treat_unions_as_ors', None, False)]
 
-CONFIGS["Language"] = [("i18n.select_language", ["en", "fr_FR"])]
+CONFIGS["Language"] = [("i18n.select_language", ["en", "fr_FR"], True)]
 CONFIGS["Advanced"] = [
-    ('logs.save_journal', None),
-    ('logs.display_level', ['error', 'info', 'debug'])]
+    ('logs.save_journal', None, True),
+    ('logs.display_level', ['error', 'info', 'debug'], True)]
 
 # Also serves as for translations
 PRETTY_NAMES = {
@@ -90,12 +97,12 @@ class ConfigMainWindow(QDialog):
     Uses one tabs for each key in CONFIGS, and creates a
     corresponding ConfigWindow.
     """
-    def __init__(self):
-        super().__init__()
-        self.cvars = cvars
-        # Save cvars for cancellation
-        # self.__initial_cvars = self.cvars.copy()
-        self.windows = []  # List of sub-windows, one for each tab
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setModal(True)
+        self.__windows = []  # List of sub-windows, one for each tab
+
+        self.applied = Signal()
 
         self.setWindowTitle(_("Preferences"))
         layout = QVBoxLayout()
@@ -104,44 +111,80 @@ class ConfigMainWindow(QDialog):
         for tab_name in CONFIGS:
             window = ConfigWindow(tab_name)
             tabs.addTab(window, tab_name)
-            self.windows.append(window)
+            self.__windows.append(window)
         layout.addWidget(tabs)
-        self.button_box = QDialogButtonBox()
-        self.button_box.setStandardButtons(QDialogButtonBox.Ok |
-                                   QDialogButtonBox.Apply |
-                                   QDialogButtonBox.Cancel)
-        layout.addWidget(self.button_box)
-        self.button_box.accepted.connect(self.OK)
-        self.button_box.rejected.connect(self.cancel)
+
+        # Buttons Apply, Cancel, OK
+        button_box = QDialogButtonBox()
+        self.apply_btn = QDialogButtonBox.Apply
+        self.ok_btn = QDialogButtonBox.Ok
+        button_box.setStandardButtons(self.ok_btn |
+                                      self.apply_btn |
+                                      QDialogButtonBox.Cancel)
+
+        layout.addWidget(button_box)
+
+        button_box.rejected.connect(self.cancel)
+        button_box.clicked.connect(self.clicked)
+        button_box.accepted.connect(self.accept)
 
         # TODO: add save/restore initial values
         # TODO: connect apply to something!
         # TODO: apply changes
 
+    def clicked(self, btn):
+        """
+        Called when a button is clicked.
+        Emit the 'applied' signal if needed.
+        """
+        # ERROR: 'QPushButton' object has no attribute 'ButtonRole'
+        # if btn.ButtonRole() == QDialogButtonBox.ApplyRole or \
+        #         btn.ButtonRole() == QDialogButtonBox.AcceptRole:
+        #     self.applied.emit()
+
     def cancel(self):
         """
         Restore initial values and close window.
         """
-        for window in self.windows:
-            initial_settings = window.initial_settings
-            for setting in initial_settings:
-                value = initial_settings[setting]
-                cvars.set(setting, value)
-        # self.cvars.restore(self.__initial_cvars)
+        for window in self.__windows:
+            window.modified_settings = dict()
+        # for setting in self.initial_settings:
+        #     value = self.initial_settings[setting]
+        #     cvars.set(setting, value)
         self.reject()
 
-    def OK(self):
-        """
-        Apply changes and close window.
-        """
-        self.apply()
-        self.accept()
+    # def OK(self):
+    #     """
+    #     Apply changes and close window.
+    #     """
+    #     self.apply()
+    #     self.accept()
+    #
+    # def apply(self):
+    #     """
+    #     Apply changes by updating ui.
+    #     """
+    #     # TODO
 
-    def apply(self):
+    @property
+    def initial_settings(self):
         """
-        Apply changes by updating ui.
+        Union of initial_settings of self.subwindows
         """
-        # TODO
+        initial_settings = dict()
+        for window in self.__windows:
+            initial_settings.update(window.initial_settings)
+        return initial_settings
+
+    @property
+    def modified_settings(self):
+        """
+        Union of initial_settings of self.subwindows
+        """
+        modified_settings = dict()
+        for window in self.__windows:
+            modified_settings.update(window.modified_settings)
+        return modified_settings
 
 
 class ConfigWindow(QDialog):
@@ -158,11 +201,12 @@ class ConfigWindow(QDialog):
     def __init__(self, name):
         super().__init__()
         self.initial_settings = dict()
+        self.modified_settings = dict()
         settings = CONFIGS.get(name)
         layout = QFormLayout()
-        for setting, setting_list in settings:
+        for setting, setting_list, enabled in settings:
             setting_initial_value = cvars.get(setting)
-            print(setting, setting_list, setting_initial_value)
+            # print(setting, setting_list, setting_initial_value)
             if setting_initial_value:
                 self.initial_settings[setting] = setting_initial_value
             title = PRETTY_NAMES[setting] if setting in PRETTY_NAMES \
@@ -178,8 +222,6 @@ class ConfigWindow(QDialog):
                 widget.addItems(pretty_setting_list)
                 widget.setting_list = setting_list
                 widget.setting = setting
-                # more_layout = QFormLayout()
-                # more_layout.addRow(title, widget)
                 if setting_initial_value:
                     initial_index = setting_list.index(setting_initial_value)
                     widget.setCurrentIndex(initial_index)
@@ -206,7 +248,8 @@ class ConfigWindow(QDialog):
             else:
                 widget = None
 
-            print("Adding wdgt", widget)
+            # print("Adding wdgt", widget)
+            widget.setEnabled(enabled)
             layout.addRow(title, widget)
 
         self.setLayout(layout)
@@ -215,22 +258,26 @@ class ConfigWindow(QDialog):
     @Slot()
     def combo_box_changed(self):
         combo_box = self.sender()
-        cvars.set(combo_box.setting, combo_box.setting_list[
-            combo_box.currentIndex()])
-        print("New setting: ", combo_box.setting, combo_box.setting_list[
-            combo_box.currentIndex()])
+        self.modified_settings[combo_box.setting] = combo_box.setting_list[
+                                                    combo_box.currentIndex()]
+        # cvars.set(combo_box.setting, combo_box.setting_list[
+        #     combo_box.currentIndex()])
+        # print("New setting: ", combo_box.setting, combo_box.setting_list[
+            # combo_box.currentIndex()])
 
     @Slot()
     def check_box_changed(self):
         cbox = self.sender()
-        cvars.set(cbox.setting, bool(cbox.checkState()))
-        print("New setting: ", cbox.setting, bool(cbox.checkState()))
+        self.modified_settings[cbox.setting] = bool(cbox.checkState())
+        # cvars.set(cbox.setting, bool(cbox.checkState()))
+        # print("New setting: ", cbox.setting, bool(cbox.checkState()))
 
     @Slot()
     def line_edit_changed(self):
         line_edit = self.sender()
-        cvars.set(line_edit.setting, line_edit.text())
-        print("New setting: ", line_edit.setting, line_edit.text())
+        self.modified_settings[line_edit.setting] = line_edit.text()
+        # cvars.set(line_edit.setting, line_edit.text())
+        # print("New setting: ", line_edit.setting, line_edit.text())
 
 
 def get_pretty_name(setting: str) -> str:

@@ -45,7 +45,8 @@ from deaduction.dui.elements            import (ActionButton,
                                                 MathObjectWidgetItem,
                                                 MenuBar,
                                                 MenuBarAction,
-                                                MenuBarMenu)
+                                                MenuBarMenu,
+                                                ConfigMainWindow)
 from deaduction.dui.primitives          import  ButtonsDialog
 from deaduction.pylib.config.i18n       import  _
 from deaduction.pylib.memory            import (Journal)
@@ -170,8 +171,8 @@ class ExerciseMainWindow(QMainWindow):
 
         # ─────────────────── Attributes ─────────────────── #
 
-        self.target_selected_by_default = cvars.get(
-                            'functionality.target_selected_by_default', False)
+        # self.target_selected_by_default = cvars.get(
+        #                    'functionality.target_selected_by_default', False)
         self.exercise             = exercise
         self.current_goal         = None
         self.current_selection    = []
@@ -228,12 +229,59 @@ class ExerciseMainWindow(QMainWindow):
         MenuBarAction and MenuBarMenu, from deaduction.dui.elements. This is
         done is this function in order not to bloat __init__.
         """
-        pass
+        # ─────────────────────── QActions ─────────────────────── #
+        preferences = MenuBarAction(self, _("Preferences"))
+        preferences.triggered.connect(self.open_config_window)
+
+        # ─────────────────────── Submenus ─────────────────────── #
+        menu_deaduction = (_("Preferences"), [preferences])
+
+        menu_exercise = ('Exercise',
+                [('Exercise history',
+                    [self.toolbar.rewind,
+                     self.toolbar.undo_action,
+                     self.toolbar.redo_action]),
+                self.toolbar.toggle_lean_editor_action,
+                self.toolbar.change_exercise_action])
+
+
+        # ─────────────────────── Main Menu ─────────────────────── #
+        outline = [menu_deaduction, menu_exercise]
+        menu_bar = MenuBar(self, outline)
+        self.setMenuBar(menu_bar)
+
+    def open_config_window(self):
+        window = ConfigMainWindow(parent=self)
+        # window.applied.connect(self.apply_new_settings)
+        window.exec_()
+        self.apply_new_settings(window.modified_settings)
+
+    @Slot()
+    def apply_new_settings(self, new_settings):
+        """
+        This is where ui is updated when preferences are modified.
+        """
+        # print("New settings:", new_settings)
+        # Update cvars
+        for setting in new_settings:
+            cvars.set(setting, new_settings[setting])
+
+        # TODO: do the following only when needed
+        self.ecw.update_goal(self.current_goal,
+                             self.proof_step.current_goal_number,
+                             self.proof_step.total_goals_counter)
+        # TODO: complete update
+        # self.ecw.update()
 
 
     ###########
     # Methods #
     ###########
+
+    @property
+    def target_selected_by_default(self):
+        return cvars.get('functionality.target_selected_by_default', False)
+
 
     @property
     def lean_file(self):
@@ -357,8 +405,8 @@ class ExerciseMainWindow(QMainWindow):
             Goal.compare(new_goal, previous_goal)  # Set tags
 
         # Goal count to be displayed next to the target
-        goal_count = f'  {self.proof_step.current_goal_number} / ' \
-                     f'{self.proof_step.total_goals_counter}'
+        # goal_count = f'  {self.proof_step.current_goal_number} / ' \
+        #              f'{self.proof_step.total_goals_counter}'
 
         # Reset current context selection
         # Here we do not use empty_current_selection since Widgets may have
@@ -367,7 +415,9 @@ class ExerciseMainWindow(QMainWindow):
         self.current_selection = []
 
         # Update UI and attributes. Target stay selected if it was.
-        self.ecw.update_goal(new_goal, goal_count)
+        self.ecw.update_goal(new_goal,
+                             self.proof_step.current_goal_number,
+                             self.proof_step.total_goals_counter)
         self.ecw.target_wgt.mark_user_selected(self.target_selected)
         self.current_goal = new_goal
 

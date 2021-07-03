@@ -139,7 +139,7 @@ class ExerciseCentralWidget(QWidget):
 
         self.__main_lyt     = QVBoxLayout()
         self.__context_lyt  = QVBoxLayout()
-        context_actions_lyt = QHBoxLayout()
+        self.__context_actions_lyt = QHBoxLayout()
         actions_lyt         = QVBoxLayout()
         action_btns_lyt     = QVBoxLayout()
 
@@ -190,23 +190,22 @@ class ExerciseCentralWidget(QWidget):
         context_gb.setLayout(self.__context_lyt)
 
         # https://i.kym-cdn.com/photos/images/original/001/561/446/27d.jpg
-        context_actions_lyt.addWidget(context_gb)
-        context_actions_lyt.addWidget(actions_gb)
+        self.__context_actions_lyt.addWidget(context_gb)
+        self.__context_actions_lyt.addWidget(actions_gb)
 
-        target_display_on_top = cvars.get('display.target_display_on_top',
-                                          True)
-        if target_display_on_top:
-            self.__main_lyt.addWidget(self.target_wgt)
-            self.__main_lyt.addLayout(context_actions_lyt)
-        else:
-            self.__main_lyt.addLayout(context_actions_lyt)
-            self.__main_lyt.addWidget(self.target_wgt)
-
+        # target_display_on_top = cvars.get('display.target_display_on_top',
+        #                                  True)
+        self.organise_main_layout()
         self.setLayout(self.__main_lyt)
 
     ##############
     # Properties #
     ##############
+
+    @property
+    def target_display_on_top(self):
+        return cvars.get('display.target_display_on_top', True)
+
 
     @property
     def actions_buttons(self) -> [ActionButton]:
@@ -218,6 +217,29 @@ class ExerciseCentralWidget(QWidget):
         return self.logic_btns.buttons \
                 + self.proof_btns.buttons \
                 + self.magic_btns.buttons
+
+    ###########
+    # Methods #
+    ###########
+
+    def organise_main_layout(self):
+        if self.__main_lyt.count() > 0:
+            if self.target_display_on_top and \
+                    self.__main_lyt.indexOf(self.target_wgt) != 0:
+                # context_actions_lyt = self.__main_lyt.itemAt(0)
+                self.__main_lyt.removeItem(self.__context_actions_lyt)
+                self.__main_lyt.addLayout(self.__context_actions_lyt)
+            elif  not self.target_display_on_top and \
+                    self.__main_lyt.indexOf(self.target_wgt) == 0:
+                self.__main_lyt.removeWidget(self.target_wgt)
+                self.__main_lyt.addWidget(self.target_wgt)
+        else:
+            if self.target_display_on_top:
+                self.__main_lyt.addWidget(self.target_wgt)
+                self.__main_lyt.addLayout(self.__context_actions_lyt)
+            else:
+                self.__main_lyt.addLayout(self.__context_actions_lyt)
+                self.__main_lyt.addWidget(self.target_wgt)
 
     def action_button(self, symbol) -> ActionButton:
         """
@@ -231,10 +253,6 @@ class ExerciseCentralWidget(QWidget):
             return buttons[0]
         else:
             return None
-
-    ###########
-    # Methods #
-    ###########
 
     def freeze(self, yes=True):
         """
@@ -256,15 +274,17 @@ class ExerciseCentralWidget(QWidget):
         for widget in to_freeze:
             widget.setEnabled(not yes)
 
-    def update_goal(self, new_goal: Goal, goal_count: str = ''):
+    def update_goal(self, new_goal: Goal,
+                    current_goal_number: int,
+                    total_goals_counter: int):
         """
         Change goal widgets (self.objects_wgts, self.props_wgt and
         self.target_wgt) to new widgets, corresponding to new_goal.
 
         :param new_goal: The goal to update self to.
-        :param goal_count: a string indicating the goal_count state,
-        e.g. "  2 / 3" means the goal number 2 out of 3 is currently being
         studied
+        :param current_goal_number: n° of goal under study
+        :param total_goals_counter: total number of goals so far
         """
 
         # Init context (objects and properties). Get them as two list of
@@ -277,6 +297,7 @@ class ExerciseCentralWidget(QWidget):
 
         new_objects_wgt = MathObjectWidget(new_objects)
         new_props_wgt   = MathObjectWidget(new_props)
+        goal_count = f'  {current_goal_number} / {total_goals_counter}'
         new_target_wgt  = TargetWidget(new_target, new_target_tag, goal_count)
 
         # Replace in the layouts
@@ -292,6 +313,9 @@ class ExerciseCentralWidget(QWidget):
         self.props_wgt    = new_props_wgt
         self.target_wgt   = new_target_wgt
         self.current_goal = new_goal
+
+        # Modify main layout if needed (e;G. target_on_top has changed)
+        self.organise_main_layout()
 
 
 class ExerciseStatusBar(QStatusBar):
