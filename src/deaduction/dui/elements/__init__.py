@@ -30,16 +30,21 @@ from .actions_widgets_classes import (
     ActionButtonsWidget,
     StatementsTreeWidgetNode,
     StatementsTreeWidgetItem,
-    StatementsTreeWidget )
+    StatementsTreeWidget)
 
 from .context_widgets_classes import (
     MathObjectWidget,
     MathObjectWidgetItem,
-    TargetWidget )
+    TargetWidget)
 
 from .lean_editor import (
-    LeanEditor )
+    LeanEditor)
+
+from .menubar import (
+    MenuBar,
+    MenuBarAction,
+    MenuBarMenu)
 
 from .recent_courses_widgets import (
     RecentCoursesLW,
-    RecentCoursesLWI )
+    RecentCoursesLWI)

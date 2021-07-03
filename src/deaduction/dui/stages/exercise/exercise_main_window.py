@@ -31,41 +31,44 @@ from typing import    Callable
 import                qtrio
 from copy import      copy, deepcopy
 
-from PySide2.QtCore import (    Signal,
-                                Slot,
-                                QEvent )
-from PySide2.QtWidgets import ( QInputDialog,
-                                QMainWindow,
-                                QMessageBox )
+from PySide2.QtCore    import (Signal,
+                               Slot,
+                               QEvent)
+from PySide2.QtWidgets import (QInputDialog,
+                               QMainWindow,
+                               QMessageBox)
 
-from deaduction.dui.elements            import ( ActionButton,
-                                                 LeanEditor,
-                                                 StatementsTreeWidgetItem,
-                                                 MathObjectWidget,
-                                                 MathObjectWidgetItem )
-from deaduction.dui.primitives          import   ButtonsDialog
-from deaduction.pylib.config.i18n       import   _
-from deaduction.pylib.memory            import ( Journal )
-from deaduction.pylib.actions           import ( InputType,
-                                                 CodeForLean,
-                                                 MissingParametersError,
-                                                 WrongUserInput)
-import deaduction.pylib.actions.generic as       generic
-from deaduction.pylib.coursedata        import ( Definition,
-                                                 Exercise,
-                                                 Theorem,
-                                                 AutoStep)
-from deaduction.pylib.mathobj           import ( MathObject,
-                                                 Goal,
-                                                 ProofState,
-                                                 ProofStep)
-from deaduction.pylib.server.exceptions import   FailedRequestError
-from deaduction.pylib.server            import   ServerInterface
+from deaduction.dui.elements            import (ActionButton,
+                                                LeanEditor,
+                                                StatementsTreeWidgetItem,
+                                                MathObjectWidget,
+                                                MathObjectWidgetItem,
+                                                MenuBar,
+                                                MenuBarAction,
+                                                MenuBarMenu)
+from deaduction.dui.primitives          import  ButtonsDialog
+from deaduction.pylib.config.i18n       import  _
+from deaduction.pylib.memory            import (Journal)
+from deaduction.pylib.actions           import (InputType,
+                                                CodeForLean,
+                                                MissingParametersError,
+                                                WrongUserInput)
+import deaduction.pylib.actions.generic as      generic
+from deaduction.pylib.coursedata        import (Definition,
+                                                Exercise,
+                                                Theorem,
+                                                AutoStep)
+from deaduction.pylib.mathobj           import (MathObject,
+                                                Goal,
+                                                ProofState,
+                                                ProofStep)
+from deaduction.pylib.server.exceptions import  FailedRequestError
+from deaduction.pylib.server            import  ServerInterface
 
-from ._exercise_main_window_widgets     import ( ExerciseCentralWidget,
-                                                 ExerciseStatusBar,
-                                                 ExerciseToolBar )
-import deaduction.pylib.config.vars      as      cvars
+from ._exercise_main_window_widgets     import (ExerciseCentralWidget,
+                                                ExerciseStatusBar,
+                                                ExerciseToolBar)
+import deaduction.pylib.config.vars      as     cvars
 
 log = logging.getLogger(__name__)
 
@@ -191,6 +194,7 @@ class ExerciseMainWindow(QMainWindow):
         self.toolbar.redo_action.setEnabled(False)  # No history at beginning
         self.toolbar.undo_action.setEnabled(False)  # same
         self.toolbar.rewind.setEnabled(False)  # same
+        self.__init_menubar()
 
         # Status Bar
         self.statusBar = ExerciseStatusBar(self)
@@ -217,6 +221,15 @@ class ExerciseMainWindow(QMainWindow):
         self.toolbar.change_exercise_action.triggered.connect(
                                                     self.change_exercise)
         self.servint.nursery.start_soon(self.server_task)  # Start server task
+
+    def __init_menubar(self):
+        """
+        Create ExerciseMainWindow's menubar. Relevant classes are MenuBar,
+        MenuBarAction and MenuBarMenu, from deaduction.dui.elements. This is
+        done is this function in order not to bloat __init__.
+        """
+        pass
+
 
     ###########
     # Methods #
