@@ -548,7 +548,9 @@ AutoTest
 begin
   sorry
 end  
+end test_exists
 
+namespace test_equality
 ----------------
 --- equality ---
 ----------------
@@ -566,7 +568,7 @@ begin
   sorry
 end
 
-
+end test_equality
 
 /- The following exo does not work. Pb= 
 ∃ x ∈ A, P(x)
@@ -590,7 +592,6 @@ AutoTest
     @O5 @P5 ∃,
     CQFD
 -/
-end test_exists
 end tests_logic_buttons
 end theorie_des_ensembles
 end course

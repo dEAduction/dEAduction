@@ -59,7 +59,7 @@ class Journal:
 
     memory:     [ProofStep]
 
-    __save_journal = cvars.get('journal.save')
+    __save_journal = cvars.get('logs.save_journal')
     __journal_file_name = cdirs.local / 'journal.pkl'
 
     def __init__(self, display_message=None):
