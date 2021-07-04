@@ -146,9 +146,9 @@ class ExerciseCentralWidget(QWidget):
         action_btns_lyt.setContentsMargins(0, 0, 0, 0)
         action_btns_lyt.setSpacing(0)
 
-        actions_gb = QGroupBox(_('Actions and statements (transform context '
-                                 'and target)'))
-        context_gb = QGroupBox(_('Context (objects and properties)'))
+        self.__actions_gb = QGroupBox(_('Actions and statements (transform '
+                                      'context and target)'))
+        self.__context_gb = QGroupBox(_('Context (objects and properties)'))
 
         # ──────────────── Init Actions area ─────────────── #
 
@@ -182,19 +182,17 @@ class ExerciseCentralWidget(QWidget):
             action_btns_lyt.addWidget(self.magic_btns)
         actions_lyt.addLayout(action_btns_lyt)
         actions_lyt.addWidget(self.statements_tree)
-        actions_gb.setLayout(actions_lyt)
+        self.__actions_gb.setLayout(actions_lyt)
 
         # Context
         self.__context_lyt.addWidget(self.objects_wgt)
         self.__context_lyt.addWidget(self.props_wgt)
-        context_gb.setLayout(self.__context_lyt)
+        self.__context_gb.setLayout(self.__context_lyt)
 
         # https://i.kym-cdn.com/photos/images/original/001/561/446/27d.jpg
-        self.__context_actions_lyt.addWidget(context_gb)
-        self.__context_actions_lyt.addWidget(actions_gb)
+        self.__context_actions_lyt.addWidget(self.__context_gb)
+        self.__context_actions_lyt.addWidget(self.__actions_gb)
 
-        # target_display_on_top = cvars.get('display.target_display_on_top',
-        #                                  True)
         self.organise_main_layout()
         self.setLayout(self.__main_lyt)
 
@@ -220,8 +218,17 @@ class ExerciseCentralWidget(QWidget):
     ###########
     # Methods #
     ###########
+    def update(self):
+        self.__actions_gb.setTitle(_('Actions and statements (transform '
+                                   'context and target)'))
+        self.__context_gb.setTitle(_('Context (objects and properties)'))
 
     def organise_main_layout(self):
+        """
+        Organize main layout, namely putting target on top or not according
+        to self.target_display_on_top. To be called at __init__ and after
+        preferences update.
+        """
         if self.__main_lyt.count() > 0:
             if self.target_display_on_top and \
                     self.__main_lyt.indexOf(self.target_wgt) != 0:
@@ -342,10 +349,6 @@ class ExerciseStatusBar(QStatusBar):
         self.show_success_icon()  # Trick: the status bar adapts its height
         self.hide_icon()
 
-        # Verbose mode
-        self.display_success_msgs = cvars.get(
-            'display.display_success_messages', True)
-
     def show_error_icon(self):
         self.iconWidget.setPixmap(self.error_pixmap)
         self.iconWidget.show()
@@ -380,8 +383,6 @@ class ExerciseStatusBar(QStatusBar):
         - success and error msgs are temporary msgs.
         """
 
-        #log.debug(f"Display msg: "
-        #          f"{proof_step.error_msg, proof_step.success_msg}")
         if proof_step.is_error():
             tmp_msg = proof_step.error_msg
         else:
@@ -413,6 +414,10 @@ class ExerciseStatusBar(QStatusBar):
                     timer.singleShot(3000, func)  # 3000 = 3sec
                 else:  # Show immediately
                     self.show_normal_msg(new_goal.msg)
+
+    @property
+    def display_success_msgs(self):
+        return cvars.get('display.display_success_messages', True)
 
 
 class ExerciseToolBar(QToolBar):
@@ -446,3 +451,12 @@ class ExerciseToolBar(QToolBar):
         self.addAction(self.toggle_lean_editor_action)
         self.addSeparator()
         self.addAction(self.change_exercise_action)
+
+    def update(self):
+        # FIXME: update gettext
+        self.rewind.setToolTip(_('Go back to beginning of proof'))
+        self.undo_action.setToolTip(_('Undo action'))
+        self.redo_action.setToolTip(_('Redo action'))
+        self.toggle_lean_editor_action.setToolTip(_('Toggle L∃∀N'))
+        self.change_exercise_action.setToolTip(_('Change exercise'))
+

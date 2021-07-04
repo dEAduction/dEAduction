@@ -62,6 +62,7 @@ CONFIGS["Display"] = [("display.target_display_on_top", None, True),  # bool
                       ('display.mathematics_font', None, True),
                       ('display.use_logic_button_symbols', None, True)]       # str
 CONFIGS["Logic"] = [
+    ("display.display_success_messages", None, True),
     ('logic.color_for_used_properties', ['None', 'red', 'blue', 'purple'],
      False),
     ('logic.color_for_dummy_variables', ['None', 'red', 'blue', 'purple'],
@@ -165,7 +166,7 @@ class ConfigMainWindow(QDialog):
         for setting in self.modified_settings:
             cvars.set(setting, self.modified_settings[setting])
         self.applied.emit(self.modified_settings)
-        print("Applied with", self.modified_settings)
+        # print("Applied with", self.modified_settings)
 
     def cancel(self):
         """
@@ -181,10 +182,10 @@ class ConfigMainWindow(QDialog):
         self.reject()
 
     def accept(self):
-        print("accept")
+        # print("accept")
         self.apply()
         if self.save_btn.isChecked():
-            print("saving")
+            # print("saving")
             self.save()
         self.close()
 

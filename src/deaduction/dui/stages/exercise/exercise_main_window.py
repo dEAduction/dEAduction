@@ -36,7 +36,8 @@ from PySide2.QtCore    import (Signal,
                                QEvent)
 from PySide2.QtWidgets import (QInputDialog,
                                QMainWindow,
-                               QMessageBox)
+                               QMessageBox,
+                               QAction)
 
 from deaduction.dui.elements            import (ActionButton,
                                                 LeanEditor,
@@ -178,6 +179,7 @@ class ExerciseMainWindow(QMainWindow):
         self.current_goal         = None
         self.current_selection    = []
         self._target_selected     = False
+        self.freezed              = False
         self.ecw                  = ExerciseCentralWidget(exercise)
         self.lean_editor          = LeanEditor()
         self.servint              = servint
@@ -232,18 +234,22 @@ class ExerciseMainWindow(QMainWindow):
         """
         # ─────────────────────── QActions ─────────────────────── #
         preferences = MenuBarAction(self, _("Preferences"))
+        preferences.setMenuRole(QAction.PreferencesRole)
         preferences.triggered.connect(self.open_config_window)
 
         # ─────────────────────── Submenus ─────────────────────── #
         menu_deaduction = (_("Preferences"), [preferences])
 
-        menu_exercise = ('Exercise',
-                [('Exercise history',
-                    [self.toolbar.rewind,
-                     self.toolbar.undo_action,
-                     self.toolbar.redo_action]),
-                self.toolbar.toggle_lean_editor_action,
-                self.toolbar.change_exercise_action])
+        menu_exercise = (_('Exercise'),
+                         [(_('Exercise history'),
+                             [self.toolbar.rewind,
+                              self.toolbar.undo_action,
+                              self.toolbar.redo_action
+                              ]
+                           ),
+                         self.toolbar.toggle_lean_editor_action,
+                         self.toolbar.change_exercise_action
+                          ])
 
         # ─────────────────────── Main Menu ─────────────────────── #
         outline = [menu_deaduction, menu_exercise]
@@ -257,27 +263,29 @@ class ExerciseMainWindow(QMainWindow):
 
     @Slot()
     def apply_new_settings(self, modified_settings):
+        global _  # At least in this module _ will be updatable
         """
         This is where ui is updated when preferences are modified.
         """
-        # print("New settings:", new_settings)
-        # Update cvars
         log.debug("New settings: ")
         log.debug(modified_settings)
-        # for setting in modified_settings:
-        #     cvars.set(setting, modified_settings[setting])
         # TODO: do the following only when needed
         # FIXME: ecw.update_goal should not be called anytime
         #  (e.g. when lean is running)
         # Update ui
         if modified_settings:
-            self.ecw.update_goal(self.current_goal,
-                                 self.proof_step.current_goal_number,
-                                 self.proof_step.total_goals_counter)
-            self.ecw.update()
+            self.current_selection = []
+            if not self.freezed:
+                pass
+                # self.ecw.update_goal(self.current_goal,
+                #                      self.proof_step.current_goal_number,
+                #                      self.proof_step.total_goals_counter)
+                # self.ecw.update()
+            self.ecw.target_wgt.mark_user_selected(self.target_selected)
         # Update language
         if "i18n.select_language" in modified_settings:
-            update_language()
+            _ = update_language()
+            self.__init_menubar()
         # TODO: complete update
 
     ###########
@@ -287,7 +295,6 @@ class ExerciseMainWindow(QMainWindow):
     @property
     def target_selected_by_default(self):
         return cvars.get('functionality.target_selected_by_default', False)
-
 
     @property
     def lean_file(self):
@@ -743,7 +750,7 @@ class ExerciseMainWindow(QMainWindow):
 
         :param yes: See above.
         """
-
+        self.freezed = yes
         self.ecw.freeze(yes)
         self.toolbar.setEnabled(not yes)
 
