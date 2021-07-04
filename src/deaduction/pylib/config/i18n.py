@@ -40,26 +40,53 @@ _ = None
 
 log = logging.getLogger(__name__)
 
-def init():
+
+# def init():
+#     global _
+#
+#     log.info("Init i18n")
+#
+#     available_languages = cvars.get("i18n.available_languages", "en")
+#
+#     select_language     = cvars.get('i18n.select_language', "en")
+#
+#     log.info(f"available_languages = {available_languages}")
+#     log.info(f"select_language     = {select_language}")
+#
+#     language_dir_path   = fs.path_helper(cdirs.share / "locales")
+#     language            = gettext.translation('deaduction',
+#                              localedir=str(language_dir_path),
+#                              languages=[select_language])
+#     language.install()
+#
+#     _ = language.gettext
+
+
+def update_language():
     global _
-
-    log.info("Init i18n")
-
-    available_languages = cvars.get("i18n.available_languages", "en")
-    #available_languages = available_languages.split(", ")
-
     select_language     = cvars.get('i18n.select_language', "en")
+    language_dir_path   = fs.path_helper(cdirs.share / "locales")
+    available_languages = cvars.get("i18n.available_languages", "en")
 
     log.info(f"available_languages = {available_languages}")
+    log.info("Language updated: ")
     log.info(f"select_language     = {select_language}")
 
-    language_dir_path   = fs.path_helper(cdirs.share / "locales")
-    language            = gettext.translation('deaduction',
-                             localedir=str(language_dir_path),
-                             languages=[select_language])
-    language.install()
+    if select_language == 'en':
+        log.info("(no translation)")
+        # No translation needed
+        _ = gettext.gettext
+    #     new_translator = lambda x: x
+    else:
+        new_language = gettext.translation('deaduction',
+                                           localedir=str(language_dir_path),
+                                           languages=[select_language])
+        new_language.install()
+        _ = new_language.gettext
+    print("Translation trial: " + _("Target"))
+    # new_translator = new_language.gettext
+    # return new_translator
 
-    _ = language.gettext
 
 # FIXME: better init managment
-init()
+update_language()

@@ -27,7 +27,7 @@ This file is part of d∃∀duction.
 
 import logging
 from   pathlib import Path
-from   gettext import gettext as _
+# from   gettext import gettext as _
 
 import deaduction.pylib.utils.filesystem as fs
 import os

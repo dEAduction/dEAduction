@@ -38,7 +38,7 @@ automatic_intro_of_variables_and_hypotheses = false
 
 [i18n]
 available_languages = ["en", "fr_FR"]
-select_language = "fr_FR"
+select_language = "en"
 
 [logs]
 save_journal = false

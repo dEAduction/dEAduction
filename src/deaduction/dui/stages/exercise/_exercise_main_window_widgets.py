@@ -206,7 +206,6 @@ class ExerciseCentralWidget(QWidget):
     def target_display_on_top(self):
         return cvars.get('display.target_display_on_top', True)
 
-
     @property
     def actions_buttons(self) -> [ActionButton]:
         """

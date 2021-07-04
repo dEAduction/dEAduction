@@ -48,7 +48,7 @@ from deaduction.dui.elements            import (ActionButton,
                                                 MenuBarMenu,
                                                 ConfigMainWindow)
 from deaduction.dui.primitives          import  ButtonsDialog
-from deaduction.pylib.config.i18n       import  _
+from deaduction.pylib.config.i18n       import  update_language
 from deaduction.pylib.memory            import (Journal)
 from deaduction.pylib.actions           import (InputType,
                                                 CodeForLean,
@@ -72,6 +72,7 @@ from ._exercise_main_window_widgets     import (ExerciseCentralWidget,
 import deaduction.pylib.config.vars      as     cvars
 
 log = logging.getLogger(__name__)
+global _
 
 
 class ExerciseMainWindow(QMainWindow):
@@ -263,16 +264,23 @@ class ExerciseMainWindow(QMainWindow):
         """
         # print("New settings:", new_settings)
         # Update cvars
+        log.debug("New settings: ")
+        log.debug(new_settings)
         for setting in new_settings:
             cvars.set(setting, new_settings[setting])
-
         # TODO: do the following only when needed
-        self.ecw.update_goal(self.current_goal,
-                             self.proof_step.current_goal_number,
-                             self.proof_step.total_goals_counter)
+        # FIXME: ecw.update_goal should not be called anytime
+        #  (e.g. when lean is running)
+        # Update ui
+        if new_settings:
+            self.ecw.update_goal(self.current_goal,
+                                 self.proof_step.current_goal_number,
+                                 self.proof_step.total_goals_counter)
+            self.ecw.update()
+        # Update language
+        if "i18n.select_language" in new_settings:
+            update_language()
         # TODO: complete update
-        # self.ecw.update()
-
 
     ###########
     # Methods #
