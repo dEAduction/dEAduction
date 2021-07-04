@@ -245,7 +245,6 @@ class ExerciseMainWindow(QMainWindow):
                 self.toolbar.toggle_lean_editor_action,
                 self.toolbar.change_exercise_action])
 
-
         # ─────────────────────── Main Menu ─────────────────────── #
         outline = [menu_deaduction, menu_exercise]
         menu_bar = MenuBar(self, outline)
@@ -253,32 +252,31 @@ class ExerciseMainWindow(QMainWindow):
 
     def open_config_window(self):
         window = ConfigMainWindow(parent=self)
-        # window.applied.connect(self.apply_new_settings)
+        window.applied.connect(self.apply_new_settings)
         window.exec_()
-        self.apply_new_settings(window.modified_settings)
 
     @Slot()
-    def apply_new_settings(self, new_settings):
+    def apply_new_settings(self, modified_settings):
         """
         This is where ui is updated when preferences are modified.
         """
         # print("New settings:", new_settings)
         # Update cvars
         log.debug("New settings: ")
-        log.debug(new_settings)
-        for setting in new_settings:
-            cvars.set(setting, new_settings[setting])
+        log.debug(modified_settings)
+        # for setting in modified_settings:
+        #     cvars.set(setting, modified_settings[setting])
         # TODO: do the following only when needed
         # FIXME: ecw.update_goal should not be called anytime
         #  (e.g. when lean is running)
         # Update ui
-        if new_settings:
+        if modified_settings:
             self.ecw.update_goal(self.current_goal,
                                  self.proof_step.current_goal_number,
                                  self.proof_step.total_goals_counter)
             self.ecw.update()
         # Update language
-        if "i18n.select_language" in new_settings:
+        if "i18n.select_language" in modified_settings:
             update_language()
         # TODO: complete update
 

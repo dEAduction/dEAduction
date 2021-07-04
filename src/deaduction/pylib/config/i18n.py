@@ -83,7 +83,7 @@ def update_language():
                                            languages=[select_language])
         new_language.install()
         _ = new_language.gettext
-    print("Translation trial: " + _("Target"))
+    # print("Translation trial: " + _("Target"))
     # new_translator = new_language.gettext
     # return new_translator
 

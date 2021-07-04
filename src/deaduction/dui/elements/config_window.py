@@ -25,6 +25,7 @@ This file is part of d∃∀duction.
 """
 
 import sys
+import logging
 
 from PySide2.QtCore import (    Signal,
                                 Slot,
@@ -42,7 +43,7 @@ from PySide2.QtWidgets import ( QApplication,
 from deaduction.pylib.config.i18n       import   _
 import deaduction.pylib.config.vars      as      cvars
 
-# TODO: cancel process. Need to be able to copy cvars.
+log = logging.getLogger(__name__)
 
 
 ######################
@@ -50,7 +51,7 @@ import deaduction.pylib.config.vars      as      cvars
 ######################
 
 CONFIGS = dict()
-# Each valeu of CONFIGS is a list of tuples:
+# Each value of CONFIGS is a list of tuples:
 # (1) srt: ref in cvars,
 # (2) list of predefined values (or None),
 # (3) bool: False if freeze (not implemented yet)
@@ -97,12 +98,13 @@ class ConfigMainWindow(QDialog):
     Uses one tabs for each key in CONFIGS, and creates a
     corresponding ConfigWindow.
     """
+    applied = Signal(dict)
+
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setModal(True)
         self.__windows = []  # List of sub-windows, one for each tab
 
-        self.applied = Signal()
 
         self.setWindowTitle(_("Preferences"))
         layout = QVBoxLayout()
@@ -114,13 +116,17 @@ class ConfigMainWindow(QDialog):
             self.__windows.append(window)
         layout.addWidget(tabs)
 
+        # Save preferences btn
+        self.save_btn = QCheckBox(_("Save preferences for next session"))
+        layout.addWidget(self.save_btn)
+
         # Buttons Apply, Cancel, OK
         button_box = QDialogButtonBox()
-        self.apply_btn = QDialogButtonBox.Apply
         self.ok_btn = QDialogButtonBox.Ok
-        button_box.setStandardButtons(self.ok_btn |
-                                      self.apply_btn |
+        button_box.setStandardButtons(QDialogButtonBox.Ok |
                                       QDialogButtonBox.Cancel)
+        self.apply_btn = button_box.addButton(QDialogButtonBox.Apply)
+        # self.save_btn = button_box.addButton(QDialogButtonBox.Save)
 
         layout.addWidget(button_box)
 
@@ -134,42 +140,58 @@ class ConfigMainWindow(QDialog):
 
     def clicked(self, btn):
         """
-        Called when a button is clicked.
-        Emit the 'applied' signal if needed.
+        Called when a button is clicked, e.g. the "Apply" button.
         """
-        # ERROR: 'QPushButton' object has no attribute 'ButtonRole'
-        # if btn.ButtonRole() == QDialogButtonBox.ApplyRole or \
-        #         btn.ButtonRole() == QDialogButtonBox.AcceptRole:
-        #     self.applied.emit()
+        if btn == self.apply_btn:
+            self.apply()
+
+    def save(self):
+        """
+        Store new settings in  cvars and save cvars in the config.toml file
+        """
+        # Store new settings in cvars
+        for setting in self.modified_settings:
+            cvars.set(setting, self.modified_settings[setting])
+        # Save
+        log.info("Saving preferences in config.toml")
+        cvars.save()
+
+    def apply(self):
+        """
+        Store new settings in cvars, and emit the applied signal,
+        so that the ui can make the relevant changes.
+        """
+        # store new settings in cvars
+        for setting in self.modified_settings:
+            cvars.set(setting, self.modified_settings[setting])
+        self.applied.emit(self.modified_settings)
+        print("Applied with", self.modified_settings)
 
     def cancel(self):
         """
         Restore initial values and close window.
         """
+        # Restore initial settings
+        for setting in self.initial_settings:
+            cvars.set(setting, self.initial_settings[setting])
+        # Delete modified_settings dict
         for window in self.__windows:
             window.modified_settings = dict()
-        # for setting in self.initial_settings:
-        #     value = self.initial_settings[setting]
-        #     cvars.set(setting, value)
+        # Bye
         self.reject()
 
-    # def OK(self):
-    #     """
-    #     Apply changes and close window.
-    #     """
-    #     self.apply()
-    #     self.accept()
-    #
-    # def apply(self):
-    #     """
-    #     Apply changes by updating ui.
-    #     """
-    #     # TODO
+    def accept(self):
+        print("accept")
+        self.apply()
+        if self.save_btn.isChecked():
+            print("saving")
+            self.save()
+        self.close()
 
     @property
     def initial_settings(self):
         """
-        Union of initial_settings of self.subwindows
+        Union of initial_settings of self's sub-windows.
         """
         initial_settings = dict()
         for window in self.__windows:
@@ -179,7 +201,7 @@ class ConfigMainWindow(QDialog):
     @property
     def modified_settings(self):
         """
-        Union of initial_settings of self.subwindows
+        Union of initial_settings of self's sub-windows.
         """
         modified_settings = dict()
         for window in self.__windows:
