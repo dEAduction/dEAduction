@@ -275,8 +275,6 @@ class ExerciseMainWindow(QMainWindow):
         """
         log.debug("New settings: ")
         log.debug(modified_settings)
-        if "i18n.select_language" in modified_settings:
-            init_i18n()
         if modified_settings:
             self.current_selection = []
             # self.ecw.update()
@@ -288,6 +286,7 @@ class ExerciseMainWindow(QMainWindow):
             self.setCentralWidget(self.ecw)
             self.__connect_signals()
             if not self.freezed:
+                # If Lean is running then maybe goal has not been set
                 self.ecw.update_goal(self.current_goal,
                                      self.proof_step.current_goal_number,
                                      self.proof_step.total_goals_counter)
@@ -305,7 +304,9 @@ class ExerciseMainWindow(QMainWindow):
                 self.ecw.props_wgt.apply_math_object_triggered.connect(
                     self.__apply_math_object_triggered)
 
-            self.ecw.target_wgt.mark_user_selected(self.target_selected)
+        self.ecw.target_wgt.mark_user_selected(self.target_selected)
+
+
 
     ###########
     # Methods #

@@ -48,8 +48,9 @@ from PySide2.QtWidgets import ( QApplication,
                                 QFormLayout,
                                 QDialogButtonBox)
 
-# from deaduction.pylib.config.i18n import _
+from deaduction.pylib.config.i18n import init_i18n
 import deaduction.pylib.config.vars      as      cvars
+from deaduction.pylib                            import logger
 
 log = logging.getLogger(__name__)
 
@@ -60,7 +61,7 @@ log = logging.getLogger(__name__)
 
 CONFIGS = dict()
 # Each value of CONFIGS is a list of tuples:
-# (1) srt: ref in cvars,
+# (1) string = ref in cvars,
 # (2) list of predefined values (or None),
 # (3) bool: False if freeze (not implemented yet)
 CONFIGS["Display"] = [("display.target_display_on_top", None, True),  # bool
@@ -68,7 +69,8 @@ CONFIGS["Display"] = [("display.target_display_on_top", None, True),  # bool
                       # ("display.context_font_size", None, True),
                       # ('display.tooltips_font_size', None, True),
                       # ('display.mathematics_font', None, True),
-                      ('display.use_logic_button_symbols', None, True)]       # str
+                      ('display.use_logic_button_symbols', None, False)]
+
 CONFIGS["Logic"] = [
     ("display.display_success_messages", None, True),
     ('logic.color_for_used_properties', ['None', 'red', 'blue', 'purple'],
@@ -77,7 +79,7 @@ CONFIGS["Logic"] = [
      False)]
 CONFIGS['Functionalities'] = [
     ('functionality.target_selected_by_default', None, True),
-    ('functionality.allow_proof_by_sorry', None, True),
+    ('functionality.allow_proof_by_sorry', None, True),  # tested
     ('functionality.expanded_apply_button', None, False),
     ('functionality.automatic_intro_of_variables_and_hypotheses', None, False),
     ('functionality.allow_forall_with_implicit_universal_prop', None, False),
@@ -86,8 +88,18 @@ CONFIGS['Functionalities'] = [
 
 CONFIGS["Language"] = [("i18n.select_language", ["en", "fr_FR"], True)]
 CONFIGS["Advanced"] = [
-    ('logs.save_journal', None, True),
-    ('logs.display_level', ['error', 'info', 'debug'], True)]
+    ('logs.save_journal', None, True),  # checked, untested
+    ('logs.display_level', ['debug', 'info', 'warning'], True)]
+
+SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
+                         "display.target_font_size",
+                         'display.use_logic_button_symbols',
+                         'logic.color_for_used_properties',
+                         'logic.color_for_dummy_variables',
+                         'functionality.allow_proof_by_sorry',
+                         'functionality.expanded_apply_button',
+                         "i18n.select_language"
+                         ]
 
 # Also serves as for translations
 PRETTY_NAMES = {
@@ -170,8 +182,19 @@ class ConfigMainWindow(QDialog):
         # store new settings in cvars
         for setting in self.modified_settings:
             cvars.set(setting, self.modified_settings[setting])
-        self.applied.emit(self.modified_settings)
-        # print("Applied with", self.modified_settings)
+        ##########################
+        # Specific modifications #
+        ##########################
+        if "i18n.select_language" in self.modified_settings:
+            init_i18n()  # UI needs to be updated
+        if 'logs.display_level' in self.modified_settings:
+            display_level = self.modified_settings['logs.display_level']
+            logger.configure(display_level)
+
+        # UI modifications will be applied by ExerciseMainWindow
+        pertinent_ui_settings = [setting for setting in self.modified_settings
+                                 if setting in SETTINGS_AFFECTING_UI]
+        self.applied.emit(pertinent_ui_settings)
 
     def cancel(self):
         """
@@ -190,11 +213,12 @@ class ConfigMainWindow(QDialog):
                     # be modified back
             window.modified_settings = new_modified_settings
         # Restore initial settings
-        for setting in self.initial_settings:
-            cvars.set(setting, self.initial_settings[setting])
+        self.apply()  # Apply backwards
+        # for setting in self.initial_settings:
+        #     cvars.set(setting, self.initial_settings[setting])
         # Emit the 'applied' signal to modify back in case modified settings
         # had been applied before cancelling
-        self.applied.emit(self.modified_settings)
+        # self.applied.emit(self.modified_settings)
         # Bye
         self.reject()
 

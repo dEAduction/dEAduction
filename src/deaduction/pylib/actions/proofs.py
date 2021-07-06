@@ -51,8 +51,6 @@ from deaduction.pylib.mathobj import (MathObject,
 
 log = logging.getLogger(__name__)
 
-# Parameters
-allow_proof_by_sorry = cvars.get('functionality.allow_proof_by_sorry')
 
 # Turn proof_button_texts into a dictionary
 proof_list = ['action_apply', 'proof_methods', 'new_object']
@@ -74,6 +72,7 @@ def action_use_proof_methods(proof_step,
         choices = [('1', _("Case-based reasoning")),
                    ('2', _("Proof by contraposition")),
                    ('3', _("Proof by contradiction"))]
+        allow_proof_by_sorry = cvars.get('functionality.allow_proof_by_sorry')
         if allow_proof_by_sorry:
             choices.append(('4', _("Admit current sub-goal!")))
         raise MissingParametersError(InputType.Choice,
