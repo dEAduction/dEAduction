@@ -324,24 +324,16 @@ class ConfigWindow(QDialog):
         combo_box = self.sender()
         self.modified_settings[combo_box.setting] = combo_box.setting_list[
                                                     combo_box.currentIndex()]
-        # cvars.set(combo_box.setting, combo_box.setting_list[
-        #     combo_box.currentIndex()])
-        # print("New setting: ", combo_box.setting, combo_box.setting_list[
-            # combo_box.currentIndex()])
 
     @Slot()
     def check_box_changed(self):
         cbox = self.sender()
         self.modified_settings[cbox.setting] = bool(cbox.checkState())
-        # cvars.set(cbox.setting, bool(cbox.checkState()))
-        # print("New setting: ", cbox.setting, bool(cbox.checkState()))
 
     @Slot()
     def line_edit_changed(self):
         line_edit = self.sender()
         self.modified_settings[line_edit.setting] = line_edit.text()
-        # cvars.set(line_edit.setting, line_edit.text())
-        # print("New setting: ", line_edit.setting, line_edit.text())
 
 
 def get_pretty_name(setting: str) -> str:

@@ -51,6 +51,7 @@ import deaduction.pylib.config.vars              as     cvars
 # i18n has to be executed BEFORE translation function "_" is used.
 import deaduction.pylib.config.i18n
 
+from deaduction.dui.stages.select_language       import select_language
 from deaduction.dui.stages.exercise              import ExerciseMainWindow
 from deaduction.dui.stages.start_coex            import StartCoExStartup
 
@@ -406,5 +407,17 @@ if __name__ == '__main__':
     cdirs.init()
     inst.init()
 
+    ############################
+    # First choice of language #
+    ############################
+    language = deaduction.pylib.config.i18n.init_i18n()
+    if language == "no_language":
+        selected_language, ok = select_language()
+        if not selected_language:
+            selected_language = 'en'
+        cvars.set('i18n.select_language', selected_language)
+        deaduction.pylib.config.i18n.init_i18n()
+        if ok:
+            cvars.save()  # Do not ask next time!
     qtrio.run(main)
     log.debug("qtrio finished")
