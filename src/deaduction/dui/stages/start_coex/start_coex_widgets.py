@@ -320,8 +320,8 @@ class CourseChooser(AbstractCoExChooser):
         course-file, a Course object is instanciated and the method
         set_preview is called.
         """
-
-        dialog = QFileDialog(directory=str(cdirs.courses))
+        directory = cvars.get('others.course_directory', str(cdirs.courses))
+        dialog = QFileDialog(directory=directory)
         dialog.setFileMode(QFileDialog.ExistingFile)
         dialog.setNameFilter('*.lean *.pkl')
 

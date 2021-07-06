@@ -27,10 +27,8 @@ This file is part of d∃∀duction.
 # TODO:
 #  - replace everywhere translations at init by translation at display
 #  - remove useless "update" functions
-#  - add choice of language prior to anything at first launch
-#  (otherwise config_window will crash)
 #  - add color...
-# TODO: add restore factory values
+#  - add restore factory values
 
 
 import sys
@@ -46,7 +44,9 @@ from PySide2.QtWidgets import ( QApplication,
                                 QLineEdit,
                                 QVBoxLayout,
                                 QFormLayout,
-                                QDialogButtonBox)
+                                QDialogButtonBox,
+                                QPushButton,
+                                QFileDialog)
 
 from deaduction.pylib.config.i18n import init_i18n
 import deaduction.pylib.config.vars      as      cvars
@@ -88,6 +88,7 @@ CONFIGS['Functionalities'] = [
 
 CONFIGS["Language"] = [("i18n.select_language", ["en", "fr_FR"], True)]
 CONFIGS["Advanced"] = [
+    ('others.course_directory', 'file', True),
     ('logs.save_journal', None, True),  # checked, untested
     ('logs.display_level', ['debug', 'info', 'warning'], True)]
 
@@ -111,7 +112,8 @@ PRETTY_NAMES = {
     "en": "English",
     'fr_FR': "Français",
     'no_language': "English",
-    'target_display_on_top': _('Target display on top')}
+    'target_display_on_top': _('Target display on top'),
+    'others.course_directory': _('Set directory for choosing courses')}
 
 
 class ConfigMainWindow(QDialog):
@@ -276,8 +278,15 @@ class ConfigWindow(QDialog):
             title = PRETTY_NAMES[setting] if setting in PRETTY_NAMES \
                 else get_pretty_name(setting)
             title = title + _(":")
+
+            # ───────── Case of file: browse directories button ─────────
+            if setting_list == 'file':
+                widget = QPushButton(_("browse directories"), self)
+                widget.clicked.connect(self.browse_dir)
+                widget.setting = setting
+
             # ───────── Case of choice into a list: combo box ─────────
-            if setting_list:
+            elif setting_list:
                 pretty_setting_list = [PRETTY_NAMES[setting]
                                        if setting in PRETTY_NAMES
                                        else setting
@@ -324,6 +333,15 @@ class ConfigWindow(QDialog):
         combo_box = self.sender()
         self.modified_settings[combo_box.setting] = combo_box.setting_list[
                                                     combo_box.currentIndex()]
+
+    @Slot()
+    def browse_dir(self):
+        widget = self.sender()
+        dialog = QFileDialog()
+        dialog.setFileMode(QFileDialog.Directory)
+        if dialog.exec_():
+            directory = dialog.selectedFiles()[0]
+            self.modified_settings[widget.setting] = directory
 
     @Slot()
     def check_box_changed(self):

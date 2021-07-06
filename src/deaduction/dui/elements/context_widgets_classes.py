@@ -223,7 +223,6 @@ class MathObjectWidget(QListWidget):
 
         super().__init__()
 
-        # TODO: make self.items a property?
         self.items = []
         # set fonts for maths display
         math_font_name = cvars.get('display.mathematics_font', 'Default')

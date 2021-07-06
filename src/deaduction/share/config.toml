@@ -3,6 +3,7 @@ path        = "$DEADUCTION_SHARE/graphical_resources/icons"
 letter_type = "letters/trials"
 context     = "letters/blue"
 
+
 [display]
 display_success_messages = true
 text_mode_in_chooser_window = false
@@ -22,6 +23,7 @@ display_detailed_errors_on_wui = true
 use_primes_for_variables_names = true
 use_seconds_for_variables_names = true
 
+
 [logic]
 color_for_used_properties = "None"
 color_for_dummy_variables = "None"
@@ -36,14 +38,19 @@ treat_intersections_as_ands = false
 treat_unions_as_ors = false
 automatic_intro_of_variables_and_hypotheses = false
 
+
 [i18n]
 available_languages = ["en", "fr_FR"]
 select_language = "no_language"
+
 
 [logs]
 save_journal = false
 display_level = "info"
 domains = [""]
+
+[others]
+course_directory = ""
 
 #########################
 # All Plateform packages
