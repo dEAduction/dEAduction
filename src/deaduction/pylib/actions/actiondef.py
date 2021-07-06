@@ -32,8 +32,6 @@ import logging
 import inspect
 from dataclasses import dataclass
 
-
-@dataclass
 class Action:
     """
     Associates data, name to a specific action function.
@@ -42,6 +40,19 @@ class Action:
     caption: str
     symbol: str  # Will be the text of the corresponding button
     run: any
+
+    def __init__(self, caption, symbol, func):
+        self.__caption  = caption
+        self.__symbol   = symbol
+        self.run       = func
+
+    @property
+    def caption(self):
+        return _(self.__caption)
+
+    @property
+    def symbol(self):
+        return _(self.__symbol)
 
 
 def action(caption: str, symbol: str):

@@ -41,6 +41,16 @@ from PySide2.QtCore import ( QObject,
                              Signal,
                              Slot  )
 
+import deaduction.pylib.config.dirs              as     cdirs
+import deaduction.pylib.config.environ           as     cenv
+import deaduction.pylib.config.site_installation as     inst
+import deaduction.pylib.config.vars              as     cvars
+###################
+# ! DO NOT MOVE ! #
+###################
+# i18n has to be executed BEFORE translation function "_" is used.
+import deaduction.pylib.config.i18n
+
 from deaduction.dui.stages.exercise              import ExerciseMainWindow
 from deaduction.dui.stages.start_coex            import StartCoExStartup
 
@@ -52,10 +62,6 @@ from deaduction.pylib.mathobj                    import MathObject
 from deaduction.pylib                            import logger
 from deaduction.pylib.server                     import ServerInterface
 
-import deaduction.pylib.config.dirs              as     cdirs
-import deaduction.pylib.config.environ           as     cenv
-import deaduction.pylib.config.site_installation as     inst
-import deaduction.pylib.config.vars              as     cvars
 from deaduction.pylib.autotest import                   select_exercise
 
 # (non-exhaustive) list of logger domains:

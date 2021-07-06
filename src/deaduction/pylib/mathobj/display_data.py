@@ -35,7 +35,7 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from deaduction.pylib.config.i18n import _
+# from deaduction.pylib.config.i18n import _
 
 # !! Latex commands should be alone in their strings,
 # except for spaces around them, so that up to strip(), they appear in

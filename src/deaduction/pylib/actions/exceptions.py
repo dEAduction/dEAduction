@@ -34,7 +34,7 @@ This file is part of dEAduction.
 
 from enum                         import IntEnum
 
-from deaduction.pylib.config.i18n import _
+# from deaduction.pylib.config.i18n import _
 
 
 class InputType(IntEnum):

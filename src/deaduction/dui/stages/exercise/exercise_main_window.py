@@ -49,7 +49,7 @@ from deaduction.dui.elements            import (ActionButton,
                                                 MenuBarMenu,
                                                 ConfigMainWindow)
 from deaduction.dui.primitives          import  ButtonsDialog
-from deaduction.pylib.config.i18n       import  update_language
+from deaduction.pylib.config.i18n       import  init_i18n
 from deaduction.pylib.memory            import (Journal)
 from deaduction.pylib.actions           import (InputType,
                                                 CodeForLean,
@@ -205,7 +205,14 @@ class ExerciseMainWindow(QMainWindow):
         self.setStatusBar(self.statusBar)
 
         # ──────────────── Signals and slots ─────────────── #
+        self.__connect_signals()
 
+        self.servint.nursery.start_soon(self.server_task)  # Start server task
+
+    def __connect_signals(self):
+        """
+        Connect all signals. Called at init and sever update.
+        """
         # Actions area
         for action_button in self.ecw.actions_buttons:
             action_button.action_triggered.connect(self.__action_triggered)
@@ -224,7 +231,6 @@ class ExerciseMainWindow(QMainWindow):
         self.servint.effective_code_received.connect(self.store_effective_code)
         self.toolbar.change_exercise_action.triggered.connect(
                                                     self.change_exercise)
-        self.servint.nursery.start_soon(self.server_task)  # Start server task
 
     def __init_menubar(self):
         """
@@ -269,24 +275,37 @@ class ExerciseMainWindow(QMainWindow):
         """
         log.debug("New settings: ")
         log.debug(modified_settings)
-        # TODO: do the following only when needed
-        # FIXME: ecw.update_goal should not be called anytime
-        #  (e.g. when lean is running)
-        # Update ui
+        if "i18n.select_language" in modified_settings:
+            init_i18n()
         if modified_settings:
             self.current_selection = []
+            # self.ecw.update()
+            # TODO: only for relevant changes in preferences
+            ##############################
+            # Redefine ecw from scratch! #
+            ##############################
+            self.ecw = ExerciseCentralWidget(self.exercise)
+            self.setCentralWidget(self.ecw)
+            self.__connect_signals()
             if not self.freezed:
-                pass
-                # self.ecw.update_goal(self.current_goal,
-                #                      self.proof_step.current_goal_number,
-                #                      self.proof_step.total_goals_counter)
-                # self.ecw.update()
-            self.ecw.target_wgt.mark_user_selected(self.target_selected)
-        # Update language
-        if "i18n.select_language" in modified_settings:
-            _ = update_language()
+                self.ecw.update_goal(self.current_goal,
+                                     self.proof_step.current_goal_number,
+                                     self.proof_step.total_goals_counter)
+            self.toolbar.update()
             self.__init_menubar()
-        # TODO: complete update
+            # Reconnect Context area signals and slots
+            self.ecw.objects_wgt.itemClicked.connect(
+                self.process_context_click)
+            self.ecw.props_wgt.itemClicked.connect(self.process_context_click)
+
+            self.ecw.target_wgt.mouseReleaseEvent = self.process_target_click
+            if hasattr(self.ecw, "action_apply_button"):
+                self.ecw.objects_wgt.apply_math_object_triggered.connect(
+                    self.__apply_math_object_triggered)
+                self.ecw.props_wgt.apply_math_object_triggered.connect(
+                    self.__apply_math_object_triggered)
+
+            self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
     ###########
     # Methods #

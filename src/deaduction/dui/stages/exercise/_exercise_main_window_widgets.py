@@ -57,7 +57,7 @@ from deaduction.dui.elements            import ( ActionButton,
                                                  StatementsTreeWidget,
                                                  MathObjectWidget,
                                                  TargetWidget)
-from deaduction.pylib.config.i18n       import   _
+# from deaduction.pylib.config.i18n import _
 from deaduction.pylib.actions           import   action_apply
 from deaduction.pylib.coursedata        import   Exercise
 from deaduction.pylib.mathobj           import   Goal
@@ -193,8 +193,22 @@ class ExerciseCentralWidget(QWidget):
         self.__context_actions_lyt.addWidget(self.__context_gb)
         self.__context_actions_lyt.addWidget(self.__actions_gb)
 
-        self.organise_main_layout()
+        self.organise_main_layout()  # Decide which one is on top
         self.setLayout(self.__main_lyt)
+
+    def update(self):
+        """
+        Update
+            - titles everywhere,
+            - text and tooltips of all buttons.
+        """
+
+        self.__actions_gb.setTitle(_('Actions and statements (transform '
+                                     'context and target)'))
+        self.__context_gb.setTitle(_('Context (objects and properties)'))
+
+        for buttons in (self.logic_btns, self.proof_btns, self.magic_btns):
+            buttons.update()
 
     ##############
     # Properties #
@@ -218,11 +232,6 @@ class ExerciseCentralWidget(QWidget):
     ###########
     # Methods #
     ###########
-    def update(self):
-        self.__actions_gb.setTitle(_('Actions and statements (transform '
-                                   'context and target)'))
-        self.__context_gb.setTitle(_('Context (objects and properties)'))
-
     def organise_main_layout(self):
         """
         Organize main layout, namely putting target on top or not according
@@ -453,10 +462,9 @@ class ExerciseToolBar(QToolBar):
         self.addAction(self.change_exercise_action)
 
     def update(self):
-        # FIXME: update gettext
-        self.rewind.setToolTip(_('Go back to beginning of proof'))
-        self.undo_action.setToolTip(_('Undo action'))
-        self.redo_action.setToolTip(_('Redo action'))
-        self.toggle_lean_editor_action.setToolTip(_('Toggle L∃∀N'))
-        self.change_exercise_action.setToolTip(_('Change exercise'))
+        self.rewind.setText(_('Go back to beginning of proof'))
+        self.undo_action.setText(_('Undo action'))
+        self.redo_action.setText(_('Redo action'))
+        self.toggle_lean_editor_action.setText(_('Toggle L∃∀N'))
+        self.change_exercise_action.setText(_('Change exercise'))
 

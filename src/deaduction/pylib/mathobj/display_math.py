@@ -64,7 +64,7 @@ from typing import Any
 from dataclasses import dataclass
 
 import deaduction.pylib.logger              as logger
-from deaduction.pylib.config.i18n import _
+# from deaduction.pylib.config.i18n import _
 
 from deaduction.pylib.mathobj.give_name     import give_local_name
 from .display_data import ( latex_from_constant_name,

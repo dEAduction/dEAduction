@@ -36,7 +36,7 @@ from copy import copy
 import logging
 
 import deaduction.pylib.logger as logger
-from deaduction.pylib.config.i18n import _
+# from deaduction.pylib.config.i18n import _
 
 from deaduction.pylib.mathobj import MathObject
 

@@ -52,7 +52,7 @@ from PySide2.QtWidgets import ( QDialog,
 from deaduction.dui.primitives    import ( TextEditLogger,
                                            TextEditLoggerHandler,
                                            YesNoDialog )
-from deaduction.pylib.config.i18n import _
+# from deaduction.pylib.config.i18n import _
 
 from deaduction.dui.stages.quit_deaduction import ( ReallyWantQuit )
 

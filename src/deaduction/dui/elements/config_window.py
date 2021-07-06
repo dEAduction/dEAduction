@@ -24,12 +24,20 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+# TODO:
+#  - replace everywhere translations at init by translation at display
+#  - remove useless "update" functions
+#  - add choice of language prior to anything at first launch
+#  (otherwise config_window will crash)
+#  - add color...
+# TODO: add restore factory values
+
+
 import sys
 import logging
 
 from PySide2.QtCore import (    Signal,
-                                Slot,
-                                QEvent)
+                                Slot)
 from PySide2.QtWidgets import ( QApplication,
                                 QDialog,
                                 QTabWidget,
@@ -40,7 +48,7 @@ from PySide2.QtWidgets import ( QApplication,
                                 QFormLayout,
                                 QDialogButtonBox)
 
-from deaduction.pylib.config.i18n       import   _
+# from deaduction.pylib.config.i18n import _
 import deaduction.pylib.config.vars      as      cvars
 
 log = logging.getLogger(__name__)
@@ -57,9 +65,9 @@ CONFIGS = dict()
 # (3) bool: False if freeze (not implemented yet)
 CONFIGS["Display"] = [("display.target_display_on_top", None, True),  # bool
                       ("display.target_font_size", None, True),
-                      ("display.context_font_size", None, True),
-                      ('display.tooltips_font_size', None, True),
-                      ('display.mathematics_font', None, True),
+                      # ("display.context_font_size", None, True),
+                      # ('display.tooltips_font_size', None, True),
+                      # ('display.mathematics_font', None, True),
                       ('display.use_logic_button_symbols', None, True)]       # str
 CONFIGS["Logic"] = [
     ("display.display_success_messages", None, True),
@@ -90,6 +98,7 @@ PRETTY_NAMES = {
     'Advanced': _("Advanced"),
     "en": "English",
     'fr_FR': "Français",
+    'no_language': "English",
     'target_display_on_top': _('Target display on top')}
 
 
@@ -110,12 +119,12 @@ class ConfigMainWindow(QDialog):
         self.setWindowTitle(_("Preferences"))
         layout = QVBoxLayout()
         self.setLayout(layout)
-        tabs = QTabWidget()
+        self.__tabs = QTabWidget()
         for tab_name in CONFIGS:
             window = ConfigWindow(tab_name)
-            tabs.addTab(window, tab_name)
+            self.__tabs.addTab(window, tab_name)
             self.__windows.append(window)
-        layout.addWidget(tabs)
+        layout.addWidget(self.__tabs)
 
         # Save preferences btn
         self.save_btn = QCheckBox(_("Save preferences for next session"))
@@ -134,10 +143,6 @@ class ConfigMainWindow(QDialog):
         button_box.rejected.connect(self.cancel)
         button_box.clicked.connect(self.clicked)
         button_box.accepted.connect(self.accept)
-
-        # TODO: add save/restore initial values
-        # TODO: connect apply to something!
-        # TODO: apply changes
 
     def clicked(self, btn):
         """
@@ -172,12 +177,24 @@ class ConfigMainWindow(QDialog):
         """
         Restore initial values and close window.
         """
+        # Adapt modified_settings (= those settings which have been modified
+        # AND applied, so after cancelling they will have to be modified back)
+        for window in self.__windows:
+            new_modified_settings = dict()
+            for setting in window.modified_settings:
+                real_setting = cvars.get(setting)
+                if real_setting != window.initial_settings[setting]:
+                    new_modified_settings[setting] = \
+                        window.initial_settings[setting]
+                    # if modified setting has been applied, it will have to
+                    # be modified back
+            window.modified_settings = new_modified_settings
         # Restore initial settings
         for setting in self.initial_settings:
             cvars.set(setting, self.initial_settings[setting])
-        # Delete modified_settings dict
-        for window in self.__windows:
-            window.modified_settings = dict()
+        # Emit the 'applied' signal to modify back in case modified settings
+        # had been applied before cancelling
+        self.applied.emit(self.modified_settings)
         # Bye
         self.reject()
 
@@ -228,10 +245,10 @@ class ConfigWindow(QDialog):
         settings = CONFIGS.get(name)
         layout = QFormLayout()
         for setting, setting_list, enabled in settings:
-            setting_initial_value = cvars.get(setting)
+            setting_initial_value = cvars.get(setting, None)
             # print(setting, setting_list, setting_initial_value)
-            if setting_initial_value:
-                self.initial_settings[setting] = setting_initial_value
+            # if setting_initial_value:
+            self.initial_settings[setting] = setting_initial_value
             title = PRETTY_NAMES[setting] if setting in PRETTY_NAMES \
                 else get_pretty_name(setting)
             title = title + _(":")

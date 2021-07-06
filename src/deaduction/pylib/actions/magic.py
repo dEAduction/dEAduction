@@ -30,7 +30,7 @@ import logging
 
 import deaduction.pylib.logger as logger
 
-from deaduction.pylib.config.i18n import _
+# from deaduction.pylib.config.i18n import _
 from deaduction.pylib.text import tooltips
 
 from deaduction.pylib.actions.actiondef import action

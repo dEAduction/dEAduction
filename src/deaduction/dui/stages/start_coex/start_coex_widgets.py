@@ -62,7 +62,7 @@ from PySide2.QtWidgets import (QApplication,
                                QVBoxLayout,
                                QWidget)
 
-from deaduction.pylib.config.i18n   import  _
+# from deaduction.pylib.config.i18n   import  _
 import deaduction.pylib.config.vars  as     cvars
 import deaduction.pylib.config.dirs  as     cdirs
 from deaduction.dui.elements        import (MathObjectWidget,

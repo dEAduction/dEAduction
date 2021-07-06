@@ -69,7 +69,7 @@ import deaduction.pylib.config.environ           as     cenv
 import deaduction.pylib.config.site_installation as     inst
 import deaduction.pylib.config.vars              as     cvars
 
-from deaduction.pylib.config.i18n import _
+# from deaduction.pylib.config.i18n import _
 from deaduction.pylib.coursedata import (Course,
                                          Exercise,
                                          Definition,

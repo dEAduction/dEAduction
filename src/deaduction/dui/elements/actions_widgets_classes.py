@@ -58,7 +58,7 @@ from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem,
                                 QToolTip)
 
-from deaduction.pylib.config.i18n import   _
+# from deaduction.pylib.config.i18n import   _
 from deaduction.pylib.actions     import   Action
 from deaduction.pylib.coursedata  import ( Definition,
                                            Exercise,
@@ -123,12 +123,18 @@ class ActionButton(QPushButton):
         super().__init__()
 
         self.action = action
-
         self.setText(action.symbol)
         self.setToolTip(action.caption)
         self.clicked.connect(self._emit_action)
         # Modify arrow appearance when over a button
         self.setCursor(QCursor(Qt.PointingHandCursor))
+
+    def update(self):
+        """
+        Update text and tooltips in button.
+        """
+        self.setText(self.action.symbol)
+        self.setToolTip(self.action.caption)
 
     @Slot()
     def _emit_action(self):
@@ -211,6 +217,13 @@ class ActionButtonsWidget(QWidget):
         main_layout.addStretch()
 
         self.setLayout(main_layout)
+
+    def update(self):
+        """
+        Update text and tooltips in all buttons.
+        """
+        for button in self.buttons:
+            button.update()
 
 
 ##############################

@@ -29,7 +29,7 @@ This file is part of dEAduction.
 
 import logging
 
-from deaduction.pylib.config.i18n import _
+# from deaduction.pylib.config.i18n import _
 from deaduction.pylib.actions import (  WrongUserInput,
                                         CodeForLean,
                                         test_selection)

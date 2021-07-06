@@ -39,7 +39,7 @@ import logging
 import pickle5 as pickle
 import time
 
-from deaduction.pylib.config.i18n import _
+# from deaduction.pylib.config.i18n import _
 
 import deaduction.pylib.config.vars as        cvars
 import deaduction.pylib.config.dirs as        cdirs

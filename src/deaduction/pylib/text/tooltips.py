@@ -28,12 +28,16 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from deaduction.pylib.config.i18n import _
+# from deaduction.pylib.config.i18n import _
 
 ########################################################################
 # Set tooltips and text button HERE to enable translation with gettext #
 ########################################################################
 # Logic and proof Buttons tooltips
+# Disable translation: translation will be done on the fly
+# _ = lambda message: message
+# TODO: modify tooltip as a list of lines,
+#  to help translation
 __tooltips = {
     'tooltip_and':
     "• " + _("Split a property 'P AND Q' into the two properties 'P', 'Q'")

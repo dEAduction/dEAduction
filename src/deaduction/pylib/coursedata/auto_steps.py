@@ -32,7 +32,7 @@ from dataclasses import dataclass
 # from parsimonious.nodes import NodeVisitor
 
 import deaduction.pylib.config.vars as cvars
-from deaduction.pylib.config.i18n import _
+# from deaduction.pylib.config.i18n import _
 
 from deaduction.pylib.mathobj import ProofStep
 import deaduction.pylib.actions.logic

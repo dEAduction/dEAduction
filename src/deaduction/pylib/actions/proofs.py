@@ -30,7 +30,7 @@ import logging
 from typing import Union
 
 from deaduction.pylib.text        import tooltips
-from deaduction.pylib.config.i18n import _
+# from deaduction.pylib.config.i18n import _
 import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.actions import (InputType,
                                       MissingParametersError,

@@ -49,7 +49,7 @@ import logging
 from typing import Union
 
 from deaduction.pylib.text        import tooltips
-from deaduction.pylib.config.i18n import _
+# from deaduction.pylib.config.i18n import _
 from deaduction.pylib.actions     import (action,
                                           InputType,
                                           MissingParametersError,

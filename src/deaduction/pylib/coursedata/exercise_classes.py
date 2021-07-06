@@ -30,7 +30,7 @@ from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
 import logging
 
-from deaduction.pylib.config.i18n import _
+# from deaduction.pylib.config.i18n import _
 import deaduction.pylib.logger as logger
 from deaduction.pylib.actions.actiondef import Action
 import deaduction.pylib.actions.logic
