@@ -53,6 +53,64 @@ LEAN_NOGOALS_TEXT    = "tactic failed, there are no goals to be solved"
 LEAN_USES_SORRY      = " uses sorry"
 
 
+####################
+# CourseData class #
+####################
+class CourseData:
+    """
+    A container class for the data related to a list of statements to get
+    their initial proof state. these data will be passed to ServerInterface
+    (as a ServerInterface attribute).
+    """
+
+    def __init__(self, course: Course, statements: [] = None):
+        self.course = course
+        if not statements:
+            self.statements = course.statements
+        else:
+            self.statements = statements
+
+        # self.log.info({f"Getting proof states for course {course.title}"})
+        # self.log.info({f"{len(self.statements)} statements"})
+
+        self.hypo_analysis   = [None] * len(self.statements)
+        self.targets_analysis = [None] * len(self.statements)
+        self.statement_from_hypo_line = dict()
+        self.statement_from_targets_line = dict()
+
+        self.pf_counter = 0
+
+    def file_content(self):
+        lines        = self.course.file_content.splitlines()
+        hypo_tactic    = "    hypo_analysis,"
+        targets_tactic = "    targets_analysis,"
+
+        shift = 0  # Shift due to line insertion/deletion
+        for statement in self.statements:
+            # self.log.debug(f"Statement n° {self.statements.index(
+            # statement)}")
+            begin_line   = statement.lean_begin_line_number + shift
+            end_line     = statement.lean_end_line_number + shift
+            # self.log.debug(f"{len(lines)} lines")
+            # self.log.debug(f"begin, end =  {begin_line, end_line}")
+            proof_lines = list(range(begin_line, end_line-1))
+            # self.log.debug(proof_lines)
+            proof_lines.reverse()
+            for index in proof_lines:
+                lines.pop(index)
+            lines.insert(begin_line, hypo_tactic)
+            lines.insert(begin_line+1, targets_tactic)
+            self.statement_from_hypo_line[begin_line+1] = statement
+            self.statement_from_targets_line[begin_line+2] = statement
+            # No shift if end_line = begin_line + 3
+            shift += 3 - (end_line - begin_line)
+            # self.log.debug(f"Shift: {shift}")
+            # Construct virtual file
+
+        file_content = "\n".join(lines)
+        return file_content
+
+
 ############################################
 # ServerInterface class
 ############################################
@@ -95,13 +153,8 @@ class ServerInterfaceAllStatements(QObject):
             self.__on_lean_state_change
 
         # Course data
-        self.course = None
-        self.statement_from_hypo_line = dict()
-        self.statement_from_targets_line = dict()
-        self.statements = []
-        self.hypo_analysis = None
-        self.targets_analysis = None
-        self.pf_counter = 0
+        self.__course_data = None
+
         # Current proof state + Events
         self.file_invalidated          = trio.Event()
         # self.__proof_state_valid       = trio.Event()
@@ -138,21 +191,22 @@ class ServerInterfaceAllStatements(QObject):
     ############################################
     # Callbacks from lean server
     ############################################
-    def __check_receive_state(self, index):
+    def __check_receive_course_data(self, index):
         """
         Check if every awaited piece of information has been received:
         """
-        hypo = self.hypo_analysis[index]
-        target = self.targets_analysis[index]
+        hypo = self.__course_data.hypo_analysis[index]
+        target = self.__course_data.targets_analysis[index]
         if hypo and target:
-            st = self.statements[index]
+            statements = self.__course_data.statements
+            st = statements[index]
             if not st.initial_proof_state:
                 ps = ProofState.from_lean_data(hypo, target)
                 st.initial_proof_state = ps
-                self.pf_counter += 1
+                self.__course_data.pf_counter += 1
 
             # TODO: check all statements
-            if self.pf_counter == len(self.statements):
+            if self.__course_data.pf_counter == len(statements):
                 self.__proof_receive_done.set()
 
     def __on_lean_message(self, msg: Message):
@@ -182,22 +236,22 @@ class ServerInterfaceAllStatements(QObject):
                 self.log.warning(f"Lean warning at line {msg.pos_line}: {txt}")
 
         elif txt.startswith("context:"):
-            st = self.statement_from_hypo_line[line]
-            index = self.statements.index(st)
+            st = self.__course_data.statement_from_hypo_line[line]
+            index = self.__course_data.statements.index(st)
             self.log.info(f"Got new context for statmnt {st.lean_name}, "
                           f"index = {index}")
-            self.hypo_analysis[index] = txt
+            self.__course_data.__hypo_analysis[index] = txt
 
-            self.__check_receive_state(index)
+            self.__check_receive_course_data(index)
 
         elif txt.startswith("targets:"):
-            st = self.statement_from_targets_line[line]
-            index = self.statements.index(st)
+            st = self.__course_data.statement_from_targets_line[line]
+            index = self.__course_data.statements.index(st)
             self.log.info(f"Got new targets for statmnt {st.lean_name}, "
                           f"index = {index}")
-            self.targets_analysis[index] = txt
+            self.__course_data.targets_analysis[index] = txt
 
-            self.__check_receive_state(index)
+            self.__check_receive_course_data(index)
 
     def __on_lean_state_change(self, is_running: bool):
         self.log.info(f"New lean state: {is_running}")
@@ -271,59 +325,12 @@ class ServerInterfaceAllStatements(QObject):
         # if error_list:
         #     raise exceptions.FailedRequestError(error_list)
 
-    ############################################
-    # Exercise initialisation
-    ############################################
+    ########################################
+    # Course and statements initialisation #
+    ########################################
     async def set_statements(self, course: Course, statements: [] = None):
-        """
-        Set course, statements, and insert hypo_analysis / targets_analysis
-        for each statement.
-        """
-
-        self.course = course
-        file_content = self.course.file_content
-        lines        = file_content.splitlines()
-        if not statements:
-            self.statements = course.statements
-        else:
-            self.statements = statements
-
-        self.log.info({f"Getting proof states for course {course.title}"})
-        self.log.info({f"{len(self.statements)} statements"})
-
-        self.hypo_analysis   = [None] * len(self.statements)
-        self.targets_analysis = [None] * len(self.statements)
-
-        hypo_tactic    = "    hypo_analysis,"
-        targets_tactic = "    targets_analysis,"
-
-        shift = 0  # Shift due to line insertion/deletion
-        for statement in self.statements:
-            # self.log.debug(f"Statement n° {self.statements.index(
-            # statement)}")
-            begin_line   = statement.lean_begin_line_number + shift
-            end_line     = statement.lean_end_line_number + shift
-            # self.log.debug(f"{len(lines)} lines")
-            # self.log.debug(f"begin, end =  {begin_line, end_line}")
-            proof_lines = list(range(begin_line, end_line-1))
-            # self.log.debug(proof_lines)
-            proof_lines.reverse()
-            for index in proof_lines:
-                lines.pop(index)
-            lines.insert(begin_line, hypo_tactic)
-            lines.insert(begin_line+1, targets_tactic)
-            self.statement_from_hypo_line[begin_line+1] = statement
-            self.statement_from_targets_line[begin_line+2] = statement
-            # No shift if end_line = begin_line + 3
-            shift += 3 - (end_line - begin_line)
-            # self.log.debug(f"Shift: {shift}")
-            # Construct virtual file
-
-        file_content = "\n".join(lines)
-        # self.log.debug(file_content)
-
-        self.lean_file_content = file_content
+        self.__course_data = CourseData(course, statements)
+        self.lean_file_content = self.course_data.file_content()
 
         await self.get_proof_states()
-
 

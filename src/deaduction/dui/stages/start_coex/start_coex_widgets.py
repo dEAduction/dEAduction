@@ -78,6 +78,7 @@ from deaduction.dui.utils           import (read_pkl_course,
 from deaduction.pylib.config.course import  add_to_recent_courses
 from deaduction.pylib.coursedata    import (Course,
                                             Exercise)
+from deaduction.pylib.server import ServerInterface
 
 log = logging.getLogger(__name__)
 
@@ -348,6 +349,7 @@ class CourseChooser(AbstractCoExChooser):
         course_path = course_item.course_path
         course = Course.from_file(course_path)
         self.set_preview(course)
+        # TODO: [[add self.servint.get_proof_states(course)]]
 
 
 class ExerciseChooser(AbstractCoExChooser):
@@ -385,9 +387,7 @@ class ExerciseChooser(AbstractCoExChooser):
         """
         See AbstractCoExChooser.__init__ docstring. Here, the browser layout is
         only made of the course's StatementsTreeWidget displaying only the
-        exercises (e.g. no theorems). The course file type is used by
-        set_preview to determine if an exercise is to be previewed with its
-        goal or not (see self docstring).
+        exercises (e.g. no theorems).
 
         :param course: The course in which usr chooses an exercise.
         """
@@ -406,7 +406,7 @@ class ExerciseChooser(AbstractCoExChooser):
     def exercises_tree_double_clicked_connect(self, slot):
         self.__exercises_tree.itemDoubleClicked.connect(slot)
 
-    def set_preview(self, exercise: Exercise):
+    async def set_preview(self, exercise: Exercise):
         """
         Set exercise preview. See AbstractCoExChooser.set_preview
         docstring. The exercise's title, subtitle and description are
@@ -423,8 +423,8 @@ class ExerciseChooser(AbstractCoExChooser):
         main_widget_lyt = QVBoxLayout()
         main_widget_lyt.setContentsMargins(0, 0, 0, 0)
 
-        with_preview = exercise.course.filetype == '.pkl'
-        if with_preview:
+        # with_preview = exercise.course.filetype == '.pkl'
+        if exercise.initial_proof_state:
 
             proofstate = exercise.initial_proof_state
             goal       = proofstate.goals[0]  # Only one goal (?)
@@ -513,9 +513,15 @@ class ExerciseChooser(AbstractCoExChooser):
             main_widget_lyt.addWidget(self.__code_wgt)
             main_widget_lyt.addLayout(cb_lyt)
         else:
+            # Ask Lean for initial proof state and call back when done
+            log.debug("Asking Lean for initial proof state...")
+            self.servint.updated_ended.connect(
+                self.__set_proof_state_for_preview)
+            course = self.__exercise.course
+            statements = [self.__exercise]
+            await self.servint.set_statements(course, statements)
 
-            widget_lbl = QLabel(_('Goal preview only available when course '
-                                  'file extension is .pkl.'))
+            widget_lbl = QLabel(_('Preview not available (be patient...)'))
             widget_lbl.setStyleSheet('color: gray;')
 
             main_widget_lyt.addWidget(widget_lbl)
@@ -559,6 +565,11 @@ class ExerciseChooser(AbstractCoExChooser):
     #########
     # Slots #
     #########
+
+    @Slot()
+    def __set_proof_state_for_preview(self):
+        log.debug("Lean initial proof state received, updating preview")
+        self.set_preview()
 
     @Slot(StatementsTreeWidgetItem)
     def __set_preview_from_click(self, item: StatementsTreeWidgetItem):
@@ -638,7 +649,8 @@ class AbstractStartCoEx(QDialog):
     quit_deaduction = Signal()
 
     def __init__(self, title: Optional[str], widget: Optional[QWidget],
-                 exercise: Optional[Exercise]):
+                 exercise: Optional[Exercise],
+                 servint: ServerInterface = None):
         """
         Init self by setting up the layouts, the buttons and the tab
         widget (see self docstring). 
@@ -649,10 +661,12 @@ class AbstractStartCoEx(QDialog):
             StartCoExExerciseFinished).
         :param exercise: Optional Exercise to be preset / previewed
             (e.g. finished exercise in StartCoExExerciseFinished).
+        :param servint: ServerInterface to get exercises' initial proof states.
         """
 
         super().__init__()
 
+        self.servint = servint
         if title:
             self.setWindowTitle(title)
         self.setMinimumWidth(450)
@@ -840,13 +854,16 @@ class StartCoExStartup(AbstractStartCoEx):
     window.
     """
 
-    def __init__(self, exercise: Exercise = None):
+    def __init__(self, exercise: Exercise = None, servint=None):
         """
         Init self.
         """
 
         title = _('Choose course and exercise — d∃∀duction')
-        super().__init__(title=title, widget=None, exercise=exercise)
+        super().__init__(title=title,
+                         widget=None,
+                         exercise=exercise,
+                         servint=servint)
 
     def closeEvent(self, event: QEvent):
         """

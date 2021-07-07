@@ -88,7 +88,7 @@ CONFIGS['Functionalities'] = [
 
 CONFIGS["Language"] = [("i18n.select_language", ["en", "fr_FR"], True)]
 CONFIGS["Advanced"] = [
-    ('others.course_directory', 'file', True),
+    ('others.course_directory', 'dir', True),
     ('logs.save_journal', None, True),  # checked, untested
     ('logs.display_level', ['debug', 'info', 'warning'], True)]
 
@@ -113,7 +113,8 @@ PRETTY_NAMES = {
     'fr_FR': "Français",
     'no_language': "English",
     'target_display_on_top': _('Target display on top'),
-    'others.course_directory': _('Set directory for choosing courses')}
+    'others.course_directory': _('Set directory for choosing courses'),
+    'logs.display_level': _('Level of logs')}
 
 
 class ConfigMainWindow(QDialog):
@@ -280,8 +281,8 @@ class ConfigWindow(QDialog):
             title = title + _(":")
 
             # ───────── Case of file: browse directories button ─────────
-            if setting_list == 'file':
-                widget = QPushButton(_("browse directories"), self)
+            if setting_list == 'dir':
+                widget = QPushButton(_("Browse directories"), self)
                 widget.clicked.connect(self.browse_dir)
                 widget.setting = setting
 

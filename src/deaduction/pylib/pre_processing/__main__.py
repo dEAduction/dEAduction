@@ -427,7 +427,6 @@ async def main_alt():
         print_goal(course)
 
 
-
 if __name__ == '__main__':
     logger.configure(domains=['ServerInterface', '__main__'])
     log.debug("starting pre-processing...")

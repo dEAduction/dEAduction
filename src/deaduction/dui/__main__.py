@@ -202,17 +202,32 @@ class Container(QObject):
         self.auto_test:       bool               = False
         self.report:          [[str]]            = []
 
+    async def check_lean_server(self):
+        """
+        Check for ServerInterface, and if none, start a new one.
+        """
+        if not self.servint:
+            self.servint = ServerInterface(self.nursery)
+            await self.servint.start()
+            log.info("Lean server started")
+
+    ###################################
+    # Methods corresponding to stages #
+    ###################################
     @Slot()
-    def choose_exercise(self):
+    async def choose_exercise(self):
         """
         Launch chooser window and connect signals. This is the first method
         that will be called by main().
         """
 
         log.debug("Choosing new exercise")
+        self.check_lean_server()
+
         if not self.chooser_window:
             # Start chooser window
-            self.chooser_window = StartCoExStartup(exercise=self.exercise)
+            self.chooser_window = StartCoExStartup(exercise=self.exercise,
+                                                   servint=self.servint)
 
             # Connect signals
             self.chooser_window.exercise_chosen.connect(self.start_exercise)
@@ -252,18 +267,15 @@ class Container(QObject):
         log.debug(f"Starting exercise {self.exercise.pretty_name}")
 
         # Stop Lean server if running
-        if self.servint:
-            await self.servint.file_invalidated.wait()
-            self.servint.stop()
-            log.info("Lean server stopped!")
-            # ─────────────────── Most Important ─────────────────── #
-            #  Re-initialisation of MathObject.Variables
-            MathObject.clear()
+        # if self.servint:
+        #     await self.servint.file_invalidated.wait()
+        #     self.servint.stop()
+        #     log.info("Lean server stopped!")
+        #     # ─────────────────── Most Important ─────────────────── #
+        #     #  Re-initialisation of MathObject.Variables
+        #     MathObject.clear()
 
-        # Start Lean server
-        self.servint = ServerInterface(self.nursery)
-        await self.servint.start()
-        log.info("Lean server started")
+        self.check_lean_server()
 
         # Start exercise window
         self.exercise_window = ExerciseMainWindow(self.exercise, self.servint)

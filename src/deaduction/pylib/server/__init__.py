@@ -42,13 +42,13 @@ from deaduction.pylib.lean.request import SyncRequest
 from deaduction.pylib.lean.server import LeanServer
 from deaduction.pylib.lean.installation import LeanEnvironment
 from deaduction.pylib.actions import CodeForLean, get_effective_code_numbers
+from deaduction.pylib.coursedata        import Course
 
 import deaduction.pylib.config.site_installation as inst
 import deaduction.pylib.server.exceptions as exceptions
+from deaduction.pylib.server.server_course_data import CourseData
 
 from PySide2.QtCore import Signal, QObject
-
-from gettext import gettext as _
 
 ############################################
 # Lean magic messages
@@ -104,6 +104,10 @@ class ServerInterface(QObject):
         # Current exercise
         self.exercise_current          = None
 
+        # Current course (when processing all course's statements for initial
+        # proof state)
+        self.__course_data             = None
+
         # Current proof state + Events
         self.file_invalidated          = trio.Event()
         self.__proof_state_valid       = trio.Event()
@@ -129,6 +133,13 @@ class ServerInterface(QObject):
         # Errors memory channels
         self.error_send, self.error_recv = \
             trio.open_memory_channel(max_buffer_size=1024)
+
+    @property
+    def lean_file_contents(self):
+        if self.__course_data:
+            return self.__course_data.lean_file_contents
+        elif self.lean_file:
+            return self.lean_file.contents
 
     async def start(self):
         """
@@ -170,6 +181,9 @@ class ServerInterface(QObject):
         After relevant messages, the __check_receive_state method is called
         to check if all awaited messages have been received.
         """
+
+        if self.__course_data:
+            self.__on_lean_message_for_course(msg)
 
         txt = msg.text
         # self.log.debug("Lean message: " + txt)
@@ -232,6 +246,61 @@ class ServerInterface(QObject):
         self.log.info(f"New lean state: {is_running}")
         self.is_running = is_running
 
+    def __check_receive_course_data(self, index):
+        """
+        Check if every awaited piece of information has been received:
+        """
+        hypo = self.__course_data.hypo_analysis[index]
+        target = self.__course_data.targets_analysis[index]
+        if hypo and target:
+            statements = self.__course_data.statements
+            st = statements[index]
+            if not st.initial_proof_state:
+                ps = ProofState.from_lean_data(hypo, target)
+                st.initial_proof_state = ps
+                self.__course_data.pf_counter += 1
+
+            # TODO: check all statements
+            if self.__course_data.pf_counter == len(statements):
+                self.__course_data = None
+                self.__proof_receive_done.set()
+
+    def __on_lean_message_for_course(self, msg: Message):
+        """
+        Treatment of relevant Lean messages.
+        """
+
+        txt = msg.text
+        # self.log.debug("Lean message: " + txt)
+        line = msg.pos_line
+        severity = msg.severity
+
+        if severity == Message.Severity.error:
+            self.log.error(f"Lean error at line {msg.pos_line}: {txt}")
+            self.__filter_error(msg)  # Record error ?
+
+        elif severity == Message.Severity.warning:
+            if not txt.endswith(LEAN_USES_SORRY):
+                self.log.warning(f"Lean warning at line {msg.pos_line}: {txt}")
+
+        elif txt.startswith("context:"):
+            st = self.__course_data.statement_from_hypo_line[line]
+            index = self.__course_data.statements.index(st)
+            self.log.info(f"Got new context for statmnt {st.lean_name}, "
+                          f"index = {index}")
+            self.__course_data.__hypo_analysis[index] = txt
+
+            self.__check_receive_course_data(index)
+
+        elif txt.startswith("targets:"):
+            st = self.__course_data.statement_from_targets_line[line]
+            index = self.__course_data.statements.index(st)
+            self.log.info(f"Got new targets for statmnt {st.lean_name}, "
+                          f"index = {index}")
+            self.__course_data.targets_analysis[index] = txt
+
+            self.__check_receive_course_data(index)
+
     ############################################
     # Message filtering
     ############################################
@@ -257,9 +326,9 @@ class ServerInterface(QObject):
             self.error_send.send_nowait(msg)
             self.__proof_receive_done.set()  # Done receiving
 
-    ############################################
-    # Update
-    ############################################
+    ##########################################
+    # Update proof state of current exercise #
+    ##########################################
     async def __update(self, lean_code=None):
         """
         Call Lean server to update the proof_state.
@@ -282,6 +351,7 @@ class ServerInterface(QObject):
 
         # Invalidate events
         self.file_invalidated = trio.Event()
+        self.__course_data = None
         self.__proof_receive_done = trio.Event()
         self.__tmp_hypo_analysis = ""
         self.__tmp_targets_analysis = ""
@@ -290,7 +360,7 @@ class ServerInterface(QObject):
         # Loop in case Lean's answer is None, which happens...
         while not resp:
             req = SyncRequest(file_name="deaduction_lean",
-                              content=self.lean_file.contents)
+                              content=self.lean_file_contents)
             resp = await self.lean_server.send(req)
 
         if resp.message == "file invalidated":
@@ -337,9 +407,9 @@ class ServerInterface(QObject):
         if error_list:
             raise exceptions.FailedRequestError(error_list, lean_code)
 
-    ############################################
-    # Exercise initialisation
-    ############################################
+    ###########################
+    # Exercise initialisation #
+    ###########################
     def __file_from_exercise(self, statement):
         """
         Create a virtual file from exercise. Concretely, this consists in
@@ -514,3 +584,44 @@ class ServerInterface(QObject):
 
         self.lean_file.state_add(label, code)
         await self.__update()
+
+    #####################################################################
+    # Methods for getting initial proof states of a bunch of statements #
+    #####################################################################
+    async def get_initial_proof_states(self):
+        """
+        Call Lean server to get the initial proof states of statements
+        stored in self.__course_data.
+        """
+        file_name = str(self.course.relative_course_path)
+        req = SyncRequest(file_name=file_name,
+                          content=self.lean_file_content)
+
+        # Invalidate events
+        self.file_invalidated           = trio.Event()
+        self.__proof_receive_done       = trio.Event()
+
+        resp = await self.lean_server.send(req)
+
+        if resp.message == "file invalidated":
+            self.file_invalidated.set()
+
+            # ───────── Waiting for all pieces of information ──────── #
+
+            await self.__proof_receive_done.wait()
+
+            self.log.debug(_("All proof states received"))
+            # Next line removed by FLR
+            # await self.lean_server.running_monitor.wait_ready()
+
+            if hasattr(self.update_ended, "emit"):
+                self.update_ended.emit()
+
+    async def set_statements(self, course: Course, statements: [] = None):
+        """
+        Set the relevant information in self.__course_data, and call
+        self.get_initial_proof_states
+        """
+        self.__course_data = CourseData(course, statements)
+        await self.get_initial_proof_states()
+
