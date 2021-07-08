@@ -1,10 +1,17 @@
 # d∃∀duction
 
-## Authors
-- [Marguerite Bin](https://github.com/m-bin) ;
+## Core team
+
+### Current members
 - [Florian Dupeyron](https://github.com/fdmysterious) ;
 - [Antoine Leudiere](https://github.com/kryzar) ;
 - [Frédéric Le Roux](https://github.com/FredericLeRoux) (BDFL).
+
+### Past members
+- [Marguerite Bin](https://github.com/m-bin)
+
+## Contributors
+- Camille Lichère (lots of testing, and teaching !)
 
 ## License
 This project is licensed under the terms of the GNU General Public License v3.0.
