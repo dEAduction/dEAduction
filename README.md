@@ -11,6 +11,7 @@
 - [Marguerite Bin](https://github.com/m-bin)
 
 ## Contributors
+- Jean Christophe Deligny (work on the installation script)
 - Camille Lichère (lots of testing, and teaching !)
 
 ## License
