@@ -55,18 +55,17 @@ from deaduction.dui.stages.select_language       import select_language
 from deaduction.dui.stages.exercise              import ExerciseMainWindow
 from deaduction.dui.stages.start_coex            import StartCoExStartup
 
-from deaduction.dui.stages.missing_dependencies  import (InstallingMissingDependencies,
-                                                         WantInstallMissingDependencies )
+from deaduction.dui.stages.missing_dependencies  import (
+    InstallingMissingDependencies, WantInstallMissingDependencies)
 
 from deaduction.pylib.coursedata                 import Exercise
-from deaduction.pylib.mathobj                    import MathObject
 from deaduction.pylib                            import logger
 from deaduction.pylib.server                     import ServerInterface
 
 from deaduction.pylib.autotest import                   select_exercise
 
 # (non-exhaustive) list of logger domains:
-# ['lean', 'ServerInterface', 'Course', 'deaduction.dui',
+# ['lean', 'ServerInterface', 'ServerQueue', 'Course', 'deaduction.dui',
 #  'deaduction.pylib.coursedata', 'deaduction.pylib.mathobj', 'LeanServer']
 
 ###################
@@ -78,7 +77,11 @@ log_level = cvars.get("logs.display_level", 'info')
 
 if os.getenv("DEADUCTION_DEV_MODE", False):
     log_level = 'debug'
-    log_domains = ["deaduction", "__main__", 'ServerInterface']
+    log_domains = ["deaduction", "__main__",  # 'lean',
+                   'ServerInterface', 'ServerQueue']
+    # log_domains = ['']
+    log_domains = ["__main__", 'lean', 'ServerInterface', 'ServerQueue']
+
 
 logger.configure(domains=log_domains,
                  display_level=log_level)
@@ -215,14 +218,13 @@ class Container(QObject):
     # Methods corresponding to stages #
     ###################################
     @Slot()
-    async def choose_exercise(self):
+    def choose_exercise(self):
         """
         Launch chooser window and connect signals. This is the first method
         that will be called by main().
         """
 
-        log.debug("Choosing new exercise")
-        self.check_lean_server()
+        log.info("Choosing new exercise")
 
         if not self.chooser_window:
             # Start chooser window
@@ -245,10 +247,9 @@ class Container(QObject):
     @Slot()
     def start_exercise(self, exercise):
         """
-        Just a synchronous front-end to the async method solve_exercise
-        (apparently slots may not be asynchronous functions).
+        Just a front-end to the solve_exercise method.
         """
-
+        # TODO: might be merged with sole_exercise, no more async
         self.chooser_window = None  # So that exiting d∃∀duction works
         self.exercise = exercise
         if self.exercise_window:
@@ -257,25 +258,15 @@ class Container(QObject):
             self.exercise_window.window_closed.disconnect()
             self.exercise_window.close()
 
-        self.nursery.start_soon(self.solve_exercise)
+        # Do start exercise!
+        self.solve_exercise()
 
-    async def solve_exercise(self):
+    def solve_exercise(self):
         """
-        Launch exercise window, start lean server, and connect signals.
+        Launch exercise window and connect signals.
         """
 
         log.debug(f"Starting exercise {self.exercise.pretty_name}")
-
-        # Stop Lean server if running
-        # if self.servint:
-        #     await self.servint.file_invalidated.wait()
-        #     self.servint.stop()
-        #     log.info("Lean server stopped!")
-        #     # ─────────────────── Most Important ─────────────────── #
-        #     #  Re-initialisation of MathObject.Variables
-        #     MathObject.clear()
-
-        self.check_lean_server()
 
         # Start exercise window
         self.exercise_window = ExerciseMainWindow(self.exercise, self.servint)
@@ -294,7 +285,7 @@ class Container(QObject):
         - setting auto_steps,
         - connecting proof_no_goal signal to test_complete.
         """
-
+        # FIXME: adapt to new methods!!
         # TODO: box for cancelling auto_test (reprendre la main)
         log.debug(f"Preparing {self.exercise.pretty_name} for test")
 
@@ -365,20 +356,22 @@ async def main():
     async with trio.open_nursery() as nursery:
         await site_installation_check(nursery)
 
-        # Create container
+        # Create container and start Lean server
         container = Container(nursery)
+        await container.check_lean_server()
 
-        # Choose first exercise
-        exercise = exercise_from_argv()
-        if not exercise:
-            container.choose_exercise()
-        else:
-            container.start_exercise(exercise)
-        # Main loop that just listen to closing windows signals,
-        # and quit if there is no more open windows.
-        signals = [container.close_chooser_window,
-                   container.close_exercise_window]
         try:
+            # Choose first exercise
+            exercise = exercise_from_argv()
+            if not exercise:
+                container.choose_exercise()
+                # container.choose_exercise()
+            else:
+                container.start_exercise(exercise)
+            # Main loop that just listen to closing windows signals,
+            # and quit if there is no more open windows.
+            signals = [container.close_chooser_window,
+                       container.close_exercise_window]
             async with qtrio.enter_emissions_channel(signals=signals) as \
                     emissions:
                 async for emission in emissions.channel:
@@ -397,10 +390,8 @@ async def main():
                             container.exercise_window):
                         log.debug("Closing d∃∀duction")
                         break
-                # log.debug("Out of async for loop")
-            # log.debug("Out of async with")
         finally:
-            # Finally closing d∃∀duction
+            # Properly close d∃∀duction
             if container.servint:
                 await container.servint.file_invalidated.wait()
                 container.servint.stop()  # Good job, buddy
