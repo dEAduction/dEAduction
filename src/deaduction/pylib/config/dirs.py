@@ -50,7 +50,7 @@ home     = Path.home()
 local    = ( home / ".deaduction{}".format("-dev" if os.getenv("DEADUCTION_DEV_MODE", False)                                                  else "") ).resolve()
 journal        = (local / "deaduction_journal").resolve()
 test_exercises = (local / "test_exercises").resolve()
-
+all_courses_ipf = (local / "all_courses_initial_proof_states.pkl").resolve()
 
 ############################################
 # Utilities
