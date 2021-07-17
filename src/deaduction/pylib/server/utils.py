@@ -1,7 +1,8 @@
 """
-# server_course_data.py : <#ShortDescription> #
+utils.py : utilities for the ServerInterface class
     
-    <#optionalLongDescription>
+    Contains the CourseData class, which pre-processes some data for the
+    ServerInterface class to process a list of statements of a given course.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -35,7 +36,7 @@ from deaduction.pylib.coursedata        import Course
 class CourseData:
     """
     A container class for the data related to a list of statements to get
-    their initial proof state. these data will be passed to ServerInterface
+    their initial proof state. These data will be passed to ServerInterface
     (as a ServerInterface attribute).
     """
 
@@ -46,11 +47,12 @@ class CourseData:
         else:
             self.statements = statements
 
-        # self.log.info({f"Getting proof states for course {course.title}"})
-        # self.log.info({f"{len(self.statements)} statements"})
-
+        # Containers to temporarily store data sent from Lean server.
         self.hypo_analysis   = [None] * len(self.statements)
         self.targets_analysis = [None] * len(self.statements)
+
+        # The following dictionaries provide access to a given statement
+        # from the line where hypo_analysis / targets_analysis is called.
         self.statement_from_hypo_line = dict()
         self.statement_from_targets_line = dict()
 
@@ -58,6 +60,10 @@ class CourseData:
         self.file_contents = self.set_file_contents()
 
     def set_file_contents(self):
+        """
+        Add "hypo/target analysis" at relevant places, once for each
+        statement to be processed.
+        """
         lines        = self.course.file_content.splitlines()
         hypo_tactic    = "    hypo_analysis,"
         targets_tactic = "    targets_analysis,"
@@ -85,6 +91,6 @@ class CourseData:
             # Construct virtual file
 
         file_contents = "\n".join(lines)
+        # print(file_contents)
         return file_contents
-
 
