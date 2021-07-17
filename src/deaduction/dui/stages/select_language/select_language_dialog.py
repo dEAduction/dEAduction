@@ -25,7 +25,7 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
-
+from locale import getdefaultlocale
 from PySide2.QtWidgets import   ( QApplication,
                                   QWidget,
                                   QInputDialog )
@@ -40,19 +40,27 @@ PRETTY_NAMES = {"en": "English",
 def select_language():
     available_languages = cvars.get("i18n.available_languages",
                                          ["en"])
+    language, font_enc = getdefaultlocale()
+    if language in available_languages:
+        return language, True
+    else:
+        for lang in available_languages:
+            if lang[:2] == language[:2]:
+                return language, True
     pretty_languages_list = [PRETTY_NAMES[setting] if setting in PRETTY_NAMES
                              else setting for setting in available_languages]
     app = QApplication()
     parent = QWidget()
 
-    item, ok = QInputDialog.getItem(parent,
+    language, ok = QInputDialog.getItem(parent,
                                     "Select language",
                                     "Available languages:",
                                     pretty_languages_list,
                                     0,
                                     False)
     for key in PRETTY_NAMES:
-        if PRETTY_NAMES[key] == item:
+        if PRETTY_NAMES[key] == language:
             return key, ok
-    return item, ok
+
+    return language, ok
 
