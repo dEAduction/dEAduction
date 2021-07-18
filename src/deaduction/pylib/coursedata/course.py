@@ -61,7 +61,7 @@ class Course:
     - the course metadata (e.g. authors, institution, etc.)
     - the "outline" of the course, an ordered dict describing namespaces
     - a list of all statements, Python object containing all information
-    related to a Lean statement.
+    related to a Lean statement. This includes the exercises.
     """
     file_content:           str
     metadata:               Dict[str, str]
@@ -75,7 +75,6 @@ class Course:
     #   values = corresponding plain language namespace
     #   e. g. section_dict["set_theory.unions_and_intersections"] =
     #   "Unions and intersections"
-    # Statements is a list of all Statements, including exercises
 
     @property
     def title(self) -> str:
@@ -99,7 +98,7 @@ class Course:
         if 'subtitle' in self.metadata:
             return self.metadata['subtitle']
         else:
-            return "no subtitle"
+            return _("no subtitle")
 
     @property
     def description(self) -> str:
@@ -110,7 +109,7 @@ class Course:
         if 'description' in self.metadata:
             return self.metadata['description']
         else:
-            return "no description"
+            return _("no description")
 
     def print_metadata(self):
         for field_name, field_content in self.metadata.items():

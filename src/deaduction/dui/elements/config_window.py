@@ -117,10 +117,21 @@ PRETTY_NAMES = {
     'fr_FR': "Français",
     'no_language': "English",
     'display.target_display_on_top': _('Target display on top'),
+    'display.target_font_size': _("target font size"),
     'others.course_directory': _('Set directory for choosing courses'),
     'logs.display_level': _('Level of logs'),
     'display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL':
-                                    _("Symbols for buttons ∧ ∨ ¬ ⇒ ⇔ ∀ ∃ =")}
+                                    _("Symbols for buttons ∧ ∨ ¬ ⇒ ⇔ ∀ ∃ ="),
+    'display.display_success_messages': _("Display success messages"),
+    'logic.color_for_dummy_variables': _("Color for dummy variables"),
+    'logic.color_for_used_properties': _("Color for used properties"),
+    'functionality.target_selected_by_default': _("Target selected by "
+                                                  "default"),
+    'functionality.allow_proof_by_sorry': _("Allow proof by sorry"),
+    # 'functionality.': _(""),
+    'logs.save_journal': _("Save journal"),
+    'None': _('None')
+}
 
 
 class ConfigMainWindow(QDialog):
@@ -143,7 +154,7 @@ class ConfigMainWindow(QDialog):
         self.__tabs = QTabWidget()
         for tab_name in CONFIGS:
             window = ConfigWindow(tab_name)
-            self.__tabs.addTab(window, tab_name)
+            self.__tabs.addTab(window, _(tab_name))
             self.__windows.append(window)
         layout.addWidget(self.__tabs)
 
