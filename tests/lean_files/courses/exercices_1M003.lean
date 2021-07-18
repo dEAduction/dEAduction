@@ -295,7 +295,6 @@ PrettyName
     L'opposé d'une partie minorée est majorée, et réciproquement
 -/
 begin
-    hypo_analysis,
     sorry
 end
 
