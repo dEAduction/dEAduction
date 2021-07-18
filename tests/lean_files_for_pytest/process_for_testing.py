@@ -183,7 +183,7 @@ async def get_all_proof_states(servint,
     counter = 0
     for statement in statements_to_process:
         counter += 1
-        await servint.exercise_set(statement)
+        await servint.set_exercise(statement)
         # proof_state is now stored as servint.proof_state
         log.info(f"Got proof state of statement "
                  f"{statement.pretty_name}, n"

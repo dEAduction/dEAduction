@@ -631,7 +631,7 @@ class StatementsTreeWidget(QTreeWidget):
 
     # def event(self, event: QEvent):
     #     """
-    #     Reimplement event handler to show dynamic tooltips.
+    #     Re-implement event handler to show dynamic tooltips.
     #     """
     #     log.debug(f"Event {event.type} handled by QtreeWidget")
     #     log.debug(event)

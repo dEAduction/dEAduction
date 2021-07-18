@@ -81,7 +81,7 @@ class ExerciseWindow(QWidget):
 
     async def server_task(self):
         await self.server.start()
-        await self.server.exercise_set(self.exercise)
+        await self.server.set_exercise(self.exercise)
         async with qtrio.enter_emissions_channel(signals=[
             self.closed,
             self.send.clicked,
