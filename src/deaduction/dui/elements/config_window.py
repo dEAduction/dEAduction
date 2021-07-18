@@ -64,12 +64,14 @@ CONFIGS = dict()
 # (1) string = ref in cvars,
 # (2) list of predefined values (or None),
 # (3) bool: False if freeze (not implemented yet)
-CONFIGS["Display"] = [("display.target_display_on_top", None, True),  # bool
-                      ("display.target_font_size", None, True),
-                      # ("display.context_font_size", None, True),
-                      # ('display.tooltips_font_size', None, True),
-                      # ('display.mathematics_font', None, True),
-                      ('display.use_logic_button_symbols', None, False)]
+CONFIGS["Display"] = [
+    ("display.target_display_on_top", None, True),  # bool
+    ("display.target_font_size", None, True),
+    # ("display.context_font_size", None, True),
+    # ('display.tooltips_font_size', None, True),
+    # ('display.mathematics_font', None, True),
+    ('display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL', None, True)
+                      ]
 
 CONFIGS["Logic"] = [
     ("display.display_success_messages", None, True),
@@ -94,6 +96,8 @@ CONFIGS["Advanced"] = [
 
 SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          "display.target_font_size",
+                         "display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_"
+                         "EXISTS_EQUAL",
                          'display.use_logic_button_symbols',
                          'logic.color_for_used_properties',
                          'logic.color_for_dummy_variables',
@@ -112,9 +116,11 @@ PRETTY_NAMES = {
     "en": "English",
     'fr_FR': "Français",
     'no_language': "English",
-    'target_display_on_top': _('Target display on top'),
+    'display.target_display_on_top': _('Target display on top'),
     'others.course_directory': _('Set directory for choosing courses'),
-    'logs.display_level': _('Level of logs')}
+    'logs.display_level': _('Level of logs'),
+    'display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL':
+                                    _("Symbols for buttons ∧ ∨ ¬ ⇒ ⇔ ∀ ∃ =")}
 
 
 class ConfigMainWindow(QDialog):

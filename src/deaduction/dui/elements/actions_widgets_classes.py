@@ -47,10 +47,14 @@ from trio import sleep
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
                                 QIcon,
-                                QCursor)
+                                QCursor,
+                                QHelpEvent)
 from PySide2.QtCore    import ( Signal,
                                 Slot,
-                                Qt)
+                                Qt,
+                                QEvent,
+                                QObject,
+                                QTimerEvent)
 from PySide2.QtWidgets import ( QHBoxLayout,
                                 QPushButton,
                                 QWidget)
@@ -58,7 +62,9 @@ from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem,
                                 QToolTip)
 
-# from deaduction.pylib.config.i18n import   _
+from deaduction.pylib.text        import ( button_symbol,
+                                           button_tool_tip)
+
 from deaduction.pylib.actions     import   Action
 from deaduction.pylib.coursedata  import ( Definition,
                                            Exercise,
@@ -123,18 +129,30 @@ class ActionButton(QPushButton):
         super().__init__()
 
         self.action = action
-        self.setText(action.symbol)
-        self.setToolTip(action.caption)
+        # self.setText(action.symbol)
+        # self.setToolTip(action.caption)
+        self.update()  # set symbol and tool tip
         self.clicked.connect(self._emit_action)
         # Modify arrow appearance when over a button
         self.setCursor(QCursor(Qt.PointingHandCursor))
 
     def update(self):
         """
-        Update text and tooltips in button.
+        Set or update text and tooltips in button, using module pylib.text.
+        NB: translation is done here.
         """
-        self.setText(self.action.symbol)
-        self.setToolTip(self.action.caption)
+        name = self.action.name
+        symbol = _(button_symbol(name))
+        self.setText(symbol)
+
+        tool_tip = button_tool_tip(name)
+        if isinstance(tool_tip, str):
+            tooltip = _(tool_tip)
+        elif isinstance(tool_tip, list):
+            tooltip = '\n'.join("• " + _(msg) for msg in tool_tip)
+        else:
+            tooltip = ""
+        self.setToolTip(tooltip)
 
     @Slot()
     def _emit_action(self):
@@ -308,8 +326,14 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
             path = icons_dir / 't.png'
         self.setIcon(0, QIcon(str(path.resolve())))
 
-        # Set tooltip
-        self.setToolTip(0, statement.caption)
+        # Set tooltips
+        self.set_tooltip()
+
+    def set_tooltip(self):
+        """
+        Set the math content of the statement as tooltip.
+        """
+        self.setToolTip(0, self.statement.caption)
         # These tooltips contain maths
         math_font_name = cvars.get('display.mathematics_font', 'Default')
         QToolTip.setFont(math_font_name)
@@ -319,7 +343,7 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
 
     async def simulate(self, duration=0.3):
         """
-        This method simulate user selecting statement. It is asynchrone
+        This method simulate user selecting statement. It is asynchronous
         since we must wait a small duration so that the checking is visible.
         This is called when redoing.
         """
@@ -445,6 +469,7 @@ class StatementsTreeWidget(QTreeWidget):
         # the branch is already created.
         if not branch:
             item            = StatementsTreeWidgetItem(statement)
+            self.items.append(item)
             root            = item.text(0)
             extg_tree[root] = (item, dict())
             parent.add_child(item)
@@ -528,6 +553,7 @@ class StatementsTreeWidget(QTreeWidget):
         # TODO: get rid of self._init_tree ?
 
         super().__init__()
+        self.items: [QTreeWidgetItem] = [] # List of items
         self._init_tree(statements, outline)
 
         # Cosmetics
@@ -598,3 +624,32 @@ class StatementsTreeWidget(QTreeWidget):
         else:
             return None
 
+    @Slot()
+    def update_tooltips(self):
+        for item in self.items:
+            item.set_tooltip()
+
+    # def event(self, event: QEvent):
+    #     """
+    #     Reimplement event handler to show dynamic tooltips.
+    #     """
+    #     log.debug(f"Event {event.type} handled by QtreeWidget")
+    #     log.debug(event)
+    #     if event.type == QEvent.ToolTip:
+    #         log.debug("Showing tooltip")
+    #         pos = QHelpEvent.globalPos(event)
+    #         item = self.itemAt(pos)
+    #         text = item.statement.caption
+    #         QToolTip.showText(pos, text)
+    #         event.accept()
+    #         return True
+    #     else:
+    #         pass
+    #         # Propagate event
+    #         # QToolTip.hideText()
+    #         event.ignore()
+    #         if isinstance(event, QTimerEvent):
+    # The following does not work, which drives me crazy:
+    #             return QObject.timerEvent(event)
+    #         else:
+    #             return QTreeWidget.event(event)

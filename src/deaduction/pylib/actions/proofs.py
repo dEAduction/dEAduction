@@ -52,20 +52,19 @@ from deaduction.pylib.mathobj import (MathObject,
 log = logging.getLogger(__name__)
 
 
-# Turn proof_button_texts into a dictionary
-proof_list = ['action_apply', 'proof_methods', 'new_object']
-lbt = tooltips.get('proof_button_texts').split(', ')
-proof_button_texts = {}
-for key, value in zip(proof_list, lbt):
-    proof_button_texts[key] = value
+# # Turn proof_button_texts into a dictionary
+# proof_list = ['action_apply', 'proof_methods', 'new_object']
+# lbt = tooltips.get('proof_button_texts').split(', ')
+# proof_button_texts = {}
+# for key, value in zip(proof_list, lbt):
+#     proof_button_texts[key] = value
 
 
-@action(tooltips.get('tooltip_proof_methods'),
-        proof_button_texts['proof_methods'])
-def action_use_proof_methods(proof_step,
-                             selected_objects: [MathObject],
-                             user_input: [str] = [],
-                             target_selected: bool = True) -> CodeForLean:
+@action()
+def action_proof_methods(proof_step,
+                         selected_objects: [MathObject],
+                         user_input: [str] = [],
+                         target_selected: bool = True) -> CodeForLean:
 
     # 1st call, choose proof method
     if not user_input:
@@ -215,8 +214,7 @@ def introduce_fun(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     raise WrongUserInput(error)
 
 
-@action(tooltips.get('tooltip_new_object'),
-        proof_button_texts['new_object'])
+@action()
 def action_new_object(proof_step,
                       selected_objects: [MathObject],
                       user_input: [str] = None,
@@ -332,8 +330,7 @@ def apply_function(proof_step, selected_objects: [MathObject]):
     return codes
 
 
-@action(tooltips.get('tooltip_apply'),
-        proof_button_texts['action_apply'])
+@action()
 def action_apply(proof_step,
                  selected_objects: [MathObject],
                  user_input: [str] = [],

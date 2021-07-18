@@ -38,24 +38,24 @@ from .code_for_lean import (LeanCombinator,
                             CodeForLean,
                             get_effective_code_numbers)
 
-from .logic import (        action_negate,
-                            action_implicate,
-                            action_and,
-                            action_or,
-                            action_forall,
-                            action_exists,
-                            apply_exists,
-                            apply_and,
-                            apply_or,
-                            apply_implicate,
-                            apply_implicate_to_hyp,
-                            apply_forall,
-                            have_new_property,
-                            apply_substitute)
+from .logic import (action_not,
+                    action_implies,
+                    action_and,
+                    action_or,
+                    action_forall,
+                    action_exists,
+                    apply_exists,
+                    apply_and,
+                    apply_or,
+                    apply_implies,
+                    apply_implies_to_hyp,
+                    apply_forall,
+                    have_new_property,
+                    apply_substitute)
 
-from .proofs import (       action_apply,
-                            action_use_proof_methods,
-                            explain_how_to_apply)
+from .proofs import (action_apply,
+                     action_proof_methods,
+                     explain_how_to_apply)
 from.magic import (         action_compute,
                             action_assumption)
 

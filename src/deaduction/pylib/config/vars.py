@@ -87,9 +87,9 @@ def get(k: str, default_value=None):
         try:
             return udict.dotget(__dict_factory,k, default_value=default_value)
         except KeyError as exc:
-            raise KeyError(_("Could not get config value: {}").format(
-                str(exc)
-            ))
+            raise KeyError(_("Could not get config value: ") +
+                str(exc))
+
 
 def set( k, v, if_not_exists=False ):
     """

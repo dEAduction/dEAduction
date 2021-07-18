@@ -68,20 +68,18 @@ import deaduction.pylib.config.vars as cvars
 log = logging.getLogger("logic")
 
 
-# Get buttons symbols from config file
-action_list = ['action_and', 'action_or', 'action_negate',
-               'action_implicate', 'action_iff', 'action_forall',
-               'action_exists', 'action_equal']
-
-if cvars.get('display.use_logic_button_symbols'):
-    logic_button_texts = cvars.get('display.logic_button_symbols')
-else:
-    logic_button_texts = tooltips.get('logic_button_texts')
-# Turn logic_button_texts into a dictionary
-lbt = logic_button_texts.split(', ')
-logic_button_texts = {}
-for key, value in zip(action_list, lbt):
-    logic_button_texts[key] = value
+# # Get buttons symbols from config file
+# action_list = ['action_and', 'action_or', 'action_negate',
+#                'action_implicate', 'action_iff', 'action_forall',
+#                'action_exists', 'action_equal']
+#
+# logic_button_texts = cvars.get(
+#                 'display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL')
+# # Turn logic_button_texts into a dictionary
+# lbt = logic_button_texts.split(', ')
+# logic_button_texts = {}
+# for key, value in zip(action_list, lbt):
+#     logic_button_texts[key] = value
 
 
 #######
@@ -159,8 +157,7 @@ def construct_and_hyp(proof_step, selected_objects: [MathObject]) \
     return code
 
 
-@action(tooltips.get('tooltip_and'),
-        logic_button_texts['action_and'])
+@action()
 def action_and(proof_step,
                selected_objects: [MathObject],
                user_input: [str] = None,
@@ -330,8 +327,7 @@ def construct_or_on_hyp(proof_step,
     return code
             
 
-@action(tooltips.get('tooltip_or'),
-        logic_button_texts['action_or'])
+@action()
 def action_or(proof_step,
               selected_objects: [MathObject],
               user_input=None,
@@ -369,11 +365,10 @@ def action_or(proof_step,
 #######
 # NOT #
 #######
-@action(tooltips.get('tooltip_not'),
-        logic_button_texts['action_negate'])
-def action_negate(proof_step,
-                  selected_objects: [MathObject],
-                  target_selected: bool = True) -> CodeForLean:
+@action()
+def action_not(proof_step,
+               selected_objects: [MathObject],
+               target_selected: bool = True) -> CodeForLean:
     """
     Translate into string of lean code corresponding to the action
     
@@ -407,7 +402,7 @@ def action_negate(proof_step,
 ###############
 # IMPLICATION #
 ###############
-def construct_implicate(proof_step) -> CodeForLean:
+def construct_implies(proof_step) -> CodeForLean:
     """
     Here the target is assumed to be an implication P ⇒ Q, P is added to the
     context, and the target becomes Q.
@@ -422,7 +417,7 @@ def construct_implicate(proof_step) -> CodeForLean:
         return code
 
 
-def apply_implicate(proof_step, selected_object: [MathObject]) -> CodeForLean:
+def apply_implies(proof_step, selected_object: [MathObject]) -> CodeForLean:
     """
     Here selected_object contains a single property which is an implication
     P ⇒ Q; if the target is Q then it will be replaced by P.
@@ -477,8 +472,8 @@ def have_new_property(arrow: MathObject,
     return code
 
 
-def apply_implicate_to_hyp(proof_step,
-                           selected_objects: [MathObject]) -> CodeForLean:
+def apply_implies_to_hyp(proof_step,
+                         selected_objects: [MathObject]) -> CodeForLean:
     """
     Try to apply last selected property on the other ones.
     The last property should be an implication
@@ -493,11 +488,10 @@ def apply_implicate_to_hyp(proof_step,
     return have_new_property(implication, variable_names, new_hypo_name)
 
 
-@action(tooltips.get('tooltip_implies'),
-        logic_button_texts['action_implicate'])
-def action_implicate(proof_step,
-                     selected_objects: [MathObject],
-                     target_selected: bool = True) -> CodeForLean:
+@action()
+def action_implies(proof_step,
+                   selected_objects: [MathObject],
+                   target_selected: bool = True) -> CodeForLean:
     """
     Three cases:
     (1) No property selected:
@@ -517,13 +511,13 @@ def action_implicate(proof_step,
             raise WrongUserInput(
                 error=_("Target is not an implication 'P ⇒ Q'"))
         else:
-            return construct_implicate(proof_step)
+            return construct_implies(proof_step)
     if len(selected_objects) == 1:
         if not selected_objects[0].can_be_used_for_implication():
             raise WrongUserInput(
                 error=_("Selected property is not an implication 'P ⇒ Q'"))
         else:
-            return apply_implicate(proof_step, selected_objects)
+            return apply_implies(proof_step, selected_objects)
     elif len(selected_objects) == 2:
         if not selected_objects[-1].can_be_used_for_implication():
             if not selected_objects[0].can_be_used_for_implication():
@@ -532,7 +526,7 @@ def action_implicate(proof_step,
                                             ))
             else:  # l[0] is an implication but not l[1]: permute
                 selected_objects.reverse()
-        return apply_implicate_to_hyp(proof_step, selected_objects)
+        return apply_implies_to_hyp(proof_step, selected_objects)
     # TODO: treat the case of more properties, including the possibility of
     #  P, Q and 'P and Q ⇒ R'
     raise WrongUserInput(error=_("Does not apply to more than two properties"))
@@ -635,8 +629,7 @@ def construct_iff_on_hyp(proof_step,
     return code
 
 
-@action(tooltips.get('tooltip_iff'),
-        logic_button_texts['action_iff'])
+@action()
 def action_iff(proof_step,
                selected_objects: [MathObject],
                user_input: [str] = [],
@@ -838,8 +831,7 @@ def apply_forall(proof_step, l: [MathObject]) -> CodeForLean:
     return code.and_then(more_code)
 
 
-@action(tooltips.get('tooltip_forall'),
-        logic_button_texts['action_forall'])
+@action()
 def action_forall(proof_step,
                   selected_objects: [MathObject],
                   user_input: [str] = [],
@@ -974,8 +966,7 @@ def construct_exists_on_hyp(proof_step,
     return code
 
 
-@action(tooltips.get('tooltip_exists'),
-        logic_button_texts['action_exists'])
+@action()
 def action_exists(proof_step,
                   selected_objects: [MathObject],
                   user_input: [str] = None,
@@ -1129,8 +1120,7 @@ def apply_substitute(proof_step, l: [MathObject], user_input: [int], equality):
     return codes
 
 
-@action(tooltips.get('tooltip_equal'),
-        logic_button_texts['action_equal'])
+@action()
 def action_equal(proof_step,
                   selected_objects: [MathObject],
                   user_input: [str] = [],

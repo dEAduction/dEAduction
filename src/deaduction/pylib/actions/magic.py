@@ -41,18 +41,17 @@ from deaduction.pylib.mathobj import (MathObject,
                                       Goal)
 
 
-log = logging.getLogger("magic")
+# log = logging.getLogger("magic")
+#
+# # Turn magic_button_texts into a dictionary
+# lbt = tooltips.get('magic_button_texts').split(', ')
+# magic_list = ['compute', 'assumption']
+# magic_button_texts = {}
+# for key, value in zip(magic_list, lbt):
+#     magic_button_texts[key] = value
 
-# Turn magic_button_texts into a dictionary
-lbt = tooltips.get('magic_button_texts').split(', ')
-magic_list = ['compute', 'assumption']
-magic_button_texts = {}
-for key, value in zip(magic_list, lbt):
-    magic_button_texts[key] = value
 
-
-@action(tooltips.get('tooltip_compute'),
-        magic_button_texts['compute'])
+@action()
 def action_compute(proof_step,
                    selected_objects,
                    target_selected: bool = True):
@@ -178,8 +177,7 @@ def split_conjunctions_in_context(proof_step):
     return code
 
 
-@action(tooltips.get('tooltip_assumption'),
-        magic_button_texts['assumption'])
+@action()
 def action_assumption(proof_step,
                       selected_objects: [MathObject],
                       target_selected: bool = True) -> CodeForLean:
