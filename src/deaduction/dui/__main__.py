@@ -54,14 +54,11 @@ import deaduction.pylib.config.i18n
 from deaduction.dui.stages.select_language       import select_language
 from deaduction.dui.stages.exercise              import ExerciseMainWindow
 from deaduction.dui.stages.start_coex            import StartCoExStartup
-
 from deaduction.dui.stages.missing_dependencies  import (
-    InstallingMissingDependencies, WantInstallMissingDependencies)
-
+                InstallingMissingDependencies, WantInstallMissingDependencies)
 from deaduction.pylib.coursedata                 import Exercise
 from deaduction.pylib                            import logger
 from deaduction.pylib.server                     import ServerInterface
-
 from deaduction.pylib.autotest import                   select_exercise
 
 # (non-exhaustive) list of logger domains:
@@ -80,7 +77,8 @@ if os.getenv("DEADUCTION_DEV_MODE", False):
     log_domains = ["deaduction", "__main__",  # 'lean',
                    'ServerInterface', 'ServerQueue']
     # log_domains = ['']
-    log_domains = ["__main__", 'lean', 'ServerInterface', 'ServerQueue']
+    log_domains = ["__main__", 'lean', 'ServerInterface', 'ServerQueue',
+                   'deaduction.dui']
 
 
 logger.configure(domains=log_domains,

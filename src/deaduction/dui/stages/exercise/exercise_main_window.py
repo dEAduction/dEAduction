@@ -46,10 +46,8 @@ from deaduction.dui.elements            import (ActionButton,
                                                 MathObjectWidgetItem,
                                                 MenuBar,
                                                 MenuBarAction,
-                                                MenuBarMenu,
                                                 ConfigMainWindow)
 from deaduction.dui.primitives          import  ButtonsDialog
-from deaduction.pylib.config.i18n       import  init_i18n
 from deaduction.pylib.memory            import (Journal)
 from deaduction.pylib.actions           import (InputType,
                                                 CodeForLean,
@@ -173,8 +171,6 @@ class ExerciseMainWindow(QMainWindow):
 
         # ─────────────────── Attributes ─────────────────── #
 
-        # self.target_selected_by_default = cvars.get(
-        #                    'functionality.target_selected_by_default', False)
         self.exercise             = exercise
         self.current_goal         = None
         self.current_selection    = []
@@ -205,9 +201,11 @@ class ExerciseMainWindow(QMainWindow):
         self.setStatusBar(self.statusBar)
 
         # ──────────────── Signals and slots ─────────────── #
+        self.__server_task_scope = None
         self.__connect_signals()
 
-        self.servint.nursery.start_soon(self.server_task)  # Start server task
+        # ──────────────── Start! ─────────────── #
+        self.initialize_exercise()
 
     def __connect_signals(self):
         """
@@ -269,7 +267,6 @@ class ExerciseMainWindow(QMainWindow):
 
     @Slot()
     def apply_new_settings(self, modified_settings):
-        global _  # At least in this module _ will be updatable
         """
         This is where ui is updated when preferences are modified.
         """
@@ -277,16 +274,15 @@ class ExerciseMainWindow(QMainWindow):
         log.debug(modified_settings)
         if modified_settings:
             self.current_selection = []
-            # self.ecw.update()
             # TODO: only for relevant changes in preferences
+            # TODO: try more subtle updating...
             ##############################
             # Redefine ecw from scratch! #
             ##############################
             self.ecw = ExerciseCentralWidget(self.exercise)
             self.setCentralWidget(self.ecw)
             self.__connect_signals()
-            if not self.freezed:
-                # If Lean is running then maybe goal has not been set
+            if not self.freezed:  # If freezed then maybe goal has not been set
                 self.ecw.update_goal(self.current_goal,
                                      self.proof_step.current_goal_number,
                                      self.proof_step.total_goals_counter)
@@ -305,8 +301,6 @@ class ExerciseMainWindow(QMainWindow):
                     self.__apply_math_object_triggered)
 
         self.ecw.target_wgt.mark_user_selected(self.target_selected)
-
-
 
     ###########
     # Methods #
@@ -365,9 +359,12 @@ class ExerciseMainWindow(QMainWindow):
         """
         if not self.test_mode:
             self.journal.save_exercise_with_proof_steps(emw=self)
-        super().closeEvent(event)
         self.lean_editor.close()
+        # FIXME:  cancel server_task
+        # if self.__server_task_scope:
+        #     self.__server_task_scope.cancel()
         self.window_closed.emit()
+        super().closeEvent(event)
 
     @property
     def current_selection_as_mathobjects(self):
@@ -483,6 +480,39 @@ class ExerciseMainWindow(QMainWindow):
 
     # ─────────────────── Server task ────────────────── #
 
+    def initialize_exercise(self):
+        """
+        Call servint.set_exercise and connect signal exercise_set to
+         self.start_server_task.
+        """
+
+        self.freeze()
+
+        # Try to display initial proof state prior to anything
+        course = self.exercise.course
+        statements = [st for st in self.exercise.available_statements
+                      if not st.initial_proof_state]
+        proof_state = self.exercise.initial_proof_state
+        if proof_state:
+            goal = proof_state.goals[0]
+            self.ecw.update_goal(goal, 1, 1)
+
+        # When exercise will be set, ui will be updated, and the following
+        # will call self.start_server_task
+        self.servint.exercise_set.connect(self.start_server_task)
+        self.servint.nursery.start_soon(self.servint.set_exercise,
+                                        self.exercise)
+
+        # Just in case initial proof states have not been received yet
+        self.servint.initial_proof_state_set.connect(
+                                    self.ecw.statements_tree.update_tooltips)
+        self.servint.set_statements(course, statements)
+
+    @Slot()
+    def start_server_task(self):
+        self.servint.nursery.start_soon(self.server_task,
+                                        name="Server task")
+
     async def server_task(self):
         """
         This method handles sending user data and actions to the server
@@ -493,10 +523,7 @@ class ExerciseMainWindow(QMainWindow):
         The user actions are stored in self.proof_step.
         """
 
-        self.freeze()
-        await self.servint.exercise_set(self.exercise)
         self.freeze(False)
-
         async with qtrio.enter_emissions_channel(
                 signals=[self.lean_editor.editor_send_lean,
                          self.toolbar.redo_action.triggered,
@@ -784,10 +811,8 @@ class ExerciseMainWindow(QMainWindow):
         triggered, thanks to the flag self.cqdf.
         """
         # TODO: make it a separate class
-
+        # FIXME: called twice for each achievement!!!
         # Display msg_box unless redoing or test mode
-        # (Previously was: Display unless exercise already solved)
-        # if not self.exercise_solved:
         if not self.proof_step.is_redo() and not self.test_mode:
             title = _('Target solved')
             text = _('The proof is complete!')
@@ -828,6 +853,7 @@ class ExerciseMainWindow(QMainWindow):
 
         :item: The math. object or property user just clicked on.
         """
+        # TODO: allow simultaneous selection of target and context objects
 
         # Once clicked, one does not want the item to remain visually
         # selected
