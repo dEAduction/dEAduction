@@ -71,7 +71,7 @@ class ServerQueue(list):
     The decorator  @task_for_server_queue intercepts a given function and puts
     it into the queue in case another task is running.
 
-    NB: each function using this decorator MUST end with the following line:
+    NB: each function using this decorator MUST and by calling
             SERVER_QUEUE.next_task(self.nursery)
     so that the next task is launched
     (otherwise the queue will be interrupted).
@@ -176,6 +176,7 @@ class ServerInterface(QObject):
     proof_no_goals              = Signal()
 
     lean_file_changed           = Signal()
+    exercise_set                = Signal()
 
     # Signal emitted when all effective codes have been received,
     # so that history_replace is called
@@ -196,6 +197,7 @@ class ServerInterface(QObject):
         # Lean attributes
         self.lean_server: LeanServer   = LeanServer(nursery, self.lean_env)
         self.nursery: trio.Nursery     = nursery
+        self.seq_num                   = 0
 
         # Set server callbacks
         self.lean_server.on_message_callback = self.__on_lean_message
@@ -454,7 +456,8 @@ class ServerInterface(QObject):
         """
 
         first_line_of_change = self.lean_file.first_line_of_last_change
-        self.log.debug(f"Updating, checking errors from line "
+        self.log.debug(f"Updating, "
+                       f"checking errors from line "
                        f"{first_line_of_change}, and context at "
                        f"line {self.lean_file.last_line_of_inner_content + 1}")
 
@@ -479,8 +482,10 @@ class ServerInterface(QObject):
         resp = None
         # Loop in case Lean's answer is None, which happens...
         while not resp:
+            self.log.debug(f"Servint seq num {self.seq_num}")
             req = SyncRequest(file_name="deaduction_lean",
                               content=self.lean_file_contents)
+            self.seq_num += 1
             resp = await self.lean_server.send(req)
 
         if resp.message == "file invalidated":
@@ -597,7 +602,7 @@ class ServerInterface(QObject):
         return virtual_file
 
     @task_for_server_queue
-    async def exercise_set(self, exercise: Exercise):
+    async def set_exercise(self, exercise: Exercise):
         """
         Initialise the virtual_file from exercise.
 
@@ -611,6 +616,8 @@ class ServerInterface(QObject):
         self.lean_file = self.__file_from_exercise(self.__exercise_current)
 
         await self.__update()
+        if hasattr(self, "exercise_set"):
+            self.exercise_set.emit()
 
     ############################################
     # History
@@ -714,7 +721,7 @@ class ServerInterface(QObject):
     # Methods for getting initial proof states of a bunch of statements #
     #####################################################################
     @task_for_server_queue
-    async def get_initial_proof_states(self, course_data: CourseData):
+    async def __get_initial_proof_states(self, course_data: CourseData):
         """
         Call Lean server to get the initial proof states of statements
         as stored in course_data.
@@ -727,8 +734,10 @@ class ServerInterface(QObject):
         self.__proof_receive_done       = trio.Event()
 
         # Ask Lean server and wait for answer
+        self.log.debug(f"Servint seq num {self.seq_num}")
         req = SyncRequest(file_name="deaduction_lean",
                           content=self.lean_file_contents)
+        self.seq_num += 1
         resp = await self.lean_server.send(req)
 
         if resp.message == "file invalidated":
@@ -758,7 +767,7 @@ class ServerInterface(QObject):
 
         if len(statements) <= self.MAX_CAPACITY:
             self.log.debug(f"Set {len(statements)} statements")
-            self.nursery.start_soon(self.get_initial_proof_states,
+            self.nursery.start_soon(self.__get_initial_proof_states,
                                     CourseData(course, statements))
         else:
             self.log.debug(f"{len(statements)} statements to process...")
