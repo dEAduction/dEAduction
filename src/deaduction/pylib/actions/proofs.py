@@ -455,7 +455,7 @@ def explain_how_to_apply(math_object: MathObject, dynamic=False, long=False) \
     captions = []  # default value
 
     if math_object.is_function():
-        captions.append(tooltips.get('tooltip_apply_function'))
+        captions.append(tooltips.apply_tool_tip('tooltip_apply_function'))
     # Substitution transfered to 'equal' button
     # elif math_object.can_be_used_for_substitution()[0]:
     #    captions.append(tooltips.get('tooltip_apply_substitute'))
@@ -465,23 +465,23 @@ def explain_how_to_apply(math_object: MathObject, dynamic=False, long=False) \
     #TODO: include this when extended apply button
     # the following 4 cases are mutually exclusive
     if math_object.is_function():
-        captions.append(tooltips.get('tooltip_apply_function'))
+        captions.append(tooltips.apply_tool_tip('tooltip_apply_function'))
 
     elif math_object.is_for_all():
-        captions.append(tooltips.get('tooltip_apply_for_all'))
+        captions.append(tooltips.apply_tool_tip('tooltip_apply_for_all'))
 
     elif math_object.is_exists():
-        captions.append(tooltips.get('tooltip_apply_exists'))
+        captions.append(tooltips.apply_tool_tip('tooltip_apply_exists'))
 
     elif math_object.is_and():
-        captions.append(tooltips.get('tooltip_apply_and'))
+        captions.append(tooltips.apply_tool_tip('tooltip_apply_and'))
 
     # Additional line
     if math_object.can_be_used_for_implication():
-        captions.append(tooltips.get('tooltip_apply_implication'))
+        captions.append(tooltips.apply_tool_tip('tooltip_apply_implication'))
 
     elif math_object.can_be_used_for_substitution()[0]:
-        captions.append(tooltips.get('tooltip_apply_substitute'))
+        captions.append(tooltips.apply_tool_tip('tooltip_apply_substitute'))
 
     return captions
 

@@ -160,6 +160,9 @@ def button_tool_tip(name):
     return __tooltips[name]
 
 
+def apply_tool_tip(name):
+    return __tooltips_apply[name]
+
 # TODO: unused?
 # def get(k):
 #     return __tooltips.get(k, None)       \
