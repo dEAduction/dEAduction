@@ -365,7 +365,7 @@ class CourseChooser(AbstractCoExChooser):
             # Ask Lean for missing ips
             self.servint.set_statements(course, exercises)
             self.servint.set_statements(course, non_exercises)
-        elif self.servint.seq_num == 0:
+        elif self.servint.request_seq_num == -1:
             # Just to wake Lean up (that speeds up a lot when exercise starts)
             log.debug(f"Launching Lean with {course.statements[0].pretty_name}")
             self.servint.set_statements(course, [course.statements[0]])

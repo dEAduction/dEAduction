@@ -489,9 +489,6 @@ class ExerciseMainWindow(QMainWindow):
         self.freeze()
 
         # Try to display initial proof state prior to anything
-        course = self.exercise.course
-        statements = [st for st in self.exercise.available_statements
-                      if not st.initial_proof_state]
         proof_state = self.exercise.initial_proof_state
         if proof_state:
             goal = proof_state.goals[0]
@@ -506,6 +503,10 @@ class ExerciseMainWindow(QMainWindow):
         # Just in case initial proof states have not been received yet
         self.servint.initial_proof_state_set.connect(
                                     self.ecw.statements_tree.update_tooltips)
+        # Ask for missing initial proof states, if any
+        course = self.exercise.course
+        statements = [st for st in self.exercise.available_statements
+                      if not st.initial_proof_state]
         self.servint.set_statements(course, statements)
 
     @Slot()

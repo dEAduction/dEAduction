@@ -196,6 +196,34 @@ class ExerciseCentralWidget(QWidget):
         self.organise_main_layout()  # Decide which one is on top
         self.setLayout(self.__main_lyt)
 
+##############################
+# Methods called by __init__ #
+##############################
+
+    def organise_main_layout(self):
+        """
+        Organize main layout, namely putting target on top or not according
+        to self.target_display_on_top. To be called at __init__ and after
+        preferences update.
+        """
+        if self.__main_lyt.count() > 0:
+            if self.target_display_on_top and \
+                    self.__main_lyt.indexOf(self.target_wgt) != 0:
+                # context_actions_lyt = self.__main_lyt.itemAt(0)
+                self.__main_lyt.removeItem(self.__context_actions_lyt)
+                self.__main_lyt.addLayout(self.__context_actions_lyt)
+            elif  not self.target_display_on_top and \
+                    self.__main_lyt.indexOf(self.target_wgt) == 0:
+                self.__main_lyt.removeWidget(self.target_wgt)
+                self.__main_lyt.addWidget(self.target_wgt)
+        else:
+            if self.target_display_on_top:
+                self.__main_lyt.addWidget(self.target_wgt)
+                self.__main_lyt.addLayout(self.__context_actions_lyt)
+            else:
+                self.__main_lyt.addLayout(self.__context_actions_lyt)
+                self.__main_lyt.addWidget(self.target_wgt)
+
     def update(self):
         """
         Update
@@ -232,30 +260,6 @@ class ExerciseCentralWidget(QWidget):
     ###########
     # Methods #
     ###########
-    def organise_main_layout(self):
-        """
-        Organize main layout, namely putting target on top or not according
-        to self.target_display_on_top. To be called at __init__ and after
-        preferences update.
-        """
-        if self.__main_lyt.count() > 0:
-            if self.target_display_on_top and \
-                    self.__main_lyt.indexOf(self.target_wgt) != 0:
-                # context_actions_lyt = self.__main_lyt.itemAt(0)
-                self.__main_lyt.removeItem(self.__context_actions_lyt)
-                self.__main_lyt.addLayout(self.__context_actions_lyt)
-            elif  not self.target_display_on_top and \
-                    self.__main_lyt.indexOf(self.target_wgt) == 0:
-                self.__main_lyt.removeWidget(self.target_wgt)
-                self.__main_lyt.addWidget(self.target_wgt)
-        else:
-            if self.target_display_on_top:
-                self.__main_lyt.addWidget(self.target_wgt)
-                self.__main_lyt.addLayout(self.__context_actions_lyt)
-            else:
-                self.__main_lyt.addLayout(self.__context_actions_lyt)
-                self.__main_lyt.addWidget(self.target_wgt)
-
     def action_button(self, symbol) -> ActionButton:
         """
         Return the ActionButton whose symbol is symbol.

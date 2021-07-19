@@ -157,7 +157,6 @@ class MathObjectWidgetItem(QListWidgetItem):
         self.setIcon(_TagIcon(tag))
         # set tool_tips (merge several tool_tips if needed)
         tool_tips = explain_how_to_apply(mathobject)
-        # log.debug(f"Setting tooltips {tool_tips}")
         if len(tool_tips) == 1:
             tool_tip = _("Double click to") + " " + tool_tips[0]
             self.setToolTip(tool_tip)
