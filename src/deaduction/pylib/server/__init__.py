@@ -99,6 +99,7 @@ class ServerQueue(list):
             self.log.debug(f"No more tasks")
 
 
+# TODO : init as a servint attribute
 SERVER_QUEUE = ServerQueue()
 TIMEOUT      = 10
 NB_TRIALS    = 3
@@ -111,6 +112,7 @@ async def task_with_timeout(fct, *args):
     """
 
     nb = 0
+    # TODO: remove timeout for first trial (use servint.seq_num)
     timeout = TIMEOUT
     while nb < NB_TRIALS:
         nb += 1
@@ -124,6 +126,7 @@ async def task_with_timeout(fct, *args):
             break
 
 
+# TODO: put SERVER_QUEUE as an argument
 def task_for_server_queue(fct):
     """
     Decorator that add a function to the server queue instead of
@@ -141,6 +144,14 @@ def task_for_server_queue(fct):
             SERVER_QUEUE.log.debug("Executing task immediately")
             SERVER_QUEUE.is_busy = True
             await task_with_timeout(fct, *args)
+        # SERVER_QUEUE.add_task(fct, args)
+        # if SERVER_QUEUE.is_busy:
+        #     SERVER_QUEUE.log.debug("I'm busy, adding task to the queue")
+        # else:
+        #     SERVER_QUEUE.log.debug("Executing task immediately")
+        #     SERVER_QUEUE.is_busy = True
+        #     SERVER_QUEUE.next.... # Arg, I do not have nursery
+
     return queued_fct
 
 
@@ -197,7 +208,7 @@ class ServerInterface(QObject):
         # Lean attributes
         self.lean_server: LeanServer   = LeanServer(nursery, self.lean_env)
         self.nursery: trio.Nursery     = nursery
-        self.seq_num                   = 0
+        self.request_seq_num                   = -1
 
         # Set server callbacks
         self.lean_server.on_message_callback = self.__on_lean_message
@@ -287,6 +298,15 @@ class ServerInterface(QObject):
             processing, this method just call the
             __on_lean_message_for_course method).
         """
+        # Filter seq_num
+        if msg.seq_num:
+            msg_seq_num = msg.seq_num
+            req_seq_num = self.request_seq_num
+            self.log.debug(f"Received msg with seq_num {msg_seq_num}")
+            if msg.seq_num != req_seq_num :
+                self.log.warning(f"Request seq_num is {req_seq_num}: "
+                                 f"ignoring msg")
+                return
 
         if self.__course_data:
             self.__on_lean_message_for_course(msg)
@@ -298,12 +318,12 @@ class ServerInterface(QObject):
         severity = msg.severity
 
         if severity == Message.Severity.error:
-            self.log.error(f"Lean error at line {msg.pos_line}: {txt}")
+            self.log.error(f"Lean error at line {line}: {txt}")
             self.__filter_error(msg)  # Record error ?
 
         elif severity == Message.Severity.warning:
             if not txt.endswith(LEAN_USES_SORRY):
-                self.log.warning(f"Lean warning at line {msg.pos_line}: {txt}")
+                self.log.warning(f"Lean warning at line {line}: {txt}")
 
         elif txt.startswith("context:") \
                 and line == self.lean_file.last_line_of_inner_content + 1\
@@ -433,9 +453,10 @@ class ServerInterface(QObject):
         """
         # Filter message text, record if not ignored message
         if msg.text.startswith(LEAN_NOGOALS_TEXT):
+            # and msg.pos_line == self.lean_file.last_line_of_inner_content:
             if hasattr(self.proof_no_goals, "emit"):
-                self.proof_no_goals.emit()
                 self.__proof_receive_done.set()  # Done receiving
+                self.proof_no_goals.emit()
         elif msg.text.startswith(LEAN_UNRESOLVED_TEXT):
             pass
         # Ignore messages that do not concern current proof
@@ -482,14 +503,15 @@ class ServerInterface(QObject):
         resp = None
         # Loop in case Lean's answer is None, which happens...
         while not resp:
-            self.log.debug(f"Servint seq num {self.seq_num}")
+            self.request_seq_num += 1
+            # self.request_seq_num = req.seq_num  # Always zero!
+            self.log.debug(f"Request seq_num: {self.request_seq_num}")
             req = SyncRequest(file_name="deaduction_lean",
                               content=self.lean_file_contents)
-            self.seq_num += 1
             resp = await self.lean_server.send(req)
 
         if resp.message == "file invalidated":
-            self.log.debug("Seq num:"+str(resp.seq_num))
+            self.log.debug("Response seq_num:"+str(resp.seq_num))
             self.file_invalidated.set()
 
             #########################################
@@ -498,8 +520,10 @@ class ServerInterface(QObject):
             await self.__proof_receive_done.wait()
 
             self.log.debug(_("Proof State received"))
-            # Next line removed by FLR
-            # await self.lean_server.running_monitor.wait_ready()
+
+            # (Timeout added by FLR)
+            with trio.move_on_after(1):
+                await self.lean_server.running_monitor.wait_ready()
 
             self.log.debug(_("After request"))
 
@@ -533,6 +557,8 @@ class ServerInterface(QObject):
         if error_list:
             raise exceptions.FailedRequestError(error_list, lean_code)
 
+        # TODO: add a block point ?
+        # await trio.sleep(0)
         # Check for next task
         SERVER_QUEUE.next_task(self.nursery)
 
@@ -734,10 +760,10 @@ class ServerInterface(QObject):
         self.__proof_receive_done       = trio.Event()
 
         # Ask Lean server and wait for answer
-        self.log.debug(f"Servint seq num {self.seq_num}")
+        self.request_seq_num += 1
+        self.log.debug(f"Request seq_num: {self.request_seq_num}")
         req = SyncRequest(file_name="deaduction_lean",
                           content=self.lean_file_contents)
-        self.seq_num += 1
         resp = await self.lean_server.send(req)
 
         if resp.message == "file invalidated":

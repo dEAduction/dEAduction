@@ -59,6 +59,7 @@ class LeanServer:
             self.max_nums: int   = max_nums
             self.pending_reqs    = [None] * max_nums
             self.results         = [None] * max_nums
+            self.seq_num         = 0
 
         def set( self, num, result ):
             """
@@ -224,11 +225,13 @@ class LeanServer:
         """
         data = json.loads(data_str)
         parsed_msg = response.from_dict(data)
-
+        # self.log.debug(data)
+        # self.log.debug(parsed_msg)
         # Check for specific messages types
         if isinstance(parsed_msg, response.CommandResponse) or \
-           isinstance(parsed_msg, response.ErrorResponse  ):
+           isinstance(parsed_msg, response.ErrorResponse):
             seq_num = parsed_msg.seq_num
+            self.seq_num = seq_num  # Store and add in subsequent msgs
             self.pending_reqs.set(seq_num, parsed_msg)
 
         elif isinstance(parsed_msg, response.CurrentTasksResponse):
@@ -239,9 +242,10 @@ class LeanServer:
             for msg in parsed_msg.msgs:
                 # self.log.info(f"{msg.severity} at {msg.file_name}
                 # :{msg.pos_line}:{msg.pos_col} : {msg.text}")
+                msg.seq_num = self.seq_num  # Last received seq_num
                 self.on_message_callback(msg)
         else:
-            self.log.warning(f"Ignored message : {msg}")
+            self.log.warning(f"Ignored message : {parsed_msg}")
 
     ############################################
     # Start / receiver tasks
@@ -293,6 +297,7 @@ class LeanServer:
             else:
                 self.buffer += sstr
 
+            # Cut in lines
             idx = self.buffer.find("\n")
             while idx >= 0:
                 line        = self.buffer[:idx]
@@ -302,7 +307,7 @@ class LeanServer:
                 try :
                     self._process_response(line)
                 except Exception:
-                    # TODO # Better error managment
+                    # TODO # Better error management
                     self.log.error(traceback.format_exc())
 
                 idx = self.buffer.find("\n")

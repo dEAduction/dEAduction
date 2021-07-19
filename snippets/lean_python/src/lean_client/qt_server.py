@@ -35,7 +35,7 @@ class QtLeanServer(QObject):
 
     def send(self, request):
         self.seq_num += 1
-        request.seq_num = self.seq_num
+        request.request_seq_num = self.seq_num
         self.process.write((request.to_json()+'\n').encode())
 
     def sync(self, file_name, content=None):
