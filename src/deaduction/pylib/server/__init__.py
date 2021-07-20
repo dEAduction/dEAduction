@@ -32,6 +32,7 @@ This file is part of d∃∀duction.
 import trio
 import logging
 from copy import deepcopy
+from functools import partial
 
 from deaduction.pylib.coursedata.exercise_classes import Exercise
 from deaduction.pylib.mathobj.proof_state import ProofState
@@ -56,6 +57,10 @@ LEAN_UNRESOLVED_TEXT = "tactic failed, there are unsolved goals"
 LEAN_NOGOALS_TEXT    = "tactic failed, there are no goals to be solved"
 LEAN_USES_SORRY      = " uses sorry"
 
+TIMEOUT = 10
+STARTING_TIMEOUT = 30
+NB_TRIALS = 3
+
 
 #####################
 # ServerQueue class #
@@ -69,90 +74,128 @@ class ServerQueue(list):
     doubled timeout, and again until NB_TRIALS is reached.
 
     The decorator  @task_for_server_queue intercepts a given function and puts
-    it into the queue in case another task is running.
+    it into the queue.
 
-    NB: each function using this decorator MUST and by calling
-            SERVER_QUEUE.next_task(self.nursery)
-    so that the next task is launched
-    (otherwise the queue will be interrupted).
+    NB: the type of self is [(callable, tuple of arguments)]
     """
-    def __init__(self):
+    def __init__(self, nursery):
         super().__init__()
         self.log                    = logging.getLogger("ServerQueue")
+        self.started                = False
         self.is_busy                = False
+        self.nursery                = nursery
+        self.cancel_scope           = None
 
-    def add_task(self, fct, args, on_top=False):
+        # Trio Event, initialized when a new queue starts,
+        # and set when it ends.
+        self.queue_ended            = None
+
+    def add_task(self, fct: callable, *args, on_top=False):
+        """
+        Add a task to the queue. The task may be added at the end of the
+        queue (default), or on top. If queue is not busy, that is, no task
+        is currently running, then call next_task so that the added task
+        starts immediately.
+        """
         if on_top:
             self.append((fct, args))
-            # self.log.debug(f"Adding task on top: {args}")
+            self.log.debug(f"Adding task on top")
         else:
-            # self.log.debug(f"Adding task") #: {args}")
+            self.log.debug(f"Adding task")
             self.insert(0, (fct, args))
+        if not self.is_busy:  # Execute task immediately
+            self.is_busy = True
+            self.queue_ended = trio.Event()
+            self.next_task()
 
-    def next_task(self, nursery):
+    def next_task(self):
+        """
+        Start first task of the queue, if any.
+        """
         if len(self) > 0:
+            # Launch first task
             fct, args = self.pop()
             self.log.debug(f"Launching task")  # : {args}")
-            nursery.start_soon(task_with_timeout, fct, *args)
+            self.nursery.start_soon(self.task_with_timeout, fct, args)
         else:
             self.is_busy = False
+            self.queue_ended.set()
             self.log.debug(f"No more tasks")
 
-
-# TODO : init as a servint attribute
-SERVER_QUEUE = ServerQueue()
-TIMEOUT      = 10
-NB_TRIALS    = 3
-
-
-async def task_with_timeout(fct, *args):
-    """
-    Execute function fct with timeout TIMEOUT, and number of trials
-    NB_TRIALS.
-    """
-
-    nb = 0
-    # TODO: remove timeout for first trial (use servint.seq_num)
-    timeout = TIMEOUT
-    while nb < NB_TRIALS:
-        nb += 1
-        with trio.move_on_after(timeout) as cancel_scope:
+    async def process_task(self, fct: callable, *args, timeout=True):
+        """
+        Wait for the queue to end, and then process fct.
+        This allows to await for the end of the task, which is not possible
+        if the task is put into the queue.
+        """
+        if self.queue_ended is not None:
+            await self.queue_ended.wait()
+        if timeout:
+            await self.task_with_timeout(fct, args)
+        else:
             await fct(*args)
-        if cancel_scope.cancelled_caught:
-            SERVER_QUEUE.log.warning(f"No answer within {timeout}s (trial"
-                                     f" {nb})")
-            timeout = 2 * timeout
-        else:
-            break
 
-
-# TODO: put SERVER_QUEUE as an argument
-def task_for_server_queue(fct):
-    """
-    Decorator that add a function to the server queue instead of
-    executing it immediately.
-    """
-
-    async def queued_fct(*args):
+    async def task_with_timeout(self, fct: callable, args: tuple):
         """
-        Put fct in the server queue.
-        """
-        if SERVER_QUEUE.is_busy:
-            SERVER_QUEUE.log.debug("I'm busy, adding task to the queue")
-            SERVER_QUEUE.add_task(fct, args)
-        else:
-            SERVER_QUEUE.log.debug("Executing task immediately")
-            SERVER_QUEUE.is_busy = True
-            await task_with_timeout(fct, *args)
-        # SERVER_QUEUE.add_task(fct, args)
-        # if SERVER_QUEUE.is_busy:
-        #     SERVER_QUEUE.log.debug("I'm busy, adding task to the queue")
-        # else:
-        #     SERVER_QUEUE.log.debug("Executing task immediately")
-        #     SERVER_QUEUE.is_busy = True
-        #     SERVER_QUEUE.next.... # Arg, I do not have nursery
+        Execute function fct with timeout TIMEOUT, and number of trials
+        NB_TRIALS.
 
-    return queued_fct
+        Th tuple args will be unpacked and used as arguments for fct.
+        """
+        nb = 0
+        if not self.started:
+            timeout = STARTING_TIMEOUT  # Timeout at the very first task
+            self.started = True
+        else:
+            timeout = TIMEOUT
+        while nb < NB_TRIALS:
+            nb += 1
+            with trio.move_on_after(timeout) as self.cancel_scope:
+                await fct(*args)
+            if self.cancel_scope.cancelled_caught:
+                self.log.warning(f"No answer within {timeout}s (trial"
+                                         f" {nb})")
+                timeout = 2 * timeout
+            else:
+                break
+
+        # Launch next task when done!
+        self.next_task()
+
+
+# SERVER_QUEUE = ServerQueue()
+
+
+# def task_for_server_queue(fct):
+#     """
+#     Decorator that add a function to the server queue instead of
+#     executing it immediately.
+#     """
+#
+#     async def queued_fct(*args):
+#         """
+#         Put fct in the server queue instead of executing immediately.
+#         This is not really async but will be called with an async fct.
+#         """
+#
+#         SERVER_QUEUE.add_task(fct, args)
+#         # if SERVER_QUEUE.is_busy:
+#         #     SERVER_QUEUE.log.debug("I'm busy, adding task to the queue")
+#         #     SERVER_QUEUE.add_task(fct, args)
+#         # else:
+#         #     SERVER_QUEUE.log.debug("Executing task immediately")
+#         #     SERVER_QUEUE.is_busy = True
+#         #     await task_with_timeout(fct, *args)
+#
+#         # SERVER_QUEUE.add_task(fct, args)
+#         # if SERVER_QUEUE.is_busy:
+#         #     SERVER_QUEUE.log.debug("I'm busy, adding task to the queue")
+#         # else:
+#         #     SERVER_QUEUE.log.debug("Executing task immediately")
+#         #     SERVER_QUEUE.is_busy = True
+#         #     SERVER_QUEUE.next.... # Arg, I do not have nursery
+#
+#     return queued_fct
 
 
 #########################
@@ -201,7 +244,7 @@ class ServerInterface(QObject):
     def __init__(self, nursery):
         super().__init__()
         self.log = logging.getLogger("ServerInterface")
-        # self.server_queue = server_queue
+        self.server_queue = ServerQueue(nursery)
 
         # Lean environment
         self.lean_env: LeanEnvironment = LeanEnvironment(inst)
@@ -264,6 +307,9 @@ class ServerInterface(QObject):
         """
         Stop the Lean server.
         """
+        # global SERVER_QUEUE
+        # SERVER_QUEUE.started = False
+        self.server_queue.started = False
         self.lean_server.stop()
 
     ############################################
@@ -302,7 +348,7 @@ class ServerInterface(QObject):
         if msg.seq_num:
             msg_seq_num = msg.seq_num
             req_seq_num = self.request_seq_num
-            self.log.debug(f"Received msg with seq_num {msg_seq_num}")
+            # self.log.debug(f"Received msg with seq_num {msg_seq_num}")
             if msg.seq_num != req_seq_num :
                 self.log.warning(f"Request seq_num is {req_seq_num}: "
                                  f"ignoring msg")
@@ -557,10 +603,8 @@ class ServerInterface(QObject):
         if error_list:
             raise exceptions.FailedRequestError(error_list, lean_code)
 
-        # TODO: add a block point ?
-        # await trio.sleep(0)
         # Check for next task
-        SERVER_QUEUE.next_task(self.nursery)
+        # SERVER_QUEUE.next_task(self.nursery)
 
     ###########################
     # Exercise initialisation #
@@ -627,8 +671,8 @@ class ServerInterface(QObject):
 
         return virtual_file
 
-    @task_for_server_queue
-    async def set_exercise(self, exercise: Exercise):
+    # @task_for_server_queue
+    async def set_exercise(self, exercise: Exercise, on_top=True):
         """
         Initialise the virtual_file from exercise.
 
@@ -704,7 +748,7 @@ class ServerInterface(QObject):
     ############################################
     # Code management
     ############################################
-    @task_for_server_queue
+    # @task_for_server_queue
     async def code_insert(self, label: str, lean_code: CodeForLean):
         """
         Inserts code in the Lean virtual file.
@@ -728,7 +772,7 @@ class ServerInterface(QObject):
 
         await self.__update(lean_code)
 
-    @task_for_server_queue
+    # @task_for_server_queue
     async def code_set(self, label: str, code: str):
         """
         Sets the code for the current exercise.
@@ -746,7 +790,7 @@ class ServerInterface(QObject):
     #####################################################################
     # Methods for getting initial proof states of a bunch of statements #
     #####################################################################
-    @task_for_server_queue
+    # @task_for_server_queue
     async def __get_initial_proof_states(self, course_data: CourseData):
         """
         Call Lean server to get the initial proof states of statements
@@ -772,15 +816,16 @@ class ServerInterface(QObject):
             # ───────── Waiting for all pieces of information ──────── #
             await self.__proof_receive_done.wait()
 
-            self.log.debug(_("All proof states received"))
+            # self.log.debug(_("All proof states received"))
 
             if hasattr(self.update_ended, "emit"):
                 self.update_ended.emit()
 
         # Check for next task
-        SERVER_QUEUE.next_task(self.nursery)
+        # SERVER_QUEUE.next_task(self.nursery)
 
-    def set_statements(self, course: Course, statements: [] = None):
+    def set_statements(self, course: Course, statements: [] = None,
+                       on_top=False):
         """
         This methods takes a list of statements and split it into lists of
         length ≤ self.MAX_CAPACITY before calling
@@ -788,16 +833,19 @@ class ServerInterface(QObject):
         """
 
         statements = list(statements)  # Just in case statements is enumerator
-        if not statements:
+        if statements is None:
             statements = course.statements
 
         if len(statements) <= self.MAX_CAPACITY:
             self.log.debug(f"Set {len(statements)} statements")
-            self.nursery.start_soon(self.__get_initial_proof_states,
-                                    CourseData(course, statements))
+            self.server_queue.add_task(self.__get_initial_proof_states,
+                                       CourseData(course, statements),
+                                       on_top=on_top)
         else:
             self.log.debug(f"{len(statements)} statements to process...")
             # Split statements
-            self.set_statements(course, statements[:self.MAX_CAPACITY])
-            self.set_statements(course, statements[self.MAX_CAPACITY:])
+            self.set_statements(course, statements[:self.MAX_CAPACITY],
+                                on_top=on_top)
+            self.set_statements(course, statements[self.MAX_CAPACITY:],
+                                on_top=on_top)
 

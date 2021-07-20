@@ -233,7 +233,7 @@ class CourseChooser(AbstractCoExChooser):
         and a QListWidget displayling recent courses.
         """
 
-        # Store courses, key = (absolute) filename. TODO?
+        # TODO: Store courses, key = (absolute) filename.
         # self.__courses = dict()
         self.servint: ServerInterface = servint
 
@@ -366,7 +366,8 @@ class CourseChooser(AbstractCoExChooser):
             self.servint.set_statements(course, exercises)
             self.servint.set_statements(course, non_exercises)
         elif self.servint.request_seq_num == -1:
-            # Just to wake Lean up (that speeds up a lot when exercise starts)
+            # Ask Lean to compile the file
+            # (that speeds up a lot when exercise starts)
             log.debug(f"Launching Lean with {course.statements[0].pretty_name}")
             self.servint.set_statements(course, [course.statements[0]])
 
@@ -380,6 +381,9 @@ class CourseChooser(AbstractCoExChooser):
         and save in a .pkl file in cdirs.local.
         """
         log.debug("Checking if I've got some new ips to save")
+        # Fixme: this method is called uselessly, but the following could
+        #  disconnect another slot
+        # self.servint.update_ended.disconnect()
         statements = self.__ips_dict
         # course_hash = hash(course.file_content)
         course_hash = course.file_content
@@ -566,7 +570,10 @@ class ExerciseChooser(AbstractCoExChooser):
         else:
             self.servint.initial_proof_state_set.connect(
                                         self.__check_proof_state_for_preview)
-
+            # Try to get preview with high priority. Remove?
+            self.servint.set_statements(exercise.course,
+                                        [exercise],
+                                        on_top=True)
             widget_lbl = QLabel(_('Preview not available (be patient...)'))
             widget_lbl.setStyleSheet('color: gray;')
 

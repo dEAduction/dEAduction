@@ -497,8 +497,9 @@ class ExerciseMainWindow(QMainWindow):
         # When exercise will be set, ui will be updated, and the following
         # will call self.start_server_task
         self.servint.exercise_set.connect(self.start_server_task)
-        self.servint.nursery.start_soon(self.servint.set_exercise,
-                                        self.exercise)
+        self.servint.server_queue.add_task(self.servint.set_exercise,
+                                           self.exercise,
+                                           on_top=True)
 
         # Just in case initial proof states have not been received yet
         self.servint.initial_proof_state_set.connect(
@@ -507,7 +508,8 @@ class ExerciseMainWindow(QMainWindow):
         course = self.exercise.course
         statements = [st for st in self.exercise.available_statements
                       if not st.initial_proof_state]
-        self.servint.set_statements(course, statements)
+        if statements:
+            self.servint.set_statements(course, statements)
 
     @Slot()
     def start_server_task(self):
@@ -713,7 +715,10 @@ class ExerciseMainWindow(QMainWindow):
                 self.proof_step.lean_code = lean_code
                 self.proof_step.user_input = user_input
                 # Update lean_file and call Lean server
-                await self.servint.code_insert(action.symbol, lean_code)
+                await self.servint.server_queue.process_task(
+                                                    self.servint.code_insert,
+                                                    action.symbol,
+                                                    lean_code)
                 break
 
     async def __server_call_statement(self,
@@ -760,16 +765,20 @@ class ExerciseMainWindow(QMainWindow):
                 log.debug(f'Calling statement {item.statement.pretty_name}')
                 self.proof_step.lean_code = lean_code
                 # Update lean_file and call Lean server
-                await self.servint.code_insert(statement.pretty_name,
-                                               lean_code)
+                await self.servint.server_queue.process_task(
+                                                    self.servint.code_insert,
+                                                    statement.pretty_name,
+                                                    lean_code)
 
     async def __server_send_editor_lean(self):
         """
         Send the L∃∀N code written in the L∃∀N editor widget to the
         server interface.
         """
-        await self.servint.code_set(_('Code from editor'),
-                                    self.lean_editor.code_get())
+        await self.servint.server_queue.process_task(
+                                self.servint.code_set,
+                                _('Code from editor'),
+                                self.lean_editor.code_get())
 
     #########
     # Slots #
@@ -811,8 +820,12 @@ class ExerciseMainWindow(QMainWindow):
         Note that the dialog is displayed only the first time the signal is
         triggered, thanks to the flag self.cqdf.
         """
+
         # TODO: make it a separate class
-        # FIXME: called twice for each achievement!!!
+        # Fixme: Add 10min to timeout, but somehow it still happens that
+        # QMessageBox appears twice
+        self.servint.server_queue.cancel_scope.deadline += 600
+
         # Display msg_box unless redoing or test mode
         if not self.proof_step.is_redo() and not self.test_mode:
             title = _('Target solved')
@@ -825,7 +838,7 @@ class ExerciseMainWindow(QMainWindow):
             button_change = msg_box.addButton(_('Change exercise'),
                                               QMessageBox.YesRole)
             button_change.clicked.connect(self.change_exercise)
-            msg_box.exec()
+            msg_box.exec_()
 
         self.proof_step.no_more_goal = True
         self.proof_step.new_goals = []
