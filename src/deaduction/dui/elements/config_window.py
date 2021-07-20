@@ -52,6 +52,8 @@ from deaduction.pylib.config.i18n import init_i18n
 import deaduction.pylib.config.vars      as      cvars
 from deaduction.pylib                            import logger
 
+from .config_window_text import PRETTY_NAMES
+
 log = logging.getLogger(__name__)
 
 
@@ -106,33 +108,6 @@ SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          "i18n.select_language"
                          ]
 
-# Also serves as for translations
-PRETTY_NAMES = {
-    'Display': _("Display"),
-    'Logic': _("Logic"),
-    'Functionalities': _("Functionalities"),
-    'Language': _("Language"),
-    'Advanced': _("Advanced"),
-    "en": "English",
-    'fr_FR': "Français",
-    'no_language': "English",
-    'display.target_display_on_top': _('Target display on top'),
-    'display.target_font_size': _("target font size"),
-    'others.course_directory': _('Set directory for choosing courses'),
-    'logs.display_level': _('Level of logs'),
-    'display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL':
-                                    _("Symbols for buttons ∧ ∨ ¬ ⇒ ⇔ ∀ ∃ ="),
-    'display.display_success_messages': _("Display success messages"),
-    'logic.color_for_dummy_variables': _("Color for dummy variables"),
-    'logic.color_for_used_properties': _("Color for used properties"),
-    'functionality.target_selected_by_default': _("Target selected by "
-                                                  "default"),
-    'functionality.allow_proof_by_sorry': _("Allow proof by sorry"),
-    # 'functionality.': _(""),
-    'logs.save_journal': _("Save journal"),
-    'None': _('None')
-}
-
 
 class ConfigMainWindow(QDialog):
     """
@@ -146,7 +121,6 @@ class ConfigMainWindow(QDialog):
         super().__init__(parent=parent)
         self.setModal(True)
         self.__windows = []  # List of sub-windows, one for each tab
-
 
         self.setWindowTitle(_("Preferences"))
         layout = QVBoxLayout()
@@ -164,10 +138,17 @@ class ConfigMainWindow(QDialog):
 
         # Buttons Apply, Cancel, OK
         button_box = QDialogButtonBox()
-        self.ok_btn = QDialogButtonBox.Ok
-        button_box.setStandardButtons(QDialogButtonBox.Ok |
-                                      QDialogButtonBox.Cancel)
+
+        # button_box.setStandardButtons(QDialogButtonBox.Ok) |
+                                      # QDialogButtonBox.Cancel)
+        # button_box.setStandardButtons()
+        self.ok_btn = button_box.addButton(QDialogButtonBox.Ok)
+        self.cancel_btn = button_box.addButton(QDialogButtonBox.Cancel)
         self.apply_btn = button_box.addButton(QDialogButtonBox.Apply)
+
+        self.ok_btn.setText(_("Ok"))
+        self.cancel_btn.setText(_("Cancel"))
+        self.apply_btn.setText(_("Apply"))
         # self.save_btn = button_box.addButton(QDialogButtonBox.Save)
 
         layout.addWidget(button_box)
@@ -293,7 +274,7 @@ class ConfigWindow(QDialog):
             # print(setting, setting_list, setting_initial_value)
             # if setting_initial_value:
             self.initial_settings[setting] = setting_initial_value
-            title = PRETTY_NAMES[setting] if setting in PRETTY_NAMES \
+            title = _(PRETTY_NAMES[setting]) if setting in PRETTY_NAMES \
                 else get_pretty_name(setting)
             title = title + _(":")
 
@@ -305,7 +286,7 @@ class ConfigWindow(QDialog):
 
             # ───────── Case of choice into a list: combo box ─────────
             elif setting_list:
-                pretty_setting_list = [PRETTY_NAMES[setting]
+                pretty_setting_list = [_(PRETTY_NAMES[setting])
                                        if setting in PRETTY_NAMES
                                        else setting
                                        for setting in setting_list]
