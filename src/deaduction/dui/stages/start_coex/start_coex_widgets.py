@@ -233,8 +233,8 @@ class CourseChooser(AbstractCoExChooser):
         and a QListWidget displayling recent courses.
         """
 
-        # TODO: Store courses, key = (absolute) filename.
-        # self.__courses = dict()
+        self.current_course = None  # Useful to save initial proof states
+
         self.servint: ServerInterface = servint
 
         # Browse button
@@ -294,7 +294,14 @@ class CourseChooser(AbstractCoExChooser):
         the exercise chooser.
         """
 
-        # TODO Store course
+        if self.current_course:
+            # Save ips of the preivous course if any,
+            # and reload ips_dict to benefit from
+            # potential new ips for the new chosen course
+            self.__save_initial_proof_states(self.current_course)
+            self.__ips_dict = load_object(cdirs.all_courses_ipf)
+
+        self.current_course = course
         # filename = str(course.relative_course_path.resolve())
         # log.debug(f"Storing course {filename}")
         # self.__courses[filename] = course
@@ -360,21 +367,21 @@ class CourseChooser(AbstractCoExChooser):
         if exercises or non_exercises:
             log.debug("Asking Lean for initial proof states...")
             # Save ips when received
-            self.servint.update_ended.connect(
-                            partial(self.__save_initial_proof_states, course))
+            # self.servint.update_ended.connect(
+            #                 partial(self.__save_initial_proof_states,
+            #                 course))
+
             # Ask Lean for missing ips
             self.servint.set_statements(course, exercises)
             self.servint.set_statements(course, non_exercises)
+
         elif self.servint.request_seq_num == -1:
             # Ask Lean to compile the file
             # (that speeds up a lot when exercise starts)
             log.debug(f"Launching Lean with {course.statements[0].pretty_name}")
             self.servint.set_statements(course, [course.statements[0]])
 
-    #########
-    # Slots #
-    #########
-    @Slot()
+    # @Slot()
     def __save_initial_proof_states(self, course: Course):
         """
         Add statements' initial proof states to self.__statements dict,
@@ -398,6 +405,9 @@ class CourseChooser(AbstractCoExChooser):
             statements[course_hash] = initial_proof_states
             save_object(statements, cdirs.all_courses_ipf)
 
+    #########
+    # Slots #
+    #########
     @Slot()
     def __browse_courses(self):
         """

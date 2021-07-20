@@ -146,7 +146,8 @@ def button_symbol(name):
     """
     Return symbol for the button corresponding to function action_<name>.
     e.g. action_and, action_proof_method, and so on.
-    NB: translation is NOT done here.
+    NB: translation is NOT done here, gettext translation function _ must be
+     applied to the output.
     """
     return __buttons_symbols[name]
 
