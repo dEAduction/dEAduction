@@ -389,7 +389,8 @@ class CourseChooser(AbstractCoExChooser):
         directory = cvars.get('others.course_directory', str(cdirs.courses))
         dialog = QFileDialog(directory=directory)
         dialog.setFileMode(QFileDialog.ExistingFile)
-        dialog.setNameFilter('*.lean *.pkl')
+        dialog.setNameFilter('*.lean')
+        # dialog.setNameFilter('*.lean *.pkl')
 
         # TODO: Stop using exec_, not recommended by documentation
         if dialog.exec_():
