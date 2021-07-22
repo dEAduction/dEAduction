@@ -258,12 +258,6 @@ class CourseChooser(AbstractCoExChooser):
         self.__recent_courses_wgt.itemDoubleClicked.connect(
                 lambda x: self.goto_exercise.emit())
 
-        # Dictionary for storing all initial proof states
-        # keys = hash number,
-        # values = list of statements initial_proof_states.
-        self.__ips_dict = load_object(cdirs.all_courses_ipf)
-        if not self.__ips_dict:
-            self.__ips_dict = dict()
         super().__init__(browser_layout)
 
     def add_browsed_course(self, course: Course):
@@ -295,16 +289,12 @@ class CourseChooser(AbstractCoExChooser):
         """
 
         if self.current_course:
-            # Save ips of the preivous course if any,
+            # Save ips of the previous course if any,
             # and reload ips_dict to benefit from
             # potential new ips for the new chosen course
-            self.__save_initial_proof_states(self.current_course)
-            self.__ips_dict = load_object(cdirs.all_courses_ipf)
+            self.current_course.save_initial_proof_states()
 
         self.current_course = course
-        # filename = str(course.relative_course_path.resolve())
-        # log.debug(f"Storing course {filename}")
-        # self.__courses[filename] = course
 
         # Title, subtitle, etc
         title       = course.title
@@ -339,25 +329,11 @@ class CourseChooser(AbstractCoExChooser):
         which update exercise preview if initial_proof_state for exercise
         has just been set.
         """
-        # Search for initial_proof_states in self.__ips_dict
-        log.debug("Setting initial proof states...")
-        # print(course.file_content)
-        # FIXME: here hash gives each time a different value,
-        #  though the file content is the same ??
-        #  so for the moment we use the whole file (!) as a key
-        # hash_course = hash(course.file_content)
-        hash_course = course.file_content
-        # log.debug(f"Searching {hash_course}")
-        # log.debug(f"in {self.__ips_dict.keys()}")
-        if hash_course in self.__ips_dict:
-            log.debug("Found hash course in dict")
-            initial_proof_states = self.__ips_dict[hash_course]
-            # NB: course.statements and initial_proof_states
-            #  should have same length
-            for st, ips in zip(course.statements, initial_proof_states):
-                st.initial_proof_state = ips
+        # Load stored initial proof states
+        # log.debug("Setting initial proof states")
+        course.set_initial_proof_states()
 
-        # Get the missing ips
+        # Get missing ips
         remaining_statements = [st for st in course.statements if not
                                 st.initial_proof_state]
         exercises = [st for st in remaining_statements
@@ -366,44 +342,38 @@ class CourseChooser(AbstractCoExChooser):
                          if not isinstance(st, Exercise)]
         if exercises or non_exercises:
             log.debug("Asking Lean for initial proof states...")
-            # Save ips when received
-            # self.servint.update_ended.connect(
-            #                 partial(self.__save_initial_proof_states,
-            #                 course))
-
             # Ask Lean for missing ips
             self.servint.set_statements(course, exercises)
             self.servint.set_statements(course, non_exercises)
 
         elif self.servint.request_seq_num == -1:
-            # Ask Lean to compile the file
+            # Ask a first request to the Lean server
             # (that speeds up a lot when exercise starts)
             log.debug(f"Launching Lean with {course.statements[0].pretty_name}")
             self.servint.set_statements(course, [course.statements[0]])
 
-    # @Slot()
-    def __save_initial_proof_states(self, course: Course):
-        """
-        Add statements' initial proof states to self.__statements dict,
-        and save in a .pkl file in cdirs.local.
-        """
-        log.debug("Checking if I've got some new ips to save")
-        # Fixme: this method is called uselessly, but the following could
-        #  disconnect another slot
-        # self.servint.update_ended.disconnect()
-        statements = self.__ips_dict
-        # course_hash = hash(course.file_content)
-        course_hash = course.file_content
-        # if course_hash not in self.__statements_dict:
-        #     self.__statements_dict[course_hash] = []
-        initial_proof_states = [st.initial_proof_state
-                                for st in course.statements]
-        # Save if anything has changed
-        if course_hash not in statements \
-                or statements[course_hash] != initial_proof_states:
-            log.debug("Saving some initial proof states")
-            statements[course_hash] = initial_proof_states
-            save_object(statements, cdirs.all_courses_ipf)
+    # These methods have been moved to course methods.
+    # # @Slot()
+    # def __save_initial_proof_states(self, course: Course):
+    #     """
+    #     Add statements' initial proof states to self.__statements dict,
+    #     and save in a .pkl file in cdirs.local.
+    #     """
+    #     log.debug("Checking if I've got some new ips to save")
+    #     # self.servint.update_ended.disconnect()
+    #     statements = self.__ips_dict
+    #     # course_hash = hash(course.file_content)
+    #     course_hash = course.file_content
+    #     # if course_hash not in self.__statements_dict:
+    #     #     self.__statements_dict[course_hash] = []
+    #     initial_proof_states = [st.initial_proof_state
+    #                             for st in course.statements]
+    #     # Save if anything has changed
+    #     if course_hash not in statements \
+    #             or statements[course_hash] != initial_proof_states:
+    #         log.debug("Saving some initial proof states")
+    #         statements[course_hash] = initial_proof_states
+    #         save_object(statements, cdirs.all_courses_ipf)
 
     #########
     # Slots #
@@ -445,33 +415,6 @@ class CourseChooser(AbstractCoExChooser):
         course = Course.from_file(course_path)
         self.set_preview(course)
         self.__set_initial_proof_states(course)
-
-
-####################
-# pickle utilities #
-####################
-def load_object(filename):
-    """
-    Load pickled object obj from file with name filename
-    (file is assumed to contain exactly one object).
-    """
-    log.debug(f"Trying to load object from {filename}...")
-    if not filename.exists():
-        log.debug("...no file found")
-        return None
-    else:
-        with filename.open(mode="rb") as input:
-            log.debug("...loaded")
-            return pickle.load(input)
-
-
-def save_object(obj, filename):
-    """
-    Save pickled object obj in a file with name filename.
-    """
-    log.debug(f"Saving pickled object in {filename}")
-    with filename.open(mode='wb') as output:  # Overwrites any existing file
-        pickle.dump(obj, output, pickle.HIGHEST_PROTOCOL)
 
 
 class ExerciseChooser(AbstractCoExChooser):
@@ -799,12 +742,12 @@ class AbstractStartCoEx(QDialog):
         self.setMinimumWidth(450)
         self.setMinimumHeight(550)
 
-        self.__course_chooser   = CourseChooser(servint)
+        self.course_chooser   = CourseChooser(servint)
         self.__exercise_chooser = QWidget()
 
         # Somehow the order of connections changes performances
-        self.__course_chooser.goto_exercise.connect(self.__goto_exercise)
-        self.__course_chooser.course_chosen.connect(self.__preview_exercises)
+        self.course_chooser.goto_exercise.connect(self.__goto_exercise)
+        self.course_chooser.course_chosen.connect(self.__preview_exercises)
 
         # ───────────────────── Buttons ──────────────────── #
 
@@ -822,7 +765,7 @@ class AbstractStartCoEx(QDialog):
         # ───────────────────── Layouts ──────────────────── #
 
         self.__tabwidget = QTabWidget()
-        self.__tabwidget.addTab(self.__course_chooser, _('Course'))
+        self.__tabwidget.addTab(self.course_chooser, _('Course'))
         self.__tabwidget.addTab(self.__exercise_chooser, _('Exercise'))
 
         buttons_lyt = QHBoxLayout()
@@ -857,9 +800,11 @@ class AbstractStartCoEx(QDialog):
         for this is not very smart so if you want to enhance it, do it
         (see CONTRIBUTING.md file).
         """
+        # TODO: adapt goto_exercise to unfold tree so that the exercise is
+        #  visible.
 
-        self.__course_chooser.set_preview(exercise.course)
-        self.__course_chooser.add_browsed_course(exercise.course)
+        self.course_chooser.set_preview(exercise.course)
+        self.course_chooser.add_browsed_course(exercise.course)
         self.__exercise_chooser.set_preview(exercise)
         self.__goto_exercise()
 
@@ -1000,6 +945,9 @@ class StartCoExStartup(AbstractStartCoEx):
 
         :param event: Some Qt mandatory thing.
         """
+        if self.course_chooser.current_course:
+            # Save ips of the previous course if any
+            self.course_chooser.current_course.save_initial_proof_states()
 
         super().closeEvent(event)
         self.window_closed.emit()
@@ -1011,7 +959,7 @@ class StartCoExExerciseFinished(AbstractStartCoEx):
     a CoEx chooser with the finished exercise
     being preset / previewed. See AbstractStartCoEx docstring.
     """
-    # TODO: unfold tree so that the exercise is visible.
+    # FIXME: not used
 
     def __init__(self, finished_exercise: Exercise):
         """

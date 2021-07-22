@@ -360,6 +360,8 @@ class ExerciseMainWindow(QMainWindow):
         if not self.test_mode:
             self.journal.save_exercise_with_proof_steps(emw=self)
         self.lean_editor.close()
+
+        self.exercise.course.save_initial_proof_states()  # In case new ips
         # FIXME:  cancel server_task
         # if self.__server_task_scope:
         #     self.__server_task_scope.cancel()
