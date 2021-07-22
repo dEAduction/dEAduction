@@ -541,26 +541,32 @@ class StatementsTreeWidget(QTreeWidget):
 
         self.addTopLevelItem(item)
 
-    def goto_statement(self, statement: Statement):
+    def goto_statement(self, statement: Statement, expand=True):
         """
         Go to to the Statement statement (as if usr clicked on it).
 
         :param statement: Statement to go to.
+        :param expand: if True, expandreveal statement by expanding all
+        parents items.
         """
-
+        log.debug("goto exercise")
         # Thanks @mcosta from https://forum.qt.io/topic/54640/
         # how-to-traverse-all-the-items-of-qlistwidget-qtreewidget/3
+
         def traverse_node(item: StatementsTreeWidgetItem):
             # Do something with item
             if isinstance(item, StatementsTreeWidgetItem):
                 if item.statement == statement:
                     item.setSelected(True)
+                    return True
             for i in range(0, item.childCount()):
-                traverse_node(item.child(i))
-
+                if traverse_node(item.child(i)):
+                    item.setExpanded(expand)
+                    return True
         for i in range(self.topLevelItemCount()):
             item = self.topLevelItem(i)
-            traverse_node(item)
+            if traverse_node(item):
+                item.setExpanded(expand)
 
     def from_name(self, lean_name: str) \
             -> StatementsTreeWidgetItem:
