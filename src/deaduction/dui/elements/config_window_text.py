@@ -57,5 +57,7 @@ PRETTY_NAMES = {
     'functionality.allow_proof_by_sorry': _("Allow proof by sorry"),
     # 'functionality.': _(""),
     'logs.save_journal': _("Save journal"),
+    'functionality.save_solved_exercises_for_autotest':
+        _("Save exercises for autotest"),
     'None': _('None')
 }

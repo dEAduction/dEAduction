@@ -94,7 +94,8 @@ CONFIGS["Language"] = [("i18n.select_language", ["en", "fr_FR"], True)]
 CONFIGS["Advanced"] = [
     ('others.course_directory', 'dir', True),
     ('logs.save_journal', None, True),  # checked, untested
-    ('logs.display_level', ['debug', 'info', 'warning'], True)]
+    ('logs.display_level', ['debug', 'info', 'warning'], True),
+    ('functionality.save_solved_exercises_for_autotest', None, True)]
 
 SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          "display.target_font_size",

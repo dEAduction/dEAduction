@@ -36,6 +36,7 @@ allow_forall_with_implicit_universal_prop = false
 treat_intersections_as_ands = false
 treat_unions_as_ors = false
 automatic_intro_of_variables_and_hypotheses = false
+save_solved_exercises_for_autotest = false
 
 
 [i18n]
