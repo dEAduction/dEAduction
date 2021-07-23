@@ -38,7 +38,8 @@ import                          logging
 from functools import partial
 from PySide2.QtCore import    ( Signal,
                                 Slot,
-                                QTimer)
+                                QTimer,
+                                Qt)
 
 from PySide2.QtGui import     ( QIcon,
                                 QPixmap )
@@ -49,7 +50,9 @@ from PySide2.QtWidgets import ( QAction,
                                 QStatusBar,
                                 QToolBar,
                                 QVBoxLayout,
-                                QWidget)
+                                QWidget,
+                                QSplitter,
+                                QSizePolicy)
 
 from deaduction.dui.utils               import   replace_widget_layout
 from deaduction.dui.elements            import ( ActionButton,
@@ -149,7 +152,6 @@ class ExerciseCentralWidget(QWidget):
         self.__actions_gb = QGroupBox(_('Actions and statements (transform '
                                       'context and target)'))
         self.__context_gb = QGroupBox(_('Context (objects and properties)'))
-
         # ──────────────── Init Actions area ─────────────── #
 
         self.logic_btns = ActionButtonsWidget(exercise.available_logic)
@@ -168,10 +170,10 @@ class ExerciseCentralWidget(QWidget):
         self.statements_tree = StatementsTreeWidget(statements, outline)
 
         # ─────── Init goal (Context area and target) ────── #
-
-        self.objects_wgt = MathObjectWidget()
-        self.props_wgt   = MathObjectWidget()
-        self.target_wgt  = TargetWidget()
+        self.current_goal = None
+        self.objects_wgt  = MathObjectWidget()
+        self.props_wgt    = MathObjectWidget()
+        self.target_wgt   = TargetWidget()
 
         # ───────────── Put widgets in layouts ───────────── #
 
@@ -185,11 +187,31 @@ class ExerciseCentralWidget(QWidget):
         self.__actions_gb.setLayout(actions_lyt)
 
         # Context
-        self.__context_lyt.addWidget(self.objects_wgt)
-        self.__context_lyt.addWidget(self.props_wgt)
+        self.splitter = True
+        if self.splitter:
+            self.__context_splitter = QSplitter(Qt.Vertical)
+            self.__context_splitter.addWidget(self.objects_wgt)
+            self.__context_splitter.addWidget(self.props_wgt)
+            self.__context_lyt.addWidget(self.__context_splitter)
+            self.__context_splitter.setChildrenCollapsible(False)
+        else:
+            self.__context_lyt.addWidget(self.objects_wgt)
+            self.__context_lyt.addWidget(self.props_wgt)
+
         self.__context_gb.setLayout(self.__context_lyt)
 
+        # Size policies:
+        #       - Context should be able to expand at will, since properties
+        #       maÍbitrarily long
+        #       - Actions shoul dbe fixed size, determined by the
+        #       number of buttons
+        self.__context_gb.setSizePolicy(QSizePolicy.Expanding,
+                                        QSizePolicy.Preferred)
+        self.__actions_gb.setSizePolicy(QSizePolicy.Fixed,
+                                        QSizePolicy.Preferred)
+
         # https://i.kym-cdn.com/photos/images/original/001/561/446/27d.jpg
+
         self.__context_actions_lyt.addWidget(self.__context_gb)
         self.__context_actions_lyt.addWidget(self.__actions_gb)
 
@@ -199,7 +221,6 @@ class ExerciseCentralWidget(QWidget):
 ##############################
 # Methods called by __init__ #
 ##############################
-
     def organise_main_layout(self):
         """
         Organize main layout, namely putting target on top or not according
@@ -241,7 +262,6 @@ class ExerciseCentralWidget(QWidget):
     ##############
     # Properties #
     ##############
-
     @property
     def target_display_on_top(self):
         return cvars.get('display.target_display_on_top', True)
@@ -320,14 +340,23 @@ class ExerciseCentralWidget(QWidget):
         new_target_wgt  = TargetWidget(new_target, new_target_tag, goal_count)
 
         # Replace in the layouts
-        replace_widget_layout(self.__context_lyt,
-                              self.objects_wgt, new_objects_wgt)
-        replace_widget_layout(self.__context_lyt,
-                              self.props_wgt, new_props_wgt)
+        if self.splitter:
+            self.__context_splitter.replaceWidget(0, new_objects_wgt)
+            self.__context_splitter.replaceWidget(1, new_props_wgt)
+        # new_context_wgt = QSplitter(Qt.Vertical)
+        # new_context_wgt.addWidget(new_objects_wgt)
+        # new_context_wgt.addWidget(new_props_wgt)
+        else:
+            replace_widget_layout(self.__context_lyt,
+                                  self.objects_wgt, new_objects_wgt)
+            replace_widget_layout(self.__context_lyt,
+                                  self.props_wgt, new_props_wgt)
+
         replace_widget_layout(self.__main_lyt,
                               self.target_wgt, new_target_wgt, True)
 
         # Set the attributes to the new values
+        # self.__context_splitter = new_context_wgt
         self.objects_wgt  = new_objects_wgt
         self.props_wgt    = new_props_wgt
         self.target_wgt   = new_target_wgt

@@ -61,16 +61,17 @@ from pathlib import Path
 import pickle5 as pickle
 import argparse
 
-from deaduction.pylib.coursedata                 import Course, Exercise
 from deaduction.pylib                            import logger
 
 import deaduction.pylib.config.dirs              as     cdirs
 import deaduction.pylib.config.environ           as     cenv
 import deaduction.pylib.config.site_installation as     inst
 import deaduction.pylib.config.vars              as     cvars
+import deaduction.pylib.config.i18n
 
 from deaduction.dui.__main__ import Container
 
+from deaduction.pylib.coursedata                 import Course, Exercise
 from deaduction.pylib.autotest import ( select_course,
                                         select_exercise)
 
@@ -82,10 +83,9 @@ from deaduction.pylib.autotest import ( select_course,
 # Configuring log #
 ###################
 # Change your own settings in .deaduction-dev/config.toml
-# log_domains = cvars.get("logs.domains", [""])
+log_domains = cvars.get("logs.domains", [""])
 # log_level = cvars.get("logs.display_level", "info")
-# logger.configure(domains=log_domains,
-#                  display_level=log_level)
+logger.configure(domains=log_domains)
 
 log = logging.getLogger(__name__)
 arg_parser = argparse.ArgumentParser("Start deaduction in test mode")
