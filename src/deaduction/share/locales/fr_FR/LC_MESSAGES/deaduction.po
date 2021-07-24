@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2021-07-20 17:15+0200\n"
-"PO-Revision-Date: 2021-07-20 17:16+0200\n"
+"POT-Creation-Date: 2021-07-24 23:57+0200\n"
+"PO-Revision-Date: 2021-07-24 23:58+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -19,117 +19,121 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: dui/elements/actions_widgets_classes.py:562
 #: dui/elements/actions_widgets_classes.py:567
+#: dui/elements/actions_widgets_classes.py:572
 msgid "Statements"
 msgstr "Enoncés"
 
-#: dui/elements/actions_widgets_classes.py:562
+#: dui/elements/actions_widgets_classes.py:567
 msgid "L∃∀N name"
 msgstr "Nom L∃∀N"
 
-#: dui/elements/config_window.py:111
-msgid "Display"
-msgstr "Affichage"
-
-#: dui/elements/config_window.py:112
-msgid "Logic"
-msgstr "Logique"
-
-#: dui/elements/config_window.py:113
-msgid "Functionalities"
-msgstr "Fonctionnalités"
-
-#: dui/elements/config_window.py:114
-msgid "Language"
-msgstr "Langue"
-
-#: dui/elements/config_window.py:115
-msgid "Advanced"
-msgstr "Avancés"
-
-#: dui/elements/config_window.py:116
-msgid "Select language"
-msgstr "Sélectionner la langue"
-
-#: dui/elements/config_window.py:120
-msgid "Target display on top"
-msgstr "Objectif en haut de la fenêtre"
-
-#: dui/elements/config_window.py:121
-msgid "target font size"
-msgstr "taille de la police pour le but"
-
-#: dui/elements/config_window.py:122
-msgid "Set directory for choosing courses"
-msgstr "Dossier pour le choix de cours"
-
-#: dui/elements/config_window.py:123
-msgid "Level of logs"
-msgstr "Niveau de logs"
-
-#: dui/elements/config_window.py:125
-msgid "Symbols for buttons ∧ ∨ ¬ ⇒ ⇔ ∀ ∃ ="
-msgstr "Symboles pour les boutons ∧ ∨ ¬ ⇒ ⇔ ∀ ∃ ="
-
 #: dui/elements/config_window.py:126
-msgid "Display success messages"
-msgstr "Afficher les messages de succès"
-
-#: dui/elements/config_window.py:127
-msgid "Color for dummy variables"
-msgstr "Couleur pour les variables muettes"
-
-#: dui/elements/config_window.py:128
-msgid "Color for used properties"
-msgstr "Couleur pour les propriétés appliquées"
-
-#: dui/elements/config_window.py:129
-msgid "Target selected by default"
-msgstr "But sélectionné par défaut"
-
-#: dui/elements/config_window.py:131
-msgid "Allow proof by sorry"
-msgstr "Admettre le but en cours est autorisé"
-
-#: dui/elements/config_window.py:133
-msgid "Save journal"
-msgstr "Sauvegarder le journal"
-
-#: dui/elements/config_window.py:134
-msgid "None"
-msgstr "Aucun(e)"
-
-#: dui/elements/config_window.py:152
-#: dui/stages/exercise/exercise_main_window.py:240
 #: dui/stages/exercise/exercise_main_window.py:245
+#: dui/stages/exercise/exercise_main_window.py:250
 msgid "Preferences"
 msgstr "Préférences"
 
-#: dui/elements/config_window.py:163
+#: dui/elements/config_window.py:137
 msgid "Save preferences for next session"
 msgstr "Sauvegarder les préférences"
 
-#: dui/elements/config_window.py:176
+#: dui/elements/config_window.py:150
 msgid "Ok"
 msgstr "Ok"
 
-#: dui/elements/config_window.py:177
+#: dui/elements/config_window.py:151
 msgid "Cancel"
 msgstr "Annuler"
 
-#: dui/elements/config_window.py:178 pylib/coursedata/auto_steps.py:116
+#: dui/elements/config_window.py:152 pylib/coursedata/auto_steps.py:116
 #: pylib/text/tooltips.py:129
 msgid "Apply"
 msgstr "Appliquer"
 
-#: dui/elements/config_window.py:306
+#: dui/elements/config_window.py:280
 msgid ":"
 msgstr " : "
 
-#: dui/elements/config_window.py:310
+#: dui/elements/config_window.py:284
 msgid "Browse directories"
 msgstr "Choisir un dossier"
+
+#: dui/elements/config_window_text.py:37
+msgid "Display"
+msgstr "Affichage"
+
+#: dui/elements/config_window_text.py:38
+msgid "Logic"
+msgstr "Logique"
+
+#: dui/elements/config_window_text.py:39
+msgid "Functionalities"
+msgstr "Fonctionnalités"
+
+#: dui/elements/config_window_text.py:40
+msgid "Language"
+msgstr "Langue"
+
+#: dui/elements/config_window_text.py:41
+msgid "Advanced"
+msgstr "Avancés"
+
+#: dui/elements/config_window_text.py:42
+msgid "Select language"
+msgstr "Sélectionner la langue"
+
+#: dui/elements/config_window_text.py:46
+msgid "Target display on top"
+msgstr "Objectif en haut de la fenêtre"
+
+#: dui/elements/config_window_text.py:47
+msgid "target font size"
+msgstr "taille de la police pour le but"
+
+#: dui/elements/config_window_text.py:48
+msgid "Set directory for choosing courses"
+msgstr "Dossier pour le choix de cours"
+
+#: dui/elements/config_window_text.py:49
+msgid "Level of logs"
+msgstr "Niveau de logs"
+
+#: dui/elements/config_window_text.py:51
+msgid "Symbols for buttons ∧ ∨ ¬ ⇒ ⇔ ∀ ∃ ="
+msgstr "Symboles pour les boutons ∧ ∨ ¬ ⇒ ⇔ ∀ ∃ ="
+
+#: dui/elements/config_window_text.py:52
+msgid "Display success messages"
+msgstr "Afficher les messages de succès"
+
+#: dui/elements/config_window_text.py:53
+msgid "Color for dummy variables"
+msgstr "Couleur pour les variables muettes"
+
+#: dui/elements/config_window_text.py:54
+msgid "Color for used properties"
+msgstr "Couleur pour les propriétés appliquées"
+
+#: dui/elements/config_window_text.py:55
+msgid "Target selected by default"
+msgstr "But sélectionné par défaut"
+
+#: dui/elements/config_window_text.py:57
+msgid "Allow proof by sorry"
+msgstr "Admettre le but en cours est autorisé"
+
+#: dui/elements/config_window_text.py:59
+msgid "Save journal"
+msgstr "Sauvegarder le journal"
+
+#: dui/elements/config_window_text.py:61
+msgid "Save exercises for autotest"
+msgstr "Sauvegarder pour auto-tests"
+
+#: dui/elements/config_window_text.py:62
+msgid "None"
+msgstr "Aucun(e)"
 
 #: dui/elements/context_widgets_classes.py:161
 msgid "Double click to"
@@ -151,78 +155,79 @@ msgstr "A démontrer"
 msgid "Send to L∃∀N"
 msgstr "Envoyer à L∃∀N"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:149
-#: dui/stages/exercise/_exercise_main_window_widgets.py:234
+#: dui/stages/exercise/_exercise_main_window_widgets.py:152
+#: dui/stages/exercise/_exercise_main_window_widgets.py:284
 msgid "Actions and statements (transform context and target)"
 msgstr "Actions et énoncés (transforment le contexte et le but)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:151
-#: dui/stages/exercise/_exercise_main_window_widgets.py:236
+#: dui/stages/exercise/_exercise_main_window_widgets.py:154
+#: dui/stages/exercise/_exercise_main_window_widgets.py:218
+#: dui/stages/exercise/_exercise_main_window_widgets.py:286
 msgid "Context (objects and properties)"
 msgstr "Contexte (objets et propriétés)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:440
+#: dui/stages/exercise/_exercise_main_window_widgets.py:509
 msgid "Toolbar"
 msgstr "Barre d’outils"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:445
-#: dui/stages/exercise/_exercise_main_window_widgets.py:469
+#: dui/stages/exercise/_exercise_main_window_widgets.py:514
+#: dui/stages/exercise/_exercise_main_window_widgets.py:538
 msgid "Go back to beginning of proof"
 msgstr "Retour au début de la preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:448
-#: dui/stages/exercise/_exercise_main_window_widgets.py:470
+#: dui/stages/exercise/_exercise_main_window_widgets.py:517
+#: dui/stages/exercise/_exercise_main_window_widgets.py:539
 msgid "Undo action"
 msgstr "Annuler l’action"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:451
-#: dui/stages/exercise/_exercise_main_window_widgets.py:471
+#: dui/stages/exercise/_exercise_main_window_widgets.py:520
+#: dui/stages/exercise/_exercise_main_window_widgets.py:540
 msgid "Redo action"
 msgstr "Refaire l’action"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:455
-#: dui/stages/exercise/_exercise_main_window_widgets.py:472
+#: dui/stages/exercise/_exercise_main_window_widgets.py:524
+#: dui/stages/exercise/_exercise_main_window_widgets.py:541
 msgid "Toggle L∃∀N"
 msgstr "Console L∃∀N"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:459
-#: dui/stages/exercise/_exercise_main_window_widgets.py:473
-#: dui/stages/exercise/exercise_main_window.py:838
+#: dui/stages/exercise/_exercise_main_window_widgets.py:528
+#: dui/stages/exercise/_exercise_main_window_widgets.py:542
+#: dui/stages/exercise/exercise_main_window.py:856
 msgid "Change exercise"
 msgstr "Changer d’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:247
-#: dui/stages/start_coex/start_coex_widgets.py:816
-#: dui/stages/start_coex/start_coex_widgets.py:909
+#: dui/stages/exercise/exercise_main_window.py:252
+#: dui/stages/start_coex/start_coex_widgets.py:770
+#: dui/stages/start_coex/start_coex_widgets.py:865
 #: pylib/pre_processing/__main__.py:210 pylib/pre_processing/__main__.py:232
 msgid "Exercise"
 msgstr "Exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:248
+#: dui/stages/exercise/exercise_main_window.py:253
 msgid "Exercise history"
 msgstr "Historique de l’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:780
+#: dui/stages/exercise/exercise_main_window.py:798
 msgid "Code from editor"
 msgstr "Code depuis l’éditeur"
 
-#: dui/stages/exercise/exercise_main_window.py:831
+#: dui/stages/exercise/exercise_main_window.py:849
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:832
+#: dui/stages/exercise/exercise_main_window.py:850
 msgid "The proof is complete!"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/exercise_main_window.py:836
+#: dui/stages/exercise/exercise_main_window.py:854
 msgid "Back to exercise"
 msgstr "Retour à l’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:956
+#: dui/stages/exercise/exercise_main_window.py:974
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:959
+#: dui/stages/exercise/exercise_main_window.py:977
 msgid "goals solved!"
 msgstr "buts atteints !"
 
@@ -235,7 +240,7 @@ msgid "Some dependencies are missing. Do you want to install them?"
 msgstr "Il manque des dépendances. Voulez-vous les installer ?"
 
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:131
-#: dui/stages/start_coex/start_coex_widgets.py:801
+#: dui/stages/start_coex/start_coex_widgets.py:755
 msgid "Quit"
 msgstr "Quitter"
 
@@ -263,59 +268,59 @@ msgstr "Aperçu indisponible."
 msgid "Browse files for course"
 msgstr "Choisir un fichier de cours"
 
-#: dui/stages/start_coex/start_coex_widgets.py:551
+#: dui/stages/start_coex/start_coex_widgets.py:505
 msgid "Text mode"
 msgstr "Mode texte"
 
-#: dui/stages/start_coex/start_coex_widgets.py:577
+#: dui/stages/start_coex/start_coex_widgets.py:531
 msgid "Preview not available (be patient...)"
 msgstr "Chargement en cours (patientez…)"
 
-#: dui/stages/start_coex/start_coex_widgets.py:623
+#: dui/stages/start_coex/start_coex_widgets.py:577
 msgid "No preview available - be patient..."
 msgstr "Chargement en cours (patientez…)"
 
-#: dui/stages/start_coex/start_coex_widgets.py:645
+#: dui/stages/start_coex/start_coex_widgets.py:599
 msgid "Objects:"
 msgstr "Objets :"
 
-#: dui/stages/start_coex/start_coex_widgets.py:646
+#: dui/stages/start_coex/start_coex_widgets.py:600
 msgid "Properties:"
 msgstr "Propriétés :"
 
-#: dui/stages/start_coex/start_coex_widgets.py:659
+#: dui/stages/start_coex/start_coex_widgets.py:613
 msgid "Target:"
 msgstr "But :"
 
-#: dui/stages/start_coex/start_coex_widgets.py:804
+#: dui/stages/start_coex/start_coex_widgets.py:758
 msgid "Start exercise"
 msgstr "Commencer la preuve"
 
-#: dui/stages/start_coex/start_coex_widgets.py:815
+#: dui/stages/start_coex/start_coex_widgets.py:769
 msgid "Course"
 msgstr "Cours"
 
-#: dui/stages/start_coex/start_coex_widgets.py:980
+#: dui/stages/start_coex/start_coex_widgets.py:936
 msgid "Choose course and exercise — d∃∀duction"
 msgstr "Choix du cours et de l’exercice — d∃∀duction"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1021
+#: dui/stages/start_coex/start_coex_widgets.py:980
 msgid "Congratulations, exercise finished!"
 msgstr "Bravo, l’exercice est résolu !"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1023
+#: dui/stages/start_coex/start_coex_widgets.py:982
 msgid "Exercise finished — d∃∀duction"
 msgstr "Exercice terminé — d∃∀duction"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1062
+#: dui/stages/start_coex/start_coex_widgets.py:1021
 msgid "Do you want to prove this statement or its negation?"
 msgstr "Voulez-vous démontrer cet énoncé ou bien sa négation ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1069
+#: dui/stages/start_coex/start_coex_widgets.py:1028
 msgid "Prove statement"
 msgstr "Démontrer l’énoncé"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1070
+#: dui/stages/start_coex/start_coex_widgets.py:1029
 msgid "Prove negation"
 msgstr "Démontrer la négation"
 
@@ -734,7 +739,7 @@ msgstr "Fonction"
 msgid "Introduce a new function"
 msgstr "Introduire une nouvelle fonction"
 
-#: pylib/actions/proofs.py:237 pylib/text/tooltips.py:131
+#: pylib/actions/proofs.py:237
 msgid "New object"
 msgstr "Nouvel Objet"
 
@@ -820,11 +825,11 @@ msgstr "But !"
 msgid "Compute"
 msgstr "Calculer"
 
-#: pylib/coursedata/course.py:101
+#: pylib/coursedata/course.py:103
 msgid "no subtitle"
 msgstr "Pas de sous-titre"
 
-#: pylib/coursedata/course.py:112
+#: pylib/coursedata/course.py:114
 msgid "no description"
 msgstr "Pas de description"
 
@@ -1340,8 +1345,12 @@ msgid "split into two properties"
 msgstr "séparer en deux propriétés"
 
 #: pylib/text/tooltips.py:130
-msgid "Proof methods"
-msgstr "Méthodes de preuve"
+msgid "Proof methods..."
+msgstr "Méthodes de preuve…"
+
+#: pylib/text/tooltips.py:131
+msgid "New object..."
+msgstr "Nouvel Objet…"
 
 #: pylib/utils/exceptions.py:41
 msgid "File {} not found"

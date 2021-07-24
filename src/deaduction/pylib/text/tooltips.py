@@ -127,8 +127,8 @@ __tooltips_apply = {
 #########################
 __buttons_symbols = {
     'apply': _('Apply'),
-    'proof_methods': _("Proof methods"),
-    'new_object': _('New object'),
+    'proof_methods': _("Proof methods..."),
+    'new_object': _('New object...'),
     'assumption': _('Goal!'),
     'compute': _('Compute')
 }
