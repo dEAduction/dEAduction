@@ -60,7 +60,6 @@ from deaduction.dui.elements            import ( ActionButton,
                                                  StatementsTreeWidget,
                                                  MathObjectWidget,
                                                  TargetWidget)
-# from deaduction.pylib.config.i18n import _
 from deaduction.pylib.actions           import   action_apply
 from deaduction.pylib.coursedata        import   Exercise
 from deaduction.pylib.mathobj           import   Goal
@@ -134,6 +133,7 @@ class ExerciseCentralWidget(QWidget):
         """
 
         super().__init__()
+        self.exercise = exercise
 
         # ───────────── Init layouts and boxes ───────────── #
         # I wish none of these were class atributes, but we need at
@@ -143,11 +143,11 @@ class ExerciseCentralWidget(QWidget):
         self.__main_lyt     = QVBoxLayout()
         self.__context_lyt  = QVBoxLayout()
         self.__context_actions_lyt = QHBoxLayout()
-        actions_lyt         = QVBoxLayout()
-        action_btns_lyt     = QVBoxLayout()
+        self.__actions_lyt         = QVBoxLayout()
+        self.__action_btns_lyt     = QVBoxLayout()
 
-        action_btns_lyt.setContentsMargins(0, 0, 0, 0)
-        action_btns_lyt.setSpacing(0)
+        self.__action_btns_lyt.setContentsMargins(0, 0, 0, 0)
+        self.__action_btns_lyt.setSpacing(0)
 
         self.__actions_gb = QGroupBox(_('Actions and statements (transform '
                                       'context and target)'))
@@ -178,32 +178,19 @@ class ExerciseCentralWidget(QWidget):
         # ───────────── Put widgets in layouts ───────────── #
 
         # Actions
-        action_btns_lyt.addWidget(self.logic_btns)
-        action_btns_lyt.addWidget(self.proof_btns)
-        if exercise.available_magic:
-            action_btns_lyt.addWidget(self.magic_btns)
-        actions_lyt.addLayout(action_btns_lyt)
-        actions_lyt.addWidget(self.statements_tree)
-        self.__actions_gb.setLayout(actions_lyt)
+        self.init_action_layout()
+        self.__actions_gb.setLayout(self.__actions_lyt)
 
         # Context
         self.splitter = True
-        if self.splitter:
-            self.__context_splitter = QSplitter(Qt.Vertical)
-            self.__context_splitter.addWidget(self.objects_wgt)
-            self.__context_splitter.addWidget(self.props_wgt)
-            self.__context_lyt.addWidget(self.__context_splitter)
-            self.__context_splitter.setChildrenCollapsible(False)
-        else:
-            self.__context_lyt.addWidget(self.objects_wgt)
-            self.__context_lyt.addWidget(self.props_wgt)
-
+        self.__context_splitter = QSplitter(Qt.Vertical)
+        self.init_context_layout()
         self.__context_gb.setLayout(self.__context_lyt)
 
         # Size policies:
         #       - Context should be able to expand at will, since properties
-        #       maÍbitrarily long
-        #       - Actions shoul dbe fixed size, determined by the
+        #       arbitrarily long
+        #       - Actions should be fixed size, determined by the
         #       number of buttons
         self.__context_gb.setSizePolicy(QSizePolicy.Expanding,
                                         QSizePolicy.Preferred)
@@ -217,6 +204,48 @@ class ExerciseCentralWidget(QWidget):
 
         self.organise_main_layout()  # Decide which one is on top
         self.setLayout(self.__main_lyt)
+
+    def init_context_layout(self):
+        if self.splitter:
+            self.__context_splitter.addWidget(self.objects_wgt)
+            self.__context_splitter.addWidget(self.props_wgt)
+            self.__context_splitter.setChildrenCollapsible(False)
+            self.__context_lyt.addWidget(self.__context_splitter)
+        else:
+            self.__context_lyt.addWidget(self.objects_wgt)
+            self.__context_lyt.addWidget(self.props_wgt)
+
+        self.__context_gb.setTitle(_('Context (objects and properties)'))
+
+    def init_action_layout(self):
+        exercise = self.exercise
+
+        # ───────────── Action buttons ───────────── #
+
+        self.logic_btns = ActionButtonsWidget(exercise.available_logic)
+        self.proof_btns = ActionButtonsWidget(exercise.available_proof)
+        self.magic_btns = ActionButtonsWidget(exercise.available_magic)
+
+        # Search for ActionButton corresponding to action_apply
+        # (which will be called by double-click):
+        apply_buttons = [button for button in self.proof_btns.buttons
+                         if button.action.run == action_apply]
+        if apply_buttons:
+            self.action_apply_button = apply_buttons[0]
+
+        self.__action_btns_lyt.addWidget(self.logic_btns)
+        self.__action_btns_lyt.addWidget(self.proof_btns)
+        if exercise.available_magic:
+            self.__action_btns_lyt.addWidget(self.magic_btns)
+
+        # ───────────── Statements ───────────── #
+        statements = exercise.available_statements
+        outline = exercise.course.outline
+        self.statements_tree = StatementsTreeWidget(statements, outline)
+
+        # Put action buttons and statement tree in lyt
+        self.__actions_lyt.addLayout(self.__action_btns_lyt)
+        self.__actions_lyt.addWidget(self.statements_tree)
 
 ##############################
 # Methods called by __init__ #
@@ -341,11 +370,18 @@ class ExerciseCentralWidget(QWidget):
 
         # Replace in the layouts
         if self.splitter:
-            self.__context_splitter.replaceWidget(0, new_objects_wgt)
-            self.__context_splitter.replaceWidget(1, new_props_wgt)
-        # new_context_wgt = QSplitter(Qt.Vertical)
-        # new_context_wgt.addWidget(new_objects_wgt)
-        # new_context_wgt.addWidget(new_props_wgt)
+            new_splitter = QSplitter(Qt.Vertical)
+            new_splitter.addWidget(new_objects_wgt)
+            new_splitter.addWidget(new_props_wgt)
+            new_splitter.setChildrenCollapsible(False)
+            replace_widget_layout(self.__context_lyt,
+                                  self.__context_splitter, new_splitter)
+            self.__context_splitter = new_splitter
+            # Unfortunately, the following does not always work
+            # log.debug("Splitter widgets:")
+            # log.debug(self.__context_splitter.count())
+            # self.__context_splitter.replaceWidget(0, new_objects_wgt)
+            # self.__context_splitter.replaceWidget(1, new_props_wgt)
         else:
             replace_widget_layout(self.__context_lyt,
                                   self.objects_wgt, new_objects_wgt)

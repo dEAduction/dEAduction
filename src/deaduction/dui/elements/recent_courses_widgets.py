@@ -105,8 +105,10 @@ class RecentCoursesLWI(QListWidgetItem):
             savec in the config files.
         """
 
-        w_or_wo = 'w/' if course_path.suffix == '.pkl' else 'w/o'
-        super().__init__(f'{course_title} [{w_or_wo} preview]')
+        # w_or_wo = 'w/' if course_path.suffix == '.pkl' else 'w/o'
+        # super().__init__(f'{course_title} [{w_or_wo} preview]')
+
+        super().__init__(course_title)
 
         self.setToolTip(str(course_path))
         self.__course_path = course_path

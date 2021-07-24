@@ -205,7 +205,7 @@ class ExerciseMainWindow(QMainWindow):
         self.__connect_signals()
 
         # ──────────────── Start! ─────────────── #
-        self.initialize_exercise()
+        self.__initialize_exercise()
 
     def __connect_signals(self):
         """
@@ -259,6 +259,37 @@ class ExerciseMainWindow(QMainWindow):
         outline = [menu_deaduction, menu_exercise]
         menu_bar = MenuBar(self, outline)
         self.setMenuBar(menu_bar)
+
+    def __initialize_exercise(self):
+        """
+        Call servint.set_exercise and connect signal exercise_set to
+         self.start_server_task.
+        """
+
+        self.freeze()
+
+        # Try to display initial proof state prior to anything
+        proof_state = self.exercise.initial_proof_state
+        if proof_state:
+            goal = proof_state.goals[0]
+            self.ecw.update_goal(goal, 1, 1)
+
+        # When exercise will be set, ui will be updated, and the following
+        # will call self.start_server_task
+        self.servint.exercise_set.connect(self.start_server_task)
+        self.servint.server_queue.add_task(self.servint.set_exercise,
+                                           self.exercise,
+                                           on_top=True)
+
+        # Just in case initial proof states have not been received yet
+        self.servint.initial_proof_state_set.connect(
+                                    self.ecw.statements_tree.update_tooltips)
+        # Ask for missing initial proof states, if any
+        course = self.exercise.course
+        statements = [st for st in self.exercise.available_statements
+                      if not st.initial_proof_state]
+        if statements:
+            self.servint.set_statements(course, statements)
 
     def open_config_window(self):
         window = ConfigMainWindow(parent=self)
@@ -481,38 +512,6 @@ class ExerciseMainWindow(QMainWindow):
     #     called when a particular signal is received in server_task.
 
     # ─────────────────── Server task ────────────────── #
-
-    def initialize_exercise(self):
-        """
-        Call servint.set_exercise and connect signal exercise_set to
-         self.start_server_task.
-        """
-
-        self.freeze()
-
-        # Try to display initial proof state prior to anything
-        proof_state = self.exercise.initial_proof_state
-        if proof_state:
-            goal = proof_state.goals[0]
-            self.ecw.update_goal(goal, 1, 1)
-
-        # When exercise will be set, ui will be updated, and the following
-        # will call self.start_server_task
-        self.servint.exercise_set.connect(self.start_server_task)
-        self.servint.server_queue.add_task(self.servint.set_exercise,
-                                           self.exercise,
-                                           on_top=True)
-
-        # Just in case initial proof states have not been received yet
-        self.servint.initial_proof_state_set.connect(
-                                    self.ecw.statements_tree.update_tooltips)
-        # Ask for missing initial proof states, if any
-        course = self.exercise.course
-        statements = [st for st in self.exercise.available_statements
-                      if not st.initial_proof_state]
-        if statements:
-            self.servint.set_statements(course, statements)
-
     @Slot()
     def start_server_task(self):
         self.servint.nursery.start_soon(self.server_task,
@@ -981,10 +980,6 @@ class ExerciseMainWindow(QMainWindow):
         self.proof_step_updated.emit()  # Received in auto_test
 
         # ─────────────── Update goal on ui ─────────────── #
-        # if proofstate is not displayed_proof_state:
-        #     self.update_goal(proofstate.goals[0])
-        # else:
-        #     self.ui_updated.emit()
         self.update_goal(proofstate.goals[0])
 
     @Slot(CodeForLean)
