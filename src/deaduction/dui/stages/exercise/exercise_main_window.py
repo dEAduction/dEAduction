@@ -33,7 +33,8 @@ from copy import      copy, deepcopy
 
 from PySide2.QtCore    import (Signal,
                                Slot,
-                               QEvent)
+                               QEvent,
+                               QSettings)
 from PySide2.QtWidgets import (QInputDialog,
                                QMainWindow,
                                QMessageBox,
@@ -199,6 +200,10 @@ class ExerciseMainWindow(QMainWindow):
         # Status Bar
         self.statusBar = ExerciseStatusBar(self)
         self.setStatusBar(self.statusBar)
+
+        settings = QSettings("deaduction")
+        if settings.value("emw/Geometry"):
+            self.restoreGeometry(settings.value("emw/Geometry"))
 
         # ──────────────── Signals and slots ─────────────── #
         self.__server_task_scope = None
@@ -388,14 +393,22 @@ class ExerciseMainWindow(QMainWindow):
 
         :param event: Some Qt mandatory thing.
         """
+        # Save journal
         if not self.test_mode:
             self.journal.save_exercise_with_proof_steps(emw=self)
         self.lean_editor.close()
 
-        self.exercise.course.save_initial_proof_states()  # In case new ips
+        # Save new initial proof states, if any
+        self.exercise.course.save_initial_proof_states()
+
+        # Save window geometry
+        settings = QSettings("deaduction")
+        settings.setValue("emw/Geometry", self.saveGeometry())
+
         # FIXME:  cancel server_task
         # if self.__server_task_scope:
         #     self.__server_task_scope.cancel()
+
         self.window_closed.emit()
         super().closeEvent(event)
 
