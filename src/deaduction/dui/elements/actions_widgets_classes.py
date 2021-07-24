@@ -175,19 +175,21 @@ class ActionButton(QPushButton):
         return self.action.symbol == symbol \
             or self.action.symbol == symbol.replace('_', ' ')
 
-    async def simulate(self, duration=0.3):
+    async def simulate(self, duration=0.3, winkle_nb=2):
         """
         This method simulate user pushing self. It is asynchrone since we
         must wait a small duration before unchecking button, so that the
         checking is visible. This is called when redoing.
+        :param duration: total duration
         """
-
-        self.setCheckable(True)
-        self.setChecked(True)
-        await sleep(duration)
-        self.setChecked(False)
-        self.setCheckable(False)
-
+        duration = duration/(3*winkle_nb)
+        for n in range(winkle_nb):
+            self.setCheckable(True)
+            self.setChecked(True)
+            await sleep(2*duration)
+            self.setChecked(False)
+            self.setCheckable(False)
+            await sleep(duration)
 
 # We wish to have an ActionButton class attribute called
 # action_triggered and defined as Signal(ActionButton). At first, one
@@ -341,16 +343,19 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
     def has_pretty_name(self, pretty_name: str) -> bool:
         return self.statement.pretty_name == pretty_name
 
-    async def simulate(self, duration=0.3):
+    async def simulate(self, duration=0.3, winkle_nb=2):
         """
         This method simulate user selecting statement. It is asynchronous
         since we must wait a small duration so that the checking is visible.
         This is called when redoing.
+        :param duration: total duration
         """
-
-        self.setBackground(0, QBrush(QColor('blue')))
-        await sleep(duration)
-        self.setBackground(0, QBrush())
+        duration = duration /(3*winkle_nb)
+        for n in range(winkle_nb):
+            self.setBackground(0, QBrush(QColor('blue')))
+            await sleep(2*duration)
+            self.setBackground(0, QBrush())
+            await sleep(duration)
 
 
 class StatementsTreeWidgetNode(QTreeWidgetItem):

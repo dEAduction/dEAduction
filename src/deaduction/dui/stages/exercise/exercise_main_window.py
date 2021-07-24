@@ -441,7 +441,7 @@ class ExerciseMainWindow(QMainWindow):
         checking button or statement stored in proof_step. This is called
         when redoing. Note that the corresponding actions are NOT called,
         since this would modify history of the lean_file.
-        The method is asynchroneous
+        The method is asynchronous.
         """
 
         # Light target on/off as needed
@@ -456,9 +456,9 @@ class ExerciseMainWindow(QMainWindow):
                     item.mark_user_selected(True)
         # Check button or statement
         if isinstance(proof_step.button, ActionButton):
-            await proof_step.button.simulate(duration=0.3)
+            await proof_step.button.simulate(duration=0.4)
         elif isinstance(proof_step.statement_item, StatementsTreeWidgetItem):
-            await proof_step.statement_item.simulate(duration=0.3)
+            await proof_step.statement_item.simulate(duration=0.4)
         # Light off selection synchronously
         for item in self.ecw.props_wgt.items:
             item.mark_user_selected(False)
