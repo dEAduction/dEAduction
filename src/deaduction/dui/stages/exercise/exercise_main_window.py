@@ -47,7 +47,8 @@ from deaduction.dui.elements            import (ActionButton,
                                                 MathObjectWidgetItem,
                                                 MenuBar,
                                                 MenuBarAction,
-                                                ConfigMainWindow)
+                                                ConfigMainWindow,
+                                                ProofOutlineTreeWidget)
 from deaduction.dui.primitives          import  ButtonsDialog
 from deaduction.pylib.memory            import (Journal)
 from deaduction.pylib.actions           import (InputType,
@@ -187,6 +188,7 @@ class ExerciseMainWindow(QMainWindow):
         self.exercise_solved      = False
         self.test_mode            = False
         self.double_clicked_item  = None
+        self.proof_outline        = ProofOutlineTreeWidget()
 
         # ─────────────────────── UI ─────────────────────── #
 
@@ -224,6 +226,8 @@ class ExerciseMainWindow(QMainWindow):
         # UI
         self.toolbar.toggle_lean_editor_action.triggered.connect(
                 self.lean_editor.toggle)
+        self.toolbar.toggle_proof_outline_action.triggered.connect(
+                self.proof_outline.toggle)
 
         # Server communication
         self.servint.proof_state_change.connect(self.update_proof_state)
@@ -397,7 +401,7 @@ class ExerciseMainWindow(QMainWindow):
         if not self.test_mode:
             self.journal.save_exercise_with_proof_steps(emw=self)
         self.lean_editor.close()
-
+        self.proof_outline.close()
         # Save new initial proof states, if any
         self.exercise.course.save_initial_proof_states()
 
@@ -491,6 +495,8 @@ class ExerciseMainWindow(QMainWindow):
         self.current_selection = []
 
         # Update UI and attributes. Target stay selected if it was.
+        # statements_scroll = self.ecw.statements_tree.verticalScrollBar(
+        #                                                            ).value()
         self.ecw.update_goal(new_goal,
                              self.proof_step.current_goal_number,
                              self.proof_step.total_goals_counter)
@@ -508,6 +514,12 @@ class ExerciseMainWindow(QMainWindow):
             self.ecw.props_wgt.apply_math_object_triggered.connect(
                 self.__apply_math_object_triggered)
 
+        # self.ecw.statements_tree.verticalScrollBar().setValue(
+        #                                                 statements_scroll)
+        # FIXME: this should be called by a signal proof_outline_changer,
+        #  to be emited each time proof_outline change, in particular when
+        #  undoing.redoing
+        self.proof_outline.set_proof(self.lean_file.proof())
         self.ui_updated.emit()  # This signal is used by the autotest module.
 
     ##################################
@@ -994,6 +1006,7 @@ class ExerciseMainWindow(QMainWindow):
 
         # ─────────────── Update goal on ui ─────────────── #
         self.update_goal(proofstate.goals[0])
+
 
     @Slot(CodeForLean)
     def store_effective_code(self, effective_lean_code):

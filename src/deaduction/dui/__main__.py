@@ -76,7 +76,6 @@ if os.getenv("DEADUCTION_DEV_MODE", False):
     log_level = 'debug'
     log_domains = ["deaduction", "__main__",  # 'lean',
                    'ServerInterface', 'ServerQueue']
-    # log_domains = ['']
     log_domains = ["__main__", 'lean', 'ServerInterface', 'ServerQueue',
                    'deaduction.dui']
 

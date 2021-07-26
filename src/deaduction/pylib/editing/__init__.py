@@ -502,14 +502,13 @@ class LeanFile(VirtualFile):
         else:
             return 1
 
-    @property
     def proof(self):  # Proof
         """
-        Return the current proof history, an instance of the Proof class
+        Return the current proof outline, an instance of the Proof class.
         """
-
-        proof = Proof([(entry.misc_info["ProofState"], None) for entry in
-                       self.history[:self.target_idx + 1]])
+        proof_steps = list(map(lambda entry: entry.misc_info.get('proof_step'),
+                           self.history))
+        proof = Proof.from_proof_steps(proof_steps)
         return proof
 
     def save_exercise_for_autotest(self, emw):

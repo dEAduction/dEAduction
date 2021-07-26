@@ -354,6 +354,7 @@ class ExerciseCentralWidget(QWidget):
         :param current_goal_number: n° of goal under study
         :param total_goals_counter: total number of goals so far
         """
+        statements_scroll = self.statements_tree.verticalScrollBar().value()
 
         # Init context (objects and properties). Get them as two list of
         # (MathObject, str), the str being the tag of the prop. or obj.
@@ -398,8 +399,11 @@ class ExerciseCentralWidget(QWidget):
         self.target_wgt   = new_target_wgt
         self.current_goal = new_goal
 
-        # Modify main layout if needed (e;G. target_on_top has changed)
-        self.organise_main_layout()
+        # FIXME:
+        #  Modify main layout if needed (e;G. target_on_top has changed)
+        # self.organise_main_layout()
+
+        self.statements_tree.verticalScrollBar().setValue(statements_scroll)
 
 
 class ExerciseStatusBar(QStatusBar):
@@ -515,6 +519,10 @@ class ExerciseToolBar(QToolBar):
                 QIcon(str((icons_dir / 'redo_action.png').resolve())),
                 _('Redo action'), self)
 
+        self.toggle_proof_outline_action = QAction(
+                QIcon(str((icons_dir / 'proof_outline.png').resolve())),
+            _('Toggle proof outline'), self)
+
         self.toggle_lean_editor_action = QAction(
                 QIcon(str((icons_dir / 'lean_editor.png').resolve())),
                 _('Toggle L∃∀N'), self)
@@ -526,9 +534,12 @@ class ExerciseToolBar(QToolBar):
         self.addAction(self.rewind)
         self.addAction(self.undo_action)
         self.addAction(self.redo_action)
+        self.addAction(self.toggle_proof_outline_action)
         self.addAction(self.toggle_lean_editor_action)
         self.addSeparator()
+        self.addSeparator()
         self.addAction(self.change_exercise_action)
+        # self.setLayoutDirection(Qt.RightToLeft)
 
     def update(self):
         self.rewind.setText(_('Go back to beginning of proof'))
@@ -536,4 +547,4 @@ class ExerciseToolBar(QToolBar):
         self.redo_action.setText(_('Redo action'))
         self.toggle_lean_editor_action.setText(_('Toggle L∃∀N'))
         self.change_exercise_action.setText(_('Change exercise'))
-
+        self.toggle_proof_outline_action.setText(_('Toggle proof outline'))

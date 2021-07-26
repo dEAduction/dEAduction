@@ -49,4 +49,7 @@ from .recent_courses_widgets import (
     RecentCoursesLW,
     RecentCoursesLWI)
 
-from .config_window       import ConfigMainWindow
+from .config_window import ConfigMainWindow
+
+from .proof_outline_widget import ProofOutlineTreeWidget
+

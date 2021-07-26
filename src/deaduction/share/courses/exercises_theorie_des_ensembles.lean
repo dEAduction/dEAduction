@@ -31,6 +31,9 @@ Institution
     Université de France
 AvailableMagic
     assumption
+Description
+    Cette feuille d'exercice consiste à démontrer les principales propriétés
+    d'un cours de théorie naïve des ensembles.
 -/
 
 

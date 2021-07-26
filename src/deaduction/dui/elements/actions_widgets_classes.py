@@ -40,7 +40,6 @@ This file is part of d∃∀duction.
 """
 
 import              logging
-from pathlib import Path
 from typing import  Dict
 from trio import sleep
 

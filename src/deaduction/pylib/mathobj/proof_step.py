@@ -42,12 +42,11 @@ from deaduction.pylib.mathobj import MathObject
 
 log = logging.getLogger(__name__)
 
-
 @dataclass()
 class NewGoal:
     """
     This class allows to store the creation of a new goal. In particular,
-    the msg property provides a msg thta can be displayed and gives
+    the msg property provides a msg that can be displayed and gives
     information about the resulting branching of the proof,
     e.g. First case/ second case, proof of first implication, ...
     """
@@ -158,7 +157,7 @@ class ProofStep:
     property_counter: int    = 0
     current_goal_number: int = 1  # Current number of goal in the proof history
     total_goals_counter: int = 1  # Total number of goals in the proof history
-    new_goals: [NewGoal]     = None  # TODO e.g. "Second case: we assume x∈A".
+    new_goals: [NewGoal]     = None  # e.g. "Second case: we assume x∈A".
     time                     = None
 
     # ──────────────── Input ─────────────── #
@@ -259,6 +258,12 @@ class ProofStep:
         # NB: this should be action_assumption.symbol,
         # but unable to import this here
 
+    def is_action_button(self):
+        return hasattr(self.button, 'symbol')
+
+    def is_statement(self):
+        return self.statement_item is not None
+
     def compare(self, auto_test) -> (str, bool):
         """
         Compare self to an auto_test, and write a report if unexpected
@@ -343,19 +348,71 @@ class ProofStep:
         return txt
 
 
-
-
-@dataclass
-class Proof:
+class ProofNode:
     """
-    This class encodes a whole proof history, maybe uncompleted (i.e. the
-    goal is not solved) as a list of ProofStates and Actions.
+    This class encodes a node in the proof, e.g. a point where the proof
+    divides into two or more subproofs, as happens for a proof by cases,
+    or a proof of a conjunction.
+    """
+    def __init__(self, new_goal: NewGoal, sub_proof: []):
+        self.new_goal = new_goal
+        self.sub_proof = sub_proof
 
-    It provides a method that counts the number of goals during the proof,
-    and tells if a goal has been solved, or if a new goal has emerged during
-    the last step of the proof. This piece of info is displayed in the UI.
+    @property
+    def txt(self):
+        return self.new_goal.msg
+
+
+class Proof(list):
+    """
+    This proof encodes the data used to display the outline of a proof.
+    It is a list whose elements are either ProofNodes,
+    or ProofSteps.
     """
 
-    # TODO: implement a display_tree method
+    def __init__(self, outline: list):
+        super().__init__()
 
-    steps: [ProofStep]  # A proof is a sequence of proof steps.
+    @classmethod
+    def from_proof_steps(cls, proof_steps: [ProofStep], new_goal_nb=0):
+        if not proof_steps:
+            return []
+        if len(proof_steps[0].new_goals) <= new_goal_nb:
+            # No NewGoal at first step:
+            #  proof is [first proof_step, <end of proof>]
+            end_of_proof = cls.from_proof_steps(proof_steps[1:], new_goal_nb)
+            return [proof_steps[0]] + end_of_proof
+
+        else:
+            # There is a new_goal at first step,
+            #  proof will be a list of ProofNodes
+            #  given by [first proof step, first proof node, <end of proof>]
+            # Current goal is the last of the pile.
+            first_proof_step = proof_steps.pop(0)
+            goals = first_proof_step.new_goals
+            new_goal = goals[-1]  # This is the proof node's goal
+            new_goal_nb = len(goals)
+            sub_proof_steps = []
+            # The sub_proof corresponding to that goal runs
+            #  until this goal disappears from the pile,
+            #  and we transfer all the corresponding sublist of proof_steps
+            #  into sub_proof
+            # while proof_steps \
+            #         and new_goal_nb <= len(proof_steps[0].new_goals) \
+            #         and proof_steps[0].new_goals \
+            #         and new_goal == proof_steps[0].new_goals[new_goal_nb-1]:
+            while proof_steps \
+                    and new_goal_nb <= len(proof_steps[0].new_goals):
+                # Remove proof_step[0] from proof_steps,
+                #  and put it in sub_proof.
+                proof_step = proof_steps.pop(0)
+                sub_proof_steps.append(proof_step)
+            # Recursively call from_proof_steps method
+            #  (new_goals beyond len(goals) are actual new_goals)
+            sub_proof = Proof.from_proof_steps(sub_proof_steps,
+                                               new_goal_nb=len(goals))
+            proof_node = ProofNode(new_goal=new_goal, sub_proof=sub_proof)
+            end_of_proof = cls.from_proof_steps(proof_steps)
+            return [first_proof_step, proof_node] + end_of_proof
+
+
