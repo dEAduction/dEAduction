@@ -713,6 +713,13 @@ class ServerInterface(QObject):
         self.lean_file.rewind()
         await self.__update()
 
+    async def history_goto(self, history_nb):
+        """
+        Move to a psecific place in the history of the Lean file.
+        """
+        self.lean_file.goto(history_nb)
+        await self.__update()
+
     async def history_delete(self):
         """
         Delete last step of history in the lean_file. Called when FailedRequest

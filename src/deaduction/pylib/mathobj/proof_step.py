@@ -42,6 +42,7 @@ from deaduction.pylib.mathobj import MathObject
 
 log = logging.getLogger(__name__)
 
+
 @dataclass()
 class NewGoal:
     """
@@ -58,7 +59,7 @@ class NewGoal:
     new_target: Optional[Union[MathObject, str]]  # e.g. 'P'
 
     @classmethod
-    def from_lean_code(cls, lean_code):  # Type: (NewGoal, NewGoal)
+    def from_lean_code(cls, lean_code):  # Type: [NewGoal, NewGoal]
         """
         If lean_code will create new goals, return them.
         """
@@ -142,6 +143,32 @@ class NewGoal:
         return msg
 
 
+class ProofNode:
+    """
+    This class encodes a node in the proof, e.g. a point where the proof
+    divides into two or more sub-proofs, as happens for a proof by cases,
+    or a proof of a conjunction.
+    """
+    def __init__(self, parent, txt, history_nb, sub_proof: [] = None):
+        super().__init__()
+        self.parent: ProofNode = parent
+        self.txt = txt
+        self.history_nb = history_nb
+        self.children = sub_proof if sub_proof else []
+
+    # @property
+    # def goals(self):
+    #     return self.proof_step.new_goals
+    #
+    # @property
+    # def new_goal(self):
+    #     return self.goals[-1]
+    #
+    # @property
+    # def txt(self):
+    #     return self.new_goal.msg
+
+
 class ProofStep:
     """
     Class to store data associated to one step in the proof.
@@ -151,14 +178,29 @@ class ProofStep:
     action to compute the pertinent Lean Code,
     and for storing the proof_state at the end of the step, to be stored in
     Journal and lean_file's history (and passed to the next proof_step).
+
+    proof_nodes is a class attribute,
+    a pile of ProofNode, initialised with an empty ProofNode
+    that stands for the whole proof.
     """
+    # Fixme: proof_nodes should not be class attributes, for history moves
 
     # ──────────────── Proof memory ─────────────── #
+    initial_proof_node       = ProofNode(parent=None,
+                                         txt="Proof",
+                                         history_nb=-1,
+                                         sub_proof=[])
+    proof_nodes: [ProofNode] = None
     property_counter: int    = 0
     current_goal_number: int = 1  # Current number of goal in the proof history
     total_goals_counter: int = 1  # Total number of goals in the proof history
-    new_goals: [NewGoal]     = None  # e.g. "Second case: we assume x∈A".
+    parent                   = None  # Parent ProofStep
+    new_goals: [NewGoal]     = None
     time                     = None
+    delta_goals_count        = 0
+    children                 = None
+    imminent_new_node: ProofNode      = None
+    history_nb: int          = None
 
     # ──────────────── Input ─────────────── #
     selection      = None  # [MathObject]
@@ -175,11 +217,14 @@ class ProofStep:
     no_more_goal              = False
 
     def __init__(self,
+                 proof_nodes=None,
                  new_goals=None,
+                 parent=None,
                  property_counter=0,
                  current_goal_number=1,
                  total_goals_counter=1,
-                 proof_state=None):
+                 proof_state=None,
+                 history_nb=-1):
         self.property_counter    = property_counter
         self.current_goal_number = current_goal_number
         self.total_goals_counter = total_goals_counter
@@ -187,31 +232,98 @@ class ProofStep:
             self.new_goals = new_goals
         else:
             self.new_goals = []
+        if parent:
+            self.parent = parent
+        else:
+            self.parent = self.initial_proof_node
 
         self.proof_state = proof_state
         self.selection = []
         self.user_input = []
+        self.imminent_new_node = None
+        self.history_nb = history_nb
+        # Creation of first proof node if none is provided
+        self.proof_nodes = proof_nodes if proof_nodes \
+            else [self.initial_proof_node]
 
     @classmethod
-    def next(cls, proof_step):
+    def next_(cls, proof_step, history_nb):
         """
         Instantiate a copy of proof_step by duplicating attributes that
         should be pass to the next proof_step.
         """
 
-        pf = proof_step
-        npf = ProofStep(property_counter=pf.property_counter,
-                        new_goals=copy(pf.new_goals),
-                        current_goal_number=pf.current_goal_number,
-                        total_goals_counter=pf.total_goals_counter,
-                        proof_state=pf.proof_state
+        delta = proof_step.delta_goals_count
+        if delta >= 0:
+            proof_nodes = proof_step.proof_nodes
+        else:
+            # Goal solved: remove -delta nodes from proof_nodes
+            log.debug(f"Solved {delta} goals")
+            proof_nodes = proof_step.proof_nodes[:delta]
+            proof_step.imminent_new_node = proof_nodes[-1]
+        next_parent = proof_nodes[-1]
+        log.debug(f"Proof nodes: "
+                  f"{[(pf.txt, pf.parent.txt if pf.parent else None) for pf in proof_nodes]}")
+        # log.debug(f"Next parent: {next_parent.txt}")
+        nps = ProofStep(property_counter=proof_step.property_counter,
+                        new_goals=copy(proof_step.new_goals),
+                        parent=next_parent,
+                        current_goal_number=proof_step.current_goal_number,
+                        total_goals_counter=proof_step.total_goals_counter,
+                        proof_state=proof_step.proof_state,
+                        history_nb=history_nb,
+                        proof_nodes=copy(proof_nodes)
                         )
-        return npf
+        if not proof_step.is_history_move()\
+                and not proof_step.is_error()\
+                and next_parent:
+            next_parent.children.append(nps)
+        return nps
 
+    def add_new_goals(self):
+        if not self.lean_code:
+            self.new_goals.append(None)
+        else:
+            old_proof_node = self.proof_nodes[-1]
+            if self.new_goals and (self.lean_code.conjunction
+                                   or self.lean_code.disjunction):
+                # Last goal will be replaced by first new goal
+                self.new_goals.pop()
+                self.proof_nodes.pop()
+            more_goals = NewGoal.from_lean_code(self.lean_code)
+            more_proof_nodes = [ProofNode(parent=old_proof_node,
+                                          txt=new_goal.msg,
+                                          history_nb = self.history_nb,
+                                          sub_proof=[])
+                                for new_goal in more_goals]
+            # The new ProofNode is a child of the old one
+            old_proof_node.children.append(more_proof_nodes[-1])
+            self.proof_nodes.extend(more_proof_nodes)
+            self.imminent_new_node = more_proof_nodes[-1]
+            self.new_goals.extend(more_goals)
+
+    def update_goals(self):
+        if not self.is_error():  # Wrong delta if error (and no need)
+            delta = self.delta_goals_count
+            if delta > 0:  # A new goal has appeared
+                self.total_goals_counter += delta
+                self.add_new_goals()  # Manage goal msgs from LeanCode
+            elif delta < 0:  # A goal has been solved
+                self.current_goal_number -= delta
+                if self.new_goals:
+                    self.new_goals.pop()  # Remove last goal msg
+
+    ##############
+    # Properties #
+    ##############
     @property
     def success_msg(self):
-        if self.is_error():
+        if self.history_nb == -1:
+            return _("Beginning of Proof")
+        elif self.is_error():
             return ''
+        elif self.is_cqfd():
+            return _("Current goal solved")
         elif self.effective_code:
             return self.effective_code.success_msg
         elif self.lean_code:
@@ -220,22 +332,26 @@ class ProofStep:
             return ''
 
     @property
+    def txt(self):
+        return str(self.history_nb) + ": " + self.success_msg
+
+    @property
     def goal(self):
         if self.proof_state:
             return self.proof_state.goals[0]
         else:
             return None
 
-    def add_new_goals(self):
-        if not self.lean_code:
-            self.new_goals.append(None)
-        else:
-            if self.new_goals and (self.lean_code.conjunction
-                                   or self.lean_code.disjunction):
-                # Last goal is replaced by first new goal
-                self.new_goals.pop()
-            more_goals = NewGoal.from_lean_code(self.lean_code)
-            self.new_goals.extend(more_goals)
+    @property
+    def current_new_goal(self):
+        if self.new_goals:
+            return self.new_goals[-1]
+
+    def is_node(self):
+        """
+        True if self is a proof node (a new goal has appeared).
+        """
+        return self.delta_goals_count and self.delta_goals_count > 0
 
     def is_undo(self):
         return self.button == 'history_undo'
@@ -246,8 +362,12 @@ class ProofStep:
     def is_rewind(self):
         return self.button == 'history_rewind'
 
+    def is_goto(self):
+        return self.button == 'history_goto'
+
     def is_history_move(self):
-        return self.is_undo() or self.is_redo() or self.is_rewind()
+        return self.is_undo() or self.is_redo() \
+               or self.is_rewind() or self.is_goto()
 
     def is_error(self):
         return bool(self.error_type)
@@ -348,50 +468,36 @@ class ProofStep:
         return txt
 
 
-class ProofNode:
-    """
-    This class encodes a node in the proof, e.g. a point where the proof
-    divides into two or more subproofs, as happens for a proof by cases,
-    or a proof of a conjunction.
-    """
-    def __init__(self, new_goal: NewGoal, sub_proof: []):
-        self.new_goal = new_goal
-        self.sub_proof = sub_proof
-
-    @property
-    def txt(self):
-        return self.new_goal.msg
-
-
 class Proof(list):
     """
     This proof encodes the data used to display the outline of a proof.
-    It is a list whose elements are either ProofNodes,
-    or ProofSteps.
+    It is a list whose elements are either ProofNodes or ProofSteps.
     """
+    # FIXME: unused, suppress
 
     def __init__(self, outline: list):
         super().__init__()
 
     @classmethod
-    def from_proof_steps(cls, proof_steps: [ProofStep], new_goal_nb=0):
+    def from_proof_steps(cls, proof_steps: [ProofStep]):
         if not proof_steps:
             return []
-        if len(proof_steps[0].new_goals) <= new_goal_nb:
+        first_proof_step = proof_steps.pop(0)
+        if not first_proof_step.is_node():
             # No NewGoal at first step:
             #  proof is [first proof_step, <end of proof>]
-            end_of_proof = cls.from_proof_steps(proof_steps[1:], new_goal_nb)
-            return [proof_steps[0]] + end_of_proof
+            end_of_proof = cls.from_proof_steps(proof_steps)
+            return [first_proof_step] + end_of_proof
 
         else:
             # There is a new_goal at first step,
             #  proof will be a list of ProofNodes
             #  given by [first proof step, first proof node, <end of proof>]
             # Current goal is the last of the pile.
-            first_proof_step = proof_steps.pop(0)
-            goals = first_proof_step.new_goals
-            new_goal = goals[-1]  # This is the proof node's goal
-            new_goal_nb = len(goals)
+
+            # goals = first_proof_step.new_goals
+            # new_goal = goals[-1]  # This is the proof node's goal
+            # new_goal_nb = len(goals)
             sub_proof_steps = []
             # The sub_proof corresponding to that goal runs
             #  until this goal disappears from the pile,
@@ -402,16 +508,17 @@ class Proof(list):
             #         and proof_steps[0].new_goals \
             #         and new_goal == proof_steps[0].new_goals[new_goal_nb-1]:
             while proof_steps \
-                    and new_goal_nb <= len(proof_steps[0].new_goals):
+                    and proof_steps[0].parent == first_proof_step:
+                    # and new_goal_nb <= len(proof_steps[0].new_goals):
                 # Remove proof_step[0] from proof_steps,
                 #  and put it in sub_proof.
                 proof_step = proof_steps.pop(0)
                 sub_proof_steps.append(proof_step)
             # Recursively call from_proof_steps method
             #  (new_goals beyond len(goals) are actual new_goals)
-            sub_proof = Proof.from_proof_steps(sub_proof_steps,
-                                               new_goal_nb=len(goals))
-            proof_node = ProofNode(new_goal=new_goal, sub_proof=sub_proof)
+            sub_proof = Proof.from_proof_steps(sub_proof_steps)
+            proof_node = ProofNode(proof_step=first_proof_step,
+                                   sub_proof=sub_proof)
             end_of_proof = cls.from_proof_steps(proof_steps)
             return [first_proof_step, proof_node] + end_of_proof
 

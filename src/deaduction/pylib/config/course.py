@@ -34,6 +34,7 @@ import deaduction.pylib.config.vars as cvars
 
 log = logging.getLogger(__name__)
 
+
 def get_recent_courses() -> ([Path], [str], [int]):
     """
     Return the list of (recent course, title) found in the user_config dict

@@ -51,9 +51,9 @@ def rw_using_statement(goal: Goal, selected_objects: [MathObject],
     defi = statement.lean_name
 
     if len(selected_objects) == 0:
-        target_msg = _('definition applied to target') \
-            if statement.is_definition() else _('theorem applied to target') \
-            if statement.is_theorem() else _('exercise applied to target')
+        target_msg = _('Definition applied to target') \
+            if statement.is_definition() else _('Theorem applied to target') \
+            if statement.is_theorem() else _('Exercise applied to target')
         codes = codes.or_else(f'rw {defi}')
         codes = codes.or_else(f'simp_rw {defi}')
         codes = codes.or_else(f'rw <- {defi}')
@@ -62,9 +62,9 @@ def rw_using_statement(goal: Goal, selected_objects: [MathObject],
     else:
         names = [item.info['name'] for item in selected_objects]
         arguments = ' '.join(names)
-        context_msg = _('definition applied to') \
-            if statement.is_definition() else _('theorem applied to') \
-            if statement.is_theorem() else _('exercise applied to')
+        context_msg = _('Definition applied to') \
+            if statement.is_definition() else _('Theorem applied to') \
+            if statement.is_theorem() else _('Exercise applied to')
         context_msg += ' ' + arguments
         codes = codes.or_else(f'rw {defi} at {arguments}')
         codes = codes.or_else(f'simp_rw {defi} at {arguments}')
@@ -87,7 +87,7 @@ def action_definition(proof_step,
     test_selection(selected_objects, target_selected)
 
     codes = rw_using_statement(proof_step.goal, selected_objects, definition)
-    codes.add_error_msg(_("unable to apply definition"))
+    codes.add_error_msg(_("Unable to apply definition"))
     return codes
 
 
@@ -114,9 +114,9 @@ def action_theorem(proof_step,
     th = theorem.lean_name
     if len(selected_objects) == 0:
         codes = codes.or_else(f'apply {th}',
-                              success_msg=_('theorem applied to target'))
+                              success_msg=_('Theorem applied to target'))
         codes = codes.or_else(f'have {h} := @{th}',
-                              success_msg=_('theorem added to the context'))
+                              success_msg=_('Theorem added to the context'))
     else:
         command = f'have {h} := {th}'
         command_implicit = f'have {h} := @{th}'
@@ -137,10 +137,10 @@ def action_theorem(proof_step,
                        command_implicit + ' _ _ _ _ ' + arguments
                        ]
         more_codes = CodeForLean.or_else_from_list(more_codes)
-        context_msg = _('theorem') + ' ' + _('applied to') + ' ' + arguments
+        context_msg = _('Theorem') + ' ' + _('applied to') + ' ' + arguments
         more_codes.add_success_msg(context_msg)
         codes = codes.or_else(more_codes)
 
-        codes.add_error_msg(_("unable to apply theorem"))
+        codes.add_error_msg(_("Unable to apply theorem"))
 
     return codes

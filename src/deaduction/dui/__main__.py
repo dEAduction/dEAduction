@@ -77,7 +77,7 @@ if os.getenv("DEADUCTION_DEV_MODE", False):
     log_domains = ["deaduction", "__main__",  # 'lean',
                    'ServerInterface', 'ServerQueue']
     log_domains = ["__main__", 'lean', 'ServerInterface', 'ServerQueue',
-                   'deaduction.dui']
+                   'deaduction.dui', 'deaduction.pylib']
 
 
 logger.configure(domains=log_domains,
@@ -390,7 +390,8 @@ async def main():
         finally:
             # Properly close d∃∀duction
             if container.servint:
-                await container.servint.file_invalidated.wait()
+                with trio.move_on_after(15):
+                    await container.servint.file_invalidated.wait()
                 container.servint.stop()  # Good job, buddy
                 log.info("Lean server stopped!")
             if container.nursery:

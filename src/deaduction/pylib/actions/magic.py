@@ -66,7 +66,7 @@ def action_compute(proof_step,
     if not (target.is_equality()
             or target.is_inequality()
             or target.is_false()):
-        error = _("target is not an equality, an inequality, "
+        error = _("Target is not an equality, an inequality, "
                   "nor a contradiction")
         raise WrongUserInput(error)
     # try_before = "try {apply div_pos}, " \

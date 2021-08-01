@@ -48,7 +48,7 @@ from deaduction.dui.elements            import (ActionButton,
                                                 MenuBar,
                                                 MenuBarAction,
                                                 ConfigMainWindow,
-                                                ProofOutlineTreeWidget)
+                                                ProofOutlineWindow)
 from deaduction.dui.primitives          import  ButtonsDialog
 from deaduction.pylib.memory            import (Journal)
 from deaduction.pylib.actions           import (InputType,
@@ -188,7 +188,7 @@ class ExerciseMainWindow(QMainWindow):
         self.exercise_solved      = False
         self.test_mode            = False
         self.double_clicked_item  = None
-        self.proof_outline        = ProofOutlineTreeWidget()
+        self.proof_outline_window = ProofOutlineWindow()
 
         # ─────────────────────── UI ─────────────────────── #
 
@@ -227,7 +227,7 @@ class ExerciseMainWindow(QMainWindow):
         self.toolbar.toggle_lean_editor_action.triggered.connect(
                 self.lean_editor.toggle)
         self.toolbar.toggle_proof_outline_action.triggered.connect(
-                self.proof_outline.toggle)
+                self.proof_outline_window.toggle)
 
         # Server communication
         self.servint.proof_state_change.connect(self.update_proof_state)
@@ -401,7 +401,7 @@ class ExerciseMainWindow(QMainWindow):
         if not self.test_mode:
             self.journal.save_exercise_with_proof_steps(emw=self)
         self.lean_editor.close()
-        self.proof_outline.close()
+        self.proof_outline_window.close()
         # Save new initial proof states, if any
         self.exercise.course.save_initial_proof_states()
 
@@ -474,6 +474,8 @@ class ExerciseMainWindow(QMainWindow):
 
         :param new_goal: The new goal to update / set the interface to.
         """
+
+        log.debug("Updating goal...")
         if new_goal is self.current_goal:  # No update needed
             self.ui_updated.emit()  # This signal is used by autotest
             return
@@ -519,7 +521,7 @@ class ExerciseMainWindow(QMainWindow):
         # FIXME: this should be called by a signal proof_outline_changer,
         #  to be emited each time proof_outline change, in particular when
         #  undoing.redoing
-        self.proof_outline.set_proof(self.lean_file.proof())
+        # self.proof_outline_window.tree.set_proof(self.lean_file.proof())
         self.ui_updated.emit()  # This signal is used by the autotest module.
 
     ##################################
@@ -558,6 +560,7 @@ class ExerciseMainWindow(QMainWindow):
                          self.toolbar.redo_action.triggered,
                          self.toolbar.undo_action.triggered,
                          self.toolbar.rewind.triggered,
+                         self.proof_outline_window.history_goto,
                          self.__action_triggered,
                          self.__statement_triggered,
                          self.__apply_math_object_triggered]) as emissions:
@@ -586,6 +589,12 @@ class ExerciseMainWindow(QMainWindow):
                 elif emission.is_from(self.toolbar.rewind.triggered):
                     self.proof_step.button = 'history_rewind'
                     await self.process_async_signal(self.servint.history_rewind)
+
+                elif emission.is_from(self.proof_outline_window.history_goto):
+                    history_nb = emission.args[0]
+                    self.proof_step.button = 'history_goto'
+                    move_fct = partial(self.servint.history_goto, history_nb)
+                    await self.process_async_signal(move_fct)
 
                 elif emission.is_from(self.window_closed):
                     break
@@ -838,6 +847,22 @@ class ExerciseMainWindow(QMainWindow):
         self.toolbar.setEnabled(not yes)
 
     @Slot()
+    def display_current_goal_solved(self, delta):
+        # FIXME: connect slot!!
+        proof_step = self.lean_file.current_proof_step
+        if proof_step.current_goal_number and not self.test_mode \
+                and self.lean_file.current_number_of_goals \
+                and not proof_step.is_error() \
+                and not proof_step.is_undo():
+            log.info(f"Current goal solved!")
+            if delta == -1:
+                message = _('Current goal solved')
+            else:  # Several goals solved at once ??
+                nb = str(-delta)
+                message = nb + ' ' + _('goals solved!')
+            QMessageBox.information(self, '', message, QMessageBox.Ok)
+
+    @Slot()
     def fireworks(self):
         """
         As of now,
@@ -944,7 +969,7 @@ class ExerciseMainWindow(QMainWindow):
 
         :proofstate: The proofstate one wants to update self to.
         """
-
+        log.debug("Updating proof state...")
         proof_step = self.proof_step
         # ───────────── Store data ──────────── #
         # Store proof_state in proof_step
@@ -960,36 +985,27 @@ class ExerciseMainWindow(QMainWindow):
             self.lean_file.state_info_attach(proof_step=proof_step)
         if not self.test_mode:
             self.journal.store(proof_step, self)
-
-        # ─────────────── Update goals counter ─────────────── #
-        if not proof_step.is_error():  # Wrong delta if error (and no need)
-            delta = self.lean_file.current_number_of_goals \
-                    - self.lean_file.previous_number_of_goals
-            if delta > 0:  # A new goal has appeared
-                proof_step.total_goals_counter += delta
-                proof_step.add_new_goals()  # Manage goal msgs
-
-            elif delta < 0:  # A goal has been solved
-                proof_step.current_goal_number -= delta
-                if proof_step.new_goals:
-                    proof_step.new_goals.pop()  # Remove last goal msg
-                if proof_step.current_goal_number and not self.test_mode \
-                        and self.lean_file.current_number_of_goals \
-                        and not proof_step.is_error() \
-                        and not proof_step.is_undo():
-                    log.info(f"Current goal solved!")
-                    if delta == -1:
-                        message = _('Current goal solved')
-                    else:  # Several goals solved at once ??
-                        nb = str(-delta)
-                        message = nb + ' ' + _('goals solved!')
-                    QMessageBox.information(self, '', message, QMessageBox.Ok)
+        delta = self.lean_file.delta_goals_count
+        proof_step.delta_goals_count = delta
+        proof_step.update_goals()
 
         # ─────────── Display msgs (no msg when undoing) ────────── #
+        # Display msg if current goal solved
+        if not proof_step.is_error() and not proof_step.is_undo() \
+                and delta < 0:
+            self.display_current_goal_solved(delta)
+
         if not proof_step.is_history_move():
             self.statusBar.manage_msgs(proof_step)
-        elif proof_step.is_redo():
+        elif proof_step.is_redo() or proof_step.is_goto():
             self.statusBar.manage_msgs(self.lean_file.current_proof_step)
+
+        # Debug
+        log.debug(f"Target_idx: {self.lean_file.target_idx}")
+        log.debug("Proof nodes:")
+        for he in self.lean_file.history:
+            proof_nodes = he.misc_info.get('proof_step').proof_nodes
+            log.debug([pf.txt for pf in proof_nodes])
 
         # ─────────────── End of proof_step ─────────────── #
         # Store auto_step
@@ -1000,13 +1016,23 @@ class ExerciseMainWindow(QMainWindow):
         # logical actions to compute the pertinent Lean code.
         self.displayed_proof_step = copy(proof_step)
         # LOGICAL proof_step is always in lean_file's history
-        self.proof_step = ProofStep.next(self.lean_file.current_proof_step)
+        self.proof_step = ProofStep.next_(self.lean_file.current_proof_step,
+                                          self.lean_file.target_idx)
 
         self.proof_step_updated.emit()  # Received in auto_test
 
+        # ─────────── Update proof_outline_window ────────── #
+        # Keep here, proof_step is modified by the next_ method
+        if not proof_step.is_history_move()\
+                and not proof_step.is_error():
+            # self.proof_outline_window.tree.insert_and_delete(proof_step)
+            self.proof_outline_window.tree.delete_and_insert(proof_step)
+        elif proof_step.is_history_move():
+            self.proof_outline_window.tree.set_marked(
+                                                self.lean_file.target_idx-1)
+
         # ─────────────── Update goal on ui ─────────────── #
         self.update_goal(proofstate.goals[0])
-
 
     @Slot(CodeForLean)
     def store_effective_code(self, effective_lean_code):

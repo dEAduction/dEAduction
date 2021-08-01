@@ -392,8 +392,8 @@ def action_not(proof_step,
             raise WrongUserInput(error)
         selected_hypo = selected_objects[0].info["name"]
         code = CodeForLean.from_string(f'push_neg at {selected_hypo}')
-        code.add_success_msg(_(f"Negation pushed on property "
-                                   f"{selected_hypo}"))
+        code.add_success_msg(_("Negation pushed on property {}").format(
+            selected_hypo))
     else:
         raise WrongUserInput(error=_('Only one property at a time'))
     return code
@@ -591,7 +591,7 @@ def destruct_iff(proof_step) -> CodeForLean:
         if left.is_implication(is_math_type=True) \
                 and right.is_implication(is_math_type=True):
             code = CodeForLean.from_string("apply iff_def.mp")
-            code.add_success_msg(_("target replaced by iff property"))
+            code.add_success_msg(_("Target replaced by iff property"))
     return code
 
 
@@ -607,7 +607,7 @@ def destruct_iff_on_hyp(proof_step,
     h2 = get_new_hyp(proof_step)
     possible_codes.append(f'cases (iff_def.mp {hypo_name}) with {h1} {h2}')
     code = CodeForLean.or_else_from_list(possible_codes)
-    code.add_success_msg(_("property {} split into {} and {}").
+    code.add_success_msg(_("Property {} split into {} and {}").
                              format(hypo_name, h1, h2))
     return code
 
@@ -876,7 +876,7 @@ def action_forall(proof_step,
                                        info={'name': item},
                                        children=[],
                                        math_type=None)
-            selected_objects.insert(0, potential_var)
+            selected_objects.insert_at(0, potential_var)
             # Now len(l) == 2
     # From now on len(l) ≥ 2
     # Search for a universal property among l, beginning with last item
@@ -909,7 +909,7 @@ def construct_exists(proof_step, user_input: [str]) -> CodeForLean:
     x = user_input[0]
     code = CodeForLean.from_string(f'use {x}, dsimp')
     code = code.or_else(f'use {x}')
-    code.add_success_msg(_("now prove {} suits our needs").format(x))
+    code.add_success_msg(_("Now prove {} suits our needs").format(x))
     return code
 
 
@@ -934,7 +934,7 @@ def apply_exists(proof_step, selected_object: [MathObject]) -> CodeForLean:
     if selected_hypo.node == 'QUANT_∃!':
         # We have to add the "simp" tactic to avoid appearance of lambda expr
         code = code.and_then(f'simp at {new_hypo_name}')
-    code.add_success_msg(_("new object {} with property {}").
+    code.add_success_msg(_("New object {} with property {}").
                          format(x, new_hypo_name))
     return code
 
@@ -961,7 +961,7 @@ def construct_exists_on_hyp(proof_step,
         error = _("I cannot build an existential property with this")
         raise WrongUserInput(error)
     code = CodeForLean.from_string(code_string)
-    code.add_success_msg(_("get new existential property {}").
+    code.add_success_msg(_("Get new existential property {}").
                              format(new_hypo))
     return code
 
@@ -1142,7 +1142,7 @@ def action_equal(proof_step,
         test, equality = prop.can_be_used_for_substitution()
         if test:
             selected_objects.remove(prop)
-            selected_objects.insert(0, prop)  # Put equality first
+            selected_objects.insert_at(0, prop)  # Put equality first
             break
     if not test:  # No equality found
         error = _("This cannot be used for substitution")

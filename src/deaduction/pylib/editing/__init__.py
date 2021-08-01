@@ -305,7 +305,7 @@ class VirtualFile:
     ################################
     def undo(self):
         """
-        Moves the history cursor one step backwards
+        Moves the history cursor one step backwards.
         """
         self.target_idx -= 1
         if self.target_idx < 0:
@@ -313,7 +313,7 @@ class VirtualFile:
 
     def redo(self):
         """
-        Moves the history cursor one step forward
+        Moves the history cursor one step forward.
         """
         self.target_idx += 1
         if self.target_idx >= len(self.history):
@@ -321,9 +321,15 @@ class VirtualFile:
 
     def rewind(self):
         """
-        Moves the history cursor at the beginning
+        Moves the history cursor at the beginning.
         """
         self.target_idx = 0
+
+    def goto(self, history_nb):
+        """
+        Move the history cursor at step_nb.
+        """
+        self.target_idx = history_nb
 
     def delete(self):
         """
@@ -502,10 +508,15 @@ class LeanFile(VirtualFile):
         else:
             return 1
 
+    @property
+    def delta_goals_count(self):
+        return self.current_number_of_goals - self.previous_number_of_goals
+
     def proof(self):  # Proof
         """
         Return the current proof outline, an instance of the Proof class.
         """
+        # FIXME: useless?
         proof_steps = list(map(lambda entry: entry.misc_info.get('proof_step'),
                            self.history))
         proof = Proof.from_proof_steps(proof_steps)

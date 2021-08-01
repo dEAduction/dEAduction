@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2021-07-24 23:57+0200\n"
-"PO-Revision-Date: 2021-07-24 23:58+0200\n"
+"POT-Creation-Date: 2021-07-29 12:04+0200\n"
+"PO-Revision-Date: 2021-07-29 12:13+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -19,18 +19,18 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: dui/elements/actions_widgets_classes.py:567
-#: dui/elements/actions_widgets_classes.py:572
+#: dui/elements/actions_widgets_classes.py:566
+#: dui/elements/actions_widgets_classes.py:571
 msgid "Statements"
 msgstr "Enoncés"
 
-#: dui/elements/actions_widgets_classes.py:567
+#: dui/elements/actions_widgets_classes.py:566
 msgid "L∃∀N name"
 msgstr "Nom L∃∀N"
 
 #: dui/elements/config_window.py:126
-#: dui/stages/exercise/exercise_main_window.py:245
-#: dui/stages/exercise/exercise_main_window.py:250
+#: dui/stages/exercise/exercise_main_window.py:249
+#: dui/stages/exercise/exercise_main_window.py:254
 msgid "Preferences"
 msgstr "Préférences"
 
@@ -151,9 +151,21 @@ msgstr "But"
 msgid "To be proved"
 msgstr "A démontrer"
 
-#: dui/elements/lean_editor.py:53
+#: dui/elements/lean_editor.py:52
 msgid "Send to L∃∀N"
 msgstr "Envoyer à L∃∀N"
+
+#: dui/elements/proof_outline_widget.py:347
+msgid "Expand all"
+msgstr "Tout déplier"
+
+#: dui/elements/proof_outline_widget.py:348
+msgid "Show details"
+msgstr "Détails"
+
+#: dui/elements/proof_outline_widget.py:349
+msgid "Move to selected step"
+msgstr "Aller"
 
 #: dui/stages/exercise/_exercise_main_window_widgets.py:152
 #: dui/stages/exercise/_exercise_main_window_widgets.py:284
@@ -171,65 +183,70 @@ msgid "Toolbar"
 msgstr "Barre d’outils"
 
 #: dui/stages/exercise/_exercise_main_window_widgets.py:514
-#: dui/stages/exercise/_exercise_main_window_widgets.py:538
+#: dui/stages/exercise/_exercise_main_window_widgets.py:545
 msgid "Go back to beginning of proof"
 msgstr "Retour au début de la preuve"
 
 #: dui/stages/exercise/_exercise_main_window_widgets.py:517
-#: dui/stages/exercise/_exercise_main_window_widgets.py:539
+#: dui/stages/exercise/_exercise_main_window_widgets.py:546
 msgid "Undo action"
 msgstr "Annuler l’action"
 
 #: dui/stages/exercise/_exercise_main_window_widgets.py:520
-#: dui/stages/exercise/_exercise_main_window_widgets.py:540
+#: dui/stages/exercise/_exercise_main_window_widgets.py:547
 msgid "Redo action"
 msgstr "Refaire l’action"
 
 #: dui/stages/exercise/_exercise_main_window_widgets.py:524
-#: dui/stages/exercise/_exercise_main_window_widgets.py:541
+#: dui/stages/exercise/_exercise_main_window_widgets.py:550
+msgid "Toggle proof outline"
+msgstr "Fil de preuve"
+
+#: dui/stages/exercise/_exercise_main_window_widgets.py:528
+#: dui/stages/exercise/_exercise_main_window_widgets.py:548
 msgid "Toggle L∃∀N"
 msgstr "Console L∃∀N"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:528
-#: dui/stages/exercise/_exercise_main_window_widgets.py:542
-#: dui/stages/exercise/exercise_main_window.py:856
+#: dui/stages/exercise/_exercise_main_window_widgets.py:532
+#: dui/stages/exercise/_exercise_main_window_widgets.py:549
+#: dui/stages/exercise/exercise_main_window.py:880
 msgid "Change exercise"
 msgstr "Changer d’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:252
+#: dui/stages/exercise/exercise_main_window.py:256
 #: dui/stages/start_coex/start_coex_widgets.py:770
 #: dui/stages/start_coex/start_coex_widgets.py:865
 #: pylib/pre_processing/__main__.py:210 pylib/pre_processing/__main__.py:232
 msgid "Exercise"
 msgstr "Exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:253
+#: dui/stages/exercise/exercise_main_window.py:257
 msgid "Exercise history"
 msgstr "Historique de l’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:798
+#: dui/stages/exercise/exercise_main_window.py:806
 msgid "Code from editor"
 msgstr "Code depuis l’éditeur"
 
-#: dui/stages/exercise/exercise_main_window.py:849
-msgid "Target solved"
-msgstr "But atteint"
-
 #: dui/stages/exercise/exercise_main_window.py:850
-msgid "The proof is complete!"
-msgstr "La preuve est terminée !"
-
-#: dui/stages/exercise/exercise_main_window.py:854
-msgid "Back to exercise"
-msgstr "Retour à l’exercice"
-
-#: dui/stages/exercise/exercise_main_window.py:974
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:977
+#: dui/stages/exercise/exercise_main_window.py:853
 msgid "goals solved!"
 msgstr "buts atteints !"
+
+#: dui/stages/exercise/exercise_main_window.py:873
+msgid "Target solved"
+msgstr "But atteint"
+
+#: dui/stages/exercise/exercise_main_window.py:874
+msgid "The proof is complete!"
+msgstr "La preuve est terminée !"
+
+#: dui/stages/exercise/exercise_main_window.py:878
+msgid "Back to exercise"
+msgstr "Retour à l’exercice"
 
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:85
 msgid "Missing dependencies"
@@ -329,47 +346,47 @@ msgid "select at least one object, one property or the target"
 msgstr "sélectionner au moins un objet, une propriété ou bien le but"
 
 #: pylib/actions/generic.py:54
-msgid "definition applied to target"
-msgstr "définition appliquée au but"
+msgid "Definition applied to target"
+msgstr "Définition appliquée au but"
 
 #: pylib/actions/generic.py:55 pylib/actions/generic.py:117
-msgid "theorem applied to target"
-msgstr "théorème appliqué au but"
+msgid "Theorem applied to target"
+msgstr "Théorème appliqué au but"
 
 #: pylib/actions/generic.py:56
-msgid "exercise applied to target"
-msgstr "exercice appliqué au but"
+msgid "Exercise applied to target"
+msgstr "Exercice appliqué au but"
 
 #: pylib/actions/generic.py:65
-msgid "definition applied to"
-msgstr "définition appliquée à"
+msgid "Definition applied to"
+msgstr "Définition appliquée à"
 
 #: pylib/actions/generic.py:66
-msgid "theorem applied to"
-msgstr "théorème appliqué à"
+msgid "Theorem applied to"
+msgstr "Théorème appliqué à"
 
 #: pylib/actions/generic.py:67
-msgid "exercise applied to"
-msgstr "exercice appliqué à"
+msgid "Exercise applied to"
+msgstr "Exercice appliqué à"
 
 #: pylib/actions/generic.py:90
-msgid "unable to apply definition"
+msgid "Unable to apply definition"
 msgstr "La définition n’a pas pu être appliquée"
 
 #: pylib/actions/generic.py:119
-msgid "theorem added to the context"
-msgstr "théorème ajouté au contexte"
+msgid "Theorem added to the context"
+msgstr "Théorème ajouté au contexte"
 
-#: pylib/actions/generic.py:140 pylib/coursedata/exercise_classes.py:257
-msgid "theorem"
-msgstr "théorème"
+#: pylib/actions/generic.py:140
+msgid "Theorem"
+msgstr "Théorème"
 
 #: pylib/actions/generic.py:140
 msgid "applied to"
 msgstr "appliqué à"
 
 #: pylib/actions/generic.py:144
-msgid "unable to apply theorem"
+msgid "Unable to apply theorem"
 msgstr "Le théorème n’a pas pu être appliqué"
 
 #: pylib/actions/logic.py:96
@@ -489,7 +506,7 @@ msgid "Selected property is not a negation 'NOT P'"
 msgstr "La propriété sélectionnée n’est pas une négation ‘NON P’"
 
 #: pylib/actions/logic.py:395
-msgid "Negation pushed on property "
+msgid "Negation pushed on property {}"
 msgstr "Négation « poussée » sur la propriété "
 
 #: pylib/actions/logic.py:398
@@ -525,12 +542,12 @@ msgid "Iff split in two implications"
 msgstr "Equivalence séparée en deux implications"
 
 #: pylib/actions/logic.py:594
-msgid "target replaced by iff property"
-msgstr "but replacé par une équivalence"
+msgid "Target replaced by iff property"
+msgstr "But replacé par une équivalence"
 
 #: pylib/actions/logic.py:610
-msgid "property {} split into {} and {}"
-msgstr "propriété {} séparée en {} et {}"
+msgid "Property {} split into {} and {}"
+msgstr "Propriété {} séparée en {} et {}"
 
 #: pylib/actions/logic.py:627
 msgid "Logical equivalence {} added to the context"
@@ -586,20 +603,20 @@ msgid "Enter element you want to use:"
 msgstr "Quel objet voulez-vous utiliser ?"
 
 #: pylib/actions/logic.py:912
-msgid "now prove {} suits our needs"
-msgstr "il reste à démontrer que {} convient"
+msgid "Now prove {} suits our needs"
+msgstr "Il reste à démontrer que {} convient"
 
 #: pylib/actions/logic.py:937
-msgid "new object {} with property {}"
-msgstr "nouvel objet {} vérifiant la propriété {}"
+msgid "New object {} with property {}"
+msgstr "Nouvel objet {} vérifiant la propriété {}"
 
 #: pylib/actions/logic.py:961
 msgid "I cannot build an existential property with this"
 msgstr "Ceci ne me permet pas de construire une propriété existentielle"
 
 #: pylib/actions/logic.py:964
-msgid "get new existential property {}"
-msgstr "nouvelle propriété existentielle {}"
+msgid "Get new existential property {}"
+msgstr "Nouvelle propriété existentielle {}"
 
 #: pylib/actions/logic.py:991 pylib/actions/logic.py:1006
 msgid "target is not existential property '∃x, P(x)'"
@@ -640,8 +657,8 @@ msgid "This cannot be used for substitution"
 msgstr "Cette propriété ne peut pas être utilisé pour la substitution"
 
 #: pylib/actions/magic.py:69
-msgid "target is not an equality, an inequality, nor a contradiction"
-msgstr "le but n’est pas une égalité, ni une inégalité, ni une contradiction"
+msgid "Target is not an equality, an inequality, nor a contradiction"
+msgstr "Le but n’est pas une égalité, ni une inégalité, ni une contradiction"
 
 #: pylib/actions/magic.py:231
 msgid "I don't know how to conclude"
@@ -706,13 +723,13 @@ msgid "Proof by contradiction only applies to target"
 msgstr "La preuve par l’absurde ne s’applique qu’au but"
 
 #: pylib/actions/proofs.py:186
-msgid "select a property \"∀ x, ∃ y, P(x,y)\" to get a function"
+msgid "Select a property \"∀ x, ∃ y, P(x,y)\" to get a function"
 msgstr ""
-"sélectionner une propriété du type « ∀ x, ∃ y, P(x,y) » pour obtenir une "
+"Sélectionner une propriété du type « ∀ x, ∃ y, P(x,y) » pour obtenir une "
 "fonction"
 
 #: pylib/actions/proofs.py:187
-msgid "function {} and property {} added to the context"
+msgid "Function {} and property {} added to the context"
 msgstr "La fonction {} et la propriété {} sont ajoutées au contexte"
 
 #: pylib/actions/proofs.py:232
@@ -772,17 +789,17 @@ msgid "New target will be added to the context after being proved"
 msgstr "Le nouveau but sera ajouté au contexte quand il aura été démontré"
 
 #: pylib/actions/proofs.py:317
-msgid "function {} applied to {}"
-msgstr "la fonction {} a été appliquée à {}"
+msgid "Function {} applied to {}"
+msgstr "La fonction {} a été appliquée à {}"
 
 #: pylib/actions/proofs.py:325
-msgid "new objet {} added to the context"
+msgid "New objet {} added to the context"
 msgstr "Nouvel objet {} ajouté au contexte"
 
 #: pylib/actions/proofs.py:371
-msgid "select an element or an equality on which to apply the function"
+msgid "Select an element or an equality on which to apply the function"
 msgstr ""
-"sélectionnez un élément ou une égalité sur laquelle appliquer la fonction"
+"Sélectionnez un élément ou une égalité sur laquelle appliquer la fonction"
 
 #: pylib/actions/proofs.py:406
 msgid "I cannot apply this"
@@ -836,6 +853,10 @@ msgstr "Pas de description"
 #: pylib/coursedata/exercise_classes.py:255
 msgid "definition"
 msgstr "définition"
+
+#: pylib/coursedata/exercise_classes.py:257
+msgid "theorem"
+msgstr "théorème"
 
 #: pylib/coursedata/exercise_classes.py:259
 msgid "exercise"
@@ -1104,15 +1125,15 @@ msgstr "en supposant {}"
 msgid "Proof of new subgoal: {}"
 msgstr "Preuve du but intermédiaire : {}"
 
-#: pylib/mathobj/proof_step.py:258
+#: pylib/mathobj/proof_step.py:358
 msgid "goal!"
 msgstr "But !"
 
-#: pylib/mathobj/proof_step.py:322
+#: pylib/mathobj/proof_step.py:428
 msgid "ERROR:"
 msgstr "ERREUR :"
 
-#: pylib/mathobj/proof_step.py:326
+#: pylib/mathobj/proof_step.py:432
 msgid "Success:"
 msgstr "Succès :"
 
@@ -1395,6 +1416,9 @@ msgstr "Progression : {:03d}%"
 #: pylib/utils/filesystem.py:249
 msgid "Download from {} to {}"
 msgstr "Téléchargé depuis {} vers {}"
+
+#~ msgid "new objet {} added to the context"
+#~ msgstr "Nouvel objet {} ajouté au contexte"
 
 #~ msgid "Goal preview only available when course file extension is .pkl."
 #~ msgstr "Aperçu disponible seulement pour les fichiers du type ‘.pkl’"

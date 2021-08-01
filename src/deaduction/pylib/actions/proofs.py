@@ -183,8 +183,8 @@ def introduce_fun(proof_step, selected_objects: [MathObject]) -> CodeForLean:
 
     goal = proof_step.goal
 
-    error = _('select a property "∀ x, ∃ y, P(x,y)" to get a function')
-    success = _("function {} and property {} added to the context")
+    error = _('Select a property "∀ x, ∃ y, P(x,y)" to get a function')
+    success = _("Function {} and property {} added to the context")
     if len(selected_objects) == 1:
         h = selected_objects[0].info["name"]
         # Finding expected math_type for the new function
@@ -314,7 +314,7 @@ def apply_function(proof_step, selected_objects: [MathObject]):
         if selected_objects[0].math_type.is_prop():
             h = selected_objects[0].info["name"]
             codes = codes.or_else(f'have {new_h} := congr_arg {f} {h}')
-            codes.add_success_msg(_("function {} applied to {}").format(f, h))
+            codes.add_success_msg(_("Function {} applied to {}").format(f, h))
         # if function applied to element x:
         # create new element y and new equality y=f(x)
         else:
@@ -322,7 +322,7 @@ def apply_function(proof_step, selected_objects: [MathObject]):
             y = give_global_name(proof_step =proof_step,
                                  math_type=Y,
                                  hints=[Y.info["name"].lower()])
-            msg = _("new objet {} added to the context").format(y)
+            msg = _("New objet {} added to the context").format(y)
             codes = codes.or_else(f'set {y} := {f} {x} with {new_h}',
                                   success_msg=msg)
         selected_objects = selected_objects[1:]
@@ -368,7 +368,7 @@ def action_apply(proof_step,
         if len(selected_objects) == 1:
             # TODO: ask user for element on which to apply the function
             #   (plus new name, cf apply_forall)
-            error = _("select an element or an equality on which to "
+            error = _("Select an element or an equality on which to "
                       "apply the function")
             raise WrongUserInput(error=error)
         else:
