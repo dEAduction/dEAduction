@@ -119,9 +119,9 @@ class ProofOutlineTreeWidget(QTreeWidget):
         header_labels = ["Messages", "Action", "Objects involved"]
         self.setHeaderLabels(header_labels)
         self.setSortingEnabled(False)
-        # Restore state
-        # Fixme: does not work
+
         # Set columns width
+        # Fixme: does not work
         settings = QSettings("deaduction")
         for col_nb in (0, 1, 2):
             if settings.value(f"proof_outline_tree/{col_nb}"):
@@ -130,8 +130,8 @@ class ProofOutlineTreeWidget(QTreeWidget):
                                                    f"{col_nb}"))
                 log.debug(f"Setting column value:"
                           f"{self.columnWidth(col_nb)}")
-        # if not settings.value("proof_outline_tree/0"):
-        #     self.setColumnWidth(0, 300)
+        if not settings.value("proof_outline_tree/0"):
+            self.setColumnWidth(0, 300)
 
         self.widgets: [ProofOutlineTreeWidget] = []
 
@@ -169,7 +169,7 @@ class ProofOutlineTreeWidget(QTreeWidget):
     def current_item_changed(self):
         self.select(self.currentItem())
 
-    def delete(self, widget_item: ProofTreeWidgetItem):
+    def __delete(self, widget_item: ProofTreeWidgetItem):
         log.debug(f"Deleting {widget_item.proof_item.txt}")
         parent = widget_item.parent()
         if not parent:
@@ -177,13 +177,13 @@ class ProofOutlineTreeWidget(QTreeWidget):
         else:
             parent.removeChild(widget_item)
 
-    def delete_from(self, widget_item):
+    def __delete_from(self, widget_item):
         index = self.widgets.index(widget_item)
         for widget in self.widgets[index:]:
-            self.delete(widget)
+            self.__delete(widget)
         self.widgets = self.widgets[:index]
 
-    def find_proof_item(self, proof_item) -> ProofTreeWidgetItem:
+    def __find_proof_item(self, proof_item) -> ProofTreeWidgetItem:
         """
         Return FIRST widget matching proof_item.
         """
@@ -191,7 +191,7 @@ class ProofOutlineTreeWidget(QTreeWidget):
             if widget.proof_item == proof_item:
                 return widget
 
-    def find_history_nb(self, idx) -> ProofTreeWidgetItem:
+    def __find_history_nb(self, idx) -> ProofTreeWidgetItem:
         """
         Return FIRST widget matching history_nb.
         """
@@ -199,7 +199,7 @@ class ProofOutlineTreeWidget(QTreeWidget):
             if widget.proof_item.history_nb == idx:
                 return widget
 
-    def insert_at_end(self, proof_item) -> ProofTreeWidgetItem:
+    def __insert_at_end(self, proof_item) -> ProofTreeWidgetItem:
         """
         Insert proof_item as a child of the ProofTreeWidgetItem
         corresponding to proof_item.parent,
@@ -219,10 +219,10 @@ class ProofOutlineTreeWidget(QTreeWidget):
             if parent.txt == "Proof":
                 parent_item = self.invisibleRootItem()
             else:
-                parent_item = self.find_proof_item(parent)
+                parent_item = self.__find_proof_item(parent)
                 if not parent_item:
                     log.debug(f"   creating parent item {parent.txt}")
-                    parent_item = self.insert_at_end(parent)
+                    parent_item = self.__insert_at_end(parent)
             if parent_item:
                 parent_item.setExpanded(True)
         else:
@@ -241,19 +241,24 @@ class ProofOutlineTreeWidget(QTreeWidget):
 
         # Delete
         history_nb = proof_step.history_nb
-        # if history_nb > 0:  # May be None or zero
-        widget = self.find_history_nb(history_nb)
+        widget = self.__find_history_nb(history_nb)
         if widget:
-            self.delete_from(widget)
+            self.__delete_from(widget)
 
         # Insert
-        new_widget = self.insert_at_end(proof_step)
+        new_widget = self.__insert_at_end(proof_step)
         new_proof_node = proof_step.imminent_new_node
         if new_proof_node:
-            self.insert_at_end(new_proof_node)
+            self.__insert_at_end(new_proof_node)
 
         # Mark widget
         self.set_marked(new_widget)
+
+    def delete_after_goto_and_error(self, proof_step):
+        history_nb = proof_step.history_nb # Do NOT delete current proof_step
+        widget = self.__find_history_nb(history_nb)
+        if widget:
+            self.__delete_from(widget)
 
     def set_marked(self, marked_widget: Union[int, ProofTreeWidgetItem]):
         """
@@ -262,7 +267,7 @@ class ProofOutlineTreeWidget(QTreeWidget):
         """
         if isinstance(marked_widget, int):
             history_nb = marked_widget
-            marked_widget = self.find_history_nb(history_nb)
+            marked_widget = self.__find_history_nb(history_nb)
             log.debug(f"Marking widget {history_nb}")
         for widget in self.widgets:
             widget.mark_user_selected(widget == marked_widget)

@@ -1031,13 +1031,13 @@ class ExerciseMainWindow(QMainWindow):
             self.statusBar.manage_msgs(self.lean_file.current_proof_step)
 
         # Update proof_outline_window
-        if not proof_step.is_history_move()\
-                and not proof_step.is_error():
-            # self.proof_outline_window.tree.insert_and_delete(proof_step)
-            self.proof_outline_window.tree.delete_and_insert(proof_step)
-        elif proof_step.is_history_move():
-            self.proof_outline_window.tree.set_marked(
-                                                self.lean_file.target_idx-1)
+        powt = self.proof_outline_window.tree
+        if proof_step.is_history_move():
+            powt.set_marked(self.lean_file.target_idx-1)
+        elif proof_step.is_error():
+            powt.delete_after_goto_and_error(proof_step)
+        else:
+            powt.delete_and_insert(proof_step)
 
         # ─────────── Creation of next proof_step ────────── #
         # LOGICAL proof_step is always in lean_file's history
