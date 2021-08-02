@@ -256,24 +256,23 @@ class ProofStep:
         should be passed to the next proof_step.
         """
 
-        delta = proof_step.delta_goals_count
-        if delta >= 0:
-            proof_nodes = proof_step.proof_nodes
-        else:
-            # Goal solved: remove -delta nodes from proof_nodes
-            log.debug(f"Solved {-delta} goals")
-            proof_nodes = proof_step.proof_nodes[:delta]
-
-            # Adapt (previous) proof_step
-            # FIXME: this shoul dbe done with add_new_goals
-            imminent_new_node = proof_nodes[-1]
-            if imminent_new_node is not ProofStep.initial_proof_node:
-                proof_step.imminent_new_node = imminent_new_node
-            proof_step.is_cqfd = True
-        next_parent = proof_nodes[-1]
+        # delta = proof_step.delta_goals_count
+        # if delta >= 0:
+        #     proof_nodes = proof_step.proof_nodes
+        # else:
+        #     # Goal solved: remove -delta nodes from proof_nodes
+        #     log.debug(f"Solved {-delta} goals")
+        #     proof_nodes = proof_step.proof_nodes[:delta]
+        #
+        #     # Adapt (previous) proof_step
+        #     # FIXME: this shoul dbe done with add_new_goals
+        #     imminent_new_node = proof_nodes[-1]
+        #     if imminent_new_node is not ProofStep.initial_proof_node:
+        #         proof_step.imminent_new_node = imminent_new_node
+        #     proof_step.is_cqfd = True
+        next_parent = proof_step.proof_nodes[-1]
         log.debug(f"Proof nodes: "
-                  f"{[(pf.txt, pf.parent.txt if pf.parent else None) for pf in proof_nodes]}")
-        # log.debug(f"Next parent: {next_parent.txt}")
+                  f"{[(pf.txt, pf.parent.txt if pf.parent else None) for pf in proof_step.proof_nodes]}")
         nps = ProofStep(property_counter=proof_step.property_counter,
                         new_goals=copy(proof_step.new_goals),
                         parent=next_parent,
@@ -281,7 +280,7 @@ class ProofStep:
                         total_goals_counter=proof_step.total_goals_counter,
                         proof_state=proof_step.proof_state,
                         history_nb=history_nb,
-                        proof_nodes=copy(proof_nodes)
+                        proof_nodes=copy(proof_step.proof_nodes)
                         )
         if not proof_step.is_history_move()\
                 and not proof_step.is_error()\
@@ -320,9 +319,15 @@ class ProofStep:
                 self.total_goals_counter += delta
                 self.add_new_goals()  # Manage goal msgs from LeanCode
             elif delta < 0:  # A goal has been solved
+                # THe following assume delta is -1
+                self.is_cqfd = True
                 self.current_goal_number -= delta
                 if self.new_goals:
                     self.new_goals.pop()  # Remove last goal msg
+                    self.proof_nodes.pop()
+                    imminent_new_node = self.proof_nodes[-1]
+                    if imminent_new_node is not ProofStep.initial_proof_node:
+                        self.imminent_new_node = imminent_new_node
 
     ##############
     # Properties #

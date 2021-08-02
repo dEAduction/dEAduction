@@ -985,8 +985,8 @@ class ExerciseMainWindow(QMainWindow):
         """
         log.debug("Updating proof state...")
         proof_step = self.proof_step
-        # ───────────── Store data ──────────── #
-        # Store proof_state in proof_step
+
+        # ───────────── Process data ──────────── #
         proof_step.proof_state = proofstate
 
         # Store current proof_step in the lean_file (for logical memory)
@@ -1003,17 +1003,6 @@ class ExerciseMainWindow(QMainWindow):
         proof_step.delta_goals_count = delta
         proof_step.update_goals()
 
-        # ─────────── Display msgs (no msg when undoing) ────────── #
-        # Display msg if current goal solved
-        if not proof_step.is_error() and not proof_step.is_history_move() \
-                and delta < 0:
-            self.display_current_goal_solved(delta)
-
-        if not proof_step.is_history_move():
-            self.statusBar.manage_msgs(proof_step)
-        elif proof_step.is_redo() or proof_step.is_goto():
-            self.statusBar.manage_msgs(self.lean_file.current_proof_step)
-
         # Debug
         log.debug(f"Target_idx: {self.lean_file.target_idx}")
         log.debug("Proof nodes:")
@@ -1021,9 +1010,6 @@ class ExerciseMainWindow(QMainWindow):
             proof_nodes = he.misc_info.get('proof_step').proof_nodes
             log.debug([pf.txt for pf in proof_nodes])
 
-        # ─────────────── End of proof_step ─────────────── #
-        # Fixme: this is too complicated, e.g. proof_step is modified
-        #  when creating next proof step and before proof_outline is called.
         # Store auto_step
         proof_step.auto_step = AutoStep.from_proof_step(proof_step, emw=self)
         # Pass proof_step to displayed_proof_step, and create a new proof_step
@@ -1031,14 +1017,20 @@ class ExerciseMainWindow(QMainWindow):
         # Note that we also keep the proof_state because it is needed by the
         # logical actions to compute the pertinent Lean code.
         self.displayed_proof_step = copy(proof_step)
-        # LOGICAL proof_step is always in lean_file's history
-        self.proof_step = ProofStep.next_(self.lean_file.current_proof_step,
-                                          self.lean_file.target_idx)
 
-        self.proof_step_updated.emit()  # Received in auto_test
+        # ─────────── Display msgs and proof_outline ────────── #
+        # Display current goal solved
+        if not proof_step.is_error() and not proof_step.is_history_move() \
+                and delta < 0:
+            self.display_current_goal_solved(delta)
 
-        # ─────────── Update proof_outline_window ────────── #
-        # Keep here, proof_step is modified by the next_ method
+        # Status bar
+        if not proof_step.is_history_move():
+            self.statusBar.manage_msgs(proof_step)
+        elif proof_step.is_redo() or proof_step.is_goto():
+            self.statusBar.manage_msgs(self.lean_file.current_proof_step)
+
+        # Update proof_outline_window
         if not proof_step.is_history_move()\
                 and not proof_step.is_error():
             # self.proof_outline_window.tree.insert_and_delete(proof_step)
@@ -1046,6 +1038,12 @@ class ExerciseMainWindow(QMainWindow):
         elif proof_step.is_history_move():
             self.proof_outline_window.tree.set_marked(
                                                 self.lean_file.target_idx-1)
+
+        # ─────────── Creation of next proof_step ────────── #
+        # LOGICAL proof_step is always in lean_file's history
+        self.proof_step = ProofStep.next_(self.lean_file.current_proof_step,
+                                          self.lean_file.target_idx)
+        self.proof_step_updated.emit()  # Received in auto_test
 
         # ─────────────── Update goal on ui ─────────────── #
         self.update_goal(proofstate.goals[0])
