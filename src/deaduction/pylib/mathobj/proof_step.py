@@ -246,11 +246,14 @@ class ProofStep:
         self.proof_nodes = proof_nodes if proof_nodes \
             else [self.initial_proof_node]
 
+        # Flags
+        self.is_cqfd = False
+
     @classmethod
     def next_(cls, proof_step, history_nb):
         """
         Instantiate a copy of proof_step by duplicating attributes that
-        should be pass to the next proof_step.
+        should be passed to the next proof_step.
         """
 
         delta = proof_step.delta_goals_count
@@ -258,9 +261,15 @@ class ProofStep:
             proof_nodes = proof_step.proof_nodes
         else:
             # Goal solved: remove -delta nodes from proof_nodes
-            log.debug(f"Solved {delta} goals")
+            log.debug(f"Solved {-delta} goals")
             proof_nodes = proof_step.proof_nodes[:delta]
-            proof_step.imminent_new_node = proof_nodes[-1]
+
+            # Adapt (previous) proof_step
+            # FIXME: this shoul dbe done with add_new_goals
+            imminent_new_node = proof_nodes[-1]
+            if imminent_new_node is not ProofStep.initial_proof_node:
+                proof_step.imminent_new_node = imminent_new_node
+            proof_step.is_cqfd = True
         next_parent = proof_nodes[-1]
         log.debug(f"Proof nodes: "
                   f"{[(pf.txt, pf.parent.txt if pf.parent else None) for pf in proof_nodes]}")
@@ -299,7 +308,9 @@ class ProofStep:
             # The new ProofNode is a child of the old one
             old_proof_node.children.append(more_proof_nodes[-1])
             self.proof_nodes.extend(more_proof_nodes)
-            self.imminent_new_node = more_proof_nodes[-1]
+            if more_proof_nodes[-1] is not ProofStep.initial_proof_node:
+                self.imminent_new_node = more_proof_nodes[-1]
+
             self.new_goals.extend(more_goals)
 
     def update_goals(self):
@@ -319,11 +330,13 @@ class ProofStep:
     @property
     def success_msg(self):
         if self.history_nb == -1:
-            return _("Beginning of Proof")
+            return self.beginning_of_proof_msg
         elif self.is_error():
             return ''
-        elif self.is_cqfd():
-            return _("Current goal solved")
+        elif self.is_cqfd:
+            return self.current_goal_solved_msg
+        elif self.is_sorry():
+            return self.sorry_msg
         elif self.effective_code:
             return self.effective_code.success_msg
         elif self.lean_code:
@@ -333,7 +346,7 @@ class ProofStep:
 
     @property
     def txt(self):
-        return str(self.history_nb) + ": " + self.success_msg
+        return str(self.history_nb+1) + _(": ") + self.success_msg
 
     @property
     def goal(self):
@@ -372,11 +385,17 @@ class ProofStep:
     def is_error(self):
         return bool(self.error_type)
 
-    def is_cqfd(self):
-        return hasattr(self.button, 'symbol') and \
-               self.button.symbol == _("goal!")
+    # def is_cqfd(self):
+    #     return hasattr(self.button, 'symbol') and \
+    #            self.button.symbol == _('Goal!')
         # NB: this should be action_assumption.symbol,
         # but unable to import this here
+
+    def is_sorry(self):
+        # Fixme: does not work
+        return hasattr(self.button, 'symbol') \
+            and self.button.symbol == _("Proof methods...") \
+            and self.selection == 3
 
     def is_action_button(self):
         return hasattr(self.button, 'symbol')
@@ -466,6 +485,19 @@ class ProofStep:
               + goal_txt + "\n"
 
         return txt
+
+    # ──────────────── msgs ─────────────── #
+    @property
+    def current_goal_solved_msg(self):
+        return _("Current goal solved")
+
+    @property
+    def sorry_msg(self):
+        return _("(Current goal admitted)")
+
+    @property
+    def beginning_of_proof_msg(self):
+        return _("Beginning of Proof")
 
 
 class Proof(list):

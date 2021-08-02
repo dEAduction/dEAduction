@@ -163,41 +163,6 @@ class ServerQueue(list):
         self.next_task()
 
 
-# SERVER_QUEUE = ServerQueue()
-
-
-# def task_for_server_queue(fct):
-#     """
-#     Decorator that add a function to the server queue instead of
-#     executing it immediately.
-#     """
-#
-#     async def queued_fct(*args):
-#         """
-#         Put fct in the server queue instead of executing immediately.
-#         This is not really async but will be called with an async fct.
-#         """
-#
-#         SERVER_QUEUE.add_task(fct, args)
-#         # if SERVER_QUEUE.is_busy:
-#         #     SERVER_QUEUE.log.debug("I'm busy, adding task to the queue")
-#         #     SERVER_QUEUE.add_task(fct, args)
-#         # else:
-#         #     SERVER_QUEUE.log.debug("Executing task immediately")
-#         #     SERVER_QUEUE.is_busy = True
-#         #     await task_with_timeout(fct, *args)
-#
-#         # SERVER_QUEUE.add_task(fct, args)
-#         # if SERVER_QUEUE.is_busy:
-#         #     SERVER_QUEUE.log.debug("I'm busy, adding task to the queue")
-#         # else:
-#         #     SERVER_QUEUE.log.debug("Executing task immediately")
-#         #     SERVER_QUEUE.is_busy = True
-#         #     SERVER_QUEUE.next.... # Arg, I do not have nursery
-#
-#     return queued_fct
-
-
 #########################
 # ServerInterface class #
 #########################
@@ -270,10 +235,10 @@ class ServerInterface(QObject):
         self.file_invalidated          = trio.Event()
         self.__proof_state_valid       = trio.Event()
 
-        # __proof_receive_done is set when enough information have been
+        # proof_receive_done is set when enough information have been
         # received, i.e. (for exercise processing) either we have context and
         # target and all effective codes, OR an error message
-        self.__proof_receive_done      = trio.Event()
+        self.proof_receive_done      = trio.Event()
 
         self.__tmp_hypo_analysis       = ""
         self.__tmp_targets_analysis    = ""
@@ -319,7 +284,7 @@ class ServerInterface(QObject):
         """
         Check if every awaited piece of information has been received:
         i.e. target and hypo analysis, and all effective codes to replace
-        the or_else instructions. After the signal __proof_receive_done is
+        the or_else instructions. After the signal proof_receive_done is
         set, the __update method will stop listening to Lean, and start
         updating Proofstate.
             (for processing exercise only)
@@ -327,7 +292,7 @@ class ServerInterface(QObject):
         if self.__tmp_targets_analysis \
                 and self.__tmp_hypo_analysis \
                 and not self.__tmp_effective_code.has_or_else():
-            self.__proof_receive_done.set()
+            self.proof_receive_done.set()
 
     def __on_lean_message(self, msg: Message):
         """
@@ -427,7 +392,7 @@ class ServerInterface(QObject):
             - set initial proof state for statement,
             - emi signal initial_proof_state_set,
             - check if all statements have been processed, and if so,
-            emit signal __proof_receive_done
+            emit signal proof_receive_done
         """
         hypo = self.__course_data.hypo_analysis[index]
         target = self.__course_data.targets_analysis[index]
@@ -443,7 +408,7 @@ class ServerInterface(QObject):
             if None not in [st.initial_proof_state for st in
                             self.__course_data.statements]:
                 self.log.debug("All proof states received")
-                self.__proof_receive_done.set()
+                self.proof_receive_done.set()
 
     def __on_lean_message_for_course(self, msg: Message):
         """
@@ -501,7 +466,7 @@ class ServerInterface(QObject):
         if msg.text.startswith(LEAN_NOGOALS_TEXT):
             # and msg.pos_line == self.lean_file.last_line_of_inner_content:
             if hasattr(self.proof_no_goals, "emit"):
-                self.__proof_receive_done.set()  # Done receiving
+                self.proof_receive_done.set()  # Done receiving
                 self.proof_no_goals.emit()
         elif msg.text.startswith(LEAN_UNRESOLVED_TEXT):
             pass
@@ -511,7 +476,7 @@ class ServerInterface(QObject):
             pass
         else:
             self.error_send.send_nowait(msg)
-            self.__proof_receive_done.set()  # Done receiving
+            self.proof_receive_done.set()  # Done receiving
 
     ##########################################
     # Update proof state of current exercise #
@@ -542,7 +507,7 @@ class ServerInterface(QObject):
         self.file_invalidated = trio.Event()
         self.__course_data = None  # tells which kind of data we are waiting
         # for
-        self.__proof_receive_done = trio.Event()
+        self.proof_receive_done = trio.Event()
         self.__tmp_hypo_analysis = ""
         self.__tmp_targets_analysis = ""
 
@@ -563,7 +528,7 @@ class ServerInterface(QObject):
             #########################################
             # Waiting for all pieces of information #
             #########################################
-            await self.__proof_receive_done.wait()
+            await self.proof_receive_done.wait()
 
             self.log.debug(_("Proof State received"))
 
@@ -580,7 +545,7 @@ class ServerInterface(QObject):
                     self.__tmp_hypo_analysis, self.__tmp_targets_analysis)
 
                 # Store proof_state for history
-                self.log.debug("storing ProofState")
+                self.log.debug("Storing ProofState")
                 self.lean_file.state_info_attach(ProofState=self.proof_state)
 
                 self.__proof_state_valid.set()
@@ -808,7 +773,7 @@ class ServerInterface(QObject):
 
         # Invalidate events
         self.file_invalidated           = trio.Event()
-        self.__proof_receive_done       = trio.Event()
+        self.proof_receive_done       = trio.Event()
 
         # Ask Lean server and wait for answer
         self.request_seq_num += 1
@@ -821,7 +786,7 @@ class ServerInterface(QObject):
             self.file_invalidated.set()
 
             # ───────── Waiting for all pieces of information ──────── #
-            await self.__proof_receive_done.wait()
+            await self.proof_receive_done.wait()
 
             # self.log.debug(_("All proof states received"))
 

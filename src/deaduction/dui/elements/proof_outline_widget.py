@@ -64,7 +64,7 @@ class ProofTreeWidgetItem(QTreeWidgetItem):
             self.setText(0, proof_item.txt)
             self.setTextColor(0, self.proof_node_color)
         else:
-            self.setText(0, proof_item.success_msg)
+            self.setText(0, proof_item.txt)
             if proof_item.is_action_button():
                 self.setText(1, _(proof_item.button.symbol))
             elif proof_item.is_statement():
@@ -74,6 +74,10 @@ class ProofTreeWidgetItem(QTreeWidgetItem):
                                proof_item.selection]
             selection = ', '.join(selection_names)
             self.setText(2, selection)
+            if proof_item.proof_state:
+                goal = proof_item.proof_state.goals[0]
+                tooltip = goal.to_tooltip()
+                self.setToolTip(0, tooltip)
 
     def mark_user_selected(self, yes: bool=True):
         """
@@ -139,7 +143,7 @@ class ProofOutlineTreeWidget(QTreeWidget):
     def widgets_debug(self):
         return [widget.debug for widget in self.widgets]
 
-    def save_state(self, event):
+    def save_state(self):
         """
         Called when parent window is closed. Save columns width.
         """
@@ -314,7 +318,7 @@ class ProofOutlineWindow(QWidget):
         # Save window geometry
         settings = QSettings("deaduction")
         settings.setValue("proof_outline/geometry", self.saveGeometry())
-        # self.tree.save_state()
+        self.tree.save_state()
         event.accept()
         self.hide()
 

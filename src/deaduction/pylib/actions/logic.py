@@ -1142,7 +1142,7 @@ def action_equal(proof_step,
         test, equality = prop.can_be_used_for_substitution()
         if test:
             selected_objects.remove(prop)
-            selected_objects.insert_at(0, prop)  # Put equality first
+            selected_objects.insert(0, prop)  # Put equality first
             break
     if not test:  # No equality found
         error = _("This cannot be used for substitution")

@@ -414,6 +414,10 @@ class ExerciseMainWindow(QMainWindow):
         #     self.__server_task_scope.cancel()
 
         self.window_closed.emit()
+
+        # Disconnect signals
+
+
         super().closeEvent(event)
 
     @property
@@ -554,6 +558,14 @@ class ExerciseMainWindow(QMainWindow):
         The user actions are stored in self.proof_step.
         """
 
+        # Wait for servint pending task to avoid receiving wrong signals
+        if not self.servint.file_invalidated.is_set():
+            log.debug("(Waiting for servint...)")
+            await self.servint.file_invalidated.wait()
+        if not self.servint.proof_receive_done.is_set():
+            log.debug("(Waiting for servint...)")
+            await self.servint.proof_receive_done.wait()
+
         self.freeze(False)
         async with qtrio.enter_emissions_channel(
                 signals=[self.lean_editor.editor_send_lean,
@@ -597,6 +609,7 @@ class ExerciseMainWindow(QMainWindow):
                     await self.process_async_signal(move_fct)
 
                 elif emission.is_from(self.window_closed):
+                    log.debug("Exit server task")
                     break
 
                 elif emission.is_from(self.__action_triggered):
@@ -877,8 +890,9 @@ class ExerciseMainWindow(QMainWindow):
         # QMessageBox appears twice
         self.servint.server_queue.cancel_scope.deadline += 600
 
-        # Display msg_box unless redoing or test mode
-        if not self.proof_step.is_redo() and not self.test_mode:
+        # Display msg_box unless redoing /moving or test mode
+        if not self.proof_step.is_redo() and not self.proof_step.is_goto()\
+                and not self.test_mode:
             title = _('Target solved')
             text = _('The proof is complete!')
             msg_box = QMessageBox(parent=self)
@@ -991,7 +1005,7 @@ class ExerciseMainWindow(QMainWindow):
 
         # ─────────── Display msgs (no msg when undoing) ────────── #
         # Display msg if current goal solved
-        if not proof_step.is_error() and not proof_step.is_undo() \
+        if not proof_step.is_error() and not proof_step.is_history_move() \
                 and delta < 0:
             self.display_current_goal_solved(delta)
 
@@ -1008,6 +1022,8 @@ class ExerciseMainWindow(QMainWindow):
             log.debug([pf.txt for pf in proof_nodes])
 
         # ─────────────── End of proof_step ─────────────── #
+        # Fixme: this is too complicated, e.g. proof_step is modified
+        #  when creating next proof step and before proof_outline is called.
         # Store auto_step
         proof_step.auto_step = AutoStep.from_proof_step(proof_step, emw=self)
         # Pass proof_step to displayed_proof_step, and create a new proof_step

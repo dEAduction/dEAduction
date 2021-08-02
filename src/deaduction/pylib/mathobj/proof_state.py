@@ -337,6 +337,26 @@ class Goal:
         text += target.math_type.to_display(is_math_type=True)
         return text
 
+    def to_tooltip(self) -> str:
+        """
+        Return context and target in a raw form as a tooltip for a goal.
+        """
+        context = self.context
+        target = self.target
+        if context:
+            text = _("Context:") + "\n"
+        else:
+            text = _("Empty context") + "\n"
+        for math_object in context:
+            math_type = math_object.math_type
+            name = math_object.to_display()
+            name_type = math_type.to_display(is_math_type=True)
+            text_object = name + _(": ") + name_type
+            text += "  " + text_object + "\n"
+        text += _("Goal:") + "\n"
+        text += " " + target.math_type.to_display(is_math_type=True)
+        return text
+
     def extract_vars(self) -> List[MathObject]:
         """
         Provides the list of all variables in the context,

@@ -246,7 +246,7 @@ class Container(QObject):
         """
         Just a front-end to the solve_exercise method.
         """
-        # TODO: might be merged with sole_exercise, no more async
+        # TODO: might be merged with solve_exercise, no more async
         self.chooser_window = None  # So that exiting d∃∀duction works
         self.exercise = exercise
         if self.exercise_window:
@@ -254,6 +254,14 @@ class Container(QObject):
             # window will be launched immediately!!
             self.exercise_window.window_closed.disconnect()
             self.exercise_window.close()
+
+        # Wait for servint pending task to avoid receiving wrong signals
+        # if self.servint:
+        #     with trio.move_on_after(10):
+        #         if not self.servint.file_invalidated.is_set():
+        #             await self.servint.file_invalidated.wait()
+        #         if not self.servint.proof_receive_done.is_set():
+        #             await self.servint.proof_receive_done.wait()
 
         # Do start exercise!
         self.solve_exercise()
