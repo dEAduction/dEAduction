@@ -337,23 +337,37 @@ class Goal:
         text += target.math_type.to_display(is_math_type=True)
         return text
 
-    def to_tooltip(self) -> str:
+    def to_tooltip(self, type="exercise") -> str:
         """
         Return context and target in a raw form as a tooltip for a goal.
         """
         context = self.context
         target = self.target
+
+        # Context
         if context:
-            text = _("Context:") + "\n"
+            if type == "exercise":
+                text = _("Context:")
+            else:
+                text = _("Hypothesis:") if len(context) == 1 else \
+                    _("Hypotheses:")
+            text += "\n"
         else:
-            text = _("Empty context") + "\n"
+            # text = _("Empty context") + "\n"
+            text = ""
         for math_object in context:
             math_type = math_object.math_type
             name = math_object.to_display()
             name_type = math_type.to_display(is_math_type=True)
             text_object = name + _(": ") + name_type
             text += "  " + text_object + "\n"
-        text += _("Goal:") + "\n"
+
+        # Goal
+        if type == "exercise":
+            text += _("Goal:")
+        else:
+            text += _("Conclusion:")
+        text += "\n"
         text += " " + target.math_type.to_display(is_math_type=True)
         return text
 

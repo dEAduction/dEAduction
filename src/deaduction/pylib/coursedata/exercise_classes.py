@@ -202,8 +202,9 @@ class Statement:
             text = self.lean_core_statement
         else:
             goal = self.initial_proof_state.goals[0]
-            target = goal.target
-            text = target.math_type.to_display(is_math_type=True)
+            # target = goal.target
+            # text = target.math_type.to_display(is_math_type=True)
+            text = goal.to_tooltip(type="non-exercise")
         return text
 
     @property

@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2021-08-02 17:17+0200\n"
-"PO-Revision-Date: 2021-08-02 17:18+0200\n"
+"POT-Creation-Date: 2021-08-03 22:07+0200\n"
+"PO-Revision-Date: 2021-08-03 22:07+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -29,8 +29,8 @@ msgid "L∃∀N name"
 msgstr "Nom L∃∀N"
 
 #: dui/elements/config_window.py:126
-#: dui/stages/exercise/exercise_main_window.py:249
-#: dui/stages/exercise/exercise_main_window.py:254
+#: dui/stages/exercise/exercise_main_window.py:262
+#: dui/stages/exercise/exercise_main_window.py:267
 msgid "Preferences"
 msgstr "Préférences"
 
@@ -53,7 +53,7 @@ msgstr "Appliquer"
 
 #: dui/elements/config_window.py:280
 msgid ":"
-msgstr " : "
+msgstr " :"
 
 #: dui/elements/config_window.py:284
 msgid "Browse directories"
@@ -155,15 +155,15 @@ msgstr "A démontrer"
 msgid "Send to L∃∀N"
 msgstr "Envoyer à L∃∀N"
 
-#: dui/elements/proof_outline_widget.py:290
+#: dui/elements/proof_outline_widget.py:295
 msgid "Expand all"
 msgstr "Tout déplier"
 
-#: dui/elements/proof_outline_widget.py:291
+#: dui/elements/proof_outline_widget.py:296
 msgid "Show details"
 msgstr "Détails"
 
-#: dui/elements/proof_outline_widget.py:293
+#: dui/elements/proof_outline_widget.py:298
 msgid "Move to selected step"
 msgstr "Aller"
 
@@ -209,43 +209,43 @@ msgstr "Console L∃∀N"
 
 #: dui/stages/exercise/_exercise_main_window_widgets.py:532
 #: dui/stages/exercise/_exercise_main_window_widgets.py:549
-#: dui/stages/exercise/exercise_main_window.py:903
+#: dui/stages/exercise/exercise_main_window.py:916
 msgid "Change exercise"
 msgstr "Changer d’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:256
+#: dui/stages/exercise/exercise_main_window.py:269
 #: dui/stages/start_coex/start_coex_widgets.py:770
 #: dui/stages/start_coex/start_coex_widgets.py:865
 #: pylib/pre_processing/__main__.py:210 pylib/pre_processing/__main__.py:232
 msgid "Exercise"
 msgstr "Exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:257
+#: dui/stages/exercise/exercise_main_window.py:270
 msgid "Exercise history"
 msgstr "Historique de l’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:828
+#: dui/stages/exercise/exercise_main_window.py:841
 msgid "Code from editor"
 msgstr "Code depuis l’éditeur"
 
-#: dui/stages/exercise/exercise_main_window.py:872
-#: pylib/mathobj/proof_step.py:492
+#: dui/stages/exercise/exercise_main_window.py:885
+#: pylib/mathobj/proof_step.py:500
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:875
+#: dui/stages/exercise/exercise_main_window.py:888
 msgid "goals solved!"
 msgstr "buts atteints !"
 
-#: dui/stages/exercise/exercise_main_window.py:896
+#: dui/stages/exercise/exercise_main_window.py:909
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:897
+#: dui/stages/exercise/exercise_main_window.py:910
 msgid "The proof is complete!"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/exercise_main_window.py:901
+#: dui/stages/exercise/exercise_main_window.py:914
 msgid "Back to exercise"
 msgstr "Retour à l’exercice"
 
@@ -851,15 +851,15 @@ msgstr "Pas de sous-titre"
 msgid "no description"
 msgstr "Pas de description"
 
-#: pylib/coursedata/exercise_classes.py:255
+#: pylib/coursedata/exercise_classes.py:256
 msgid "definition"
 msgstr "définition"
 
-#: pylib/coursedata/exercise_classes.py:257
+#: pylib/coursedata/exercise_classes.py:258
 msgid "theorem"
 msgstr "théorème"
 
-#: pylib/coursedata/exercise_classes.py:259
+#: pylib/coursedata/exercise_classes.py:260
 msgid "exercise"
 msgstr "exercice"
 
@@ -1082,30 +1082,30 @@ msgstr "Alors"
 msgid "True or False?"
 msgstr "Vrai ou faux ?"
 
-#: pylib/mathobj/proof_state.py:324
+#: pylib/mathobj/proof_state.py:324 pylib/mathobj/proof_state.py:352
 msgid "Hypothesis:"
 msgstr "Hypothèse :"
 
-#: pylib/mathobj/proof_state.py:326
+#: pylib/mathobj/proof_state.py:326 pylib/mathobj/proof_state.py:353
 msgid "Hypotheses:"
 msgstr "Hypothèses :"
 
-#: pylib/mathobj/proof_state.py:331 pylib/mathobj/proof_state.py:354
-#: pylib/mathobj/proof_step.py:349
+#: pylib/mathobj/proof_state.py:331 pylib/mathobj/proof_state.py:362
+#: pylib/mathobj/proof_step.py:357
 msgid ": "
 msgstr " : "
 
-#: pylib/mathobj/proof_state.py:347
+#: pylib/mathobj/proof_state.py:350
 msgid "Context:"
 msgstr "Contexte :"
 
-#: pylib/mathobj/proof_state.py:349
-msgid "Empty context"
-msgstr "Contexte vide"
-
-#: pylib/mathobj/proof_state.py:356
+#: pylib/mathobj/proof_state.py:367
 msgid "Goal:"
 msgstr "But :"
+
+#: pylib/mathobj/proof_state.py:369
+msgid "Conclusion:"
+msgstr "Conclusion :"
 
 #: pylib/mathobj/proof_step.py:112
 msgid "Proof of first property: {}"
@@ -1139,23 +1139,23 @@ msgstr "en supposant {}"
 msgid "Proof of new subgoal: {}"
 msgstr "Preuve du but intermédiaire : {}"
 
-#: pylib/mathobj/proof_step.py:397 pylib/text/tooltips.py:130
+#: pylib/mathobj/proof_step.py:405 pylib/text/tooltips.py:130
 msgid "Proof methods..."
 msgstr "Méthodes de preuve…"
 
-#: pylib/mathobj/proof_step.py:466
+#: pylib/mathobj/proof_step.py:474
 msgid "ERROR:"
 msgstr "ERREUR :"
 
-#: pylib/mathobj/proof_step.py:470
+#: pylib/mathobj/proof_step.py:478
 msgid "Success:"
 msgstr "Succès :"
 
-#: pylib/mathobj/proof_step.py:496
+#: pylib/mathobj/proof_step.py:504
 msgid "(Current goal admitted)"
 msgstr "(But en cours admis)"
 
-#: pylib/mathobj/proof_step.py:500
+#: pylib/mathobj/proof_step.py:508
 msgid "Beginning of Proof"
 msgstr "Début de la preuve"
 
@@ -1434,6 +1434,9 @@ msgstr "Progression : {:03d}%"
 #: pylib/utils/filesystem.py:249
 msgid "Download from {} to {}"
 msgstr "Téléchargé depuis {} vers {}"
+
+#~ msgid "Empty context"
+#~ msgstr "Contexte vide"
 
 #~ msgid "goal!"
 #~ msgstr "But !"

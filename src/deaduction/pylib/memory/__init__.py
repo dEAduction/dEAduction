@@ -106,7 +106,7 @@ class Journal:
         print(total_string)
 
         log.debug(f"Saving auto_steps in {file_path}")
-        with open(file_path, mode='xb') as output:
+        with open(file_path, mode='wb') as output:
             pickle.dump(exercise, output, pickle.HIGHEST_PROTOCOL)
 
         file_path = file_path.with_suffix('.txt')
