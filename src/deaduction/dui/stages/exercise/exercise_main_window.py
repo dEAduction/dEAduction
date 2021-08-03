@@ -239,6 +239,19 @@ class ExerciseMainWindow(QMainWindow):
         self.toolbar.change_exercise_action.triggered.connect(
                                                     self.change_exercise)
 
+    def __disconnect_signals(self):
+        """
+        This method is called at closing. It is VERY important: wihtout it,
+        servint signals will still be connected to methods concerning
+        the previous exercise.
+        """
+        self.servint.proof_state_change.disconnect()
+        self.servint.lean_file_changed.disconnect()
+        self.servint.proof_no_goals.disconnect()
+        self.servint.effective_code_received.disconnect()
+        self.servint.exercise_set.disconnect()
+        self.servint.initial_proof_state_set.disconnect()
+
     def __init_menubar(self):
         """
         Create ExerciseMainWindow's menubar. Relevant classes are MenuBar,
@@ -415,10 +428,10 @@ class ExerciseMainWindow(QMainWindow):
 
         self.window_closed.emit()
 
-        # Disconnect signals
-
-
+        # Disconnect signals FIXME
+        self.__disconnect_signals()
         super().closeEvent(event)
+        self.deleteLater()
 
     @property
     def current_selection_as_mathobjects(self):
@@ -557,7 +570,7 @@ class ExerciseMainWindow(QMainWindow):
         interface. This method is called in self.__init__.
         The user actions are stored in self.proof_step.
         """
-
+        log.info("Starting server task")
         # Wait for servint pending task to avoid receiving wrong signals
         if not self.servint.file_invalidated.is_set():
             log.debug("(Waiting for servint...)")
@@ -988,7 +1001,8 @@ class ExerciseMainWindow(QMainWindow):
 
         # ───────────── Process data ──────────── #
         proof_step.proof_state = proofstate
-
+        log.debug(f"Proof step n°{proof_step.pf_nb}:")
+        log.debug(proof_step.display())
         # Store current proof_step in the lean_file (for logical memory)
         # and in the journal (for comprehensive memory)
         # We do NOT want to modify the attached context if we are moving in

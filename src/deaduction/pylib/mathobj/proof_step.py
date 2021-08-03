@@ -186,6 +186,7 @@ class ProofStep:
     # Fixme: proof_nodes should not be class attributes, for history moves
 
     # ──────────────── Proof memory ─────────────── #
+    pf_nb                    = 0
     initial_proof_node       = ProofNode(parent=None,
                                          txt="Proof",
                                          history_nb=-1,
@@ -248,6 +249,8 @@ class ProofStep:
 
         # Flags
         self.is_cqfd = False
+        self.pf_nb = ProofStep.pf_nb
+        ProofStep.pf_nb += 1
 
     @classmethod
     def next_(cls, proof_step, history_nb):

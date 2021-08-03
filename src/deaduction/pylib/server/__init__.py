@@ -568,9 +568,6 @@ class ServerInterface(QObject):
         if error_list:
             raise exceptions.FailedRequestError(error_list, lean_code)
 
-        # Check for next task
-        # SERVER_QUEUE.next_task(self.nursery)
-
     ###########################
     # Exercise initialisation #
     ###########################
@@ -624,8 +621,8 @@ class ServerInterface(QObject):
         #  cannot mistake Lean's responses to a previous exercise for the
         #  awaited responses.
         # Add 100 lines per exercise number in the preamble
-        if isinstance(statement, Exercise):
-            virtual_file_preamble += "\n" * 100 * statement.exercise_number
+        # if isinstance(statement, Exercise):
+        #     virtual_file_preamble += "\n" * 100 * statement.exercise_number
         # self.log.debug(f"File preamble: {virtual_file_preamble}")
         virtual_file = LeanFile(file_name=statement.lean_name,
                                 preamble=virtual_file_preamble,

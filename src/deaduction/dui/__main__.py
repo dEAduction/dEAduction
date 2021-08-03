@@ -255,14 +255,6 @@ class Container(QObject):
             self.exercise_window.window_closed.disconnect()
             self.exercise_window.close()
 
-        # Wait for servint pending task to avoid receiving wrong signals
-        # if self.servint:
-        #     with trio.move_on_after(10):
-        #         if not self.servint.file_invalidated.is_set():
-        #             await self.servint.file_invalidated.wait()
-        #         if not self.servint.proof_receive_done.is_set():
-        #             await self.servint.proof_receive_done.wait()
-
         # Do start exercise!
         self.solve_exercise()
 
