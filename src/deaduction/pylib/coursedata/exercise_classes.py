@@ -33,8 +33,8 @@ import logging
 # from deaduction.pylib.config.i18n import _
 import deaduction.pylib.logger as logger
 from deaduction.pylib.actions.actiondef import Action
-import deaduction.pylib.actions.logic
-import deaduction.pylib.actions.proofs
+# import deaduction.pylib.actions.logic
+# import deaduction.pylib.actions.proofs
 import deaduction.pylib.actions.magic
 from deaduction.pylib.coursedata.utils import (find_suffix,
                                                substitute_macros,
@@ -260,9 +260,36 @@ class Statement:
             return _('exercise')
 
 
-@dataclass
 class Definition(Statement):
-    pass
+
+    @property
+    def implicit_use(self):
+        if 'implicit_use' in self.info and self.info['implicit_use']:
+            return True
+        else:
+            return False
+
+    def extract_left_term(self):
+        ipf = self.initial_proof_state
+        if not ipf:
+            return None
+        goal = ipf.goals[0]
+        target = goal.target
+        if not target.is_iff():
+            return None
+        left_term = target.math_type.children[0]
+        return left_term
+
+    def extract_right_term(self):
+        ipf = self.initial_proof_state
+        if not ipf:
+            return None
+        goal = ipf.goals[0]
+        target = goal.target
+        if not target.is_iff():
+            return None
+        right_term = target.math_type.children[1]
+        return right_term
 
 
 @dataclass

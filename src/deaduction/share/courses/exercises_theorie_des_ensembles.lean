@@ -187,6 +187,8 @@ x ∈ A ∩ B ↔ ( x ∈ A ∧ x ∈ B) :=
 /- dEAduction
 PrettyName
     Intersection de deux ensembles
+ImplicitUse
+    True
 -/
 begin
     exact iff.rfl
@@ -197,6 +199,8 @@ lemma definition.intersection_quelconque_ensembles {I : Type} {E : I → set X} 
 /- dEAduction
 PrettyName
     Intersection d'une famille quelconque d'ensembles
+ImplicitUse
+    True
 -/
 begin
     exact set.mem_Inter
@@ -207,6 +211,8 @@ x ∈ A ∪ B ↔ ( x ∈ A ∨ x ∈ B) :=
 /- dEAduction
 PrettyName
     Union de deux ensembles
+ImplicitUse
+    True
 -/
 begin
     exact iff.rfl
@@ -217,6 +223,8 @@ lemma definition.union_quelconque_ensembles {I : Type} {E : I → set X}  {x : X
 /- dEAduction
 PrettyName
     Union d'une famille quelconque d'ensembles
+ImplicitUse
+    True
 -/
 begin
     exact set.mem_Union
@@ -461,6 +469,10 @@ PrettyName
     Définitions
 -/
 lemma definition.image_directe (y : Y) : y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y :=
+/- dEAduction
+ImplicitUse
+    True
+-/
 begin
     todo
 end
@@ -482,6 +494,8 @@ f = f' ↔ ∀ x, f x = f' x :=
 /- dEAduction
 PrettyName
     Egalité de deux fonctions
+ImplicitUse
+    True
 -/
 begin
     exact function.funext_iff,
@@ -650,6 +664,8 @@ injective f ↔ ∀ x x' : X, (f x = f x' → x = x')
 /- dEAduction
 PrettyName
     Application injective
+ImplicitUse
+    True
 -/
 begin
     refl,
@@ -661,6 +677,8 @@ surjective f ↔ ∀ y : Y, ∃ x : X, y = f x
 /- dEAduction
 PrettyName
     Application surjective
+ImplicitUse
+    True
 -/
 begin
     refl,

@@ -201,6 +201,8 @@ class Shape:
         elif node in ["LOCAL_CONSTANT", "CONSTANT"]:
             # ! Return display, not shape
             display = display_constant(math_object, format_)
+        elif node == 'METAVAR':
+            display = display_metavar(math_object, format_)
         elif node == 'NUMBER':
             display = display_number(math_object, format_)
         elif math_object.is_quantifier(is_math_type=True):
@@ -502,6 +504,13 @@ def display_constant(math_object, format_) -> list:
             display = display_sequence(math_object, format_)
 
     return display
+
+
+def display_metavar(math_object, format_) -> list:
+    txt = 'metavar'
+    if 'nb' in math_object.info:
+        txt += ' n°' + str(math_object.info['nb'])
+    return [txt]
 
 
 def display_number(math_object, format_) -> list:

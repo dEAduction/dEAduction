@@ -36,7 +36,6 @@ from typing import List, Tuple, Any, Optional
 from copy import copy
 
 import deaduction.pylib.logger as logger
-# from deaduction.pylib.config.i18n import _
 
 from .MathObject import MathObject
 from .lean_analysis import ( lean_expr_with_type_grammar,

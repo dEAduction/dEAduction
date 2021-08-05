@@ -27,8 +27,12 @@ This file is part of dEAduction.
 """
 
 from .MathObject import     (MathObject,
+                             # PatternMathObject,
+                             MissingImplicitDefinition,
                              NO_MATH_TYPE,
-                             NUMBER_SETS_LIST)
+                             NUMBER_SETS_LIST,
+                             HAVE_BOUND_VARS)
+from .pattern_math_objects import PatternMathObject
 from .proof_state import    (Goal,
                              ProofState
                              )

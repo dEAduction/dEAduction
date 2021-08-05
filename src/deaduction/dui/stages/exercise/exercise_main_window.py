@@ -61,6 +61,8 @@ from deaduction.pylib.coursedata        import (Definition,
                                                 Theorem,
                                                 AutoStep)
 from deaduction.pylib.mathobj           import (MathObject,
+                                                PatternMathObject,
+                                                MissingImplicitDefinition,
                                                 Goal,
                                                 ProofState,
                                                 ProofStep)
@@ -287,7 +289,7 @@ class ExerciseMainWindow(QMainWindow):
         Call servint.set_exercise and connect signal exercise_set to
          self.start_server_task.
         """
-
+        log.debug("Initializing exercise")
         self.freeze()
 
         # Try to display initial proof state prior to anything
@@ -312,6 +314,16 @@ class ExerciseMainWindow(QMainWindow):
                       if not st.initial_proof_state]
         if statements:
             self.servint.set_statements(course, statements)
+
+        ################################
+        # Definitions for implicit use #
+        ################################
+        definitions = [st for st in self.exercise.available_statements
+                       if isinstance(st, Definition) and st.implicit_use]
+        log.debug(f"{len(definitions)} definition(s) set for implicit use")
+        PatternMathObject.set_definitions_for_implicit_use(definitions)
+        log.debug(f"{len(MathObject.definition_patterns)} implicit "
+                  f"definitions in MathObject list")
 
     def open_config_window(self):
         window = ConfigMainWindow(parent=self)
@@ -751,6 +763,7 @@ class ExerciseMainWindow(QMainWindow):
                         selection,
                         user_input,
                         target_selected=self.target_selected)
+
             except MissingParametersError as e:
                 if e.input_type == InputType.Text:
                     choice, ok = QInputDialog.getText(action_btn,
@@ -764,6 +777,7 @@ class ExerciseMainWindow(QMainWindow):
                     user_input.append(choice)
                 else:
                     break
+
             except WrongUserInput as error:
                 self.proof_step.user_input = user_input
                 self.proof_step.error_type = 1
@@ -772,6 +786,27 @@ class ExerciseMainWindow(QMainWindow):
                 self.empty_current_selection()
                 self.update_proof_state(self.displayed_proof_step.proof_state)
                 break
+
+            # New: implicit use of definition
+            except MissingImplicitDefinition as mid:
+                definition = mid.definition
+                math_object = mid.math_object
+                if selection:
+                    index = math_object.find_in(selection)
+                    if index:
+                        selection_rw = [selection[index]]
+                    else:
+                        selection_rw = selection
+                lean_code = generic.action_definition(self.proof_step,
+                                                      selection_rw,
+                                                      definition,
+                                                      self.target_selected)
+                await self.servint.server_queue.process_task(
+                                                    self.servint.code_insert,
+                                                    definition.pretty_name,
+                                                    lean_code)
+                break
+
             else:
                 self.proof_step.lean_code = lean_code
                 self.proof_step.user_input = user_input

@@ -42,6 +42,8 @@ import logging
 import deaduction.pylib.config.dirs as      cdirs
 import deaduction.pylib.logger as           logger
 from deaduction.pylib.utils import (        load_object, save_object)
+
+from deaduction.pylib.mathobj import MathObject
 from deaduction.pylib.coursedata import (   Exercise,
                                             Definition,
                                             Theorem,

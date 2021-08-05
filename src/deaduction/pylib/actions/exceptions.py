@@ -59,8 +59,8 @@ class WrongUserInput(Exception):
         self.message = error
 
 
-def test_selection(items_selected,
-                   selected_target):
+def test_selection(items_selected: [],
+                   selected_target: bool):
     """
     Test that at least one of items_selected or selected_target is not empty.
     """

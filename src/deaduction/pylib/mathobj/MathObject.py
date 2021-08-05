@@ -52,17 +52,57 @@ from typing import          List, Any
 import logging
 
 import deaduction.pylib.logger as logger
+if __name__ == "__main__":
+    import deaduction.pylib.config.i18n
 
-from .display_math      import (display_math_type_of_local_constant,
+from deaduction.pylib.mathobj.display_math      import (
+    display_math_type_of_local_constant,
                                 Shape)
-from .display_data      import (HAVE_BOUND_VARS,
+from deaduction.pylib.mathobj.display_data      import (HAVE_BOUND_VARS,
                                 INEQUALITIES)
-
 import deaduction.pylib.mathobj.give_name as give_name
-
+from deaduction.pylib.mathobj.utils import *
 
 log = logging.getLogger(__name__)
 NUMBER_SETS_LIST = ['ℕ', 'ℤ', 'ℚ', 'ℝ']
+
+
+class MissingImplicitDefinition(Exception):
+    def __init__(self, definition, math_object):
+        self.definition = definition
+        self.math_object = math_object
+
+
+def allow_implicit_use(test: callable):
+    """
+    Modify the function test to allow implicit use of the definitions
+    whose patterns are in MathObject.definition_patterns.
+    'test' is typically 'is_and', 'is_or', 'is_forall', ...
+    """
+
+    # TODO: add call to cvars.config['allow_implicit_use_of_definitions']
+    def test_implicit(math_object, is_math_type=False) -> bool:
+        if test(math_object, is_math_type):
+            return True
+        else:
+            if is_math_type:
+                math_type = math_object
+            else:
+                math_type = math_object.math_type
+            implicit_definitions = MathObject.implicit_definitions
+            definition_patterns = MathObject.definition_patterns
+            definition_right_terms = MathObject.definition_right_terms
+            for index in range(len(definition_patterns)):
+                # Test right term if self match pattern
+                if definition_patterns[index].match(math_type):
+                    if test(definition_right_terms[index], is_math_type=True):
+                        implicit_definition = implicit_definitions[index]
+                        raise MissingImplicitDefinition(implicit_definition,
+                                                        math_object)
+                        # return True
+            return False
+
+    return test_implicit
 
 
 #############################################
@@ -97,6 +137,13 @@ class MathObject:
     # So that MathObject.number_sets[-1] always return the largest set of
     # numbers involved in the current exercise
     bound_var_number = 0  # A counter to distinguish bound variables
+
+    # Lists from definitions for implicit use
+    #   This is set up at course loading, via the PatternMathObject
+    #   set_definitions_for_implicit_use() method.
+    implicit_definitions   = []
+    definition_patterns    = []
+    definition_right_terms = []
 
     # Some robust methods to access information stored in attributes
     @property
@@ -457,6 +504,21 @@ class MathObject:
                 counter += math_object.contains(other)
         return counter
 
+    def find_in(self, selection):
+        """
+        Try to find self in a list of math_objects.
+        """
+        if self in selection:
+            index = selection.index(self)
+        # else:
+        #     for math_object in selection
+        #        if math_object.contains(self)
+        # ...
+            return index
+
+
+
+
     def direction_for_substitution_in(self, other) -> str:
         """
         Assuming self is an equality or an iff,
@@ -536,6 +598,7 @@ class MathObject:
             math_type = self.math_type
         return math_type.node == "FUNCTION"
 
+    @allow_implicit_use
     def is_and(self, is_math_type=False) -> bool:
         """
         Test if (math_type of) self is a conjunction.
@@ -547,6 +610,7 @@ class MathObject:
         return (math_type.node == "PROP_AND"
                 or math_type.node == "PROP_∃")
 
+    @allow_implicit_use
     def is_or(self, is_math_type=False) -> bool:
         """
         Test if (math_type of) self is a disjunction.
@@ -557,6 +621,7 @@ class MathObject:
             math_type = self.math_type
         return math_type.node == "PROP_OR"
 
+    @allow_implicit_use
     def is_implication(self, is_math_type=False) -> bool:
         """
         Test if (math_type of) self is an implication.
@@ -567,6 +632,7 @@ class MathObject:
             math_type = self.math_type
         return math_type.node == "PROP_IMPLIES"
 
+    @allow_implicit_use
     def is_exists(self, is_math_type=False) -> bool:
         """
         Test if (math_type of) self is an existence property.
@@ -577,6 +643,7 @@ class MathObject:
             math_type = self.math_type
         return math_type.node in ("QUANT_∃", "QUANT_∃!")
 
+    @allow_implicit_use
     def is_for_all(self, is_math_type=False) -> bool:
         """
         Test if (math_type of) self is a universal property.
@@ -787,8 +854,9 @@ NO_MATH_TYPE = MathObject(node="not provided",
 
 
 #########
-# Utils #
+# UTILS #
 #########
+
 def mark_bound_vars(bound_var_1, bound_var_2):
     """
     Mark two bound variables with a common number, so that we can follow
@@ -838,10 +906,3 @@ def cut_spaces(string: str) -> str:
     while string.find("  ") != -1:
         string = string.replace("  ", " ")
     return string
-
-
-#########
-# trials #
-#########
-if __name__ == '__main__':
-    logger.configure()
