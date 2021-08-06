@@ -68,9 +68,14 @@ NUMBER_SETS_LIST = ['ℕ', 'ℤ', 'ℚ', 'ℝ']
 
 
 class MissingImplicitDefinition(Exception):
-    def __init__(self, definition, math_object):
-        self.definition = definition
-        self.math_object = math_object
+    def __init__(self, definition, math_object, rewritten_math_object):
+        super().__init__(f"Implicit use of definition "
+                         f"{definition.pretty_name} in "
+                         f"{math_object.to_display()} -> "
+                         f"{rewritten_math_object}")
+        self.definition            = definition
+        self.math_object           = math_object
+        self.rewritten_math_object = rewritten_math_object
 
 
 def allow_implicit_use(test: callable):
@@ -91,14 +96,18 @@ def allow_implicit_use(test: callable):
                 math_type = math_object.math_type
             implicit_definitions = MathObject.implicit_definitions
             definition_patterns = MathObject.definition_patterns
-            definition_right_terms = MathObject.definition_right_terms
             for index in range(len(definition_patterns)):
                 # Test right term if self match pattern
-                if definition_patterns[index].match(math_type):
-                    if test(definition_right_terms[index], is_math_type=True):
+                pattern = definition_patterns[index]
+                pattern_left = pattern.children[0]
+                pattern_right = pattern.children[1]
+                if pattern_left.match(math_type):
+                    if test(pattern_right, is_math_type=True):
                         implicit_definition = implicit_definitions[index]
+                        rewritten_math_object = pattern_right.apply_matching()
                         raise MissingImplicitDefinition(implicit_definition,
-                                                        math_object)
+                                                        math_object,
+                                                        rewritten_math_object)
                         # return True
             return False
 
@@ -143,7 +152,6 @@ class MathObject:
     #   set_definitions_for_implicit_use() method.
     implicit_definitions   = []
     definition_patterns    = []
-    definition_right_terms = []
 
     # Some robust methods to access information stored in attributes
     @property
@@ -408,6 +416,9 @@ class MathObject:
         WARNING: this should probably not be used for bound variables.
         """
 
+        # TODO: simplify handling of bound variables by using a global list
+        #  MathObject.__marked_bound_vars
+        #  instead of marking/unmarking bound vars.
         # Successively test for
         #                           nodes
         #                           name (if exists)
@@ -437,7 +448,7 @@ class MathObject:
             # linked and should represent the same variable everywhere
             bound_var_1 = self.children[1]
             bound_var_2 = other.children[1]
-            mark_bound_vars(bound_var_1, bound_var_2)
+            self.mark_bound_vars(bound_var_1, bound_var_2)
             marked = True
 
         # Names
@@ -488,7 +499,7 @@ class MathObject:
 
         # Unmark bound_vars, in prevision of future tests
         if marked:
-            unmark_bound_vars(bound_var_1, bound_var_2)
+            self.unmark_bound_vars(bound_var_1, bound_var_2)
 
         return equal
 
@@ -516,8 +527,26 @@ class MathObject:
         # ...
             return index
 
+    @classmethod
+    def mark_bound_vars(cls, bound_var_1, bound_var_2):
+        """
+        Mark two bound variables with a common number, so that we can follow
+        them along two quantified expressions and check if these expressions
+        are identical
+        """
+        cls.bound_var_number += 1
+        bound_var_1.info['bound_var_number'] = MathObject.bound_var_number
+        bound_var_2.info['bound_var_number'] = MathObject.bound_var_number
 
-
+    @classmethod
+    def unmark_bound_vars(cls, bound_var_1, bound_var_2):
+        """
+        Mark two bound variables with a common number, so that we can follow
+        them along two quantified expressions and check tif these expressions
+        are identical
+        """
+        bound_var_1.info.pop('bound_var_number')
+        bound_var_2.info.pop('bound_var_number')
 
     def direction_for_substitution_in(self, other) -> str:
         """
@@ -851,31 +880,6 @@ NO_MATH_TYPE = MathObject(node="not provided",
                           info={},
                           children=[],
                           math_type=None)
-
-
-#########
-# UTILS #
-#########
-
-def mark_bound_vars(bound_var_1, bound_var_2):
-    """
-    Mark two bound variables with a common number, so that we can follow
-    them along two quantified expressions and check if these expressions
-    are identical
-    """
-    MathObject.bound_var_number += 1
-    bound_var_1.info['bound_var_number'] = MathObject.bound_var_number
-    bound_var_2.info['bound_var_number'] = MathObject.bound_var_number
-
-
-def unmark_bound_vars(bound_var_1, bound_var_2):
-    """
-    Mark two bound variables with a common number, so that we can follow
-    them along two quantified expressions and check tif these expressions
-    are identical
-    """
-    bound_var_1.info.pop('bound_var_number')
-    bound_var_2.info.pop('bound_var_number')
 
 
 def structured_display_to_string(structured_display) -> str:

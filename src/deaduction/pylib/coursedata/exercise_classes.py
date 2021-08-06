@@ -269,7 +269,7 @@ class Definition(Statement):
         else:
             return False
 
-    def extract_left_term(self):
+    def extract_iff(self):
         ipf = self.initial_proof_state
         if not ipf:
             return None
@@ -277,19 +277,18 @@ class Definition(Statement):
         target = goal.target
         if not target.is_iff():
             return None
-        left_term = target.math_type.children[0]
-        return left_term
+        else:
+            return target.math_type
+
+    def extract_left_term(self):
+        iff = self.extract_iff()
+        if iff:
+            return iff.children[0]
 
     def extract_right_term(self):
-        ipf = self.initial_proof_state
-        if not ipf:
-            return None
-        goal = ipf.goals[0]
-        target = goal.target
-        if not target.is_iff():
-            return None
-        right_term = target.math_type.children[1]
-        return right_term
+        iff = self.extract_iff()
+        if iff:
+            return iff.children[1]
 
 
 @dataclass

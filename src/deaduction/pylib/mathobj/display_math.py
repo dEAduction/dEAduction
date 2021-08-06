@@ -509,7 +509,7 @@ def display_constant(math_object, format_) -> list:
 def display_metavar(math_object, format_) -> list:
     txt = 'metavar'
     if 'nb' in math_object.info:
-        txt += ' n°' + str(math_object.info['nb'])
+        txt += '_' + str(math_object.info['nb'])
     return [txt]
 
 

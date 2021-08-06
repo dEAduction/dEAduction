@@ -515,10 +515,6 @@ class ExerciseMainWindow(QMainWindow):
             previous_goal = self.logically_previous_proof_step.goal
             Goal.compare(new_goal, previous_goal)  # Set tags
 
-        # Goal count to be displayed next to the target
-        # goal_count = f'  {self.proof_step.current_goal_number} / ' \
-        #              f'{self.proof_step.total_goals_counter}'
-
         # Reset current context selection
         # Here we do not use empty_current_selection since Widgets may have
         # been deleted, and anyway this is cosmetics since  widgets are
@@ -791,12 +787,15 @@ class ExerciseMainWindow(QMainWindow):
             except MissingImplicitDefinition as mid:
                 definition = mid.definition
                 math_object = mid.math_object
-                if selection:
-                    index = math_object.find_in(selection)
-                    if index:
-                        selection_rw = [selection[index]]
-                    else:
-                        selection_rw = selection
+                rewritten_math_object = mid.rewritten_math_object
+                selection_rw = selection
+                index = math_object.find_in(selection)
+                if index is not None:
+                    selection_rw = [selection[index]]
+                log.debug(f"Implicit use of definition "
+                         f"{definition.pretty_name} in "
+                         f"{math_object.to_display()} -> "
+                         f"{rewritten_math_object.to_display()}")
                 lean_code = generic.action_definition(self.proof_step,
                                                       selection_rw,
                                                       definition,
