@@ -52,7 +52,8 @@ import deaduction.pylib.config.vars              as     cvars
 import deaduction.pylib.config.i18n
 
 from deaduction.dui.stages.select_language       import select_language
-from deaduction.dui.stages.exercise              import ExerciseMainWindow
+from deaduction.dui.stages.exercise              import (Coordinator,
+                                                         ExerciseMainWindow)
 from deaduction.dui.stages.start_coex            import StartCoExStartup
 from deaduction.dui.stages.missing_dependencies  import (
                 InstallingMissingDependencies, WantInstallMissingDependencies)
@@ -76,8 +77,12 @@ if os.getenv("DEADUCTION_DEV_MODE", False):
     log_level = 'debug'
     log_domains = ["deaduction", "__main__",  # 'lean',
                    'ServerInterface', 'ServerQueue']
-    log_domains = ["__main__", 'lean', 'ServerInterface', 'ServerQueue',
-                   'deaduction.dui', 'deaduction.pylib']
+    log_domains = ["__main__",
+                   #'lean',
+                   'ServerInterface',
+                   'ServerQueue',
+                   'deaduction.dui',
+                   'deaduction.pylib']
 
 
 logger.configure(domains=log_domains,
@@ -193,7 +198,8 @@ class Container(QObject):
     def __init__(self, nursery, exercise=None):
         super().__init__()
 
-        self.exercise_window: ExerciseMainWindow = None
+        self.coordinator: Coordinator            = None
+        # self.exercise_window: ExerciseMainWindow = None
         self.chooser_window:  StartCoExStartup   = None
         self.servint:         ServerInterface    = None
         self.exercise:        Exercise           = exercise
@@ -201,6 +207,13 @@ class Container(QObject):
         self.exercises:       [Exercise]         = []
         self.auto_test:       bool               = False
         self.report:          [[str]]            = []
+
+    @property
+    def exercise_window(self):
+        if self.coordinator:
+            return self.coordinator.emw
+        else:
+            return None
 
     async def check_lean_server(self):
         """
@@ -247,6 +260,7 @@ class Container(QObject):
         Just a front-end to the solve_exercise method.
         """
         # TODO: might be merged with solve_exercise, no more async
+        #  but cf tests
         self.chooser_window = None  # So that exiting d∃∀duction works
         self.exercise = exercise
         if self.exercise_window:
@@ -265,8 +279,10 @@ class Container(QObject):
 
         log.debug(f"Starting exercise {self.exercise.pretty_name}")
 
-        # Start exercise window
-        self.exercise_window = ExerciseMainWindow(self.exercise, self.servint)
+        # Start coordinator, who will start an ExerciseMainWindow instance
+        self.coordinator = Coordinator(self.exercise, self.servint)
+        # self.exercise_window = ExerciseMainWindow(self.exercise,
+        # self.servint)
 
         # Connect signals
         self.exercise_window.window_closed.connect(self.close_exercise_window)
@@ -299,7 +315,7 @@ class Container(QObject):
         self.server_started.emit()
 
         # Start exercise window and add auto_steps
-        self.exercise_window = ExerciseMainWindow(self.exercise, self.servint)
+        self.coordinator = Coordinator(self.exercise, self.servint)
         self.exercise_window.test_mode = True
 
         # Connect signals
@@ -379,7 +395,7 @@ async def main():
                         log.debug("No more chooser window")
                     elif emission.is_from(container.close_exercise_window):
                         # Remember that there is no more exercise window:
-                        container.exercise_window = None
+                        container.coordinator.exercise_window = None
                         log.debug("No more exercise window")
 
                     # Quit if no more open window:

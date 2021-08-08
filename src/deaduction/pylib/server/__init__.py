@@ -140,7 +140,9 @@ class ServerQueue(list):
         Execute function fct with timeout TIMEOUT, and number of trials
         NB_TRIALS.
 
-        Th tuple args will be unpacked and used as arguments for fct.
+        The tuple args will be unpacked and used as arguments for fct.
+
+        When execution is complete, the next task in ServerQueue is launched.
         """
         nb = 0
         if not self.started:
@@ -186,20 +188,24 @@ class ServerInterface(QObject):
     ############################################
     # Qt Signals
     ############################################
-    proof_state_change = Signal(ProofState)
+    proof_state_change = Signal(ProofState)  # FIXME: suppress
+    update_started              = Signal()  # Unused
+    update_ended                = Signal()  # Unused
 
+    proof_no_goals              = Signal()  # FIXME: suppress
+    failed_request_errors       = Signal()  # FIXME: suppress?
+
+    # Signal sending info from Lean
+    lean_response = Signal(bool, tuple, list)
+
+    # For functionality using ipf (tooltips, implicit definitions):
     initial_proof_state_set     = Signal()
-    update_started              = Signal()
-    update_ended                = Signal()
-
-    proof_no_goals              = Signal()
-
-    lean_file_changed           = Signal()
-    exercise_set                = Signal()
-
-    # Signal emitted when all effective codes have been received,
-    # so that history_replace is called
+    # To store effective code, so that history_replace is called:
     effective_code_received     = Signal(CodeForLean)
+    # To update the Lean editor console:
+    lean_file_changed           = Signal()
+    # To launch the Coordinator.server_task:
+    exercise_set                = Signal()
 
     MAX_CAPACITY = 10  # Max number of statements sent in one request
 
@@ -250,6 +256,7 @@ class ServerInterface(QObject):
         # sent by Lean.
         self.__tmp_effective_code      = CodeForLean.empty_code()
         self.proof_state               = None
+        self.no_more_goals             = False
 
         # Errors memory channels
         self.error_send, self.error_recv = \
@@ -465,9 +472,11 @@ class ServerInterface(QObject):
         # Filter message text, record if not ignored message
         if msg.text.startswith(LEAN_NOGOALS_TEXT):
             # and msg.pos_line == self.lean_file.last_line_of_inner_content:
-            if hasattr(self.proof_no_goals, "emit"):
-                self.proof_receive_done.set()  # Done receiving
-                self.proof_no_goals.emit()
+            self.no_more_goals = True
+            self.proof_receive_done.set()  # Done receiving
+            # if hasattr(self.proof_no_goals, "emit"):
+            #     self.proof_receive_done.set()  # Done receiving
+            #     self.proof_no_goals.emit()
         elif msg.text.startswith(LEAN_UNRESOLVED_TEXT):
             pass
         # Ignore messages that do not concern current proof
@@ -505,9 +514,9 @@ class ServerInterface(QObject):
 
         # Invalidate events
         self.file_invalidated = trio.Event()
-        self.__course_data = None  # tells which kind of data we are waiting
-        # for
         self.proof_receive_done = trio.Event()
+        self.__course_data = None
+        self.no_more_goals = False
         self.__tmp_hypo_analysis = ""
         self.__tmp_targets_analysis = ""
 
@@ -532,27 +541,28 @@ class ServerInterface(QObject):
 
             self.log.debug(_("Proof State received"))
 
-            # (Timeout added by FLR)
+            # (Timeout added by FLR) TODO: move this at the end
             with trio.move_on_after(1):
                 await self.lean_server.running_monitor.wait_ready()
 
             self.log.debug(_("After request"))
 
             # If data for new proof state have been received
-            if not self.__proof_state_valid.is_set():
-                # Construct new proof state
-                self.proof_state = ProofState.from_lean_data(
-                    self.__tmp_hypo_analysis, self.__tmp_targets_analysis)
-
-                # Store proof_state for history
-                self.log.debug("Storing ProofState")
-                self.lean_file.state_info_attach(ProofState=self.proof_state)
-
-                self.__proof_state_valid.set()
-
-                # Emit signal only if from qt context (avoid AttributeError)
-                if hasattr(self.proof_state_change, "emit"):
-                    self.proof_state_change.emit(self.proof_state)
+            # TODO: move this to logical part
+            # if not self.__proof_state_valid.is_set():
+            #     # Construct new proof state
+            #     self.proof_state = ProofState.from_lean_data(
+            #         self.__tmp_hypo_analysis, self.__tmp_targets_analysis)
+            #
+            #     # Store proof_state for history
+            #     self.log.debug("Storing ProofState")
+            #     self.lean_file.state_info_attach(ProofState=self.proof_state)
+            #
+            #     self.__proof_state_valid.set()
+            #
+            #     # Emit signal only if from qt context (avoid AttributeError)
+            #     if hasattr(self.proof_state_change, "emit"):
+            #         self.proof_state_change.emit(self.proof_state)
 
             if hasattr(self.update_ended, "emit"):
                 self.update_ended.emit()
@@ -565,8 +575,15 @@ class ServerInterface(QObject):
         except trio.WouldBlock:
             pass
 
-        if error_list:
-            raise exceptions.FailedRequestError(error_list, lean_code)
+        # if error_list:
+        #     # TODO: replace by signal
+        #     # raise exceptions.FailedRequestError(error_list, lean_code)
+        #     pass
+
+        self.lean_response.emit(self.no_more_goals,
+                                (self.__tmp_hypo_analysis,
+                                 self.__tmp_targets_analysis),
+                                error_list)
 
     ###########################
     # Exercise initialisation #
@@ -633,7 +650,6 @@ class ServerInterface(QObject):
 
         return virtual_file
 
-    # @task_for_server_queue
     async def set_exercise(self, exercise: Exercise, on_top=True):
         """
         Initialise the virtual_file from exercise.

@@ -26,3 +26,4 @@ This file is part of d∃∀duction.
 """
 
 from .exercise_main_window import ExerciseMainWindow
+from .Coordinator          import Coordinator

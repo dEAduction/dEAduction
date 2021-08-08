@@ -195,7 +195,7 @@ class ProofStep:
     property_counter: int    = 0
     current_goal_number: int = 1  # Current number of goal in the proof history
     total_goals_counter: int = 1  # Total number of goals in the proof history
-    parent                   = None  # Parent ProofStep
+    parent                   = None  # Parent ProofNode
     new_goals: [NewGoal]     = None
     time                     = None
     delta_goals_count        = 0

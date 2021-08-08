@@ -48,14 +48,6 @@ class Action:
     def __init__(self, func):
         self.run       = func
 
-    # @property
-    # def caption(self):
-    #     __caption = self.__caption
-    #     if isinstance(__caption, str):
-    #         return _(__caption)
-    #     elif isinstance(__caption, list):
-    #         caption = ["• " + _(msg) for msg in __caption].join('\n')
-    #
     @property
     def symbol(self):
         """

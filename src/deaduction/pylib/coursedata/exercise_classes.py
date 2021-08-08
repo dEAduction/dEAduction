@@ -321,6 +321,12 @@ class Exercise(Theorem):
                      if isinstance(statement, Exercise)]
         return exercises.index(self)
 
+    @property
+    def definitions_for_implicit_use(self):
+        definitions = [st for st in self.available_statements
+                       if isinstance(st, Definition) and st.implicit_use]
+        return definitions
+
     @classmethod
     def from_parser_data(cls, data: dict, statements: list):
         """

@@ -330,6 +330,9 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         # Set tooltips
         self.set_tooltip()
 
+    def is_node(self):
+        return False
+
     def set_tooltip(self):
         """
         Set the math content of the statement as tooltip.
@@ -381,6 +384,9 @@ class StatementsTreeWidgetNode(QTreeWidgetItem):
         # Cosmetics
         self.setExpanded(True)
         self.set_selectable(False)
+
+    def is_node(self):
+        return True
 
     def add_child(self, child: QTreeWidgetItem):
         """
