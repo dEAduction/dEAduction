@@ -5,6 +5,7 @@
 
 Author(s)      : Kryzar <antoine@hugounet.com>
 Maintainers(s) : Kryzar <antoine@hugounet.com>
+                 Frédéric Le Roux <frederic.le_roux@imj-prg.fr>
 Date           : March 2021
 
 Copyright (c) 2021 the dEAduction team
@@ -25,11 +26,8 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from functools import partial
 import                logging
 from typing import    Optional
-import                qtrio
-from copy import      copy, deepcopy
 
 from PySide2.QtCore    import (Signal,
                                Slot,
@@ -39,6 +37,15 @@ from PySide2.QtWidgets import (QInputDialog,
                                QMainWindow,
                                QMessageBox,
                                QAction)
+
+import deaduction.pylib.config.vars      as     cvars
+from deaduction.pylib.coursedata        import  Exercise
+from deaduction.pylib.mathobj           import (MathObject,
+                                                PatternMathObject,
+                                                MissingImplicitDefinition,
+                                                Goal,
+                                                ProofState,
+                                                ProofStep)
 
 from deaduction.dui.elements            import (ActionButton,
                                                 LeanEditor,
@@ -50,29 +57,9 @@ from deaduction.dui.elements            import (ActionButton,
                                                 ConfigMainWindow,
                                                 ProofOutlineWindow)
 from deaduction.dui.primitives          import  ButtonsDialog
-from deaduction.pylib.memory            import (Journal)
-from deaduction.pylib.actions           import (InputType,
-                                                CodeForLean,
-                                                MissingParametersError,
-                                                WrongUserInput)
-import deaduction.pylib.actions.generic as      generic
-from deaduction.pylib.coursedata        import (Definition,
-                                                Exercise,
-                                                Theorem,
-                                                AutoStep)
-from deaduction.pylib.mathobj           import (MathObject,
-                                                PatternMathObject,
-                                                MissingImplicitDefinition,
-                                                Goal,
-                                                ProofState,
-                                                ProofStep)
-from deaduction.pylib.server.exceptions import  FailedRequestError
-from deaduction.pylib.server            import  ServerInterface
-
 from ._exercise_main_window_widgets     import (ExerciseCentralWidget,
                                                 ExerciseStatusBar,
                                                 ExerciseToolBar)
-import deaduction.pylib.config.vars      as     cvars
 
 log = logging.getLogger(__name__)
 global _
@@ -81,46 +68,35 @@ global _
 class ExerciseMainWindow(QMainWindow):
     # TODO: explain better communication and who talks to who?
     """
-    This class is responsible for both:
-        - managing the whole interface for exercises;
-        - communicating with a so-called server interface (self.servint, not
-          instantiated in this class): a middle man between the interface and
-          L∃∀N.
+    This class is responsible for managing the whole interface for exercises.
+    The communication with a so-called server interface, a middle man
+    between the interface and L∃∀N, is done in the Coordinator class,
+    which listen to ExerciseMainWindow's signals to handle user actions.
 
     User interface, server interface and L∃∀N server are different entities
     which remain separated by design; Qt signals and slots are used for
     communication between them. For the interface, self instantiates
     ExerciseCentralWidget, a toolbar, and probably more things in the future.
-    For the communication with self.servint, self:
+    For the communication with Coordinator.servint, self:
         1. stores user selection of math. objects or properties
            (self.current_selection);
         2. detects when an action button (in self.ecw.logic_btns or
            in self.ecw.proof_btns) or a statement (in
            self.ecw.statements_tree) is clicked on;
+        Then the Coordinator class is responsible for handling the next steps:
         3. sends (the current goal, current selection) and ((clicked
            action button (with self.__server_call_action)) xor (clicked
            statement (with self.__server_call_statement))) to the server
            interface;
         4. waits for some response (e.g. a new goal, an exception asking
            for new user parameters).
-    As said, this class both sends and receives data to / from a server
-    interface.
-        - Sending data to the server inteface (self.servint) is achieved
-          in the method server_task with signals and slots. More
-          precisely, this methods receives signals (async with
-          qtrio.enter_emissions_channel(signals …)) and calls functions
-          / methods accordingly. Beware that this is not exactly Qt's
-          native signals / slots mechanism.
-        - Receiving data from the server interface achieved with signals
-          and slots. Such signals are simply connected to Qt Slots in
-          self.__init__; this is much simpler than sending data.
-
-    Finally, all of this uses asynchronous processes (keywords async and
-    await) using trio and qtrio.
 
     :attribute exercise Exercise: The instance of the Exercise class
         representing the exercise to be solved by the user, instantiated
         in deaduction.dui.__main__.py.
+    :attribute lean_file VirtualFile: this object contains all the history
+    of the proof, and in particular all proof_steps and corresponding Lean
+    code content.
     :attribute current_goal Goal: The current goal, which contains the
         tagged target, tagged math. objects and tagged math. properties.
     :attribute current_selection [MathObjectWidgetItem]: The ordered of
@@ -130,8 +106,6 @@ class ExerciseMainWindow(QMainWindow):
         ExerciseCentraiWidget.__doc__.
     :attribute lean_editor LeanEditor: A text editor to live-edit lean
         code.
-    :attribute servint ServerInterface: The instance of ServerInterface
-        for the session, instantiated in deaduction.dui.__main__.py.
     :attribute toolbar QToolBar: The toolbar.
     :attribute journal Journal: used to store the list of all events
         occurring in the interface, both practical and logical.
@@ -158,16 +132,11 @@ class ExerciseMainWindow(QMainWindow):
     proof_step_updated              = Signal()
     ui_updated                      = Signal()
 
-    def __init__(self, exercise: Exercise, servint: ServerInterface):
+    def __init__(self, exercise: Exercise, lean_file):
         """
         Init self with an instance of the exercise class and an instance of the
         class ServerInterface. Both those instances are created in
         deaduction.dui.__main__.py. See self.__doc__.
-
-        :param exercise: The instance of the Exercise class representing
-            the exercise to be solved by the user.
-        :param servint: The instance of the ServerInterface class in charge of
-            communicating with vim.
         """
 
         super().__init__()
@@ -176,19 +145,21 @@ class ExerciseMainWindow(QMainWindow):
         # ─────────────────── Attributes ─────────────────── #
 
         self.exercise             = exercise
+        self.lean_file            = lean_file
+        # self.journal              = Journal()
+        # self.proof_step           = ProofStep()
         self.current_goal         = None
+        self.displayed_proof_step = None
+
+        # self.exercise_solved      = False
+        self.test_mode            = False
+
         self.current_selection    = []
         self._target_selected     = False
         self.freezed              = False
         self.ecw                  = ExerciseCentralWidget(exercise)
         self.lean_editor          = LeanEditor()
-        self.servint              = servint
         self.toolbar              = ExerciseToolBar()
-        self.journal              = Journal()
-        self.proof_step           = ProofStep()
-        self.displayed_proof_step = None
-        self.exercise_solved      = False
-        self.test_mode            = False
         self.double_clicked_item  = None
         self.proof_outline_window = ProofOutlineWindow()
 
@@ -209,12 +180,14 @@ class ExerciseMainWindow(QMainWindow):
         if settings.value("emw/Geometry"):
             self.restoreGeometry(settings.value("emw/Geometry"))
 
-        # ──────────────── Signals and slots ─────────────── #
+        self.close_coordinator = None  # Method set up in Coordinator
         self.__connect_signals()
 
         self.freeze()
-        # ──────────────── Start! ─────────────── #
-        # self.__initialize_exercise()
+
+    #######################
+    # Init /close methods #
+    #######################
 
     def __connect_signals(self):
         """
@@ -232,29 +205,6 @@ class ExerciseMainWindow(QMainWindow):
                 self.proof_outline_window.toggle)
         self.toolbar.change_exercise_action.triggered.connect(
                                                     self.change_exercise)
-
-        # # Server communication
-        # self.servint.proof_state_change.connect(self.update_proof_state)
-        # self.servint.lean_file_changed.connect(self.__update_lean_editor)
-        # self.servint.proof_no_goals.connect(self.fireworks)
-        # self.servint.effective_code_received.connect(
-        #                                         self.servint.history_replace)
-        # self.servint.effective_code_received.connect(self.store_effective_code)
-
-    def __disconnect_signals(self):
-        """
-        This method is called at closing. It is VERY important: without it,
-        servint signals will still be connected to methods concerning
-        the previous exercise.
-        """
-        # FIXME: move this in coordinator?? __main__ could call
-        #  Coordinator.close()
-        # self.servint.proof_state_change.disconnect()
-        self.servint.lean_file_changed.disconnect()
-        # self.servint.proof_no_goals.disconnect()
-        self.servint.effective_code_received.disconnect()
-        self.servint.exercise_set.disconnect()
-        self.servint.initial_proof_state_set.disconnect()
 
     def __init_menubar(self):
         """
@@ -286,46 +236,36 @@ class ExerciseMainWindow(QMainWindow):
         menu_bar = MenuBar(self, outline)
         self.setMenuBar(menu_bar)
 
-    def __initialize_exercise(self):
+    def closeEvent(self, event: QEvent):
         """
-        Call servint.set_exercise and connect signal exercise_set to
-         self.start_server_task.
+        Overload native Qt closeEvent method — which is called when self
+        is closed — to send the signal self.window_closed.
+
+        :param event: Some Qt mandatory thing.
         """
-        log.debug("Initializing exercise")
-        self.freeze()
+        log.info("Closing ExerciseMainWindow")
+        # # Save journal
+        # if not self.test_mode:
+        #     self.journal.save_exercise_with_proof_steps(emw=self)
+        self.lean_editor.close()
+        self.proof_outline_window.close()
 
-        # Try to display initial proof state prior to anything
-        proof_state = self.exercise.initial_proof_state
-        if proof_state:
-            goal = proof_state.goals[0]
-            self.ecw.update_goal(goal, 1, 1)
+        # Save window geometry
+        settings = QSettings("deaduction")
+        settings.setValue("emw/Geometry", self.saveGeometry())
 
-        # When exercise will be set, ui will be updated, and the following
-        # will call self.start_server_task
-        self.servint.exercise_set.connect(self.start_server_task)
-        self.servint.server_queue.add_task(self.servint.set_exercise,
-                                           self.exercise,
-                                           on_top=True)
+        self.window_closed.emit()
 
-        # Just in case initial proof states have not been received yet
-        self.servint.initial_proof_state_set.connect(
-                                    self.ecw.statements_tree.update_tooltips)
-        # Ask for missing initial proof states, if any
-        course = self.exercise.course
-        statements = [st for st in self.exercise.available_statements
-                      if not st.initial_proof_state]
-        if statements:
-            self.servint.set_statements(course, statements)
+        # Disconnect signals FIXME
+        if self.close_coordinator:
+            # Set up by Coordinator
+            self.close_coordinator()
+        super().closeEvent(event)
+        self.deleteLater()
 
-        ################################
-        # Definitions for implicit use #
-        ################################
-        definitions = [st for st in self.exercise.available_statements
-                       if isinstance(st, Definition) and st.implicit_use]
-        log.debug(f"{len(definitions)} definition(s) set for implicit use")
-        PatternMathObject.set_definitions_for_implicit_use(definitions)
-        log.debug(f"{len(MathObject.definition_patterns)} implicit "
-                  f"definitions in MathObject list")
+    ##################
+    # Config methods #
+    ##################
 
     def open_config_window(self):
         window = ConfigMainWindow(parent=self)
@@ -350,9 +290,10 @@ class ExerciseMainWindow(QMainWindow):
             self.setCentralWidget(self.ecw)
             self.__connect_signals()
             if not self.freezed:  # If freezed then maybe goal has not been set
-                self.ecw.update_goal(self.current_goal,
-                                     self.proof_step.current_goal_number,
-                                     self.proof_step.total_goals_counter)
+                self.ecw.update_goal(
+                                 self.current_goal,
+                                 self.displayed_proof_step.current_goal_number,
+                                 self.displayed_proof_step.total_goals_counter)
             self.toolbar.update()
             self.__init_menubar()
             # Reconnect Context area signals and slots
@@ -369,18 +310,15 @@ class ExerciseMainWindow(QMainWindow):
 
         self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
-    ###########
-    # Methods #
-    ###########
+    ##############
+    ##############
+    # Properties #
+    ##############
+    ##############
 
     @property
     def target_selected_by_default(self):
         return cvars.get('functionality.target_selected_by_default', False)
-
-    @property
-    def lean_file(self):
-        """ Virtual file containing the Lean code and its history."""
-        return self.servint.lean_file
 
     @property
     def logically_previous_proof_step(self):
@@ -390,7 +328,10 @@ class ExerciseMainWindow(QMainWindow):
         that was previously displayed by the ui in case of history undo or
         rewind (which is stored in self.displayed_proof_step).
         """
-        return self.lean_file.previous_proof_step
+        if self.lean_file:
+            return self.lean_file.previous_proof_step
+        else:
+            return None
 
     @property
     def objects(self):
@@ -417,36 +358,6 @@ class ExerciseMainWindow(QMainWindow):
     def target_selected(self, target_selected):
         self._target_selected = target_selected
 
-    def closeEvent(self, event: QEvent):
-        """
-        Overload native Qt closeEvent method — which is called when self
-        is closed — to send the signal self.window_closed.
-
-        :param event: Some Qt mandatory thing.
-        """
-        # Save journal
-        if not self.test_mode:
-            self.journal.save_exercise_with_proof_steps(emw=self)
-        self.lean_editor.close()
-        self.proof_outline_window.close()
-        # Save new initial proof states, if any
-        self.exercise.course.save_initial_proof_states()
-
-        # Save window geometry
-        settings = QSettings("deaduction")
-        settings.setValue("emw/Geometry", self.saveGeometry())
-
-        # FIXME:  cancel server_task
-        # if self.__server_task_scope:
-        #     self.__server_task_scope.cancel()
-
-        self.window_closed.emit()
-
-        # Disconnect signals FIXME
-        self.__disconnect_signals()
-        super().closeEvent(event)
-        self.deleteLater()
-
     @property
     def current_selection_as_mathobjects(self):
         """
@@ -470,458 +381,11 @@ class ExerciseMainWindow(QMainWindow):
 
         return msg
 
-    async def simulate(self, proof_step: ProofStep):
-        """
-        This method simulate proof_step by selecting the selection and
-        checking button or statement stored in proof_step. This is called
-        when redoing. Note that the corresponding actions are NOT called,
-        since this would modify history of the lean_file.
-        The method is asynchronous.
-        """
-
-        # Light target on/off as needed
-        if proof_step.selection:
-            self.ecw.target_wgt.mark_user_selected(False)
-        else:
-            self.ecw.target_wgt.mark_user_selected(True)
-        # Light on selection
-        for item in self.ecw.props_wgt.items + self.ecw.objects_wgt.items:
-            for math_object in proof_step.selection:
-                if item.mathobject == math_object:
-                    item.mark_user_selected(True)
-        # Check button or statement
-        if isinstance(proof_step.button, ActionButton):
-            await proof_step.button.simulate(duration=0.4)
-        elif isinstance(proof_step.statement_item, StatementsTreeWidgetItem):
-            await proof_step.statement_item.simulate(duration=0.4)
-        # Light off selection synchronously
-        for item in self.ecw.props_wgt.items:
-            item.mark_user_selected(False)
-
-    def manage_msgs(self, proof_step):
-        # ─────────── Display msgs and proof_outline ────────── #
-        # TODO: move everything below here to EMW
-        # Display current goal solved
-        if not proof_step.is_error() and not proof_step.is_history_move() \
-                and proof_step.delta_goals_count < 0:
-            self.display_current_goal_solved(proof_step.delta_goals_count)
-
-        # Status bar
-        if not proof_step.is_history_move():
-            self.statusBar.manage_msgs(proof_step)
-        elif proof_step.is_redo() or proof_step.is_goto():
-            self.statusBar.manage_msgs(self.lean_file.current_proof_step)
-
-        # Update proof_outline_window
-        powt = self.proof_outline_window.tree
-        if proof_step.is_history_move():
-            powt.set_marked(self.lean_file.target_idx-1)
-        elif proof_step.is_error():
-            powt.delete_after_goto_and_error(proof_step)
-        else:
-            powt.delete_and_insert(proof_step)
-
-    def process_wrong_user_input(self):
-        self.empty_current_selection()  # FIXME?
-
-    def update_goal(self, new_goal: Optional[Goal]):
-        """
-        Change widgets (target, math. objects and properties) to
-        new_goal and update internal mechanics accordingly.
-
-        :param new_goal: The new goal to update / set the interface to.
-        """
-
-        log.info("Updating UI")
-        self.manage_msgs(self.displayed_proof_step)
-
-        if not new_goal or new_goal is self.current_goal:  # No update needed
-            self.ui_updated.emit()  # This signal is used by autotest
-            return
-
-        # Get previous goal and set tags
-        if self.logically_previous_proof_step:
-            # Fixme: not when undoing history ?
-            previous_goal = self.logically_previous_proof_step.goal
-            Goal.compare(new_goal, previous_goal)  # Set tags
-
-        # Reset current context selection
-        # Here we do not use empty_current_selection since Widgets may have
-        # been deleted, and anyway this is cosmetics since  widgets are
-        # destroyed and re-created by "self.ecw.update_goal" just below
-        self.current_selection = []
-
-        # Update UI and attributes. Target stay selected if it was.
-        # statements_scroll = self.ecw.statements_tree.verticalScrollBar(
-        #                                                            ).value()
-        self.ecw.update_goal(new_goal,
-                             self.proof_step.current_goal_number,
-                             self.proof_step.total_goals_counter)
-        self.ecw.target_wgt.mark_user_selected(self.target_selected)
-        self.current_goal = new_goal
-
-        # Reconnect Context area signals and slots
-        self.ecw.objects_wgt.itemClicked.connect(self.process_context_click)
-        self.ecw.props_wgt.itemClicked.connect(self.process_context_click)
-
-        self.ecw.target_wgt.mouseReleaseEvent = self.process_target_click
-        if hasattr(self.ecw, "action_apply_button"):
-            self.ecw.objects_wgt.apply_math_object_triggered.connect(
-                self.apply_math_object_triggered)
-            self.ecw.props_wgt.apply_math_object_triggered.connect(
-                self.apply_math_object_triggered)
-
-        # self.ecw.statements_tree.verticalScrollBar().setValue(
-        #                                                 statements_scroll)
-        # FIXME: this should be called by a signal proof_outline_changer,
-        #  to be emited each time proof_outline change, in particular when
-        #  undoing.redoing
-        # self.proof_outline_window.tree.set_proof(self.lean_file.proof())
-        self.ui_updated.emit()  # This signal is used by the autotest module.
-
-    ##################################
-    # Async tasks and server methods #
-    ##################################
-
-    # Most important methods for communication with the server interface
-    # (self.servint) are defined here:
-    #   - server_task is the director which listens to signals and calls
-    #     other methods;
-    #   - process_async_signal is a wrapper method which allows
-    #     specific methods to be properly called in server_task by
-    #     putting them in try… except… blocks, etc;
-    #   - other methods are specific methods with a specific task,
-    #     called when a particular signal is received in server_task.
-
-    # # ─────────────────── Server task ────────────────── #
-    # @Slot()
-    # def start_server_task(self):
-    #     self.servint.nursery.start_soon(self.server_task,
-    #                                     name="Server task")
-    #
-    # async def server_task(self):
-    #     """
-    #     This method handles sending user data and actions to the server
-    #     interface (self.servint). It listens to signals and calls
-    #     specific methods for those signals accordingly. Async / await
-    #     processes are used in accordance to what is done in the server
-    #     interface. This method is called in self.__init__.
-    #     The user actions are stored in self.proof_step.
-    #     """
-    #     log.info("Starting server task")
-    #     # Wait for servint pending task to avoid receiving wrong signals
-    #     # FIXME: sometimes waiting never ends
-    #     if not self.servint.file_invalidated.is_set():
-    #         log.debug("(Waiting for servint...)")
-    #         await self.servint.file_invalidated.wait()
-    #     if not self.servint.proof_receive_done.is_set():
-    #         log.debug("(Waiting for servint...)")
-    #         await self.servint.proof_receive_done.wait()
-    #
-    #     self.freeze(False)
-    #     async with qtrio.enter_emissions_channel(
-    #             signals=[self.lean_editor.editor_send_lean,
-    #                      self.toolbar.redo_action.triggered,
-    #                      self.toolbar.undo_action.triggered,
-    #                      self.toolbar.rewind.triggered,
-    #                      self.proof_outline_window.history_goto,
-    #                      self.action_triggered,
-    #                      self.statement_triggered,
-    #                      self.apply_math_object_triggered]) as emissions:
-    #         async for emission in emissions.channel:
-    #             self.statusBar.erase()
-    #
-    #             if emission.is_from(self.lean_editor.editor_send_lean):
-    #                 await self.process_async_signal(self.__server_send_editor_lean)
-    #
-    #             elif emission.is_from(self.toolbar.redo_action.triggered)\
-    #                     and not self.lean_file.history_at_end:
-    #                 # No need to call self.update_goal, this emits the
-    #                 # signal proof_state_change of which
-    #                 # self.update_goal is a slot.
-    #                 # The UI simulate the redone step if possible.
-    #                 self.proof_step.button = 'history_redo'
-    #                 proof_step = self.lean_file.next_proof_step
-    #                 if proof_step:
-    #                     await self.simulate(proof_step)
-    #                 await self.process_async_signal(self.servint.history_redo)
-    #
-    #             elif emission.is_from(self.toolbar.undo_action.triggered):
-    #                 self.proof_step.button = 'history_undo'
-    #                 await self.process_async_signal(self.servint.history_undo)
-    #
-    #             elif emission.is_from(self.toolbar.rewind.triggered):
-    #                 self.proof_step.button = 'history_rewind'
-    #                 await self.process_async_signal(self.servint.history_rewind)
-    #
-    #             elif emission.is_from(self.proof_outline_window.history_goto):
-    #                 history_nb = emission.args[0]
-    #                 self.proof_step.button = 'history_goto'
-    #                 move_fct = partial(self.servint.history_goto, history_nb)
-    #                 await self.process_async_signal(move_fct)
-    #
-    #             elif emission.is_from(self.window_closed):
-    #                 log.debug("Exit server task")
-    #                 break
-    #
-    #             elif emission.is_from(self.action_triggered):
-    #                 # emission.args[0] is the ActionButton triggered by user
-    #                 button = emission.args[0]
-    #                 self.proof_step.button = button
-    #                 if button == self.ecw.action_apply_button \
-    #                         and self.double_clicked_item:
-    #                     # Make sure item is marked and added to selection
-    #                     item = self.double_clicked_item
-    #                     if item in self.current_selection:
-    #                         self.current_selection.remove(item)
-    #                     self.current_selection.append(item)  # Item is last
-    #                     self.double_clicked_item = None
-    #                 await self.process_async_signal(partial(
-    #                         self.__server_call_action, emission.args[0]))
-    #
-    #             elif emission.is_from(self.statement_triggered):
-    #                 # emission.args[0] is the StatementTreeWidgetItem
-    #                 # triggered by user
-    #                 if hasattr(emission.args[0], 'statement'):
-    #                     self.proof_step.statement_item = emission.args[0]
-    #                 await self.process_async_signal(partial(
-    #                         self.__server_call_statement, emission.args[0]))
-    #
-    #             elif emission.is_from(self.apply_math_object_triggered):
-    #                 self.double_clicked_item = emission.args[0]
-    #                 # Emulate click on 'apply' button:
-    #                 self.ecw.action_apply_button.animateClick(msec=500)
-    #
-    # # ──────────────── Template function ─────────────── #
-    #
-    # async def process_async_signal(self, process_function: Callable):
-    #     """
-    #     This methods wraps specific methods to be called when a specific
-    #     signal is received in server_task. First, try to call
-    #     process_function and waits for a response. An exception may be
-    #     risen to ask user for additional info (e.g. a math object).
-    #     Note that the current goal is modified from elsewhere in the
-    #     program (signal self.servint.proof_state_change.connect), not
-    #     here! This is done before the finally bloc. And finally, update
-    #     the last interface elements to be updated.
-    #     """
-    #
-    #     self.freeze(True)
-    #
-    #     try:
-    #         await process_function()
-    #     except FailedRequestError as error:
-    #         # TODO: turn this into a Slot
-    #         self.proof_step.error_type = 2
-    #         self.proof_step.error_msg = error.message
-    #
-    #         # Abort and go back to last goal
-    #         await self.servint.history_delete()
-    #
-    #     finally:
-    #         if self.lean_file.current_proof_step \
-    #                 and not self.lean_file.current_proof_step.no_more_goal:
-    #             self.freeze(False)
-    #         else:  # If no more goals, disable actions but enable toolbar
-    #             self.ecw.freeze(True)
-    #             self.toolbar.setEnabled(True)
-    #         # Required because history is always changed with signals
-    #         self.toolbar.undo_action.setEnabled(
-    #                 not self.servint.lean_file.history_at_beginning)
-    #         self.toolbar.rewind.setEnabled(
-    #                 not self.servint.lean_file.history_at_beginning)
-    #         self.toolbar.redo_action.setEnabled(
-    #                 not self.servint.lean_file.history_at_end)
-    #
-    # # ─────────────── Specific functions ─────────────── #
-    # # To be called as process_function in the above
-    #
-    # async def __server_call_action(self,
-    #                                action_btn: ActionButton,
-    #                                auto_selection=None,
-    #                                auto_user_input=None):
-    #     """
-    #     Call the action corresponding to the action_btn
-    #
-    #     The action is linked to the action_btn in the "action" field. Then, we
-    #     can try to call the action in a loop. As we doesn't now if the action
-    #     needs some parameters or not, it may throw the
-    #     "MissingParametersErrorException". This exception indicates that we
-    #     need to ask some info to the user. So, we ask what the user wants, then
-    #     we redo one loop iteration, feeding the action with the new input.
-    #
-    #     Another exception that can occur is the WrongUserInput exception. At
-    #     this point, the user entered some wrong data, we display an error
-    #     in the status bar and stop.
-    #
-    #     Note the usage of the try .. else statement.
-    #
-    #     :param action_btn: the button corresponding to the action we want to
-    #     call
-    #     """
-    #
-    #     action     = action_btn.action
-    #     log.debug(f'Calling action {action.symbol}')
-    #     # Send action and catch exception when user needs to:
-    #     #   - choose A or B when having to prove (A OR B) ;
-    #     #   - enter an element when clicking on 'exists' button.
-    #     #   - and so on.
-    #     if auto_selection:  # For autotest
-    #         selection = auto_selection
-    #         self.proof_step.selection = selection
-    #     else:
-    #         selection = self.current_selection_as_mathobjects
-    #         self.proof_step.selection = selection
-    #
-    #     if auto_user_input:
-    #         user_input = auto_user_input
-    #     else:
-    #         user_input = []
-    #
-    #     while True:
-    #         try:
-    #             if not user_input:
-    #                 lean_code = action.run(
-    #                     self.proof_step,
-    #                     selection,  # (TODO: selection is stored in proof_step)
-    #                     target_selected=self.target_selected)
-    #             else:
-    #                 lean_code = action.run(
-    #                     self.proof_step,
-    #                     selection,
-    #                     user_input,
-    #                     target_selected=self.target_selected)
-    #
-    #         except MissingParametersError as e:
-    #             if e.input_type == InputType.Text:
-    #                 choice, ok = QInputDialog.getText(action_btn,
-    #                                                   e.title,
-    #                                                   e.output)
-    #             elif e.input_type == InputType.Choice:
-    #                 choice, ok = ButtonsDialog.get_item(e.choices,
-    #                                                     e.title,
-    #                                                     e.output)
-    #             if ok:
-    #                 user_input.append(choice)
-    #             else:
-    #                 break
-    #
-    #         except WrongUserInput as error:
-    #             self.proof_step.user_input = user_input
-    #             self.proof_step.error_type = 1
-    #             self.proof_step.error_msg = error.message
-    #
-    #             self.empty_current_selection()
-    #             self.update_proof_state(self.displayed_proof_step.proof_state)
-    #             break
-    #
-    #         # New: implicit use of definition
-    #         except MissingImplicitDefinition as mid:
-    #             definition = mid.definition
-    #             math_object = mid.math_object
-    #             rewritten_math_object = mid.rewritten_math_object
-    #             selection_rw = selection
-    #             index = math_object.find_in(selection)
-    #             if index is not None:
-    #                 selection_rw = [selection[index]]
-    #             log.debug(f"Implicit use of definition "
-    #                      f"{definition.pretty_name} in "
-    #                      f"{math_object.to_display()} -> "
-    #                      f"{rewritten_math_object.to_display()}")
-    #             lean_code = generic.action_definition(self.proof_step,
-    #                                                   selection_rw,
-    #                                                   definition,
-    #                                                   self.target_selected)
-    #             await self.servint.server_queue.process_task(
-    #                                                 self.servint.code_insert,
-    #                                                 definition.pretty_name,
-    #                                                 lean_code)
-    #             break
-    #
-    #         else:
-    #             self.proof_step.lean_code = lean_code
-    #             self.proof_step.user_input = user_input
-    #             # Update lean_file and call Lean server
-    #             await self.servint.server_queue.process_task(
-    #                                                 self.servint.code_insert,
-    #                                                 action.symbol,
-    #                                                 lean_code)
-    #             break
-    #
-    # async def __server_call_statement(self,
-    #                                   item: StatementsTreeWidgetItem,
-    #                                   auto_selection=None):
-    #     """
-    #     This function is called when the user clicks on a Statement he wants to
-    #     apply. The statement can be either a Definition or a Theorem. the code
-    #     is then inserted to the server.
-    #     """
-    #     if auto_selection:
-    #         selection = auto_selection
-    #         self.proof_step.selection = selection
-    #     else:
-    #         selection = self.current_selection_as_mathobjects
-    #         self.proof_step.selection = selection
-    #
-    #     # Do nothing if user clicks on a node
-    #     if isinstance(item, StatementsTreeWidgetItem):
-    #         try:
-    #             item.setSelected(False)
-    #             statement = item.statement
-    #
-    #             if isinstance(statement, Definition):
-    #                 lean_code = generic.action_definition(
-    #                     self.proof_step,
-    #                     selection,
-    #                     statement,
-    #                     self.target_selected)
-    #             elif isinstance(statement, Theorem):
-    #                 lean_code = generic.action_theorem(
-    #                     self.proof_step,
-    #                     selection,
-    #                     statement,
-    #                     self.target_selected)
-    #
-    #         except WrongUserInput as error:
-    #             self.empty_current_selection()
-    #             self.proof_step.error_type = 1
-    #             self.proof_step.error_msg = error.message
-    #             self.update_proof_state(self.displayed_proof_step.proof_state)
-    #
-    #         else:
-    #             log.debug(f'Calling statement {item.statement.pretty_name}')
-    #             self.proof_step.lean_code = lean_code
-    #             # Update lean_file and call Lean server
-    #             await self.servint.server_queue.process_task(
-    #                                                 self.servint.code_insert,
-    #                                                 statement.pretty_name,
-    #                                                 lean_code)
-    #
-    # async def __server_send_editor_lean(self):
-    #     """
-    #     Send the L∃∀N code written in the L∃∀N editor widget to the
-    #     server interface.
-    #     """
-    #     await self.servint.server_queue.process_task(
-    #                             self.servint.code_set,
-    #                             _('Code from editor'),
-    #                             self.lean_editor.code_get())
-
-    #########
-    # Slots #
-    #########
-
-    @Slot()
-    def empty_current_selection(self):
-        """
-        Clear current (user) selection of math. objects and properties.
-        """
-
-        for item in self.current_selection:
-            item.mark_user_selected(False)
-        self.current_selection = []
-        if self.target_selected_by_default:
-            self.ecw.target_wgt.mark_user_selected(self.target_selected)
+    ##############
+    ##############
+    # UI Methods #
+    ##############
+    ##############
 
     @Slot()
     def freeze(self, yes=True):
@@ -938,79 +402,24 @@ class ExerciseMainWindow(QMainWindow):
         self.ecw.freeze(yes)
         self.toolbar.setEnabled(not yes)
 
-    def history_button_unfreeze(self):
+    def history_button_unfreeze(self, at_beginning, at_end):
         # Required because history is always changed with signals
-        self.emw.toolbar.undo_action.setEnabled(
-            not self.servint.lean_file.history_at_beginning)
-        self.emw.toolbar.rewind.setEnabled(
-            not self.servint.lean_file.history_at_beginning)
-        self.emw.toolbar.redo_action.setEnabled(
-            not self.servint.lean_file.history_at_end)
+        self.toolbar.undo_action.setEnabled(not at_beginning)
+        self.toolbar.rewind.setEnabled(not at_beginning)
+        self.toolbar.redo_action.setEnabled(not at_end)
 
-
+    # Manage selection #
     @Slot()
-    def display_current_goal_solved(self, delta):
-        # FIXME: connect slot!!
-        proof_step = self.lean_file.current_proof_step
-        if proof_step.current_goal_number and not self.test_mode \
-                and self.lean_file.current_number_of_goals \
-                and not proof_step.is_error() \
-                and not proof_step.is_undo():
-            log.info(f"Current goal solved!")
-            if delta == -1:
-                message = _('Current goal solved')
-            else:  # Several goals solved at once ??
-                nb = str(-delta)
-                message = nb + ' ' + _('goals solved!')
-            QMessageBox.information(self, '', message, QMessageBox.Ok)
-
-    @Slot()
-    def fireworks(self):
+    def empty_current_selection(self):
         """
-        As of now,
-        - display a dialog when the target is successfully solved,
-        - replace the target by a message "No more goal"
-        Note that the dialog is displayed only the first time the signal is
-        triggered, thanks to the flag self.cqdf.
+        Clear current (user) selection of math. objects and properties.
         """
 
-        # TODO: make it a separate class
-        # Fixme: Add 10min to timeout, but somehow it still happens that
-        # QMessageBox appears twice
-        self.servint.server_queue.cancel_scope.deadline += 600
-
-        # Display msg_box unless redoing /moving or test mode
-        if not self.proof_step.is_redo() and not self.proof_step.is_goto()\
-                and not self.test_mode:
-            title = _('Target solved')
-            text = _('The proof is complete!')
-            msg_box = QMessageBox(parent=self)
-            msg_box.setText(text)
-            msg_box.setWindowTitle(title)
-            button_ok = msg_box.addButton(_('Back to exercise'),
-                                          QMessageBox.YesRole)
-            button_change = msg_box.addButton(_('Change exercise'),
-                                              QMessageBox.YesRole)
-            button_change.clicked.connect(self.change_exercise)
-            msg_box.exec_()
-
-        self.proof_step.no_more_goal = True
-        self.proof_step.new_goals = []
-        # Artificially create a final proof_state by replacing target by a msg
-        # (We do not get the final proof_state from Lean).
-        proof_state = deepcopy(self.proof_step.proof_state)
-        target = proof_state.goals[0].target
-        target.math_type = MathObject(node="NO_MORE_GOAL",
-                                      info={},
-                                      children=[],
-                                      )
-        # Update proof_step and UI
-        self.update_proof_state(proof_state)
-
-        if not self.exercise_solved:
-            self.exercise_solved = True
-            if not self.test_mode:  # Save exercise for auto-test
-                self.lean_file.save_exercise_for_autotest(self)
+        for item in self.current_selection:
+            item.mark_user_selected(False)
+        self.current_selection = []
+        if self.target_selected_by_default:
+            self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
     @Slot(MathObjectWidgetItem)
     def process_context_click(self, item: MathObjectWidgetItem):
@@ -1053,92 +462,139 @@ class ExerciseMainWindow(QMainWindow):
         # Un-select context items
         self.empty_current_selection()
 
+    async def simulate(self, proof_step: ProofStep):
+        """
+        This method simulate proof_step by selecting the selection and
+        checking button or statement stored in proof_step. This is called
+        when redoing. Note that the corresponding actions are NOT called,
+        since this would modify history of the lean_file.
+        The method is asynchronous.
+        """
+
+        # Light target on/off as needed
+        if proof_step.selection:
+            self.ecw.target_wgt.mark_user_selected(False)
+        else:
+            self.ecw.target_wgt.mark_user_selected(True)
+        # Light on selection
+        for item in self.ecw.props_wgt.items + self.ecw.objects_wgt.items:
+            for math_object in proof_step.selection:
+                if item.mathobject == math_object:
+                    item.mark_user_selected(True)
+        # Check button or statement
+        if isinstance(proof_step.button, ActionButton):
+            await proof_step.button.simulate(duration=0.4)
+        elif isinstance(proof_step.statement_item, StatementsTreeWidgetItem):
+            await proof_step.statement_item.simulate(duration=0.4)
+        # Light off selection synchronously
+        for item in self.ecw.props_wgt.items:
+            item.mark_user_selected(False)
+
+    ##################
+    ##################
+    # Update methods #
+    ##################
+    ##################
+
     @Slot()
-    def update_lean_editor(self):
+    def update_lean_editor(self, lean_file_content):
         """
         Update the L∃∀N editor widget to that of the current virtual
         file L∃∀N code.
         """
 
-        self.lean_editor.code_set(self.servint.lean_file.inner_contents)
+        self.lean_editor.code_set(lean_file_content)
 
-    # @Slot(ProofState)
-    # def update_proof_state(self, proofstate: ProofState):
-    #     """
-    #     Update self (attributes, interface) to the new proof state,
-    #     which includes the new goal. This is also where self.proof_step is
-    #     updated and stored both in the journal and in lean_file's history if
-    #     this is adequate.
-    #
-    #     :proofstate: The proofstate one wants to update self to.
-    #     """
-    #     log.debug("Updating proof state...")
-    #     proof_step = self.proof_step
-    #
-    #     # ───────────── Process data ──────────── #
-    #     proof_step.proof_state = proofstate
-    #     log.debug(f"Proof step n°{proof_step.pf_nb}:")
-    #     log.debug(proof_step.display())
-    #     # Store current proof_step in the lean_file (for logical memory)
-    #     # and in the journal (for comprehensive memory)
-    #     # We do NOT want to modify the attached context if we are moving in
-    #     # history or recovering from an error.
-    #     if not proof_step.is_history_move()\
-    #             and not proof_step.is_error():
-    #         # log.debug("Attaching proof_step to history")
-    #         self.lean_file.state_info_attach(proof_step=proof_step)
-    #     if not self.test_mode:
-    #         self.journal.store(proof_step, self)
-    #     delta = self.lean_file.delta_goals_count
-    #     proof_step.delta_goals_count = delta
-    #     proof_step.update_goals()
-    #
-    #     # Debug
-    #     log.debug(f"Target_idx: {self.lean_file.target_idx}")
-    #     log.debug("Proof nodes:")
-    #     for he in self.lean_file.history:
-    #         proof_nodes = he.misc_info.get('proof_step').proof_nodes
-    #         log.debug([pf.txt for pf in proof_nodes])
-    #
-    #     # Store auto_step
-    #     proof_step.auto_step = AutoStep.from_proof_step(proof_step, emw=self)
-    #     # Pass proof_step to displayed_proof_step, and create a new proof_step
-    #     # with same goals data as logically previous proof step.
-    #     # Note that we also keep the proof_state because it is needed by the
-    #     # logical actions to compute the pertinent Lean code.
-    #     self.displayed_proof_step = copy(proof_step)
-    #
-    #     # ─────────── Display msgs and proof_outline ────────── #
-    #     # Display current goal solved
-    #     if not proof_step.is_error() and not proof_step.is_history_move() \
-    #             and delta < 0:
-    #         self.display_current_goal_solved(delta)
-    #
-    #     # Status bar
-    #     if not proof_step.is_history_move():
-    #         self.statusBar.manage_msgs(proof_step)
-    #     elif proof_step.is_redo() or proof_step.is_goto():
-    #         self.statusBar.manage_msgs(self.lean_file.current_proof_step)
-    #
-    #     # Update proof_outline_window
-    #     powt = self.proof_outline_window.tree
-    #     if proof_step.is_history_move():
-    #         powt.set_marked(self.lean_file.target_idx-1)
-    #     elif proof_step.is_error():
-    #         powt.delete_after_goto_and_error(proof_step)
-    #     else:
-    #         powt.delete_and_insert(proof_step)
-    #
-    #     # ─────────── Creation of next proof_step ────────── #
-    #     # LOGICAL proof_step is always in lean_file's history
-    #     self.proof_step = ProofStep.next_(self.lean_file.current_proof_step,
-    #                                       self.lean_file.target_idx)
-    #     self.proof_step_updated.emit()  # Received in auto_test
-    #
-    #     # ─────────────── Update goal on ui ─────────────── #
-    #     self.update_goal(proofstate.goals[0])
+    @Slot()
+    def display_current_goal_solved(self, delta):
+        # FIXME: connect slot!!
+        proof_step = self.lean_file.current_proof_step
+        if proof_step.current_goal_number and not self.test_mode \
+                and self.lean_file.current_number_of_goals \
+                and not proof_step.is_error() \
+                and not proof_step.is_undo():
+            log.info(f"Current goal solved!")
+            if delta == -1:
+                message = _('Current goal solved')
+            else:  # Several goals solved at once ??
+                nb = str(-delta)
+                message = nb + ' ' + _('goals solved!')
+            QMessageBox.information(self, '', message, QMessageBox.Ok)
 
-    @Slot(CodeForLean)
-    def store_effective_code(self, effective_lean_code):
-        self.proof_step.effective_code = effective_lean_code
+    def manage_msgs(self, proof_step):
+        """
+        Display msgs in status bar, "current goal solved" msg if needed,
+        and display proof_outline in proof_outline_window.
+        """
+        # Display current goal solved
+        if not proof_step.is_error() and not proof_step.is_history_move() \
+                and proof_step.delta_goals_count < 0:
+            self.display_current_goal_solved(proof_step.delta_goals_count)
+
+        # Status bar
+        if not proof_step.is_history_move():
+            self.statusBar.manage_msgs(proof_step)
+        elif proof_step.is_redo() or proof_step.is_goto():
+            self.statusBar.manage_msgs(self.lean_file.current_proof_step)
+
+        # Update proof_outline_window
+        powt = self.proof_outline_window.tree
+        if proof_step.is_history_move():
+            powt.set_marked(self.lean_file.target_idx-1)
+        elif proof_step.is_error():
+            powt.delete_after_goto_and_error(proof_step)
+        else:
+            powt.delete_and_insert(proof_step)
+
+    def process_wrong_user_input(self):
+        self.empty_current_selection()
+
+    def update_goal(self, new_goal: Optional[Goal]):
+        """
+        Change widgets (target, math. objects and properties) to
+        new_goal and update internal mechanics accordingly.
+
+        :param new_goal: The new goal to update / set the interface to.
+        """
+        # TODO: tags will be incorporated in ContextMathObjects
+        log.info("Updating UI")
+        self.manage_msgs(self.displayed_proof_step)
+
+        if not new_goal or new_goal is self.current_goal:  # No update needed
+            self.ui_updated.emit()  # This signal is used by autotest
+            return
+
+        # Get previous goal and set tags
+        if self.logically_previous_proof_step:
+            # Fixme: not when undoing history ?
+            previous_goal = self.logically_previous_proof_step.goal
+            Goal.compare(new_goal, previous_goal)  # Set tags
+
+        # Reset current context selection
+        # Here we do not use empty_current_selection since Widgets may have
+        # been deleted, and anyway this is cosmetics since  widgets are
+        # destroyed and re-created by "self.ecw.update_goal" just below
+        self.current_selection = []
+
+        # Update UI and attributes. Target stay selected if it was.
+        # statements_scroll = self.ecw.statements_tree.verticalScrollBar(
+        #                                                            ).value()
+        self.ecw.update_goal(new_goal,
+                             self.displayed_proof_step.current_goal_number,
+                             self.displayed_proof_step.total_goals_counter)
+        self.ecw.target_wgt.mark_user_selected(self.target_selected)
+        self.current_goal = new_goal
+
+        # Reconnect Context area signals and slots
+        self.ecw.objects_wgt.itemClicked.connect(self.process_context_click)
+        self.ecw.props_wgt.itemClicked.connect(self.process_context_click)
+
+        self.ecw.target_wgt.mouseReleaseEvent = self.process_target_click
+        if hasattr(self.ecw, "action_apply_button"):
+            self.ecw.objects_wgt.apply_math_object_triggered.connect(
+                self.apply_math_object_triggered)
+            self.ecw.props_wgt.apply_math_object_triggered.connect(
+                self.apply_math_object_triggered)
+
+        self.ui_updated.emit()  # This signal is used by the autotest module.
 

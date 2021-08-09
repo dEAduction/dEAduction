@@ -63,6 +63,9 @@ class LeanEditor(QWidget):
         main_layout.addLayout(btn_layout)
         self.setLayout(main_layout)
 
+        # TODO: enable code sent?
+        self.send_btn.setEnabled(False)
+
     ###########
     # Methods #
     ###########

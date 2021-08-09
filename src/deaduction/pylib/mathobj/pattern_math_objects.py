@@ -116,7 +116,8 @@ class PatternMathObject(MathObject):
             # log.debug(f"   Mo is metavar n°{metavar.info['nb']}")
             return metavar
 
-        elif math_object.node == 'LOCAL_CONSTANT':
+        elif math_object.node == 'LOCAL_CONSTANT' and \
+                not math_object.is_bound_var():
             # Turn math_type into a PatternMathObject,
             # then create a new metavar.
             if math_object.math_type is NO_MATH_TYPE:
@@ -156,6 +157,7 @@ class PatternMathObject(MathObject):
         """
         Redefine __eq__, otherwise all METAVARS are equals!
         """
+        # Fixme
         return self is other
 
     def is_metavar(self):

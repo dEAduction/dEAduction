@@ -25,9 +25,6 @@ This file is part of d∃∀duction.
 """
 
 # TODO:
-#  - send a unique signal from Servint, at the end of its process,
-#  with status: ok/error/no_goal
-#  - Process FRErrors
 #  - Put UserActionStep as an attribute of emw, and fill it there.
 #  Then store it in proof_step.
 #  - Use Coordinator.action_queue to complete implementation of  implicit def
@@ -96,17 +93,20 @@ class Coordinator(QObject):
     """
     Coordinate UI (ExerciseMainWindow), logical actions, and Lean server.
 
-
     Info needed by ExerciseMainWindow:
     - For init,
         - list of buttons,
         - list of statements, with initial proof states.
 
     - For updating,
-        - goal = list of ContextMathObjects, and target.
+        - goal = a list of ContextMathObjects, and a target.
         - tags history at beginning / at end (for toolbar)
         - tag no_goal
         - msgs for StatusBar
+        - delta_goal_count for displaying "goal solved" msg.
+        - lean_file content for the lean_editor console.
+
+    For the moment, much info is passed through proof_step and lean_file.
     """
 
     proof_step_updated              = Signal()
@@ -115,26 +115,33 @@ class Coordinator(QObject):
         super().__init__()
         self.exercise: Exercise       = exercise
         self.servint: ServerInterface = servint
+        self.emw = ExerciseMainWindow(exercise, lean_file=None)
+        # Lean_file will be set when starting server_task
+        self.emw.close_coordinator = self.closeEvent
 
-        self.emw = ExerciseMainWindow(exercise, servint)
-        # TODO: suppress servint in emw
+        # self.current_action_step            = None
+        # self.action_queue: [UserActionStep] = None
 
-        self.current_action_step            = None
-        self.action_queue: [UserActionStep] = None
-
-        self.journal                        = Journal()
         self.proof_step                     = ProofStep()
+        self.journal                        = Journal()
 
         # Flags
         self.exercise_solved                = False
         self.test_mode                      = False
 
         # Initialization
-        # self.emw.show()  # TODO: Remove ?
         self.__connect_signals()
         self.__initialize_exercise()
 
-    # Properties: TODO move to EMW
+    ##############
+    # Properties #
+    ##############
+
+    # TODO move to EMW?
+    @property
+    def lean_file(self):
+        return self.servint.lean_file
+
     @property
     def ecw(self):
         return self.emw.ecw
@@ -158,10 +165,6 @@ class Coordinator(QObject):
     @property
     def displayed_proof_step(self):
         return self.emw.displayed_proof_step
-
-    @property
-    def lean_file(self):
-        return self.servint.lean_file
 
     @property
     def action_triggered(self):
@@ -190,6 +193,12 @@ class Coordinator(QObject):
     @property
     def target_selected(self):
         return self.emw.target_selected
+
+    #######################
+    #######################
+    # Init /close methods #
+    #######################
+    #######################
 
     def __connect_signals(self):
         """
@@ -241,61 +250,53 @@ class Coordinator(QObject):
             self.servint.set_statements(course, statements)
 
         # Implicit definitions
-        self.set_definitions_for_implicit_use(self.exercise)
+        self.set_definitions_for_implicit_use()
 
-    @staticmethod
     @Slot()
-    def set_definitions_for_implicit_use(exercise):
+    def set_definitions_for_implicit_use(self):
+        exercise = self.exercise
         definitions = exercise.definitions_for_implicit_use
         log.debug(f"{len(definitions)} definition(s) set for implicit use")
         PatternMathObject.set_definitions_for_implicit_use(definitions)
         log.debug(f"{len(MathObject.definition_patterns)} implicit "
                   f"definitions in MathObject list")
 
-    @Slot()
-    def set_fireworks(self):
+
+    def closeEvent(self):
+        log.info("Closing Coordinator")
+
+        self.disconnect_signals()
+
+        # Save journal
+        if not self.test_mode:
+            self.journal.save_exercise_with_proof_steps(emw=self)
+        # Save new initial proof states, if any
+        self.exercise.course.save_initial_proof_states()
+        # FIXME:  cancel server_task
+        # if self.__server_task_scope:
+        #     self.__server_task_scope.cancel()
+
+    def disconnect_signals(self):
         """
-        As of now,
-        - display a dialog when the target is successfully solved,
-        - replace the target by a message "No more goal".
+        This method is called at closing. It is VERY important: without it,
+        servint signals will still be connected to methods concerning
+        the previous exercise.
         """
+        self.servint.lean_file_changed.disconnect()
+        self.servint.effective_code_received.disconnect()
+        self.servint.exercise_set.disconnect()
+        self.servint.initial_proof_state_set.disconnect()
+        self.servint.lean_response.disconnect()
 
-        # TODO: call this AT THE END of process
-        # Fixme: Add 10min to timeout, but somehow it still happens that
-        # QMessageBox appears twice
-        self.servint.server_queue.cancel_scope.deadline += 600
-
-        # Display msg_box unless redoing /moving or test mode
-        if not self.proof_step.is_redo() and not self.proof_step.is_goto()\
-                and not self.test_mode:
-            title = _('Target solved')
-            text = _('The proof is complete!')
-            msg_box = QMessageBox(parent=self.emw)
-            msg_box.setText(text)
-            msg_box.setWindowTitle(title)
-            button_ok = msg_box.addButton(_('Back to exercise'),
-                                          QMessageBox.YesRole)
-            button_change = msg_box.addButton(_('Change exercise'),
-                                              QMessageBox.YesRole)
-            button_change.clicked.connect(self.emw.change_exercise)
-            msg_box.exec_()
-
-        self.proof_step.no_more_goal = True
-        self.proof_step.new_goals = []
-        # Artificially create a final proof_state by replacing target by a msg
-        # (We do not get the final proof_state from Lean).
-        proof_state = deepcopy(self.proof_step.proof_state)
-        target = proof_state.goals[0].target
-        target.math_type = MathObject(node="NO_MORE_GOAL",
-                                      info={},
-                                      children=[],
-                                      )
-
-        return proof_state
-
+    ######################################################
+    ######################################################
     # ─────────────────── Server task ────────────────── #
+    ######################################################
+    ######################################################
+
     @Slot()
     def start_server_task(self):
+        self.emw.lean_file = self.servint.lean_file
         self.servint.nursery.start_soon(self.server_task,
                                         name="Server task")
 
@@ -303,22 +304,13 @@ class Coordinator(QObject):
         """
         This method handles sending user data and actions to the server
         interface (self.servint). It listens to signals and calls
-        specific methods for those signals accordingly. Async / await
-        processes are used in accordance to what is done in the server
-        interface. This method is called in self.__init__.
+        specific methods for those signals accordingly. Actions are then
+        sent to the ServerQueue of ServerInterface.
+        This method is called at initialisation of Coordinator.
         The user actions are stored in self.proof_step.
         """
 
-        # TODO: suppress process_async_signal
         log.info("Starting server task")
-        # Wait for servint pending task to avoid receiving wrong signals
-        # FIXME: sometimes waiting never ends
-        # if not self.servint.file_invalidated.is_set():
-        #     log.debug("(Waiting for servint...)")
-        #     await self.servint.file_invalidated.wait()
-        # if not self.servint.proof_receive_done.is_set():
-        #     log.debug("(Waiting for servint...)")
-        #     await self.servint.proof_receive_done.wait()
 
         self.emw.freeze(False)
         async with qtrio.enter_emissions_channel(
@@ -332,11 +324,13 @@ class Coordinator(QObject):
                          self.apply_math_object_triggered]) as emissions:
             async for emission in emissions.channel:
                 self.statusBar.erase()
+                self.emw.freeze(True)
+                # DO NOT forget to unfreeze at th end. TODO: add timeout
                 log.debug("Emission in the server_task channel")
-                if emission.is_from(self.lean_editor.editor_send_lean):
-                    await self.process_async_signal(self.__server_send_editor_lean)
-
-                elif emission.is_from(self.toolbar.redo_action.triggered)\
+                ########################
+                # History move actions #
+                ########################
+                if emission.is_from(self.toolbar.redo_action.triggered)\
                         and not self.lean_file.history_at_end:
                     # No need to call self.update_goal, this emits the
                     # signal proof_state_change of which
@@ -346,25 +340,29 @@ class Coordinator(QObject):
                     proof_step = self.lean_file.next_proof_step
                     if proof_step:
                         await self.emw.simulate(proof_step)
-                    await self.process_async_signal(self.servint.history_redo)
+                    self.servint.server_queue.add_task(
+                                                    self.servint.history_redo)
 
                 elif emission.is_from(self.toolbar.undo_action.triggered):
                     self.proof_step.button = 'history_undo'
-                    await self.process_async_signal(self.servint.history_undo)
+                    self.servint.server_queue.add_task(
+                                                    self.servint.history_undo)
 
                 elif emission.is_from(self.toolbar.rewind.triggered):
                     self.proof_step.button = 'history_rewind'
-                    await self.process_async_signal(self.servint.history_rewind)
+                    self.servint.server_queue.add_task(
+                                                self.servint.history_rewind)
 
                 elif emission.is_from(self.proof_outline_window.history_goto):
                     history_nb = emission.args[0]
                     self.proof_step.button = 'history_goto'
-                    move_fct = partial(self.servint.history_goto, history_nb)
-                    await self.process_async_signal(move_fct)
-
-                # elif emission.is_from(self.window_closed):
-                #     log.debug("Exit server task")
-                #     break
+                    self.servint.server_queue.add_task(
+                                        self.servint.history_goto, history_nb)
+                ########################
+                # Code to Lean actions #
+                ########################
+                elif emission.is_from(self.lean_editor.editor_send_lean):
+                    self.__server_send_editor_lean()
 
                 elif emission.is_from(self.action_triggered):
                     # emission.args[0] is the ActionButton triggered by user
@@ -372,22 +370,21 @@ class Coordinator(QObject):
                     self.proof_step.button = button
                     if button == self.ecw.action_apply_button \
                             and self.double_clicked_item:
+                        # TODO: move this to ecw
                         # Make sure item is marked and added to selection
                         item = self.double_clicked_item
                         if item in self.current_selection:
                             self.current_selection.remove(item)
                         self.current_selection.append(item)  # Item is last
                         self.emw.double_clicked_item = None
-                    await self.process_async_signal(partial(
-                            self.__server_call_action, emission.args[0]))
+                    self.__server_call_action(emission.args[0])
 
                 elif emission.is_from(self.statement_triggered):
                     # emission.args[0] is the StatementTreeWidgetItem
                     # triggered by user
                     if hasattr(emission.args[0], 'statement'):
                         self.proof_step.statement_item = emission.args[0]
-                    await self.process_async_signal(partial(
-                            self.__server_call_statement, emission.args[0]))
+                    self.__server_call_statement(emission.args[0])
 
                 elif emission.is_from(self.apply_math_object_triggered):
                     # Fixme: put in EMW
@@ -395,80 +392,10 @@ class Coordinator(QObject):
                     # Emulate click on 'apply' button:
                     self.ecw.action_apply_button.animateClick(msec=500)
 
-    # ──────────────── Template function ─────────────── #
-
-    async def process_async_signal(self, process_function: Callable):
-        """
-        This methods wraps specific methods to be called when a specific
-        signal is received in server_task. First, try to call
-        process_function and waits for a response. An exception may be
-        risen to ask user for additional info (e.g. a math object).
-        Note that the current goal is modified from elsewhere in the
-        program (signal self.servint.proof_state_change.connect), not
-        here! This is done before the finally bloc. And finally, update
-        the last interface elements to be updated.
-        """
-
-        # FIXME: no more asynchronous
-        self.emw.freeze(True)
-
-        try:
-            await process_function()
-        except FailedRequestError as error:
-            # FIXME: suppress
-            self.process_failed_request_error(error)
-
-        finally:
-            if self.lean_file.current_proof_step \
-                    and not self.lean_file.current_proof_step.no_more_goal:
-                self.emw.freeze(False)
-            else:  # If no more goals, disable actions but enable toolbar
-                self.ecw.freeze(True)
-                self.toolbar.setEnabled(True)
-            # Required because history is always changed with signals
-            self.toolbar.undo_action.setEnabled(
-                    not self.servint.lean_file.history_at_beginning)
-            self.toolbar.rewind.setEnabled(
-                    not self.servint.lean_file.history_at_beginning)
-            self.toolbar.redo_action.setEnabled(
-                    not self.servint.lean_file.history_at_end)
-
-    # ─────────────── Specific functions ─────────────── #
-    # To be called as process_function in the above
-
-    def unfreeze(self):
-        # TODO: put this in EMW
-        if self.lean_file.current_proof_step \
-                and not self.lean_file.current_proof_step.no_more_goal:
-            self.emw.freeze(False)
-        else:  # If no more goals, disable actions but enable toolbar
-            self.emw.ecw.freeze(True)
-            self.emw.toolbar.setEnabled(True)
-        self.emw.history_button_unfreeze()
-
-    @Slot()
-    def process_failed_request_error(self, errors):
-        # TODO: connect slot
-        self.proof_step.error_type = 2
-        lean_code = self.proof_step.lean_code
-        if lean_code.error_msg:
-            self.proof_step.error_msg = lean_code.error_msg
-        else:
-            self.proof_step.error_msg = _('Error')
-
-        details = ""
-        for error in errors:
-            details += "\n" + error.text
-        log.debug(f"Lean errors, details: {details}")
-
-    def process_wrong_user_input(self, error):
-        self.proof_step.error_type = 1
-        self.proof_step.error_msg = error.message
-        self.update_proof_step()
-        self.emw.process_wrong_user_input()  # fixme: useless??
-        self.emw.update_goal(None)
-
-    async def __server_call_action(self,
+    ################################################
+    # Actions that send code to Lean (via servint) #
+    ################################################
+    def __server_call_action(self,
                                    action_btn,  # ActionButton
                                    auto_selection=None,
                                    auto_user_input=None):
@@ -498,13 +425,14 @@ class Coordinator(QObject):
         #   - choose A or B when having to prove (A OR B) ;
         #   - enter an element when clicking on 'exists' button.
         #   - and so on.
-        if auto_selection:  # For autotest
+        if auto_selection:  # For auto-test
             selection = auto_selection
             self.proof_step.selection = selection
+            target_selected = True if not selection else False
         else:
             selection = self.current_selection_as_mathobjects
             self.proof_step.selection = selection
-
+            target_selected = self.emw.target_selected
         if auto_user_input:
             user_input = auto_user_input
         else:
@@ -516,13 +444,13 @@ class Coordinator(QObject):
                     lean_code = action.run(
                         self.proof_step,
                         selection,  # (TODO: selection is stored in proof_step)
-                        target_selected=self.target_selected)
+                        target_selected=target_selected)
                 else:
                     lean_code = action.run(
                         self.proof_step,
                         selection,
                         user_input,
-                        target_selected=self.target_selected)
+                        target_selected=target_selected)
 
             except MissingParametersError as e:
                 if e.input_type == InputType.Text:
@@ -537,6 +465,7 @@ class Coordinator(QObject):
                 if ok:
                     user_input.append(choice)
                 else:
+                    self.unfreeze()
                     break
 
             except WrongUserInput as error:
@@ -554,13 +483,13 @@ class Coordinator(QObject):
                 if index is not None:
                     selection_rw = [selection[index]]
                 log.debug(f"Implicit use of definition "
-                         f"{definition.pretty_name} in "
-                         f"{math_object.to_display()} -> "
-                         f"{rewritten_math_object.to_display()}")
+                          f"{definition.pretty_name} in ")
+                log.debug(f"{math_object.to_display()} -> ")
+                log.debug(f"{rewritten_math_object.to_display()}")
                 lean_code = generic.action_definition(self.proof_step,
                                                       selection_rw,
                                                       definition,
-                                                      self.target_selected)
+                                                      target_selected)
                 self.servint.server_queue.add_task(
                                                     self.servint.code_insert,
                                                     definition.pretty_name,
@@ -578,7 +507,7 @@ class Coordinator(QObject):
                                                     lean_code)
                 break
 
-    async def __server_call_statement(self,
+    def __server_call_statement(self,
                                       item,  # StatementsTreeWidgetItem
                                       auto_selection=None):
         """
@@ -589,9 +518,11 @@ class Coordinator(QObject):
         if auto_selection:
             selection = auto_selection
             self.proof_step.selection = selection
+            target_selected = True if not selection else False
         else:
             selection = self.current_selection_as_mathobjects
             self.proof_step.selection = selection
+            target_selected = self.emw.target_selected
 
         # Do nothing if user clicks on a node
         # FIXME: filter this, and UI actions, in EMW
@@ -606,13 +537,13 @@ class Coordinator(QObject):
                     self.proof_step,
                     selection,
                     statement,
-                    self.target_selected)
+                    target_selected)
             elif isinstance(statement, Theorem):
                 lean_code = generic.action_theorem(
                     self.proof_step,
                     selection,
                     statement,
-                    self.target_selected)
+                    target_selected)
 
         except WrongUserInput as error:
             self.process_wrong_user_input(error)
@@ -628,7 +559,7 @@ class Coordinator(QObject):
                                                 statement.pretty_name,
                                                 lean_code)
 
-    async def __server_send_editor_lean(self):
+    def __server_send_editor_lean(self):
         """
         Send the L∃∀N code written in the L∃∀N editor widget to the
         server interface.
@@ -638,86 +569,92 @@ class Coordinator(QObject):
                                 _('Code from editor'),
                                 self.lean_editor.code_get())
 
-    @Slot(ProofState)
-    def update_proof_state(self, proofstate: ProofState):
-        """
-        This is where self.proof_step is
-        updated and stored both in the journal and in lean_file's history if
-        this is adequate.
+    #########################
+    #########################
+    # Process Lean response #
+    #########################
+    #########################
 
-        :proofstate: The proofstate one wants to update self to.
-        """
-        # TODO: suppress
+    def unfreeze(self):
+        # TODO: put this in EMW
+        if self.lean_file.current_proof_step \
+                and not self.lean_file.current_proof_step.no_more_goal:
+            self.emw.freeze(False)
+        else:  # If no more goals, disable actions but enable toolbar
+            self.emw.ecw.freeze(True)
+            self.emw.toolbar.setEnabled(True)
+        at_beginning = self.servint.lean_file.history_at_beginning
+        at_end = self.servint.lean_file.history_at_end
 
-        log.debug("Updating proof state...")
-        proof_step = self.proof_step
-
-        # ───────────── Process data ──────────── #
-        proof_step.proof_state = proofstate
-        log.debug(f"Proof step n°{proof_step.pf_nb}:")
-        log.debug(proof_step.display())
-
-        if not proof_step.is_history_move():
-            self.lean_file.state_info_attach(proof_step=proof_step)
-        if not self.test_mode:
-            self.journal.store(proof_step, self)
-
-        # Check for new goals
-        delta = self.lean_file.delta_goals_count
-        proof_step.delta_goals_count = delta
-        proof_step.update_goals()
-
-        # Debug
-        log.debug(f"Target_idx: {self.lean_file.target_idx}")
-        log.debug("Proof nodes:")
-        for he in self.lean_file.history:
-            proof_nodes = he.misc_info.get('proof_step').proof_nodes
-            log.debug([pf.txt for pf in proof_nodes])
-
-        # Store auto_step
-        proof_step.auto_step = AutoStep.from_proof_step(proof_step,
-                                                        emw=self.emw)
-        # Pass proof_step to displayed_proof_step, and create a new proof_step
-        # with same goals data as logically previous proof step.
-        # Note that we also keep the proof_state because it is needed by the
-        # logical actions to compute the pertinent Lean code.
-        self.emw.displayed_proof_step = copy(proof_step)
-
-        # # ─────────── Display msgs and proof_outline ────────── #
-        # # TODO: move everything below here to EMW
-        # # Display current goal solved
-        # if not proof_step.is_error() and not proof_step.is_history_move() \
-        #         and proof_step.delta_goals_count < 0:
-        #     self.display_current_goal_solved(proof_step.delta_goals_count)
-        #
-        # # Status bar
-        # if not proof_step.is_history_move():
-        #     self.statusBar.manage_msgs(proof_step)
-        # elif proof_step.is_redo() or proof_step.is_goto():
-        #     self.statusBar.manage_msgs(self.lean_file.current_proof_step)
-        #
-        # # Update proof_outline_window
-        # powt = self.proof_outline_window.tree
-        # if proof_step.is_history_move():
-        #     powt.set_marked(self.lean_file.target_idx-1)
-        # elif proof_step.is_error():
-        #     powt.delete_after_goto_and_error(proof_step)
-        # else:
-        #     powt.delete_and_insert(proof_step)
-        #
-        # ─────────── Creation of next proof_step ────────── #
-        # LOGICAL proof_step is always in lean_file's history
-        # self.proof_step = ProofStep.next_(self.lean_file.current_proof_step,
-        #                                   self.lean_file.target_idx)
-        # self.proof_step_updated.emit()  # Received in auto_test
-        #
-        # # ─────────────── Update goal on ui ─────────────── #
-        # self.emw.update_goal(proofstate.goals[0])
+        self.emw.history_button_unfreeze(at_beginning, at_end)
 
     @Slot(CodeForLean)
     def process_effective_code(self, effective_lean_code):
         self.proof_step.effective_code = effective_lean_code
         self.servint.history_replace(effective_lean_code)
+
+    @Slot()
+    def process_failed_request_error(self, errors):
+        """
+        Note that history_delete will be called.
+        """
+        self.proof_step.error_type = 2
+        lean_code = self.proof_step.lean_code
+        if lean_code.error_msg:
+            self.proof_step.error_msg = lean_code.error_msg
+        else:
+            self.proof_step.error_msg = _('Error')
+
+        details = ""
+        for error in errors:
+            details += "\n" + error.text
+        log.debug(f"Lean errors, details: {details}")
+
+    def process_wrong_user_input(self, error):
+        self.proof_step.error_type = 1
+        self.proof_step.error_msg = error.message
+
+        self.update_proof_step()
+
+        self.emw.process_wrong_user_input()
+        self.unfreeze()
+        self.emw.update_goal(None)
+
+    @Slot()
+    def set_fireworks(self):
+        """
+        As of now,
+        - display a dialog when the target is successfully solved,
+        - replace the target by a message "No more goal".
+        """
+        # Display msg_box unless redoing /moving or test mode
+        # TODO: move this part to EMW
+        if not self.proof_step.is_redo() and not self.proof_step.is_goto()\
+                and not self.test_mode:
+            title = _('Target solved')
+            text = _('The proof is complete!')
+            msg_box = QMessageBox(parent=self.emw)
+            msg_box.setText(text)
+            msg_box.setWindowTitle(title)
+            button_ok = msg_box.addButton(_('Back to exercise'),
+                                          QMessageBox.YesRole)
+            button_change = msg_box.addButton(_('Change exercise'),
+                                              QMessageBox.YesRole)
+            button_change.clicked.connect(self.emw.change_exercise)
+            msg_box.exec_()
+
+        self.proof_step.no_more_goal = True
+        self.proof_step.new_goals = []
+        # Artificially create a final proof_state by replacing target by a msg
+        # (We do not get the final proof_state from Lean).
+        proof_state = deepcopy(self.proof_step.proof_state)
+        target = proof_state.goals[0].target
+        target.math_type = MathObject(node="NO_MORE_GOAL",
+                                      info={},
+                                      children=[],
+                                      math_type=None)
+
+        return proof_state
 
     @Slot()
     def process_lean_response(self,
@@ -746,13 +683,11 @@ class Coordinator(QObject):
             log.info("  -> errors")
             self.process_failed_request_error(errors)
             # Abort and go back to last goal
-            # TODO: we could unfreeze interface, then delete history as a
-            #  silent task.
-            #  (Note that history_delete call servint.__update, and then this.)
             self.servint.server_queue.add_task(self.servint.history_delete)
-            return  # process_lean_response will be called again after deleting
+            # Process_lean_response will be called again after deleting
+            return
 
-        else:
+        else:  # Generic step
             hypo_analysis, targets_analysis = analysis
             proof_state = ProofState.from_lean_data(hypo_analysis,
                                                     targets_analysis)
@@ -782,6 +717,7 @@ class Coordinator(QObject):
         self.update_proof_step()
 
         # Update UI
+        self.unfreeze()
         if self.proof_step.is_error():
             self.emw.update_goal(None)
         else:

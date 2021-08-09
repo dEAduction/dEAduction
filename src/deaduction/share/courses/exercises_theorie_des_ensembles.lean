@@ -99,6 +99,10 @@ PrettyName
 -- COURSE DEFINITIONS --
 ------------------------
 lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, x ∈ A → x ∈ B :=
+/- dEAduction
+ImplicitUse
+    True
+-/
 begin
     exact iff.rfl
 end
@@ -495,7 +499,7 @@ f = f' ↔ ∀ x, f x = f' x :=
 PrettyName
     Egalité de deux fonctions
 ImplicitUse
-    True
+    False
 -/
 begin
     exact function.funext_iff,

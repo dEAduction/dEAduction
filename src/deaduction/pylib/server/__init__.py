@@ -203,7 +203,7 @@ class ServerInterface(QObject):
     # To store effective code, so that history_replace is called:
     effective_code_received     = Signal(CodeForLean)
     # To update the Lean editor console:
-    lean_file_changed           = Signal()
+    lean_file_changed           = Signal(str)
     # To launch the Coordinator.server_task:
     exercise_set                = Signal()
 
@@ -506,8 +506,8 @@ class ServerInterface(QObject):
             self.__tmp_effective_code = deepcopy(lean_code)
         else:
             self.__tmp_effective_code = CodeForLean.empty_code()
-
-        self.lean_file_changed.emit()  # Will update the lean text editor
+        # Update the lean text editor:
+        self.lean_file_changed.emit(self.lean_file.inner_contents)
 
         if hasattr(self.update_started, "emit"):
             self.update_started.emit()
@@ -728,7 +728,8 @@ class ServerInterface(QObject):
             label = lean_file.history[lean_file.target_idx].label
             self.lean_file.undo()
             self.lean_file.insert(label=label, add_txt=code_string)
-            self.lean_file_changed.emit()  # Will update the lean text editor
+            # Update the lean text editor:
+            self.lean_file_changed.emit(self.lean_file.inner_contents)
 
     ############################################
     # Code management
