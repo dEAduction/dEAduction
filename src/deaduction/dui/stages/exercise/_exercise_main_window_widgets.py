@@ -407,10 +407,24 @@ class ExerciseCentralWidget(QWidget):
 
 
 class ExerciseStatusBar(QStatusBar):
-    # TODO: Docstring me and all methods
+    """
+    A pending msg can be displayed after a timeout.
+    This is used to display msgs about the structure of the proof
+    (e.g. "Proof of first implication").
+    Pending msgs are stored in the LILO list self.pending_msgs.
+    A pending msg may be cancelled: if a user action happens before timeout,
+    the msg is replaced by "". Note that a new pending msgs may be added by
+    the action, with a new timeout ; this is why the cancelled msgs is
+    erased but a blank msg stays in the list.
+    """
 
     def __init__(self, parent):
         super().__init__(parent)
+
+        # Tag
+        self.msgs_enabled = True
+        self.timer = QTimer(self)
+        self.pending_msgs = []
 
         # Icon
         self.iconWidget = QLabel(self)
@@ -431,19 +445,49 @@ class ExerciseStatusBar(QStatusBar):
         self.show_success_icon()  # Trick: the status bar adapts its height
         self.hide_icon()
 
+    def show_pending_msgs(self):
+        if self.pending_msgs:
+            msg = self.pending_msgs.pop(0)
+            if msg:
+                # # Show msg only if it is the only msg in the list
+                # # (otherwise it is outdated, wait for last msg!)
+                # if not self.pending_msgs:
+                self.show_normal_msg(msg)
+
+    # def enable_msgs(self, yes=True):
+    #     if not yes and self.pending_msgs:
+    #         log.debug("(Cancelling first pending msg)")
+    #         self.pending_msg[0] = ""
+    #     # log.debug(f"Status bar msgs: {yes}")
+    #     # self.msgs_enabled = yes
+    #     # log.debug(f"Timer: {self.timer}")
+    #     # if self.timer:
+    #     #     log.debug(f"Timer is active: {self.timer.isActive()}")
+    #     # if not yes:
+    #     #     if self.timer:
+    #     #         self.timer.stop()
+
+    def cancel_pending_msgs(self):
+        if self.pending_msgs:
+            log.debug("(Cancelling first pending msg)")
+            self.pending_msgs = [""] * len(self.pending_msgs)
+
     def show_error_icon(self):
-        self.iconWidget.setPixmap(self.error_pixmap)
-        self.iconWidget.show()
+        if self.msgs_enabled:
+            self.iconWidget.setPixmap(self.error_pixmap)
+            self.iconWidget.show()
 
     def show_success_icon(self):
-        self.iconWidget.setPixmap(self.success_pixmap)
-        self.iconWidget.show()
+        if self.msgs_enabled:
+            self.iconWidget.setPixmap(self.success_pixmap)
+            self.iconWidget.show()
 
     def hide_icon(self):
         self.iconWidget.hide()
 
     def set_message(self, msg: str):
-        self.messageWidget.setText(msg)
+        if self.msgs_enabled:
+            self.messageWidget.setText(msg)
 
     def erase(self):
         self.set_message("")
@@ -465,6 +509,7 @@ class ExerciseStatusBar(QStatusBar):
         - success and error msgs are temporary msgs.
         """
 
+        # self.enable_msgs()
         if proof_step.is_error():
             tmp_msg = proof_step.error_msg
         else:
@@ -490,10 +535,13 @@ class ExerciseStatusBar(QStatusBar):
             if new_goal:
                 # Set QTimer for normal msg
                 if tmp_msg:
-                    log.debug("StatusBar timer " + new_goal.msg)
-                    timer = QTimer(self)
-                    func = partial(self.show_normal_msg, new_goal.msg)
-                    timer.singleShot(3000, func)  # 3000 = 3sec
+                    # log.debug("StatusBar timer " + new_goal.msg)
+                    # self.timer = QTimer(self)
+                    # func = partial(self.show_normal_msg, new_goal.msg)
+                    self.pending_msgs.append(new_goal.msg)
+                    # self.delayed_msg_count += 1
+                    # self.delayed_msg_nb = self.delayed_msg_count
+                    self.timer.singleShot(3000, self.show_pending_msgs)
                 else:  # Show immediately
                     self.show_normal_msg(new_goal.msg)
 

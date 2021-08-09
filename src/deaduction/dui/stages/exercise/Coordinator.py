@@ -577,6 +577,7 @@ class Coordinator(QObject):
 
     def unfreeze(self):
         # TODO: put this in EMW
+
         if self.lean_file.current_proof_step \
                 and not self.lean_file.current_proof_step.no_more_goal:
             self.emw.freeze(False)

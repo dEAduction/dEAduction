@@ -401,6 +401,8 @@ class ExerciseMainWindow(QMainWindow):
         self.freezed = yes
         self.ecw.freeze(yes)
         self.toolbar.setEnabled(not yes)
+        if yes:
+            self.statusBar.cancel_pending_msgs()
 
     def history_button_unfreeze(self, at_beginning, at_end):
         # Required because history is always changed with signals
