@@ -421,8 +421,7 @@ class ExerciseStatusBar(QStatusBar):
     def __init__(self, parent):
         super().__init__(parent)
 
-        # Tag
-        self.msgs_enabled = True
+        # Pending msgs
         self.timer = QTimer(self)
         self.pending_msgs = []
 
@@ -446,26 +445,14 @@ class ExerciseStatusBar(QStatusBar):
         self.hide_icon()
 
     def show_pending_msgs(self):
+        """
+        This method is called by the timer, when there is a new_goal msg to
+        display on top of the usual success/error msgs.
+        """
         if self.pending_msgs:
             msg = self.pending_msgs.pop(0)
             if msg:
-                # # Show msg only if it is the only msg in the list
-                # # (otherwise it is outdated, wait for last msg!)
-                # if not self.pending_msgs:
                 self.show_normal_msg(msg)
-
-    # def enable_msgs(self, yes=True):
-    #     if not yes and self.pending_msgs:
-    #         log.debug("(Cancelling first pending msg)")
-    #         self.pending_msg[0] = ""
-    #     # log.debug(f"Status bar msgs: {yes}")
-    #     # self.msgs_enabled = yes
-    #     # log.debug(f"Timer: {self.timer}")
-    #     # if self.timer:
-    #     #     log.debug(f"Timer is active: {self.timer.isActive()}")
-    #     # if not yes:
-    #     #     if self.timer:
-    #     #         self.timer.stop()
 
     def cancel_pending_msgs(self):
         if self.pending_msgs:
@@ -473,21 +460,18 @@ class ExerciseStatusBar(QStatusBar):
             self.pending_msgs = [""] * len(self.pending_msgs)
 
     def show_error_icon(self):
-        if self.msgs_enabled:
-            self.iconWidget.setPixmap(self.error_pixmap)
-            self.iconWidget.show()
+        self.iconWidget.setPixmap(self.error_pixmap)
+        self.iconWidget.show()
 
     def show_success_icon(self):
-        if self.msgs_enabled:
-            self.iconWidget.setPixmap(self.success_pixmap)
-            self.iconWidget.show()
+        self.iconWidget.setPixmap(self.success_pixmap)
+        self.iconWidget.show()
 
     def hide_icon(self):
         self.iconWidget.hide()
 
     def set_message(self, msg: str):
-        if self.msgs_enabled:
-            self.messageWidget.setText(msg)
+        self.messageWidget.setText(msg)
 
     def erase(self):
         self.set_message("")
@@ -533,14 +517,8 @@ class ExerciseStatusBar(QStatusBar):
         if proof_step.new_goals:
             new_goal = proof_step.new_goals[-1]
             if new_goal:
-                # Set QTimer for normal msg
-                if tmp_msg:
-                    # log.debug("StatusBar timer " + new_goal.msg)
-                    # self.timer = QTimer(self)
-                    # func = partial(self.show_normal_msg, new_goal.msg)
+                if tmp_msg:  # Add to pending msgs
                     self.pending_msgs.append(new_goal.msg)
-                    # self.delayed_msg_count += 1
-                    # self.delayed_msg_nb = self.delayed_msg_count
                     self.timer.singleShot(3000, self.show_pending_msgs)
                 else:  # Show immediately
                     self.show_normal_msg(new_goal.msg)
