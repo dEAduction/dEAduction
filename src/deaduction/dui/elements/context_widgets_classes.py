@@ -149,13 +149,16 @@ class MathObjectWidgetItem(QListWidgetItem):
 
         self.mathobject = mathobject
         self.tag        = tag
+        self.label       = QLabel()
 
         lean_name = mathobject.to_display()
         math_expr = mathobject.math_type.to_display(is_math_type=True)
         caption   = f'{lean_name} : {math_expr}'
-        self.setText(caption)
+        caption   = "\div {font color:'blue'} " + caption + "/div"
+        self.label.setText(caption)
         self.setIcon(_TagIcon(tag))
         # set tool_tips (merge several tool_tips if needed)
+
         tool_tips = explain_how_to_apply(mathobject)
         if len(tool_tips) == 1:
             tool_tip = _("Double click to") + " " + tool_tips[0]
@@ -229,6 +232,7 @@ class MathObjectWidget(QListWidget):
         for mathobject, tag in tagged_mathobjects:
             item = MathObjectWidgetItem(mathobject, tag)
             self.addItem(item)
+            self.setItemWidget(item, item.label)
             self.items.append(item)
 
         self.itemDoubleClicked.connect(self._emit_apply_math_object)

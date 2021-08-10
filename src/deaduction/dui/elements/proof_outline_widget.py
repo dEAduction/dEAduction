@@ -76,8 +76,9 @@ class ProofTreeWidgetItem(QTreeWidgetItem):
             self.setText(2, selection)
             if proof_item.proof_state:
                 goal = proof_item.proof_state.goals[0]
-                tooltip = goal.to_tooltip()
-                self.setToolTip(0, tooltip)
+                if goal:
+                    tooltip = goal.to_tooltip()
+                    self.setToolTip(0, tooltip)
 
     def mark_user_selected(self, yes: bool=True):
         """
