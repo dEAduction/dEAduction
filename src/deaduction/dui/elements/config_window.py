@@ -86,7 +86,7 @@ CONFIGS['Functionalities'] = [
     ('functionality.allow_proof_by_sorry', None, True),  # tested
     ('functionality.expanded_apply_button', None, False),
     ('functionality.automatic_intro_of_variables_and_hypotheses', None, False),
-    ('functionality.allow_forall_with_implicit_universal_prop', None, False),
+    ('functionality.allow_implicit_use_of_definitions', None, True),
     ('functionality.treat_intersections_as_ands', None, False),
     ('functionality.treat_unions_as_ors', None, False)]
 

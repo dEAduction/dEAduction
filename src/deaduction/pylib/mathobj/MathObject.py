@@ -55,13 +55,14 @@ import deaduction.pylib.logger as logger
 if __name__ == "__main__":
     import deaduction.pylib.config.i18n
 
-from deaduction.pylib.mathobj.display_math      import (
-    display_math_type_of_local_constant,
-                                Shape)
-from deaduction.pylib.mathobj.display_data      import (HAVE_BOUND_VARS,
-                                INEQUALITIES)
-import deaduction.pylib.mathobj.give_name as give_name
-from deaduction.pylib.mathobj.utils import *
+import deaduction.pylib.config.vars            as cvars
+from deaduction.pylib.mathobj.display_math import (Shape,
+                                        display_math_type_of_local_constant)
+
+from deaduction.pylib.mathobj.display_data import (HAVE_BOUND_VARS,
+                                                   INEQUALITIES)
+import deaduction.pylib.mathobj.give_name      as give_name
+from deaduction.pylib.mathobj.utils        import *
 
 log = logging.getLogger(__name__)
 NUMBER_SETS_LIST = ['ℕ', 'ℤ', 'ℚ', 'ℝ']
@@ -86,15 +87,24 @@ def allow_implicit_use(test: callable):
     """
 
     # TODO: add call to cvars.config['allow_implicit_use_of_definitions']
-    def test_implicit(math_object, is_math_type=False) -> bool:
-        if test(math_object, is_math_type):
+    def test_implicit(math_object,
+                      is_math_type=False,
+                      implicit=False,
+                      return_def=False):
+        implicit = implicit and cvars.get(
+            "functionality.allow_implicit_use_of_definitions")
+        if not implicit:
+            return test(math_object, is_math_type)
+        elif test(math_object, is_math_type):
             return True
         else:
+            MathObject.last_used_implicit_definition = None
+            MathObject.last_rw_object = None
             if is_math_type:
                 math_type = math_object
             else:
                 math_type = math_object.math_type
-            implicit_definitions = MathObject.implicit_definitions
+            # implicit_definitions = MathObject.implicit_definitions
             definition_patterns = MathObject.definition_patterns
             for index in range(len(definition_patterns)):
                 # Test right term if self match pattern
@@ -103,12 +113,20 @@ def allow_implicit_use(test: callable):
                 pattern_right = pattern.children[1]
                 if pattern_left.match(math_type):
                     if test(pattern_right, is_math_type=True):
-                        implicit_definition = implicit_definitions[index]
-                        rewritten_math_object = pattern_right.apply_matching()
-                        raise MissingImplicitDefinition(implicit_definition,
-                                                        math_object,
-                                                        rewritten_math_object)
-                        # return True
+                        # implicit_definition = implicit_definitions[index]
+                        # rewritten_math_object = pattern_right.apply_matching()
+                        # raise MissingImplicitDefinition(implicit_definition,
+                        #                                 math_object,
+                        #                                 rewritten_math_object)
+                        # if return_def:
+                        #     return MathObject.implicit_definitions[index]
+                        # else:
+                        # Store data for further use
+                        MathObject.last_used_implicit_definition = \
+                                    MathObject.implicit_definitions[index]
+                        MathObject.last_rw_object = \
+                            pattern_right.apply_matching()
+                        return True
             return False
 
     return test_implicit
@@ -150,8 +168,10 @@ class MathObject:
     # Lists from definitions for implicit use
     #   This is set up at course loading, via the PatternMathObject
     #   set_definitions_for_implicit_use() method.
-    implicit_definitions   = []
-    definition_patterns    = []
+    implicit_definitions          = []
+    definition_patterns           = []
+    last_used_implicit_definition = None
+    last_rw_object                = None
 
     # Some robust methods to access information stored in attributes
     @property
@@ -874,6 +894,53 @@ class MathObject:
         else:
             shape = Shape.from_math_object(self, format_, text_depth)
         return structured_display_to_string(shape.display)
+
+    def find_implicit_definition(self, test=None):
+        """
+        Search if self matches some definition in
+        MathObject.implicit_definitions matching test and if so,
+        return the first matching definition.
+        """
+        definition_patterns = MathObject.definition_patterns
+        for index in range(len(definition_patterns)):
+            # Test right term if self match pattern
+            pattern = definition_patterns[index]
+            pattern_left = pattern.children[0]
+            if pattern_left.match(self):
+                if test is None or test(self):
+                    return MathObject.implicit_definitions[index]
+
+    def apply_implicit_definition(self):
+        """
+        Search if self matches some definition in
+        MathObject.implicit_definitions and if so, return the MathObject
+        obtained by applying the first matching definition.
+        """
+        # FIXME: unused?
+
+        definition_patterns = MathObject.definition_patterns
+        for index in range(len(definition_patterns)):
+            # Test right term if self match pattern
+            pattern = definition_patterns[index]
+            pattern_left = pattern.children[0]
+            if pattern_left.match(self):
+                pattern_right = pattern.children[1]
+                rewritten_math_object = pattern_right.apply_matching()
+                return rewritten_math_object
+
+    def implicit_children(self):
+        """
+        Search if self matches some definition in
+        MathObject.implicit_definitions and if so, return the
+        children of the MathObject obtained by applying the first matching
+        definition.
+        If no definition matches, then return the original children
+        """
+        # FIXME: unused?
+        rewritten_math_object = self.apply_implicit_definition()
+        if rewritten_math_object:
+            return rewritten_math_object.children
+        return self.children
 
 
 NO_MATH_TYPE = MathObject(node="not provided",

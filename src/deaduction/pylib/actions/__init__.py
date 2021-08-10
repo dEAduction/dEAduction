@@ -38,6 +38,8 @@ from .code_for_lean import (LeanCombinator,
                             CodeForLean,
                             get_effective_code_numbers)
 
+from .generic import action_definition
+
 from .logic import (action_not,
                     action_implies,
                     action_and,

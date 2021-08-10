@@ -285,7 +285,6 @@ class Coordinator(QObject):
         self.servint.lean_file_changed.disconnect()
         self.servint.effective_code_received.disconnect()
         self.servint.exercise_set.disconnect()
-        self.servint.initial_proof_state_set.disconnect()
         self.servint.lean_response.disconnect()
 
     ######################################################

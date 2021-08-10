@@ -86,7 +86,6 @@ class PatternMathObject(MathObject):
                    children=[],
                    math_type=math_type)
 
-
     @classmethod
     def from_math_object(cls, math_object: MathObject):
         cls.__loc_csts_for_metavars = []
@@ -292,7 +291,7 @@ class PatternMathObject(MathObject):
         Substitute metavars in self according to PatternMathObject.metavars and
         PatternMathObject.metavar_objects. Returns a MathObject if all
         metavars of self are in PatternMathObject.metavars,
-        else a PatterniMathObject.
+        else a MathObject with some metavars.
         """
 
         if self.is_metavar():
@@ -375,4 +374,4 @@ if __name__ == '__main__':
     mt = mo.math_type
     print(f"{mt.to_display()} matches {pattern.to_display()} ?")
     print(pattern.children[0].match(mt))
-
+    print(pattern.children[1].apply_matching().to_display())

@@ -49,13 +49,13 @@ import logging
 from typing import Union
 
 from deaduction.pylib.text        import tooltips
-# from deaduction.pylib.config.i18n import _
 from deaduction.pylib.actions     import (action,
                                           InputType,
                                           MissingParametersError,
                                           WrongUserInput,
                                           test_selection,
-                                          CodeForLean
+                                          CodeForLean,
+                                          action_definition
                                           )
 
 from deaduction.pylib.mathobj     import (MathObject,
@@ -66,20 +66,17 @@ from deaduction.pylib.mathobj     import (MathObject,
 import deaduction.pylib.config.vars as cvars
 
 log = logging.getLogger("logic")
+global _
 
 
-# # Get buttons symbols from config file
-# action_list = ['action_and', 'action_or', 'action_negate',
-#                'action_implicate', 'action_iff', 'action_forall',
-#                'action_exists', 'action_equal']
-#
-# logic_button_texts = cvars.get(
-#                 'display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL')
-# # Turn logic_button_texts into a dictionary
-# lbt = logic_button_texts.split(', ')
-# logic_button_texts = {}
-# for key, value in zip(action_list, lbt):
-#     logic_button_texts[key] = value
+def rw_with_defi(definition, object=None):
+    defi = definition.lean_name
+    if object:
+        name = object.info['name']
+        code = CodeForLean.from_string(f"rw {defi} at {name}")
+    else:
+        code = CodeForLean.from_string(f"rw {defi}")
+    return code
 
 
 #######
@@ -89,14 +86,22 @@ log = logging.getLogger("logic")
 def construct_and(proof_step, user_input: [str]) -> CodeForLean:
     """
     Split the target 'P AND Q' into two sub-goals.
+    Handle the case of an implicit "and".
     """
     target = proof_step.goal.target.math_type
 
-    if not target.is_and(is_math_type=True):
+    if not target.is_and(is_math_type=True, implicit=True):
         raise WrongUserInput(error=_("Target is not a conjunction 'P AND Q'"))
 
-    left = target.children[0]
-    right = target.children[1]
+    if not target.is_and(is_math_type=True):
+        # Implicit "and"
+        implicit_definition = MathObject.last_used_implicit_definition
+        target              = MathObject.last_rw_object
+
+    children = target.children
+
+    left = children[0]
+    right = children[1]
     if not user_input:
         # User choice
         choices = [(_("Left"), left.to_display()),
@@ -109,7 +114,10 @@ def construct_and(proof_step, user_input: [str]) -> CodeForLean:
     else:
         if user_input[0] == 1:
             # Prove second property first
-            if target.node == "PROP_∃":
+            if implicit_definition:
+                code_rw = rw_with_defi(implicit_definition)
+                code = code_rw.and_then("rw and.comm")
+            elif target.node == "PROP_∃":
                 # In this case, first rw target as a conjunction
                 code = CodeForLean.and_then_from_list(["rw exists_prop",
                                                        "rw and.comm"])
@@ -180,7 +188,7 @@ If two hypothesis P, then Q, have been previously selected:
     if len(selected_objects) == 0:
         return construct_and(proof_step, user_input)
     if len(selected_objects) == 1:
-        if not selected_objects[0].is_and():
+        if not selected_objects[0].is_and(implicit=True):
             raise WrongUserInput(error=_("Selected property is not "
                                          "a conjunction 'P AND Q'"))
         else:
@@ -201,11 +209,20 @@ If two hypothesis P, then Q, have been previously selected:
 def construct_or(proof_step, user_input: [str]) -> CodeForLean:
     """
     Assuming target is a disjunction 'P OR Q', choose to prove either P or Q.
+    Handle the case of an implicit "or".
     """
-    target = proof_step.goal.target
+    target = proof_step.goal.target.math_type
 
-    left = target.math_type.children[0].to_display()
-    right = target.math_type.children[1].to_display()
+    # Implicit definition ?
+    if not target.is_or(is_math_type=True):
+        # Implicit "or"
+        # implicit_definition = MathObject.last_used_implicit_definition
+        target              = MathObject.last_rw_object
+
+    children = target.children
+
+    left = children[0].to_display()
+    right = children[1].to_display()
     choices = [(_("Left"), left), (_("Right"), right)]
 
     if not user_input:
@@ -217,7 +234,7 @@ def construct_or(proof_step, user_input: [str]) -> CodeForLean:
     code = None
     if len(user_input) == 1:
         i = user_input[0]
-        if i==0:
+        if i == 0:
             code = CodeForLean.from_string("left")
             code.add_success_msg(_("Target replaced by the left alternative"))
         else:
@@ -233,17 +250,23 @@ def apply_or(proof_step,
     """
     Assuming selected_objects is one disjunction 'P OR Q',
     engage in a proof by cases.
+    Handle the case of an implicit "or".
     """
 
-    # if not selected_objects[0].is_or():
-    #     raise WrongUserInput(error=_("Selected property is not "
-    #                                  "a disjunction 'P OR Q'"))
-
     selected_hypo = selected_objects[0]
+    math_type = selected_hypo.math_type
     code = CodeForLean.empty_code()
 
-    left = selected_hypo.math_type.children[0]
-    right = selected_hypo.math_type.children[1]
+    # Implicit definition ?
+    if not selected_hypo.is_or(is_math_type=True):
+        # Implicit "or"
+        implicit_definition = MathObject.last_used_implicit_definition
+        math_type = MathObject.last_rw_object
+
+    children = math_type.children
+
+    left = children[0]
+    right = children[1]
     if not user_input:
         choices = [(_("Left"), left.to_display()),
                    (_("Right"), right.to_display())]
@@ -254,8 +277,12 @@ def apply_or(proof_step,
     else:  # len(user_input) == 1
         if user_input[0] == 1:
             # If user wants the second property first, then first permute
-            code = f'rw or.comm at {selected_hypo.info["name"]}'
-            code = CodeForLean.from_string(code)
+            code_str = f'rw or.comm at {selected_hypo.info["name"]}'
+            if implicit_definition:
+                code = rw_with_defi(implicit_definition, selected_hypo)
+                code = code.and_then(code_str)
+            else:
+                code = CodeForLean.from_string(code_str)
             left, right = right, left
 
     h1 = get_new_hyp(proof_step)
@@ -345,13 +372,13 @@ def action_or(proof_step,
     goal = proof_step.goal
 
     if len(selected_objects) == 0:
-        if not goal.target.is_or():
+        if not goal.target.is_or(implicit=True):
             raise WrongUserInput(
                 error=_("Target is not a disjunction 'P OR Q'"))
         else:
             return construct_or(proof_step, user_input)
     elif len(selected_objects) == 1:
-        if selected_objects[0].is_or():
+        if selected_objects[0].is_or(implicit=True):
             return apply_or(proof_step, selected_objects, user_input)
         else:
             return construct_or_on_hyp(proof_step, selected_objects, user_input)

@@ -82,7 +82,8 @@ if os.getenv("DEADUCTION_DEV_MODE", False):
                    'ServerInterface',
                    'ServerQueue',
                    'deaduction.dui',
-                   'deaduction.pylib']
+                   'deaduction.pylib',
+                   'logic']
 
 
 logger.configure(domains=log_domains,
