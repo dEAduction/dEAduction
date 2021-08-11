@@ -341,6 +341,7 @@ class PatternMathObject(MathObject):
                 log.debug(f"   Pattern: {pattern.to_display()}")
                 MathObject.implicit_definitions.append(definition)
                 MathObject.definition_patterns.append(pattern)
+                definition.implicit_use_activated = True
 
 
 NO_MATH_TYPE_PATTERN = PatternMathObject(node="not provided",

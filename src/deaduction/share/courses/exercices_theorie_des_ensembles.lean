@@ -206,7 +206,7 @@ lemma definition.intersection_quelconque_ensembles {I : Type} {E : I → set X} 
 PrettyName
     Intersection d'une famille quelconque d'ensembles
 ImplicitUse
-    True
+    False
 -/
 begin
     exact set.mem_Inter
@@ -230,7 +230,7 @@ lemma definition.union_quelconque_ensembles {I : Type} {E : I → set X}  {x : X
 PrettyName
     Union d'une famille quelconque d'ensembles
 ImplicitUse
-    True
+    False
 -/
 begin
     exact set.mem_Union

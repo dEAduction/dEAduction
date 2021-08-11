@@ -240,12 +240,12 @@ class Coordinator(QObject):
         course = self.exercise.course
         statements = [st for st in self.exercise.available_statements
                       if not st.initial_proof_state]
+        self.servint.initial_proof_state_set.connect(
+                                    self.set_definitions_for_implicit_use)
         if statements:
             # Just in case initial proof states have not been received yet
             self.servint.initial_proof_state_set.connect(
                                 self.emw.ecw.statements_tree.update_tooltips)
-            self.servint.initial_proof_state_set.connect(
-                                self.set_definitions_for_implicit_use)
 
             self.servint.set_statements(course, statements)
 
@@ -265,6 +265,10 @@ class Coordinator(QObject):
         loc_csts = PatternMathObject.loc_csts_for_metavars
         log.debug([(idx+1, loc_csts[idx].to_display())
                    for idx in range(len(loc_csts))])
+        if len(MathObject.definition_patterns) == len (definitions):
+            self.servint.initial_proof_state_set.disconnect()
+
+        self.emw.ecw.statements_tree.update_tooltips()
 
     def closeEvent(self):
         log.info("Closing Coordinator")

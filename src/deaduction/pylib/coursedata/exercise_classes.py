@@ -263,6 +263,9 @@ class Statement:
 
 
 class Definition(Statement):
+    # def __init__(self, **data):
+    #     super().__init__(self, **data)
+    #     self.implicit_use_activated = False
 
     @property
     def implicit_use(self):

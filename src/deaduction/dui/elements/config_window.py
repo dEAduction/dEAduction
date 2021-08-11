@@ -25,7 +25,6 @@ This file is part of d∃∀duction.
 """
 
 # TODO:
-#  - replace everywhere translations at init by translation at display
 #  - remove useless "update" functions
 #  - add color...
 #  - add restore factory values
@@ -60,6 +59,11 @@ log = logging.getLogger(__name__)
 ######################
 # Settings to be set #
 ######################
+# TO ADD A NEW SETTING:
+# - Append the data to the relevant dictionary
+# (each dict correspond to some tab of the config window)
+# - Add it to the SETTINGS_AFFECTING_UI list if needed
+# - Make sure the setting is correctly updated in ExerciseMainWindow
 
 CONFIGS = dict()
 # Each value of CONFIGS is a list of tuples:
@@ -106,6 +110,7 @@ SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          'logic.color_for_dummy_variables',
                          'functionality.allow_proof_by_sorry',
                          'functionality.expanded_apply_button',
+                         'functionality.allow_implicit_use_of_definitions',
                          "i18n.select_language"
                          ]
 
