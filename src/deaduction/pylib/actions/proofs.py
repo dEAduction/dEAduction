@@ -357,7 +357,7 @@ def action_apply(proof_step,
     # fixme: rewrite to provide meaningful error msgs
 
     if not selected_objects:
-        raise WrongUserInput(error=_("no property selected"))
+        raise WrongUserInput(error=_("No property selected"))
 
     # Now len(l) > 0
 

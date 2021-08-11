@@ -374,7 +374,8 @@ A ⊆ B → set.compl B ⊆ set.compl A
 PrettyName
     Le passage au complémentaire renverse les inclusions, implication
 Description
-    Si A est inclus dans B, alors le complémentaire de A contient le complémentaire de B
+    Si A est inclus dans B, alors le complémentaire de A contient le
+    complémentaire de B.
 -/
 begin
     todo

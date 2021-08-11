@@ -685,23 +685,23 @@ def action_iff(proof_step,
                 return code
             else:
                 raise WrongUserInput(
-                    error=_("target is not an iff property 'P ⇔ Q'"))
+                    error=_("Target is not an iff property 'P ⇔ Q'"))
         else:
             return construct_iff(proof_step, user_input)
     if len(selected_objects) == 1:
         if selected_objects[0].math_type.node != "PROP_IFF":
-            error = _("selected property is not an iff property 'P ⇔ Q'")
+            error = _("Selected property is not an iff property 'P ⇔ Q'")
             raise WrongUserInput(error)
         else:
             return destruct_iff_on_hyp(proof_step, selected_objects)
     if len(selected_objects) == 2:
         if not (selected_objects[0].math_type.is_prop()
                 and selected_objects[1].math_type.is_prop()):
-            error = _("selected items should both be implications")
+            error = _("Selected items should both be implications")
             raise WrongUserInput(error)
         else:
             return construct_iff_on_hyp(proof_step, selected_objects)
-    raise WrongUserInput(error=_("does not apply to more than two properties"))
+    raise WrongUserInput(error=_("Does not apply to more than two properties"))
 
 
 ###########
@@ -887,14 +887,14 @@ def action_forall(proof_step,
 
     if len(selected_objects) == 0:
         if not goal.target.is_for_all(implicit=True):
-            error = _("target is not a universal property '∀x, P(x)'")
+            error = _("Target is not a universal property '∀x, P(x)'")
             raise WrongUserInput(error)
         else:
             return construct_forall(proof_step)
 
     elif len(selected_objects) == 1:  # Ask user for item
         if not selected_objects[0].is_for_all(implicit=True):
-            error = _("selected property is not a universal property '∀x, "
+            error = _("Selected property is not a universal property '∀x, "
                       "P(x)'")
             raise WrongUserInput(error)
         elif not user_input:
@@ -924,7 +924,7 @@ def action_forall(proof_step,
             selected_objects.reverse()
             selected_objects.append(item)
             return apply_forall(proof_step, selected_objects)
-    raise WrongUserInput(error=_("no universal property among selected"))
+    raise WrongUserInput(error=_("No universal property among selected"))
 
 
 ##########
@@ -1030,7 +1030,7 @@ def action_exists(proof_step,
 
     if len(selected_objects) == 0:
         if not goal.target.is_exists(implicit=True):
-            error = _("target is not existential property '∃x, P(x)'")
+            error = _("Target is not existential property '∃x, P(x)'")
             raise WrongUserInput(error)
         else:
             return construct_exists(proof_step, user_input)
@@ -1039,20 +1039,20 @@ def action_exists(proof_step,
         if selected_hypo.math_type.is_prop():
             # Try to apply property "exists x, P(x)" to get a new MathObject x
             if not selected_hypo.is_exists(implicit=True):
-                error = _("selection is not existential property '∃x, P(x)'")
+                error = _("Selection is not existential property '∃x, P(x)'")
                 raise WrongUserInput(error)
             else:
                 return apply_exists(proof_step, selected_objects)
         else:  # h_selected is not a property : get an existence property
             if not goal.target.is_exists(implicit=True):
-                error = _("target is not existential property '∃x, P(x)'")
+                error = _("Target is not existential property '∃x, P(x)'")
                 raise WrongUserInput(error)
             else:
                 object_name = selected_objects[0].info["name"]
                 return construct_exists(proof_step, [object_name])
     elif len(selected_objects) == 2:
         return construct_exists_on_hyp(proof_step, selected_objects)
-    raise WrongUserInput(error=_("does not apply to more than two properties"))
+    raise WrongUserInput(error=_("Does not apply to more than two properties"))
 
 
 #########

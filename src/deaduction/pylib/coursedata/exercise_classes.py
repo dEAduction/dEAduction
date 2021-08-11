@@ -206,7 +206,7 @@ class Statement:
             text = goal.to_tooltip(type="non-exercise")
             if cvars.get("functionality.allow_implicit_use_of_definitions"):
                 if isinstance(self, Definition) and self.implicit_use:
-                    text = _("(implicit use allowed)\n") + text
+                    text = '(' + _("implicit use allowed") + ')' + '\n' + text
         return text
 
     @property

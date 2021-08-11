@@ -65,5 +65,5 @@ def test_selection(items_selected: [],
     Test that at least one of items_selected or selected_target is not empty.
     """
     if not (items_selected or selected_target):
-        error = _("select at least one object, one property or the target")
+        error = _("Select at least one object, one property or the target")
         raise WrongUserInput(error)

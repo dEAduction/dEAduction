@@ -238,7 +238,7 @@ class CourseChooser(AbstractCoExChooser):
         self.servint: ServerInterface = servint
 
         # Browse button
-        self.__browse_btn = QPushButton(_('Browse files for course'))
+        self.__browse_btn = QPushButton(_('Browse files for course...'))
         self.__browse_btn.setAutoDefault(False)
         self.__browse_btn.clicked.connect(self.__browse_courses)
 
@@ -400,6 +400,7 @@ class CourseChooser(AbstractCoExChooser):
             title = course.title
             self.__recent_courses_wgt.add_browsed_course(course_path, title)
             self.set_preview(course)
+            self.__set_initial_proof_states(course)
 
     @Slot(RecentCoursesLWI, bool)
     def __recent_course_clicked(self, course_item: RecentCoursesLWI):
