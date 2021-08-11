@@ -256,11 +256,15 @@ class Coordinator(QObject):
     def set_definitions_for_implicit_use(self):
         exercise = self.exercise
         definitions = exercise.definitions_for_implicit_use
-        log.debug(f"{len(definitions)} definition(s) set for implicit use")
+        log.debug(f"Found {len(definitions)} definition(s) for implicit "
+                  f"use...")
         PatternMathObject.set_definitions_for_implicit_use(definitions)
-        log.debug(f"{len(MathObject.definition_patterns)} implicit "
-                  f"definitions in MathObject list")
-
+        log.debug(f"...set {len(MathObject.definition_patterns)} implicit "
+                  f"definitions")
+        log.debug("Metavar_objects list:")
+        loc_csts = PatternMathObject.loc_csts_for_metavars
+        log.debug([(idx+1, loc_csts[idx].to_display())
+                   for idx in range(len(loc_csts))])
 
     def closeEvent(self):
         log.info("Closing Coordinator")
@@ -472,7 +476,7 @@ class Coordinator(QObject):
                 self.process_wrong_user_input(error)
                 break
 
-            # New: implicit use of definition
+            # New: implicit use of definition FIXME: unused
             except MissingImplicitDefinition as mid:
                 definition = mid.definition
                 math_object = mid.math_object

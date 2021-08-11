@@ -122,13 +122,16 @@ def allow_implicit_use(test: callable):
                         #     return MathObject.implicit_definitions[index]
                         # else:
                         # Store data for further use
-                        MathObject.last_used_implicit_definition = \
-                                    MathObject.implicit_definitions[index]
-                        MathObject.last_rw_object = \
-                            pattern_right.apply_matching()
+                        definition = MathObject.implicit_definitions[index]
+                        MathObject.last_used_implicit_definition = definition
+                        rw_math_object = pattern_right.apply_matching()
+                        MathObject.last_rw_object = rw_math_object
+                        log.debug(f"Implicit definition: "
+                                  f"{definition.pretty_name}")
+                        log.debug(f"    {math_type.to_display()}  ->"
+                                  f" {rw_math_object.to_display()}")
                         return True
             return False
-
     return test_implicit
 
 
@@ -826,6 +829,7 @@ class MathObject:
         else:
             return False, None
 
+    @allow_implicit_use
     def can_be_used_for_implication(self, is_math_type=False) -> bool:
         """
         Determines if a proposition can be used as a basis for implication,
@@ -895,21 +899,6 @@ class MathObject:
             shape = Shape.from_math_object(self, format_, text_depth)
         return structured_display_to_string(shape.display)
 
-    def find_implicit_definition(self, test=None):
-        """
-        Search if self matches some definition in
-        MathObject.implicit_definitions matching test and if so,
-        return the first matching definition.
-        """
-        definition_patterns = MathObject.definition_patterns
-        for index in range(len(definition_patterns)):
-            # Test right term if self match pattern
-            pattern = definition_patterns[index]
-            pattern_left = pattern.children[0]
-            if pattern_left.match(self):
-                if test is None or test(self):
-                    return MathObject.implicit_definitions[index]
-
     def apply_implicit_definition(self):
         """
         Search if self matches some definition in
@@ -927,6 +916,22 @@ class MathObject:
                 pattern_right = pattern.children[1]
                 rewritten_math_object = pattern_right.apply_matching()
                 return rewritten_math_object
+
+    def find_implicit_definition(self, test=None):
+        """
+        Search if self matches some definition in
+        MathObject.implicit_definitions matching test and if so,
+        return the first matching definition.
+        """
+        # FIXME: unused?
+        definition_patterns = MathObject.definition_patterns
+        for index in range(len(definition_patterns)):
+            # Test right term if self match pattern
+            pattern = definition_patterns[index]
+            pattern_left = pattern.children[0]
+            if pattern_left.match(self):
+                if test is None or test(self):
+                    return MathObject.implicit_definitions[index]
 
     def implicit_children(self):
         """

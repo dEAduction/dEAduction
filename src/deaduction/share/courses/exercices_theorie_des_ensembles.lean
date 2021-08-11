@@ -112,6 +112,8 @@ lemma definition.egalite_deux_ensembles {A A' : set X} :
 /- dEAduction
 PrettyName
     Egalité de deux ensembles
+ImplicitUse
+    True
 -/
 begin
      exact set.ext_iff
@@ -499,7 +501,7 @@ f = f' ↔ ∀ x, f x = f' x :=
 PrettyName
     Egalité de deux fonctions
 ImplicitUse
-    False
+    True
 -/
 begin
     exact function.funext_iff,
@@ -511,6 +513,8 @@ f₀ = Identite ↔ ∀ x, f₀ x = x :=
 /- dEAduction
 PrettyName
     Application identité
+ImplicitUse
+    True
 -/
 begin
     apply definition.egalite_fonctions,

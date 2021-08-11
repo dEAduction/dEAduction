@@ -139,7 +139,8 @@ class Shape:
         # log.debug(f"Computing shape of {math_object}")
         if format_ not in ["latex", 'utf8', "lean"]:
             return shape_error(f"unknown format = {format_}")
-
+        if math_object is None:
+            return shape_error(f"None")
         node = math_object.node
         if format_ == "lean" and node in lean_from_node:
             raw_shape = Shape(display=list(lean_from_node[node]),
@@ -723,7 +724,7 @@ def display_belongs_to(math_type: Any, format_, text_depth, belonging=True) \
     #    if format_ in ('utf8', 'lean'):
     #        return "∈"
     # from now on math_type is an instance of MathObject
-    if math_type is 'unknown':
+    if math_type is 'unknown' or math_type is None:  # DO NOT change is into ==
         if text_depth > 0:
             symbol = _("is")
         else:

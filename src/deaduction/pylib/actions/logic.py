@@ -434,7 +434,7 @@ def construct_implies(proof_step) -> CodeForLean:
     Here the target is assumed to be an implication P ⇒ Q, P is added to the
     context, and the target becomes Q.
     """
-    if not proof_step.goal.target.is_implication():
+    if not proof_step.goal.target.is_implication(implicit=True):
         raise WrongUserInput(error=_("Target is not an implication 'P ⇒ Q'"))
     else:
         new_hypo_name = get_new_hyp(proof_step)
@@ -534,20 +534,21 @@ def action_implies(proof_step,
     goal = proof_step.goal
 
     if len(selected_objects) == 0:
-        if not goal.target.is_implication():
+        if not goal.target.is_implication(implicit=True):
             raise WrongUserInput(
                 error=_("Target is not an implication 'P ⇒ Q'"))
         else:
             return construct_implies(proof_step)
     if len(selected_objects) == 1:
-        if not selected_objects[0].can_be_used_for_implication():
+        if not selected_objects[0].can_be_used_for_implication(implicit=True):
             raise WrongUserInput(
                 error=_("Selected property is not an implication 'P ⇒ Q'"))
         else:
             return apply_implies(proof_step, selected_objects)
     elif len(selected_objects) == 2:
-        if not selected_objects[-1].can_be_used_for_implication():
-            if not selected_objects[0].can_be_used_for_implication():
+        if not selected_objects[1].can_be_used_for_implication(implicit=True):
+            if not selected_objects[0].can_be_used_for_implication(
+                                                               implicit=True):
                 raise WrongUserInput(error=_(
                     "Selected properties are not implications 'P ⇒ Q'"
                                             ))
@@ -715,6 +716,12 @@ def construct_forall(proof_step) -> CodeForLean:
 
     goal = proof_step.goal
     math_object = goal.target.math_type
+
+    if not math_object.is_for_all(is_math_type=True):
+        # Implicit "for_all"
+        implicit_definition = MathObject.last_used_implicit_definition
+        math_object         = MathObject.last_rw_object
+
     math_type = math_object.children[0]
     variable = math_object.children[1]
     body = math_object.children[2]
@@ -774,7 +781,7 @@ def inequality_from_pattern_matching(math_object: MathObject,
     return inequality
 
 
-def apply_forall(proof_step, l: [MathObject]) -> CodeForLean:
+def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     """
     Try to apply last selected property on the other ones.
     The last property should be a universal property
@@ -788,13 +795,13 @@ def apply_forall(proof_step, l: [MathObject]) -> CodeForLean:
     #  For the moment "forall x, P->Q" works with "P->Q" and button forall
 
     goal = proof_step.goal
-    universal_property = l[-1]  # The property to be applied
+    universal_property = selected_objects[-1]  # The property to be applied
     unsolved_inequality_counter = 0
     # Variable_names will contain the list of variables and proofs of
     # inequalities that will be passed to universal_property
     variable_names = []
     code = CodeForLean.empty_code()
-    for potential_var in l[:-1]:
+    for potential_var in selected_objects[:-1]:
         # TODO: replace by pattern matching
         # Check for "∀x>0" (and variations)
         inequality = inequality_from_pattern_matching(universal_property,
@@ -854,7 +861,7 @@ def apply_forall(proof_step, l: [MathObject]) -> CodeForLean:
         more_code = more_code.and_then("rotate")
 
     code.add_success_msg(_("Property {} added to the context").
-                             format(new_hypo_name))
+                         format(new_hypo_name))
     return code.and_then(more_code)
 
 
@@ -877,14 +884,14 @@ def action_forall(proof_step,
     goal = proof_step.goal
 
     if len(selected_objects) == 0:
-        if not goal.target.is_for_all():
+        if not goal.target.is_for_all(implicit=True):
             error = _("target is not a universal property '∀x, P(x)'")
             raise WrongUserInput(error)
         else:
             return construct_forall(proof_step)
 
     elif len(selected_objects) == 1:  # Ask user for item
-        if not selected_objects[0].is_for_all():
+        if not selected_objects[0].is_for_all(implicit=True):
             error = _("selected property is not a universal property '∀x, "
                       "P(x)'")
             raise WrongUserInput(error)
@@ -909,7 +916,7 @@ def action_forall(proof_step,
     # Search for a universal property among l, beginning with last item
     selected_objects.reverse()
     for item in selected_objects:
-        if item.is_for_all():
+        if item.is_for_all(implicit=True):
             # Put item on last position
             selected_objects.remove(item)
             selected_objects.reverse()
@@ -943,10 +950,16 @@ def construct_exists(proof_step, user_input: [str]) -> CodeForLean:
 def apply_exists(proof_step, selected_object: [MathObject]) -> CodeForLean:
     """
     Apply a property '∃ x, P(x)' to get an x with property P(x).
+    Assume selected_object[0] is an existence property.
     """
-
     selected_hypo = selected_object[0].math_type
     hypo_name = selected_object[0].info["name"]
+
+    if not selected_hypo.is_exists(is_math_type=True):
+        # Implicit "exists"
+        # implicit_definition = MathObject.last_used_implicit_definition
+        selected_hypo       = MathObject.last_rw_object
+
     x = give_global_name(proof_step=proof_step,
                          math_type=selected_hypo.children[0],
                          hints=[selected_hypo.children[1].to_display()])
@@ -1014,7 +1027,7 @@ def action_exists(proof_step,
     goal = proof_step.goal
 
     if len(selected_objects) == 0:
-        if not goal.target.is_exists():
+        if not goal.target.is_exists(implicit=True):
             error = _("target is not existential property '∃x, P(x)'")
             raise WrongUserInput(error)
         else:
@@ -1023,13 +1036,13 @@ def action_exists(proof_step,
         selected_hypo = selected_objects[0]
         if selected_hypo.math_type.is_prop():
             # Try to apply property "exists x, P(x)" to get a new MathObject x
-            if not selected_hypo.is_exists():
+            if not selected_hypo.is_exists(implicit=True):
                 error = _("selection is not existential property '∃x, P(x)'")
                 raise WrongUserInput(error)
             else:
                 return apply_exists(proof_step, selected_objects)
         else:  # h_selected is not a property : get an existence property
-            if not goal.target.is_exists():
+            if not goal.target.is_exists(implicit=True):
                 error = _("target is not existential property '∃x, P(x)'")
                 raise WrongUserInput(error)
             else:
@@ -1105,7 +1118,7 @@ def apply_substitute(proof_step, l: [MathObject], user_input: [int], equality):
     if len(l) == 2:
         h = l[0].info["name"]
         heq_name = l[-1].info["name"]
-        if len(user_input) > 0:
+        if user_input:
             if user_input[0] == 1:
                 success_msg = success2 + _("in {}").format(h)
                 more_code = CodeForLean.from_string(f'rw <- {heq_name} at {h}',
@@ -1149,9 +1162,9 @@ def apply_substitute(proof_step, l: [MathObject], user_input: [int], equality):
 
 @action()
 def action_equal(proof_step,
-                  selected_objects: [MathObject],
-                  user_input: [str] = [],
-                  target_selected: bool = True) -> CodeForLean:
+                 selected_objects: [MathObject],
+                 user_input: [str] = [],
+                 target_selected: bool = True) -> CodeForLean:
     """
     Try to use one of the selected properties for substitution in the goal
     (in case only one property has been selected) or in the second one.
@@ -1160,22 +1173,50 @@ def action_equal(proof_step,
         button
     """
     if not selected_objects:
-        raise WrongUserInput(error=_("no property selected"))
+        raise WrongUserInput(error=_("No property selected"))
     # Now len(l) > 0
 
+    if len(selected_objects) > 2:
+        raise WrongUserInput(error=_("Too many selected objects"))
+
     # Try all properties for substitution
-    selected_objects.reverse()  # Last selected first
-    for prop in selected_objects:
-        test, equality = prop.can_be_used_for_substitution()
-        if test:
-            selected_objects.remove(prop)
-            selected_objects.insert(0, prop)  # Put equality first
-            break
-    if not test:  # No equality found
+    # selected_objects.reverse()  # Last selected first
+    # for prop in selected_objects:
+    #     test, equality = prop.can_be_used_for_substitution()
+    #     if test:
+    #         selected_objects.remove(prop)
+    #         selected_objects.insert(0, prop)  # Put equality first ???
+    #         break
+    prop0, prop1 = selected_objects[0], selected_objects[1]
+    test0, equality0 = prop0.can_be_used_for_substitution()
+    test1, equality1 = prop1.can_be_used_for_substitution()
+    if test0 and test1:
+        # Two equalities: which one to use?
+        if not user_input:
+            eq0 = equality0.to_display()
+            eq1 = equality1.to_display()
+            choices = [(eq0, f"Use for substitution in {eq1}"),
+                       (eq1, f"Use for substitution in {eq0}")]
+            raise MissingParametersError(
+                InputType.Choice,
+                choices,
+                title=_("Precision of substitution"),
+                output=_("Choose which equality to use for substitution"))
+        elif user_input[0] == 0:
+            equality = equality0
+            selected_objects.reverse()
+        else:
+            equality = equality1
+    elif test1:
+        equality = equality1
+    elif test0:
+        equality = equality0
+        selected_objects.reverse()
+    else:  # No equality found
         error = _("This cannot be used for substitution")
         raise WrongUserInput(error)
 
-    selected_objects.reverse()  # Back in the original order
+    # selected_objects.reverse()  # Back in the original order
     codes = CodeForLean.empty_code()
     codes = codes.or_else(apply_substitute(proof_step,
                                            selected_objects,

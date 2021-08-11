@@ -360,19 +360,24 @@ def action_apply(proof_step,
         raise WrongUserInput(error=_("no property selected"))
 
     # Now len(l) > 0
-    prop = selected_objects[-1]  # property to be applied
 
     # (1)   If user wants to apply a function
     #       (note this is exclusive of other types of applications)
-    if prop.is_function():
-        if len(selected_objects) == 1:
-            # TODO: ask user for element on which to apply the function
-            #   (plus new name, cf apply_forall)
-            error = _("Select an element or an equality on which to "
-                      "apply the function")
-            raise WrongUserInput(error=error)
-        else:
-            return apply_function(proof_step, selected_objects)
+    # We successively try all selected objects
+    for i in range(len(selected_objects)-1):
+        prop = selected_objects[-1]  # property to be applied
+        if prop.is_function():
+            if len(selected_objects) == 1:
+                # TODO: ask user for element on which to apply the function
+                #   (plus new name, cf apply_forall)
+                error = _("Select an element or an equality on which to "
+                          "apply the function")
+                raise WrongUserInput(error=error)
+            else:
+                return apply_function(proof_step, selected_objects)
+        # Put prop at index 0 and try again
+        prop = selected_objects.pop()
+        selected_objects.insert(0, prop)
 
     codes = CodeForLean.empty_code()
     error = ""

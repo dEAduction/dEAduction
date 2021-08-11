@@ -480,10 +480,10 @@ class ExerciseChooser(AbstractCoExChooser):
         """
         Set exercise preview. See AbstractCoExChooser.set_preview
         docstring. The exercise's title, subtitle and description are
-        displayed; if a preview is available (i.e. when course's file
-        file-type is '.pkl', see self doctring), it is displayed. This
-        method manages these two possibilities with a big if / else
-        condition.
+        displayed; if a preview is available (i.e. exercise.initial_proof_state
+        is not None), it is displayed ; if not, Lean server is asked for the
+        missing information. This method manages these two possibilities
+        with a big if / else condition.
 
         :param exercise: The exercise to be previewed.
         """
@@ -775,6 +775,11 @@ class AbstractStartCoEx(QDialog):
         buttons_lyt.addWidget(self.__start_ex_btn)
 
         main_layout = QVBoxLayout()
+        # # FIXME: put this in the right place
+        # explanation = _("First select a course, then choose "
+        #                                "an exercise.")
+        # explanation_widget= QLabel(explanation)
+        # main_layout.addWidget(explanation_widget)
         if widget:
             main_layout.addWidget(widget)
         main_layout.addWidget(self.__tabwidget)

@@ -287,7 +287,7 @@ INEQUALITIES = ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥", "PROP_EQUAL_NOT")
 NATURE_LEAVES_LIST = ("PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                       "FUNCTION", "SEQUENCE", "SET_FAMILY",
                       "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY",
-                      "CONSTANT", "LOCAL_CONSTANT")
+                      "CONSTANT", "LOCAL_CONSTANT", "NONE")
 
 
 def needs_paren(parent, child, child_number) -> bool:
@@ -308,7 +308,7 @@ def needs_paren(parent, child, child_number) -> bool:
     #   et utiliser Biggl( biggl( Bigl( bigl( (x) bigr) Bigr) biggr) Biggr)
 
     p_node = parent.node
-    c_node = child.node
+    c_node = child.node if child is not None else "NONE"
     if c_node in NATURE_LEAVES_LIST:
         return False
     if p_node == 'PROP_NOT':
