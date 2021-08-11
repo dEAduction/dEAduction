@@ -86,7 +86,6 @@ def allow_implicit_use(test: callable):
     'test' is typically 'is_and', 'is_or', 'is_forall', ...
     """
 
-    # TODO: add call to cvars.config['allow_implicit_use_of_definitions']
     def test_implicit(math_object,
                       is_math_type=False,
                       implicit=False,
@@ -111,24 +110,18 @@ def allow_implicit_use(test: callable):
                 pattern = definition_patterns[index]
                 pattern_left = pattern.children[0]
                 pattern_right = pattern.children[1]
+                log.debug(f"(Trying definition "
+                          f"{MathObject.implicit_definitions[index].pretty_name}"
+                          f"...)")
                 if pattern_left.match(math_type):
                     if test(pattern_right, is_math_type=True):
-                        # implicit_definition = implicit_definitions[index]
-                        # rewritten_math_object = pattern_right.apply_matching()
-                        # raise MissingImplicitDefinition(implicit_definition,
-                        #                                 math_object,
-                        #                                 rewritten_math_object)
-                        # if return_def:
-                        #     return MathObject.implicit_definitions[index]
-                        # else:
-                        # Store data for further use
                         definition = MathObject.implicit_definitions[index]
                         MathObject.last_used_implicit_definition = definition
                         rw_math_object = pattern_right.apply_matching()
                         MathObject.last_rw_object = rw_math_object
                         log.debug(f"Implicit definition: "
                                   f"{definition.pretty_name}")
-                        log.debug(f"    {math_type.to_display()}  ->"
+                        log.debug(f"    {math_type.to_display()}  <=>"
                                   f" {rw_math_object.to_display()}")
                         return True
             return False
@@ -558,8 +551,8 @@ class MathObject:
         are identical
         """
         cls.bound_var_number += 1
-        bound_var_1.info['bound_var_number'] = MathObject.bound_var_number
-        bound_var_2.info['bound_var_number'] = MathObject.bound_var_number
+        bound_var_1.info['bound_var_number'] = cls.bound_var_number
+        bound_var_2.info['bound_var_number'] = cls.bound_var_number
 
     @classmethod
     def unmark_bound_vars(cls, bound_var_1, bound_var_2):

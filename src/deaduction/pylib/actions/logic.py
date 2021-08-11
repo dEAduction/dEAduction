@@ -717,10 +717,12 @@ def construct_forall(proof_step) -> CodeForLean:
     goal = proof_step.goal
     math_object = goal.target.math_type
 
+    possible_codes = CodeForLean.empty_code()
     if not math_object.is_for_all(is_math_type=True):
         # Implicit "for_all"
         implicit_definition = MathObject.last_used_implicit_definition
         math_object         = MathObject.last_rw_object
+        possible_codes = rw_with_defi(implicit_definition)
 
     math_type = math_object.children[0]
     variable = math_object.children[1]
@@ -730,14 +732,14 @@ def construct_forall(proof_step) -> CodeForLean:
         [math_type_1, math_type_2] = math_type.children
         x = give_global_name(proof_step=proof_step, math_type=math_type_1)
         y = give_global_name(proof_step=proof_step, math_type=math_type_2)
-        possible_codes = CodeForLean.from_string(f'rintro ⟨ {x}, {y} ⟩')
+        possible_codes = possible_codes.and_then(f'rintro ⟨ {x}, {y} ⟩')
         name = f"({x},{y})"
     else:
         x = give_global_name(proof_step=proof_step,
                              math_type=math_type,
                              hints=[hint]
                              )
-        possible_codes = CodeForLean.from_string(f'intro {x}')
+        possible_codes = possible_codes.and_then(f'intro {x}')
         name = f"{x}"
     possible_codes.add_success_msg(_("Object {} added to the context").
                                        format(name))

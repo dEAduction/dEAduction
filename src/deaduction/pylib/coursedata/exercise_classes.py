@@ -30,18 +30,17 @@ from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
 import logging
 
-# from deaduction.pylib.config.i18n import _
-import deaduction.pylib.logger as logger
-from deaduction.pylib.actions.actiondef import Action
-# import deaduction.pylib.actions.logic
-# import deaduction.pylib.actions.proofs
+import deaduction.pylib.logger                  as logger
+import deaduction.pylib.config.vars             as cvars
+from deaduction.pylib.actions.actiondef     import Action
 import deaduction.pylib.actions.magic
-from deaduction.pylib.coursedata.utils import (find_suffix,
-                                               substitute_macros,
-                                               extract_list)
+from deaduction.pylib.coursedata.utils     import (find_suffix,
+                                                   substitute_macros,
+                                                   extract_list)
 from deaduction.pylib.coursedata.auto_steps import AutoStep
 
 log = logging.getLogger(__name__)
+global _
 
 ##############################################
 # Lists of all instances of the Action class #
@@ -205,6 +204,9 @@ class Statement:
             # target = goal.target
             # text = target.math_type.to_display(is_math_type=True)
             text = goal.to_tooltip(type="non-exercise")
+            if cvars.get("functionality.allow_implicit_use_of_definitions"):
+                if isinstance(self, Definition) and self.implicit_use:
+                    text = _("(implicit use allowed)\n") + text
         return text
 
     @property
@@ -643,10 +645,11 @@ def make_statement_callable(prefix: str, statements) -> callable:
 
 def polish_data(data):
     """
-    Make some formal smoothing.
+    Make some formal smoothing. BEware that capitalization modifies math
+    notations!
     """
     if 'description' in data:
-        data['description'] = data['description'].capitalize()
+        # data['description'] = data['description'].capitalize()
         if data['description'][-1].isalpha():
             data['description'] += '.'
 
