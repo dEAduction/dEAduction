@@ -45,7 +45,8 @@ from typing  import  (Dict,
 from PySide2.QtCore    import (Qt,
                                Signal,
                                Slot,
-                               QEvent)
+                               QEvent,
+                               QSettings)
 from PySide2.QtGui     import (QFont,
                                QPixmap)
 from PySide2.QtWidgets import (QApplication,
@@ -738,6 +739,10 @@ class AbstractStartCoEx(QDialog):
 
         super().__init__()
 
+        settings = QSettings("deaduction")
+        if settings.value("coex_chooser/Geometry"):
+            self.restoreGeometry(settings.value("coex_chooser/Geometry"))
+
         self.servint = servint
         if title:
             self.setWindowTitle(title)
@@ -955,6 +960,10 @@ class StartCoExStartup(AbstractStartCoEx):
         if self.course_chooser.current_course:
             # Save ips of the previous course if any
             self.course_chooser.current_course.save_initial_proof_states()
+
+        # Save window geometry
+        settings = QSettings("deaduction")
+        settings.setValue("coex_chooser/Geometry", self.saveGeometry())
 
         super().closeEvent(event)
         self.window_closed.emit()

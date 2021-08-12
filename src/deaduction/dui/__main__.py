@@ -282,8 +282,6 @@ class Container(QObject):
 
         # Start coordinator, who will start an ExerciseMainWindow instance
         self.coordinator = Coordinator(self.exercise, self.servint)
-        # self.exercise_window = ExerciseMainWindow(self.exercise,
-        # self.servint)
 
         # Connect signals
         self.exercise_window.window_closed.connect(self.close_exercise_window)

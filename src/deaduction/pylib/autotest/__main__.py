@@ -430,7 +430,7 @@ async def main():
     3) or a file path to an individual exercise in a pkl file.
 
     - In the first case, it will collect all exercises with autotest data in
-    all courses in the directory, as well ass all individual pkl
+    all courses in the directory, as well as all individual pkl
     test_exercises.
     - In the second case it will collect the individual exercise if
     specified, or all the exercises from this one, or all exercises in the
