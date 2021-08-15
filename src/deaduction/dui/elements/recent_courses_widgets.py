@@ -61,8 +61,9 @@ class RecentCoursesLW(QListWidget):
         courses_paths, titles, exercise_numbers = get_recent_courses()
         info = zip(courses_paths, titles, exercise_numbers)
         for course_path, course_title, exercise_number in info:
-            item = RecentCoursesLWI(course_path, course_title)
-            self.addItem(item)
+            if course_path.exists():
+                item = RecentCoursesLWI(course_path, course_title)
+                self.addItem(item)
 
     def add_browsed_course(self, course_path: Path, course_title: str):
         """
@@ -109,7 +110,6 @@ class RecentCoursesLWI(QListWidgetItem):
         # super().__init__(f'{course_title} [{w_or_wo} preview]')
 
         super().__init__(course_title)
-
         self.setToolTip(str(course_path))
         self.__course_path = course_path
 

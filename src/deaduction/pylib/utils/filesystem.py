@@ -90,7 +90,7 @@ def check_dir(path: Path, exc=False, create=False):
     """
     log.info(_("Checking path: {}").format(str(path)))
 
-    if (not path.exists()):
+    if not path.exists():
         if create:
             log.info(_("→ Creating directory {}").format(str(path)))
             path.mkdir()

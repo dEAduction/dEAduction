@@ -581,21 +581,12 @@ class ExerciseMainWindow(QMainWindow):
         The method is asynchronous because we wait for the button blinking.
         """
 
-        # # Light target on/off as needed
-        # if proof_step.selection:
-        #     self.ecw.target_wgt.mark_user_selected(False)
-        # else:
-        #     self.ecw.target_wgt.mark_user_selected(True)
-        # # Light on selection
-        # for item in self.ecw.props_wgt.items + self.ecw.objects_wgt.items:
-        #     for math_object in proof_step.selection:
-        #         if item.math_object == math_object:
-        #             item.mark_user_selected(True)
-
         self.simulate_selection(proof_step.selection)
         # Check button or statement
         if isinstance(proof_step.button, ActionButton):
+            self.ecw.freeze(False)
             await proof_step.button.simulate(duration=0.4)
+            self.ecw.freeze(self.freezed)
         elif isinstance(proof_step.statement_item, StatementsTreeWidgetItem):
             await proof_step.statement_item.simulate(duration=0.4)
         # # Light off selection synchronously

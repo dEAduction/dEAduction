@@ -413,7 +413,6 @@ class CourseChooser(AbstractCoExChooser):
 
         :course_item: The RecentCoursesLWI the user clicked on.
         """
-
         course_path = course_item.course_path
         course = Course.from_file(course_path)
         self.set_preview(course)
