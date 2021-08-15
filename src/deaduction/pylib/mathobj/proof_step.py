@@ -36,11 +36,11 @@ from copy import copy
 import logging
 
 import deaduction.pylib.logger as logger
-# from deaduction.pylib.config.i18n import _
 
 from deaduction.pylib.mathobj import MathObject
 
 log = logging.getLogger(__name__)
+global _
 
 
 @dataclass()
@@ -169,7 +169,7 @@ class ProofNode:
     #     return self.new_goal.msg
 
 
-class ProofStep:
+class ProofStep():
     """
     Class to store data associated to one step in the proof.
     The step starts with user inputs, and ends with Lean's responses.
@@ -209,6 +209,7 @@ class ProofStep:
     button         = None  # ActionButton or str, e.g. "history_undo".
     statement_item = None  # StatementsTreeWidgetItem
     lean_code      = None  # CodeForLean
+    is_automatic   = False
 
     # ──────────────── Output ─────────────── #
     effective_code            = None  # CodeForLean that proved effective
@@ -216,6 +217,9 @@ class ProofStep:
     error_msg: str            = ''
     proof_state               = None
     no_more_goal              = False
+
+    # AutoStep version, computed in Coordinator.update_proof_step():
+    auto_step                 = None
 
     def __init__(self,
                  proof_nodes=None,
@@ -285,6 +289,7 @@ class ProofStep:
                         history_nb=history_nb,
                         proof_nodes=copy(proof_step.proof_nodes)
                         )
+        log.debug(f"New proof step, n°{nps.pf_nb}")
         if not proof_step.is_history_move()\
                 and not proof_step.is_error()\
                 and next_parent:

@@ -527,6 +527,7 @@ class LeanFile(VirtualFile):
 
         :param emw: ExerciseMainWindow instance
         """
+        # FIXME: this has been transfered to a Coordinator method
         save = cvars.get('functionality.save_solved_exercises_for_autotest',
                          False)
         if not save:

@@ -79,8 +79,8 @@ PrettyName
 
 lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, x ∈ A → x ∈ B :=
 /- dEAduction
-AutoSteps
-  ∀, →
+ImplicitUse
+  True
 -/
 begin
     exact iff.rfl
@@ -91,19 +91,24 @@ lemma definition.egalite_deux_ensembles {A A' : set X} :
 /- dEAduction
 PrettyName
     Egalité de deux ensembles
+ImplicitUse
+  True
 -/
 begin
      exact set.ext_iff
 end
 
-lemma theorem.double_inclusion (A A' : set X) :
-(A ⊆ A' ∧ A' ⊆ A) → A = A' :=
+-- Unfortunately split cannot work
+lemma definition.double_inclusion (A A' : set X) :
+A = A' ↔ (A ⊆ A' ∧ A' ⊆ A) :=
 /- dEAduction
 PrettyName
     Egalité de deux ensembles : double inclusion
+ImplicitUse
+  False
 -/
 begin
-    exact set.subset.antisymm_iff.mpr
+    exact set.subset.antisymm_iff
 end
 
 lemma definition.ensemble_vide
@@ -136,6 +141,8 @@ x ∈ A ∩ B ↔ ( x ∈ A ∧ x ∈ B) :=
 /- dEAduction
 PrettyName
     Intersection de deux ensembles
+ImplicitUse
+    True
 -/
 begin
     exact iff.rfl
@@ -146,6 +153,8 @@ x ∈ A ∪ B ↔ ( x ∈ A ∨ x ∈ B) :=
 /- dEAduction
 PrettyName
     Union de deux ensembles
+ImplicitUse
+    True
 -/
 begin
     exact iff.rfl
@@ -167,6 +176,8 @@ injective f ↔ ∀ x x' : X, (f x = f x' → x = x')
 /- dEAduction
 PrettyName
     Application injective
+ImplicitUse
+    True
 -/
 begin
     refl,
@@ -178,6 +189,8 @@ surjective f ↔ ∀ y : Y, ∃ x : X, y = f x
 /- dEAduction
 PrettyName
     Application surjective
+ImplicitUse
+    True
 -/
 begin
     refl,

@@ -323,7 +323,7 @@ class ServerInterface(QObject):
             # self.log.debug(f"Received msg with seq_num {msg_seq_num}")
             if msg.seq_num != req_seq_num :
                 self.log.warning(f"Request seq_num is {req_seq_num}: "
-                                 f"ignoring msg")
+                                 f"ignoring msg form seq_num {msg.seq_num}")
                 return
 
         if self.__course_data:
@@ -530,7 +530,7 @@ class ServerInterface(QObject):
                               content=self.lean_file_contents)
             resp = await self.lean_server.send(req)
 
-        if resp.message == "file invalidated":
+        if resp.message in ("file invalidated", "file_unchanged"):
             self.log.debug("Response seq_num:"+str(resp.seq_num))
             self.file_invalidated.set()
 
@@ -567,6 +567,8 @@ class ServerInterface(QObject):
             if hasattr(self.update_ended, "emit"):
                 self.update_ended.emit()
 
+        else:
+            self.log.warning(f"Unexpected Lean response: {resp.message}")
         # Emit exceptions ?
         error_list = []
         try:
@@ -647,7 +649,6 @@ class ServerInterface(QObject):
 
         virtual_file.cursor_move_to(0)
         virtual_file.cursor_save()
-
         return virtual_file
 
     async def set_exercise(self, exercise: Exercise, on_top=True):

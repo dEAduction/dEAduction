@@ -61,6 +61,7 @@ from   deaduction.pylib.utils.filesystem import path_helper
 import deaduction.pylib.config.vars as cvars
 
 log = logging.getLogger(__name__)
+global _
 
 ################################
 # MathObject widgets classes #
@@ -136,7 +137,7 @@ class MathObjectWidgetItem(QListWidgetItem):
         _TagIcon) of mathobject.
     """
 
-    def __init__(self, mathobject: MathObject, tag: str='='):
+    def __init__(self, math_object: MathObject, tag: str='='):
         """
         Init self with an instance of the class MathObject and a tag.
         See self.__doc__.
@@ -147,16 +148,16 @@ class MathObjectWidgetItem(QListWidgetItem):
 
         super().__init__()
 
-        self.mathobject = mathobject
+        self.math_object = math_object
         self.tag        = tag
 
-        lean_name = mathobject.to_display()
-        math_expr = mathobject.math_type.to_display(is_math_type=True)
+        lean_name = math_object.to_display()
+        math_expr = math_object.math_type.to_display(is_math_type=True)
         caption   = f'{lean_name} : {math_expr}'
         self.setText(caption)
         self.setIcon(_TagIcon(tag))
         # set tool_tips (merge several tool_tips if needed)
-        tool_tips = explain_how_to_apply(mathobject)
+        tool_tips = explain_how_to_apply(math_object)
         if len(tool_tips) == 1:
             tool_tip = _("Double click to") + " " + tool_tips[0]
             self.setToolTip(tool_tip)
@@ -165,6 +166,14 @@ class MathObjectWidgetItem(QListWidgetItem):
             for tool_tip in tool_tips:
                 text += "\n" + "• " + tool_tip
             self.setToolTip(text)
+
+    @property
+    def logic(self):
+        return self.math_object
+
+    @property
+    def display_name(self):
+        return self.math_object.display_name
 
     def __eq__(self, other):
         """
@@ -191,8 +200,8 @@ class MathObjectWidgetItem(QListWidgetItem):
 
         self.setBackground(QBrush(QColor('limegreen')) if yes else QBrush())
 
-    def has_math_object(self, math_object: MathObject) -> bool:
-        return self.mathobject is MathObject
+    # def has_math_object(self, math_object: MathObject) -> bool:
+    #     return self.math_object is MathObject
 
 
 class MathObjectWidget(QListWidget):
@@ -243,17 +252,22 @@ class MathObjectWidget(QListWidget):
         item.setSelected(False)
         self.apply_math_object_triggered.emit(item)
 
-    def math_object_widget_item(self, math_object) -> MathObjectWidgetItem:
+    def item_from_logic(self, math_object) -> MathObjectWidgetItem:
         """
-        Return MathObjectWidgetItem whose mathobject is Math_object.
+        Return MathObjectWidgetItem whose math_object is math_object.
         """
 
-        items = [item for item in self.items if item.has_math_object(
-                 math_object)]
+        items = [item for item in self.items
+                 if item.math_object == math_object]
         if items:
             return items[0]
         else:
             return None
+
+    def item_from_nb(self, idx: int) -> MathObjectWidgetItem:
+        items = self.items
+        if idx in range(len(items)):
+            return items[idx]
 
 
 MathObjectWidget.apply_math_object_triggered = Signal(MathObjectWidget)
@@ -349,3 +363,10 @@ class TargetWidget(QWidget):
         else:
             self.target_label.setStyleSheet(self.target_label.unselected_style)
 
+    @property
+    def math_object(self):
+        return self.target
+
+    @property
+    def logic(self):
+        return self.target

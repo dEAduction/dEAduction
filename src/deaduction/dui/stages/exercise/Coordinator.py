@@ -27,18 +27,15 @@ This file is part of d∃∀duction.
 # TODO:
 #  - Put UserActionStep as an attribute of emw, and fill it there.
 #  Then store it in proof_step.
-#  - Use Coordinator.action_queue to complete implementation of  implicit def
-#  and auto_forall
 #  - EMW should send abstract info (action instead of buttons,
 #                                   ContextMathObjects instead of WidgetItems,
 #                                   ...)
 
-from functools import partial
 import                logging
-from typing import    Callable
 import                qtrio
+from trio import      Event as TrioEvent
 from copy import      copy, deepcopy
-
+from pickle import  ( dump, HIGHEST_PROTOCOL )
 
 from PySide2.QtCore import ( QObject,
                              Signal,
@@ -47,12 +44,12 @@ from PySide2.QtWidgets import (QInputDialog,
                                QMessageBox)
 
 
-from deaduction.dui.primitives      import ButtonsDialog
-from deaduction.dui.stages.exercise import ExerciseMainWindow
-
-from deaduction.pylib.server.exceptions import  FailedRequestError
-
-from deaduction.pylib.server        import ServerInterface
+import deaduction.pylib.config.dirs as          cdirs
+import deaduction.pylib.config.vars as          cvars
+from deaduction.pylib.utils.filesystem import   check_dir
+from deaduction.dui.primitives      import      ButtonsDialog
+from deaduction.dui.stages.exercise import      ExerciseMainWindow, UserAction
+from deaduction.pylib.server        import      ServerInterface
 
 from deaduction.pylib.coursedata        import (Statement,
                                                 Exercise,
@@ -78,17 +75,6 @@ log = logging.getLogger(__name__)
 global _
 
 
-@classmethod
-class UserActionStep:
-    """
-    A class for storing usr actions for one step.
-    """
-    selection      = None  # [MathObject]
-    user_input     = None  # [str]
-    button         = None  # ActionButton or str, e.g. "history_undo".
-    statement_item = None  # StatementsTreeWidgetItem
-
-
 class Coordinator(QObject):
     """
     Coordinate UI (ExerciseMainWindow), logical actions, and Lean server.
@@ -109,25 +95,29 @@ class Coordinator(QObject):
     For the moment, much info is passed through proof_step and lean_file.
     """
 
-    proof_step_updated              = Signal()
+    proof_step_updated = Signal()
+    proof_no_goals     = Signal()
 
     def __init__(self, exercise, servint):
         super().__init__()
         self.exercise: Exercise       = exercise
         self.servint: ServerInterface = servint
-        self.emw = ExerciseMainWindow(exercise, lean_file=None)
+        self.emw = ExerciseMainWindow(exercise)
         # Lean_file will be set when starting server_task
         self.emw.close_coordinator = self.closeEvent
 
         # self.current_action_step            = None
-        # self.action_queue: [UserActionStep] = None
+        # No need for queueing for the moment:
+        # self.action_queue: []               = None
 
         self.proof_step                     = ProofStep()
+        self.previous_proof_step            = None
         self.journal                        = Journal()
 
         # Flags
         self.exercise_solved                = False
         self.test_mode                      = False
+        self.server_task_running            = TrioEvent()
 
         # Initialization
         self.__connect_signals()
@@ -141,6 +131,19 @@ class Coordinator(QObject):
     @property
     def lean_file(self):
         return self.servint.lean_file
+
+    @property
+    def logically_previous_proof_step(self):
+        """
+        The previous proof step in the logical order is always stored in the
+        previous entry of lean_file's history. This is NOT the proof step
+        that was previously displayed by the ui in case of history undo or
+        rewind (which is stored in self.displayed_proof_step).
+        """
+        if self.lean_file:
+            return self.lean_file.previous_proof_step
+        else:
+            return None
 
     @property
     def ecw(self):
@@ -229,7 +232,7 @@ class Coordinator(QObject):
 
         # When exercise will be set, ui will be updated, and the following
         # will call self.start_server_task
-        self.servint.exercise_set.connect(self.start_server_task)
+        # self.servint.exercise_set.connect(self.start_server_task)  fixme
 
         # Set exercise
         self.servint.server_queue.add_task(self.servint.set_exercise,
@@ -238,8 +241,11 @@ class Coordinator(QObject):
 
         # Missing initial proof states?
         course = self.exercise.course
+        #   (Already done if start_coex was launched, but useful otherwise:)
+        course.set_initial_proof_states()
         statements = [st for st in self.exercise.available_statements
                       if not st.initial_proof_state]
+        # Connect even if no statement otherwise error when disconnecting:
         self.servint.initial_proof_state_set.connect(
                                     self.set_definitions_for_implicit_use)
         if statements:
@@ -256,6 +262,11 @@ class Coordinator(QObject):
     def set_definitions_for_implicit_use(self):
         exercise = self.exercise
         definitions = exercise.definitions_for_implicit_use
+        definitions_with_ips = [st for st in definitions if
+                                st.initial_proof_state]
+        if len(definitions_with_ips) == len(MathObject.definition_patterns):
+            # All definitions already set up
+            return
         log.debug(f"Found {len(definitions)} definition(s) for implicit "
                   f"use...")
         PatternMathObject.set_definitions_for_implicit_use(definitions)
@@ -266,9 +277,42 @@ class Coordinator(QObject):
         log.debug([(idx+1, loc_csts[idx].to_display())
                    for idx in range(len(loc_csts))])
         if len(MathObject.definition_patterns) == len (definitions):
+            # Done with setting implicit definitions
             self.servint.initial_proof_state_set.disconnect()
 
         self.emw.ecw.statements_tree.update_tooltips()
+
+    def save_exercise_for_autotest(self):
+        """
+        This method fills self.exercise's attribute refined_auto_step
+        by retrieving the list of proof_step.auto_step from the lean_file,
+        and save the resulting exercise object in a pkl file for future
+        testing.
+        """
+        save = cvars.get('functionality.save_solved_exercises_for_autotest',
+                         False)
+        if not save:
+            return
+
+        auto_steps = [entry.misc_info.get("proof_step").auto_step
+                      for entry in self.lean_file.history]
+        auto_steps = [step for step in auto_steps if step is not None]
+
+        exercise = self.exercise
+        exercise.refined_auto_steps = auto_steps
+        filename = ('test_' + exercise.lean_short_name).replace('.', '_') \
+            + '.pkl'
+        file_path = cdirs.test_exercises / filename
+        check_dir(cdirs.test_exercises, create=True)
+
+        total_string = 'AutoTest\n'
+        for step in auto_steps:
+            total_string += '    ' + step.raw_string + ',\n'
+        print(total_string)
+
+        log.debug(f"Saving auto_steps in {file_path}")
+        with open(file_path, mode='wb') as output:
+            dump(exercise, output, HIGHEST_PROTOCOL)
 
     def closeEvent(self):
         log.info("Closing Coordinator")
@@ -292,7 +336,7 @@ class Coordinator(QObject):
         """
         self.servint.lean_file_changed.disconnect()
         self.servint.effective_code_received.disconnect()
-        self.servint.exercise_set.disconnect()
+        # self.servint.exercise_set.disconnect()
         self.servint.lean_response.disconnect()
 
     ######################################################
@@ -301,7 +345,7 @@ class Coordinator(QObject):
     ######################################################
     ######################################################
 
-    @Slot()
+    # @Slot()
     def start_server_task(self):
         self.emw.lean_file = self.servint.lean_file
         self.servint.nursery.start_soon(self.server_task,
@@ -319,7 +363,7 @@ class Coordinator(QObject):
 
         log.info("Starting server task")
 
-        self.emw.freeze(False)
+        # self.emw.freeze(False)
         async with qtrio.enter_emissions_channel(
                 signals=[self.lean_editor.editor_send_lean,
                          self.toolbar.redo_action.triggered,
@@ -329,11 +373,12 @@ class Coordinator(QObject):
                          self.action_triggered,
                          self.statement_triggered,
                          self.apply_math_object_triggered]) as emissions:
+            self.server_task_running.set()
             async for emission in emissions.channel:
                 self.statusBar.erase()
                 self.emw.freeze(True)
                 # DO NOT forget to unfreeze at th end. TODO: add timeout
-                log.debug("Emission in the server_task channel")
+                log.info(f"Emission in the server_task channel")
                 ########################
                 # History move actions #
                 ########################
@@ -432,7 +477,7 @@ class Coordinator(QObject):
         #   - choose A or B when having to prove (A OR B) ;
         #   - enter an element when clicking on 'exists' button.
         #   - and so on.
-        if auto_selection:  # For auto-test
+        if auto_selection:  # For auto-test FIXME: selection set before
             selection = auto_selection
             self.proof_step.selection = selection
             target_selected = True if not selection else False
@@ -441,13 +486,13 @@ class Coordinator(QObject):
             self.proof_step.selection = selection
             target_selected = self.emw.target_selected
         if auto_user_input:
-            user_input = auto_user_input
+            self.emw.user_input = auto_user_input
         else:
-            user_input = []
+            self.emw.user_input = []
 
         while True:
             try:
-                if not user_input:
+                if not self.emw.user_input:
                     lean_code = action.run(
                         self.proof_step,
                         selection,  # (TODO: selection is stored in proof_step)
@@ -456,7 +501,7 @@ class Coordinator(QObject):
                     lean_code = action.run(
                         self.proof_step,
                         selection,
-                        user_input,
+                        self.emw.user_input,
                         target_selected=target_selected)
 
             except MissingParametersError as e:
@@ -470,13 +515,13 @@ class Coordinator(QObject):
                                                         e.title,
                                                         e.output)
                 if ok:
-                    user_input.append(choice)
+                    self.emw.user_input.append(choice)
                 else:
                     self.unfreeze()
                     break
 
             except WrongUserInput as error:
-                self.proof_step.user_input = user_input
+                self.proof_step.user_input = self.emw.user_input
                 self.process_wrong_user_input(error)
                 break
 
@@ -501,12 +546,11 @@ class Coordinator(QObject):
                                                     self.servint.code_insert,
                                                     definition.pretty_name,
                                                     lean_code)
-                # TODO: add action in self.action_queue
                 break
 
             else:
                 self.proof_step.lean_code = lean_code
-                self.proof_step.user_input = user_input
+                self.proof_step.user_input = self.emw.user_input
                 # Update lean_file and call Lean server
                 self.servint.server_queue.add_task(
                                                     self.servint.code_insert,
@@ -515,14 +559,14 @@ class Coordinator(QObject):
                 break
 
     def __server_call_statement(self,
-                                      item,  # StatementsTreeWidgetItem
-                                      auto_selection=None):
+                                item,  # StatementsTreeWidgetItem or Node
+                                auto_selection=None):
         """
         This function is called when the user clicks on a Statement he wants to
         apply. The statement can be either a Definition or a Theorem. the code
         is then inserted to the server.
         """
-        if auto_selection:
+        if auto_selection:  # fixme: now useless
             selection = auto_selection
             self.proof_step.selection = selection
             target_selected = True if not selection else False
@@ -531,10 +575,6 @@ class Coordinator(QObject):
             self.proof_step.selection = selection
             target_selected = self.emw.target_selected
 
-        # Do nothing if user clicks on a node
-        # FIXME: filter this, and UI actions, in EMW
-        if item.is_node():
-            return
         try:
             item.setSelected(False)
             statement = item.statement
@@ -581,6 +621,34 @@ class Coordinator(QObject):
     # Process Lean response #
     #########################
     #########################
+
+    @staticmethod
+    def automatic_actions(goal: Goal):
+        target = goal.target
+
+        user_action = None
+        # Check automatic intro of variables and hypotheses
+        auto_for_all = cvars.get(
+                "functionality.automatic_intro_of_variables_and_hypotheses")
+        if auto_for_all:
+            if target.is_for_all():
+                user_action = UserAction.simple_action("forall")
+            elif target.is_implication():
+                user_action = UserAction.simple_action("implies")
+
+        return user_action
+
+    def process_automatic_actions(self, goal):
+        user_action = Coordinator.automatic_actions(goal)
+        if user_action:
+            action = user_action.button if user_action.button else \
+                user_action.statement
+            log.debug(f"Automatic action: {action}")
+            self.proof_step.is_automatic = True
+
+            # await self.server_task_running.wait()  # For first step!
+            # TODO: freeze, and add this to nursery
+            self.emw.simulate_user_action(user_action)
 
     def unfreeze(self):
         # TODO: put this in EMW
@@ -637,8 +705,9 @@ class Coordinator(QObject):
         """
         # Display msg_box unless redoing /moving or test mode
         # TODO: move this part to EMW
-        if not self.proof_step.is_redo() and not self.proof_step.is_goto()\
-                and not self.test_mode:
+        if self.test_mode:
+            self.proof_no_goals.emit()
+        elif not self.proof_step.is_redo() and not self.proof_step.is_goto():
             title = _('Target solved')
             text = _('The proof is complete!')
             msg_box = QMessageBox(parent=self.emw)
@@ -650,6 +719,12 @@ class Coordinator(QObject):
                                               QMessageBox.YesRole)
             button_change.clicked.connect(self.emw.change_exercise)
             msg_box.exec_()
+
+        # Saving for auto-test if first firework in this proof
+        if not self.exercise_solved:
+            self.exercise_solved = True
+            if not self.test_mode:
+                self.lean_file.save_exercise_for_autotest(self)
 
         self.proof_step.no_more_goal = True
         self.proof_step.new_goals = []
@@ -664,6 +739,31 @@ class Coordinator(QObject):
 
         return proof_state
 
+    def update_proof_step(self):
+        """
+        Store proof_step and creat next proof_step.
+        This is called for every user action, including errors and history
+        moves.
+        """
+        # Store journal and auto_step
+        if not self.test_mode:
+            self.journal.store(self.proof_step, self)
+            self.proof_step.auto_step = AutoStep.from_proof_step(
+                                                            self.proof_step,
+                                                            emw=self.emw)
+
+        # Create next proof_step
+        self.emw.displayed_proof_step = copy(self.proof_step)
+        self.proof_step = ProofStep.next_(self.lean_file.current_proof_step,
+                                          self.lean_file.target_idx)
+
+        self.proof_step_updated.emit()  # Received in auto_test
+        # # Saving for auto-test if proof complete
+        # if self.proof_step.no_more_goal and not self.exercise_solved:
+        #     self.exercise_solved = True
+        #     if not self.test_mode:
+        #         self.lean_file.save_exercise_for_autotest(self)
+
     @Slot()
     def process_lean_response(self,
                               no_more_goals: bool,
@@ -677,12 +777,20 @@ class Coordinator(QObject):
         (2) The request has failed,
         (3) The request has succeeded but proof is not complete.
 
+        Every action of the user (ie click on an ActionButton, a statement
+        item, or a history move) which do not rise a WrongUserInput
+        exception is passed to Lean, and then goes through this method.
+
         :param no_more_goals: True if no_more_goal: proof is complete!
         :param analysis: (hypo_analysis, targets_analysis),
                          = info to construct new proof_state
         :param errors: list of errors, if non-empty then request has failed.
         """
         log.info("Processing Lean's response")
+        if self.proof_step.pf_nb == 0:  # First step
+            log.info("First proof step")
+            self.start_server_task()
+
         if no_more_goals:
             log.info("  -> proof completed!")
             proof_state = self.set_fireworks()
@@ -722,6 +830,7 @@ class Coordinator(QObject):
                 log.debug([pf.txt for pf in proof_nodes])
 
         # Update proof_step
+        self.previous_proof_step = self.proof_step
         self.update_proof_step()
 
         # Update UI
@@ -731,29 +840,8 @@ class Coordinator(QObject):
         else:
             self.emw.update_goal(proof_state.goals[0])
 
-    def update_proof_step(self):
-        """
-        Store proof_step and creat next proof_step.
-        This is called for every user action, including errors and history
-        moves.
-        """
-        # Store journal and auto_step
-        if not self.test_mode:
-            self.journal.store(self.proof_step, self)
-            self.proof_step.auto_step = AutoStep.from_proof_step(
-                                                            self.proof_step,
-                                                            emw=self.emw)
-
-        # Create next proof_step
-        self.emw.displayed_proof_step = copy(self.proof_step)
-        self.proof_step = ProofStep.next_(self.lean_file.current_proof_step,
-                                          self.lean_file.target_idx)
-        self.proof_step_updated.emit()  # Received in auto_test
-
-        # Saving for auto-test if proof complete
-        if self.proof_step.no_more_goal and not self.exercise_solved:
-            self.exercise_solved = True
-            if not self.test_mode:
-                self.lean_file.save_exercise_for_autotest(self)
-
+        # Automatic actions (e.g. auto_intro)
+        if not self.previous_proof_step.is_history_move()\
+                and not self.test_mode:
+            self.process_automatic_actions(proof_state.goals[0])
 

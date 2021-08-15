@@ -3,7 +3,7 @@
 # __main__.py : Test deaduction #
 #################################
 
-Launch deaduction, and an auto_test on one or several exercises from a given
+Launch deaduction, and a test on one or several exercises from a given
 course. This module may be launched with the following arguments:
 * choice of a directory, with  one of the two equivalent syntaxes:
     -d <directory path>
@@ -85,9 +85,9 @@ from deaduction.pylib.autotest import ( select_course,
 # Change your own settings in .deaduction-dev/config.toml
 log_domains = cvars.get("logs.domains", [""])
 # log_level = cvars.get("logs.display_level", "info")
-logger.configure(domains=log_domains)
-
+# logger.configure(domains=log_domains)
 log = logging.getLogger(__name__)
+
 arg_parser = argparse.ArgumentParser("Start deaduction in test mode")
 arg_parser.add_argument('--directory', '-d', help="Path for directory")
 arg_parser.add_argument('--course', '-c', help="Course filename")
@@ -173,9 +173,8 @@ def coex_from_argv() -> (Optional[Path], Course, Exercise, bool):
 
 def get_exercises_from_dir(dir_path: Path):
     test_course_files = [file for file in dir_path.iterdir()
-                         if (file.suffix == '.lean' or file.suffix == '.pkl')
-                         and file.name.startswith('test')
-                         and not file.name.startswith('test_exercise')]
+                         if file.suffix == '.lean'
+                         and file.name.startswith('test')]
 
     test_exercise_files = [file for file in dir_path.iterdir()
                            if file.suffix == '.pkl'
@@ -256,6 +255,8 @@ def find_selection(auto_step, emw):
     Convert the data in auto_step.selection into MathObjects instances.
     This is used by the async auto_step function.
     """
+    # TODO: deprecated
+
     auto_selection = []
     success = True
     # First trial
@@ -328,7 +329,10 @@ async def auto_test(container: Container):
     log.debug(total_string)
 
     emw = container.exercise_window
-    signals = [emw.proof_step_updated, emw.ui_updated]
+    test_window = container.test_window
+    signals = [emw.proof_step_updated,
+               emw.ui_updated,
+               test_window.process_next_step]
     test_success = True
     steps_counter = 0
     async with qtrio.enter_emissions_channel(signals=signals) as \
@@ -336,7 +340,7 @@ async def auto_test(container: Container):
         reports = [f'Exercise {exercise.pretty_name}']
         container.report.append(reports)
         async for emission in emissions.channel:
-            # Check result #
+            # Check result of previous proof step #
             if emission.is_from(emw.proof_step_updated) and steps_counter:
                 step = auto_steps[steps_counter-1]
                 report, step_success = emw.displayed_proof_step.compare(step)
@@ -354,62 +358,49 @@ async def auto_test(container: Container):
                     report += "(no success msg)"
                 reports.append(report)
 
-            # Apply next step #
             elif emission.is_from(emw.ui_updated):
-                log.debug("ui_updated received")
+                test_window.display_in_console("ui_updated received")
 
                 step = auto_steps[steps_counter]
                 steps_counter += 1
-                log.debug(f"auto_step found: {step}")
+                test_window.display_in_console(f"Auto_step found: {step}")
                 if not step:
-                    log.debug("Found 'None' step, giving up")
+                    test_window.display_in_console("    Found 'None' step, "
+                                                   "giving up")
                     emw.close()
                     break
 
-                auto_selection, success = find_selection(step, emw)
-                if not success:
-                    # Quit this exercise
-                    container.exercise_window.close()
-                selection_names = [item.display_name
-                                   for item in auto_selection]
-                log.debug(f"Selection: {selection_names}")
-                auto_user_input = [int(item) if item.isdecimal() else item
+                # selection_names = [item.display_name
+                #                    for item in step.selection]
+                # log.debug(f"    Selection: {selection_names}")
+                step.user_input = [int(item) if item.isdecimal() else item
                                    for item in step.user_input]
 
-                if step.button:  # Auto step is a button step
-                    if step.button.endswith('undo'):
-                        await emw.process_async_signal(
-                                                emw.servint.history_undo)
-                    elif step.button.endswith('redo'):
-                        await emw.process_async_signal(
-                                                emw.servint.history_redo)
-                    elif step.button.endswith('rewind'):
-                        await emw.process_async_signal(
-                                                    emw.servint.history_rewind)
-                    else:
-                        # e.g. Nouvel_Objet -> Nouvel Objet
-                        step.button = step.button.replace('_', ' ')
-                        action_btn = emw.ecw.action_button(step.button)
-                        log.debug(f"Button: {action_btn}")
-                        await emw.process_async_signal(partial(
-                                                    emw.__server_call_action,
-                                                    action_btn, auto_selection,
-                                                    auto_user_input))
+                # For first step:
+                await container.coordinator.server_task_running.wait()
 
-                elif step.statement:  # Auto step is a statement step
-                    statement_widget = emw.ecw.statements_tree.from_name(
-                        step.statement)
-                    log.debug(f"Statement: {statement_widget}")
-                    await emw.process_async_signal(partial(
-                                                emw.__server_call_statement,
-                                                statement_widget,
-                                                auto_selection))
+                if not test_window.step_by_step:
+                    test_window.process_next_step.emit()
                 else:
-                    log.warning("Auto-step loop: empty step")
+                    test_window.next_step_button.setEnabled(True)
+
+            elif emission.is_from(test_window.process_next_step):
+
+                test_window.next_step_button.setEnabled(False)
+
+                ################
+                # Process step #
+                ################
+
+                success, msg = emw.simulate_user_action(step)
+
+                if not success:
+                    test_window.display_in_console("    Failing action:")
+                test_window.display_in_console(msg)
 
                 if steps_counter == len(auto_steps):
                     break
-    log.debug(f"Auto_test successfull: {test_success}")
+    test_window.display_in_console(f"Auto_test successfull: {test_success}")
     reports.insert(0, test_success)
 
 
@@ -462,6 +453,8 @@ async def main():
     async with trio.open_nursery() as nursery:
         # Create container and enter test mode
         container = Container(nursery)
+        await container.check_lean_server()
+
         container.exercises = exercises
 
         # Main loop: quit if window is closed by user or if there is no more
@@ -476,7 +469,7 @@ async def main():
                 # Test first exercise
                 container.exercise = container.exercises[0]
                 container.exercises = container.exercises[1:]
-                await container.test_exercise()
+                container.test_exercise()
                 container.nursery.start_soon(auto_test, container)
 
                 async for emission in emissions.channel:
@@ -492,7 +485,7 @@ async def main():
                             # Test next exercise
                             container.exercise = container.exercises[0]
                             container.exercises = container.exercises[1:]
-                            await container.test_exercise()
+                            container.test_exercise()
                             container.nursery.start_soon(auto_test, container)
 
                         else:

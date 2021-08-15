@@ -27,20 +27,17 @@ This file is part of d∃∀duction.
 """
 
 from dataclasses import dataclass
-# from typing import List, Dict, Any
-# from parsimonious.grammar import Grammar
-# from parsimonious.nodes import NodeVisitor
+from typing import Union
 
 import deaduction.pylib.config.vars as cvars
-# from deaduction.pylib.config.i18n import _
 
 from deaduction.pylib.mathobj import ProofStep
 import deaduction.pylib.actions.logic
-import deaduction.pylib.actions.proofs
 import deaduction.pylib.actions.magic
 import logging
 
 log = logging.getLogger(__name__)
+global _
 
 ##############################################
 # Lists of all instances of the Action class #
@@ -120,29 +117,111 @@ alternative_symbols = {'→': '⇒',
                        }
 
 
-@dataclass
-class AutoStep:
+class UserAction:
+    """
+    A class for storing usr actions for one step.
+    """
+    selection = None  # Union[QListWidgetItem, str]
+    button = None  # Union[QPushButton, str]
+    statement = None  # Union[StatementsTreeWidgetItem, str]
+    user_input = None  # Union[int, str]
+
+    def __init__(self,
+                 selection=None,
+                 button=None,
+                 statement=None,
+                 user_input=None):
+        if selection is None:
+            selection = []
+        if user_input is None:
+            user_input = []
+        self.selection  = selection
+        self.button     = button
+        self.statement  = statement
+        self.user_input = user_input
+
+    @classmethod
+    def simple_action(cls, symbol):
+        user_action = cls(button=symbol)
+        return user_action
+
+
+
+class AutoStep(UserAction):
     """
     A class to store one step of proof in deaduction, simulating selection,
-    choice of button or statement, and user input.
+    choice of button or statement, and user input. Attributes error_msg,
+    success_msg also allow to store deaduction's answer to the step; this is
+    useful for debugging, e.g comparing actual answer to answer in a
+    stored exercise.
+    Data is stored in a string format, which is independent of the objects
+    of the interface, which is crucial for saving.
+    AutoStep may be created:
+    - either from a raw string; this is a useful way to get them from
+    metadata in the Lean file (see the exercise.refined_auto_steps property);
+    - either from ProofStep; this is the way AutoStep are systematically
+    computed and stored during exercise solving.
+    AutoStep are used for testing.
+
+    :attribute raw_string: A single string that contains all information.
+    Other attributes may be computed from this string by the "from_string"
+    method.
+
+    :attribute selection: a list of string represented selected objects of
+    the context, e.g. @P1, @O2 for property n°1, object n°2 of the context.
+
+    :attribute button: A button symbol or equivalent (cf BUTTON_SYMBOLS,
+    alternative_symbols).
+
+    :attribute statement: statement short name,
+    e.g. definition.intersection_two_sets
+
+    :attribute user_input: list of integers converted into string.
     """
-    raw_string: str
-    selection:  [str]
-    button:     str
-    statement:  str
-    user_input: [str]
-    error_type: int  # 0 = WrongUserInput, 1 = FailedRequestError
-    error_msg: str
-    success_msg: str
+    # Inputs:
+    # selection:  [str]
+    # button:     str
+    # statement:  str
+    # user_input: [str]
+
+    raw_string: str = ""
+
+    # Response:
+    error_type: int = 0  # 0 = WrongUserInput, 1 = FailedRequestError
+    error_msg: str = ""
+    success_msg: str = ""
 
     error_dic = {0: '', 1: 'WrongUserInput', 2: 'FailedRequestError'}
+
+    def __init__(self, selection, button, statement, user_input,
+                 raw_string, error_type, error_mg, success_msg):
+
+        UserAction.__init__(self, selection, button, statement, user_input)
+        # self.selection = selection
+        # self.button = button
+        # self.statement = statement
+        # self.user_input = user_input
+        self.raw_string = raw_string
+        self.error_type = error_type
+        self.error_msg = error_mg
+        self.success_msg = success_msg
 
     @classmethod
     def from_string(cls, string):
         """
         Analyze a string to extract an AutoStep instance.
         The string should contain a button symbol (e.g. '∀')
-        xor a statement name (e.g. 'definition.inclusion')
+        xor a statement name (e.g. 'definition.inclusion').
+        Items are separated by spaces, and the last item should represents
+        an action, i.e. a statement name or a button symbol.
+         e.g. the following sequence of strings may be passed to the
+        "from.string" method:
+            ∀ success=Objet_x_ajouté_au_contexte,
+            ∀ success=Objet_x'_ajouté_au_contexte,
+            ⇒ success=propriété_H0_ajoutée_au_contexte,
+            @P3 @P2 ⇒ success=propriété_H3_ajoutée_au_contexte,
+            @P4 @P1 ⇒ success=propriété_H4_ajoutée_au_contexte,
+            Goal!
         """
 
         string.replace("\\n", " ")
@@ -192,13 +271,13 @@ class AutoStep:
         user_input = [item for item in items[button_or_statement_rank+1:]
                       if item]  # Remove if item = ''
 
-        return cls(string, selection, button, statement, user_input,
+        return cls(selection, button, statement, user_input, string,
                    error_type, error_msg, success_msg)
 
     @classmethod
     def from_proof_step(cls, proof_step: ProofStep, emw):
         """
-        Convert proof_step to the corresponding auto_step, e.g. for use as
+        Convert proof_step to the corresponding AutoStep, e.g. for use as
         with auto_test.
         
         :param proof_step: instance of ProofStep 

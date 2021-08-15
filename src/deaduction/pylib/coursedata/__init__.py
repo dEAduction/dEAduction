@@ -28,4 +28,4 @@ This file is part of dEAduction.
 
 from .exercise_classes import Definition, Exercise, Statement, Theorem
 from .course import           Course
-from .auto_steps import       AutoStep
+from .auto_steps import       UserAction, AutoStep

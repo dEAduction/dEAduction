@@ -27,7 +27,7 @@ This file is part of d∃∀duction.
 """
 
 import                logging
-from typing import    Optional
+from typing import    Optional, Union
 
 from PySide2.QtCore    import (Signal,
                                Slot,
@@ -39,7 +39,7 @@ from PySide2.QtWidgets import (QInputDialog,
                                QAction)
 
 import deaduction.pylib.config.vars      as     cvars
-from deaduction.pylib.coursedata        import  Exercise
+from deaduction.pylib.coursedata        import  Exercise, UserAction
 from deaduction.pylib.mathobj           import (MathObject,
                                                 PatternMathObject,
                                                 MissingImplicitDefinition,
@@ -50,6 +50,7 @@ from deaduction.pylib.mathobj           import (MathObject,
 from deaduction.dui.elements            import (ActionButton,
                                                 LeanEditor,
                                                 StatementsTreeWidgetItem,
+                                                StatementsTreeWidgetNode,
                                                 MathObjectWidget,
                                                 MathObjectWidgetItem,
                                                 MenuBar,
@@ -132,7 +133,7 @@ class ExerciseMainWindow(QMainWindow):
     proof_step_updated              = Signal()
     ui_updated                      = Signal()
 
-    def __init__(self, exercise: Exercise, lean_file):
+    def __init__(self, exercise: Exercise):
         """
         Init self with an instance of the exercise class and an instance of the
         class ServerInterface. Both those instances are created in
@@ -142,26 +143,28 @@ class ExerciseMainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle(f'{exercise.pretty_name} — d∃∀duction')
 
-        # ─────────────────── Attributes ─────────────────── #
-
+        # ─────────────────── Data ─────────────────── #
+        # From outside
         self.exercise             = exercise
-        self.lean_file            = lean_file
-        # self.journal              = Journal()
-        # self.proof_step           = ProofStep()
+        self.lean_file            = None
         self.current_goal         = None
         self.displayed_proof_step = None
-
-        # self.exercise_solved      = False
         self.test_mode            = False
 
+        # From inside
         self.current_selection    = []
         self._target_selected     = False
+        self.user_input           = []
+        self.double_clicked_item  = None
         self.freezed              = False
+
+        # ─────────────────────── Elements ─────────────────────── #
+
         self.ecw                  = ExerciseCentralWidget(exercise)
         self.lean_editor          = LeanEditor()
         self.toolbar              = ExerciseToolBar()
-        self.double_clicked_item  = None
         self.proof_outline_window = ProofOutlineWindow()
+        self.statusBar = ExerciseStatusBar(self)
 
         # ─────────────────────── UI ─────────────────────── #
 
@@ -171,9 +174,6 @@ class ExerciseMainWindow(QMainWindow):
         self.toolbar.undo_action.setEnabled(False)  # same
         self.toolbar.rewind.setEnabled(False)  # same
         self.__init_menubar()
-
-        # Status Bar
-        self.statusBar = ExerciseStatusBar(self)
         self.setStatusBar(self.statusBar)
 
         settings = QSettings("deaduction")
@@ -181,8 +181,8 @@ class ExerciseMainWindow(QMainWindow):
             self.restoreGeometry(settings.value("emw/Geometry"))
 
         self.close_coordinator = None  # Method set up in Coordinator
-        self.__connect_signals()
 
+        self.__connect_signals()
         self.freeze()
 
     #######################
@@ -196,7 +196,8 @@ class ExerciseMainWindow(QMainWindow):
         # Actions area
         for action_button in self.ecw.actions_buttons:
             action_button.action_triggered.connect(self.action_triggered)
-        self.ecw.statements_tree.itemClicked.connect(self.statement_triggered)
+        self.ecw.statements_tree.itemClicked.connect(
+                                            self.statement_triggered_filter)
 
         # UI
         self.toolbar.toggle_lean_editor_action.triggered.connect(
@@ -244,9 +245,6 @@ class ExerciseMainWindow(QMainWindow):
         :param event: Some Qt mandatory thing.
         """
         log.info("Closing ExerciseMainWindow")
-        # # Save journal
-        # if not self.test_mode:
-        #     self.journal.save_exercise_with_proof_steps(emw=self)
         self.lean_editor.close()
         self.proof_outline_window.close()
 
@@ -254,12 +252,10 @@ class ExerciseMainWindow(QMainWindow):
         settings = QSettings("deaduction")
         settings.setValue("emw/Geometry", self.saveGeometry())
 
-        self.window_closed.emit()
-
-        # Disconnect signals FIXME
         if self.close_coordinator:
             # Set up by Coordinator
             self.close_coordinator()
+        self.window_closed.emit()
         super().closeEvent(event)
         self.deleteLater()
 
@@ -310,15 +306,44 @@ class ExerciseMainWindow(QMainWindow):
 
         self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
-    ##############
-    ##############
-    # Properties #
-    ##############
-    ##############
+    ######################
+    ######################
+    # Properties or like #
+    ######################
+    ######################
 
     @property
     def target_selected_by_default(self):
-        return cvars.get('functionality.target_selected_by_default', False)
+        return cvars.get('functionality.target_selected_by_default', False) \
+                or self.test_mode 
+
+    @property
+    def target_selected(self):
+        """
+        Boolean, True iff target is selected.
+        """
+        if not self.target_selected_by_default:
+            return self._target_selected
+        else:
+            # Target is selected by default if current_selection is empty
+            return not self.current_selection
+
+    @target_selected.setter
+    def target_selected(self, target_selected):
+        self._target_selected = target_selected
+
+    def pretty_current_selection(self) -> str:
+        """
+        Return the current selection as a string, for display.
+
+        :return: See above.
+        """
+        msg = 'Current user selection: '
+        msg += str([item.text() for item in self.current_selection])
+
+        return msg
+
+    # ─────────────────── Logical information ─────────────────── #
 
     @property
     def logically_previous_proof_step(self):
@@ -336,27 +361,12 @@ class ExerciseMainWindow(QMainWindow):
     @property
     def objects(self):
         """ MathObject's instances displayed as objects"""
-        return [item.mathobject for item in self.ecw.objects_wgt.items]
+        return [item.math_object for item in self.ecw.objects_wgt.items]
 
     @property
     def properties(self):
         """ MathObject's instances displayed as properties"""
-        return [item.mathobject for item in self.ecw.props_wgt.items]
-
-    @property
-    def target_selected(self):
-        """
-        Boolean, True iff target is selected.
-        """
-        if not self.target_selected_by_default:
-            return self._target_selected
-        else:
-            # Target is selected by default if current_selection is empty
-            return not self.current_selection
-
-    @target_selected.setter
-    def target_selected(self, target_selected):
-        self._target_selected = target_selected
+        return [item.math_object for item in self.ecw.props_wgt.items]
 
     @property
     def current_selection_as_mathobjects(self):
@@ -366,26 +376,103 @@ class ExerciseMainWindow(QMainWindow):
 
         :return: See above.
         """
+        return [item.math_object for item in self.current_selection]
 
-        return [item.mathobject for item in self.current_selection]
+    # ─────────────────── Conversion methods ─────────────────── #
 
-    def pretty_current_selection(self) -> str:
+    def button_from_string(self, string: str):
         """
-        Return the current selection as a string, for display.
+        Search a button widget that match string.
+        Search successively in
+        - ActionButton,
+        - history buttons
+        """
+        # TODO: add search in context widgets.
+        button = self.ecw.action_button(string)
+        if button:
+            return button
+        history_buttons = {'undo': self.toolbar.undo_action,
+                           'redo': self.toolbar.redo_action,
+                           'rewind': self.toolbar.rewind}
+        if string.find('undo') != -1:
+            string = 'undo'
+        elif string.find('redo') != -1:
+            string = 'redo'
+        elif string.find('rewind') != -1:
+            string = 'rewind'
+        if string in history_buttons:
+            return history_buttons[string]
+        log.warning(f"No button found from {string}")
 
-        :return: See above.
+    def context_item_from_math_object(self, math_object):
+        """
+        Turn a MathObject into a MathObjectWidgetItem of the context.
+        """
+        if math_object.math_type.is_prop():
+            item = self.ecw.props_wgt.item_from_logic(math_object)
+        else:
+            item = self.ecw.objects_wgt.item_from_logic(math_object)
+        return item
+
+    def context_item_from_string(self, name):
+        """
+        Turn a string, as used in AutoStep, into a MathObjectWidgetItem
+        of the context.
+        """
+        item = None
+        if name.startswith('@O'):
+            try:
+                nb = [int(name[2:]) - 1]
+                item = self.ecw.objects_wgt.item_from_nb(nb)
+            except IndexError:
+                pass
+        elif name.startswith('@P'):
+            try:
+                nb = int(name[2:]) - 1
+                item = self.ecw.props_wgt.item_from_nb(nb)
+            except IndexError:
+                pass
+        else:
+            if name.startswith('@'):  # (unwanted @)
+                name = name[1:]
+            math_object = self.current_goal.math_object_from_name(name)
+            item = self.context_item_from_math_object(math_object)
+        return item
+    
+    def contextualised_selection(self, selection: [Union[MathObject, str]]):
+        """
+        Turn ContextMathObject or str in the list into MathObjectWidgetItem.
         """
 
-        msg = 'Current user selection: '
-        msg += str([item.text() for item in self.current_selection])
+        contextualised_selection = []
+        for item in selection:
+            if isinstance(item, str):
+                item = self.context_item_from_string(item)
+            elif isinstance(item, MathObject):
+                item = self.context_item_from_math_object(item)
+            contextualised_selection.append(item)
+        return contextualised_selection
 
-        return msg
+    def contextualised_button(self, button):
+        """Turn an action encoded by a string, e.g. "forall", into a button."""
+
+        contextualised_action = button
+        if isinstance(button, str):
+            contextualised_action = self.button_from_string(button)
+        return contextualised_action
 
     ##############
     ##############
     # UI Methods #
     ##############
     ##############
+
+    @Slot()
+    def statement_triggered_filter(self, item: Union[StatementsTreeWidgetItem,
+                                                     StatementsTreeWidgetNode]
+                                   ):
+        if isinstance(item, StatementsTreeWidgetItem):
+            self.statement_triggered.emit(item)
 
     @Slot()
     def freeze(self, yes=True):
@@ -410,7 +497,6 @@ class ExerciseMainWindow(QMainWindow):
         self.toolbar.rewind.setEnabled(not at_beginning)
         self.toolbar.redo_action.setEnabled(not at_end)
 
-    # Manage selection #
     @Slot()
     def empty_current_selection(self):
         """
@@ -464,33 +550,90 @@ class ExerciseMainWindow(QMainWindow):
         # Un-select context items
         self.empty_current_selection()
 
+    def simulate_selection(self,
+                           selection:
+                           [Union[MathObject, MathObjectWidgetItem]]):
+        """
+        Simulate user selecting selection: for every item in selection,
+        self.process_context_click(item).
+        Note that items in selection are first transformed into
+        MathObjectWidgetItem if they are MathObject.
+        """
+        self.current_selection = []
+        for item in selection:
+            if isinstance(item, MathObject):
+                if item.math_type.is_prop():
+                    item = self.ecw.props_wgt.item_from_logic(item)
+                else:
+                    item = self.ecw.objects_wgt.item_from_logic(item)
+            self.process_context_click(item)
+
+        # Select target if no selection:
+        if not self.current_selection:
+            self.process_target_click(None)
+
     async def simulate(self, proof_step: ProofStep):
         """
         This method simulate proof_step by selecting the selection and
         checking button or statement stored in proof_step. This is called
         when redoing. Note that the corresponding actions are NOT called,
         since this would modify history of the lean_file.
-        The method is asynchronous.
+        The method is asynchronous because we wait for the button blinking.
         """
 
-        # Light target on/off as needed
-        if proof_step.selection:
-            self.ecw.target_wgt.mark_user_selected(False)
-        else:
-            self.ecw.target_wgt.mark_user_selected(True)
-        # Light on selection
-        for item in self.ecw.props_wgt.items + self.ecw.objects_wgt.items:
-            for math_object in proof_step.selection:
-                if item.mathobject == math_object:
-                    item.mark_user_selected(True)
+        # # Light target on/off as needed
+        # if proof_step.selection:
+        #     self.ecw.target_wgt.mark_user_selected(False)
+        # else:
+        #     self.ecw.target_wgt.mark_user_selected(True)
+        # # Light on selection
+        # for item in self.ecw.props_wgt.items + self.ecw.objects_wgt.items:
+        #     for math_object in proof_step.selection:
+        #         if item.math_object == math_object:
+        #             item.mark_user_selected(True)
+
+        self.simulate_selection(proof_step.selection)
         # Check button or statement
         if isinstance(proof_step.button, ActionButton):
             await proof_step.button.simulate(duration=0.4)
         elif isinstance(proof_step.statement_item, StatementsTreeWidgetItem):
             await proof_step.statement_item.simulate(duration=0.4)
-        # Light off selection synchronously
-        for item in self.ecw.props_wgt.items:
-            item.mark_user_selected(False)
+        # # Light off selection synchronously
+        # for item in self.ecw.props_wgt.items:
+        #     item.mark_user_selected(False)
+
+    def simulate_user_action(self, user_action: UserAction) -> (bool, str):
+        """
+        Simulate user_action as if buttons were actually pressed.
+        Return True if the simulation was actually performed.
+        """
+        # TODO: make this async for visual simulation. Freeze first!
+        log.debug("Simulating user action...")
+        msg = ""
+        msg += f"    -> selection = {user_action.selection}"
+        selection = self.contextualised_selection(user_action.selection)
+        if None in selection:
+            msg += "    ->(None in selection)"
+            msg += self.current_goal.to_tooltip()
+            return False, msg
+        self.simulate_selection(selection)
+        self.user_input = user_action.user_input
+
+        button = user_action.button
+        statement = user_action.statement
+        if button:
+            msg += f"    -> click on button {button}"
+            action_button = self.contextualised_button(button)
+            action_button.click()
+            return True, msg
+        elif statement:
+            msg += f"    -> statement {statement} called"
+            statement_widget = self.ecw.statements_tree.from_name(statement)
+            self.statement_triggered.emit(statement_widget)
+            return True, msg
+
+        msg += "    ->(No button nor statement found)"
+        return False, msg
 
     ##################
     ##################
@@ -507,7 +650,6 @@ class ExerciseMainWindow(QMainWindow):
 
         self.lean_editor.code_set(lean_file_content)
 
-    @Slot()
     def display_current_goal_solved(self, delta):
         # FIXME: connect slot!!
         proof_step = self.lean_file.current_proof_step
@@ -529,9 +671,9 @@ class ExerciseMainWindow(QMainWindow):
         and display proof_outline in proof_outline_window.
         """
         # Display current goal solved
-        if not proof_step.is_error() and not proof_step.is_history_move() \
-                and proof_step.delta_goals_count < 0:
-            self.display_current_goal_solved(proof_step.delta_goals_count)
+        if not proof_step.is_error() and not proof_step.is_history_move():
+            if proof_step.delta_goals_count < 0:
+                self.display_current_goal_solved(proof_step.delta_goals_count)
 
         # Status bar
         if not proof_step.is_history_move():
@@ -598,5 +740,6 @@ class ExerciseMainWindow(QMainWindow):
             self.ecw.props_wgt.apply_math_object_triggered.connect(
                 self.apply_math_object_triggered)
 
+        log.debug("UI updated (signal emitted)")
         self.ui_updated.emit()  # This signal is used by the autotest module.
 

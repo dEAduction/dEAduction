@@ -66,6 +66,8 @@ from deaduction.pylib.mathobj           import   Goal
 import deaduction.pylib.config.vars      as      cvars
 import deaduction.pylib.utils.filesystem as      fs
 
+from deaduction.pylib.text.tooltips import button_symbol
+
 log = logging.getLogger(__name__)
 
 
@@ -298,7 +300,7 @@ class ExerciseCentralWidget(QWidget):
     @property
     def actions_buttons(self) -> [ActionButton]:
         """
-        Do not delete! A list of all logic buttons and proof
+        A list of all logic buttons and proof
         buttons (instances of the class ActionButton).
         """
 
@@ -315,6 +317,10 @@ class ExerciseCentralWidget(QWidget):
         :param symbol: Symbol of som ActionButton, which is displayed on the
         button.
         """
+        # Allow name instead of symbol
+        if button_symbol(symbol):
+            symbol = button_symbol(symbol)
+
         buttons = [button for button in self.actions_buttons if
                    button.has_symbol(symbol)]
         if buttons:

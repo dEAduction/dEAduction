@@ -212,8 +212,7 @@ class Statement:
     @property
     def refined_auto_steps(self) -> [AutoStep]:
         """
-        Turn the raw string parsed from the lean file into a
-        :return:
+        Turn the raw string parsed from the lean file into a list of AutoStep.
         """
         if self.__refined_auto_steps:
             return self.__refined_auto_steps

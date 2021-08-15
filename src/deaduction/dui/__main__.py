@@ -57,6 +57,7 @@ from deaduction.dui.stages.exercise              import (Coordinator,
 from deaduction.dui.stages.start_coex            import StartCoExStartup
 from deaduction.dui.stages.missing_dependencies  import (
                 InstallingMissingDependencies, WantInstallMissingDependencies)
+from deaduction.dui.stages.test                  import QTestWindow
 from deaduction.pylib.coursedata                 import Exercise
 from deaduction.pylib                            import logger
 from deaduction.pylib.server                     import ServerInterface
@@ -203,6 +204,7 @@ class Container(QObject):
         # self.exercise_window: ExerciseMainWindow = None
         self.chooser_window:  StartCoExStartup   = None
         self.servint:         ServerInterface    = None
+        self.test_window:     QTestWindow        = None
         self.exercise:        Exercise           = exercise
         self.nursery:         trio.Nursery       = nursery
         self.exercises:       [Exercise]         = []
@@ -290,38 +292,27 @@ class Container(QObject):
         # Show window
         self.exercise_window.show()
 
-    async def test_exercise(self):
+    def test_exercise(self):
         """
         Launch exercise window, start lean server, and connect signals
         for testing self.exercise. Very much like solve_exercise, except for
-        - setting auto_steps,
+        - setting test_mode,
         - connecting proof_no_goal signal to test_complete.
         """
         # FIXME: adapt to new methods!!
         # TODO: box for cancelling auto_test (reprendre la main)
         log.debug(f"Preparing {self.exercise.pretty_name} for test")
 
-        # Stop Lean server if running
-        if self.servint:
-            await self.servint.file_invalidated.wait()
-            self.servint.stop()
-            log.info("Lean server stopped!")
-
-        # Start Lean server
-        self.servint = ServerInterface(self.nursery)
-        await self.servint.start()
-        log.info("Lean server started")
-        self.server_started.emit()
-
-        # Start exercise window and add auto_steps
+        # Start exercise window and test window
         self.coordinator = Coordinator(self.exercise, self.servint)
+        self.test_window = QTestWindow()
+        self.test_window.show()
         self.exercise_window.test_mode = True
+        self.coordinator.test_mode = True
 
         # Connect signals
         self.exercise_window.window_closed.connect(self.close_exercise_window)
-        self.servint.proof_no_goals.connect(self.test_complete)
-        # The following avoid QMessageBox in firework and when goal solved
-        self.exercise_window.cqfd = True
+        self.coordinator.proof_no_goals.connect(self.test_complete)
 
         # Show window
         self.exercise_window.show()

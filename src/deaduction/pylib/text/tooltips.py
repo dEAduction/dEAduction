@@ -149,7 +149,8 @@ def button_symbol(name):
     NB: translation is NOT done here, gettext translation function _ must be
      applied to the output.
     """
-    return __buttons_symbols[name]
+    if name in __buttons_symbols:
+        return __buttons_symbols[name]
 
 
 def button_tool_tip(name):

@@ -25,5 +25,5 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .exercise_main_window import ExerciseMainWindow
+from .exercise_main_window import ExerciseMainWindow, UserAction
 from .Coordinator          import Coordinator
