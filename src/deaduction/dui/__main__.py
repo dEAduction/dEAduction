@@ -52,8 +52,7 @@ import deaduction.pylib.config.vars              as     cvars
 import deaduction.pylib.config.i18n
 
 from deaduction.dui.stages.select_language       import select_language
-from deaduction.dui.stages.exercise              import (Coordinator,
-                                                         ExerciseMainWindow)
+from deaduction.dui.stages.exercise              import Coordinator
 from deaduction.dui.stages.start_coex            import StartCoExStartup
 from deaduction.dui.stages.missing_dependencies  import (
                 InstallingMissingDependencies, WantInstallMissingDependencies)
@@ -292,7 +291,7 @@ class Container(QObject):
         # Show window
         self.exercise_window.show()
 
-    def test_exercise(self):
+    def test_exercise(self, test_window):
         """
         Launch exercise window, start lean server, and connect signals
         for testing self.exercise. Very much like solve_exercise, except for
@@ -305,7 +304,7 @@ class Container(QObject):
 
         # Start exercise window and test window
         self.coordinator = Coordinator(self.exercise, self.servint)
-        self.test_window = QTestWindow()
+        self.test_window = test_window
         self.test_window.show()
         self.exercise_window.test_mode = True
         self.coordinator.test_mode = True
@@ -314,7 +313,7 @@ class Container(QObject):
         self.exercise_window.window_closed.connect(self.close_exercise_window)
         self.coordinator.proof_no_goals.connect(self.test_complete)
 
-        # Show window
+        # Show exercise window
         self.exercise_window.show()
 
     @Slot()

@@ -70,8 +70,9 @@ import deaduction.pylib.config.vars              as     cvars
 import deaduction.pylib.config.i18n
 
 from deaduction.dui.__main__ import Container
+from deaduction.dui.stages.test import QTestWindow
 
-from deaduction.pylib.coursedata                 import Course, Exercise
+from deaduction.pylib.coursedata import Course, Exercise
 from deaduction.pylib.autotest import ( select_course,
                                         select_exercise)
 
@@ -320,16 +321,20 @@ async def auto_test(container: Container):
 
     # Auto-steps loop
     exercise = container.exercise
-    log.info(f"Testing exercise {exercise.pretty_name}")
+    emw = container.exercise_window
+    test_window = container.test_window
     auto_steps = exercise.refined_auto_steps
-    log.debug('auto_steps:')
+
+    log.info(f"Testing exercise {exercise.pretty_name}")
+
+    test_window.display(f"Testing exercise {exercise.pretty_name}",
+                        color='red')
+    test_window.display('auto_steps:')
     total_string = 'AutoTest\n'
     for step in auto_steps:
         total_string += '    ' + step.raw_string + ',\n'
-    log.debug(total_string)
+    test_window.display(total_string)
 
-    emw = container.exercise_window
-    test_window = container.test_window
     signals = [emw.proof_step_updated,
                emw.ui_updated,
                test_window.process_next_step]
@@ -359,14 +364,14 @@ async def auto_test(container: Container):
                 reports.append(report)
 
             elif emission.is_from(emw.ui_updated):
-                test_window.display_in_console("ui_updated received")
+                test_window.display("ui_updated received")
 
                 step = auto_steps[steps_counter]
                 steps_counter += 1
-                test_window.display_in_console(f"Auto_step found: {step}")
+                test_window.display(f"Auto_step found: "
+                                               f"{step.raw_string}")
                 if not step:
-                    test_window.display_in_console("    Found 'None' step, "
-                                                   "giving up")
+                    test_window.display("    Found 'None' step, giving up")
                     emw.close()
                     break
 
@@ -395,12 +400,12 @@ async def auto_test(container: Container):
                 success, msg = emw.simulate_user_action(step)
 
                 if not success:
-                    test_window.display_in_console("    Failing action:")
-                test_window.display_in_console(msg)
+                    test_window.display("    Failing action:")
+                test_window.display(msg)
 
                 if steps_counter == len(auto_steps):
                     break
-    test_window.display_in_console(f"Auto_test successfull: {test_success}")
+    test_window.display(f"Auto_test successfull: {test_success}")
     reports.insert(0, test_success)
 
 
@@ -457,6 +462,10 @@ async def main():
 
         container.exercises = exercises
 
+        # Start console
+        test_window = QTestWindow()
+
+
         # Main loop: quit if window is closed by user or if there is no more
         # exercise.
         signals = [container.test_complete,
@@ -469,15 +478,16 @@ async def main():
                 # Test first exercise
                 container.exercise = container.exercises[0]
                 container.exercises = container.exercises[1:]
-                container.test_exercise()
+                container.test_exercise(test_window)
                 container.nursery.start_soon(auto_test, container)
 
                 async for emission in emissions.channel:
                     if emission.is_from(container.test_complete) \
                             and container.exercises:  # Test next exercise
-                        log.debug("Test complete -> next exercise")
-                        log.debug(f"{len(container.exercises)} exercises "
-                                  f"remaining to test")
+                        test_window.display("Test complete -> next exercise",
+                                            color='red')
+                        test_window.display(f"{len(container.exercises)} "
+                                            f"exercises remaining to test")
                         # Close window
                         container.exercise_window.window_closed.disconnect()
                         container.exercise_window.close()
@@ -485,11 +495,11 @@ async def main():
                             # Test next exercise
                             container.exercise = container.exercises[0]
                             container.exercises = container.exercises[1:]
-                            container.test_exercise()
+                            container.test_exercise(test_window)
                             container.nursery.start_soon(auto_test, container)
 
                         else:
-                            log.debug("No more exercises to test!")
+                            test_window.display("No more exercises to test!")
                             break
 
                     elif emission.is_from(container.close_exercise_window):
@@ -497,16 +507,18 @@ async def main():
                         break
 
         finally:
-            print("================================================")
+            test_window.display("============================================")
             global_success = False not in [exo_report[0] for
                                            exo_report in container.report]
-            print(f"Global success : {global_success}")
+            test_window.display(f"Global success : {global_success}")
             for exo_report in container.report:
                 success = "success" if exo_report[0] else "FAILURE"
                 if len(exo_report) > 1:
-                    print(exo_report[1] + ": " + success)
+                    test_window.display(exo_report[1] + ": " + success)
                     for step_report in exo_report[2:]:
-                        print(step_report)
+                        test_window.display(step_report)
+
+            print(test_window.txt)
 
             # Finally closing d∃∀duction
             if container.servint:
@@ -515,7 +527,6 @@ async def main():
                 log.info("Lean server stopped!")
             if container.nursery:
                 container.nursery.cancel_scope.cancel()
-
 
 if __name__ == '__main__':
     log.info("Starting autotest...")

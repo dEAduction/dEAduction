@@ -422,7 +422,7 @@ class ExerciseMainWindow(QMainWindow):
         item = None
         if name.startswith('@O'):
             try:
-                nb = [int(name[2:]) - 1]
+                nb = int(name[2:]) - 1
                 item = self.ecw.objects_wgt.item_from_nb(nb)
             except IndexError:
                 pass
@@ -613,8 +613,18 @@ class ExerciseMainWindow(QMainWindow):
         msg += f"    -> selection = {user_action.selection}"
         selection = self.contextualised_selection(user_action.selection)
         if None in selection:
-            msg += "    ->(None in selection)"
+            msg += "    -> (None in selection: "
+            for item in selection:
+                if isinstance(item, MathObject):
+                    msg += item.to_display()
+                elif isinstance(item, str):
+                    msg += item
+                else:
+                    msg += str(item)
+            msg += ')' + '\n'
             msg += self.current_goal.to_tooltip()
+            msg += f'\n {len(self.objects)} objects, {len(self.properties)} ' \
+                   f'properties.'
             return False, msg
         self.simulate_selection(selection)
         self.user_input = user_action.user_input

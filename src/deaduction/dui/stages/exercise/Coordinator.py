@@ -787,7 +787,7 @@ class Coordinator(QObject):
         :param errors: list of errors, if non-empty then request has failed.
         """
         log.info("Processing Lean's response")
-        if self.proof_step.pf_nb == 0:  # First step
+        if not self.server_task_running.is_set():  # First step
             log.info("First proof step")
             self.start_server_task()
 
