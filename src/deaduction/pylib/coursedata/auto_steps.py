@@ -146,7 +146,6 @@ class UserAction:
         return user_action
 
 
-
 class AutoStep(UserAction):
     """
     A class to store one step of proof in deaduction, simulating selection,
@@ -345,7 +344,7 @@ class AutoStep(UserAction):
         if success_msg:
             string += ' ' + success_msg
 
-        return cls(string, selection, button, statement, user_input,
+        return cls(selection, button, statement, user_input, string,
                    proof_step.error_type, proof_step.error_msg,
                    proof_step.success_msg)
 
