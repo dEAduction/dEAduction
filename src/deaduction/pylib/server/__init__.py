@@ -531,7 +531,7 @@ class ServerInterface(QObject):
             resp = await self.lean_server.send(req)
 
         if resp.message in ("file invalidated", "file_unchanged"):
-            self.log.debug("Response seq_num:"+str(resp.seq_num))
+            self.log.debug("Response seq_num: "+str(resp.seq_num))
             self.file_invalidated.set()
 
             #########################################

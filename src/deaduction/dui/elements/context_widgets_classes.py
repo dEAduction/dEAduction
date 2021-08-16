@@ -358,10 +358,13 @@ class TargetWidget(QWidget):
 
         :param yes: See paragraph above.
         """
-        if yes:
-            self.target_label.setStyleSheet(self.target_label.selected_style)
+        if hasattr(self, 'target_label'):
+            if yes:
+                self.target_label.setStyleSheet(self.target_label.selected_style)
+            else:
+                self.target_label.setStyleSheet(self.target_label.unselected_style)
         else:
-            self.target_label.setStyleSheet(self.target_label.unselected_style)
+            log.warning("Attempt to use deleted attribute target_label")
 
     @property
     def math_object(self):

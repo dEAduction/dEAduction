@@ -97,6 +97,7 @@ class Coordinator(QObject):
 
     proof_step_updated = Signal()
     proof_no_goals     = Signal()
+    close_server_task   = Signal()
 
     def __init__(self, exercise, servint):
         super().__init__()
@@ -314,20 +315,6 @@ class Coordinator(QObject):
         with open(file_path, mode='wb') as output:
             dump(exercise, output, HIGHEST_PROTOCOL)
 
-    def closeEvent(self):
-        log.info("Closing Coordinator")
-
-        self.disconnect_signals()
-
-        # Save journal
-        if not self.test_mode:
-            self.journal.save_exercise_with_proof_steps(emw=self)
-        # Save new initial proof states, if any
-        self.exercise.course.save_initial_proof_states()
-        # FIXME:  cancel server_task
-        # if self.__server_task_scope:
-        #     self.__server_task_scope.cancel()
-
     def disconnect_signals(self):
         """
         This method is called at closing. It is VERY important: without it,
@@ -339,13 +326,34 @@ class Coordinator(QObject):
         # self.servint.exercise_set.disconnect()
         self.servint.lean_response.disconnect()
 
+    def closeEvent(self):
+        log.info("Closing Coordinator")
+
+        self.disconnect_signals()
+
+        # Save journal
+        if not self.test_mode:
+            self.journal.save_exercise_with_proof_steps(emw=self)
+        # Save new initial proof states, if any
+        self.exercise.course.save_initial_proof_states()
+
+        # Emit close_server_task signal and wait for effect
+        tasks = self.servint.nursery.child_tasks
+        log.debug(f"{len(tasks)} nursery tasks:")
+        log.debug([task.name for task in tasks])
+        # log.debug("Closing server task")
+        # self.close_server_task.emit()
+        # while 'Server task' in [task.name for task in tasks]:
+        #     pass
+        #
+        # log.debug([task.name for task in tasks])
+
     ######################################################
     ######################################################
     # ─────────────────── Server task ────────────────── #
     ######################################################
     ######################################################
 
-    # @Slot()
     def start_server_task(self):
         self.emw.lean_file = self.servint.lean_file
         self.servint.nursery.start_soon(self.server_task,
@@ -363,7 +371,6 @@ class Coordinator(QObject):
 
         log.info("Starting server task")
 
-        # self.emw.freeze(False)
         async with qtrio.enter_emissions_channel(
                 signals=[self.lean_editor.editor_send_lean,
                          self.toolbar.redo_action.triggered,
@@ -372,7 +379,8 @@ class Coordinator(QObject):
                          self.proof_outline_window.history_goto,
                          self.action_triggered,
                          self.statement_triggered,
-                         self.apply_math_object_triggered]) as emissions:
+                         self.apply_math_object_triggered,
+                         self.close_server_task]) as emissions:
             self.server_task_running.set()
             async for emission in emissions.channel:
                 self.statusBar.erase()
@@ -444,13 +452,18 @@ class Coordinator(QObject):
                     # Emulate click on 'apply' button:
                     self.ecw.action_apply_button.animateClick(msec=500)
 
+                ###########
+                # Closing #
+                ###########
+                elif emission.is_from(self.close_server_task):
+                    log.debug("Exiting server task's loop")
+                    break
+
     ################################################
     # Actions that send code to Lean (via servint) #
     ################################################
-    def __server_call_action(self,
-                                   action_btn,  # ActionButton
-                                   auto_selection=None,
-                                   auto_user_input=None):
+
+    def __server_call_action(self, action_btn):
         """
         Call the action corresponding to the action_btn
 
@@ -477,18 +490,9 @@ class Coordinator(QObject):
         #   - choose A or B when having to prove (A OR B) ;
         #   - enter an element when clicking on 'exists' button.
         #   - and so on.
-        if auto_selection:  # For auto-test FIXME: selection set before
-            selection = auto_selection
-            self.proof_step.selection = selection
-            target_selected = True if not selection else False
-        else:
-            selection = self.current_selection_as_mathobjects
-            self.proof_step.selection = selection
-            target_selected = self.emw.target_selected
-        if auto_user_input:
-            self.emw.user_input = auto_user_input
-        else:
-            self.emw.user_input = []
+        selection = self.current_selection_as_mathobjects
+        self.proof_step.selection = selection
+        target_selected = self.emw.target_selected
 
         while True:
             try:
@@ -538,83 +542,73 @@ class Coordinator(QObject):
                           f"{definition.pretty_name} in ")
                 log.debug(f"{math_object.to_display()} -> ")
                 log.debug(f"{rewritten_math_object.to_display()}")
+
                 lean_code = generic.action_definition(self.proof_step,
                                                       selection_rw,
                                                       definition,
                                                       target_selected)
-                self.servint.server_queue.add_task(
-                                                    self.servint.code_insert,
-                                                    definition.pretty_name,
-                                                    lean_code)
+
+                self.servint.server_queue.add_task(self.servint.code_insert,
+                                                   definition.pretty_name,
+                                                   lean_code)
                 break
 
             else:
                 self.proof_step.lean_code = lean_code
                 self.proof_step.user_input = self.emw.user_input
+
                 # Update lean_file and call Lean server
-                self.servint.server_queue.add_task(
-                                                    self.servint.code_insert,
-                                                    action.symbol,
-                                                    lean_code)
+                self.servint.server_queue.add_task(self.servint.code_insert,
+                                                   action.symbol,
+                                                   lean_code)
                 break
 
-    def __server_call_statement(self,
-                                item,  # StatementsTreeWidgetItem or Node
-                                auto_selection=None):
+    def __server_call_statement(self, item):
         """
         This function is called when the user clicks on a Statement he wants to
         apply. The statement can be either a Definition or a Theorem. the code
         is then inserted to the server.
         """
-        if auto_selection:  # fixme: now useless
-            selection = auto_selection
-            self.proof_step.selection = selection
-            target_selected = True if not selection else False
-        else:
-            selection = self.current_selection_as_mathobjects
-            self.proof_step.selection = selection
-            target_selected = self.emw.target_selected
+
+        selection = self.current_selection_as_mathobjects
+        self.proof_step.selection = selection
+        target_selected = self.emw.target_selected
 
         try:
             item.setSelected(False)
             statement = item.statement
 
             if isinstance(statement, Definition):
-                lean_code = generic.action_definition(
-                    self.proof_step,
-                    selection,
-                    statement,
-                    target_selected)
+                lean_code = generic.action_definition(self.proof_step,
+                                                      selection,
+                                                      statement,
+                                                      target_selected)
             elif isinstance(statement, Theorem):
-                lean_code = generic.action_theorem(
-                    self.proof_step,
-                    selection,
-                    statement,
-                    target_selected)
+                lean_code = generic.action_theorem(self.proof_step,
+                                                   selection,
+                                                   statement,
+                                                   target_selected)
 
         except WrongUserInput as error:
             self.process_wrong_user_input(error)
-            # self.emw.empty_current_selection()
-            # self.update_proof_state(self.displayed_proof_step.proof_state)
 
         else:
             log.debug(f'Calling statement {item.statement.pretty_name}')
             self.proof_step.lean_code = lean_code
+
             # Update lean_file and call Lean server
-            self.servint.server_queue.add_task(
-                                                self.servint.code_insert,
-                                                statement.pretty_name,
-                                                lean_code)
+            self.servint.server_queue.add_task(self.servint.code_insert,
+                                               statement.pretty_name,
+                                               lean_code)
 
     def __server_send_editor_lean(self):
         """
         Send the L∃∀N code written in the L∃∀N editor widget to the
         server interface.
         """
-        self.servint.server_queue.add_task(
-                                self.servint.code_set,
-                                _('Code from editor'),
-                                self.lean_editor.code_get())
+        self.servint.server_queue.add_task(self.servint.code_set,
+                                           _('Code from editor'),
+                                           self.lean_editor.code_get())
 
     #########################
     #########################
@@ -695,6 +689,7 @@ class Coordinator(QObject):
         self.emw.process_wrong_user_input()
         self.unfreeze()
         self.emw.update_goal(None)
+        self.emw.ui_updated.emit()
 
     @Slot()
     def set_fireworks(self):
@@ -704,7 +699,7 @@ class Coordinator(QObject):
         - replace the target by a message "No more goal".
         """
         # Display msg_box unless redoing /moving or test mode
-        # TODO: move this part to EMW
+        # TODO: add click to MessageBox in test_mode
         if self.test_mode:
             self.proof_no_goals.emit()
         elif not self.proof_step.is_redo() and not self.proof_step.is_goto():
@@ -720,13 +715,8 @@ class Coordinator(QObject):
             button_change.clicked.connect(self.emw.change_exercise)
             msg_box.exec_()
 
-        # Saving for auto-test if first firework in this proof
-        if not self.exercise_solved:
-            self.exercise_solved = True
-            if not self.test_mode:
-                self.lean_file.save_exercise_for_autotest(self)
-
         self.proof_step.no_more_goal = True
+        self.proof_step.success_msg = _("Proof complete")
         self.proof_step.new_goals = []
         # Artificially create a final proof_state by replacing target by a msg
         # (We do not get the final proof_state from Lean).
@@ -745,6 +735,7 @@ class Coordinator(QObject):
         This is called for every user action, including errors and history
         moves.
         """
+
         # Store journal and auto_step
         if not self.test_mode:
             self.journal.store(self.proof_step, self)
@@ -787,21 +778,26 @@ class Coordinator(QObject):
         :param errors: list of errors, if non-empty then request has failed.
         """
         log.info("Processing Lean's response")
+
         if not self.server_task_running.is_set():  # First step
             log.info("First proof step")
+            # tasks = self.servint.nursery.child_tasks
+            # log.debug(f"{len(tasks)} nursery tasks:")
+            # log.debug([task.name for task in tasks])
+
             self.start_server_task()
 
-        if no_more_goals:
-            log.info("  -> proof completed!")
-            proof_state = self.set_fireworks()
-
-        elif errors:
+        if errors:
             log.info("  -> errors")
             self.process_failed_request_error(errors)
             # Abort and go back to last goal
             self.servint.server_queue.add_task(self.servint.history_delete)
             # Process_lean_response will be called again after deleting
             return
+
+        if no_more_goals:
+            log.info("  -> proof completed!")
+            proof_state = self.set_fireworks()
 
         else:  # Generic step
             hypo_analysis, targets_analysis = analysis
@@ -810,7 +806,6 @@ class Coordinator(QObject):
             log.debug("  -> computing new ProofState")
             self.lean_file.state_info_attach(ProofState=proof_state)
 
-        # No need to update if errors or recovering from errors
         if not self.proof_step.is_error():
             self.proof_step.proof_state = proof_state
             if not self.proof_step.is_history_move():
@@ -824,10 +819,16 @@ class Coordinator(QObject):
 
             # Debug
             log.debug(f"    Target_idx: {self.lean_file.target_idx}")
-            log.debug("     Proof nodes:")
-            for he in self.lean_file.history:
-                proof_nodes = he.misc_info.get('proof_step').proof_nodes
-                log.debug([pf.txt for pf in proof_nodes])
+            # log.debug("     Proof nodes:")
+            # for he in self.lean_file.history:
+            #     proof_nodes = he.misc_info.get('proof_step').proof_nodes
+            #     log.debug([pf.txt for pf in proof_nodes])
+
+        # Saving for auto-test if first firework in this proof
+        if no_more_goals and not self.exercise_solved:
+            self.exercise_solved = True
+            if not self.test_mode:
+                self.lean_file.save_exercise_for_autotest(self)
 
         # Update proof_step
         self.previous_proof_step = self.proof_step
@@ -845,3 +846,6 @@ class Coordinator(QObject):
                 and not self.test_mode:
             self.process_automatic_actions(proof_state.goals[0])
 
+        # Emit UI updated (for auto_test)
+        log.debug("UI updated (signal emitted)")
+        self.emw.ui_updated.emit()

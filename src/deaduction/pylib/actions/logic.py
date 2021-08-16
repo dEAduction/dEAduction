@@ -90,6 +90,7 @@ def construct_and(proof_step, user_input: [str]) -> CodeForLean:
     """
     target = proof_step.goal.target.math_type
 
+    implicit_definition = None
     if not target.is_and(is_math_type=True, implicit=True):
         raise WrongUserInput(error=_("Target is not a conjunction 'P AND Q'"))
 
@@ -258,7 +259,8 @@ def apply_or(proof_step,
     code = CodeForLean.empty_code()
 
     # Implicit definition ?
-    if not selected_hypo.is_or(is_math_type=True):
+    implicit_definition = None
+    if not selected_hypo.is_or(is_math_type=False):
         # Implicit "or"
         implicit_definition = MathObject.last_used_implicit_definition
         math_type = MathObject.last_rw_object

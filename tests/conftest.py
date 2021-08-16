@@ -58,7 +58,7 @@ import deaduction.pylib.config.site_installation as     inst
 import deaduction.pylib.config.vars              as     cvars
 
 from deaduction.pylib.coursedata import Exercise
-from deaduction.dui.__main__ import Container
+from deaduction.dui.__main__ import WindowManager
 log = logging.getLogger(__name__)
 
 
@@ -72,12 +72,12 @@ async def container(nursery, exercise):  # NB: nursery is pytest-trio fixture
     cenv.init()
     cdirs.init()
     inst.init()
-    container = Container(nursery, exercise)
+    container = WindowManager(nursery, exercise)
     return container
 
 
 @pytest.fixture()
-async def exercise_main_window(qbot, container: Container):
+async def exercise_main_window(qbot, container: WindowManager):
     container.start_exercise(container.exercise)
     container.nursery.start_soon(container.solve_exercise)
     return container.exercise_window

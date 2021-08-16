@@ -625,13 +625,19 @@ class ExerciseMainWindow(QMainWindow):
         if button:
             msg += f"    -> click on button {button}"
             action_button = self.contextualised_button(button)
-            action_button.click()
-            return True, msg
+            if action_button:
+                action_button.click()
+                return True, msg
+            else:
+                return False, f"No button match {button}"
         elif statement:
             msg += f"    -> statement {statement} called"
             statement_widget = self.ecw.statements_tree.from_name(statement)
-            self.statement_triggered.emit(statement_widget)
-            return True, msg
+            if statement_widget:
+                self.statement_triggered.emit(statement_widget)
+                return True, msg
+            else:
+                return False, f"No statement match {statement}"
 
         msg += "    ->(No button nor statement found)"
         return False, msg
@@ -704,9 +710,9 @@ class ExerciseMainWindow(QMainWindow):
         # TODO: tags will be incorporated in ContextMathObjects
         log.info("Updating UI")
         self.manage_msgs(self.displayed_proof_step)
+        self.user_input = []
 
         if not new_goal or new_goal is self.current_goal:  # No update needed
-            self.ui_updated.emit()  # This signal is used by autotest
             return
 
         # Get previous goal and set tags
@@ -741,6 +747,4 @@ class ExerciseMainWindow(QMainWindow):
             self.ecw.props_wgt.apply_math_object_triggered.connect(
                 self.apply_math_object_triggered)
 
-        log.debug("UI updated (signal emitted)")
-        self.ui_updated.emit()  # This signal is used by the autotest module.
 

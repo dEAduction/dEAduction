@@ -171,8 +171,10 @@ class ActionButton(QPushButton):
         """
         Test if symbol is the symbol of (the action associated to) self.
         """
-        return self.action.symbol == symbol \
-            or self.action.symbol == symbol.replace('_', ' ')
+        return self.action.symbol.startswith(symbol) \
+            or self.action.symbol.startswith(symbol.replace('_', ' ')) \
+            or _(self.action.symbol).startswith(_(symbol)) \
+            or _(self.action.symbol).startswith(_(symbol.replace('_', ' ')))
 
     async def simulate(self, duration=0.3, winkle_nb=2):
         """

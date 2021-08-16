@@ -129,8 +129,8 @@ class ProofOutlineTreeWidget(QTreeWidget):
                 self.setColumnWidth(col_nb,
                                     settings.value(f"proof_outline_tree/"
                                                    f"{col_nb}"))
-                log.debug(f"Setting column value:"
-                          f"{self.columnWidth(col_nb)}")
+                # log.debug(f"Setting column value:"
+                #           f"{self.columnWidth(col_nb)}")
         if not settings.value("proof_outline_tree/0"):
             self.setColumnWidth(0, 300)
 
@@ -152,7 +152,7 @@ class ProofOutlineTreeWidget(QTreeWidget):
         settings = QSettings("deaduction")
         for col_nb in (0, 1, 2):
             columns_width = self.columnWidth(col_nb)
-            log.debug(f"Saving column width {columns_width}")
+            # log.debug(f"Saving column width {columns_width}")
             settings.setValue(f"proof_outline_tree/{col_nb}", columns_width)
 
     def select(self, selected_widget):
@@ -171,7 +171,7 @@ class ProofOutlineTreeWidget(QTreeWidget):
         self.select(self.currentItem())
 
     def __delete(self, widget_item: ProofTreeWidgetItem):
-        log.debug(f"Deleting {widget_item.proof_item.txt}")
+        # log.debug(f"Deleting {widget_item.proof_item.txt}")
         parent = widget_item.parent()
         if not parent:
             self.takeTopLevelItem(self.indexOfTopLevelItem(widget_item))
@@ -211,24 +211,24 @@ class ProofOutlineTreeWidget(QTreeWidget):
         """
 
         # Debug
-        log.debug(f"Inserting item {proof_item.txt}")
+        # log.debug(f"Inserting item {proof_item.txt}")
         widgets = []  # Fixme: return all inserted widgets
         # Search for parent node
         if proof_item.parent:
-            log.debug(f"   parent step: {proof_item.parent.txt}")
+            # log.debug(f"   parent step: {proof_item.parent.txt}")
             parent = proof_item.parent
             if parent.txt == "Proof":
                 parent_item = self.invisibleRootItem()
             else:
                 parent_item = self.__find_proof_item(parent)
                 if not parent_item:
-                    log.debug(f"   creating parent item {parent.txt}")
+                    # log.debug(f"   creating parent item {parent.txt}")
                     parent_item = self.__insert_at_end(parent)
             if parent_item:
                 parent_item.setExpanded(True)
         else:
             parent_item = self.invisibleRootItem()
-        log.debug(f"   inserting item at {parent_item.text(0)}")
+        # log.debug(f"   inserting item at {parent_item.text(0)}")
         new_widget_item = ProofTreeWidgetItem(parent=parent_item,
                                               proof_item=proof_item)
         self.widgets.append(new_widget_item)
@@ -269,7 +269,7 @@ class ProofOutlineTreeWidget(QTreeWidget):
         if isinstance(marked_widget, int):
             history_nb = marked_widget
             marked_widget = self.__find_history_nb(history_nb)
-            log.debug(f"Marking widget {history_nb}")
+            # log.debug(f"Marking widget {history_nb}")
         for widget in self.widgets:
             widget.mark_user_selected(widget == marked_widget)
             widget.setSelected(False)
@@ -338,11 +338,11 @@ class ProofOutlineWindow(QWidget):
 
     @Slot()
     def history_goto_btn(self, *args):
-        log.debug(f"History move, args: {args}")
+        # log.debug(f"History move, args: {args}")
         tree_widget_item = self.tree.currentItem()
         if tree_widget_item and not tree_widget_item.is_node():
-            log.debug(f"History move to "
-                      f"{tree_widget_item.proof_item.history_nb}")
+            # log.debug(f"History move to "
+            #           f"{tree_widget_item.proof_item.history_nb}")
             self.history_goto.emit(tree_widget_item.proof_item.history_nb+1)
 
     @Slot()

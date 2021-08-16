@@ -217,7 +217,7 @@ class ProofStep():
     error_msg: str            = ''
     proof_state               = None
     no_more_goal              = False
-
+    _success_msg: str         = ''
     # AutoStep version, computed in Coordinator.update_proof_step():
     auto_step                 = None
 
@@ -278,8 +278,8 @@ class ProofStep():
         #         proof_step.imminent_new_node = imminent_new_node
         #     proof_step.is_cqfd = True
         next_parent = proof_step.proof_nodes[-1]
-        log.debug(f"Proof nodes: "
-                  f"{[(pf.txt, pf.parent.txt if pf.parent else None) for pf in proof_step.proof_nodes]}")
+        # log.debug(f"Proof nodes: "
+        #           f"{[(pf.txt, pf.parent.txt if pf.parent else None) for pf in proof_step.proof_nodes]}")
         nps = ProofStep(property_counter=proof_step.property_counter,
                         new_goals=copy(proof_step.new_goals),
                         parent=next_parent,
@@ -339,10 +339,11 @@ class ProofStep():
 
     ##############
     # Properties #
-    ##############
     @property
     def success_msg(self):
-        if self.history_nb == -1:
+        if self._success_msg:
+            return self._success_msg
+        elif self.history_nb == -1:
             return self.beginning_of_proof_msg
         elif self.is_error():
             return ''
@@ -356,6 +357,10 @@ class ProofStep():
             return self.lean_code.success_msg
         else:
             return ''
+
+    @success_msg.setter
+    def success_msg(self, msg: str):
+        self._success_msg = msg
 
     @property
     def txt(self):

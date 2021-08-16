@@ -258,8 +258,7 @@ lemma exercise.test_introduce_new_object
 /- dEAduction
 AutoTest
     new_object 0 z x,
-    ∃ z,
-    CQFD
+    ∃ z
 -/
 begin
   sorry
@@ -273,7 +272,7 @@ lemma exercise.test_introduce_new_subgoal
 /- dEAduction
 AutoTest
     new_object 1 P∨Q,
-    ∨ 1, CQFD,
+    ∨ 1, CQFD, CQFD,
     ∨ 0, CQFD
 -/
 begin
@@ -333,10 +332,6 @@ begin
   sorry
 end
 end tests_proof_buttons
-
-
-
-
 
 
 

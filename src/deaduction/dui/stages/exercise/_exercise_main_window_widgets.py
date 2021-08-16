@@ -320,7 +320,8 @@ class ExerciseCentralWidget(QWidget):
         # Allow name instead of symbol
         if button_symbol(symbol):
             symbol = button_symbol(symbol)
-
+        # ['∧', '∨', '¬', '⇒', '⇔', '∀', '∃', '=', 'Méthodes de preuve…',
+        # 'Nouvel Objet…', 'Appliquer', 'Calculer', 'But !']
         buttons = [button for button in self.actions_buttons if
                    button.has_symbol(symbol)]
         if buttons:

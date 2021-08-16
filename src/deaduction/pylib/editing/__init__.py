@@ -57,6 +57,10 @@ class HistoryEntry:
 
     misc_info: Dict[str, any]
 
+    @property
+    def proof_step(self):
+        return self.misc_info.get("proof_step")
+
 
 class VirtualFile:
     """
@@ -533,8 +537,8 @@ class LeanFile(VirtualFile):
         if not save:
             return
 
-        auto_steps = [entry.misc_info.get("proof_step").auto_step
-                      for entry in self.history]
+        proof_steps = [entry.proof_step for entry in self.history]
+        auto_steps = [ps.auto_step for ps in proof_steps if ps is not None]
         auto_steps = [step for step in auto_steps if step is not None]
 
         exercise = emw.exercise

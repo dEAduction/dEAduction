@@ -49,6 +49,7 @@ class QTestWindow(QWidget):
     """
 
     process_next_step = Signal()
+    process_next_exercise = Signal()
 
     def __init__(self):
         super().__init__()
@@ -66,16 +67,20 @@ class QTestWindow(QWidget):
 
         # Buttons
         btn_layout = QHBoxLayout()
-        btn_layout.addStretch()
 
         self.step_by_step_btn = QCheckBox(_("Step by step"))
         self.next_step_button = QPushButton(_("Next step"))
-        self.step_by_step_btn.clicked.connect(self.enable_next_button)
+        self.next_step_button.setDefault(True)
+        self.step_by_step_btn.stateChanged.connect(self.enable_next_button)
         self.next_step_button.clicked.connect(self.process_next_step)
         self.step_by_step_btn.setChecked(True)
+        self.next_exercise_btn = QPushButton("Next exercise")
+        self.next_exercise_btn.clicked.connect(self.process_next_exercise)
 
         self.scroll_to_end_btn = QCheckBox(_("Scroll to end"))
 
+        btn_layout.addWidget(self.next_exercise_btn)
+        btn_layout.addStretch()
         btn_layout.addWidget(self.scroll_to_end_btn)
         btn_layout.addWidget(self.step_by_step_btn)
         btn_layout.addWidget(self.next_step_button)
@@ -85,6 +90,8 @@ class QTestWindow(QWidget):
         main_layout.addWidget(self.console)
         main_layout.addLayout(btn_layout)
         self.setLayout(main_layout)
+
+        self.freeze()
 
     def closeEvent(self, event):
         # Save window geometry
@@ -123,4 +130,17 @@ class QTestWindow(QWidget):
         if self.scroll_to_end_btn.isChecked():
             self.console.ensureCursorVisible()
 
+    def freeze(self):
+        if self.step_by_step:
+            self.setEnabled(False)
+        else:
+            # Step by step is off, user must be able to put it again
+            self.next_step_button.setEnabled(False)
+
+    def unfreeze(self):
+        self.setEnabled(True)
+        if self.step_by_step:
+            self.next_step_button.setEnabled(True)
+        else:
+            self.next_step_button.setEnabled(False)
 

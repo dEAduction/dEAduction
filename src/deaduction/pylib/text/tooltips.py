@@ -87,7 +87,7 @@ __tooltips = {
     'compute':
         _("Terminate the proof when target results from manipulating numbers")
 }
-# decentralized apply buttons
+# Decentralized apply buttons
 # this phrase will be preceded by "double click to "
 __tooltips_apply = {
     'tooltip_apply_function':
@@ -104,24 +104,6 @@ __tooltips_apply = {
     _("""split into two properties""")
 }
 
-# Text for buttons
-# __buttons = {
-#     'logic_button_texts': _("AND, OR, NOT, ⇒, ⇔, ∀, ∃, ="),
-#     'proof_button_texts': _("Apply")
-#                           + ", " + _("Proof Methods")
-#                           + ", " + _("New Object"),
-#     'magic_button_texts': _('Compute') + ', ' + _('Goal!')
-# }
-
-
-# logic_button_texts = cvars.get(
-#     'display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL')
-# # Turn logic_button_texts into a dictionary
-# lbt = logic_button_texts.split(', ')
-# logic_button_texts = {}
-# for key, value in zip(action_list, lbt):
-#     logic_button_texts[key] = value
-
 #########################
 # Define button symbols #
 #########################
@@ -130,7 +112,8 @@ __buttons_symbols = {
     'proof_methods': _("Proof methods..."),
     'new_object': _('New object...'),
     'assumption': _('Goal!'),
-    'compute': _('Compute')
+    'compute': _('Compute'),
+    'CQFD': _('Goal!')
 }
 logic_buttons = ['and', 'or', 'not', 'implies', 'iff', 'forall', 'exists',
                  'equal']

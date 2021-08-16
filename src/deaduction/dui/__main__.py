@@ -178,7 +178,7 @@ async def site_installation_check(nursery):
 ###############################################
 # Container class, managing signals and slots #
 ###############################################
-class Container(QObject):
+class WindowManager(QObject):
     """
     This class is responsible for keeping the memory of open windows
     (CoEx starter and exercise window), launching the windows when
@@ -194,7 +194,7 @@ class Container(QObject):
     close_chooser_window  = Signal()
     close_exercise_window = Signal()
     server_started        = Signal()
-    test_complete         = Signal()  # For testing only
+    proof_complete         = Signal()  # For testing only
 
     def __init__(self, nursery, exercise=None):
         super().__init__()
@@ -311,7 +311,7 @@ class Container(QObject):
 
         # Connect signals
         self.exercise_window.window_closed.connect(self.close_exercise_window)
-        self.coordinator.proof_no_goals.connect(self.test_complete)
+        self.coordinator.proof_no_goals.connect(self.proof_complete)
 
         # Show exercise window
         self.exercise_window.show()
@@ -344,7 +344,7 @@ def exercise_from_argv() -> Exercise:
 
 
 ##############################################################
-# Main event loop: init container and wait for window closed #
+# Main event loop: init wm and wait for window closed #
 ##############################################################
 async def main():
     """
@@ -358,49 +358,49 @@ async def main():
     async with trio.open_nursery() as nursery:
         await site_installation_check(nursery)
 
-        # Create container and start Lean server
-        container = Container(nursery)
-        await container.check_lean_server()
+        # Create wm and start Lean server
+        wm = WindowManager(nursery)
+        await wm.check_lean_server()
 
         try:
             # Choose first exercise
             exercise = exercise_from_argv()
             if not exercise:
-                container.choose_exercise()
-                # container.choose_exercise()
+                wm.choose_exercise()
+                # wm.choose_exercise()
             else:
-                container.start_exercise(exercise)
+                wm.start_exercise(exercise)
             # Main loop that just listen to closing windows signals,
             # and quit if there is no more open windows.
-            signals = [container.close_chooser_window,
-                       container.close_exercise_window]
+            signals = [wm.close_chooser_window,
+                       wm.close_exercise_window]
             async with qtrio.enter_emissions_channel(signals=signals) as \
                     emissions:
                 async for emission in emissions.channel:
                     log.debug("Signal received")
-                    if emission.is_from(container.close_chooser_window):
+                    if emission.is_from(wm.close_chooser_window):
                         # Remember that there is no more chooser window:
-                        container.chooser_window = None
+                        wm.chooser_window = None
                         log.debug("No more chooser window")
-                    elif emission.is_from(container.close_exercise_window):
+                    elif emission.is_from(wm.close_exercise_window):
                         # Remember that there is no more exercise window:
-                        container.coordinator.exercise_window = None
+                        wm.coordinator.exercise_window = None
                         log.debug("No more exercise window")
 
                     # Quit if no more open window:
-                    if not (container.chooser_window or
-                            container.exercise_window):
+                    if not (wm.chooser_window or
+                            wm.exercise_window):
                         log.debug("Closing d∃∀duction")
                         break
         finally:
             # Properly close d∃∀duction
-            if container.servint:
+            if wm.servint:
                 with trio.move_on_after(15):
-                    await container.servint.file_invalidated.wait()
-                container.servint.stop()  # Good job, buddy
+                    await wm.servint.file_invalidated.wait()
+                wm.servint.stop()  # Good job, buddy
                 log.info("Lean server stopped!")
-            if container.nursery:
-                container.nursery.cancel_scope.cancel()
+            if wm.nursery:
+                wm.nursery.cancel_scope.cancel()
 
 
 if __name__ == '__main__':
