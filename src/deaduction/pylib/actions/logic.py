@@ -1122,14 +1122,15 @@ def apply_substitute(proof_step, l: [MathObject], user_input: [int], equality):
     if len(l) == 2:
         h = l[0].info["name"]
         heq_name = l[-1].info["name"]
-        if user_input:
-            if user_input[0] == 1:
+        # Note that the pertinent user_input here is user_input[1]
+        if len(user_input) > 1:
+            if user_input[1] == 1:
                 success_msg = success2 + _("in {}").format(h)
                 more_code = CodeForLean.from_string(f'rw <- {heq_name} at {h}',
                                                     success_msg=success_msg)
                 codes = codes.or_else(more_code)
 
-            elif user_input[0] == 0:
+            elif user_input[1] == 0:
                 success_msg = success1 + _("in {}").format(h)
                 more_code = CodeForLean.from_string(f'rw {heq_name} at {h}',
                                                     success_msg=success_msg)
@@ -1167,7 +1168,7 @@ def apply_substitute(proof_step, l: [MathObject], user_input: [int], equality):
 @action()
 def action_equal(proof_step,
                  selected_objects: [MathObject],
-                 user_input: [str] = [],
+                 user_input: [str] = None,
                  target_selected: bool = True) -> CodeForLean:
     """
     Try to use one of the selected properties for substitution in the goal
@@ -1176,11 +1177,13 @@ def action_equal(proof_step,
     TODO: implement iff substitution with iff button rather than equal
         button
     """
+    if user_input == None:
+        user_input = []
     if not selected_objects:
         raise WrongUserInput(error=_("No property selected"))
     # Now len(l) > 0
 
-    if len(selected_objects) > 2:
+    elif len(selected_objects) > 2:
         raise WrongUserInput(error=_("Too many selected objects"))
 
     # Try all properties for substitution
@@ -1191,34 +1194,45 @@ def action_equal(proof_step,
     #         selected_objects.remove(prop)
     #         selected_objects.insert(0, prop)  # Put equality first ???
     #         break
-    prop0, prop1 = selected_objects[0], selected_objects[1]
-    test0, equality0 = prop0.can_be_used_for_substitution()
-    test1, equality1 = prop1.can_be_used_for_substitution()
-    if test0 and test1:
-        # Two equalities: which one to use?
-        if not user_input:
-            eq0 = equality0.to_display()
-            eq1 = equality1.to_display()
-            choices = [(eq0, f"Use for substitution in {eq1}"),
-                       (eq1, f"Use for substitution in {eq0}")]
-            raise MissingParametersError(
-                InputType.Choice,
-                choices,
-                title=_("Precision of substitution"),
-                output=_("Choose which equality to use for substitution"))
-        elif user_input[0] == 0:
+
+    elif len(selected_objects) == 2:
+        prop0, prop1 = selected_objects[0], selected_objects[1]
+        test0, equality0 = prop0.can_be_used_for_substitution()
+        test1, equality1 = prop1.can_be_used_for_substitution()
+        if test0 and test1:
+            # Two equalities: which one to use?
+            if not user_input:
+                eq0 = equality0.to_display()
+                eq1 = equality1.to_display()
+                choices = [(eq0, f"Use for substitution in {eq1}"),
+                           (eq1, f"Use for substitution in {eq0}")]
+                raise MissingParametersError(
+                    InputType.Choice,
+                    choices,
+                    title=_("Precision of substitution"),
+                    output=_("Choose which equality to use for substitution"))
+            elif user_input[0] == 0:
+                equality = equality0
+                selected_objects.reverse()
+            else:
+                equality = equality1
+        elif test1:
+            equality = equality1
+            user_input.append(None)  # Make place for a potential second input
+        elif test0:
             equality = equality0
             selected_objects.reverse()
-        else:
-            equality = equality1
-    elif test1:
-        equality = equality1
-    elif test0:
-        equality = equality0
-        selected_objects.reverse()
-    else:  # No equality found
-        error = _("This cannot be used for substitution")
-        raise WrongUserInput(error)
+            user_input.append(None)
+        else:  # No equality found
+            error = _("This cannot be used for substitution")
+            raise WrongUserInput(error)
+
+    elif len(selected_objects) == 1:
+        prop = selected_objects[0]
+        test, equality = prop.can_be_used_for_substitution()
+        if not test:
+            error = _("This cannot be used for substitution")
+            raise WrongUserInput(error)
 
     # selected_objects.reverse()  # Back in the original order
     codes = CodeForLean.empty_code()
