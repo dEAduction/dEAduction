@@ -555,7 +555,7 @@ namespace test_equality
 --- equality ---
 ----------------
 
-lemma exercise.test_apply_equality2
+lemma exercise.test_apply_equality1
 (A B: set X) (x y : X) (f: X → Y) (H: x = y) (H': x ∈ A) (H'': A =B):
 y ∈ B :=
 /- dEAduction
@@ -567,6 +567,67 @@ AutoTest
 begin
   sorry
 end
+
+lemma exercise.test_apply_equality2a
+(x y : X) (f: X → Y) (H: x = y):
+f x= f y :=
+/- dEAduction
+AutoTest
+    H = 0
+-/
+begin
+  sorry
+end
+
+lemma exercise.test_apply_equality2b
+(x y : X) (f: X → Y) (H: x = y):
+f x= f y :=
+/- dEAduction
+AutoTest
+    H = 1
+-/
+begin
+  sorry
+end
+
+lemma exercise.test_apply_equality3a
+(x y z: X) (f: X → Y) (H: x = y) (H': y = z):
+x = z :=
+/- dEAduction
+AutoTest
+    H' H = 0,
+    CQFD
+-/
+begin
+  sorry
+end
+
+lemma exercise.test_apply_equality3b
+(x y z : X) (f: X → Y) (H: x = y) (H': y = z):
+x = z :=
+/- dEAduction
+AutoTest
+    H' H = 1,
+    CQFD
+-/
+begin
+  sorry
+end
+
+lemma exercise.test_apply_equality4
+(x y z : X) (f: X → Y) (H: x = y) (H': y = x):
+x = z :=
+/- dEAduction
+AutoTest
+    H' H = 0 0,
+    proof_methods 3
+-/
+begin
+  sorry
+end
+
+
+
 
 end test_equality
 

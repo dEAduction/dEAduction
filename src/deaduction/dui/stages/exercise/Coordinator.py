@@ -135,6 +135,10 @@ class Coordinator(QObject):
         return self.servint.lean_file
 
     @property
+    def nursery(self):
+        return self.servint.nursery
+
+    @property
     def logically_previous_proof_step(self):
         """
         The previous proof step in the logical order is always stored in the
@@ -332,11 +336,17 @@ class Coordinator(QObject):
 
         self.disconnect_signals()
 
-        # Save journal
+        ref = 'functionality.save_solved_exercises_for_autotest'
+        save_for_test = cvars.get(ref, False)
         if not self.test_mode:
+            # Save journal
             self.journal.save_exercise_with_proof_steps(emw=self)
-        # Save new initial proof states, if any
-        self.exercise.course.save_initial_proof_states()
+            # Save new initial proof states, if any
+            # FIXME: also in test mode ??
+            self.exercise.course.save_initial_proof_states()
+            # Save exercise for autotest
+            if save_for_test:
+                self.lean_file.save_exercise_for_autotest(self)
 
         # Emit close_server_task signal and wait for effect
         tasks = self.servint.nursery.child_tasks
@@ -346,7 +356,7 @@ class Coordinator(QObject):
         self.close_server_task.emit()
         # while not self.server_task_closed.is_set():
         #     trio.sleep(0)  # FIXME: has to be awaited!
-        log.debug([task.name for task in tasks])
+        # log.debug([task.name for task in tasks])
         self.deleteLater()
     ######################################################
     ######################################################
@@ -383,10 +393,20 @@ class Coordinator(QObject):
                          self.close_server_task]) as emissions:
             self.server_task_started.set()
             async for emission in emissions.channel:
+                ###########
+                # Closing #
+                ###########
+                log.info(f"Emission in the server_task channel")
+                if emission.is_from(self.close_server_task):
+                    log.debug("    -> Close server_Task")
+                    self.server_task_closed.set()
+                    await emissions.aclose()
+                    break
+
                 self.statusBar.erase()
                 self.emw.freeze(True)
                 # DO NOT forget to unfreeze at th end. TODO: add timeout
-                log.info(f"Emission in the server_task channel")
+
                 ########################
                 # History move actions #
                 ########################
@@ -451,14 +471,6 @@ class Coordinator(QObject):
                     self.emw.double_clicked_item = emission.args[0]
                     # Emulate click on 'apply' button:
                     self.ecw.action_apply_button.animateClick(msec=500)
-
-                ###########
-                # Closing #
-                ###########
-                elif emission.is_from(self.close_server_task):
-                    log.debug("Exiting server task's loop")
-                    self.server_task_closed.set()
-                    break
 
     ################################################
     # Actions that send code to Lean (via servint) #
@@ -641,9 +653,8 @@ class Coordinator(QObject):
             log.debug(f"Automatic action: {action}")
             self.proof_step.is_automatic = True
 
-            # await self.server_task_running.wait()  # For first step!
-            # TODO: freeze, and add this to nursery
-            self.emw.simulate_user_action(user_action)
+            self.nursery.start_soon(self.emw.simulate_user_action, user_action)
+
 
     def unfreeze(self):
         # TODO: put this in EMW
@@ -827,10 +838,11 @@ class Coordinator(QObject):
             #     log.debug([pf.txt for pf in proof_nodes])
 
         # Saving for auto-test if first firework in this proof
-        if no_more_goals and not self.exercise_solved:
-            self.exercise_solved = True
-            if not self.test_mode:
-                self.lean_file.save_exercise_for_autotest(self)
+        # FIXME: moed to closeEvent()
+        # if no_more_goals and not self.exercise_solved:
+        #     self.exercise_solved = True
+        #     if not self.test_mode:
+        #         self.lean_file.save_exercise_for_autotest(self)
 
         # Update proof_step
         self.previous_proof_step = self.proof_step

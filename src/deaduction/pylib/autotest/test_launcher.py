@@ -432,7 +432,7 @@ async def auto_test(wm: WindowManager):
                 # For first step:
                 await wm.coordinator.server_task_started.wait()
 
-                success, msg = emw.simulate_user_action(step)
+                success, msg = await emw.simulate_user_action(step)
                 if not success:
                     test_window.display("    Failing action:")
                 test_window.display(msg)

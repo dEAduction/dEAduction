@@ -127,7 +127,9 @@ class ServerQueue(list):
         Wait for the queue to end, and then process fct.
         This allows to await for the end of the task, which is not possible
         if the task is put into the queue.
+        This method is deprecated, all tasks should go through add_task().
         """
+
         if self.queue_ended is not None:
             await self.queue_ended.wait()
         if timeout:
@@ -474,8 +476,8 @@ class ServerInterface(QObject):
         - ignore "proof uses sorry" messages.
         """
         # Filter message text, record if not ignored message
-        if msg.text.startswith(LEAN_NOGOALS_TEXT):
-            # and msg.pos_line == self.lean_file.last_line_of_inner_content:
+        if msg.text.startswith(LEAN_NOGOALS_TEXT) \
+            and msg.pos_line == self.lean_file.last_line_of_inner_content + 1:
             self.no_more_goals = True
             self.proof_receive_done.set()  # Done receiving
             # if hasattr(self.proof_no_goals, "emit"):
@@ -550,23 +552,6 @@ class ServerInterface(QObject):
                 await self.lean_server.running_monitor.wait_ready()
 
             self.log.debug(_("After request"))
-
-            # If data for new proof state have been received
-            # TODO: move this to logical part
-            # if not self.__proof_state_valid.is_set():
-            #     # Construct new proof state
-            #     self.proof_state = ProofState.from_lean_data(
-            #         self.__tmp_hypo_analysis, self.__tmp_targets_analysis)
-            #
-            #     # Store proof_state for history
-            #     self.log.debug("Storing ProofState")
-            #     self.lean_file.state_info_attach(ProofState=self.proof_state)
-            #
-            #     self.__proof_state_valid.set()
-            #
-            #     # Emit signal only if from qt context (avoid AttributeError)
-            #     if hasattr(self.proof_state_change, "emit"):
-            #         self.proof_state_change.emit(self.proof_state)
 
             if hasattr(self.update_ended, "emit"):
                 self.update_ended.emit()

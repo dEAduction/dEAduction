@@ -436,7 +436,8 @@ class ExerciseMainWindow(QMainWindow):
             if name.startswith('@'):  # (unwanted @)
                 name = name[1:]
             math_object = self.current_goal.math_object_from_name(name)
-            item = self.context_item_from_math_object(math_object)
+            if math_object:
+                item = self.context_item_from_math_object(math_object)
         return item
     
     def contextualised_selection(self, selection: [Union[MathObject, str]]):
@@ -593,7 +594,8 @@ class ExerciseMainWindow(QMainWindow):
         # for item in self.ecw.props_wgt.items:
         #     item.mark_user_selected(False)
 
-    def simulate_user_action(self, user_action: UserAction) -> (bool, str):
+    async def simulate_user_action(self, user_action: UserAction) -> (bool,
+                                                                     str):
         """
         Simulate user_action as if buttons were actually pressed.
         Return True if the simulation was actually performed.
@@ -627,6 +629,7 @@ class ExerciseMainWindow(QMainWindow):
             action_button = self.contextualised_button(button)
             if action_button:
                 action_button.click()
+                await action_button.simulate(duration=0.4)
                 return True, msg
             else:
                 return False, f"No button match {button}"
@@ -635,6 +638,7 @@ class ExerciseMainWindow(QMainWindow):
             statement_widget = self.ecw.statements_tree.from_name(statement)
             if statement_widget:
                 self.statement_triggered.emit(statement_widget)
+                await statement_widget.simulate(duration=0.4)
                 return True, msg
             else:
                 return False, f"No statement match {statement}"

@@ -272,8 +272,7 @@ lemma exercise.test_introduce_new_subgoal
 /- dEAduction
 AutoTest
     new_object 1 P∨Q,
-    ∨ 1, CQFD, CQFD,
-    ∨ 0, CQFD
+    ∨ 1, CQFD, CQFD
 -/
 begin
   sorry
