@@ -34,7 +34,7 @@ import logging
 from copy import deepcopy
 from functools import partial
 
-from deaduction.pylib.coursedata.exercise_classes import Exercise
+from deaduction.pylib.coursedata.exercise_classes import Exercise, Statement
 from deaduction.pylib.mathobj.proof_state import ProofState
 from deaduction.pylib.lean.response import Message
 from deaduction.pylib.editing import LeanFile
@@ -196,7 +196,7 @@ class ServerInterface(QObject):
     failed_request_errors       = Signal()  # FIXME: suppress?
 
     # Signal sending info from Lean
-    lean_response = Signal(bool, tuple, list)
+    lean_response = Signal(Statement, bool, tuple, list)
 
     # For functionality using ipf (tooltips, implicit definitions):
     initial_proof_state_set     = Signal()
@@ -237,9 +237,10 @@ class ServerInterface(QObject):
         # proof state)
         self.__course_data             = None
 
-        # Current proof state + Events
+        # Events
+        self.lean_server_running       = trio.Event()
         self.file_invalidated          = trio.Event()
-        self.__proof_state_valid       = trio.Event()
+        self.__proof_state_valid       = trio.Event()  # FIXME: useless
 
         # proof_receive_done is set when enough information have been
         # received, i.e. (for exercise processing) either we have context and
@@ -274,6 +275,8 @@ class ServerInterface(QObject):
         Asynchronously start the Lean server.
         """
         await self.lean_server.start()
+        self.lean_server_running.set()
+
 
     def stop(self):
         """
@@ -282,6 +285,7 @@ class ServerInterface(QObject):
         # global SERVER_QUEUE
         # SERVER_QUEUE.started = False
         self.server_queue.started = False
+        self.lean_server_running = trio.Event()
         self.lean_server.stop()
 
     ############################################
@@ -495,7 +499,7 @@ class ServerInterface(QObject):
         Call Lean server to update the proof_state.
             (for processing exercise only)
         """
-
+        exercise = self.__exercise_current
         first_line_of_change = self.lean_file.first_line_of_last_change
         self.log.debug(f"Updating, "
                        f"checking errors from line "
@@ -582,7 +586,8 @@ class ServerInterface(QObject):
         #     # raise exceptions.FailedRequestError(error_list, lean_code)
         #     pass
 
-        self.lean_response.emit(self.no_more_goals,
+        self.lean_response.emit(exercise,
+                                self.no_more_goals,
                                 (self.__tmp_hypo_analysis,
                                  self.__tmp_targets_analysis),
                                 error_list)

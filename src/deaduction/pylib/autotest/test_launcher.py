@@ -308,7 +308,7 @@ def find_selection(auto_step, emw):
     return auto_selection, success
 
 
-COLOR = {True: 'green', False: 'red'}
+COLOR = {True: 'green', False: 'red', None: 'orange'}
 
 
 async def auto_test(wm: WindowManager):
@@ -333,17 +333,18 @@ async def auto_test(wm: WindowManager):
 
     test_window.display(f"Testing exercise {exercise.pretty_name}",
                         color='blue')
-    test_window.display('auto_steps:')
-    total_string = 'AutoTest\n'
+    # test_window.display('auto_steps:')
+    total_string = '    Steps:'
     for step in auto_steps:
-        total_string += '    ' + step.raw_string + ',\n'
+        total_string += ' ' + step.raw_string + ',\n'
     test_window.display(total_string)
 
     signals = [emw.proof_step_updated,
                emw.ui_updated,
                test_window.process_next_step,
+               test_window.stop_exercise,
                wm.proof_complete]
-    test_success = True
+    test_success = None
     steps_counter = 0
     async with qtrio.enter_emissions_channel(signals=signals) as \
             emissions:
@@ -354,11 +355,18 @@ async def auto_test(wm: WindowManager):
             if emission.is_from(wm.proof_complete):
                 proof_complete = True
 
+            elif emission.is_from(test_window.stop_exercise):
+                test_window.display("Test interrupted", color='red')
+                break
+            #######################################
             # Check result of previous proof step #
+            #######################################
             elif emission.is_from(emw.proof_step_updated) and steps_counter:
                 step = auto_steps[steps_counter-1]
                 report, step_success = emw.displayed_proof_step.compare(step)
-                test_success = test_success and step_success
+                if not step_success:
+                    test_success = False
+                # test_success = test_success and step_success
                 if not report:
                     report = f'Success with {step.raw_string}'
                 else:
@@ -372,12 +380,27 @@ async def auto_test(wm: WindowManager):
                     report += "(no success msg)"
                 reports.append(report)
 
+            ###########################
+            # Prepare next proof step #
+            ###########################
             elif emission.is_from(emw.ui_updated):
-                test_window.display("ui_updated received")
+                test_window.display("(ui_updated received)", color='grey')
+
+                #####################
+                # Testing complete? #
+                #####################
+                if steps_counter == len(auto_steps):
+                    log.debug("Test complete")
+                    test_window.display("   Test complete", color='green')
+                    if test_success is None:
+                        # Test is successfull if no step failed
+                        test_success = True
+                    break
 
                 step = auto_steps[steps_counter]
                 steps_counter += 1
-                test_window.display(f"Auto_step found: {step.raw_string}")
+                test_window.display(f"    Auto_step found:"
+                                    f" {step.raw_string}")
                 if not step:
                     test_window.display("    Found 'None' step, giving up")
                     emw.close()
@@ -386,38 +409,53 @@ async def auto_test(wm: WindowManager):
                 step.user_input = [int(item) if item.isdecimal() else item
                                    for item in step.user_input]
 
-                # For first step:
-                await wm.coordinator.server_task_running.wait()
-
-                if not test_window.step_by_step:
-                    test_window.process_next_step.emit()
-                else:
+                if test_window.step_by_step or \
+                    test_window.exercise_by_exercise and steps_counter == 1:
                     test_window.unfreeze()
+                else:
+                    test_window.process_next_step.emit()
 
+
+            ################
+            # Process step #
+            ################
             elif emission.is_from(test_window.process_next_step):
                 test_window.freeze()
 
-                ################
-                # Process step #
-                ################
-                if proof_complete:
-                    test_window.display(f"Got remaining step for exercise "
-                                        f"{exercise.pretty_name} but proof is"
-                                        " complete", color="red")
-                    break
-                else:
-                    success, msg = emw.simulate_user_action(step)
+                # if proof_complete:
+                #     test_window.display(f"Got remaining step for exercise "
+                #                         f"{exercise.pretty_name} but proof is"
+                #                         " complete", color="red")
+                    # break
+                # else:
 
+                # For first step:
+                await wm.coordinator.server_task_started.wait()
+
+                success, msg = emw.simulate_user_action(step)
                 if not success:
                     test_window.display("    Failing action:")
                 test_window.display(msg)
 
-                if steps_counter == len(auto_steps):
-                    break
+                # ######################
+                # # Testing complete ! #
+                # ######################
+                # if steps_counter == len(auto_steps):
+                #     log.debug("Test complete")
+                #     if test_success is None:
+                #         # Test is successfull if no step failed
+                #         test_success = True
+                #     break
 
     color = COLOR[test_success]
-    test_window.display(f"Auto_test successfull: {test_success}", color=color)
+    test_window.display(f"    Success: {test_success}", color=color)
     reports.insert(0, test_success)
+
+    wm.test_complete.emit()
+    # if not test_window.step_by_step:
+    #     test_window.process_next_exercise.emit()
+    # else:
+    #     test_window.unfreeze()
 
 
 #############
@@ -475,8 +513,9 @@ async def main():
         # Main loop: quit if window is closed by user or if there is no more
         # exercise.
         signals = [wm.proof_complete,
-                   wm.close_exercise_window,
-                   test_window.process_next_exercise]
+                   wm.exercise_window_closed,
+                   test_window.stop_exercise,
+                   wm.test_complete]
         try:
             async with qtrio.enter_emissions_channel(signals=signals) as \
                     emissions:
@@ -489,19 +528,22 @@ async def main():
                 wm.nursery.start_soon(auto_test, wm)
 
                 async for emission in emissions.channel:
-                    if emission.is_from(wm.proof_complete):
-                        test_window.display("Test complete -> next exercise",
-                                            color='blue')
-                    elif emission.is_from(test_window.process_next_exercise):
-                        test_window.display("Test interrupted -> next "
-                                            "exercise", color='blue')
+                    # if emission.is_from(wm.proof_complete):
+                    #     test_window.display("Test complete -> next exercise",
+                    #                         color='blue')
+                    # if emission.is_from(test_window.process_next_exercise):
+                    #     test_window.display("Test interrupted -> next "
+                    #                         "exercise", color='blue')
 
-                    if emission.is_from(wm.proof_complete) \
-                            or emission.is_from(
-                                        test_window.process_next_exercise):
+                    #if emission.is_from(test_window.process_next_exercise) \
+                    if emission.is_from(wm.test_complete):
 
                         test_window.display(f"{len(wm.exercises)} "
                                             f"exercises remaining to test")
+
+                        if test_window.exercise_by_exercise:
+                            # FIXME
+                            pass
 
                         # Close window
                         wm.exercise_window.window_closed.disconnect()
@@ -518,7 +560,7 @@ async def main():
                             test_window.display("No more exercises to test!")
                             break
 
-                    elif emission.is_from(wm.close_exercise_window):
+                    elif emission.is_from(wm.exercise_window_closed):
                         log.info("Exercise window closed")
                         break
 

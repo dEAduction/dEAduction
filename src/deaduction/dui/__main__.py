@@ -191,16 +191,16 @@ class WindowManager(QObject):
     without asking user. Useful for testing.
     """
 
-    close_chooser_window  = Signal()
-    close_exercise_window = Signal()
+    chooser_window_closed  = Signal()
+    exercise_window_closed = Signal()
     server_started        = Signal()
-    proof_complete         = Signal()  # For testing only
+    proof_complete        = Signal()  # For testing only
+    test_complete         = Signal()  # For testing only
 
     def __init__(self, nursery, exercise=None):
         super().__init__()
 
         self.coordinator: Coordinator            = None
-        # self.exercise_window: ExerciseMainWindow = None
         self.chooser_window:  StartCoExStartup   = None
         self.servint:         ServerInterface    = None
         self.test_window:     QTestWindow        = None
@@ -223,6 +223,7 @@ class WindowManager(QObject):
         """
         if not self.servint:
             self.servint = ServerInterface(self.nursery)
+        if not self.servint.lean_server_running.is_set():
             await self.servint.start()
             log.info("Lean server started")
 
@@ -246,7 +247,7 @@ class WindowManager(QObject):
             # Connect signals
             self.chooser_window.exercise_chosen.connect(self.start_exercise)
             self.chooser_window.window_closed.connect(
-                                                self.close_chooser_window)
+                                                self.chooser_window_closed)
             self.chooser_window.quit_deaduction.connect(self.quit_deaduction)
 
             # Show window
@@ -285,7 +286,7 @@ class WindowManager(QObject):
         self.coordinator = Coordinator(self.exercise, self.servint)
 
         # Connect signals
-        self.exercise_window.window_closed.connect(self.close_exercise_window)
+        self.exercise_window.window_closed.connect(self.exercise_window_closed)
         self.exercise_window.change_exercise.connect(self.choose_exercise)
 
         # Show window
@@ -310,7 +311,7 @@ class WindowManager(QObject):
         self.coordinator.test_mode = True
 
         # Connect signals
-        self.exercise_window.window_closed.connect(self.close_exercise_window)
+        self.exercise_window.window_closed.connect(self.exercise_window_closed)
         self.coordinator.proof_no_goals.connect(self.proof_complete)
 
         # Show exercise window
@@ -321,10 +322,10 @@ class WindowManager(QObject):
         if self.exercise_window:
             self.exercise_window.close()
             # Just in case signal is disconnected
-            self.close_exercise_window.emit()
+            self.exercise_window_closed.emit()
         if self.chooser_window:
             self.chooser_window.close()
-            self.close_chooser_window.emit()
+            self.chooser_window_closed.emit()
 
 
 def exercise_from_argv() -> Exercise:
@@ -372,17 +373,17 @@ async def main():
                 wm.start_exercise(exercise)
             # Main loop that just listen to closing windows signals,
             # and quit if there is no more open windows.
-            signals = [wm.close_chooser_window,
-                       wm.close_exercise_window]
+            signals = [wm.chooser_window_closed,
+                       wm.exercise_window_closed]
             async with qtrio.enter_emissions_channel(signals=signals) as \
                     emissions:
                 async for emission in emissions.channel:
-                    log.debug("Signal received")
-                    if emission.is_from(wm.close_chooser_window):
+                    # log.debug("Signal received")
+                    if emission.is_from(wm.chooser_window_closed):
                         # Remember that there is no more chooser window:
                         wm.chooser_window = None
                         log.debug("No more chooser window")
-                    elif emission.is_from(wm.close_exercise_window):
+                    elif emission.is_from(wm.exercise_window_closed):
                         # Remember that there is no more exercise window:
                         wm.coordinator.exercise_window = None
                         log.debug("No more exercise window")
@@ -425,5 +426,9 @@ if __name__ == '__main__':
         deaduction.pylib.config.i18n.init_i18n()
         if ok:
             cvars.save()  # Do not ask next time!
+
+    #################
+    # Run main loop #
+    #################
     qtrio.run(main)
     log.debug("qtrio finished")

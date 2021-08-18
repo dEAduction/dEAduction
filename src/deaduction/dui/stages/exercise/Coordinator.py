@@ -33,7 +33,7 @@ This file is part of d∃∀duction.
 
 import                logging
 import                qtrio
-from trio import      Event as TrioEvent
+import trio
 from copy import      copy, deepcopy
 from pickle import  ( dump, HIGHEST_PROTOCOL )
 
@@ -118,7 +118,8 @@ class Coordinator(QObject):
         # Flags
         self.exercise_solved                = False
         self.test_mode                      = False
-        self.server_task_running            = TrioEvent()
+        self.server_task_started            = trio.Event()
+        self.server_task_closed             = trio.Event()
 
         # Initialization
         self.__connect_signals()
@@ -341,13 +342,12 @@ class Coordinator(QObject):
         tasks = self.servint.nursery.child_tasks
         log.debug(f"{len(tasks)} nursery tasks:")
         log.debug([task.name for task in tasks])
-        # log.debug("Closing server task")
-        # self.close_server_task.emit()
-        # while 'Server task' in [task.name for task in tasks]:
-        #     pass
-        #
-        # log.debug([task.name for task in tasks])
-
+        log.debug("Closing server task")
+        self.close_server_task.emit()
+        # while not self.server_task_closed.is_set():
+        #     trio.sleep(0)  # FIXME: has to be awaited!
+        log.debug([task.name for task in tasks])
+        self.deleteLater()
     ######################################################
     ######################################################
     # ─────────────────── Server task ────────────────── #
@@ -381,7 +381,7 @@ class Coordinator(QObject):
                          self.statement_triggered,
                          self.apply_math_object_triggered,
                          self.close_server_task]) as emissions:
-            self.server_task_running.set()
+            self.server_task_started.set()
             async for emission in emissions.channel:
                 self.statusBar.erase()
                 self.emw.freeze(True)
@@ -447,7 +447,7 @@ class Coordinator(QObject):
                     self.__server_call_statement(emission.args[0])
 
                 elif emission.is_from(self.apply_math_object_triggered):
-                    # Fixme: put in EMW
+                    # Fixme: causes freeze
                     self.emw.double_clicked_item = emission.args[0]
                     # Emulate click on 'apply' button:
                     self.ecw.action_apply_button.animateClick(msec=500)
@@ -457,6 +457,7 @@ class Coordinator(QObject):
                 ###########
                 elif emission.is_from(self.close_server_task):
                     log.debug("Exiting server task's loop")
+                    self.server_task_closed.set()
                     break
 
     ################################################
@@ -701,7 +702,7 @@ class Coordinator(QObject):
         # Display msg_box unless redoing /moving or test mode
         # TODO: add click to MessageBox in test_mode
         if self.test_mode:
-            self.proof_no_goals.emit()
+            self.proof_no_goals.emit()  # FIXME: deprecated
         elif not self.proof_step.is_redo() and not self.proof_step.is_goto():
             title = _('Target solved')
             text = _('The proof is complete!')
@@ -757,6 +758,7 @@ class Coordinator(QObject):
 
     @Slot()
     def process_lean_response(self,
+                              exercise,
                               no_more_goals: bool,
                               analysis: tuple,
                               errors: list):
@@ -778,12 +780,12 @@ class Coordinator(QObject):
         :param errors: list of errors, if non-empty then request has failed.
         """
         log.info("Processing Lean's response")
+        if exercise != self.exercise:
+            log.warning("    not from current exercise, ignoring")
+            return
 
-        if not self.server_task_running.is_set():  # First step
+        if not self.server_task_started.is_set():  # First step
             log.info("First proof step")
-            # tasks = self.servint.nursery.child_tasks
-            # log.debug(f"{len(tasks)} nursery tasks:")
-            # log.debug([task.name for task in tasks])
 
             self.start_server_task()
 

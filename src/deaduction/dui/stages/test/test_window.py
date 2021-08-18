@@ -31,7 +31,7 @@ import logging
 from typing import Union
 from PySide2.QtCore import    ( Qt, Signal, Slot, QSettings )
 from PySide2.QtGui import     ( QColor, QBrush, QKeySequence )
-from PySide2.QtWidgets import (
+from PySide2.QtWidgets import ( QComboBox,
                                 QToolTip,
                                 QApplication,
                                 QWidget,
@@ -49,7 +49,7 @@ class QTestWindow(QWidget):
     """
 
     process_next_step = Signal()
-    process_next_exercise = Signal()
+    stop_exercise = Signal()
 
     def __init__(self):
         super().__init__()
@@ -68,21 +68,28 @@ class QTestWindow(QWidget):
         # Buttons
         btn_layout = QHBoxLayout()
 
-        self.step_by_step_btn = QCheckBox(_("Step by step"))
+        self.mode_btn = QComboBox()
+        self.mode_btn.addItems(['Step by step',
+                                'Exercise by exercise',
+                                'Uninterrupted'])
+        # self.step_by_step_btn = QCheckBox(_("Step by step"))
         self.next_step_button = QPushButton(_("Next step"))
         self.next_step_button.setDefault(True)
-        self.step_by_step_btn.stateChanged.connect(self.enable_next_button)
+        # self.step_by_step_btn.stateChanged.connect(self.enable_next_button)
+        # self.step_by_step_btn.setChecked(True)
+        self.stop_exercise_btn = QPushButton("Stop this test")
+
+        self.mode_btn.currentIndexChanged.connect(self.change_mode)
         self.next_step_button.clicked.connect(self.process_next_step)
-        self.step_by_step_btn.setChecked(True)
-        self.next_exercise_btn = QPushButton("Next exercise")
-        self.next_exercise_btn.clicked.connect(self.process_next_exercise)
+        self.stop_exercise_btn.clicked.connect(self.stop_exercise)
 
         self.scroll_to_end_btn = QCheckBox(_("Scroll to end"))
 
-        btn_layout.addWidget(self.next_exercise_btn)
+        btn_layout.addWidget(self.mode_btn)
         btn_layout.addStretch()
         btn_layout.addWidget(self.scroll_to_end_btn)
-        btn_layout.addWidget(self.step_by_step_btn)
+        # btn_layout.addWidget(self.step_by_step_btn)
+        btn_layout.addWidget(self.stop_exercise_btn)
         btn_layout.addWidget(self.next_step_button)
 
         # Main layout
@@ -102,17 +109,31 @@ class QTestWindow(QWidget):
 
     @property
     def step_by_step(self):
-        return self.step_by_step_btn.isChecked()
+        return self.mode_btn.currentIndex() == 0
+        # return self.step_by_step_btn.isChecked()
+
+    @property
+    def exercise_by_exercise(self):
+        return self.mode_btn.currentIndex() == 1
+
+    @property
+    def uninterrupted(self):
+        return self.mode_btn.currentIndex() == 2
 
     @property
     def txt(self):
         return self.console.toPlainText()
 
-    def enable_next_button(self):
-        yes = self.step_by_step_btn.isChecked()
-        if not yes:
-            self.next_step_button.click()
-        self.next_step_button.setEnabled(yes)
+    @Slot()
+    def change_mode(self):
+        if self.uninterrupted:
+            self.next_step_button.setEnabled(False)
+            self.process_next_step.emit()
+        elif self.exercise_by_exercise:
+            self.next_step_button.setEnabled(True)
+            self.process_next_step.emit()
+        else:
+            self.next_step_button.setEnabled(True)
 
     def display(self, txt, color=None):
         txt += '<br>'
@@ -139,7 +160,7 @@ class QTestWindow(QWidget):
 
     def unfreeze(self):
         self.setEnabled(True)
-        if self.step_by_step:
+        if self.step_by_step or self.exercise_by_exercise:
             self.next_step_button.setEnabled(True)
         else:
             self.next_step_button.setEnabled(False)
