@@ -130,7 +130,6 @@ class ExerciseMainWindow(QMainWindow):
     action_triggered              = Signal(ActionButton)
     apply_math_object_triggered   = Signal(MathObjectWidget)
     statement_triggered           = Signal(StatementsTreeWidgetItem)
-    proof_step_updated              = Signal()
     ui_updated                      = Signal()
 
     def __init__(self, exercise: Exercise):

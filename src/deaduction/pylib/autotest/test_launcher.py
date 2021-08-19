@@ -124,7 +124,6 @@ def exercise_from_pkl(exercise_like, dir_path):
         file_path = exercise_like
 
     [exercise] = pickled_items(file_path)
-    # log.debug(f"Pickled object {type(exercise)}")
     return exercise
 
 
@@ -201,11 +200,16 @@ def get_exercises_from_dir(dir_path: Path):
 
     for exercise_file in test_exercise_files:
         exercise = exercise_from_pkl(exercise_file, None)
+        # Add time
+        exercise.time = exercise_file.stat().st_mtime
         if exercise.refined_auto_steps:
             log.debug(f"Adding {exercise.pretty_name}")
             exercises.append(exercise)
         else:
             log.warning(f"No auto_step found in {exercise.pretty_name}")
+
+    # Sort by reverse time order
+    exercises.sort(key=lambda x: x.time, reverse=True)
 
     return exercises
 
@@ -337,7 +341,7 @@ async def auto_test(wm: WindowManager):
         total_string += ' ' + step.raw_string + ',\n'
     test_window.display(total_string)
 
-    signals = [emw.proof_step_updated,
+    signals = [wm.coordinator.proof_step_updated,
                emw.ui_updated,
                test_window.process_next_step,
                test_window.stop_exercise,
@@ -363,7 +367,8 @@ async def auto_test(wm: WindowManager):
             #######################################
             # Check result of previous proof step #
             #######################################
-            if emission.is_from(emw.proof_step_updated) and steps_counter:
+            if emission.is_from(wm.coordinator.proof_step_updated) \
+                    and steps_counter:
                 step = auto_steps[steps_counter-1]
                 report, step_success = emw.displayed_proof_step.compare(step)
                 if not step_success:
@@ -377,17 +382,18 @@ async def auto_test(wm: WindowManager):
                 report = f"Step {steps_counter}: " + report
                 if not emw.displayed_proof_step.success_msg \
                         and emw.displayed_proof_step.button \
-                        and not emw.displayed_proof_step.button.is_cqfd() \
+                        and not emw.displayed_proof_step.is_cqfd \
                         and not emw.displayed_proof_step.is_error():
                     report += "(no success msg)"
                 reports.append(report)
-                msg = emw.displayed_proof_step.success_msg
-                if msg:
-                    test_window.display(msg)
-                elif emw.displayed_proof_step.is_error:
-                    msg = emw.displayed_proof_step.error_mgs
-                    test_window.display(msg, color='red')
-
+                # msg = emw.displayed_proof_step.success_msg
+                # if msg:
+                #     test_window.display(msg)
+                # elif emw.displayed_proof_step.is_error():
+                #     msg = emw.displayed_proof_step.error_mgs
+                #     test_window.display(msg, color='red')
+                if report.find("Success with") == -1:
+                    test_window.display(report, color='red')
             ###########################
             # Prepare next proof step #
             ###########################
