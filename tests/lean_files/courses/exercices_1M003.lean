@@ -7,6 +7,7 @@ import data.real.basic
 -- dEAduction imports
 import structures2
 import compute
+import utils
 
 -- import definitions
 -- import notations_definitions

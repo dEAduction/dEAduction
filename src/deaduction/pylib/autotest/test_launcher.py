@@ -386,12 +386,6 @@ async def auto_test(wm: WindowManager):
                         and not emw.displayed_proof_step.is_error():
                     report += "(no success msg)"
                 reports.append(report)
-                # msg = emw.displayed_proof_step.success_msg
-                # if msg:
-                #     test_window.display(msg)
-                # elif emw.displayed_proof_step.is_error():
-                #     msg = emw.displayed_proof_step.error_mgs
-                #     test_window.display(msg, color='red')
                 if report.find("Success with") == -1:
                     test_window.display(report, color='red')
             ###########################

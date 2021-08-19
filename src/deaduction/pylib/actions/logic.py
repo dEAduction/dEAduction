@@ -914,7 +914,7 @@ def action_forall(proof_step,
                                        info={'name': item},
                                        children=[],
                                        math_type=None)
-            selected_objects.insert_at(0, potential_var)
+            selected_objects.insert(0, potential_var)
             # Now len(l) == 2
     # From now on len(l) ≥ 2
     # Search for a universal property among l, beginning with last item
