@@ -322,7 +322,6 @@ async def auto_test(wm: WindowManager):
     processing to the next exercise to be tested.
     """
 
-    # Auto-steps loop
     exercise = wm.exercise
     emw = wm.exercise_window
     test_window = wm.test_window
@@ -333,7 +332,6 @@ async def auto_test(wm: WindowManager):
 
     test_window.display(f"Testing exercise {exercise.pretty_name}",
                         color='blue')
-    # test_window.display('auto_steps:')
     total_string = '    Steps:'
     for step in auto_steps:
         total_string += ' ' + step.raw_string + ',\n'
@@ -358,10 +356,14 @@ async def auto_test(wm: WindowManager):
             elif emission.is_from(test_window.stop_exercise):
                 test_window.display("Test interrupted", color='red')
                 break
+
+            if test_window.is_suspended:
+                # Ignore signals
+                continue
             #######################################
             # Check result of previous proof step #
             #######################################
-            elif emission.is_from(emw.proof_step_updated) and steps_counter:
+            if emission.is_from(emw.proof_step_updated) and steps_counter:
                 step = auto_steps[steps_counter-1]
                 report, step_success = emw.displayed_proof_step.compare(step)
                 if not step_success:
@@ -379,6 +381,12 @@ async def auto_test(wm: WindowManager):
                         and not emw.displayed_proof_step.is_error():
                     report += "(no success msg)"
                 reports.append(report)
+                msg = emw.displayed_proof_step.success_msg
+                if msg:
+                    test_window.display(msg)
+                elif emw.displayed_proof_step.is_error:
+                    msg = emw.displayed_proof_step.error_mgs
+                    test_window.display(msg, color='red')
 
             ###########################
             # Prepare next proof step #
@@ -421,14 +429,6 @@ async def auto_test(wm: WindowManager):
             ################
             elif emission.is_from(test_window.process_next_step):
                 test_window.freeze()
-
-                # if proof_complete:
-                #     test_window.display(f"Got remaining step for exercise "
-                #                         f"{exercise.pretty_name} but proof is"
-                #                         " complete", color="red")
-                    # break
-                # else:
-
                 # For first step:
                 await wm.coordinator.server_task_started.wait()
 
@@ -437,25 +437,14 @@ async def auto_test(wm: WindowManager):
                     test_window.display("    Failing action:")
                 test_window.display(msg)
 
-                # ######################
-                # # Testing complete ! #
-                # ######################
-                # if steps_counter == len(auto_steps):
-                #     log.debug("Test complete")
-                #     if test_success is None:
-                #         # Test is successfull if no step failed
-                #         test_success = True
-                #     break
-
+    ##################
+    # End of testing #
+    ##################
     color = COLOR[test_success]
     test_window.display(f"    Success: {test_success}", color=color)
     reports.insert(0, test_success)
 
     wm.test_complete.emit()
-    # if not test_window.step_by_step:
-    #     test_window.process_next_exercise.emit()
-    # else:
-    #     test_window.unfreeze()
 
 
 #############

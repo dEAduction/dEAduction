@@ -66,31 +66,35 @@ class QTestWindow(QWidget):
         self.console.setLineWrapMode(QTextEdit.NoWrap)
 
         # Buttons
-        btn_layout = QHBoxLayout()
-
+        self.suspend_btn = QCheckBox('Suspend')
         self.mode_btn = QComboBox()
         self.mode_btn.addItems(['Step by step',
                                 'Exercise by exercise',
                                 'Uninterrupted'])
-        # self.step_by_step_btn = QCheckBox(_("Step by step"))
         self.next_step_button = QPushButton(_("Next step"))
-        self.next_step_button.setDefault(True)
-        # self.step_by_step_btn.stateChanged.connect(self.enable_next_button)
-        # self.step_by_step_btn.setChecked(True)
         self.stop_exercise_btn = QPushButton("Stop this test")
+        self.scroll_to_end_btn = QCheckBox(_("Scroll to end"))
 
+        # Btns signals
+        self.suspend_btn.stateChanged.connect(self.change_suspension)
         self.mode_btn.currentIndexChanged.connect(self.change_mode)
         self.next_step_button.clicked.connect(self.process_next_step)
         self.stop_exercise_btn.clicked.connect(self.stop_exercise)
 
-        self.scroll_to_end_btn = QCheckBox(_("Scroll to end"))
+        # Btns layout
+        btn_status_layout = QVBoxLayout()
+        btn_status_layout.addWidget(self.scroll_to_end_btn)
+        btn_status_layout.addWidget(self.suspend_btn)
+        btn_status_layout.addWidget(self.mode_btn)
 
-        btn_layout.addWidget(self.mode_btn)
+        btn_process_layout = QVBoxLayout()
+        btn_process_layout.addWidget(self.stop_exercise_btn)
+        btn_process_layout.addWidget(self.next_step_button)
+
+        btn_layout = QHBoxLayout()
+        btn_layout.addLayout(btn_status_layout)
         btn_layout.addStretch()
-        btn_layout.addWidget(self.scroll_to_end_btn)
-        # btn_layout.addWidget(self.step_by_step_btn)
-        btn_layout.addWidget(self.stop_exercise_btn)
-        btn_layout.addWidget(self.next_step_button)
+        btn_layout.addLayout(btn_process_layout)
 
         # Main layout
         main_layout = QVBoxLayout()
@@ -121,19 +125,39 @@ class QTestWindow(QWidget):
         return self.mode_btn.currentIndex() == 2
 
     @property
+    def is_suspended(self):
+        return self.suspend_btn.isChecked()
+
+    @property
     def txt(self):
         return self.console.toPlainText()
 
     @Slot()
+    def change_suspension(self):
+        if self.is_suspended:
+            for btn in (self.next_step_button,
+                        self.mode_btn):
+                btn.setEnabled(False)
+        else:
+            for btn in (self.next_step_button,
+                        self.mode_btn):
+                btn.setEnabled(True)
+
+    @Slot()
     def change_mode(self):
         if self.uninterrupted:
+            self.mode_btn.setEnabled(True)
             self.next_step_button.setEnabled(False)
             self.process_next_step.emit()
         elif self.exercise_by_exercise:
+            self.mode_btn.setEnabled(True)
             self.next_step_button.setEnabled(True)
+            self.next_step_button.setDefault(True)
             self.process_next_step.emit()
         else:
+            self.mode_btn.setEnabled(True)
             self.next_step_button.setEnabled(True)
+            self.next_step_button.setDefault(True)
 
     def display(self, txt, color=None):
         txt += '<br>'
@@ -141,13 +165,7 @@ class QTestWindow(QWidget):
             intro = f'<font color="{color}">'
             outro = '</font>'
             txt = intro + txt + outro
-            # self.console.setStyleSheet(f"background-color: {color};")
         self.console.insertHtml(txt)
-        # else:
-        #     self.console.insertPlainText(txt)
-        # self.txt_for_console += '\n' + txt
-        # self.console.setText(self.txt_for_console)
-        # dy = txt.count('\n')
         if self.scroll_to_end_btn.isChecked():
             self.console.ensureCursorVisible()
 
@@ -162,6 +180,7 @@ class QTestWindow(QWidget):
         self.setEnabled(True)
         if self.step_by_step or self.exercise_by_exercise:
             self.next_step_button.setEnabled(True)
+            self.next_step_button.setDefault(True)
         else:
             self.next_step_button.setEnabled(False)
 
