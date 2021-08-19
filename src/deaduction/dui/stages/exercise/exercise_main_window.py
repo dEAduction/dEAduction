@@ -573,7 +573,7 @@ class ExerciseMainWindow(QMainWindow):
         if not self.current_selection:
             self.process_target_click(None)
 
-    async def simulate(self, proof_step: ProofStep):
+    async def simulate(self, proof_step: ProofStep, duration=0.4):
         """
         This method simulate proof_step by selecting the selection and
         checking button or statement stored in proof_step. This is called
@@ -586,16 +586,17 @@ class ExerciseMainWindow(QMainWindow):
         # Check button or statement
         if isinstance(proof_step.button, ActionButton):
             self.ecw.freeze(False)
-            await proof_step.button.simulate(duration=0.4)
+            await proof_step.button.simulate(duration=duration)
             self.ecw.freeze(self.freezed)
         elif isinstance(proof_step.statement_item, StatementsTreeWidgetItem):
-            await proof_step.statement_item.simulate(duration=0.4)
+            await proof_step.statement_item.simulate(duration=duration)
         # # Light off selection synchronously
         # for item in self.ecw.props_wgt.items:
         #     item.mark_user_selected(False)
 
-    async def simulate_user_action(self, user_action: UserAction) -> (bool,
-                                                                     str):
+    async def simulate_user_action(self,
+                                   user_action: UserAction,
+                                   duration=0.4) -> (bool, str):
         """
         Simulate user_action as if buttons were actually pressed.
         Return True if the simulation was actually performed.
@@ -628,8 +629,10 @@ class ExerciseMainWindow(QMainWindow):
             msg += f"    -> click on button {button}"
             action_button = self.contextualised_button(button)
             if action_button:
+                self.ecw.freeze(False)
+                await action_button.simulate(duration=duration)
                 action_button.click()
-                await action_button.simulate(duration=0.4)
+                self.ecw.freeze(self.freezed)
                 return True, msg
             else:
                 return False, f"No button match {button}"

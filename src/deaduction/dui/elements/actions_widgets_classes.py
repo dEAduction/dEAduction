@@ -347,13 +347,16 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
     def has_pretty_name(self, pretty_name: str) -> bool:
         return self.statement.pretty_name == pretty_name
 
-    async def simulate(self, duration=0.3, winkle_nb=2):
+    async def simulate(self, duration=0.3, winkle_nb=2, expand=True):
         """
         This method simulate user selecting statement. It is asynchronous
         since we must wait a small duration so that the checking is visible.
         This is called when redoing.
         :param duration: total duration
         """
+        if expand:
+            self.setExpanded(expand)
+            self.treeWidget().scrollToItem(self)
         duration = duration /(3*winkle_nb)
         for n in range(winkle_nb):
             self.setBackground(0, QBrush(QColor('blue')))
