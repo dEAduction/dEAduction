@@ -271,7 +271,6 @@ class ExerciseMainWindow(QMainWindow):
         window = ConfigMainWindow(parent=self)
         window.applied.connect(self.apply_new_settings)
         window.show()
-        # window.exec_()
 
     @Slot()
     def apply_new_settings(self, modified_settings):
@@ -477,6 +476,10 @@ class ExerciseMainWindow(QMainWindow):
     def statement_triggered_filter(self, item: Union[StatementsTreeWidgetItem,
                                                      StatementsTreeWidgetNode]
                                    ):
+        """
+        Emit statement_triggered iff the clicked item is not a node,
+        i.e. corresponds to a statement.
+        """
         if isinstance(item, StatementsTreeWidgetItem):
             self.statement_triggered.emit(item)
 
@@ -498,7 +501,9 @@ class ExerciseMainWindow(QMainWindow):
             self.statusBar.cancel_pending_msgs()
 
     def history_button_unfreeze(self, at_beginning, at_end):
-        # Required because history is always changed with signals
+        """
+        Unfreeze the relevant history btns.
+        """
         self.toolbar.undo_action.setEnabled(not at_beginning)
         self.toolbar.rewind.setEnabled(not at_beginning)
         self.toolbar.redo_action.setEnabled(not at_end)
@@ -580,10 +585,13 @@ class ExerciseMainWindow(QMainWindow):
 
     async def simulate(self, proof_step: ProofStep, duration=0.4):
         """
-        This method simulate proof_step by selecting the selection and
+        Simulate proof_step by selecting the selection and
         checking button or statement stored in proof_step. This is called
-        when redoing. Note that the corresponding actions are NOT called,
-        since this would modify history of the lean_file.
+        when redoing, but also when processing automatic actions, or testing.
+        Note that contrarily to what happens in self.simulate_user_action,
+        the corresponding actions are NOT processed,
+        since this would modify history of the lean_file which is not what
+        we want when redoing.
         The method is asynchronous because we wait for the button blinking.
         """
 
@@ -595,16 +603,14 @@ class ExerciseMainWindow(QMainWindow):
             self.ecw.freeze(self.freezed)
         elif isinstance(proof_step.statement_item, StatementsTreeWidgetItem):
             await proof_step.statement_item.simulate(duration=duration)
-        # # Light off selection synchronously
-        # for item in self.ecw.props_wgt.items:
-        #     item.mark_user_selected(False)
 
     async def simulate_user_action(self,
                                    user_action: UserAction,
                                    duration=0.4) -> (bool, str):
         """
         Simulate user_action as if buttons were actually pressed.
-        Return True if the simulation was actually performed.
+        Return True if the simulation was actually performed, and Flase with
+        a detailed msg if not (useful for testing).
         """
         log.debug("Simulating user action...")
         msg = ""
@@ -669,7 +675,6 @@ class ExerciseMainWindow(QMainWindow):
         self.lean_editor.code_set(lean_file_content)
 
     def display_current_goal_solved(self, delta):
-        # FIXME: connect slot!!
         proof_step = self.lean_file.current_proof_step
         if proof_step.current_goal_number and not self.test_mode \
                 and self.lean_file.current_number_of_goals \
@@ -709,7 +714,7 @@ class ExerciseMainWindow(QMainWindow):
             powt.delete_and_insert(proof_step)
 
     def process_wrong_user_input(self):
-        self.empty_current_selection()
+        self.empty_current_selection()  # That's it?? Is this even useful??
 
     def update_goal(self, new_goal: Optional[Goal]):
         """

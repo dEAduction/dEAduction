@@ -501,8 +501,9 @@ class Coordinator(QObject):
                     # Fixme: causes freeze - no more double click
                     self.emw.double_clicked_item = emission.args[0]
                     # Emulate click on 'apply' button:
-                    self.ecw.action_apply_button.animateClick(msec=500)
-
+                    self.emw.freeze(False)
+                    if self.ecw.action_apply_button:
+                        self.ecw.action_apply_button.animateClick(msec=500)
     ################################################
     # Actions that send code to Lean (via servint) #
     ################################################

@@ -166,6 +166,8 @@ class ExerciseCentralWidget(QWidget):
                          if button.action.run == action_apply]
         if apply_buttons:
             self.action_apply_button = apply_buttons[0]
+        else:
+            self.action_apply_button = None
 
         statements           = exercise.available_statements
         outline              = exercise.course.outline
