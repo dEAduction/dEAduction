@@ -194,7 +194,7 @@ class WindowManager(QObject):
     chooser_window_closed  = Signal()
     exercise_window_closed = Signal()
     server_started        = Signal()
-    proof_complete        = Signal()  # For testing only
+    # proof_complete        = Signal()  # For testing only
     test_complete         = Signal()  # For testing only
 
     def __init__(self, nursery, exercise=None):
@@ -269,9 +269,11 @@ class WindowManager(QObject):
         if self.exercise_window:
             # Close window but do not tell main() since a new exercise
             # window will be launched immediately!!
-            self.exercise_window.window_closed.disconnect()
-            self.exercise_window.close()
-
+            try:
+                self.exercise_window.window_closed.disconnect()
+                self.exercise_window.close()
+            except RuntimeError:
+                pass
         # Do start exercise!
         self.solve_exercise()
 
@@ -312,7 +314,7 @@ class WindowManager(QObject):
 
         # Connect signals
         self.exercise_window.window_closed.connect(self.exercise_window_closed)
-        self.coordinator.proof_no_goals.connect(self.proof_complete)
+        # self.coordinator.proof_no_goals.connect(self.proof_complete)
 
         # Show exercise window
         self.exercise_window.show()

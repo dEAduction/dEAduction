@@ -332,8 +332,6 @@ class Course:
 
     @property
     def ips_path(self):
-        # return  cdirs.all_courses_ipf_dir / \
-        #         str(self.relative_course_path.stem) + '.pkl'
         return  cdirs.all_courses_ipf_dir / \
                 self.relative_course_path.with_suffix('.pkl').name
 
@@ -345,8 +343,8 @@ class Course:
 
     def load_initial_proof_states(self):
         """
-        Return the list of initial proof states of the course's
-            statements. Each ips is either None or the actual ips.
+        Search ips from a .pkl file in the self.ips_path directory,
+        and assign them as attributes of the corresponding statements.
 
         To achieve this we Load a dictionary with
             keys    = course_hash
@@ -358,12 +356,11 @@ class Course:
         """
         courses_ips_dic: dict = load_object(self.ips_path)
         if courses_ips_dic:
-            return courses_ips_dic.get(self.course_hash)
+            ips_list = courses_ips_dic.get(self.course_hash)
         else:
-            return None
+            ips_list = None
 
-    def set_initial_proof_states(self):
-        ips_list = self.load_initial_proof_states()
+        # ips_list = self.load_initial_proof_states()
         if ips_list:
             log.debug(f"Set initial proof states for "
                       f"{self.relative_course_path}")

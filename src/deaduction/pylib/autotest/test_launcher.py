@@ -176,9 +176,14 @@ def get_exercises_from_dir(dir_path: Path):
                          if file.suffix == '.lean'
                          and file.name.startswith('test')]
 
+    test_course_files.sort(key = (lambda x: x.stat().st_mtime))
+
     test_exercise_files = [file for file in dir_path.iterdir()
                            if file.suffix == '.pkl'
                            and file.name.startswith('test_exercise')]
+
+    test_exercise_files.sort(key = (lambda x: x.stat().st_mtime),
+                             reverse=True)
 
     nb_files = len(test_course_files) + len(test_exercise_files)
     log.info(f"looking for deaduction test files in {dir_path.name}")
@@ -198,19 +203,21 @@ def get_exercises_from_dir(dir_path: Path):
               f"course")
         exercises.extend(exo_for_this_course)
 
+    exercises_pkl = []
     for exercise_file in test_exercise_files:
         exercise = exercise_from_pkl(exercise_file, None)
         # Add time
         exercise.time = exercise_file.stat().st_mtime
         if exercise.refined_auto_steps:
             log.debug(f"Adding {exercise.pretty_name}")
-            exercises.append(exercise)
+            exercises_pkl.append(exercise)
         else:
             log.warning(f"No auto_step found in {exercise.pretty_name}")
 
     # Sort by reverse time order
-    exercises.sort(key=lambda x: x.time, reverse=True)
+    # exercises_pkl.sort(key=lambda x: x.time, reverse=True)
 
+    exercises = exercises_pkl + exercises
     return exercises
 
 
@@ -330,7 +337,7 @@ async def auto_test(wm: WindowManager):
     emw = wm.exercise_window
     test_window = wm.test_window
     auto_steps = exercise.refined_auto_steps
-    proof_complete =False
+    # proof_complete =False
 
     log.info(f"Testing exercise {exercise.pretty_name}")
 
@@ -344,8 +351,8 @@ async def auto_test(wm: WindowManager):
     signals = [wm.coordinator.proof_step_updated,
                emw.ui_updated,
                test_window.process_next_step,
-               test_window.stop_exercise,
-               wm.proof_complete]
+               test_window.stop_exercise]
+               # wm.proof_complete]
     test_success = None
     steps_counter = 0
     async with qtrio.enter_emissions_channel(signals=signals) as \
@@ -353,11 +360,11 @@ async def auto_test(wm: WindowManager):
         reports = [f'Exercise {exercise.pretty_name}']
         wm.report.append(reports)
         async for emission in emissions.channel:
-            #
-            if emission.is_from(wm.proof_complete):
-                proof_complete = True
 
-            elif emission.is_from(test_window.stop_exercise):
+            # if emission.is_from(wm.proof_complete):
+            #     proof_complete = True
+
+            if emission.is_from(test_window.stop_exercise):
                 test_window.display("Test interrupted", color='red')
                 break
 
@@ -501,10 +508,9 @@ async def main():
 
         # Main loop: quit if window is closed by user or if there is no more
         # exercise.
-        signals = [wm.proof_complete,
-                   wm.exercise_window_closed,
+        signals = [wm.exercise_window_closed,
                    test_window.stop_exercise,
-                   wm.test_complete]
+                   wm.test_complete]  #  wm.proof_complete,
         try:
             async with qtrio.enter_emissions_channel(signals=signals) as \
                     emissions:

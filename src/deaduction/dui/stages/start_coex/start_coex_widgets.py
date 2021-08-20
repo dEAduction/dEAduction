@@ -332,7 +332,7 @@ class CourseChooser(AbstractCoExChooser):
         """
         # Load stored initial proof states
         # log.debug("Setting initial proof states")
-        course.set_initial_proof_states()
+        course.load_initial_proof_states()
 
         # Get missing ips
         remaining_statements = [st for st in course.statements if not

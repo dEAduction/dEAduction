@@ -67,7 +67,6 @@ global _
 
 
 class ExerciseMainWindow(QMainWindow):
-    # TODO: explain better communication and who talks to who?
     """
     This class is responsible for managing the whole interface for exercises.
     The communication with a so-called server interface, a middle man
@@ -84,6 +83,7 @@ class ExerciseMainWindow(QMainWindow):
         2. detects when an action button (in self.ecw.logic_btns or
            in self.ecw.proof_btns) or a statement (in
            self.ecw.statements_tree) is clicked on;
+
         Then the Coordinator class is responsible for handling the next steps:
         3. sends (the current goal, current selection) and ((clicked
            action button (with self.__server_call_action)) xor (clicked
@@ -124,19 +124,18 @@ class ExerciseMainWindow(QMainWindow):
         lean_file and may be retrieved using the logically_previous_proof_step
          property.
     """
-
-    window_closed                   = Signal()
-    change_exercise                 = Signal()
-    action_triggered              = Signal(ActionButton)
-    apply_math_object_triggered   = Signal(MathObjectWidget)
-    statement_triggered           = Signal(StatementsTreeWidgetItem)
-    ui_updated                      = Signal()
+    # Signals for WindowManager and testing:
+    window_closed                = Signal()
+    change_exercise              = Signal()
+    ui_updated                   = Signal()
+    # User action signals:
+    action_triggered             = Signal(ActionButton)
+    apply_math_object_triggered  = Signal(MathObjectWidget)
+    statement_triggered          = Signal(StatementsTreeWidgetItem)
 
     def __init__(self, exercise: Exercise):
         """
-        Init self with an instance of the exercise class and an instance of the
-        class ServerInterface. Both those instances are created in
-        deaduction.dui.__main__.py. See self.__doc__.
+        Init self with an instance of the exercise class. See self.__doc__.
         """
 
         super().__init__()
@@ -179,10 +178,10 @@ class ExerciseMainWindow(QMainWindow):
         if settings.value("emw/Geometry"):
             self.restoreGeometry(settings.value("emw/Geometry"))
 
-        self.close_coordinator = None  # Method set up in Coordinator
+        self.close_coordinator = None  # Method set up by Coordinator
 
         self.__connect_signals()
-        self.freeze()
+        self.freeze()  # Wait for data before allowing user actions.
 
     #######################
     # Init /close methods #
@@ -190,7 +189,7 @@ class ExerciseMainWindow(QMainWindow):
 
     def __connect_signals(self):
         """
-        Connect all signals. Called at init and sever update.
+        Connect all signals. Called at init.
         """
         # Actions area
         for action_button in self.ecw.actions_buttons:
@@ -209,8 +208,7 @@ class ExerciseMainWindow(QMainWindow):
     def __init_menubar(self):
         """
         Create ExerciseMainWindow's menubar. Relevant classes are MenuBar,
-        MenuBarAction and MenuBarMenu, from deaduction.dui.elements. This is
-        done is this function in order not to bloat __init__.
+        MenuBarAction and MenuBarMenu, from deaduction.dui.elements.
         """
         # ─────────────────────── QActions ─────────────────────── #
         preferences = MenuBarAction(self, _("Preferences"))
@@ -244,6 +242,8 @@ class ExerciseMainWindow(QMainWindow):
         :param event: Some Qt mandatory thing.
         """
         log.info("Closing ExerciseMainWindow")
+
+        # Close children
         self.lean_editor.close()
         self.proof_outline_window.close()
 
@@ -254,7 +254,9 @@ class ExerciseMainWindow(QMainWindow):
         if self.close_coordinator:
             # Set up by Coordinator
             self.close_coordinator()
+
         self.window_closed.emit()
+
         super().closeEvent(event)
         self.deleteLater()
 
@@ -263,14 +265,18 @@ class ExerciseMainWindow(QMainWindow):
     ##################
 
     def open_config_window(self):
+        """
+        Open the preference window.
+        """
         window = ConfigMainWindow(parent=self)
         window.applied.connect(self.apply_new_settings)
-        window.exec_()
+        window.show()
+        # window.exec_()
 
     @Slot()
     def apply_new_settings(self, modified_settings):
         """
-        This is where ui is updated when preferences are modified.
+        This is where UI is updated when preferences are modified.
         """
         log.debug("New settings: ")
         log.debug(modified_settings)
@@ -600,7 +606,6 @@ class ExerciseMainWindow(QMainWindow):
         Simulate user_action as if buttons were actually pressed.
         Return True if the simulation was actually performed.
         """
-        # TODO: make this async for visual simulation. Freeze first!
         log.debug("Simulating user action...")
         msg = ""
         msg += f"    -> selection = {user_action.selection}"

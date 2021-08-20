@@ -76,7 +76,7 @@ CONFIGS["Display"] = [
     # ("display.context_font_size", None, True),
     # ('display.tooltips_font_size', None, True),
     # ('display.mathematics_font', None, True),
-    ('display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL', None, True)
+    ('display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL', None, False)
                       ]
 
 CONFIGS["Logic"] = [
