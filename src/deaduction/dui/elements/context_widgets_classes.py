@@ -40,7 +40,8 @@ from pathlib import Path
 from typing  import Tuple
 
 from PySide2.QtCore    import ( Signal,
-                                Slot)
+                                Slot,
+                                Qt)
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
                                 QIcon,
@@ -131,6 +132,7 @@ class MathObjectWidgetItem(QListWidgetItem):
     _TagIcon.__doc__.
 
     :attribute mathobject MathObject: The instance of the class
+    :attribute mathobject MathObject: The instance of the class
         one wants to display and keep as an attribute.
     :attribute tag str: The current tag (e.g. '+', '=' or '≠', see
         _TagIcon) of mathobject.
@@ -150,11 +152,12 @@ class MathObjectWidgetItem(QListWidgetItem):
         self.mathobject = mathobject
         self.tag        = tag
         self.label       = QLabel()
-
+        # self.label.setTextFormat(Qt.RichText)
         lean_name = mathobject.to_display()
+        lean_name = "<div style='color:Blue;'>" + lean_name + "</div>"
         math_expr = mathobject.math_type.to_display(is_math_type=True)
+        math   = "<div style='color:Red;'>" + math_expr + "</div>"
         caption   = f'{lean_name} : {math_expr}'
-        caption   = "\div {font color:'blue'} " + caption + "/div"
         self.label.setText(caption)
         self.setIcon(_TagIcon(tag))
         # set tool_tips (merge several tool_tips if needed)
@@ -192,8 +195,9 @@ class MathObjectWidgetItem(QListWidgetItem):
 
         # TODO: change color for double-click
 
-        self.setBackground(QBrush(QColor('limegreen')) if yes else QBrush())
-
+        # self.setBackground(QBrush(QColor('limegreen')) if yes else QBrush())
+        self.label.setStyleSheet("background-color: limegreen" if yes
+                                 else "background-color: white")
     def has_math_object(self, math_object: MathObject) -> bool:
         return self.mathobject is MathObject
 
