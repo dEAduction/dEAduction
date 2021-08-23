@@ -88,13 +88,23 @@ def give_local_name(math_type: MathObject,
     :return:                str, a name for the new variable
     """
 
-    additional_forbidden_vars = body.extract_local_vars()
+    more_forbidden_vars = body.extract_local_vars()
     names = [var.info['name'] for var in forbidden_vars]
     # log.debug(f'Giving name to bound var, a priori forbidden names ={names}')
-    more_names = [var.info['name'] for var in additional_forbidden_vars]
+    more_names = [var.info['name'] for var in more_forbidden_vars]
     # log.debug(f'Additional forbidden names ={more_names}')
-    forbidden_vars.extend(additional_forbidden_vars)
-    return give_name(math_type, forbidden_vars, hints)
+    forbidden_vars.extend(more_forbidden_vars)
+
+    exclude_glob_vars = cvars.get(
+                                'logic.do_not_name_dummy_vars_as_global_vars',
+                                 False)
+    if exclude_glob_vars:
+        pass
+        # FIXME: proof_stap is not available here!
+        # more_forbidden_vars = proof_step.goal.extract_vars()
+        # forbidden_vars.extend(more_forbidden_vars)
+    use_indices = cvars.get('logic.use_indices_for_dummy_variables', True)
+    return give_name(math_type, forbidden_vars, hints, None, use_indices)
 
 
 def give_global_name(math_type: MathObject,
@@ -116,7 +126,8 @@ def give_global_name(math_type: MathObject,
 def give_name(math_type,
               forbidden_vars: [MathObject],
               hints: [str]=[],
-              proof_step=None) -> str:
+              proof_step=None,
+              use_indices=False) -> str:
     """
     Provide a name for a new variable.
     Roughly speaking,
@@ -189,10 +200,10 @@ def give_name(math_type,
         # Each hint is one lowercase letter
 
     # Lower case: add main hint
-    # fixme: in some case main hint must be added in pole position,
-    #  but not always...
     # according to math_type's name
     # e.g. math_type is "X" -> hint[0] = 'x'
+    # fixme: in some case main hint must be added in pole position,
+    #  but not always...
     if (not upper_case_name) and 'name' in math_type.info:
         type_name = math_type.info["name"]
         if type_name[0] in alphabet_upper:
@@ -212,6 +223,17 @@ def give_name(math_type,
     for standard_hint in standard_hints:
         insert_maybe(hints, standard_hint)
 
+    ###########################
+    # Easy case : use indices #
+    ###########################
+    if use_indices and hints:
+        radical = hints[0]
+        subscript = -1
+        potential_name = radical  # Start with no index!
+        while potential_name in forbidden_names:
+            subscript += 1
+            potential_name = radical + '_' + str(subscript)
+        return potential_name
     ##########################################################
     # First trial: use hints, maybe with primes if permitted #
     ##########################################################
@@ -219,8 +241,7 @@ def give_name(math_type,
         # Try each hints successively
         # log.debug(f"trying {potential_name}...")
         if potential_name not in forbidden_names:
-            new_name = potential_name
-            return new_name
+            return potential_name
         # If hint = "x" and this is already the name of a variable with the
         # same math_type as the variable we want to name,
         # then try to use "x'"

@@ -497,13 +497,17 @@ def display_constant(math_object, format_) -> list:
     :param format_:
     :return:            'display' list
     """
-    display = [math_object.display_name]  # generic case
+    name = math_object.display_name
+    display = [name]  # generic case
     if hasattr(math_object.math_type, "node"):
         if math_object.math_type.node == "SET_FAMILY":
-            display = display_set_family(math_object, format_)
+            return display_set_family(math_object, format_)
         elif math_object.math_type.node == "SEQUENCE":
-            display = display_sequence(math_object, format_)
-
+            return display_sequence(math_object, format_)
+    # Displaying some subscript
+    if name.count('_') == 1:
+        radical, subscript = name.split('_')
+        display = [radical, '_', subscript]
     return display
 
 
