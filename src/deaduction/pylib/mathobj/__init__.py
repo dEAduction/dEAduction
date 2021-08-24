@@ -26,23 +26,22 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .MathObject import     (MathObject,
-                             # PatternMathObject,
-                             MissingImplicitDefinition,
-                             NO_MATH_TYPE,
-                             NUMBER_SETS_LIST,
-                             HAVE_BOUND_VARS)
+from .MathObject import          (MathObject,
+                                  # MissingImplicitDefinition,
+                                  NO_MATH_TYPE,
+                                  NUMBER_SETS_LIST,
+                                  HAVE_BOUND_VARS)
+from .context_math_object import  ContextMathObject
 from .pattern_math_objects import PatternMathObject
-from .proof_state import    (Goal,
-                             ProofState
-                             )
-from .proof_step import     (Proof,
-                             ProofStep,
-                             NewGoal)
+from .proof_state import         (Goal,
+                                  ProofState)
+from .proof_step import          (Proof,
+                                  ProofStep,
+                                  NewGoal)
 
-from .give_name import     (get_new_hyp,
-                            give_global_name,
-                            give_local_name,
-                            )
+from .give_name import           (get_new_hyp,
+                                  give_global_name,
+                                  give_local_name)
 
-from .lean_analysis import lean_expr_with_type_grammar, LeanEntryVisitor
+from .lean_analysis import       (lean_expr_with_type_grammar,
+                                  LeanEntryVisitor)

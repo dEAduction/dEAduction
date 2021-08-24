@@ -42,7 +42,7 @@ import deaduction.pylib.config.vars      as     cvars
 from deaduction.pylib.coursedata        import  Exercise, UserAction
 from deaduction.pylib.mathobj           import (MathObject,
                                                 PatternMathObject,
-                                                MissingImplicitDefinition,
+                                                #MissingImplicitDefinition,
                                                 Goal,
                                                 ProofState,
                                                 ProofStep)
@@ -732,10 +732,10 @@ class ExerciseMainWindow(QMainWindow):
             return
 
         # Get previous goal and set tags
-        if self.logically_previous_proof_step:
-            # Fixme: not when undoing history ?
-            previous_goal = self.logically_previous_proof_step.goal
-            Goal.compare(new_goal, previous_goal)  # Set tags
+        # if self.logically_previous_proof_step:
+        #     # Fixme: not when undoing history ?
+        #     previous_goal = self.logically_previous_proof_step.goal
+        #     Goal.compare(new_goal, previous_goal)  # Set tags
 
         # Reset current context selection
         # Here we do not use empty_current_selection since Widgets may have

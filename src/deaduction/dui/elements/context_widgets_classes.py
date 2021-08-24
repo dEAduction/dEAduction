@@ -53,7 +53,8 @@ from PySide2.QtWidgets import ( QHBoxLayout,
                                 QListWidgetItem)
 
 # from   deaduction.pylib.config.i18n      import   _
-from   deaduction.pylib.mathobj          import   MathObject
+from   deaduction.pylib.mathobj          import  (ContextMathObject,
+                                                  MathObject)
 from   deaduction.pylib.actions          import   explain_how_to_apply
 
 from   deaduction.pylib.utils.filesystem import path_helper
@@ -137,7 +138,7 @@ class MathObjectWidgetItem(QListWidgetItem):
         _TagIcon) of mathobject.
     """
 
-    def __init__(self, math_object: MathObject, tag: str='='):
+    def __init__(self, math_object: ContextMathObject):
         """
         Init self with an instance of the class MathObject and a tag.
         See self.__doc__.
@@ -149,13 +150,18 @@ class MathObjectWidgetItem(QListWidgetItem):
         super().__init__()
 
         self.math_object = math_object
-        self.tag        = tag
+        if math_object.is_new:
+            self.tag        = '+'
+        elif math_object.is_modified:
+            self.tag = '≠'
+        else:
+            self.tag = '='
 
         lean_name = math_object.to_display()
         math_expr = math_object.math_type.to_display(is_math_type=True)
         caption   = f'{lean_name} : {math_expr}'
         self.setText(caption)
-        self.setIcon(_TagIcon(tag))
+        self.setIcon(_TagIcon(self.tag))
         # set tool_tips (merge several tool_tips if needed)
         tool_tips = explain_how_to_apply(math_object)
         if len(tool_tips) == 1:
@@ -218,7 +224,7 @@ class MathObjectWidget(QListWidget):
         attribute makes accessing them painless.
     """
 
-    def __init__(self, tagged_mathobjects: [Tuple[MathObject, str]]=[]):
+    def __init__(self, context_math_objects: [ContextMathObject]=None):
         """
         Init self an ordered list of tuples (mathobject, tag), where
         mathobject is an instance of the class MathObject (not
@@ -228,15 +234,17 @@ class MathObjectWidget(QListWidget):
         :param tagged_mathobjects: The list of tagged instances of the
             class MathObject.
         """
-
         super().__init__()
 
         self.items = []
         # set fonts for maths display
         math_font_name = cvars.get('display.mathematics_font', 'Default')
         self.setFont(QFont(math_font_name))
-        for mathobject, tag in tagged_mathobjects:
-            item = MathObjectWidgetItem(mathobject, tag)
+
+        if not context_math_objects:
+            context_math_objects = []
+        for mathobject in context_math_objects:
+            item = MathObjectWidgetItem(mathobject)
             self.addItem(item)
             self.items.append(item)
 

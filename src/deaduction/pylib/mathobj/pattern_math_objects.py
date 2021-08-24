@@ -67,10 +67,11 @@ class PatternMathObject(MathObject):
     metavars        = None
     metavar_objects = None  # Objects matching metavars (see self.match)
 
-    def __init__(self, node, info, children, math_type):
+    def __init__(self, node, info, children, bound_vars, math_type):
         super().__init__(node=node,
                          info=info,
                          children=children,
+                         bound_vars=bound_vars,
                          math_type=math_type)
 
     @property
@@ -86,6 +87,7 @@ class PatternMathObject(MathObject):
         return cls(node='METAVAR',
                    info={'nb': cls.metavar_nb},
                    children=[],
+                   bound_vars=[],
                    math_type=math_type)
 
     @classmethod
@@ -153,6 +155,7 @@ class PatternMathObject(MathObject):
             pattern_math_object = cls(node=node,
                                       info=info,
                                       children=children,
+                                      bound_vars=math_object.bound_vars,
                                       math_type=math_type)
             # log.debug(f"   ->pmo: {pmo.to_display()}")
             return pattern_math_object
@@ -320,9 +323,9 @@ class PatternMathObject(MathObject):
 
         math_object = MathObject(node=self.node,
                                  info=self.info,
-                                 math_type=found_math_type,
-                                 children=found_children
-                                 )
+                                 children=found_children,
+                                 bound_vars=self.bound_vars,
+                                 math_type=found_math_type)
         return math_object
 
     @classmethod
@@ -347,6 +350,7 @@ class PatternMathObject(MathObject):
 NO_MATH_TYPE_PATTERN = PatternMathObject(node="not provided",
                                          info={},
                                          children=[],
+                                         bound_vars=[],
                                          math_type=None)
 
 

@@ -25,6 +25,7 @@ use_seconds_for_variables_names = true
 
 [logic]
 do_not_name_dummy_vars_as_global_vars = true
+do_not_name_dummy_vars_as_dummy_vars = false
 use_indices_for_dummy_vars = true
 color_for_used_properties = "None"
 color_for_dummy_vars = "None"

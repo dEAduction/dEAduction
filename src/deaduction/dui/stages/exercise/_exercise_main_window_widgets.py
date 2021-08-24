@@ -367,11 +367,13 @@ class ExerciseCentralWidget(QWidget):
 
         # Init context (objects and properties). Get them as two list of
         # (MathObject, str), the str being the tag of the prop. or obj.
-        new_context    = new_goal.tag_and_split_propositions_objects()
+        # new_context    = new_goal.tag_and_split_propositions_objects()
         new_target     = new_goal.target
         new_target_tag = '='  # new_target.future_tags[1]
-        new_objects    = new_context[0]
-        new_props      = new_context[1]
+        # new_objects    = new_context[0]
+        # new_props      = new_context[1]
+        new_objects = new_goal.context_objects
+        new_props = new_goal.context_props
 
         new_objects_wgt = MathObjectWidget(new_objects)
         new_props_wgt   = MathObjectWidget(new_props)

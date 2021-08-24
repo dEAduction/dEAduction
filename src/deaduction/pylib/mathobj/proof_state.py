@@ -38,6 +38,7 @@ from copy import copy
 import deaduction.pylib.logger as logger
 
 from .MathObject import MathObject
+from .context_math_object import ContextMathObject
 from .lean_analysis import ( lean_expr_with_type_grammar,
                              LeanEntryVisitor )
 import deaduction.pylib.config.vars as cvars
@@ -70,7 +71,7 @@ class Goal:
     - splitting goals into objects and properties,
     - printing goals.
     """
-    context:        [MathObject]
+    context:        [ContextMathObject]
     target:         MathObject
     future_tags:    [] = None
 
@@ -107,6 +108,16 @@ class Goal:
         tree = lean_expr_with_type_grammar.parse(target_analysis)
         target = LeanEntryVisitor().visit(tree)
         return cls(context, target)
+
+    @property
+    def context_objects(self):
+        objects = [cmo for cmo in self.context if not cmo.math_type.is_prop()]
+        return objects
+
+    @property
+    def context_props(self):
+        props = [cmo for cmo in self.context if cmo.math_type.is_prop()]
+        return props
 
     def math_object_from_name(self, name: str) -> MathObject:
         """
@@ -175,16 +186,22 @@ class Goal:
                 # New objects at the end
                 permuted_new_context.append(math_object)
                 permuted_new_tags.append("+")
+                math_object.is_new = True
             else:
-                # Put new object at old index, and check for modifications
+                # Put new object at old index, copy tags for ui,
+                #  and check for modifications
+                old_object = old_context[old_index]
                 permuted_new_context[old_index] = math_object
-                old_math_type = old_context[old_index].math_type
+                math_object.copy_tags(old_object)
+                old_math_type = old_object.math_type
                 new_math_type = math_object.math_type
                 # (3) Check if the object has the same type
                 if old_math_type == new_math_type:
                     permuted_new_tags[old_index] = "="
                 else:  # (4) If not, object has been modified
                     permuted_new_tags[old_index] = "≠"
+                    math_object.is_modified = True
+                    math_object.is_hidden = False  # Reveal if modified?
 
             if old_index is not None:
                 # Will not be considered anymore:
@@ -201,41 +218,106 @@ class Goal:
         self.context     = clean_permuted_new_context
         self.future_tags = clean_permuted_new_tags
 
-    def tag_and_split_propositions_objects(self) -> ([MathObject, str],
-                                                     [MathObject, str]):
+    def name_bound_vars(self):
         """
-        Split the context into
-            - a list of tagged objects,
-            - a list of tagged propositions
-        A tag object is a couple (object, tag), where tag is one of
-        "=", "≠", "+"
+        Give a name to all dummy vars appearing in the properties of
+        self.context.
+        * Case 1:
+           - dummy vars cannot share names with glob vars,
+           - dummy vars can share names with dummy vars in some other prop
+        We process independantly for each property of the context,
+        and for each math_type of dummy vars in a given property.
 
-        Lean, based on type theory, makes no difference between
-        mathematical "objects" (e.g. a set, an element of the set,
-        a function, ...) and mathematical "propositions" (logical assertions
-        concerning the objects). But mathematicians do, and the UI display
-        objects and propositions separately.
-
-        :return:
-        - a list of tuples (po, tag), where po is an object in the context
-        and tag is the tag of po
-        - a list of tuples (po, tag), where po is a proposition in the context
-        and tag is the tag of po
         """
+        props = self.context_props
+        objects = self.context_objects
+        for prop in props:
+            log.debug(f"Naming vars in {prop.to_display()}")
+            math_types = {var.math_type for var in prop.math_type.bound_vars}
+            for math_type in math_types:
+                glob_vars = self.objects_of_type(math_type)
+                dummy_vars = [var for var in prop.math_type.bound_vars
+                              if var.math_type == math_type]
+                _name_bound_vars(math_type, glob_vars, dummy_vars)
 
-        log.info("split objects and propositions of the context")
-        context = self.context
-        if not self.future_tags:
-            self.future_tags = ["="] * len(context)
-        objects = []
-        propositions = []
-        for (math_object, tag) in zip(context, self.future_tags):
-            if math_object.math_type.is_prop():
-                propositions.append((math_object, tag))
-            else:
-                objects.append((math_object, tag))
-        return objects, propositions
+    @staticmethod
+    def _name_bound_vars(math_type, named_vars, unnamed_vars):
+        log.debug("Naming vars:")
+        log.debug(math_type.to_display(is_math_type=True))
+        log.debug([var.display_name() for var in named_vars])
+        log.debug([var.display_name() for var in unnamed_vars])
 
+
+
+
+
+    # def tag_and_split_propositions_objects(self) -> ([MathObject, str],
+    #                                                  [MathObject, str]):
+    #     """
+    #     Split the context into
+    #         - a list of tagged objects,
+    #         - a list of tagged propositions
+    #     A tag object is a couple (object, tag), where tag is one of
+    #     "=", "≠", "+"
+    #
+    #     Lean, based on type theory, makes no difference between
+    #     mathematical "objects" (e.g. a set, an element of the set,
+    #     a function, ...) and mathematical "propositions" (logical assertions
+    #     concerning the objects). But mathematicians do, and the UI display
+    #     objects and propositions separately.
+    #
+    #     :return:
+    #     - a list of tuples (po, tag), where po is an object in the context
+    #     and tag is the tag of po
+    #     - a list of tuples (po, tag), where po is a proposition in the context
+    #     and tag is the tag of po
+    #     """
+    #
+    #     # FIXME: obsolete
+    #     log.info("split objects and propositions of the context")
+    #     context = self.context
+    #     if not self.future_tags:
+    #         self.future_tags = ["="] * len(context)
+    #     objects = []
+    #     propositions = []
+    #     for (math_object, tag) in zip(context, self.future_tags):
+    #         if math_object.math_type.is_prop():
+    #             propositions.append((math_object, tag))
+    #         else:
+    #             objects.append((math_object, tag))
+    #     return objects, propositions
+
+    def objects_of_type(self, math_type):
+        """
+        Return all object of self.context whose type is math_type.
+        """
+        return [obj for obj in self.context_objects
+                if obj.math_type == math_type]
+
+    def extract_vars(self) -> List[MathObject]:
+        """
+        Provides the list of all variables in the context,
+        (but NOT bound variables, nor names of hypotheses)
+
+        :return: list of MathObject (variables names)
+        """
+        variables = [math_object for math_object in self.context
+                     if not math_object.is_prop()]
+        return variables
+
+    def extract_vars_names(self) -> List[str]:
+        """
+        provides the list of names of all variables in the context,
+        (but NOT bound variables, nor names of hypotheses)
+        :return: list of MathObject (variables names)
+        """
+        names = [math_object.info['name'] for math_object in
+                 self.extract_vars()]
+        return names
+
+    ###################
+    # Display methods #
+    ###################
     def goal_to_text(self,
                      format_="utf8",
                      to_prove=True,
@@ -369,28 +451,6 @@ class Goal:
         text += "\n"
         text += " " + target.math_type.to_display(is_math_type=True)
         return text
-
-    def extract_vars(self) -> List[MathObject]:
-        """
-        Provides the list of all variables in the context,
-        (but NOT bound variables, nor names of hypotheses)
-
-        :return: list of MathObject (variables names)
-        """
-        variables = [math_object for math_object in self.context
-                     if not math_object.is_prop()]
-        return variables
-
-    def extract_vars_names(self) -> List[str]:
-        """
-        provides the list of names of all variables in the context,
-        (but NOT bound variables, nor names of hypotheses)
-        :return: list of MathObject (variables names)
-        """
-        names = [math_object.info['name'] for math_object in
-                 self.extract_vars()]
-        return names
-
 
 ########################
 # The ProofState class #

@@ -57,7 +57,7 @@ from deaduction.pylib.coursedata        import (Statement,
 
 from deaduction.pylib.mathobj           import (MathObject,
                                                 PatternMathObject,
-                                                MissingImplicitDefinition,
+                                                #MissingImplicitDefinition,
                                                 Goal,
                                                 ProofState,
                                                 ProofStep)
@@ -795,13 +795,14 @@ class Coordinator(QObject):
         target.math_type = MathObject(node="NO_MORE_GOAL",
                                       info={},
                                       children=[],
+                                      bound_vars=[],
                                       math_type=None)
 
         return proof_state
 
     def update_proof_step(self):
         """
-        Store proof_step and creat next proof_step.
+        Store proof_step and create next proof_step.
         This is called for every user action, including errors and history
         moves.
         """
@@ -845,6 +846,7 @@ class Coordinator(QObject):
         :param errors: list of errors, if non-empty then request has failed.
         """
         log.info("Processing Lean's response")
+        proof_state = None
         if exercise != self.exercise:
             log.warning("    not from current exercise, ignoring")
             return
@@ -887,6 +889,14 @@ class Coordinator(QObject):
             self.proof_step.update_goals()
 
             # log.debug(f"    Target_idx: {self.lean_file.target_idx}")
+
+        # ─────── Tag new goal ─────── #
+        if self.logically_previous_proof_step:
+            # Fixme: not when undoing history ?
+            new_goal = self.proof_step.goal
+            previous_goal = self.logically_previous_proof_step.goal
+            Goal.compare(new_goal, previous_goal)  # Set tags
+            new_goal.name_bound_vars()
 
         # ─────── Update proof_step ─────── #
         self.previous_proof_step = self.proof_step

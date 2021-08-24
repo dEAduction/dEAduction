@@ -100,7 +100,7 @@ def give_local_name(math_type: MathObject,
                                  False)
     if exclude_glob_vars:
         pass
-        # FIXME: proof_stap is not available here!
+        # FIXME: proof_step is not available here!
         # more_forbidden_vars = proof_step.goal.extract_vars()
         # forbidden_vars.extend(more_forbidden_vars)
     use_indices = cvars.get('logic.use_indices_for_dummy_variables', True)

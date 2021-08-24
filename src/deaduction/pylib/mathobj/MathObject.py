@@ -48,7 +48,7 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 from dataclasses import     dataclass, field
-from typing import          List, Any
+from typing import          List, Any, Optional
 import logging
 
 import deaduction.pylib.logger as logger
@@ -68,15 +68,15 @@ log = logging.getLogger(__name__)
 NUMBER_SETS_LIST = ['ℕ', 'ℤ', 'ℚ', 'ℝ']
 
 
-class MissingImplicitDefinition(Exception):
-    def __init__(self, definition, math_object, rewritten_math_object):
-        super().__init__(f"Implicit use of definition "
-                         f"{definition.pretty_name} in "
-                         f"{math_object.to_display()} -> "
-                         f"{rewritten_math_object}")
-        self.definition            = definition
-        self.math_object           = math_object
-        self.rewritten_math_object = rewritten_math_object
+# class MissingImplicitDefinition(Exception):
+#     def __init__(self, definition, math_object, rewritten_math_object):
+#         super().__init__(f"Implicit use of definition "
+#                          f"{definition.pretty_name} in "
+#                          f"{math_object.to_display()} -> "
+#                          f"{rewritten_math_object}")
+#         self.definition            = definition
+#         self.math_object           = math_object
+#         self.rewritten_math_object = rewritten_math_object
 
 
 def allow_implicit_use(test: callable):
@@ -131,7 +131,7 @@ def allow_implicit_use(test: callable):
 #############################################
 # MathObject: general mathematical entities #
 #############################################
-@dataclass
+# @dataclass
 class MathObject:
     """
     Python representation of mathematical entities,
@@ -144,12 +144,12 @@ class MathObject:
     node              : str   # e.g. "LOCAL_CONSTANT", "FUNCTION", "QUANT_∀"
     info              : dict  # e.g. "name", "id", "pp_type"
     children          : list  # List of MathObjects
-    math_type         : Any = field(repr=False)  # Necessary with @dataclass
-    _math_type        : Any = field(init=False,
-                                    repr=False,
-                                    default=None)
-
-    has_unnamed_bound_vars: bool = False  # True if bound vars to be named
+    bound_vars        : Optional[list]
+    # math_type         : Any = field(repr=False)  # Necessary with @dataclass
+    # _math_type        : Any = field(init=False,
+    #                                 repr=False,
+    #                                default=None)
+    # has_unnamed_bound_vars: bool = False  # True if bound vars to be named
 
     Variables = {}  # Containing every element having an identifier,
     # i.e. global and bound variables. This is used to avoid duplicate.
@@ -169,7 +169,14 @@ class MathObject:
     last_used_implicit_definition = None
     last_rw_object                = None
 
-    # Some robust methods to access information stored in attributes
+    def __init__(self, node, info, children, bound_vars, math_type):
+        self.node = node
+        self.info = info
+        self.children = children
+        self.bound_vars = bound_vars
+        self.math_type = math_type
+
+
     @property
     def math_type(self) -> Any:
         """
@@ -186,6 +193,134 @@ class MathObject:
     @math_type.setter
     def math_type(self, math_type: Any):
         self._math_type = math_type
+
+    #################
+    # Class methods #
+    #################
+    @classmethod
+    def clear(cls):
+        """Re-initialise various class variables, in particular the
+        Variables dict. It is crucial that this method is called when Lean
+        server is stopped, because in the next session Lean could
+        re-attributes an identifier that is in Variables, entailing chaos."""
+        cls.Variables = {}
+        cls.number_sets = []
+        cls.bound_var_number = 0
+        cls.context_bound_vars = []
+
+    @classmethod
+    def add_numbers_set(cls, name: str):
+        """
+        Insert name in cls.number_sets at the right place
+        :param name: an element of NUMBER_SETS_LIST = ['ℕ', 'ℤ', 'ℚ', 'ℝ']
+        """
+        if name in NUMBER_SETS_LIST and name not in cls.number_sets:
+            cls.number_sets.append(name)
+            counter = len(MathObject.number_sets) -1
+            while counter > 0:
+                old_item = cls.number_sets[counter - 1]
+                if NUMBER_SETS_LIST.index(name) < \
+                   NUMBER_SETS_LIST.index(old_item):
+                    # Swap
+                    cls.number_sets[counter] = old_item
+                    cls.number_sets[counter-1] = name
+                    counter -= 1
+                else:
+                    break
+            log.debug(f"Number_sets: {MathObject.number_sets}")
+
+    @classmethod
+    def from_info_and_children(cls, info: {}, children: []):
+        """
+        Create an instance of MathObject from the Lean data collected by
+        the parser.
+        :param info: dictionary with mandatory key  'node_name',
+                                    optional keys   'math_type',
+                                                    'name'
+                                                    'identifier'
+        :param children: list of MathObject instances
+        :return: a MathObject
+        """
+
+        node = info.pop("node_name")
+        if 'math_type' in info.keys():
+            math_type = info.pop('math_type')
+        else:
+            math_type = None  # NB math_type is a @property, cf above
+
+        bound_vars = []
+        for child in children:
+            bound_vars.extend(child.bound_vars)
+
+        #####################################################
+        # Treatment of global variables: avoiding duplicate #
+        #####################################################
+        if 'identifier' in info.keys():
+            # This concerns only MathObjects with node=='LOCAL_CONSTANT'
+            identifier = info['identifier']
+            if identifier in MathObject.Variables:
+                # Return already existing MathObject
+                # log.debug(f"already exists in dict "
+                #          f"{[(key, MathObject.Variables[key]) for key in
+                #          MathObject.Variables]}")
+                math_object = MathObject.Variables[identifier]
+            else:
+                # Create new object
+                math_object = cls(node=node,
+                                  info=info,
+                                  math_type=math_type,
+                                  children=children,
+                                  bound_vars=[])
+                MathObject.Variables[identifier] = math_object
+
+        ##############################
+        # Treatment of other objects #
+        ##############################
+        elif node in HAVE_BOUND_VARS:
+            #################################################################
+            # Quantifiers & lambdas: provisionally "unname" bound variables #
+            #################################################################
+            # NB: info["name"] is given by structures.lean,
+            # but may be inadequate (e.g. two distinct variables sharing the
+            # same name)
+            # This lean name is saved in info['lean_name'],
+            # and info['name'] = "NO NAME" until proper naming
+            bound_var_type, bound_var, local_context = children
+            new_info = {'name': "NO NAME",
+                        'lean_name': bound_var.info['name'],
+                        'is_bound_var': True}
+            bound_var.info.update(new_info)
+            bound_vars.append([bound_var])
+            math_object = cls(node=node,
+                              info=info,
+                              math_type=math_type,
+                              children=children,
+                              bound_vars=bound_vars)
+
+        else:
+            ##############################
+            # End: generic instantiation #
+            ##############################
+            # Self has unnamed bound vars if some child has
+            # child_bool = (True in [child.has_unnamed_bound_vars
+            #                        for child in children])
+            math_object = cls(node=node,
+                              info=info,
+                              math_type=math_type,
+                              children=children,
+                              bound_vars=bound_vars)
+        # Detect sets of numbers and insert in number_sets if needed
+        # at the right place so that the list stay ordered
+        name = math_object.display_name
+        MathObject.add_numbers_set(name)
+        return math_object
+
+    #######################
+    # Properties and like #
+    #######################
+    @property
+    def has_unnamed_bound_vars(self):
+        return self.bound_vars is not None and self.bound_vars is not []
 
     @property
     def display_name(self) -> str:
@@ -235,118 +370,6 @@ class MathObject:
     def has_name(self, name: str):
         return self.display_name == name
 
-    @classmethod
-    def clear(cls):
-        """Re-initialise various class variables, in particular the
-        Variables dict. It is crucial that this method is called when Lean
-        server is stopped, because in the next session Lean could
-        re-attributes an identifier that is in Variables, entailing chaos."""
-        cls.Variables = {}
-        cls.number_sets = []
-        cls.bound_var_number = 0
-
-    # Main creation method #
-    @classmethod
-    def from_info_and_children(cls, info: {}, children: []):
-        """
-        Create an instance of MathObject from the Lean data collected by
-        the parser.
-        :param info: dictionary with mandatory key  'node_name',
-                                    optional keys   'math_type',
-                                                    'name'
-                                                    'identifier'
-        :param children: list of MathObject instances
-        :return: a MathObject
-        """
-
-        node = info.pop("node_name")
-        if 'math_type' in info.keys():
-            math_type = info.pop('math_type')
-        else:
-            math_type = None  # NB math_type is a @property, cf above
-
-        #####################################################
-        # Treatment of global variables: avoiding duplicate #
-        #####################################################
-        if 'identifier' in info.keys():
-            # This concerns only MathObjects with node=='LOCAL_CONSTANT'
-            identifier = info['identifier']
-            if identifier in MathObject.Variables:
-                # Return already existing MathObject
-                # log.debug(f"already exists in dict "
-                #          f"{[(key, MathObject.Variables[key]) for key in
-                #          MathObject.Variables]}")
-                math_object = MathObject.Variables[identifier]
-            else:
-                # Create new object
-                math_object = MathObject(node=node,
-                                         info=info,
-                                         math_type=math_type,
-                                         children=children
-                                         )
-                MathObject.Variables[identifier] = math_object
-        ##############################
-        # Treatment of other objects #
-        ##############################
-        elif node in HAVE_BOUND_VARS:
-            #################################################################
-            # Quantifiers & lambdas: provisionally "unname" bound variables #
-            #################################################################
-            # NB: info["name"] is given by structures.lean,
-            # but may be inadequate (e.g. two distinct variables sharing the
-            # same name)
-            # This lean name is saved in info['lean_name'],
-            # and info['name'] = "NO NAME" until proper naming
-            bound_var_type, bound_var, local_context = children
-            new_info = {'name': "NO NAME",
-                        'lean_name': bound_var.info['name'],
-                        'is_bound_var': True}
-            bound_var.info.update(new_info)
-            math_object = MathObject(node=node,
-                                     info=info,
-                                     math_type=math_type,
-                                     children=children,
-                                     has_unnamed_bound_vars=True)
-
-        else:
-            ##############################
-            # End: generic instantiation #
-            ##############################
-            # Self has unnamed bound vars if some child has
-            child_bool = (True in [child.has_unnamed_bound_vars
-                                   for child in children])
-            math_object = MathObject(node=node,
-                                     info=info,
-                                     math_type=math_type,
-                                     children=children,
-                                     has_unnamed_bound_vars=child_bool)
-        # Detect sets of numbers and insert in number_sets if needed
-        # at the right place so that the list stay ordered
-        name = math_object.display_name
-        cls.add_numbers_set(name)
-        return math_object
-
-    @classmethod
-    def add_numbers_set(cls, name: str):
-        """
-        Insert name in cls.number_sets at the right place
-        :param name: an element of NUMBER_SETS_LIST = ['ℕ', 'ℤ', 'ℚ', 'ℝ']
-        """
-        if name in NUMBER_SETS_LIST and name not in cls.number_sets:
-            cls.number_sets.append(name)
-            counter = len(MathObject.number_sets) -1
-            while counter > 0:
-                old_item = cls.number_sets[counter - 1]
-                if NUMBER_SETS_LIST.index(name) < \
-                   NUMBER_SETS_LIST.index(old_item):
-                    # Swap
-                    cls.number_sets[counter] = old_item
-                    cls.number_sets[counter-1] = name
-                    counter -= 1
-                else:
-                    break
-            log.debug(f"Number_sets: {MathObject.number_sets}")
-
     ########################
     # Name bound variables #
     ########################
@@ -385,7 +408,7 @@ class MathObject:
             # log.debug("no bound vars")
             return
         # log.debug(f"Naming bound vars in {self}")
-        self.has_unnamed_bound_vars = False
+        # self.has_unnamed_bound_vars = False
         if not forbidden_vars:
             forbidden_vars = []
         node = self.node
@@ -892,58 +915,59 @@ class MathObject:
             shape = Shape.from_math_object(self, format_, text_depth)
         return structured_display_to_string(shape.display)
 
-    def apply_implicit_definition(self):
-        """
-        Search if self matches some definition in
-        MathObject.implicit_definitions and if so, return the MathObject
-        obtained by applying the first matching definition.
-        """
-        # FIXME: unused?
-
-        definition_patterns = MathObject.definition_patterns
-        for index in range(len(definition_patterns)):
-            # Test right term if self match pattern
-            pattern = definition_patterns[index]
-            pattern_left = pattern.children[0]
-            if pattern_left.match(self):
-                pattern_right = pattern.children[1]
-                rewritten_math_object = pattern_right.apply_matching()
-                return rewritten_math_object
-
-    def find_implicit_definition(self, test=None):
-        """
-        Search if self matches some definition in
-        MathObject.implicit_definitions matching test and if so,
-        return the first matching definition.
-        """
-        # FIXME: unused?
-        definition_patterns = MathObject.definition_patterns
-        for index in range(len(definition_patterns)):
-            # Test right term if self match pattern
-            pattern = definition_patterns[index]
-            pattern_left = pattern.children[0]
-            if pattern_left.match(self):
-                if test is None or test(self):
-                    return MathObject.implicit_definitions[index]
-
-    def implicit_children(self):
-        """
-        Search if self matches some definition in
-        MathObject.implicit_definitions and if so, return the
-        children of the MathObject obtained by applying the first matching
-        definition.
-        If no definition matches, then return the original children
-        """
-        # FIXME: unused?
-        rewritten_math_object = self.apply_implicit_definition()
-        if rewritten_math_object:
-            return rewritten_math_object.children
-        return self.children
+    # def apply_implicit_definition(self):
+    #     """
+    #     Search if self matches some definition in
+    #     MathObject.implicit_definitions and if so, return the MathObject
+    #     obtained by applying the first matching definition.
+    #     """
+    #     # FIXME: unused?
+    #
+    #     definition_patterns = MathObject.definition_patterns
+    #     for index in range(len(definition_patterns)):
+    #         # Test right term if self match pattern
+    #         pattern = definition_patterns[index]
+    #         pattern_left = pattern.children[0]
+    #         if pattern_left.match(self):
+    #             pattern_right = pattern.children[1]
+    #             rewritten_math_object = pattern_right.apply_matching()
+    #             return rewritten_math_object
+    #
+    # def find_implicit_definition(self, test=None):
+    #     """
+    #     Search if self matches some definition in
+    #     MathObject.implicit_definitions matching test and if so,
+    #     return the first matching definition.
+    #     """
+    #     # FIXME: unused?
+    #     definition_patterns = MathObject.definition_patterns
+    #     for index in range(len(definition_patterns)):
+    #         # Test right term if self match pattern
+    #         pattern = definition_patterns[index]
+    #         pattern_left = pattern.children[0]
+    #         if pattern_left.match(self):
+    #             if test is None or test(self):
+    #                 return MathObject.implicit_definitions[index]
+    #
+    # def implicit_children(self):
+    #     """
+    #     Search if self matches some definition in
+    #     MathObject.implicit_definitions and if so, return the
+    #     children of the MathObject obtained by applying the first matching
+    #     definition.
+    #     If no definition matches, then return the original children
+    #     """
+    #     # FIXME: unused?
+    #     rewritten_math_object = self.apply_implicit_definition()
+    #     if rewritten_math_object:
+    #         return rewritten_math_object.children
+    #     return self.children
 
 
 NO_MATH_TYPE = MathObject(node="not provided",
                           info={},
                           children=[],
+                          bound_vars=[],
                           math_type=None)
 
 
