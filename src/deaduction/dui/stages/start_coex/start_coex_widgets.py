@@ -559,9 +559,9 @@ class ExerciseChooser(AbstractCoExChooser):
         proofstate = exercise.initial_proof_state
         goal = proofstate.goals[0]  # Only one goal (?)
         target = goal.target
-        context = goal.tag_and_split_propositions_objects()
-        objects = context[0]
-        properties = context[1]
+        objects = goal.context_objects
+        properties = goal.context_props
+        goal.name_bound_vars()
 
         # ────────────────────── Rest ────────────────────── #
         if self.__text_mode_checkbox.isChecked():

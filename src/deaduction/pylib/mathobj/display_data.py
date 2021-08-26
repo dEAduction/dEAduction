@@ -40,6 +40,8 @@ This file is part of d∃∀duction.
 # !! Latex commands should be alone in their strings,
 # except for spaces around them, so that up to strip(), they appear in
 # latex_to_utf8_dic
+global _
+
 latex_from_node = {
     "PROP_AND": (0, " " + _("and") + " ", 1),
     "PROP_OR": (0, " " + _("or") + " ", 1),

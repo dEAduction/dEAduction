@@ -113,7 +113,6 @@ class Coordinator(QObject):
         self.emw = ExerciseMainWindow(exercise)
         self.emw.close_coordinator = self.closeEvent
 
-
         self.proof_step                     = ProofStep()
         self.previous_proof_step            = None
         self.journal                        = Journal()
@@ -688,7 +687,7 @@ class Coordinator(QObject):
         user_action = None
         # Check automatic intro of variables and hypotheses
         auto_for_all = cvars.get("functionality.automatic_intro_of" +
-                                                "_variables_and_hypotheses")
+                                 "_variables_and_hypotheses")
         if auto_for_all:
             if target.is_for_all():
                 user_action = UserAction.simple_action("forall")
@@ -710,7 +709,6 @@ class Coordinator(QObject):
             # Async call to emw.simulate_user_action:
             self.emw.freeze(True)
             self.nursery.start_soon(self.emw.simulate_user_action, user_action)
-
 
     def unfreeze(self):
         """
@@ -890,15 +888,18 @@ class Coordinator(QObject):
 
             # log.debug(f"    Target_idx: {self.lean_file.target_idx}")
 
-        # ─────── Tag new goal ─────── #
+        # ─────── Tag and sort new goal ─────── #
         if self.logically_previous_proof_step:
             # Fixme: not when undoing history ?
             new_goal = self.proof_step.goal
             previous_goal = self.logically_previous_proof_step.goal
             Goal.compare(new_goal, previous_goal)  # Set tags
-            new_goal.name_bound_vars()
+
+        # ─────── Name all bound vars ─────── #
+        self.proof_step.goal.name_bound_vars()
 
         # ─────── Update proof_step ─────── #
+        # From here, self.proof_step is replaced by a new proof_step!
         self.previous_proof_step = self.proof_step
         self.update_proof_step()
 

@@ -68,6 +68,9 @@ class ContextMathObject(MathObject):
         self.has_been_applied_in_proof = False  # TODO: implement
         self.is_hidden = False
 
+        log.debug(f"Creating ContextMathPObject {self.to_display()},"
+                  f"dummy vars = "
+                  f"{[var.to_display() for var in self.bound_vars]}")
 
     @classmethod
     def whose_math_type_is(cls, math_type: MathObject):

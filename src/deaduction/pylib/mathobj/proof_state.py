@@ -36,13 +36,13 @@ from typing import List, Tuple, Any, Optional
 from copy import copy
 
 import deaduction.pylib.logger as logger
+import deaduction.pylib.config.vars as cvars
 
 from .MathObject import MathObject
 from .context_math_object import ContextMathObject
 from .lean_analysis import ( lean_expr_with_type_grammar,
                              LeanEntryVisitor )
-import deaduction.pylib.config.vars as cvars
-
+from .give_name import name_bound_vars, inj_list
 log = logging.getLogger(__name__)
 
 
@@ -221,35 +221,72 @@ class Goal:
     def name_bound_vars(self):
         """
         Give a name to all dummy vars appearing in the properties of
-        self.context.
-        * Case 1:
-           - dummy vars cannot share names with glob vars,
-           - dummy vars can share names with dummy vars in some other prop
-        We process independantly for each property of the context,
-        and for each math_type of dummy vars in a given property.
-
+        self.context. Three level of constraint are taken into account,
+        according to cvars values:
+        * Level 0: dummy vars can share names with dummy vars of other props
+        and with glob vars.
+        * Level 1: dummy vars can share names with dummy vars of other props
+        but not with glob vars.
+        * Level 2: dummy vars cannot share names with glob vars nor dummy vars
+            of other props.
         """
+        not_glob = cvars.get("logic.do_not_name_dummy_vars_as_global_vars",
+                             True)
+        not_dummy = cvars.get("logic.do_not_name_dummy_vars_as_dummy_vars",
+                             False)  # All dummy vars have distinct names
+        glob_vars = self.context_objects
         props = self.context_props
+        props.append(self.target)  # Do not forget dummy vars in target!
         objects = self.context_objects
-        for prop in props:
-            log.debug(f"Naming vars in {prop.to_display()}")
-            math_types = {var.math_type for var in prop.math_type.bound_vars}
+        # We compute a sequence of (math_types, dummy_vars),
+        #  each term is to be treated globally
+
+        if not_dummy:  # (Level 2)
+            # math_types = []
+            # for prop in props:
+            #     for var in prop.bound_vars:
+            #         math_type = var.math_type
+            #         if math_type not in math_types:
+            #             math_types.append(math_type)
+            # Collect all math_types, with no repetition
+            math_types = inj_list([var.math_type
+                                   for var in prop.math_type.bound_vars
+                                   for prop in props])
+            dummy_vars = [var for var in prop.math_type.bound_vars
+                          for prop in prop]  # All dummy vars (no repetition)
+            data = [(math_types, dummy_vars, glob_vars)]
+        else:  # Types and dummy vars prop by prop
+            data = []
+            for prop in props:
+                log.debug(f"Naming vars in {prop.to_display()}")
+                log.debug(f"""Dummy vars types: {[var.math_type.to_display()
+                                for var in prop.math_type.bound_vars]}""")
+                # Collect math_types of bound_vars with no rep
+                math_types = inj_list([var.math_type for var in
+                                       prop.math_type.bound_vars])
+                log.debug(f"Math_types : "
+                          f"{[mt.to_display() for mt in math_types]}")
+                # math_types = []
+                # for var in prop.bound_vars:
+                #     math_type = var.math_type
+                #     if math_type not in math_types:
+                #         math_types.append(math_type)
+                # (Level 1 or 0)
+                forb_vars = glob_vars if not_glob \
+                                    else prop.math_type.extract_local_vars()
+                data.append((math_types, prop.math_type.bound_vars, forb_vars))
+
+        # For each term in data, successively name dummy_vars of each math_type
+        for math_types, dummy_vars, forb_vars in data:
             for math_type in math_types:
-                glob_vars = self.objects_of_type(math_type)
-                dummy_vars = [var for var in prop.math_type.bound_vars
-                              if var.math_type == math_type]
-                _name_bound_vars(math_type, glob_vars, dummy_vars)
-
-    @staticmethod
-    def _name_bound_vars(math_type, named_vars, unnamed_vars):
-        log.debug("Naming vars:")
-        log.debug(math_type.to_display(is_math_type=True))
-        log.debug([var.display_name() for var in named_vars])
-        log.debug([var.display_name() for var in unnamed_vars])
-
-
-
-
+                glob_vars_of_type = [var for var in glob_vars
+                                      if var.math_type == math_type]
+                dummy_vars_of_type = [var for var in dummy_vars
+                                      if var.math_type == math_type]
+                log.debug(f"Naming vars of type "
+                          f"{math_type.to_display()}")
+                name_bound_vars(math_type, glob_vars_of_type,
+                                dummy_vars_of_type, forb_vars)
 
     # def tag_and_split_propositions_objects(self) -> ([MathObject, str],
     #                                                  [MathObject, str]):
@@ -381,7 +418,7 @@ class Goal:
         if to_prove and not open_problem:
             target_text = _("Prove that") + " " + target_text
         elif text:
-                target_text = _("Then") + " " + target_text
+            target_text = _("Then") + " " + target_text
         else:
             target_text = target_text.capitalize()
             # Little issue: if sentence starts with a lower case
@@ -452,6 +489,7 @@ class Goal:
         text += " " + target.math_type.to_display(is_math_type=True)
         return text
 
+
 ########################
 # The ProofState class #
 ########################
@@ -498,7 +536,6 @@ class ProofState:
                                              target_analysis=other_string_goal)
             goals.append(other_goal)
         return cls(goals, (hypo_analysis, targets_analysis))
-
 
 
 def print_proof_state(goal: Goal):

@@ -111,8 +111,8 @@ def allow_implicit_use(test: callable):
                 pattern_left = pattern.children[0]
                 pattern_right = pattern.children[1]
                 log.debug(f"(Trying definition "
-                          f"{MathObject.implicit_definitions[index].pretty_name}"
-                          f"...)")
+                      f"{MathObject.implicit_definitions[index].pretty_name}"
+                      f"...)")
                 if pattern_left.match(math_type):
                     if test(pattern_right, is_math_type=True):
                         definition = MathObject.implicit_definitions[index]
@@ -176,7 +176,6 @@ class MathObject:
         self.bound_vars = bound_vars
         self.math_type = math_type
 
-
     @property
     def math_type(self) -> Any:
         """
@@ -216,7 +215,7 @@ class MathObject:
         """
         if name in NUMBER_SETS_LIST and name not in cls.number_sets:
             cls.number_sets.append(name)
-            counter = len(MathObject.number_sets) -1
+            counter = len(MathObject.number_sets) - 1
             while counter > 0:
                 old_item = cls.number_sets[counter - 1]
                 if NUMBER_SETS_LIST.index(name) < \
@@ -290,7 +289,8 @@ class MathObject:
                         'lean_name': bound_var.info['name'],
                         'is_bound_var': True}
             bound_var.info.update(new_info)
-            bound_vars.append([bound_var])
+            bound_var.math_type = bound_var_type
+            bound_vars.insert(0, bound_var)
             math_object = cls(node=node,
                               info=info,
                               math_type=math_type,
@@ -320,7 +320,18 @@ class MathObject:
     #######################
     @property
     def has_unnamed_bound_vars(self):
-        return self.bound_vars is not None and self.bound_vars is not []
+        """
+        Return True if self has some dummy vars whose name is "NO NAME".
+        """
+
+        if not self.bound_vars:
+            return False
+
+        vars = self.bound_vars
+        for var in vars:
+            if var.display_name() == "NO NAME":
+                return True
+        return False
 
     @property
     def display_name(self) -> str:
@@ -366,6 +377,9 @@ class MathObject:
             return child
         else:
             return child.descendant(remaining)
+
+    def give_name(self, name):
+        self.info["name"] = name
 
     def has_name(self, name: str):
         return self.display_name == name
@@ -520,7 +534,7 @@ class MathObject:
                 elif self.info['name'] != other.info['name']:
                     # None is a bound var
                     equal = False
-                    #log.debug(f"distinct names "
+                    # log.debug(f"distinct names "
                     #          f"{self.info['name'], other.info['name']}")
         # Recursively test for math_types
         elif self.math_type != other.math_type:
@@ -907,7 +921,8 @@ class MathObject:
             #########################################
             # Naming bound variables before display #
             #########################################
-            self.name_bound_vars(forbidden_vars=[])
+            # FIXME: now called from Coordinator
+            # self.name_bound_vars(forbidden_vars=[])
             shape = display_math_type_of_local_constant(self,
                                                         format_,
                                                         text_depth)

@@ -25,13 +25,15 @@ This file is part of dEAduction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
+
 from typing import List
 import logging
 
 import deaduction.pylib.logger as logger
 
 from deaduction.pylib.mathobj import MathObject
-# from deaduction.config.config import (EXERCISE)
+# class MathObject:
+#     pass
 
 import deaduction.pylib.config.vars as cvars
 
@@ -88,6 +90,7 @@ def give_local_name(math_type: MathObject,
     :return:                str, a name for the new variable
     """
 
+    # Fixme: unused
     more_forbidden_vars = body.extract_local_vars()
     names = [var.info['name'] for var in forbidden_vars]
     # log.debug(f'Giving name to bound var, a priori forbidden names ={names}')
@@ -125,7 +128,7 @@ def give_global_name(math_type: MathObject,
 
 def give_name(math_type,
               forbidden_vars: [MathObject],
-              hints: [str]=[],
+              hints: [str]=None,
               proof_step=None,
               use_indices=False) -> str:
     """
@@ -157,6 +160,8 @@ def give_name(math_type,
 
     # FIXME: choice of names needs to be improved!
 
+    if hints is None:
+        hints = []
     # List of forbidden names (with repeat)
     forbidden_names = [var.info['name'] for var in forbidden_vars]
     # log.debug(f"giving name to var, hints = {hints} type={math_type}")
@@ -234,6 +239,7 @@ def give_name(math_type,
             subscript += 1
             potential_name = radical + '_' + str(subscript)
         return potential_name
+
     ##########################################################
     # First trial: use hints, maybe with primes if permitted #
     ##########################################################
@@ -245,7 +251,7 @@ def give_name(math_type,
         # If hint = "x" and this is already the name of a variable with the
         # same math_type as the variable we want to name,
         # then try to use "x'"
-        elif cvars.get("display.use_primes_for_variables_names"):
+        elif cvars.get("display.allow_primes_for_names"):
             # here potential_name are assumed to be the name of some variable
             name = potential_name
             index_ = forbidden_names.index(name)
@@ -256,7 +262,7 @@ def give_name(math_type,
                 # Use "x'" only if "x" has the same type
                 if potential_name not in forbidden_names:
                     return potential_name
-                elif cvars.get('display.use_seconds_for_variables_names'):
+                elif cvars.get('display.allow_seconds_for_names'):
                     name = potential_name
                     index_ = forbidden_names.index(name)
                     variable = forbidden_vars[index_]
@@ -290,6 +296,209 @@ def give_name(math_type,
     return potential_name + '_' + str(counter)
 
 
+alphabet_lower = "abcdefghijklmnopqrstuvwxyz"
+alphabet_upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+alphabet_greek = "αβγδεζηθικλμνξοπρςστυφχψω" \
+                 + "ΓΔΘΛΞΠΣΦΨΩ"
+ALPHABET = alphabet_lower + alphabet_upper + alphabet_greek
+
+
+def hints_from_type(math_type, hints=None):
+    """
+    Provides a non void list of hints for naming a new var of type math_type.
+
+    * The name of math_type can sometimes provide a hint.
+    * For some types, hint is provided by tradition
+    (e.g. functions, sets, ...).
+    """
+    if not hints:
+        hints = []
+
+    # Avoid bad hints, e.g. for families where hints could be {E_i, i in I}
+    # All hints have to be acceptable variable names!
+    for hint in hints:
+        if hint not in ALPHABET:
+            hints.remove(hint)
+
+    # Subsets will be named with uppercase letters
+    if math_type.node in ['SET', 'TYPE', 'PROP']:
+        upper_case_name = True
+    else:
+        upper_case_name = False
+
+    if upper_case_name:
+        hints = [hint[0].upper() for hint in hints]
+        # Each hint is one uppercase letter
+    else:
+        hints = [hint[0].lower() for hint in hints]
+        # Each hint is one lowercase letter
+
+    # Try first letter of math_type if upper
+    if (not upper_case_name) and 'name' in math_type.info:
+        type_name = math_type.info["name"]
+        if type_name[0] in alphabet_upper:
+            hint = type_name[0].lower()
+            insert_maybe(hints, hint, position=0)
+            # if main_hint:
+            #     insert_maybe(hints, hint, position=1)
+            # else:
+            #     insert_maybe(hints, hint, position=0)
+            #     main_hint = True
+
+    # Standard hints
+    standard_hints = ['A'] if math_type.node.startswith('SET') \
+        else ['X'] if math_type.is_type(is_math_type=True) \
+        else ['P'] if math_type.is_prop(is_math_type=True) \
+        else ['f'] if math_type.is_function(is_math_type=True) \
+        else ['n', 'm', 'p'] if math_type.is_nat(is_math_type=True) \
+        else ['x']
+    for standard_hint in standard_hints:
+        insert_maybe(hints, standard_hint)
+
+    return hints
+
+
+def hints_by_name(named_vars: [MathObject], unnamed_var_nb: int):
+    """
+    Look into named_vars: if they all start by the same letter,
+    then this is our main hint. If not, return a sequence of new letters.
+    """
+
+    letters = {var.display_name[0] for var in named_vars}
+    if not letters:
+        return []
+    elif len(letters) == 1:
+        letter = letters.pop()
+        return [letter]
+    else:
+        letters = list(letter)
+        letters.sort()
+        new_letters = near(letters, unnamed_var_nb)
+        return new_letters
+
+
+def name_with_index(unnamed_vars, radical, forbidden_names, start=0):
+    """
+    Name unnmaed vars using radical and indices, avoiding forbidden_names,
+    with index starting at start. Always succeeds!
+    """
+    subscript = start
+    potential_name = radical + '_' + str(subscript)
+    for var in unnamed_vars:
+        while potential_name in forbidden_names:
+            subscript += 1
+            potential_name = radical + '_' + str(subscript)
+        var.give_name(potential_name)
+        subscript += 1
+        potential_name = radical + '_' + str(subscript)
+
+
+def try_names(vars_to_name, forbidden_names, names):
+    """
+    Try to name all vars_to_name according to names, avoiding
+    forbidden_names.
+
+    :param vars_to_name: MathObject, dummy_vars.
+    :param forbidden_names: list of names already used, to be avoided.
+    :param names: list of potential names.
+    """
+
+    allowed_names = [name for name in names if name not in forbidden_names]
+    if len(allowed_names) >= len(vars_to_name):
+        for var, name in zip(vars_to_name, allowed_names):
+            var.give_name(name)
+        return True
+    else:
+        return False
+
+
+def name_bound_vars(math_type, named_vars, unnamed_vars, forbidden_vars):
+    """
+
+    :param math_type:
+    :param named_vars:
+    :param unnamed_vars: list of dummy vars to be named, ordered
+    :param forbidden_vars:
+    :return:
+    """
+    log.debug("Naming vars (type, named, forbidden):")
+    log.debug(math_type.to_display())
+    log.debug(f"{[var.to_display() for var in named_vars]}")
+    log.debug(f"{[var.to_display() for var in unnamed_vars]}")
+    log.debug(f"{[var.to_display() for var in forbidden_vars]}")
+
+    forbidden_names = inj_list([var.info['name'] for var in forbidden_vars])
+    named_vars_names = [var.info['name'] for var in named_vars]  # No rep
+
+    hints_from_vars = hints_by_name(named_vars, len(unnamed_vars))
+    hints_type = hints_from_type(math_type)
+    assert hints_type != []
+
+    ###########################
+    # Easy case : use indices #
+    ###########################
+    use_indices = cvars.get("logic.force_indices_for_dummy_vars", False)
+    if use_indices:  # Force indices in dummy vars
+        hint = hints_type[0]
+        name_with_index(unnamed_vars, hint, forbidden_names)
+        return
+
+    if len(hints_from_vars) == len(unnamed_vars):
+        # If no name is forbidden, use this for naming
+        matching = True
+        for name in hints_from_vars:
+            if name in forbidden_names:
+                matching = False
+        if matching:
+            for name, var in zip(hints_from_vars, unnamed_vars):
+                var.give_name(name)
+                # var.info["name"] = name
+            return
+    # Main hint is hints_from_vars if there is only one, otherwise from type
+    hints = hints_from_vars + hints_type if len(hints_from_vars) == 1 \
+        else hints_type + hints_from_vars
+
+    allow_indices = cvars.get("logic.allow_indices_for_names", True)
+    allow_primes  = cvars.get("display.allow_primes_for_names", True)
+    allow_seconds = cvars.get("display.allow_seconds_for_names")
+    success = False
+
+    for hint in hints:
+        # Try each hint successively
+        # log.debug(f"trying {hint}...")
+        hint_prime = hint + "'"
+        hint_second = hint + "''"
+        total_vars_nb = len(forbidden_vars) + len(unnamed_vars)
+        # (1) Collect a sequence of trials
+        trials = []  # Each term will be a potential LIST of names
+        if allow_primes:
+            trials.append([hint, hint_prime])
+            if allow_seconds and hint_prime in named_vars_names:
+                # Consider second only if prime is already used
+                trials.append([hint,
+                               hint_prime,
+                               hint_second])
+        if allow_indices:
+            index_trial = [hint + "_" + str(nb)
+                           for nb in range(total_vars_nb - 1)]
+            trials.append(index_trial)
+        letters_trial = near([hint], total_vars_nb)
+        trials.append(letters_trial)
+        # (2) Try each trial
+        for trial in trials:
+            success = try_names(unnamed_vars, forbidden_names, trial)
+            if success:
+                break
+        if success:
+            break
+
+    if not success:
+        # Use indices, finally!
+        hint = hints_type[0]
+        name_with_index(unnamed_vars, hint, forbidden_names)
+        return
+
+
 #########
 # UTILS #
 #########
@@ -320,6 +529,64 @@ def next_in_list(letter: str, letters: List[str]):
         return letters[0]
 
 
+def near(letters, nb_new_letters):
+    """
+    Return a letter which is "near" letters:
+    - first which is not in letters, starting with letters[0]
+    - except if this is void, in that case fisrt before letters[0].
+    """
+    letters.sort()
+    new_letters = []
+    for alphabet in [alphabet_lower, alphabet_upper, alphabet_greek]:
+        if letters[0] in alphabet:
+            index = 0
+            letter = letters[index]
+            alphabet_index = alphabet.index(letter)
+            end_of_alphabet = False
+            # First search in the positive direction
+            while index < len(letters)-1:
+                letter = letters[index]
+                next_letter = letters[index + 1]
+                if next_letter not in alphabet:
+                    new_letters.extend(alphabet[alphabet_index+1:])
+                    end_of_alphabet = True
+                    break
+                # next_letter is in alphabet: get new letters, and go on
+                next_alphabet_index = alphabet.index(next_letter)
+                new_letters.extend(alphabet[alphabet_index + 1:
+                                            next_alphabet_index])
+                index += 1
+                letter = letters[index]
+                alphabet_index = alphabet.index(letter)
+
+            if len(new_letters) < nb_new_letters:  # Not enough
+                if not end_of_alphabet:  # last letter is in alphabet
+                    last_index = alphabet.index(letters[-1])
+                    new_letters.extend(alphabet[last_index + 1:])
+                first_index = alphabet.index(letters[0])
+                # Add beginning of alphabet in reverse order
+                more = list(alphabet[:first_index])
+                more.reverse()
+                new_letters.extend(more)
+
+            if len(new_letters) < nb_new_letters:  # Failure
+                return None
+            else:
+                new_letters = new_letters[:nb_new_letters]
+                return new_letters
+
+    return None
+
+def inj_list(list_: list):
+    """
+    Return a list with same elements of list_ but no repetition.
+    """
+    inj_list = []
+    for item in list_:
+        if item not in inj_list:
+            inj_list.append(item)
+    return inj_list
+
 def insert_maybe(L: list, item, position=None):
     """Insert or displace item in a list at the given position"""
     if item in L:
@@ -327,3 +594,10 @@ def insert_maybe(L: list, item, position=None):
     if position is None:
         position = len(L)
     L.insert(position, item)
+
+
+if __name__ == "__main__":
+    letters = ['A', 'C']
+    L = near(letters, 3)
+    print(L)
+
