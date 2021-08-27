@@ -1064,7 +1064,11 @@ def action_exists(proof_step,
 #########
 
 
-def apply_substitute(proof_step, l: [MathObject], user_input: [int], equality):
+def apply_substitute(proof_step,
+                     selected_objects: [MathObject],
+                     user_input: [int],
+                     equality,
+                     equality_nb=-1):
     """
     Try to rewrite the goal or the first selected property using the last
     selected property.
@@ -1073,7 +1077,8 @@ def apply_substitute(proof_step, l: [MathObject], user_input: [int], equality):
     goal = proof_step.goal
 
     codes = CodeForLean.empty_code()
-    heq = l[-1]
+    heq = selected_objects[equality_nb]  # Property to be used for substitution
+    heq_name = heq.info["name"]
     left_term = equality.children[0]
     right_term = equality.children[1]
     success1 = ' ' + _("{} replaced by {}").format(left_term.to_display(),
@@ -1087,19 +1092,19 @@ def apply_substitute(proof_step, l: [MathObject], user_input: [int], equality):
                (right_term.to_display(),
                 f'Replace by {left_term.to_display()}')]
 
-    if len(l) == 1:
+    if len(selected_objects) == 1:
         # If the user has chosen a direction, apply substitution
         # else if both directions make sense, ask the user for a choice
         # else try direct way or else reverse way.
-        h = l[0].info["name"]
+        # h = l[0].info["name"] Useless
         if len(user_input) > 0:
             if user_input[0] == 1:
                 success_msg = success2 + _("in target")
-                more_code = CodeForLean.from_string(f'rw <- {h}',
+                more_code = CodeForLean.from_string(f'rw <- {heq_name}',
                                                     success_msg=success_msg)
             elif user_input[0] == 0:
                 success_msg = success1 + _("in target")
-                more_code = CodeForLean.from_string(f'rw {h}',
+                more_code = CodeForLean.from_string(f'rw {heq_name}',
                                                     success_msg=success_msg)
             codes = codes.or_else(more_code)
         else:
@@ -1113,49 +1118,50 @@ def apply_substitute(proof_step, l: [MathObject], user_input: [int], equality):
                     output=_("Choose which expression you want to replace"))
             else:
                 msg2 = success2 + _("in target")
-                more_code2 = CodeForLean.from_string(f'rw <- {h}',
+                more_code2 = CodeForLean.from_string(f'rw <- {heq_name}',
                                                      success_msg=msg2)
                 codes = codes.or_else(more_code2)
                 msg1 = success1 + _("in target")
-                more_code1 = CodeForLean.from_string(f'rw {h}',
+                more_code1 = CodeForLean.from_string(f'rw {heq_name}',
                                                      success_msg=msg1)
                 codes = codes.or_else(more_code1)
 
-    if len(l) == 2:
-        h = l[0].info["name"]
-        heq_name = l[-1].info["name"]
+    if len(selected_objects) == 2:
+        prop_nb = 0 if equality_nb != 0 else 1
+        prop = selected_objects[prop_nb]
+        prop_name = prop.info["name"]
+        # heq_name = l[-1].info["name"]
         # Note that the pertinent user_input here is user_input[1]
+        #  (user_input[0] contains the choice of selected_object to be used
+        #  for substitution, or None if no choice)
         if len(user_input) > 1:
             if user_input[1] == 1:
-                success_msg = success2 + _("in {}").format(h)
-                more_code = CodeForLean.from_string(f'rw <- {heq_name} at {h}',
-                                                    success_msg=success_msg)
+                success_msg = success2 + _("in {}").format(prop_name)
+                more_code = CodeForLean.from_string(
+                                            f'rw <- {heq_name} at {prop_name}',
+                                            success_msg=success_msg)
                 codes = codes.or_else(more_code)
 
             elif user_input[1] == 0:
-                success_msg = success1 + _("in {}").format(h)
-                more_code = CodeForLean.from_string(f'rw {heq_name} at {h}',
-                                                    success_msg=success_msg)
+                success_msg = success1 + _("in {}").format(prop_name)
+                more_code = CodeForLean.from_string(
+                    f'rw {heq_name} at {prop_name}', success_msg=success_msg)
                 codes = codes.or_else(more_code)
         else:
-            if l[0].math_type.contains(left_term) and \
-                    l[0].math_type.contains(right_term):
+            if prop.math_type.contains(left_term) and \
+                    prop.math_type.contains(right_term):
                 raise MissingParametersError(
                     InputType.Choice,
                     choices,
                     title=_("Precision of substitution"),
                     output=_("Choose which expression you want to replace"))
 
-        # h, heq_name = heq_name, h
-        # codes = codes.or_else(f'rw <- {heq_name} at {h}')
-        # codes = codes.or_else(f'rw {heq_name} at {h}')
-
-        msg2 = success2 + _("in {}").format(h)
-        more_code2 = CodeForLean.from_string(f'rw <- {heq_name} at {h}',
+        msg2 = success2 + _("in {}").format(prop_name)
+        more_code2 = CodeForLean.from_string(f'rw <- {heq_name} at {prop_name}',
                                              success_msg=msg2)
         codes = codes.or_else(more_code2)
-        msg1 = success1 + _("in {}").format(h)
-        more_code1 = CodeForLean.from_string(f'rw {heq_name} at {h}',
+        msg1 = success1 + _("in {}").format(prop_name)
+        more_code1 = CodeForLean.from_string(f'rw {heq_name} at {prop_name}',
                                              success_msg=msg1)
         codes = codes.or_else(more_code1)
 
@@ -1181,10 +1187,12 @@ def action_equal(proof_step,
     """
     if user_input == None:
         user_input = []
+
+    equality_nb = -1  # Default nb of property to be used for substitution
+
     if not selected_objects:
         raise WrongUserInput(error=_("No property selected"))
     # Now len(l) > 0
-
     elif len(selected_objects) > 2:
         raise WrongUserInput(error=_("Too many selected objects"))
 
@@ -1196,7 +1204,6 @@ def action_equal(proof_step,
     #         selected_objects.remove(prop)
     #         selected_objects.insert(0, prop)  # Put equality first ???
     #         break
-
     elif len(selected_objects) == 2:
         prop0, prop1 = selected_objects[0], selected_objects[1]
         test0, equality0 = prop0.can_be_used_for_substitution()
@@ -1215,7 +1222,7 @@ def action_equal(proof_step,
                     output=_("Choose which equality to use for substitution"))
             elif user_input[0] == 0:
                 equality = equality0
-                selected_objects.reverse()
+                equality_nb = 0
             else:
                 equality = equality1
         elif test1:
@@ -1241,7 +1248,8 @@ def action_equal(proof_step,
     codes = codes.or_else(apply_substitute(proof_step,
                                            selected_objects,
                                            user_input,
-                                           equality))
+                                           equality,
+                                           equality_nb))
     return codes
 
 

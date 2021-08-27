@@ -876,8 +876,10 @@ class Coordinator(QObject):
             # log.debug("  -> computing new ProofState")
             self.lean_file.state_info_attach(ProofState=proof_state)
 
+        self.proof_step.proof_state = proof_state
+
         if not self.proof_step.is_error():
-            self.proof_step.proof_state = proof_state
+            # self.proof_step.proof_state = proof_state
             if not self.proof_step.is_history_move():
                 # log.debug("     Storing proof step in lean_file info")
                 self.lean_file.state_info_attach(proof_step=self.proof_step)

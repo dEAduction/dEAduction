@@ -614,8 +614,8 @@ begin
   sorry
 end
 
-lemma exercise.test_apply_equality_equality_and_direction
-(x y z : X) (f: X → Y) (H: x = y) (H': y = x):
+lemma exercise.test_apply_equality_equality_and_direction1
+(x y z : X) (f: X → Y) (H: x = y) (H': x = y):
 x = z :=
 /- dEAduction
 AutoTest
@@ -626,6 +626,39 @@ begin
   sorry
 end
 
+lemma exercise.test_apply_equality_equality_and_direction2
+(x y z : X) (f: X → Y) (H: x = y) (H': x = y):
+x = z :=
+/- dEAduction
+AutoTest
+    H' H = 0 1,
+    proof_methods 3
+-/
+begin
+  sorry
+end
+lemma exercise.test_apply_equality_equality_and_direction3
+(x y z : X) (f: X → Y) (H: x = y) (H': x = y):
+x = z :=
+/- dEAduction
+AutoTest
+    H' H = 1 0,
+    proof_methods 3
+-/
+begin
+  sorry
+end
+lemma exercise.test_apply_equality_equality_and_direction4
+(x y z : X) (f: X → Y) (H: x = y) (H': x = y):
+x = z :=
+/- dEAduction
+AutoTest
+    H' H = 1 1,
+    proof_methods 3
+-/
+begin
+  sorry
+end
 
 
 
