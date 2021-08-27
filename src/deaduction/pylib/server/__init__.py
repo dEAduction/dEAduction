@@ -413,7 +413,7 @@ class ServerInterface(QObject):
             statements = self.__course_data.statements
             st = statements[index]
             if not st.initial_proof_state:
-                ps = ProofState.from_lean_data(hypo, target)
+                ps = ProofState.from_lean_data(hypo, target, to_prove=False)
                 st.initial_proof_state = ps
                 # Emit signal in case an exercise is waiting for its ips
                 self.initial_proof_state_set.emit()

@@ -371,7 +371,7 @@ def hints_by_name(named_vars: [MathObject], unnamed_var_nb: int):
         letter = letters.pop()
         return [letter]
     else:
-        letters = list(letter)
+        letters = list(letters)
         letters.sort()
         new_letters = near(letters, unnamed_var_nb)
         return new_letters
@@ -412,16 +412,21 @@ def try_names(vars_to_name, forbidden_names, names):
         return False
 
 
-def name_bound_vars(math_type, named_vars, unnamed_vars, forbidden_vars):
+def name_bound_vars(math_type: MathObject,
+                    named_vars: [MathObject],
+                    unnamed_vars: [MathObject],
+                    forbidden_vars: [MathObject]):
     """
+    Name all vars in unnamed_vars, assumed to be dummy vars sharing type
+    math_type, using named_vars (of the same type) as clues, and avoiding
+    names of forbidden_vars.
 
     :param math_type:
     :param named_vars:
     :param unnamed_vars: list of dummy vars to be named, ordered
     :param forbidden_vars:
-    :return:
     """
-    log.debug("Naming vars (type, named, forbidden):")
+    log.debug("Naming vars (type, named, unnamed, forbidden):")
     log.debug(math_type.to_display())
     log.debug(f"{[var.to_display() for var in named_vars]}")
     log.debug(f"{[var.to_display() for var in unnamed_vars]}")

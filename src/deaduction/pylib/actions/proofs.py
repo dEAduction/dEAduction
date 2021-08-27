@@ -197,6 +197,7 @@ def introduce_fun(proof_step, selected_objects: [MathObject]) -> CodeForLean:
                 math_type = MathObject(node="FUNCTION",
                                        info={},
                                        children=[source_type, target_type],
+                                       bound_vars=[],
                                        math_type=NO_MATH_TYPE)
 
                 hf = get_new_hyp(proof_step)

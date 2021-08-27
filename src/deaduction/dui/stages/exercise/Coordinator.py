@@ -871,7 +871,8 @@ class Coordinator(QObject):
         else:  # Generic step
             hypo_analysis, targets_analysis = analysis
             proof_state = ProofState.from_lean_data(hypo_analysis,
-                                                    targets_analysis)
+                                                    targets_analysis,
+                                                    to_prove=True)
             # log.debug("  -> computing new ProofState")
             self.lean_file.state_info_attach(ProofState=proof_state)
 

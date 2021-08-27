@@ -561,7 +561,6 @@ class ExerciseChooser(AbstractCoExChooser):
         target = goal.target
         objects = goal.context_objects
         properties = goal.context_props
-        goal.name_bound_vars()
 
         # ────────────────────── Rest ────────────────────── #
         if self.__text_mode_checkbox.isChecked():

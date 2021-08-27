@@ -110,12 +110,12 @@ class Goal:
         return cls(context, target)
 
     @property
-    def context_objects(self):
+    def context_objects(self) -> [ContextMathObject]:
         objects = [cmo for cmo in self.context if not cmo.math_type.is_prop()]
         return objects
 
     @property
-    def context_props(self):
+    def context_props(self) -> [ContextMathObject]:
         props = [cmo for cmo in self.context if cmo.math_type.is_prop()]
         return props
 
@@ -218,7 +218,72 @@ class Goal:
         self.context     = clean_permuted_new_context
         self.future_tags = clean_permuted_new_tags
 
-    def name_bound_vars(self):
+    def __name_bound_vars_in_data(self, math_types, dummy_vars, forb_vars,
+                                  future_vars):
+        """
+        Name all vars in dummy_vars, type by type.
+
+        :param math_types: union of all types of vars in dummy_vars.
+        :param dummy_vars: unnamed dummy_vars, to be named
+        :param forb_vars:  vars whose name is forbidden.
+        :param future_vars:  anticipated vars in future context, whose name
+        is to be forbidden and used as guide for naming.
+        """
+
+        glob_vars = self.context_objects
+        for math_type in math_types:
+            glob_vars_of_type = [var for var in glob_vars
+                                  if var.math_type == math_type]
+            dummy_vars_of_type = [var for var in dummy_vars
+                                  if var.math_type == math_type]
+            future_vars_of_type = [var for var in future_vars
+                                  if var.math_type == math_type]
+            log.debug(f"Naming vars of type "
+                      f"{math_type.to_display()}")
+            name_bound_vars(math_type=math_type,
+                            named_vars=glob_vars_of_type + future_vars_of_type,
+                            unnamed_vars=dummy_vars_of_type,
+                            forbidden_vars=forb_vars + future_vars_of_type)
+            log.debug(f"    --> "
+                      f"{[var.to_display() for var in dummy_vars_of_type]}")
+
+    def __name_bound_vars_in_prop(self, prop: MathObject, future_vars):
+        """
+        Name all dummy vars in prop.
+
+        :param prop: MathObject, whose math_type is a proposition.
+        :return:
+        """
+        not_glob = cvars.get("logic.do_not_name_dummy_vars_as_global_vars",
+                             True)
+
+        glob_vars = self.context_objects
+
+        log.debug(f"Naming vars in {prop.to_display()}:")
+        if prop.math_type.bound_vars:
+            log.debug(f"""-->Dummy vars types: {[var.math_type.to_display()
+                                  for var in prop.math_type.bound_vars]}""")
+            # Collect math_types of bound_vars with no rep
+            math_types = inj_list([var.math_type for var in
+                                   prop.math_type.bound_vars])
+            log.debug(f"-->Math_types : "
+                      f"{[mt.to_display() for mt in math_types]}")
+            # math_types = []
+            # for var in prop.bound_vars:
+            #     math_type = var.math_type
+            #     if math_type not in math_types:
+            #         math_types.append(math_type)
+            # (Level 1 or 0)
+            forb_vars = glob_vars if not_glob \
+                else prop.math_type.extract_local_vars()
+
+            data = (math_types,
+                    prop.math_type.bound_vars,
+                    forb_vars,
+                    future_vars)
+            self.__name_bound_vars_in_data(*data)
+
+    def name_bound_vars(self, to_prove=True):
         """
         Give a name to all dummy vars appearing in the properties of
         self.context. Three level of constraint are taken into account,
@@ -229,100 +294,64 @@ class Goal:
         but not with glob vars.
         * Level 2: dummy vars cannot share names with glob vars nor dummy vars
             of other props.
+
+        We first name dummy vars for target, and then estimate future
+        context vars from target. Note that thos two sets of vars are not
+        disjoint but not identical: target usually contains dummy vars that
+        will not be introduced (e.g. existence quantifier, or any dummy var
+        in a premisse), and dummy vars will also appear in definitions
+        that have not been unfolded yet.
+        Those future vars will be considered as forbidden vars, to prevent
+        dummy vars name of context properties to from changing too much as
+        user unfolds the target.
+        
+        :param to_prove: True if this is the goal of an exercise, as opposed to
+        coming from the initial_proof_state of a statement.
         """
-        not_glob = cvars.get("logic.do_not_name_dummy_vars_as_global_vars",
-                             True)
+        # (0) Some unnamed vars?
+        there_are_unamed_vars = False
+        if self.target.math_type.has_unnamed_bound_vars:
+            there_are_unamed_vars = True
+        else:
+            for context_math_prop in self.context_props:
+                if context_math_prop.math_type.has_unnamed_bound_vars:
+                    there_are_unamed_vars = True
+        if not there_are_unamed_vars:
+            return
+
+        # (1) Name dummy_vars in target
+        self.__name_bound_vars_in_prop(self.target, [])
+
+
+        # not_glob = cvars.get("logic.do_not_name_dummy_vars_as_global_vars",
+        #                      True)
         not_dummy = cvars.get("logic.do_not_name_dummy_vars_as_dummy_vars",
                              False)  # All dummy vars have distinct names
-        glob_vars = self.context_objects
-        props = self.context_props
-        props.append(self.target)  # Do not forget dummy vars in target!
-        objects = self.context_objects
-        # We compute a sequence of (math_types, dummy_vars),
-        #  each term is to be treated globally
+
+        # glob_vars = self.context_objects
+
+        # (2) Estimate future context names from target (if to_prove == True)
+        future_vars = []  # Future context vars to be named
+        if to_prove:
+            future_vars = self.target.math_type.glob_vars_when_proving()
+            math_types = inj_list([var.math_type for var in future_vars])
+            data = (math_types, future_vars, self.context_objects, [])
+            log.debug("Naming future vars:")
+            self.__name_bound_vars_in_data(*data)
 
         if not_dummy:  # (Level 2)
-            # math_types = []
-            # for prop in props:
-            #     for var in prop.bound_vars:
-            #         math_type = var.math_type
-            #         if math_type not in math_types:
-            #             math_types.append(math_type)
             # Collect all math_types, with no repetition
             math_types = inj_list([var.math_type
                                    for var in prop.math_type.bound_vars
-                                   for prop in props])
+                                   for prop in self.context_props])
             dummy_vars = [var for var in prop.math_type.bound_vars
                           for prop in prop]  # All dummy vars (no repetition)
-            data = [(math_types, dummy_vars, glob_vars)]
+            data = (math_types, dummy_vars, self.context_objects, future_vars)
+            self.__name_bound_vars_in_data(*data)
         else:  # Types and dummy vars prop by prop
             data = []
-            for prop in props:
-                log.debug(f"Naming vars in {prop.to_display()}")
-                log.debug(f"""Dummy vars types: {[var.math_type.to_display()
-                                for var in prop.math_type.bound_vars]}""")
-                # Collect math_types of bound_vars with no rep
-                math_types = inj_list([var.math_type for var in
-                                       prop.math_type.bound_vars])
-                log.debug(f"Math_types : "
-                          f"{[mt.to_display() for mt in math_types]}")
-                # math_types = []
-                # for var in prop.bound_vars:
-                #     math_type = var.math_type
-                #     if math_type not in math_types:
-                #         math_types.append(math_type)
-                # (Level 1 or 0)
-                forb_vars = glob_vars if not_glob \
-                                    else prop.math_type.extract_local_vars()
-                data.append((math_types, prop.math_type.bound_vars, forb_vars))
-
-        # For each term in data, successively name dummy_vars of each math_type
-        for math_types, dummy_vars, forb_vars in data:
-            for math_type in math_types:
-                glob_vars_of_type = [var for var in glob_vars
-                                      if var.math_type == math_type]
-                dummy_vars_of_type = [var for var in dummy_vars
-                                      if var.math_type == math_type]
-                log.debug(f"Naming vars of type "
-                          f"{math_type.to_display()}")
-                name_bound_vars(math_type, glob_vars_of_type,
-                                dummy_vars_of_type, forb_vars)
-
-    # def tag_and_split_propositions_objects(self) -> ([MathObject, str],
-    #                                                  [MathObject, str]):
-    #     """
-    #     Split the context into
-    #         - a list of tagged objects,
-    #         - a list of tagged propositions
-    #     A tag object is a couple (object, tag), where tag is one of
-    #     "=", "≠", "+"
-    #
-    #     Lean, based on type theory, makes no difference between
-    #     mathematical "objects" (e.g. a set, an element of the set,
-    #     a function, ...) and mathematical "propositions" (logical assertions
-    #     concerning the objects). But mathematicians do, and the UI display
-    #     objects and propositions separately.
-    #
-    #     :return:
-    #     - a list of tuples (po, tag), where po is an object in the context
-    #     and tag is the tag of po
-    #     - a list of tuples (po, tag), where po is a proposition in the context
-    #     and tag is the tag of po
-    #     """
-    #
-    #     # FIXME: obsolete
-    #     log.info("split objects and propositions of the context")
-    #     context = self.context
-    #     if not self.future_tags:
-    #         self.future_tags = ["="] * len(context)
-    #     objects = []
-    #     propositions = []
-    #     for (math_object, tag) in zip(context, self.future_tags):
-    #         if math_object.math_type.is_prop():
-    #             propositions.append((math_object, tag))
-    #         else:
-    #             objects.append((math_object, tag))
-    #     return objects, propositions
+            for prop in self.context_props:
+                self.__name_bound_vars_in_prop(prop, future_vars)
 
     def objects_of_type(self, math_type):
         """
@@ -378,6 +407,10 @@ class Goal:
         """
 
         # fixme: depth>1 does not really work
+
+        # Name bound vars if needed!
+        self.name_bound_vars(to_prove=to_prove)
+
         context = self.context
         target = self.target
         text = ""
@@ -433,6 +466,10 @@ class Goal:
         """
         Return context and target in a raw form.
         """
+
+        # Name bound vars if needed
+        self.name_bound_vars(to_prove=to_prove)
+
         context = self.context
         target = self.target
         text = ""
@@ -455,16 +492,20 @@ class Goal:
         text += target.math_type.to_display(is_math_type=True)
         return text
 
-    def to_tooltip(self, type="exercise") -> str:
+    def to_tooltip(self, type_='exercise') -> str:
         """
         Return context and target in a raw form as a tooltip for a goal.
         """
+
+        # Name bound vars if needed
+        self.name_bound_vars(to_prove=(type_=='exercise'))
+
         context = self.context
         target = self.target
 
         # Context
         if context:
-            if type == "exercise":
+            if type_ == "exercise":
                 text = _("Context:")
             else:
                 text = _("Hypothesis:") if len(context) == 1 else \
@@ -481,7 +522,7 @@ class Goal:
             text += "  " + text_object + "\n"
 
         # Goal
-        if type == "exercise":
+        if type_ == "exercise":
             text += _("Goal:")
         else:
             text += _("Conclusion:")
@@ -510,7 +551,8 @@ class ProofState:
     lean_data: Tuple[str, str] = None
 
     @classmethod
-    def from_lean_data(cls, hypo_analysis: str, targets_analysis: str):
+    def from_lean_data(cls, hypo_analysis: str, targets_analysis: str,
+                       to_prove=True):
         """
         :param hypo_analysis:    string from the lean tactic hypo_analysis
         :param targets_analysis: string from the lean tactic targets_analysis
@@ -535,6 +577,7 @@ class ProofState:
             other_goal = Goal.from_lean_data(hypo_analysis="",
                                              target_analysis=other_string_goal)
             goals.append(other_goal)
+
         return cls(goals, (hypo_analysis, targets_analysis))
 
 

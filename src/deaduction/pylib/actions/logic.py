@@ -596,10 +596,12 @@ def construct_iff(proof_step, user_input: [str]) -> CodeForLean:
     impl1 = MathObject(info={},
                        node="PROP_IMPLIES",
                        children = [left, right],
+                       bound_vars=target.bound_vars,
                        math_type="PROP")
     impl2 = MathObject(info={},
                        node="PROP_IMPLIES",
                        children = [right, left],
+                       bound_vars=target.bound_vars,
                        math_type="PROP")
     code.add_conjunction(target, impl1, impl2)
     return code
@@ -720,7 +722,7 @@ def construct_forall(proof_step) -> CodeForLean:
     math_object = goal.target.math_type
 
     possible_codes = CodeForLean.empty_code()
-    if not math_object.is_for_all(is_math_type=True):
+    if not math_object.is_for_all(is_math_type=True, implicit = False):
         # Implicit "for_all"
         implicit_definition = MathObject.last_used_implicit_definition
         math_object         = MathObject.last_rw_object

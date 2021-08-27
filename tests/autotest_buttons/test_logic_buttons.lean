@@ -568,7 +568,7 @@ begin
   sorry
 end
 
-lemma exercise.test_apply_equality2a
+lemma exercise.test_apply_equality_target1
 (x y : X) (f: X → Y) (H: x = y):
 f x= f y :=
 /- dEAduction
@@ -579,7 +579,7 @@ begin
   sorry
 end
 
-lemma exercise.test_apply_equality2b
+lemma exercise.test_apply_equality_target2
 (x y : X) (f: X → Y) (H: x = y):
 f x= f y :=
 /- dEAduction
@@ -590,7 +590,7 @@ begin
   sorry
 end
 
-lemma exercise.test_apply_equality3a
+lemma exercise.test_apply_equality_equality1
 (x y z: X) (f: X → Y) (H: x = y) (H': y = z):
 x = z :=
 /- dEAduction
@@ -602,7 +602,7 @@ begin
   sorry
 end
 
-lemma exercise.test_apply_equality3b
+lemma exercise.test_apply_equality_equality2
 (x y z : X) (f: X → Y) (H: x = y) (H': y = z):
 x = z :=
 /- dEAduction
@@ -614,7 +614,7 @@ begin
   sorry
 end
 
-lemma exercise.test_apply_equality4
+lemma exercise.test_apply_equality_equality_and_direction
 (x y z : X) (f: X → Y) (H: x = y) (H': y = x):
 x = z :=
 /- dEAduction

@@ -203,7 +203,7 @@ class Statement:
             goal = self.initial_proof_state.goals[0]
             # target = goal.target
             # text = target.math_type.to_display(is_math_type=True)
-            text = goal.to_tooltip(type="non-exercise")
+            text = goal.to_tooltip(type_="non-exercise")
             if cvars.get("functionality.allow_implicit_use_of_definitions"):
                 if isinstance(self, Definition) and self.implicit_use:
                     text = '(' + _("implicit use allowed") + ')' + '\n' + text

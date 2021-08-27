@@ -49,6 +49,7 @@ This file is part of dEAduction.
 """
 from dataclasses import     dataclass, field
 from typing import          List, Any, Optional
+from copy import copy
 import logging
 
 import deaduction.pylib.logger as logger
@@ -285,7 +286,7 @@ class MathObject:
             # This lean name is saved in info['lean_name'],
             # and info['name'] = "NO NAME" until proper naming
             bound_var_type, bound_var, local_context = children
-            new_info = {'name': "NO NAME",
+            new_info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
                         'lean_name': bound_var.info['name'],
                         'is_bound_var': True}
             bound_var.info.update(new_info)
@@ -323,13 +324,8 @@ class MathObject:
         """
         Return True if self has some dummy vars whose name is "NO NAME".
         """
-
-        if not self.bound_vars:
-            return False
-
-        vars = self.bound_vars
-        for var in vars:
-            if var.display_name() == "NO NAME":
+        for var in self.bound_vars:
+            if var.is_unnamed():
                 return True
         return False
 
@@ -385,69 +381,70 @@ class MathObject:
         return self.display_name == name
 
     ########################
-    # Name bound variables #
+    # Name bound variables # Fixme: unused
     ########################
-    def name_bound_vars(self, forbidden_vars=None):
-        """
-        Provide a good name for all bound variables of self
-         e.g. when the node is a quantifier, "LAMBDA", "SET_EXTENSION".
-         (cf the have_bound_vars list in display_data.py)
-
-        (1) Assume all bound vars of self are unnamed (name = 'NO NAME')
-        (2) Name bound var of main node, if any
-        (3) Recursively call name_bound_vars on self.children
-
-         This order gives the wanted result, e.g.
-         ∀ x:X, ∀ x':X, etc. and not the converse
-        """
-        # NB: info["name"] is provided by structures.lean,
-        # but may be inadequate (e.g. two distinct variables sharing the
-        # same name).
-        # The Lean name is just used as a hint to find a good name
-        # but even this might turn out to be a bad idea
-
-        # For an expression like ∀ x: X, P(x)
-        # the constraints are:
-        # (1) the name of the bound variable
-        # (which is going to replace `x`)  must be distinct from all names
-        # of variables appearing in the body `P(x)`, whether free or bound
-        # (2) the name of the bound variable must be distinct from names
-        # of bound variables appearing previously in the same MathObject
-
-        # Bound vars inside P(x) must be unnamed, so that their names will not
-        # be on the forbidden list
-
-        if not self.has_unnamed_bound_vars:
-            # Prevents for (badly) renaming vars several times
-            # log.debug("no bound vars")
-            return
-        # log.debug(f"Naming bound vars in {self}")
-        # self.has_unnamed_bound_vars = False
-        if not forbidden_vars:
-            forbidden_vars = []
-        node = self.node
-        children = self.children
-        if node in HAVE_BOUND_VARS:
-            bound_var_type, bound_var, local_context = children
-            hint = bound_var.info["lean_name"]
-            # Search for a fresh name valid inside local context
-            name = give_name.give_local_name(math_type=bound_var_type,
-                                             hints=[hint],
-                                             body=local_context,
-                                             forbidden_vars=forbidden_vars)
-            bound_var.info["name"] = name
-            # Bound vars have no math_type indication
-            # but we need one for further proper naming
-            bound_var.math_type = bound_var_type
-            # log.debug(f"giving name {name}")
-
-            children = [local_context]
-            # Prevent further bound vars in the expression to take the same
-            # name
-            forbidden_vars.append(bound_var)
-        # Recursively name bound variables in local_context
-        for child in children:
-            child.name_bound_vars(forbidden_vars=forbidden_vars)
+    # def name_bound_vars(self, forbidden_vars=None):
+    #     """
+    #     Provide a good name for all bound variables of self
+    #      e.g. when the node is a quantifier, "LAMBDA", "SET_EXTENSION".
+    #      (cf the have_bound_vars list in display_data.py)
+    #
+    #     (1) Assume all bound vars of self are unnamed (name = 'NO NAME')
+    #     (2) Name bound var of main node, if any
+    #     (3) Recursively call name_bound_vars on self.children
+    #
+    #      This order gives the wanted result, e.g.
+    #      ∀ x:X, ∀ x':X, etc. and not the converse
+    #     """
+    #
+    #     # NB: info["name"] is provided by structures.lean,
+    #     # but may be inadequate (e.g. two distinct variables sharing the
+    #     # same name).
+    #     # The Lean name is just used as a hint to find a good name
+    #     # but even this might turn out to be a bad idea
+    #
+    #     # For an expression like ∀ x: X, P(x)
+    #     # the constraints are:
+    #     # (1) the name of the bound variable
+    #     # (which is going to replace `x`)  must be distinct from all names
+    #     # of variables appearing in the body `P(x)`, whether free or bound
+    #     # (2) the name of the bound variable must be distinct from names
+    #     # of bound variables appearing previously in the same MathObject
+    #
+    #     # Bound vars inside P(x) must be unnamed, so that their names will not
+    #     # be on the forbidden list
+    #
+    #     if not self.has_unnamed_bound_vars:
+    #         # Prevents for (badly) renaming vars several times
+    #         # log.debug("no bound vars")
+    #         return
+    #     # log.debug(f"Naming bound vars in {self}")
+    #     # self.has_unnamed_bound_vars = False
+    #     if not forbidden_vars:
+    #         forbidden_vars = []
+    #     node = self.node
+    #     children = self.children
+    #     if node in HAVE_BOUND_VARS:
+    #         bound_var_type, bound_var, local_context = children
+    #         hint = bound_var.info["lean_name"]
+    #         # Search for a fresh name valid inside local context
+    #         name = give_name.give_local_name(math_type=bound_var_type,
+    #                                          hints=[hint],
+    #                                          body=local_context,
+    #                                          forbidden_vars=forbidden_vars)
+    #         bound_var.info["name"] = name
+    #         # Bound vars have no math_type indication
+    #         # but we need one for further proper naming
+    #         bound_var.math_type = bound_var_type
+    #         # log.debug(f"giving name {name}")
+    #
+    #         children = [local_context]
+    #         # Prevent further bound vars in the expression to take the same
+    #         # name
+    #         forbidden_vars.append(bound_var)
+    #     # Recursively name bound variables in local_context
+    #     for child in children:
+    #         child.name_bound_vars(forbidden_vars=forbidden_vars)
 
 ##########################################
 # Tests for equality and related methods #
@@ -811,6 +808,10 @@ class MathObject:
         else:
             return False
 
+    def is_unnamed(self):
+        return self.display_name == "NO NAME" \
+               or self.display_name == '*no_name*'
+
     def which_number_set(self, is_math_type=False) -> str:
         """
         Return 'ℕ', 'ℤ', 'ℚ', 'ℝ' if self is a number, else None
@@ -882,6 +883,71 @@ class MathObject:
             return body.can_be_used_for_implication(is_math_type=True)
         else:
             return False
+
+    def glob_vars_when_proving(self):
+        """
+        Try to determine the variables that will be introduced when proving
+        self. implicit definitions will be unfolded.
+
+        :return: list of vars (local constants). Order has no meaning.
+        NB: these vars can be manipulated (e.g. named) with no damage,
+        they are (shallow) copies of the original vars. Their math_type
+        should not be touched, however.
+        """
+        # We systematically try actual node, and node from implicit definition.
+        # TODO: optimize by testing implicit definition once for all the tests!
+        math_type = self
+        vars = []
+        if self.is_for_all(is_math_type = True, implicit=True):
+            if not self.is_for_all(is_math_type = True, implicit=False):
+                math_type = MathObject.last_rw_object  # Implicit forall
+            #####################################
+            # This is where we find a new var!! #
+            #####################################
+            vars.append(copy(math_type.children[1]))
+            children = [math_type.children[2]]
+        elif self.is_and(is_math_type = True, implicit=True) \
+                or self.is_or(is_math_type = True, implicit=True) \
+                or self.is_not(is_math_type = True) \
+                or self.is_iff(is_math_type = True):
+            if not (self.is_and(is_math_type = True, implicit=False) \
+                    or self.is_or(is_math_type = True, implicit=False) \
+                    or self.is_not(is_math_type = True) \
+                    or self.is_iff(is_math_type = True)):
+                math_type = MathObject.last_rw_object  # Implicit and, etc.
+            children = math_type.children  # (we will take "Max" of children)
+        elif self.is_implication(is_math_type = True, implicit=True):
+            if not self.is_implication(is_math_type = True, implicit=False):
+                math_type = MathObject.last_rw_object
+            children = [math_type.children[1]]  # Vars of premisse ignored
+        elif self.is_exists(is_math_type = True, implicit=True):
+            if self.is_exists(is_math_type = True, implicit=False):
+                math_type = MathObject.last_rw_object
+            children = [math_type.children[2]]
+        else:
+            children = []  # Nothing else?
+
+        children_vars = [child.glob_vars_when_proving() for child in children]
+        # Keep max of each type:
+        #  Repeat until empty: pop any var from all children_vars
+        #  that contain it, and add it to vars
+        more_vars = []
+        while children_vars:
+            child_vars = children_vars[0]
+            if child_vars == []:
+                children_vars.remove([])
+            else:
+                var = child_vars.pop()
+                more_vars.append(var)
+                # Search for vars of same type in other children vars:
+                for other_child_vars in children_vars[1:]:
+                    types = [v.math_type for v in other_child_vars]
+                    if var.math_type in types:
+                        index = types.index(var.math_type)
+                        other_child_vars.pop(index)
+
+        vars.extend(more_vars)
+        return vars
 
     ###############################
     # Collect the local variables #
