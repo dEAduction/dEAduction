@@ -323,6 +323,10 @@ class Coordinator(QObject):
         return self.servint.lean_file
 
     @property
+    def history_nb(self):
+        return self.lean_file.target_idx
+
+    @property
     def nursery(self):
         return self.servint.nursery
 
@@ -467,9 +471,13 @@ class Coordinator(QObject):
 
                 elif emission.is_from(self.proof_outline_window.history_goto):
                     history_nb = emission.args[0]
-                    self.proof_step.button = 'history_goto'
-                    self.servint.server_queue.add_task(
+                    if history_nb != self.history_nb:
+                        self.proof_step.button = 'history_goto'
+                        self.servint.server_queue.add_task(
                                         self.servint.history_goto, history_nb)
+                    else:
+                        self.unfreeze()
+
                 ########################
                 # Code to Lean actions #
                 ########################
