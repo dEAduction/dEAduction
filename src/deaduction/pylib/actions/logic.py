@@ -48,7 +48,6 @@ This file is part of dEAduction.
 import logging
 from typing import Union
 
-from deaduction.pylib.text        import tooltips
 from deaduction.pylib.actions     import (action,
                                           InputType,
                                           MissingParametersError,
@@ -62,8 +61,6 @@ from deaduction.pylib.mathobj     import (MathObject,
                                           give_global_name,
                                           get_new_hyp,
                                           NUMBER_SETS_LIST)
-
-import deaduction.pylib.config.vars as cvars
 
 log = logging.getLogger("logic")
 global _
@@ -397,6 +394,7 @@ def action_or(proof_step,
 @action()
 def action_not(proof_step,
                selected_objects: [MathObject],
+               user_input = None,
                target_selected: bool = True) -> CodeForLean:
     """
     Translate into string of lean code corresponding to the action
@@ -520,6 +518,7 @@ def apply_implies_to_hyp(proof_step,
 @action()
 def action_implies(proof_step,
                    selected_objects: [MathObject],
+                   user_input = None,
                    target_selected: bool = True) -> CodeForLean:
     """
     Three cases:
@@ -664,7 +663,7 @@ def construct_iff_on_hyp(proof_step,
 @action()
 def action_iff(proof_step,
                selected_objects: [MathObject],
-               user_input: [str] = [],
+               user_input: [str] = None,
                target_selected: bool = True) -> CodeForLean:
     """
     Three cases:
@@ -678,6 +677,8 @@ def action_iff(proof_step,
     (3) 2 properties:
         try to obtain P ⇔ Q.
     """
+    if user_input is None:
+        user_input = []
 
     test_selection(selected_objects, target_selected)
     goal = proof_step.goal
@@ -793,7 +794,7 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     The last property should be a universal property
     (or equivalent to such after unfolding definitions)
 
-    :param l: list of MathObjects of length ≥ 2
+    :param selected_objects: list of MathObjects of length ≥ 2
     :return:
     """
     # FIXME: return error msg if user try to apply "forall x:X, P(x)"
@@ -874,7 +875,7 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
 @action()
 def action_forall(proof_step,
                   selected_objects: [MathObject],
-                  user_input: [str] = [],
+                  user_input: [str],
                   target_selected: bool = True) -> CodeForLean:
     """
     (1) If no selection and target is of the form ∀ x, P(x):
@@ -915,6 +916,7 @@ def action_forall(proof_step,
             potential_var = MathObject(node="LOCAL_CONSTANT",
                                        info={'name': item},
                                        children=[],
+                                       bound_vars=[],
                                        math_type=None)
             selected_objects.insert(0, potential_var)
             # Now len(l) == 2

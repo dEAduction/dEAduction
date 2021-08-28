@@ -47,7 +47,6 @@ This file is part of dEAduction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
-from dataclasses import     dataclass, field
 from typing import          List, Any, Optional
 from copy import copy
 import logging
@@ -167,7 +166,9 @@ class MathObject:
     last_used_implicit_definition = None
     last_rw_object                = None
 
-    def __init__(self, node, info, children, bound_vars, math_type):
+    def __init__(self, node, info, children, bound_vars=None, math_type=None):
+        if bound_vars is None:
+            bound_vars = []
         self.node = node
         self.info = info
         self.children = children
@@ -804,7 +805,7 @@ class MathObject:
         return self.display_name == "NO NAME" \
                or self.display_name == '*no_name*'
 
-    def which_number_set(self, is_math_type=False) -> str:
+    def which_number_set(self, is_math_type=False) -> Optional[str]:
         """
         Return 'ℕ', 'ℤ', 'ℚ', 'ℝ' if self is a number, else None
         """
@@ -892,30 +893,30 @@ class MathObject:
         #  MathObject, and then a method "vars_to_intro"
         math_type = self
         vars = []
-        if self.is_for_all(is_math_type = True, implicit=True):
-            if not self.is_for_all(is_math_type = True, implicit=False):
+        if self.is_for_all(is_math_type=True, implicit=True):
+            if not self.is_for_all(is_math_type=True, implicit=False):
                 math_type = MathObject.last_rw_object  # Implicit forall
             #####################################
             # This is where we find a new var!! #
             #####################################
             vars.append(copy(math_type.children[1]))
             children = [math_type.children[2]]
-        elif self.is_and(is_math_type = True, implicit=True) \
-                or self.is_or(is_math_type = True, implicit=True) \
-                or self.is_not(is_math_type = True) \
-                or self.is_iff(is_math_type = True):
-            if not (self.is_and(is_math_type = True, implicit=False) \
-                    or self.is_or(is_math_type = True, implicit=False) \
-                    or self.is_not(is_math_type = True) \
-                    or self.is_iff(is_math_type = True)):
+        elif (self.is_and(is_math_type=True, implicit=True)
+                or self.is_or(is_math_type=True, implicit=True)
+                or self.is_not(is_math_type=True)
+                or self.is_iff(is_math_type=True)):
+            if not (self.is_and(is_math_type=True, implicit=False)
+                    or self.is_or(is_math_type=True, implicit=False)
+                    or self.is_not(is_math_type=True)
+                    or self.is_iff(is_math_type=True)):
                 math_type = MathObject.last_rw_object  # Implicit and, etc.
             children = math_type.children  # (we will take "Max" of children)
-        elif self.is_implication(is_math_type = True, implicit=True):
-            if not self.is_implication(is_math_type = True, implicit=False):
+        elif self.is_implication(is_math_type=True, implicit=True):
+            if not self.is_implication(is_math_type=True, implicit=False):
                 math_type = MathObject.last_rw_object
-            children = [math_type.children[1]]  # Vars of premisse ignored
-        elif self.is_exists(is_math_type = True, implicit=True):
-            if not self.is_exists(is_math_type = True, implicit=False):
+            children = [math_type.children[1]]  # Vars of premise ignored
+        elif self.is_exists(is_math_type=True, implicit=True):
+            if not self.is_exists(is_math_type=True, implicit=False):
                 math_type = MathObject.last_rw_object
             children = [math_type.children[2]]
         else:

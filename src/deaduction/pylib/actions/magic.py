@@ -54,6 +54,7 @@ from deaduction.pylib.mathobj import (MathObject,
 @action()
 def action_compute(proof_step,
                    selected_objects,
+                   user_input,
                    target_selected: bool = True):
     """
     If the target is an equality, an inequality (or 'False'), then send
@@ -180,6 +181,7 @@ def split_conjunctions_in_context(proof_step):
 @action()
 def action_assumption(proof_step,
                       selected_objects: [MathObject],
+                      user_input,
                       target_selected: bool = True) -> CodeForLean:
     """
     Translate into string of lean code corresponding to the action.

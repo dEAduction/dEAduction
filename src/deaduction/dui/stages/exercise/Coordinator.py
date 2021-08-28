@@ -21,7 +21,7 @@ This file is part of d∃∀duction.
     more details.
 
     You should have received a copy of the GNU General Public License along
-    with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
+    with d∃∀duction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 # TODO:
@@ -45,19 +45,17 @@ from PySide2.QtWidgets import (QInputDialog,
 import deaduction.pylib.config.dirs as          cdirs
 import deaduction.pylib.config.vars as          cvars
 from deaduction.pylib.utils.filesystem import   check_dir
-from deaduction.dui.primitives      import      ButtonsDialog
+from deaduction.dui.primitives import           ButtonsDialog
 from deaduction.dui.stages.exercise import      ExerciseMainWindow, UserAction
-from deaduction.pylib.server        import      ServerInterface
+from deaduction.pylib.server import             ServerInterface
 
-from deaduction.pylib.coursedata        import (Statement,
-                                                Exercise,
+from deaduction.pylib.coursedata import        (Exercise,
                                                 Definition,
                                                 Theorem,
                                                 AutoStep)
 
-from deaduction.pylib.mathobj           import (MathObject,
+from deaduction.pylib.mathobj import           (MathObject,
                                                 PatternMathObject,
-                                                #MissingImplicitDefinition,
                                                 Goal,
                                                 ProofState,
                                                 ProofStep)
@@ -551,17 +549,16 @@ class Coordinator(QObject):
 
         while True:
             try:
-                if not self.emw.user_input:
-                    lean_code = action.run(
-                        self.proof_step,
-                        selection,  # (TODO: selection is stored in proof_step)
-                        target_selected=target_selected)
-                else:
-                    lean_code = action.run(
-                        self.proof_step,
-                        selection,
-                        self.emw.user_input,
-                        target_selected=target_selected)
+                # if not self.emw.user_input:
+                #     lean_code = action.run(
+                #         self.proof_step,
+                #         selection,  # (TODO: selection is stored in proof_step)
+                #         target_selected=target_selected)
+                # else:
+                lean_code = action.run(self.proof_step,
+                                       selection,
+                                       self.emw.user_input,
+                                       target_selected=target_selected)
 
             except MissingParametersError as e:
                 if e.input_type == InputType.Text:

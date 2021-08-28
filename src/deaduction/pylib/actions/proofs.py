@@ -63,7 +63,7 @@ log = logging.getLogger(__name__)
 @action()
 def action_proof_methods(proof_step,
                          selected_objects: [MathObject],
-                         user_input: [str] = [],
+                         user_input: [str],
                          target_selected: bool = True) -> CodeForLean:
 
     # 1st call, choose proof method
@@ -334,7 +334,7 @@ def apply_function(proof_step, selected_objects: [MathObject]):
 @action()
 def action_apply(proof_step,
                  selected_objects: [MathObject],
-                 user_input: [str] = [],
+                 user_input: [str],
                  target_selected: bool = True):
     """
     Translate into string of lean code corresponding to the action
