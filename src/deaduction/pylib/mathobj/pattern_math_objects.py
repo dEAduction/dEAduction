@@ -246,7 +246,7 @@ class PatternMathObject(MathObject):
                 if match:
                     metavars.append(self)
                     metavar_objects.append(math_object)
-                match = True
+                # match = True
             return match
         # Node
         elif node != math_object.node:
@@ -300,7 +300,8 @@ class PatternMathObject(MathObject):
                     #        f"{self.info['name'], math_object.info['name']}")
 
         # Recursively test for math_types
-        elif not self.math_type.recursive_match(math_object.math_type):
+        #  (added: also when names)
+        if not self.math_type.recursive_match(math_object.math_type):
             log.debug(f"distinct types {self.math_type}")
             log.debug(f"math_object type     {math_object.math_type}")
             match = False
