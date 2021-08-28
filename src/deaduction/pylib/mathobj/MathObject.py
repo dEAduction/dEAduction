@@ -145,12 +145,7 @@ class MathObject:
     node              : str   # e.g. "LOCAL_CONSTANT", "FUNCTION", "QUANT_∀"
     info              : dict  # e.g. "name", "id", "pp_type"
     children          : list  # List of MathObjects
-    bound_vars        : Optional[list]
-    # math_type         : Any = field(repr=False)  # Necessary with @dataclass
-    # _math_type        : Any = field(init=False,
-    #                                 repr=False,
-    #                                default=None)
-    # has_unnamed_bound_vars: bool = False  # True if bound vars to be named
+    bound_vars        : Optional[list]  # All bound vars (including children)
 
     Variables = {}  # Containing every element having an identifier,
     # i.e. global and bound variables. This is used to avoid duplicate.
@@ -167,6 +162,8 @@ class MathObject:
     #   set_definitions_for_implicit_use() method.
     implicit_definitions          = []
     definition_patterns           = []
+    # The following class attributes are modified each time an implicit
+    # definition is used with success:
     last_used_implicit_definition = None
     last_rw_object                = None
 
@@ -206,7 +203,7 @@ class MathObject:
         cls.Variables = {}
         cls.number_sets = []
         cls.bound_var_number = 0
-        cls.context_bound_vars = []
+        # cls.context_bound_vars = []
 
     @classmethod
     def add_numbers_set(cls, name: str):
@@ -302,9 +299,6 @@ class MathObject:
             ##############################
             # End: generic instantiation #
             ##############################
-            # Self has unnamed bound vars if some child has
-            # child_bool = (True in [child.has_unnamed_bound_vars
-            #                        for child in children])
             math_object = cls(node=node,
                               info=info,
                               math_type=math_type,
@@ -591,9 +585,7 @@ class MathObject:
     @classmethod
     def unmark_bound_vars(cls, bound_var_1, bound_var_2):
         """
-        Mark two bound variables with a common number, so that we can follow
-        them along two quantified expressions and check tif these expressions
-        are identical
+        Unmark the two bound vars.
         """
         bound_var_1.info.pop('bound_var_number')
         bound_var_2.info.pop('bound_var_number')
@@ -896,6 +888,8 @@ class MathObject:
         """
         # We systematically try actual node, and node from implicit definition.
         # TODO: optimize by testing implicit definition once for all the tests!
+        # TODO: refactor with a method "unfold_implicit_defs" which return a
+        #  MathObject, and then a method "vars_to_intro"
         math_type = self
         vars = []
         if self.is_for_all(is_math_type = True, implicit=True):
@@ -921,7 +915,7 @@ class MathObject:
                 math_type = MathObject.last_rw_object
             children = [math_type.children[1]]  # Vars of premisse ignored
         elif self.is_exists(is_math_type = True, implicit=True):
-            if self.is_exists(is_math_type = True, implicit=False):
+            if not self.is_exists(is_math_type = True, implicit=False):
                 math_type = MathObject.last_rw_object
             children = [math_type.children[2]]
         else:
