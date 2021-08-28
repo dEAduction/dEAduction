@@ -58,6 +58,29 @@ class PatternMathObject(MathObject):
     """
     A class for MathObject that may contains metavariables. Metavraiables
     are represented by PatternMathObject whose node is 'METAVAR".
+    e.g. The PatternMathObject representing the definition of injectivity
+    looks like:
+        metavar_28 is injective ⇔ ( ∀x ∈ metavar_26, ∀x' ∈ metavar_26,
+                                  (metavar_28(x) = metavar_28(x') ⇒ x = x') )
+    Note that here metavar_28 would have type '(metavar_26) → (metavar_27)'
+    and metavar_26 has type 'ensemble'.
+
+    The match() method tests if a given MathObject match a PatternMathObject,
+    e.g. if left is the PatternMathObject 'metavar_28 is injective', and
+         math_object = 'g∘f is injective'
+    then
+        left.match(math_object)
+    will be True. Note the the math_types should also match.
+
+    After a successful matching test, the matching values of the metavars are
+    stored in the metavar_objects class attribute as a list of MathObject
+    instances. Then the apply_matching() method will substitute metavars in
+    some MathObject. For instance after the previous example, if right is the
+    PatternMathObject
+        (∀x ∈ metavar_26, ∀x' ∈ metavar_26,
+        (metavar_28(x) = metavar_28(x') ⇒ x = x'))
+    then right.apply_matching() will produce the MathObject
+        ∀x ∈ X, ∀x' ∈ X, (g∘f(x) = g∘f(x') ⇒ x = x')
     """
     metavar_nb = 0
     metavars_csts           = []  # List of all metavars in all patterns
@@ -169,12 +192,14 @@ class PatternMathObject(MathObject):
     def is_metavar(self):
         return self.node == "METAVAR"
 
-    def match(self, math_object: MathObject):
+    def match(self, math_object: MathObject) -> bool:
         """
         Test if math_object match self. This is a recursive test.
         The list PatternMathObject.metavars contains the metavars that have
         already been matched against a math_object, which is stored with the
         same index in the list PatternMathObject.metavar_objects.
+        e.g. 'g∘f is injective' matches 'metavar_28 is injective'
+        (note that math_types of metavars should also match).
         """
 
         PatternMathObject.metavars = []
@@ -187,12 +212,12 @@ class PatternMathObject(MathObject):
         log.debug(f"    Metavars, objects: {list_}")
         return match
 
-    def recursive_match(self, math_object: MathObject):
+    def recursive_match(self, math_object: MathObject) -> bool:
         """
         Test if math_object match self. This is a recursive test.
         The list metavars contains the metavars that have already been
-        matched against a math_object, which is stored with the same index
-        in the metavar_objects list.
+        matched against a math_object, and this object is stored with the same
+        index in the metavar_objects list.
         """
 
         metavars = PatternMathObject.metavars

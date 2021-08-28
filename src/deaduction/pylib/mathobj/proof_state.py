@@ -268,12 +268,6 @@ class Goal:
                                    prop.math_type.bound_vars])
             log.debug(f"-->Math_types : "
                       f"{[mt.to_display() for mt in math_types]}")
-            # math_types = []
-            # for var in prop.bound_vars:
-            #     math_type = var.math_type
-            #     if math_type not in math_types:
-            #         math_types.append(math_type)
-            # (Level 1 or 0)
             forb_vars = glob_vars if not_glob \
                 else prop.math_type.extract_local_vars()
 
@@ -322,14 +316,6 @@ class Goal:
         # (1) Name dummy_vars in target
         self.__name_bound_vars_in_prop(self.target, [])
 
-
-        # not_glob = cvars.get("logic.do_not_name_dummy_vars_as_global_vars",
-        #                      True)
-        not_dummy = cvars.get("logic.do_not_name_dummy_vars_as_dummy_vars",
-                             False)  # All dummy vars have distinct names
-
-        # glob_vars = self.context_objects
-
         # (2) Estimate future context names from target (if to_prove == True)
         future_vars = []  # Future context vars to be named
         if to_prove:
@@ -339,6 +325,8 @@ class Goal:
             log.debug("Naming future vars:")
             self.__name_bound_vars_in_data(*data)
 
+        not_dummy = cvars.get("logic.do_not_name_dummy_vars_as_dummy_vars",
+                             False)  # All dummy vars have distinct names
         if not_dummy:  # (Level 2)
             # Collect all math_types, with no repetition
             math_types = inj_list([var.math_type
