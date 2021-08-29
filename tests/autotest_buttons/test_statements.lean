@@ -207,7 +207,7 @@ A = A'
 :=
 /- dEAduction
 AutoTest
-    theorem.double_inclusion success=théorème_appliqué,
+    theorem.double_inclusion success=Théorème_appliqué,
     CQFD
 -/
 begin
@@ -221,7 +221,7 @@ A = A'
 :=
 /- dEAduction
 AutoTest
-    H1 theorem.double_inclusion success=théorème_appliqué,
+    H1 theorem.double_inclusion success=Théorème_appliqué,
     CQFD
 -/
 begin

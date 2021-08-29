@@ -103,7 +103,6 @@ def allow_implicit_use(test: callable):
                 math_type = math_object
             else:
                 math_type = math_object.math_type
-            # implicit_definitions = MathObject.implicit_definitions
             definition_patterns = MathObject.definition_patterns
             for index in range(len(definition_patterns)):
                 # Test right term if self match pattern
@@ -167,8 +166,17 @@ class MathObject:
     last_rw_object                = None
 
     def __init__(self, node, info, children, bound_vars=None, math_type=None):
+        """
+        Create a MathObject. If bound_vars is None then the dummy vars list is
+        inferred from the children's lists and the node.
+        """
         if bound_vars is None:
             bound_vars = []
+            for child in children:
+                bound_vars.extend(child.bound_vars)
+            if node in HAVE_BOUND_VARS:
+                bound_var_type, bound_var, local_context = children
+                bound_vars.insert(0, bound_var)
         self.node = node
         self.info = info
         self.children = children
@@ -877,47 +885,93 @@ class MathObject:
         else:
             return False
 
+    def unfold_implicit_definition(self):  # -> [MathObject]
+        """
+        Try to unfold each implicit definition at top level only,
+        and return the list of resulting math_objects.
+        If no definition matches then the empty list is returned.
+        """
+
+        definition_patterns = MathObject.definition_patterns
+        rw_math_objects = []
+        for index in range(len(definition_patterns)):
+            # Test right term if self match pattern
+            pattern = definition_patterns[index]
+            pattern_left = pattern.children[0]
+            pattern_right = pattern.children[1]
+            if pattern_left.match(self):
+                definition = MathObject.implicit_definitions[index]
+                MathObject.last_used_implicit_definition = definition
+                rw_math_object = pattern_right.apply_matching()
+                rw_math_objects.append(rw_math_object)
+                name = MathObject.implicit_definitions[index].pretty_name
+                log.debug(f"Implicit definition {name} "
+                          f"--> {rw_math_object.to_display()}")
+        return rw_math_objects
+
+    def unfold_implicit_definition_recursively(self):
+        """
+        Unfold implicit definition recursively, keeping only the first match at
+        each unfolding.
+        """
+        # (1) Unfold definitions at top level
+        math_object = self
+        rw_math_objects = math_object.unfold_implicit_definition()
+        if rw_math_objects:
+            math_object = rw_math_objects[0]
+
+        # (2) Unfold definitions recursively for children
+        rw_children = []
+        for child in math_object.children:
+            rw_child = child.unfold_implicit_definition_recursively()
+            rw_children.append(rw_child)
+
+        # (3) Create new object with all defs unfolded
+        rw_math_object = MathObject(node=math_object.node,
+                                    info=math_object.info,
+                                    children=rw_children,
+                                    bound_vars=None,
+                                    math_type=math_object.math_type)
+        return rw_math_object
+
     def glob_vars_when_proving(self):
         """
         Try to determine the variables that will be introduced when proving
-        self. implicit definitions will be unfolded.
+        self. Implicit definitions must be unfolded prior to calling this
+        method.
 
         :return: list of vars (local constants). Order has no meaning.
         NB: these vars can be manipulated (e.g. named) with no damage,
         they are (shallow) copies of the original vars. Their math_type
         should not be touched, however.
         """
-        # We systematically try actual node, and node from implicit definition.
-        # TODO: optimize by testing implicit definition once for all the tests!
-        # TODO: refactor with a method "unfold_implicit_defs" which return a
-        #  MathObject, and then a method "vars_to_intro"
         math_type = self
         vars = []
-        if self.is_for_all(is_math_type=True, implicit=True):
-            if not self.is_for_all(is_math_type=True, implicit=False):
-                math_type = MathObject.last_rw_object  # Implicit forall
+        if self.is_for_all(is_math_type=True, implicit=False):
+            # if not self.is_for_all(is_math_type=True, implicit=False):
+            #     math_type = MathObject.last_rw_object  # Implicit forall
             #####################################
             # This is where we find a new var!! #
             #####################################
             vars.append(copy(math_type.children[1]))
             children = [math_type.children[2]]
-        elif (self.is_and(is_math_type=True, implicit=True)
-                or self.is_or(is_math_type=True, implicit=True)
-                or self.is_not(is_math_type=True)
-                or self.is_iff(is_math_type=True)):
-            if not (self.is_and(is_math_type=True, implicit=False)
-                    or self.is_or(is_math_type=True, implicit=False)
-                    or self.is_not(is_math_type=True)
-                    or self.is_iff(is_math_type=True)):
-                math_type = MathObject.last_rw_object  # Implicit and, etc.
+        elif (self.is_and(is_math_type=True, implicit=False)
+                or self.is_or(is_math_type=True, implicit=False)
+                or self.is_not(is_math_type=False)
+                or self.is_iff(is_math_type=False)):
+            # if not (self.is_and(is_math_type=True, implicit=False)
+            #         or self.is_or(is_math_type=True, implicit=False)
+            #         or self.is_not(is_math_type=True)
+            #         or self.is_iff(is_math_type=True)):
+            #     math_type = MathObject.last_rw_object  # Implicit and, etc.
             children = math_type.children  # (we will take "Max" of children)
-        elif self.is_implication(is_math_type=True, implicit=True):
-            if not self.is_implication(is_math_type=True, implicit=False):
-                math_type = MathObject.last_rw_object
+        elif self.is_implication(is_math_type=True, implicit=False):
+            # if not self.is_implication(is_math_type=True, implicit=False):
+            #     math_type = MathObject.last_rw_object
             children = [math_type.children[1]]  # Vars of premise ignored
-        elif self.is_exists(is_math_type=True, implicit=True):
-            if not self.is_exists(is_math_type=True, implicit=False):
-                math_type = MathObject.last_rw_object
+        elif self.is_exists(is_math_type=True, implicit=False):
+            # if not self.is_exists(is_math_type=True, implicit=False):
+            #     math_type = MathObject.last_rw_object
             children = [math_type.children[2]]
         else:
             children = []  # Nothing else?

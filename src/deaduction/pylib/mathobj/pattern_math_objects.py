@@ -205,11 +205,11 @@ class PatternMathObject(MathObject):
         PatternMathObject.metavars = []
         PatternMathObject.metavar_objects = []
         match = self.recursive_match(math_object)
-        log.debug(f"Matching...")
+        # log.debug(f"Matching...")
         list_ = [(PatternMathObject.metavars[idx].to_display(),
                   PatternMathObject.metavar_objects[idx].to_display())
                  for idx in range(len(PatternMathObject.metavars))]
-        log.debug(f"    Metavars, objects: {list_}")
+        # log.debug(f"    Metavars, objects: {list_}")
         return match
 
     def recursive_match(self, math_object: MathObject) -> bool:

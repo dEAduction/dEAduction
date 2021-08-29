@@ -319,7 +319,11 @@ class Goal:
         # (2) Estimate future context names from target (if to_prove == True)
         future_vars = []  # Future context vars to be named
         if to_prove:
-            future_vars = self.target.math_type.glob_vars_when_proving()
+            # First unfold definitions
+            math_type = self.target.math_type
+            rw_math_type = math_type.unfold_implicit_definition_recursively()
+            log.debug(f"Rw math_type: {rw_math_type.to_display()}")
+            future_vars = rw_math_type.glob_vars_when_proving()
             math_types = inj_list([var.math_type for var in future_vars])
             data = (math_types, future_vars, self.context_objects, [])
             log.debug("Naming future vars:")
