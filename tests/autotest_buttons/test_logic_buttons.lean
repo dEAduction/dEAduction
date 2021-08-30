@@ -660,32 +660,66 @@ begin
   sorry
 end
 
-
-
 end test_equality
 
-/- The following exo does not work. Pb= 
-∃ x ∈ A, P(x)
-as a target is actually 
-∃ x:X, ∃ H:x ∈ A, P(x)
-whereas in deaduction's hypo it is
-∃ x:X, x ∈ A ∧ P(x).
-Deaduction display all this the same way but assumption fails!
--/
--- lemma exercise.test_apply_exists_2
--- (X: Type) (A: set X) (P Q: X → Prop)
--- (H1: ∃ x ∈ A, P(x))
--- (H2: ∀x∈A, P(x) → Q(x)) :
--- (∃ x ∈ A, Q(x))
---  :=
-/- deaduc
+namespace test_mapsto
+--------------
+--- mapsto ---
+--------------
+
+lemma exercise.test_mapsto_equality
+(x y : X) (f: X → Y) (H: x = y):
+f(x) = f(y) :=
+/- dEAduction
 AutoTest
-    H1 ∃,
-    @P1 H2 →,
-    @P3 @P4 ∧,
-    @O5 @P5 ∃,
+    H f mapsto,
     CQFD
 -/
+begin
+  sorry
+end
+
+lemma exercise.test_mapsto_element_1
+(x x' : X) (f: X → Y) :
+∃ y:Y, y= f(x') :=
+/- dEAduction
+AutoTest
+    x' f mapsto,
+    y exists
+-/
+begin
+  sorry
+end
+
+lemma exercise.test_mapsto_element_2
+(x x' : X) (f: X → Y) :
+∃ y:Y, y= f(x') :=
+/- dEAduction
+AutoTest
+    f mapsto x',
+    y exists
+-/
+begin
+  sorry
+end
+
+
+lemma exercise.test_apply_error_1
+(A B: set X) (x y : X) (f: X → Y) (H: x = y) (H': x ∈ A) (H'': A =B):
+y ∈ B :=
+/- dEAduction
+AutoTest
+    H' mapsto WUI error=Sélectionner_une_application,
+    proof_methods 3
+-/
+begin
+  sorry
+end
+
+
+
+
+end test_maps_to
 end tests_logic_buttons
 end theorie_des_ensembles
 end course

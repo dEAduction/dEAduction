@@ -290,49 +290,5 @@ AutoTest
 begin
   sorry
 end
-
------------
--- Apply --
------------
-
-lemma exercise.test_apply_equality
-(x y : X) (f: X → Y) (H: x = y):
-f(x) = f(y) :=
-/- dEAduction
-AutoTest
-    H f apply,
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_apply_error_1
-(A B: set X) (x y : X) (f: X → Y) (H: x = y) (H': x ∈ A) (H'': A =B):
-y ∈ B :=
-/- dEAduction
-AutoTest
-    H' apply WUI error=appliquer_ceci,
-    proof_methods 3
--/
-begin
-  sorry
-end
-
-lemma exercise.test_apply_error_2
-(A B: set X) (x y : X) (f: X → Y) (H: x = y) (H': x ∈ A) (H'': A =B):
-y ∈ B :=
-/- dEAduction
-AutoTest
-    CQFD FRE error=pas_comment_conclure,
-    proof_methods 3
--/
-begin
-  sorry
-end
-end tests_proof_buttons
-
-
-
 end theorie_des_ensembles
 end course

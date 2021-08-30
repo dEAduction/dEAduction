@@ -113,7 +113,8 @@ alternative_symbols = {'→': '⇒',
                        'apply': _('Apply'),
                        'assumption': _('Goal!'),
                        "CQFD": _('Goal!'),
-                       'compute': _('Compute')
+                       'compute': _('Compute'),
+                       'mapsto': '↦'
                        }
 
 
