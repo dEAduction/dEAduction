@@ -1255,6 +1255,120 @@ def action_equal(proof_step,
     return codes
 
 
+def apply_map_to_element(proof_step,
+                         map_: MathObject,
+                         x: str):
+    """
+    Return Lean code to apply map_ to element.
+    Element may be a MathObject (selected by user)
+    or a string (as a result of a WrongUserInput exception).
+    """
+
+    f = map_.info["name"]
+    # if isinstance(element, MathObject):
+    #     x = element.info["name"]
+    # elif isinstance(element, str):
+    image_set = map_.math_type.children[1]
+    y = give_global_name(proof_step=proof_step,
+                         math_type=image_set,
+                         hints=[image_set.info["name"]])
+    new_h = get_new_hyp(proof_step)
+    msg = _("New objet {} added to the context").format(y)
+    code = CodeForLean.from_string(f"set {y} := {f} {x} with {new_h}",
+                                   success_msg=msg)
+    return code
+
+
+def apply_function(proof_step, map_, selected_objects: [MathObject]):
+    """
+    Apply map_, which is assumed to be a map f,
+    to selected_objects, which can be:
+        - equalities
+        - objects x (then create the new object f(x) )
+
+    selected_objects MUST have length at least 1.
+    """
+
+    codes = CodeForLean.empty_code()
+    # map_ = selected_objects[-1]
+    f = map_.info["name"]
+    # Y = selected_objects[-1].math_type.children[1]  # Target set
+
+    while selected_objects:
+
+        if selected_objects[0].math_type.is_prop():
+            # Function applied to a property, presumed to be an equality
+            h = selected_objects[0].info["name"]
+            new_h = get_new_hyp(proof_step)
+            codes = codes.and_then(f'have {new_h} := congr_arg {f} {h}')
+            codes.add_success_msg(_("Map {} applied to {}").format(f, h))
+        else:
+            # Function applied to element x:
+            #   create new element y and new equality y=f(x)
+            x = selected_objects[0].info["name"]
+            codes = codes.and_then(apply_map_to_element(proof_step,
+                                                        map_,
+                                                        x))
+            # y = give_global_name(proof_step=proof_step,
+            #                      math_type=Y,
+            #                      hints=[Y.info["name"].lower()])
+            # msg = _("New objet {} added to the context").format(y)
+            # codes = codes.or_else(f'set {y} := {f} {x} with {new_h}',
+            #                       success_msg=msg)
+        selected_objects = selected_objects[1:]
+    msg = _("The map {} cannot be applied to these objects").format(f)
+    codes.add_error_msg(msg)
+    return codes
+
+
+@action()
+def action_mapsto(proof_step,
+                  selected_objects: [MathObject],
+                  user_input: [str] = None,
+                  target_selected: bool = True) -> CodeForLean:
+    """
+    Apply a function, which must be one of the selected object,
+    to an element or an equality.
+    - If no function is selected, rise a WrongUserInput exception
+    - If a function but no other object is selected, rise a
+    MissingParameterError exception.
+
+    (Previously action_apply).
+    """
+
+    # We successively try all selected objects
+    for math_object in selected_objects:
+        if math_object.is_function():
+            if len(selected_objects) == 1:
+                # A function, but no other object:
+                if not user_input:
+                    name = math_object.to_display()
+                    output = _("Enter element on which you want to apply "
+                               "the map {}:").format(name)
+                    raise MissingParametersError(InputType.Text,
+                                                 title=_("Map"),
+                                                 output=output)
+                else:
+                    # Apply function to user input:
+                    x = user_input[0]
+                    code = apply_map_to_element(proof_step,
+                                                map_=math_object,
+                                                x=x)
+
+                    return code
+                # error = _("Select an element or an equality on which to "
+                #           "apply the function")
+                # raise WrongUserInput(error=error)
+            else:
+                selected_objects.remove(math_object)
+                return apply_function(proof_step,
+                                      map_=math_object,
+                                      selected_objects=selected_objects)
+
+    error = _("Select an application and an element or an equality")
+    raise WrongUserInput(error=error)
+
+
 #########
 # utils #
 #########

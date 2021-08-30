@@ -9,7 +9,7 @@ Title
 Institution
     Université du monde
 AvailableProof
-    proof_methods new_object apply
+    proof_methods new_object
 AvailableMagic
     assumption
 AvailableExercises

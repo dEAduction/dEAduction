@@ -69,6 +69,8 @@ __tooltips = {
         _("""From '∃ x, P(x)' get an 'x' and 'P(x)'""")],
     'equal':
         _("""Use an equality to substitute one term with the other"""),
+    "mapsto":
+        _("""Apply a function to an element or an equality"""),
     'apply':
         # [_("Apply an equality or an iff to substitute in another property"),
         _("""Apply a function to an element or an equality"""),
@@ -116,9 +118,9 @@ __buttons_symbols = {
     'CQFD': _('Goal!')
 }
 logic_buttons = ['and', 'or', 'not', 'implies', 'iff', 'forall', 'exists',
-                 'equal']
+                 'equal', 'mapsto']
 logic_button_symbols = cvars.get(
-    'display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL')
+    'display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAPSTO')
 # FIXME: in config_window, check format
 symbols = logic_button_symbols.split(", ")
 for key, value in zip(logic_buttons, logic_button_symbols.split(", ")):

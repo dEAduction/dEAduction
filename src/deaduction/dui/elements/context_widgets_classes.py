@@ -55,7 +55,7 @@ from PySide2.QtWidgets import ( QHBoxLayout,
 # from   deaduction.pylib.config.i18n      import   _
 from   deaduction.pylib.mathobj          import  (ContextMathObject,
                                                   MathObject)
-from   deaduction.pylib.actions          import   explain_how_to_apply
+# from   deaduction.pylib.actions          import   explain_how_to_apply
 
 from   deaduction.pylib.utils.filesystem import path_helper
 
@@ -163,15 +163,15 @@ class MathObjectWidgetItem(QListWidgetItem):
         self.setText(caption)
         self.setIcon(_TagIcon(self.tag))
         # set tool_tips (merge several tool_tips if needed)
-        tool_tips = explain_how_to_apply(math_object)
-        if len(tool_tips) == 1:
-            tool_tip = _("Double click to") + " " + tool_tips[0]
-            self.setToolTip(tool_tip)
-        elif len(tool_tips) > 1:
-            text = _("Double click to:")
-            for tool_tip in tool_tips:
-                text += "\n" + "• " + tool_tip
-            self.setToolTip(text)
+        # tool_tips = explain_how_to_apply(math_object)
+        # if len(tool_tips) == 1:
+        #     tool_tip = _("Double click to") + " " + tool_tips[0]
+        #     self.setToolTip(tool_tip)
+        # elif len(tool_tips) > 1:
+        #     text = _("Double click to:")
+        #     for tool_tip in tool_tips:
+        #         text += "\n" + "• " + tool_tip
+        #     self.setToolTip(text)
 
     @property
     def logic(self):

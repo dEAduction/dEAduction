@@ -60,7 +60,7 @@ from deaduction.dui.elements            import ( ActionButton,
                                                  StatementsTreeWidget,
                                                  MathObjectWidget,
                                                  TargetWidget)
-from deaduction.pylib.actions           import   action_apply
+# from deaduction.pylib.actions           import   action_apply
 from deaduction.pylib.coursedata        import   Exercise
 from deaduction.pylib.mathobj           import   Goal
 import deaduction.pylib.config.vars      as      cvars
@@ -162,12 +162,12 @@ class ExerciseCentralWidget(QWidget):
 
         # Search for ActionButton corresponding to action_apply
         # (which will be called by double-click):
-        apply_buttons = [button for button in self.proof_btns.buttons
-                         if button.action.run == action_apply]
-        if apply_buttons:
-            self.action_apply_button = apply_buttons[0]
-        else:
-            self.action_apply_button = None
+        # apply_buttons = [button for button in self.proof_btns.buttons
+        #                  if button.action.run == action_apply]
+        # if apply_buttons:
+        #     self.action_apply_button = apply_buttons[0]
+        # else:
+        #     self.action_apply_button = None
 
         statements           = exercise.available_statements
         outline              = exercise.course.outline
@@ -232,10 +232,10 @@ class ExerciseCentralWidget(QWidget):
 
         # Search for ActionButton corresponding to action_apply
         # (which will be called by double-click):
-        apply_buttons = [button for button in self.proof_btns.buttons
-                         if button.action.run == action_apply]
-        if apply_buttons:
-            self.action_apply_button = apply_buttons[0]
+        # apply_buttons = [button for button in self.proof_btns.buttons
+        #                  if button.action.run == action_apply]
+        # if apply_buttons:
+        #     self.action_apply_button = apply_buttons[0]
 
         self.__action_btns_lyt.addWidget(self.logic_btns)
         self.__action_btns_lyt.addWidget(self.proof_btns)

@@ -488,15 +488,15 @@ class Coordinator(QObject):
                 elif emission.is_from(self.action_triggered):
                     button = emission.args[0]  # ActionButton triggered by user
                     self.proof_step.button = button
-                    # FIXME: no moree double click
-                    if button == self.ecw.action_apply_button \
-                            and self.double_clicked_item:
-                        # Make sure item is marked and added to selection
-                        item = self.double_clicked_item
-                        if item in self.current_selection:
-                            self.current_selection.remove(item)
-                        self.current_selection.append(item)  # Item is last
-                        self.emw.double_clicked_item = None
+                    # # FIXME: no more double click
+                    # if button == self.ecw.action_apply_button \
+                    #         and self.double_clicked_item:
+                    #     # Make sure item is marked and added to selection
+                    #     item = self.double_clicked_item
+                    #     if item in self.current_selection:
+                    #         self.current_selection.remove(item)
+                    #     self.current_selection.append(item)  # Item is last
+                    #     self.emw.double_clicked_item = None
                     self.__server_call_action(emission.args[0])
 
                 elif emission.is_from(self.statement_triggered):

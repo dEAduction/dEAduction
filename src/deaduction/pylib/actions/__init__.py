@@ -46,6 +46,8 @@ from .logic import (action_not,
                     action_or,
                     action_forall,
                     action_exists,
+                    action_equal,
+                    action_mapsto,
                     apply_exists,
                     apply_and,
                     apply_or,
@@ -55,9 +57,7 @@ from .logic import (action_not,
                     have_new_property,
                     apply_substitute)
 
-from .proofs import (action_apply,
-                     action_proof_methods,
-                     explain_how_to_apply)
-from.magic import (         action_compute,
-                            action_assumption)
+from .proofs import action_proof_methods
+from.magic import  (action_compute,
+                    action_assumption)
 

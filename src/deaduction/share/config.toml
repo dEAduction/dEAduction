@@ -14,7 +14,7 @@ target_font_size = "24pt"
 context_font_size = "12pt"
 tooltips_font_size = "10pt"
 mathematics_font = "Defaults"
-symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃, ="
+symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAPSTO = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃, =, ↦"
 use_logic_button_symbols = true
 
 display_detailed_errors_on_wui = true

@@ -92,7 +92,7 @@ class CodeForLean:
     @classmethod
     def from_string(cls,
                     instruction: str,
-                    error_msg: str = '',
+                    error_msg: str = "",
                     success_msg: str = ""):
         """
         Create a CodeForLean with a single instruction
