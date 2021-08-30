@@ -30,7 +30,8 @@ import sys
 import logging
 from typing import Union
 from PySide2.QtCore import    ( Qt, Signal, Slot, QSettings )
-from PySide2.QtGui import     ( QColor, QBrush, QKeySequence )
+# from PySide2.QtGui import     ( QColor, QBrush, QKeySequence )
+from PySide2.QtGui import       QTextCursor
 from PySide2.QtWidgets import ( QComboBox,
                                 QToolTip,
                                 QApplication,
@@ -42,6 +43,7 @@ from PySide2.QtWidgets import ( QComboBox,
                                 QHBoxLayout)
 
 global _
+
 
 class QTestWindow(QWidget):
     """
@@ -165,6 +167,7 @@ class QTestWindow(QWidget):
             intro = f'<font color="{color}">'
             outro = '</font>'
             txt = intro + txt + outro
+        self.console.moveCursor(QTextCursor.End)
         self.console.insertHtml(txt)
         if self.scroll_to_end_btn.isChecked():
             self.console.ensureCursorVisible()
