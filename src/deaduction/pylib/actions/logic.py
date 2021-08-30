@@ -1279,43 +1279,35 @@ def apply_map_to_element(proof_step,
     return code
 
 
-def apply_function(proof_step, map_, selected_objects: [MathObject]):
+def apply_function(proof_step, map_, arguments: [MathObject]):
     """
     Apply map_, which is assumed to be a map f,
-    to selected_objects, which can be:
+    to arguments, which can be:
         - equalities
         - objects x (then create the new object f(x) )
 
-    selected_objects MUST have length at least 1.
+    arguments MUST have length at least 1.
     """
 
     codes = CodeForLean.empty_code()
-    # map_ = selected_objects[-1]
     f = map_.info["name"]
-    # Y = selected_objects[-1].math_type.children[1]  # Target set
 
-    while selected_objects:
+    while arguments:
 
-        if selected_objects[0].math_type.is_prop():
+        if arguments[0].math_type.is_prop():
             # Function applied to a property, presumed to be an equality
-            h = selected_objects[0].info["name"]
+            h = arguments[0].info["name"]
             new_h = get_new_hyp(proof_step)
             codes = codes.and_then(f'have {new_h} := congr_arg {f} {h}')
             codes.add_success_msg(_("Map {} applied to {}").format(f, h))
         else:
             # Function applied to element x:
             #   create new element y and new equality y=f(x)
-            x = selected_objects[0].info["name"]
+            x = arguments[0].info["name"]
             codes = codes.and_then(apply_map_to_element(proof_step,
                                                         map_,
                                                         x))
-            # y = give_global_name(proof_step=proof_step,
-            #                      math_type=Y,
-            #                      hints=[Y.info["name"].lower()])
-            # msg = _("New objet {} added to the context").format(y)
-            # codes = codes.or_else(f'set {y} := {f} {x} with {new_h}',
-            #                       success_msg=msg)
-        selected_objects = selected_objects[1:]
+        arguments = arguments[1:]
     msg = _("The map {} cannot be applied to these objects").format(f)
     codes.add_error_msg(msg)
     return codes
@@ -1337,7 +1329,8 @@ def action_mapsto(proof_step,
     """
 
     # We successively try all selected objects
-    for math_object in selected_objects:
+    for i in  range(len(selected_objects)):
+        math_object = selected_objects[i]
         if math_object.is_function():
             if len(selected_objects) == 1:
                 # A function, but no other object:
@@ -1356,14 +1349,11 @@ def action_mapsto(proof_step,
                                                 x=x)
 
                     return code
-                # error = _("Select an element or an equality on which to "
-                #           "apply the function")
-                # raise WrongUserInput(error=error)
             else:
-                selected_objects.remove(math_object)
+                arguments = selected_objects[:i] + selected_objects[i+1:]
                 return apply_function(proof_step,
                                       map_=math_object,
-                                      selected_objects=selected_objects)
+                                      arguments=arguments)
 
     error = _("Select an application and an element or an equality")
     raise WrongUserInput(error=error)

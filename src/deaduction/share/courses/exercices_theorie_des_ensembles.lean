@@ -16,7 +16,7 @@ import utils
 -- Course metadata --
 ---------------------
 -- logic names ['and', 'or', 'negate', 'implicate', 'iff', 'forall', 'exists',
-'equal', 'mapsto']
+-- 'equal', 'mapsto']
 -- proofs names ['use_proof_methods', 'new_object']
 -- proof methods names ['cbr', 'contrapose', 'absurdum', 'sorry']
 -- magic names ['compute', 'assumption']

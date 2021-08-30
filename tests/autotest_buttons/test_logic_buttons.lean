@@ -667,12 +667,24 @@ namespace test_mapsto
 --- mapsto ---
 --------------
 
-lemma exercise.test_mapsto_equality
+lemma exercise.test_mapsto_equality1
 (x y : X) (f: X → Y) (H: x = y):
 f(x) = f(y) :=
 /- dEAduction
 AutoTest
     H f mapsto,
+    CQFD
+-/
+begin
+  sorry
+end
+
+lemma exercise.test_mapsto_equality2
+(x y z w : X) (f: X → Y) (H: x = y) (H': x = z) (H'': z = w):
+f(x) = f(y) :=
+/- dEAduction
+AutoTest
+    H f H' H'' mapsto,
     CQFD
 -/
 begin
@@ -718,8 +730,7 @@ end
 
 
 
-
-end test_maps_to
+end test_mapsto
 end tests_logic_buttons
 end theorie_des_ensembles
 end course
