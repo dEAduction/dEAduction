@@ -65,7 +65,7 @@ import deaduction.pylib.mathobj.give_name      as give_name
 from deaduction.pylib.mathobj.utils        import *
 
 log = logging.getLogger(__name__)
-NUMBER_SETS_LIST = ['ℕ', 'ℤ', 'ℚ', 'ℝ']
+# NUMBER_SETS_LIST = ['ℕ', 'ℤ', 'ℚ', 'ℝ']
 
 
 # class MissingImplicitDefinition(Exception):
@@ -153,6 +153,7 @@ class MathObject:
     # i.e. global and bound variables. This is used to avoid duplicate.
     # key = identifier,
     # value = MathObject
+    NUMBER_SETS_LIST = ['ℕ', 'ℤ', 'ℚ', 'ℝ']
     number_sets = []  # Ordered list of all sets of numbers involved in some
     # MathObjects of the context, ordered sublist of ['ℕ', 'ℤ', 'ℚ', 'ℝ']
     # So that MathObject.number_sets[-1] always return the largest set of
@@ -224,13 +225,13 @@ class MathObject:
         Insert name in cls.number_sets at the right place
         :param name: an element of NUMBER_SETS_LIST = ['ℕ', 'ℤ', 'ℚ', 'ℝ']
         """
-        if name in NUMBER_SETS_LIST and name not in cls.number_sets:
+        if name in cls.NUMBER_SETS_LIST and name not in cls.number_sets:
             cls.number_sets.append(name)
             counter = len(MathObject.number_sets) - 1
             while counter > 0:
                 old_item = cls.number_sets[counter - 1]
-                if NUMBER_SETS_LIST.index(name) < \
-                   NUMBER_SETS_LIST.index(old_item):
+                if cls.NUMBER_SETS_LIST.index(name) < \
+                   cls.NUMBER_SETS_LIST.index(old_item):
                     # Swap
                     cls.number_sets[counter] = old_item
                     cls.number_sets[counter-1] = name
@@ -241,10 +242,16 @@ class MathObject:
 
     @classmethod
     def FALSE(cls):
+        """
+        The constant FALSE as a MathObject.
+        """
         return cls(node="PROP_FALSE", info={}, children=[], math_type="PROP")
 
     @classmethod
     def NO_MATH_TYPE(cls):
+        """
+        The type of having undefined type as a MathObject.
+        """
         # TODO: replace global var
         return cls(node="not provided", info={}, children=[], math_type=None)
 
@@ -787,6 +794,21 @@ class MathObject:
         else:
             math_type = self.math_type
         return math_type.node in INEQUALITIES
+
+    def concerns_numbers(self) -> bool:
+        """
+        True iff self is an equality or an inequality between numbers,
+        i.e. elements of the MathObject.NUMBER_SETS_LIST.
+        """
+        if (self.is_equality(is_math_type=True)
+            or self.is_inequality(is_math_type=True)
+                or self.is_non_equality(is_math_type=True)):
+            name = self.children[0].math_type.display_name
+            if name in self.NUMBER_SETS_LIST:
+                return True
+
+        return False
+
 
     def is_iff(self, is_math_type=False) -> bool:
         """

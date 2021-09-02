@@ -27,9 +27,7 @@ This file is part of dEAduction.
 """
 
 from .MathObject import          (MathObject,
-                                  # MissingImplicitDefinition,
                                   NO_MATH_TYPE,
-                                  NUMBER_SETS_LIST,
                                   HAVE_BOUND_VARS)
 from .context_math_object import  ContextMathObject
 from .pattern_math_objects import PatternMathObject

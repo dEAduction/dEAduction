@@ -26,19 +26,18 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from typing import Union, Optional
+from typing import Optional
 from copy import copy
 import logging
 
 from deaduction.pylib.actions.actiondef import action
 from deaduction.pylib.actions import (CodeForLean,
-                                      WrongUserInput,
-                                      test_selection)
-from deaduction.pylib.mathobj import (MathObject,
-                                      Goal)
+                                      WrongUserInput)
+from deaduction.pylib.mathobj import  MathObject
 
 
 log = logging.getLogger("magic")
+global _
 
 
 @action()
@@ -249,7 +248,8 @@ def compute(target) -> CodeForLean:
 def raw_solve_equality(target: MathObject) -> CodeForLean:
     """
     Assuming prop is an equality or an iff, return a list of tactics trying to
-    solve prop as a target.
+    solve prop as a target. These tactics are pertinent whatever the type of
+    the terms.
     """
 
     code = CodeForLean.empty_code()
@@ -263,7 +263,7 @@ def raw_solve_equality(target: MathObject) -> CodeForLean:
     return code
 
 
-def raw_solve_target(target, selected_objects) -> CodeForLean:
+def raw_solve_target(target, proof_step, selected_objects) -> CodeForLean:
     """
     Try to solve target without splitting conjunctions, disjunctions,
     nor using symmetry properties. Tactics should be ordered from the
@@ -288,15 +288,20 @@ def raw_solve_target(target, selected_objects) -> CodeForLean:
         code = code.or_else(more_code)
 
     # (3) Computing tactics (beware, this may take a long time!)
-    # FIXME: test seriously if target involves number before calling this
-    #  time consuming tactic
-    if (target.is_equality(is_math_type=True)
-            or target.is_inequality(is_math_type=True)
-            or target.is_false(is_math_type=True)):
+    numbers_involved = False
+    if target.is_false(is_math_type=True):
+        # Check if numbers are involved somewhere in context
+        context = proof_step.goal.context
+        for math_object in context:
+            if math_object.math_type.concerns_numbers():
+                numbers_involved = True
+    elif target.concerns_numbers():
+        numbers_involved = True
+    if numbers_involved:
         more_code = compute(target)
         code = code.or_else(more_code)
+        log.debug(f"Compute: {code}")
 
-    log.debug(f"Raw code: {code}")
     return code
 
 
@@ -421,7 +426,8 @@ def rec_split_disj(target):
         return [["left", left], CodeForLean.or_else, ["right", right]]
 
 
-def code_from_tree(tree, selected_objects, preamble=None) -> CodeForLean:
+def code_from_tree(tree, selected_objects, proof_step, preamble=None) \
+        -> CodeForLean:
     """
     Compute CodeForLean corresponding to a tree as returned by the functions
     rec_split_disj and rec_split_conj. The leaves that are MathObject
@@ -444,19 +450,9 @@ def code_from_tree(tree, selected_objects, preamble=None) -> CodeForLean:
         log.debug(f"--> PREAMBLE and_then Lean(tree)")
         return preamble.and_then(more_code)
     elif isinstance(tree, MathObject):
-        more_code = raw_solve_target(tree, selected_objects)
+        more_code = raw_solve_target(tree, proof_step, selected_objects)
         log.debug(f"--> PREAMBLE and_then {more_code}")
         return preamble.and_then(more_code)
-    # elif isinstance(tree, list):  # NB: non empty list
-    #     first_item = tree.pop(0)
-    #     end_of_tree = tree[1:]
-    #     if first_item is CodeForLean.or_else:
-    #         more_code = code_from_tree(end_of_tree, selected_objects)
-    #         return preamble.or_else(more_code)
-    #     else:
-    #         preamble = code_from_tree(first_item, selected_objects, preamble)
-    #         return code_from_tree(end_of_tree, selected_objects, preamble)
-
     elif isinstance(tree, list):  # NB: non empty list
         combinator = CodeForLean.and_then
         msg_combi = " and_then "
@@ -466,7 +462,9 @@ def code_from_tree(tree, selected_objects, preamble=None) -> CodeForLean:
                 combinator = CodeForLean.or_else
                 msg_combi = " or_else "
             else:
-                child_code = code_from_tree(child, selected_objects)
+                child_code = code_from_tree(child,
+                                            selected_objects,
+                                            proof_step)
                 preamble = combinator(preamble, child_code)
                 msg += msg_combi + str(child_code)
                 combinator = CodeForLean.and_then
@@ -516,7 +514,7 @@ def action_assumption2(proof_step,
     print(modulated_tree)
 
     # (3) Turn code_tree into CodeForLean
-    code = code_from_tree(modulated_tree, selected_objects)
+    code = code_from_tree(modulated_tree, selected_objects, proof_step)
     print("Code :")
     print(code)
 
