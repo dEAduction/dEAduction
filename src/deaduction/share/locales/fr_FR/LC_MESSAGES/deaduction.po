@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2021-08-30 16:55+0200\n"
-"PO-Revision-Date: 2021-08-30 16:57+0200\n"
+"POT-Creation-Date: 2021-09-02 17:01+0200\n"
+"PO-Revision-Date: 2021-09-02 17:02+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -189,16 +189,19 @@ msgstr "Changer d’exercice"
 msgid "Proof complete"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:154
-#: dui/stages/exercise/_exercise_main_window_widgets.py:288
-msgid "Actions and statements (transform context and target)"
-msgstr "Actions et énoncés (transforment le contexte et le but)"
+#: dui/stages/exercise/_exercise_main_window_widgets.py:153
+msgid "Actions (logical rules and statements)"
+msgstr "Actions (règles logiques et énoncés)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:156
+#: dui/stages/exercise/_exercise_main_window_widgets.py:154
 #: dui/stages/exercise/_exercise_main_window_widgets.py:222
 #: dui/stages/exercise/_exercise_main_window_widgets.py:290
 msgid "Context (objects and properties)"
 msgstr "Contexte (objets et propriétés)"
+
+#: dui/stages/exercise/_exercise_main_window_widgets.py:288
+msgid "Actions and statements (transform context and target)"
+msgstr "Actions et énoncés (transforment le contexte et le but)"
 
 #: dui/stages/exercise/_exercise_main_window_widgets.py:546
 msgid "Toolbar"
@@ -352,7 +355,7 @@ msgstr "Etape suivante"
 
 #: dui/stages/test/test_window.py:78
 msgid "Scroll to end"
-msgstr ""
+msgstr "Bas de page"
 
 #: pylib/actions/exceptions.py:68
 msgid "Select at least one object, one property or the target"
@@ -679,23 +682,23 @@ msgstr "Cette propriété ne peut pas être utilisé pour la substitution"
 msgid "New objet {} added to the context"
 msgstr "Nouvel objet {} ajouté au contexte"
 
-#: pylib/actions/logic.py:1304
+#: pylib/actions/logic.py:1302
 msgid "Map {} applied to {}"
 msgstr "La fonction {} a été appliquée à {}"
 
-#: pylib/actions/logic.py:1319
+#: pylib/actions/logic.py:1311
 msgid "The map {} cannot be applied to these objects"
 msgstr "L’application {} ne peut pas être appliquée à ces objets"
 
-#: pylib/actions/logic.py:1346
+#: pylib/actions/logic.py:1339
 msgid "Enter element on which you want to apply the map {}:"
 msgstr "Entrer l’objet sur lequel vous voulez appliquer {} :"
 
-#: pylib/actions/logic.py:1349
+#: pylib/actions/logic.py:1342
 msgid "Map"
 msgstr "Application"
 
-#: pylib/actions/logic.py:1368
+#: pylib/actions/logic.py:1358
 msgid "Select an application and an element or an equality"
 msgstr "Sélectionner une application, et un élément ou une égalité"
 

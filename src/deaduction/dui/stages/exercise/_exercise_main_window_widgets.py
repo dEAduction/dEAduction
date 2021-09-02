@@ -150,10 +150,10 @@ class ExerciseCentralWidget(QWidget):
 
         self.__action_btns_lyt.setContentsMargins(0, 0, 0, 0)
         self.__action_btns_lyt.setSpacing(0)
-
-        self.__actions_gb = QGroupBox(_('Actions and statements (transform '
-                                      'context and target)'))
-        self.__context_gb = QGroupBox(_('Context (objects and properties)'))
+        action_title = _('Actions (logical rules and statements)')
+        context_title = _('Context (objects and properties)')
+        self.__actions_gb = QGroupBox(action_title)
+        self.__context_gb = QGroupBox(context_title)
         # ──────────────── Init Actions area ─────────────── #
 
         self.logic_btns = ActionButtonsWidget(exercise.available_logic)
