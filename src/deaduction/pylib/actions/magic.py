@@ -378,7 +378,7 @@ def modulate_tree(tree, variations: [callable]):
         modulated_tree = []
         for child in tree:
             modulated_tree.append(modulate_tree(child, variations))
-            return modulated_tree
+        return modulated_tree
     elif isinstance(tree, MathObject):
         return modulate(tree, variations)
     else:  # String or "or_else"
@@ -425,8 +425,8 @@ def rec_split_disj(target):
     if not target.is_or(is_math_type=True):
         return target
     else:
-        left = rec_split_conj(target.children[0])
-        right = rec_split_conj(target.children[1])
+        left = rec_split_disj(target.children[0])
+        right = rec_split_disj(target.children[1])
         return [["left", left], CodeForLean.or_else, ["right", right]]
 
 
@@ -504,16 +504,19 @@ def action_assumption(proof_step,
     if isinstance(split_conj, list):
         code_tree += [CodeForLean.or_else, split_conj]
     # elif target.is_and(is_math_type=True, implicit=True):
+        # TODO: split context (once ?)
         # TODO: add implicit definitions, for and / or only ? And only once ?
 
     # (1b) Split disjunctions
     split_disj = rec_split_disj(target)
     if isinstance(split_disj, list):
-        code_tree += [CodeForLean.or_else, split_conj]
+        code_tree += [CodeForLean.or_else, split_disj]
     # elif target.is_or(is_math_type=True, implicit=True):
 
     # (2) Add the variations: exfalso, symmetrize
     modulated_tree = modulate_tree(code_tree, variations=[exfalso, symmetrize])
+    print("Code tree :")
+    print(code_tree)
     print("Modulated tree :")
     print(modulated_tree)
 

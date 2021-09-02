@@ -263,9 +263,45 @@ begin
   sorry
 end
 
+lemma exercise.test_assumption_or_3
+(P Q R: Prop) (H: P):
+(P or Q) or R
+:=
+/- dEAduction
+AutoTest
+    CQFD
+-/
+begin
+  sorry
+end
+
 lemma exercise.test_assumption_split_and
 (P Q R: Prop) (H: P ∧ Q) (H': R):
 P ∧ R
+:=
+/- dEAduction
+AutoTest
+    CQFD
+-/
+begin
+  sorry
+end
+
+lemma exercise.test_assumption_rec_split_target
+(P Q R: Prop) (H: P) (H': Q) (H'': R):
+(P ∧ Q) ∧ R
+:=
+/- dEAduction
+AutoTest
+    CQFD
+-/
+begin
+  sorry
+end
+
+lemma exercise.test_assumption_split_context
+(P Q R: Prop) (H: P ∧ R) (H': Q):
+(P ∧ Q) ∧ R
 :=
 /- dEAduction
 AutoTest
