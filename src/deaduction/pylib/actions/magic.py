@@ -171,7 +171,7 @@ def split_conjunctions_in_context(proof_step):
 
 
 @action()
-def action_assumption(proof_step,
+def action_assumption_old(proof_step,
                       selected_objects: [MathObject],
                       user_input,
                       target_selected: bool = True) -> CodeForLean:
@@ -336,8 +336,12 @@ def symmetrize(target) -> (Optional[CodeForLean], Optional[MathObject]):
         code = CodeForLean.from_string("apply or.symm")
 
     if code:
-        new_target = copy(target)
-        new_target.children.reverse()
+        new_children = [target.children[1], target.children[0]]
+        new_target = MathObject(node=target.node,
+                                info=target.info,
+                                children=new_children,
+                                bound_vars=target.bound_vars,
+                                math_type=target.math_type)
 
     return code, new_target
 
@@ -474,10 +478,10 @@ def code_from_tree(tree, selected_objects, proof_step, preamble=None) \
 
 
 @action()
-def action_assumption2(proof_step,
-                       selected_objects: [MathObject],
-                       user_input,
-                       target_selected: bool = True) -> CodeForLean:
+def action_assumption(proof_step,
+                      selected_objects: [MathObject],
+                      user_input,
+                      target_selected: bool = True) -> CodeForLean:
     """
     New action assumption.
     The idea is to apply a series of transformation of the target, and then

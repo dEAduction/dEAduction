@@ -922,8 +922,9 @@ class Coordinator(QObject):
             self.emw.update_goal(proof_state.goals[0])
 
         # ─────── Automatic actions ─────── #
-        if not self.previous_proof_step.is_history_move()\
-                and not self.test_mode:
+        if not (self.previous_proof_step.is_history_move()
+                or self.previous_proof_step.is_error()
+                or self.test_mode):
             self.process_automatic_actions(proof_state.goals[0])
 
         self.emw.ui_updated.emit()  # For testing

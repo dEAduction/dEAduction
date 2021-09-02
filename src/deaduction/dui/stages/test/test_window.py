@@ -167,8 +167,9 @@ class QTestWindow(QWidget):
             intro = f'<font color="{color}">'
             outro = '</font>'
             txt = intro + txt + outro
-        self.console.moveCursor(QTextCursor.End)
-        self.console.insertHtml(txt)
+        # self.console.moveCursor(QTextCursor.End)
+        # self.console.insertHtml(txt)
+        self.console.append(txt)
         if self.scroll_to_end_btn.isChecked():
             self.console.ensureCursorVisible()
 

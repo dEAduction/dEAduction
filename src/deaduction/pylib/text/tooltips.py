@@ -84,9 +84,9 @@ __tooltips = {
         _("Create a new subgoal (a lemma)"),
         _("Create a function from X to Y from property '∀ x ∈ X, ∃ y ∈ Y, P(x,"
             "y)'")],
-    'assumption':
+    'assumption_old':
         _("Terminate the proof when the target is obvious from the context"),
-    'assumption2':
+    'assumption':
         _("Terminate the proof when the target is obvious from the context"),
     'compute':
         _("Terminate the proof when target results from manipulating numbers")
@@ -115,10 +115,10 @@ __buttons_symbols = {
     'apply': _('Apply'),
     'proof_methods': _("Proof methods..."),
     'new_object': _('New object...'),
-    'assumption': _('Goal!'),
-    'assumption2': _("Goal!")+"+",
+    'assumption_old': 'Goal! (old)',
+    'assumption': _("Goal!"),
     'compute': _('Compute'),
-    'CQFD': _('Goal!')
+    'CQFD': _('Goal!')+"+"
 }
 logic_buttons = ['and', 'or', 'not', 'implies', 'iff', 'forall', 'exists',
                  'equal', 'mapsto']

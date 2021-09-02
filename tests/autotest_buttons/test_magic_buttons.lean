@@ -4,6 +4,7 @@ import tactic
 -- dEAduction imports
 import structures2
 import notations_definitions
+import compute
 import utils
 
 -- General principles :
