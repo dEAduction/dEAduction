@@ -86,6 +86,8 @@ __tooltips = {
             "y)'")],
     'assumption':
         _("Terminate the proof when the target is obvious from the context"),
+    'assumption2':
+        _("Terminate the proof when the target is obvious from the context"),
     'compute':
         _("Terminate the proof when target results from manipulating numbers")
 }
@@ -114,6 +116,7 @@ __buttons_symbols = {
     'proof_methods': _("Proof methods..."),
     'new_object': _('New object...'),
     'assumption': _('Goal!'),
+    'assumption2': _("Goal!")+"+",
     'compute': _('Compute'),
     'CQFD': _('Goal!')
 }

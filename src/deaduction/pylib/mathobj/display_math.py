@@ -79,7 +79,7 @@ from .display_data import ( latex_from_constant_name,
                             )
 
 log = logging.getLogger(__name__)
-
+global _
 
 @dataclass
 class Shape:

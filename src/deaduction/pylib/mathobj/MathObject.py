@@ -79,7 +79,7 @@ NUMBER_SETS_LIST = ['ℕ', 'ℤ', 'ℚ', 'ℝ']
 #         self.rewritten_math_object = rewritten_math_object
 
 
-def allow_implicit_use(test: callable):
+def allow_implicit_use(test: callable) -> callable:
     """
     Modify the function test to allow implicit use of the definitions
     whose patterns are in MathObject.definition_patterns.
@@ -88,8 +88,12 @@ def allow_implicit_use(test: callable):
 
     def test_implicit(math_object,
                       is_math_type=False,
-                      implicit=False,
-                      return_def=False):
+                      implicit=False) -> bool:
+        """
+        Apply test to math_object.
+
+        :param implicit:     if False, implicit definitions are not used.
+        """
         implicit = implicit and cvars.get(
             "functionality.allow_implicit_use_of_definitions")
         if not implicit:
@@ -234,6 +238,15 @@ class MathObject:
                 else:
                     break
             log.debug(f"Number_sets: {MathObject.number_sets}")
+
+    @classmethod
+    def FALSE(cls):
+        return cls(node="PROP_FALSE", info={}, children=[], math_type="PROP")
+
+    @classmethod
+    def NO_MATH_TYPE(cls):
+        # TODO: replace global var
+        return cls(node="not provided", info={}, children=[], math_type=None)
 
     @classmethod
     def from_info_and_children(cls, info: {}, children: []):
@@ -755,6 +768,16 @@ class MathObject:
             math_type = self.math_type
         return math_type.node == "PROP_EQUAL"
 
+    def is_non_equality(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is an equality.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node == "PROP_EQUAL_NOT"
+
     def is_inequality(self, is_math_type=False) -> bool:
         """
         Test if (math_type of) self is an inequality.
@@ -1097,7 +1120,6 @@ class MathObject:
 NO_MATH_TYPE = MathObject(node="not provided",
                           info={},
                           children=[],
-                          bound_vars=[],
                           math_type=None)
 
 

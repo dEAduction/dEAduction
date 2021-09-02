@@ -215,7 +215,7 @@ def construct_or(proof_step, user_input: [str]) -> CodeForLean:
     if not target.is_or(is_math_type=True):
         # Implicit "or"
         # implicit_definition = MathObject.last_used_implicit_definition
-        target              = MathObject.last_rw_object
+        target = MathObject.last_rw_object
 
     children = target.children
 
