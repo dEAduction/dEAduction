@@ -30,6 +30,7 @@ This file is part of d∃∀duction.
 
 import deaduction.pylib.config.vars as cvars
 
+
 ########################################################################
 # Set tooltips and text button HERE to enable translation with gettext #
 ########################################################################
@@ -69,7 +70,7 @@ __tooltips = {
         _("""From '∃ x, P(x)' get an 'x' and 'P(x)'""")],
     'equal':
         _("""Use an equality to substitute one term with the other"""),
-    "mapsto":
+    "map":
         _("""Apply a function to an element or an equality"""),
     'apply':
         # [_("Apply an equality or an iff to substitute in another property"),
@@ -121,9 +122,11 @@ __buttons_symbols = {
     'CQFD': _('Goal!')+"+"
 }
 logic_buttons = ['and', 'or', 'not', 'implies', 'iff', 'forall', 'exists',
-                 'equal', 'mapsto']
+                 'equal', 'map']
+__logic_translation = [_('AND'), _('OR'), _('NOT'), _('IMPLIES'), _('IFF'),
+                       _('FORALL'), _('EXISTS'), _('EQUAL'), _('MAP')]
 logic_button_symbols = cvars.get(
-    'display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAPSTO')
+    'display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP')
 # FIXME: in config_window, check format
 symbols = logic_button_symbols.split(", ")
 for key, value in zip(logic_buttons, logic_button_symbols.split(", ")):
@@ -141,13 +144,23 @@ def button_symbol(name):
         return __buttons_symbols[name]
 
 
-def button_tool_tip(name):
+def button_tool_tip(name: str):
     """
     Return tool_tip for the button corresponding to function action_<name>.
     e.g. action_and, action_proof_method, and so on.
     NB: translation is NOT done here.
     """
-    return __tooltips[name]
+    if name in logic_buttons:
+        # Add the name of the logic button to explicit the symbols
+        pretty_name = name.upper()+':'
+        tooltip = __tooltips[name]
+        if isinstance(tooltip, str):
+            tooltip = [tooltip]
+        if tooltip[0] != pretty_name:
+            tooltip.insert(0, pretty_name)
+        return tooltip
+    else:
+        return __tooltips[name]
 
 
 def apply_tool_tip(name):

@@ -27,9 +27,9 @@ This file is part of dEAduction.
 """
 
 from typing import Optional
-from copy import copy
 import logging
 
+from deaduction.pylib.utils.nice_display_tree import display_tree
 from deaduction.pylib.actions.actiondef import action
 from deaduction.pylib.actions import (CodeForLean,
                                       WrongUserInput)
@@ -151,25 +151,6 @@ def search_specific_prop(proof_step):
     return more_code
 
 
-def split_conjunctions_in_context(proof_step):
-    """
-    Return a Lean code that will split all conjunctions in context (non
-    recursively, only first level is split).
-    """
-
-    goal = proof_step.goal
-    code = CodeForLean.empty_code()
-    counter = 0
-    for prop in goal.context:
-        if prop.is_and():
-            name = prop.info['name']
-            h0 = f"H_aux_{counter}"  # these hypotheses will disappear
-            h1 = f"H_aux_{counter + 1}"  # so names are unimportant
-            code = code.and_then(f"cases {name} with {h0} {h1}")
-            counter += 2
-    return code
-
-
 @action()
 def action_assumption_old(proof_step,
                       selected_objects: [MathObject],
@@ -194,7 +175,7 @@ def action_assumption_old(proof_step,
     # (3) Conjunctions: try to split hypotheses once
     # TODO: recursive splitting in hypo
     # And then retry many things (in improved_assumption_2).
-    split_conj = split_conjunctions_in_context(proof_step)
+    split_conj = split_conjunctions_in_context(proof_step.goal.context)
 
     improved_assumption_2 = solve_target(target)
     # Split target
@@ -389,6 +370,28 @@ def modulate_tree(tree, variations: [callable]):
 # Splitting code #
 ##################
 
+def split_conjunctions_in_context(context):
+    """
+    Return a Lean code that will split all conjunctions in context (non
+    recursively, only first level is split). Implicit definitions are also
+    split.
+    """
+
+    code = CodeForLean.empty_code()
+    counter = 0
+    split_context = False
+    for prop in context:
+        if prop.is_and(implicit=True):
+            split_context = True
+            name = prop.info['name']
+            h0 = f"H_aux_{counter}"  # these hypotheses will disappear
+            h1 = f"H_aux_{counter + 1}"  # so names are unimportant
+            code = code.and_then(f"cases {name} with {h0} {h1}")
+            counter += 2
+    if split_context:
+        return code
+
+
 def rec_split_conj(target):
     """
     Recursively split target until there is no conjunction left in sub-goals.
@@ -402,12 +405,15 @@ def rec_split_conj(target):
     to solve it, and resulting list must be chained with "and_then".
     """
 
-    if not target.is_and(is_math_type=True):
+    if not target.is_and(is_math_type=True, implicit=True):
         return target
-    else:
-        left = rec_split_conj(target.children[0])
-        right = rec_split_conj(target.children[1])
-        return ["split", left, right]
+    elif not target.is_and(is_math_type=True, implicit=False):
+        # Implicit and
+        target = MathObject.last_rw_object
+
+    left = rec_split_conj(target.children[0])
+    right = rec_split_conj(target.children[1])
+    return ["split", left, right]
 
 
 def rec_split_disj(target):
@@ -422,12 +428,15 @@ def rec_split_disj(target):
         - MathObject
     """
 
-    if not target.is_or(is_math_type=True):
+    if not target.is_or(is_math_type=True, implicit=True):
         return target
-    else:
-        left = rec_split_disj(target.children[0])
-        right = rec_split_disj(target.children[1])
-        return [["left", left], CodeForLean.or_else, ["right", right]]
+    elif not target.is_or(is_math_type=True, implicit=False):
+        # Implicit or
+        target = MathObject.last_rw_object
+
+    left = rec_split_disj(target.children[0])
+    right = rec_split_disj(target.children[1])
+    return [["left", left], CodeForLean.or_else, ["right", right]]
 
 
 def code_from_tree(tree, selected_objects, proof_step, preamble=None) \
@@ -439,23 +448,23 @@ def code_from_tree(tree, selected_objects, proof_step, preamble=None) \
     """
 
     # TODO: make it a CodeForLean class method?
-    log.debug(f"CFT(TREE={tree}, PREAMBLE={preamble})")
+    # log.debug(f"CFT(TREE={tree}, PREAMBLE={preamble})")
     if not preamble:
         preamble = CodeForLean.empty_code()
     if not tree:
-        log.debug(f"--> PREAMBLE")
+        # log.debug(f"--> PREAMBLE")
         return preamble
 
     if isinstance(tree, CodeForLean):
-        log.debug(f"--> PREAMBLE and_then TREE")
+        # log.debug(f"--> PREAMBLE and_then TREE")
         return preamble.and_then(tree)
     elif isinstance(tree, str):
         more_code = CodeForLean.from_string(tree)
-        log.debug(f"--> PREAMBLE and_then Lean(tree)")
+        # log.debug(f"--> PREAMBLE and_then Lean(tree)")
         return preamble.and_then(more_code)
     elif isinstance(tree, MathObject):
         more_code = raw_solve_target(tree, proof_step, selected_objects)
-        log.debug(f"--> PREAMBLE and_then {more_code}")
+        # log.debug(f"--> PREAMBLE and_then {more_code}")
         return preamble.and_then(more_code)
     elif isinstance(tree, list):  # NB: non empty list
         combinator = CodeForLean.and_then
@@ -473,7 +482,7 @@ def code_from_tree(tree, selected_objects, proof_step, preamble=None) \
                 msg += msg_combi + str(child_code)
                 combinator = CodeForLean.and_then
                 msg_combi = " and_then "
-        log.debug(f"--> {msg}")
+        # log.debug(f"--> {msg}")
         return preamble
 
 
@@ -495,30 +504,34 @@ def action_assumption(proof_step,
 
     goal = proof_step.goal
     target = goal.target.math_type
+    context = goal.context
 
     # (0) Raw target
     code_tree = [target]
 
     # (1a) Split conjunctions
-    split_conj = rec_split_conj(target)
-    if isinstance(split_conj, list):
+    split_conj_target = rec_split_conj(target)
+    split_conj_context = split_conjunctions_in_context(context)
+    if isinstance(split_conj_target, list):
+        # If target is a conjunction then we split context and rec split
+        # target simultaneously
+        split_conj = [split_conj_context, split_conj_target]
         code_tree += [CodeForLean.or_else, split_conj]
-    # elif target.is_and(is_math_type=True, implicit=True):
-        # TODO: split context (once ?)
-        # TODO: add implicit definitions, for and / or only ? And only once ?
+    elif split_conj_context:
+        split_conj = [split_conj_context, target]
+        code_tree += [CodeForLean.or_else, split_conj]
 
-    # (1b) Split disjunctions
+    # (1b) Split disjunctions in target
     split_disj = rec_split_disj(target)
     if isinstance(split_disj, list):
         code_tree += [CodeForLean.or_else, split_disj]
-    # elif target.is_or(is_math_type=True, implicit=True):
 
     # (2) Add the variations: exfalso, symmetrize
     modulated_tree = modulate_tree(code_tree, variations=[exfalso, symmetrize])
     print("Code tree :")
-    print(code_tree)
+    display_tree(code_tree)
     print("Modulated tree :")
-    print(modulated_tree)
+    display_tree(modulated_tree)
 
     # (3) Turn code_tree into CodeForLean
     code = code_from_tree(modulated_tree, selected_objects, proof_step)
@@ -531,13 +544,6 @@ def action_assumption(proof_step,
     # TODO:
     #   - add implicit definitions, for and / or only ? And only once ?
     #   (inter, union, borné, ...)
-    #   - test numbers before applying compute
     #   - Add error, success msgs
     return code  # .solve1()
 
-
-# if __name__ == "__main__":
-#     _ = lambda x: x
-#     P = MathObject(node="PROP", children =[], math_type = MathObject.NO_MATH_TYPE())
-#     code_tree = ["split", P]
-#     code_tree2 = modulate_tree(code_tree, variations=[exfalso, symmetrize])

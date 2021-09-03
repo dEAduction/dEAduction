@@ -127,7 +127,7 @@ def extract_list(string: str, macros: {}, search: callable) -> list:
             if remove:
                 for item in diff_list:
                     if item in final_list:
-                        log.debug(f"removing {len(diff_list)} item(s)")
+                        # log.debug(f"removing {len(diff_list)} item(s)")
                         final_list.remove(item)
             else:
                 # log.debug(f"adding {len(diff_list)} item(s)")

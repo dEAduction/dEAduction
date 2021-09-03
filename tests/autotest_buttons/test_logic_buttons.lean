@@ -662,53 +662,53 @@ end
 
 end test_equality
 
-namespace test_mapsto
+namespace test_map
 --------------
---- mapsto ---
+--- map ---
 --------------
 
-lemma exercise.test_mapsto_equality1
+lemma exercise.test_map_equality1
 (x y : X) (f: X → Y) (H: x = y):
 f(x) = f(y) :=
 /- dEAduction
 AutoTest
-    H f mapsto,
+    H f map,
     CQFD
 -/
 begin
   sorry
 end
 
-lemma exercise.test_mapsto_equality2
+lemma exercise.test_map_equality2
 (x y z w : X) (f: X → Y) (H: x = y) (H': x = z) (H'': z = w):
 f(x) = f(y) :=
 /- dEAduction
 AutoTest
-    H f H' H'' mapsto,
+    H f H' H'' map,
     CQFD
 -/
 begin
   sorry
 end
 
-lemma exercise.test_mapsto_element_1
+lemma exercise.test_map_element_1
 (x x' : X) (f: X → Y) :
 ∃ y:Y, y= f(x') :=
 /- dEAduction
 AutoTest
-    x' f mapsto,
+    x' f map,
     y exists
 -/
 begin
   sorry
 end
 
-lemma exercise.test_mapsto_element_2
+lemma exercise.test_map_element_2
 (x x' : X) (f: X → Y) :
 ∃ y:Y, y= f(x') :=
 /- dEAduction
 AutoTest
-    f mapsto x',
+    f map x',
     y exists
 -/
 begin
@@ -721,7 +721,7 @@ lemma exercise.test_apply_error_1
 y ∈ B :=
 /- dEAduction
 AutoTest
-    H' mapsto WUI error=Sélectionner_une_application,
+    H' map WUI error=Sélectionner_une_application,
     proof_methods 3
 -/
 begin
@@ -730,7 +730,7 @@ end
 
 
 
-end test_mapsto
+end test_map
 end tests_logic_buttons
 end theorie_des_ensembles
 end course

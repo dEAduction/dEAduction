@@ -234,13 +234,13 @@ class Coordinator(QObject):
         PatternMathObject.set_definitions_for_implicit_use(definitions)
         log.debug(f"...set {len(MathObject.definition_patterns)} implicit "
                   f"definitions")
-        log.debug("Metavar_objects list (nb, name, type):")
+        # log.debug("Metavar_objects list (nb, name, type):")
         loc_csts = PatternMathObject.loc_csts_for_metavars
-        log.debug([(idx+1, loc_csts[idx].to_display(),
-                    loc_csts[idx].math_type.to_display(),
-                    " / ", PatternMathObject.metavars_csts[
-                        idx].math_type.to_display())
-                   for idx in range(len(loc_csts))])
+        # log.debug([(idx+1, loc_csts[idx].to_display(),
+        #             loc_csts[idx].math_type.to_display(),
+        #             " / ", PatternMathObject.metavars_csts[
+        #                 idx].math_type.to_display())
+        #            for idx in range(len(loc_csts))])
 
         self.emw.ecw.statements_tree.update_tooltips()
 

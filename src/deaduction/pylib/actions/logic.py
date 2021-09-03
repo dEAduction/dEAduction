@@ -1313,7 +1313,7 @@ def apply_function(proof_step, map_, arguments: [MathObject]):
 
 
 @action()
-def action_mapsto(proof_step,
+def action_map(proof_step,
                   selected_objects: [MathObject],
                   user_input: [str] = None,
                   target_selected: bool = True) -> CodeForLean:

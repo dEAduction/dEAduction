@@ -76,7 +76,8 @@ CONFIGS["Display"] = [
     # ("display.context_font_size", None, True),
     # ('display.tooltips_font_size', None, True),
     # ('display.mathematics_font', None, True),
-    ('display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL', None, False)
+    ('display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP',
+     None, False)
                       ]
 
 CONFIGS["Logic"] = [
@@ -104,7 +105,7 @@ CONFIGS["Advanced"] = [
 SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          "display.target_font_size",
                          "display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_"
-                         "EXISTS_EQUAL",
+                         "EXISTS_EQUAL_MAP",
                          'display.use_logic_button_symbols',
                          'logic.color_for_used_properties',
                          'logic.color_for_dummy_variables',
