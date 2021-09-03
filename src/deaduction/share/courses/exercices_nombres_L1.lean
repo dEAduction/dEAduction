@@ -39,7 +39,7 @@ OpenQuestion
 AvailableExercises
     NONE
 AvailableLogic
-    ALL -negate
+    ALL -not
 -/
 
 -- If OpenQuestion is True, DEAduction will ask the user if she wants to

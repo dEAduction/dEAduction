@@ -114,7 +114,7 @@ alternative_symbols = {'→': '⇒',
                        'assumption': _('Goal!'),
                        "CQFD": _('Goal!'),
                        'compute': _('Compute'),
-                       'mapsto': '↦'
+                       'map': '↦'
                        }
 
 

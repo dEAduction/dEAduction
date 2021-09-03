@@ -16,7 +16,7 @@ import utils
 -- Course metadata --
 ---------------------
 -- logic names ['and', 'or', 'negate', 'implicate', 'iff', 'forall', 'exists',
--- 'equal', 'mapsto']
+-- 'equal', 'map']
 -- proofs names ['use_proof_methods', 'new_object']
 -- proof methods names ['cbr', 'contrapose', 'absurdum', 'sorry']
 -- magic names ['compute', 'assumption']
@@ -31,7 +31,7 @@ Author
 Institution
     Université de France
 AvailableMagic
-    assumption
+    ALL
 Description
     Cette feuille d'exercice consiste à démontrer les principales propriétés
     d'un cours de théorie naïve des ensembles.

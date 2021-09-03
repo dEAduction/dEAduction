@@ -42,7 +42,6 @@ from deaduction.pylib.mathobj.utils        import *
 log = logging.getLogger(__name__)
 
 
-
 class ContextMathObject(MathObject):
     """
     This class subclasses MathObject for objects of the context.

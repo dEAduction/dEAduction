@@ -59,8 +59,7 @@ from deaduction.pylib.actions     import (action,
 
 from deaduction.pylib.mathobj     import (MathObject,
                                           give_global_name,
-                                          get_new_hyp,
-                                          NUMBER_SETS_LIST)
+                                          get_new_hyp)
 
 log = logging.getLogger("logic")
 global _
@@ -215,7 +214,7 @@ def construct_or(proof_step, user_input: [str]) -> CodeForLean:
     if not target.is_or(is_math_type=True):
         # Implicit "or"
         # implicit_definition = MathObject.last_used_implicit_definition
-        target              = MathObject.last_rw_object
+        target = MathObject.last_rw_object
 
     children = target.children
 
@@ -1314,7 +1313,7 @@ def apply_function(proof_step, map_, arguments: [MathObject]):
 
 
 @action()
-def action_mapsto(proof_step,
+def action_map(proof_step,
                   selected_objects: [MathObject],
                   user_input: [str] = None,
                   target_selected: bool = True) -> CodeForLean:
@@ -1375,7 +1374,7 @@ def which_number_set(string: str):
     if not string.isdigit():
         return None
     else:
-        return NUMBER_SETS_LIST[ind]
+        return MathObject.NUMBER_SETS_LIST[ind]
 
 
 def add_type_indication(item: Union[str, MathObject],

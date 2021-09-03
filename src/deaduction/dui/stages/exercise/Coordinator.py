@@ -234,13 +234,13 @@ class Coordinator(QObject):
         PatternMathObject.set_definitions_for_implicit_use(definitions)
         log.debug(f"...set {len(MathObject.definition_patterns)} implicit "
                   f"definitions")
-        log.debug("Metavar_objects list (nb, name, type):")
+        # log.debug("Metavar_objects list (nb, name, type):")
         loc_csts = PatternMathObject.loc_csts_for_metavars
-        log.debug([(idx+1, loc_csts[idx].to_display(),
-                    loc_csts[idx].math_type.to_display(),
-                    " / ", PatternMathObject.metavars_csts[
-                        idx].math_type.to_display())
-                   for idx in range(len(loc_csts))])
+        # log.debug([(idx+1, loc_csts[idx].to_display(),
+        #             loc_csts[idx].math_type.to_display(),
+        #             " / ", PatternMathObject.metavars_csts[
+        #                 idx].math_type.to_display())
+        #            for idx in range(len(loc_csts))])
 
         self.emw.ecw.statements_tree.update_tooltips()
 
@@ -922,8 +922,9 @@ class Coordinator(QObject):
             self.emw.update_goal(proof_state.goals[0])
 
         # ─────── Automatic actions ─────── #
-        if not self.previous_proof_step.is_history_move()\
-                and not self.test_mode:
+        if not (self.previous_proof_step.is_history_move()
+                or self.previous_proof_step.is_error()
+                or self.test_mode):
             self.process_automatic_actions(proof_state.goals[0])
 
         self.emw.ui_updated.emit()  # For testing

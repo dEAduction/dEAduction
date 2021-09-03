@@ -148,7 +148,14 @@ class ActionButton(QPushButton):
         if isinstance(tool_tip, str):
             tooltip = _(tool_tip)
         elif isinstance(tool_tip, list):
-            tooltip = '\n'.join("• " + _(msg) for msg in tool_tip)
+            pretty_list = []
+            for msg in tool_tip:
+                if msg.endswith(':'):
+                    msg = _("Button") + " " + _(msg[:-1]) + _(":")
+                else:
+                    msg = "• " + _(msg)
+                pretty_list.append(msg)
+            tooltip = '\n'.join(pretty_list)
         else:
             tooltip = ""
         self.setToolTip(tooltip)

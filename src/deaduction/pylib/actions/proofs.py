@@ -46,8 +46,7 @@ from deaduction.pylib.actions import (InputType,
 from deaduction.pylib.mathobj import (MathObject,
                                       get_new_hyp,
                                       give_global_name,
-                                      NO_MATH_TYPE,
-                                      NUMBER_SETS_LIST)
+                                      NO_MATH_TYPE)
 
 log = logging.getLogger(__name__)
 
@@ -513,7 +512,7 @@ def which_number_set(string: str):
     if not string.isdigit():
         return None
     else:
-        return NUMBER_SETS_LIST[ind]
+        return MathObject.NUMBER_SETS_LIST[ind]
 
 
 def add_type_indication(item: Union[str, MathObject],

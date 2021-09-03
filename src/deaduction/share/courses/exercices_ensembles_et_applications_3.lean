@@ -11,7 +11,7 @@ Institution
 AvailableProof
     proof_methods new_object
 AvailableMagic
-    assumption
+    ALL
 AvailableExercises
   UNTIL_NOW -image_directe_et_inclusion_II -image_reciproque_et_inclusion_II -image_directe_et_intersection_II
 -/
