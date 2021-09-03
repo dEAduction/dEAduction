@@ -57,8 +57,8 @@ LEAN_UNRESOLVED_TEXT = "tactic failed, there are unsolved goals"
 LEAN_NOGOALS_TEXT    = "tactic failed, there are no goals to be solved"
 LEAN_USES_SORRY      = " uses sorry"
 
-TIMEOUT = 20
-STARTING_TIMEOUT = 40
+TIMEOUT = 60  # 20
+STARTING_TIMEOUT = 300  # 40
 NB_TRIALS = 3
 
 
