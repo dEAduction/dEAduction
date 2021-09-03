@@ -29,7 +29,7 @@ This file is part of dEAduction.
 from typing import Optional
 import logging
 
-from deaduction.pylib.utils.nice_display_tree import display_tree
+# from deaduction.pylib.utils.nice_display_tree import display_tree
 from deaduction.pylib.actions.actiondef import action
 from deaduction.pylib.actions import (CodeForLean,
                                       WrongUserInput)
@@ -538,10 +538,10 @@ def action_assumption(proof_step,
 
     # (2) Add the variations: exfalso, symmetrize
     modulated_tree = modulate_tree(code_tree, variations=[exfalso, symmetrize])
-    print("Code tree :")
-    display_tree(code_tree)
-    print("Modulated tree :")
-    display_tree(modulated_tree)
+    # print("Code tree :")
+    # display_tree(code_tree)
+    # print("Modulated tree :")
+    # display_tree(modulated_tree)
 
     # (3) Turn code_tree into CodeForLean
     code = code_from_tree(modulated_tree, selected_objects, proof_step)
