@@ -27,10 +27,9 @@ This file is part of d∃∀duction.
 
 import logging
 from   pathlib import Path
-# from   gettext import gettext as _
+import os
 
 import deaduction.pylib.utils.filesystem as fs
-import os
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +46,10 @@ courses        = (share / "courses").resolve()
 
 # Home paths
 home     = Path.home()
-local    = ( home / ".deaduction{}".format("-dev" if os.getenv("DEADUCTION_DEV_MODE", False)                                                  else "") ).resolve()
+if os.getenv("DEADUCTION_DEV_MODE", '0') == '1':
+    local = ( home / ".deaduction-dev" ).resolve()
+else:
+    local = (home / ".deaduction").resolve()
 journal        = (local / "deaduction_journal").resolve()
 test_exercises = (local / "test_exercises").resolve()
 all_courses_ipf_dir = (local / "initial_proof_states").resolve()

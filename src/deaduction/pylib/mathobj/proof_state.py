@@ -45,6 +45,7 @@ from .lean_analysis import ( lean_expr_with_type_grammar,
 from .give_name import name_bound_vars, inj_list
 log = logging.getLogger(__name__)
 
+global _
 
 ##################
 # The Goal class #
@@ -238,14 +239,14 @@ class Goal:
                                   if var.math_type == math_type]
             future_vars_of_type = [var for var in future_vars
                                   if var.math_type == math_type]
-            log.debug(f"Naming vars of type "
-                      f"{math_type.to_display()}")
+            # log.debug(f"Naming vars of type "
+            #           f"{math_type.to_display()}")
             name_bound_vars(math_type=math_type,
                             named_vars=glob_vars_of_type + future_vars_of_type,
                             unnamed_vars=dummy_vars_of_type,
                             forbidden_vars=forb_vars + future_vars_of_type)
-            log.debug(f"    --> "
-                      f"{[var.to_display() for var in dummy_vars_of_type]}")
+            # log.debug(f"    --> "
+            #           f"{[var.to_display() for var in dummy_vars_of_type]}")
 
     def __name_bound_vars_in_prop(self, prop: MathObject, future_vars):
         """
@@ -259,15 +260,15 @@ class Goal:
 
         glob_vars = self.context_objects
 
-        log.debug(f"Naming vars in {prop.to_display()}:")
+        # log.debug(f"Naming vars in {prop.to_display()}:")
         if prop.math_type.bound_vars:
-            log.debug(f"""-->Dummy vars types: {[var.math_type.to_display()
-                                  for var in prop.math_type.bound_vars]}""")
+            # log.debug(f"""-->Dummy vars types: {[var.math_type.to_display()
+            #                       for var in prop.math_type.bound_vars]}""")
             # Collect math_types of bound_vars with no rep
             math_types = inj_list([var.math_type for var in
                                    prop.math_type.bound_vars])
-            log.debug(f"-->Math_types : "
-                      f"{[mt.to_display() for mt in math_types]}")
+            # log.debug(f"-->Math_types : "
+            #           f"{[mt.to_display() for mt in math_types]}")
             forb_vars = glob_vars if not_glob \
                 else prop.math_type.extract_local_vars()
 
@@ -322,22 +323,23 @@ class Goal:
             # First unfold definitions
             math_type = self.target.math_type
             rw_math_type = math_type.unfold_implicit_definition_recursively()
-            log.debug(f"Rw math_type: {rw_math_type.to_display()}")
+            # log.debug(f"Rw math_type: {rw_math_type.to_display()}")
             future_vars = rw_math_type.glob_vars_when_proving()
             math_types = inj_list([var.math_type for var in future_vars])
             data = (math_types, future_vars, self.context_objects, [])
-            log.debug("Naming future vars:")
+            # log.debug("Naming future vars:")
             self.__name_bound_vars_in_data(*data)
 
         not_dummy = cvars.get("logic.do_not_name_dummy_vars_as_dummy_vars",
-                             False)  # All dummy vars have distinct names
+                              False)  # All dummy vars have distinct names
         if not_dummy:  # (Level 2)
             # Collect all math_types, with no repetition
             math_types = inj_list([var.math_type
-                                   for var in prop.math_type.bound_vars
-                                   for prop in self.context_props])
-            dummy_vars = [var for var in prop.math_type.bound_vars
-                          for prop in prop]  # All dummy vars (no repetition)
+                                   for prop in self.context_props
+                                   for var in prop.math_type.bound_vars])
+            # All dummy vars (no repetition):
+            dummy_vars = [var for prop in self.context_props
+                          for var in prop.math_type.bound_vars]
             data = (math_types, dummy_vars, self.context_objects, future_vars)
             self.__name_bound_vars_in_data(*data)
         else:  # Types and dummy vars prop by prop

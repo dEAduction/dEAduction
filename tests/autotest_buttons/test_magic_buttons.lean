@@ -251,6 +251,18 @@ begin
   sorry
 end
 
+lemma exercise.test_assumption_cc2
+(x y z: X) (B: set Y) (f: X → Y) (H: x=y) (H': y=z) (H'': f(z) ∈ B):
+f(x) ∈ B
+:=
+/- dEAduction
+AutoTest
+    CQFD
+-/
+begin
+  sorry
+end
+
 lemma exercise.test_assumption_inequality
 (x y: ℝ) (H: x < y):
 y > x

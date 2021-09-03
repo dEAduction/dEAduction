@@ -47,6 +47,7 @@ import deaduction.pylib.config.dirs as dirs
 
 import os
 
+
 def init():
     os.environ["DEADUCTION_PKG"]   = str(dirs.pkg_dir)
     os.environ["DEADUCTION_HOME"]  = str(dirs.local)

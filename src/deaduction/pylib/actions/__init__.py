@@ -58,6 +58,5 @@ from .logic import (action_not,
                     apply_substitute)
 
 from .proofs import action_proof_methods
-from.magic import  (action_compute,
-                    action_assumption)
+from.magic import   action_assumption
 

@@ -426,11 +426,11 @@ def name_bound_vars(math_type: MathObject,
     :param unnamed_vars: list of dummy vars to be named, ordered
     :param forbidden_vars:
     """
-    log.debug("Naming vars (type, named, unnamed, forbidden):")
-    log.debug(math_type.to_display())
-    log.debug(f"{[var.to_display() for var in named_vars]}")
-    log.debug(f"{[var.to_display() for var in unnamed_vars]}")
-    log.debug(f"{[var.to_display() for var in forbidden_vars]}")
+    # log.debug("Naming vars (type, named, unnamed, forbidden):")
+    # log.debug(math_type.to_display())
+    # log.debug(f"{[var.to_display() for var in named_vars]}")
+    # log.debug(f"{[var.to_display() for var in unnamed_vars]}")
+    # log.debug(f"{[var.to_display() for var in forbidden_vars]}")
 
     forbidden_names = inj_list([var.info['name'] for var in forbidden_vars])
     named_vars_names = [var.info['name'] for var in named_vars]  # No rep

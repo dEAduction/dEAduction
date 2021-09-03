@@ -17,6 +17,7 @@ import utils
 ---------------------
 -- logic names ['and', 'or', 'negate', 'implicate', 'iff', 'forall', 'exists',
 -- 'equal', 'map']
+-- 'equal', 'map']
 -- proofs names ['use_proof_methods', 'new_object']
 -- proof methods names ['cbr', 'contrapose', 'absurdum', 'sorry']
 -- magic names ['compute', 'assumption']
@@ -148,14 +149,16 @@ begin
 end
 
 
-lemma theorem.double_inclusion (A A' : set X) :
-(A ⊆ A' ∧ A' ⊆ A) → A = A' :=
+lemma definition.double_inclusion (A A' : set X) :
+A = A' ↔ (A ⊆ A' ∧ A' ⊆ A) :=
 /- dEAduction
 PrettyName
     Double inclusion
+ImplicitUse
+    True
 -/
 begin
-    exact set.subset.antisymm_iff.mpr
+    exact set.subset.antisymm_iff
 end
 
 lemma exercise.inclusion_transitive

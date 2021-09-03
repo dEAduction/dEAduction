@@ -260,6 +260,7 @@ class ServerInterface(QObject):
         self.__tmp_effective_code      = CodeForLean.empty_code()
         self.proof_state               = None
         self.no_more_goals             = False
+        self.is_running                = False
 
         # Errors memory channels
         self.error_send, self.error_recv = \
@@ -394,8 +395,9 @@ class ServerInterface(QObject):
                 self.__check_receive_state()
 
     def __on_lean_state_change(self, is_running: bool):
-        self.log.info(f"New lean state: {is_running}")
-        self.is_running = is_running
+        if is_running != self.is_running:
+            self.log.info(f"New lean state: {is_running}")
+            self.is_running = is_running
 
     def __check_receive_course_data(self, index):
         """

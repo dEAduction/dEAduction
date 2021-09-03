@@ -87,10 +87,12 @@ def construct_and(proof_step, user_input: [str]) -> CodeForLean:
     target = proof_step.goal.target.math_type
 
     implicit_definition = None
-    if not target.is_and(is_math_type=True, implicit=True):
+    if not (target.is_and(is_math_type=True, implicit=True)
+            or target.is_iff(is_math_type=True)):
         raise WrongUserInput(error=_("Target is not a conjunction 'P AND Q'"))
 
-    if not target.is_and(is_math_type=True):
+    if not (target.is_and(is_math_type=True)
+            or target.is_iff(is_math_type=True)):
         # Implicit "and"
         implicit_definition = MathObject.last_used_implicit_definition
         target              = MathObject.last_rw_object
@@ -109,20 +111,23 @@ def construct_and(proof_step, user_input: [str]) -> CodeForLean:
             title=_("Choose sub-goal"),
             output=_("Which property to prove first?"))
     else:
-        if user_input[0] == 1:
-            # Prove second property first
-            if implicit_definition:
-                code_rw = rw_with_defi(implicit_definition)
-                code = code_rw.and_then("rw and.comm")
-            elif target.node == "PROP_∃":
-                # In this case, first rw target as a conjunction
-                code = CodeForLean.and_then_from_list(["rw exists_prop",
-                                                       "rw and.comm"])
-            else:
-                code = CodeForLean.from_string("rw and.comm")
-            left, right = right, left
+        if implicit_definition:
+            code = rw_with_defi(implicit_definition)
         else:
             code = CodeForLean.empty_code()
+        if user_input[0] == 1:
+            # Prove second property first
+            # if implicit_definition:
+            #     code_rw = rw_with_defi(implicit_definition)
+            #     code = code_rw.and_then("rw and.comm")
+            if target.node == "PROP_∃":
+                # In this case, first rw target as a conjunction
+                code = code.and_then("rw exists_prop")
+                # code = CodeForLean.and_then_from_list(["rw exists_prop",
+                #                                        "rw and.comm"])
+            code = code.and_then("rw and.comm")
+            left, right = right, left
+
         code = code.and_then("split")
         code.add_success_msg(_('Target split'))
         code.add_conjunction(target, left, right)

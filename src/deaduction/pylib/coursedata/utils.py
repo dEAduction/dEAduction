@@ -81,7 +81,7 @@ def substitute_macros(string: str, macros: {}) -> str:
                     # NB : we keep the preceding minus...
                 new_string = string.replace(macro_name, macro_string)
     if new_string:
-        log.debug(f"changed {string} into {new_string}")
+        # log.debug(f"changed {string} into {new_string}")
         return substitute_macros(new_string, macros)
     else:  # no macro found
         return string
@@ -133,6 +133,7 @@ def extract_list(string: str, macros: {}, search: callable) -> list:
                 # log.debug(f"adding {len(diff_list)} item(s)")
                 final_list.extend(diff_list)
         else:
-            log.debug(f"Found no item for {word} in metadata")
+            pass
+            # log.debug(f"Found no item for {word} in metadata")
 
     return final_list
