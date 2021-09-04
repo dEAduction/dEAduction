@@ -124,15 +124,14 @@ class ProofOutlineTreeWidget(QTreeWidget):
         # Set columns width
         # Fixme: does not work
         settings = QSettings("deaduction")
+        default_col_width = [300, 50, 50]
         for col_nb in (0, 1, 2):
-            if settings.value(f"proof_outline_tree/{col_nb}"):
-                self.setColumnWidth(col_nb,
-                                    settings.value(f"proof_outline_tree/"
-                                                   f"{col_nb}"))
-                # log.debug(f"Setting column value:"
-                #           f"{self.columnWidth(col_nb)}")
-        if not settings.value("proof_outline_tree/0"):
-            self.setColumnWidth(0, 300)
+            col_width = settings.value(f"proof_outline_tree/{col_nb}")
+            try:  #Fixme
+                col_width = int(col_width)
+            except ValueError:
+                col_width = default_col_width[col_nb]
+            self.setColumnWidth(col_nb, col_width)
 
         self.widgets: [ProofOutlineTreeWidget] = []
 
