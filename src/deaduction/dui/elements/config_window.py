@@ -76,20 +76,21 @@ CONFIGS["Display"] = [
     # ("display.context_font_size", None, True),
     # ('display.tooltips_font_size', None, True),
     # ('display.mathematics_font', None, True),
-    ('display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP',
-     None, False)
+    # ('display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP',
+    #  None, False)
                       ]
 
 CONFIGS["Logic"] = [
     ("display.display_success_messages", None, True),
     ('logic.color_for_used_properties', ['None', 'red', 'blue', 'purple'],
-     False),
-    ('logic.color_for_dummy_variables', ['None', 'red', 'blue', 'purple'],
      False)]
+    # ('logic.color_for_dummy_vars', ['None', 'red', 'blue', 'purple'], False)
+
+
 CONFIGS['Functionalities'] = [
     ('functionality.target_selected_by_default', None, True),
     ('functionality.allow_proof_by_sorry', None, True),  # tested
-    ('functionality.expanded_apply_button', None, False),
+    # ('functionality.expanded_apply_button', None, False),
     ('functionality.automatic_intro_of_variables_and_hypotheses', None, True),
     ('functionality.allow_implicit_use_of_definitions', None, True)]
 
@@ -106,9 +107,9 @@ SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          "EXISTS_EQUAL_MAP",
                          'display.use_logic_button_symbols',
                          'logic.color_for_used_properties',
-                         'logic.color_for_dummy_variables',
+                         # 'logic.color_for_dummy_vars',
                          'functionality.allow_proof_by_sorry',
-                         'functionality.expanded_apply_button',
+                         # 'functionality.expanded_apply_button',
                          'functionality.allow_implicit_use_of_definitions',
                          "i18n.select_language"
                          ]
@@ -275,7 +276,9 @@ class ConfigWindow(QDialog):
         settings = CONFIGS.get(name)
         layout = QFormLayout()
         for setting, setting_list, enabled in settings:
-            setting_initial_value = cvars.get(setting, None)
+            setting_initial_value = cvars.get(setting, default_value="none")
+            if setting_initial_value == "none":
+                setting_initial_value = None  # Avoid KeyError
             # print(setting, setting_list, setting_initial_value)
             # if setting_initial_value:
             self.initial_settings[setting] = setting_initial_value
