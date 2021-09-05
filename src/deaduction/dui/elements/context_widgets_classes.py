@@ -237,6 +237,10 @@ class MathObjectWidget(QListWidget):
         super().__init__()
 
         self.items = []
+
+        # TODO: method setfontstyle
+        # size = cvars.get('display.main_font_size')
+        # self.setStyleSheet(f'font-size: {size};')
         # set fonts for maths display
         math_font_name = cvars.get('display.mathematics_font', 'Default')
         self.setFont(QFont(math_font_name))
@@ -337,6 +341,7 @@ class TargetWidget(QWidget):
             text = '…'
         self.target_label = QLabel(text)
 
+        # TODO: method setfontstyle
         size = cvars.get('display.target_font_size')
         self.target_label.unselected_style = f'font-size: {size};'
         self.target_label.selected_style = self.target_label.unselected_style \

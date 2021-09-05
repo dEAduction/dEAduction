@@ -323,6 +323,8 @@ class ServerInterface(QObject):
             processing, this method just call the
             __on_lean_message_for_course method).
         """
+        # TODO: reset server_queue timeout
+
         # Filter seq_num
         if msg.seq_num:
             msg_seq_num = msg.seq_num
@@ -398,6 +400,7 @@ class ServerInterface(QObject):
         if is_running != self.is_running:
             self.log.info(f"New lean state: {is_running}")
             self.is_running = is_running
+            # TODO: reset server_queue timeout
 
     def __check_receive_course_data(self, index):
         """

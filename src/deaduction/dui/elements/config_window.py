@@ -73,12 +73,14 @@ CONFIGS = dict()
 CONFIGS["Display"] = [
     ("display.target_display_on_top", None, True),  # bool
     ("display.target_font_size", None, True),
-    # ("display.context_font_size", None, True),
-    # ('display.tooltips_font_size', None, True),
-    # ('display.mathematics_font', None, True),
-    # ('display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP',
-    #  None, False)
-                      ]
+    ("display.main_font_size", None, True),
+    ("display.tooltips_font_size", None, True)
+    # ('display.font_for_mathematics', "font", True)
+    ]
+# ('display.mathematics_font', None, True),
+# ('display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP',
+#  None, False)
+
 
 CONFIGS["Logic"] = [
     ("display.display_success_messages", None, True),
@@ -103,6 +105,8 @@ CONFIGS["Advanced"] = [
 
 SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          "display.target_font_size",
+                         "display.main_font_size",
+                         "display.tooltips_font_size",
                          "display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_"
                          "EXISTS_EQUAL_MAP",
                          'display.use_logic_button_symbols',
@@ -286,7 +290,7 @@ class ConfigWindow(QDialog):
                 else get_pretty_name(setting)
             title = title + _(":")
 
-            # ───────── Case of file: browse directories button ─────────
+            # ───────── Case of file: browse directories button ───────── #
             if setting_list == 'dir':
                 widget = QPushButton(_("Browse directories"), self)
                 widget.clicked.connect(self.browse_dir)

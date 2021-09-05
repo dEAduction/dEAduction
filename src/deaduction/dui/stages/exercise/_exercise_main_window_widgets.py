@@ -35,9 +35,7 @@ This file is part of d∃∀duction.
 
 import                          logging
 
-from functools import partial
-from PySide2.QtCore import    ( Signal,
-                                Slot,
+from PySide2.QtCore import    ( Slot,
                                 QTimer,
                                 Qt)
 
@@ -133,8 +131,8 @@ class ExerciseCentralWidget(QWidget):
         :param exercise: The instance of the Exercise class representing
             the exercise to be solved by the user.
         """
-
         super().__init__()
+        self.set_font_size()
         self.exercise = exercise
 
         # ───────────── Init layouts and boxes ───────────── #
@@ -254,6 +252,20 @@ class ExerciseCentralWidget(QWidget):
 ##############################
 # Methods called by __init__ #
 ##############################
+    def set_font_size(self):
+        """
+        Set the font size for some sub-widgets.
+        Button font sizes are set in the widgets'methods.
+        """
+
+        main_font_size   = cvars.get('display.main_font_size')
+        tooltips_font_size = cvars.get('display.tooltips_font_size', "14pt")
+        log.debug(f"Font sizes for main and tooltips: {main_font_size, tooltips_font_size}")
+        style = f'QTreeWidget {{font-size: {main_font_size};}}' \
+                f'QListView {{font-size: {main_font_size};}}' \
+                f'QToolTip {{font-size: {tooltips_font_size};}}'
+        self.setStyleSheet(style)
+
     def organise_main_layout(self):
         """
         Organize main layout, namely putting target on top or not according
@@ -284,7 +296,6 @@ class ExerciseCentralWidget(QWidget):
             - titles everywhere,
             - text and tooltips of all buttons.
         """
-
         self.__actions_gb.setTitle(_('Actions and statements (transform '
                                      'context and target)'))
         self.__context_gb.setTitle(_('Context (objects and properties)'))

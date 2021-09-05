@@ -11,8 +11,9 @@ target_display_on_top = false
 depth_of_unfold_statements = 1
 show_lean_name_for_statements = false
 target_font_size = "24pt"
-context_font_size = "12pt"
-tooltips_font_size = "10pt"
+main_font_size = "14pt"
+button_font_size_for_symbols = "default"  # Does not work
+tooltips_font_size = "12pt"
 mathematics_font = "Defaults"
 symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃, =, ↦"
 use_logic_button_symbols = true

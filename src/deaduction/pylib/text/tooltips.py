@@ -125,12 +125,6 @@ logic_buttons = ['and', 'or', 'not', 'implies', 'iff', 'forall', 'exists',
                  'equal', 'map']
 __logic_translation = [_('AND'), _('OR'), _('NOT'), _('IMPLIES'), _('IFF'),
                        _('FORALL'), _('EXISTS'), _('EQUAL'), _('MAP')]
-logic_button_symbols = cvars.get(
-    'display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP')
-# FIXME: in config_window, check format
-symbols = logic_button_symbols.split(", ")
-for key, value in zip(logic_buttons, logic_button_symbols.split(", ")):
-    __buttons_symbols[key] = value
 
 
 def button_symbol(name):
@@ -140,6 +134,12 @@ def button_symbol(name):
     NB: translation is NOT done here, gettext translation function _ must be
      applied to the output.
     """
+    logic_button_symbols = cvars.get(
+        'display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP')
+    # FIXME: in config_window, check format
+    # symbols = logic_button_symbols.split(", ")
+    for key, value in zip(logic_buttons, logic_button_symbols.split(", ")):
+        __buttons_symbols[key] = value
     if name in __buttons_symbols:
         return __buttons_symbols[name]
 
@@ -165,12 +165,4 @@ def button_tool_tip(name: str):
 
 def apply_tool_tip(name):
     return __tooltips_apply[name]
-
-# TODO: unused?
-# def get(k):
-#     return __tooltips.get(k, None)       \
-#         or __tooltips_apply.get(k, None) \
-#         or __buttons[k]
-
-
 
