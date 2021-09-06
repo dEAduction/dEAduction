@@ -573,6 +573,7 @@ class Coordinator(QObject):
                 if ok:
                     self.emw.user_input.append(choice)
                 else:
+                    self.emw.user_input = []
                     self.unfreeze()
                     break
 

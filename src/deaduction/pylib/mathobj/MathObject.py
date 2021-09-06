@@ -175,13 +175,13 @@ class MathObject:
         Create a MathObject. If bound_vars is None then the dummy vars list is
         inferred from the children's lists and the node.
         """
-        if bound_vars is None:
-            bound_vars = []
-            for child in children:
-                bound_vars.extend(child.bound_vars)
-            if node in HAVE_BOUND_VARS:
-                bound_var_type, bound_var, local_context = children
-                bound_vars.insert(0, bound_var)
+        # if bound_vars is None:
+        #     bound_vars = []
+        #     for child in children:
+        #         bound_vars.extend(child.bound_vars)
+        #     if node in HAVE_BOUND_VARS:
+        #         bound_var_type, bound_var, local_context = children
+        #         bound_vars.insert(0, bound_var)
         self.node = node
         self.info = info
         self.children = children
@@ -204,6 +204,24 @@ class MathObject:
     @math_type.setter
     def math_type(self, math_type: Any):
         self._math_type = math_type
+
+    @property
+    def bound_vars(self):
+        """Store bound_vars to avoid repeated computation."""
+        if not self._bound_vars:
+            bound_vars = []
+            for child in self.children:
+                bound_vars.extend(child.bound_vars)
+            if self.node in HAVE_BOUND_VARS:
+                bound_var_type, bound_var, local_context = self.children
+                bound_vars.insert(0, bound_var)
+            self._bound_vars = bound_vars
+
+        return self._bound_vars
+
+    @bound_vars.setter
+    def bound_vars(self, bound_vars: []):
+        self._bound_vars = bound_vars
 
     #################
     # Class methods #
