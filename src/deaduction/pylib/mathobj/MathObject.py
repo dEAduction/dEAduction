@@ -208,7 +208,7 @@ class MathObject:
     @property
     def bound_vars(self):
         """Store bound_vars to avoid repeated computation."""
-        if not self._bound_vars:
+        if not hasattr(self, "_bound_vars") or  not self._bound_vars:
             bound_vars = []
             for child in self.children:
                 bound_vars.extend(child.bound_vars)

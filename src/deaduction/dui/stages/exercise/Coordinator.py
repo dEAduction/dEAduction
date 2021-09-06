@@ -292,7 +292,11 @@ class Coordinator(QObject):
         """
         log.info("Closing Coordinator")
 
-        self.disconnect_signals()
+        try:
+            self.disconnect_signals()
+        except RuntimeError:
+            # It seems that sometimes signals are already deleted
+            pass
 
         ref = 'functionality.save_solved_exercises_for_autotest'
         save_for_test = cvars.get(ref, False)
@@ -312,7 +316,7 @@ class Coordinator(QObject):
         # log.debug([task.name for task in tasks])
         # log.debug("Closing server task")
         self.close_server_task.emit()
-        self.deleteLater()
+        # self.deleteLater()  FIXME: needed ??
 
     ##############
     # Properties #
@@ -708,11 +712,14 @@ class Coordinator(QObject):
     def process_automatic_actions(self, goal):
         """
         Perform the UserAction returned by self.automatic_action, if any.
+        emw.automatic_action is set to True so that emw knows about it,
+        in particular TargetSelected will be true whatever.
         """
         user_action = Coordinator.automatic_actions(goal)
         if user_action:
-            action = user_action.button if user_action.button else \
-                user_action.statement
+            self.emw.automatic_action = True
+            # action = user_action.button if user_action.button else \
+            #     user_action.statement
             # log.debug(f"Automatic action: {action}")
             self.proof_step.is_automatic = True
             # Async call to emw.simulate_user_action:
@@ -853,6 +860,7 @@ class Coordinator(QObject):
         :param errors: list of errors, if non-empty then request has failed.
         """
         log.info("Processing Lean's response")
+        self.emw.automatic_action = False
         proof_state = None
         if exercise != self.exercise:
             log.warning("    not from current exercise, ignoring")

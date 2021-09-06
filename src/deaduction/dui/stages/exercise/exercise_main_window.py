@@ -148,6 +148,7 @@ class ExerciseMainWindow(QMainWindow):
         self.current_goal         = None
         self.displayed_proof_step = None
         self.test_mode            = False
+        self.automatic_action     = False
 
         # From inside
         self.current_selection    = []
@@ -319,7 +320,7 @@ class ExerciseMainWindow(QMainWindow):
     @property
     def target_selected_by_default(self):
         return cvars.get('functionality.target_selected_by_default', False) \
-                or self.test_mode 
+                or self.test_mode or self.automatic_action
 
     @property
     def target_selected(self):
@@ -609,8 +610,9 @@ class ExerciseMainWindow(QMainWindow):
                                    duration=0.4) -> (bool, str):
         """
         Simulate user_action as if buttons were actually pressed.
-        Return True if the simulation was actually performed, and Flase with
+        Return True if the simulation was actually performed, and False with
         a detailed msg if not (useful for testing).
+        This is called by Coordinator.process_automatic_actions.
         """
         log.debug("Simulating user action...")
         msg = ""
