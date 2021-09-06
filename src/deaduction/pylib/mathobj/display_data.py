@@ -294,8 +294,8 @@ NATURE_LEAVES_LIST = ("PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
 def needs_paren(parent, child, child_number) -> bool:
     """
     Decides if parentheses are needed around the child
-    e.g. if PropObj.node = PROP.IFF then
-    needs_paren(PropObj, [i])
+    e.g. if math_obj.node = PROP.IFF then
+    needs_paren(math_obj, children[i], i)
     will be set to True for i = 0, 1 so that the display will be
     ( ... ) <=> ( ... )
 
@@ -318,9 +318,14 @@ def needs_paren(parent, child, child_number) -> bool:
                   "PROP_EQUAL_NOT", "PROP_≤", "PROP_≥", "PROP_<", "PROP_>"
                   "PROP_INCLUDED", "SET_UNION+", "SET_INTER+"):
         return False
+    elif (p_node == "SET_INVERSE"
+          and child_number == 0
+          and c_node != "LOCAL_CONSTANT" ):
+        # e.g. (f∘g)^{-1} (x)
+        return True
     elif c_node == "APPLICATION":
         return False
-    elif p_node in ("SET_IMAGE", "SET_INVERSE",
+    elif p_node in ("SET_IMAGE",  # "SET_INVERSE",
                     "SET_UNION+", "SET_INTER+", "APPLICATION",
                     "PROP_INCLUDED",  "PROP_BELONGS", "PROP_NOT_BELONGS",
                     "LAMBDA",

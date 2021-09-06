@@ -1219,8 +1219,9 @@ def action_equal(proof_step,
             if not user_input:
                 eq0 = equality0.to_display()
                 eq1 = equality1.to_display()
-                choices = [(eq0, f"Use for substitution in {eq1}"),
-                           (eq1, f"Use for substitution in {eq0}")]
+                choice = _("Use for substitution in {}")
+                choices = [(eq0, choice.format(eq1)),
+                           (eq1, choice.format(eq0))]
                 raise MissingParametersError(
                     InputType.Choice,
                     choices,
