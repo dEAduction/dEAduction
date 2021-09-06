@@ -96,6 +96,10 @@ PrettyName
 -/
 
 lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, x ∈ A → x ∈ B :=
+/- dEAduction
+ImplicitUse
+    True
+-/
 begin
     exact iff.rfl
 end
@@ -105,20 +109,24 @@ lemma definition.egalite_deux_ensembles {A A' : set X} :
 /- dEAduction
 PrettyName
     Egalité de deux ensembles
+ImplicitUse
+    True
 -/
 begin
      exact set.ext_iff
 end
 
 
-lemma theorem.double_inclusion (A A' : set X) :
-(A ⊆ A' ∧ A' ⊆ A) → A = A' :=
+lemma definition.double_inclusion (A A' : set X) :
+A = A' ↔ (A ⊆ A' ∧ A' ⊆ A):=
 /- dEAduction
 PrettyName
     Double inclusion
+ImplicitUse
+    True
 -/
 begin
-    exact set.subset.antisymm_iff.mpr
+    exact subset.antisymm_iff,
 end
 end inclusions_egalites
 
@@ -132,6 +140,8 @@ x ∈ A ∩ B ↔ ( x ∈ A ∧ x ∈ B) :=
 /- dEAduction
 PrettyName
     Intersection de deux ensembles
+ImplicitUse
+    True
 -/
 begin
     exact iff.rfl
@@ -142,6 +152,8 @@ x ∈ A ∪ B ↔ ( x ∈ A ∨ x ∈ B) :=
 /- dEAduction
 PrettyName
     Union de deux ensembles
+ImplicitUse
+    True
 -/
 begin
     exact iff.rfl
@@ -260,4 +272,129 @@ begin
 end
 end exercices
 
+namespace composition
+/- dEAduction
+PrettyName
+    Exercices sur la composition
+-/
+
+open set
+variables (f: X → Y) (g : Y → Z) (A: set X) (B: set Y)
+
+namespace definitions
+/- dEAduction
+PrettyName
+    Définitions
+-/
+
+lemma definition.composition {x:X}:
+composition g f x = g (f x)
+:=
+begin
+    sorry,
+end
+
+lemma definition.image_directe (y : Y) : y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y :=
+/- dEAduction
+ImplicitUse
+    True
+-/
+begin
+    sorry
+end
+
+lemma definition.image_reciproque (x:X) : x ∈ f  ⁻¹' B ↔ f(x) ∈ B :=
+begin
+    sorry
+end
+
+
+lemma definition.injectivite :
+injective f ↔ ∀ x y : X, (f x = f y → x = y)
+:=
+/- dEAduction
+PrettyName
+    Application injective
+ImplicitUse
+    True
+-/
+begin
+    refl,
+end
+
+lemma definition.surjectivite :
+surjective f ↔ ∀ y : Y, ∃ x : X, y = f x
+:=
+/- dEAduction
+PrettyName
+    Application surjective
+ImplicitUse
+    True
+-/
+begin
+    refl,
+end
+
+
+
+
+end definitions
+
+namespace exercices
+
+
+lemma exercise.composition_injections
+(H1 : injective f) (H2 : injective g)
+:
+injective (composition g f)
+:=
+/- dEAduction
+PrettyName
+    Composition d'injections
+-/
+begin
+    sorry
+end
+
+lemma exercise.composition_surjections
+(H1 : surjective f) (H2 : surjective g) :
+surjective (composition g f)
+:=
+/- dEAduction
+PrettyName
+    Composition de surjections
+-/
+begin
+    sorry
+end
+
+
+lemma exercise.composition_image_directe
+(A: set X) :
+(composition g f) '' A = g '' (f '' A)
+:=
+/- dEAduction
+PrettyName
+    Image directe par une composition
+-/
+begin
+    sorry
+end
+
+
+lemma exercise.composition_image_reciproque
+(C: set Z) :
+(composition g f) ⁻¹' C = f ⁻¹' (g ⁻¹' C)
+:=
+/- dEAduction
+PrettyName
+    Image réciproque par une composition
+-/
+begin
+    sorry
+end
+
+
+end exercices
+end composition
 end course
