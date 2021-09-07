@@ -127,9 +127,11 @@ class ProofOutlineTreeWidget(QTreeWidget):
         default_col_width = [300, 50, 50]
         for col_nb in (0, 1, 2):
             col_width = settings.value(f"proof_outline_tree/{col_nb}")
-            try:  #Fixme
+            try:  # Fixme
                 col_width = int(col_width)
             except:  # ValueError, TypeError
+                log.warning(f"col_width is not str or int, type = "
+                            f"{type(col_width)}")
                 col_width = default_col_width[col_nb]
             self.setColumnWidth(col_nb, col_width)
 
