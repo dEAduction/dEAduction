@@ -295,7 +295,7 @@ class LeanServer:
                 # self.log.error("UnicodeDecodeError", error.reason)
                 self.log.warning("!UnicodeDecodeError!")
                 self.log.debug(error.reason)
-                raise UnicodeDecodeError
+                raise
             else:
                 self.buffer += sstr
 
