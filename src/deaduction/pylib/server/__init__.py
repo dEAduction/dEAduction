@@ -33,7 +33,7 @@ import trio
 import logging
 from copy import deepcopy
 
-from deaduction.pylib.utils.nice_display_tree import nice_display_tree
+# from deaduction.pylib.utils.nice_display_tree import nice_display_tree
 from deaduction.pylib.coursedata.exercise_classes import Exercise, Statement
 from deaduction.pylib.mathobj.proof_state import ProofState
 from deaduction.pylib.lean.response import Message
@@ -747,8 +747,8 @@ class ServerInterface(QObject):
         self.log.info("CodeForLean: ")
         self.log.info(lean_code)
         # self.log.info("Code sent to Lean: " + code_string)
-        print("Code sent to Lean:")
-        nice_display_tree(code_string)
+        # print("Code sent to Lean:")
+        # nice_display_tree(code_string)
 
         self.lean_file.insert(label=label, add_txt=code_string)
 
