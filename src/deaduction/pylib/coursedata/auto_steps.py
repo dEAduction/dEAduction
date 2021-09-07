@@ -191,7 +191,11 @@ class AutoStep(UserAction):
     error_msg: str = ""
     success_msg: str = ""
 
-    error_dic = {0: '', 1: 'WrongUserInput', 2: 'FailedRequestError'}
+    error_dic = {0: '',
+                 1: 'WrongUserInput',
+                 2: 'FailedRequestError',
+                 3: 'Timeout',
+                 4: 'UnicodeDecodeError'}
 
     def __init__(self, selection, button, statement, user_input,
                  raw_string, error_type, error_mg, success_msg):

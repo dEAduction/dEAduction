@@ -160,6 +160,9 @@ class ServerQueue(list):
                 self.log.warning(f"No answer within {timeout}s (trial"
                                          f" {nb})")
                 timeout = 2 * timeout
+                if nb == NB_TRIALS:  # Task definitively  cancelled!
+                    pass
+
             else:
                 break
 
@@ -570,11 +573,6 @@ class ServerInterface(QObject):
                 error_list.append(self.error_recv.receive_nowait())
         except trio.WouldBlock:
             pass
-
-        # if error_list:
-        #     # TODO: replace by signal
-        #     # raise exceptions.FailedRequestError(error_list, lean_code)
-        #     pass
 
         self.lean_response.emit(exercise,
                                 self.no_more_goals,

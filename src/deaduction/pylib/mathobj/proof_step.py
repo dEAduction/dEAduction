@@ -213,7 +213,7 @@ class ProofStep():
 
     # ──────────────── Output ─────────────── #
     effective_code            = None  # CodeForLean that proved effective
-    error_type: Optional[int] = 0  # 1 = WUI, 2 = FRE
+    error_type: Optional[int] = 0  # 1 = WUI, 2 = FRE, 3 = TIMEOUT, 4 = UNICODE
     error_msg: str            = ''
     proof_state               = None
     no_more_goal              = False
