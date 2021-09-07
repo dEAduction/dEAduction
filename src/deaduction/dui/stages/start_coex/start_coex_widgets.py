@@ -388,6 +388,8 @@ class CourseChooser(AbstractCoExChooser):
         set_preview is called.
         """
         directory = cvars.get('others.course_directory', str(cdirs.courses))
+        if not directory:
+            directory = str(cdirs.courses)
         dialog = QFileDialog(directory=directory)
         dialog.setFileMode(QFileDialog.ExistingFile)
         dialog.setNameFilter('*.lean')
