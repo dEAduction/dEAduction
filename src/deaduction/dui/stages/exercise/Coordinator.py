@@ -100,7 +100,6 @@ class Coordinator(QObject):
 
     proof_step_updated = Signal()  # Listend by test_launcher (for testing)
     close_server_task   = Signal()  # Send by self.closeEvent
-    # proof_no_goals     = Signal()
 
     def __init__(self, exercise, servint):
         super().__init__()
@@ -111,7 +110,8 @@ class Coordinator(QObject):
         self.emw = ExerciseMainWindow(exercise)
         self.emw.close_coordinator = self.closeEvent
 
-        self.proof_step                     = ProofStep()
+        # Information
+        self.proof_step                     = None  # Set later
         self.previous_proof_step            = None
         self.journal                        = Journal()
 
@@ -151,15 +151,16 @@ class Coordinator(QObject):
         # Try to display initial proof state of self.exercise prior to anything
         #  (so that user may start thinking, even if UI stay frozen for a
         #  while.)
+        self.proof_step                     = ProofStep()
         proof_state = self.exercise.initial_proof_state
         if proof_state:
             goal = proof_state.goals[0]
             self.emw.ecw.update_goal(goal, 1, 1)
 
         # Set exercise. In particular, this will initialize servint.lean_file.
-        self.servint.server_queue.add_task(self.servint.set_exercise,
-                                           self.exercise,
-                                           on_top=True)
+        self.server_queue.add_task(self.servint.set_exercise,
+                                   self.exercise,
+                                   on_top=True)
 
         # Set initial proof states for all statements
         # (Already done if start_coex was launched, but useful otherwise:)
@@ -332,6 +333,10 @@ class Coordinator(QObject):
         return self.lean_file.target_idx
 
     @property
+    def server_queue(self):
+        return self.servint.server_queue
+
+    @property
     def nursery(self):
         return self.servint.nursery
 
@@ -426,6 +431,7 @@ class Coordinator(QObject):
         """
 
         log.info("Starting server task")
+        add_task = self.server_queue.add_task
 
         async with qtrio.enter_emissions_channel(
                 signals=[self.lean_editor.editor_send_lean,
@@ -437,6 +443,7 @@ class Coordinator(QObject):
                          self.statement_triggered,
                          self.apply_math_object_triggered,
                          self.close_server_task]) as emissions:
+
             self.server_task_started.set()
             async for emission in emissions.channel:
                 ###########
@@ -461,25 +468,21 @@ class Coordinator(QObject):
                     proof_step = self.lean_file.next_proof_step
                     if proof_step:
                         await self.emw.simulate(proof_step)
-                    self.servint.server_queue.add_task(
-                                                    self.servint.history_redo)
+                    add_task(self.servint.history_redo)
 
                 elif emission.is_from(self.toolbar.undo_action.triggered):
                     self.proof_step.button = 'history_undo'
-                    self.servint.server_queue.add_task(
-                                                    self.servint.history_undo)
+                    add_task(self.servint.history_undo)
 
                 elif emission.is_from(self.toolbar.rewind.triggered):
                     self.proof_step.button = 'history_rewind'
-                    self.servint.server_queue.add_task(
-                                                self.servint.history_rewind)
+                    add_task(self.servint.history_rewind)
 
                 elif emission.is_from(self.proof_outline_window.history_goto):
                     history_nb = emission.args[0]
                     if history_nb != self.history_nb:
                         self.proof_step.button = 'history_goto'
-                        self.servint.server_queue.add_task(
-                                        self.servint.history_goto, history_nb)
+                        add_task(self.servint.history_goto, history_nb)
                     else:
                         self.unfreeze()
 
@@ -586,38 +589,15 @@ class Coordinator(QObject):
                 self.process_wrong_user_input(error)
                 break
 
-            # New: implicit use of definition FIXME: unused
-            # except MissingImplicitDefinition as mid:
-            #     definition = mid.definition
-            #     math_object = mid.math_object
-            #     rewritten_math_object = mid.rewritten_math_object
-            #     selection_rw = selection
-            #     index = math_object.find_in(selection)
-            #     if index is not None:
-            #         selection_rw = [selection[index]]
-            #     log.debug(f"Implicit use of definition "
-            #               f"{definition.pretty_name} in ")
-            #     log.debug(f"{math_object.to_display()} -> ")
-            #     log.debug(f"{rewritten_math_object.to_display()}")
-            #
-            #     lean_code = generic.action_definition(self.proof_step,
-            #                                           selection_rw,
-            #                                           definition,
-            #                                           target_selected)
-            #
-            #     self.servint.server_queue.add_task(self.servint.code_insert,
-            #                                        definition.pretty_name,
-            #                                        lean_code)
-            #     break
-
             else:
                 self.proof_step.lean_code = lean_code
                 self.proof_step.user_input = self.emw.user_input
 
                 # Update lean_file and call Lean server
-                self.servint.server_queue.add_task(self.servint.code_insert,
-                                                   action.symbol,
-                                                   lean_code)
+                self.server_queue.add_task(self.servint.code_insert,
+                                           action.symbol,
+                                           lean_code,
+                                           cancel_fct=self.lean_file.undo)
                 break
 
     def __server_call_statement(self, item):
@@ -654,18 +634,19 @@ class Coordinator(QObject):
             self.proof_step.lean_code = lean_code
 
             # Update lean_file and call Lean server
-            self.servint.server_queue.add_task(self.servint.code_insert,
-                                               statement.pretty_name,
-                                               lean_code)
+            self.server_queue.add_task(self.servint.code_insert,
+                                       statement.pretty_name,
+                                       lean_code,
+                                       cancel_fct=self.lean_file.undo)
 
     def __server_send_editor_lean(self):
         """
         Send the L∃∀N code written in the L∃∀N editor widget to the
         server interface.
         """
-        self.servint.server_queue.add_task(self.servint.code_set,
-                                           _('Code from editor'),
-                                           self.lean_editor.code_get())
+        self.server_queue.add_task(self.servint.code_set, None,
+                                   _('Code from editor'),
+                                   self.lean_editor.code_get())
 
     #########################
     #########################
@@ -752,16 +733,11 @@ class Coordinator(QObject):
 
         This is called by a signal in servint.
         """
+        log.debug(f"Replacing code by effective code {effective_lean_code}")
         self.proof_step.effective_code = effective_lean_code
         self.servint.history_replace(effective_lean_code)
 
-    @Slot()
     def process_failed_request_error(self, errors):
-        """
-        Note that history_delete will be called, and then process_lean_response
-        again.
-        """
-        self.proof_step.error_type = 2
         lean_code = self.proof_step.lean_code
         if lean_code.error_msg:
             self.proof_step.error_msg = lean_code.error_msg
@@ -772,6 +748,35 @@ class Coordinator(QObject):
         for error in errors:
             details += "\n" + error.text
         log.debug(f"Lean errors, details: {details}")
+
+    def process_error(self, error_type, errors):
+        """
+        Note that history_delete will be called, and then process_lean_response
+        again.
+        """
+        self.proof_step.error_type = error_type
+        if error_type == 1:  # FailedRequestError
+            self.process_failed_request_error(errors)
+        elif error_type == 3:  # Timeout
+            self.proof_step.error_msg = _("I've got a headache, try again...")
+            log.debug("Lean timeout")
+        elif error_type == 4:  # UnicodeDecodeError
+            self.proof_step.error_msg = _("Unicode error, try again...")
+            log.debug("Unicode Error")
+        elif error_type == 3:  # Timeout
+            self.proof_step.error_msg = _("Error, no proof state, "
+                                          "try again...")
+            log.debug("Proof state is None!")
+
+    def abort_process(self):
+        log.debug("Aborting process")
+        if not self.servint.lean_file.history_at_beginning:
+            # Abort and go back to last goal
+            self.server_queue.add_task(self.servint.history_delete)
+        else:
+            # Resent the whole code
+
+            self.__initialize_exercise()
 
     @Slot()
     def set_fireworks(self):
@@ -840,7 +845,8 @@ class Coordinator(QObject):
                               exercise,
                               no_more_goals: bool,
                               analysis: tuple,
-                              errors: list):
+                              errors: list,
+                              error_type=0):
         """
         This method processes Lean response after a request, and is a slot
         of a signal emitted by self.servint when all info have been received.
@@ -858,11 +864,24 @@ class Coordinator(QObject):
         :param analysis: (hypo_analysis, targets_analysis),
                          = info to construct new proof_state
         :param errors: list of errors, if non-empty then request has failed.
+        :param error_type: int
+            0 = no error, 1 = WUI (unused here),
+            2 = FRE, 3 = Timeout, 4 = UnicodeError
         """
         log.info("Processing Lean's response")
+        history_nb = self.lean_file.target_idx
+        log.info(f"History nb: {history_nb}")
         self.emw.automatic_action = False
         proof_state = None
-        if exercise != self.exercise:
+
+        # ─────── Errors ─────── #
+        if error_type != 0:
+            log.info("  -> error!")
+            self.process_error(error_type, errors)
+            self.abort_process()
+            return
+
+        if exercise != self.exercise:  # Should never happen
             log.warning("    not from current exercise, ignoring")
             return
 
@@ -871,34 +890,32 @@ class Coordinator(QObject):
             # log.debug("First proof step")
             self.start_server_task()
 
-        # ─────── Errors ─────── #
-        if errors:
-            log.info("  -> errors")
-            self.process_failed_request_error(errors)
-            # Abort and go back to last goal
-            self.servint.server_queue.add_task(self.servint.history_delete)
-            # Process_lean_response will be called again after deleting
-            return
-
         # ─────── Compute proof state ─────── #
-        elif no_more_goals:
+        if no_more_goals:
             log.info("  -> proof completed!")
             proof_state = self.set_fireworks()
 
         else:  # Generic step
             hypo_analysis, targets_analysis = analysis
-            proof_state = ProofState.from_lean_data(hypo_analysis,
-                                                    targets_analysis,
-                                                    to_prove=True)
-            # log.debug("  -> computing new ProofState")
-            self.lean_file.state_info_attach(ProofState=proof_state)
+            if hypo_analysis and targets_analysis:
+                proof_state = ProofState.from_lean_data(hypo_analysis,
+                                                        targets_analysis,
+                                                        to_prove=True)
+            if proof_state:
+                self.lean_file.state_info_attach(ProofState=proof_state)
+            else:
+                # No proof state !? Maybe empty analysis ?
+                self.process_error(error_type=5, errors=[])
+                log.debug(f"Analysis: {hypo_analysis} /// {targets_analysis}")
+                self.abort_process()
+                return
 
         self.proof_step.proof_state = proof_state
 
         if not self.proof_step.is_error():
             # self.proof_step.proof_state = proof_state
             if not self.proof_step.is_history_move():
-                # log.debug("     Storing proof step in lean_file info")
+                log.debug("     Storing proof step in lean_file info")
                 self.lean_file.state_info_attach(proof_step=self.proof_step)
 
             # ─────── Check for new goals ─────── #

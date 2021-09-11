@@ -32,6 +32,7 @@ This file is part of d∃∀duction.
 import trio
 import logging
 from copy import deepcopy
+from typing import Optional, Dict
 
 # from deaduction.pylib.utils.nice_display_tree import nice_display_tree
 from deaduction.pylib.coursedata.exercise_classes import Exercise, Statement
@@ -57,9 +58,7 @@ LEAN_UNRESOLVED_TEXT = "tactic failed, there are unsolved goals"
 LEAN_NOGOALS_TEXT    = "tactic failed, there are no goals to be solved"
 LEAN_USES_SORRY      = " uses sorry"
 
-TIMEOUT = 60  # 20
-STARTING_TIMEOUT = 300  # 40
-NB_TRIALS = 3
+global _
 
 
 #####################
@@ -72,25 +71,34 @@ class ServerQueue(list):
     The "next_task" method is also responsible for the timeout: if the task
     is not done within TIMEOUT, then the request is sent another time with
     doubled timeout, and again until NB_TRIALS is reached.
-
-    The decorator  @task_for_server_queue intercepts a given function and puts
-    it into the queue.
-
-    NB: the type of self is [(callable, tuple of arguments)]
+    A cancellation method can be applied when a task is cancelled.
     """
-    def __init__(self, nursery):
+
+    TIMEOUT = 10  # 20 FIXME
+    STARTING_TIMEOUT = 20  # 40
+    NB_TRIALS = 2  # 3 FIXME
+
+    def __init__(self, nursery, timeout_signal):
         super().__init__()
-        self.log                    = logging.getLogger("ServerQueue")
-        self.started                = False
-        self.is_busy                = False
-        self.nursery                = nursery
-        self.cancel_scope           = None
+        self.log = logging.getLogger("ServerQueue")
+
+        # Initial parameters
+        self.nursery                               = nursery
+        self.timeout_signal                        = timeout_signal
+
+        # Tags
+        self.started = False
+        self.is_busy = False
+
+        # Cancel scope
+        self.cancel_scope: Optional[trio.CancelScope] = None
+        self.actual_timeout = self.TIMEOUT
 
         # Trio Event, initialized when a new queue starts,
         # and set when it ends.
         self.queue_ended            = None
 
-    def add_task(self, fct: callable, *args, on_top=False):
+    def add_task(self, fct, *args, cancel_fct=None, on_top=False):
         """
         Add a task to the queue. The task may be added at the end of the
         queue (default), or on top. If queue is not busy, that is, no task
@@ -98,11 +106,11 @@ class ServerQueue(list):
         starts immediately.
         """
         if on_top:
-            self.append((fct, args))
+            self.append((fct, cancel_fct, args))
             self.log.debug(f"Adding task on top")
         else:
             self.log.debug(f"Adding task")
-            self.insert(0, (fct, args))
+            self.insert(0, (fct, cancel_fct, args))
         if not self.is_busy:  # Execute task immediately
             self.is_busy = True
             self.queue_ended = trio.Event()
@@ -114,9 +122,10 @@ class ServerQueue(list):
         """
         if len(self) > 0:
             # Launch first task
-            fct, args = self.pop()
+            fct, cancel_fct, args = self.pop()
             self.log.debug(f"Launching task")  # : {args}")
-            self.nursery.start_soon(self.task_with_timeout, fct, args)
+            self.nursery.start_soon(self.task_with_timeout, fct, cancel_fct,
+                                    args)
         else:
             self.is_busy = False
             self.queue_ended.set()
@@ -137,7 +146,7 @@ class ServerQueue(list):
         else:
             await fct(*args)
 
-    async def task_with_timeout(self, fct: callable, args: tuple):
+    async def task_with_timeout(self, fct: callable, cancel_fct, args: tuple):
         """
         Execute function fct with timeout TIMEOUT, and number of trials
         NB_TRIALS.
@@ -145,26 +154,47 @@ class ServerQueue(list):
         The tuple args will be unpacked and used as arguments for fct.
 
         When execution is complete, the next task in ServerQueue is launched.
+
+        If task is canceled, cancel_fct is called.
         """
         nb = 0
         if not self.started:
-            timeout = STARTING_TIMEOUT  # Timeout at the very first task
+            # Set timeout at the very first task
+            self.actual_timeout = self.STARTING_TIMEOUT
             self.started = True
         else:
-            timeout = TIMEOUT
-        while nb < NB_TRIALS:
+            self.actual_timeout = self.TIMEOUT
+        while nb < self.NB_TRIALS:
             nb += 1
-            with trio.move_on_after(timeout) as self.cancel_scope:
-                await fct(*args)
-            if self.cancel_scope.cancelled_caught:
-                self.log.warning(f"No answer within {timeout}s (trial"
-                                         f" {nb})")
-                timeout = 2 * timeout
-                if nb == NB_TRIALS:  # Task definitively  cancelled!
-                    pass
-
-            else:
-                break
+            try:
+                with trio.move_on_after(self.actual_timeout) \
+                        as self.cancel_scope:
+                    ################
+                    # Process task #
+                    await fct(*args)
+                    ################
+                if self.cancel_scope.cancelled_caught:
+                    self.log.warning(f"No answer within "
+                                     f"{self.actual_timeout}s (trial {nb})")
+                    self.actual_timeout = 2 * self.actual_timeout
+                    if nb == self.NB_TRIALS:  # Task definitively  cancelled!
+                        # Emit lean_response signal with timeout error
+                        self.timeout_signal.emit(None, False, ("", ""), [], 3)
+                    else:  # Task will be tried again
+                        if cancel_fct:
+                            cancel_fct()
+                else:
+                    break
+            except TypeError as e:
+                self.log.debug("TypeError while cancelling trio")
+                self.log.debug(e)
+                self.actual_timeout = 2 * self.actual_timeout
+                if nb == self.NB_TRIALS:  # Task definitively  cancelled!
+                    # Emit lean_response signal with timeout error
+                    self.timeout_signal.emit(None, False, ("", ""), [], 3)
+                else:  # Task will be tried again
+                    if cancel_fct:
+                        cancel_fct()
 
         # Launch next task when done!
         self.next_task()
@@ -201,7 +231,8 @@ class ServerInterface(QObject):
     failed_request_errors       = Signal()  # FIXME: suppress?
 
     # Signal sending info from Lean
-    lean_response = Signal(Statement, bool, tuple, list)
+    lean_response = Signal(Statement, bool, tuple, list, int)
+    # timeout_signal = Signal()
 
     # For functionality using ipf (tooltips, implicit definitions):
     initial_proof_state_set     = Signal()
@@ -220,14 +251,14 @@ class ServerInterface(QObject):
     def __init__(self, nursery):
         super().__init__()
         self.log = logging.getLogger("ServerInterface")
-        self.server_queue = ServerQueue(nursery)
 
         # Lean environment
         self.lean_env: LeanEnvironment = LeanEnvironment(inst)
+
         # Lean attributes
         self.lean_server: LeanServer   = LeanServer(nursery, self.lean_env)
         self.nursery: trio.Nursery     = nursery
-        self.request_seq_num                   = -1
+        self.request_seq_num           = -1
 
         # Set server callbacks
         self.lean_server.on_message_callback = self.__on_lean_message
@@ -235,8 +266,8 @@ class ServerInterface(QObject):
             self.__on_lean_state_change
 
         # Current exercise (when processing one exercise)
-        self.lean_file: LeanFile       = None
-        self.__exercise_current          = None
+        self.lean_file: Optional[LeanFile] = None
+        self.__exercise_current            = None
 
         # Current course (when processing a bunch of statements for initial
         # proof state)
@@ -269,6 +300,10 @@ class ServerInterface(QObject):
         self.error_send, self.error_recv = \
             trio.open_memory_channel(max_buffer_size=1024)
 
+        # ServerQueue
+        self.server_queue = ServerQueue(nursery=nursery,
+                                        timeout_signal=self.lean_response)
+
     @property
     def lean_file_contents(self):
         if self.__course_data:
@@ -283,7 +318,6 @@ class ServerInterface(QObject):
         await self.lean_server.start()
         self.lean_server_running.set()
 
-
     def stop(self):
         """
         Stop the Lean server.
@@ -293,6 +327,18 @@ class ServerInterface(QObject):
         self.server_queue.started = False
         self.lean_server_running = trio.Event()
         self.lean_server.stop()
+
+    def __add_time_to_cancel_scope(self):
+        """
+        Reset the deadline of the cancel_scope.
+        """
+        if self.server_queue.cancel_scope:
+            time = self.server_queue.actual_timeout
+            self.server_queue.cancel_scope.deadline = (trio.current_time()
+                                                       + time)
+            # deadline = (self.server_queue.cancel_scope.deadline
+            #             - trio.current_time())
+            # self.log.debug(f"Cancel scope deadline: {deadline}")
 
     ############################################
     # Callbacks from lean server
@@ -326,7 +372,7 @@ class ServerInterface(QObject):
             processing, this method just call the
             __on_lean_message_for_course method).
         """
-        # TODO: reset server_queue timeout
+        self.__add_time_to_cancel_scope()
 
         # Filter seq_num
         if msg.seq_num:
@@ -400,10 +446,11 @@ class ServerInterface(QObject):
                 self.__check_receive_state()
 
     def __on_lean_state_change(self, is_running: bool):
+        self.__add_time_to_cancel_scope()
+
         if is_running != self.is_running:
             self.log.info(f"New lean state: {is_running}")
             self.is_running = is_running
-            # TODO: reset server_queue timeout
 
     def __check_receive_course_data(self, index):
         """
@@ -552,6 +599,8 @@ class ServerInterface(QObject):
             # Waiting for all pieces of information #
             #########################################
             await self.proof_receive_done.wait()
+            self.server_queue.cancel_scope.shield = True
+            # ------ Up to here task may be cancelled by timeout ------ #
 
             self.log.debug(_("Proof State received"))
 
@@ -574,11 +623,13 @@ class ServerInterface(QObject):
         except trio.WouldBlock:
             pass
 
+        error_type = 1 if error_list else 0
         self.lean_response.emit(exercise,
                                 self.no_more_goals,
                                 (self.__tmp_hypo_analysis,
                                  self.__tmp_targets_analysis),
-                                error_list)
+                                error_list,
+                                error_type)
 
     ###########################
     # Exercise initialisation #
@@ -628,17 +679,12 @@ class ServerInterface(QObject):
                                  "targets_analysis,\n" \
                                  + end_of_file
 
-        # FIXME: the following is a trick to ensure that the begin_line of
-        #  distinct exercises are sufficiently far apart, so that deaduction
-        #  cannot mistake Lean's responses to a previous exercise for the
-        #  awaited responses.
-        # Add 100 lines per exercise number in the preamble
-        # if isinstance(statement, Exercise):
-        #     virtual_file_preamble += "\n" * 100 * statement.exercise_number
-        # self.log.debug(f"File preamble: {virtual_file_preamble}")
         virtual_file = LeanFile(file_name=statement.lean_name,
                                 preamble=virtual_file_preamble,
                                 afterword=virtual_file_afterword)
+        # Ensure file is different at each new request:
+        # (avoid "file unchanged" response)
+        virtual_file.add_seq_num(self.request_seq_num)
 
         virtual_file.cursor_move_to(0)
         virtual_file.cursor_save()
@@ -655,7 +701,7 @@ class ServerInterface(QObject):
         self.log.info(f"Set exercise to: "
                       f"{exercise.lean_name} -> {exercise.pretty_name}")
         self.__exercise_current = exercise
-        self.lean_file = self.__file_from_exercise(self.__exercise_current)
+        self.lean_file = self.__file_from_exercise(exercise)
 
         await self.__update()
         if hasattr(self, "exercise_set"):
@@ -751,13 +797,16 @@ class ServerInterface(QObject):
         # nice_display_tree(code_string)
 
         self.lean_file.insert(label=label, add_txt=code_string)
+        self.lean_file.add_seq_num(self.request_seq_num)
 
         await self.__update(lean_code)
 
     # @task_for_server_queue
     async def code_set(self, label: str, code: str):
         """
-        Sets the code for the current exercise.
+        Sets the code for the current exercise. This is suposed to be called
+        when user sets code using the Lean console, but this functionality
+        is not activated right now because it f... up the history.
         """
         self.log.info("Code sent to Lean: " + code)
         if not code.endswith(","):

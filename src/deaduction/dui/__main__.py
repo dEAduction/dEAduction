@@ -78,9 +78,9 @@ if os.getenv("DEADUCTION_DEV_MODE", False):
     log_domains = ["deaduction", "__main__",  # 'lean',
                    'ServerInterface', 'ServerQueue']
     log_domains = ["__main__",
-                   #'lean',
                    'ServerInterface',
                    'ServerQueue',
+                   'lean',
                    'deaduction.dui',
                    'deaduction.pylib',
                    'logic',

@@ -195,7 +195,8 @@ class AutoStep(UserAction):
                  1: 'WrongUserInput',
                  2: 'FailedRequestError',
                  3: 'Timeout',
-                 4: 'UnicodeDecodeError'}
+                 4: 'UnicodeDecodeError',
+                 5: 'No proof state'}
 
     def __init__(self, selection, button, statement, user_input,
                  raw_string, error_type, error_mg, success_msg):

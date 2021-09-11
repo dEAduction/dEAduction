@@ -37,6 +37,7 @@ import logging
 from subprocess    import PIPE
 from queue         import Queue
 from pathlib       import Path
+# from random import random
 
 from .             import request
 from .             import response
@@ -187,6 +188,8 @@ class LeanServer:
         self.nursery                   = nursery
         self.env                       = env
 
+        self.seq_num = None
+
         self.process = None
         self.buffer = ""
 
@@ -201,7 +204,7 @@ class LeanServer:
 
         self.exited  = trio.Event()
 
-        self.tasks: List[response.Task] = []
+        self.tasks: [response.Task] = []
 
     ############################################
     # Protected utilities
@@ -290,12 +293,17 @@ class LeanServer:
 
         async for data in self.process.stdout:
             try:
-                sstr         = data.decode("utf-8")
+                sstr = data.decode("utf-8")
+
+                # # Simulate UnicodeDecodeError:
+                # trial = random()
+                # self.log.debug(f"Random = {trial}")
+                # if trial < 0.3:
+                #     raise UnicodeDecodeError("Essai d'unicodeerror", data,
+                #                              0, 0, "")
             except UnicodeDecodeError as error:
-                # self.log.error("UnicodeDecodeError", error.reason)
-                self.log.warning("!UnicodeDecodeError!")
+                self.log.error("!UnicodeDecodeError!")
                 self.log.debug(error.reason)
-                raise
             else:
                 self.buffer += sstr
 

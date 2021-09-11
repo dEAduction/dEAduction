@@ -302,8 +302,9 @@ class PatternMathObject(MathObject):
         # Recursively test for math_types
         #  (added: also when names)
         if not self.math_type.recursive_match(math_object.math_type):
-            log.debug(f"distinct types {self.math_type}")
-            log.debug(f"math_object type     {math_object.math_type}")
+            # log.debug(f"distinct types {self.math_type}")
+            # log.debug(f"math_object type     "
+            #           f"{math_object.math_type.to_display()}")
             match = False
 
         # Recursively test matching for children

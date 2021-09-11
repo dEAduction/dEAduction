@@ -213,7 +213,8 @@ class ProofStep():
 
     # ──────────────── Output ─────────────── #
     effective_code            = None  # CodeForLean that proved effective
-    error_type: Optional[int] = 0  # 1 = WUI, 2 = FRE, 3 = TIMEOUT, 4 = UNICODE
+    # 1 = WUI, 2 = FRE, 3 = TIMEOUT, 4 = UNICODE, 5 = No proof state:
+    error_type: Optional[int] = 0
     error_msg: str            = ''
     proof_state               = None
     no_more_goal              = False
@@ -263,20 +264,6 @@ class ProofStep():
         should be passed to the next proof_step.
         """
 
-        # delta = proof_step.delta_goals_count
-        # if delta >= 0:
-        #     proof_nodes = proof_step.proof_nodes
-        # else:
-        #     # Goal solved: remove -delta nodes from proof_nodes
-        #     log.debug(f"Solved {-delta} goals")
-        #     proof_nodes = proof_step.proof_nodes[:delta]
-        #
-        #     # Adapt (previous) proof_step
-        #     # FIXME: this shoul dbe done with add_new_goals
-        #     imminent_new_node = proof_nodes[-1]
-        #     if imminent_new_node is not ProofStep.initial_proof_node:
-        #         proof_step.imminent_new_node = imminent_new_node
-        #     proof_step.is_cqfd = True
         next_parent = proof_step.proof_nodes[-1]
         # log.debug(f"Proof nodes: "
         #           f"{[(pf.txt, pf.parent.txt if pf.parent else None) for pf in proof_step.proof_nodes]}")
