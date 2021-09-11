@@ -295,6 +295,7 @@ class ServerInterface(QObject):
         self.proof_state               = None
         self.no_more_goals             = False
         self.is_running                = False
+        self.last_content              = ""  # Content of last LeanFile sent.
 
         # Errors memory channels
         self.error_send, self.error_recv = \
@@ -797,8 +798,13 @@ class ServerInterface(QObject):
         # nice_display_tree(code_string)
 
         self.lean_file.insert(label=label, add_txt=code_string)
-        self.lean_file.add_seq_num(self.request_seq_num)
 
+        # Ensure content is not identical to last sent (void "no change")
+        content = self.lean_file.inner_contents  # Without preamble
+        if content == self.last_content:
+            self.lean_file.add_seq_num(self.request_seq_num)
+        self.last_content = self.lean_file.inner_contents
+        
         await self.__update(lean_code)
 
     # @task_for_server_queue
