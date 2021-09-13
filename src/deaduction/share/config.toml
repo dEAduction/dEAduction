@@ -38,8 +38,6 @@ target_selected_by_default = false
 allow_proof_by_sorry = true
 expanded_apply_button = false
 allow_implicit_use_of_definitions = false
-treat_intersections_as_ands = false
-treat_unions_as_ors = false
 automatic_intro_of_variables_and_hypotheses = false
 save_solved_exercises_for_autotest = false
 

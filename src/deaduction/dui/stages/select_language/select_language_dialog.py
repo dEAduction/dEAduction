@@ -33,20 +33,18 @@ from PySide2.QtWidgets import   ( QApplication,
 import deaduction.pylib.config.vars as cvars
 
 PRETTY_NAMES = {"en": "English",
-                'fr_FR': "Français"
-                }
+                'fr_FR': "Français"}
 
 
 def select_language():
-    available_languages = cvars.get("i18n.available_languages",
-                                         ["en"])
+    available_languages = cvars.get("i18n.available_languages", ["en"])
     language, font_enc = getdefaultlocale()
     if language in available_languages:
         return language, True
     else:
         for lang in available_languages:
             if lang[:2] == language[:2]:
-                return language, True
+                return lang, True
     pretty_languages_list = [PRETTY_NAMES[setting] if setting in PRETTY_NAMES
                              else setting for setting in available_languages]
     app = QApplication()
