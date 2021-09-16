@@ -50,8 +50,13 @@ class NewGoal:
     the msg property provides a msg that can be displayed and gives
     information about the resulting branching of the proof,
     e.g. First case/ second case, proof of first implication, ...
+
+    An instance is created from CodeForLean, by looking at special attributes
+    (conjunction, disjunction, subgoal). The old/new hypos, or new target
+    are stored. Using these attributes, the msg property computes msgs for
+    the user indicating the kind of new goal that has appeared.
     """
-    node_type:  str  # 'or', 'and', 'iff'
+    node_type:  str  # 'or', 'and', 'iff', 'subgoal'
     counter:    int  # 1st or 2nd case / target
     old_hypo:   Optional[Union[MathObject, str]]    # e.g. 'P or Q'
     old_target: Optional[Union[MathObject, str]]  # e.g. 'P and Q'
@@ -59,50 +64,44 @@ class NewGoal:
     new_target: Optional[Union[MathObject, str]]  # e.g. 'P'
 
     @classmethod
-    def from_lean_code(cls, lean_code):  # Type: [NewGoal, NewGoal]
+    def from_lean_code(cls, lean_code, delta=1):  # Type: [NewGoal, NewGoal]
         """
         If lean_code will create new goals, return them.
         """
-        more_goals = None
+        more_goals = []
         if lean_code.conjunction:
             p_and_q, p, q = lean_code.conjunction
             type_ = 'and'
             if isinstance(p_and_q, MathObject) and p_and_q.is_iff(
                     is_math_type=True):
                 type_ = 'iff'
-            new_goal1 = NewGoal(type_, 1,
-                                old_hypo=None,
-                                old_target=p_and_q,
-                                new_hypo=None,
-                                new_target=p)
-            new_goal2 = NewGoal(type_, 2,
-                                old_hypo=None,
-                                old_target=p_and_q,
-                                new_hypo=None,
-                                new_target=q)
+            new_goal1 = NewGoal(type_, 1, old_hypo=None, old_target=p_and_q,
+                                new_hypo=None, new_target=p)
+            new_goal2 = NewGoal(type_, 2, old_hypo=None, old_target=p_and_q,
+                                new_hypo=None, new_target=q)
             more_goals = [new_goal2, new_goal1]  # Mind the order: pile!
         elif lean_code.disjunction:
             p_or_q, p, q = lean_code.disjunction
-            new_goal1 = NewGoal('or', 1,
-                                old_hypo=p_or_q,
-                                old_target=None,
-                                new_hypo=p,
-                                new_target=None)
-            new_goal2 = NewGoal('or', 2,
-                                old_hypo=p_or_q,
-                                old_target=None,
-                                new_hypo=q,
-                                new_target=None)
+            new_goal1 = NewGoal('or', 1, old_hypo=p_or_q, old_target=None,
+                                new_hypo=p, new_target=None)
+            new_goal2 = NewGoal('or', 2, old_hypo=p_or_q, old_target=None,
+                                new_hypo=q, new_target=None)
             more_goals = [new_goal2, new_goal1]
         elif lean_code.subgoal:
             subgoal = lean_code.subgoal
-            new_goal = NewGoal('subgoal', 1,
-                               old_hypo=None,
-                               old_target=None,
-                               new_hypo=None,
-                               new_target=subgoal)
+            new_goal = NewGoal('subgoal', 1, old_hypo=None, old_target=None,
+                               new_hypo=None, new_target=subgoal)
             more_goals = [new_goal]
+        if len(more_goals) < delta:
+            # Add generic NewGoals to complete the list
+            generic_new_goal = cls.generic()
+            more_goals.extend([generic_new_goal] * (delta - len(more_goals)))
         return more_goals
+
+    @classmethod
+    def generic(cls):
+        return NewGoal('generic', 1, old_hypo=None, old_target=None,
+                       new_hypo=None, new_target=None)
 
     @property
     def msg(self):
@@ -139,6 +138,8 @@ class NewGoal:
             msg += " " + _("assuming {}").format(hypo)
         elif self.node_type == 'subgoal':
             msg = _("Proof of new subgoal: {}").format(self.new_target)
+        else:  # Generic case
+            msg = _("Proof of new subgoal")
         msg += " ..."
         return msg
 
@@ -148,6 +149,9 @@ class ProofNode:
     This class encodes a node in the proof, e.g. a point where the proof
     divides into two or more sub-proofs, as happens for a proof by cases,
     or a proof of a conjunction.
+
+    The 'txt" attribute store the NewGoal.msg to be displayed for user
+    as a node of the proof outline.
     """
     def __init__(self, parent, txt, history_nb, sub_proof: [] = None):
         super().__init__()
@@ -156,20 +160,8 @@ class ProofNode:
         self.history_nb = history_nb
         self.children = sub_proof if sub_proof else []
 
-    # @property
-    # def goals(self):
-    #     return self.proof_step.new_goals
-    #
-    # @property
-    # def new_goal(self):
-    #     return self.goals[-1]
-    #
-    # @property
-    # def txt(self):
-    #     return self.new_goal.msg
 
-
-class ProofStep():
+class ProofStep:
     """
     Class to store data associated to one step in the proof.
     The step starts with user inputs, and ends with Lean's responses.
@@ -283,7 +275,7 @@ class ProofStep():
             next_parent.children.append(nps)
         return nps
 
-    def add_new_goals(self):
+    def add_new_goals(self, delta):
         if not self.lean_code:
             self.new_goals.append(None)
         else:
@@ -293,7 +285,7 @@ class ProofStep():
                 # Last goal will be replaced by first new goal
                 self.new_goals.pop()
                 self.proof_nodes.pop()
-            more_goals = NewGoal.from_lean_code(self.lean_code)
+            more_goals = NewGoal.from_lean_code(self.lean_code, delta)
             more_proof_nodes = [ProofNode(parent=old_proof_node,
                                           txt=new_goal.msg,
                                           history_nb = self.history_nb,
@@ -308,21 +300,31 @@ class ProofStep():
             self.new_goals.extend(more_goals)
 
     def update_goals(self):
-        if not self.is_error():  # Wrong delta if error (and no need)
-            delta = self.delta_goals_count
-            if delta > 0:  # A new goal has appeared
-                self.total_goals_counter += delta
-                self.add_new_goals()  # Manage goal msgs from LeanCode
-            elif delta < 0:  # A goal has been solved
-                # THe following assume delta is -1
-                self.is_cqfd = True
-                self.current_goal_number -= delta
-                if self.new_goals:
-                    self.new_goals.pop()  # Remove last goal msg
-                    self.proof_nodes.pop()
-                    imminent_new_node = self.proof_nodes[-1]
-                    if imminent_new_node is not ProofStep.initial_proof_node:
-                        self.imminent_new_node = imminent_new_node
+        """
+        Manage the goals pile of self. That is,
+        - if self.delta_goals_count > 0, i.e. new goals have been created
+        during this step, add NewGoal instances to self.new_goals
+        - if self.delta_goals_count < 0, i.e. new goals have been solved,
+        then pop items from self.new_goals and self.proof_nodes.
+        :return:
+        """
+        if self.is_error():  # Wrong delta if error (and no need)
+            return
+
+        delta = self.delta_goals_count
+        if delta > 0:  # A new goal has appeared
+            self.total_goals_counter += delta
+            self.add_new_goals(delta)  # Manage goal msgs from LeanCode
+        elif delta < 0:  # A goal has been solved
+            # THe following assume delta is -1
+            self.is_cqfd = True
+            self.current_goal_number -= delta
+            if self.new_goals:
+                self.new_goals.pop()  # Remove last goal msg
+                self.proof_nodes.pop()
+                imminent_new_node = self.proof_nodes[-1]
+                if imminent_new_node is not ProofStep.initial_proof_node:
+                    self.imminent_new_node = imminent_new_node
 
     ##############
     # Properties #
@@ -357,8 +359,14 @@ class ProofStep():
     def goal(self):
         if self.proof_state:
             return self.proof_state.goals[0]
-        else:
-            return None
+
+    @property
+    def nb_of_goals(self):
+        """
+        Return the number of unsolved goals in self.proof_state
+        """
+        if self.proof_state:
+            return len(self.proof_state.goals)
 
     @property
     def current_new_goal(self):

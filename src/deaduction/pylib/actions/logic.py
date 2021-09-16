@@ -464,6 +464,8 @@ def have_new_property(arrow: MathObject,
                       variable_names: [str],
                       new_hypo_name: str) -> CodeForLean:
     """
+    Compute Lean code to apply an implication or a universal property to a
+    property or a variable.
 
     :param arrow:           a MathObject which is either an implication or a
                             universal property
@@ -475,6 +477,9 @@ def have_new_property(arrow: MathObject,
                             taking into account implicit parameters
     """
 
+    # TODO: add smart guess for placeholders, by matching math types
+    #  May even try to guess parameters from the context
+    #  (e.g. if we need a function and there is only one in the context)
     selected_hypo = arrow.info["name"]
 
     command = f'have {new_hypo_name} := {selected_hypo}'
@@ -799,7 +804,6 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     (or equivalent to such after unfolding definitions)
 
     :param selected_objects: list of MathObjects of length ≥ 2
-    :return:
     """
     # FIXME: return error msg if user try to apply "forall x:X, P(x)"
     #  to some object of wrong type (e.g. implication)
@@ -821,10 +825,12 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
         if inequality:
             math_types = [p.math_type for p in goal.context]
             if inequality in math_types:
+                # Check if inequality is in context:
                 index = math_types.index(inequality)
                 inequality_name = goal.context[index].display_name
                 variable_names.append(inequality_name)
             else:
+                # If not, assert inequality as a new goal:
                 inequality_name = get_new_hyp(proof_step)
                 variable_names.append(inequality_name)
                 unsolved_inequality_counter += 1
@@ -833,27 +839,26 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
                 # Variable is not used explicitly, but this affects inequality:
                 variable = inequality.children[0]
                 variable = add_type_indication(variable, math_type)
-                display_inequality = inequality.to_display(
-                    is_math_type=False,
-                    format_='lean')
+                display_inequality = inequality.to_display(is_math_type=False,
+                                                           format_='lean')
                 # Code I: state corresponding inequality #
                 code = code.and_then(f"have {inequality_name}: "
                                      f"{display_inequality}")
-                code = code.and_then("rotate")
+                code = code.and_then("rotate")  # Back to main goal
 
     # Code II: Apply universal_property #
     new_hypo_name = get_new_hyp(proof_step)
     code = code.and_then(have_new_property(universal_property,
                                            variable_names,
-                                           new_hypo_name)
-                         )
+                                           new_hypo_name))
 
     # Code III: try to solve inequalities #     e.g.:
     #   iterate 2 { solve1 {try {norm_num at *}, try {compute_n 10}} <|>
     #               rotate},   rotate,
     more_code = CodeForLean.empty_code()
     if unsolved_inequality_counter:
-        code = code.and_then("rotate")  # back to first inequality
+        # Back to first inequality:
+        code = code.and_then(f"rotate {proof_step.nb_of_goals}")
         more_code1 = CodeForLean.from_string("norm_num at *")
         more_code1 = more_code1.try_()
         more_code2 = CodeForLean.from_string("compute_n 1")
@@ -924,6 +929,7 @@ def action_forall(proof_step,
                                        math_type=None)
             selected_objects.insert(0, potential_var)
             # Now len(l) == 2
+
     # From now on len(l) ≥ 2
     # Search for a universal property among l, beginning with last item
     selected_objects.reverse()
