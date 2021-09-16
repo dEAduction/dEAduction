@@ -158,6 +158,7 @@ class Goal:
             context list.
         """
 
+        # TODO: copy old tags (attributes of ContextMathObject) to new object
         new_goal = self
         new_context = new_goal.context.copy()
         old_context = old_goal.context.copy()

@@ -38,25 +38,23 @@ from deaduction.pylib.mathobj       import ( MathObject,
 
 log = logging.getLogger(__name__)
 
-# List of default implicit definitions
-# TODO: mark them in the metadata of the Lean file
-# TODO: test double-inclusion as a def
-IMPLICIT_DEFINITIONS = ['inclusion',
-                        'intersection_deux_ensembles',
-                        'union_deux_ensembles',
-                        'intersection_quelconque_ensembles',
-                        'union_quelconque_ensembles',
-                        'produit_de_parties',
-                        'image_directe',
-                        'egalite_fonctions',
-                        'Identite',
-                        'injectivite'
-                        ]
+# List of default implicit definitions FIXME: deprecated
+# IMPLICIT_DEFINITIONS = ['inclusion',
+#                         'intersection_deux_ensembles',
+#                         'union_deux_ensembles',
+#                         'intersection_quelconque_ensembles',
+#                         'union_quelconque_ensembles',
+#                         'produit_de_parties',
+#                         'image_directe',
+#                         'egalite_fonctions',
+#                         'Identite',
+#                         'injectivite'
+#                         ]
 
 
 class PatternMathObject(MathObject):
     """
-    A class for MathObject that may contains metavariables. Metavraiables
+    A class for MathObject that may contains metavariables. Metavariables
     are represented by PatternMathObject whose node is 'METAVAR".
     e.g. The PatternMathObject representing the definition of injectivity
     looks like:
