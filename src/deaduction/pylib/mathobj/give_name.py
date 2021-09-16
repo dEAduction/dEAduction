@@ -128,8 +128,10 @@ def give_global_name(math_type: MathObject,
     if not hints:
         hints = []
     forbidden_vars = proof_step.goal.extract_vars()
-    if strong_hint and strong_hint not in forbidden_vars:
-        return strong_hint
+    if strong_hint:
+        forbidden_names = [var.info['name'] for var in forbidden_vars]
+        if strong_hint not in forbidden_names:
+            return strong_hint
 
     return give_name(math_type, forbidden_vars, hints, proof_step)
 
@@ -387,7 +389,7 @@ def hints_by_name(named_vars: [MathObject], unnamed_var_nb: int):
 
 def name_with_index(unnamed_vars, radical, forbidden_names, start=0):
     """
-    Name unnmaed vars using radical and indices, avoiding forbidden_names,
+    Name unnamed vars using radical and indices, avoiding forbidden_names,
     with index starting at start. Always succeeds!
     """
     subscript = start
