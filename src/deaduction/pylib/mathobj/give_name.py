@@ -90,7 +90,7 @@ def give_local_name(math_type: MathObject,
     :return:                str, a name for the new variable
     """
 
-    # Fixme: unused
+    # Fixme: used only in display_math
     more_forbidden_vars = body.extract_local_vars()
     names = [var.info['name'] for var in forbidden_vars]
     # log.debug(f'Giving name to bound var, a priori forbidden names ={names}')
@@ -112,7 +112,8 @@ def give_local_name(math_type: MathObject,
 
 def give_global_name(math_type: MathObject,
                      proof_step,
-                     hints: [str] = []) -> str:
+                     hints: [str] = None,
+                     strong_hint: str = '') -> str:
     """
     Attribute a name to a global variable. See give_name below.
     Here the forbidden variables are all variables from the context.
@@ -120,9 +121,16 @@ def give_global_name(math_type: MathObject,
     :param math_type:   PropObj type of new variable
     :param goal:        current_goal
     :param hints:       a list of hints for the future name
+    (only the initial is taken into account)
+    :param strong_hint:  a strong hint, to be used if possible
     :return:            a name for the new variable
     """
+    if not hints:
+        hints = []
     forbidden_vars = proof_step.goal.extract_vars()
+    if strong_hint and strong_hint not in forbidden_vars:
+        return strong_hint
+
     return give_name(math_type, forbidden_vars, hints, proof_step)
 
 
@@ -438,6 +446,12 @@ def name_bound_vars(math_type: MathObject,
     hints_from_vars = hints_by_name(named_vars, len(unnamed_vars))
     hints_type = hints_from_type(math_type)
     assert hints_type != []
+
+    if math_type.display_name == 'ℝ':
+        var = unnamed_vars[0]
+        if 'hint_name' in var.info:
+            initial = var.info['hint_name']
+        insert_maybe(hints_type, initial, position=0)
 
     ###########################
     # Easy case : use indices #

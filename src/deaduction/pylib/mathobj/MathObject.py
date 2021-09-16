@@ -332,7 +332,13 @@ class MathObject:
             bound_var_type, bound_var, local_context = children
             new_info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
                         'lean_name': bound_var.info['name'],
-                        'is_bound_var': True}
+                        'is_bound_var': True,
+                        'quantifier': node}
+            # Add info to help naming dummy var
+            if local_context.is_implication(is_math_type=True):
+                child = local_context.children[0]
+                if child.is_inequality(is_math_type=True):
+                    new_info['inequality'] = child.node
             bound_var.info.update(new_info)
             bound_var.math_type = bound_var_type
             bound_vars.insert(0, bound_var)

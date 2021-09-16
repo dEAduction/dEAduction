@@ -742,6 +742,7 @@ def construct_forall(proof_step) -> CodeForLean:
     variable = math_object.children[1]
     body = math_object.children[2]
     hint = variable.display_name  # not optimal
+    strong_hint = hint
     if math_type.node == "PRODUCT":
         [math_type_1, math_type_2] = math_type.children
         x = give_global_name(proof_step=proof_step, math_type=math_type_1)
@@ -751,8 +752,8 @@ def construct_forall(proof_step) -> CodeForLean:
     else:
         x = give_global_name(proof_step=proof_step,
                              math_type=math_type,
-                             hints=[hint]
-                             )
+                             hints=[hint],
+                             strong_hint=strong_hint)
         possible_codes = possible_codes.and_then(f'intro {x}')
         name = f"{x}"
     possible_codes.add_success_msg(_("Object {} added to the context").
@@ -978,9 +979,11 @@ def apply_exists(proof_step, selected_object: [MathObject]) -> CodeForLean:
         # implicit_definition = MathObject.last_used_implicit_definition
         selected_hypo       = MathObject.last_rw_object
 
+    hint = selected_hypo.children[1].to_display()
     x = give_global_name(proof_step=proof_step,
                          math_type=selected_hypo.children[0],
-                         hints=[selected_hypo.children[1].to_display()])
+                         hints=[hint],
+                         strong_hint=hint)
     new_hypo_name = get_new_hyp(proof_step)
 
     if selected_hypo.children[2].node == "PROP_∃":
@@ -1280,6 +1283,7 @@ def apply_map_to_element(proof_step,
     #     x = element.info["name"]
     # elif isinstance(element, str):
     image_set = map_.math_type.children[1]
+    # TODO: choose a better name by a careful examination of context
     y = give_global_name(proof_step=proof_step,
                          math_type=image_set,
                          hints=[image_set.info["name"]])

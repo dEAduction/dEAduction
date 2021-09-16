@@ -220,6 +220,33 @@ class Goal:
         self.context     = clean_permuted_new_context
         self.future_tags = clean_permuted_new_tags
 
+    def __name_real_bound_vars(self, math_type, unnamed_vars, forb_vars):
+        """
+        Name dummy variables of type 'ℝ', by using Lean's name if possible.
+
+        we first sort dummy_vars by initials of Lean's name.
+        Then we name all vars with a given initial together.
+        """
+        initials = []
+        var_with_initials = []  # For each initial, list of vars with initial
+        for var in unnamed_vars:
+            if 'lean_name' in var.info:
+                name = var.info['lean_name']
+                hint_name = name[0]
+                var.info['hint_name'] = hint_name
+            else:
+                hint_name = None
+            if hint_name in initials:
+                index = initials.index(hint_name)
+                var_with_initials[index].append(var)
+            else:
+                initials.append(hint_name)
+                var_with_initials.append([var])
+
+        for initial, variables in zip(initials, var_with_initials):
+            name_bound_vars(math_type=math_type, named_vars=[],
+                            unnamed_vars=variables, forbidden_vars=forb_vars)
+
     def __name_bound_vars_in_data(self, math_types, dummy_vars, forb_vars,
                                   future_vars):
         """
@@ -240,12 +267,20 @@ class Goal:
                                   if var.math_type == math_type]
             future_vars_of_type = [var for var in future_vars
                                   if var.math_type == math_type]
+
+            forb_vars = forb_vars + future_vars_of_type
+            named_vars = glob_vars_of_type + future_vars_of_type
             # log.debug(f"Naming vars of type "
             #           f"{math_type.to_display()}")
-            name_bound_vars(math_type=math_type,
-                            named_vars=glob_vars_of_type + future_vars_of_type,
-                            unnamed_vars=dummy_vars_of_type,
-                            forbidden_vars=forb_vars + future_vars_of_type)
+            if math_type.display_name == 'ℝ':
+                self.__name_real_bound_vars(math_type=math_type,
+                                            unnamed_vars=dummy_vars_of_type,
+                                            forb_vars=forb_vars)
+            else:
+                name_bound_vars(math_type=math_type,
+                                named_vars=named_vars,
+                                unnamed_vars=dummy_vars_of_type,
+                                forbidden_vars=forb_vars)
             # log.debug(f"    --> "
             #           f"{[var.to_display() for var in dummy_vars_of_type]}")
 
