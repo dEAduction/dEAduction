@@ -431,7 +431,7 @@ def shape_from_application(math_object,
         name = 0  # Default case
         if first_child.node == "LOCAL_CONSTANT":
             name = first_child.display_name
-        if first_child.node == "LAMBDA":
+        elif first_child.node == "LAMBDA":
             body = first_child.children[2]
             if body.node == "APPLICATION" and body.children[0].node == \
                     "LOCAL_CONSTANT":
@@ -446,7 +446,6 @@ def shape_from_application(math_object,
         if name in latex_from_constant_name:
             # Damn bug, I got you!!!!!
             display = list(latex_from_constant_name[name])
-            pass
         else:  # Standard format
             display = list(latex_from_constant_name['STANDARD_CONSTANT'])
             display_not = list(latex_from_constant_name[

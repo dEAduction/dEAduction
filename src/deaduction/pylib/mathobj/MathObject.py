@@ -1112,6 +1112,9 @@ class MathObject:
                                                         text_depth)
         else:
             shape = Shape.from_math_object(self, format_, text_depth)
+
+        log.debug(f"Display: {shape.display}")
+        print(str(self))
         return structured_display_to_string(shape.display)
 
     # def apply_implicit_definition(self):
