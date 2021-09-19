@@ -53,6 +53,7 @@ from deaduction.pylib.utils.exceptions import (FileCheckError)
 
 log = logging.getLogger(__name__)
 
+
 # ┌────────────────────────────────────────┐
 # │ Package class                          │
 # └────────────────────────────────────────┘
@@ -77,7 +78,7 @@ class Package:
             raise RuntimeError( _("invalid directory, must be "
                                   "in $HOME/.deaduction folder !!!"))
 
-        if self.path.exists(): # remove only if path exists
+        if self.path.exists():  # remove only if path exists
             shutil.rmtree(str(self.path.resolve()))
 
     ############################################
@@ -92,6 +93,7 @@ class Package:
                                         .format(str(self.path)),
                                         dbg_info=e )
 
+
 # ┌────────────────────────────────────────┐
 # │ ArchivePackage class                   │
 # └────────────────────────────────────────┘
@@ -102,7 +104,6 @@ class ArchivePackage(Package):
                  archive_hlist: Path   = None,
                  archive_root: Path    = None,        # Root folder
                  archive_type: str     = "tar"):      # can be "tar" or "zip"
-                 
 
         super().__init__(path)
 
@@ -217,7 +218,6 @@ class ArchivePackage(Package):
         #        self.remove()
         #    self.install() # TODO # if error, only raise exception, don't
         #                   #  install !!!
-
 
     def install(self, on_progress: Callable = None):
         """
@@ -355,6 +355,7 @@ class FolderPackage(Package):
         self._check_folder()
         self._check_files()
 
+
 # ┌────────────────────────────────────────┐
 # │ Load from config                       │
 # └────────────────────────────────────────┘
@@ -363,21 +364,21 @@ def from_config(conf: Dict[str, any]):
     Loads a specific package information from info given
     in config.
 
-    :param conf: a key/pair value giving config insight. must contain the
-    "type attribute"
+    :param conf: a key/pair value giving config insight. Must contain the
+    "type attribute".
     :return: a Package subclass (FolderPackage, ArchivePackage, GitPackage)
     with the correct settings.
     """
 
-    package_types = { "folder" : FolderPackage,
-                      #"git"    : GitPackage,
-                      "archive": ArchivePackage }
+    package_types = {"folder": FolderPackage,
+                     #"git"    : GitPackage,
+                     "archive": ArchivePackage }
     
-    if not "type" in conf:
+    if "type" not in conf:
         raise KeyError(_("Excepted \"type\" key in package config."))
     
     ttype = conf["type"]
-    if not ttype in package_types:
+    if ttype not in package_types:
         raise KeyError( _("Uknown package type {}, excepted {}")
                          .format(ttype, ",".join(package_types.keys())) )
 

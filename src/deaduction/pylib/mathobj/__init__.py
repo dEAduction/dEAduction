@@ -43,3 +43,5 @@ from .give_name import           (get_new_hyp,
 
 from .lean_analysis import       (lean_expr_with_type_grammar,
                                   LeanEntryVisitor)
+
+from .display_math import         Shape
