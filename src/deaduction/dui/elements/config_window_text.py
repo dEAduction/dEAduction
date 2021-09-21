@@ -55,9 +55,12 @@ PRETTY_NAMES = {
     'functionality.target_selected_by_default': _("Target selected by "
                                                   "default"),
     'functionality.allow_proof_by_sorry': _("Allow proof by sorry"),
-    # 'functionality.': _(""),
-    'logs.save_journal': _("Save journal"),
+    'functionality.allow_implicit_use_of_definitions':
+        _("Allow implicit use of definitions"),
+    'functionality.automatic_intro_of_variables_and_hypotheses':
+        _("Automatic intro of variables and hypotheses"),
     'functionality.save_solved_exercises_for_autotest':
         _("Save exercises for autotest"),
+    'logs.save_journal': _("Save journal"),
     'None': _('None')
 }
