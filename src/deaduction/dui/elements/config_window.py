@@ -1,6 +1,14 @@
 """
 # config_window.py : a window for user config #
 
+To add a parameter for config:
+- add an entry to the relevant CONFIG sub-dictionary,
+- add an entry in config_window_text.PRETTY_NAMES for translation,
+- if relevant, add an entry in SETTINGS_AFFECTING_UI so that UI is updated
+when the value of the parameter is modified
+- make sure that the parameter's value is taken into account on the spot
+when UI is updated.
+
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Created       : 07 2021 (creation)
@@ -59,11 +67,7 @@ log = logging.getLogger(__name__)
 ######################
 # Settings to be set #
 ######################
-# TO ADD A NEW SETTING:
-# - Append the data to the relevant dictionary
-# (each dict correspond to some tab of the config window)
-# - Add it to the SETTINGS_AFFECTING_UI list if needed
-# - Make sure the setting is correctly updated in ExerciseMainWindow
+# TO ADD A NEW SETTING: cf file documentation
 
 CONFIGS = dict()
 # Each value of CONFIGS is a list of tuples:
