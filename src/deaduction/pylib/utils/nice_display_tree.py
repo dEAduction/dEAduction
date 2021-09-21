@@ -34,8 +34,9 @@ log = logging.getLogger()
 # logger.configure()
 # log = lambda x:x
 
-LEFT_SPLIT_STRINGS = '([{'
-RIGHT_SPLIT_STRINGS = ')]}'
+LEFT_SPLIT_STRINGS = '({'
+REGEXP_LEFT_SPLIT_STRINGS = '\(\{'
+RIGHT_SPLIT_STRINGS = ')}'
 
 
 def split_children(string):
@@ -49,33 +50,54 @@ def split_children(string):
             depth += 1
         elif carac in RIGHT_SPLIT_STRINGS:
             depth -= 1
-            if depth <0:
+            if depth < 0:
                 log.warning("Wrong balanced expr")
         elif carac == ',' and depth == 0:
             children.append((child[:-1]).strip())
             child = ""
         # Last child
     children.append(child.strip())
-    log.debug(f"Children of {string}: {children}")
+    print(f"Children of {string}: {children}")
     return children
 
 
 def split_once(string: str):
-    left = LEFT_SPLIT_STRINGS + ','
+    left = REGEXP_LEFT_SPLIT_STRINGS + ','
     # Search first splitting string from left
-    # mot suivi d'une parenthèse  ou d'une virgule
+    # mot followed by parenthesis or comma
     pattern_root = '^[^' + left + ']*[' + left + ']'
     mo = re.search(pattern_root, string)
     if mo:
         root = mo.group()
-        children_string = string[len(root):-1]
-        log.debug(f"Split once: {root} // {children_string}")
+        children_string = string[len(root):]  # -1
+        print(f"Split once: {root} // {children_string}")
         return root[:-1], children_string
 
 
+def split_once_alt(string: str):
+    left = LEFT_SPLIT_STRINGS + ','
+    ignore_left = '['
+    ignore_right = ']'
+    # Search first splitting string from left
+    # mot followed by parenthesis or comma
+    root = ""
+    ignore_depth = 0
+    for carac in string:
+        root += carac
+        if carac in ignore_left:
+            ignore_depth += 1
+        elif carac in ignore_right:
+            ignore_depth -= 1
+        elif carac in left and ignore_depth ==0:
+            break
+    if root != string:
+        children_string = string[len(root):]
+        print(f"Split once: {root} // {children_string}")
+        return root, children_string
+
+
 def tree_str_to_list(tree_str: str) -> []:
-    tree_list = []
-    split = split_once(tree_str)
+    split = split_once_alt(tree_str)
     if split:
         root, children_string = split
         children = split_children(children_string)
@@ -108,6 +130,11 @@ def display_tree(tree, depth=0):
 
 
 def nice_display_tree(tree_str: str):
+    """
+    Nice display for strings from targets_analysis and hypo_analysis.
+    :param tree_str:
+    :return:
+    """
     tree = tree_str_to_list(tree_str)
     display_tree(tree)
 

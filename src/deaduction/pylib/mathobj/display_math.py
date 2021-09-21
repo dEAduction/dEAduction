@@ -75,11 +75,12 @@ from .display_data import ( latex_from_constant_name,
                             latex_from_quant_node,
                             latex_to_utf8_dic,
                             latex_to_lean_dic,
-                            needs_paren
-                            )
+                            needs_paren,
+                            latex_to_utf8)
 
 log = logging.getLogger(__name__)
 global _
+
 
 @dataclass
 class Shape:
@@ -106,7 +107,7 @@ class Shape:
     text_depth:                 int         = 0
     #   depth until which a text version should be displayed if available.
     display_not:                list        = None
-    all_app_arguments:          list        = None
+    all_app_arguments:          list        = None  # FIXME: deprecated
     #   Contains supplementary children if needed. See display_application.
     negate:                     bool        = False
     #   When negate is True, try to compute display_not instead of display.
@@ -117,6 +118,17 @@ class Shape:
                          format_="latex",
                          text_depth=0,
                          negate=False):
+
+        raw_shape = Shape.raw_shape_from_math_object(math_object, format_,
+                                                     text_depth)
+        raw_shape.expand_from_shape(negate=negate)
+        return raw_shape  # Now expanded
+
+    @classmethod
+    def raw_shape_from_math_object(cls,
+                                   math_object: Any,
+                                   format_="latex",
+                                   text_depth=0):
         """
         This function essentially looks in the format_from_node
         dictionary, and then pass the result to the from_shape method
@@ -152,7 +164,7 @@ class Shape:
                               math_object=math_object,
                               format_=format_)
 
-        elif node in latex_from_node:
+        elif node in latex_from_node:  # Generic case!
             raw_shape = Shape(display=list(latex_from_node[node]),
                               math_object=math_object,
                               format_=format_)
@@ -160,8 +172,7 @@ class Shape:
         else:  # Node not found in dictionaries: try specific methods
             raw_shape = Shape.from_specific_nodes(math_object,
                                                   format_,
-                                                  text_depth
-                                                  )
+                                                  text_depth)
 
         # From now on shape is an instance of Shape, with latex format
         if format_ == "lean" and node not in lean_from_node:
@@ -172,8 +183,8 @@ class Shape:
             raw_shape.text_to_latex()
 
         # Finally expand raw_shape
-        raw_shape.expand_from_shape(negate=negate)
-        return raw_shape  # Now expanded
+        # raw_shape.expand_from_shape(negate=negate)
+        return raw_shape  # Unexpanded
 
     @classmethod
     def from_specific_nodes(cls, math_object, format_, text_depth):
@@ -198,7 +209,7 @@ class Shape:
             display = _("All goals reached!")
         elif node == "APPLICATION":
             # This one returns a shape, to handle supplementary children
-            shape = shape_from_application(math_object, format_)
+            shape = shape_from_application_alt(math_object, format_) # Fixme
         elif node in ["LOCAL_CONSTANT", "CONSTANT"]:
             # ! Return display, not shape
             display = display_constant(math_object, format_)
@@ -251,15 +262,16 @@ class Shape:
         math_object =  self.math_object
         format_ =      self.format_
         text_depth =   self.text_depth
-        if math_object:  # Math_object is None if shape = error_shape
-            children = math_object.children
-
-        # Case of supplementary children (when node == "APPLICATION")
-        if self.all_app_arguments:
-            children = self.all_app_arguments
+        # FIXME: not used anymore ??
+        # if math_object:  # Math_object is None if shape = error_shape
+        #     children = math_object.children
+        #
+        # # Case of supplementary children (when node == "APPLICATION")
+        # if self.all_app_arguments:
+        #     children = self.all_app_arguments
 
         # Successively expand each item in display list
-        expanded_display = []
+        expanded_display = []  # Will contain the final expanded display
         counter = -1
         subscript = False
         superscript = False
@@ -269,18 +281,18 @@ class Shape:
             display_item = item
 
             # (1) Integers code for children, or tuples for grandchildren
-            if isinstance(item, int):
-                child = children[item]
-            elif isinstance(item, tuple):  # DO NOT call this when item was int
-                # (case of supplementary children from 'application' node)
-                child = math_object.descendant(item)
+            # if isinstance(item, int):
+            #     child = children[item]
+            # elif isinstance(item, tuple):  # DO NOT call this when item was int
+            #     # (case of supplementary children from 'application' node)
+            #     child = math_object.descendant(item)
             if isinstance(item, int) or isinstance(item, tuple):
+                child = math_object.descendant(item)
                 # Recursively get shape for child
                 shape = Shape.from_math_object(math_object=child,
                                                format_=format_,
                                                text_depth=text_depth - 1,
-                                               negate=negate_child
-                                               )
+                                               negate=negate_child)
                 display_item = shape.display
                 if negate_child and shape.display_not:
                     # If negation has already been incorporated in display:
@@ -338,11 +350,12 @@ class Shape:
         # log.debug(f"convert {display} to utf8")
         for string, n in zip(display, range(len(display))):
             if isinstance(string, str):
-                striped_string = string.strip()  # remove spaces
-                if striped_string in latex_to_utf8_dic:
-                    utf8_string = latex_to_utf8_dic[striped_string]
-                    utf8_string = string.replace(striped_string, utf8_string)
-                    display[n] = utf8_string
+                display[n] = latex_to_utf8(string)
+                # striped_string = string.strip()  # remove spaces
+                # if striped_string in latex_to_utf8_dic:
+                #     utf8_string = latex_to_utf8_dic[striped_string]
+                #     utf8_string = string.replace(striped_string, utf8_string)
+                #     display[n] = utf8_string
 
     def latex_to_lean(self):
         """
@@ -396,12 +409,23 @@ def shape_from_application(math_object,
     - APP(APP(APP(composition, f),g),x)     -> r"f \\circ g (x)"
 
     :param all_app_arguments: use to transform
-                                            APP(APP(...APP(x0,x1),...,xn)
+                                            APP(APP(...APP(x0,x1),...),xn)
                                     into
                                             APP(x0, x1, ..., xn)
     """
 
-    # log.debug(f"shape from app {math_object.display_debug}")
+    log.debug(f"shape from app {math_object.display_debug}")
+    nb = math_object.nb_implicit_children()
+    log.debug(f"Nb of implicit children: {nb}")
+    log.debug(f"implicit children:")
+    for n in range(nb):
+        child = math_object.implicit_children(n)
+        if child:
+            child_string = child.to_display()
+        else:
+            child_string = "None!"
+        log.debug(f"  {n}-->{child_string}")
+
     if all_app_arguments is None:
         all_app_arguments = []
     first_child     = math_object.children[0]
@@ -438,7 +462,7 @@ def shape_from_application(math_object,
                 name = body.children[0].display_name
             else:
                 name = '*set_family*'
-        display = [name, '_', 1]
+        display = [name, ['_', 1]]
 
     # (3) Case of constants, e.g. APP(injective, f)
     elif first_child.node == "CONSTANT":
@@ -486,6 +510,104 @@ def shape_from_application(math_object,
     return raw_shape
 
 
+def shape_from_application_alt(math_object,
+                               format_) -> Shape:
+    """
+    Provide display for node 'APPLICATION'
+    This is a very special case, includes e.g.
+    - APP(injective, f)                     -> f is injective
+    - APP(APP(composition, f),g)            -> r"f \\circ g"
+    - APP(f, x)                             -> f(x)
+    - APP(APP(APP(composition, f),g),x)     -> r"f \\circ g (x)"
+
+    NB: implicit children are used to transform
+                                            APP(APP(...APP(x0,x1),...),xn)
+                                    into
+                                            APP(x0, x1, ..., xn)
+    """
+
+    nb = math_object.nb_implicit_children()
+    implicit_children = [math_object.implicit_children(n)
+                         for n in range(nb)]
+    log.debug(f"Nb of implicit children: {nb}")
+    log.debug(f"implicit children:")
+    for child in implicit_children:
+        if child:
+            child_string = child.to_display()
+        else:
+            child_string = "None!"
+        log.debug(f"----->{child_string}")
+
+    display = [0]  # Default = display first child as a function
+    display_not = None
+
+    first_child = implicit_children[0]
+    # (2) Case of index notation: sequences, set families
+    if first_child.math_type.node in ["SET_FAMILY", "SEQUENCE"]:
+        # APP(E, i) -> E_i
+        # we DO NOT call display for first_child because we just want
+        #  "E_i",       but NOT       "{E_i, i ∈ I}_i"      !!!
+        # We just take care of two cases of APP(E,i) with either
+        # (1) E a local constant, or
+        # (2) E a LAMBDA with body APP(F, j) with F local constant
+        name = 0  # Default case
+        if first_child.node == "LOCAL_CONSTANT":
+            name = first_child.display_name
+        elif first_child.node == "LAMBDA":
+            body = first_child.children[2]
+            if body.node == "APPLICATION" and body.children[0].node == \
+                    "LOCAL_CONSTANT":
+                name = body.children[0].display_name
+            else:
+                name = '*set_family*'
+        display = [name, ['_', 1]]
+
+    # (3) Case of constants, e.g. APP(injective, f)
+    elif first_child.node == "CONSTANT":
+        name = first_child.display_name
+        if name in latex_from_constant_name:
+            # Damn bug, I got you!!!!!
+            display = list(latex_from_constant_name[name])
+        else:  # Standard format
+            display = list(latex_from_constant_name['STANDARD_CONSTANT'])
+            display_not = list(latex_from_constant_name[
+                                   'STANDARD_CONSTANT_NOT'])
+
+    # (4) Finally: use functional notation for remaining arguments
+    # ONLY if they are not type
+    # first search for unused children
+    # search for least used child
+    least_used_child = 0
+    for item in display:
+        if isinstance(item, int):
+            if item < 0:  # Negative values forbid supplementary arguments
+                least_used_child = len(implicit_children) + 10
+            if item > least_used_child:
+                least_used_child = item
+
+    # Keep only those unused_children whose math_type is not TYPE
+    more_display = []
+    for n in range(least_used_child+1, len(implicit_children)):
+        math_type = implicit_children[n].math_type
+        if not hasattr(math_type, 'node') or not math_type.node == 'TYPE':
+            more_display.append(n)
+    if more_display:
+        display += ['('] + more_display + [')']
+        # NB: in generic case APP(f,x), this gives  ['(', 1, ')']
+    # names = [item.display_name for item in implicit_children]
+    # log.debug(f"all arguments : {names}")
+    # log.debug(f"more display: {more_display}")
+    # log.debug(f"display: {display}")
+
+    raw_shape = Shape(display=display,
+                      display_not=display_not,
+                      math_object=math_object,
+                      format_=format_)
+    return raw_shape
+
+
+
+
 def display_constant(math_object, format_) -> list:
     """
     Display for nodes 'CONSTANT' and 'LOCAL_CONSTANT'
@@ -506,7 +628,7 @@ def display_constant(math_object, format_) -> list:
     # Displaying some subscript
     if name.count('_') == 1:
         radical, subscript = name.split('_')
-        display = [radical, '_', subscript]
+        display = [radical, ['_', subscript]]
     return display
 
 
@@ -582,7 +704,7 @@ def display_lambda(math_object, format_="latex") -> list:
     if math_type.node == "SET_FAMILY":
         display = [r'\{', 2, ', ', 1, r' \in ', 0, r'\}']
     elif math_type.node == "SEQUENCE":
-        display = ['(', 2, ')', '_', 1, r' \in ', 0]
+        display = ['(', 2, ')', ['_', 1], r' \in ', 0]
         # todo: manage subscript
     elif body.node == "APPLICATION" and body.children[1] == var:
         # Object is of the form x -> f(x)
@@ -612,8 +734,8 @@ def display_sequence(math_object, format_="latex") -> list:
     bound_var_type = math_object.math_type.children[0]
     index_name = give_local_name(math_type=bound_var_type,
                                  body=math_object)
-    display = [r"(", name, '_', index_name, ')', '_',
-               index_name, r" \in ", math_type_name]
+    display = [r"(", name, ['_', index_name], ')', ['_', index_name], r" \in ",
+               math_type_name]
     return display
 
 
@@ -635,7 +757,7 @@ def display_set_family(math_object, format_="latex") -> list:
     bound_var_type = math_object.math_type.children[0]
     index_name = give_local_name(math_type=bound_var_type,
                                  body=math_object)
-    display = [r"\{", name, '_', index_name, ', ',
+    display = [r"\{", name, ['_', index_name], ', ',
                index_name, r" \in ", math_type_name, r"\}"]
     return display
 
@@ -788,9 +910,9 @@ def text_to_subscript_or_sup(structured_string,
                                                            sup)
         if not is_subscriptable:
             if sup:
-                sub_or_sup = ['^'] + [structured_string]
+                sub_or_sup = ['^', structured_string]
             else:
-                sub_or_sup = ['_'] + [structured_string]
+                sub_or_sup = ['_', structured_string]
             # [sub] necessary in case sub is an (unstructured) string
         # log.debug(f"--> {sub_or_sup}")
         return sub_or_sup

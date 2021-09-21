@@ -52,10 +52,10 @@ from PySide2.QtWidgets import ( QHBoxLayout,
                                 QListWidget,
                                 QListWidgetItem)
 
-# from   deaduction.pylib.config.i18n      import   _
+from .math_object_frame import MathObjectFrame
+
 from   deaduction.pylib.mathobj          import  (ContextMathObject,
                                                   MathObject)
-# from   deaduction.pylib.actions          import   explain_how_to_apply
 
 from   deaduction.pylib.utils.filesystem import path_helper
 
@@ -357,6 +357,11 @@ class TargetWidget(QWidget):
         central_layout = QVBoxLayout()
         central_layout.addWidget(caption_label)
         central_layout.addWidget(self.target_label)
+
+        # FIXME: trial
+        if target:
+            target_widget = MathObjectFrame(target.math_type)
+            central_layout.addWidget(target_widget)
 
         main_layout = QHBoxLayout()
         main_layout.addStretch()

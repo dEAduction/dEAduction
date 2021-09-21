@@ -25,19 +25,10 @@ This file is part of d∃∀duction.
 """
 
 
-from typing import          List, Any
+from typing import          Any
 import logging
-import deaduction.pylib.logger as logger
-
-import deaduction.pylib.config.vars            as cvars
 
 from deaduction.pylib.mathobj.MathObject   import MathObject
-from deaduction.pylib.mathobj.display_math import (Shape,
-                                        display_math_type_of_local_constant)
-from deaduction.pylib.mathobj.display_data import (HAVE_BOUND_VARS,
-                                                   INEQUALITIES)
-import deaduction.pylib.mathobj.give_name      as give_name
-from deaduction.pylib.mathobj.utils        import *
 
 log = logging.getLogger(__name__)
 

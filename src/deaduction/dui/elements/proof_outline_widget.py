@@ -135,7 +135,7 @@ class ProofOutlineTreeWidget(QTreeWidget):
                 col_width = default_col_width[col_nb]
             self.setColumnWidth(col_nb, col_width)
 
-        self.widgets: [ProofOutlineTreeWidget] = []
+        self.widgets: [ProofTreeWidgetItem] = []
 
         # Signals
         self.itemClicked.connect(self.item_clicked)

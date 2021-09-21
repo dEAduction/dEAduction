@@ -367,6 +367,12 @@ class MathObject:
     # Properties and like #
     #######################
     @property
+    def raw_shape(self):
+        format_ = 'utf-8'
+        shape = Shape.raw_shape_from_math_object(self, format_)
+        return shape.display
+
+    @property
     def has_unnamed_bound_vars(self):
         """
         Return True if self has some dummy vars whose name is "NO NAME".
@@ -404,6 +410,41 @@ class MathObject:
         else:
             return '*no_name*'
 
+    def nb_implicit_children(self):
+        """
+        e.g. APP(APP(...APP(x0,x1),...),xn) has (n+1) implicit children.
+        cf self.implicit_children().
+        """
+        if not self.is_application():
+            return 0
+
+        if self.children[0].is_application():
+            return 1 + self.children[0].nb_implicit_children()
+        else:
+            return 2
+
+    def implicit_children(self, nb):
+        """
+        Only when self.is_application().
+        e.g. APP(APP(...APP(x0,x1),...),xn) is considered equivalent to
+             APP(x0, x1, ..., xn)
+        and x0, ... , xn are the (n+1) implicit children.
+        """
+        if not self.is_application():
+            return None
+
+        # From now on self is_application(), and so has exactly 2 children
+        nb_children = self.nb_implicit_children()
+        if nb < 0:
+            nb = nb_children + nb
+
+        if nb == nb_children - 1:
+            return self.children[1]
+        elif nb_children == 2 and nb == 0:  # APP(x0, x1)
+            return self.children[0]
+        else:
+            return self.children[0].implicit_children(nb)
+
     def descendant(self, line_of_descent):
         """
         Return the MathObject corresponding to the line_of_descent
@@ -413,7 +454,11 @@ class MathObject:
         :return:                    MathObject
         """
         if type(line_of_descent) == int:
-            return self.children[line_of_descent]
+            if self.is_application():
+                return self.implicit_children(line_of_descent)
+            else:
+                return self.children[line_of_descent]
+
         child_number, *remaining = line_of_descent
         child = self.children[child_number]
         if not remaining:
@@ -882,6 +927,9 @@ class MathObject:
         return self.display_name == "NO NAME" \
                or self.display_name == '*no_name*'
 
+    def is_application(self):
+        return self.node == "APPLICATION"
+
     def which_number_set(self, is_math_type=False) -> Optional[str]:
         """
         Return 'ℕ', 'ℤ', 'ℚ', 'ℝ' if self is a number, else None
@@ -1114,7 +1162,6 @@ class MathObject:
             shape = Shape.from_math_object(self, format_, text_depth)
 
         log.debug(f"Display: {shape.display}")
-        print(str(self))
         return structured_display_to_string(shape.display)
 
     # def apply_implicit_definition(self):
