@@ -80,6 +80,14 @@ class ProofTreeWidgetItem(QTreeWidgetItem):
                     tooltip = goal.to_tooltip()
                     self.setToolTip(0, tooltip)
 
+    def __eq__(self, other):
+        """
+        Necessary since it is not implemented in seom versions of PyQt!!
+        :param other:
+        :return:
+        """
+        return self is other
+
     def mark_user_selected(self, yes: bool=True):
         """
         Change self's background to green if yes or to normal color
