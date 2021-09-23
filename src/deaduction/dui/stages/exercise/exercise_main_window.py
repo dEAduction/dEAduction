@@ -57,6 +57,8 @@ from deaduction.dui.elements            import (ActionButton,
                                                 MenuBarAction,
                                                 ConfigMainWindow,
                                                 ProofOutlineWindow)
+from deaduction.dui.stages.calculator import    Calculator
+
 from deaduction.dui.primitives          import  ButtonsDialog
 from ._exercise_main_window_widgets     import (ExerciseCentralWidget,
                                                 ExerciseStatusBar,
@@ -725,6 +727,16 @@ class ExerciseMainWindow(QMainWindow):
 
         :param new_goal: The new goal to update / set the interface to.
         """
+                # FIXME: for snippets only
+        if self.current_goal:
+            log.info("Creating calculator")
+            self.calculator = Calculator(self.exercise, self.current_goal,
+                                             parent=self)
+            self.calculator.toggle()
+        else:
+            log.debug("No current goal")
+
+
         # TODO: tags will be incorporated in ContextMathObjects
         log.info("Updating UI")
         self.manage_msgs(self.displayed_proof_step)

@@ -287,6 +287,7 @@ class ProofOutlineWindow(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.setWindowTitle(_("Proof outline window"))
         settings = QSettings("deaduction")
         if settings.value("proof_outline/geometry"):
             self.restoreGeometry(settings.value("proof_outline/geometry"))

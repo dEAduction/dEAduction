@@ -954,3 +954,4 @@ class Coordinator(QObject):
             self.process_automatic_actions(proof_state.goals[0])
 
         self.emw.ui_updated.emit()  # For testing
+

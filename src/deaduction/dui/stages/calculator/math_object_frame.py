@@ -106,7 +106,7 @@ class MathObjectFrame(QFrame):
 
         # Cosmetic
         layout.setSpacing(0)
-        self.setFrameShape(QFrame.Panel)
+        self.setFrameShape(QFrame.StyledPanel)
         self.setFrameShadow(QFrame.Sunken)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 

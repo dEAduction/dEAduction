@@ -36,8 +36,6 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 import logging
-from pathlib import Path
-from typing  import Tuple
 
 from PySide2.QtCore    import ( Signal,
                                 Slot)
@@ -52,7 +50,7 @@ from PySide2.QtWidgets import ( QHBoxLayout,
                                 QListWidget,
                                 QListWidgetItem)
 
-from .math_object_frame import MathObjectFrame
+from deaduction.dui.stages.calculator.math_object_frame import MathObjectFrame
 
 from   deaduction.pylib.mathobj          import  (ContextMathObject,
                                                   MathObject)
