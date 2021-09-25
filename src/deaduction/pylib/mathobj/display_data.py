@@ -41,6 +41,10 @@ This file is part of d∃∀duction.
 # except for spaces around them, so that up to strip(), they appear in
 # latex_to_utf8_dic
 
+global _
+# FIXME: just for debug, remove!!
+# _ = lambda x: x
+
 latex_from_node = {
     "PROP_AND": (0, " " + _("and") + " ", 1),
     "PROP_OR": (0, " " + _("or") + " ", 1),
@@ -69,7 +73,7 @@ latex_from_node = {
     "SET_EXTENSION3": (r'\{', 0, ', ', 1, ', ', 2, r'\}'),
     "SET_FAMILY": (0,  r" \to ", r'{\mathcal P}', "(", 1, ")"),
     "SET_IMAGE": (0, "(", 1, ")"),
-    "SET_INVERSE": (0, r'^', '-1', '(', 1, ')'),
+    "SET_INVERSE": (0, [r'^', '-1'], '(', 1, ')'),  # LEAVE the list as is!
     "SET_PRODUCT": (0, r'\times', 1),
     "COUPLE": ('(', 0, ',', 1, ')'),
     "SET_INTENSION": (r'\{', 1, r' \in ', 0, ' | ', 2, r'\}'),
@@ -341,3 +345,13 @@ def needs_paren(parent, child, child_number) -> bool:
         elif c_node.startswith("QUANT"):
             return False
     return True
+
+
+def latex_to_utf8(string: str):
+    striped_string = string.strip()  # Remove spaces
+    if striped_string in latex_to_utf8_dic:
+        utf8_string = latex_to_utf8_dic[striped_string]
+        utf8_string = string.replace(striped_string, utf8_string)
+        return utf8_string
+    else:
+        return string

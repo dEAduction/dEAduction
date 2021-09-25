@@ -24,13 +24,17 @@ allow_primes_for_names = true
 allow_seconds_for_names = true
 allow_indices_for_names = true
 
+color_for_applied_properties = "DarkGrey"
+color_for_dummy_vars = "DarkMagenta"
+color_for_selection = "LimeGreen"
+
 
 [logic]
 do_not_name_dummy_vars_as_global_vars = true
 do_not_name_dummy_vars_as_dummy_vars = false
 force_indices_for_dummy_vars = false
-color_for_used_properties = "None"
-color_for_dummy_vars = "None"
+use_color_for_dummy_vars = true
+use_color_for_applied_properties = true
 
 
 [functionality]
