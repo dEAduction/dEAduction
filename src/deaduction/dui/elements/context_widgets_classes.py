@@ -53,7 +53,7 @@ from PySide2.QtWidgets import ( QHBoxLayout,
                                 QListWidget,
                                 QListWidgetItem)
 
-# from   deaduction.pylib.config.i18n      import   _
+from deaduction.dui.elements             import   HTMLDelegate
 from   deaduction.pylib.mathobj          import   MathObject
 from   deaduction.pylib.actions          import   explain_how_to_apply
 
@@ -198,8 +198,13 @@ class MathObjectWidgetItem(QListWidgetItem):
         # self.setBackground(QBrush(QColor('limegreen')) if yes else QBrush())
         self.label.setStyleSheet("background-color: limegreen" if yes
                                  else "background-color: white")
+
     def has_math_object(self, math_object: MathObject) -> bool:
         return self.mathobject is MathObject
+
+    @property
+    def width(self):
+        return self.label.size().width()
 
 
 class MathObjectWidget(QListWidget):
@@ -228,7 +233,6 @@ class MathObjectWidget(QListWidget):
         """
 
         super().__init__()
-
         self.items = []
         # set fonts for maths display
         math_font_name = cvars.get('display.mathematics_font', 'Default')
@@ -238,8 +242,13 @@ class MathObjectWidget(QListWidget):
             self.addItem(item)
             self.setItemWidget(item, item.label)
             self.items.append(item)
+        # FIXME: deprecated
+        # self.itemDoubleClicked.connect(self._emit_apply_math_object)
 
-        self.itemDoubleClicked.connect(self._emit_apply_math_object)
+        # self.horizontalScrollBar().setRange(0, self.width)
+        log.debug(f"Horizontal context width: {self.width}")
+        log.debug(f"Size hint for col 0: {self.sizeHintForColumn(0)}")
+
 
     @Slot(MathObjectWidgetItem)
     def _emit_apply_math_object(self, item):
@@ -262,6 +271,18 @@ class MathObjectWidget(QListWidget):
             return items[0]
         else:
             return None
+
+    @property
+    def width(self):
+        width = 0
+        for item in self.items:
+            if item.width > width:
+                width = item.width
+        return width
+
+    def resizeEvent(self, event):
+        self.horizontalScrollBar().setRange(0, self.width)
+        # self.horizontalScrollBar().setValue(200)
 
 
 MathObjectWidget.apply_math_object_triggered = Signal(MathObjectWidget)
@@ -356,4 +377,6 @@ class TargetWidget(QWidget):
             self.target_label.setStyleSheet(self.target_label.selected_style)
         else:
             self.target_label.setStyleSheet(self.target_label.unselected_style)
+
+
 
