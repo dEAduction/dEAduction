@@ -184,8 +184,6 @@ class Shape:
         elif format == "latex" and text_depth <= 0:
             raw_shape.text_to_latex()
 
-        # Finally expand raw_shape
-        # raw_shape.expand_from_shape(negate=negate)
         return raw_shape  # Unexpanded
 
     @classmethod
@@ -771,7 +769,7 @@ def display_set_family(math_object, format_="latex") -> list:
 ##################
 # This function is called directly by MathObject.to_display
 # Thus it has to return an EXPANDED shape
-def display_math_type_of_local_constant(math_type,
+def raw_display_math_type_of_local_constant(math_type,
                                         format_,
                                         text_depth=0) -> Shape:
     """
@@ -818,11 +816,10 @@ def display_math_type_of_local_constant(math_type,
     # Generic case  #
     #################
     else:  # Compute Shape from math_object
-        raw_shape = Shape.from_math_object(math_object=math_type,
-                                           format_=format_,
-                                           text_depth=text_depth
-                                           )
-    raw_shape.expand_from_shape()
+        raw_shape = Shape.raw_shape_from_math_object(math_object=math_type,
+                                                     format_=format_,
+                                                     text_depth=text_depth)
+    # raw_shape.expand_from_shape()
     return raw_shape
 
 
@@ -997,4 +994,29 @@ def shape_error(message: str, math_object=None, format_="", text_depth=0):
                   format_,
                   text_depth)
     return shape
+
+
+def recursive_display(math_object, raw_display=None, negate=False,
+                      text_depth=0):
+    if not raw_display:
+        raw_display = math_object.raw_shape(negate, text_depth)
+
+    display = []
+    for item in raw_display:
+        display_item = item  # FIXME: case of '\in'
+
+        # Integers code for children, or tuples for grandchildren
+        if isinstance(item, int) or isinstance(item, tuple):
+            child = math_object.descendant(item)
+
+            display_item = child.abstract_display()
+
+            # In parentheses?
+            if text_depth < 1:
+                if needs_paren(math_object, child, item):
+                    display_item = ['('] + display_item + [')']
+
+        display.append(display_item)
+
+    return display
 

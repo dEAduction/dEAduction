@@ -47,7 +47,7 @@ This file is part of dEAduction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import          List, Any, Optional
+from typing import          List, Any, Optional, Union
 from copy import copy
 import logging
 
@@ -57,11 +57,13 @@ if __name__ == "__main__":
 
 import deaduction.pylib.config.vars            as cvars
 from deaduction.pylib.mathobj.display_math import (Shape,
-                                        display_math_type_of_local_constant)
+                                    recursive_display,
+                                    raw_display_math_type_of_local_constant)
+from deaduction.pylib.mathobj.html_display import html_display
 
 from deaduction.pylib.mathobj.display_data import (HAVE_BOUND_VARS,
                                                    INEQUALITIES)
-import deaduction.pylib.mathobj.give_name      as give_name
+
 from deaduction.pylib.mathobj.utils        import *
 
 log = logging.getLogger(__name__)
@@ -366,12 +368,6 @@ class MathObject:
     #######################
     # Properties and like #
     #######################
-    @property
-    def raw_shape(self):
-        format_ = 'utf-8'
-        shape = Shape.raw_shape_from_math_object(self, format_)
-        return shape.display
-
     @property
     def has_unnamed_bound_vars(self):
         """
@@ -1144,73 +1140,56 @@ class MathObject:
     ########################
     # Display math objects #
     ########################
-    def to_display(self,
+    def raw_shape(self, negate, text_depth):
+        """
+        e.g. if self is a MathObject whose node is 'PROP_EQUAL', this method
+        will return [0, " = ", 1].
+        """
+        format_ = 'utf8'
+        shape = Shape.raw_shape_from_math_object(self, format_, text_depth)
+        # Fixme: negate
+        raw_display = shape.display
+        log.debug(f"Raw shape: {raw_display}")
+        return raw_display
+
+    def abstract_display(self, text_depth=0):
+        """
+        Recursively fill the children of raw_display.
+        e.g. if self is a MathObject coding for "f(x)=y", this method
+        will return something like [ [["f"], "(", ["x"], ")"], " = ", "y"].
+        If x is a dummy var then it will be replaced by [@dummy_var, ['x']].
+        """
+        # FIXME: is_math_type, text_depth
+        display = recursive_display(self)
+        if self.is_bound_var():
+            display = ['@dummy_var', display]
+
+        # Debug
+        log.debug(f"{self.old_to_display()} -> {display}")
+        return display
+
+    def to_display(self, text_depth=0) -> str:
+        """
+        Return a displayable string version of self.
+        """
+        abstract_string = self.abstract_display(text_depth)
+        display = html_display(abstract_string, text_depth)
+        log.debug(f"{self.old_to_display()} -> {display}")
+        return display
+
+    def old_to_display(self,
                    is_math_type=False,
                    format_="utf8",  # change to "latex" for latex...
                    text_depth=0
                    ) -> str:
         if is_math_type:
-            #########################################
-            # Naming bound variables before display #
-            #########################################
-            # FIXME: now called from Coordinator
-            # self.name_bound_vars(forbidden_vars=[])
-            shape = display_math_type_of_local_constant(self,
-                                                        format_,
+            shape = raw_display_math_type_of_local_constant(self, format_,
                                                         text_depth)
         else:
             shape = Shape.from_math_object(self, format_, text_depth)
 
-        log.debug(f"Display: {shape.display}")
+        # log.debug(f"Display: {shape.display}")
         return structured_display_to_string(shape.display)
-
-    # def apply_implicit_definition(self):
-    #     """
-    #     Search if self matches some definition in
-    #     MathObject.implicit_definitions and if so, return the MathObject
-    #     obtained by applying the first matching definition.
-    #     """
-    #     # FIXME: unused?
-    #
-    #     definition_patterns = MathObject.definition_patterns
-    #     for index in range(len(definition_patterns)):
-    #         # Test right term if self match pattern
-    #         pattern = definition_patterns[index]
-    #         pattern_left = pattern.children[0]
-    #         if pattern_left.match(self):
-    #             pattern_right = pattern.children[1]
-    #             rewritten_math_object = pattern_right.apply_matching()
-    #             return rewritten_math_object
-    #
-    # def find_implicit_definition(self, test=None):
-    #     """
-    #     Search if self matches some definition in
-    #     MathObject.implicit_definitions matching test and if so,
-    #     return the first matching definition.
-    #     """
-    #     # FIXME: unused?
-    #     definition_patterns = MathObject.definition_patterns
-    #     for index in range(len(definition_patterns)):
-    #         # Test right term if self match pattern
-    #         pattern = definition_patterns[index]
-    #         pattern_left = pattern.children[0]
-    #         if pattern_left.match(self):
-    #             if test is None or test(self):
-    #                 return MathObject.implicit_definitions[index]
-    #
-    # def implicit_children(self):
-    #     """
-    #     Search if self matches some definition in
-    #     MathObject.implicit_definitions and if so, return the
-    #     children of the MathObject obtained by applying the first matching
-    #     definition.
-    #     If no definition matches, then return the original children
-    #     """
-    #     # FIXME: unused?
-    #     rewritten_math_object = self.apply_implicit_definition()
-    #     if rewritten_math_object:
-    #         return rewritten_math_object.children
-    #     return self.children
 
 
 NO_MATH_TYPE = MathObject(node="not provided",

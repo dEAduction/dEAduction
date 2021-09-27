@@ -271,7 +271,7 @@ class Goal:
             forb_vars = forb_vars + future_vars_of_type
             named_vars = glob_vars_of_type + future_vars_of_type
             # log.debug(f"Naming vars of type "
-            #           f"{math_type.to_display()}")
+            #           f"{math_type.old_to_display()}")
             if math_type.display_name == 'ℝ':
                 self.__name_real_bound_vars(math_type=math_type,
                                             unnamed_vars=dummy_vars_of_type,
@@ -298,7 +298,7 @@ class Goal:
 
         # log.debug(f"Naming vars in {prop.to_display()}:")
         if prop.math_type.bound_vars:
-            # log.debug(f"""-->Dummy vars types: {[var.math_type.to_display()
+            # log.debug(f"""-->Dummy vars types: {[var.math_type.old_to_display()
             #                       for var in prop.math_type.bound_vars]}""")
             # Collect math_types of bound_vars with no rep
             math_types = inj_list([var.math_type for var in
@@ -359,7 +359,7 @@ class Goal:
             # First unfold definitions
             math_type = self.target.math_type
             rw_math_type = math_type.unfold_implicit_definition_recursively()
-            # log.debug(f"Rw math_type: {rw_math_type.to_display()}")
+            # log.debug(f"Rw math_type: {rw_math_type.old_to_display()}")
             future_vars = rw_math_type.glob_vars_when_proving()
             math_types = inj_list([var.math_type for var in future_vars])
             data = (math_types, future_vars, self.context_objects, [])
@@ -447,13 +447,13 @@ class Goal:
         for math_object in context:
             math_type = math_object.math_type
             if math_type.is_prop():
-                prop = math_object.math_type.to_display(text_depth=text_depth,
+                prop = math_object.math_type.old_to_display(text_depth=text_depth,
                                                         format_=format_,
                                                         is_math_type=True)
                 new_sentence = _("Assume that") + " " + prop + "."
             else:
                 name = math_object.to_display()
-                name_type = math_type.to_display(is_math_type=True,
+                name_type = math_type.old_to_display(is_math_type=True,
                                                  format_=format_,
                                                  text_depth=text_depth)
                 if math_type.node == "FUNCTION" and text_depth == 0:
@@ -475,7 +475,7 @@ class Goal:
 
         if text:
             text += "\n"
-        target_text = target.math_type.to_display(text_depth=text_depth,
+        target_text = target.math_type.old_to_display(text_depth=text_depth,
                                                   format_="utf8",
                                                   is_math_type=True)
         if to_prove and not open_problem:
@@ -512,14 +512,14 @@ class Goal:
         for math_object in context:
             math_type = math_object.math_type
             name = math_object.to_display()
-            name_type = math_type.to_display(is_math_type=True)
+            name_type = math_type.old_to_display(is_math_type=True)
             text_object = name + _(": ") + name_type
             text += "  " + text_object + "\n"
         if to_prove and not open_problem:
             text += _("Prove that") + "\n"
         elif context:
             text += _("Then") + "\n"
-        text += target.math_type.to_display(is_math_type=True)
+        text += target.math_type.old_to_display(is_math_type=True)
         return text
 
     def to_tooltip(self, type_='exercise') -> str:
@@ -547,7 +547,7 @@ class Goal:
         for math_object in context:
             math_type = math_object.math_type
             name = math_object.to_display()
-            name_type = math_type.to_display(is_math_type=True)
+            name_type = math_type.old_to_display(is_math_type=True)
             text_object = name + _(": ") + name_type
             text += "  " + text_object + "\n"
 
@@ -557,7 +557,7 @@ class Goal:
         else:
             text += _("Conclusion:")
         text += "\n"
-        text += " " + target.math_type.to_display(is_math_type=True)
+        text += " " + target.math_type.old_to_display(is_math_type=True)
         return text
 
 
@@ -617,7 +617,7 @@ def print_proof_state(goal: Goal):
         print(f"{[PO.to_display() for PO in mt_list]} :"
               f" {mt.to_display()}")
     print("Target:")
-    print(goal.target.math_type.to_display())
+    print(goal.target.math_type.old_to_display())
 
 
 if __name__ == '__main__':
@@ -649,7 +649,7 @@ if __name__ == '__main__':
             print(f"{[PO.to_display() for PO in mt_list]} :"
                   f" {mt.to_display()}")
         print("Target:")
-        print(goal.target.math_type.to_display())
+        print(goal.target.math_type.old_to_display())
 
 
     goal = Goal.from_lean_data(essai_set_family_hypo, essai_set_family_target)

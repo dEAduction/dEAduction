@@ -158,7 +158,7 @@ class MathObjectWidgetItem(QListWidgetItem):
             self.tag = '='
 
         lean_name = math_object.to_display()
-        math_expr = math_object.math_type.to_display(is_math_type=True)
+        math_expr = math_object.math_type_to_display()
         caption   = f'{lean_name} : {math_expr}'
         self.setText(caption)
         self.setIcon(_TagIcon(self.tag))
@@ -336,7 +336,7 @@ class TargetWidget(QWidget):
         # 'is_math_type=True' triggers the bound variables naming
         if target:
             # log.debug("updating target")
-            text = target.math_type.to_display(is_math_type=True)
+            text = target.math_type_to_display()
         else:
             text = '…'
         self.target_label = QLabel(text)

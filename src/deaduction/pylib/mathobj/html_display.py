@@ -57,15 +57,28 @@ def html_color(s: str, color: str):
     return html_pre + s + html_post
 
 
+def sub_sup_to_html(string: str) -> str:
+    string = string.replace('_', '@sub')
+    string = string.replace('^', '@sup')
+    if string.find('@sub') != -1:
+        before, _, after  = string.partition('@sub')
+        string = before + html_subscript(after)
+    if string.find('@sup') != -1:
+        before, _, after  = string.partition('@sub')
+        string = before + html_superscript(after)
+
+    return string
+
+
 def color_dummy_vars():
-    return (cvars.get('color_for_dummy_vars', None)
-            if cvars.get('use_color_for_dummy_vars', True)
+    return (cvars.get('display.color_for_dummy_vars', None)
+            if cvars.get('logic..use_color_for_dummy_vars', True)
             else None)
 
 
 def color_props():
-    return (cvars.get('color_for_applied_properties', None)
-            if cvars.get('use_color_for_applied_properties', True)
+    return (cvars.get('display.color_for_applied_properties', None)
+            if cvars.get('logic.use_color_for_applied_properties', True)
             else None)
 
 
@@ -77,9 +90,9 @@ def recursive_html_display(l: list, text_depth=0):
     - @applied_property for properties that have already been applied
     """
     head = l[0]
-    if head == '@sub':
+    if head == '@sub' or head == '_':
         return html_subscript(recursive_html_display(l[1:]))
-    elif head == '@sup':
+    elif head == '@sup' or head == '^':
         return html_superscript(recursive_html_display(l[1:]))
     elif head == '@dummy_var':
         color = color_dummy_vars()
@@ -93,19 +106,22 @@ def recursive_html_display(l: list, text_depth=0):
             return html_color(recursive_html_display(l[1:]), color)
         else:
             return recursive_html_display(l[1:])
+
     else:  # Generic case
         strings = [html_display(child) for child in l]
         return ''.join(strings)
 
 
-def html_display(string: Union[str, list], text_depth=0):
+def html_display(abstract_string: Union[str, list], text_depth=0):
     """
     Return a html version of the string represented by string, which is a
     tree of string.
     """
     # FIXME: take tex_depth into account
-    if isinstance(string, list):
-        string = recursive_html_display(string, text_depth)
+    if isinstance(abstract_string, list):
+        string = recursive_html_display(abstract_string, text_depth)
+    else:
+        string = sub_sup_to_html(abstract_string)
 
     return cut_spaces(string)
 

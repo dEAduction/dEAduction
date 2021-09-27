@@ -29,15 +29,10 @@ from typing import          List, Any
 import logging
 import deaduction.pylib.logger as logger
 
-import deaduction.pylib.config.vars            as cvars
-
 from deaduction.pylib.mathobj.MathObject   import MathObject
-from deaduction.pylib.mathobj.display_math import (Shape,
-                                        display_math_type_of_local_constant)
-from deaduction.pylib.mathobj.display_data import (HAVE_BOUND_VARS,
-                                                   INEQUALITIES)
-import deaduction.pylib.mathobj.give_name      as give_name
-from deaduction.pylib.mathobj.utils        import *
+from deaduction.pylib.mathobj.html_display import html_display
+from deaduction.pylib.mathobj.display_math import (recursive_display,
+    raw_display_math_type_of_local_constant)
 
 log = logging.getLogger(__name__)
 
@@ -82,3 +77,29 @@ class ContextMathObject(MathObject):
     def copy_tags(self, other):
         self.has_been_applied_in_proof = other.has_been_applied_in_proof
         self.is_hidden = other.is_hidden
+
+    def math_type_raw_shape(self, negate, text_depth):
+        format_ = 'utf8'
+        shape = raw_display_math_type_of_local_constant(self.math_type,
+                                                        format_, text_depth)
+        # Fixme: negate
+        return shape.display
+
+    def abstract_display(self, text_depth=0):
+        display = super().abstract_display()
+        # Fixme
+        # if self.has_been_applied_in_the_proof:
+        #     display = ['@applied_property', display]
+        return display
+
+    def abstract_math_type_display(self, negate=False, text_depth=0):
+        # FIXME: is_math_type, text_depth
+        raw_display = self.math_type_raw_shape(negate, text_depth)
+        display = recursive_display(self, raw_display)
+        return display
+
+    def math_type_to_display(self, text_depth=0) -> str:
+        abstract_string = self.abstract_math_type_display(text_depth)
+        display = html_display(abstract_string, text_depth)
+        return display
+
