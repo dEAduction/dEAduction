@@ -257,9 +257,9 @@ class ExerciseMainWindow(QMainWindow):
             self.close_coordinator()
 
         self.window_closed.emit()
-
-        super().closeEvent(event)
-        self.deleteLater()
+        event.accept()
+        # super().closeEvent(event)
+        # self.deleteLater()
 
     ##################
     # Config methods #

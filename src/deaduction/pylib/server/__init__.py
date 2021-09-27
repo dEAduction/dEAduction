@@ -317,6 +317,7 @@ class ServerInterface(QObject):
         Asynchronously start the Lean server.
         """
         await self.lean_server.start()
+        self.file_invalidated.set()  # No file at starting
         self.lean_server_running.set()
 
     def stop(self):
