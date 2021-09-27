@@ -116,7 +116,8 @@ class Install_Dependencies_Stage(QObject):
         self.missing_packages      = missing_packages
 
         self.install_dialog        = InstallingMissingDependencies()
-        self.thread                = threading.Thread(target=self.do_install, daemon=True)
+        self.thread                = threading.Thread(target=self.do_install,
+                                                      daemon=True)
 
         # Connect log display
         self.install_dialog.log_attach(logging.getLogger(""))
@@ -143,7 +144,7 @@ class Install_Dependencies_Stage(QObject):
 
     def do_install(self):
         try:
-            for pkg_name,pkg_desc,pkg_exc in self.missing_packages:
+            for pkg_name, pkg_desc, pkg_exc in self.missing_packages:
                 pkg_desc.install()
         finally:
             self.install_completed.emit()
