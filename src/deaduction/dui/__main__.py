@@ -388,7 +388,7 @@ async def main():
                         log.debug("No more chooser window")
                     elif emission.is_from(wm.exercise_window_closed):
                         # Remember that there is no more exercise window:
-                        wm.coordinator.exercise_window = None
+                        wm.coordinator.emw = None
                         log.debug("No more exercise window")
 
                     # Quit if no more open window:
@@ -399,7 +399,7 @@ async def main():
         finally:
             # Properly close d∃∀duction
             if wm.servint:
-                with trio.move_on_after(15):
+                with trio.move_on_after(10):
                     await wm.servint.file_invalidated.wait()
                 wm.servint.stop()  # Good job, buddy
                 log.info("Lean server stopped!")

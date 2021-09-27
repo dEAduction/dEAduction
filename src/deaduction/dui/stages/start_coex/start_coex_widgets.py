@@ -919,7 +919,7 @@ class AbstractStartCoEx(QDialog):
         # Send exercise_chosen signal and close dialog
         self.exercise_chosen.emit(exercise)
         # log.debug("Exercise chosen, closing window")
-        self.accept()  # Fuck you and I'll see you tomorrow!
+        self.close()  # Fuck you and I'll see you tomorrow!
 
 
 class StartCoExStartup(AbstractStartCoEx):
@@ -965,8 +965,10 @@ class StartCoExStartup(AbstractStartCoEx):
         settings = QSettings("deaduction")
         settings.setValue("coex_chooser/Geometry", self.saveGeometry())
 
-        super().closeEvent(event)
         self.window_closed.emit()
+        event.accept()
+        # super().closeEvent(event)
+        # self.deleteLater()
 
 
 class StartCoExExerciseFinished(AbstractStartCoEx):
