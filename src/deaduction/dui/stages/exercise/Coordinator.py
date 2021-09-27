@@ -283,9 +283,11 @@ class Coordinator(QObject):
         servint signals will still be connected to methods concerning
         the previous exercise (?)
         """
-        self.servint.lean_file_changed.disconnect()
-        self.servint.effective_code_received.disconnect()
-        self.servint.lean_response.disconnect()
+        if self.servint:
+            self.servint.effective_code_received.disconnect()
+            self.servint.lean_response.disconnect()
+            if self.emw:  # This signal is connected to some emw method
+                self.servint.lean_file_changed.disconnect()
 
     def closeEvent(self):
         """
@@ -317,7 +319,6 @@ class Coordinator(QObject):
         # log.debug([task.name for task in tasks])
         # log.debug("Closing server task")
         self.close_server_task.emit()
-        # self.deleteLater()  FIXME: needed ??
 
     ##############
     # Properties #
@@ -451,9 +452,10 @@ class Coordinator(QObject):
                 ###########
                 log.debug(f"Emission in the server_task channel")
                 if emission.is_from(self.close_server_task):
-                    log.info("    -> Close server_Task")
+                    log.info("    -> Close server_Task...")
                     self.server_task_closed.set()
                     await emissions.aclose()
+                    log.info("            ...closed!")
                     break
 
                 self.statusBar.erase()

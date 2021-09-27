@@ -74,8 +74,9 @@ class Package:
         Remove package directory
         """
         if not str(self.path).startswith(str(dirs.local)):
-            raise RuntimeError( _("invalid directory, must be "
-                                  "in $HOME/.deaduction folder !!!"))
+            log.warning(_("Directory should be $HOME/.deaduction folder !!!"))
+            # raise RuntimeError( _("invalid directory, must be "
+            #                       "in $HOME/.deaduction folder !!!"))
 
         if self.path.exists(): # remove only if path exists
             shutil.rmtree(str(self.path.resolve()))
@@ -217,7 +218,6 @@ class ArchivePackage(Package):
         #        self.remove()
         #    self.install() # TODO # if error, only raise exception, don't
         #                   #  install !!!
-
 
     def install(self, on_progress: Callable = None):
         """
