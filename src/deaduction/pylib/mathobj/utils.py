@@ -26,25 +26,25 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-def mark_bound_vars(bound_var_1, bound_var_2):
-    """
-    Mark two bound variables with a common number, so that we can follow
-    them along two quantified expressions and check if these expressions
-    are identical
-    """
-    MathObject.bound_var_number += 1
-    bound_var_1.info['bound_var_number'] = MathObject.bound_var_number
-    bound_var_2.info['bound_var_number'] = MathObject.bound_var_number
-
-
-def unmark_bound_vars(bound_var_1, bound_var_2):
-    """
-    Mark two bound variables with a common number, so that we can follow
-    them along two quantified expressions and check tif these expressions
-    are identical
-    """
-    bound_var_1.info.pop('bound_var_number')
-    bound_var_2.info.pop('bound_var_number')
+# def mark_bound_vars(bound_var_1, bound_var_2):
+#     """
+#     Mark two bound variables with a common number, so that we can follow
+#     them along two quantified expressions and check if these expressions
+#     are identical
+#     """
+#     MathObject.bound_var_number += 1
+#     bound_var_1.info['bound_var_number'] = MathObject.bound_var_number
+#     bound_var_2.info['bound_var_number'] = MathObject.bound_var_number
+#
+#
+# def unmark_bound_vars(bound_var_1, bound_var_2):
+#     """
+#     Mark two bound variables with a common number, so that we can follow
+#     them along two quantified expressions and check tif these expressions
+#     are identical
+#     """
+#     bound_var_1.info.pop('bound_var_number')
+#     bound_var_2.info.pop('bound_var_number')
 
 
 def structured_display_to_string(structured_display) -> str:
@@ -63,7 +63,7 @@ def structured_display_to_string(structured_display) -> str:
             string += lr
         return cut_spaces(string)
     else:
-        log.warning("error in list_string_join: argument should be list or "
+        print("error in list_string_join: argument should be list or "
                     f"str, not {type(structured_display)}")
         return "**"
 
@@ -75,3 +75,84 @@ def cut_spaces(string: str) -> str:
     while string.find("  ") != -1:
         string = string.replace("  ", " ")
     return string
+
+
+def text_to_subscript_or_sup(structured_string,
+                             format_="latex",
+                             sup=False
+                             ):
+    """
+    Convert structured_string to subscript of superscript
+
+    :param structured_string:   list
+    :param format_:             "latex" or "utf8" or "lean"
+    :param sup:                 True if superscript, else subscript
+    :return:                    list, converted structured string
+    """
+    # log.debug(f"converting into sub/superscript {structured_string}")
+    if format_ == 'latex':
+        if sup:
+            return [r'^{', structured_string, r'}']
+        else:
+            return [r'_{', structured_string, r'}']
+    else:
+        sub_or_sup, is_subscriptable = recursive_subscript(structured_string,
+                                                           sup)
+        if not is_subscriptable:
+            if sup:
+                sub_or_sup = ['^', structured_string]
+            else:
+                sub_or_sup = ['_', structured_string]
+            # [sub] necessary in case sub is an (unstructured) string
+        # log.debug(f"--> {sub_or_sup}")
+        return sub_or_sup
+
+
+SOURCE = {'sub': " 0123456789" + "aeioruv",
+          'sup': " -1"}
+TARGET = {'sub': " ₀₁₂₃₄₅₆₇₈₉" + "ₐₑᵢₒᵣᵤᵥ",
+          'sup': " ⁻¹"}
+
+
+def recursive_subscript(structured_string, sup):
+    """
+    Recursive version, for strings to be displayed use global_subscript instead
+    This is not for latex format.
+
+    :param structured_string:   list of structured string
+    :param sup:                 bool
+    :return: the structured string in a subscript version if available,
+                or the structured string unchanged if not,
+                and a boolean is_subscriptable
+    """
+    is_subscriptable = True
+    if isinstance(structured_string, list):
+        sub_list = []
+        for item in structured_string:
+            sub, still_is_sub = recursive_subscript(item, sup)
+            if not still_is_sub:  # Not subscriptable
+                return structured_string, False
+            else:
+                sub_list.append(sub)
+        return sub_list, True
+
+    # From now on structured_string is assumed to be a string
+    style = 'sup' if sup else 'sub'
+    for letter in structured_string:
+        if letter not in SOURCE[style]:
+            is_subscriptable = False
+    if is_subscriptable:
+        subscript_string = ""
+        for letter in structured_string:
+            pos = SOURCE[style].index(letter)
+            subscript_string += TARGET[style][pos]
+    else:
+        subscript_string = structured_string
+    return subscript_string, is_subscriptable
+
+
+def first_descendant(l):
+    if isinstance(l, list):
+        return first_descendant(l[0])
+    else:
+        return l

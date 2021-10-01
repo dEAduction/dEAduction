@@ -253,6 +253,8 @@ class CourseChooser(AbstractCoExChooser):
                 self.__recent_course_clicked)
         self.__recent_courses_wgt.itemDoubleClicked.connect(
                 self.__recent_course_clicked)
+        self.__recent_courses_wgt.currentItemChanged.connect(
+            self.current_item_changed)
         # Cannot connect signal directly to signal because
         # itemDoubleClicked sends an argument but goto_exercise
         # does not receive one. See snippets/connect_signal_to_signal.
@@ -260,6 +262,15 @@ class CourseChooser(AbstractCoExChooser):
                 lambda x: self.goto_exercise.emit())
 
         super().__init__(browser_layout)
+
+    def current_item_changed(self):
+        course_item = self.__recent_courses_wgt.currentItem()
+        course_path = course_item.course_path
+        course = Course.from_file(course_path)
+        self.set_preview(course)
+        self.__set_initial_proof_states(course)
+
+
 
     def add_browsed_course(self, course: Course):
         """
@@ -469,12 +480,19 @@ class ExerciseChooser(AbstractCoExChooser):
         self.__exercises_tree = exercises_tree
 
         exercises_tree.itemClicked.connect(self.__set_preview_from_click)
+        exercises_tree.currentItemChanged.connect(self.current_item_changed)
 
         self.__text_mode_checkbox = None
         self.__goal_widget        = None
         self.__main_widget_lyt    = None
 
         super().__init__(browser_layout)
+
+    def current_item_changed(self):
+        item = self.__exercises_tree.currentItem()
+        if isinstance(item, StatementsTreeWidgetItem):
+            exercise = item.statement
+            self.set_preview(exercise)
 
     def exercises_tree_double_clicked_connect(self, slot):
         self.__exercises_tree.itemDoubleClicked.connect(slot)
@@ -574,10 +592,10 @@ class ExerciseChooser(AbstractCoExChooser):
             self.__code_wgt.setReadOnly(True)
             self.__code_wgt.setFont(QFont('Menlo'))
             if exercise.initial_proof_state:
-                text = goal.goal_to_text()
+                text = goal.goal_to_text(format_="html")
             else:
                 text = _("No preview available - be patient...")
-            self.__code_wgt.setText(text)
+            self.__code_wgt.setHtml(text)
             widget = self.__code_wgt
         else:
             ###################
@@ -606,8 +624,7 @@ class ExerciseChooser(AbstractCoExChooser):
             propobj_lyt.addLayout(properties_lyt)
             # ───────────────────── Target ───────────────────── #
             target_wgt = QLineEdit()
-            target_wgt.setText(target.math_type.to_display(format_="utf8",
-                                                           is_math_type=True))
+            target_wgt.setText(target.math_type_to_display())
             target_wgt.setFont(QFont('Menlo'))
             self.__friendly_wgt = QWidget()
             friendly_wgt_lyt = QVBoxLayout()

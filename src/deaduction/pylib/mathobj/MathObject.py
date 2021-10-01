@@ -56,13 +56,19 @@ if __name__ == "__main__":
     import deaduction.pylib.config.i18n
 
 import deaduction.pylib.config.vars            as cvars
+from deaduction.pylib.mathobj.display_data import (HAVE_BOUND_VARS,
+                                                   INEQUALITIES,
+                                                   latex_from_node,
+                                                   latex_to_utf8)
 from deaduction.pylib.mathobj.display_math import (Shape,
                                     recursive_display,
-                                    raw_display_math_type_of_local_constant)
+                                    raw_display_math_type_of_local_constant,
+                                    raw_latex_shape_from_specific_nodes,
+                                    various_belongs,
+                                    shallow_latex_to_text)
 from deaduction.pylib.mathobj.html_display import html_display
+from deaduction.pylib.mathobj.utf8_display import utf8_display
 
-from deaduction.pylib.mathobj.display_data import (HAVE_BOUND_VARS,
-                                                   INEQUALITIES)
 
 from deaduction.pylib.mathobj.utils        import *
 
@@ -397,7 +403,7 @@ class MathObject:
             display += ', children: **' + display_child + '**'
         return display
 
-    def math_type_child_name(self, format_) -> str:
+    def math_type_child_name(self) -> str:
         """display name of first child of math_type"""
         math_type = self.math_type
         if math_type.children:
@@ -1140,51 +1146,96 @@ class MathObject:
     ########################
     # Display math objects #
     ########################
-    def raw_shape(self, negate, text_depth):
+    def raw_latex_shape(self, negate=False):
         """
         e.g. if self is a MathObject whose node is 'PROP_EQUAL', this method
         will return [0, " = ", 1].
         """
-        format_ = 'utf8'
-        shape = Shape.raw_shape_from_math_object(self, format_, text_depth)
-        # Fixme: negate
-        raw_display = shape.display
-        log.debug(f"Raw shape: {raw_display}")
-        return raw_display
+        if self.node in latex_from_node:
+            raw_shape = list(latex_from_node[self.node])
 
-    def abstract_display(self, text_depth=0):
+        else:  # Node not found in dictionaries: try specific methods
+            raw_shape = raw_latex_shape_from_specific_nodes(self)
+
+        ###############################
+        # Specific treatment of "\in" #
+        ###############################
+        for i in range(len(raw_shape)-1):
+            item = raw_shape[i]
+            if isinstance(item, str):
+                stripped_item = item.strip()
+                if stripped_item == r'\in':
+                    next_item = raw_shape[i+1]
+                    if (isinstance(next_item, int)
+                            or isinstance(next_item, tuple)):
+                        math_type = self.descendant(next_item)
+                        new_belongs = various_belongs(math_type)
+                        if new_belongs:
+                            raw_shape[i].replace(r'\in', new_belongs)
+                        # elif math_type.node == "SET":  # A ∈ P(X) <-> A ⊂ X
+                        #     if isinstance(next_item, int):
+                        #         raw_shape[i+1] = (next_item, 1)
+                        #         raw_shape[i].replace(r'\in', r'\subset')
+                        #     elif isinstance(next_item, tuple):
+                        #         raw_shape[i + 1] = next_item + (1,)
+                        #         raw_shape[i].replace(r'\in', r'\subset')
+        log.debug(f"Raw shape: {raw_shape}")
+        return raw_shape
+
+    def expanded_latex_shape(self):
         """
         Recursively fill the children of raw_display.
         e.g. if self is a MathObject coding for "f(x)=y", this method
         will return something like [ [["f"], "(", ["x"], ")"], " = ", "y"].
-        If x is a dummy var then it will be replaced by [@dummy_var, ['x']].
+        If x is a dummy var then it will be replaced by [\dummy_var, x].
         """
-        # FIXME: is_math_type, text_depth
         display = recursive_display(self)
-        if self.is_bound_var():
-            display = ['@dummy_var', display]
-
-        # Debug
-        log.debug(f"{self.old_to_display()} -> {display}")
         return display
 
-    def to_display(self, text_depth=0) -> str:
+    def to_display(self, format_="html", text_depth=0) -> str:
         """
         Return a displayable string version of self.
+
+        (1) First compute an "expanded latex shape", a tree of strings with
+        latex macro.
+        (2) if text_depth >0, replace some symbols by plain text. In any case,
+        take care of '\\in' according to the context.
+        (3) Turn latex macro into utf8 text and/or html command.
+
+        :param format_:     one of 'utf8', 'html', 'latex'
+        :param text_depth:  if >0, will try to replace symbols by plain text
+        for the upper branches of the MathObject tree.
         """
-        abstract_string = self.abstract_display(text_depth)
-        display = html_display(abstract_string, text_depth)
-        log.debug(f"{self.old_to_display()} -> {display}")
+
+        # WARNING: if you make some changes here,
+        #   then you probably have to do the same changes in
+        #   ContextMathObject.math_type_to_display.
+        log.debug(f"Displaying {self.old_to_display()}...")
+        # (1) Latex shape
+        abstract_string = self.expanded_latex_shape()
+        log.debug(f"(1) --> abstract string: {abstract_string}")
+        # (2) Replace some symbol by plain text: TODO
+        display = shallow_latex_to_text(abstract_string, text_depth)
+        log.debug(f"(2) --> to text: {abstract_string}")
+        # (3) Replace latex macro by utf8:
+        if format_ in ('utf8', 'html'):
+            display = latex_to_utf8(display)
+        if format_ == 'html':
+            display = html_display(display)
+        elif format_ == 'utf8':
+            display = utf8_display(display)
+        log.debug(f"(3) --> to html: {display}")
         return display
 
     def old_to_display(self,
-                   is_math_type=False,
-                   format_="utf8",  # change to "latex" for latex...
-                   text_depth=0
-                   ) -> str:
+                       is_math_type=False,
+                       format_="utf8",  # change to "latex" for latex...
+                       text_depth=0
+                       ) -> str:
         if is_math_type:
             shape = raw_display_math_type_of_local_constant(self, format_,
                                                         text_depth)
+            shape.expand_from_shape()
         else:
             shape = Shape.from_math_object(self, format_, text_depth)
 

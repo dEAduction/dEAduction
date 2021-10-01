@@ -34,6 +34,7 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import Union
 
 # from deaduction.pylib.config.i18n import _
 
@@ -45,13 +46,19 @@ global _
 # FIXME: just for debug, remove!!
 # _ = lambda x: x
 
+######################
+######################
+# LATEX dictionaries #
+######################
+######################
 latex_from_node = {
     "PROP_AND": (0, " " + _("and") + " ", 1),
     "PROP_OR": (0, " " + _("or") + " ", 1),
-    "PROP_FALSE": (_("Contradiction"), ),
+    "PROP_FALSE": (r"\false", ),  # Macro to be defined
     "PROP_IFF": (0, r" \Leftrightarrow ", 1),
-    "PROP_NOT": (_("not") + " ", 0),
-    "PROP_IMPLIES": (0, r" \Rightarrow ", 1),
+    "PROP_NOT": (r"\not", 0),  # Macro to be define
+    # '\if' is just here for text mode:
+    "PROP_IMPLIES": (r'\if', 0, r" \Rightarrow ", 1),
     # "∃ (H : P), Q" is treated as "P and Q",
     # and also handled by the 'AND' button
     "PROP_∃":  (0, " " + _("and") + " ", 1),
@@ -71,9 +78,11 @@ latex_from_node = {
     "SET_EXTENSION1": (r'\{', 0, r'\}'),
     "SET_EXTENSION2": (r'\{', 0, ', ', 1, r'\}'),
     "SET_EXTENSION3": (r'\{', 0, ', ', 1, ', ', 2, r'\}'),
-    "SET_FAMILY": (0,  r" \to ", r'{\mathcal P}', "(", 1, ")"),
-    "SET_IMAGE": (0, "(", 1, ")"),
-    "SET_INVERSE": (0, [r'^', '-1'], '(', 1, ')'),  # LEAVE the list as is!
+    "SET_FAMILY": (0,  r" \to ", r'{\mathcal P}', r'\parentheses', 1),
+    # "SET_IMAGE": (0, "(", 1, ")"),
+    # "SET_INVERSE": (0, [r'^', '-1'], '(', 1, ')'),  # LEAVE the list as is!
+    "SET_IMAGE": (0, r'\set_image', 1),
+    "SET_INVERSE": (0, r'\set_inverse', 1),
     "SET_PRODUCT": (0, r'\times', 1),
     "COUPLE": ('(', 0, ',', 1, ')'),
     "SET_INTENSION": (r'\{', 1, r' \in ', 0, ' | ', 2, r'\}'),
@@ -97,18 +106,19 @@ latex_from_node = {
     ##################
     # GENERAL TYPES: #
     ##################
-    "SET": (r'{\mathcal P}', "(", 0, ")"),
-    "PROP": (_("proposition"),),
-    "TYPE": (_("set"),),
-    "FUNCTION": (0, r" \to ", 1),
-    "SEQUENCE": (0, r" \to ", 1),
+    "SET": (r'\set_of_subsets', 0),  # (r'{\mathcal P}', "(", 0, ")"),
+    "PROP": (r'\proposition',),
+    "TYPE": (r'\set',),
+    "FUNCTION": (r'\function_from', 0, r'\to', 1),  # (0, r" \to ", 1),
+    "SEQUENCE": (r'\sequence_from', 0, r'\to', 1)  # (0, r" \to ", 1),
 }
 
+# \in_quant --> "belonging to", or "in" in text mode (but NOT "belongs to")
 latex_from_quant_node = {
-    "QUANT_∀": (r"\forall", 1, r" \in ", 0, ", ", 2),
-    "QUANT_∃": (r"\exists", 1, r" \in ", 0, ", ", 2),
+    "QUANT_∀": (r"\forall", 1, r" \in_quant ", 0, ", ", 2),
+    "QUANT_∃": (r"\exists", 1, r" \in_quant ", 0, r'\such_that', 2),
     "PROP_∃": ("*PROP_∃*",),
-    "QUANT_∃!": (r"\exists !", 1, r" \in ", 0, ", ", 2)
+    "QUANT_∃!": (r"\exists !", 1, r" \in_quant ", 0, r'\such_that', 2)
 }
 
 # Negative value = from end of children list
@@ -123,7 +133,7 @@ latex_from_constant_name = {
     "prod": (1, r'\times', 2),
     "Identite": ("Id",),
     "ne": (2, r" \neq ", 3),  # Lean name for ≠
-    "interval": ("\[", -2, ",", -1, "\]"),
+    "interval": (r"\[", -2, ",", -1, r"\]"),
     "majorant": (-1, " majorant de ", -2),
     "minorant": (-1, " minorant de ", -2),
     "borne_sup": ("Sup", -2, " = ", -1),
@@ -133,29 +143,26 @@ latex_from_constant_name = {
     "est_borne": (-1, " borné"),
     "limite": ("lim", -2, " = ", -1),
     "abs": ('|', -1, '|'),
-    "max": ("Max", "(", -2, ",", -1, ")")
+    "max": ("Max", [r'\parentheses', -2, ",", -1])
 }
 
-# Lean formats that cannot be deduced from latex
-lean_from_node = {  # todo: this has not been tested on Lean yet!
-    "PROP_FALSE": ('False',),
-    "SET_INTER+": ('set.Inter', 0),
-    "SET_UNION+": ('set.Union', 0),
-    "SET_FAMILY": (),    # FIXME: should be lean_name
-    "SET_IMAGE": (0, " '' ", 1),
-    "SET_INVERSE": (0, " ⁻¹' ", 1),
-    "SET": ("set", 0),
-    "PROP": ("Prop",),
-    "TYPE": ("Type",)
-}
-
+###################
+###################
+# UTF8 dictionary #
+###################
+###################
 # Convert Latex command into utf8 symbols
 latex_to_utf8_dic = {
     r'\backslash': '\\',
     r'\Delta': '∆',
     r'\circ': '∘',
     r'\times': '×',
-    #    r'\in': '∈',       This is handled in the expand_from_shape method
+    r'\in': '∈',
+    r'\in_quant': '∈',
+    r"\in_symbol": '∈',
+    r'\in_prop': ":",
+    r'\in_set': ":",
+    r'\in_function': ":",
     r'\Leftrightarrow': '⇔',
     r'\Rightarrow': '⇒',
     r'\forall': '∀',
@@ -172,33 +179,58 @@ latex_to_utf8_dic = {
     r'\neq': '≠',
     r'\leq': '≤',
     r'\geq': '≥',
-    r'{\mathcal P}': 'P',
+    r'\set_of_subsets': 'P',
     r'\{': '{',
     r'\}': '}',
     r'\[': '[',
-    r'\]': ']'
+    r'\]': ']',
+    r'\false': _("Contradiction"),
+    r'\proposition': _("proposition"),
+    r'\set': _("set"),
+    r'\not': _("not") + " ",
+    r'\set_image': "",
+    r'\set_inverse': [r'^', '-1'],
+    r'\if': "",  # '\if' is just here for text mode
+    r'\such_that': ", ",
+    r'\function_from': ""
                     }
 
-# Only those lean symbols that are distinct from the latex_to_utf8 dict
-latex_to_lean_dic = {
-    #'AND': 'and',
-    #'OR': 'or',
-    #'NOT': 'not',
-    r'\Leftrightarrow': '↔',
-    r'\Rightarrow': '→',
-    r'\cap': '∩',
-    r'\cup': '∪',
-    r'\bigcap': '⋂',  # probably useless
-    r'\bigcup': '⋃'
-                    }
+
+#####################
+#####################
+# TEXT dictionaries #
+#####################
+#####################
+latex_to_text = {
+    r'\Leftrightarrow': " " + _("if and only if") + " ",
+    r'\not': _("the negation of") + " ",
+    r'\if': _("if") + " ",
+    r'\Rightarrow': _("then"),
+    r'\set_of_subsets': _("the set of subsets of") + " ",
+    r'\proposition': _("a proposition"),
+    r'\set': _("a set"),
+    r'\such_that': " " + _("such that") + " ",
+    r'\forall': _("for all") + " ",
+    r'\exists': _("there exists") + " ",
+    r"\exists !": _("there exists a unique") + " ",
+    r'\function_from': " " + _("a function from") + " ",
+    r'\sequence_from': " " + _("a sequence from") + " ",  # FIXME...
+    r'\to': " " + _("in") + " ",
+    # r'\in': " " + _("belongs to") + " ",
+    r'\in_prop': " " + _("is") + " ",
+    r'\in_set': " " + _("is") + " ",
+    r'\in_function': " " + _("is") + " ",
+    r'\in_quant': " " + _("in") + " ",
+}
+
 
 text_from_node = {
-    "PROP_AND": (0, " " + _("and") + " ", 1),
-    "PROP_OR": (0, " " + _("or") + " ", 1),
-    "PROP_FALSE": (_("Contradiction"), ),
-    "PROP_IFF": (0, " " + _("if and only if") + " ", 1),
-    "PROP_NOT": (_("the negation of") + " ", 0),
-    "PROP_IMPLIES": (_("if") + " ", 0, " " + _("then") + " ", 1),
+    # # "PROP_AND": (0, " " + _("and") + " ", 1),
+    # # "PROP_OR": (0, " " + _("or") + " ", 1),
+    # # "PROP_FALSE": (_("Contradiction"), ),
+    # "PROP_IFF": (0, " " + _("if and only if") + " ", 1),
+    # "PROP_NOT": (_("the negation of") + " ", 0),
+    # "PROP_IMPLIES": (_("if") + " ", 0, " " + _("then") + " ", 1),
     ###############
     # SET THEORY: #
     ###############
@@ -212,7 +244,7 @@ text_from_node = {
     # "SET_UNION+": (_("the union of the sets") + " ", 0),
     # "SET_COMPLEMENT": (_("the complement of ") + " ", 0),
     # "SET_EMPTY": (_("the empty set"),),
-    "SET_FAMILY": (_("a family of subsets of") + " ", 1),
+    # "SET_FAMILY": (_("a family of subsets of") + " ", 1),
     # "SET_IMAGE": (_("the image under") + " ", 0, " " + _("of") + " ", 1),
     # "SET_INVERSE": (_("the inverse image under") + " ", 0, " " + _("of") +
     # " ", 1),
@@ -228,10 +260,10 @@ text_from_node = {
     ##################
     # GENERAL TYPES: #
     ##################
-    "SET": ("P(", 0, ")"),
-    "PROP": (_("a proposition"),),
-    "TYPE": (_("a set"),),
-    "FUNCTION": (_("a function from") + " ", 0, " " + _("to") + " ", 1),
+    # "SET": ("P(", 0, ")"),
+    # "PROP": (_("a proposition"),),
+    # "TYPE": (_("a set"),),
+    # "FUNCTION": (_("a function from") + " ", 0, " " + _("to") + " ", 1),
 }
 
 text_from_all_nodes = {
@@ -285,6 +317,38 @@ text_from_quant_node = {
     "PROP_∃": ("*PROP_∃*",)
 }
 
+
+###################
+###################
+# LEAN dictionary #
+###################
+###################
+# Only those lean symbols that are distinct from the latex_to_utf8 dict
+latex_to_lean_dic = {
+    #'AND': 'and',
+    #'OR': 'or',
+    #'NOT': 'not',
+    r'\Leftrightarrow': '↔',
+    r'\Rightarrow': '→',
+    r'\cap': '∩',
+    r'\cup': '∪',
+    r'\bigcap': '⋂',  # probably useless
+    r'\bigcup': '⋃',
+    r'\false': 'False',
+    r'\proposition': 'Prop',
+    r'\set': 'Type',
+    "SET_FAMILY": (),  # FIXME: should be lean_name
+    r'\set_image': " '' ",
+    r'\set_inverse': " ⁻¹' ",
+    r'\set_of_subsets': "set"
+}
+
+
+####################
+####################
+# Helper functions #
+####################
+####################
 # Nodes of math objects that need instantiation of bound variables
 HAVE_BOUND_VARS = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_EXTENSION", "LAMBDA")
 INEQUALITIES = ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥", "PROP_EQUAL_NOT")
@@ -314,17 +378,20 @@ def needs_paren(parent, child, child_number) -> bool:
 
     p_node = parent.node
     c_node = child.node if child is not None else "NONE"
+    if (p_node in ("SET", "SET_IMAGE", "SET_INVERSE")
+            and child_number == 1):  # P(X), f(A), f^{-1}(A)
+        return True
     if c_node in NATURE_LEAVES_LIST:
         return False
     if p_node == 'PROP_NOT':
         return True
     if c_node in ("SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
-                  "PROP_EQUAL_NOT", "PROP_≤", "PROP_≥", "PROP_<", "PROP_>"
+                  "PROP_EQUAL_NOT", "PROP_≤", "PROP_≥", "PROP_<", "PROP_>",
                   "PROP_INCLUDED", "SET_UNION+", "SET_INTER+"):
         return False
     elif (p_node == "SET_INVERSE"
           and child_number == 0
-          and c_node != "LOCAL_CONSTANT" ):
+          and c_node != "LOCAL_CONSTANT"):
         # e.g. (f∘g)^{-1} (x)
         return True
     elif c_node == "APPLICATION":
@@ -347,11 +414,20 @@ def needs_paren(parent, child, child_number) -> bool:
     return True
 
 
-def latex_to_utf8(string: str):
-    striped_string = string.strip()  # Remove spaces
-    if striped_string in latex_to_utf8_dic:
-        utf8_string = latex_to_utf8_dic[striped_string]
-        utf8_string = string.replace(striped_string, utf8_string)
-        return utf8_string
+def latex_to_utf8(string: Union[str, list]):
+    """
+    Convert a string or a list of string from latex to utf8.
+    """
+    if isinstance(string, list):
+        return [latex_to_utf8(item) for item in string]
+    elif isinstance(string, str):
+        striped_string = string.strip()  # Remove spaces
+        if striped_string in latex_to_utf8_dic:
+            utf8_string = latex_to_utf8_dic[striped_string]
+            if isinstance(utf8_string, str):
+                utf8_string = string.replace(striped_string, utf8_string)
+            return utf8_string
+        else:
+            return string
     else:
         return string
