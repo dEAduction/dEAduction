@@ -46,6 +46,13 @@ global _
 # FIXME: just for debug, remove!!
 # _ = lambda x: x
 
+
+# NB Some latex macro have a special treatment elsewhere, e.g.
+# r'\not'
+# r'\in' and all its variation (\in_quant, \in_prop,etc.)
+# \text_is
+# and so on
+
 ######################
 ######################
 # LATEX dictionaries #
@@ -56,7 +63,8 @@ latex_from_node = {
     "PROP_OR": (0, " " + _("or") + " ", 1),
     "PROP_FALSE": (r"\false", ),  # Macro to be defined
     "PROP_IFF": (0, r" \Leftrightarrow ", 1),
-    "PROP_NOT": (r"\not", 0),  # Macro to be define
+    # NB: negation has a special treatment in recursive_display!
+    "PROP_NOT": (r"\not", 0),  # Macro to be defined.
     # '\if' is just here for text mode:
     "PROP_IMPLIES": (r'\if', 0, r" \Rightarrow ", 1),
     # "∃ (H : P), Q" is treated as "P and Q",
@@ -123,8 +131,8 @@ latex_from_quant_node = {
 
 # Negative value = from end of children list
 latex_from_constant_name = {
-    "STANDARD_CONSTANT": (-1, " " + _("is") + " ", 0),
-    "STANDARD_CONSTANT_NOT": (-1, " " + _("is not") + " ", 0),
+    "STANDARD_CONSTANT": (-1, r'\text_is', 0),
+    # "STANDARD_CONSTANT_NOT": (-1, " " + _("is not") + " ", 0),  deprecated
     # NB: STANDARD_CONSTANT prevents supplementary arguments,
     # Do not use with a CONSTANT c s.t. APP(c, x) is a FUNCTION,
     # or anything that can be applied (i.e. in APP(APP(c,x),...) )
@@ -134,16 +142,17 @@ latex_from_constant_name = {
     "Identite": ("Id",),
     "ne": (2, r" \neq ", 3),  # Lean name for ≠
     "interval": (r"\[", -2, ",", -1, r"\]"),
-    "majorant": (-1, " majorant de ", -2),
-    "minorant": (-1, " minorant de ", -2),
-    "borne_sup": ("Sup", -2, " = ", -1),
-    "borne_inf": ("Inf", -2, " = ", -1),
-    "est_majore": (-1, " majoré"),
-    "est_minore": (-1, " minoré"),
-    "est_borne": (-1, " borné"),
+    # FIXME: translate to english in Lean files
+    "majorant": (-1, r'\text_is', " majorant de ", -2),
+    "minorant": (-1, r'\text_is', " minorant de ", -2),
+    "borne_sup": ("Sup ", -2, " = ", -1),
+    "borne_inf": ("Inf ", -2, " = ", -1),
+    "est_majore": (-1, r'\text_is', " majoré"),
+    "est_minore": (-1, r'\text_is', " minoré"),
+    "est_borne": (-1, r'\text_is', " borné"),
     "limite": ("lim", -2, " = ", -1),
     "abs": ('|', -1, '|'),
-    "max": ("Max", [r'\parentheses', -2, ",", -1])
+    "max": ("Max", r'\parentheses', -2, ",", -1)
 }
 
 ###################
@@ -192,8 +201,10 @@ latex_to_utf8_dic = {
     r'\set_inverse': [r'^', '-1'],
     r'\if': "",  # '\if' is just here for text mode
     r'\such_that': ", ",
-    r'\function_from': ""
-                    }
+    r'\function_from': "",
+    r'\text_is': ' ',  # " " + _("is") + " " ? Anyway 'is' will be removed?
+    r'\text_is_not': _('not')  # Idem
+}
 
 
 #####################
@@ -210,7 +221,7 @@ latex_to_text = {
     r'\proposition': _("a proposition"),
     r'\set': _("a set"),
     r'\such_that': " " + _("such that") + " ",
-    r'\forall': _("for all") + " ",
+    r'\forall': _("for every") + " ",
     r'\exists': _("there exists") + " ",
     r"\exists !": _("there exists a unique") + " ",
     r'\function_from': " " + _("a function from") + " ",
@@ -219,8 +230,10 @@ latex_to_text = {
     # r'\in': " " + _("belongs to") + " ",
     r'\in_prop': " " + _("is") + " ",
     r'\in_set': " " + _("is") + " ",
-    r'\in_function': " " + _("is") + " ",
+    r'\in_function': " " + _("is") + " ",  # FIXME: ???
     r'\in_quant': " " + _("in") + " ",
+    r'\text_is': " " + _('is') + " ",
+    r'\text_is_not': " " + _('is not') + " "
 }
 
 
@@ -431,3 +444,5 @@ def latex_to_utf8(string: Union[str, list]):
             return string
     else:
         return string
+
+

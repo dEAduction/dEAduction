@@ -53,19 +53,38 @@ def sub_sup_to_utf8(string: str) -> str:
     return string
 
 
-def color_dummy_vars():
-    return (cvars.get('display.color_for_dummy_vars', None)
-            if cvars.get('logic..use_color_for_dummy_vars', True)
-            else None)
+# def color_dummy_vars():
+#     return (cvars.get('display.color_for_dummy_vars', None)
+#             if cvars.get('logic..use_color_for_dummy_vars', True)
+#             else None)
+#
+#
+# def color_props():
+#     return (cvars.get('display.color_for_applied_properties', None)
+#             if cvars.get('logic.use_color_for_applied_properties', True)
+#             else None)
 
 
-def color_props():
-    return (cvars.get('display.color_for_applied_properties', None)
-            if cvars.get('logic.use_color_for_applied_properties', True)
-            else None)
+def add_parentheses(l: list, depth):
+    """
+    Search for the \\parentheses macro and replace it by a pair of
+    parentheses. Remove redundant parentheses, i.e.
+    ((...)) or parentheses at depth 0.
+    """
+    for index in range(len(l) - 1):
+        child = l[index]
+        if child == r'\parentheses':
+            next_child = l[index + 1]
+            if (first_descendant(next_child) == r'\parentheses' or
+                    (index == 0 and depth == 0)):
+                # Remove redundant parentheses
+                l[index] = ""
+            else:
+                l[index] = "("
+                l.append(")")
 
 
-def recursive_utf8_display(l: list):
+def recursive_utf8_display(l: list, depth):
     """
     Use the following tags as first child:
     - \sub, \super for subscript/superscript
@@ -74,32 +93,33 @@ def recursive_utf8_display(l: list):
     """
     head = l[0]
     if head == r'\sub' or head == '_':
-        return subscript(recursive_utf8_display(l[1:]))
+        return subscript(recursive_utf8_display(l[1:], depth))
     elif head == r'\super' or head == '^':
-        return superscript(recursive_utf8_display(l[1:]))
+        return superscript(recursive_utf8_display(l[1:], depth))
     elif head == r'\dummy_var':  # No color in utf8 :-(
-        return recursive_utf8_display(l[1:])
+        return recursive_utf8_display(l[1:], depth)
     elif head == r'\applied_property':  # No color in utf8 :-(
-        return recursive_utf8_display(l[1:])
-    elif head == r'\parentheses':
-        # Avoid redundant parentheses:
-        if len(l) > 1 and first_descendant(l[1]) == r'\parentheses':
-            return recursive_utf8_display(l[1:])
-        else:
-            return "(" + recursive_utf8_display(l[1:]) + ")"
+        return recursive_utf8_display(l[1:], depth)
+    # elif head == r'\parentheses':
+    #     # Avoid redundant parentheses:
+    #     if len(l) > 1 and first_descendant(l[1]) == r'\parentheses':
+    #         return recursive_utf8_display(l[1:], depth)
+    #     else:
+    #         return "(" + recursive_utf8_display(l[1:], depth) + ")"
 
     else:  # Generic case
-        strings = [utf8_display(child) for child in l]
+        add_parentheses(l, depth)
+        strings = [utf8_display(child, depth+1) for child in l]
         return ''.join(strings)
 
 
-def utf8_display(abstract_string: Union[str, list]):
+def utf8_display(abstract_string: Union[str, list], depth=0):
     """
     Return a html version of the string represented by string, which is a
     tree of string.
     """
     if isinstance(abstract_string, list):
-        string = recursive_utf8_display(abstract_string)
+        string = recursive_utf8_display(abstract_string, depth)
     else:
         string = sub_sup_to_utf8(abstract_string)
 

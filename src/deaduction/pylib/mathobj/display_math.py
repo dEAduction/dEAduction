@@ -394,7 +394,39 @@ class Shape:
 # shape_from_application for "APPLICATION"
 # display_set_family (called by display_constant when needed)
 # display_lambda
-def shape_from_application(math_object):
+
+def extensive_children(display: []) -> []:
+    """
+    Compute all child nb appearing in display,
+    e.g. [0, [\\parentheses, -1, 3]] -> [0, -1, 3]
+    """
+    if isinstance(display, list):
+        children = []
+        for item in display:
+            children.extend(extensive_children(item))
+        return children
+    elif isinstance(display, int):
+        return [display]
+    else:
+        return []
+
+
+def least_children(display) -> Union[int, None]:
+    """
+    Return None if display has some negative chil nb,
+    or the greatest child nb otherwise.
+    """
+    children = extensive_children(display)
+    least_used_child = 0
+    for child_nb in children:
+        if child_nb < 0:  # Negative values forbid supplementary arguments
+            return None
+        elif child_nb > least_used_child:
+            least_used_child = child_nb
+    return least_used_child
+
+
+def shape_from_application(math_object, negate=False):
     """
     Provide display for node 'APPLICATION'
     This is a very special case, includes e.g.
@@ -413,14 +445,14 @@ def shape_from_application(math_object):
     nb = math_object.nb_implicit_children()
     implicit_children = [math_object.implicit_children(n)
                          for n in range(nb)]
-    log.debug(f"Nb of implicit children: {nb}")
-    log.debug(f"implicit children:")
-    for child in implicit_children:
-        if child:
-            child_string = child.to_display()
-        else:
-            child_string = "None!"
-        log.debug(f"----->{child_string}")
+    # log.debug(f"Nb of implicit children: {nb}")
+    # log.debug(f"implicit children:")
+    # for child in implicit_children:
+    #     if child:
+    #         child_string = child.to_display()
+    #     else:
+    #         child_string = "None!"
+    #     log.debug(f"----->{child_string}")
 
     display = [0]  # Default = display first child as a function
     display_not = None
@@ -454,34 +486,46 @@ def shape_from_application(math_object):
             display = list(latex_from_constant_name[name])
         else:  # Standard format
             display = list(latex_from_constant_name['STANDARD_CONSTANT'])
-            display_not = list(latex_from_constant_name[
-                                   'STANDARD_CONSTANT_NOT'])
+            # display_not = list(latex_from_constant_name[
+            #                        'STANDARD_CONSTANT_NOT'])
+
+        ############
+        # NEGATION #
+        ############
+        if negate:
+            text_is = r'\text_is'
+            text_is_not = r'\text_is_not'
+            if text_is in display:
+                index = display.index(text_is)
+                display[index] = text_is_not
+            else:
+                display.insert(0, r'\not')
 
     # (4) Finally: use functional notation for remaining arguments
     # ONLY if they are not type
     # first search for unused children
     # search for least used child
-    least_used_child = 0
-    for item in display:
-        if isinstance(item, int):
-            if item < 0:  # Negative values forbid supplementary arguments
-                least_used_child = len(implicit_children) + 10
-            if item > least_used_child:
-                least_used_child = item
+    least_used_child = least_children(display)
+    # for item in display:  # FIXME: deprecated
+    #     if isinstance(item, int):
+    #         if item < 0:  # Negative values forbid supplementary arguments
+    #             least_used_child = len(implicit_children) + 10
+    #         if item > least_used_child:
+    #             least_used_child = item
 
     # Keep only those unused_children whose math_type is not TYPE
-    more_display = []
-    for n in range(least_used_child+1, len(implicit_children)):
-        math_type = implicit_children[n].math_type
-        if not hasattr(math_type, 'node') or not math_type.node == 'TYPE':
-            more_display.append(n)
-    if more_display:
-        display += ['('] + more_display + [')']
-        # NB: in generic case APP(f,x), this gives  ['(', 1, ')']
-    # names = [item.display_name for item in implicit_children]
-    # log.debug(f"all arguments : {names}")
-    # log.debug(f"more display: {more_display}")
-    # log.debug(f"display: {display}")
+    # nor other implicit arguments like instances
+    if least_used_child is not None:
+        more_display = []
+        for n in range(least_used_child+1, len(implicit_children)):
+            math_type = implicit_children[n].math_type
+            if not hasattr(math_type, 'node') or not math_type.is_implicit_arg():
+                more_display.append(n)
+            else:
+                log.debug(f"Implicit arg: {implicit_children[n].display_name}")
+        if more_display:
+            display += ['('] + more_display + [')']
+            # NB: in generic case APP(f,x), this gives  ['(', 1, ')']
 
     return display
 
@@ -565,8 +609,6 @@ def display_quantifier(math_object) -> list:
     # Case of "for all A in P(X)" TODO
     # elif math_type.node == "SET":
     #     display = [quantifier, ]
-
-
 
     return display
 
@@ -669,6 +711,7 @@ def raw_display_math_type_of_local_constant(math_type,
     :param text_depth:      int
     :return:                shape with expanded display
     """
+    # FIXME: deprecated
     ########################################################
     # Special math_types for which display is not the same #
     ########################################################
@@ -795,20 +838,6 @@ def string_to_latex(string: str):
 #######################################
 
 
-def display_text_quant(math_object, format_, text_depth):
-    """
-    Compute a smart text version of a quantified sentence.
-
-    :param math_object: a math object with node "QUANT_∀", "QUANT_∃", or
-                        "QUANT_∃!".
-    :param format_:     "text+utf8"
-    :param text_depth:  see display_math_object
-    """
-
-    # TODO
-    pass
-
-
 def display_text_belongs_to(math_object, format_, text_depth):
     """Compute a smart text version of 'belongs to'.
 
@@ -834,7 +863,7 @@ def display_error(message: str) -> str:
     return '*' + message + '*'
 
 
-def raw_latex_shape_from_specific_nodes(math_object):
+def raw_latex_shape_from_specific_nodes(math_object, negate=False):
     """
     Treat the case of some specific nodes by calling the appropriate
     function. Specific nodes include:
@@ -855,7 +884,7 @@ def raw_latex_shape_from_specific_nodes(math_object):
         display = _("All goals reached!")
     elif node == "APPLICATION":
         # This one returns a shape, to handle supplementary children
-        display = shape_from_application(math_object)
+        display = shape_from_application(math_object, negate)
     elif node in ["LOCAL_CONSTANT", "CONSTANT"]:
         # ! Return display, not shape
         display = display_constant(math_object)
@@ -873,18 +902,26 @@ def raw_latex_shape_from_specific_nodes(math_object):
         universe = math_object.math_type_child_name()
         display = [universe, r" \backslash ", 0]
 
+    if negate and node != "APPLICATION":
+        display = [r'\not', display]
     return display
 
 
 def recursive_display(math_object, raw_display=None, negate=False):
     """
     Recursively replace children by their raw_latex_shape.
-    Tahe care of parentheses.
+    Take care of parentheses.
 
     \\parentheses -> to be displayed between parentheses
     """
     if not raw_display:
         raw_display = math_object.raw_latex_shape(negate)
+
+    if raw_display == [r'\not', 0]:
+        negate = True
+        raw_display = [0]  # -> [0]
+    else:
+        negate = False  # negation does not propagate to children
 
     display = []
     for item in raw_display:
@@ -894,15 +931,68 @@ def recursive_display(math_object, raw_display=None, negate=False):
         # Integers code for children, or tuples for grandchildren
         if isinstance(item, int) or isinstance(item, tuple):
             child = math_object.descendant(item)
-            display_item = recursive_display(child)
+            display_item = recursive_display(child, negate=negate)
             # Between parentheses? (to be displayed only if text_depth <1)
             if needs_paren(math_object, child, item):
-                # display_item = ['('] + display_item + [')']
                 display_item = [r'\parentheses', display_item]
+
+        elif isinstance(item, list):
+            display_item = recursive_display(math_object, raw_display=item,
+                                             negate=negate)
 
         display.append(display_item)
 
+    # Special cases: \forall A in [r'\set_of_subsets'] --> \forall A \subset X
+    head = display[0]
+    if math_object.node in latex_from_quant_node:
+        type_ = display[3]
+        if isinstance(type_, list) and type_[0] == r'\set_of_subsets':
+            display[2] = r' \subset '
+            display[3] = type_[1]
+
+    log.debug(f"    --> Recursive display: {display}")
     return display
+
+
+def shorten(string: str) -> str:
+    """
+    Try to shorten string for concise display: e.g.
+    "an element of " -> "element of "
+    "is injective" -> injective.
+    Note that this is called after translation.
+    """
+    to_be_shortened = (_("a function"), _("an element"), _("a subset"))
+    to_be_suppressed = (r'\text_is',)
+    to_be_replaced = {r'\text_is_not': _("not")}
+    for phrase in to_be_shortened:
+        if string.startswith(phrase):
+            prefix, suffix = phrase.split(" ")
+            string = string[len(prefix)+1:]
+
+    for word in to_be_suppressed:
+        if string == word:
+            string = " "
+
+    for word in to_be_replaced:
+        if string == word:
+            string = to_be_replaced[word]
+
+    return string
+
+
+def latex_to_text_func(string: str) -> str:
+    striped_string = string.strip()  # Remove spaces
+    if striped_string in latex_to_text:
+        text_stripped = latex_to_text[striped_string]
+        text_string = string.replace(striped_string, text_stripped)
+        string = text_string
+    return string
+
+
+displaceable_types = (_("function"), _("element"), _("subset"))
+with_adj = {_("function"): _("a function"),
+            _("element"): _("an element"),
+            _("subset"): _("a subset")}
 
 
 def shallow_latex_to_text(string: Union[list, str], text_depth=0):
@@ -911,12 +1001,41 @@ def shallow_latex_to_text(string: Union[list, str], text_depth=0):
     but only until depth given by text_depth. The deepest branches are left
     untouched (so they still contain latex macro that are NOT suitable to
     display without either latex compilation or conversion to utf8).
-
-    Also replaces: \\in_prop, \\in_set, \\in_function.
     """
     if isinstance(string, list):
+        head = string[0]
+        # # Pre-treatment
+        # if text_depth >0:
+        #     if head in (r"\forall", r"\exists", r"\exists !"):
+        #         type_ = string[3]
+        #         if type_ == r'\set_of_subsets':
+        #             string
+
+        # Recursion
         string = [shallow_latex_to_text(item, text_depth-1) for item in string]
+
+        # Special cases
+        if text_depth > 0:
+            if head == latex_to_text[r"\forall"]:  # FIXME: deprecated
+                # Case of a function:
+                #   for every f FUNCTION from X to Y
+                #   --> for every FUNCTION f from X to Y
+                #   there exists A FUNCTION etc.
+                # Case of element:
+                #   --> for every element x of X
+                for word in displaceable_types:
+                    if string[2].startswith(word):
+                        string[2] = string[2][len(word)+1:]
+                        string.insert(1, word + " ")
+            if head in (latex_to_text[r"\exists"],
+                        latex_to_text[r"\exists !"]):
+                for word in displaceable_types:
+                    if string[2].startswith(word):
+                        string[2] = string[2][len(word)+1:]
+                        string.insert(1, with_adj[word] + " ")
+        log.debug(f"    --> Shallow_to_text: {string}")
         return string
+
     elif isinstance(string, str):
 
         # FUNCTIONS: a very special case
@@ -926,23 +1045,11 @@ def shallow_latex_to_text(string: Union[list, str], text_depth=0):
             else:
                 string = ":"
 
-        if text_depth <= 0:
-            # Shorten display if not text: e.g.
-            #   "an element of " -> "element of "
-            if string.startswith("a "):
-                string = string[2:]
-            elif string.startswith("an "):
-                string = string[3:]
-        else:  # Try to convert symbol to text
-            striped_string = string.strip()  # Remove spaces
-            if striped_string in latex_to_text:
-                text_stripped = latex_to_text[striped_string]
-                text_string = string.replace(striped_string, text_stripped)
-                string = text_string
+        if text_depth > 0:
+            string = latex_to_text_func(string)
 
-        # MORE SPECIAL CASES: TODO
-        #  Negation
-        #  A in P(X) --> A a subset of X  if text_depth>0
+        else:
+            string = shorten(string)
 
         return string
 

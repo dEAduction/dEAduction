@@ -114,7 +114,7 @@ class NewGoal:
             if isinstance(self.new_target, str):
                 target = self.new_target
             else:
-                target = self.new_target.to_display(is_math_type=True)
+                target = self.new_target.math_type_to_display(format_="utf8")
             msg = msg.format(target)
         elif self.node_type == 'iff':
             if self.counter == 1:
@@ -124,7 +124,7 @@ class NewGoal:
             if isinstance(self.new_target, str):
                 target = self.new_target
             else:
-                target = self.new_target.to_display(is_math_type=True)
+                target = self.new_target.math_type_to_display(format_="utf8")
             msg = msg.format(target)
         elif self.node_type == 'or':
             if self.counter == 1:
@@ -134,7 +134,7 @@ class NewGoal:
             if isinstance(self.new_hypo, str):
                 hypo = self.new_hypo
             else:
-                hypo = self.new_hypo.to_display(is_math_type=True)
+                hypo = self.new_hypo.math_type_to_display(format_="utf8")
             msg += " " + _("assuming {}").format(hypo)
         elif self.node_type == 'subgoal':
             msg = _("Proof of new subgoal: {}").format(self.new_target)

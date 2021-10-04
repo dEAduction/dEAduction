@@ -24,10 +24,14 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Union
+import logging
 
 import deaduction.pylib.config.vars as cvars
 
 from deaduction.pylib.mathobj.utils import cut_spaces, first_descendant
+from deaduction.pylib.mathobj.utf8_display import add_parentheses
+
+log = logging.getLogger(__name__)
 
 utf8_to_html_dic = {
     "<": "&lt",
@@ -38,7 +42,7 @@ utf8_to_html_dic = {
 }
 
 
-def reserve_special_char(s: str):
+def reserve_special_char(s: str) -> str:
     stripped_s = s.strip()
     if stripped_s == "<":
         s.replace("<", "&lt")
@@ -48,19 +52,19 @@ def reserve_special_char(s: str):
     return s
 
 
-def subscript(s: str):
+def subscript(s: str) -> str:
     html_pre = '<sub>'
     html_post = '</sub>'
     return html_pre + s + html_post
 
 
-def superscript(s: str):
+def superscript(s: str) -> str:
     html_pre = '<sup>'
     html_post = '</sup>'
     return html_pre + s + html_post
 
 
-def html_color(s: str, color: str):
+def html_color(s: str, color: str) -> str:
     # html_pre = f"<div style='color:{color};'>"
     # html_post = '</div>'
     html_pre = f"<font style='color:{color};'>"
@@ -93,53 +97,69 @@ def color_props():
             else None)
 
 
-def recursive_html_display(l: list):
+def recursive_html_display(l: list, depth) -> str:
     """
     Use the following tags as first child:
-    - \sub, \super for subscript/superscript
-    - \dummy_var for dummy vars
-    - \applied_property for properties that have already been applied
+    - \\sub, \\super for subscript/superscript
+    - \\dummy_var for dummy vars
+    - \\applied_property for properties that have already been applied
     """
     head = l[0]
     if head == r'\sub' or head == '_':
-        return subscript(recursive_html_display(l[1:]))
+        return subscript(recursive_html_display(l[1:], depth))
     elif head == r'\super' or head == '^':
-        return superscript(recursive_html_display(l[1:]))
+        return superscript(recursive_html_display(l[1:], depth))
     elif head == r'\dummy_var':
         color = color_dummy_vars()
         if color:
-            return html_color(recursive_html_display(l[1:]), color)
+            return html_color(recursive_html_display(l[1:], depth), color)
         else:
-            return recursive_html_display(l[1:])
+            return recursive_html_display(l[1:], depth)
     elif head == r'\applied_property':
         color = color_props()
         if color:
-            return html_color(recursive_html_display(l[1:]), color)
+            return html_color(recursive_html_display(l[1:], depth), color)
         else:
-            return recursive_html_display(l[1:])
-    elif head == r'\parentheses':
-        # Avoid redundant parentheses:
-        if len(l) > 1 and first_descendant(l[1]) == r'\parentheses':
-            return recursive_html_display(l[1:])
-        else:
-            return "(" + recursive_html_display(l[1:]) + ")"
+            return recursive_html_display(l[1:], depth)
+    # elif head == r'\parentheses':  FIXME: deprecated
+    #     # Avoid redundant parentheses:
+    #     if len(l) > 1 and first_descendant(l[1]) == r'\parentheses':
+    #         return recursive_html_display(l[1:])
+    #     else:
+    #         return "(" + recursive_html_display(l[1:]) + ")"
 
-    else:  # Generic case
-        strings = [html_display(child) for child in l]
+    else:
+        # handle "\parentheses":
+        add_parentheses(l, depth)
+        # for index in range(len(l)-1):
+        #     child = l[index]
+        #     if child == r'\parentheses':
+        #         next_child = l[index+1]
+        #         if (first_descendant(next_child) == r'\parentheses' or
+        #                 depth == 0):
+        #             # Remove redundant parentheses
+        #             l[index] = ""
+        #         else:
+        #             l[index] = "("
+        #             l.append(")")
+        # Generic case:
+        log.debug(f"Children to html: {l}")
+        strings = [html_display(child, depth+1) for child in l]
         return ''.join(strings)
 
 
-def html_display(abstract_string: Union[str, list]):
+def html_display(abstract_string: Union[str, list], depth=0) -> str:
     """
     Return a html version of the string represented by string, which is a
     tree of string.
     """
     # FIXME: take tex_depth into account
     if isinstance(abstract_string, list):
-        string = recursive_html_display(abstract_string)
+        string = recursive_html_display(abstract_string, depth)
     else:
         # Do this BEFORE formatting:
         abstract_string = reserve_special_char(abstract_string)
+        # Formatting subscript/superscript:
         string = sub_sup_to_html(abstract_string)
 
     return cut_spaces(string)

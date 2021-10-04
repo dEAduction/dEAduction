@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2021-10-01 13:29+0200\n"
-"PO-Revision-Date: 2021-10-01 13:29+0200\n"
+"POT-Creation-Date: 2021-10-02 17:50+0200\n"
+"PO-Revision-Date: 2021-10-02 17:51+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -928,215 +928,258 @@ msgstr "Préparation du dossier de lancement"
 msgid "Launch folder: {}"
 msgstr "Dossier de lancement : {}"
 
-#: pylib/mathobj/context_math_object.py:93 pylib/mathobj/display_math.py:681
+#: pylib/mathobj/context_math_object.py:93 pylib/mathobj/display_math.py:726
 msgid "an element of"
 msgstr "un élément de"
 
-#: pylib/mathobj/context_math_object.py:96 pylib/mathobj/display_math.py:686
+#: pylib/mathobj/context_math_object.py:96
+msgid "a non-negative integer"
+msgstr "Un entier positif ou nul"
+
+#: pylib/mathobj/context_math_object.py:98
+msgid "an integer"
+msgstr "un entier"
+
+#: pylib/mathobj/context_math_object.py:100
+msgid "a rational number"
+msgstr "un nombre rationnel"
+
+#: pylib/mathobj/context_math_object.py:102
+msgid "a real number"
+msgstr "un nombre réel"
+
+#: pylib/mathobj/context_math_object.py:104 pylib/mathobj/display_math.py:731
 msgid "a subset of"
 msgstr "une partie de"
 
-#: pylib/mathobj/context_math_object.py:99 pylib/mathobj/display_math.py:690
+#: pylib/mathobj/context_math_object.py:107 pylib/mathobj/display_math.py:735
 msgid "a sequence in"
 msgstr "une suite dans"
 
-#: pylib/mathobj/context_math_object.py:101 pylib/mathobj/display_data.py:288
-#: pylib/mathobj/display_math.py:692
+#: pylib/mathobj/context_math_object.py:109 pylib/mathobj/display_data.py:301
+#: pylib/mathobj/display_math.py:737
 msgid "a family of subsets of"
 msgstr "une famille de parties de"
 
-#: pylib/mathobj/display_data.py:55 pylib/mathobj/display_data.py:64
-#: pylib/mathobj/display_data.py:270 pylib/mathobj/display_data.py:282
-#: pylib/mathobj/display_data.py:283
+#: pylib/mathobj/display_data.py:62 pylib/mathobj/display_data.py:72
+#: pylib/mathobj/display_data.py:283 pylib/mathobj/display_data.py:295
+#: pylib/mathobj/display_data.py:296
 msgid "and"
 msgstr "et"
 
-#: pylib/mathobj/display_data.py:56 pylib/mathobj/display_data.py:271
+#: pylib/mathobj/display_data.py:63 pylib/mathobj/display_data.py:284
 msgid "or"
 msgstr "ou"
 
-#: pylib/mathobj/display_data.py:126 pylib/mathobj/display_data.py:220
-#: pylib/mathobj/display_data.py:221 pylib/mathobj/display_data.py:222
-#: pylib/mathobj/display_math.py:739 pylib/mathobj/display_math.py:748
-#: pylib/mathobj/display_math.py:925
-msgid "is"
-msgstr "est"
-
-#: pylib/mathobj/display_data.py:127
-msgid "is not"
-msgstr "n’est pas"
-
-#: pylib/mathobj/display_data.py:187 pylib/mathobj/display_data.py:272
+#: pylib/mathobj/display_data.py:196 pylib/mathobj/display_data.py:285
 msgid "Contradiction"
 msgstr "Contradiction"
 
-#: pylib/mathobj/display_data.py:188
+#: pylib/mathobj/display_data.py:197
 msgid "proposition"
 msgstr "proposition"
 
-#: pylib/mathobj/display_data.py:189
+#: pylib/mathobj/display_data.py:198
 msgid "set"
 msgstr "ensemble"
 
-#: pylib/mathobj/display_data.py:190
+#: pylib/mathobj/display_data.py:199 pylib/mathobj/display_data.py:206
+#: pylib/mathobj/display_math.py:972
 msgid "not"
 msgstr "non"
 
-#: pylib/mathobj/display_data.py:205 pylib/mathobj/display_data.py:273
+#: pylib/mathobj/display_data.py:216 pylib/mathobj/display_data.py:286
 msgid "if and only if"
 msgstr "si et seulement si"
 
-#: pylib/mathobj/display_data.py:206 pylib/mathobj/display_data.py:274
+#: pylib/mathobj/display_data.py:217 pylib/mathobj/display_data.py:287
 msgid "the negation of"
 msgstr "la négation de"
 
-#: pylib/mathobj/display_data.py:207 pylib/mathobj/display_data.py:275
+#: pylib/mathobj/display_data.py:218 pylib/mathobj/display_data.py:288
 msgid "if"
 msgstr "si"
 
-#: pylib/mathobj/display_data.py:208 pylib/mathobj/display_data.py:275
+#: pylib/mathobj/display_data.py:219 pylib/mathobj/display_data.py:288
 msgid "then"
 msgstr "alors"
 
-#: pylib/mathobj/display_data.py:209
+#: pylib/mathobj/display_data.py:220
 msgid "the set of subsets of"
 msgstr "l’ensemble des parties de"
 
-#: pylib/mathobj/display_data.py:210 pylib/mathobj/display_data.py:305
+#: pylib/mathobj/display_data.py:221 pylib/mathobj/display_data.py:318
 msgid "a proposition"
 msgstr "une proposition"
 
-#: pylib/mathobj/display_data.py:211 pylib/mathobj/display_data.py:306
+#: pylib/mathobj/display_data.py:222 pylib/mathobj/display_data.py:319
 msgid "a set"
 msgstr "un ensemble"
 
-#: pylib/mathobj/display_data.py:212 pylib/mathobj/display_data.py:314
-#: pylib/mathobj/display_data.py:316
+#: pylib/mathobj/display_data.py:223 pylib/mathobj/display_data.py:327
+#: pylib/mathobj/display_data.py:329
 msgid "such that"
 msgstr "tel que"
 
-#: pylib/mathobj/display_data.py:213
-msgid "for all"
-msgstr "pour tout"
-
-#: pylib/mathobj/display_data.py:214 pylib/mathobj/display_data.py:313
-msgid "there exists"
-msgstr "il existe"
-
-#: pylib/mathobj/display_data.py:215 pylib/mathobj/display_data.py:315
-msgid "there exists a unique"
-msgstr "il existe un unique"
-
-#: pylib/mathobj/display_data.py:216 pylib/mathobj/display_data.py:307
-msgid "a function from"
-msgstr "une fonction de"
-
-#: pylib/mathobj/display_data.py:217
-msgid "a sequence from"
-msgstr "une suite de"
-
-#: pylib/mathobj/display_data.py:218 pylib/mathobj/display_data.py:223
-#: pylib/mathobj/display_data.py:311 pylib/mathobj/display_data.py:313
-#: pylib/mathobj/display_data.py:315
-msgid "in"
-msgstr "dans"
-
-#: pylib/mathobj/display_data.py:279
-msgid "is included in"
-msgstr "est inclus dans"
-
-#: pylib/mathobj/display_data.py:282
-msgid "the intersection of"
-msgstr "l’intersection de"
-
-#: pylib/mathobj/display_data.py:283
-msgid "the union of"
-msgstr "l’union de"
-
-#: pylib/mathobj/display_data.py:284
-msgid "the intersection of the sets"
-msgstr "l’intersection des ensembles"
-
-#: pylib/mathobj/display_data.py:285
-msgid "the union of the sets"
-msgstr "l’union des ensembles"
-
-#: pylib/mathobj/display_data.py:286
-msgid "the complement of "
-msgstr "le complémentaire de "
-
-#: pylib/mathobj/display_data.py:287
-msgid "the empty set"
-msgstr "l’ensemble vide"
-
-#: pylib/mathobj/display_data.py:289
-msgid "the image under"
-msgstr "l’image par"
-
-#: pylib/mathobj/display_data.py:289 pylib/mathobj/display_data.py:290
-msgid "of"
-msgstr "de"
-
-#: pylib/mathobj/display_data.py:290
-msgid "the inverse image under"
-msgstr "l’image réciproque par"
-
-#: pylib/mathobj/display_data.py:295
-msgid "equals"
-msgstr "égale"
-
-#: pylib/mathobj/display_data.py:296
-msgid "is different from"
-msgstr "est différent de"
-
-#: pylib/mathobj/display_data.py:297
-msgid "is less than"
-msgstr "est inférieur à"
-
-#: pylib/mathobj/display_data.py:298
-msgid "is greater than"
-msgstr "est plus grand que"
-
-#: pylib/mathobj/display_data.py:299
-msgid "is less than or equal to"
-msgstr "est inférieur ou égal à"
-
-#: pylib/mathobj/display_data.py:300
-msgid "is greater than or equal to"
-msgstr "est supérieur ou égal à"
-
-#: pylib/mathobj/display_data.py:307
-msgid "to"
-msgstr "vers"
-
-#: pylib/mathobj/display_data.py:311
+#: pylib/mathobj/display_data.py:224 pylib/mathobj/display_data.py:324
 msgid "for every"
 msgstr "pour tout"
 
-#: pylib/mathobj/display_math.py:205 pylib/mathobj/display_math.py:855
+#: pylib/mathobj/display_data.py:225 pylib/mathobj/display_data.py:326
+msgid "there exists"
+msgstr "il existe"
+
+#: pylib/mathobj/display_data.py:226 pylib/mathobj/display_data.py:328
+msgid "there exists a unique"
+msgstr "il existe un unique"
+
+#: pylib/mathobj/display_data.py:227 pylib/mathobj/display_data.py:320
+msgid "a function from"
+msgstr "une fonction de"
+
+#: pylib/mathobj/display_data.py:228
+msgid "a sequence from"
+msgstr "une suite de"
+
+#: pylib/mathobj/display_data.py:229 pylib/mathobj/display_data.py:234
+#: pylib/mathobj/display_data.py:324 pylib/mathobj/display_data.py:326
+#: pylib/mathobj/display_data.py:328
+msgid "in"
+msgstr "dans"
+
+#: pylib/mathobj/display_data.py:231 pylib/mathobj/display_data.py:232
+#: pylib/mathobj/display_data.py:233 pylib/mathobj/display_data.py:235
+#: pylib/mathobj/display_math.py:784 pylib/mathobj/display_math.py:793
+#: pylib/mathobj/display_math.py:1043
+msgid "is"
+msgstr "est"
+
+#: pylib/mathobj/display_data.py:236
+msgid "is not"
+msgstr "n’est pas"
+
+#: pylib/mathobj/display_data.py:292
+msgid "is included in"
+msgstr "est inclus dans"
+
+#: pylib/mathobj/display_data.py:295
+msgid "the intersection of"
+msgstr "l’intersection de"
+
+#: pylib/mathobj/display_data.py:296
+msgid "the union of"
+msgstr "l’union de"
+
+#: pylib/mathobj/display_data.py:297
+msgid "the intersection of the sets"
+msgstr "l’intersection des ensembles"
+
+#: pylib/mathobj/display_data.py:298
+msgid "the union of the sets"
+msgstr "l’union des ensembles"
+
+#: pylib/mathobj/display_data.py:299
+msgid "the complement of "
+msgstr "le complémentaire de "
+
+#: pylib/mathobj/display_data.py:300
+msgid "the empty set"
+msgstr "l’ensemble vide"
+
+#: pylib/mathobj/display_data.py:302
+msgid "the image under"
+msgstr "l’image par"
+
+#: pylib/mathobj/display_data.py:302 pylib/mathobj/display_data.py:303
+msgid "of"
+msgstr "de"
+
+#: pylib/mathobj/display_data.py:303
+msgid "the inverse image under"
+msgstr "l’image réciproque par"
+
+#: pylib/mathobj/display_data.py:308
+msgid "equals"
+msgstr "égale"
+
+#: pylib/mathobj/display_data.py:309
+msgid "is different from"
+msgstr "est différent de"
+
+#: pylib/mathobj/display_data.py:310
+msgid "is less than"
+msgstr "est inférieur à"
+
+#: pylib/mathobj/display_data.py:311
+msgid "is greater than"
+msgstr "est plus grand que"
+
+#: pylib/mathobj/display_data.py:312
+msgid "is less than or equal to"
+msgstr "est inférieur ou égal à"
+
+#: pylib/mathobj/display_data.py:313
+msgid "is greater than or equal to"
+msgstr "est supérieur ou égal à"
+
+#: pylib/mathobj/display_data.py:320
+msgid "to"
+msgstr "vers"
+
+#: pylib/mathobj/display_math.py:205 pylib/mathobj/display_math.py:900
 msgid "All goals reached!"
 msgstr "Tous les buts ont été atteints !"
 
-#: pylib/mathobj/display_math.py:683
+#: pylib/mathobj/display_math.py:728
 msgid "element of"
 msgstr "élément de"
 
-#: pylib/mathobj/display_math.py:688
+#: pylib/mathobj/display_math.py:733
 msgid "subset of"
 msgstr "partie de"
 
-#: pylib/mathobj/display_math.py:752
+#: pylib/mathobj/display_math.py:797
 msgid "belongs to"
 msgstr "appartient à"
 
-#: pylib/mathobj/display_math.py:853
+#: pylib/mathobj/display_math.py:898
 msgid "unknown object"
 msgstr "Objet inconnu"
 
+#: pylib/mathobj/display_math.py:970
+msgid "a "
+msgstr "un "
+
+#: pylib/mathobj/display_math.py:970
+msgid "an "
+msgstr "un "
+
+#: pylib/mathobj/display_math.py:997 pylib/mathobj/display_math.py:998
+msgid "function"
+msgstr "fonction"
+
+#: pylib/mathobj/display_math.py:997 pylib/mathobj/display_math.py:999
+msgid "element"
+msgstr "élément"
+
+#: pylib/mathobj/display_math.py:997 pylib/mathobj/display_math.py:1000
+msgid "subset"
+msgstr "partie"
+
+#: pylib/mathobj/display_math.py:998
+msgid "a function"
+msgstr "une fonction"
+
+#: pylib/mathobj/display_math.py:999
+msgid "an element"
+msgstr "un élément"
+
+#: pylib/mathobj/display_math.py:1000
+msgid "a subset"
+msgstr "une partie"
+
 #: pylib/mathobj/proof_state.py:456
-#, fuzzy
-#| msgid "Assume that"
-msgid "Assume_that"
+msgid "Assume that"
 msgstr "Supposons que"
 
 #: pylib/mathobj/proof_state.py:483
@@ -1144,9 +1187,7 @@ msgid "Let"
 msgstr "Soit"
 
 #: pylib/mathobj/proof_state.py:483
-#, fuzzy
-#| msgid "be"
-msgid "be "
+msgid " be "
 msgstr " "
 
 #: pylib/mathobj/proof_state.py:503 pylib/mathobj/proof_state.py:549
@@ -1154,16 +1195,12 @@ msgid "Prove that"
 msgstr "Démontrer que"
 
 #: pylib/mathobj/proof_state.py:505
-#, fuzzy
-#| msgid "the negation of"
 msgid "the negation"
-msgstr "la négation de"
+msgstr "la négation"
 
 #: pylib/mathobj/proof_state.py:506
-#, fuzzy
-#| msgid "Prove that"
 msgid "Prove"
-msgstr "Démontrer que"
+msgstr "Démontrer"
 
 #: pylib/mathobj/proof_state.py:514 pylib/mathobj/proof_state.py:551
 msgid "Then"
@@ -1181,7 +1218,7 @@ msgstr "Hypothèse :"
 msgid "Hypotheses:"
 msgstr "Hypothèses :"
 
-#: pylib/mathobj/proof_state.py:546 pylib/mathobj/proof_state.py:581
+#: pylib/mathobj/proof_state.py:546 pylib/mathobj/proof_state.py:582
 #: pylib/mathobj/proof_step.py:356
 msgid ": "
 msgstr " : "
@@ -1190,11 +1227,11 @@ msgstr " : "
 msgid "Context:"
 msgstr "Contexte :"
 
-#: pylib/mathobj/proof_state.py:586
+#: pylib/mathobj/proof_state.py:587
 msgid "Goal:"
 msgstr "But :"
 
-#: pylib/mathobj/proof_state.py:588
+#: pylib/mathobj/proof_state.py:589
 msgid "Conclusion:"
 msgstr "Conclusion :"
 
@@ -1561,6 +1598,12 @@ msgstr "Progression : {:03d}%"
 #: pylib/utils/filesystem.py:249
 msgid "Download from {} to {}"
 msgstr "Téléchargé depuis {} vers {}"
+
+#~ msgid "for all"
+#~ msgstr "pour tout"
+
+#~ msgid "be "
+#~ msgstr " "
 
 #~ msgid "Target is not an equality, an inequality, nor a contradiction"
 #~ msgstr ""

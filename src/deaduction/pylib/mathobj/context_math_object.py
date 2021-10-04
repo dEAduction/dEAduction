@@ -81,53 +81,10 @@ class ContextMathObject(MathObject):
         self.has_been_applied_in_proof = other.has_been_applied_in_proof
         self.is_hidden = other.is_hidden
 
-    def raw_latex_shape_of_math_type(self):
-        ########################################################
-        # Special math_types for which display is not the same #
-        ########################################################
-        math_type = self.math_type
-        if hasattr(math_type, 'math_type') \
-                and hasattr(math_type.math_type, 'node') \
-                and math_type.math_type.node == "TYPE":
-            name = math_type.info["name"]
-            raw_shape = [_("an element of") + " ", name]
-            # The "an" is to be removed fo short display
-        elif hasattr(math_type, 'node') and math_type.node == "SET":
-            raw_shape = [_("a subset of") + " ", 0]
-            # Idem
-        elif math_type.node == "SEQUENCE":
-            raw_shape = [_("a sequence in") + " ", 1]
-        elif math_type.node == "SET_FAMILY":
-            raw_shape = [_("a family of subsets of") + " ", 1]
-        else:  # Generic case: usual shape from math_object
-            raw_shape = math_type.raw_latex_shape()
-
-        return raw_shape
-
     def expanded_latex_shape(self):
         display = super().expanded_latex_shape()
         # FIXME: settle applied properties attribute
         # if self.has_been_applied_in_the_proof:
         #     display = ['@applied_property', display]
-        return display
-
-    def math_type_to_display(self, format_="html", text_depth=0) -> str:
-        """
-        cf MathObject.to_display
-        """
-        raw_shape = self.raw_latex_shape_of_math_type()
-        abstract_string = recursive_display(self.math_type,
-                                            raw_display=raw_shape)
-        # Replace some symbol by plain text:
-        display = shallow_latex_to_text(abstract_string, text_depth)
-        # Replace latex macro by utf8:
-        if format_ in ('utf8', 'html'):
-            display = latex_to_utf8(display)
-        if format_ == 'html':
-            display = html_display(display)
-        elif format_ == 'utf8':
-            display = utf8_display(display)
-        log.debug(f"{self.old_to_display()} -> {display}")
-
         return display
 

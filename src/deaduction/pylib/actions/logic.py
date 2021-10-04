@@ -103,8 +103,8 @@ def construct_and(proof_step, user_input: [str]) -> CodeForLean:
     right = children[1]
     if not user_input:
         # User choice
-        choices = [(_("Left"), left.to_display()),
-                   (_("Right"), right.to_display())]
+        choices = [(_("Left"), left.to_display(format="utf8")),
+                   (_("Right"), right.to_display(format="utf8"))]
         raise MissingParametersError(
             InputType.Choice,
             choices,
@@ -223,8 +223,8 @@ def construct_or(proof_step, user_input: [str]) -> CodeForLean:
 
     children = target.children
 
-    left = children[0].to_display()
-    right = children[1].to_display()
+    left = children[0].to_display(format="utf8")
+    right = children[1].to_display(format="utf8")
     choices = [(_("Left"), left), (_("Right"), right)]
 
     if not user_input:
@@ -271,8 +271,8 @@ def apply_or(proof_step,
     left = children[0]
     right = children[1]
     if not user_input:
-        choices = [(_("Left"), left.to_display()),
-                   (_("Right"), right.to_display())]
+        choices = [(_("Left"), left.to_display(format="utf8")),
+                   (_("Right"), right.to_display(format="utf8"))]
         raise MissingParametersError(InputType.Choice,
                                      choices=choices,
                                      title=_("Choose case"),
@@ -308,7 +308,7 @@ def construct_or_on_hyp(proof_step,
         user_input = []
     possible_codes = []
     first_hypo_name = selected_property[0].info["name"]
-    hypo = selected_property[0].math_type.to_display()
+    hypo = selected_property[0].math_type.display_name
 
     if len(selected_property) == 2:
         if not (selected_property[0].math_type.is_prop()
@@ -584,9 +584,11 @@ def construct_iff(proof_step, user_input: [str]) -> CodeForLean:
 
     left = target.children[0]
     right = target.children[1]
+    left_display = left.to_display(format_="utf8")
+    right_display = right.to_display(format_="utf8")
     if not user_input:
-        choices = [("⇒", f'({left.to_display()}) ⇒ ({right.to_display()})'),
-                   ("⇐", f'({right.to_display()}) ⇒ ({left.to_display()})')]
+        choices = [("⇒", f'({left_display}) ⇒ ({right_display})'),
+                   ("⇐", f'({right_display}) ⇒ ({left_display})')]
         raise MissingParametersError(
             InputType.Choice,
             choices,
@@ -840,8 +842,7 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
                 # Variable is not used explicitly, but this affects inequality:
                 variable = inequality.children[0]
                 variable = add_type_indication(variable, math_type)
-                display_inequality = inequality.to_display(is_math_type=False,
-                                                           format_='lean')
+                display_inequality = inequality.to_display(format_='lean')
                 # Code I: state corresponding inequality #
                 code = code.and_then(f"have {inequality_name}: "
                                      f"{display_inequality}")
@@ -979,7 +980,7 @@ def apply_exists(proof_step, selected_object: [MathObject]) -> CodeForLean:
         # implicit_definition = MathObject.last_used_implicit_definition
         selected_hypo       = MathObject.last_rw_object
 
-    hint = selected_hypo.children[1].to_display()
+    hint = selected_hypo.children[1].display_name
     x = give_global_name(proof_step=proof_step,
                          math_type=selected_hypo.children[0],
                          hints=[hint],
@@ -1094,18 +1095,20 @@ def apply_substitute(proof_step,
     codes = CodeForLean.empty_code()
     heq = selected_objects[equality_nb]  # Property to be used for substitution
     heq_name = heq.info["name"]
-    left_term = equality.children[0]
-    right_term = equality.children[1]
-    success1 = ' ' + _("{} replaced by {}").format(left_term.to_display(),
-                                                   right_term.to_display())\
+    left = equality.children[0]
+    right = equality.children[1]
+    left_display = left.to_display(format_="utf8")
+    right_display = right.to_display(format_="utf8")
+    success1 = ' ' + _("{} replaced by {}").format(left_display,
+                                                   right_display)\
                + ' '
-    success2 = ' ' + _("{} replaced by {}").format(right_term.to_display(),
-                                                   left_term.to_display())\
+    success2 = ' ' + _("{} replaced by {}").format(right_display,
+                                                   left_display)\
                + ' '
-    choices = [(left_term.to_display(),
-                f'Replace by {right_term.to_display()}'),
-               (right_term.to_display(),
-                f'Replace by {left_term.to_display()}')]
+    choices = [(left_display,
+                f'Replace by {right_display}'),
+               (right_display,
+                f'Replace by {left_display}')]
 
     if len(selected_objects) == 1:
         # If the user has chosen a direction, apply substitution
@@ -1123,8 +1126,8 @@ def apply_substitute(proof_step,
                                                     success_msg=success_msg)
             codes = codes.or_else(more_code)
         else:
-            if goal.target.math_type.contains(left_term) and \
-                    goal.target.math_type.contains(right_term):
+            if goal.target.math_type.contains(left) and \
+                    goal.target.math_type.contains(right):
 
                 raise MissingParametersError(
                     InputType.Choice,
@@ -1163,8 +1166,8 @@ def apply_substitute(proof_step,
                     f'rw {heq_name} at {prop_name}', success_msg=success_msg)
                 codes = codes.or_else(more_code)
         else:
-            if prop.math_type.contains(left_term) and \
-                    prop.math_type.contains(right_term):
+            if prop.math_type.contains(left) and \
+                    prop.math_type.contains(right):
                 raise MissingParametersError(
                     InputType.Choice,
                     choices,
@@ -1226,8 +1229,8 @@ def action_equal(proof_step,
         if test0 and test1:
             # Two equalities: which one to use?
             if not user_input:
-                eq0 = equality0.to_display()
-                eq1 = equality1.to_display()
+                eq0 = equality0.to_display(format="utf8")
+                eq1 = equality1.to_display(format="utf8")
                 choice = _("Use for substitution in {}")
                 choices = [(eq0, choice.format(eq1)),
                            (eq1, choice.format(eq0))]
@@ -1350,7 +1353,7 @@ def action_map(proof_step,
             if len(selected_objects) == 1:
                 # A function, but no other object:
                 if not user_input:
-                    name = math_object.to_display()
+                    name = math_object.display_name
                     output = _("Enter element on which you want to apply "
                                "the map {}:").format(name)
                     raise MissingParametersError(InputType.Text,

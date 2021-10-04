@@ -480,7 +480,7 @@ class Goal:
                 #     new_sentence = "Soit" + " " + name + " " \
                 #                    + type_ + "."
                 # else:
-                new_sentence = (_("Let") + " " + name + " " + _("be ") + " "
+                new_sentence = (_("Let") + " " + name + _(" be ") + " "
                                 + type_ + ".")
 
             if text:
@@ -577,7 +577,8 @@ class Goal:
         for math_object in context:
             math_type = math_object.math_type
             name = math_object.to_display()
-            name_type = math_type.old_to_display(is_math_type=True)
+            # name_type = math_type.old_to_display(is_math_type=True)
+            name_type = math_object.math_type_to_display(format_="utf8")
             text_object = name + _(": ") + name_type
             text += "  " + text_object + "\n"
 
@@ -587,7 +588,7 @@ class Goal:
         else:
             text += _("Conclusion:")
         text += "\n"
-        text += " " + target.math_type.old_to_display(is_math_type=True)
+        text += " " + target.math_type_to_display(format_="utf8")
         return text
 
 
