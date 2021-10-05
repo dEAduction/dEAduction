@@ -121,28 +121,11 @@ def recursive_html_display(l: list, depth) -> str:
             return html_color(recursive_html_display(l[1:], depth), color)
         else:
             return recursive_html_display(l[1:], depth)
-    # elif head == r'\parentheses':  FIXME: deprecated
-    #     # Avoid redundant parentheses:
-    #     if len(l) > 1 and first_descendant(l[1]) == r'\parentheses':
-    #         return recursive_html_display(l[1:])
-    #     else:
-    #         return "(" + recursive_html_display(l[1:]) + ")"
 
     else:
         # handle "\parentheses":
         add_parentheses(l, depth)
-        # for index in range(len(l)-1):
-        #     child = l[index]
-        #     if child == r'\parentheses':
-        #         next_child = l[index+1]
-        #         if (first_descendant(next_child) == r'\parentheses' or
-        #                 depth == 0):
-        #             # Remove redundant parentheses
-        #             l[index] = ""
-        #         else:
-        #             l[index] = "("
-        #             l.append(")")
-        # Generic case:
+
         log.debug(f"Children to html: {l}")
         strings = [html_display(child, depth+1) for child in l]
         return ''.join(strings)

@@ -47,11 +47,10 @@ This file is part of dEAduction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import          List, Any, Optional, Union
+from typing import          List, Any, Optional
 from copy import copy
 import logging
 
-import deaduction.pylib.logger as logger
 if __name__ == "__main__":
     import deaduction.pylib.config.i18n
 
@@ -59,14 +58,14 @@ import deaduction.pylib.config.vars            as cvars
 from deaduction.pylib.mathobj.display_data import (HAVE_BOUND_VARS,
                                                    INEQUALITIES,
                                                    latex_from_node,
-                                                   latex_to_utf8,
-                                                   latex_from_quant_node)
-from deaduction.pylib.mathobj.display_math import (Shape,
-                                    recursive_display,
-                                    raw_display_math_type_of_local_constant,
-                                    raw_latex_shape_from_specific_nodes,
-                                    various_belongs,
-                                    shallow_latex_to_text)
+                                                   latex_to_utf8)
+from deaduction.pylib.mathobj.display_math import \
+    (Shape,
+     recursive_display,
+     raw_latex_shape_from_couple_of_nodes,
+     raw_display_math_type_of_local_constant,
+     raw_latex_shape_from_specific_nodes,
+     shallow_latex_to_text)
 from deaduction.pylib.mathobj.html_display import html_display
 from deaduction.pylib.mathobj.utf8_display import utf8_display
 
@@ -74,8 +73,9 @@ from deaduction.pylib.mathobj.utf8_display import utf8_display
 from deaduction.pylib.mathobj.utils        import *
 
 log = logging.getLogger(__name__)
-# NUMBER_SETS_LIST = ['ℕ', 'ℤ', 'ℚ', 'ℝ']
+global _
 
+# NUMBER_SETS_LIST = ['ℕ', 'ℤ', 'ℚ', 'ℝ']
 
 CONSTANT_IMPLICIT_ARGS = ("real.decidable_linear_order",)
 
@@ -470,71 +470,6 @@ class MathObject:
     def has_name(self, name: str):
         return self.display_name == name
 
-    ########################
-    # Name bound variables # Fixme: unused
-    ########################
-    # def name_bound_vars(self, forbidden_vars=None):
-    #     """
-    #     Provide a good name for all bound variables of self
-    #      e.g. when the node is a quantifier, "LAMBDA", "SET_EXTENSION".
-    #      (cf the have_bound_vars list in display_data.py)
-    #
-    #     (1) Assume all bound vars of self are unnamed (name = 'NO NAME')
-    #     (2) Name bound var of main node, if any
-    #     (3) Recursively call name_bound_vars on self.children
-    #
-    #      This order gives the wanted result, e.g.
-    #      ∀ x:X, ∀ x':X, etc. and not the converse
-    #     """
-    #
-    #     # NB: info["name"] is provided by structures.lean,
-    #     # but may be inadequate (e.g. two distinct variables sharing the
-    #     # same name).
-    #     # The Lean name is just used as a hint to find a good name
-    #     # but even this might turn out to be a bad idea
-    #
-    #     # For an expression like ∀ x: X, P(x)
-    #     # the constraints are:
-    #     # (1) the name of the bound variable
-    #     # (which is going to replace `x`)  must be distinct from all names
-    #     # of variables appearing in the body `P(x)`, whether free or bound
-    #     # (2) the name of the bound variable must be distinct from names
-    #     # of bound variables appearing previously in the same MathObject
-    #
-    #     # Bound vars inside P(x) must be unnamed, so that their names will not
-    #     # be on the forbidden list
-    #
-    #     if not self.has_unnamed_bound_vars:
-    #         # Prevents for (badly) renaming vars several times
-    #         # log.debug("no bound vars")
-    #         return
-    #     # log.debug(f"Naming bound vars in {self}")
-    #     # self.has_unnamed_bound_vars = False
-    #     if not forbidden_vars:
-    #         forbidden_vars = []
-    #     node = self.node
-    #     children = self.children
-    #     if node in HAVE_BOUND_VARS:
-    #         bound_var_type, bound_var, local_context = children
-    #         hint = bound_var.info["lean_name"]
-    #         # Search for a fresh name valid inside local context
-    #         name = give_name.give_local_name(math_type=bound_var_type,
-    #                                          hints=[hint],
-    #                                          body=local_context,
-    #                                          forbidden_vars=forbidden_vars)
-    #         bound_var.info["name"] = name
-    #         # Bound vars have no math_type indication
-    #         # but we need one for further proper naming
-    #         bound_var.math_type = bound_var_type
-    #         # log.debug(f"giving name {name}")
-    #
-    #         children = [local_context]
-    #         # Prevent further bound vars in the expression to take the same
-    #         # name
-    #         forbidden_vars.append(bound_var)
-    #     # Recursively name bound variables in local_context
-    #     for child in children:
-    #         child.name_bound_vars(forbidden_vars=forbidden_vars)
 
 ##########################################
 # Tests for equality and related methods #
@@ -1164,57 +1099,63 @@ class MathObject:
     ########################
     # Display math objects #
     ########################
-    def raw_latex_shape(self, negate=False):
+    def raw_latex_shape(self, negate=False, text_depth=0):
         """
         e.g. if self is a MathObject whose node is 'PROP_EQUAL', this method
         will return [0, " = ", 1].
         Includes treatment of "in".
         """
-        if self.node in latex_from_node:
-            raw_shape = list(latex_from_node[self.node])
-            ############
-            # Negation #
-            ############
+        # Case of special shape from self and its first child:
+        shape = raw_latex_shape_from_couple_of_nodes(self, text_depth)
+
+        if shape:
+            # NEGATION:
             if negate:
-                raw_shape = [r'\not', raw_shape]
-        else:  # Node not found in dictionaries: try specific methods
-            raw_shape = raw_latex_shape_from_specific_nodes(self, negate)
+                shape = [r'\not', shape]
+        else:
+            if self.node in latex_from_node:  # Generic case
+                shape = list(latex_from_node[self.node])
+
+                # NEGATION:
+                if negate:
+                    shape = [r'\not', shape]
+            else:  # Node not found in dictionaries: try specific methods
+                shape = raw_latex_shape_from_specific_nodes(self, negate)
 
         ###############################
         # Specific treatment of "\in" #
         ###############################
-        for i in range(len(raw_shape)-1):
-            item = raw_shape[i]
-            if isinstance(item, str):
-                stripped_item = item.strip()
-                if stripped_item == r'\in':
-                    next_item = raw_shape[i+1]
-                    if (isinstance(next_item, int)
-                            or isinstance(next_item, tuple)):
-                        math_type = self.descendant(next_item)
-                        new_belongs = various_belongs(math_type)
-                        if new_belongs:
-                            raw_shape[i].replace(r'\in', new_belongs)
-                        # elif math_type.node == "SET":  # A ∈ P(X) <-> A ⊂ X
-                        #     if isinstance(next_item, int):
-                        #         raw_shape[i+1] = (next_item, 1)
-                        #         raw_shape[i].replace(r'\in', r'\subset')
-                        #     elif isinstance(next_item, tuple):
-                        #         raw_shape[i + 1] = next_item + (1,)
-                        #         raw_shape[i].replace(r'\in', r'\subset')
+        # for i in range(len(shape)-1):  FIXME: deprecated
+        #     item = shape[i]
+        #     if isinstance(item, str):
+        #         stripped_item = item.strip()
+        #         if stripped_item == r'\in':
+        #             next_item = shape[i+1]
+        #             if (isinstance(next_item, int)
+        #                     or isinstance(next_item, tuple)):
+        #                 math_type = self.descendant(next_item)
+        #                 new_belongs = various_belongs(math_type)
+        #                 if new_belongs:
+        #                     shape[i].replace(r'\in', new_belongs)
+        #                 # elif math_type.node == "SET":  # A ∈ P(X) <-> A ⊂ X
+        #                 #     if isinstance(next_item, int):
+        #                 #         shape[i+1] = (next_item, 1)
+        #                 #         shape[i].replace(r'\in', r'\subset')
+        #                 #     elif isinstance(next_item, tuple):
+        #                 #         shape[i + 1] = next_item + (1,)
+        #                 #         shape[i].replace(r'\in', r'\subset')
 
-        log.debug(f"    --> Raw shape: {raw_shape}")
-        return raw_shape
+        log.debug(f"    --> Raw shape: {shape}")
+        return shape
 
-    def expanded_latex_shape(self):
+    def expanded_latex_shape(self, text_depth=0):
         """
         Recursively fill the children of raw_display.
         e.g. if self is a MathObject coding for "f(x)=y", this method
         will return something like [[["f"], [\\parentheses, "x"]], " = ", "y"].
         If x is a dummy var then it will be replaced by [\\dummy_var, x].
         """
-        display = recursive_display(self)
-
+        display = recursive_display(self, text_depth)
         return display
 
     def to_display(self, format_="html", text_depth=0) -> str:
@@ -1243,7 +1184,7 @@ class MathObject:
         log.debug(f"Displaying {self.old_to_display()}...")
         # (1) Latex shape, includes treatment of "in"
         # needs_paren is called --> '\parentheses'
-        abstract_string = self.expanded_latex_shape()
+        abstract_string = self.expanded_latex_shape(text_depth=text_depth)
         # log.debug(f"(1) --> abstract string: {abstract_string}")
         # (2) Replace some symbol by plain text:
         display = shallow_latex_to_text(abstract_string, text_depth)
@@ -1258,7 +1199,7 @@ class MathObject:
         # log.debug(f"    --> To html: {display}")
         return display
 
-    def raw_latex_shape_of_math_type(self):
+    def raw_latex_shape_of_math_type(self, text_depth=0):
         ########################################################
         # Special math_types for which display is not the same #
         ########################################################
@@ -1267,27 +1208,27 @@ class MathObject:
                 and hasattr(math_type.math_type, 'node') \
                 and math_type.math_type.node == "TYPE":
             name = math_type.info["name"]
-            raw_shape = [_("an element of") + " ", name]
-            # The "an" is to be removed fo short display
+            shape = [_("an element of") + " ", name]
+            # The "an" is to be removed for short display
         elif math_type.is_N():
-            raw_shape = [_('a non-negative integer')]
+            shape = [_('a non-negative integer')]
         elif math_type.is_Z():
-            raw_shape = [_('an integer')]
+            shape = [_('an integer')]
         elif math_type.is_Q():
-            raw_shape = [_('a rational number')]
+            shape = [_('a rational number')]
         elif math_type.is_R():
-            raw_shape = [_('a real number')]
+            shape = [_('a real number')]
         elif hasattr(math_type, 'node') and math_type.node == "SET":
-            raw_shape = [_("a subset of") + " ", 0]
+            shape = [_("a subset of") + " ", 0]
             # Idem
         elif math_type.node == "SEQUENCE":
-            raw_shape = [_("a sequence in") + " ", 1]
+            shape = [_("a sequence in") + " ", 1]
         elif math_type.node == "SET_FAMILY":
-            raw_shape = [_("a family of subsets of") + " ", 1]
+            shape = [_("a family of subsets of") + " ", 1]
         else:  # Generic case: usual shape from math_object
-            raw_shape = math_type.raw_latex_shape()
+            shape = math_type.raw_latex_shape(text_depth=text_depth)
 
-        return raw_shape
+        return shape
 
     def math_type_to_display(self, format_="html", text_depth=0) -> str:
         """
@@ -1295,9 +1236,10 @@ class MathObject:
         """
         log.debug(f"Displaying math_type: {self.old_to_display()}...")
 
-        raw_shape = self.raw_latex_shape_of_math_type()
+        shape = self.raw_latex_shape_of_math_type(text_depth=text_depth)
         abstract_string = recursive_display(self.math_type,
-                                            raw_display=raw_shape)
+                                            raw_display=shape,
+                                            text_depth=text_depth)
         # Replace some symbol by plain text:
         display = shallow_latex_to_text(abstract_string, text_depth)
         # Replace latex macro by utf8:

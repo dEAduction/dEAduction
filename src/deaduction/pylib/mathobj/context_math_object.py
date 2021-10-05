@@ -40,6 +40,7 @@ from deaduction.pylib.mathobj.display_math import (recursive_display,
 log = logging.getLogger(__name__)
 global _
 
+
 class ContextMathObject(MathObject):
     """
     This class subclasses MathObject for objects of the context.
@@ -81,8 +82,8 @@ class ContextMathObject(MathObject):
         self.has_been_applied_in_proof = other.has_been_applied_in_proof
         self.is_hidden = other.is_hidden
 
-    def expanded_latex_shape(self):
-        display = super().expanded_latex_shape()
+    def expanded_latex_shape(self, text_depth=0):
+        display = super().expanded_latex_shape(text_depth)
         # FIXME: settle applied properties attribute
         # if self.has_been_applied_in_the_proof:
         #     display = ['@applied_property', display]

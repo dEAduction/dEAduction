@@ -32,12 +32,18 @@ from deaduction.pylib.mathobj.utils import (cut_spaces,
                                             first_descendant)
 
 
-def subscript(s: str):
-    return text_to_subscript_or_sup(s, format_="utf8", sup=False)
+def subscript(s: str) -> str:
+    text = text_to_subscript_or_sup(s, format_="utf8", sup=False)
+    if isinstance(text, list):
+        text = "".join(text)
+    return text
 
 
-def superscript(s: str):
-    return text_to_subscript_or_sup(s, format_="utf8", sup=True)
+def superscript(s: str) -> str:
+    text = text_to_subscript_or_sup(s, format_="utf8", sup=True)
+    if isinstance(text, list):
+        text = "".join(text)
+    return text
 
 
 def sub_sup_to_utf8(string: str) -> str:
@@ -71,6 +77,17 @@ def add_parentheses(l: list, depth):
     parentheses. Remove redundant parentheses, i.e.
     ((...)) or parentheses at depth 0.
     """
+    # Remove first parentheses at any depth if depth=0
+    if depth == 0:
+        # Find first leaf of the tree
+        last_node = l
+        first_leaf = last_node[0]
+        while isinstance(first_leaf, list):
+            last_node = first_leaf
+            first_leaf = last_node[0]
+        if first_leaf == r'\parentheses':
+            last_node.pop(0)
+    
     for index in range(len(l) - 1):
         child = l[index]
         if child == r'\parentheses':
@@ -84,7 +101,7 @@ def add_parentheses(l: list, depth):
                 l.append(")")
 
 
-def recursive_utf8_display(l: list, depth):
+def recursive_utf8_display(l: list, depth) -> str:
     """
     Use the following tags as first child:
     - \sub, \super for subscript/superscript
@@ -123,6 +140,8 @@ def utf8_display(abstract_string: Union[str, list], depth=0):
     else:
         string = sub_sup_to_utf8(abstract_string)
 
+    if isinstance(string, list):  # debug
+        print(f"Variable string {string} should be a string, not a list!")
     return cut_spaces(string)
 
 

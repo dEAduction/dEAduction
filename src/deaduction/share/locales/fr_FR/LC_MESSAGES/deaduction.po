@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2021-10-02 17:50+0200\n"
-"PO-Revision-Date: 2021-10-02 17:51+0200\n"
+"POT-Creation-Date: 2021-10-04 09:54+0200\n"
+"PO-Revision-Date: 2021-10-04 10:30+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -444,7 +444,7 @@ msgstr "Gauche"
 msgid "Right"
 msgstr "Droite"
 
-#: pylib/actions/logic.py:111 pylib/actions/logic.py:593
+#: pylib/actions/logic.py:111 pylib/actions/logic.py:595
 msgid "Choose sub-goal"
 msgstr "Choisissez un nouveau but"
 
@@ -473,8 +473,8 @@ msgid "Selected items are not properties"
 msgstr "Les objets sélectionnés ne sont pas des propriétés"
 
 #: pylib/actions/logic.py:204 pylib/actions/logic.py:391
-#: pylib/actions/logic.py:570 pylib/actions/logic.py:718
-#: pylib/actions/logic.py:1074
+#: pylib/actions/logic.py:570 pylib/actions/logic.py:720
+#: pylib/actions/logic.py:1075
 msgid "Does not apply to more than two properties"
 msgstr "Ne s’applique pas à plus de deux propriétés"
 
@@ -527,7 +527,7 @@ msgid "On which side do you want"
 msgstr "De quel côté voulez-vous"
 
 #: pylib/actions/logic.py:355 pylib/actions/logic.py:446
-#: pylib/actions/logic.py:506 pylib/actions/logic.py:880
+#: pylib/actions/logic.py:506 pylib/actions/logic.py:881
 msgid "Property {} added to the context"
 msgstr "propriété {} ajoutée au contexte"
 
@@ -571,163 +571,163 @@ msgstr "La propriété sélectionnée n’est pas une implication ‘P ⇒ Q’"
 msgid "Selected properties are not implications 'P ⇒ Q'"
 msgstr "Les propriétés sélectionnées ne sont pas des implications ‘P ⇒ Q’"
 
-#: pylib/actions/logic.py:594
+#: pylib/actions/logic.py:596
 msgid "Which implication to prove first?"
 msgstr "Quelle implication voulez-vous démontrer en premier ?"
 
-#: pylib/actions/logic.py:602
+#: pylib/actions/logic.py:604
 msgid "Undocumented error"
 msgstr "Erreur non documentée"
 
-#: pylib/actions/logic.py:603
+#: pylib/actions/logic.py:605
 msgid "Iff split in two implications"
 msgstr "Equivalence séparée en deux implications"
 
-#: pylib/actions/logic.py:634
+#: pylib/actions/logic.py:636
 msgid "Target replaced by iff property"
 msgstr "But replacé par une équivalence"
 
-#: pylib/actions/logic.py:650
+#: pylib/actions/logic.py:652
 msgid "Property {} split into {} and {}"
 msgstr "Propriété {} séparée en {} et {}"
 
-#: pylib/actions/logic.py:667
+#: pylib/actions/logic.py:669
 msgid "Logical equivalence {} added to the context"
 msgstr "Equivalence {} ajoutée au contexte"
 
-#: pylib/actions/logic.py:702
+#: pylib/actions/logic.py:704
 msgid "Target is not an iff property 'P ⇔ Q'"
 msgstr "Le but n’est pas un « si et seulement si » ‘P ⇔ Q’"
 
-#: pylib/actions/logic.py:707
+#: pylib/actions/logic.py:709
 msgid "Selected property is not an iff property 'P ⇔ Q'"
 msgstr "La propriété sélectionnée n’est pas un « si et seulement si » ‘P ⇔ Q’"
 
-#: pylib/actions/logic.py:714
+#: pylib/actions/logic.py:716
 msgid "Selected items should both be implications"
 msgstr "Les objets sélectionnés ne sont pas deux implications"
 
-#: pylib/actions/logic.py:759
+#: pylib/actions/logic.py:761
 msgid "Object {} added to the context"
 msgstr "Objet {} ajouté au contexte"
 
-#: pylib/actions/logic.py:905
+#: pylib/actions/logic.py:906
 msgid "Target is not a universal property '∀x, P(x)'"
 msgstr "Le but n’est pas une propriété universelle ‘∀x, P(x)’"
 
-#: pylib/actions/logic.py:912
+#: pylib/actions/logic.py:913
 msgid "Selected property is not a universal property '∀x, P(x)'"
 msgstr ""
 "La propriété sélectionnée n’est pas une propriété universelle ‘∀x, P(x)’"
 
-#: pylib/actions/logic.py:917
+#: pylib/actions/logic.py:918
 msgid "Apply a universal property"
 msgstr "Appliquer une propriété universelle"
 
-#: pylib/actions/logic.py:919
+#: pylib/actions/logic.py:920
 msgid "Enter element on which you want to apply:"
 msgstr "Entrer l’objet à utiliser :"
 
-#: pylib/actions/logic.py:944
+#: pylib/actions/logic.py:945
 msgid "No universal property among selected"
 msgstr "Pas de propriété universelle dans la sélection"
 
-#: pylib/actions/logic.py:959
+#: pylib/actions/logic.py:960
 msgid "Exist"
 msgstr "Existence"
 
-#: pylib/actions/logic.py:961
+#: pylib/actions/logic.py:962
 msgid "Enter element you want to use:"
 msgstr "Quel objet voulez-vous utiliser ?"
 
-#: pylib/actions/logic.py:965
+#: pylib/actions/logic.py:966
 msgid "Now prove {} suits our needs"
 msgstr "Il reste à démontrer que {} convient"
 
-#: pylib/actions/logic.py:998
+#: pylib/actions/logic.py:999
 msgid "New object {} with property {}"
 msgstr "Nouvel objet {} vérifiant la propriété {}"
 
-#: pylib/actions/logic.py:1022
+#: pylib/actions/logic.py:1023
 msgid "I cannot build an existential property with this"
 msgstr "Ceci ne me permet pas de construire une propriété existentielle"
 
-#: pylib/actions/logic.py:1025
+#: pylib/actions/logic.py:1026
 msgid "Get new existential property {}"
 msgstr "Nouvelle propriété existentielle {}"
 
-#: pylib/actions/logic.py:1052 pylib/actions/logic.py:1067
+#: pylib/actions/logic.py:1053 pylib/actions/logic.py:1068
 msgid "Target is not existential property '∃x, P(x)'"
 msgstr "Le but n’est pas une propriété existentielle ‘∃x, P(x)’"
 
-#: pylib/actions/logic.py:1061
+#: pylib/actions/logic.py:1062
 msgid "Selection is not existential property '∃x, P(x)'"
 msgstr "L’objet sélectionné n’est pas une propriété existentielle ’∃x, P(x)’"
 
-#: pylib/actions/logic.py:1099 pylib/actions/logic.py:1102
+#: pylib/actions/logic.py:1102 pylib/actions/logic.py:1105
 msgid "{} replaced by {}"
 msgstr "{} remplacé par {}"
 
-#: pylib/actions/logic.py:1117 pylib/actions/logic.py:1121
-#: pylib/actions/logic.py:1135 pylib/actions/logic.py:1139
+#: pylib/actions/logic.py:1120 pylib/actions/logic.py:1124
+#: pylib/actions/logic.py:1138 pylib/actions/logic.py:1142
 msgid "in target"
 msgstr "dans le but"
 
-#: pylib/actions/logic.py:1132 pylib/actions/logic.py:1171
-#: pylib/actions/logic.py:1237
+#: pylib/actions/logic.py:1135 pylib/actions/logic.py:1174
+#: pylib/actions/logic.py:1240
 msgid "Precision of substitution"
 msgstr "Préciser le sens de substitution"
 
-#: pylib/actions/logic.py:1133 pylib/actions/logic.py:1172
+#: pylib/actions/logic.py:1136 pylib/actions/logic.py:1175
 msgid "Choose which expression you want to replace"
 msgstr "Choisissez quelle expression remplacer"
 
-#: pylib/actions/logic.py:1154 pylib/actions/logic.py:1161
-#: pylib/actions/logic.py:1174 pylib/actions/logic.py:1178
+#: pylib/actions/logic.py:1157 pylib/actions/logic.py:1164
+#: pylib/actions/logic.py:1177 pylib/actions/logic.py:1181
 msgid "in {}"
 msgstr "dans {}"
 
-#: pylib/actions/logic.py:1209
+#: pylib/actions/logic.py:1212
 msgid "No property selected"
 msgstr "Pas de propriété sélectionnée"
 
-#: pylib/actions/logic.py:1212
+#: pylib/actions/logic.py:1215
 msgid "Too many selected objects"
 msgstr "Appliquer cette propriété à un objet sélectionné"
 
-#: pylib/actions/logic.py:1231
+#: pylib/actions/logic.py:1234
 msgid "Use for substitution in {}"
 msgstr "Utiliser pour substituer dans {}"
 
-#: pylib/actions/logic.py:1238
+#: pylib/actions/logic.py:1241
 msgid "Choose which equality to use for substitution"
 msgstr "Choisissez l’égalité à utiliser pour la substitution"
 
-#: pylib/actions/logic.py:1252 pylib/actions/logic.py:1259
+#: pylib/actions/logic.py:1255 pylib/actions/logic.py:1262
 msgid "This cannot be used for substitution"
 msgstr "Cette propriété ne peut pas être utilisé pour la substitution"
 
-#: pylib/actions/logic.py:1291
+#: pylib/actions/logic.py:1294
 msgid "New objet {} added to the context"
 msgstr "Nouvel objet {} ajouté au contexte"
 
-#: pylib/actions/logic.py:1317
+#: pylib/actions/logic.py:1320
 msgid "Map {} applied to {}"
 msgstr "La fonction {} a été appliquée à {}"
 
-#: pylib/actions/logic.py:1326
+#: pylib/actions/logic.py:1329
 msgid "The map {} cannot be applied to these objects"
 msgstr "L’application {} ne peut pas être appliquée à ces objets"
 
-#: pylib/actions/logic.py:1354
+#: pylib/actions/logic.py:1357
 msgid "Enter element on which you want to apply the map {}:"
 msgstr "Entrer l’objet sur lequel vous voulez appliquer {} :"
 
-#: pylib/actions/logic.py:1357
+#: pylib/actions/logic.py:1360
 msgid "Map"
 msgstr "Application"
 
-#: pylib/actions/logic.py:1373
+#: pylib/actions/logic.py:1376
 msgid "Select an application and an element or an equality"
 msgstr "Sélectionner une application, et un élément ou une égalité"
 
@@ -928,255 +928,383 @@ msgstr "Préparation du dossier de lancement"
 msgid "Launch folder: {}"
 msgstr "Dossier de lancement : {}"
 
-#: pylib/mathobj/context_math_object.py:93 pylib/mathobj/display_math.py:726
+#: pylib/math_object_display/text_display.py:43
+msgid "For every subset {} of {}"
+msgstr "pour toute partie {} de {}"
+
+#: pylib/math_object_display/text_display.py:45
+msgid "For every proposition {}"
+msgstr "pour toute proposition {}"
+
+#: pylib/math_object_display/text_display.py:47
+msgid "For every set {}"
+msgstr "pour tout ensemble {}"
+
+#: pylib/math_object_display/text_display.py:49
+msgid "For every function {} from {} to {}"
+msgstr "pour toute fonction {} de {} dans {}"
+
+#: pylib/math_object_display/text_display.py:51
+msgid "For every sequence {} in {}"
+msgstr "pour tout suite {} dans {}"
+
+#: pylib/math_object_display/text_display.py:53
+#, fuzzy
+#| msgid "there exists a unique"
+msgid "There exists a subset {} of {}"
+msgstr "il existe un unique"
+
+#: pylib/math_object_display/text_display.py:55
+#, fuzzy
+#| msgid "a proposition"
+msgid "There exists a proposition {}"
+msgstr "une proposition"
+
+#: pylib/math_object_display/text_display.py:57
+#, fuzzy
+#| msgid "there exists a unique"
+msgid "There exists a set {}"
+msgstr "il existe un unique"
+
+#: pylib/math_object_display/text_display.py:59
+msgid "There exists a function {} from {} to {}"
+msgstr ""
+
+#: pylib/math_object_display/text_display.py:61
+#, fuzzy
+#| msgid "there exists a unique"
+msgid "There exists a sequence {} in {}"
+msgstr "il existe un unique"
+
+#: pylib/math_object_display/text_display.py:63
+#, fuzzy
+#| msgid "there exists a unique"
+msgid "There exists a unique subset {} of {}"
+msgstr "il existe un unique"
+
+#: pylib/math_object_display/text_display.py:65
+#, fuzzy
+#| msgid "there exists a unique"
+msgid "There exists a unique proposition {}"
+msgstr "il existe un unique"
+
+#: pylib/math_object_display/text_display.py:67
+#, fuzzy
+#| msgid "there exists a unique"
+msgid "There exists a unique set {}"
+msgstr "il existe un unique"
+
+#: pylib/math_object_display/text_display.py:69
+msgid "There exists a unique function {} from {} to {}"
+msgstr ""
+
+#: pylib/math_object_display/text_display.py:72
+#, fuzzy
+#| msgid "there exists a unique"
+msgid "There exists a unique sequence {} in {}"
+msgstr "il existe un unique"
+
+#: pylib/mathobj/MathObject.py:1278 pylib/mathobj/display_math.py:727
 msgid "an element of"
 msgstr "un élément de"
 
-#: pylib/mathobj/context_math_object.py:96
+#: pylib/mathobj/MathObject.py:1281
 msgid "a non-negative integer"
-msgstr "Un entier positif ou nul"
+msgstr "un entier positif ou nul"
 
-#: pylib/mathobj/context_math_object.py:98
+#: pylib/mathobj/MathObject.py:1283
 msgid "an integer"
 msgstr "un entier"
 
-#: pylib/mathobj/context_math_object.py:100
+#: pylib/mathobj/MathObject.py:1285
 msgid "a rational number"
 msgstr "un nombre rationnel"
 
-#: pylib/mathobj/context_math_object.py:102
+#: pylib/mathobj/MathObject.py:1287
 msgid "a real number"
 msgstr "un nombre réel"
 
-#: pylib/mathobj/context_math_object.py:104 pylib/mathobj/display_math.py:731
+#: pylib/mathobj/MathObject.py:1289 pylib/mathobj/display_math.py:732
 msgid "a subset of"
 msgstr "une partie de"
 
-#: pylib/mathobj/context_math_object.py:107 pylib/mathobj/display_math.py:735
+#: pylib/mathobj/MathObject.py:1292 pylib/mathobj/display_math.py:736
 msgid "a sequence in"
 msgstr "une suite dans"
 
-#: pylib/mathobj/context_math_object.py:109 pylib/mathobj/display_data.py:301
-#: pylib/mathobj/display_math.py:737
+#: pylib/mathobj/MathObject.py:1294 pylib/mathobj/display_data.py:302
+#: pylib/mathobj/display_math.py:738
 msgid "a family of subsets of"
 msgstr "une famille de parties de"
 
 #: pylib/mathobj/display_data.py:62 pylib/mathobj/display_data.py:72
-#: pylib/mathobj/display_data.py:283 pylib/mathobj/display_data.py:295
-#: pylib/mathobj/display_data.py:296
+#: pylib/mathobj/display_data.py:284 pylib/mathobj/display_data.py:296
+#: pylib/mathobj/display_data.py:297
 msgid "and"
 msgstr "et"
 
-#: pylib/mathobj/display_data.py:63 pylib/mathobj/display_data.py:284
+#: pylib/mathobj/display_data.py:63 pylib/mathobj/display_data.py:285
 msgid "or"
 msgstr "ou"
 
-#: pylib/mathobj/display_data.py:196 pylib/mathobj/display_data.py:285
+#: pylib/mathobj/display_data.py:197 pylib/mathobj/display_data.py:286
 msgid "Contradiction"
 msgstr "Contradiction"
 
-#: pylib/mathobj/display_data.py:197
+#: pylib/mathobj/display_data.py:198
 msgid "proposition"
 msgstr "proposition"
 
-#: pylib/mathobj/display_data.py:198
+#: pylib/mathobj/display_data.py:199
 msgid "set"
 msgstr "ensemble"
 
-#: pylib/mathobj/display_data.py:199 pylib/mathobj/display_data.py:206
-#: pylib/mathobj/display_math.py:972
+#: pylib/mathobj/display_data.py:200 pylib/mathobj/display_data.py:207
+#: pylib/mathobj/display_math.py:1008
 msgid "not"
 msgstr "non"
 
-#: pylib/mathobj/display_data.py:216 pylib/mathobj/display_data.py:286
+#: pylib/mathobj/display_data.py:217 pylib/mathobj/display_data.py:287
 msgid "if and only if"
 msgstr "si et seulement si"
 
-#: pylib/mathobj/display_data.py:217 pylib/mathobj/display_data.py:287
+#: pylib/mathobj/display_data.py:218 pylib/mathobj/display_data.py:288
 msgid "the negation of"
 msgstr "la négation de"
 
-#: pylib/mathobj/display_data.py:218 pylib/mathobj/display_data.py:288
+#: pylib/mathobj/display_data.py:219 pylib/mathobj/display_data.py:289
 msgid "if"
 msgstr "si"
 
-#: pylib/mathobj/display_data.py:219 pylib/mathobj/display_data.py:288
+#: pylib/mathobj/display_data.py:220 pylib/mathobj/display_data.py:289
 msgid "then"
 msgstr "alors"
 
-#: pylib/mathobj/display_data.py:220
+#: pylib/mathobj/display_data.py:221
 msgid "the set of subsets of"
 msgstr "l’ensemble des parties de"
 
-#: pylib/mathobj/display_data.py:221 pylib/mathobj/display_data.py:318
+#: pylib/mathobj/display_data.py:222 pylib/mathobj/display_data.py:319
+#: pylib/mathobj/display_math.py:1006
 msgid "a proposition"
 msgstr "une proposition"
 
-#: pylib/mathobj/display_data.py:222 pylib/mathobj/display_data.py:319
+#: pylib/mathobj/display_data.py:223 pylib/mathobj/display_data.py:320
 msgid "a set"
 msgstr "un ensemble"
 
-#: pylib/mathobj/display_data.py:223 pylib/mathobj/display_data.py:327
-#: pylib/mathobj/display_data.py:329
+#: pylib/mathobj/display_data.py:224 pylib/mathobj/display_data.py:328
+#: pylib/mathobj/display_data.py:330
 msgid "such that"
 msgstr "tel que"
 
-#: pylib/mathobj/display_data.py:224 pylib/mathobj/display_data.py:324
+#: pylib/mathobj/display_data.py:225 pylib/mathobj/display_data.py:325
 msgid "for every"
 msgstr "pour tout"
 
-#: pylib/mathobj/display_data.py:225 pylib/mathobj/display_data.py:326
+#: pylib/mathobj/display_data.py:226 pylib/mathobj/display_data.py:327
 msgid "there exists"
 msgstr "il existe"
 
-#: pylib/mathobj/display_data.py:226 pylib/mathobj/display_data.py:328
+#: pylib/mathobj/display_data.py:227 pylib/mathobj/display_data.py:329
 msgid "there exists a unique"
 msgstr "il existe un unique"
 
-#: pylib/mathobj/display_data.py:227 pylib/mathobj/display_data.py:320
+#: pylib/mathobj/display_data.py:228 pylib/mathobj/display_data.py:321
 msgid "a function from"
 msgstr "une fonction de"
 
-#: pylib/mathobj/display_data.py:228
+#: pylib/mathobj/display_data.py:229
 msgid "a sequence from"
 msgstr "une suite de"
 
-#: pylib/mathobj/display_data.py:229 pylib/mathobj/display_data.py:234
-#: pylib/mathobj/display_data.py:324 pylib/mathobj/display_data.py:326
-#: pylib/mathobj/display_data.py:328
+#: pylib/mathobj/display_data.py:230 pylib/mathobj/display_data.py:235
+#: pylib/mathobj/display_data.py:325 pylib/mathobj/display_data.py:327
+#: pylib/mathobj/display_data.py:329
 msgid "in"
 msgstr "dans"
 
-#: pylib/mathobj/display_data.py:231 pylib/mathobj/display_data.py:232
-#: pylib/mathobj/display_data.py:233 pylib/mathobj/display_data.py:235
-#: pylib/mathobj/display_math.py:784 pylib/mathobj/display_math.py:793
-#: pylib/mathobj/display_math.py:1043
+#: pylib/mathobj/display_data.py:232 pylib/mathobj/display_data.py:233
+#: pylib/mathobj/display_data.py:234 pylib/mathobj/display_data.py:236
+#: pylib/mathobj/display_math.py:785 pylib/mathobj/display_math.py:794
 msgid "is"
 msgstr "est"
 
-#: pylib/mathobj/display_data.py:236
+#: pylib/mathobj/display_data.py:237
 msgid "is not"
 msgstr "n’est pas"
 
-#: pylib/mathobj/display_data.py:292
+#: pylib/mathobj/display_data.py:293
 msgid "is included in"
 msgstr "est inclus dans"
 
-#: pylib/mathobj/display_data.py:295
+#: pylib/mathobj/display_data.py:296
 msgid "the intersection of"
 msgstr "l’intersection de"
 
-#: pylib/mathobj/display_data.py:296
+#: pylib/mathobj/display_data.py:297
 msgid "the union of"
 msgstr "l’union de"
 
-#: pylib/mathobj/display_data.py:297
+#: pylib/mathobj/display_data.py:298
 msgid "the intersection of the sets"
 msgstr "l’intersection des ensembles"
 
-#: pylib/mathobj/display_data.py:298
+#: pylib/mathobj/display_data.py:299
 msgid "the union of the sets"
 msgstr "l’union des ensembles"
 
-#: pylib/mathobj/display_data.py:299
+#: pylib/mathobj/display_data.py:300
 msgid "the complement of "
 msgstr "le complémentaire de "
 
-#: pylib/mathobj/display_data.py:300
+#: pylib/mathobj/display_data.py:301
 msgid "the empty set"
 msgstr "l’ensemble vide"
 
-#: pylib/mathobj/display_data.py:302
+#: pylib/mathobj/display_data.py:303
 msgid "the image under"
 msgstr "l’image par"
 
-#: pylib/mathobj/display_data.py:302 pylib/mathobj/display_data.py:303
+#: pylib/mathobj/display_data.py:303 pylib/mathobj/display_data.py:304
 msgid "of"
 msgstr "de"
 
-#: pylib/mathobj/display_data.py:303
+#: pylib/mathobj/display_data.py:304
 msgid "the inverse image under"
 msgstr "l’image réciproque par"
 
-#: pylib/mathobj/display_data.py:308
+#: pylib/mathobj/display_data.py:309
 msgid "equals"
 msgstr "égale"
 
-#: pylib/mathobj/display_data.py:309
+#: pylib/mathobj/display_data.py:310
 msgid "is different from"
 msgstr "est différent de"
 
-#: pylib/mathobj/display_data.py:310
+#: pylib/mathobj/display_data.py:311
 msgid "is less than"
 msgstr "est inférieur à"
 
-#: pylib/mathobj/display_data.py:311
+#: pylib/mathobj/display_data.py:312
 msgid "is greater than"
 msgstr "est plus grand que"
 
-#: pylib/mathobj/display_data.py:312
+#: pylib/mathobj/display_data.py:313
 msgid "is less than or equal to"
 msgstr "est inférieur ou égal à"
 
-#: pylib/mathobj/display_data.py:313
+#: pylib/mathobj/display_data.py:314
 msgid "is greater than or equal to"
 msgstr "est supérieur ou égal à"
 
-#: pylib/mathobj/display_data.py:320
+#: pylib/mathobj/display_data.py:321
 msgid "to"
 msgstr "vers"
 
-#: pylib/mathobj/display_math.py:205 pylib/mathobj/display_math.py:900
+#: pylib/mathobj/display_data.py:366
+msgid "for every subset {} of {}, {}"
+msgstr "pour toute partie {} de {}, {}"
+
+#: pylib/mathobj/display_data.py:368
+msgid "for every proposition {}, {}"
+msgstr "pour toute proposition {}, {}"
+
+#: pylib/mathobj/display_data.py:370
+msgid "for every set {}, {}"
+msgstr "pour tout ensemble {}, {}"
+
+#: pylib/mathobj/display_data.py:372
+msgid "for every function {} from {} to {}, {}"
+msgstr "pour toute fonction {} de {} dans {}, {}"
+
+#: pylib/mathobj/display_data.py:374
+msgid "for every sequence {} in {}, {}"
+msgstr "pour toute suite {} dans {}, {}"
+
+#: pylib/mathobj/display_data.py:376
+msgid "there exists a subset {} of {} such that {}"
+msgstr "il existe une unique partie {} de {} telle que {}"
+
+#: pylib/mathobj/display_data.py:378
+msgid "there exists a proposition {} such that {}"
+msgstr "il existe une proposition {} telle que {}"
+
+#: pylib/mathobj/display_data.py:380
+msgid "there exists a set {} such that {}"
+msgstr "il existe un ensemble {} tel que {}"
+
+#: pylib/mathobj/display_data.py:382
+msgid "there exists a function {} from {} to {} such that {}"
+msgstr "il existe une fonction {} de {} dans {} telle que {}"
+
+#: pylib/mathobj/display_data.py:385
+msgid "there exists a sequence {} in {} such that {}"
+msgstr "il existe une suite {} dans {} telle que {}"
+
+#: pylib/mathobj/display_data.py:388
+msgid "there exists a unique subset {} of {} such that {}"
+msgstr "il existe une unique partie {} de {} telle que {}"
+
+#: pylib/mathobj/display_data.py:391
+msgid "there exists a unique proposition {} such that {}"
+msgstr "il existe une unique proposition {} telle que {}"
+
+#: pylib/mathobj/display_data.py:394
+msgid "there exists a unique set {} such that {}"
+msgstr "il existe un unique ensemble {} tel que {}"
+
+#: pylib/mathobj/display_data.py:396
+msgid "there exists a unique function {} from {} to {} such that {}"
+msgstr "il existe une unique fonction {} de {} dans {} telle que {}"
+
+#: pylib/mathobj/display_data.py:399
+msgid "there exists a unique sequence {} in {} such that {}"
+msgstr "il existe une unique suite {} dans {} telle que {}"
+
+#: pylib/mathobj/display_math.py:208 pylib/mathobj/display_math.py:921
 msgid "All goals reached!"
 msgstr "Tous les buts ont été atteints !"
 
-#: pylib/mathobj/display_math.py:728
+#: pylib/mathobj/display_math.py:729
 msgid "element of"
 msgstr "élément de"
 
-#: pylib/mathobj/display_math.py:733
+#: pylib/mathobj/display_math.py:734
 msgid "subset of"
 msgstr "partie de"
 
-#: pylib/mathobj/display_math.py:797
+#: pylib/mathobj/display_math.py:798
 msgid "belongs to"
 msgstr "appartient à"
 
-#: pylib/mathobj/display_math.py:898
+#: pylib/mathobj/display_math.py:919
 msgid "unknown object"
 msgstr "Objet inconnu"
 
-#: pylib/mathobj/display_math.py:970
-msgid "a "
-msgstr "un "
-
-#: pylib/mathobj/display_math.py:970
-msgid "an "
-msgstr "un "
-
-#: pylib/mathobj/display_math.py:997 pylib/mathobj/display_math.py:998
-msgid "function"
-msgstr "fonction"
-
-#: pylib/mathobj/display_math.py:997 pylib/mathobj/display_math.py:999
-msgid "element"
-msgstr "élément"
-
-#: pylib/mathobj/display_math.py:997 pylib/mathobj/display_math.py:1000
-msgid "subset"
-msgstr "partie"
-
-#: pylib/mathobj/display_math.py:998
+#: pylib/mathobj/display_math.py:1005 pylib/mathobj/display_math.py:1035
 msgid "a function"
 msgstr "une fonction"
 
-#: pylib/mathobj/display_math.py:999
+#: pylib/mathobj/display_math.py:1005 pylib/mathobj/display_math.py:1036
 msgid "an element"
 msgstr "un élément"
 
-#: pylib/mathobj/display_math.py:1000
+#: pylib/mathobj/display_math.py:1005 pylib/mathobj/display_math.py:1037
 msgid "a subset"
 msgstr "une partie"
+
+#: pylib/mathobj/display_math.py:1034 pylib/mathobj/display_math.py:1035
+msgid "function"
+msgstr "fonction"
+
+#: pylib/mathobj/display_math.py:1034 pylib/mathobj/display_math.py:1036
+msgid "element"
+msgstr "élément"
+
+#: pylib/mathobj/display_math.py:1034 pylib/mathobj/display_math.py:1037
+msgid "subset"
+msgstr "partie"
 
 #: pylib/mathobj/proof_state.py:456
 msgid "Assume that"
@@ -1598,6 +1726,12 @@ msgstr "Progression : {:03d}%"
 #: pylib/utils/filesystem.py:249
 msgid "Download from {} to {}"
 msgstr "Téléchargé depuis {} vers {}"
+
+#~ msgid "a "
+#~ msgstr "un "
+
+#~ msgid "an "
+#~ msgstr "un "
 
 #~ msgid "for all"
 #~ msgstr "pour tout"

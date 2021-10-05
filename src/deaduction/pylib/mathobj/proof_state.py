@@ -503,7 +503,7 @@ class Goal:
             prove_that = _("Prove that") + " "
             # "Prove that the negation" --> "Prove the negation"
             if target_text.startswith(_('the negation')):
-                prove_that = _("Prove")
+                prove_that = _("Prove") + " "
             elif cvars.get('i18n.select_language') == 'fr_FR':
                 # "Démontrer que il" --> "Démontrer qu'il"
                 if (target_text.startswith("un")

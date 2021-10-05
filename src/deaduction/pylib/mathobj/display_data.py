@@ -3,14 +3,11 @@
 # display_data.py : data for displaying MathObject, used by display_math #
 ##########################################################################
 
-    This file provides dictionaries for converting MathObjects into strings:
-    - latex_from_node, latex_from_quant_node, latex_from_constant_name
-    - lean_from_node,
-    - latex_to_utf8_dic,
-    - latex_to_lean,
-    - text_from_node, text_from_quant_node
+    This file provides dictionaries for converting MathObjects into strings.
+    Here only strings, and dic/lists/tuples/sets of strings are manipulated.
+    Processing on MathObjects take place in the companion file display_math.
 
-    It also provides the function needs_paren.
+    It also provides several functions, like the function needs_paren.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -43,8 +40,7 @@ from typing import Union
 # latex_to_utf8_dic
 
 global _
-# FIXME: just for debug, remove!!
-# _ = lambda x: x
+# _ = lambda x: x  # FIXME: just for debugging:
 
 
 # NB Some latex macro have a special treatment elsewhere, e.g.
@@ -126,7 +122,7 @@ latex_from_quant_node = {
     "QUANT_∀": (r"\forall", 1, r" \in_quant ", 0, ", ", 2),
     "QUANT_∃": (r"\exists", 1, r" \in_quant ", 0, r'\such_that', 2),
     "PROP_∃": ("*PROP_∃*",),
-    "QUANT_∃!": (r"\exists !", 1, r" \in_quant ", 0, r'\such_that', 2)
+    "QUANT_∃!": (r"\exists_unique", 1, r" \in_quant ", 0, r'\such_that', 2)
 }
 
 # Negative value = from end of children list
@@ -155,6 +151,7 @@ latex_from_constant_name = {
     "max": ("Max", r'\parentheses', -2, ",", -1)
 }
 
+
 ###################
 ###################
 # UTF8 dictionary #
@@ -176,7 +173,7 @@ latex_to_utf8_dic = {
     r'\Rightarrow': '⇒',
     r'\forall': '∀',
     r'\exists': '∃',
-    r'\exists !': '∃!',
+    r'exists_unique': '∃!',
     r'\subset': '⊂',
     r'\not\in': '∉',
     r'\cap': '∩',
@@ -203,7 +200,7 @@ latex_to_utf8_dic = {
     r'\such_that': ", ",
     r'\function_from': "",
     r'\text_is': ' ',  # " " + _("is") + " " ? Anyway 'is' will be removed?
-    r'\text_is_not': _('not')  # Idem
+    r'\text_is_not': " " + _('not')  # Idem
 }
 
 
@@ -223,7 +220,7 @@ latex_to_text = {
     r'\such_that': " " + _("such that") + " ",
     r'\forall': _("for every") + " ",
     r'\exists': _("there exists") + " ",
-    r"\exists !": _("there exists a unique") + " ",
+    r"exists_unique": _("there exists a unique") + " ",
     r'\function_from': " " + _("a function from") + " ",
     r'\sequence_from': " " + _("a sequence from") + " ",  # FIXME...
     r'\to': " " + _("in") + " ",
@@ -355,6 +352,84 @@ latex_to_lean_dic = {
     r'\set_inverse': " ⁻¹' ",
     r'\set_of_subsets': "set"
 }
+
+
+####################
+# Couples of nodes #
+####################
+# In the following dic, the second node is assumed to be the first child node.
+couples_of_nodes_to_text = {
+    ("QUANT_∀", "SET"): (_("for every subset {} of {}, {}"),
+                         (1, (0, 0), 2)),
+    ("QUANT_∀", "PROP"): (_("for every proposition {}, {}"),
+                          (1, 2)),
+    ("QUANT_∀", "TYPE"): (_("for every set {}, {}"),
+                          (1, 2)),
+    ("QUANT_∀", "FUNCTION"): (_("for every function {} from {} to {}, {}"),
+                          (1, (0, 0), (0, 1), 2)),
+    ("QUANT_∀", "SEQUENCE"): (_("for every sequence {} in {}, {}"),
+                              (1, (0, 1), 2)),
+    ("QUANT_∃", "SET"): (_("there exists a subset {} of {} such that {}"),
+                         (1, (0, 0), 2)),
+    ("QUANT_∃", "PROP"): (_("there exists a proposition {} such that {}"),
+                          (1, 2)),
+    ("QUANT_∃", "TYPE"): (_("there exists a set {} such that {}"),
+                          (1, 2)),
+    ("QUANT_∃", "FUNCTION"): (_("there exists a function {} from {} to {} "
+                                "such that {}"),
+                              (1, (0, 0), (0, 1), 2)),
+    ("QUANT_∃", "SEQUENCE"): (_("there exists a sequence {} in {} such that "
+                                "{}"),
+                              (1, (0, 1), 2)),
+    ("QUANT_∃!", "SET"): (_("there exists a unique subset {} of {} such that "
+                            "{}"),
+                         (1, (0, 0), 2)),
+    ("QUANT_∃!", "PROP"): (_("there exists a unique proposition {} such that "
+                             "{}"),
+                          (1, 2)),
+    ("QUANT_∃!", "TYPE"): (_("there exists a unique set {} such that {}"),
+                          (1, 2)),
+    ("QUANT_∃!", "FUNCTION"): (_("there exists a unique function {} from {} "
+                                 "to {} such that {}"),
+                              (1, (0, 0), (0, 1), 2)),
+    ("QUANT_∃!", "SEQUENCE"): (_("there exists a unique sequence {} in {} "
+                                 "such that {}"),
+                              (1, (0, 1), 2))
+}
+
+couples_of_nodes_to_utf8 = {
+    ("QUANT_∀", "SET"): (r"\forall", 1, r" \subset ", (0, 0), ", ", 2),
+    ("QUANT_∀", "PROP"): (r"\forall", 1, r'\proposition'),
+    ("QUANT_∀", "TYPE"): (r"\forall", 1, r" \set"),
+    ("QUANT_∀", "FUNCTION"): (r"\forall", 1, r" \function_from", (0, 0),
+                              r'\to', (0, 1)),
+    ("QUANT_∀", "SEQUENCE"): (r"\forall", 1, r'\in', (0, 1)),
+    # Other quantifiers are treated automatically below
+    # ("QUANT_∃", "SET"): (r"\exists", 1, r" \subset ", (0, 0), ", ", 2),
+    # ("QUANT_∃", "PROP"): (r"\exists", 1, r'\proposition'),
+    # ("QUANT_∃", "TYPE"): (r"\exists", 1, r" \set"),
+    # ("QUANT_∃", "FUNCTION"): (r"\exists", 1, r" \function_from", (0, 0),
+    #                           r'\to', (0, 1)),
+    # ("QUANT_∃", "SEQUENCE"): (r"\exists", 1, r'\in', (0, 1)),
+}
+
+first_nodes_of_couples = {node for (node, _) in couples_of_nodes_to_text}
+
+# Extend couples_of_nodes_to_utf8 with other quantifiers
+supplementary_couples = {}
+for quant_node, type_node in couples_of_nodes_to_utf8:
+    for new_quant_node, quant_macro in [("QUANT_∃", r'\exists'),
+                                        ("QUANT_∃!", r'\exists_unique')]:
+        new_key = new_quant_node, type_node
+        old_value = couples_of_nodes_to_utf8[(quant_node, type_node)]
+        new_value = (quant_macro,) + old_value[1:]
+        supplementary_couples[new_key] = new_value
+couples_of_nodes_to_utf8.update(supplementary_couples)
+
+# Dic of first nodes: e.g. dic_of_first_nodes["QUANT_∀"] = ["SET", "PROP",...]}
+dic_of_first_nodes = {node: [] for node, _ in couples_of_nodes_to_text}
+for (first_node, second_node) in couples_of_nodes_to_text:
+    dic_of_first_nodes[first_node].append(second_node)
 
 
 ####################

@@ -74,7 +74,10 @@ from .display_data import ( latex_from_node,
                             latex_to_utf8_dic,
                             latex_to_lean_dic,
                             needs_paren,
-                            latex_to_utf8)
+                            latex_to_utf8,
+                            couples_of_nodes_to_text,
+                            couples_of_nodes_to_utf8,
+                            dic_of_first_nodes)
 
 log = logging.getLogger(__name__)
 global _
@@ -817,6 +820,7 @@ def various_belongs(math_type) -> str:
     :return: e.g. [r'\\in', math_type], or [r'\\in_prop'], [r'\\in_set'],
     [r'\\in_function'].
     """
+    # FIXME: deprecated?
     belongs = (r'\in_prop' if math_type.is_prop(is_math_type=True)
                else r'\in_set' if math_type.is_type(is_math_type=True)
                else r'\in_function' if math_type.is_function(is_math_type=True)
@@ -863,6 +867,39 @@ def display_error(message: str) -> str:
     return '*' + message + '*'
 
 
+def insert_children_in_string(string: str, children: tuple):
+    string_list = string.split("{}")
+    assert len(string_list) == len(children) + 1
+    shape = [string_list[0]]
+    for string, child in zip(string_list[1:], children):
+        shape.extend([child, string])
+    shape = [item for item in shape if '' != item]  # Remove empty strings
+
+    return shape
+
+
+def raw_latex_shape_from_couple_of_nodes(math_object, text_depth=0):
+    """
+    Return a shape from the dictionaries couples_of_nodes_to_text
+    or couples_of_nodes_to_utf8 (according to text_depth)
+    if it finds some key that matches math_object and math_object's first child
+    nodes. Otherwise return None.
+    """
+    shape = None
+    first_node = math_object.node
+    if first_node in dic_of_first_nodes:
+        second_node = math_object.children[0].node
+        if second_node in dic_of_first_nodes[first_node]:
+            key = (first_node, second_node)
+            if text_depth > 0:
+                string, children = couples_of_nodes_to_text[key]
+                shape = insert_children_in_string(string, children)
+            else:
+                shape = couples_of_nodes_to_utf8[key]
+
+    return shape
+
+
 def raw_latex_shape_from_specific_nodes(math_object, negate=False):
     """
     Treat the case of some specific nodes by calling the appropriate
@@ -907,7 +944,8 @@ def raw_latex_shape_from_specific_nodes(math_object, negate=False):
     return display
 
 
-def recursive_display(math_object, raw_display=None, negate=False):
+def recursive_display(math_object, text_depth=0, raw_display=None,
+                      negate=False):
     """
     Recursively replace children by their raw_latex_shape.
     Take care of parentheses.
@@ -915,7 +953,7 @@ def recursive_display(math_object, raw_display=None, negate=False):
     \\parentheses -> to be displayed between parentheses
     """
     if not raw_display:
-        raw_display = math_object.raw_latex_shape(negate)
+        raw_display = math_object.raw_latex_shape(negate, text_depth)
 
     if raw_display == [r'\not', 0]:
         negate = True
@@ -931,24 +969,18 @@ def recursive_display(math_object, raw_display=None, negate=False):
         # Integers code for children, or tuples for grandchildren
         if isinstance(item, int) or isinstance(item, tuple):
             child = math_object.descendant(item)
-            display_item = recursive_display(child, negate=negate)
+            display_item = recursive_display(child, negate=negate,
+                                             text_depth=text_depth-1)
             # Between parentheses? (to be displayed only if text_depth <1)
             if needs_paren(math_object, child, item):
                 display_item = [r'\parentheses', display_item]
 
         elif isinstance(item, list):
             display_item = recursive_display(math_object, raw_display=item,
-                                             negate=negate)
+                                             negate=negate,
+                                             text_depth=text_depth)
 
         display.append(display_item)
-
-    # Special cases: \forall A in [r'\set_of_subsets'] --> \forall A \subset X
-    head = display[0]
-    if math_object.node in latex_from_quant_node:
-        type_ = display[3]
-        if isinstance(type_, list) and type_[0] == r'\set_of_subsets':
-            display[2] = r' \subset '
-            display[3] = type_[1]
 
     log.debug(f"    --> Recursive display: {display}")
     return display
@@ -961,7 +993,9 @@ def shorten(string: str) -> str:
     "is injective" -> injective.
     Note that this is called after translation.
     """
-    to_be_shortened = (_("a function"), _("an element"), _("a subset"))
+    # FIXME: to be adapted according to languages
+    to_be_shortened = (_("a function"), _("an element"), _("a subset"),
+                       _('a proposition'), _("a family"))
     to_be_suppressed = (r'\text_is',)
     to_be_replaced = {r'\text_is_not': _("not")}
     for phrase in to_be_shortened:
@@ -989,12 +1023,6 @@ def latex_to_text_func(string: str) -> str:
     return string
 
 
-displaceable_types = (_("function"), _("element"), _("subset"))
-with_adj = {_("function"): _("a function"),
-            _("element"): _("an element"),
-            _("subset"): _("a subset")}
-
-
 def shallow_latex_to_text(string: Union[list, str], text_depth=0):
     """
     Try to change symbols for text in a tree representing some MathObject,
@@ -1003,54 +1031,16 @@ def shallow_latex_to_text(string: Union[list, str], text_depth=0):
     display without either latex compilation or conversion to utf8).
     """
     if isinstance(string, list):
-        head = string[0]
-        # # Pre-treatment
-        # if text_depth >0:
-        #     if head in (r"\forall", r"\exists", r"\exists !"):
-        #         type_ = string[3]
-        #         if type_ == r'\set_of_subsets':
-        #             string
-
         # Recursion
         string = [shallow_latex_to_text(item, text_depth-1) for item in string]
-
-        # Special cases
-        if text_depth > 0:
-            if head == latex_to_text[r"\forall"]:  # FIXME: deprecated
-                # Case of a function:
-                #   for every f FUNCTION from X to Y
-                #   --> for every FUNCTION f from X to Y
-                #   there exists A FUNCTION etc.
-                # Case of element:
-                #   --> for every element x of X
-                for word in displaceable_types:
-                    if string[2].startswith(word):
-                        string[2] = string[2][len(word)+1:]
-                        string.insert(1, word + " ")
-            if head in (latex_to_text[r"\exists"],
-                        latex_to_text[r"\exists !"]):
-                for word in displaceable_types:
-                    if string[2].startswith(word):
-                        string[2] = string[2][len(word)+1:]
-                        string.insert(1, with_adj[word] + " ")
         log.debug(f"    --> Shallow_to_text: {string}")
         return string
 
     elif isinstance(string, str):
-
-        # FUNCTIONS: a very special case
-        if string == r'\in_function':
-            if text_depth > 1:
-                string = _("is")
-            else:
-                string = ":"
-
-        if text_depth > 0:
+        if text_depth > 0:  # Try to convert to text
             string = latex_to_text_func(string)
-
-        else:
+        else:  # Try to shorten
             string = shorten(string)
-
         return string
 
 
