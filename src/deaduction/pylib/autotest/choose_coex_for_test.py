@@ -27,7 +27,12 @@ This file is part of d∃∀duction.
 """
 
 import logging
-import pickle5 as pickle
+from sys import version_info
+if version_info[1] < 8:
+    import pickle5 as pickle
+else:
+    import pickle
+
 from pathlib import Path
 from typing import Any
 
