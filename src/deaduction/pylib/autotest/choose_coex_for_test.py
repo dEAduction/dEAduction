@@ -28,29 +28,31 @@ This file is part of d∃∀duction.
 
 import logging
 from sys import version_info
-if version_info[1] < 8:
-    import pickle5 as pickle
-else:
-    import pickle
+# if version_info[1] < 8:
+#     import pickle5 as pickle
+# else:
+#     import pickle
 
 from pathlib import Path
 from typing import Any
 
 from PySide2.QtWidgets import QFileDialog
+
+from deaduction.pylib.utils import load_object
 from deaduction.pylib.coursedata import (Course,
                                          Exercise)
 
 log = logging.getLogger(__name__)
 
 
-def pickled_items(filename):
-    """ Unpickle a file of pickled data. """
-    with filename.open(mode="rb") as input:
-        while True:
-            try:
-                yield pickle.load(input)
-            except EOFError:
-                break
+# def pickled_items(filename):
+#     """ Unpickle a file of pickled data. """
+#     with filename.open(mode="rb") as input:
+#         while True:
+#             try:
+#                 yield pickle.load(input)
+#             except EOFError:
+#                 break
 
 
 def select_course(course_path: Any = None) -> Course:
@@ -80,7 +82,7 @@ def select_course(course_path: Any = None) -> Course:
         course = Course.from_file(course_path)
     # case of a pre-processed .pkl file
     elif extension == '.pkl':
-        [course] = pickled_items(course_path)
+        [course] = load_object(course_path)
     else:
         log.error("Wrong file format")
 
