@@ -36,7 +36,12 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 import logging
-import pickle5 as pickle
+from sys import version_info
+if version_info[1] < 8:
+    import pickle5 as pickle
+else:
+    import pickle
+
 import time
 
 # from deaduction.pylib.config.i18n import _

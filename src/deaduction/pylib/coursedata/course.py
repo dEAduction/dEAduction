@@ -35,9 +35,13 @@ from collections import                     OrderedDict
 from dataclasses import                     dataclass
 from pathlib import                         Path
 from typing import                          List, Dict
-import pickle5 as pickle
 import os
 import logging
+from sys import version_info
+if version_info[1] < 8:
+    import pickle5 as pickle
+else:
+    import pickle
 
 import deaduction.pylib.config.dirs as      cdirs
 import deaduction.pylib.logger as           logger

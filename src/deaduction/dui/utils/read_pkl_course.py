@@ -26,7 +26,12 @@ This file is part of d∃∀duction.
 """
 
 from pathlib import Path
-import pickle5 as pickle
+from sys import version_info
+if version_info[1] < 8:
+    import pickle5 as pickle
+else:
+    import pickle
+
 
 from deaduction.pylib.coursedata import Course
 
