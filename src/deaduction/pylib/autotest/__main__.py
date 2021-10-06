@@ -58,7 +58,12 @@ from sys import argv
 from functools import partial
 from typing import Optional
 from pathlib import Path
-import pickle5 as pickle
+from sys import version_info
+if version_info[1] < 8:
+    import pickle5 as pickle
+else:
+    import pickle
+
 import argparse
 
 from deaduction.pylib                            import logger
