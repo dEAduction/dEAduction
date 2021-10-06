@@ -107,7 +107,9 @@ class Goal:
                 context.append(math_object)
 
         tree = lean_expr_with_type_grammar.parse(target_analysis)
+        log.debug("Creating target...")
         target = LeanEntryVisitor().visit(tree)
+        log.debug("...target created!")
         return cls(context, target)
 
     @property

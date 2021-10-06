@@ -84,9 +84,16 @@ from deaduction.pylib.autotest import ( select_course,
 # Configuring log #
 ###################
 # Change your own settings in .deaduction-dev/config.toml
-log_domains = cvars.get("logs.domains", [""])
+# (non-exhaustive) list of logger domains:
+# ['lean', 'ServerInterface', 'ServerQueue', 'Course', 'deaduction.dui',
+#  'deaduction.pylib.coursedata', 'deaduction.pylib.mathobj', 'LeanServer']
+
+# log_domains = cvars.get("logs.domains", [""])
 # log_level = cvars.get("logs.display_level", "info")
-# logger.configure(domains=log_domains)
+#log_domains = ['ServerInterface', 'ServerQueue', 'Course', 'deaduction.dui',
+               # 'deaduction.pylib.coursedata', 'deaduction.pylib.mathobj',
+               # 'LeanServer']
+#logger.configure(domains=log_domains, display_level="debug")
 log = logging.getLogger(__name__)
 
 arg_parser = argparse.ArgumentParser("Start deaduction in test mode")

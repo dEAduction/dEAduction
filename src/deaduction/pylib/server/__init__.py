@@ -124,6 +124,7 @@ class ServerQueue(list):
             # Launch first task
             fct, cancel_fct, args = self.pop()
             self.log.debug(f"Launching task")  # : {args}")
+            continue_ = input("Launching task?")  # FIXME: debugging
             self.nursery.start_soon(self.task_with_timeout, fct, cancel_fct,
                                     args)
         else:

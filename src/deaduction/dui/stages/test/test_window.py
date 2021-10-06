@@ -106,6 +106,10 @@ class QTestWindow(QWidget):
 
         self.freeze()
 
+        uninterrupted = True # For debugging
+        if uninterrupted:
+            self.mode_btn.setCurrentIndex(2)
+
     def closeEvent(self, event):
         # Save window geometry
         settings = QSettings("deaduction")
