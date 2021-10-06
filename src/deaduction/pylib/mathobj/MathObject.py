@@ -189,6 +189,15 @@ class MathObject:
         self.bound_vars = bound_vars
         self.math_type = math_type
 
+    def duplicate(self):
+        """
+        Create a copy of self, by duplicating the info dic.
+        Beware that children of duplicates are children of self, not copies!
+        """
+        new_info = copy(self.info)
+        other = MathObject(self.node, new_info, self.children)
+        return other
+
     @property
     def math_type(self) -> Any:
         """
@@ -1025,7 +1034,8 @@ class MathObject:
             #####################################
             # This is where we find a new var!! #
             #####################################
-            vars.append(copy(math_type.children[1]))
+            # vars.append(copy(math_type.children[1])) BUG!!
+            vars.append(math_type.children[1].duplicate())
             children = [math_type.children[2]]
         elif (self.is_and(is_math_type=True, implicit=False)
                 or self.is_or(is_math_type=True, implicit=False)
@@ -1145,7 +1155,7 @@ class MathObject:
         #                 #         shape[i + 1] = next_item + (1,)
         #                 #         shape[i].replace(r'\in', r'\subset')
 
-        log.debug(f"    --> Raw shape: {shape}")
+        # log.debug(f"    --> Raw shape: {shape}")
         return shape
 
     def expanded_latex_shape(self, text_depth=0):
@@ -1181,7 +1191,7 @@ class MathObject:
         # WARNING: if you make some changes here,
         #   then you probably have to do the same changes in
         #   ContextMathObject.math_type_to_display.
-        log.debug(f"Displaying {self.old_to_display()}...")
+        # log.debug(f"Displaying {self.old_to_display()}...")
         # (1) Latex shape, includes treatment of "in"
         # needs_paren is called --> '\parentheses'
         abstract_string = self.expanded_latex_shape(text_depth=text_depth)
@@ -1228,13 +1238,14 @@ class MathObject:
         else:  # Generic case: usual shape from math_object
             shape = math_type.raw_latex_shape(text_depth=text_depth)
 
+        log.debug(f"Raw shape: {shape}")
         return shape
 
     def math_type_to_display(self, format_="html", text_depth=0) -> str:
         """
         cf MathObject.to_display
         """
-        log.debug(f"Displaying math_type: {self.old_to_display()}...")
+        # log.debug(f"Displaying math_type: {self.old_to_display()}...")
 
         shape = self.raw_latex_shape_of_math_type(text_depth=text_depth)
         abstract_string = recursive_display(self.math_type,
@@ -1249,7 +1260,7 @@ class MathObject:
             display = html_display(display)
         elif format_ == 'utf8':
             display = utf8_display(display)
-        log.debug(f"{self.old_to_display()} -> {display}")
+        # log.debug(f"{self.old_to_display()} -> {display}")
 
         return display
 

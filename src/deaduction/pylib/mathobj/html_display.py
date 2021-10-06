@@ -34,21 +34,21 @@ from deaduction.pylib.mathobj.utf8_display import add_parentheses
 log = logging.getLogger(__name__)
 
 utf8_to_html_dic = {
-    "<": "&lt",
-    ">": "&gt",
-    "'": "&apos",
-    # "&": "&amp",
-    # '"': "&quot"
+    "<": "&lt;",
+    ">": "&gt;",
+    "'": "&apos;",
+    # "&": "&amp;",
+    # '"': "&quot;"
 }
 
 
 def reserve_special_char(s: str) -> str:
     stripped_s = s.strip()
     if stripped_s == "<":
-        s.replace("<", "&lt")
+        s = s.replace("<", "&lt;")
     elif stripped_s == ">":
-        s.replace(">", "&gt")
-    s.replace("'", "&apos")
+        s = s.replace(">", "&gt;")
+    s = s.replace("'", "&apos;")
     return s
 
 

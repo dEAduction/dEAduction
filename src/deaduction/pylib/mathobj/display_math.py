@@ -982,7 +982,7 @@ def recursive_display(math_object, text_depth=0, raw_display=None,
 
         display.append(display_item)
 
-    log.debug(f"    --> Recursive display: {display}")
+    # log.debug(f"    --> Recursive display: {display}")
     return display
 
 
@@ -1033,7 +1033,7 @@ def shallow_latex_to_text(string: Union[list, str], text_depth=0):
     if isinstance(string, list):
         # Recursion
         string = [shallow_latex_to_text(item, text_depth-1) for item in string]
-        log.debug(f"    --> Shallow_to_text: {string}")
+        # log.debug(f"    --> Shallow_to_text: {string}")
         return string
 
     elif isinstance(string, str):

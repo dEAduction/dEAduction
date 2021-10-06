@@ -417,6 +417,7 @@ def try_names(vars_to_name, forbidden_names, names):
     if len(allowed_names) >= len(vars_to_name):
         for var, name in zip(vars_to_name, allowed_names):
             var.give_name(name)
+            # log.debug(f"Naming var with {name}")
         return True
     else:
         return False
@@ -444,6 +445,8 @@ def name_bound_vars(math_type: MathObject,
 
     forbidden_names = inj_list([var.info['name'] for var in forbidden_vars])
     named_vars_names = [var.info['name'] for var in named_vars]  # No rep
+
+    # log.debug(f'Forbidden names: {forbidden_names}')
 
     hints_from_vars = hints_by_name(named_vars, len(unnamed_vars))
     hints_type = hints_from_type(math_type)

@@ -262,11 +262,11 @@ class Goal:
         glob_vars = self.context_objects
         for math_type in math_types:
             glob_vars_of_type = [var for var in glob_vars
-                                  if var.math_type == math_type]
+                                 if var.math_type == math_type]
             dummy_vars_of_type = [var for var in dummy_vars
                                   if var.math_type == math_type]
             future_vars_of_type = [var for var in future_vars
-                                  if var.math_type == math_type]
+                                   if var.math_type == math_type]
 
             forb_vars = forb_vars + future_vars_of_type
             named_vars = glob_vars_of_type + future_vars_of_type
@@ -340,14 +340,14 @@ class Goal:
         coming from the initial_proof_state of a statement.
         """
         # (0) Some unnamed vars?
-        there_are_unamed_vars = False
+        there_are_unnamed_vars = False
         if self.target.math_type.has_unnamed_bound_vars:
-            there_are_unamed_vars = True
+            there_are_unnamed_vars = True
         else:
             for context_math_prop in self.context_props:
                 if context_math_prop.math_type.has_unnamed_bound_vars:
-                    there_are_unamed_vars = True
-        if not there_are_unamed_vars:
+                    there_are_unnamed_vars = True
+        if not there_are_unnamed_vars:
             return
 
         # (1) Name dummy_vars in target
@@ -366,6 +366,7 @@ class Goal:
             # log.debug("Naming future vars:")
             self.__name_bound_vars_in_data(*data)
 
+        # (3) Name context dummy vars
         not_dummy = cvars.get("logic.do_not_name_dummy_vars_as_dummy_vars",
                               False)  # All dummy vars have distinct names
         if not_dummy:  # (Level 2)
@@ -540,16 +541,16 @@ class Goal:
         elif len(context) > 1:
             text += _("Hypotheses:") + "\n"
         for math_object in context:
-            math_type = math_object.math_type
-            name = math_object.to_display()
-            name_type = math_type.old_to_display(is_math_type=True)
+            # math_type = math_object.math_type
+            name = math_object.to_display(format_="utf8")
+            name_type = math_object.math_type_to_display(format_="utf8")
             text_object = name + _(": ") + name_type
             text += "  " + text_object + "\n"
         if to_prove and not open_problem:
             text += _("Prove that") + "\n"
         elif context:
             text += _("Then") + "\n"
-        text += target.math_type.old_to_display(is_math_type=True)
+        text += target.math_type_to_display(format_="utf8")
         return text
 
     def to_tooltip(self, type_='exercise') -> str:
@@ -558,7 +559,7 @@ class Goal:
         """
 
         # Name bound vars if needed
-        self.name_bound_vars(to_prove=(type_=='exercise'))
+        self.name_bound_vars(to_prove=(type_ == 'exercise'))
 
         context = self.context
         target = self.target
@@ -575,8 +576,8 @@ class Goal:
             # text = _("Empty context") + "\n"
             text = ""
         for math_object in context:
-            math_type = math_object.math_type
-            name = math_object.to_display()
+            # math_type = math_object.math_type
+            name = math_object.to_display(format_="utf8")
             # name_type = math_type.old_to_display(is_math_type=True)
             name_type = math_object.math_type_to_display(format_="utf8")
             text_object = name + _(": ") + name_type
