@@ -296,11 +296,11 @@ class Coordinator(QObject):
         log.info("Closing Coordinator")
         # continue_ = input("Closing Coordinator?")  # FIXME: debugging
 
-        # try:   FIXME!!!! (for testing)
-        #     self.disconnect_signals()
-        # except RuntimeError:
-        #     # It seems that sometimes signals are already deleted
-        #     pass
+        try:
+            self.disconnect_signals()
+        except RuntimeError:
+            # It seems that sometimes signals are already deleted
+            pass
 
         ref = 'functionality.save_solved_exercises_for_autotest'
         save_for_test = cvars.get(ref, False)
@@ -320,6 +320,7 @@ class Coordinator(QObject):
         # log.debug([task.name for task in tasks])
         # log.debug("Closing server task")
         self.close_server_task.emit()
+        # self.deleteLater()  FIXME: needed ??
 
     ##############
     # Properties #
@@ -455,7 +456,7 @@ class Coordinator(QObject):
                 if emission.is_from(self.close_server_task):
                     log.info("    -> Close server_Task...")
                     self.server_task_closed.set()
-                    # await emissions.aclose() FIXME!!!! (for testing)
+                    await emissions.aclose() # FIXME!!!! (for testing)
                     log.info("            ...closed!")
                     break
 
