@@ -257,7 +257,7 @@ class ExerciseMainWindow(QMainWindow):
             self.close_coordinator()
 
         self.window_closed.emit()
-        # event.accept()
+        # event.accept()  # THIS create crash after the second closing!!
         super().closeEvent(event)
         self.deleteLater()
 

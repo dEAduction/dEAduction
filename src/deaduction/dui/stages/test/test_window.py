@@ -104,11 +104,11 @@ class QTestWindow(QWidget):
         main_layout.addLayout(btn_layout)
         self.setLayout(main_layout)
 
-        self.freeze()
-
-        uninterrupted = True # For debugging
+        uninterrupted = True  # For debugging
         if uninterrupted:
             self.mode_btn.setCurrentIndex(2)
+        else:
+            self.freeze()
 
     def closeEvent(self, event):
         # Save window geometry
