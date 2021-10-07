@@ -38,7 +38,6 @@ import sys
 import logging
 from functools import partial
 from pathlib import   Path
-import pickle5 as pickle
 from typing  import  (Dict,
                       Optional)
 

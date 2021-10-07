@@ -31,7 +31,6 @@ This file is part of d∃∀duction.
 
 from sys import argv
 import logging
-import qtrio
 import threading
 import trio
 import argparse
@@ -40,6 +39,8 @@ import os
 from PySide2.QtCore import ( QObject,
                              Signal,
                              Slot  )
+
+import qtrio
 
 import deaduction.pylib.config.dirs              as     cdirs
 import deaduction.pylib.config.environ           as     cenv

@@ -35,9 +35,13 @@ from collections import                     OrderedDict
 from dataclasses import                     dataclass
 from pathlib import                         Path
 from typing import                          List, Dict
-import pickle5 as pickle
 import os
 import logging
+from sys import version_info
+# if version_info[1] < 8:
+#     import pickle5 as pickle
+# else:
+#     import pickle
 
 import deaduction.pylib.config.dirs as      cdirs
 import deaduction.pylib.logger as           logger
@@ -51,7 +55,7 @@ from deaduction.pylib.coursedata import (   Exercise,
 import deaduction.pylib.coursedata.parser_course as parser_course
 
 log = logging.getLogger(__name__)
-
+global _
 
 @dataclass
 class Course:
@@ -149,8 +153,8 @@ class Course:
             file_content = course_path.read_text()
             course = Course.from_file_content(file_content)
         elif course_filetype == '.pkl':
-            with course_path.open(mode='rb') as input:
-                course = pickle.load(input)
+            with course_path.open(mode='rb') as input_:
+                course = load_object(input_)
 
         course.filetype = course_filetype
         course_path = course_path.resolve()

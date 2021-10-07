@@ -58,10 +58,17 @@ from sys import argv
 from functools import partial
 from typing import Optional
 from pathlib import Path
-import pickle5 as pickle
+# from sys import version_info
+# if version_info[1] < 8:
+#     import pickle5 as pickle
+# else:
+#     import pickle
+
 import argparse
 
 from deaduction.pylib                            import logger
+
+from deaduction.pylib.utils import load_object
 
 import deaduction.pylib.config.dirs              as     cdirs
 import deaduction.pylib.config.environ           as     cenv
@@ -130,18 +137,18 @@ def exercise_from_pkl(exercise_like, dir_path):
     else:
         file_path = exercise_like
 
-    [exercise] = pickled_items(file_path)
+    [exercise] = load_object(file_path)
     return exercise
 
 
-def pickled_items(filename):
-    """ Unpickle a file of pickled data. """
-    with filename.open(mode="rb") as input:
-        while True:
-            try:
-                yield pickle.load(input)
-            except EOFError:
-                break
+# def pickled_items(filename):
+#     """ Unpickle a file of pickled data. """
+#     with filename.open(mode="rb") as input:
+#         while True:
+#             try:
+#                 yield pickle.load(input)
+#             except EOFError:
+#                 break
 
 
 def coex_from_argv() -> (Optional[Path], Course, Exercise, bool):

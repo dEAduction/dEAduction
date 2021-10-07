@@ -36,11 +36,16 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 import logging
-import pickle5 as pickle
+# from sys import version_info
+# if version_info[1] < 8:
+#     import pickle5 as pickle
+# else:
+#     import pickle
+
 import time
 
 # from deaduction.pylib.config.i18n import _
-
+from deaduction.pylib.utils import            save_object
 import deaduction.pylib.config.vars as        cvars
 import deaduction.pylib.config.dirs as        cdirs
 from deaduction.pylib.utils.filesystem import check_dir
@@ -106,8 +111,9 @@ class Journal:
         print(total_string)
 
         log.debug(f"Saving auto_steps in {file_path}")
-        with open(file_path, mode='wb') as output:
-            pickle.dump(exercise, output, pickle.HIGHEST_PROTOCOL)
+        save_object(exercise, file_path)
+        # with open(file_path, mode='wb') as output:
+        #     pickle.dump(exercise, output, pickle.HIGHEST_PROTOCOL)
 
         file_path = file_path.with_suffix('.txt')
         log.debug(f"Saving journal in {file_path}")
