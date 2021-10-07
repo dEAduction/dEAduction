@@ -294,6 +294,7 @@ class Coordinator(QObject):
         Called at closing, and when closing ExerciseMainWindow.
         """
         log.info("Closing Coordinator")
+        # continue_ = input("Closing Coordinator?")  # FIXME: debugging
 
         try:
             self.disconnect_signals()
@@ -319,6 +320,7 @@ class Coordinator(QObject):
         # log.debug([task.name for task in tasks])
         # log.debug("Closing server task")
         self.close_server_task.emit()
+        # self.deleteLater()  FIXME: needed ??
 
     ##############
     # Properties #
@@ -454,7 +456,7 @@ class Coordinator(QObject):
                 if emission.is_from(self.close_server_task):
                     log.info("    -> Close server_Task...")
                     self.server_task_closed.set()
-                    await emissions.aclose()
+                    await emissions.aclose() # FIXME!!!! (for testing)
                     log.info("            ...closed!")
                     break
 
@@ -870,7 +872,7 @@ class Coordinator(QObject):
             0 = no error, 1 = WUI (unused here),
             2 = FRE, 3 = Timeout, 4 = UnicodeError
         """
-        log.info("Processing Lean's response")
+        log.info("** Processing Lean's response **")
         history_nb = self.lean_file.target_idx
         log.info(f"History nb: {history_nb}")
         self.emw.automatic_action = False
@@ -900,6 +902,7 @@ class Coordinator(QObject):
         else:  # Generic step
             hypo_analysis, targets_analysis = analysis
             if hypo_analysis and targets_analysis:
+                log.info("** Creating new proof state **")
                 proof_state = ProofState.from_lean_data(hypo_analysis,
                                                         targets_analysis,
                                                         to_prove=True)
@@ -929,12 +932,14 @@ class Coordinator(QObject):
 
         # ─────── Tag and sort new goal ─────── #
         if self.logically_previous_proof_step:
+            log.info("** Comparing new goal with previous one **")
             # Fixme: not when undoing history ?
             new_goal = self.proof_step.goal
             previous_goal = self.logically_previous_proof_step.goal
             Goal.compare(new_goal, previous_goal)  # Set tags
 
         # ─────── Name all bound vars ─────── #
+        log.info("** Naming dummy vars **")
         self.proof_step.goal.name_bound_vars()
 
         # ─────── Update proof_step ─────── #
@@ -943,6 +948,7 @@ class Coordinator(QObject):
         self.update_proof_step()
 
         # ─────── Update UI ─────── #
+        log.info("** Updating UI **")
         self.unfreeze()
         if self.proof_step.is_error():
             self.emw.update_goal(None)

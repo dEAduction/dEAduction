@@ -966,7 +966,7 @@ class StartCoExStartup(AbstractStartCoEx):
         settings.setValue("coex_chooser/Geometry", self.saveGeometry())
 
         self.window_closed.emit()
-        event.accept()
+        super().closeEvent(event)
         # super().closeEvent(event)
         # self.deleteLater()
 
