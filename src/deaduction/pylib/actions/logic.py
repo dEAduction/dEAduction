@@ -103,8 +103,8 @@ def construct_and(proof_step, user_input: [str]) -> CodeForLean:
     right = children[1]
     if not user_input:
         # User choice
-        choices = [(_("Left"), left.to_display(format="utf8")),
-                   (_("Right"), right.to_display(format="utf8"))]
+        choices = [(_("Left"), left.to_display(format_="utf8")),
+                   (_("Right"), right.to_display(format_="utf8"))]
         raise MissingParametersError(
             InputType.Choice,
             choices,
@@ -223,8 +223,8 @@ def construct_or(proof_step, user_input: [str]) -> CodeForLean:
 
     children = target.children
 
-    left = children[0].to_display(format="utf8")
-    right = children[1].to_display(format="utf8")
+    left = children[0].to_display(format_="utf8")
+    right = children[1].to_display(format_="utf8")
     choices = [(_("Left"), left), (_("Right"), right)]
 
     if not user_input:
@@ -271,8 +271,8 @@ def apply_or(proof_step,
     left = children[0]
     right = children[1]
     if not user_input:
-        choices = [(_("Left"), left.to_display(format="utf8")),
-                   (_("Right"), right.to_display(format="utf8"))]
+        choices = [(_("Left"), left.to_display(format_="utf8")),
+                   (_("Right"), right.to_display(format_="utf8"))]
         raise MissingParametersError(InputType.Choice,
                                      choices=choices,
                                      title=_("Choose case"),
@@ -607,12 +607,12 @@ def construct_iff(proof_step, user_input: [str]) -> CodeForLean:
                        node="PROP_IMPLIES",
                        children = [left, right],
                        bound_vars=target.bound_vars,
-                       math_type="PROP")
+                       math_type=MathObject.PROP_AS_MATHOBJECT())
     impl2 = MathObject(info={},
                        node="PROP_IMPLIES",
                        children = [right, left],
                        bound_vars=target.bound_vars,
-                       math_type="PROP")
+                       math_type=MathObject.PROP_AS_MATHOBJECT())
     code.add_conjunction(target, impl1, impl2)
     return code
 
@@ -1229,8 +1229,8 @@ def action_equal(proof_step,
         if test0 and test1:
             # Two equalities: which one to use?
             if not user_input:
-                eq0 = equality0.to_display(format="utf8")
-                eq1 = equality1.to_display(format="utf8")
+                eq0 = equality0.to_display(format_="utf8")
+                eq1 = equality1.to_display(format_="utf8")
                 choice = _("Use for substitution in {}")
                 choices = [(eq0, choice.format(eq1)),
                            (eq1, choice.format(eq0))]

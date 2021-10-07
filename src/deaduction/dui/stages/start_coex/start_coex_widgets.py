@@ -209,7 +209,7 @@ class AbstractCoExChooser(QWidget):
         if main_widget:
             layout.addWidget(main_widget)
 
-        layout.addStretch()
+        # layout.addStretch()  # Fixme: useless??
 
         widget.setLayout(layout)
         replace_widget_layout(self.__main_layout, self.__preview_wgt, widget)
@@ -267,10 +267,8 @@ class CourseChooser(AbstractCoExChooser):
         course_item = self.__recent_courses_wgt.currentItem()
         course_path = course_item.course_path
         course = Course.from_file(course_path)
-        self.set_preview(course)
         self.__set_initial_proof_states(course)
-
-
+        self.set_preview(course)
 
     def add_browsed_course(self, course: Course):
         """
@@ -328,7 +326,7 @@ class CourseChooser(AbstractCoExChooser):
 
         super().set_preview(main_widget=None, title=title, subtitle=subtitle,
                             details=details, description=description,
-                            expand_details=True)
+                            expand_details=False)
 
         self.course_chosen.emit(course)
 
@@ -364,28 +362,6 @@ class CourseChooser(AbstractCoExChooser):
             log.debug(f"Launching Lean with {course.statements[0].pretty_name}")
             self.servint.set_statements(course, [course.statements[0]])
 
-    # These methods have been moved to course methods.
-    # # @Slot()
-    # def __save_initial_proof_states(self, course: Course):
-    #     """
-    #     Add statements' initial proof states to self.__statements dict,
-    #     and save in a .pkl file in cdirs.local.
-    #     """
-    #     log.debug("Checking if I've got some new ips to save")
-    #     # self.servint.update_ended.disconnect()
-    #     statements = self.__ips_dict
-    #     # course_hash = hash(course.file_content)
-    #     course_hash = course.file_content
-    #     # if course_hash not in self.__statements_dict:
-    #     #     self.__statements_dict[course_hash] = []
-    #     initial_proof_states = [st.initial_proof_state
-    #                             for st in course.statements]
-    #     # Save if anything has changed
-    #     if course_hash not in statements \
-    #             or statements[course_hash] != initial_proof_states:
-    #         log.debug("Saving some initial proof states")
-    #         statements[course_hash] = initial_proof_states
-    #         save_object(statements, cdirs.all_courses_ipf)
 
     #########
     # Slots #
@@ -413,8 +389,8 @@ class CourseChooser(AbstractCoExChooser):
 
             title = course.title
             self.__recent_courses_wgt.add_browsed_course(course_path, title)
-            self.set_preview(course)
             self.__set_initial_proof_states(course)
+            self.set_preview(course)
 
     @Slot(RecentCoursesLWI, bool)
     def __recent_course_clicked(self, course_item: RecentCoursesLWI):
@@ -428,8 +404,8 @@ class CourseChooser(AbstractCoExChooser):
         """
         course_path = course_item.course_path
         course = Course.from_file(course_path)
-        self.set_preview(course)
         self.__set_initial_proof_states(course)
+        self.set_preview(course)
 
 
 class ExerciseChooser(AbstractCoExChooser):
@@ -474,14 +450,15 @@ class ExerciseChooser(AbstractCoExChooser):
         self.__exercise = None
         browser_layout = QVBoxLayout()
         exercises_tree = StatementsTreeWidget(course.exercises,
-                                              course.outline)
+                                              course.outline,
+                                              is_exercise_list=True)
         exercises_tree.resizeColumnToContents(0)
         browser_layout.addWidget(exercises_tree)
-        self.__exercises_tree = exercises_tree
 
         exercises_tree.itemClicked.connect(self.__set_preview_from_click)
         exercises_tree.currentItemChanged.connect(self.current_item_changed)
 
+        self.__exercises_tree = exercises_tree
         self.__text_mode_checkbox = None
         self.__goal_widget        = None
         self.__main_widget_lyt    = None
@@ -540,12 +517,13 @@ class ExerciseChooser(AbstractCoExChooser):
             self.__goal_widget = self.create_widget()
             main_widget_lyt.addWidget(self.__goal_widget)
             # main_widget_lyt.addWidget(self.__code_wgt)
+            main_widget_lyt.addStretch()  # -> check box at bottom
             main_widget_lyt.addLayout(cb_lyt)
             self.__main_widget_lyt = main_widget_lyt
         else:
             self.servint.initial_proof_state_set.connect(
                                         self.__check_proof_state_for_preview)
-            # Try to get preview with high priority. Remove?
+            # Try to get preview with high priority:
             self.servint.set_statements(exercise.course,
                                         [exercise],
                                         on_top=True)
@@ -585,12 +563,12 @@ class ExerciseChooser(AbstractCoExChooser):
         # ────────────────────── Rest ────────────────────── #
         if self.__text_mode_checkbox.isChecked():
             ###############
-            # Code widget #
+            # Text widget #
             ###############
             # The goal is presented in a single list widget.
             self.__code_wgt = QTextEdit()
             self.__code_wgt.setReadOnly(True)
-            self.__code_wgt.setFont(QFont('Menlo'))
+            self.__code_wgt.setFont(QFont('Menlo'))  # FIXME: font problem
             if exercise.initial_proof_state:
                 text = goal.goal_to_text(format_="html")
             else:
@@ -598,9 +576,9 @@ class ExerciseChooser(AbstractCoExChooser):
             self.__code_wgt.setHtml(text)
             widget = self.__code_wgt
         else:
-            ###################
-            # Friendly widget #
-            ###################
+            #############
+            # UI widget #
+            #############
             # The widget with lists for math. objects and properties
             # and a line edit for the target.
             # ───────────── Objects and properties ───────────── #
@@ -692,8 +670,7 @@ class ExerciseChooser(AbstractCoExChooser):
         if self.__exercise and self.__exercise.initial_proof_state:
             log.debug("Lean initial proof state received, updating preview")
             self.set_preview(self.__exercise)
-        # else:
-        #     self.get_all_initial_proof_state()
+        self.__exercises_tree.update_tooltips()
 
 
 class AbstractStartCoEx(QDialog):
@@ -825,7 +802,7 @@ class AbstractStartCoEx(QDialog):
         exercise and its course, usr's clicks are emulated by adding the
         Course as a browsed course in
         self.__course_chooser.__recent_courses_wgt and selecting the
-        exercise in self.__exercise_chooser.exercises_tree. The code
+        exercise in self.__exercise_chooser.__exercises_tree. The code
         for this is not very smart so if you want to enhance it, do it
         (see CONTRIBUTING.md file).
         """
@@ -894,7 +871,7 @@ class AbstractStartCoEx(QDialog):
 
         self.__exercise_chooser.exercise_previewed.connect(
                 self.__enable_start_ex_btn)
-        self.__exercise_chooser.exercises_tree_double_clicked_connect(
+        self.__exercise_chooser.__exercises_tree_double_clicked_connect(
             # self.__start_exercise)
             self.__process_double_click)
 

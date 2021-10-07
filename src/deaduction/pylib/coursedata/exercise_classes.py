@@ -191,8 +191,7 @@ class Statement:
         ugly_hierarchy = self.lean_name.split('.')[:-2]
         return ugly_hierarchy
 
-    @property
-    def caption(self) -> str:
+    def caption(self, is_exercise=False) -> str:
         """
         Return a string that shows a simplified version of the statement
         (e.g. to be displayed as a tooltip).
@@ -203,7 +202,8 @@ class Statement:
             goal = self.initial_proof_state.goals[0]
             # target = goal.target
             # text = target.math_type.to_display(is_math_type=True)
-            text = goal.to_tooltip(type_="non-exercise")
+            type_ = "exercise" if is_exercise else "non-exercise"
+            text = goal.to_tooltip(type_=type_)
             if cvars.get("functionality.allow_implicit_use_of_definitions"):
                 if isinstance(self, Definition) and self.implicit_use:
                     text = '(' + _("implicit use allowed") + ')' + '\n' + text

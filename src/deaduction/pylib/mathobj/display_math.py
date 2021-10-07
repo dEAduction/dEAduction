@@ -896,7 +896,8 @@ def raw_latex_shape_from_couple_of_nodes(math_object, text_depth=0):
                 shape = insert_children_in_string(string, children)
             else:
                 shape = couples_of_nodes_to_utf8[key]
-
+    if shape:
+        log.debug("Shape from couple of nodes")
     return shape
 
 

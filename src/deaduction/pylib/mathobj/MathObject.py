@@ -1132,29 +1132,6 @@ class MathObject:
             else:  # Node not found in dictionaries: try specific methods
                 shape = raw_latex_shape_from_specific_nodes(self, negate)
 
-        ###############################
-        # Specific treatment of "\in" #
-        ###############################
-        # for i in range(len(shape)-1):  FIXME: deprecated
-        #     item = shape[i]
-        #     if isinstance(item, str):
-        #         stripped_item = item.strip()
-        #         if stripped_item == r'\in':
-        #             next_item = shape[i+1]
-        #             if (isinstance(next_item, int)
-        #                     or isinstance(next_item, tuple)):
-        #                 math_type = self.descendant(next_item)
-        #                 new_belongs = various_belongs(math_type)
-        #                 if new_belongs:
-        #                     shape[i].replace(r'\in', new_belongs)
-        #                 # elif math_type.node == "SET":  # A ∈ P(X) <-> A ⊂ X
-        #                 #     if isinstance(next_item, int):
-        #                 #         shape[i+1] = (next_item, 1)
-        #                 #         shape[i].replace(r'\in', r'\subset')
-        #                 #     elif isinstance(next_item, tuple):
-        #                 #         shape[i + 1] = next_item + (1,)
-        #                 #         shape[i].replace(r'\in', r'\subset')
-
         # log.debug(f"    --> Raw shape: {shape}")
         return shape
 
@@ -1228,7 +1205,7 @@ class MathObject:
             shape = [_('a rational number')]
         elif math_type.is_R():
             shape = [_('a real number')]
-        elif hasattr(math_type, 'node') and math_type.node == "SET":
+        elif math_type.node == "SET":
             shape = [_("a subset of") + " ", 0]
             # Idem
         elif math_type.node == "SEQUENCE":
@@ -1238,7 +1215,7 @@ class MathObject:
         else:  # Generic case: usual shape from math_object
             shape = math_type.raw_latex_shape(text_depth=text_depth)
 
-        log.debug(f"Raw shape: {shape}")
+        log.debug(f"Raw shape of math type: {shape}")
         return shape
 
     def math_type_to_display(self, format_="html", text_depth=0) -> str:
@@ -1278,6 +1255,13 @@ class MathObject:
 
         # log.debug(f"Display: {shape.display}")
         return structured_display_to_string(shape.display)
+
+    @classmethod
+    def PROP_AS_MATHOBJECT(cls):
+        return MathObject(node="PROP",
+                          info={},
+                          children=[],
+                          math_type=None)
 
 
 NO_MATH_TYPE = MathObject(node="not provided",

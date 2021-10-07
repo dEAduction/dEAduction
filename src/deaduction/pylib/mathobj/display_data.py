@@ -399,11 +399,12 @@ couples_of_nodes_to_text = {
 
 couples_of_nodes_to_utf8 = {
     ("QUANT_∀", "SET"): (r"\forall", 1, r" \subset ", (0, 0), ", ", 2),
-    ("QUANT_∀", "PROP"): (r"\forall", 1, r'\proposition'),
-    ("QUANT_∀", "TYPE"): (r"\forall", 1, r" \set"),
+    ("QUANT_∀", "PROP"): (r"\forall", 1, r'\proposition', ", ", 2),
+    ("QUANT_∀", "TYPE"): (r"\forall", 1, r" \set", ", ", 2),
     ("QUANT_∀", "FUNCTION"): (r"\forall", 1, r" \function_from", (0, 0),
-                              r'\to', (0, 1)),
-    ("QUANT_∀", "SEQUENCE"): (r"\forall", 1, r'\in', (0, 1)),
+                              r'\to', (0, 1), ", ", 2),
+    ("QUANT_∀", "SEQUENCE"): (r"\forall", 1, r" \function_from", (0, 0),
+                              r'\to', (0, 1), ", ", 2),
     # Other quantifiers are treated automatically below
     # ("QUANT_∃", "SET"): (r"\exists", 1, r" \subset ", (0, 0), ", ", 2),
     # ("QUANT_∃", "PROP"): (r"\exists", 1, r'\proposition'),
