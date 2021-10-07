@@ -45,6 +45,12 @@ fi
 OS="$(uname)"
 if [[ "$OS" == "Linux" ]]; then
   DEADUCTION_ON_LINUX=1
+  echo "WARNING: if you are on DEBIAN or UBUNTU, then envconfig_user"
+  echo "is not adapted."
+  echo "(use envconfig_user_ubuntu, "
+  eco "with apt install python3.8-venv python3-pip, "
+  echo "also consider pip3 install --upgrade stetuptools "
+  echo " and apt install python3-setuptools )"
 elif [[ "$OS" = "Darwin" ]]; then
   DEADUCTION_ON_LINUX=0
 else
