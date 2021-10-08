@@ -194,7 +194,7 @@ class MathObjectWidgetItem(QStandardItem):
         """
 
         # TODO: change color for double-click
-
+        log.debug(f"Selection: {self.mathobject.math_type.to_display()}")
         # self.setBackground(QBrush(QColor('limegreen')) if yes else QBrush())
         self.label.setStyleSheet("background-color: limegreen" if yes
                                  else "background-color: white")
@@ -272,7 +272,7 @@ class MathObjectWidget(QListView):
 
     def math_object_widget_item(self, math_object) -> MathObjectWidgetItem:
         """
-        Return MathObjectWidgetItem whose mathobject is Math_object.
+        Return MathObjectWidgetItem whose math_object is Math_object.
         """
 
         items = [item for item in self.items if item.has_math_object(
