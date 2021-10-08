@@ -172,6 +172,8 @@ class MathObjectWidgetItem(QStandardItem):
                 text += "\n" + "• " + tool_tip
             self.setToolTip(text)
 
+        self.setSelectable(False)
+
     def __eq__(self, other):
         """
         Define the operator == for the class MathObjectWidgetItem. Do
@@ -195,9 +197,9 @@ class MathObjectWidgetItem(QStandardItem):
 
         # TODO: change color for double-click
         log.debug(f"Selection: {self.mathobject.math_type.to_display()}")
-        # self.setBackground(QBrush(QColor('limegreen')) if yes else QBrush())
-        self.label.setStyleSheet("background-color: limegreen" if yes
-                                 else "background-color: white")
+        self.setBackground(QBrush(QColor('limegreen')) if yes else QBrush())
+        # self.label.setStyleSheet("background-color: limegreen" if yes
+        #                          else "background-color: white")
 
     def has_math_object(self, math_object: MathObject) -> bool:
         return self.mathobject is MathObject
@@ -245,7 +247,7 @@ class MathObjectWidget(QListView):
         self.setItemDelegate(HTMLDelegate())  # parent=self?
 
         self.items = []
-        # set fonts for maths display
+        # set fonts for maths display FIXME: put this in delegate
         math_font_name = cvars.get('display.mathematics_font', 'Default')
         self.setFont(QFont(math_font_name))
         for mathobject, tag in tagged_mathobjects:
@@ -259,6 +261,10 @@ class MathObjectWidget(QListView):
         # self.horizontalScrollBar().setRange(0, self.width)
         # log.debug(f"Horizontal context width: {self.width}")
         # log.debug(f"Size hint for col 0: {self.sizeHintForColumn(0)}")
+
+    def item_from_index(self, index_):
+        item = self.model().itemFromIndex(index_)
+        return item
 
     @Slot(MathObjectWidgetItem)
     def _emit_apply_math_object(self, item):
@@ -282,17 +288,17 @@ class MathObjectWidget(QListView):
         else:
             return None
 
-    @property
-    def width(self):
-        width = 0
-        for item in self.items:
-            if item.width > width:
-                width = item.width
-        return width
-
-    def resizeEvent(self, event):
-        self.horizontalScrollBar().setRange(0, self.width)
-        # self.horizontalScrollBar().setValue(200)
+    # @property
+    # def width(self):
+    #     width = 0
+    #     for item in self.items:
+    #         if item.width > width:
+    #             width = item.width
+    #     return width
+    #
+    # def resizeEvent(self, event):
+    #     self.horizontalScrollBar().setRange(0, self.width)
+    #     # self.horizontalScrollBar().setValue(200)
 
 
 MathObjectWidget.apply_math_object_triggered = Signal(MathObjectWidget)

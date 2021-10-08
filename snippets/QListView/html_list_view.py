@@ -28,15 +28,12 @@ This file is part of d∃∀duction.
 
 from typing import Tuple
 
-from PySide2.QtCore import (QSize)
+from PySide2.QtCore import (QSize, Slot, QObject)
 from PySide2.QtGui import (QTextDocument, QAbstractTextDocumentLayout,
                            QStandardItemModel, QStandardItem)
 from PySide2.QtWidgets import (QApplication, QAbstractItemView, QListView,
                                QStyledItemDelegate, QStyleOptionViewItem,
                                QStyle)
-
-
-from deaduction.pylib.mathobj import MathObject
 
 
 class HTMLDelegate(QStyledItemDelegate):
@@ -97,10 +94,6 @@ class HTMLDelegate(QStyledItemDelegate):
 #         painter.restore()
 
 
-# @QtCore.Slot
-# def on_click(index):
-    # print(list_view.model().index(index, 0))
-
 
 if __name__ == "__main__":
     app = QApplication()
@@ -134,8 +127,11 @@ if __name__ == "__main__":
 
     list_view.show()
 
-    # list_view.clicked.connect(on_click)
+    @Slot()
+    def on_click(index_):
+        print(list_view.model().itemFromIndex(index_))
 
+    list_view.clicked.connect(on_click)
 
     liste = ["nouvel item", "deuxième nouvel item"]
     model.clear()

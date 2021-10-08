@@ -297,9 +297,8 @@ class ExerciseMainWindow(QMainWindow):
             self.toolbar.update()
             self.__init_menubar()
             # Reconnect Context area signals and slots
-            self.ecw.objects_wgt.itemClicked.connect(
-                self.process_context_click)
-            self.ecw.props_wgt.itemClicked.connect(self.process_context_click)
+            self.ecw.objects_wgt.clicked.connect(self.process_context_click)
+            self.ecw.props_wgt.clicked.connect(self.process_context_click)
 
             self.ecw.target_wgt.mouseReleaseEvent = self.process_target_click
             if hasattr(self.ecw, "action_apply_button"):
@@ -424,7 +423,7 @@ class ExerciseMainWindow(QMainWindow):
             self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
     @Slot(MathObjectWidgetItem)
-    def process_context_click(self, item: MathObjectWidgetItem):
+    def process_context_click(self, index_):
         """
         Add or remove item (item represents a math. object or property)
         from the current selection, depending on whether it was already
@@ -434,9 +433,14 @@ class ExerciseMainWindow(QMainWindow):
         """
         # TODO: allow simultaneous selection of target and context objects
 
+        print(index_)
+        print(self.ecw.objects_wgt.model())
+        item = self.ecw.objects_wgt.item_from_index(index_)
+        if not item:
+            item = self.ecw.props_wgt.item_from_index(index_)
         # Once clicked, one does not want the item to remain visually
         # selected
-        item.setSelected(False)
+        # item.setSelected(False)
         # Un-select target
         self.ecw.target_wgt.mark_user_selected(False)
         self.target_selected = False
@@ -588,8 +592,8 @@ class ExerciseMainWindow(QMainWindow):
         self.current_goal = new_goal
 
         # Reconnect Context area signals and slots
-        self.ecw.objects_wgt.itemClicked.connect(self.process_context_click)
-        self.ecw.props_wgt.itemClicked.connect(self.process_context_click)
+        self.ecw.objects_wgt.clicked.connect(self.process_context_click)
+        self.ecw.props_wgt.clicked.connect(self.process_context_click)
 
         self.ecw.target_wgt.mouseReleaseEvent = self.process_target_click
         if hasattr(self.ecw, "action_apply_button"):
