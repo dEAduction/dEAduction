@@ -528,6 +528,8 @@ def latex_to_lean(string: Union[str, list]):
     Warning, this has not really been tested.
     (Used only in logic.py.)
     """
+    # Fixme: this should also handles lambda expression
+    #  (including sequences, set families, and so on)
     if isinstance(string, list):
         return [latex_to_lean(item) for item in string]
     elif isinstance(string, str):
