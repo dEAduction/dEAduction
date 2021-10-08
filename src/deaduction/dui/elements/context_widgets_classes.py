@@ -45,15 +45,17 @@ from PySide2.QtCore    import ( Signal,
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
                                 QIcon,
-                                QFont)
+                                QFont,
+                                QStandardItem,
+                                QStandardItemModel)
 from PySide2.QtWidgets import ( QHBoxLayout,
                                 QVBoxLayout,
                                 QLabel,
                                 QWidget,
-                                QListWidget,
-                                QListWidgetItem)
+                                QListView,
+                                QAbstractItemView)
 
-from deaduction.dui.elements             import   HTMLDelegate
+from snippets.QListView.html_list_view   import   HTMLDelegate
 from   deaduction.pylib.mathobj          import   MathObject
 from   deaduction.pylib.actions          import   explain_how_to_apply
 
@@ -63,13 +65,12 @@ import deaduction.pylib.config.vars as cvars
 
 log = logging.getLogger(__name__)
 
+global _
 ################################
 # MathObject widgets classes #
 ################################
 
 # A usefull class.
-
-
 class _TagIcon(QIcon):
     """
     A QIcon (self) depending on the tag (one of '+', '=', '≠') given
@@ -118,7 +119,7 @@ class _TagIcon(QIcon):
 # 'Properties' widgets use those same two classes.
 
 
-class MathObjectWidgetItem(QListWidgetItem):
+class MathObjectWidgetItem(QStandardItem):
     """
     Widget in charge of containing an instance of the class MathObject
     as an attribute and displaying it in a list (MathObjectWidget)
@@ -151,14 +152,13 @@ class MathObjectWidgetItem(QListWidgetItem):
 
         self.mathobject = mathobject
         self.tag        = tag
-        self.label       = QLabel()
         # self.label.setTextFormat(Qt.RichText)
         lean_name = mathobject.to_display()
-        lean_name = "<div style='color:Blue;'>" + lean_name + "</div>"
+        # lean_name = "<div style='color:Blue;'>" + lean_name + "</div>"
         math_expr = mathobject.math_type.to_display(is_math_type=True)
-        math   = "<div style='color:Red;'>" + math_expr + "</div>"
+        # math   = "<div style='color:Red;'>" + math_expr + "</div>"
         caption   = f'{lean_name} : {math_expr}'
-        self.label.setText(caption)
+        self.setText(caption)
         self.setIcon(_TagIcon(tag))
         # set tool_tips (merge several tool_tips if needed)
 
@@ -207,7 +207,7 @@ class MathObjectWidgetItem(QListWidgetItem):
         return self.label.size().width()
 
 
-class MathObjectWidget(QListWidget):
+class MathObjectWidget(QListView):
     """
     A container class to display an ordered list of tagged (see
     _TagIcon.__doc__) instances of the class MathObject. Each element
@@ -221,7 +221,7 @@ class MathObjectWidget(QListWidget):
         attribute makes accessing them painless.
     """
 
-    def __init__(self, tagged_mathobjects: [Tuple[MathObject, str]]=[]):
+    def __init__(self, tagged_mathobjects: [Tuple[MathObject, str]] = None):
         """
         Init self an ordered list of tuples (mathobject, tag), where
         mathobject is an instance of the class MathObject (not
@@ -231,24 +231,34 @@ class MathObjectWidget(QListWidget):
         :param tagged_mathobjects: The list of tagged instances of the
             class MathObject.
         """
+        if not tagged_mathobjects:
+            tagged_mathobjects = []
 
         super().__init__()
+        # model = QStandardItemModel(self)
+        # No text edition (!), multi-selection
+        self.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.setSelectionMode(QAbstractItemView.MultiSelection)
+
+        # After filling content?
+        self.setModel(QStandardItemModel())  # parent=self?
+        self.setItemDelegate(HTMLDelegate())  # parent=self?
+
         self.items = []
         # set fonts for maths display
         math_font_name = cvars.get('display.mathematics_font', 'Default')
         self.setFont(QFont(math_font_name))
         for mathobject, tag in tagged_mathobjects:
             item = MathObjectWidgetItem(mathobject, tag)
-            self.addItem(item)
-            self.setItemWidget(item, item.label)
+            # self.addItem(item)
+            self.model().appendRow(item)
             self.items.append(item)
         # FIXME: deprecated
         # self.itemDoubleClicked.connect(self._emit_apply_math_object)
 
         # self.horizontalScrollBar().setRange(0, self.width)
-        log.debug(f"Horizontal context width: {self.width}")
-        log.debug(f"Size hint for col 0: {self.sizeHintForColumn(0)}")
-
+        # log.debug(f"Horizontal context width: {self.width}")
+        # log.debug(f"Size hint for col 0: {self.sizeHintForColumn(0)}")
 
     @Slot(MathObjectWidgetItem)
     def _emit_apply_math_object(self, item):

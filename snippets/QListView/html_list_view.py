@@ -25,31 +25,37 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
-import qtrio.examples.emissions
-from PySide2 import QtGui, QtCore, QtWidgets
+
+from typing import Tuple
+
+from PySide2.QtCore import (QSize)
+from PySide2.QtGui import (QTextDocument, QAbstractTextDocumentLayout,
+                           QStandardItemModel, QStandardItem)
+from PySide2.QtWidgets import (QApplication, QAbstractItemView, QListView,
+                               QStyledItemDelegate, QStyleOptionViewItem,
+                               QStyle)
 
 
-class HTMLDelegate(QtWidgets.QStyledItemDelegate):
+from deaduction.pylib.mathobj import MathObject
+
+
+class HTMLDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
-        options = QtWidgets.QStyleOptionViewItem(option)
+        options = QStyleOptionViewItem(option)
         self.initStyleOption(options, index)
 
-        style = QtWidgets.QApplication.style() if options.widget is None else \
+        style = QApplication.style() if options.widget is None else \
             options.widget.style()
 
-        doc = QtGui.QTextDocument()
+        doc = QTextDocument()
         doc.setHtml(options.text)
 
         options.text = ""
-        style.drawControl(QtWidgets.QStyle.CE_ItemViewItem, options, painter)
+        style.drawControl(QStyle.CE_ItemViewItem, options, painter)
 
-        ctx = QtGui.QAbstractTextDocumentLayout.PaintContext()
+        ctx = QAbstractTextDocumentLayout.PaintContext()
 
-        # Highlighting text if item is selected
-        #if (optionV4.state & QStyle::State_Selected)
-            #ctx.palette.setColor(QPalette::Text, optionV4.palette.color(QPalette::Active, QPalette::HighlightedText));
-
-        textRect = style.subElementRect(QtWidgets.QStyle.SE_ItemViewItemText,
+        textRect = style.subElementRect(QStyle.SE_ItemViewItemText,
                                         options)
         painter.save()
         painter.translate(textRect.topLeft())
@@ -59,10 +65,10 @@ class HTMLDelegate(QtWidgets.QStyledItemDelegate):
         painter.restore()
 
     def sizeHint(self, option, index):
-        options = QtWidgets.QStyleOptionViewItem(option)
+        options = QStyleOptionViewItem(option)
         self.initStyleOption(options, index)
 
-        doc = QtGui.QTextDocument()
+        doc = QTextDocument()
         doc.setDefaultFont(option.font)
         doc.setHtml(options.text)
         # print(options.text)
@@ -70,10 +76,10 @@ class HTMLDelegate(QtWidgets.QStyledItemDelegate):
         # width, height = doc.size().width(), doc.size().height()
         # print(width, height)
         doc.setTextWidth(options.rect.width())
-        return QtCore.QSize(width, height)
+        return QSize(width, height)
 
 
-# class HTMLDelegate2(QtWidgets.QItemDelegate):
+# class HTMLDelegate2(QItemDelegate):
 #     def __init__(self, parent=None):
 #         super(HTMLDelegate2, self).__init__(parent)
 #
@@ -91,34 +97,40 @@ class HTMLDelegate(QtWidgets.QStyledItemDelegate):
 #         painter.restore()
 
 
-def main():
-    app = QtWidgets.QApplication()
+# @QtCore.Slot
+# def on_click(index):
+    # print(list_view.model().index(index, 0))
 
-    # main_window = QtWidgets.QDialog()
-    list_view = QtWidgets.QListView()
+
+if __name__ == "__main__":
+    app = QApplication()
+
+    # main_window = QDialog()
+    list_view = QListView()
     list_view.setWindowTitle("Essai de liste")
-    model = QtGui.QStandardItemModel(list_view)
+    model = QStandardItemModel(list_view)
 
     liste = ["Toto", "Babaf", "tomato",
              "Et si jamais vous trouvez ça trop long: raccourcissez !!!"]
 
     for text in liste:
         text = "<div style='color:Blue;'>" + text + "</div>"
-        item = QtGui.QStandardItem(text)
+        item = QStandardItem(text)
         model.appendRow(item)
 
     list_view.setModel(model)
     list_view.setItemDelegate(HTMLDelegate(list_view))
 
     # Settings
-    # list_view.setMovement(QtWidgets.QListView.Free)
+    # list_view.setMovement(QListView.Free)
     # list_view.setRowHidden(1, True)
     # list_view.setAlternatingRowColors(True)
-    list_view.setDragEnabled(True)
-    list_view.setDragDropMode(QtWidgets.QAbstractItemView.DragDrop)
+    # list_view.setDragEnabled(True)
+    # list_view.setDragDropMode(QAbstractItemView.DragDrop)
 
-    list_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-    list_view.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+    # No text edition (!), multi-selection
+    list_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
+    list_view.setSelectionMode(QAbstractItemView.MultiSelection)
 
     list_view.show()
 
@@ -132,17 +144,8 @@ def main():
                + text + "<sub>" + "n+1" + "</sub>"\
                "<sup> -1 </sup>"\
                + "</div>"
-        item = QtGui.QStandardItem(text)
+        item = QStandardItem(text)
         model.appendRow(item)
 
     app.exec_()
-
-
-# @QtCore.Slot
-# def on_click(index):
-    # print(list_view.model().index(index, 0))
-
-
-if __name__ == "__main__":
-    main()
 
