@@ -27,15 +27,8 @@ This file is part of d∃∀duction.
 
 from typing import Any
 import logging
-import deaduction.pylib.logger as logger
 
 from deaduction.pylib.mathobj.MathObject   import MathObject
-from deaduction.pylib.mathobj.html_display import html_display
-from deaduction.pylib.mathobj.utf8_display import utf8_display
-
-from deaduction.pylib.mathobj.display_math import (recursive_display,
-                                                   latex_to_utf8,
-                                                   shallow_latex_to_text)
 
 log = logging.getLogger(__name__)
 global _

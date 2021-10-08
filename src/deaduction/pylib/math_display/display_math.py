@@ -63,21 +63,19 @@ import logging
 from typing import Any, Union
 from dataclasses import dataclass
 
-import deaduction.pylib.logger              as logger
-
 from deaduction.pylib.mathobj.give_name     import give_local_name
-from deaduction.pylib.mathobj.utils import text_to_subscript_or_sup
-from .display_data import ( latex_from_node,
-                            latex_from_constant_name,
-                            latex_from_quant_node,
-                            latex_to_text,
-                            latex_to_utf8_dic,
-                            latex_to_lean_dic,
-                            needs_paren,
-                            latex_to_utf8,
-                            couples_of_nodes_to_text,
-                            couples_of_nodes_to_utf8,
-                            dic_of_first_nodes)
+from deaduction.pylib.math_display.utils import text_to_subscript_or_sup
+from deaduction.pylib.math_display.display_data import (latex_from_node,
+                                                        latex_from_constant_name,
+                                                        latex_from_quant_node,
+                                                        latex_to_text,
+                                                        latex_to_utf8_dic,
+                                                        latex_to_lean_dic,
+                                                        needs_paren,
+                                                        latex_to_utf8,
+                                                        couples_of_nodes_to_text,
+                                                        couples_of_nodes_to_utf8,
+                                                        dic_of_first_nodes)
 
 log = logging.getLogger(__name__)
 global _
@@ -108,10 +106,12 @@ class Shape:
     text_depth:                 int         = 0
     #   depth until which a text version should be displayed if available.
     display_not:                list        = None
-    all_app_arguments:          list        = None  # FIXME: deprecated
+    all_app_arguments:          list        = None
     #   Contains supplementary children if needed. See display_application.
     negate:                     bool        = False
     #   When negate is True, try to compute display_not instead of display.
+
+    # FIXME: deprecated
 
     @classmethod
     def from_math_object(cls,

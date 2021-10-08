@@ -25,11 +25,9 @@ This file is part of d∃∀duction.
 """
 from typing import Union
 
-import deaduction.pylib.config.vars as cvars
-
-from deaduction.pylib.mathobj.utils import (cut_spaces,
-                                            text_to_subscript_or_sup,
-                                            first_descendant)
+from deaduction.pylib.math_display.utils import (cut_spaces,
+                                                 text_to_subscript_or_sup,
+                                                 first_descendant)
 
 
 def subscript(s: str) -> str:

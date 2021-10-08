@@ -419,7 +419,8 @@ class Goal:
                      format_="utf8",
                      to_prove=True,
                      text_depth=10,
-                     open_problem=False) -> str:
+                     open_problem=False,
+                     by_type=True) -> str:
         """
         Compute a displayable version of the goal as the statement of an
         exercise.

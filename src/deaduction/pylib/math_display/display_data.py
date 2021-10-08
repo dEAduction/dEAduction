@@ -522,3 +522,29 @@ def latex_to_utf8(string: Union[str, list]):
         return string
 
 
+def latex_to_lean(string: Union[str, list]):
+    """
+    Convert a string or a list of string from latex to Lean.
+    Warning, this has not really been tested.
+    (Used only in logic.py.)
+    """
+    if isinstance(string, list):
+        return [latex_to_lean(item) for item in string]
+    elif isinstance(string, str):
+        striped_string = string.strip()  # Remove spaces
+        if striped_string in latex_to_lean_dic:
+            lean_string = latex_to_lean_dic[striped_string]
+            if isinstance(lean_string, str):
+                utf8_string = string.replace(striped_string, lean_string)
+            return lean_string
+        elif striped_string in latex_to_utf8_dic:
+            utf8_string = latex_to_utf8_dic[striped_string]
+            if isinstance(utf8_string, str):
+                utf8_string = string.replace(striped_string, utf8_string)
+            return utf8_string
+        else:
+            return string
+    else:
+        return string
+
+

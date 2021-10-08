@@ -28,8 +28,8 @@ import logging
 
 import deaduction.pylib.config.vars as cvars
 
-from deaduction.pylib.mathobj.utils import cut_spaces, first_descendant
-from deaduction.pylib.mathobj.utf8_display import add_parentheses
+from deaduction.pylib.math_display.utils import cut_spaces
+from deaduction.pylib.math_display.utf8_display import add_parentheses
 
 log = logging.getLogger(__name__)
 

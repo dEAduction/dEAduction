@@ -52,25 +52,22 @@ from copy import copy
 import logging
 
 if __name__ == "__main__":
-    import deaduction.pylib.config.i18n
+    pass
 
 import deaduction.pylib.config.vars            as cvars
-from deaduction.pylib.mathobj.display_data import (HAVE_BOUND_VARS,
-                                                   INEQUALITIES,
-                                                   latex_from_node,
-                                                   latex_to_utf8)
-from deaduction.pylib.mathobj.display_math import \
-    (Shape,
-     recursive_display,
-     raw_latex_shape_from_couple_of_nodes,
-     raw_display_math_type_of_local_constant,
-     raw_latex_shape_from_specific_nodes,
-     shallow_latex_to_text)
-from deaduction.pylib.mathobj.html_display import html_display
-from deaduction.pylib.mathobj.utf8_display import utf8_display
+from deaduction.pylib.math_display import (HAVE_BOUND_VARS, INEQUALITIES,
+                                           latex_from_node, latex_to_utf8,
+                                           latex_to_lean, Shape,
+                                           recursive_display,
+                                           raw_latex_shape_from_couple_of_nodes,
+                                           raw_display_math_type_of_local_constant,
+                                           raw_latex_shape_from_specific_nodes,
+                                           shallow_latex_to_text,
+                                           html_display, utf8_display,
+                                           structured_display_to_string)
 
 
-from deaduction.pylib.mathobj.utils        import *
+from deaduction.pylib.math_display.utils import *
 
 log = logging.getLogger(__name__)
 global _
@@ -1177,12 +1174,16 @@ class MathObject:
         display = shallow_latex_to_text(abstract_string, text_depth)
         # log.debug(f"(2) --> to text: {abstract_string}")
         # (3) Replace latex macro by utf8:
-        if format_ in ('utf8', 'html'):
+        if format_ == 'lean':
+            display = latex_to_lean(display)
+        if format_ in ('lean', 'utf8', 'html'):
             display = latex_to_utf8(display)
         if format_ == 'html':
             display = html_display(display)
         elif format_ == 'utf8':
             display = utf8_display(display)
+        elif format_ == 'lean':
+            display = utf8_display(display)  # FIXME: should be adapted to Lean
         # log.debug(f"    --> To html: {display}")
         return display
 
@@ -1220,7 +1221,7 @@ class MathObject:
 
     def math_type_to_display(self, format_="html", text_depth=0) -> str:
         """
-        cf MathObject.to_display
+        cf MathObject.to_display. Lean format_ is not pertinent here.
         """
         # log.debug(f"Displaying math_type: {self.old_to_display()}...")
 
@@ -1246,6 +1247,7 @@ class MathObject:
                        format_="utf8",  # change to "latex" for latex...
                        text_depth=0
                        ) -> str:
+        # FIXME: suppress, and also the Shape class
         if is_math_type:
             shape = raw_display_math_type_of_local_constant(self, format_,
                                                         text_depth)
@@ -1268,33 +1270,3 @@ NO_MATH_TYPE = MathObject(node="not provided",
                           info={},
                           children=[],
                           math_type=None)
-
-
-def structured_display_to_string(structured_display) -> str:
-    """
-    Turn a (structured) latex or utf-8 display into a latex string.
-
-    :param structured_display:  type is recursively defined as str or list of
-                                structured_display
-    """
-    if isinstance(structured_display, str):
-        return structured_display
-    elif isinstance(structured_display, list):
-        string = ""
-        for lr in structured_display:
-            lr = structured_display_to_string(lr)
-            string += lr
-        return cut_spaces(string)
-    else:
-        log.warning("error in list_string_join: argument should be list or "
-                    f"str, not {type(structured_display)}")
-        return "**"
-
-
-def cut_spaces(string: str) -> str:
-    """
-    Remove unnecessary spaces inside string
-    """
-    while string.find("  ") != -1:
-        string = string.replace("  ", " ")
-    return string
