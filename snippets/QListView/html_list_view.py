@@ -26,9 +26,8 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from typing import Tuple
 
-from PySide2.QtCore import (QSize, Slot, QObject)
+from PySide2.QtCore import (QSize, Slot)
 from PySide2.QtGui import (QTextDocument, QAbstractTextDocumentLayout,
                            QStandardItemModel, QStandardItem)
 from PySide2.QtWidgets import (QApplication, QAbstractItemView, QListView,
@@ -46,6 +45,7 @@ class HTMLDelegate(QStyledItemDelegate):
 
         doc = QTextDocument()
         doc.setHtml(options.text)
+        # doc.setDefaultFont(option.font)
 
         options.text = ""
         style.drawControl(QStyle.CE_ItemViewItem, options, painter)
@@ -57,6 +57,9 @@ class HTMLDelegate(QStyledItemDelegate):
         painter.save()
         painter.translate(textRect.topLeft())
         painter.setClipRect(textRect.translated(-textRect.topLeft()))
+        # color = QtGui.QColor("blue")
+        # painter.fillRect(option.rect, color)
+
         doc.documentLayout().draw(painter, ctx)
 
         painter.restore()
@@ -69,6 +72,7 @@ class HTMLDelegate(QStyledItemDelegate):
         doc.setDefaultFont(option.font)
         doc.setHtml(options.text)
         # print(options.text)
+        # FIXME: how to get ACTUAL size??
         width, height = int(doc.idealWidth())+100, doc.size().height()
         # width, height = doc.size().width(), doc.size().height()
         # print(width, height)
@@ -94,7 +98,6 @@ class HTMLDelegate(QStyledItemDelegate):
 #         painter.restore()
 
 
-
 if __name__ == "__main__":
     app = QApplication()
 
@@ -102,7 +105,6 @@ if __name__ == "__main__":
     list_view = QListView()
     list_view.setWindowTitle("Essai de liste")
     model = QStandardItemModel(list_view)
-
     liste = ["Toto", "Babaf", "tomato",
              "Et si jamais vous trouvez ça trop long: raccourcissez !!!"]
 
@@ -122,8 +124,8 @@ if __name__ == "__main__":
     # list_view.setDragDropMode(QAbstractItemView.DragDrop)
 
     # No text edition (!), multi-selection
-    list_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
-    list_view.setSelectionMode(QAbstractItemView.MultiSelection)
+    # list_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
+    # list_view.setSelectionMode(QAbstractItemView.MultiSelection)
 
     list_view.show()
 

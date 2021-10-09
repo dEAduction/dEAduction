@@ -237,12 +237,22 @@ class MathObjectWidget(QListView):
             tagged_mathobjects = []
 
         super().__init__()
-        # model = QStandardItemModel(self)
-        # No text edition (!), multi-selection
+
+        # Possible settings:
+        # self.setSelectionMode(QAbstractItemView.MultiSelection)
+        # list_view.setMovement(QListView.Free)
+        # list_view.setRowHidden(1, True)
+        # list_view.setAlternatingRowColors(True)
+        # list_view.setDragEnabled(True)
+        # list_view.setDragDropMode(QAbstractItemView.DragDrop)
+
+        # No text edition (!), no selection, no drag-n-drop
+        self.setSelectionMode(QAbstractItemView.NoSelection)
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.setSelectionMode(QAbstractItemView.MultiSelection)
+        self.setDragDropMode(QAbstractItemView.NoDragDrop)
 
         # After filling content?
+        # model = QStandardItemModel(self)
         self.setModel(QStandardItemModel())  # parent=self?
         self.setItemDelegate(HTMLDelegate())  # parent=self?
 
