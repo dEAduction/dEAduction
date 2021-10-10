@@ -32,11 +32,11 @@ This file is part of d∃∀duction.
 import trio
 import logging
 from copy import deepcopy
-from typing import Optional, Dict
+from typing import Optional
 
 # from deaduction.pylib.utils.nice_display_tree import nice_display_tree
 from deaduction.pylib.coursedata.exercise_classes import Exercise, Statement
-from deaduction.pylib.mathobj.proof_state import ProofState
+from deaduction.pylib.proof_state.proof_state import ProofState
 from deaduction.pylib.lean.response import Message
 from deaduction.pylib.editing import LeanFile
 from deaduction.pylib.lean.request import SyncRequest

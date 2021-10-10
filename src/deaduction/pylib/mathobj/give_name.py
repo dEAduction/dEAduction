@@ -31,7 +31,7 @@ import logging
 
 import deaduction.pylib.logger as logger
 
-from deaduction.pylib.mathobj import MathObject
+# from .math_object import MathObject
 # class MathObject:
 #     pass
 
@@ -73,10 +73,10 @@ def get_new_hyp_from_forbidden_names(proof_step,
     return potential_name
 
 
-def give_local_name(math_type: MathObject,
-                    body: MathObject,
-                    hints: [str] = [],
-                    forbidden_vars: [MathObject] = []) -> str:
+def give_local_name(math_type,
+                    body,
+                    hints: [str] = None,
+                    forbidden_vars = None) -> str:
     """
     Attribute a name to a local variable. See give_name below.
     Mainly computes all pertinent forbidden variables, by adding vars from
@@ -90,6 +90,10 @@ def give_local_name(math_type: MathObject,
     :return:                str, a name for the new variable
     """
 
+    if hints is None:
+        hints = []
+    if forbidden_vars is None:
+        forbidden_vars = []
     # Fixme: used only in display_math
     more_forbidden_vars = body.extract_local_vars()
     names = [var.info['name'] for var in forbidden_vars]
@@ -110,7 +114,7 @@ def give_local_name(math_type: MathObject,
     return give_name(math_type, forbidden_vars, hints, None, use_indices)
 
 
-def give_global_name(math_type: MathObject,
+def give_global_name(math_type,
                      proof_step,
                      hints: [str] = None,
                      strong_hint: str = '') -> str:
@@ -137,7 +141,7 @@ def give_global_name(math_type: MathObject,
 
 
 def give_name(math_type,
-              forbidden_vars: [MathObject],
+              forbidden_vars,
               hints: [str]=None,
               proof_step=None,
               use_indices=False) -> str:
@@ -368,7 +372,7 @@ def hints_from_type(math_type, hints=None):
     return hints
 
 
-def hints_by_name(named_vars: [MathObject], unnamed_var_nb: int):
+def hints_by_name(named_vars, unnamed_var_nb: int):
     """
     Look into named_vars: if they all start by the same letter,
     then this is our main hint. If not, return a sequence of new letters.
@@ -423,10 +427,10 @@ def try_names(vars_to_name, forbidden_names, names):
         return False
 
 
-def name_bound_vars(math_type: MathObject,
-                    named_vars: [MathObject],
-                    unnamed_vars: [MathObject],
-                    forbidden_vars: [MathObject]):
+def name_bound_vars(math_type,
+                    named_vars,
+                    unnamed_vars,
+                    forbidden_vars):
     """
     Name all vars in unnamed_vars, assumed to be dummy vars sharing type
     math_type, using named_vars (of the same type) as clues, and avoiding

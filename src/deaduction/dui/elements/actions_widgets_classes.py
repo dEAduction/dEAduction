@@ -199,6 +199,7 @@ class ActionButton(QPushButton):
             self.setCheckable(False)
             await sleep(duration)
 
+
 # We wish to have an ActionButton class attribute called
 # action_triggered and defined as Signal(ActionButton). At first, one
 # may define it in ActionButton.__init__. However, doing this will raise

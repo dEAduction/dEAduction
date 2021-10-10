@@ -607,12 +607,12 @@ def construct_iff(proof_step, user_input: [str]) -> CodeForLean:
                        node="PROP_IMPLIES",
                        children = [left, right],
                        bound_vars=target.bound_vars,
-                       math_type=MathObject.PROP_AS_MATHOBJECT())
+                       math_type=MathObject.PROP)
     impl2 = MathObject(info={},
                        node="PROP_IMPLIES",
                        children = [right, left],
                        bound_vars=target.bound_vars,
-                       math_type=MathObject.PROP_AS_MATHOBJECT())
+                       math_type=MathObject.PROP)
     code.add_conjunction(target, impl1, impl2)
     return code
 

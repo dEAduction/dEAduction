@@ -36,26 +36,25 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 import logging
-from pathlib import Path
-from typing  import Tuple
 
 from PySide2.QtCore    import ( Signal,
-                                Slot)
+                                Slot,
+                                Qt)
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
                                 QIcon,
-                                QFont)
+                                QFont,
+                                QStandardItem,
+                                QStandardItemModel)
 from PySide2.QtWidgets import ( QHBoxLayout,
                                 QVBoxLayout,
                                 QLabel,
                                 QWidget,
-                                QListWidget,
-                                QListWidgetItem)
+                                QListView,
+                                QAbstractItemView)
 
-# from   deaduction.pylib.config.i18n      import   _
-from   deaduction.pylib.mathobj          import  (ContextMathObject,
-                                                  MathObject)
-# from   deaduction.pylib.actions          import   explain_how_to_apply
+from .html_list_view                     import   HTMLDelegate
+# from   deaduction.pylib.mathobj          import   MathObject
 
 from   deaduction.pylib.utils.filesystem import path_helper
 
@@ -68,9 +67,8 @@ global _
 # MathObject widgets classes #
 ################################
 
+
 # A usefull class.
-
-
 class _TagIcon(QIcon):
     """
     A QIcon (self) depending on the tag (one of '+', '=', '≠') given
@@ -119,7 +117,7 @@ class _TagIcon(QIcon):
 # 'Properties' widgets use those same two classes.
 
 
-class MathObjectWidgetItem(QListWidgetItem):
+class MathObjectWidgetItem(QStandardItem):
     """
     Widget in charge of containing an instance of the class MathObject
     as an attribute and displaying it in a list (MathObjectWidget)
@@ -138,32 +136,34 @@ class MathObjectWidgetItem(QListWidgetItem):
         _TagIcon) of mathobject.
     """
 
-    def __init__(self, math_object: ContextMathObject):
+    def __init__(self, context_math_object):
         """
-        Init self with an instance of the class MathObject and a tag.
+        Init self with an instance of the class ContextMathObject.
         See self.__doc__.
 
-        :param mathobject: The MathObject one wants to display.
-        :param tag: The tag of mathobject.
+        :param context_math_object: The ContextMathObject one wants to display.
         """
 
         super().__init__()
 
-        self.math_object = math_object
-        if math_object.is_new:
+        self.context_math_object = context_math_object
+        if context_math_object.is_new:
             self.tag        = '+'
-        elif math_object.is_modified:
+        elif context_math_object.is_modified:
             self.tag = '≠'
         else:
             self.tag = '='
 
-        lean_name = math_object.to_display()
-        math_expr = math_object.math_type_to_display()
+        lean_name = context_math_object.to_display()
+        math_expr = context_math_object.math_type_to_display()
         caption   = f'{lean_name} : {math_expr}'
         self.setText(caption)
         self.setIcon(_TagIcon(self.tag))
+
+        # self.setSelectable(False)
+
         # set tool_tips (merge several tool_tips if needed)
-        # tool_tips = explain_how_to_apply(math_object)
+        # tool_tips = explain_how_to_apply(context_math_object)
         # if len(tool_tips) == 1:
         #     tool_tip = _("Double click to") + " " + tool_tips[0]
         #     self.setToolTip(tool_tip)
@@ -172,6 +172,10 @@ class MathObjectWidgetItem(QListWidgetItem):
         #     for tool_tip in tool_tips:
         #         text += "\n" + "• " + tool_tip
         #     self.setToolTip(text)
+
+    @property
+    def math_object(self):
+        return self.context_math_object
 
     @property
     def logic(self):
@@ -210,7 +214,21 @@ class MathObjectWidgetItem(QListWidgetItem):
     #     return self.math_object is MathObject
 
 
-class MathObjectWidget(QListWidget):
+class TargetWidgetItem(QStandardItem):
+    """
+    Widget to display a target in the chooser, with the same format as the
+    MathObjectWidgetItem.
+    """
+
+    def __init__(self, target):
+
+        super().__init__()
+        self.target = target
+        caption = target.math_type_to_display()
+        self.setText(caption)
+
+
+class MathObjectWidget(QListView):
     """
     A container class to display an ordered list of tagged (see
     _TagIcon.__doc__) instances of the class MathObject. Each element
@@ -224,7 +242,7 @@ class MathObjectWidget(QListWidget):
         attribute makes accessing them painless.
     """
 
-    def __init__(self, context_math_objects: [ContextMathObject]=None):
+    def __init__(self, context_math_objects=None, target=None):
         """
         Init self an ordered list of tuples (mathobject, tag), where
         mathobject is an instance of the class MathObject (not
@@ -234,25 +252,54 @@ class MathObjectWidget(QListWidget):
         :param tagged_mathobjects: The list of tagged instances of the
             class MathObject.
         """
+
         super().__init__()
+
+        # Possible settings:
+        # self.setSelectionMode(QAbstractItemView.MultiSelection)
+        # list_view.setMovement(QListView.Free)
+        # list_view.setRowHidden(1, True)
+        # list_view.setAlternatingRowColors(True)
+        # list_view.setDragEnabled(True)
+        # list_view.setDragDropMode(QAbstractItemView.DragDrop)
+
+        # No text edition (!), no selection, no drag-n-drop
+        self.setSelectionMode(QAbstractItemView.NoSelection)
+        self.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.setDragDropMode(QAbstractItemView.NoDragDrop)
+
+        # After filling content?
+        # model = QStandardItemModel(self)
+        self.setModel(QStandardItemModel())  # parent=self?
+        self.setItemDelegate(HTMLDelegate())  # parent=self?
 
         self.items = []
 
-        # TODO: method setfontstyle
-        # size = cvars.get('display.main_font_size')
-        # self.setStyleSheet(f'font-size: {size};')
-        # set fonts for maths display
-        math_font_name = cvars.get('display.mathematics_font', 'Default')
-        self.setFont(QFont(math_font_name))
+        # set fonts for maths display FIXME: put this in delegate
+        # math_font_name = cvars.get('display.mathematics_font', 'Default')
+        # main_font_size   = int(cvars.get('display.main_font_size')[:-2])
+        # font = QFont(math_font_name)
+        # font.setPointSize(main_font_size)
+        # self.setFont(font)  # FIXME: does not do anything
 
-        if not context_math_objects:
-            context_math_objects = []
-        for mathobject in context_math_objects:
-            item = MathObjectWidgetItem(mathobject)
-            self.addItem(item)
-            self.items.append(item)
+        # self.setStyle(f'{{font - size: {main_font_size};}}')
 
-        self.itemDoubleClicked.connect(self._emit_apply_math_object)
+        if context_math_objects:
+            for math_object in context_math_objects:
+                item = MathObjectWidgetItem(math_object)
+                self.model().appendRow(item)
+                self.items.append(item)
+        elif target:
+            item = TargetWidgetItem(target)
+            self.model().appendRow(item)
+
+        # self.horizontalScrollBar().setRange(0, self.width)
+        # log.debug(f"Horizontal context width: {self.width}")
+        # log.debug(f"Size hint for col 0: {self.sizeHintForColumn(0)}")
+
+    def item_from_index(self, index_):
+        item = self.model().itemFromIndex(index_)
+        return item
 
     @Slot(MathObjectWidgetItem)
     def _emit_apply_math_object(self, item):
@@ -285,6 +332,18 @@ class MathObjectWidget(QListWidget):
 MathObjectWidget.apply_math_object_triggered = Signal(MathObjectWidget)
 
 
+# @property
+# def width(self):
+#     width = 0
+#     for item in self.items:
+#         if item.width > width:
+#             width = item.width
+#     return width
+#
+# def resizeEvent(self, event):
+#     self.horizontalScrollBar().setRange(0, self.width)
+#     # self.horizontalScrollBar().setValue(200)
+
 ##########################
 # Target widgets classes #
 ##########################
@@ -302,8 +361,8 @@ class TargetWidget(QWidget):
     :attribute tag str: The tag associated to target.
     """
 
-    def __init__(self, target: MathObject=None, tag: str=None,
-                 goal_count: str=''):
+    def __init__(self, target=None, tag: str = None,
+                 goal_count: str = ''):
         """"
         Init self with an target (an instance of the class ProofStatePO)
         and a tag. If those are None, display an empty tag and '…' in
@@ -339,7 +398,9 @@ class TargetWidget(QWidget):
             text = target.math_type_to_display()
         else:
             text = '…'
-        self.target_label = QLabel(text)
+        self.target_label = QLabel()
+        self.target_label.setTextFormat(Qt.RichText)
+        self.target_label.setText(text)
 
         # TODO: method setfontstyle
         size = cvars.get('display.target_font_size')
@@ -364,6 +425,9 @@ class TargetWidget(QWidget):
         main_layout.addStretch()
         self.setLayout(main_layout)
 
+    def mouseReleaseEvent(self, event):
+        print("Click!")
+
     def mark_user_selected(self, yes: bool=True):
         """
         Change self's background to green if yes or to normal color
@@ -386,3 +450,4 @@ class TargetWidget(QWidget):
     @property
     def logic(self):
         return self.target
+

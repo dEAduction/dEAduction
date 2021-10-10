@@ -31,14 +31,13 @@ import trio
 import logging
 
 from deaduction.pylib.coursedata        import Course
-from deaduction.pylib.mathobj.proof_state import ProofState
+from deaduction.pylib.proof_state.proof_state import ProofState
 from deaduction.pylib.lean.response import Message
 from deaduction.pylib.lean.request import SyncRequest
 from deaduction.pylib.lean.server import LeanServer
 from deaduction.pylib.lean.installation import LeanEnvironment
 
 import deaduction.pylib.config.site_installation as inst
-import deaduction.pylib.server.exceptions as exceptions
 
 from PySide2.QtCore import Signal, QObject
 

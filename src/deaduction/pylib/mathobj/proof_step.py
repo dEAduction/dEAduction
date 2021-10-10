@@ -513,58 +513,58 @@ class ProofStep:
         return _("Beginning of Proof")
 
 
-class Proof(list):
-    """
-    This proof encodes the data used to display the outline of a proof.
-    It is a list whose elements are either ProofNodes or ProofSteps.
-    """
-    # FIXME: unused, suppress
-
-    def __init__(self, outline: list):
-        super().__init__()
-
-    @classmethod
-    def from_proof_steps(cls, proof_steps: [ProofStep]):
-        if not proof_steps:
-            return []
-        first_proof_step = proof_steps.pop(0)
-        if not first_proof_step.is_node():
-            # No NewGoal at first step:
-            #  proof is [first proof_step, <end of proof>]
-            end_of_proof = cls.from_proof_steps(proof_steps)
-            return [first_proof_step] + end_of_proof
-
-        else:
-            # There is a new_goal at first step,
-            #  proof will be a list of ProofNodes
-            #  given by [first proof step, first proof node, <end of proof>]
-            # Current goal is the last of the pile.
-
-            # goals = first_proof_step.new_goals
-            # new_goal = goals[-1]  # This is the proof node's goal
-            # new_goal_nb = len(goals)
-            sub_proof_steps = []
-            # The sub_proof corresponding to that goal runs
-            #  until this goal disappears from the pile,
-            #  and we transfer all the corresponding sublist of proof_steps
-            #  into sub_proof
-            # while proof_steps \
-            #         and new_goal_nb <= len(proof_steps[0].new_goals) \
-            #         and proof_steps[0].new_goals \
-            #         and new_goal == proof_steps[0].new_goals[new_goal_nb-1]:
-            while proof_steps \
-                    and proof_steps[0].parent == first_proof_step:
-                    # and new_goal_nb <= len(proof_steps[0].new_goals):
-                # Remove proof_step[0] from proof_steps,
-                #  and put it in sub_proof.
-                proof_step = proof_steps.pop(0)
-                sub_proof_steps.append(proof_step)
-            # Recursively call from_proof_steps method
-            #  (new_goals beyond len(goals) are actual new_goals)
-            sub_proof = Proof.from_proof_steps(sub_proof_steps)
-            proof_node = ProofNode(proof_step=first_proof_step,
-                                   sub_proof=sub_proof)
-            end_of_proof = cls.from_proof_steps(proof_steps)
-            return [first_proof_step, proof_node] + end_of_proof
+# class Proof(list):
+#     """
+#     This proof encodes the data used to display the outline of a proof.
+#     It is a list whose elements are either ProofNodes or ProofSteps.
+#     """
+#     # FIXME: unused, suppress
+#
+#     def __init__(self, outline: list):
+#         super().__init__()
+#
+#     @classmethod
+#     def from_proof_steps(cls, proof_steps: [ProofStep]):
+#         if not proof_steps:
+#             return []
+#         first_proof_step = proof_steps.pop(0)
+#         if not first_proof_step.is_node():
+#             # No NewGoal at first step:
+#             #  proof is [first proof_step, <end of proof>]
+#             end_of_proof = cls.from_proof_steps(proof_steps)
+#             return [first_proof_step] + end_of_proof
+#
+#         else:
+#             # There is a new_goal at first step,
+#             #  proof will be a list of ProofNodes
+#             #  given by [first proof step, first proof node, <end of proof>]
+#             # Current goal is the last of the pile.
+#
+#             # goals = first_proof_step.new_goals
+#             # new_goal = goals[-1]  # This is the proof node's goal
+#             # new_goal_nb = len(goals)
+#             sub_proof_steps = []
+#             # The sub_proof corresponding to that goal runs
+#             #  until this goal disappears from the pile,
+#             #  and we transfer all the corresponding sublist of proof_steps
+#             #  into sub_proof
+#             # while proof_steps \
+#             #         and new_goal_nb <= len(proof_steps[0].new_goals) \
+#             #         and proof_steps[0].new_goals \
+#             #         and new_goal == proof_steps[0].new_goals[new_goal_nb-1]:
+#             while proof_steps \
+#                     and proof_steps[0].parent == first_proof_step:
+#                     # and new_goal_nb <= len(proof_steps[0].new_goals):
+#                 # Remove proof_step[0] from proof_steps,
+#                 #  and put it in sub_proof.
+#                 proof_step = proof_steps.pop(0)
+#                 sub_proof_steps.append(proof_step)
+#             # Recursively call from_proof_steps method
+#             #  (new_goals beyond len(goals) are actual new_goals)
+#             sub_proof = Proof.from_proof_steps(sub_proof_steps)
+#             proof_node = ProofNode(proof_step=first_proof_step,
+#                                    sub_proof=sub_proof)
+#             end_of_proof = cls.from_proof_steps(proof_steps)
+#             return [first_proof_step, proof_node] + end_of_proof
 
 

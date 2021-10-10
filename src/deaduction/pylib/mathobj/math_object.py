@@ -63,11 +63,10 @@ from deaduction.pylib.math_display import (HAVE_BOUND_VARS, INEQUALITIES,
                                            raw_display_math_type_of_local_constant,
                                            raw_latex_shape_from_specific_nodes,
                                            shallow_latex_to_text,
-                                           html_display, utf8_display,
-                                           structured_display_to_string)
+                                           html_display, utf8_display)
 
 
-from deaduction.pylib.math_display.utils import *
+# from deaduction.pylib.math_display.utils import *
 
 log = logging.getLogger(__name__)
 global _
@@ -204,7 +203,7 @@ class MathObject:
         The constant NO_MATH_TYPE is defined below, after the methods
         """
         if self._math_type is None:
-            return NO_MATH_TYPE
+            return MathObject.NO_MATH_TYPE
         else:
             return self._math_type
 
@@ -271,14 +270,6 @@ class MathObject:
         The constant FALSE as a MathObject.
         """
         return cls(node="PROP_FALSE", info={}, children=[], math_type="PROP")
-
-    @classmethod
-    def NO_MATH_TYPE(cls):
-        """
-        The type of having undefined type as a MathObject.
-        """
-        # TODO: replace global var
-        return cls(node="not provided", info={}, children=[], math_type=None)
 
     @classmethod
     def from_info_and_children(cls, info: {}, children: []):
@@ -510,10 +501,12 @@ class MathObject:
         marked = False  # Will be True if bound variables should be unmarked
 
         node = self.node
-        # Case of NO_MATH_TYPE (avoid infinite recursion!)
-        if self is NO_MATH_TYPE \
-                and other is NO_MATH_TYPE:
+        # Include case of NO_MATH_TYPE (avoid infinite recursion!)
+        if self is other:
             return True
+        # if self is NO_MATH_TYPE \
+        #         and other is NO_MATH_TYPE:
+        #     return True
 
         # Node
         elif node != other.node:
@@ -1242,21 +1235,21 @@ class MathObject:
 
         return display
 
-    def old_to_display(self,
-                       is_math_type=False,
-                       format_="utf8",  # change to "latex" for latex...
-                       text_depth=0
-                       ) -> str:
-        # FIXME: suppress, and also the Shape class
-        if is_math_type:
-            shape = raw_display_math_type_of_local_constant(self, format_,
-                                                        text_depth)
-            shape.expand_from_shape()
-        else:
-            shape = Shape.from_math_object(self, format_, text_depth)
-
-        # log.debug(f"Display: {shape.display}")
-        return structured_display_to_string(shape.display)
+    # def old_to_display(self,
+    #                    is_math_type=False,
+    #                    format_="utf8",  # change to "latex" for latex...
+    #                    text_depth=0
+    #                    ) -> str:
+    #     # FIXME: suppress, and also the Shape class
+    #     if is_math_type:
+    #         shape = raw_display_math_type_of_local_constant(self, format_,
+    #                                                     text_depth)
+    #         shape.expand_from_shape()
+    #     else:
+    #         shape = Shape.from_math_object(self, format_, text_depth)
+    #
+    #     # log.debug(f"Display: {shape.display}")
+    #     return structured_display_to_string(shape.display)
 
     @classmethod
     def PROP_AS_MATHOBJECT(cls):
@@ -1266,7 +1259,18 @@ class MathObject:
                           math_type=None)
 
 
-NO_MATH_TYPE = MathObject(node="not provided",
-                          info={},
-                          children=[],
-                          math_type=None)
+MathObject.NO_MATH_TYPE = MathObject(node="not provided",
+                                     info={},
+                                     children=[],
+                                     math_type=None)
+
+MathObject.NO_MORE_GOALS = MathObject(node="NO_MORE_GOAL",
+                                      info={},
+                                      children=[],
+                                      math_type=None)
+
+MathObject.PROP = MathObject(node="PROP",
+                             info={},
+                             children=[],
+                             math_type=None)
+

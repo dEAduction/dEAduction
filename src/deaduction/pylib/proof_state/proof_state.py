@@ -38,14 +38,15 @@ from copy import copy
 import deaduction.pylib.logger as logger
 import deaduction.pylib.config.vars as cvars
 
-from .MathObject import MathObject
-from .context_math_object import ContextMathObject
-from .lean_analysis import ( lean_expr_with_type_grammar,
-                             LeanEntryVisitor )
-from .give_name import name_bound_vars, inj_list
+from deaduction.pylib.mathobj.math_object import MathObject
+from deaduction.pylib.mathobj.context_math_object import ContextMathObject
+from deaduction.pylib.mathobj.lean_analysis import (lean_expr_with_type_grammar,
+                                                    LeanEntryVisitor)
+from deaduction.pylib.mathobj.give_name import name_bound_vars, inj_list
 log = logging.getLogger(__name__)
 
 global _
+
 
 ##################
 # The Goal class #

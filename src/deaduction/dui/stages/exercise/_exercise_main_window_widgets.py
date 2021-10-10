@@ -60,7 +60,7 @@ from deaduction.dui.elements            import ( ActionButton,
                                                  TargetWidget)
 # from deaduction.pylib.actions           import   action_apply
 from deaduction.pylib.coursedata        import   Exercise
-from deaduction.pylib.mathobj           import   Goal
+from deaduction.pylib.proof_state       import   Goal
 import deaduction.pylib.config.vars      as      cvars
 import deaduction.pylib.utils.filesystem as      fs
 
@@ -391,6 +391,7 @@ class ExerciseCentralWidget(QWidget):
         goal_count = f'  {current_goal_number} / {total_goals_counter}'
         new_target_wgt  = TargetWidget(new_target, new_target_tag, goal_count)
 
+
         # Replace in the layouts
         if self.splitter:
             new_splitter = QSplitter(Qt.Vertical)
@@ -426,6 +427,8 @@ class ExerciseCentralWidget(QWidget):
         # self.organise_main_layout()
 
         self.statements_tree.verticalScrollBar().setValue(statements_scroll)
+
+        log.debug(f"ScrollBar: {new_props_wgt.horizontalScrollBar()}")
 
 
 class ExerciseStatusBar(QStatusBar):

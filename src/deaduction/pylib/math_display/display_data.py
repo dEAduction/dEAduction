@@ -173,7 +173,7 @@ latex_to_utf8_dic = {
     r'\Rightarrow': '⇒',
     r'\forall': '∀',
     r'\exists': '∃',
-    r'exists_unique': '∃!',
+    r'\exists_unique': '∃!',
     r'\subset': '⊂',
     r'\not\in': '∉',
     r'\cap': '∩',
@@ -385,16 +385,14 @@ couples_of_nodes_to_text = {
                             "{}"),
                          (1, (0, 0), 2)),
     ("QUANT_∃!", "PROP"): (_("there exists a unique proposition {} such that "
-                             "{}"),
-                          (1, 2)),
+                             "{}"), (1, 2)),
     ("QUANT_∃!", "TYPE"): (_("there exists a unique set {} such that {}"),
-                          (1, 2)),
+                           (1, 2)),
     ("QUANT_∃!", "FUNCTION"): (_("there exists a unique function {} from {} "
                                  "to {} such that {}"),
-                              (1, (0, 0), (0, 1), 2)),
+                               (1, (0, 0), (0, 1), 2)),
     ("QUANT_∃!", "SEQUENCE"): (_("there exists a unique sequence {} in {} "
-                                 "such that {}"),
-                              (1, (0, 1), 2))
+                                 "such that {}"), (1, (0, 1), 2))
 }
 
 couples_of_nodes_to_utf8 = {

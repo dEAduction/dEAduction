@@ -46,19 +46,22 @@ import deaduction.pylib.config.dirs as          cdirs
 import deaduction.pylib.config.vars as          cvars
 from deaduction.pylib.utils.filesystem import   check_dir
 from deaduction.dui.primitives import           ButtonsDialog
-from deaduction.dui.stages.exercise import      ExerciseMainWindow, UserAction
+from deaduction.dui.stages.exercise import      ExerciseMainWindow
 from deaduction.pylib.server import             ServerInterface
 
 from deaduction.pylib.coursedata import        (Exercise,
                                                 Definition,
                                                 Theorem,
+                                                UserAction,
                                                 AutoStep)
 
 from deaduction.pylib.mathobj import           (MathObject,
                                                 PatternMathObject,
-                                                Goal,
-                                                ProofState,
                                                 ProofStep)
+from deaduction.pylib.proof_state import       (Goal,
+                                                ProofState)
+
+
 from deaduction.pylib.actions           import (generic,
                                                 InputType,
                                                 CodeForLean,
@@ -811,11 +814,7 @@ class Coordinator(QObject):
         # (We do not get the final proof_state from Lean).
         proof_state = deepcopy(self.proof_step.proof_state)
         target = proof_state.goals[0].target
-        target.math_type = MathObject(node="NO_MORE_GOAL",
-                                      info={},
-                                      children=[],
-                                      bound_vars=[],
-                                      math_type=None)
+        target.math_type = MathObject.NO_MORE_GOALS
 
         return proof_state
 

@@ -28,7 +28,7 @@ This file is part of d∃∀duction.
 from typing import Any
 import logging
 
-from deaduction.pylib.mathobj.MathObject   import MathObject
+from deaduction.pylib.mathobj.math_object   import MathObject
 
 log = logging.getLogger(__name__)
 global _

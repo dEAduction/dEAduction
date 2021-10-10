@@ -27,29 +27,13 @@ This file is part of d∃∀duction.
 """
 
 import logging
-from typing import Optional
 if __name__ == "__main__":
     import deaduction.pylib.config.i18n
 
-from deaduction.pylib.mathobj       import ( MathObject,
-                                             NO_MATH_TYPE,
-                                             HAVE_BOUND_VARS )
-# from .MathObject import mark_bound_vars, unmark_bound_vars
+from deaduction.pylib.math_display        import HAVE_BOUND_VARS
+from deaduction.pylib.mathobj.math_object import MathObject
 
 log = logging.getLogger(__name__)
-
-# List of default implicit definitions FIXME: deprecated
-# IMPLICIT_DEFINITIONS = ['inclusion',
-#                         'intersection_deux_ensembles',
-#                         'union_deux_ensembles',
-#                         'intersection_quelconque_ensembles',
-#                         'union_quelconque_ensembles',
-#                         'produit_de_parties',
-#                         'image_directe',
-#                         'egalite_fonctions',
-#                         'Identite',
-#                         'injectivite'
-#                         ]
 
 
 class PatternMathObject(MathObject):
@@ -145,8 +129,8 @@ class PatternMathObject(MathObject):
                 not math_object.is_bound_var():
             # Turn math_type into a PatternMathObject,
             # then create a new metavar.
-            if math_object.math_type is NO_MATH_TYPE:
-                math_type = NO_MATH_TYPE_PATTERN
+            if math_object.math_type is MathObject.NO_MATH_TYPE:
+                math_type = PatternMathObject.NO_MATH_TYPE
             else:
                 math_type   = cls.__from_math_object(math_object.math_type)
             new_metavar = cls.new_metavar(math_type)
@@ -167,8 +151,8 @@ class PatternMathObject(MathObject):
             for child in math_object.children:
                 new_child = cls.__from_math_object(child)
                 children.append(new_child)
-            if math_object.math_type is NO_MATH_TYPE:
-                math_type = NO_MATH_TYPE_PATTERN
+            if math_object.math_type is MathObject.NO_MATH_TYPE:
+                math_type = PatternMathObject.NO_MATH_TYPE
             else:
                 # log.debug("   ->Math type:")
                 math_type   = cls.__from_math_object(math_object.math_type)
@@ -225,7 +209,7 @@ class PatternMathObject(MathObject):
 
         node = self.node
         # Case of NO_MATH_TYPE (avoid infinite recursion!)
-        if self is NO_MATH_TYPE_PATTERN:
+        if self is PatternMathObject.NO_MATH_TYPE:
             return True
 
         # METAVAR
@@ -321,7 +305,7 @@ class PatternMathObject(MathObject):
 
     def math_object_from_metavar(self):
         if self not in PatternMathObject.metavars:
-            return NO_MATH_TYPE
+            return MathObject.NO_MATH_TYPE
         else:
             index = PatternMathObject.metavars.index(self)
             math_object = PatternMathObject.metavar_objects[index]
@@ -337,8 +321,8 @@ class PatternMathObject(MathObject):
 
         if self.is_metavar():
             return self.math_object_from_metavar()
-        elif self is NO_MATH_TYPE_PATTERN:
-            return NO_MATH_TYPE
+        elif self is PatternMathObject.NO_MATH_TYPE:
+            return MathObject.NO_MATH_TYPE
 
         found_math_type = self.math_type.apply_matching()
         found_children = []
@@ -372,11 +356,11 @@ class PatternMathObject(MathObject):
                 definition.implicit_use_activated = True
 
 
-NO_MATH_TYPE_PATTERN = PatternMathObject(node="not provided",
-                                         info={},
-                                         children=[],
-                                         bound_vars=[],
-                                         math_type=None)
+PatternMathObject.NO_MATH_TYPE = PatternMathObject(node="not provided",
+                                                   info={},
+                                                   children=[],
+                                                   bound_vars=[],
+                                                   math_type=None)
 
 
 #########

@@ -867,7 +867,7 @@ def display_error(message: str) -> str:
     return '*' + message + '*'
 
 
-def insert_children_in_string(string: str, children: tuple):
+def insert_children_in_string(string: str, children: tuple) -> []:
     string_list = string.split("{}")
     assert len(string_list) == len(children) + 1
     shape = [string_list[0]]
@@ -878,7 +878,7 @@ def insert_children_in_string(string: str, children: tuple):
     return shape
 
 
-def raw_latex_shape_from_couple_of_nodes(math_object, text_depth=0):
+def raw_latex_shape_from_couple_of_nodes(math_object, text_depth=0) -> []:
     """
     Return a shape from the dictionaries couples_of_nodes_to_text
     or couples_of_nodes_to_utf8 (according to text_depth)
@@ -895,7 +895,7 @@ def raw_latex_shape_from_couple_of_nodes(math_object, text_depth=0):
                 string, children = couples_of_nodes_to_text[key]
                 shape = insert_children_in_string(string, children)
             else:
-                shape = couples_of_nodes_to_utf8[key]
+                shape = list(couples_of_nodes_to_utf8[key])
     if shape:
         log.debug("Shape from couple of nodes")
     return shape
@@ -999,18 +999,21 @@ def shorten(string: str) -> str:
                        _('a proposition'), _("a family"))
     to_be_suppressed = (r'\text_is',)
     to_be_replaced = {r'\text_is_not': _("not")}
+
+    striped_string = string.strip()
     for phrase in to_be_shortened:
-        if string.startswith(phrase):
+        if striped_string.startswith(phrase):
             prefix, suffix = phrase.split(" ")
-            string = string[len(prefix)+1:]
+            string.replace(prefix+" ", "", 1)  # Juste replace first occurrence
+            # string = string[len(prefix)+1:]
 
     for word in to_be_suppressed:
-        if string == word:
+        if striped_string == word:
             string = " "
 
     for word in to_be_replaced:
-        if string == word:
-            string = to_be_replaced[word]
+        if striped_string == word:
+            string.replace(word, to_be_replaced[word])
 
     return string
 

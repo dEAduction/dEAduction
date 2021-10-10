@@ -37,6 +37,8 @@ from .context_widgets_classes import (
     MathObjectWidgetItem,
     TargetWidget)
 
+from .html_list_view import HTMLDelegate
+
 from .lean_editor import (
     LeanEditor)
 

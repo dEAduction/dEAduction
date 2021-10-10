@@ -36,7 +36,7 @@ import deaduction.pylib.config.dirs as        cdirs
 import deaduction.pylib.config.vars as        cvars
 from deaduction.pylib.utils.filesystem import check_dir
 
-from deaduction.pylib.mathobj import    Proof, ProofStep
+from deaduction.pylib.mathobj import    ProofStep
 
 dmp = diff_match_patch()
 
