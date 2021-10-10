@@ -356,9 +356,6 @@ class TargetWidget(QWidget):
     A class to display a tagged target and store both the target and the
     tag as attributes. To display a target in ExerciseCentralWidget, use
     this class and not _TargetLabel as this one also manages layouts!
-
-    :attribute target MathObject: The target one wants to display.
-    :attribute tag str: The tag associated to target.
     """
 
     def __init__(self, target=None, tag: str = None,
@@ -392,7 +389,6 @@ class TargetWidget(QWidget):
         #   H : ∀ x ∈ X, ∃ ε, …
         # where H might be the lean name of the target. That's what
         # the .math_type is for.
-        # 'is_math_type=True' triggers the bound variables naming
         if target:
             # log.debug("updating target")
             text = target.math_type_to_display()
@@ -403,11 +399,12 @@ class TargetWidget(QWidget):
         self.target_label.setText(text)
 
         # TODO: method setfontstyle
-        size = cvars.get('display.target_font_size')
-        self.target_label.unselected_style = f'font-size: {size};'
+        # size = cvars.get('display.target_font_size')
+        # self.target_label.unselected_style = f'font-size: {size};'
+        self.target_label.unselected_style = self.styleSheet()
         self.target_label.selected_style = self.target_label.unselected_style \
             + f'background-color: limegreen;'
-        self.target_label.setStyleSheet(self.target_label.unselected_style)
+        # self.target_label.setStyleSheet(self.target_label.unselected_style)
 
         # Set fonts for maths display
         math_font_name = cvars.get('display.mathematics_font', 'Default')
@@ -425,8 +422,11 @@ class TargetWidget(QWidget):
         main_layout.addStretch()
         self.setLayout(main_layout)
 
-    def mouseReleaseEvent(self, event):
+    def mouseReleaseEvent(self, event) -> None:
         print("Click!")
+
+    def mouseDoubleClickEvent(self, event) -> None:
+        print("Double click!")
 
     def mark_user_selected(self, yes: bool=True):
         """

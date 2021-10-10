@@ -63,8 +63,7 @@ from PySide2.QtWidgets import (QApplication,
                                QTabWidget,
                                QTextEdit,
                                QVBoxLayout,
-                               QWidget,
-                               QSizePolicy)
+                               QWidget)
 
 import deaduction.pylib.config.vars  as     cvars
 import deaduction.pylib.config.dirs  as     cdirs
@@ -85,6 +84,7 @@ from deaduction.pylib.server import ServerInterface
 
 log = logging.getLogger(__name__)
 global _
+
 
 class AbstractCoExChooser(QWidget):
     """
@@ -120,8 +120,7 @@ class AbstractCoExChooser(QWidget):
     atributes.
     """
 
-    def __init__(self, browser_wdgs: [QWidget]):
-        # browser_layout: QLayout
+    def __init__(self, browser_layout: QLayout):
         """
         Init self by preparing layouts and adding the (fixed)
         browser_layout (not a QWidget!).
@@ -134,19 +133,15 @@ class AbstractCoExChooser(QWidget):
 
         self.__preview_wgt = QLabel(_('No preview yet.'))
         self.__preview_wgt.setStyleSheet('color: gray;')
-        self.__preview_wgt.sizePolicy().setVerticalStretch(1)
-
         spacer1             = QSpacerItem(1, 5)
         spacer2             = QSpacerItem(1, 5)
         self.__main_layout = QVBoxLayout()
-        # self.__main_layout.addLayout(browser_layout)
-        for wdg in browser_wdgs:
-            self.__main_layout.addWidget(wdg)
+        self.__main_layout.addLayout(browser_layout)
         self.__main_layout.addItem(spacer1)
         self.__main_layout.addWidget(HorizontalLine())
         self.__main_layout.addItem(spacer2)
         self.__main_layout.addWidget(self.__preview_wgt)
-        print(self.__preview_wgt.sizePolicy().verticalPolicy())
+
         self.setLayout(self.__main_layout)
 
     def set_preview(self, main_widget: Optional[QWidget], title: Optional[str],
@@ -269,8 +264,7 @@ class CourseChooser(AbstractCoExChooser):
         self.__recent_courses_wgt.itemDoubleClicked.connect(
                 lambda x: self.goto_exercise.emit())
 
-        browser_wdgs = [self.__browse_btn, self.__recent_courses_wgt]
-        super().__init__(browser_wdgs)
+        super().__init__(browser_layout)
 
     def current_item_changed(self):
         course_item = self.__recent_courses_wgt.currentItem()
@@ -462,8 +456,6 @@ class ExerciseChooser(AbstractCoExChooser):
                                               course.outline,
                                               is_exercise_list=True)
         exercises_tree.resizeColumnToContents(0)
-        sp = exercises_tree.sizePolicy().verticalPolicy()
-        print(f"Exercise tree v policy: {sp}")
         browser_layout.addWidget(exercises_tree)
 
         exercises_tree.itemClicked.connect(self.__set_preview_from_click)
@@ -474,9 +466,7 @@ class ExerciseChooser(AbstractCoExChooser):
         self.__goal_widget        = None
         self.__main_widget_lyt    = None
 
-
-        browser_wdgs = [exercises_tree]
-        super().__init__(browser_wdgs)
+        super().__init__(browser_layout)
 
     def current_item_changed(self):
         item = self.__exercises_tree.currentItem()
@@ -589,9 +579,9 @@ class ExerciseChooser(AbstractCoExChooser):
             ###############
             # The goal is presented in a single list widget.
             self.__code_wgt = QTextEdit()
-            height = self.__code_wgt.sizeHint().height()
-            print(f"Height: {height}")
-            self.__code_wgt.setMaximumHeight(height)
+            # height = self.__code_wgt.sizeHint().height()
+            # print(f"Height: {height}")
+            # self.__code_wgt.setMaximumHeight(height)
 
             self.__code_wgt.setReadOnly(True)
             self.__code_wgt.setFont(QFont('Menlo'))  # FIXME: font problem
@@ -614,10 +604,10 @@ class ExerciseChooser(AbstractCoExChooser):
             objects_lyt = QVBoxLayout()
             properties_lyt = QVBoxLayout()
 
-            # objects_wgt.adjustSize()
+            objects_wgt.adjustSize()
             math_font = QFont(cvars.get("display.mathematics_font", 'Menlo'))
             objects_wgt.setFont(math_font)
-            # properties_wgt.adjustSize()
+            properties_wgt.adjustSize()
             properties_wgt.setFont(math_font)
 
             objects_lyt.addWidget(QLabel(_('Objects:')))
@@ -627,34 +617,13 @@ class ExerciseChooser(AbstractCoExChooser):
             propobj_lyt.addLayout(objects_lyt)
             propobj_lyt.addLayout(properties_lyt)
             # ───────────────────── Target ───────────────────── #
-            # target_wgt = QLabel()
-            # target_wgt.setTextFormat(Qt.RichText)
-            # target_wgt.setText(target.math_type_to_display())
-
-            # target_wgt = QTextEdit(target.math_type_to_display())
             target_wgt = MathObjectWidget(target=target)
             target_wgt.setFont(math_font)
-
-            # target_wgt.sizePolicy().setVerticalPolicy(QSizePolicy.Fixed)
-            # sp = QSizePolicy()
-            # sp.setVerticalPolicy(QSizePolicy.Maximum)
-            # sp.setHorizontalPolicy(QSizePolicy.Preferred)
-            # target_wgt.setSizePolicy(sp)
-            # print(target_wgt.sizePolicy().verticalPolicy())
-            # target_wgt = QTextEdit()
-            # target_wgt.setReadOnly(True)
-            # target_wgt.setHtml(target.math_type_to_display())
-            # target_wgt.setFont(QFont(math_font))
-            # # target_wgt.setSizePolicy(QSizePolicy.Preferred,
-            # # QSizePolicy.Minimum)
-
+            # Set target_wgt height to 1 line
             font_metrics = QFontMetrics(math_font)
             text_size = font_metrics.size(0, target.math_type_to_display())
             text_height = text_size.height() * 2  # Need to tweak
             target_wgt.setMaximumHeight(text_height)
-
-
-            # target_wgt.updateGeometry()
 
             self.__friendly_wgt = QWidget()
             friendly_wgt_lyt = QVBoxLayout()
@@ -664,9 +633,7 @@ class ExerciseChooser(AbstractCoExChooser):
             self.__friendly_wgt.setLayout(friendly_wgt_lyt)
             friendly_wgt_lyt.setContentsMargins(0, 0, 0, 0)
 
-
             widget = self.__friendly_wgt
-            # print(widget.sizePolicy().verticalStretch())
 
         return widget
 
@@ -927,7 +894,6 @@ class AbstractStartCoEx(QDialog):
         self.__exercise_chooser.exercise_previewed.connect(
                 self.__enable_start_ex_btn)
         self.__exercise_chooser.exercises_tree_double_clicked_connect(
-            # self.__start_exercise)
             self.__process_double_click)
 
     @Slot()
