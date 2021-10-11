@@ -395,16 +395,16 @@ class TargetWidget(QWidget):
         else:
             text = '…'
         self.target_label = QLabel()
-        self.target_label.setTextFormat(Qt.RichText)
+        # self.target_label.setTextFormat(Qt.RichText)
         self.target_label.setText(text)
 
         # TODO: method setfontstyle
-        # size = cvars.get('display.target_font_size')
-        # self.target_label.unselected_style = f'font-size: {size};'
-        self.target_label.unselected_style = self.styleSheet()
+        size = cvars.get('display.target_font_size')
+        self.target_label.unselected_style = f'font-size: {size};'
+        # self.target_label.unselected_style = self.styleSheet()
         self.target_label.selected_style = self.target_label.unselected_style \
             + f'background-color: limegreen;'
-        # self.target_label.setStyleSheet(self.target_label.unselected_style)
+        self.target_label.setStyleSheet(self.target_label.unselected_style)
 
         # Set fonts for maths display
         math_font_name = cvars.get('display.mathematics_font', 'Default')
@@ -422,11 +422,15 @@ class TargetWidget(QWidget):
         main_layout.addStretch()
         self.setLayout(main_layout)
 
-    def mouseReleaseEvent(self, event) -> None:
-        print("Click!")
-
-    def mouseDoubleClickEvent(self, event) -> None:
-        print("Double click!")
+    # For testing
+    # def mousePressEvent(self, event) -> None:
+    #     print("Clac!")
+    #
+    # def mouseReleaseEvent(self, event) -> None:
+    #     print("Click!")
+    #
+    # def mouseDoubleClickEvent(self, event) -> None:
+    #     print("Double click!")
 
     def mark_user_selected(self, yes: bool=True):
         """
