@@ -33,6 +33,7 @@ from .actions_widgets_classes import (
     StatementsTreeWidget)
 
 from .context_widgets_classes import (
+    TargetLabel,
     MathObjectWidget,
     MathObjectWidgetItem,
     TargetWidget)

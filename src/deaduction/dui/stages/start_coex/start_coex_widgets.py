@@ -68,7 +68,7 @@ from PySide2.QtWidgets import (QApplication,
 import deaduction.pylib.config.vars  as     cvars
 import deaduction.pylib.config.dirs  as     cdirs
 from deaduction.dui.elements        import (MathObjectWidget,
-                                            TargetWidget,
+                                            TargetLabel,
                                             RecentCoursesLW,
                                             RecentCoursesLWI,
                                             StatementsTreeWidget,
@@ -530,7 +530,7 @@ class ExerciseChooser(AbstractCoExChooser):
             self.servint.set_statements(exercise.course,
                                         [exercise],
                                         on_top=True)
-            widget_lbl = QLabel(_('Preview not available (be patient...)'))
+            widget_lbl = QTextEdit(_('Preview not available (be patient...)'))
             widget_lbl.setStyleSheet('color: gray;')
 
             main_widget_lyt.addWidget(widget_lbl)
@@ -558,10 +558,8 @@ class ExerciseChooser(AbstractCoExChooser):
         # Logical data
         exercise = self.__exercise
         proofstate = exercise.initial_proof_state
-        goal = proofstate.goals[0]  # Only one goal (?)
-        target = goal.target
-        objects = goal.context_objects
-        properties = goal.context_props
+        goal = proofstate.goals[0]  # Only one goal
+        goal.name_bound_vars(to_prove=False)
 
         # BOF: keep standard size here.
         # main_font_size = cvars.get('display.main_font_size')
@@ -577,7 +575,7 @@ class ExerciseChooser(AbstractCoExChooser):
             ###############
             # Text widget #
             ###############
-            # The goal is presented in a single list widget.
+            # The goal is presented in a single widget.
             self.__code_wgt = QTextEdit()
             # height = self.__code_wgt.sizeHint().height()
             # print(f"Height: {height}")
@@ -585,10 +583,7 @@ class ExerciseChooser(AbstractCoExChooser):
 
             self.__code_wgt.setReadOnly(True)
             self.__code_wgt.setFont(QFont('Menlo'))  # FIXME: font problem
-            if exercise.initial_proof_state:
-                text = goal.goal_to_text(format_="html")
-            else:
-                text = _("No preview available - be patient...")
+            text = goal.goal_to_text(format_="html")
             self.__code_wgt.setHtml(text)
             widget = self.__code_wgt
         else:
@@ -596,7 +591,11 @@ class ExerciseChooser(AbstractCoExChooser):
             # UI widget #
             #############
             # The widget with lists for math. objects and properties
-            # and a line edit for the target.
+            # and a QLAbel for the target.
+            target = goal.target
+            objects = goal.context_objects
+            properties = goal.context_props
+
             # ───────────── Objects and properties ───────────── #
             propobj_lyt = QHBoxLayout()
             objects_wgt = MathObjectWidget(objects)
@@ -616,14 +615,16 @@ class ExerciseChooser(AbstractCoExChooser):
             properties_lyt.addWidget(properties_wgt)
             propobj_lyt.addLayout(objects_lyt)
             propobj_lyt.addLayout(properties_lyt)
+
             # ───────────────────── Target ───────────────────── #
-            target_wgt = MathObjectWidget(target=target)
+            # target_wgt = MathObjectWidget(target=target)
+            target_wgt = TargetLabel(target)
             target_wgt.setFont(math_font)
-            # Set target_wgt height to 1 line
-            font_metrics = QFontMetrics(math_font)
-            text_size = font_metrics.size(0, target.math_type_to_display())
-            text_height = text_size.height() * 2  # Need to tweak
-            target_wgt.setMaximumHeight(text_height)
+            # Set target_wgt height to 1 line: USELESS with QLabel
+            # font_metrics = QFontMetrics(math_font)
+            # text_size = font_metrics.size(0, target.math_type_to_display())
+            # text_height = text_size.height() * 2  # Need to tweak
+            # target_wgt.setMaximumHeight(text_height)
 
             self.__friendly_wgt = QWidget()
             friendly_wgt_lyt = QVBoxLayout()

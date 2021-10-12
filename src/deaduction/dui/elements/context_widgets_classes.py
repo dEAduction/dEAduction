@@ -68,6 +68,35 @@ global _
 ################################
 
 
+class TargetLabel(QLabel):
+    """
+    A class to display the target. Can be used in ExerciseMainWindow via
+    TargetWidget, and in the exercise chooser. Take the target as a
+    parameter, and display it in richText format (html).
+    """
+
+    def __init__(self, target):
+        super().__init__()
+        # Display
+        #   ∀ x ∈ X, ∃ ε, …
+        # and not
+        #   H : ∀ x ∈ X, ∃ ε, …
+        # where H might be the lean name of the target. That's what
+        # the .math_type is for.
+        if target:
+            # log.debug("updating target")
+            text = target.math_type_to_display()
+        else:
+            text = '…'
+
+        self.setText(text)
+        self.setTextFormat(Qt.RichText)
+
+    # Debugging
+    # def mouseReleaseEvent(self, ev) -> None:
+    #     print("Clac!!")
+
+
 # A usefull class.
 class _TagIcon(QIcon):
     """
@@ -350,34 +379,6 @@ MathObjectWidget.apply_math_object_triggered = Signal(MathObjectWidget)
 
 # Classes to display and store the target in the main exercise window.
 
-class TargetLabel(QLabel):
-    """
-    A class to display the target.
-    """
-
-    def __init__(self, target):
-        super().__init__()
-        # Display
-        #   ∀ x ∈ X, ∃ ε, …
-        # and not
-        #   H : ∀ x ∈ X, ∃ ε, …
-        # where H might be the lean name of the target. That's what
-        # the .math_type is for.
-        if target:
-            # log.debug("updating target")
-            text = target.math_type_to_display()
-        else:
-            text = '…'
-        self.target_label = TargetLabel(text)
-
-        self.setText(text)
-        self.setTextFormat(Qt.RichText)
-
-    # Debugging
-    # def mouseReleaseEvent(self, ev) -> None:
-    #     print("Clac!!")
-
-
 class TargetWidget(QWidget):
     """
     A class to display a tagged target and store both the target and the
@@ -404,6 +405,8 @@ class TargetWidget(QWidget):
 
         # ───────────────────── Widgets ──────────────────── #
         caption_label = QLabel(_('Target') + goal_count)
+        self.target_label = TargetLabel(target)
+
         self.setToolTip(_('To be proved'))
         # TODO: put the pre-set size of group boxes titles
         caption_label.setStyleSheet('font-size: 11pt;')

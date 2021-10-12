@@ -74,7 +74,7 @@ class Goal:
     - printing goals.
     """
     context:        [ContextMathObject]
-    target:         MathObject
+    target:         ContextMathObject
     future_tags:    [] = None
 
     @classmethod
@@ -337,8 +337,9 @@ class Goal:
         dummy vars name of context properties to from changing too much as
         user unfolds the target.
         
-        :param to_prove: True if this is the goal of an exercise, as opposed to
-        coming from the initial_proof_state of a statement.
+        :param to_prove: True if this is the goal of the exercise currently
+        being solved in the UI, as opposed to coming from the
+        initial_proof_state of a statement.
         """
         # (0) Some unnamed vars?
         there_are_unnamed_vars = False

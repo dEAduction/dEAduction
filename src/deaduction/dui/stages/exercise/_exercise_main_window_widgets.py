@@ -382,7 +382,7 @@ class ExerciseCentralWidget(QWidget):
         # (MathObject, str), the str being the tag of the prop. or obj.
         # new_context    = new_goal.tag_and_split_propositions_objects()
         new_target     = new_goal.target
-        new_target_tag = '='  # new_target.future_tags[1]
+        # new_target_tag = '='  # new_target.future_tags[1]
         # new_objects    = new_context[0]
         # new_props      = new_context[1]
         new_objects = new_goal.context_objects
@@ -391,8 +391,7 @@ class ExerciseCentralWidget(QWidget):
         new_objects_wgt = MathObjectWidget(new_objects)
         new_props_wgt   = MathObjectWidget(new_props)
         goal_count = f'  {current_goal_number} / {total_goals_counter}'
-        new_target_wgt  = TargetWidget(new_target, new_target_tag, goal_count)
-
+        new_target_wgt  = TargetWidget(new_target, goal_count)
 
         # Replace in the layouts
         if self.splitter:
