@@ -296,7 +296,8 @@ class ExerciseMainWindow(QMainWindow):
             self.ecw.objects_wgt.clicked.connect(self.process_context_click)
             self.ecw.props_wgt.clicked.connect(self.process_context_click)
 
-            self.ecw.target_wgt.mousePressEvent = self.process_target_click
+            self.ecw.target_wgt.target_label.mousePressEvent = \
+                self.process_target_click
             if hasattr(self.ecw, "action_apply_button"):
                 self.ecw.objects_wgt.apply_math_object_triggered.connect(
                     self.apply_math_object_triggered)
@@ -758,11 +759,11 @@ class ExerciseMainWindow(QMainWindow):
         self.ecw.objects_wgt.clicked.connect(self.process_context_click)
         self.ecw.props_wgt.clicked.connect(self.process_context_click)
 
-        self.ecw.target_wgt.mousePressEvent = self.process_target_click
-        # if hasattr(self.ecw, "action_apply_button"):
-        #     self.ecw.objects_wgt.apply_math_object_triggered.connect(
-        #         self.apply_math_object_triggered)
-        #     self.ecw.props_wgt.apply_math_object_triggered.connect(
-        #         self.apply_math_object_triggered)
+        # NB: there seems to be abug in Qt,
+        #  self.ecw.target_wgt.mousePressEvent is not called when
+        #  self.ecw.target_wgt.target_label format is set to richText (!)
+        #  so we call the event of the target_label instead.
+        self.ecw.target_wgt.target_label.mousePressEvent = \
+            self.process_target_click
 
 

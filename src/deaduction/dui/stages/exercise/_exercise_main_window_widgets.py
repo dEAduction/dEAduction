@@ -256,24 +256,17 @@ class ExerciseCentralWidget(QWidget):
         """
         Set the font size for some sub-widgets.
         Button font sizes are set in the widgets'methods.
+        Target font size is set in TargetWidget.
         """
 
         main_font_size   = cvars.get('display.main_font_size')
         tooltips_font_size = cvars.get('display.tooltips_font_size', "14pt")
-        target_font_size = cvars.get('display.target_font_size')
+        # target_font_size = cvars.get('display.target_font_size')
         log.debug(f"Font sizes for main and tooltips: {main_font_size, tooltips_font_size}")
         style = f'QTreeWidget {{font-size: {main_font_size};}}' \
                 f'QListView {{font-size: {main_font_size};}}' \
-                f'TargetWidget {{font-size: {target_font_size};}}' \
                 f'QToolTip {{font-size: {tooltips_font_size};}}'
         self.setStyleSheet(style)
-
-        # self.setBackground(QBrush(QColor('limegreen')) if yes else QBrush())
-        # self.target_label.unselected_style = f'font-size: {size};'
-        # self.target_label.selected_style = self.target_label.unselected_style \
-        #     + f'background-color: limegreen;'
-        # self.target_label.setStyleSheet(self.target_label.unselected_style)
-
 
     def organise_main_layout(self):
         """

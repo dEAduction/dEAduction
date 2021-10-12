@@ -348,7 +348,34 @@ MathObjectWidget.apply_math_object_triggered = Signal(MathObjectWidget)
 # Target widgets classes #
 ##########################
 
-# Classe to display and store the target in the main exercise window.
+# Classes to display and store the target in the main exercise window.
+
+class TargetLabel(QLabel):
+    """
+    A class to display the target.
+    """
+
+    def __init__(self, target):
+        super().__init__()
+        # Display
+        #   ∀ x ∈ X, ∃ ε, …
+        # and not
+        #   H : ∀ x ∈ X, ∃ ε, …
+        # where H might be the lean name of the target. That's what
+        # the .math_type is for.
+        if target:
+            # log.debug("updating target")
+            text = target.math_type_to_display()
+        else:
+            text = '…'
+        self.target_label = TargetLabel(text)
+
+        self.setText(text)
+        self.setTextFormat(Qt.RichText)
+
+    # Debugging
+    # def mouseReleaseEvent(self, ev) -> None:
+    #     print("Clac!!")
 
 
 class TargetWidget(QWidget):
@@ -358,8 +385,7 @@ class TargetWidget(QWidget):
     this class and not _TargetLabel as this one also manages layouts!
     """
 
-    def __init__(self, target=None, tag: str = None,
-                 goal_count: str = ''):
+    def __init__(self, target=None, goal_count: str = ''):
         """"
         Init self with an target (an instance of the class ProofStatePO)
         and a tag. If those are None, display an empty tag and '…' in
@@ -375,7 +401,6 @@ class TargetWidget(QWidget):
         super().__init__()
 
         self.target = target
-        self.tag    = tag
 
         # ───────────────────── Widgets ──────────────────── #
         caption_label = QLabel(_('Target') + goal_count)
@@ -383,25 +408,9 @@ class TargetWidget(QWidget):
         # TODO: put the pre-set size of group boxes titles
         caption_label.setStyleSheet('font-size: 11pt;')
 
-        # Display
-        #   ∀ x ∈ X, ∃ ε, …
-        # and not
-        #   H : ∀ x ∈ X, ∃ ε, …
-        # where H might be the lean name of the target. That's what
-        # the .math_type is for.
-        if target:
-            # log.debug("updating target")
-            text = target.math_type_to_display()
-        else:
-            text = '…'
-        self.target_label = QLabel()
-        # self.target_label.setTextFormat(Qt.RichText)
-        self.target_label.setText(text)
-
         # TODO: method setfontstyle
         size = cvars.get('display.target_font_size')
         self.target_label.unselected_style = f'font-size: {size};'
-        # self.target_label.unselected_style = self.styleSheet()
         self.target_label.selected_style = self.target_label.unselected_style \
             + f'background-color: limegreen;'
         self.target_label.setStyleSheet(self.target_label.unselected_style)
@@ -422,11 +431,11 @@ class TargetWidget(QWidget):
         main_layout.addStretch()
         self.setLayout(main_layout)
 
-    # For testing
+    # For debugging
     # def mousePressEvent(self, event) -> None:
     #     print("Clac!")
     #
-    # def mouseReleaseEvent(self, event) -> None:
+    # def mouseReleaseEvent(self, event) -> None:  # DOES NOT WORK
     #     print("Click!")
     #
     # def mouseDoubleClickEvent(self, event) -> None:
