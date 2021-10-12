@@ -679,6 +679,26 @@ class MathObject:
             math_type = self.math_type
         return math_type.node == "TYPE"
 
+    def is_variable(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is a variable (used for coloration).
+        The (somewhat subjective) conditions are:
+        - to be a local constant,
+        - not a property nor a type
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+
+        math_type_of_math_type = math_type.math_type
+        if math_type.node == "LOCAL_CONSTANT":
+            if not (math_type_of_math_type.is_prop(is_math_type=False) or
+                    math_type_of_math_type.is_type(is_math_type=True) or
+                    math_type_of_math_type == MathObject.NO_MATH_TYPE):
+                return True
+        return False
+
     def is_nat(self, is_math_type=False) -> bool:
         """
         Test if (math_type of) self is ℕ.
@@ -1250,6 +1270,20 @@ class MathObject:
     #
     #     # log.debug(f"Display: {shape.display}")
     #     return structured_display_to_string(shape.display)
+
+    @classmethod
+    def expanded_sequence_from_sequence(cls, sequence):
+        """
+        Take a MathObject of type "SEQUENCE",
+        (whose display would be, say , "u")
+        and return a new MathObject whose display will be
+        "(u_n)_{n in N}"
+        :param sequence:
+        :return:
+        """
+        children = []
+
+
 
     @classmethod
     def PROP_AS_MATHOBJECT(cls):

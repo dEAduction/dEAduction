@@ -136,9 +136,14 @@ def button_symbol(name):
     """
     logic_button_symbols = cvars.get(
         'display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP')
-    # FIXME: in config_window, check format
-    # symbols = logic_button_symbols.split(", ")
-    for key, value in zip(logic_buttons, logic_button_symbols.split(", ")):
+    logic_button_symbols = logic_button_symbols.split(", ")
+    use_symbols = cvars.get('display.use_symbols_for_logic_button')
+    if not use_symbols:
+        logic_button_symbols[0] = _("AND")
+        logic_button_symbols[1] = _("OR")
+        logic_button_symbols[2] = _("NOT")
+
+    for key, value in zip(logic_buttons, logic_button_symbols):
         __buttons_symbols[key] = value
     if name in __buttons_symbols:
         return __buttons_symbols[name]

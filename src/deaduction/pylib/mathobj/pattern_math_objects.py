@@ -350,7 +350,7 @@ class PatternMathObject(MathObject):
             iff = definition.extract_iff()
             if iff:
                 pattern = cls.from_math_object(iff)
-                log.debug(f"   Pattern: {pattern.to_display()}")
+                # log.debug(f"  Pattern: {pattern.to_display(format_='utf8')}")
                 MathObject.implicit_definitions.append(definition)
                 MathObject.definition_patterns.append(pattern)
                 definition.implicit_use_activated = True

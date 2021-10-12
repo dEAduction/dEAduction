@@ -114,7 +114,8 @@ latex_from_node = {
     "PROP": (r'\proposition',),
     "TYPE": (r'\set',),
     "FUNCTION": (r'\function_from', 0, r'\to', 1),  # (0, r" \to ", 1),
-    "SEQUENCE": (r'\sequence_from', 0, r'\to', 1)  # (0, r" \to ", 1),
+    "SEQUENCE": (r'\sequence_from', 0, r'\to', 1),  # (0, r" \to ", 1),
+    "EXPANDED_SEQUENCE":  (r"(", 0, ('_', 1), ')', ('_', 1, r"\in_symbol", 2))
 }
 
 # \in_quant --> "belonging to", or "in" in text mode (but NOT "belongs to")
@@ -163,7 +164,7 @@ latex_to_utf8_dic = {
     r'\Delta': '∆',
     r'\circ': '∘',
     r'\times': '×',
-    r'\in': '∈',
+    r'\in': '∈',  # '∊'
     r'\in_quant': '∈',
     r"\in_symbol": '∈',
     r'\in_prop': ":",
@@ -199,8 +200,8 @@ latex_to_utf8_dic = {
     r'\if': "",  # '\if' is just here for text mode
     r'\such_that': ", ",
     r'\function_from': "",
-    r'\text_is': ' ',  # " " + _("is") + " " ? Anyway 'is' will be removed?
-    r'\text_is_not': " " + _('not')  # Idem
+    r'\text_is': " ",  # " " + _("is") + " " ? Anyway 'is' will be removed?
+    r'\text_is_not': " " + _('not') + " "  # Idem
 }
 
 
@@ -220,7 +221,7 @@ latex_to_text = {
     r'\such_that': " " + _("such that") + " ",
     r'\forall': _("for every") + " ",
     r'\exists': _("there exists") + " ",
-    r"exists_unique": _("there exists a unique") + " ",
+    r"\exists_unique": _("there exists a unique") + " ",
     r'\function_from': " " + _("a function from") + " ",
     r'\sequence_from': " " + _("a sequence from") + " ",  # FIXME...
     r'\to': " " + _("in") + " ",

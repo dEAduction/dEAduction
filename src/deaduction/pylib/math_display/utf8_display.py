@@ -111,16 +111,9 @@ def recursive_utf8_display(l: list, depth) -> str:
         return subscript(recursive_utf8_display(l[1:], depth))
     elif head == r'\super' or head == '^':
         return superscript(recursive_utf8_display(l[1:], depth))
-    elif head == r'\dummy_var':  # No color in utf8 :-(
+    # No color in utf8 :-(
+    elif head in (r'\variable', r'\dummy_variable', r'\applied_property'):
         return recursive_utf8_display(l[1:], depth)
-    elif head == r'\applied_property':  # No color in utf8 :-(
-        return recursive_utf8_display(l[1:], depth)
-    # elif head == r'\parentheses':
-    #     # Avoid redundant parentheses:
-    #     if len(l) > 1 and first_descendant(l[1]) == r'\parentheses':
-    #         return recursive_utf8_display(l[1:], depth)
-    #     else:
-    #         return "(" + recursive_utf8_display(l[1:], depth) + ")"
 
     else:  # Generic case
         add_parentheses(l, depth)

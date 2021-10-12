@@ -85,9 +85,15 @@ def sub_sup_to_html(string: str) -> str:
     return string
 
 
-def color_dummy_vars():
-    return (cvars.get('display.color_for_dummy_vars', None)
-            if cvars.get('logic..use_color_for_dummy_vars', True)
+def color_dummy_variables():
+    return (cvars.get('display.color_for_dummy_variables', None)
+            if cvars.get('logic.use_color_for_dummy_variables', True)
+            else None)
+
+
+def color_variables():
+    return (cvars.get('display.color_for_variables', None)
+            if cvars.get('logic.use_color_for_variables', True)
             else None)
 
 
@@ -101,7 +107,7 @@ def recursive_html_display(l: list, depth) -> str:
     """
     Use the following tags as first child:
     - \\sub, \\super for subscript/superscript
-    - \\dummy_var for dummy vars
+    - \\dummy_variable for dummy vars
     - \\applied_property for properties that have already been applied
     """
     head = l[0]
@@ -109,8 +115,14 @@ def recursive_html_display(l: list, depth) -> str:
         return subscript(recursive_html_display(l[1:], depth))
     elif head == r'\super' or head == '^':
         return superscript(recursive_html_display(l[1:], depth))
-    elif head == r'\dummy_var':
-        color = color_dummy_vars()
+    elif head == r'\variable':
+        color = color_variables()
+        if color:
+            return html_color(recursive_html_display(l[1:], depth), color)
+        else:
+            return recursive_html_display(l[1:], depth)
+    elif head == r'\dummy_variable':
+        color = color_dummy_variables()
         if color:
             return html_color(recursive_html_display(l[1:], depth), color)
         else:

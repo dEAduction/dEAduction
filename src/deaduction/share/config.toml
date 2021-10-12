@@ -16,7 +16,7 @@ button_font_size_for_symbols = "default"  # Does not work
 tooltips_font_size = "12pt"
 mathematics_font = "Defaults"
 symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃, =, ↦"
-use_logic_button_symbols = true
+use_symbols_for_logic_button = true
 
 display_detailed_errors_on_wui = true
 
@@ -25,7 +25,8 @@ allow_seconds_for_names = true
 allow_indices_for_names = true
 
 color_for_applied_properties = "DarkGrey"
-color_for_dummy_vars = "DarkMagenta"
+color_for_variables = "Blue"
+color_for_dummy_variables = "DarkMagenta"
 color_for_selection = "LimeGreen"
 
 
@@ -33,7 +34,8 @@ color_for_selection = "LimeGreen"
 do_not_name_dummy_vars_as_global_vars = true
 do_not_name_dummy_vars_as_dummy_vars = false
 force_indices_for_dummy_vars = false
-use_color_for_dummy_vars = true
+use_color_for_variables = true
+use_color_for_dummy_variables = true
 use_color_for_applied_properties = false
 
 

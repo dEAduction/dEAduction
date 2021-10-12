@@ -554,9 +554,12 @@ def display_constant(math_object) -> list:
         radical, subscript = name.split('_')
         display = [radical, ['_', subscript]]
 
-    # Dummy vars
+    # Variables and dummy variables (for coloration)
     if math_object.is_bound_var():
-        display = [r'\dummy_var', display]
+        display = [r'\dummy_variable', display]
+    elif math_object.is_variable(is_math_type=True):
+        display = [r'\variable', display]
+
     return display
 
 
@@ -997,15 +1000,16 @@ def shorten(string: str) -> str:
     # FIXME: to be adapted according to languages
     to_be_shortened = (_("a function"), _("an element"), _("a subset"),
                        _('a proposition'), _("a family"))
-    to_be_suppressed = (r'\text_is',)
-    to_be_replaced = {r'\text_is_not': _("not")}
+    to_be_suppressed = (r'\text_is', " ")
+    to_be_replaced = {r'\text_is_not': _("not") + " "}
 
     striped_string = string.strip()
     for phrase in to_be_shortened:
         if striped_string.startswith(phrase):
-            prefix, suffix = phrase.split(" ")
-            string.replace(prefix+" ", "", 1)  # Juste replace first occurrence
-            # string = string[len(prefix)+1:]
+            words = phrase.split(" ")
+            prefix = words[0]
+            # Just replace first occurrence:
+            string = string.replace(prefix+" ", "", 1)
 
     for word in to_be_suppressed:
         if striped_string == word:
@@ -1013,7 +1017,7 @@ def shorten(string: str) -> str:
 
     for word in to_be_replaced:
         if striped_string == word:
-            string.replace(word, to_be_replaced[word])
+            string = string.replace(word, to_be_replaced[word], 1)
 
     return string
 

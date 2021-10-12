@@ -62,7 +62,7 @@ from deaduction.pylib                            import logger
 from .config_window_text import PRETTY_NAMES
 
 log = logging.getLogger(__name__)
-
+global _
 
 ######################
 # Settings to be set #
@@ -78,20 +78,18 @@ CONFIGS["Display"] = [
     ("display.target_display_on_top", None, True),  # bool
     ("display.target_font_size", None, True),
     ("display.main_font_size", None, True),
-    ("display.tooltips_font_size", None, True)
+    ("display.tooltips_font_size", None, True),
+    ('display.use_symbols_for_logic_button', None, True)
     # ('display.font_for_mathematics', "font", True)
     ]
 # ('display.mathematics_font', None, True),
 # ('display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP',
 #  None, False)
 
-
 CONFIGS["Logic"] = [
     ("display.display_success_messages", None, True),
-    ('logic.color_for_used_properties', ['None', 'red', 'blue', 'purple'],
-     False)]
-    # ('logic.color_for_dummy_vars', ['None', 'red', 'blue', 'purple'], False)
-
+    ("logic.use_color_for_variables", None, True),
+    ("logic.use_color_for_dummy_variables", None, True)]
 
 CONFIGS['Functionalities'] = [
     ('functionality.target_selected_by_default', None, True),
@@ -101,6 +99,7 @@ CONFIGS['Functionalities'] = [
     ('functionality.allow_implicit_use_of_definitions', None, True)]
 
 CONFIGS["Language"] = [("i18n.select_language", ["en", "fr_FR"], True)]
+
 CONFIGS["Advanced"] = [
     ('others.course_directory', 'dir', True),
     ('logs.save_journal', None, True),  # checked, untested
@@ -111,13 +110,12 @@ SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          "display.target_font_size",
                          "display.main_font_size",
                          "display.tooltips_font_size",
-                         "display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_"
+                         "logic.use_color_for_variables",
+                         "logic.use_color_for_dummy_variables",
                          "EXISTS_EQUAL_MAP",
-                         'display.use_logic_button_symbols',
+                         'display.use_symbols_for_logic_button',
                          'logic.color_for_used_properties',
-                         # 'logic.color_for_dummy_vars',
                          'functionality.allow_proof_by_sorry',
-                         # 'functionality.expanded_apply_button',
                          'functionality.allow_implicit_use_of_definitions',
                          "i18n.select_language"
                          ]

@@ -47,10 +47,10 @@ PRETTY_NAMES = {
     'display.target_font_size': _("target font size"),
     'others.course_directory': _('Set directory for choosing courses'),
     'logs.display_level': _('Level of logs'),
-    'display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL':
-                                    _("Symbols for buttons ∧ ∨ ¬ ⇒ ⇔ ∀ ∃ ="),
+    'display.use_symbols_for_logic_button': _("Use symbol for logic buttons"),
     'display.display_success_messages': _("Display success messages"),
-    'logic.color_for_dummy_variables': _("Color for dummy variables"),
+    'logic.use_color_for_variables': _("Use color for variables"),
+    'logic.use_color_for_dummy_variables': _("Use color for dummy variables"),
     'logic.color_for_used_properties': _("Color for used properties"),
     'functionality.target_selected_by_default': _("Target selected by "
                                                   "default"),
@@ -62,5 +62,7 @@ PRETTY_NAMES = {
     'functionality.save_solved_exercises_for_autotest':
         _("Save exercises for autotest"),
     'logs.save_journal': _("Save journal"),
+    'display.main_font_size': _("Main font size"),
+    'display.tooltips_font_size': _("Tooltips font size"),
     'None': _('None')
 }
