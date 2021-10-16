@@ -57,14 +57,14 @@ if __name__ == "__main__":
 import deaduction.pylib.config.vars            as cvars
 from deaduction.pylib.math_display import (HAVE_BOUND_VARS, INEQUALITIES,
                                            latex_from_node, latex_to_utf8,
-                                           latex_to_lean, Shape,
+                                           latex_to_lean,
                                            recursive_display,
                                            raw_latex_shape_from_couple_of_nodes,
-                                           raw_display_math_type_of_local_constant,
                                            raw_latex_shape_from_specific_nodes,
                                            shallow_latex_to_text,
                                            html_display, utf8_display)
 
+from deaduction.pylib.mathobj.give_name import name_single_bound_var
 
 # from deaduction.pylib.math_display.utils import *
 
@@ -169,21 +169,30 @@ class MathObject:
 
     def __init__(self, node, info, children, bound_vars=None, math_type=None):
         """
-        Create a MathObject. If bound_vars is None then the dummy vars list is
-        inferred from the children's lists and the node.
+        Create a MathObject.
         """
-        # if bound_vars is None:
-        #     bound_vars = []
-        #     for child in children:
-        #         bound_vars.extend(child.bound_vars)
-        #     if node in HAVE_BOUND_VARS:
-        #         bound_var_type, bound_var, local_context = children
-        #         bound_vars.insert(0, bound_var)
         self.node = node
         self.info = info
         self.children = children
         self.bound_vars = bound_vars
         self.math_type = math_type
+
+    def process_sequences_and_likes(self):
+        """
+        TODO
+        """
+        # Special treatment for displaying SEQUENCE / SET_FAMILY
+        # if self.math_type.node in ("SEQUENCE", "SET_FAMILY"):
+            # Modify node and add children (bound_var_type, bound_var, body)
+            #   where body = APP(raw_version, bound_var)
+            #   and raw_version = original version
+        if (self.is_sequence() or self.is_set_family())\
+                and self.node.find("_EXPANDED_") == -1:
+            log.debug(f"processing sequence {self.display_debug}")
+            bound_var, body = self.__lambda_var_n_body()
+            bound_var_type = self.math_type.children[0]
+            self.children = [bound_var_type, bound_var, body]
+            self.node += "_EXPANDED_" + self.math_type.node
 
     def duplicate(self):
         """
@@ -191,7 +200,8 @@ class MathObject:
         Beware that children of duplicates are children of self, not copies!
         """
         new_info = copy(self.info)
-        other = MathObject(self.node, new_info, self.children)
+        other = MathObject(node=self.node, info=new_info,
+                           children=self.children, math_type=self.math_type)
         return other
 
     @property
@@ -228,6 +238,12 @@ class MathObject:
     @bound_vars.setter
     def bound_vars(self, bound_vars: []):
         self._bound_vars = bound_vars
+
+    def unnamed_bound_vars(self):
+        """
+        Only unnamed bound vars, tested by is_unnamed method.
+        """
+        return [var for var in self.bound_vars if var.is_unnamed()]
 
     #################
     # Class methods #
@@ -359,6 +375,9 @@ class MathObject:
         # at the right place so that the list stay ordered
         name = math_object.display_name
         MathObject.add_numbers_set(name)
+
+        # Special treatment for sequences and set families
+        math_object.process_sequences_and_likes()
         return math_object
 
     #######################
@@ -395,6 +414,10 @@ class MathObject:
         if display_child:
             display += ', children: **' + display_child + '**'
         return display
+
+    # def has_expanded_version(self):
+    #     return hasattr(self, "expanded_version") and \
+    #             self.expanded_version
 
     def math_type_child_name(self) -> str:
         """display name of first child of math_type"""
@@ -466,7 +489,6 @@ class MathObject:
 
     def has_name(self, name: str):
         return self.display_name == name
-
 
 ##########################################
 # Tests for equality and related methods #
@@ -559,8 +581,8 @@ class MathObject:
                     #          f"{self.info['name'], other.info['name']}")
         # Recursively test for math_types
         elif self.math_type != other.math_type:
-            log.debug(f"distinct types {self.math_type}")
-            log.debug(f"other type     {other.math_type}")
+            # log.debug(f"distinct types {self.math_type}")
+            # log.debug(f"other type     {other.math_type}")
             equal = False
 
         # Recursively test for children
@@ -698,6 +720,36 @@ class MathObject:
                     math_type_of_math_type == MathObject.NO_MATH_TYPE):
                 return True
         return False
+
+    def is_sequence(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is a "universe"
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node == "SEQUENCE"
+
+    def is_set_family(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is a "universe"
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node == "SET_FAMILY"
+
+    def is_lambda(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is a "universe"
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node == "LAMBDA"
 
     def is_nat(self, is_math_type=False) -> bool:
         """
@@ -996,8 +1048,8 @@ class MathObject:
                 rw_math_object = pattern_right.apply_matching()
                 rw_math_objects.append(rw_math_object)
                 name = MathObject.implicit_definitions[index].pretty_name
-                log.debug(f"Implicit definition {name} "
-                          f"--> {rw_math_object.to_display()}")
+                # log.debug(f"Implicit definition {name} "
+                #           f"--> {rw_math_object.to_display()}")
         return rw_math_objects
 
     def unfold_implicit_definition_recursively(self):
@@ -1126,12 +1178,14 @@ class MathObject:
         Includes treatment of "in".
         """
         # Case of special shape from self and its first child:
+        # log.debug(f"Raw latex shape : {self.display_debug}")
         shape = raw_latex_shape_from_couple_of_nodes(self, text_depth)
 
         if shape:
             # NEGATION:
             if negate:
                 shape = [r'\not', shape]
+            # log.debug(f"Shape from couples: {shape}")
         else:
             if self.node in latex_from_node:  # Generic case
                 shape = list(latex_from_node[self.node])
@@ -1152,7 +1206,9 @@ class MathObject:
         will return something like [[["f"], [\\parentheses, "x"]], " = ", "y"].
         If x is a dummy var then it will be replaced by [\\dummy_var, x].
         """
+        # log.debug(f"Expanded latex shape for {self.display_debug}")
         display = recursive_display(self, text_depth)
+        # log.debug(f"     Els--> {display}")
         return display
 
     def to_display(self, format_="html", text_depth=0) -> str:
@@ -1229,7 +1285,7 @@ class MathObject:
         else:  # Generic case: usual shape from math_object
             shape = math_type.raw_latex_shape(text_depth=text_depth)
 
-        log.debug(f"Raw shape of math type: {shape}")
+        # log.debug(f"Raw shape of math type: {shape}")
         return shape
 
     def math_type_to_display(self, format_="html", text_depth=0) -> str:
@@ -1255,35 +1311,134 @@ class MathObject:
 
         return display
 
-    # def old_to_display(self,
-    #                    is_math_type=False,
-    #                    format_="utf8",  # change to "latex" for latex...
-    #                    text_depth=0
-    #                    ) -> str:
-    #     # FIXME: suppress, and also the Shape class
-    #     if is_math_type:
-    #         shape = raw_display_math_type_of_local_constant(self, format_,
-    #                                                     text_depth)
-    #         shape.expand_from_shape()
-    #     else:
-    #         shape = Shape.from_math_object(self, format_, text_depth)
+    # @property
+    # def expanded_version(self):
+    #     """
+    #     Return an expanded version if it exists, or None.
+    #     """
+    #     if not self._expanded_version:
+    #         if (self.is_sequence() or self.is_set_family()) \
+    #                 and not self.node.startswith("EXPANDED_"):
+    #             self._expanded_version = self.__expanded()
     #
-    #     # log.debug(f"Display: {shape.display}")
-    #     return structured_display_to_string(shape.display)
+    #     return self._expanded_version
+
+    # def raw_version(self):
+    #     """
+    #     Return a new MathObject which is a copy of self except that the
+    #     math_type's node is prefixed by "RAW_". RAW_SEQUENCE and RAW_SET_FAMILY
+    #     types indicate that self should not be expanded (like "u" replaced by
+    #     (u_n)_{n in N} ).
+    #     """
+    #     # math_type = self.math_type
+    #     # raw_node = "RAW_" + math_type.node
+    #     # raw_math_type = MathObject(node=raw_node,
+    #     #                            info=copy(math_type.info),
+    #     #                            children=math_type.children,
+    #     #                            math_type=math_type.math_type)
+    #     # raw_self = MathObject(node="LOCAL_CONSTANT",
+    #     #                       info=copy(self.info),
+    #     #                       children=self.children,
+    #     #                       math_type=raw_math_type)
+    #     # FIXME: now just copy of self. Rename duplicate(self)
+    #     raw_self = MathObject(node=self.node,
+    #                           info=copy(self.info),
+    #                           children=self.children,
+    #                           math_type=self.math_type)
+    #
+    #     return raw_self
+
+    def __lambda_var_n_body(self):
+        """
+        Given a MathObject that codes for
+            a sequence u = (u_n)_{n in N}
+            or a set family E = {E_i, i in I}
+        (but maybe a lambda expression), returns the body, that corresponds to
+        "u_n" or "E_i".
+        """
+        if self.is_lambda(is_math_type=True):
+            body = self.children[2]
+            bound_var = self.children[1]
+            name_single_bound_var(bound_var)
+        else:
+            # NB: math_type is "SET FAMILY ( X, set Y)"
+            #   or "SEQUENCE( N, Y)
+            # Change type to avoid infinite recursion:
+            raw_version = self.duplicate()
+            bound_var_type = self.math_type.children[0]
+            bound_var = MathObject.new_bound_var(bound_var_type)
+            math_type = self.math_type.children[1]
+            body = MathObject(node="APPLICATION",
+                              info={},
+                              children=[raw_version, bound_var],
+                              math_type=math_type)
+
+        name_single_bound_var(bound_var)
+        return bound_var, body
+
+    # def __expanded(self):
+    #     """
+    #     Take a MathObject of type "SEQUENCE" or "SET_FAMILY",
+    #     (whose display would be, say , "u")
+    #     and return a new MathObject whose display will be like
+    #     "(u_n)_{n in N}" or "{E_i, i in I}".
+    #     """
+    #
+    #     math_type = self.math_type
+    #     bound_var, body = self.__lambda_var_n_body()
+    #     bound_var_type = math_type.children[0]
+    #     # type first, like for quantifiers
+    #     children = [bound_var_type, bound_var, body]
+    #     node = "EXPANDED_" + math_type.node
+    #     expanded_self = MathObject(node=node,
+    #                                info=copy(self.info),
+    #                                children=children,
+    #                                math_type=math_type,
+    #                                bound_vars=[])
+    #     # NB: "bound_vars=[]" is a trick to hide the bound var from above
+    #     # so that it will not be part of the naming game. Its name is
+    #     # independent of the context.
+    #
+    #     print(f"{node}")
+    #     return expanded_self
+
+    # def __expanded_set_family(self):
+    #     """
+    #     Take a ContextMathObject of type "SEQUENCE",
+    #     (whose display would be, say , "E")
+    #     and return a new MathObject whose display will be like
+    #     "{E_i, i in I}". See __expand_sequence for more details.
+    #     """
+    #
+    #     math_type = self.math_type
+    #     body = self.__lambda_body()
+    #     bound_var = body.children[1]
+    #     bound_var_type = math_type.children[0]
+    #     # type first, like for quantifiers
+    #     children = [bound_var_type, bound_var, body]
+    #
+    #     expanded_family = MathObject(node="EXPANDED_SET_FAMILY",
+    #                                  info=copy(self.info),
+    #                                  children=children,
+    #                                  math_type=math_type,
+    #                                  bound_vars=[])
+    #
+    #     return expanded_family
 
     @classmethod
-    def expanded_sequence_from_sequence(cls, sequence):
+    def new_bound_var(cls, math_type):
         """
-        Take a MathObject of type "SEQUENCE",
-        (whose display would be, say , "u")
-        and return a new MathObject whose display will be
-        "(u_n)_{n in N}"
-        :param sequence:
-        :return:
+        Return a new bound var of given math_type.
         """
-        children = []
 
-
+        info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
+                'lean_name': "NONE",
+                'is_bound_var': True}
+        bound_var = cls(node="LOCAL_CONSTANT",
+                        info=info,
+                        children=[],
+                        math_type=math_type)
+        return bound_var
 
     @classmethod
     def PROP_AS_MATHOBJECT(cls):

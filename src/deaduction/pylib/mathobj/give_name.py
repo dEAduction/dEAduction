@@ -142,7 +142,7 @@ def give_global_name(math_type,
 
 def give_name(math_type,
               forbidden_vars,
-              hints: [str]=None,
+              hints: [str] = None,
               proof_step=None,
               use_indices=False) -> str:
     """
@@ -525,6 +525,17 @@ def name_bound_vars(math_type,
         hint = hints_type[0]
         name_with_index(unnamed_vars, hint, forbidden_names)
         return
+
+
+def name_single_bound_var(bound_var):
+    """
+    Give name to som isolated bound var, e.g. useful for sequences where
+    variable "n" is used independently of the context.
+
+    :param bound_var: MathObject
+    """
+    name_bound_vars(bound_var.math_type, named_vars=[],
+                    unnamed_vars=[bound_var], forbidden_vars=[])
 
 
 #########

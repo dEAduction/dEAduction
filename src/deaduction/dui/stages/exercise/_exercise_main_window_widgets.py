@@ -429,7 +429,7 @@ class ExerciseCentralWidget(QWidget):
 
         self.statements_tree.verticalScrollBar().setValue(statements_scroll)
 
-        log.debug(f"ScrollBar: {new_props_wgt.horizontalScrollBar()}")
+        # log.debug(f"ScrollBar: {new_props_wgt.horizontalScrollBar()}")
 
 
 class ExerciseStatusBar(QStatusBar):

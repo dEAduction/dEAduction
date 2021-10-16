@@ -221,6 +221,14 @@ class Goal:
         self.context     = clean_permuted_new_context
         self.future_tags = clean_permuted_new_tags
 
+    def expand_lambdas(self):
+        for i in range(len(self.context)):
+            math_object = self.context[i]
+            if isinstance(math_object, ContextMathObject):
+                expanded_math_object = math_object.expanded_version
+                if expanded_math_object:
+                    self.context[i] = expanded_math_object
+
     def __name_real_bound_vars(self, math_type, unnamed_vars, forb_vars):
         """
         Name dummy variables of type 'ℝ', by using Lean's name if possible.
@@ -341,6 +349,9 @@ class Goal:
         being solved in the UI, as opposed to coming from the
         initial_proof_state of a statement.
         """
+        # Expand sequences, set families, and so on.
+        # self.expand_lambdas()
+
         # (0) Some unnamed vars?
         there_are_unnamed_vars = False
         if self.target.math_type.has_unnamed_bound_vars:

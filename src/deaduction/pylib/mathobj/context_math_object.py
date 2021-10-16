@@ -27,8 +27,11 @@ This file is part of d∃∀duction.
 
 from typing import Any
 import logging
+from copy import copy
 
+# from deaduction.pylib.math_display import TO_BE_EXPANDED
 from deaduction.pylib.mathobj.math_object   import MathObject
+from deaduction.pylib.mathobj.give_name import name_single_bound_var
 
 log = logging.getLogger(__name__)
 global _
@@ -51,6 +54,7 @@ class ContextMathObject(MathObject):
 
     def __init__(self, node, info, children, bound_vars, math_type):
         super().__init__(node, info, children, bound_vars, math_type)
+
         ContextMathObject.list_.append(self)
 
         # Tags
@@ -59,9 +63,9 @@ class ContextMathObject(MathObject):
         self.has_been_applied_in_proof = False  # TODO: implement
         self.is_hidden = False
 
-        log.debug(f"Creating ContextMathPObject {self.to_display()},"
-                  f"dummy vars = "
-                  f"{[var.to_display() for var in self.bound_vars]}")
+        # log.debug(f"Creating ContextMathPObject {self.to_display()},")
+                  # f"dummy vars = "
+                  # f"{[var.to_display() for var in self.bound_vars]}")
 
     @classmethod
     def whose_math_type_is(cls, math_type: MathObject):
@@ -81,4 +85,91 @@ class ContextMathObject(MathObject):
         # if self.has_been_applied_in_the_proof:
         #     display = ['@applied_property', display]
         return display
+
+    # @property
+    # def expanded_version(self):
+    #     """
+    #     Return an expanded version if it exists, or None.
+    #     """
+    #     if not self._expanded_version:
+    #         if self.is_sequence():
+    #             self._expanded_version = self.__expanded_sequence()
+    #         elif self.is_set_family():
+    #             self._expanded_version = self.__expanded_set_family()
+    #
+    #     return self._expanded_version
+    #
+    # def __raw_version(self):
+    #     """
+    #     Return a new MathObject which is a copy of self except that the
+    #     math_type's node is prefixed by "RAW_".
+    #     """
+    #     math_type = self.math_type
+    #     raw_node = "RAW_" + math_type.node
+    #     raw_math_type = MathObject(node=raw_node,
+    #                                info=copy(math_type.info),
+    #                                children=math_type.children,
+    #                                math_type=math_type.math_type)
+    #     raw_self = MathObject(node="LOCAL_CONSTANT",
+    #                           info=copy(self.info),
+    #                           children=self.children,
+    #                           math_type=raw_math_type)
+    #     return raw_self
+    #
+    # def __expanded_sequence(self):
+    #     """
+    #     Take a ContextMathObject of type "SEQUENCE",
+    #     (whose display would be, say , "u")
+    #     and return a new MathObject whose display will be
+    #     "(u_n)_{n in N}".
+    #     NB: display of EXPANDED_SEQUENCE will be as
+    #     (r"(", 0, ('_', 1), ')', ('_', 1, r"\in_symbol", 2))
+    #     """
+    #
+    #     # We have to change math_type in raw_sequence,
+    #     # otherwise we will get infinite recursion, i.e.
+    #     # the 'u' in '(u_n)_{n in N}' will be replaced by '(u_n)_{n in N}'...
+    #     math_type = self.math_type
+    #     raw_sequence = self.__raw_version()
+    #     bound_var_type = math_type.children[0]
+    #     bound_var = MathObject.new_bound_var(bound_var_type)
+    #     name_single_bound_var(bound_var)
+    #     # type first, like for quantifiers
+    #     children = [bound_var_type, bound_var, raw_sequence]
+    #
+    #     expanded_sequence = ContextMathObject(node="EXPANDED_SEQUENCE",
+    #                                           info=copy(self.info),
+    #                                           children=children,
+    #                                           math_type=math_type,
+    #                                           bound_vars=[])
+    #     # NB: "bound_vars=[]" is a trick to hide the bound var from above
+    #     # so that it will not be part of the naming game. Its name is
+    #     # independent of the context.
+    #
+    #     return expanded_sequence
+    #
+    # def __expanded_set_family(self):
+    #     """
+    #     Take a ContextMathObject of type "SEQUENCE",
+    #     (whose display would be, say , "E")
+    #     and return a new MathObject whose display will be like
+    #     "{E_i, i in I}". See __expand_sequence for more details.
+    #     """
+    #
+    #     math_type = self.math_type
+    #     raw_set_family = self.__raw_version()
+    #
+    #     bound_var_type = math_type.children[0]
+    #     bound_var = MathObject.new_bound_var(bound_var_type)
+    #     name_single_bound_var(bound_var)
+    #     # type first, like for quantifiers
+    #     children = [bound_var_type, bound_var, raw_set_family]
+    #
+    #     expanded_family = ContextMathObject(node="EXPANDED_SET_FAMILY",
+    #                                         info=copy(self.info),
+    #                                         children=children,
+    #                                         math_type=math_type,
+    #                                         bound_vars=[])
+    #
+    #     return expanded_family
 

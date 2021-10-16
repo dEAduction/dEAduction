@@ -49,11 +49,14 @@ global _
 # \text_is
 # and so on
 
+
 ######################
 ######################
 # LATEX dictionaries #
 ######################
 ######################
+# Mind that values are tuples whose tuple elements indicate "descendant"
+# (children of children). Otherwise use lists within main tuple.
 latex_from_node = {
     "PROP_AND": (0, " " + _("and") + " ", 1),
     "PROP_OR": (0, " " + _("or") + " ", 1),
@@ -115,8 +118,17 @@ latex_from_node = {
     "TYPE": (r'\set',),
     "FUNCTION": (r'\function_from', 0, r'\to', 1),  # (0, r" \to ", 1),
     "SEQUENCE": (r'\sequence_from', 0, r'\to', 1),  # (0, r" \to ", 1),
-    "EXPANDED_SEQUENCE":  (r"(", 0, ('_', 1), ')', ('_', 1, r"\in_symbol", 2))
-}
+    "LOCAL_CONSTANT_EXPANDED_SEQUENCE":
+        (r"(", 2, ')', ['_', 1, r"\in_symbol", 0]),
+    # NB: children[2] is the whole body, "u_n"
+    "LOCAL_CONSTANT_EXPANDED_SET_FAMILY":
+        (r"\{", 2, ', ', 1, r"\in_symbol", 0, r"\}"),
+    "LAMBDA_EXPANDED_SEQUENCE":
+        (r"(", 2, ')', ['_', 1, r"\in_symbol", 0]),
+    # NB: children[2] is the whole body, "u_n"
+    "LAMBDA_EXPANDED_SET_FAMILY":
+        (r"\{", 2, ', ', 1, r"\in_symbol", 0, r"\}")
+    }
 
 # \in_quant --> "belonging to", or "in" in text mode (but NOT "belongs to")
 latex_from_quant_node = {
@@ -396,7 +408,7 @@ couples_of_nodes_to_text = {
                                  "such that {}"), (1, (0, 1), 2))
 }
 
-couples_of_nodes_to_utf8 = {
+couples_of_nodes_to_latex = {
     ("QUANT_∀", "SET"): (r"\forall", 1, r" \subset ", (0, 0), ", ", 2),
     ("QUANT_∀", "PROP"): (r"\forall", 1, r'\proposition', ", ", 2),
     ("QUANT_∀", "TYPE"): (r"\forall", 1, r" \set", ", ", 2),
@@ -404,33 +416,45 @@ couples_of_nodes_to_utf8 = {
                               r'\to', (0, 1), ", ", 2),
     ("QUANT_∀", "SEQUENCE"): (r"\forall", 1, r" \function_from", (0, 0),
                               r'\to', (0, 1), ", ", 2),
-    # Other quantifiers are treated automatically below
-    # ("QUANT_∃", "SET"): (r"\exists", 1, r" \subset ", (0, 0), ", ", 2),
-    # ("QUANT_∃", "PROP"): (r"\exists", 1, r'\proposition'),
-    # ("QUANT_∃", "TYPE"): (r"\exists", 1, r" \set"),
-    # ("QUANT_∃", "FUNCTION"): (r"\exists", 1, r" \function_from", (0, 0),
-    #                           r'\to', (0, 1)),
-    # ("QUANT_∃", "SEQUENCE"): (r"\exists", 1, r'\in', (0, 1)),
+    ("APPLICATION", "LOCAL_CONSTANT_EXPANDED_SEQUENCE"):
+        ((0, 2, 0), ['_', 1]),
+    ("APPLICATION", "LOCAL_CONSTANT_EXPANDED_SET_FAMILY"):
+        ((0, 2, 0), ['_', 1]),
+        ("APPLICATION", "LAMBDA_EXPANDED_SEQUENCE"):
+        ((0, 2, 0), ['_', 1]),
+    ("APPLICATION", "LAMBDA_EXPANDED_SET_FAMILY"):
+        ((0, 2, 0), ['_', 1])
 }
+# Other quantifiers are treated automatically below
+# ("QUANT_∃", "SET"): (r"\exists", 1, r" \subset ", (0, 0), ", ", 2),
+# ("QUANT_∃", "PROP"): (r"\exists", 1, r'\proposition'),
+# ("QUANT_∃", "TYPE"): (r"\exists", 1, r" \set"),
+# ("QUANT_∃", "FUNCTION"): (r"\exists", 1, r" \function_from", (0, 0),
+#                           r'\to', (0, 1)),
+# ("QUANT_∃", "SEQUENCE"): (r"\exists", 1, r'\in', (0, 1)),
+
 
 first_nodes_of_couples = {node for (node, _) in couples_of_nodes_to_text}
 
-# Extend couples_of_nodes_to_utf8 with other quantifiers
+# Extend couples_of_nodes_to_latex with other quantifiers
 supplementary_couples = {}
-for quant_node, type_node in couples_of_nodes_to_utf8:
+for quant_node, type_node in couples_of_nodes_to_latex:
     for new_quant_node, quant_macro in [("QUANT_∃", r'\exists'),
                                         ("QUANT_∃!", r'\exists_unique')]:
         new_key = new_quant_node, type_node
-        old_value = couples_of_nodes_to_utf8[(quant_node, type_node)]
+        old_value = couples_of_nodes_to_latex[(quant_node, type_node)]
         new_value = (quant_macro,) + old_value[1:]
         supplementary_couples[new_key] = new_value
-couples_of_nodes_to_utf8.update(supplementary_couples)
+couples_of_nodes_to_latex.update(supplementary_couples)
 
 # Dic of first nodes: e.g. dic_of_first_nodes["QUANT_∀"] = ["SET", "PROP",...]}
-dic_of_first_nodes = {node: [] for node, _ in couples_of_nodes_to_text}
+dic_of_first_nodes_text = {node: [] for node, _ in couples_of_nodes_to_text}
 for (first_node, second_node) in couples_of_nodes_to_text:
-    dic_of_first_nodes[first_node].append(second_node)
+    dic_of_first_nodes_text[first_node].append(second_node)
 
+dic_of_first_nodes_latex = {node: [] for node, _ in couples_of_nodes_to_latex}
+for (first_node, second_node) in couples_of_nodes_to_latex:
+    dic_of_first_nodes_latex[first_node].append(second_node)
 
 ####################
 ####################
@@ -438,7 +462,11 @@ for (first_node, second_node) in couples_of_nodes_to_text:
 ####################
 ####################
 # Nodes of math objects that need instantiation of bound variables
-HAVE_BOUND_VARS = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_EXTENSION", "LAMBDA")
+HAVE_BOUND_VARS = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_EXTENSION",
+                   "LAMBDA", "EXTENDED_SEQUENCE", "EXTENDED_SET_FAMILY")
+
+# TO_BE_EXPANDED = ("SEQUENCE", "SET_FAMILY", "LAMBDA")
+
 INEQUALITIES = ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥", "PROP_EQUAL_NOT")
 
 NATURE_LEAVES_LIST = ("PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",

@@ -74,8 +74,9 @@ from deaduction.pylib.math_display.display_data import (latex_from_node,
                                                         needs_paren,
                                                         latex_to_utf8,
                                                         couples_of_nodes_to_text,
-                                                        couples_of_nodes_to_utf8,
-                                                        dic_of_first_nodes)
+                                                        couples_of_nodes_to_latex,
+                                                        dic_of_first_nodes_text,
+                                                        dic_of_first_nodes_latex)
 
 log = logging.getLogger(__name__)
 global _
@@ -429,7 +430,7 @@ def least_children(display) -> Union[int, None]:
     return least_used_child
 
 
-def shape_from_application(math_object, negate=False):
+def raw_latex_shape_from_application(math_object, negate=False):
     """
     Provide display for node 'APPLICATION'
     This is a very special case, includes e.g.
@@ -448,30 +449,28 @@ def shape_from_application(math_object, negate=False):
     nb = math_object.nb_implicit_children()
     implicit_children = [math_object.implicit_children(n)
                          for n in range(nb)]
-    # log.debug(f"Nb of implicit children: {nb}")
-    # log.debug(f"implicit children:")
-    # for child in implicit_children:
-    #     if child:
-    #         child_string = child.to_display()
-    #     else:
-    #         child_string = "None!"
-    #     log.debug(f"----->{child_string}")
 
     display = [0]  # Default = display first child as a function
-    display_not = None
 
     first_child = implicit_children[0]
     # (2) Case of index notation: sequences, set families
-    if first_child.math_type.node in ["SET_FAMILY", "SEQUENCE"]:
+    # FIXME: deprecated??
+    if first_child.math_type.node in ["SET_FAMILY", "SEQUENCE",
+                                      "RAW_SET_FAMILY", "RAW_SEQUENCE"]:
         # APP(E, i) -> E_i
         # we DO NOT call display for first_child because we just want
         #  "E_i",       but NOT       "{E_i, i ∈ I}_i"      !!!
         # We just take care of two cases of APP(E,i) with either
         # (1) E a local constant, or
         # (2) E a LAMBDA with body APP(F, j) with F local constant
-        name = 0  # Default case
+        #  I guess this second case should not happen: substitution should
+        #  have been done by Lean!
         if first_child.node == "LOCAL_CONSTANT":
-            name = first_child.display_name
+            # name = first_child.display_name
+            # Prevent future replacement of "u" by "(u_n)_{n in N}"
+            #  or "E" by "{E_i, i in I}".
+            first_child = first_child.duplicate()
+            display = [0, ['_', 1]]
         elif first_child.node == "LAMBDA":
             body = first_child.children[2]
             if body.node == "APPLICATION" and body.children[0].node == \
@@ -479,7 +478,8 @@ def shape_from_application(math_object, negate=False):
                 name = body.children[0].display_name
             else:
                 name = '*set_family*'
-        display = [name, ['_', 1]]
+            display = [name, ['_', 1]]
+        log.debug(f"Displaying app: {display}")
 
     # (3) Case of constants, e.g. APP(injective, f)
     elif first_child.node == "CONSTANT":
@@ -509,12 +509,6 @@ def shape_from_application(math_object, negate=False):
     # first search for unused children
     # search for least used child
     least_used_child = least_children(display)
-    # for item in display:  # FIXME: deprecated
-    #     if isinstance(item, int):
-    #         if item < 0:  # Negative values forbid supplementary arguments
-    #             least_used_child = len(implicit_children) + 10
-    #         if item > least_used_child:
-    #             least_used_child = item
 
     # Keep only those unused_children whose math_type is not TYPE
     # nor other implicit arguments like instances
@@ -544,11 +538,11 @@ def display_constant(math_object) -> list:
     """
     name = math_object.display_name
     display = [name]  # generic case
-    if hasattr(math_object.math_type, "node"):
-        if math_object.math_type.node == "SET_FAMILY":
-            return display_set_family(math_object)
-        elif math_object.math_type.node == "SEQUENCE":
-            return display_sequence(math_object)
+    # if hasattr(math_object.math_type, "node"):
+    #     if math_object.math_type.node == "SET_FAMILY":
+    #         return display_set_family(math_object)
+    #     elif math_object.math_type.node == "SEQUENCE":
+    #         return display_sequence(math_object)
     # Displaying some subscript
     if name.count('_') == 1:
         radical, subscript = name.split('_')
@@ -597,7 +591,7 @@ def display_quantifier(math_object) -> list:
     display = list(latex_from_quant_node[node])
     math_type = children[0]
     variable = children[1]
-    potential_implication = children[2]
+    property = children[2]
     quantifier = display[0]
     # belongs_to = display[2]
     such_that = display[4]
@@ -605,16 +599,23 @@ def display_quantifier(math_object) -> list:
     # The following tests if math_object has the form
     # ∀ x:X, (x R ... ==> ...)
     # where R is some inequality relation
-    if potential_implication.is_implication(is_math_type=True):
-        premise = potential_implication.children[0]  # children (2,0)
-        if premise.is_inequality(is_math_type=True):
-            item = premise.children[0]
-            if item == variable:
-                # (2,0), (2,1) code for descendants:
-                display = [quantifier, (2, 0), such_that, (2, 1)]
-    # Case of "for all A in P(X)" TODO
-    # elif math_type.node == "SET":
-    #     display = [quantifier, ]
+    if math_object.is_for_all(is_math_type=True):
+        if property.is_implication(is_math_type=True):
+            premise = property.children[0]  # children (2,0)
+            if premise.is_inequality(is_math_type=True):
+                item = premise.children[0]
+                if item == variable:
+                    # (2,0), (2,1) code for descendants:
+                    display = [quantifier, (2, 0), such_that, (2, 1)]
+
+    if math_object.is_exists(is_math_type=True):
+        if property.is_and(is_math_type=True):
+            premise = property.children[0]  # children (2,0)
+            if premise.is_inequality(is_math_type=True):
+                item = premise.children[0]
+                if item == variable:
+                    # (2,0), (2,1) code for descendants:
+                    display = [quantifier, (2, 0), such_that, (2, 1)]
 
     return display
 
@@ -630,7 +631,8 @@ def display_lambda(math_object, format_="latex") -> list:
         encoded by LAMBDA(X, x, APP(f, x))  --> "f"
     - anything else is displayed as "x ↦ f(x)"
     """
-
+    # TODO: modify this with expanded_version
+    print("Unexpected lambda")
     math_type = math_object.math_type
     _, var, body = math_object.children
     # log.debug(f"display LAMBDA with var, body, type = {var, body,
@@ -890,17 +892,22 @@ def raw_latex_shape_from_couple_of_nodes(math_object, text_depth=0) -> []:
     """
     shape = None
     first_node = math_object.node
-    if first_node in dic_of_first_nodes:
-        second_node = math_object.children[0].node
-        if second_node in dic_of_first_nodes[first_node]:
-            key = (first_node, second_node)
-            if text_depth > 0:
+    if text_depth > 0:
+        if first_node in dic_of_first_nodes_text:
+            second_node = math_object.children[0].node
+            if second_node in dic_of_first_nodes_text[first_node]:
+                key = (first_node, second_node)
                 string, children = couples_of_nodes_to_text[key]
                 shape = insert_children_in_string(string, children)
-            else:
-                shape = list(couples_of_nodes_to_utf8[key])
-    if shape:
-        log.debug("Shape from couple of nodes")
+    if not shape:
+        if first_node in dic_of_first_nodes_latex:
+            second_node = math_object.children[0].node
+            if second_node in dic_of_first_nodes_latex[first_node]:
+                key = (first_node, second_node)
+                shape = list(couples_of_nodes_to_latex[key])
+
+    # if shape:
+    # log.debug("Shape from couple of nodes")
     return shape
 
 
@@ -925,7 +932,7 @@ def raw_latex_shape_from_specific_nodes(math_object, negate=False):
         display = _("All goals reached!")
     elif node == "APPLICATION":
         # This one returns a shape, to handle supplementary children
-        display = shape_from_application(math_object, negate)
+        display = raw_latex_shape_from_application(math_object, negate)
     elif node in ["LOCAL_CONSTANT", "CONSTANT"]:
         # ! Return display, not shape
         display = display_constant(math_object)
@@ -956,6 +963,12 @@ def recursive_display(math_object, text_depth=0, raw_display=None,
 
     \\parentheses -> to be displayed between parentheses
     """
+
+    # # Takes care of sequences, set families, etc.
+    # expanded = math_object.expanded_version
+    # if expanded:
+    #     math_object = expanded
+
     if not raw_display:
         raw_display = math_object.raw_latex_shape(negate, text_depth)
 
