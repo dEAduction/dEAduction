@@ -431,7 +431,7 @@ class Goal:
     def goal_to_text(self,
                      format_="utf8",
                      to_prove=True,
-                     text_depth=10,
+                     text_depth=20,
                      open_problem=False,
                      by_type=True) -> str:
         """

@@ -206,7 +206,7 @@ latex_to_utf8_dic = {
     r'\false': _("Contradiction"),
     r'\proposition': _("proposition"),
     r'\set': _("set"),
-    r'\not': _("not") + " ",
+    r'\not': " " + _("not") + " ",
     r'\set_image': "",
     r'\set_inverse': [r'^', '-1'],
     r'\if': "",  # '\if' is just here for text mode
@@ -475,7 +475,7 @@ NATURE_LEAVES_LIST = ("PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                       "CONSTANT", "LOCAL_CONSTANT", "NONE")
 
 
-def needs_paren(parent, child, child_number) -> bool:
+def needs_paren(parent, child, child_number, text_depth=0) -> bool:
     """
     Decides if parentheses are needed around the child
     e.g. if math_obj.node = PROP.IFF then
@@ -494,14 +494,16 @@ def needs_paren(parent, child, child_number) -> bool:
 
     p_node = parent.node
     c_node = child.node if child is not None else "NONE"
-    if (p_node in ("SET", "SET_IMAGE", "SET_INVERSE")
-            and child_number == 1):  # P(X), f(A), f^{-1}(A)
+    if (p_node in ("SET_IMAGE", "SET_INVERSE")
+            and child_number == 1):  # f(A), f^{-1}(A)
         return True
-    if c_node in NATURE_LEAVES_LIST:
+    elif p_node == "SET" and text_depth <= 0:  # P(X)
+        return True
+    elif c_node in NATURE_LEAVES_LIST:
         return False
-    if p_node == 'PROP_NOT':
+    elif p_node == 'PROP_NOT':
         return True
-    if c_node in ("SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
+    elif c_node in ("SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
                   "PROP_EQUAL_NOT", "PROP_≤", "PROP_≥", "PROP_<", "PROP_>",
                   "PROP_INCLUDED", "SET_UNION+", "SET_INTER+"):
         return False
@@ -534,7 +536,7 @@ def latex_to_utf8(string: Union[str, list]):
     """
     Convert a string or a list of string from latex to utf8.
     """
-    if isinstance(string, list):
+    if isinstance(string, list) or isinstance(string, tuple):
         return [latex_to_utf8(item) for item in string]
     elif isinstance(string, str):
         striped_string = string.strip()  # Remove spaces

@@ -989,7 +989,7 @@ def recursive_display(math_object, text_depth=0, raw_display=None,
             display_item = recursive_display(child, negate=negate,
                                              text_depth=text_depth-1)
             # Between parentheses? (to be displayed only if text_depth <1)
-            if needs_paren(math_object, child, item):
+            if needs_paren(math_object, child, item, text_depth):
                 display_item = [r'\parentheses', display_item]
 
         elif isinstance(item, list):
@@ -1014,7 +1014,7 @@ def shorten(string: str) -> str:
     to_be_shortened = (_("a function"), _("an element"), _("a subset"),
                        _('a proposition'), _("a family"))
     to_be_suppressed = (r'\text_is', " ")
-    to_be_replaced = {r'\text_is_not': _("not") + " "}
+    to_be_replaced = {r'\text_is_not': " " + _("not") + " "}
 
     striped_string = string.strip()
     for phrase in to_be_shortened:

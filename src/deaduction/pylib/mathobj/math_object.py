@@ -1184,7 +1184,7 @@ class MathObject:
         if shape:
             # NEGATION:
             if negate:
-                shape = [r'\not', shape]
+                shape = [" " + r'\not' + " ", shape]
             # log.debug(f"Shape from couples: {shape}")
         else:
             if self.node in latex_from_node:  # Generic case
@@ -1192,7 +1192,7 @@ class MathObject:
 
                 # NEGATION:
                 if negate:
-                    shape = [r'\not', shape]
+                    shape = [" " + r'\not' + " ", shape]
             else:  # Node not found in dictionaries: try specific methods
                 shape = raw_latex_shape_from_specific_nodes(self, negate)
 
@@ -1230,10 +1230,12 @@ class MathObject:
         :param text_depth:  if >0, will try to replace symbols by plain text
         for the upper branches of the MathObject tree.
         """
-
+        # TODO: the case when text_depth is >0 but not "infinity" has not
+        #  been tested.
         # WARNING: if you make some changes here,
         #   then you probably have to do the same changes in
         #   ContextMathObject.math_type_to_display.
+
         # log.debug(f"Displaying {self.old_to_display()}...")
         # (1) Latex shape, includes treatment of "in"
         # needs_paren is called --> '\parentheses'
@@ -1247,6 +1249,7 @@ class MathObject:
             display = latex_to_lean(display)
         if format_ in ('lean', 'utf8', 'html'):
             display = latex_to_utf8(display)
+        # (4) Final display: format for html and concatenate.
         if format_ == 'html':
             display = html_display(display)
         elif format_ == 'utf8':
@@ -1254,6 +1257,7 @@ class MathObject:
         elif format_ == 'lean':
             display = utf8_display(display)  # FIXME: should be adapted to Lean
         # log.debug(f"    --> To html: {display}")
+
         return display
 
     def raw_latex_shape_of_math_type(self, text_depth=0):
