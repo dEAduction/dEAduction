@@ -1011,19 +1011,24 @@ def shorten(string: str) -> str:
     Note that this is called after translation.
     """
     # FIXME: to be adapted according to languages
-    to_be_shortened = (_("a function"), _("an element"), _("a subset"),
-                       _('a proposition'), _("a family"))
+    to_be_shortened = {_("a function"): _("function"),
+                       _("an element"): _("element"),
+                       _("a subset"): _("subset"),
+                       _('a proposition'): _("proposition"),
+                       _("a family"): _("family")
+                       }
     to_be_suppressed = (r'\text_is', " ")
     to_be_replaced = {r'\text_is_not': " " + _("not") + " "}
 
     striped_string = string.strip()
     for phrase in to_be_shortened:
         if striped_string.startswith(phrase):
-            words = phrase.split(" ")
-            prefix = words[0]
-            # Just replace first occurrence:
-            string = string.replace(prefix+" ", "", 1)
-
+            shortened_phrase = to_be_shortened[phrase]
+            # words = phrase.split(" ")
+            # prefix = words[0]
+            # # Just replace first occurrence:
+            # string = string.replace(prefix+" ", "", 1)
+            string = string.replace(phrase, shortened_phrase)
     for word in to_be_suppressed:
         if striped_string == word:
             string = " "
