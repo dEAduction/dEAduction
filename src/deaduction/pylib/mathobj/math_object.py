@@ -179,13 +179,17 @@ class MathObject:
 
     def process_sequences_and_likes(self):
         """
-        TODO
+        This method is called at each MathObject instantiation from lean
+        info and children. Local constant representing set families or
+        sequences ar modified to obtain the very special display, e.g.
+        {E_i, i in I}       instead of E
+        (u_n)_{n in N}      instead of u
+        For this the MathObject is modified, in particular children are
+        added including the bound var, its type, and the body. Note that
+        __lambda_var_n_body that creates a duplicate version of the ORIGINAL
+        (NOT EXPANDED) self, and body is something like
+        APPLICATION(non expanded duplicate, var).
         """
-        # Special treatment for displaying SEQUENCE / SET_FAMILY
-        # if self.math_type.node in ("SEQUENCE", "SET_FAMILY"):
-            # Modify node and add children (bound_var_type, bound_var, body)
-            #   where body = APP(raw_version, bound_var)
-            #   and raw_version = original version
         if (self.is_sequence() or self.is_set_family())\
                 and self.node.find("_EXPANDED_") == -1:
             log.debug(f"processing sequence {self.display_debug}")
@@ -889,7 +893,7 @@ class MathObject:
         return self.display_name == 'ℤ'
 
     def is_Q(self):
-        return self.display_name == 'Q'
+        return self.display_name == 'ℚ'
 
     def is_R(self):
         return self.display_name == 'ℝ'
@@ -1028,6 +1032,9 @@ class MathObject:
         else:
             return False
 
+    ########################
+    # Implicit definitions #
+    ########################
     def unfold_implicit_definition(self):  # -> [MathObject]
         """
         Try to unfold each implicit definition at top level only,
