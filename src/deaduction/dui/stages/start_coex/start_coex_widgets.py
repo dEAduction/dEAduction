@@ -251,15 +251,9 @@ class CourseChooser(AbstractCoExChooser):
         browser_layout.addWidget(self.__browse_btn)
         browser_layout.addWidget(self.__recent_courses_wgt)
 
-        self.__recent_courses_wgt.itemClicked.connect(
-                self.__recent_course_clicked)
-        self.__recent_courses_wgt.itemDoubleClicked.connect(
-                self.__recent_course_clicked)
+        # Signals
         self.__recent_courses_wgt.currentItemChanged.connect(
             self.current_item_changed)
-        # Cannot connect signal directly to signal because
-        # itemDoubleClicked sends an argument but goto_exercise
-        # does not receive one. See snippets/connect_signal_to_signal.
         self.__recent_courses_wgt.itemDoubleClicked.connect(
                 lambda x: self.goto_exercise.emit())
 
@@ -364,7 +358,6 @@ class CourseChooser(AbstractCoExChooser):
             log.debug(f"Launching Lean with {course.statements[0].pretty_name}")
             self.servint.set_statements(course, [course.statements[0]])
 
-
     #########
     # Slots #
     #########
@@ -393,21 +386,6 @@ class CourseChooser(AbstractCoExChooser):
             self.__recent_courses_wgt.add_browsed_course(course_path, title)
             self.__set_initial_proof_states(course)
             self.set_preview(course)
-
-    @Slot(RecentCoursesLWI, bool)
-    def __recent_course_clicked(self, course_item: RecentCoursesLWI):
-        """
-        This method is called when the user clicks on an item in
-        self.__recent_courses_wgt. It sends the corresponding
-        RecentCoursesLWI and this method instantiates a Course object
-        from it and passes it to set_preview.
-
-        :course_item: The RecentCoursesLWI the user clicked on.
-        """
-        course_path = course_item.course_path
-        course = Course.from_file(course_path)
-        self.__set_initial_proof_states(course)
-        self.set_preview(course)
 
 
 class ExerciseChooser(AbstractCoExChooser):
@@ -457,13 +435,16 @@ class ExerciseChooser(AbstractCoExChooser):
         exercises_tree.resizeColumnToContents(0)
         browser_layout.addWidget(exercises_tree)
 
-        exercises_tree.itemClicked.connect(self.__set_preview_from_click)
         exercises_tree.currentItemChanged.connect(self.current_item_changed)
 
         self.__exercises_tree = exercises_tree
         self.__text_mode_checkbox = None
-        self.__goal_widget        = None
         self.__main_widget_lyt    = None
+        self.__goal_widget        = None
+        self.__text_wgt           = None
+        self.__ui_wgt             = None
+
+        self.__scrollbar_current_item_pos = 0
 
         super().__init__(browser_layout)
 
@@ -518,7 +499,6 @@ class ExerciseChooser(AbstractCoExChooser):
             # according to self.__text_mode_checkbox.
             self.__goal_widget = self.create_widget()
             main_widget_lyt.addWidget(self.__goal_widget)
-            # main_widget_lyt.addWidget(self.__code_wgt)
             main_widget_lyt.addStretch()  # -> check box at bottom
             main_widget_lyt.addLayout(cb_lyt)
             self.__main_widget_lyt = main_widget_lyt
@@ -549,10 +529,16 @@ class ExerciseChooser(AbstractCoExChooser):
                             description=description, expand_details=False)
 
         self.exercise_previewed.emit()
+        # item = self.__exercises_tree.currentItem()
+        # self.__exercises_tree.scrollToItem(item)
+                               # hint=self.__exercises_tree.PositionAtCenter)
 
     def create_widget(self):
         """
-        This method creates the goal widget.
+        This method creates the goal widget, which will be either a
+        __text_wgt, with exercise's content displayed as a text, or a __ui_wgt,
+        with content displayed as it will be in the prover UI.
+        The widget is actually created only at first call.
         """
         # Logical data
         exercise = self.__exercise
@@ -575,16 +561,17 @@ class ExerciseChooser(AbstractCoExChooser):
             # Text widget #
             ###############
             # The goal is presented in a single widget.
-            self.__code_wgt = QTextEdit()
-            # height = self.__code_wgt.sizeHint().height()
+            if not self.__text_wgt:  # First call to text_wgt
+                self.__text_wgt = QTextEdit()
+            # height = self.__text_wgt.sizeHint().height()
             # print(f"Height: {height}")
-            # self.__code_wgt.setMaximumHeight(height)
+            # self.__text_wgt.setMaximumHeight(height)
 
-            self.__code_wgt.setReadOnly(True)
-            self.__code_wgt.setFont(QFont('Menlo'))  # FIXME: font problem
+            self.__text_wgt.setReadOnly(True)
+            self.__text_wgt.setFont(QFont('Menlo'))  # FIXME: font problem
             text = goal.goal_to_text(format_="html")
-            self.__code_wgt.setHtml(text)
-            widget = self.__code_wgt
+            self.__text_wgt.setHtml(text)
+            widget = self.__text_wgt
         else:
             #############
             # UI widget #
@@ -625,15 +612,16 @@ class ExerciseChooser(AbstractCoExChooser):
             # text_height = text_size.height() * 2  # Need to tweak
             # target_wgt.setMaximumHeight(text_height)
 
-            self.__friendly_wgt = QWidget()
+            self.__ui_wgt = QWidget()
+
             friendly_wgt_lyt = QVBoxLayout()
             friendly_wgt_lyt.addLayout(propobj_lyt)
             friendly_wgt_lyt.addWidget(QLabel(_('Target:')))
             friendly_wgt_lyt.addWidget(target_wgt)
-            self.__friendly_wgt.setLayout(friendly_wgt_lyt)
+            self.__ui_wgt.setLayout(friendly_wgt_lyt)
             friendly_wgt_lyt.setContentsMargins(0, 0, 0, 0)
 
-            widget = self.__friendly_wgt
+            widget = self.__ui_wgt
 
         return widget
 
@@ -659,23 +647,6 @@ class ExerciseChooser(AbstractCoExChooser):
     #########
     # Slots #
     #########
-
-    @Slot(StatementsTreeWidgetItem)
-    def __set_preview_from_click(self, item: StatementsTreeWidgetItem):
-        """
-        When the user selects an exercise in the course's exercises
-        tree, the signal itemClicked is emitted and this slot is called.
-        One cannot directly call set_preview because at first we must be
-        sure that the clicked item was an exercise item and not a node
-        (e.g. a course section).
-
-        :param item: The clicked item (exercise item or nod item) in the
-            course's exercises tree.
-        """
-
-        if isinstance(item, StatementsTreeWidgetItem):
-            exercise = item.statement
-            self.set_preview(exercise)
 
     @Slot()
     def toggle_text_mode(self):
