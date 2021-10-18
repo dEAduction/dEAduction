@@ -73,7 +73,7 @@ from deaduction.pylib.utils import load_object
 import deaduction.pylib.config.dirs              as     cdirs
 import deaduction.pylib.config.environ           as     cenv
 import deaduction.pylib.config.site_installation as     inst
-import deaduction.pylib.config.vars              as     cvars
+
 import deaduction.pylib.config.i18n
 
 from deaduction.dui.__main__ import WindowManager
@@ -137,7 +137,8 @@ def exercise_from_pkl(exercise_like, dir_path):
     else:
         file_path = exercise_like
 
-    [exercise] = load_object(file_path)
+    # [exercise] = load_object(file_path)
+    exercise = load_object(file_path)
     return exercise
 
 

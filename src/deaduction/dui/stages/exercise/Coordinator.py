@@ -48,6 +48,7 @@ from deaduction.pylib.utils.filesystem import   check_dir
 from deaduction.dui.primitives import           ButtonsDialog
 from deaduction.dui.stages.exercise import      ExerciseMainWindow
 from deaduction.pylib.server import             ServerInterface
+from deaduction.pylib.utils import save_object
 
 from deaduction.pylib.coursedata import        (Exercise,
                                                 Definition,
@@ -277,8 +278,10 @@ class Coordinator(QObject):
         print(total_string)
 
         log.debug(f"Saving auto_steps in {file_path}")
-        with open(file_path, mode='wb') as output:
-            dump(exercise, output, HIGHEST_PROTOCOL)
+
+        save_object(exercise, file_path)
+        # with open(file_path, mode='wb') as output:
+        #     dump(exercise, output, HIGHEST_PROTOCOL)
 
     def disconnect_signals(self):
         """
