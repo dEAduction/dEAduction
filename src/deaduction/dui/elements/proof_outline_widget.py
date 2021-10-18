@@ -31,18 +31,17 @@ from PySide2.QtCore import    ( Qt, Signal, Slot, QSettings )
 from PySide2.QtGui import     ( QColor, QBrush, QKeySequence )
 from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem,
-                                QToolTip,
                                 QApplication,
                                 QWidget,
                                 QPushButton,
                                 QCheckBox,
                                 QVBoxLayout,
-                                QHBoxLayout,
-                                QTreeWidgetItemIterator)
+                                QHBoxLayout)
 
-from deaduction.pylib.mathobj.proof_step import Proof, ProofNode, ProofStep
+from deaduction.pylib.mathobj.proof_step import ProofNode, ProofStep
 
 log = logging.getLogger(__name__)
+global _
 
 
 class ProofTreeWidgetItem(QTreeWidgetItem):

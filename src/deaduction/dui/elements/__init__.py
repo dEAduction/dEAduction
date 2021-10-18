@@ -33,9 +33,12 @@ from .actions_widgets_classes import (
     StatementsTreeWidget)
 
 from .context_widgets_classes import (
+    TargetLabel,
     MathObjectWidget,
     MathObjectWidgetItem,
     TargetWidget)
+
+from .html_list_view import HTMLDelegate
 
 from .lean_editor import (
     LeanEditor)

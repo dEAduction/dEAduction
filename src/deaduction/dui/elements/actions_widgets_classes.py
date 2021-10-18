@@ -199,6 +199,7 @@ class ActionButton(QPushButton):
             self.setCheckable(False)
             await sleep(duration)
 
+
 # We wish to have an ActionButton class attribute called
 # action_triggered and defined as Signal(ActionButton). At first, one
 # may define it in ActionButton.__init__. However, doing this will raise
@@ -318,6 +319,7 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         super().__init__(None, to_display)
 
         self.statement = statement
+        self.parent = None  # Will be the QTreeWidget when inserted
 
         # Print second col. in gray
         self.setForeground(1, QBrush(QColor('gray')))
@@ -336,8 +338,14 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
             path = icons_dir / 't.png'
         self.setIcon(0, QIcon(str(path.resolve())))
 
-        # Set tooltips
-        self.set_tooltip()
+        # Set tooltips: tooltips are set when item is put in the QTReeWidget
+        # so that is_exercise property has a meaning
+        # self.set_tooltip()
+
+    @property
+    def is_exercise(self):
+        if self.parent:
+            return self.parent.is_exercise_list
 
     def is_node(self):
         return False
@@ -346,7 +354,8 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         """
         Set the math content of the statement as tooltip.
         """
-        self.setToolTip(0, self.statement.caption)
+        self.setToolTip(0, self.statement.caption(
+            is_exercise=self.is_exercise))
         # These tooltips contain maths
         math_font_name = cvars.get('display.mathematics_font', 'Default')
         QToolTip.setFont(math_font_name)
@@ -396,6 +405,11 @@ class StatementsTreeWidgetNode(QTreeWidgetItem):
         # Cosmetics
         self.setExpanded(True)
         self.set_selectable(False)
+
+    # @property
+    # def is_exercise_list(self):
+    #     if self.parent():
+    #         return self.parent().is_exercise_list
 
     def is_node(self):
         return True
@@ -557,7 +571,8 @@ class StatementsTreeWidget(QTreeWidget):
             self._init_tree_branch(self._tree, branch, expanded_flags,
                                    statement, self)
 
-    def __init__(self, statements: [Statement], outline: Dict[str, str]):
+    def __init__(self, statements: [Statement], outline: Dict[str, str],
+                 is_exercise_list=False):
         """
         Init self with a list of instances of the class Statement (or
         child of) and an outline (see self.__doc__). This method
@@ -577,6 +592,8 @@ class StatementsTreeWidget(QTreeWidget):
         super().__init__()
         self.items: [QTreeWidgetItem] = [] # List of items
         self._init_tree(statements, outline)
+        self.is_exercise_list = is_exercise_list
+        self.update_tooltips()
 
         # Cosmetics
         self.setWindowTitle('StatementsTreeWidget')
@@ -655,6 +672,7 @@ class StatementsTreeWidget(QTreeWidget):
     @Slot()
     def update_tooltips(self):
         for item in self.items:
+            item.parent = self
             item.set_tooltip()
 
     # def event(self, event: QEvent):

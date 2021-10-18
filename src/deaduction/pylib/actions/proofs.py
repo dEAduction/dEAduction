@@ -45,8 +45,7 @@ from deaduction.pylib.actions import (InputType,
 
 from deaduction.pylib.mathobj import (MathObject,
                                       get_new_hyp,
-                                      give_global_name,
-                                      NO_MATH_TYPE)
+                                      give_global_name)
 
 log = logging.getLogger(__name__)
 
@@ -197,7 +196,7 @@ def introduce_fun(proof_step, selected_objects: [MathObject]) -> CodeForLean:
                                        info={},
                                        children=[source_type, target_type],
                                        bound_vars=[],
-                                       math_type=NO_MATH_TYPE)
+                                       math_type=MathObject.NO_MATH_TYPE)
 
                 hf = get_new_hyp(proof_step)
                 f = give_global_name(math_type=math_type,

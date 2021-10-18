@@ -33,9 +33,12 @@ import logging
 from deaduction.pylib.actions import (  WrongUserInput,
                                         CodeForLean,
                                         test_selection)
-from deaduction.pylib.mathobj import (  Goal,
-                                        MathObject,
+from deaduction.pylib.mathobj import (  MathObject,
                                         get_new_hyp)
+
+from deaduction.pylib.proof_state import Goal
+
+global _
 
 
 def rw_using_statement(goal: Goal, selected_objects: [MathObject],

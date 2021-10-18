@@ -31,7 +31,7 @@ import logging
 
 import deaduction.pylib.logger as logger
 
-from deaduction.pylib.mathobj import MathObject
+# from .math_object import MathObject
 # class MathObject:
 #     pass
 
@@ -73,10 +73,10 @@ def get_new_hyp_from_forbidden_names(proof_step,
     return potential_name
 
 
-def give_local_name(math_type: MathObject,
-                    body: MathObject,
-                    hints: [str] = [],
-                    forbidden_vars: [MathObject] = []) -> str:
+def give_local_name(math_type,
+                    body,
+                    hints: [str] = None,
+                    forbidden_vars = None) -> str:
     """
     Attribute a name to a local variable. See give_name below.
     Mainly computes all pertinent forbidden variables, by adding vars from
@@ -90,7 +90,11 @@ def give_local_name(math_type: MathObject,
     :return:                str, a name for the new variable
     """
 
-    # Fixme: unused
+    if hints is None:
+        hints = []
+    if forbidden_vars is None:
+        forbidden_vars = []
+    # Fixme: used only in display_math
     more_forbidden_vars = body.extract_local_vars()
     names = [var.info['name'] for var in forbidden_vars]
     # log.debug(f'Giving name to bound var, a priori forbidden names ={names}')
@@ -110,9 +114,10 @@ def give_local_name(math_type: MathObject,
     return give_name(math_type, forbidden_vars, hints, None, use_indices)
 
 
-def give_global_name(math_type: MathObject,
+def give_global_name(math_type,
                      proof_step,
-                     hints: [str] = []) -> str:
+                     hints: [str] = None,
+                     strong_hint: str = '') -> str:
     """
     Attribute a name to a global variable. See give_name below.
     Here the forbidden variables are all variables from the context.
@@ -120,15 +125,24 @@ def give_global_name(math_type: MathObject,
     :param math_type:   PropObj type of new variable
     :param goal:        current_goal
     :param hints:       a list of hints for the future name
+    (only the initial is taken into account)
+    :param strong_hint:  a strong hint, to be used if possible
     :return:            a name for the new variable
     """
+    if not hints:
+        hints = []
     forbidden_vars = proof_step.goal.extract_vars()
+    if strong_hint:
+        forbidden_names = [var.info['name'] for var in forbidden_vars]
+        if strong_hint not in forbidden_names:
+            return strong_hint
+
     return give_name(math_type, forbidden_vars, hints, proof_step)
 
 
 def give_name(math_type,
-              forbidden_vars: [MathObject],
-              hints: [str]=None,
+              forbidden_vars,
+              hints: [str] = None,
               proof_step=None,
               use_indices=False) -> str:
     """
@@ -358,7 +372,7 @@ def hints_from_type(math_type, hints=None):
     return hints
 
 
-def hints_by_name(named_vars: [MathObject], unnamed_var_nb: int):
+def hints_by_name(named_vars, unnamed_var_nb: int):
     """
     Look into named_vars: if they all start by the same letter,
     then this is our main hint. If not, return a sequence of new letters.
@@ -379,7 +393,7 @@ def hints_by_name(named_vars: [MathObject], unnamed_var_nb: int):
 
 def name_with_index(unnamed_vars, radical, forbidden_names, start=0):
     """
-    Name unnmaed vars using radical and indices, avoiding forbidden_names,
+    Name unnamed vars using radical and indices, avoiding forbidden_names,
     with index starting at start. Always succeeds!
     """
     subscript = start
@@ -412,10 +426,10 @@ def try_names(vars_to_name, forbidden_names, names):
         return False
 
 
-def name_bound_vars(math_type: MathObject,
-                    named_vars: [MathObject],
-                    unnamed_vars: [MathObject],
-                    forbidden_vars: [MathObject]):
+def name_bound_vars(math_type,
+                    named_vars,
+                    unnamed_vars,
+                    forbidden_vars):
     """
     Name all vars in unnamed_vars, assumed to be dummy vars sharing type
     math_type, using named_vars (of the same type) as clues, and avoiding
@@ -438,6 +452,12 @@ def name_bound_vars(math_type: MathObject,
     hints_from_vars = hints_by_name(named_vars, len(unnamed_vars))
     hints_type = hints_from_type(math_type)
     assert hints_type != []
+
+    if math_type.display_name == 'ℝ':
+        var = unnamed_vars[0]
+        if 'hint_name' in var.info:
+            initial = var.info['hint_name']
+        insert_maybe(hints_type, initial, position=0)
 
     ###########################
     # Easy case : use indices #
@@ -502,6 +522,17 @@ def name_bound_vars(math_type: MathObject,
         hint = hints_type[0]
         name_with_index(unnamed_vars, hint, forbidden_names)
         return
+
+
+def name_single_bound_var(bound_var):
+    """
+    Give name to som isolated bound var, e.g. useful for sequences where
+    variable "n" is used independently of the context.
+
+    :param bound_var: MathObject
+    """
+    name_bound_vars(bound_var.math_type, named_vars=[],
+                    unnamed_vars=[bound_var], forbidden_vars=[])
 
 
 #########

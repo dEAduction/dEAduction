@@ -55,7 +55,8 @@ from pathlib import Path
 from deaduction.pylib import logger
 
 from deaduction.pylib.coursedata import Exercise, Definition, Theorem, Course
-from deaduction.pylib.mathobj import Goal, MathObject
+# from deaduction.pylib.mathobj import MathObject
+from deaduction.pylib.proof_state import Goal
 from deaduction.pylib.server import ServerInterface
 
 log = logging.getLogger(__name__)

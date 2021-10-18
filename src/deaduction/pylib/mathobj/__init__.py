@@ -26,15 +26,10 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .MathObject import          (MathObject,
-                                  NO_MATH_TYPE,
-                                  HAVE_BOUND_VARS)
-from .context_math_object import  ContextMathObject
-from .pattern_math_objects import PatternMathObject
-from .proof_state import         (Goal,
-                                  ProofState)
-from .proof_step import          (Proof,
-                                  ProofStep,
+from deaduction.pylib.mathobj.math_object import MathObject
+from .context_math_object import                 ContextMathObject
+from .pattern_math_objects import                PatternMathObject
+from .proof_step import          (ProofStep,
                                   NewGoal)
 
 from .give_name import           (get_new_hyp,
@@ -43,3 +38,4 @@ from .give_name import           (get_new_hyp,
 
 from .lean_analysis import       (lean_expr_with_type_grammar,
                                   LeanEntryVisitor)
+

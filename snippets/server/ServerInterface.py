@@ -28,9 +28,8 @@ This file is part of dEAduction.
 
 import trio
 
-from dataclasses import dataclass
 from deaduction.pylib.coursedata.exercise_classes import Exercise
-from deaduction.pylib.mathobj.proof_state import ProofState
+from deaduction.pylib.proof_state.proof_state import ProofState
 from deaduction.pylib.lean.response import Message
 from pathlib import Path
 from deaduction.pylib.editing import LeanFile

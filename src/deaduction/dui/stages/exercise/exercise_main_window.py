@@ -27,24 +27,20 @@ This file is part of d∃∀duction.
 """
 
 import                logging
-from typing import    Optional, Union
+from typing import    Union
 
 from PySide2.QtCore    import (Signal,
                                Slot,
                                QEvent,
-                               QSettings)
-from PySide2.QtWidgets import (QInputDialog,
-                               QMainWindow,
+                               QSettings,
+                               QModelIndex)
+from PySide2.QtWidgets import (QMainWindow,
                                QMessageBox,
                                QAction)
 
 import deaduction.pylib.config.vars      as     cvars
 from deaduction.pylib.coursedata        import  Exercise, UserAction
 from deaduction.pylib.mathobj           import (MathObject,
-                                                PatternMathObject,
-                                                #MissingImplicitDefinition,
-                                                Goal,
-                                                ProofState,
                                                 ProofStep)
 
 from deaduction.dui.elements            import (ActionButton,
@@ -57,7 +53,6 @@ from deaduction.dui.elements            import (ActionButton,
                                                 MenuBarAction,
                                                 ConfigMainWindow,
                                                 ProofOutlineWindow)
-from deaduction.dui.primitives          import  ButtonsDialog
 from ._exercise_main_window_widgets     import (ExerciseCentralWidget,
                                                 ExerciseStatusBar,
                                                 ExerciseToolBar)
@@ -298,11 +293,11 @@ class ExerciseMainWindow(QMainWindow):
             self.toolbar.update()
             self.__init_menubar()
             # Reconnect Context area signals and slots
-            self.ecw.objects_wgt.itemClicked.connect(
-                self.process_context_click)
-            self.ecw.props_wgt.itemClicked.connect(self.process_context_click)
+            self.ecw.objects_wgt.clicked.connect(self.process_context_click)
+            self.ecw.props_wgt.clicked.connect(self.process_context_click)
 
-            self.ecw.target_wgt.mouseReleaseEvent = self.process_target_click
+            self.ecw.target_wgt.target_label.mousePressEvent = \
+                self.process_target_click
             if hasattr(self.ecw, "action_apply_button"):
                 self.ecw.objects_wgt.apply_math_object_triggered.connect(
                     self.apply_math_object_triggered)
@@ -522,7 +517,8 @@ class ExerciseMainWindow(QMainWindow):
             self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
     @Slot(MathObjectWidgetItem)
-    def process_context_click(self, item: MathObjectWidgetItem):
+    def process_context_click(self, item: Union[QModelIndex,
+                                                MathObjectWidgetItem]):
         """
         Add or remove item (item represents a math. object or property)
         from the current selection, depending on whether it was already
@@ -531,10 +527,14 @@ class ExerciseMainWindow(QMainWindow):
         :item: The math. object or property user just clicked on.
         """
         # TODO: allow simultaneous selection of target and context objects
-
+        if isinstance(item, QModelIndex):
+            index = item
+            item = self.ecw.objects_wgt.item_from_index(index)
+            if not item:
+                item = self.ecw.props_wgt.item_from_index(index)
         # Once clicked, one does not want the item to remain visually
         # selected
-        item.setSelected(False)
+        # item.setSelected(False)
         # Un-select target
         self.ecw.target_wgt.mark_user_selected(False)
         self.target_selected = False
@@ -718,12 +718,13 @@ class ExerciseMainWindow(QMainWindow):
     def process_wrong_user_input(self):
         self.empty_current_selection()  # That's it?? Is this even useful??
 
-    def update_goal(self, new_goal: Optional[Goal]):
+    def update_goal(self, new_goal):
         """
         Change widgets (target, math. objects and properties) to
         new_goal and update internal mechanics accordingly.
 
-        :param new_goal: The new goal to update / set the interface to.
+        :param new_goal: The new Goal to update / set the interface to.
+        (or None if it has not been received yet).
         """
         # TODO: tags will be incorporated in ContextMathObjects
         log.info("Updating UI")
@@ -755,14 +756,14 @@ class ExerciseMainWindow(QMainWindow):
         self.current_goal = new_goal
 
         # Reconnect Context area signals and slots
-        self.ecw.objects_wgt.itemClicked.connect(self.process_context_click)
-        self.ecw.props_wgt.itemClicked.connect(self.process_context_click)
+        self.ecw.objects_wgt.clicked.connect(self.process_context_click)
+        self.ecw.props_wgt.clicked.connect(self.process_context_click)
 
-        self.ecw.target_wgt.mouseReleaseEvent = self.process_target_click
-        if hasattr(self.ecw, "action_apply_button"):
-            self.ecw.objects_wgt.apply_math_object_triggered.connect(
-                self.apply_math_object_triggered)
-            self.ecw.props_wgt.apply_math_object_triggered.connect(
-                self.apply_math_object_triggered)
+        # NB: there seems to be abug in Qt,
+        #  self.ecw.target_wgt.mousePressEvent is not called when
+        #  self.ecw.target_wgt.target_label format is set to richText (!)
+        #  so we call the event of the target_label instead.
+        self.ecw.target_wgt.target_label.mousePressEvent = \
+            self.process_target_click
 
 

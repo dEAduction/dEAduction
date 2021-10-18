@@ -38,14 +38,15 @@ from copy import copy
 import deaduction.pylib.logger as logger
 import deaduction.pylib.config.vars as cvars
 
-from .MathObject import MathObject
-from .context_math_object import ContextMathObject
-from .lean_analysis import ( lean_expr_with_type_grammar,
-                             LeanEntryVisitor )
-from .give_name import name_bound_vars, inj_list
+from deaduction.pylib.mathobj.math_object import MathObject
+from deaduction.pylib.mathobj.context_math_object import ContextMathObject
+from deaduction.pylib.mathobj.lean_analysis import (lean_expr_with_type_grammar,
+                                                    LeanEntryVisitor)
+from deaduction.pylib.mathobj.give_name import name_bound_vars, inj_list
 log = logging.getLogger(__name__)
 
 global _
+
 
 ##################
 # The Goal class #
@@ -73,7 +74,7 @@ class Goal:
     - printing goals.
     """
     context:        [ContextMathObject]
-    target:         MathObject
+    target:         ContextMathObject
     future_tags:    [] = None
 
     @classmethod
@@ -107,9 +108,7 @@ class Goal:
                 context.append(math_object)
 
         tree = lean_expr_with_type_grammar.parse(target_analysis)
-        log.debug("Creating target...")
         target = LeanEntryVisitor().visit(tree)
-        log.debug("...target created!")
         return cls(context, target)
 
     @property
@@ -222,6 +221,33 @@ class Goal:
         self.context     = clean_permuted_new_context
         self.future_tags = clean_permuted_new_tags
 
+    def __name_real_bound_vars(self, math_type, unnamed_vars, forb_vars):
+        """
+        Name dummy variables of type 'ℝ', by using Lean's name if possible.
+
+        we first sort dummy_vars by initials of Lean's name.
+        Then we name all vars with a given initial together.
+        """
+        initials = []
+        var_with_initials = []  # For each initial, list of vars with initial
+        for var in unnamed_vars:
+            if 'lean_name' in var.info:
+                name = var.info['lean_name']
+                hint_name = name[0]
+                var.info['hint_name'] = hint_name
+            else:
+                hint_name = None
+            if hint_name in initials:
+                index = initials.index(hint_name)
+                var_with_initials[index].append(var)
+            else:
+                initials.append(hint_name)
+                var_with_initials.append([var])
+
+        for initial, variables in zip(initials, var_with_initials):
+            name_bound_vars(math_type=math_type, named_vars=[],
+                            unnamed_vars=variables, forbidden_vars=forb_vars)
+
     def __name_bound_vars_in_data(self, math_types, dummy_vars, forb_vars,
                                   future_vars):
         """
@@ -237,17 +263,25 @@ class Goal:
         glob_vars = self.context_objects
         for math_type in math_types:
             glob_vars_of_type = [var for var in glob_vars
-                                  if var.math_type == math_type]
+                                 if var.math_type == math_type]
             dummy_vars_of_type = [var for var in dummy_vars
                                   if var.math_type == math_type]
             future_vars_of_type = [var for var in future_vars
-                                  if var.math_type == math_type]
+                                   if var.math_type == math_type]
+
+            forb_vars = forb_vars + future_vars_of_type
+            named_vars = glob_vars_of_type + future_vars_of_type
             # log.debug(f"Naming vars of type "
-            #           f"{math_type.to_display()}")
-            name_bound_vars(math_type=math_type,
-                            named_vars=glob_vars_of_type + future_vars_of_type,
-                            unnamed_vars=dummy_vars_of_type,
-                            forbidden_vars=forb_vars + future_vars_of_type)
+            #           f"{math_type.old_to_display()}")
+            if math_type.display_name == 'ℝ':
+                self.__name_real_bound_vars(math_type=math_type,
+                                            unnamed_vars=dummy_vars_of_type,
+                                            forb_vars=forb_vars)
+            else:
+                name_bound_vars(math_type=math_type,
+                                named_vars=named_vars,
+                                unnamed_vars=dummy_vars_of_type,
+                                forbidden_vars=forb_vars)
             # log.debug(f"    --> "
             #           f"{[var.to_display() for var in dummy_vars_of_type]}")
 
@@ -265,7 +299,7 @@ class Goal:
 
         # log.debug(f"Naming vars in {prop.to_display()}:")
         if prop.math_type.bound_vars:
-            # log.debug(f"""-->Dummy vars types: {[var.math_type.to_display()
+            # log.debug(f"""-->Dummy vars types: {[var.math_type.old_to_display()
             #                       for var in prop.math_type.bound_vars]}""")
             # Collect math_types of bound_vars with no rep
             math_types = inj_list([var.math_type for var in
@@ -303,18 +337,19 @@ class Goal:
         dummy vars name of context properties to from changing too much as
         user unfolds the target.
         
-        :param to_prove: True if this is the goal of an exercise, as opposed to
-        coming from the initial_proof_state of a statement.
+        :param to_prove: True if this is the goal of the exercise currently
+        being solved in the UI, as opposed to coming from the
+        initial_proof_state of a statement.
         """
         # (0) Some unnamed vars?
-        there_are_unamed_vars = False
+        there_are_unnamed_vars = False
         if self.target.math_type.has_unnamed_bound_vars:
-            there_are_unamed_vars = True
+            there_are_unnamed_vars = True
         else:
             for context_math_prop in self.context_props:
                 if context_math_prop.math_type.has_unnamed_bound_vars:
-                    there_are_unamed_vars = True
-        if not there_are_unamed_vars:
+                    there_are_unnamed_vars = True
+        if not there_are_unnamed_vars:
             return
 
         # (1) Name dummy_vars in target
@@ -333,6 +368,7 @@ class Goal:
             # log.debug("Naming future vars:")
             self.__name_bound_vars_in_data(*data)
 
+        # (3) Name context dummy vars
         not_dummy = cvars.get("logic.do_not_name_dummy_vars_as_dummy_vars",
                               False)  # All dummy vars have distinct names
         if not_dummy:  # (Level 2)
@@ -384,13 +420,14 @@ class Goal:
     def goal_to_text(self,
                      format_="utf8",
                      to_prove=True,
-                     text_depth=5,
-                     open_problem=False) -> str:
+                     text_depth=20,
+                     open_problem=False,
+                     by_type=True) -> str:
         """
-        Compute a readable version of the goal as the statement of an
+        Compute a displayable version of the goal as the statement of an
         exercise.
 
-        :param format_:     parameter of MathObject.to_display method
+        :param format_:     "utf8" or "html".
         :param to_prove:    boolean.
             If True, the goal will be formulated as "Prove that..."
             If False, the goal will be formulated as "Then..." (useful if
@@ -403,50 +440,67 @@ class Goal:
         :return: a text version of the goal
         """
 
-        # fixme: depth>1 does not really work
+        text_cr = "<br>" if format_ == "html" else "\n"
 
         # Name bound vars if needed!
-        self.name_bound_vars(to_prove=to_prove)
+        self.name_bound_vars(to_prove=to_prove)  # FIXME: deprecated ?
 
         context = self.context
         target = self.target
         text = ""
+        previous_object_is_prop = None
         for math_object in context:
             math_type = math_object.math_type
             if math_type.is_prop():
-                prop = math_object.math_type.to_display(text_depth=text_depth,
-                                                        format_=format_,
-                                                        is_math_type=True)
-                new_sentence = _("Assume that") + " " + prop + "."
+                prop = math_object.math_type_to_display(format_=format_,
+                                                        text_depth=text_depth)
+                # prop = math_object.math_type.old_to_display(text_depth=text_depth,
+                #                                         format_=format_,
+                #                                         is_math_type=True)
+                assume_that = _("Assume that") + " "
+                if cvars.get('i18n.select_language') == 'fr_FR':
+                    # "Supposons que il" --> "Supposons qu'il"
+                    if (prop.startswith("un")
+                            or prop.startswith("il")):
+                        assume_that = assume_that[:-2] + "'"
+
+                new_sentence = assume_that + prop + "."
+                object_is_prop = True
             else:
                 name = math_object.to_display()
-                name_type = math_type.to_display(is_math_type=True,
-                                                 format_=format_,
-                                                 text_depth=text_depth)
-                if math_type.node == "FUNCTION" and text_depth == 0:
-                    new_sentence = _("Let") + " " + name + ":" \
-                                   + " " + name_type + "."
-                else:
-                    if cvars.get('i18n.select_language') == 'fr_FR':
-                        # indispensable pour la gestion des espacements
-                        # (le "be" anglais n'a pas d'équivalent en Français)
-                        new_sentence = "Soit" + " " + name + " " \
-                                       + name_type + "."
-                    else:
-                        new_sentence = _("Let") + " " + name + " " + _("be") \
-                                   + " " + name_type + "."
+                type_ = math_object.math_type_to_display(format_=format_,
+                                                         text_depth=text_depth)
+                object_is_prop = False
+                new_sentence = (_("Let") + " " + name + _(" be ") + " "
+                                + type_ + ".")
 
             if text:
-                text += "\n"
+                if object_is_prop != previous_object_is_prop:
+                    # New line only to separate objects and propositions.
+                    text += text_cr
+                else:
+                    # New sentence
+                    text += " "
+            previous_object_is_prop = object_is_prop
             text += new_sentence
 
         if text:
-            text += "\n"
-        target_text = target.math_type.to_display(text_depth=text_depth,
-                                                  format_="utf8",
-                                                  is_math_type=True)
+            text += text_cr
+        # target_text = target.math_type.old_to_display(text_depth=text_depth,
+        #                                           format_="utf8",
+        #                                           is_math_type=True)
+        target_text = target.math_type_to_display(text_depth=text_depth)
         if to_prove and not open_problem:
-            target_text = _("Prove that") + " " + target_text
+            prove_that = _("Prove that") + " "
+            # "Prove that the negation" --> "Prove the negation"
+            if target_text.startswith(_('the negation')):
+                prove_that = _("Prove") + " "
+            elif cvars.get('i18n.select_language') == 'fr_FR':
+                # "Démontrer que il" --> "Démontrer qu'il"
+                if (target_text.startswith("un")
+                        or target_text.startswith("il")):
+                    prove_that = prove_that[:-2] + "'"
+            target_text = prove_that + target_text
         elif text:
             target_text = _("Then") + " " + target_text
         else:
@@ -454,14 +508,14 @@ class Goal:
             # Little issue: if sentence starts with a lower case
             # variable. This should never happen though...
         if open_problem:
-            text = _("True or False?") + "\n" + text
+            text = _("True or False?") + text_cr + text
 
         text += target_text + "."
         return text
 
     def print_goal(self, open_problem=False, to_prove=True) -> str:
         """
-        Return context and target in a raw form.
+        Return context and target in a raw (text) form.
         """
 
         # Name bound vars if needed
@@ -477,16 +531,16 @@ class Goal:
         elif len(context) > 1:
             text += _("Hypotheses:") + "\n"
         for math_object in context:
-            math_type = math_object.math_type
-            name = math_object.to_display()
-            name_type = math_type.to_display(is_math_type=True)
+            # math_type = math_object.math_type
+            name = math_object.to_display(format_="utf8")
+            name_type = math_object.math_type_to_display(format_="utf8")
             text_object = name + _(": ") + name_type
             text += "  " + text_object + "\n"
         if to_prove and not open_problem:
             text += _("Prove that") + "\n"
         elif context:
             text += _("Then") + "\n"
-        text += target.math_type.to_display(is_math_type=True)
+        text += target.math_type_to_display(format_="utf8")
         return text
 
     def to_tooltip(self, type_='exercise') -> str:
@@ -495,7 +549,7 @@ class Goal:
         """
 
         # Name bound vars if needed
-        self.name_bound_vars(to_prove=(type_=='exercise'))
+        self.name_bound_vars(to_prove=(type_ == 'exercise'))
 
         context = self.context
         target = self.target
@@ -512,9 +566,10 @@ class Goal:
             # text = _("Empty context") + "\n"
             text = ""
         for math_object in context:
-            math_type = math_object.math_type
-            name = math_object.to_display()
-            name_type = math_type.to_display(is_math_type=True)
+            # math_type = math_object.math_type
+            name = math_object.to_display(format_="utf8")
+            # name_type = math_type.old_to_display(is_math_type=True)
+            name_type = math_object.math_type_to_display(format_="utf8")
             text_object = name + _(": ") + name_type
             text += "  " + text_object + "\n"
 
@@ -524,7 +579,7 @@ class Goal:
         else:
             text += _("Conclusion:")
         text += "\n"
-        text += " " + target.math_type.to_display(is_math_type=True)
+        text += " " + target.math_type_to_display(format_="utf8")
         return text
 
 

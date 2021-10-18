@@ -60,7 +60,7 @@ from deaduction.dui.elements            import ( ActionButton,
                                                  TargetWidget)
 # from deaduction.pylib.actions           import   action_apply
 from deaduction.pylib.coursedata        import   Exercise
-from deaduction.pylib.mathobj           import   Goal
+from deaduction.pylib.proof_state       import   Goal
 import deaduction.pylib.config.vars      as      cvars
 import deaduction.pylib.utils.filesystem as      fs
 
@@ -256,10 +256,12 @@ class ExerciseCentralWidget(QWidget):
         """
         Set the font size for some sub-widgets.
         Button font sizes are set in the widgets'methods.
+        Target font size is set in TargetWidget.
         """
 
         main_font_size   = cvars.get('display.main_font_size')
         tooltips_font_size = cvars.get('display.tooltips_font_size', "14pt")
+        # target_font_size = cvars.get('display.target_font_size')
         log.debug(f"Font sizes for main and tooltips: {main_font_size, tooltips_font_size}")
         style = f'QTreeWidget {{font-size: {main_font_size};}}' \
                 f'QListView {{font-size: {main_font_size};}}' \
@@ -380,7 +382,7 @@ class ExerciseCentralWidget(QWidget):
         # (MathObject, str), the str being the tag of the prop. or obj.
         # new_context    = new_goal.tag_and_split_propositions_objects()
         new_target     = new_goal.target
-        new_target_tag = '='  # new_target.future_tags[1]
+        # new_target_tag = '='  # new_target.future_tags[1]
         # new_objects    = new_context[0]
         # new_props      = new_context[1]
         new_objects = new_goal.context_objects
@@ -389,7 +391,7 @@ class ExerciseCentralWidget(QWidget):
         new_objects_wgt = MathObjectWidget(new_objects)
         new_props_wgt   = MathObjectWidget(new_props)
         goal_count = f'  {current_goal_number} / {total_goals_counter}'
-        new_target_wgt  = TargetWidget(new_target, new_target_tag, goal_count)
+        new_target_wgt  = TargetWidget(new_target, goal_count)
 
         # Replace in the layouts
         if self.splitter:
@@ -426,6 +428,8 @@ class ExerciseCentralWidget(QWidget):
         # self.organise_main_layout()
 
         self.statements_tree.verticalScrollBar().setValue(statements_scroll)
+
+        # log.debug(f"ScrollBar: {new_props_wgt.horizontalScrollBar()}")
 
 
 class ExerciseStatusBar(QStatusBar):
