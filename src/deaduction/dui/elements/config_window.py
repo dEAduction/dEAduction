@@ -40,6 +40,7 @@ This file is part of d∃∀duction.
 
 import sys
 import logging
+from importlib import reload
 
 from PySide2.QtCore import (    Signal,
                                 Slot)
@@ -58,6 +59,7 @@ from PySide2.QtWidgets import ( QApplication,
 from deaduction.pylib.config.i18n import init_i18n
 import deaduction.pylib.config.vars      as      cvars
 from deaduction.pylib                            import logger
+
 
 from .config_window_text import PRETTY_NAMES
 
@@ -200,6 +202,9 @@ class ConfigMainWindow(QDialog):
         ##########################
         if "i18n.select_language" in self.modified_settings:
             init_i18n()  # UI needs to be updated
+            import deaduction.pylib.math_display.display_data
+            reload(deaduction.pylib.math_display.display_data)
+
         if 'logs.display_level' in self.modified_settings:
             display_level = self.modified_settings['logs.display_level']
             logger.configure(display_level)

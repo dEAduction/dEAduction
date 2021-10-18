@@ -58,17 +58,10 @@ from dataclasses import dataclass
 
 from deaduction.pylib.mathobj.give_name     import give_local_name
 from deaduction.pylib.math_display.utils import text_to_subscript_or_sup
-from deaduction.pylib.math_display.display_data import (latex_from_node,
-                                                        latex_from_constant_name,
+from deaduction.pylib.math_display.display_data import (latex_from_constant_name,
                                                         latex_from_quant_node,
-                                                        latex_to_text,
-                                                        latex_to_utf8_dic,
-                                                        latex_to_lean_dic,
                                                         needs_paren,
-                                                        latex_to_utf8,
-                                                        couples_of_nodes_to_text,
                                                         couples_of_nodes_to_latex,
-                                                        dic_of_first_nodes_text,
                                                         dic_of_first_nodes_latex)
 
 log = logging.getLogger(__name__)
@@ -868,6 +861,8 @@ def raw_latex_shape_from_couple_of_nodes(math_object, text_depth=0) -> []:
     if it finds some key that matches math_object and math_object's first child
     nodes. Otherwise return None.
     """
+    from deaduction.pylib.math_display import (dic_of_first_nodes_text,
+                                               couples_of_nodes_to_text)
     shape = None
     first_node = math_object.node
     if text_depth > 0:
@@ -1020,6 +1015,12 @@ def shorten(string: str) -> str:
 
 
 def latex_to_text_func(string: str) -> str:
+    """
+    Translate latex into text. We import the latex_to_text dic here so that
+    the selected language is applied even if it has changed since the launch
+    of deaduction.
+    """
+    from .display_data import latex_to_text
     striped_string = string.strip()  # Remove spaces
     if striped_string in latex_to_text:
         text_stripped = latex_to_text[striped_string]

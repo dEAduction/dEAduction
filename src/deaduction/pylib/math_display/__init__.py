@@ -30,7 +30,12 @@ from .display_data import (HAVE_BOUND_VARS,
                            INEQUALITIES,
                            latex_from_node,
                            latex_to_utf8,
-                           latex_to_lean)
+                           latex_to_lean,
+                           plurals,
+                           numbers,
+                           dic_of_first_nodes_text,
+                           couples_of_nodes_to_text
+                           )
 from .display_math import (recursive_display,
                            raw_latex_shape_from_couple_of_nodes,
                            raw_latex_shape_from_specific_nodes,

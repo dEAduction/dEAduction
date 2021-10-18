@@ -245,7 +245,29 @@ latex_to_text = {
     r'\text_is': " " + _('is') + " ",
     r'\text_is_not': " " + _('is not') + " "
 }
+plurals = {
+    _('Let {} be {}'): _("Let {} be {} {}"),  # Translate plural!!
+    _('a proposition'): _("propositions"),
+    _('a set'): _("sets"),
+    _('a subset'): _("subsets"),
+    _('an element'): _("elements"),
+    _('a function'): _("functions"),
+    _('a sequence'): _("sequences"),
+    _('a real number'): _("real numbers")
+}
 
+numbers = {
+    1: _("one"),
+    2: _("two"),
+    3: _("three"),
+    4: _("four"),
+    5: _("five"),
+    6: _("six"),
+    7: _("seven"),
+    8: _("eight"),
+    9: _("nine"),
+    10: _("ten")
+}
 
 text_from_node = {
     # # "PROP_AND": (0, " " + _("and") + " ", 1),

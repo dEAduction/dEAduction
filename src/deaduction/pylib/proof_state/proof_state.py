@@ -42,6 +42,7 @@ from deaduction.pylib.mathobj.math_object import MathObject
 from deaduction.pylib.mathobj.context_math_object import ContextMathObject
 from deaduction.pylib.mathobj.lean_analysis import (lean_expr_with_type_grammar,
                                                     LeanEntryVisitor)
+# from deaduction.pylib.math_display import plurals, numbers
 from deaduction.pylib.mathobj.give_name import name_bound_vars, inj_list
 log = logging.getLogger(__name__)
 
@@ -440,6 +441,7 @@ class Goal:
         :return: a text version of the goal
         """
 
+        # TODO: if by_type, group successive context objects by math_type.
         text_cr = "<br>" if format_ == "html" else "\n"
 
         # Name bound vars if needed!
@@ -449,14 +451,15 @@ class Goal:
         target = self.target
         text = ""
         previous_object_is_prop = None
-        for math_object in context:
+        counter = 0
+        while counter < len(context):
+            math_object = context[counter]
             math_type = math_object.math_type
-            if math_type.is_prop():
+
+            if math_type.is_prop():  # Display hypotheses
+                object_is_prop = True
                 prop = math_object.math_type_to_display(format_=format_,
                                                         text_depth=text_depth)
-                # prop = math_object.math_type.old_to_display(text_depth=text_depth,
-                #                                         format_=format_,
-                #                                         is_math_type=True)
                 assume_that = _("Assume that") + " "
                 if cvars.get('i18n.select_language') == 'fr_FR':
                     # "Supposons que il" --> "Supposons qu'il"
@@ -465,15 +468,19 @@ class Goal:
                         assume_that = assume_that[:-2] + "'"
 
                 new_sentence = assume_that + prop + "."
-                object_is_prop = True
-            else:
-                name = math_object.to_display()
-                type_ = math_object.math_type_to_display(format_=format_,
-                                                         text_depth=text_depth)
+            else:  # Display objects
                 object_is_prop = False
-                new_sentence = (_("Let") + " " + name + _(" be ") + " "
-                                + type_ + ".")
+                new_sentence = ""
+                # Try to gather objects of the same type:
+                grouped_objects = [math_object]
+                while (counter < len(context) - 1
+                       and context[counter+1].math_type == math_type):
+                    counter += 1
+                    grouped_objects.append(context[counter])
+                new_sentence = introduce_several_object(grouped_objects,
+                                                        format_=format_)
 
+            # Add a separator, either a new line or a space
             if text:
                 if object_is_prop != previous_object_is_prop:
                     # New line only to separate objects and propositions.
@@ -481,14 +488,15 @@ class Goal:
                 else:
                     # New sentence
                     text += " "
+
             previous_object_is_prop = object_is_prop
             text += new_sentence
 
+            counter += 1
+
         if text:
             text += text_cr
-        # target_text = target.math_type.old_to_display(text_depth=text_depth,
-        #                                           format_="utf8",
-        #                                           is_math_type=True)
+
         target_text = target.math_type_to_display(text_depth=text_depth)
         if to_prove and not open_problem:
             prove_that = _("Prove that") + " "
@@ -530,6 +538,7 @@ class Goal:
             text += _("Hypothesis:") + "\n"
         elif len(context) > 1:
             text += _("Hypotheses:") + "\n"
+
         for math_object in context:
             # math_type = math_object.math_type
             name = math_object.to_display(format_="utf8")
@@ -678,3 +687,57 @@ if __name__ == '__main__':
     print_proof_state(goal)
 
     print(f"variable names {goal.extract_var_names()}")
+
+
+def introduce_several_object(objects: [MathObject], format_) -> str:
+    """
+    Given two or more MathObject having the same math_type, try to construct a
+    sentence that introduces them together. e.g.
+    "Let A, B be two subsets of X".
+    The construction succeed if a plural version of the type is found in
+    the "plurals" dictionary.
+    """
+
+    # Fixme: changing i18n does not update the following dic,
+    #  even if module is reloaded (see config_window)
+    from deaduction.pylib.math_display import plurals, numbers
+    new_sentence = ""
+    if not objects:
+        return new_sentence
+
+    if len(objects) == 1:  # One object
+        math_object = objects[0]
+        names = math_object.to_display(format_)
+        type_ = math_object.math_type_to_display(format_=format_,
+                                                 text_depth=10)
+        new_sentence = _("Let {} be {}").format(names, type_) + "."
+
+    else:  # More than one object
+        names = ", ".join([obj.to_display(format_) for obj in objects])
+        number = len(objects)
+        if len(objects) <= len(numbers):
+            number = numbers[number]  # text version of the number
+        type_ = objects[0].math_type_to_display(format_=format_, text_depth=10)
+
+        words = type_.split(" ")
+        plural_type = None
+        # Try to replace first words by plural:
+        for counter in range(len(words)):
+            first_words = " ".join(words[:counter+1])
+            if first_words in plurals:
+                plural_first_words = plurals[first_words]
+                new_words = [plural_first_words] + words[counter+1:]
+                plural_type = " ".join(new_words)
+                break
+
+        if plural_type:
+            shape = plurals[_("Let {} be {}")]
+            new_sentence = shape.format(names, number, plural_type) + "."
+
+    if not new_sentence:  # No plural found: introduce one by one.
+        sentences = [introduce_several_object([obj],
+                                              format_) for obj in objects]
+        new_sentence = " ".join(sentences)
+
+    return new_sentence
+
