@@ -561,8 +561,7 @@ class ExerciseChooser(AbstractCoExChooser):
             # Text widget #
             ###############
             # The goal is presented in a single widget.
-            if not self.__text_wgt:  # First call to text_wgt
-                self.__text_wgt = QTextEdit()
+            self.__text_wgt = QTextEdit()
             # height = self.__text_wgt.sizeHint().height()
             # print(f"Height: {height}")
             # self.__text_wgt.setMaximumHeight(height)
