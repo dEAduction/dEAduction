@@ -113,7 +113,8 @@ latex_from_node = {
     ##################
     # GENERAL TYPES: #
     ##################
-    "SET": (r'\set_of_subsets', 0),  # (r'{\mathcal P}', "(", 0, ")"),
+    "SET": (r'\set_of_subsets', [r"\parentheses", 0]),
+    # (r'{\mathcal P}', "(", 0, ")"),
     "PROP": (r'\proposition',),
     "TYPE": (r'\set',),
     "FUNCTION": (r'\function_from', 0, r'\to', 1),  # (0, r" \to ", 1),
@@ -161,7 +162,14 @@ latex_from_constant_name = {
     "est_borne": (-1, r'\text_is', " borné"),
     "limite": ("lim", -2, " = ", -1),
     "abs": ('|', -1, '|'),
-    "max": ("Max", r'\parentheses', -2, ",", -1)
+    "max": ("Max", r'\parentheses', -2, ",", -1),
+    "inv": (-1, [r'^', '-1']),
+    "product": (-2, " . ", -1),
+    "identite": ("Id",),
+    "image": (-1, " = ", -3, "(", -2, ")"),
+    "relation_equivalence": (-1, " " + _("is an equivalence relation")),
+    "classe_equivalence": (r"\[", -1, r"\]", ["_", 1]),
+    "disjoint": (-2, " " + _("and") + " ", -1, " " + _("are disjoint"))
 }
 
 
@@ -519,15 +527,15 @@ def needs_paren(parent, child, child_number, text_depth=0) -> bool:
     if (p_node in ("SET_IMAGE", "SET_INVERSE")
             and child_number == 1):  # f(A), f^{-1}(A)
         return True
-    elif p_node == "SET" and text_depth <= 0:  # P(X)
-        return True
+    # elif p_node == "SET" and text_depth <= 0:  # P(X) vs subset of X
+    #     return True
     elif c_node in NATURE_LEAVES_LIST:
         return False
     elif p_node == 'PROP_NOT':
         return True
     elif c_node in ("SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
-                  "PROP_EQUAL_NOT", "PROP_≤", "PROP_≥", "PROP_<", "PROP_>",
-                  "PROP_INCLUDED", "SET_UNION+", "SET_INTER+"):
+                    "PROP_EQUAL_NOT", "PROP_≤", "PROP_≥", "PROP_<", "PROP_>",
+                    "PROP_INCLUDED", "SET_UNION+", "SET_INTER+"):
         return False
     elif (p_node == "SET_INVERSE"
           and child_number == 0
