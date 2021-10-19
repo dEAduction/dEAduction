@@ -113,7 +113,8 @@ latex_from_node = {
     ##################
     # GENERAL TYPES: #
     ##################
-    "SET": (r'\set_of_subsets', 0),  # (r'{\mathcal P}', "(", 0, ")"),
+    # (r'{\mathcal P}', "(", 0, ")"),
+    "SET": (r'\set_of_subsets', [r"\parentheses", 0]),
     "PROP": (r'\proposition',),
     "TYPE": (r'\set',),
     "FUNCTION": (r'\function_from', 0, r'\to', 1),  # (0, r" \to ", 1),
@@ -519,8 +520,9 @@ def needs_paren(parent, child, child_number, text_depth=0) -> bool:
     if (p_node in ("SET_IMAGE", "SET_INVERSE")
             and child_number == 1):  # f(A), f^{-1}(A)
         return True
-    elif p_node == "SET" and text_depth <= 0:  # P(X)
-        return True
+    # P(X) vs "subsets of X": this is treated in the latex_from_nodes dic
+    # elif p_node == "SET" and text_depth <= 0:
+    #     return True
     elif c_node in NATURE_LEAVES_LIST:
         return False
     elif p_node == 'PROP_NOT':
