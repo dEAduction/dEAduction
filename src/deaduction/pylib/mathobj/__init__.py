@@ -34,7 +34,7 @@ from .proof_step import          (ProofStep,
 
 from .give_name import           (get_new_hyp,
                                   give_global_name,
-                                  give_local_name)
+                                  names_for_types)
 
 from .lean_analysis import       (lean_expr_with_type_grammar,
                                   LeanEntryVisitor)

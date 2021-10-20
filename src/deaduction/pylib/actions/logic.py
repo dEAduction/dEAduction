@@ -59,6 +59,7 @@ from deaduction.pylib.actions     import (action,
 
 from deaduction.pylib.mathobj     import (MathObject,
                                           give_global_name,
+                                          names_for_types,
                                           get_new_hyp)
 
 log = logging.getLogger("logic")
@@ -746,9 +747,10 @@ def construct_forall(proof_step) -> CodeForLean:
     hint = variable.display_name  # not optimal
     strong_hint = hint
     if math_type.node == "PRODUCT":
-        [math_type_1, math_type_2] = math_type.children
-        x = give_global_name(proof_step=proof_step, math_type=math_type_1)
-        y = give_global_name(proof_step=proof_step, math_type=math_type_2)
+        # [math_type_1, math_type_2] = math_type.children
+        [x, y] = names_for_types(math_type.children, proof_step)
+        # x = give_global_name(proof_step=proof_step, math_type=math_type_1)
+        # y = give_global_name(proof_step=proof_step, math_type=math_type_2)
         possible_codes = possible_codes.and_then(f'rintro ⟨ {x}, {y} ⟩')
         name = f"({x},{y})"
     else:

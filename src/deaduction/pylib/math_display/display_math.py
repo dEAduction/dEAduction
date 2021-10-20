@@ -54,15 +54,13 @@ Copyright (c) 2020 the dEAduction team
 
 import logging
 from typing import Any, Union
-from dataclasses import dataclass
 
-from deaduction.pylib.mathobj.give_name     import give_local_name
-from deaduction.pylib.math_display.utils import text_to_subscript_or_sup
-from deaduction.pylib.math_display.display_data import (latex_from_constant_name,
-                                                        latex_from_quant_node,
-                                                        needs_paren,
-                                                        couples_of_nodes_to_latex,
-                                                        dic_of_first_nodes_latex)
+from deaduction.pylib.math_display.display_data \
+                                        import (latex_from_constant_name,
+                                                latex_from_quant_node,
+                                                needs_paren,
+                                                couples_of_nodes_to_latex,
+                                                dic_of_first_nodes_latex)
 
 log = logging.getLogger(__name__)
 global _

@@ -164,12 +164,16 @@ latex_from_constant_name = {
     "abs": ('|', -1, '|'),
     "max": ("Max", r'\parentheses', -2, ",", -1),
     "inv": (-1, [r'^', '-1']),
-    "product": (-2, " . ", -1),
+    "product": (-2, ".", -1),
     "identite": ("Id",),
     "image": (-1, " = ", -3, "(", -2, ")"),
     "relation_equivalence": (-1, " " + _("is an equivalence relation")),
     "classe_equivalence": (r"\[", -1, r"\]", ["_", 1]),
-    "disjoint": (-2, " " + _("and") + " ", -1, " " + _("are disjoint"))
+    "disjoint": (-2, " " + _("and") + " ", -1, " " + _("are disjoint")),
+    "powerset": (r'\set_of_subsets', [r"\parentheses", -1]),
+    "partition": (-1, " " + _("is a partition of") + " ", -2),
+    "application": (-1, " " + _("is an application") + " "),
+    "application_bijective":  (-1, " " + _("is a bijective application") + " ")
 }
 
 
@@ -492,7 +496,7 @@ for (first_node, second_node) in couples_of_nodes_to_latex:
 ####################
 ####################
 # Nodes of math objects that need instantiation of bound variables
-HAVE_BOUND_VARS = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_EXTENSION",
+HAVE_BOUND_VARS = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_INTENSION",
                    "LAMBDA", "EXTENDED_SEQUENCE", "EXTENDED_SET_FAMILY")
 
 # TO_BE_EXPANDED = ("SEQUENCE", "SET_FAMILY", "LAMBDA")
@@ -535,17 +539,23 @@ def needs_paren(parent, child, child_number, text_depth=0) -> bool:
         return True
     elif c_node in ("SET_IMAGE", "SET_INVERSE", "PROP_BELONGS", "PROP_EQUAL",
                     "PROP_EQUAL_NOT", "PROP_≤", "PROP_≥", "PROP_<", "PROP_>",
-                    "PROP_INCLUDED", "SET_UNION+", "SET_INTER+"):
+                    "PROP_INCLUDED", "SET_UNION+", "SET_INTER+",
+                    "SET_INTENSION", "SET_EXTENSION1", "SET_EXTENSION2",
+                    "SET_EXTENSION3"):
         return False
     elif (p_node == "SET_INVERSE"
           and child_number == 0
           and c_node != "LOCAL_CONSTANT"):
         # e.g. (f∘g)^{-1} (x)
         return True
+    # Fixme: Does not work?:
+    elif p_node == "APPLICATION" and child_number == 1 and child.children:
+        return True
     elif c_node == "APPLICATION":
         return False
     elif p_node in ("SET_IMAGE",  # "SET_INVERSE",
                     "SET_UNION+", "SET_INTER+", "APPLICATION",
+                    "SET_INTENSION",
                     "PROP_INCLUDED",  "PROP_BELONGS", "PROP_NOT_BELONGS",
                     "LAMBDA",
                     "PROP_EQUAL", "PROP_EQUAL_NOT",
