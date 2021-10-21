@@ -265,13 +265,13 @@ class ExerciseCentralWidget(QWidget):
 
         main_font_size   = cvars.get('display.main_font_size')
         tooltips_font_size = cvars.get('display.tooltips_font_size', "14pt")
-        symbol_size = cvars.get('display.action_button_font_size', "14pt")
-        log.debug(f"Font sizes for main and tooltips: {main_font_size, tooltips_font_size}")
-        style = f'QTreeWidget {{font-size: {main_font_size};}}' \
-                f'QListView {{font-size: {main_font_size};}}' \
+        symbol_size = cvars.get('display.font_size_for_symbol_buttons', "14pt")
+        # log.debug(f"Font sizes for main and tooltips: {main_font_size, tooltips_font_size}")
+        style = f'QTreeWidget {{font-size: {main_font_size}}}' \
+                f'QListView {{font-size: {main_font_size}}}' \
                 f'QToolTip {{font-size: {tooltips_font_size};}}' \
-                f'ActionButtonsWidget {{max-height: 30px;}} ' \
-                f'{{font-size: {symbol_size};}}'
+                f'ActionButton {{max-height: 30px; ' \
+                f'font-size: {symbol_size} }}'
         self.setStyleSheet(style)
 
         main_math_font = self.deaduction_fonts.math_font()

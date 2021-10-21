@@ -18,7 +18,7 @@ tooltips_font_size = "12pt"
 mathematics_font = "Times New Roman"
 selection_color = "limegreen"
 symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃, =, ↦"
-action_button_font_size = "20pt"
+font_size_for_symbol_buttons = "14pt"
 use_symbols_for_logic_button = true
 
 display_detailed_errors_on_wui = true
