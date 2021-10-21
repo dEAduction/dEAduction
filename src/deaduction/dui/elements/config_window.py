@@ -81,7 +81,8 @@ CONFIGS["Display"] = [
     ("display.target_font_size", None, True),
     ("display.main_font_size", None, True),
     ("display.tooltips_font_size", None, True),
-    ('display.use_symbols_for_logic_button', None, True)
+    ('display.use_symbols_for_logic_button', None, True),
+    ('display.font_size_for_symbol_buttons', None, True)
     # ('display.font_for_mathematics', "font", True)
     ]
 # ('display.mathematics_font', None, True),
@@ -116,6 +117,7 @@ SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          "logic.use_color_for_dummy_variables",
                          "EXISTS_EQUAL_MAP",
                          'display.use_symbols_for_logic_button',
+                         'display.font_size_for_symbol_buttons',
                          'logic.color_for_used_properties',
                          'functionality.allow_proof_by_sorry',
                          'functionality.allow_implicit_use_of_definitions',

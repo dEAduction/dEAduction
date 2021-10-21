@@ -48,6 +48,7 @@ PRETTY_NAMES = {
     'others.course_directory': _('Set directory for choosing courses'),
     'logs.display_level': _('Level of logs'),
     'display.use_symbols_for_logic_button': _("Use symbol for logic buttons"),
+    'display.font_size_for_symbol_buttons': _("Font size for symbol buttons"),
     'display.display_success_messages': _("Display success messages"),
     'logic.use_color_for_variables': _("Use color for variables"),
     'logic.use_color_for_dummy_variables': _("Use color for dummy variables"),
