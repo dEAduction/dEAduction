@@ -72,6 +72,16 @@ def html_color(s: str, color: str) -> str:
     return html_pre + s + html_post
 
 
+def variable_style(s) -> str:
+    italic = False
+    html_pre = ""
+    html_post = ""
+    if italic:
+        html_pre = '<i> '
+        html_post = ' </i>'
+    return html_pre + s + html_post
+
+
 def sub_sup_to_html(string: str) -> str:
     string = string.replace('_', r'\sub')
     string = string.replace('^', r'\super')
@@ -117,16 +127,20 @@ def recursive_html_display(l: list, depth) -> str:
         return superscript(recursive_html_display(l[1:], depth))
     elif head == r'\variable':
         color = color_variables()
+        raw_string = recursive_html_display(l[1:], depth)
+        formatted_string = variable_style(raw_string)
         if color:
-            return html_color(recursive_html_display(l[1:], depth), color)
+            return html_color(formatted_string, color)
         else:
-            return recursive_html_display(l[1:], depth)
+            return formatted_string
     elif head == r'\dummy_variable':
         color = color_dummy_variables()
+        raw_string = recursive_html_display(l[1:], depth)
+        formatted_string = variable_style(raw_string)
         if color:
-            return html_color(recursive_html_display(l[1:], depth), color)
+            return html_color(formatted_string, color)
         else:
-            return recursive_html_display(l[1:], depth)
+            return formatted_string
     elif head == r'\applied_property':
         color = color_props()
         if color:

@@ -58,7 +58,8 @@ from deaduction.dui.elements            import ( ActionButton,
                                                  StatementsTreeWidget,
                                                  MathObjectWidget,
                                                  TargetWidget)
-# from deaduction.pylib.actions           import   action_apply
+from deaduction.dui.primitives          import DeaductionFonts
+
 from deaduction.pylib.coursedata        import   Exercise
 from deaduction.pylib.proof_state       import   Goal
 import deaduction.pylib.config.vars      as      cvars
@@ -132,7 +133,6 @@ class ExerciseCentralWidget(QWidget):
             the exercise to be solved by the user.
         """
         super().__init__()
-        self.set_font_size()
         self.exercise = exercise
 
         # ───────────── Init layouts and boxes ───────────── #
@@ -176,6 +176,8 @@ class ExerciseCentralWidget(QWidget):
         self.objects_wgt  = MathObjectWidget()
         self.props_wgt    = MathObjectWidget()
         self.target_wgt   = TargetWidget()
+        self.deaduction_fonts = DeaductionFonts(self)
+        self.set_font()
 
         # ───────────── Put widgets in layouts ───────────── #
 
@@ -252,21 +254,45 @@ class ExerciseCentralWidget(QWidget):
 ##############################
 # Methods called by __init__ #
 ##############################
-    def set_font_size(self):
+    def set_font(self):
         """
         Set the font size for some sub-widgets.
         Button font sizes are set in the widgets'methods.
         Target font size is set in TargetWidget.
+        ActionButtonsWidget max-height is set so that they keep their nice
+        appearance on Mac, whatever the font size.
         """
 
         main_font_size   = cvars.get('display.main_font_size')
         tooltips_font_size = cvars.get('display.tooltips_font_size', "14pt")
-        # target_font_size = cvars.get('display.target_font_size')
+        symbol_size = cvars.get('display.action_button_font_size', "14pt")
         log.debug(f"Font sizes for main and tooltips: {main_font_size, tooltips_font_size}")
         style = f'QTreeWidget {{font-size: {main_font_size};}}' \
                 f'QListView {{font-size: {main_font_size};}}' \
-                f'QToolTip {{font-size: {tooltips_font_size};}}'
+                f'QToolTip {{font-size: {tooltips_font_size};}}' \
+                f'ActionButtonsWidget {{max-height: 30px;}} ' \
+                f'{{font-size: {symbol_size};}}'
         self.setStyleSheet(style)
+
+        main_math_font = self.deaduction_fonts.math_font()
+        main_size = self.deaduction_fonts.main_font_size
+        main_math_font.setPointSize(main_size)
+        self.props_wgt.setFont(main_math_font)
+        self.objects_wgt.setFont(main_math_font)
+
+        # Target styles #
+        target_math_font = self.deaduction_fonts.math_font()
+        target_size = self.deaduction_fonts.target_font_size
+        # The following has no effect, see styleSheet below:
+        target_math_font.setPointSize(target_size)
+        target_lbl = self.target_wgt.target_label
+        target_lbl.setFont(target_math_font)
+        # Setting selected / unselected style:
+        self.target_wgt.unselected_style = f'font-size: {target_size};'
+        background_color = cvars.get("display.selection_color", "limegreen")
+        self.target_wgt.selected_style = self.target_wgt.unselected_style \
+            + f'background-color: {background_color};'
+        self.target_wgt.setStyleSheet(self.target_wgt.unselected_style)
 
     def organise_main_layout(self):
         """
@@ -422,14 +448,9 @@ class ExerciseCentralWidget(QWidget):
         self.props_wgt    = new_props_wgt
         self.target_wgt   = new_target_wgt
         self.current_goal = new_goal
-
-        # FIXME:
-        #  Modify main layout if needed (e;G. target_on_top has changed)
-        # self.organise_main_layout()
+        self.set_font()
 
         self.statements_tree.verticalScrollBar().setValue(statements_scroll)
-
-        # log.debug(f"ScrollBar: {new_props_wgt.horizontalScrollBar()}")
 
 
 class ExerciseStatusBar(QStatusBar):

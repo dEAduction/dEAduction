@@ -73,7 +73,8 @@ from deaduction.dui.elements        import (MathObjectWidget,
                                             StatementsTreeWidget,
                                             StatementsTreeWidgetItem)
 from deaduction.dui.primitives      import (DisclosureTriangle,
-                                            ButtonsDialog)
+                                            ButtonsDialog,
+                                            DeaductionFonts)
 from deaduction.dui.utils           import (replace_widget_layout,
                                             HorizontalLine)
 from deaduction.pylib.config.course import  add_to_recent_courses
@@ -446,6 +447,12 @@ class ExerciseChooser(AbstractCoExChooser):
 
         self.__scrollbar_current_item_pos = 0
 
+        # Load fonts for math widgets
+        self.deaduction_fonts = DeaductionFonts(self)
+        font_size = self.deaduction_fonts.chooser_math_font_size
+        self.math_font = self.deaduction_fonts.math_font()
+        self.math_font.setPointSize(font_size)
+
         super().__init__(browser_layout)
 
     def current_item_changed(self):
@@ -567,7 +574,7 @@ class ExerciseChooser(AbstractCoExChooser):
             # self.__text_wgt.setMaximumHeight(height)
 
             self.__text_wgt.setReadOnly(True)
-            self.__text_wgt.setFont(QFont('Menlo'))  # FIXME: font problem
+            self.__text_wgt.setFont(self.math_font)
             text = goal.goal_to_text(format_="html")
             self.__text_wgt.setHtml(text)
             widget = self.__text_wgt
@@ -588,11 +595,11 @@ class ExerciseChooser(AbstractCoExChooser):
             objects_lyt = QVBoxLayout()
             properties_lyt = QVBoxLayout()
 
+            # Math font
             objects_wgt.adjustSize()
-            math_font = QFont(cvars.get("display.mathematics_font", 'Menlo'))
-            objects_wgt.setFont(math_font)
+            objects_wgt.setFont(self.math_font)
             properties_wgt.adjustSize()
-            properties_wgt.setFont(math_font)
+            properties_wgt.setFont(self.math_font)
 
             objects_lyt.addWidget(QLabel(_('Objects:')))
             properties_lyt.addWidget(QLabel(_('Properties:')))
@@ -604,7 +611,7 @@ class ExerciseChooser(AbstractCoExChooser):
             # ───────────────────── Target ───────────────────── #
             # target_wgt = MathObjectWidget(target=target)
             target_wgt = TargetLabel(target)
-            target_wgt.setFont(math_font)
+            target_wgt.setFont(self.math_font)
             # Set target_wgt height to 1 line: USELESS with QLabel
             # font_metrics = QFontMetrics(math_font)
             # text_size = font_metrics.size(0, target.math_type_to_display())

@@ -10,12 +10,15 @@ text_mode_in_chooser_window = true
 target_display_on_top = false
 depth_of_unfold_statements = 1
 show_lean_name_for_statements = false
-target_font_size = "24pt"
-main_font_size = "14pt"
+chooser_math_font_size = "16pt"
+main_font_size = "16pt"
+target_font_size = "20pt"
 button_font_size_for_symbols = "default"  # Does not work
 tooltips_font_size = "12pt"
-mathematics_font = "Defaults"
+mathematics_font = "Times New Roman"
+selection_color = "limegreen"
 symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃, =, ↦"
+action_button_font_size = "20pt"
 use_symbols_for_logic_button = true
 
 display_detailed_errors_on_wui = true

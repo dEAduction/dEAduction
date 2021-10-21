@@ -412,16 +412,19 @@ class TargetWidget(QWidget):
         caption_label.setStyleSheet('font-size: 11pt;')
 
         # TODO: method setfontstyle
-        size = cvars.get('display.target_font_size')
-        self.target_label.unselected_style = f'font-size: {size};'
-        self.target_label.selected_style = self.target_label.unselected_style \
-            + f'background-color: limegreen;'
-        self.target_label.setStyleSheet(self.target_label.unselected_style)
+        # size = cvars.get('display.target_font_size')
+        # self.target_label.unselected_style = f'font-size: {size};'
+        # self.target_label.unselected_style = ''
+        # self.target_label.selected_style = self.target_label.unselected_style \
+        #     + f'background-color: limegreen;'
+        # self.target_label.setStyleSheet(self.target_label.unselected_style)
 
         # Set fonts for maths display
-        math_font_name = cvars.get('display.mathematics_font', 'Default')
-        self.target_label.setFont(QFont(math_font_name))
+        # math_font_name = cvars.get('display.mathematics_font', 'Default')
+        # self.target_label.setFont(QFont(math_font_name))
 
+        self.selected_style = ""  # Set in _exercise_main_window_widgets
+        self.unselected_style = ""
         # ───────────────────── Layouts ──────────────────── #
 
         central_layout = QVBoxLayout()
@@ -453,9 +456,9 @@ class TargetWidget(QWidget):
         """
         if hasattr(self, 'target_label'):
             if yes:
-                self.target_label.setStyleSheet(self.target_label.selected_style)
+                self.target_label.setStyleSheet(self.selected_style)
             else:
-                self.target_label.setStyleSheet(self.target_label.unselected_style)
+                self.target_label.setStyleSheet(self.unselected_style)
         else:
             log.warning("Attempt to use deleted attribute target_label")
 

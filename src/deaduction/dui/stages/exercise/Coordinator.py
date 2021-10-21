@@ -128,7 +128,7 @@ class Coordinator(QObject):
         # Initialization
         self.__connect_signals()
         self.__initialize_exercise()
-
+        # log.debug(f"Selected style: {self.emw.ecw.target_wgt.selected_style}")
     ######################
     ######################
     # Init/close methods #

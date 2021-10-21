@@ -86,24 +86,6 @@ class HTMLDelegate(QStyledItemDelegate):
         return QSize(width, height)
 
 
-# class HTMLDelegate2(QItemDelegate):
-#     def __init__(self, parent=None):
-#         super(HTMLDelegate2, self).__init__(parent)
-#
-#     def paint(self, painter, option, index):
-#         # text = index.model().data(index).toString()
-#         text = "Toto"
-#         document = QtGui.QTextDocument()
-#         document.setDefaultFont(option.font)
-#         document.setHtml(text)
-#         color = QtGui.QColor("blue")
-#         painter.save()
-#         painter.fillRect(option.rect, color)
-#         painter.translate(option.rect.x(), option.rect.y())
-#         document.drawContents(painter)
-#         painter.restore()
-
-
 if __name__ == "__main__":
     app = QApplication()
 
