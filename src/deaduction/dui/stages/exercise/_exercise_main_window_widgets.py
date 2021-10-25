@@ -263,22 +263,25 @@ class ExerciseCentralWidget(QWidget):
         appearance on Mac, whatever the font size.
         """
 
-        main_font_size   = cvars.get('display.main_font_size')
-        tooltips_font_size = cvars.get('display.tooltips_font_size', "14pt")
-        symbol_size = cvars.get('display.font_size_for_symbol_buttons', "14pt")
-        # log.debug(f"Font sizes for main and tooltips: {main_font_size, tooltips_font_size}")
-        style = f'QTreeWidget {{font-size: {main_font_size}}}' \
-                f'QListView {{font-size: {main_font_size}}}' \
-                f'QToolTip {{font-size: {tooltips_font_size};}}' \
+        # Sizes #
+        main_size = self.deaduction_fonts.main_font_size
+        tooltip_size = self.deaduction_fonts.tooltips_font_size
+        symbol_size = self.deaduction_fonts.symbol_button_font_size
+        style = f'QTreeWidget {{font-size: {main_size}}}' \
+                f'QListView {{font-size: {main_size}}}' \
+                f'QToolTip {{font-size: {tooltip_size};}}' \
                 f'ActionButton {{max-height: 30px; ' \
                 f'font-size: {symbol_size} }}'
         self.setStyleSheet(style)
 
+        # Set math fonts #
         main_math_font = self.deaduction_fonts.math_font()
-        main_size = self.deaduction_fonts.main_font_size
         main_math_font.setPointSize(main_size)
         self.props_wgt.setFont(main_math_font)
         self.objects_wgt.setFont(main_math_font)
+        symbol_font = self.deaduction_fonts.math_font()
+        symbol_font.setPointSize(symbol_size)
+        self.logic_btns.setFont(symbol_font)
 
         # Target styles #
         target_math_font = self.deaduction_fonts.math_font()

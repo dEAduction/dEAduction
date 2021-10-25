@@ -57,6 +57,10 @@ class DeaductionFonts:
         self.main_font_size = int(font_size[:-2])
         font_size = cvars.get("display.target_font_size", "20pt")
         self.target_font_size = int(font_size[:-2])
+        symbol_size = cvars.get('display.font_size_for_symbol_buttons', "14pt")
+        self.symbol_button_font_size = int(symbol_size[:-2])
+        self.tooltips_font_size = cvars.get('display.tooltips_font_size',
+                                            "14pt")
 
         self.alt_characters = {}
         in_font = QFontMetrics(self.math_font()).inFont
