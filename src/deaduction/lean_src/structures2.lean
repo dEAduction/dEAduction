@@ -92,6 +92,8 @@ match e with
                 return ("SET_INTENSION",[X, var_, inst_body])
     | _ := return ("SET_INTENSION", [X, P])
     end
+| `(index_set) := return ("TYPE", [])
+| `(set_family %%I %%X) := return ("SET_FAMILY", [I, X])
 | (pi name binder type body) := do
     let is_arr := is_arrow e,
     if is_arr
@@ -100,17 +102,14 @@ match e with
             if is_pro
                 then return ("PROP_IMPLIES", [type,body])
                 else match e with
-                -- do expr_f ←  infer_type type,
-                -- if expr_f = `(Type )
-                    | `(%%X → %%Y) :=
-                    match X with
+                    | `(%%X → %%Y) := match X with
                         | `(ℕ) := return ("SEQUENCE", [X, Y])
-                        | _ := do
-                        match Y with
-                            | `(_root_.set %%Z) :=
-                        if Z = X
-                            then return ("FUNCTION", [X, Y])
-                            else return ("SET_FAMILY", [X, Z])
+                        | _ := do X_type ← infer_type X,
+                            match (X_type, Y) with
+                        -- A set family is when source is an index_set
+                        -- (just a type which is "tagged" for serving as index)
+                        -- and target is "set something"
+                            | (`(index_set), `(_root_.set %%Z)) := return ("SET_FAMILY", [X, Z])
                             | _ := return ("FUNCTION", [X, Y])
                             end
                         end
@@ -384,3 +383,11 @@ match names with
 
 
 end tactic.interactive
+
+
+-- example (X Y: Type) (f: set X → set X) (I: set.index_set) (E: I → set X)
+-- (F: I → X) (G: I → set (X × Y)) (H: Y → set X):
+-- true := 
+-- begin
+--     hypo_analysis,
+-- end

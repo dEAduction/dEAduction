@@ -57,6 +57,8 @@ global _
 ######################
 # Mind that values are tuples whose tuple elements indicate "descendant"
 # (children of children). Otherwise use lists within main tuple.
+# '\no_text' indicates that text mode should not be used in the current display
+#   (e.g. within an equality)
 latex_from_node = {
     "PROP_AND": (0, " " + _("and") + " ", 1),
     "PROP_OR": (0, " " + _("or") + " ", 1),
@@ -92,14 +94,15 @@ latex_from_node = {
     "SET_INVERSE": (0, r'\set_inverse', 1),
     "SET_PRODUCT": (0, r'\times', 1),
     "COUPLE": ('(', 0, ',', 1, ')'),
-    "SET_INTENSION": (r'\{', 1, r' \in ', 0, ' | ', 2, r'\}'),
+    "SET_INTENSION": (r"\no_text", r'\{', 1, r' \in ', 0, ' | ', 2, r'\}'),
     # FIXME: instantiate set extensions
     ############
     # NUMBERS: #
     ############
     "COE": (0,),    # We do not want to see bindings
-    "PROP_EQUAL": (0, " = ", 1),
-    "PROP_EQUAL_NOT": (0, r" \neq ", 1),  # todo
+    "PROP_EQUAL": (r"\no_text", 0, r" \equal ", 1),  # influence text
+    # conversion
+    "PROP_EQUAL_NOT": (r"\no_text", 0, r" \neq ", 1),  # todo
     "PROP_<": (0, " < ", 1),
     "PROP_>": (0, " > ", 1),
     "PROP_≤": (0, r" \leq ", 1),
@@ -114,7 +117,8 @@ latex_from_node = {
     # GENERAL TYPES: #
     ##################
     # (r'{\mathcal P}', "(", 0, ")"),
-    "SET": (r'\set_of_subsets', [r"\parentheses", 0]),
+    # "SET": (r'\set_of_subsets', [r"\parentheses", 0]),
+    "SET": (r'\set_of_subsets', [r'\symbol_parentheses', 0]),
     "PROP": (r'\proposition',),
     "TYPE": (r'\set',),
     "FUNCTION": (r'\function_from', 0, r'\to', 1),  # (0, r" \to ", 1),
@@ -163,7 +167,7 @@ latex_from_constant_name = {
     "limite": ("lim", -2, " = ", -1),
     "abs": ('|', -1, '|'),
     "max": ("Max", r'\parentheses', -2, ",", -1),
-    "inv": (-1, [r'^', '-1']),
+    "inv": ([r'\parentheses', -1], [r'^', '-1']),
     "product": (-2, ".", -1),
     "identite": ("Id",),
     "image": (-1, " = ", -3, "(", -2, ")"),
@@ -184,6 +188,7 @@ latex_from_constant_name = {
 ###################
 # Convert Latex command into utf8 symbols
 latex_to_utf8_dic = {
+    r"\equal": "=",
     r'\backslash': '\\',
     r'\Delta': '∆',
     r'\circ': '∘',
@@ -225,7 +230,9 @@ latex_to_utf8_dic = {
     r'\such_that': ", ",
     r'\function_from': "",
     r'\text_is': " ",  # " " + _("is") + " " ? Anyway 'is' will be removed?
-    r'\text_is_not': " " + _('not') + " "  # Idem
+    r'\text_is_not': " " + _('not') + " ",  # Idem
+    r'\no_text': "",
+    r'\symbol_parentheses': r'\parentheses'  # True parentheses for symbols
 }
 
 
@@ -255,7 +262,9 @@ latex_to_text = {
     r'\in_function': " " + _("is") + " ",  # FIXME: ???
     r'\in_quant': " " + _("in") + " ",
     r'\text_is': " " + _('is') + " ",
-    r'\text_is_not': " " + _('is not') + " "
+    r'\text_is_not': " " + _('is not') + " ",
+    r'\symbol_parentheses': ""  # Parentheses but for symbols only
+    # r'\subset': " " + _("is included in") + " " Does not help
 }
 plurals = {
     _('Let {} be {}'): _("Let {} be {} {}"),  # Translate plural!!
@@ -531,9 +540,6 @@ def needs_paren(parent, child, child_number, text_depth=0) -> bool:
     if (p_node in ("SET_IMAGE", "SET_INVERSE")
             and child_number == 1):  # f(A), f^{-1}(A)
         return True
-    # P(X) vs "subsets of X": this is treated in the latex_from_nodes dic
-    # elif p_node == "SET" and text_depth <= 0:
-    #     return True
     elif c_node in NATURE_LEAVES_LIST:
         return False
     elif p_node == 'PROP_NOT':
@@ -554,7 +560,7 @@ def needs_paren(parent, child, child_number, text_depth=0) -> bool:
         return True
     elif c_node == "APPLICATION":
         return False
-    elif p_node in ("SET_IMAGE",  # "SET_INVERSE",
+    elif p_node in ("SET_IMAGE",  "SET",
                     "SET_UNION+", "SET_INTER+", "APPLICATION",
                     "SET_INTENSION",
                     "PROP_INCLUDED",  "PROP_BELONGS", "PROP_NOT_BELONGS",
@@ -585,6 +591,8 @@ def latex_to_utf8(string: Union[str, list]):
             utf8_string = latex_to_utf8_dic[striped_string]
             if isinstance(utf8_string, str):
                 utf8_string = string.replace(striped_string, utf8_string)
+            else:
+                utf8_string = list(utf8_string)
             return utf8_string
         else:
             return string

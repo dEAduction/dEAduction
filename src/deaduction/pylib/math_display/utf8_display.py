@@ -80,7 +80,7 @@ def add_parentheses(l: list, depth):
         # Find first leaf of the tree
         last_node = l
         first_leaf = last_node[0]
-        while isinstance(first_leaf, list):
+        while isinstance(first_leaf, list) and len(first_leaf) > 0:
             last_node = first_leaf
             first_leaf = last_node[0]
         if first_leaf == r'\parentheses':
@@ -106,6 +106,9 @@ def recursive_utf8_display(l: list, depth) -> str:
     - \dummy_var for dummy vars
     - \applied_property for properties that have already been applied
     """
+    if not l:
+        return ""
+
     head = l[0]
     if head == r'\sub' or head == '_':
         return subscript(recursive_utf8_display(l[1:], depth))

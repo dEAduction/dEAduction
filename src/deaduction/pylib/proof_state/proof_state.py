@@ -329,7 +329,7 @@ class Goal:
             of other props.
 
         We first name dummy vars for target, and then estimate future
-        context vars from target. Note that thos two sets of vars are not
+        context vars from target. Note that those two sets of vars are not
         disjoint but not identical: target usually contains dummy vars that
         will not be introduced (e.g. existence quantifier, or any dummy var
         in a premisse), and dummy vars will also appear in definitions
@@ -394,16 +394,16 @@ class Goal:
         return [obj for obj in self.context_objects
                 if obj.math_type == math_type]
 
-    def extract_vars(self) -> List[MathObject]:
-        """
-        Provides the list of all variables in the context,
-        (but NOT bound variables, nor names of hypotheses)
-
-        :return: list of MathObject (variables names)
-        """
-        variables = [math_object for math_object in self.context
-                     if not math_object.is_prop()]
-        return variables
+    # def extract_vars(self) -> List[MathObject]:
+    #     """
+    #     Provides the list of all variables in the context,
+    #     (but NOT bound variables, nor names of hypotheses)
+    #
+    #     :return: list of MathObject (variables names)
+    #     """
+    #     variables = [math_object for math_object in self.context
+    #                  if not math_object.is_prop()]
+    #     return variables
 
     def extract_vars_names(self) -> List[str]:
         """
@@ -412,7 +412,7 @@ class Goal:
         :return: list of MathObject (variables names)
         """
         names = [math_object.info['name'] for math_object in
-                 self.extract_vars()]
+                 self.context_objects]
         return names
 
     ###################

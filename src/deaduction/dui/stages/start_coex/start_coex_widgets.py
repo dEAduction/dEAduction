@@ -180,7 +180,7 @@ class AbstractCoExChooser(QWidget):
         :param details: Other data for the course or exercise such as
             the course's year, teacher, school, etc.
         :param description: The course or exercise description.
-        :param exapand_details: Tell if the 'Details' disclosure tree is
+        :param expand_details: Tell if the 'Details' disclosure tree is
             expanded at __init__ (True) or not (False).
         """
 
@@ -733,8 +733,12 @@ class AbstractStartCoEx(QDialog):
         super().__init__()
 
         settings = QSettings("deaduction")
-        if settings.value("coex_chooser/Geometry"):
-            self.restoreGeometry(settings.value("coex_chooser/Geometry"))
+        geometry = settings.value("coex_chooser/Geometry")
+        maximised = settings.value("coex_chooser/isMaximised")
+        if geometry:
+            self.restoreGeometry(geometry)
+            if maximised:
+                self.showMaximized()
 
         self.servint = servint
         if title:
@@ -791,6 +795,28 @@ class AbstractStartCoEx(QDialog):
         self.__tabwidget.setTabEnabled(1, False)
         if exercise:
             self.__preset_exercise(exercise)
+
+    def closeEvent(self, event: QEvent):
+        """
+        Overload native Qt closeEvent method — which is called when self
+        is closed — to send the signal self.window_closed.
+
+        :param event: Some Qt mandatory thing.
+        """
+        if self.course_chooser.current_course:
+            # Save ips of the previous course if any
+            self.course_chooser.current_course.save_initial_proof_states()
+
+        # Save window geometry
+        settings = QSettings("deaduction")
+        settings.setValue("coex_chooser/isMaximised", self.isMaximized())
+        self.showNormal()
+        settings.setValue("coex_chooser/Geometry", self.saveGeometry())
+
+        self.window_closed.emit()
+        super().closeEvent(event)
+        # super().closeEvent(event)
+        # self.deleteLater()
 
     def __preset_exercise(self, exercise: Exercise):
         """
@@ -942,28 +968,8 @@ class StartCoExStartup(AbstractStartCoEx):
                          exercise=exercise,
                          servint=servint)
 
-    def closeEvent(self, event: QEvent):
-        """
-        Overload native Qt closeEvent method — which is called when self
-        is closed — to send the signal self.window_closed.
 
-        :param event: Some Qt mandatory thing.
-        """
-        if self.course_chooser.current_course:
-            # Save ips of the previous course if any
-            self.course_chooser.current_course.save_initial_proof_states()
-
-        # Save window geometry
-        settings = QSettings("deaduction")
-        settings.setValue("coex_chooser/Geometry", self.saveGeometry())
-
-        self.window_closed.emit()
-        super().closeEvent(event)
-        # super().closeEvent(event)
-        # self.deleteLater()
-
-
-class StartCoExExerciseFinished(AbstractStartCoEx):
+class StartCoExExerciseFinpoished(AbstractStartCoEx):
     """
     The CoEx chooser after usr just finished an exercise. It displays
     a CoEx chooser with the finished exercise

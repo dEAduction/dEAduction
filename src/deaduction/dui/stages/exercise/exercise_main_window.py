@@ -170,9 +170,15 @@ class ExerciseMainWindow(QMainWindow):
         self.__init_menubar()
         self.setStatusBar(self.statusBar)
 
+        # Restore geometry
         settings = QSettings("deaduction")
-        if settings.value("emw/Geometry"):
-            self.restoreGeometry(settings.value("emw/Geometry"))
+        geometry = settings.value("emw/Geometry")
+        maximised = settings.value("emw/isMaximised")
+        log.debug(f"maximised: {maximised}")
+        if geometry:
+            self.restoreGeometry(geometry)
+            if maximised:
+                self.showMaximized()
 
         self.close_coordinator = None  # Method set up by Coordinator
 
@@ -244,7 +250,12 @@ class ExerciseMainWindow(QMainWindow):
         self.proof_outline_window.close()
 
         # Save window geometry
+        # FIXME: does not work
         settings = QSettings("deaduction")
+        is_maximised = self.isMaximized()
+        # log.debug(f"Maximised: {is_maximised}")
+        settings.setValue("emw/isMaximised", is_maximised)
+        self.showNormal()
         settings.setValue("emw/Geometry", self.saveGeometry())
 
         if self.close_coordinator:

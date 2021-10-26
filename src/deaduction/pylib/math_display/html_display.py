@@ -152,7 +152,7 @@ def recursive_html_display(l: list, depth) -> str:
         # handle "\parentheses":
         add_parentheses(l, depth)
 
-        log.debug(f"Children to html: {l}")
+        # log.debug(f"Children to html: {l}")
         strings = [html_display(child, depth+1) for child in l]
         return ''.join(strings)
 

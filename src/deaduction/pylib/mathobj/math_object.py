@@ -1237,11 +1237,11 @@ class MathObject:
         #   then you probably have to do the same changes in
         #   ContextMathObject.math_type_to_display.
 
-        # log.debug(f"Displaying {self.old_to_display()}...")
+        log.debug(f"Displaying: {self.display_name}...")
         # (1) Latex shape, includes treatment of "in"
         # needs_paren is called --> '\parentheses'
         abstract_string = self.expanded_latex_shape(text_depth=text_depth)
-        # log.debug(f"(1) --> abstract string: {abstract_string}")
+        log.debug(f"(1) --> abstract string: {abstract_string}")
         # (2) Replace some symbol by plain text:
         display = shallow_latex_to_text(abstract_string, text_depth)
         # log.debug(f"(2) --> to text: {abstract_string}")
@@ -1297,12 +1297,13 @@ class MathObject:
         """
         cf MathObject.to_display. Lean format_ is not pertinent here.
         """
-        # log.debug(f"Displaying math_type: {self.old_to_display()}...")
+        log.debug(f"Displaying math_type: {self.display_name}...")
 
         shape = self.raw_latex_shape_of_math_type(text_depth=text_depth)
         abstract_string = recursive_display(self.math_type,
                                             raw_display=shape,
                                             text_depth=text_depth)
+        log.debug(f"(1) --> abstract string: {abstract_string}")
         # Replace some symbol by plain text:
         display = shallow_latex_to_text(abstract_string, text_depth)
         # Replace latex macro by utf8:
@@ -1315,43 +1316,6 @@ class MathObject:
         # log.debug(f"{self.old_to_display()} -> {display}")
 
         return display
-
-    # @property
-    # def expanded_version(self):
-    #     """
-    #     Return an expanded version if it exists, or None.
-    #     """
-    #     if not self._expanded_version:
-    #         if (self.is_sequence() or self.is_set_family()) \
-    #                 and not self.node.startswith("EXPANDED_"):
-    #             self._expanded_version = self.__expanded()
-    #
-    #     return self._expanded_version
-
-    # def raw_version(self):
-    #     """
-    #     Return a new MathObject which is a copy of self except that the
-    #     math_type's node is prefixed by "RAW_". RAW_SEQUENCE and RAW_SET_FAMILY
-    #     types indicate that self should not be expanded (like "u" replaced by
-    #     (u_n)_{n in N} ).
-    #     """
-    #     # math_type = self.math_type
-    #     # raw_node = "RAW_" + math_type.node
-    #     # raw_math_type = MathObject(node=raw_node,
-    #     #                            info=copy(math_type.info),
-    #     #                            children=math_type.children,
-    #     #                            math_type=math_type.math_type)
-    #     # raw_self = MathObject(node="LOCAL_CONSTANT",
-    #     #                       info=copy(self.info),
-    #     #                       children=self.children,
-    #     #                       math_type=raw_math_type)
-    #     # FIXME: now just copy of self. Rename duplicate(self)
-    #     raw_self = MathObject(node=self.node,
-    #                           info=copy(self.info),
-    #                           children=self.children,
-    #                           math_type=self.math_type)
-    #
-    #     return raw_self
 
     def __lambda_var_n_body(self):
         """
@@ -1381,54 +1345,6 @@ class MathObject:
         name_single_bound_var(bound_var)
         return bound_var, body
 
-    # def __expanded(self):
-    #     """
-    #     Take a MathObject of type "SEQUENCE" or "SET_FAMILY",
-    #     (whose display would be, say , "u")
-    #     and return a new MathObject whose display will be like
-    #     "(u_n)_{n in N}" or "{E_i, i in I}".
-    #     """
-    #
-    #     math_type = self.math_type
-    #     bound_var, body = self.__lambda_var_n_body()
-    #     bound_var_type = math_type.children[0]
-    #     # type first, like for quantifiers
-    #     children = [bound_var_type, bound_var, body]
-    #     node = "EXPANDED_" + math_type.node
-    #     expanded_self = MathObject(node=node,
-    #                                info=copy(self.info),
-    #                                children=children,
-    #                                math_type=math_type,
-    #                                bound_vars=[])
-    #     # NB: "bound_vars=[]" is a trick to hide the bound var from above
-    #     # so that it will not be part of the naming game. Its name is
-    #     # independent of the context.
-    #
-    #     print(f"{node}")
-    #     return expanded_self
-
-    # def __expanded_set_family(self):
-    #     """
-    #     Take a ContextMathObject of type "SEQUENCE",
-    #     (whose display would be, say , "E")
-    #     and return a new MathObject whose display will be like
-    #     "{E_i, i in I}". See __expand_sequence for more details.
-    #     """
-    #
-    #     math_type = self.math_type
-    #     body = self.__lambda_body()
-    #     bound_var = body.children[1]
-    #     bound_var_type = math_type.children[0]
-    #     # type first, like for quantifiers
-    #     children = [bound_var_type, bound_var, body]
-    #
-    #     expanded_family = MathObject(node="EXPANDED_SET_FAMILY",
-    #                                  info=copy(self.info),
-    #                                  children=children,
-    #                                  math_type=math_type,
-    #                                  bound_vars=[])
-    #
-    #     return expanded_family
 
     @classmethod
     def new_bound_var(cls, math_type):

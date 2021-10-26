@@ -73,45 +73,45 @@ def get_new_hyp_from_forbidden_names(proof_step,
     return potential_name
 
 
-def give_local_name(math_type,
-                    body,
-                    hints: [str] = None,
-                    forbidden_vars = None) -> str:
-    """
-    Attribute a name to a local variable. See give_name below.
-    Mainly computes all pertinent forbidden variables, by adding vars from
-    body to the forbidden_vars list.
-
-    :param math_type:       MathObject type of new variable
-    :param body:            a MathObject inside which the new name will serve
-                            as a bound variable
-    :param hints:           a list of hints (str) for the future name
-    :param forbidden_vars:  list of vars (MathObject) whose names are forbidden
-    :return:                str, a name for the new variable
-    """
-
-    if hints is None:
-        hints = []
-    if forbidden_vars is None:
-        forbidden_vars = []
-    # Fixme: used only in display_math
-    more_forbidden_vars = body.extract_local_vars()
-    names = [var.info['name'] for var in forbidden_vars]
-    # log.debug(f'Giving name to bound var, a priori forbidden names ={names}')
-    more_names = [var.info['name'] for var in more_forbidden_vars]
-    # log.debug(f'Additional forbidden names ={more_names}')
-    forbidden_vars.extend(more_forbidden_vars)
-
-    exclude_glob_vars = cvars.get(
-                                'logic.do_not_name_dummy_vars_as_global_vars',
-                                 False)
-    if exclude_glob_vars:
-        pass
-        # FIXME: proof_step is not available here!
-        # more_forbidden_vars = proof_step.goal.extract_vars()
-        # forbidden_vars.extend(more_forbidden_vars)
-    use_indices = cvars.get('logic.use_indices_for_dummy_variables', True)
-    return give_name(math_type, forbidden_vars, hints, None, use_indices)
+# def give_local_name(math_type,
+#                     body,
+#                     hints: [str] = None,
+#                     forbidden_vars = None) -> str:
+#     """
+#     Attribute a name to a local variable. See give_name below.
+#     Mainly computes all pertinent forbidden variables, by adding vars from
+#     body to the forbidden_vars list.
+#
+#     :param math_type:       MathObject type of new variable
+#     :param body:            a MathObject inside which the new name will serve
+#                             as a bound variable
+#     :param hints:           a list of hints (str) for the future name
+#     :param forbidden_vars:  list of vars (MathObject) whose names are forbidden
+#     :return:                str, a name for the new variable
+#     """
+#
+#     if hints is None:
+#         hints = []
+#     if forbidden_vars is None:
+#         forbidden_vars = []
+#     # Fixme: used only in display_math
+#     more_forbidden_vars = body.extract_local_vars()
+#     names = [var.info['name'] for var in forbidden_vars]
+#     # log.debug(f'Giving name to bound var, a priori forbidden names ={names}')
+#     more_names = [var.info['name'] for var in more_forbidden_vars]
+#     # log.debug(f'Additional forbidden names ={more_names}')
+#     forbidden_vars.extend(more_forbidden_vars)
+#
+#     exclude_glob_vars = cvars.get(
+#                                 'logic.do_not_name_dummy_vars_as_global_vars',
+#                                  False)
+#     if exclude_glob_vars:
+#         pass
+#         # FIXME: proof_step is not available here!
+#         # more_forbidden_vars = proof_step.goal.extract_vars()
+#         # forbidden_vars.extend(more_forbidden_vars)
+#     use_indices = cvars.get('logic.use_indices_for_dummy_variables', True)
+#     return give_name(math_type, forbidden_vars, hints, None, use_indices)
 
 
 def give_global_name(math_type,
@@ -131,7 +131,7 @@ def give_global_name(math_type,
     """
     if not hints:
         hints = []
-    forbidden_vars = proof_step.goal.extract_vars()
+    forbidden_vars = proof_step.goal.context_objects
     if strong_hint:
         forbidden_names = [var.info['name'] for var in forbidden_vars]
         if strong_hint not in forbidden_names:
@@ -417,13 +417,157 @@ def try_names(vars_to_name, forbidden_names, names):
     :param names: list of potential names.
     """
 
-    allowed_names = [name for name in names if name not in forbidden_names]
-    if len(allowed_names) >= len(vars_to_name):
-        for var, name in zip(vars_to_name, allowed_names):
+    # allowed_names = [name for name in names if name not in forbidden_names]
+    # if len(allowed_names) >= len(vars_to_name):
+    #     for var, name in zip(vars_to_name, allowed_names):
+    #         var.give_name(name)
+    #     return True
+    # else:
+    #     return False
+    names = allowed_names(names, forbidden_names, len(vars_to_name))
+    if names:
+        for var, name in zip(vars_to_name, names):
             var.give_name(name)
-        return True
     else:
         return False
+
+
+def allowed_names(names: [str], forbidden_names: [str], number: int):
+    """
+    If possible, return <number> item from <names> that are not in
+    forbidden_names. If not, return False.
+    """
+    allowed = [name for name in names if name not in forbidden_names]
+    if len(allowed) >= number:
+        return allowed[:number]
+    else:
+        return False
+
+
+def indexed_names(radical, forbidden_names, start=0, number=1):
+    """
+    Return names using radical and indices, avoiding forbidden_names,
+    with index starting at start. Always succeeds!
+    """
+    names = []
+    subscript = start
+    potential_name = radical + '_' + str(subscript)
+    for i in range(number):
+        while potential_name in forbidden_names:
+            subscript += 1
+            potential_name = radical + '_' + str(subscript)
+        names.append(potential_name)
+        subscript += 1
+        potential_name = radical + '_' + str(subscript)
+
+    return names
+
+
+def names_for_types(math_types, proof_step, number=1,
+                    hints=None, strong_hint=None) -> [str]:
+    """
+    Provide <number> names for vars of given math_types, given the goal
+    indicated in proof_step.
+    math_types is either one MathObject or a list of MathObject.
+    """
+
+    # Case of multiple math_types:
+    if isinstance(math_types, list):
+        distinct_types = inj_list(math_types)
+        names = []
+        for math_type in distinct_types:
+            number = math_types.count(math_type)
+            names.extend(names_for_types(math_type, proof_step, number))
+        return names
+
+    math_type = math_types
+    context = proof_step.goal.context_objects
+    forbidden_vars = context
+    named_var = [var for var in context if var.math_type == math_type]
+    return names_for_type(math_type, named_var, forbidden_vars, number,
+                          hints, strong_hint)
+
+
+def names_for_type(math_type, named_vars, forbidden_vars, number=1,
+                   hints=None, strong_hint=None, use_indices=False) -> [str]:
+    """
+    Provide a list of <number> names for math_type, avoiding names from
+    forbidden_vars, using hints and strong_hint. The tag use_indices forces
+    the use of indices.
+    """
+    forbidden_names = inj_list([var.info['name'] for var in forbidden_vars])
+
+    if not hints:
+        hints = []
+
+    if strong_hint:
+        if number == 1:
+            name = allowed_names([strong_hint], forbidden_names, 1)
+            if name:
+                return name
+        insert_maybe(hints, strong_hint, position=0)
+
+    named_vars_names = [var.info['name'] for var in named_vars]  # No rep
+
+    hints_from_vars = hints_by_name(named_vars, number)
+    hints_type = hints_from_type(math_type)
+    assert hints_type != []
+
+    ###########################
+    # Easy case : use indices #
+    ###########################
+    if use_indices:
+        hint = strong_hint if strong_hint else hints_type[0]
+        return indexed_names(hint, forbidden_names, number=number)
+
+    if len(hints_from_vars) == number:
+        # If no name is forbidden, use this for naming
+        matching = True
+        for name in hints_from_vars:
+            if name in forbidden_names:
+                matching = False
+        if matching:
+            return hints_from_vars
+
+    # Main hint is hints_from_vars if there is only one, otherwise from type
+    more_hints = hints_from_vars + hints_type if len(hints_from_vars) == 1 \
+        else hints_type + hints_from_vars
+    hints += more_hints
+
+    allow_indices = cvars.get("logic.allow_indices_for_names", True)
+    allow_primes  = cvars.get("display.allow_primes_for_names", True)
+    allow_seconds = cvars.get("display.allow_seconds_for_names")
+
+    for hint in hints:
+        # Try each hint successively
+        # log.debug(f"trying {hint}...")
+        hint_prime = hint + "'"
+        hint_second = hint + "''"
+        total_vars_nb = len(forbidden_vars) + number
+        # (1) Collect a sequence of trials
+        trials = []  # Each term will be a potential LIST of names
+        if allow_primes:
+            trials.append([hint, hint_prime])
+            if allow_seconds and hint_prime in named_vars_names:
+                # Consider second only if prime is already used
+                trials.append([hint,
+                               hint_prime,
+                               hint_second])
+        if allow_indices:
+            index_trial = [hint + "_" + str(nb)
+                           for nb in range(total_vars_nb - 1)]
+            trials.append(index_trial)
+        letters_trial = near([hint], total_vars_nb)
+        trials.append(letters_trial)
+        # (2) Try each trial
+        for trial in trials:
+            names = allowed_names(trial, forbidden_names, number)
+            if names:
+                return names
+
+    # Use indices, finally!
+    hint = hints[0]
+    return indexed_names(hint, forbidden_names, number=number)
 
 
 def name_bound_vars(math_type,
@@ -439,6 +583,7 @@ def name_bound_vars(math_type,
     :param named_vars:
     :param unnamed_vars: list of dummy vars to be named, ordered
     :param forbidden_vars:
+    :param use_indices:
     """
     # log.debug("Naming vars (type, named, unnamed, forbidden):")
     # log.debug(math_type.to_display())
@@ -479,6 +624,7 @@ def name_bound_vars(math_type,
                 var.give_name(name)
                 # var.info["name"] = name
             return
+
     # Main hint is hints_from_vars if there is only one, otherwise from type
     hints = hints_from_vars + hints_type if len(hints_from_vars) == 1 \
         else hints_type + hints_from_vars
@@ -613,6 +759,7 @@ def near(letters, nb_new_letters):
 
     return None
 
+
 def inj_list(list_: list):
     """
     Return a list with same elements of list_ but no repetition.
@@ -622,6 +769,7 @@ def inj_list(list_: list):
         if item not in inj_list:
             inj_list.append(item)
     return inj_list
+
 
 def insert_maybe(L: list, item, position=None):
     """Insert or displace item in a list at the given position"""

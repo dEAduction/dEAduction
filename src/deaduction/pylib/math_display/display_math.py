@@ -54,15 +54,13 @@ Copyright (c) 2020 the dEAduction team
 
 import logging
 from typing import Any, Union
-from dataclasses import dataclass
 
-from deaduction.pylib.mathobj.give_name     import give_local_name
-from deaduction.pylib.math_display.utils import text_to_subscript_or_sup
-from deaduction.pylib.math_display.display_data import (latex_from_constant_name,
-                                                        latex_from_quant_node,
-                                                        needs_paren,
-                                                        couples_of_nodes_to_latex,
-                                                        dic_of_first_nodes_latex)
+from deaduction.pylib.math_display.display_data \
+                                        import (latex_from_constant_name,
+                                                latex_from_quant_node,
+                                                needs_paren,
+                                                couples_of_nodes_to_latex,
+                                                dic_of_first_nodes_latex)
 
 log = logging.getLogger(__name__)
 global _
@@ -950,6 +948,9 @@ def recursive_display(math_object, text_depth=0, raw_display=None,
     else:
         negate = False  # negation does not propagate to children
 
+    if raw_display[0] == r'\no_text':
+        text_depth = 0
+
     # (2) Recursively replace integers by display of children,
     #  e.g. ["f", "\text_is_not", "injective"]
     display = []
@@ -962,7 +963,7 @@ def recursive_display(math_object, text_depth=0, raw_display=None,
             child = math_object.descendant(item)
             display_item = recursive_display(child, negate=negate,
                                              text_depth=text_depth-1)
-            # Between parentheses? (to be displayed only if text_depth <1)
+            # Between parentheses?
             if needs_paren(math_object, child, item, text_depth):
                 display_item = [r'\parentheses', display_item]
 
@@ -1014,7 +1015,7 @@ def shorten(string: str) -> str:
     return string
 
 
-def latex_to_text_func(string: str) -> str:
+def latex_to_text_func(string: str) -> (str, bool):
     """
     Translate latex into text. We import the latex_to_text dic here so that
     the selected language is applied even if it has changed since the launch
@@ -1025,8 +1026,8 @@ def latex_to_text_func(string: str) -> str:
     if striped_string in latex_to_text:
         text_stripped = latex_to_text[striped_string]
         text_string = string.replace(striped_string, text_stripped)
-        string = text_string
-    return string
+        return text_string, True
+    return string, False
 
 
 def shallow_latex_to_text(string: Union[list, str], text_depth=0):
@@ -1037,6 +1038,9 @@ def shallow_latex_to_text(string: Union[list, str], text_depth=0):
     display without either latex compilation or conversion to utf8).
     """
     if isinstance(string, list):
+        # Stop conversion to text in some cases
+        if string[0] == r'\no_text':
+            text_depth = 0
         # Recursion
         string = [shallow_latex_to_text(item, text_depth-1) for item in string]
         # log.debug(f"    --> Shallow_to_text: {string}")
@@ -1044,7 +1048,7 @@ def shallow_latex_to_text(string: Union[list, str], text_depth=0):
 
     elif isinstance(string, str):
         if text_depth > 0:  # Try to convert to text
-            string = latex_to_text_func(string)
+            string, success = latex_to_text_func(string)
         else:  # Try to shorten
             string = shorten(string)
         return string
