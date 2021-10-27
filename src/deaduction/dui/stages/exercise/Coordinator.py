@@ -729,7 +729,7 @@ class Coordinator(QObject):
             self.emw.freeze(False)
         else:  # If no more goals, disable actions but enable toolbar
             self.emw.ecw.freeze(True)
-            self.emw.toolbar.setEnabled(True)
+            self.toolbar.setEnabled(True)
         at_beginning = self.servint.lean_file.history_at_beginning
         at_end = self.servint.lean_file.history_at_end
 
