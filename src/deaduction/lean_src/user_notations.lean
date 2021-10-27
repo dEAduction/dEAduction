@@ -38,7 +38,7 @@ notation [parsing_only]  A ` inclus ` B := A ⊆ B
 
 -- notation f `⟮` A `⟯` := set.image f  A  Does not work?
 -- notation f `⁻¹⟮` A `⟯` := set.preimage f  A
-notation [parsing_only] f `inverse` A := set.preimage f  A
-notation [parsing_only] f `image` A := set.image f  A
+notation [parsing_only] f `image_reciproque` A := set.preimage f  A
+notation [parsing_only] f `image_directe` A := set.image f  A
 -- notation g `∘` f := set.composition g f
 
