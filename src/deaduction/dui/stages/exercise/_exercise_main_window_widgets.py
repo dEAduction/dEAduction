@@ -579,7 +579,9 @@ class ExerciseStatusBar(QStatusBar):
 
 
 class ExerciseToolBar(QToolBar):
-    # TODO: Docstring me and all methods
+    """
+    A toolbar for tools concerning current exercise.
+    """
 
     def __init__(self):
         super().__init__(_('Toolbar'))
@@ -603,24 +605,39 @@ class ExerciseToolBar(QToolBar):
                 QIcon(str((icons_dir / 'lean_editor.png').resolve())),
                 _('Toggle L∃∀N'), self)
 
-        self.change_exercise_action = QAction(
-                QIcon(str((icons_dir / 'change_exercise.png').resolve())),
-                _('Change exercise'), self)
-
         self.addAction(self.rewind)
         self.addAction(self.undo_action)
         self.addAction(self.redo_action)
         self.addAction(self.toggle_proof_outline_action)
         self.addAction(self.toggle_lean_editor_action)
-        self.addSeparator()
-        self.addSeparator()
-        self.addAction(self.change_exercise_action)
-        # self.setLayoutDirection(Qt.RightToLeft)
 
     def update(self):
         self.rewind.setText(_('Go back to beginning of proof'))
         self.undo_action.setText(_('Undo action'))
         self.redo_action.setText(_('Redo action'))
         self.toggle_lean_editor_action.setText(_('Toggle L∃∀N'))
-        self.change_exercise_action.setText(_('Change exercise'))
         self.toggle_proof_outline_action.setText(_('Toggle proof outline'))
+
+
+class GlobalToolbar(QToolBar):
+    def __init__(self):
+        super().__init__(_('Toolbar'))
+        icons_base_dir = cvars.get("icons.path")
+        icons_dir = fs.path_helper(icons_base_dir)
+        self.settings_action = QAction(
+                QIcon(str((icons_dir / 'settings').resolve())),
+                _('Settings'), self)
+
+        self.change_exercise_action = QAction(
+                QIcon(str((icons_dir / 'change_exercise.png').resolve())),
+                _('Change exercise'), self)
+
+        self.addAction(self.settings_action)
+        self.addAction(self.change_exercise_action)
+        self.setLayoutDirection(Qt.RightToLeft)
+
+    def update(self):
+        self.change_exercise_action.setText(_('Change exercise'))
+        self.settings_action.setText(_("Settings"))
+
+

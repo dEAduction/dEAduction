@@ -55,7 +55,8 @@ from deaduction.dui.elements            import (ActionButton,
                                                 ProofOutlineWindow)
 from ._exercise_main_window_widgets     import (ExerciseCentralWidget,
                                                 ExerciseStatusBar,
-                                                ExerciseToolBar)
+                                                ExerciseToolBar,
+                                                GlobalToolbar)
 
 log = logging.getLogger(__name__)
 global _
@@ -156,17 +157,20 @@ class ExerciseMainWindow(QMainWindow):
 
         self.ecw                  = ExerciseCentralWidget(exercise)
         self.lean_editor          = LeanEditor()
-        self.toolbar              = ExerciseToolBar()
+        self.exercise_toolbar              = ExerciseToolBar()
+        self.global_toolbar       = GlobalToolbar()
         self.proof_outline_window = ProofOutlineWindow()
-        self.statusBar = ExerciseStatusBar(self)
+        self.statusBar            = ExerciseStatusBar(self)
+        self.config_window        = None
 
         # ─────────────────────── UI ─────────────────────── #
 
         self.setCentralWidget(self.ecw)
-        self.addToolBar(self.toolbar)
-        self.toolbar.redo_action.setEnabled(False)  # No history at beginning
-        self.toolbar.undo_action.setEnabled(False)  # same
-        self.toolbar.rewind.setEnabled(False)  # same
+        self.addToolBar(self.exercise_toolbar)
+        self.addToolBar(self.global_toolbar)
+        self.exercise_toolbar.redo_action.setEnabled(False)  # No history at beginning
+        self.exercise_toolbar.undo_action.setEnabled(False)  # same
+        self.exercise_toolbar.rewind.setEnabled(False)  # same
         self.__init_menubar()
         self.setStatusBar(self.statusBar)
 
@@ -193,6 +197,7 @@ class ExerciseMainWindow(QMainWindow):
         """
         Connect all signals. Called at init.
         """
+        log.debug("EMW: connect signals")
         # Actions area
         for action_button in self.ecw.actions_buttons:
             action_button.action_triggered.connect(self.action_triggered)
@@ -200,36 +205,33 @@ class ExerciseMainWindow(QMainWindow):
                                             self.statement_triggered_filter)
 
         # UI
-        self.toolbar.toggle_lean_editor_action.triggered.connect(
+        self.exercise_toolbar.toggle_lean_editor_action.triggered.connect(
                 self.lean_editor.toggle)
-        self.toolbar.toggle_proof_outline_action.triggered.connect(
+        self.exercise_toolbar.toggle_proof_outline_action.triggered.connect(
                 self.proof_outline_window.toggle)
-        self.toolbar.change_exercise_action.triggered.connect(
+        self.global_toolbar.change_exercise_action.triggered.connect(
                                                     self.change_exercise)
+        self.global_toolbar.settings_action.triggered.connect(
+                                                    self.open_config_window)
 
     def __init_menubar(self):
         """
         Create ExerciseMainWindow's menubar. Relevant classes are MenuBar,
         MenuBarAction and MenuBarMenu, from deaduction.dui.elements.
         """
-        # ─────────────────────── QActions ─────────────────────── #
-        preferences = MenuBarAction(self, _("Preferences"))
-        preferences.setMenuRole(QAction.PreferencesRole)
-        preferences.triggered.connect(self.open_config_window)
-
         # ─────────────────────── Submenus ─────────────────────── #
-        menu_deaduction = (_("Preferences"), [preferences])
+        menu_deaduction = (_("Preferences"),
+                           [self.global_toolbar.settings_action])
 
         menu_exercise = (_('Exercise'),
                          [(_('Exercise history'),
-                             [self.toolbar.rewind,
-                              self.toolbar.undo_action,
-                              self.toolbar.redo_action
-                              ]
-                           ),
-                         self.toolbar.toggle_lean_editor_action,
-                         self.toolbar.change_exercise_action
-                          ])
+                             [self.exercise_toolbar.rewind,
+                              self.exercise_toolbar.undo_action,
+                              self.exercise_toolbar.redo_action,
+                              self.exercise_toolbar.toggle_proof_outline_action
+                              ]),
+                         self.exercise_toolbar.toggle_lean_editor_action,
+                         self.global_toolbar.change_exercise_action])
 
         # ─────────────────────── Main Menu ─────────────────────── #
         outline = [menu_deaduction, menu_exercise]
@@ -275,9 +277,10 @@ class ExerciseMainWindow(QMainWindow):
         """
         Open the preference window.
         """
-        window = ConfigMainWindow(parent=self)
-        window.applied.connect(self.apply_new_settings)
-        window.show()
+        if not self.config_window or self.config_window.isHidden():
+            self.config_window = ConfigMainWindow(parent=self)
+            self.config_window.applied.connect(self.apply_new_settings)
+        self.config_window.show()
 
     @Slot()
     def apply_new_settings(self, modified_settings):
@@ -301,7 +304,7 @@ class ExerciseMainWindow(QMainWindow):
                                  self.current_goal,
                                  self.displayed_proof_step.current_goal_number,
                                  self.displayed_proof_step.total_goals_counter)
-            self.toolbar.update()
+            self.exercise_toolbar.update()
             self.__init_menubar()
             # Reconnect Context area signals and slots
             self.ecw.objects_wgt.clicked.connect(self.process_context_click)
@@ -402,9 +405,9 @@ class ExerciseMainWindow(QMainWindow):
         button = self.ecw.action_button(string)
         if button:
             return button
-        history_buttons = {'undo': self.toolbar.undo_action,
-                           'redo': self.toolbar.redo_action,
-                           'rewind': self.toolbar.rewind}
+        history_buttons = {'undo': self.exercise_toolbar.undo_action,
+                           'redo': self.exercise_toolbar.redo_action,
+                           'rewind': self.exercise_toolbar.rewind}
         if string.find('undo') != -1:
             string = 'undo'
         elif string.find('redo') != -1:
@@ -503,7 +506,7 @@ class ExerciseMainWindow(QMainWindow):
         """
         self.freezed = yes
         self.ecw.freeze(yes)
-        self.toolbar.setEnabled(not yes)
+        self.exercise_toolbar.setEnabled(not yes)
         if yes:
             self.statusBar.cancel_pending_msgs()
 
@@ -511,9 +514,9 @@ class ExerciseMainWindow(QMainWindow):
         """
         Unfreeze the relevant history btns.
         """
-        self.toolbar.undo_action.setEnabled(not at_beginning)
-        self.toolbar.rewind.setEnabled(not at_beginning)
-        self.toolbar.redo_action.setEnabled(not at_end)
+        self.exercise_toolbar.undo_action.setEnabled(not at_beginning)
+        self.exercise_toolbar.rewind.setEnabled(not at_beginning)
+        self.exercise_toolbar.redo_action.setEnabled(not at_end)
 
     @Slot()
     def empty_current_selection(self):

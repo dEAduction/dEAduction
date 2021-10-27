@@ -373,7 +373,7 @@ class Coordinator(QObject):
 
     @property
     def toolbar(self):
-        return self.emw.toolbar
+        return self.emw.exercise_toolbar
 
     @property
     def statusBar(self):

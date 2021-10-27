@@ -242,6 +242,7 @@ class ConfigMainWindow(QDialog):
         # Bye
         self.reject()
 
+
     def accept(self):
         # print("accept")
         self.apply()
