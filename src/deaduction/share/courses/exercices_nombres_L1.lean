@@ -1,13 +1,21 @@
--- import data.set
-import tactic
+/-
+This is a d∃∀duction file providing first exercises about quantifiers and numbers.
+French version.
+-/
+
+import data.set
 import data.real.basic
+import tactic
 
+-- dEAduction tactics
+import structures2      -- hypo_analysis, targets_analysis
+import utils            -- no_meta_vars
+import user_notations   -- notations that can be used in deaduction UI for a new object
+import compute          -- tactics for computation, used by the Goal! button
 
+-- dEAduction definitions
+-- import set_definitions
 
--- dEAduction imports
-import structures2
-import compute
-import utils
 
 -- General principles :
 -- Type should be defined as parameters, in order to be implicit everywhere
@@ -34,6 +42,13 @@ Institution
     Université de France
 Title
     Logique et inégalités
+Description
+    Ce fichier contient quelques exercices de base
+    impliquant des quantificateurs et des inégalités.
+    Certains buts sont vrais et d'autres faux :
+    avant de commencer l'exercice,
+    vous choisirez ce que vous voulez prouver,
+    le but ou sa négation.
 OpenQuestion
     True
 AvailableExercises
@@ -51,45 +66,12 @@ AvailableLogic
 -- by the user. Recommended with OpenQuestions set to True!
 
 
-
-
-
-
-
-
 local attribute [instance] classical.prop_decidable
 
 ---------------------------------------------
 -- global parameters = implicit variables --
 ---------------------------------------------
 section course
-
-notation [parsing_only] P ` and ` Q := P ∧ Q
-notation [parsing_only]  P ` or ` Q := P ∨ Q
-notation [parsing_only]  ` not ` P := ¬ P
-notation [parsing_only]  P ` implies ` Q := P → Q
-notation [parsing_only]  P ` iff ` Q := P ↔ Q
-
-notation [parsing_only]  x ` in ` A := x ∈ A
-notation [parsing_only]  A ` cap ` B := A ∩ B
-notation [parsing_only]  A ` cup ` B := A ∪ B
-notation [parsing_only]  A ` subset ` B := A ⊆ B
-notation [parsing_only]  `emptyset` := ∅
-
-notation [parsing_only] P ` et ` Q := P ∧ Q
-notation [parsing_only]  P ` ou ` Q := P ∨ Q
-notation [parsing_only]  ` non ` P := ¬ P
-notation [parsing_only]  P ` implique ` Q := P → Q
-notation [parsing_only]  P ` ssi ` Q := P ↔ Q
-
-notation [parsing_only]  x ` dans ` A := x ∈ A
-notation [parsing_only]  x ` appartient ` A := x ∈ A
-notation [parsing_only]  A ` inter ` B := A ∩ B
-notation [parsing_only]  A ` intersection ` B := A ∩ B
-notation [parsing_only]  A ` union ` B := A ∪ B
-notation [parsing_only]  A ` inclus ` B := A ⊆ B
-notation [parsing_only]  `vide` := ∅
-
 
 namespace Logique_et_nombres_reels
 /- dEAduction
@@ -217,7 +199,7 @@ PrettyName
     Pas zéro ou pas un
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.zero_ou_un_2 : ∀ n:ℕ, (n = 0 or n = 1)
@@ -227,7 +209,7 @@ PrettyName
     Zéro ou un ou ?...
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -238,7 +220,7 @@ PrettyName
     Plus petit que tous
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -249,7 +231,7 @@ PrettyName
     Plus petit que tous...
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -260,7 +242,7 @@ PrettyName
     Tous égaux
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -272,7 +254,7 @@ PrettyName
     Egaux à tous !
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -284,7 +266,7 @@ PrettyName
     Très petit
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -298,7 +280,7 @@ SimplificationCompute
     $ALL
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -311,7 +293,7 @@ PrettyName
     Trop compliqué !
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -323,7 +305,7 @@ PrettyName
     Entre deux entiers
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -335,7 +317,7 @@ PrettyName
     Entre deux réels
 -/
 begin
-    sorry
+    todo
 end
 
 end exercices

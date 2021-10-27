@@ -1,26 +1,32 @@
--- import data.set
+/-
+This is a d∃∀duction file providing exercises for basic set theory. French version.
+-/
+
+import data.set
 import tactic
 
--- dEAduction imports
-import structures2
--- import notations_definitions
-import utils
+-- dEAduction tactics
+import structures2      -- hypo_analysis, targets_analysis
+import utils            -- no_meta_vars
+import user_notations   -- notations that can be used in deaduction UI for a new object
+
+-- dEAduction definitions
+import set_definitions
 
 -- General principles :
 -- Type should be defined as parameters, in order to be implicit everywhere
 -- other parameters are implicit in definitions, i.e. defined using '{}' (e.g. {A : set X} )
 -- but explicit everywhere else, i.e. defined using '()' (e.g. (A : set X) )
--- each definition must be an iff statement (since it will be called with 'rw' or 'symp_rw')
+-- each definition must be an iff statement or an equality
+-- (since it will be called with 'rw' or 'symp_rw')
 
----------------------
--- Course metadata --
----------------------
+-------------------------
+-- dEAduction METADATA --
+-------------------------
 -- logic names ['and', 'or', 'negate', 'implicate', 'iff', 'forall', 'exists']
 -- proofs names ['use_proof_methods', 'new_object', 'apply', 'assumption']
 -- magic names ['compute']
 -- proof methods names ['cbr', 'contrapose', 'absurdum', 'sorry']
-
-
 
 /- dEAduction
 Title
@@ -30,15 +36,12 @@ Author
 Institution
     Université de France
 Description
-    Ce cours correspond à un cours standard de théorie "élémentaire" des
-    ensembles.
+    Ce cours correspond à un cours standard de théorie "élémentaire" des ensembles.
 AvailableMagic
     ALL -compute
 -/
 
-
 local attribute [instance] classical.prop_decidable
-
 
 ---------------------------------------------
 -- global parameters = implicit variables --
@@ -46,37 +49,6 @@ local attribute [instance] classical.prop_decidable
 section course
 parameters {X Y Z: Type}
 
--- notation [parsing_only] P ` and ` Q := P ∧ Q
--- notation [parsing_only]  P ` or ` Q := P ∨ Q
--- notation [parsing_only]  ` not ` P := ¬ P
--- notation [parsing_only]  P ` implies ` Q := P → Q
--- notation [parsing_only]  P ` iff ` Q := P ↔ Q
-
--- notation [parsing_only]  x ` in ` A := x ∈ A
--- notation [parsing_only]  A ` cap ` B := A ∩ B
--- notation [parsing_only]  A ` cup ` B := A ∪ B
--- notation [parsing_only]  A ` subset ` B := A ⊆ B
--- notation [parsing_only]  `emptyset` := ∅
-
--- notation [parsing_only] P ` et ` Q := P ∧ Q
--- notation [parsing_only]  P ` ou ` Q := P ∨ Q
--- notation [parsing_only]  ` non ` P := ¬ P
--- notation [parsing_only]  P ` implique ` Q := P → Q
--- notation [parsing_only]  P ` ssi ` Q := P ↔ Q
-
--- notation [parsing_only]  x ` dans ` A := x ∈ A
--- notation [parsing_only]  x ` appartient ` A := x ∈ A
--- notation [parsing_only]  A ` inter ` B := A ∩ B
--- notation [parsing_only]  A ` intersection ` B := A ∩ B
--- notation [parsing_only]  A ` union ` B := A ∪ B
--- notation [parsing_only]  A ` inclus ` B := A ⊆ B
--- notation [parsing_only]  `vide` := ∅
-
--- notation f `⟮` A `⟯` := f '' A
--- notation f `⁻¹⟮` A `⟯` := f  ⁻¹' A
--- notation [parsing_only] f `inverse` A := f  ⁻¹' A
--- notation g `∘` f := set.composition g f
--- notation `∃!` P := exists_unique P
 
 open set
 
@@ -325,10 +297,6 @@ PrettyName
 begin
     finish
 end
-
---lemma definition.difference_d_ensembles {A B : set X} {x : X} : x ∈ B \ A ↔ (x ∈ B ∧ x ∉ A) :=
--- iff.rfl
-
 
 ---------------
 -- EXERCICES --
@@ -658,13 +626,6 @@ namespace definitions
 /- dEAduction
 PrettyName
     Définitions
--/
-
-/-
-def injective {X Y : Type} (f₀ : X → Y) := ∀ x y : X, (f₀ x = f₀ y → x = y)
-def surjective {X Y : Type} (f₀ : X → Y) := ∀ y : Y, ∃ x : X, y = f₀ x
-def composition {X Y Z : Type} (g₀ : Y → Z) (f₀ : X → Y) := λx:X, g₀ (f₀ x)
-def Identite {X : Type} := λ x:X, x
 -/
 
 lemma definition.injectivite :

@@ -1,17 +1,35 @@
-import tactic
-import structures2
-import notations_definitions
-import utils
+/-
+This is a d∃∀duction file providing exercises for sets and maps. French version.
+-/
 
+import data.set
+import tactic
+
+-- dEAduction tactics
+import structures2      -- hypo_analysis, targets_analysis
+import utils            -- no_meta_vars
+import user_notations   -- notations that can be used in deaduction UI for a new object
+
+-- dEAduction definitions
+import set_definitions
+
+-------------------------
+-- dEAduction METADATA --
+-------------------------
 /- dEAduction
 Title
     Ensembles et applications
 Institution
     Université du monde
+Description
+    Ce fichier contient une série d'exercices concernant les opérations ensemblistes
+    préservées par image directe ou réciproque par une application. Pour l'aborder,
+    les étudiant.e.s devraient avoir une bonne image mentale des définitions
+    d'image directe et réciproque, ainsi que d'injectivité et de surjectivité.
 AvailableProof
-    proof_methods new_object
+    proof_methods new_object apply
 AvailableMagic
-    ALL
+    assumption
 AvailableExercises
   UNTIL_NOW -image_directe_et_inclusion_II -image_reciproque_et_inclusion_II -image_directe_et_intersection_II
 -/
@@ -23,36 +41,6 @@ local attribute [instance] classical.prop_decidable
 section course
 parameters {X Y Z: Type}
 
-notation [parsing_only] P ` and ` Q := P ∧ Q
-notation [parsing_only]  P ` or ` Q := P ∨ Q
-notation [parsing_only]  ` not ` P := ¬ P
-notation [parsing_only]  P ` implies ` Q := P → Q
-notation [parsing_only]  P ` iff ` Q := P ↔ Q
-
-notation [parsing_only]  x ` in ` A := x ∈ A
-notation [parsing_only]  A ` cap ` B := A ∩ B
-notation [parsing_only]  A ` cup ` B := A ∪ B
-notation [parsing_only]  A ` subset ` B := A ⊆ B
-notation [parsing_only]  `emptyset` := ∅
-
-notation [parsing_only] P ` et ` Q := P ∧ Q
-notation [parsing_only]  P ` ou ` Q := P ∨ Q
-notation [parsing_only]  ` non ` P := ¬ P
-notation [parsing_only]  P ` implique ` Q := P → Q
-notation [parsing_only]  P ` ssi ` Q := P ↔ Q
-
-notation [parsing_only]  x ` dans ` A := x ∈ A
-notation [parsing_only]  x ` appartient ` A := x ∈ A
-notation [parsing_only]  A ` inter ` B := A ∩ B
-notation [parsing_only]  A ` intersection ` B := A ∩ B
-notation [parsing_only]  A ` union ` B := A ∪ B
-notation [parsing_only]  A ` inclus ` B := A ⊆ B
-notation [parsing_only]  `vide` := ∅
-notation f `⟮` A `⟯` := f '' A
-notation f `⁻¹⟮` A `⟯` := f  ⁻¹' A
-notation [parsing_only] f `inverse` A := f  ⁻¹' A
-notation g `∘` f := set.composition g f
-notation `∃!` P := exists_unique P
 
 open set
 
@@ -91,8 +79,6 @@ lemma definition.egalite_deux_ensembles {A A' : set X} :
 /- dEAduction
 PrettyName
     Egalité de deux ensembles
-ImplicitUse
-  True
 -/
 begin
      exact set.ext_iff
@@ -124,7 +110,7 @@ lemma theorem.ensemble_non_vide
 (A ≠ ∅) ↔ ∃ x : X, x ∈ A
 :=
 begin
-    sorry
+    todo
 end
 
 end generalites
@@ -200,7 +186,7 @@ lemma definition.image_directe (y : Y) :
 y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y
 :=
 begin
-    sorry
+    todo
 end
 
 lemma theorem.image_directe :
@@ -208,14 +194,14 @@ lemma theorem.image_directe :
  (x ∈ A → f x ∈ f '' A)
 :=
 begin
-    sorry
+    todo
 end
 
 lemma definition.image_reciproque (x:X) :
 x ∈ f  ⁻¹' B ↔ f(x) ∈ B
 :=
 begin
-    sorry
+    todo
 end
 
 end applications
@@ -277,7 +263,7 @@ PrettyName
   Image directe et inclusion (i)
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_directe_et_inclusion_II :
@@ -288,7 +274,7 @@ PrettyName
   Image directe et inclusion (ii)
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_directe_et_inclusion_III :
@@ -299,7 +285,7 @@ PrettyName
   Image directe et inclusion (iii)
 -/
 begin
-  sorry
+  todo
 end
 
 end image_directe
@@ -322,7 +308,7 @@ PrettyName
   Image réciproque et inclusion (i)
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_reciproque_et_inclusion_II :
@@ -333,7 +319,7 @@ PrettyName
   Image réciproque et inclusion (ii)
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_reciproque_et_inclusion_III :
@@ -344,7 +330,7 @@ PrettyName
   Image réciproque et inclusion (iii)
 -/
 begin
-  sorry
+  todo
 end
 
 end image_reciproque
@@ -367,7 +353,7 @@ PrettyName
   Image de l'image réciproque
 -/
 begin
-  sorry
+  todo
 end
 
 
@@ -379,7 +365,7 @@ PrettyName
   Image réciproque de l'image
 -/
 begin
-  sorry
+  todo
 end
 
 end inclusions
@@ -400,7 +386,7 @@ PrettyName
   Image de l'image réciproque : inclusion réciproque
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_reciproque_de_image_bis :
@@ -411,7 +397,7 @@ PrettyName
   Image réciproque de l'image : inclusion réciproque
 -/
 begin
-  sorry
+  todo
 end
 
 end inclusions_reciproques
@@ -433,7 +419,7 @@ PrettyName
   Image directe et intersection (i)
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_directe_et_intersection_II :
@@ -444,7 +430,7 @@ PrettyName
   Image directe et intersection (ii)
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.image_directe_et_intersection_III
@@ -456,7 +442,7 @@ PrettyName
   Image directe et intersection (iii)
 -/
 begin
-  sorry
+  todo
 end
 
 end image_intersection
@@ -477,7 +463,7 @@ PrettyName
   Image directe et union
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.egalite_II :
@@ -488,7 +474,7 @@ PrettyName
   Image réciproque et intersection
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.egalite_III :
@@ -499,7 +485,7 @@ PrettyName
   Image réciproque et union
 -/
 begin
-  sorry
+  todo
 end
 
 
