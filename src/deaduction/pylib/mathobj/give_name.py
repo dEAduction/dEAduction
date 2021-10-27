@@ -428,6 +428,7 @@ def try_names(vars_to_name, forbidden_names, names):
     if names:
         for var, name in zip(vars_to_name, names):
             var.give_name(name)
+        return True
     else:
         return False
 
@@ -583,7 +584,6 @@ def name_bound_vars(math_type,
     :param named_vars:
     :param unnamed_vars: list of dummy vars to be named, ordered
     :param forbidden_vars:
-    :param use_indices:
     """
     # log.debug("Naming vars (type, named, unnamed, forbidden):")
     # log.debug(math_type.to_display())
@@ -651,7 +651,7 @@ def name_bound_vars(math_type,
                                hint_second])
         if allow_indices:
             index_trial = [hint + "_" + str(nb)
-                           for nb in range(total_vars_nb - 1)]
+                           for nb in range(total_vars_nb)]
             trials.append(index_trial)
         letters_trial = near([hint], total_vars_nb)
         trials.append(letters_trial)
