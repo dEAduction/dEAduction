@@ -748,12 +748,6 @@ class ExerciseMainWindow(QMainWindow):
         if not new_goal or new_goal is self.current_goal:  # No update needed
             return
 
-        # Get previous goal and set tags
-        # if self.logically_previous_proof_step:
-        #     # Fixme: not when undoing history ?
-        #     previous_goal = self.logically_previous_proof_step.goal
-        #     Goal.compare(new_goal, previous_goal)  # Set tags
-
         # Reset current context selection
         # Here we do not use empty_current_selection since Widgets may have
         # been deleted, and anyway this is cosmetics since  widgets are
@@ -779,5 +773,4 @@ class ExerciseMainWindow(QMainWindow):
         #  so we call the event of the target_label instead.
         self.ecw.target_wgt.target_label.mousePressEvent = \
             self.process_target_click
-
 

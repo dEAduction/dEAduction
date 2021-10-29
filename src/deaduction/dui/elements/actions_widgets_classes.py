@@ -75,6 +75,7 @@ import deaduction.pylib.config.vars as cvars
 import deaduction.pylib.utils.filesystem as fs
 
 log = logging.getLogger(__name__)
+global _
 
 #################################
 # Action button widgets classes #
@@ -143,8 +144,8 @@ class ActionButton(QPushButton):
         name = self.action.name
         symbol = _(button_symbol(name))
         self.setText(symbol)
-        if len(symbol) != 1:
-            self.setStyleSheet('QPushButton { font-size: 12pt }')
+        # if len(symbol) > 1:
+        #     self.setStyleSheet('QPushButton { font-size: 12pt }')
 
         tool_tip = button_tool_tip(name)
         if isinstance(tool_tip, str):

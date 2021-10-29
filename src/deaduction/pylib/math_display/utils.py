@@ -76,7 +76,7 @@ def cut_spaces(string: str) -> str:
     """
     while string.find("  ") != -1:
         string = string.replace("  ", " ")
-    return string.strip()
+    return string
 
 
 def text_to_subscript_or_sup(structured_string,

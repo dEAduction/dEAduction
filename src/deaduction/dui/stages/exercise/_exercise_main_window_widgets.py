@@ -281,7 +281,10 @@ class ExerciseCentralWidget(QWidget):
         self.objects_wgt.setFont(main_math_font)
         symbol_font = self.deaduction_fonts.math_font()
         symbol_font.setPointSize(symbol_size)
-        self.logic_btns.setFont(symbol_font)
+        # self.logic_btns.setFont(symbol_font)
+        # self.logic_btns.updateGeometry()
+        for button in self.logic_btns.buttons:
+            button.setFont(symbol_font)
 
         # Target styles #
         target_math_font = self.deaduction_fonts.math_font()
@@ -296,6 +299,7 @@ class ExerciseCentralWidget(QWidget):
         self.target_wgt.selected_style = self.target_wgt.unselected_style \
             + f'background-color: {background_color};'
         self.target_wgt.setStyleSheet(self.target_wgt.unselected_style)
+
 
     def organise_main_layout(self):
         """
