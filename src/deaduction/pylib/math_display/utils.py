@@ -46,6 +46,8 @@ This file is part of d∃∀duction.
 #     bound_var_1.info.pop('bound_var_number')
 #     bound_var_2.info.pop('bound_var_number')
 
+import deaduction.pylib.config.vars as cvars
+
 
 def structured_display_to_string(structured_display) -> str:
     """
@@ -74,7 +76,7 @@ def cut_spaces(string: str) -> str:
     """
     while string.find("  ") != -1:
         string = string.replace("  ", " ")
-    return string
+    return string.strip()
 
 
 def text_to_subscript_or_sup(structured_string,
@@ -156,3 +158,26 @@ def first_descendant(l):
         return first_descendant(l[0])
     else:
         return l
+
+
+dubious_characters = "ℕ, ℤ, ℚ, ℝ, 𝒫, ↦"
+replacement_characters = cvars.get("display.dubious_characters")
+if replacement_characters == dubious_characters:
+    def replace_dubious_characters(s):
+        return s
+else:
+    character_translation_dic = {}
+    dubious_characters = dubious_characters.split(', ')
+    replacement_characters = replacement_characters.split(', ')
+    for default, new in zip(dubious_characters, replacement_characters):
+        character_translation_dic[default] = new
+
+    def replace_dubious_characters(s: str) -> str:
+        new_string = ""
+        for char in s:
+            new_char = (character_translation_dic[char]
+                        if char in character_translation_dic
+                        else char)
+            new_string += new_char
+        return new_string
+

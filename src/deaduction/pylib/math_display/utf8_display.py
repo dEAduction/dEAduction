@@ -27,7 +27,8 @@ from typing import Union
 
 from deaduction.pylib.math_display.utils import (cut_spaces,
                                                  text_to_subscript_or_sup,
-                                                 first_descendant)
+                                                 first_descendant,
+                                                 replace_dubious_characters)
 
 
 def subscript(s: str) -> str:
@@ -136,6 +137,6 @@ def utf8_display(abstract_string: Union[str, list], depth=0):
 
     if isinstance(string, list):  # debug
         print(f"Variable string {string} should be a string, not a list!")
-    return cut_spaces(string)
+    return replace_dubious_characters(cut_spaces(string))
 
 

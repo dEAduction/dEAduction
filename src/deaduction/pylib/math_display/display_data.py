@@ -215,7 +215,7 @@ latex_to_utf8_dic = {
     r'\neq': '≠',
     r'\leq': '≤',
     r'\geq': '≥',
-    r'\set_of_subsets': 'P',
+    r'\set_of_subsets': '𝒫',
     r'\{': '{',
     r'\}': '}',
     r'\[': '[',

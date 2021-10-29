@@ -519,7 +519,8 @@ class CodeForLean:
             return False
         elif self.is_single_string():
             string = self.instructions[0]
-            return string.find("apply") != -1 or string.find("have") != -1
+            return (string.find("apply") != -1 or string.find("have") != -1
+                    or string.find("rw") != -1)
         else:
             return True in [instruction.could_have_meta_vars() for
                             instruction in self.instructions]

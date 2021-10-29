@@ -434,13 +434,13 @@ class ServerInterface(QObject):
                 self.log.info(f"Got {txt_line}")
                 node_nb, code_nb = get_effective_code_numbers(txt_line)
                 # Modify __tmp_effective_code by selecting the effective
-                # or_else alternative according to codes
+                #  or_else alternative according to codes
                 self.__tmp_effective_code, found = \
                     self.__tmp_effective_code.select_or_else(node_nb, code_nb)
                 if found:
                     self.log.debug("(selecting effective code)")
 
-            # Test if some there remain some or_else combinators
+            # Test if there remain some or_else combinators
             if not self.__tmp_effective_code.has_or_else():
                 # Done with effective codes, history_replace will be called
                 self.log.debug("No more effective code to receive")

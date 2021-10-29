@@ -28,7 +28,8 @@ import logging
 
 import deaduction.pylib.config.vars as cvars
 
-from deaduction.pylib.math_display.utils import cut_spaces
+from deaduction.pylib.math_display.utils import (cut_spaces,
+                                                 replace_dubious_characters)
 from deaduction.pylib.math_display.utf8_display import add_parentheses
 
 log = logging.getLogger(__name__)
@@ -171,6 +172,6 @@ def html_display(abstract_string: Union[str, list], depth=0) -> str:
         # Formatting subscript/superscript:
         string = sub_sup_to_html(abstract_string)
 
-    return cut_spaces(string)
+    return replace_dubious_characters(cut_spaces(string))
 
 

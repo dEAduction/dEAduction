@@ -903,8 +903,11 @@ begin
     todo,
 end
 
-lemma exercise.question3 (A : Type) (R : set (A × A)) (h1 : relation_equivalence R) (a b : A) :
-classe_equivalence R h1 a ≠ classe_equivalence R h1 b → classe_equivalence R h1 a ∩ classe_equivalence R h1 b = ∅ :=
+lemma exercise.question8_3
+(A : Type) (R : set (A × A)) (h1 : relation_equivalence R) (a b : A) :
+classe_equivalence R h1 a ≠ classe_equivalence R h1 b →
+classe_equivalence R h1 a ∩ classe_equivalence R h1 b = ∅
+:=
 /- dEAduction
 PrettyName
     Question 3

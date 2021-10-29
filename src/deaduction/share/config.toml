@@ -32,6 +32,7 @@ color_for_variables = "Blue"
 color_for_dummy_variables = "DarkMagenta"
 color_for_selection = "LimeGreen"
 
+dubious_characters = "ℕ, ℤ, ℚ, ℝ, 𝒫, ↦"
 
 [logic]
 do_not_name_dummy_vars_as_global_vars = true

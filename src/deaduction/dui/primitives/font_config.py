@@ -41,13 +41,14 @@ class DeaductionFonts:
     could be missing, use the value instead. If the character is available
     then value = key.
     """
-    dubious_characters = {'ℕ': 'N',
-                          'ℤ': 'Z',
-                          'ℚ': 'Q',
-                          'ℝ': 'R',
-                          "𝒫": "P",
-                          "↦": "→"
-                          }
+    # dubious_characters_dic = {'ℕ': 'N',
+    #                       'ℤ': 'Z',
+    #                       'ℚ': 'Q',
+    #                       'ℝ': 'R',
+    #                       "𝒫": "P",
+    #                       "↦": "→"
+    #                       }
+    # dubious_characters = ['ℕ', 'ℤ', 'ℚ', 'ℝ', "𝒫", "↦"]
 
     def __init__(self, parent: QApplication):
         self.parent = parent
@@ -62,13 +63,19 @@ class DeaductionFonts:
         self.tooltips_font_size = cvars.get('display.tooltips_font_size',
                                             "14pt")
 
-        self.alt_characters = {}
-        in_font = QFontMetrics(self.math_font()).inFont
-        for default in self.dubious_characters:
-            if in_font(default):
-                self.alt_characters[default] = default
-            else:
-                self.alt_characters[default] = self.dubious_characters[default]
+        # in_font = QFontMetrics(self.math_font()).inFont
+        #
+        # characters = cvars.get("display.dubious_characters").split(", ")
+        # self.character_translation = {}
+        #
+        # for default, new in zip(self.dubious_characters, characters):
+        #     # FIXME: inFont DOES NOT WORK!!!
+        #     # if in_font(default):
+        #     #     self.character_translation[default] = default
+        #     # else:
+        #     #     self.character_translation[default] = \
+        #     #         self.dubious_characters_dic[default]
+        #     self.character_translation[default] = new
 
     def math_font(self):
         math_font = cvars.get("display.mathematics_font", None)
