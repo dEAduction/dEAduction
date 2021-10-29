@@ -76,10 +76,49 @@ class CodeForLean:
     disjunction       = None  # type: (Union[MathObject, str])
     subgoal           = None  # type: (Union[MathObject, str])
     # The following is used to store the number of an or_else instructions
-    or_else_node_number:   Optional[int] = None
-
-    # The following counts the total number of or_else instructions so far
+    or_else_node_number: Optional[int] = None
+    lean_code_number:    Optional[int] = None
+    # Total number of or_else instructions so far:
     or_else_node_counter = 0
+    # Total number of lean effective code so far:
+    lean_effective_code_counter = 0
+    counter_placeholder = r'\lean_code_counter'
+
+    def __init__(self, instructions: [],
+                 combinator=LeanCombinator.single_string,
+                 error_msg="", success_msg="",
+                 conjunction=None, disjunction=None, subgoal=None,
+                 or_else_node_number=None, lean_code_number=None):
+        """
+        Th only trick here is that instruction may contain a counter
+        placeholder. In this case the placeholder will be replaced by
+        lean_effective_code_counter, and this number will be set as
+        self's lean_code_number attribute.
+        The meaning of this operation is that we are expecting a msg from
+        Lean telling us to replace this instruction by a simpler one.
+        This replacement is done in the replace_lean_effective_code method.
+        """
+        # If appropriate, add a number for retrieving Lean effective code,
+        #  and tag self:
+        if len(instructions) == 1:
+            instruction = instructions[0]
+            if isinstance(instruction, str) \
+                    and instruction.find(self.counter_placeholder) != -1:
+                lean_code_number = self.lean_effective_code_counter
+                ident = f'"{lean_code_number}"'  # Between quotes!
+                instruction = instruction.replace(self.counter_placeholder,
+                                                  ident)
+                CodeForLean.lean_effective_code_counter += 1
+                instructions = [instruction]
+        self.instructions = instructions
+        self.combinator = combinator
+        self.error_msg = error_msg
+        self.success_msg = success_msg
+        self.conjunction = conjunction
+        self.disjunction = disjunction
+        self.subgoal = subgoal
+        self.or_else_node_number = or_else_node_number
+        self.lean_code_number = lean_code_number
 
     @classmethod
     def empty_code(cls, error_msg: str = ''):
@@ -109,9 +148,8 @@ class CodeForLean:
         """
         Create an or_else CodeForLean from a (list of) strings or CodeForLean
         """
-        if isinstance(instructions, str):
-            instructions = [instructions]
-        elif isinstance(instructions, CodeForLean):
+        if isinstance(instructions, str) \
+                or isinstance(instructions, CodeForLean):
             instructions = [instructions]
         for i in range(len(instructions)):
             if isinstance(instructions[i], str):
@@ -133,9 +171,8 @@ class CodeForLean:
         """
         Create an or_else CodeForLean from a (list of) strings or CodeForLean
         """
-        if isinstance(instructions, str):
-            instructions = [instructions]
-        elif isinstance(instructions, CodeForLean):
+        if isinstance(instructions, str) \
+                or isinstance(instructions, CodeForLean):
             instructions = [instructions]
         for i in range(len(instructions)):
             if isinstance(instructions[i], str):
@@ -241,30 +278,6 @@ class CodeForLean:
                            instructions=[self],
                            success_msg=success_msg)
 
-    # def and_finally(self, other):
-    #     """
-    #     Add other before each "or_else" combinator, so that whatever
-    #     sequence of instruction that succeeds ends with other
-    #     e.g. and_finally ("A or_else B", "C")
-    #         -> "(A, C) or_else (B,C)"
-    #
-    #     :param other:   another instance of CodeForLean
-    #     :return:        CodeForLean
-    #     """
-    #     # fixme: not used anywhere
-    #     if isinstance(other, str):
-    #         other = CodeForLean.from_string(other)
-    #     if self.is_empty():
-    #         return other
-    #     elif self.is_single_string() or self.is_and_then():
-    #         # replace self by self and then other
-    #         return self.and_then(other)
-    #     elif self.is_or_else():
-    #         instructions = [piece_of_code.and_finally(other)
-    #                         for piece_of_code in self.instructions]
-    #         return CodeForLean(combinator=LeanCombinator.or_else,
-    #                            instructions=instructions)
-
     def to_raw_string(self, exclude_no_meta_vars=False) -> str:
         """
         Format CodeForLean into a string which can be sent to Lean
@@ -313,8 +326,8 @@ class CodeForLean:
         2) mark each "or_else" node with a node_number
         which will be used by the select_or_else method.
 
-        :return: two instances of CodeForLean, the first contains the trace
-        msgs, the second is self with marked or_else node.
+        :return: two instances of CodeForLean, the second contains the trace
+        msgs, the first is self with marked or_else node.
         """
 
         if self.is_single_string():
@@ -379,6 +392,47 @@ class CodeForLean:
                                    or_else_node_number=self.or_else_node_number)
 
             return new_code, found
+
+    def replace_lean_effective_code(self, ident: int,
+                                    lean_effective_code: str):
+        """
+        Find in self the code with identifier <ident> and replace it by
+        lean_effective_code.
+        Return True if code has been successfully replaced.
+        """
+        found = False
+        if self.lean_code_number == ident:
+            self.instructions = [lean_effective_code]
+            found = True
+            self.lean_code_number = None
+        elif self.is_single_string():
+            found = False
+        else:
+            assert isinstance(self.instructions, list)
+            for ins in self.instructions:
+                found = ins.replace_lean_effective_code(lean_effective_code,
+                                                        ident)
+                if found:
+                    break
+        return found
+
+    def has_lean_effective_code(self) -> bool:
+        """
+        Return True if self has some instruction with meaningful
+        lean_code_number attribute at any level.
+        """
+        found = False
+        if self.lean_code_number:
+            found = True
+        elif self.is_single_string():
+            found = False
+        else:
+            assert isinstance(self.instructions, list)
+            for ins in self.instructions:
+                if ins.has_lean_effective_code():
+                    found = True
+                    break
+        return found
 
     def add_no_meta_vars(self):
         """
@@ -526,45 +580,29 @@ class CodeForLean:
                             instruction in self.instructions]
 
 
-# _VAR_NB = 0
-# _FUN_NB = 0
-#
-#
-# def get_new_var():
-#     global _VAR_NB
-#     _VAR_NB += 1
-#     return "x{0}".format(_VAR_NB)
-#
-#
-# def get_new_fun():
-#     global _FUN_NB
-#     _FUN_NB += 1
-#     return "f{0}".format(_FUN_NB)
-#
-#
-# # OBSOLETE : see mathobj.give_name.get_new_hyp()
-# def get_new_hyp():
-#     global _VAR_NB
-#     _VAR_NB += 1
-#     return "h{0}".format(_VAR_NB)
-#
-#
-# def solve1_wrap(string: str) -> str:
-#     # (obsolete)
-#     return "solve1 {" + string + "}"
-
-
-def get_effective_code_numbers(trace_effective_code: str) -> (int, int):
+def get_effective_code_numbers(trace_effective_code: str) -> Any:
     """
     Convert a string traced by Lean into a tuple
-    Effective code n°12.2   -->   12, 2
+    EFFECTIVE CODE n°12.2               --> (True, 12, 2)
+    EFFECTIVE CODE LEAN n°37: blabla    --> (False, 37, blabla)
+    other                               --> (None, None, None)
     """
 
     # Find string right of "n°"...
-    string1 = trace_effective_code.split('n°')[1]
-    # ...and split at '.'
-    string2, string3 = string1.split('.')
-    return int(string2), int(string3)
+    words = trace_effective_code.split('n°')
+    string1 = 'n°'.join(words[1:])
+    if words[0] == "EFFECTIVE CODE ":
+        # ...and split at '.'
+        string2, string3 = string1.split('.')
+        return True, int(string2), int(string3)
+    elif words[0] == "EFFECTIVE CODE LEAN ":
+        words = string1.split(':')
+        number = int(words[0])
+        code = ':'.join(words[1:])
+        return False, number, code
+
+    # Unexepcted values!
+    return (None, None, None)
 
 
 if __name__ == '__main__':
@@ -602,10 +640,10 @@ if __name__ == '__main__':
     code, deco = possible_code.to_decorated_string()
     # print(deco)
     print(code)
-    code, found = code.select_or_else(3,0)
+    code, found_ = code.select_or_else(3,0)
     print(code.to_raw_string())
     print(code.has_or_else())
-    code, found = code.select_or_else(4,0)
+    code, found_ = code.select_or_else(4,0)
     print(code.to_raw_string())
     print(code.has_or_else())
 

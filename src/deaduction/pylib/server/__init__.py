@@ -355,9 +355,11 @@ class ServerInterface(QObject):
         updating Proofstate.
             (for processing exercise only)
         """
+        code = self.__tmp_effective_code
         if self.__tmp_targets_analysis \
                 and self.__tmp_hypo_analysis \
-                and not self.__tmp_effective_code.has_or_else():
+                and not code.has_or_else() \
+                and not code.has_lean_effective_code():
             self.proof_receive_done.set()
 
     def __on_lean_message(self, msg: Message):
@@ -423,29 +425,41 @@ class ServerInterface(QObject):
             self.__check_receive_state()
 
         elif txt.startswith("EFFECTIVE CODE") \
-            and line == self.lean_file.last_line_of_inner_content \
-                and self.__tmp_effective_code.has_or_else():
+                and line == self.lean_file.last_line_of_inner_content:
+            code = self.__tmp_effective_code
             # txt may contain several lines
             for txt_line in txt.splitlines():
                 if not txt_line.startswith("EFFECTIVE CODE"):
-                    # Message could be "EFFECTIVE LEAN CODE"
-                    # TODO: treat these messages
                     continue
                 self.log.info(f"Got {txt_line}")
-                node_nb, code_nb = get_effective_code_numbers(txt_line)
-                # Modify __tmp_effective_code by selecting the effective
-                #  or_else alternative according to codes
-                self.__tmp_effective_code, found = \
-                    self.__tmp_effective_code.select_or_else(node_nb, code_nb)
-                if found:
-                    self.log.debug("(selecting effective code)")
+                info = get_effective_code_numbers(txt_line)
+
+                if info[0] is None:
+                    self.log.warning("Unexpected Lean info")
+
+                # Case of or_else selector #
+                elif info[0] and code.has_or_else():
+                    _, node_nb, code_nb = info
+                    # Modify __tmp_effective_code by selecting the effective
+                    #  or_else alternative according to codes
+                    code, found = code.select_or_else(node_nb, code_nb)
+                    if found:
+                        self.log.debug("(selecting effective code)")
+
+                # Case of Lean effective code #
+                elif not info[0] and code.has_lean_effective_code():
+                    _, ident, lean_code = info
+                    found = code.replace_lean_effective_code(ident, lean_code)
+                    if found:
+                        self.log.debug("(selecting effective Lean code)")
 
             # Test if there remain some or_else combinators
-            if not self.__tmp_effective_code.has_or_else():
+            #  or some lean effective code
+            if not (code.has_or_else() or code.has_lean_effective_code()):
                 # Done with effective codes, history_replace will be called
                 self.log.debug("No more effective code to receive")
                 if hasattr(self.effective_code_received, 'emit'):
-                    self.effective_code_received.emit(self.__tmp_effective_code)
+                    self.effective_code_received.emit(code)
                 self.__check_receive_state()
 
     def __on_lean_state_change(self, is_running: bool):

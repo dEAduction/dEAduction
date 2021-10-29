@@ -31,8 +31,7 @@ import logging
 
 # from deaduction.pylib.utils.nice_display_tree import display_tree
 from deaduction.pylib.actions.actiondef import action
-from deaduction.pylib.actions import (CodeForLean,
-                                      WrongUserInput)
+from deaduction.pylib.actions import (CodeForLean)
 from deaduction.pylib.mathobj import  MathObject
 
 
@@ -219,7 +218,8 @@ def compute(target) -> CodeForLean:
     Try to use tactics to solve numerical target, mainly by linear computing.
     """
     code1 = CodeForLean.from_string("norm_num at *").solve1()
-    code2a = CodeForLean.from_string("compute_n 10")
+    comp_str = f"compute_and_return_code 10 {CodeForLean.counter_placeholder}"
+    code2a = CodeForLean.from_string(comp_str)
     code2b = CodeForLean.from_string("norm_num at *").try_().and_then(code2a)
     code2c = code2b.solve1()
     possible_code = code1.or_else(code2c)
