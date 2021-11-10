@@ -1,9 +1,7 @@
 import tactic
 import data.real.basic
-
-
 /-
-- nom des variables dans la def de limite !
+- nom des variables dans la def de limit !
 - variables muettes = variables globales : bof
 - calcul avec abs : abs (l'-l) /2 >0 ??
 (x ≠ 0 → |x| >0)
@@ -29,8 +27,25 @@ import real_definitions
 local attribute [instance] classical.prop_decidable
 
 
+/-- `l` is the limit of the sequence `a` of reals -/
+definition limit (u : ℕ → ℝ) (l : ℝ) : Prop :=
+∀ ε > 0, ∃ N, ∀ n ≥ N, | u n - l | < ε
+
+definition convergent (u : ℕ → ℝ) : Prop :=
+∃ l, limit u l
+
+definition limit_plus_infinity (u : ℕ → ℝ) : Prop :=
+∀ M, ∃ N, ∀ n ≥ N, u n > M
+
+definition bounded_sequence (u : ℕ → ℝ) : Prop :=
+∃ M, ∀ n, | u n | ≤ M
+
+definition even (n:ℕ) : Prop := ∃ n', n=2 * n'
+
+
 
 section course
+open tactic.interactive
 -- notation `|` x `|` := abs x
 
 -----------------
@@ -65,6 +80,18 @@ find your way around the `max` API is to *guess* what the names
 of the theorems are! For example what do you think 
 `max A B < C ↔ A < C ∧ B < C` is called?
 -/
+
+lemma definition.even (n:ℕ) : even n ↔ ∃ n', n = 2 * n'
+:=
+/- dEAduction
+PrettyName
+  Entier naturel pair
+-/
+begin
+   refl
+end
+
+----------------------------------
 namespace maximum
 
 lemma theorem.ppe_max_gauche : ∀ a b : ℝ, a ≤ max a b :=
@@ -137,21 +164,65 @@ end
 
 end valeur_absolue
 
+------------------------------
+-- Définitions de la limit --
+------------------------------
 
-/-- `l` is the limit of the sequence `a` of reals -/
-definition limite (u : ℕ → ℝ) (l : ℝ) : Prop :=
-∀ ε > 0, ∃ N, ∀ n ≥ N, | u n - l | < ε
-
-lemma definition.limite 
+lemma definition.limit 
 {u : ℕ → ℝ} {l : ℝ} :
-(limite u l) ↔ 
+(limit u l) ↔ 
 ∀ ε > 0, ∃ N, ∀ n ≥ N, | u n - l | < ε
 := 
 /- dEAduction
 PrettyName
   Limite d'une suite
-Variables
-  ε, N, n
+ImplicitUse
+  True
+-/
+begin
+  refl
+end
+
+lemma definition.convergent
+{u : ℕ → ℝ} :
+(convergent u) ↔ 
+∃ l, limit u l
+:= 
+/- dEAduction
+PrettyName
+  Suite convergent
+ImplicitUse
+  True
+-/
+begin
+  refl
+end
+
+lemma definition.limit_plus_infinity
+{u : ℕ → ℝ} {l : ℝ} :
+(limit_plus_infinity u) ↔ 
+∀ M, ∃ N, ∀ n ≥ N, u n > M
+:= 
+/- dEAduction
+PrettyName
+  Limite infinie d'une suite
+ImplicitUse
+  True
+-/
+begin
+  refl
+end
+
+lemma definition.bounded 
+{u : ℕ → ℝ} :
+(bounded_sequence u) ↔ 
+∃ M, ∀ n, | u n | ≤ M
+:= 
+/- dEAduction
+PrettyName
+  Suite bornée
+ImplicitUse
+  True
 -/
 begin
   refl
@@ -161,16 +232,7 @@ end
 end definitions
 
 
------------------
---  exercices  --
------------------
-namespace exercices
-open definitions
-/- 
-div_pos : 0 < a → 0 < b → 0 < a / b
-lt_div_iff : 0 < c → (a < b / c ↔ a * c < b)
-lt_div_iff' : 0 < c → (a < b / c ↔ c * a < b)
--/
+namespace tests
 
 lemma exercise.test_compute
 :
@@ -178,8 +240,8 @@ lemma exercise.test_compute
 :=
 begin
   split,
-  compute_n 1,
-  compute_n 1,
+  {compute_and_trace_code "1"},
+  {compute_and_trace_code "1"},
 end
 
 lemma exercise.test_compute_2
@@ -198,17 +260,63 @@ begin
   todo
 end
 
+end tests
 
 
-lemma exercise.limite_constante 
-(u : ℕ → ℝ) (c : ℝ) (H : ∀ n, u n = c) :
-limite u c :=
+-----------------
+--  exercices  --
+-----------------
+namespace exercices
+open definitions
+
+--------------------------------------------------
+namespace examples
+
+lemma exercise.ex_non_cv :
+¬ (convergent (λ n, (-1)^n))
+:=
 /- dEAduction
 PrettyName
-  La limite d'une suite constante
+  Un exemple de suite non convergent
 -/
 begin
---   rw definition.limite,
+  todo
+end
+
+lemma exercise.ex_cv :
+convergent (λ n, (1/n^2))
+:=
+/- dEAduction
+PrettyName
+  Un exemple de suite convergent
+-/
+begin
+  todo
+end
+
+lemma exercise.ex_dv :
+limit_plus_infinity (λ n, (real.sqrt (n+2)))
+:=
+/- dEAduction
+PrettyName
+  Un exemple de suite divergente
+-/
+begin
+  todo
+end
+
+
+
+
+lemma exercise.limit_constante 
+(u : ℕ → ℝ) (c : ℝ) (H : ∀ n, u n = c) :
+limit u c :=
+/- dEAduction
+PrettyName
+  La limit d'une suite constante
+-/
+begin
+--   rw definition.limit,
 --   intros ε Hε,
 --   use 0,
 --   intros n H1,
@@ -217,13 +325,22 @@ begin
   todo
 end
 
-lemma exercise.limite_unique
-(u : ℕ → ℝ) (l : ℝ)(l' : ℝ) (H : limite u l) (H' : limite u l') :
+end examples
+
+-------------------------------------------------
+namespace premieres_proprietes
+/- dEAduction
+PrettyName
+  Première propriétés
+-/
+
+lemma exercise.limit_unique
+(u : ℕ → ℝ) (l : ℝ)(l' : ℝ) (H : limit u l) (H' : limit u l') :
 l = l' 
 :=
 /- dEAduction
 PrettyName
-  Unicité de la limite
+  Unicité de la limit
 -/
 begin
   -- by_contradiction,
@@ -243,18 +360,66 @@ begin
   todo
 end
 
-lemma exercise.limite_somme
-(u u': ℕ → ℝ) (l l' : ℝ) (H : limite u l)
-(H' : limite u' l') :
-limite (λn, u n + u' n) (l+l')
+
+lemma exercise.def_alt
+(u : ℕ → ℝ) (l : ℝ) :
+(limit u l) ↔ 
+∀ ε > 0, ∃ N, ∀ n ≥ N, | u n - l | ≤ ε
+:=
+/- dEAduction
+PrettyName
+  Définition alternative de la limit
+-/
+begin
+  todo
+end
+
+
+lemma definition.limit_infinity_alt
+{u : ℕ → ℝ} {l : ℝ} :
+(limit_plus_infinity u) ↔ 
+∀ M>0, ∃ N, ∀ n ≥ N, u n > M
+:= 
+/- dEAduction
+PrettyName
+  Définition alternative pour une limit infinie
+-/
+begin
+  todo
+end
+
+
+
+
+
+
+
+
+
+
+
+
+end premieres_proprietes
+
+
+namespace proprietes
+/- dEAduction
+PrettyName
+  Propriétés
+-/
+
+lemma exercise.limit_somme
+(u u': ℕ → ℝ) (l l' : ℝ) (H : limit u l)
+(H' : limit u' l') :
+limit (λn, u n + u' n) (l+l')
 :=
 /- dEAduction
 PrettyName
   Limite d'une somme
 -/
 begin
---   rw definitions.definition.limite,
--- rw definitions.definition.limite at H H',
+--   rw definitions.definition.limit,
+-- rw definitions.definition.limit at H H',
 -- intro ε, intro H1,
 -- have H2 := H _ H1,
 -- have H3 := H' _ H1,
@@ -270,10 +435,10 @@ end
 
 
 -- preuve par DL ?
-lemma exercise.limite_produit
-(u u': ℕ → ℝ) (l l' : ℝ) (H : limite u l)
-(H' : limite u' l') :
-limite (λn, (u n) * (u' n)) (l*l')
+lemma exercise.limit_produit
+(u u': ℕ → ℝ) (l l' : ℝ) (H : limit u l)
+(H' : limit u' l') :
+limit (λn, (u n) * (u' n)) (l*l')
 :=
 /- dEAduction
 PrettyName
@@ -283,15 +448,15 @@ begin
   todo
 end
 
-lemma exercise.limite_inegalites
-(u u': ℕ → ℝ) (l l' : ℝ) (H : limite u l)
-(H' : limite u' l')
+lemma exercise.limit_inegalites
+(u u': ℕ → ℝ) (l l' : ℝ) (H : limit u l)
+(H' : limit u' l')
 (H'' : ∀n, u n ≤ u' n ) :
 l ≤ l'
 :=
 /- dEAduction
 PrettyName
-  Passage à la limite dans une inégalité
+  Passage à la limit dans une inégalité
 -/
 begin
   todo
@@ -299,9 +464,9 @@ end
 
 lemma exercise.gendarmes
 (u u' v  : ℕ → ℝ) (l : ℝ) 
-(H : limite u l) (H' : limite u' l)
+(H : limit u l) (H' : limit u' l)
 (H'' : ∀n, (((u n) ≤ v n) and ((v n) ≤ u' n))) :
-limite v l
+limit v l
 :=
 /- dEAduction
 PrettyName
@@ -319,19 +484,15 @@ definition is_bounded (a : ℕ → ℝ) := ∃ B, ∀ n, |a n| ≤ B
 
 -- Now try this:
 lemma tendsto_bounded_mul_zero {a : ℕ → ℝ} {b : ℕ → ℝ}
-  (hA : is_bounded a) (hB : limite b 0) 
-  : limite (λ n, (a n) * (b n)) 0 :=
+  (hA : is_bounded a) (hB : limit b 0) 
+  : limit (λ n, (a n) * (b n)) 0 :=
 begin
   todo,
 end
 
-end exercices
+end proprietes
 
-/-
-Lemmes évidents : 
-constant -> convergent
-convergent -> borné ?
--/
+end exercices
 
 
 

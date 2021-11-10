@@ -445,7 +445,7 @@ class ServerInterface(QObject):
                     code, found = code.select_or_else(node_nb, code_nb)
                     if found:
                         self.log.debug("(selecting effective code)")
-
+                        self.__tmp_effective_code = code
                 # Case of Lean effective code #
                 elif not info[0] and code.has_lean_effective_code():
                     _, ident, lean_code = info

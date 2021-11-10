@@ -31,8 +31,8 @@ import logging
 
 # from deaduction.pylib.utils.nice_display_tree import display_tree
 from deaduction.pylib.actions.actiondef import action
-from deaduction.pylib.actions import (CodeForLean)
-from deaduction.pylib.mathobj import  MathObject
+from deaduction.pylib.actions import CodeForLean
+from deaduction.pylib.mathobj import MathObject
 
 
 log = logging.getLogger("magic")
@@ -213,17 +213,20 @@ global _
 # Raw codes #
 #############
 
-def compute(target) -> CodeForLean:
+def compute() -> CodeForLean:
     """
     Try to use tactics to solve numerical target, mainly by linear computing.
+    Solve the goal or fail. The tactic is to be replaced replaced by efficient
+    code according to the Lean msgs.
     """
-    code1 = CodeForLean.from_string("norm_num at *").solve1()
-    comp_str = f"compute_and_return_code 10 {CodeForLean.counter_placeholder}"
-    code2a = CodeForLean.from_string(comp_str)
-    code2b = CodeForLean.from_string("norm_num at *").try_().and_then(code2a)
-    code2c = code2b.solve1()
-    possible_code = code1.or_else(code2c)
-    return possible_code
+    # code1 = CodeForLean.from_string("norm_num at *").solve1()
+    comp_str = f"compute_and_trace_code {CodeForLean.counter_placeholder}"
+    code = CodeForLean.from_string(comp_str)
+    # Integrate norm_num in compute
+    # code2b = CodeForLean.from_string("norm_num at *").try_().and_then(code2a)
+    # code2c = code2b.solve1()
+    # possible_code = code1.or_else(code2c)
+    return code.solve1()
 
 
 def raw_solve_equality(target: MathObject) -> CodeForLean:
@@ -289,7 +292,7 @@ def raw_solve_target(target, proof_step, selected_objects) -> CodeForLean:
     elif target.concerns_numbers():
         numbers_involved = True
     if numbers_involved:
-        more_code = compute(target)
+        more_code = compute()
         code = code.or_else(more_code)
         log.debug(f"Compute: {code}")
 

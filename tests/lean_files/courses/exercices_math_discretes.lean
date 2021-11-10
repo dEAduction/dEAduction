@@ -953,7 +953,7 @@ PrettyName
     Exercice 22
 -/
 
-lemma exercise.question1 (X Y : Type) (f : X → Y) (R : set (X × X)) (H1 : ∀x x', (x, x') ∈ R ↔ f x = f x') :
+lemma exercise.question22_1 (X Y : Type) (f : X → Y) (R : set (X × X)) (H1 : ∀x x', (x, x') ∈ R ↔ f x = f x') :
 relation_equivalence R :=
 /- dEAduction
 PrettyName

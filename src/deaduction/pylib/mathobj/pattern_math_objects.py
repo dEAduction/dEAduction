@@ -340,7 +340,10 @@ class PatternMathObject(MathObject):
     @classmethod
     def set_definitions_for_implicit_use(cls, definitions):
         """
-        Set definitions for implicit use.
+        Set definitions for implicit use.Namely, extract a pattern from each
+        definition which is an iff, and update the
+        MathObject.implicit_definitions and
+        MathObject.implicit_patterns lists.
         """
         MathObject.implicit_definitions = []
         MathObject.definition_patterns = []

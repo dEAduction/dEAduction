@@ -112,6 +112,8 @@ latex_from_node = {
     "MULT": (0, r" \times ", 1),
     "PRODUCT": (0, r" \times ", 1),
     "DIV": (0, r"/", 1),
+    "POWER": (0, ["^", 1]),
+    "SQRT": ("√", 0),
     "MINUS": ("-", 0),
     ##################
     # GENERAL TYPES: #
@@ -163,8 +165,9 @@ latex_from_constant_name = {
     "borne_inf": ("Inf ", -2, " = ", -1),
     "est_majore": (-1, r'\text_is', " majoré"),
     "est_minore": (-1, r'\text_is', " minoré"),
-    "est_borne": (-1, r'\text_is', " borné"),
-    "limite": ("lim", -2, " = ", -1),
+    "bounded_sequence": (-1, r'\text_is', _("bounded")),
+    "limit": ("lim", -2, " = ", -1),
+    "limit_plus_infinity": ("lim", -1, " = + ∞"),
     "abs": ('|', -1, '|'),
     "max": ("Max", r'\parentheses', -2, ",", -1),
     "inv": ([r'\parentheses', -1], [r'^', '-1']),
@@ -172,14 +175,16 @@ latex_from_constant_name = {
     "identite": ("Id",),
     "image": (-1, " = ", -3, "(", -2, ")"),
     "relation_equivalence": (-1, " " + _("is an equivalence relation")),
-    "classe_equivalence": (r"\[", -1, r"\]", ["_", 1]),
+    "classe_equivalence": (r"\[", -1, r"\]", ["_", -3]),
     "disjoint": (-2, " " + _("and") + " ", -1, " " + _("are disjoint")),
     "powerset": (r'\set_of_subsets', [r"\parentheses", -1]),
     "partition": (-1, " " + _("is a partition of") + " ", -2),
     "application": (-1, " " + _("is an application") + " "),
-    "application_bijective":  (-1, " " + _("is a bijective application") + " ")
+    "application_bijective":  (-1, " " + _("is a bijective application") + " "),
+    "convergent": (-1, r'\text_is', _("convergent")),
 }
 
+just_for_translation = {_("limit"), _("convergent"), _("even")}
 
 ###################
 ###################

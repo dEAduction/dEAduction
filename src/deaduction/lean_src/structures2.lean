@@ -13,6 +13,7 @@ Authors: Frédéric Le Roux
 -/
 
 import data.set
+import data.real.basic
 import tactic
 import parser_analysis_definitions
 
@@ -165,6 +166,8 @@ match e with
 | `(has_mul.mul %%a %%b) := return ("MULT", [a, b]) -- TODO: distinguish types/numbers
 | `(%%a × %%b) := return ("PRODUCT", [a, b]) -- TODO: distinguish types/numbers
 | `(%%a / %%b) := return ("DIV", [a, b])
+| `(%%a ^ %%b) := return ("POWER", [a, b])
+| `(real.sqrt %%a) := return ("SQRT", [a])
 ------------------------------ Leaves with data ---------------------------
 | (app function argument)   :=
     if is_numeral e

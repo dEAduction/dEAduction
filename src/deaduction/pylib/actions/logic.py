@@ -53,9 +53,9 @@ from deaduction.pylib.actions     import (action,
                                           MissingParametersError,
                                           WrongUserInput,
                                           test_selection,
-                                          CodeForLean,
-                                          action_definition
+                                          CodeForLean
                                           )
+from .magic import compute
 
 from deaduction.pylib.mathobj     import (MathObject,
                                           give_global_name,
@@ -863,13 +863,13 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     if unsolved_inequality_counter:
         # Back to first inequality:
         code = code.and_then(f"rotate {proof_step.nb_of_goals}")
-        more_code1 = CodeForLean.from_string("norm_num at *")
-        more_code1 = more_code1.try_()
-        more_code2 = CodeForLean.from_string("compute_n 1")
-        more_code2 = more_code2.try_()
+        # more_code1 = CodeForLean.from_string("norm_num at *")
+        # more_code1 = more_code1.try_()
+        # more_code2 = CodeForLean.from_string("compute_and_return_code")
+        # more_code2 = more_code2.try_()
         # Try to solve1 inequality by norm_num, maybe followed by compute:
-        more_code = more_code1.and_then(more_code2)
-        more_code = more_code.single_combinator("solve1")
+        # more_code = more_code1.and_then(more_code2)
+        more_code = compute()
         # If it fails, rotate to next inequality
         more_code = more_code.or_else("rotate")
         # Do this for all inequalities
