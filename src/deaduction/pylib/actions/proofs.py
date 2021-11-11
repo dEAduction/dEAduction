@@ -276,7 +276,7 @@ def action_new_object(proof_step,
     # Choice = new sub-goal
     elif user_input[0] == 1:
         if len(user_input) == 1:
-            output = new_objects
+            output = new_properties
             raise MissingParametersError(InputType.Text,
                                          title=_("Introduce a new subgoal") ,
                                          output=output)

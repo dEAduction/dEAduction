@@ -628,23 +628,23 @@ def latex_to_lean(string: Union[str, list]):
         return string
 
 
-new_properties = _("""Examples of syntax:
+new_properties = _("Examples of syntax:") + "\n" + \
+_("""
+    x ∈ A ∩ B          --> x belongs (A cap B)
+    A ⊂ B               --> A subset B
+    A = ∅               --> A = emptyset
+    ∀x ∈ A ∩ A', x ∈ A   --> forall x belongs (A cap A'), x belongs A """) + \
+"\n \n" + \
+_("You can use the keywords and, or, not, implies, iff, forall, exists.") + \
+"\n" + _("In case of error, try with more parentheses.")
 
-x ∈ A ∩ B   --> x belongs (A cap B)
-A ⊂ B       --> A subset B
-A = ∅       --> A = emptyset
-
-You can use the keywords and, or, not implies, iff.
-In case of error, try with more parentheses.
-""")
-new_objects = _("""Examples of syntax:
-
-    A ∩ B   --> A cap B
-    A ∪ B   --> A cup B
-    f(A)    --> f direct_image A
-    f⁻¹(A)  --> f inverse_image A
-    f∘g (x) --> (composition f g)(x)
-    f(x) ; x+1/2 ; 2*n
-
-In case of error, try with more parentheses.  
-""")
+new_objects = _("Examples of syntax:") + "\n \n" + \
+_("""
+    A ∩ B           --> A cap B
+    A ∪ B           --> A cup B
+    f(A)            --> f direct_image A
+    f⁻¹(A)          --> f inverse_image A
+    f∘g (x)         --> (composition f g)(x)
+    And also f(x) ; x+1/2 ; 2*n, ...
+""") + "\n \n" + \
+_("In case of error, try with more parentheses.")
