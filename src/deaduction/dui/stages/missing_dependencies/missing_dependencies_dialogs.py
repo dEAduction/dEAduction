@@ -92,10 +92,10 @@ class WantInstallMissingDependencies(YesNoDialog):
 
 class InstallingMissingDependencies(QDialog):
     """
-    At start, dEaduction checks if missing dependencies are missing. If
+    At start, dEaduction checks if some dependencies are missing. If
     some indeed are, usr is asked is they want to install them
-    (ReallyWantQuit). If they do, download begins and this dialog is
-    shown showing a logger of the installation.
+    (WantInstallMissingDependencies). If they do, download begins and this
+    dialog is shown showing a logger of the installation.
 
     When the download is completed, the 'Start dEAduction' button is
     activated (method installation_completed) and usr may click on it.

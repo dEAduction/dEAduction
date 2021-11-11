@@ -34,7 +34,9 @@ from .display_data import (HAVE_BOUND_VARS,
                            plurals,
                            numbers,
                            dic_of_first_nodes_text,
-                           couples_of_nodes_to_text
+                           couples_of_nodes_to_text,
+                           new_objects,
+                           new_properties
                            )
 from .display_math import (recursive_display,
                            raw_latex_shape_from_couple_of_nodes,

@@ -47,8 +47,10 @@ from deaduction.pylib.mathobj import (MathObject,
                                       get_new_hyp,
                                       give_global_name)
 
-log = logging.getLogger(__name__)
+from deaduction.pylib.math_display import new_objects, new_properties
 
+log = logging.getLogger(__name__)
+global _
 
 # # Turn proof_button_texts into a dictionary
 # proof_list = ['action_apply', 'proof_methods', 'new_object']
@@ -241,12 +243,21 @@ def action_new_object(proof_step,
             raise MissingParametersError(InputType.Text,
                                          title="+",
                                          output=_("Name your object:"))
-        if len(user_input) == 2:  # Ask for new object
-            raise MissingParametersError(InputType.Text,
-                                         title="+",
-                                         output=_("Introduce a new object")
-                                         + "(" + _("e.g.")
-                                         + "0, {1}, f(2), ...)")
+        elif len(user_input) == 2:
+            # Check name does not already exists
+            name = user_input[1]
+            names = [obj.display_name for obj in goal.context]
+            if name in names:
+                user_input.pop()
+                output = _("This name already exists, please give a new name:")
+                raise MissingParametersError(InputType.Text,
+                                             title="+",
+                                             output=output)
+            else:  # Ask for new object
+                output = new_objects
+                raise MissingParametersError(InputType.Text,
+                                             title=_("Introduce a new object"),
+                                             output=output)
         else:  # Send code
             name = user_input[1]
             new_hypo_name = get_new_hyp(proof_step)
@@ -265,9 +276,10 @@ def action_new_object(proof_step,
     # Choice = new sub-goal
     elif user_input[0] == 1:
         if len(user_input) == 1:
+            output = new_objects
             raise MissingParametersError(InputType.Text,
-                                         title="+",
-                                         output=_("Introduce new subgoal:"))
+                                         title=_("Introduce a new subgoal") ,
+                                         output=output)
         else:
             new_hypo_name = get_new_hyp(proof_step)
             codes = CodeForLean.from_string(f"have {new_hypo_name}:"

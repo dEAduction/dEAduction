@@ -36,7 +36,7 @@ from deaduction.dui.utils import set_selectable
 
 class DisclosureTriangle(QTreeWidget):
     """
-    An (very basic) implementation of a DisclosureTriangle, i.e. a
+    A (very basic) implementation of a DisclosureTriangle, i.e. a
     widget that looks like this:
 
     ____________________
@@ -47,8 +47,8 @@ class DisclosureTriangle(QTreeWidget):
     |      …           |
     --------------------
 
-    This triangle can be expanded or collapsed and is instanciated with
-    a title and a dictionnary of keys and values. Made with the help of
+    This triangle can be expanded or collapsed and is instantiated with
+    a title and a dictionary of keys and values. Made with the help of
     musicamente on Stackoverflow:  https://stackoverflow.com/questions/
     63862724/
     qtreeview-dynamic-height-according-to-content-disclosure-triangle.

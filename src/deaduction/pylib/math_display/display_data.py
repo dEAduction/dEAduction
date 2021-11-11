@@ -628,3 +628,23 @@ def latex_to_lean(string: Union[str, list]):
         return string
 
 
+new_properties = _("""Examples of syntax:
+
+x ∈ A ∩ B   --> x belongs (A cap B)
+A ⊂ B       --> A subset B
+A = ∅       --> A = emptyset
+
+You can use the keywords and, or, not implies, iff.
+In case of error, try with more parentheses.
+""")
+new_objects = _("""Examples of syntax:
+
+    A ∩ B   --> A cap B
+    A ∪ B   --> A cup B
+    f(A)    --> f direct_image A
+    f⁻¹(A)  --> f inverse_image A
+    f∘g (x) --> (composition f g)(x)
+    f(x) ; x+1/2 ; 2*n
+
+In case of error, try with more parentheses.  
+""")
