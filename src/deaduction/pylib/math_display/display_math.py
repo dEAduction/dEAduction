@@ -598,18 +598,15 @@ def display_quantifier(math_object) -> list:
     return display
 
 
-# def display_lambda(math_object, format_="latex") -> list:
-#     """
-#     Display lambda expression, e.g.
-#     - set families with explicit bound variable
-#         lambda (i:I), E i
-#         encoded by LAMBDA(I, i, APP(E, i)) --> "{E_i, i ∈ I}"
-#     - sequences,
-#     - mere functions
-#         encoded by LAMBDA(X, x, APP(f, x))  --> "f"
-#     - anything else is displayed as "x ↦ f(x)"
-#     """
-#     # TODO: modify this with expanded_version
+def display_lambda(math_object, format_="latex") -> list:
+    """
+    Display lambda expression. Note that set families and sequences should
+    not be processed here, but catched by the "couple of nodes" trick.
+    - mere functions are encoded by
+        LAMBDA(X, x, APP(f, x))  --> "f"
+    - anything else is displayed as
+        "x ↦ f(x)"
+    """
 #     log.warning("Unexpected lambda")
 #     math_type = math_object.math_type
 #     _, var, body = math_object.children
@@ -630,7 +627,7 @@ def display_quantifier(math_object) -> list:
 #     if not display:
 #         display = ['*unknown lambda*']
 #     # log.debug(f"--> {display}")
-#     return display
+    return [1, '↦', 2]
 
 
 # # The following is not called directly, but via display_constant
@@ -913,8 +910,8 @@ def raw_latex_shape_from_specific_nodes(math_object, negate=False):
         display = display_number(math_object)
     elif math_object.is_quantifier(is_math_type=True):
         display = display_quantifier(math_object)
-    # elif node == "LAMBDA":
-    #     display = display_lambda(math_object)
+    elif node == "LAMBDA":
+        display = display_lambda(math_object)
     elif node == "SET_UNIVERSE":
         display = [math_object.math_type_child_name()]
     elif node == "SET_COMPLEMENT":

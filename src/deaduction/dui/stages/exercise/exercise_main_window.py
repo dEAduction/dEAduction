@@ -400,7 +400,10 @@ class ExerciseMainWindow(QMainWindow):
         Search successively in
         - ActionButton,
         - history buttons
+
+        :return: ActionButton or None
         """
+        # FIXME: obsolete
         # TODO: add search in context widgets.
         button = self.ecw.action_button(string)
         if button:
@@ -418,7 +421,8 @@ class ExerciseMainWindow(QMainWindow):
             return history_buttons[string]
         log.warning(f"No button found from {string}")
 
-    def context_item_from_math_object(self, math_object):
+    def context_item_from_math_object(self,math_object) -> \
+            MathObjectWidgetItem:
         """
         Turn a MathObject into a MathObjectWidgetItem of the context.
         """
@@ -428,7 +432,7 @@ class ExerciseMainWindow(QMainWindow):
             item = self.ecw.objects_wgt.item_from_logic(math_object)
         return item
 
-    def context_item_from_string(self, name):
+    def context_item_from_string(self, name) -> MathObjectWidgetItem:
         """
         Turn a string, as used in AutoStep, into a MathObjectWidgetItem
         of the context.
@@ -451,10 +455,11 @@ class ExerciseMainWindow(QMainWindow):
                 name = name[1:]
             math_object = self.current_goal.math_object_from_name(name)
             if math_object:
-                item = self.context_item_from_math_object(math_object)
+                item = self.math_object.widget_item
         return item
     
-    def contextualised_selection(self, selection: [Union[MathObject, str]]):
+    def contextualised_selection(self, selection: [Union[MathObject, str]])\
+            -> [MathObjectWidgetItem]:
         """
         Turn ContextMathObject or str in the list into MathObjectWidgetItem.
         """
@@ -466,15 +471,14 @@ class ExerciseMainWindow(QMainWindow):
             elif isinstance(item, MathObject):
                 item = self.context_item_from_math_object(item)
             contextualised_selection.append(item)
+        log.debug(contextualised_selection)
         return contextualised_selection
 
-    def contextualised_button(self, button):
-        """Turn an action encoded by a string, e.g. "forall", into a button."""
-
-        contextualised_action = button
-        if isinstance(button, str):
-            contextualised_action = self.button_from_string(button)
-        return contextualised_action
+    @staticmethod
+    def contextualised_button(button_name: str) -> ActionButton:
+        """Turn an action encoded by a string, e.g. "forall", into a button.
+        """
+        return ActionButton.from_name.get(button_name)
 
     ##############
     ##############
@@ -585,17 +589,18 @@ class ExerciseMainWindow(QMainWindow):
         Note that items in selection are first transformed into
         MathObjectWidgetItem if they are MathObject.
         """
-        self.current_selection = []
+        self.empty_current_selection()
         for item in selection:
             if isinstance(item, MathObject):
-                if item.math_type.is_prop():
-                    item = self.ecw.props_wgt.item_from_logic(item)
-                else:
-                    item = self.ecw.objects_wgt.item_from_logic(item)
+                item = MathObjectWidgetItem.from_math_object(item)
+            #     if item.math_type.is_prop():
+            #         item = self.ecw.props_wgt.item_from_logic(item)
+            #     else:
+            #         item = self.ecw.objects_wgt.item_from_logic(item)
             self.process_context_click(item)
 
         # Select target if no selection:
-        if not self.current_selection:
+        if not selection:
             self.process_target_click(None)
 
     async def simulate(self, proof_step: ProofStep, duration=0.4):
@@ -603,30 +608,45 @@ class ExerciseMainWindow(QMainWindow):
         Simulate proof_step by selecting the selection and
         checking button or statement stored in proof_step. This is called
         when redoing, but also when processing automatic actions, or testing.
-        Note that contrarily to what happens in self.simulate_user_action,
-        the corresponding actions are NOT processed,
+        Note that the corresponding actions are NOT processed,
         since this would modify history of the lean_file which is not what
         we want when redoing.
         The method is asynchronous because we wait for the button blinking.
         """
 
-        self.simulate_selection(proof_step.selection)
-        # Check button or statement
-        if isinstance(proof_step.button, ActionButton):
-            self.ecw.freeze(False)
-            await proof_step.button.simulate(duration=duration)
-            self.ecw.freeze(self.freezed)
-        elif isinstance(proof_step.statement_item, StatementsTreeWidgetItem):
-            await proof_step.statement_item.simulate(duration=duration)
+        user_action = UserAction.from_proof_step(proof_step)
+        log.info("Simulating proof_step with:")
+        print(user_action)
+        success, msg = await self.simulate_user_action(user_action, duration,
+                                                       execute_action=False)
+        log.debug("  -->" + str(success) + msg)
+        # self.simulate_selection(proof_step.selection)
+        # # Check button or statement
+        # if proof_step.button_name:
+        #     button = ActionButton.from_name.get(proof_step.button_name)
+        #     if button:
+        #         self.ecw.freeze(False)
+        #         await button.simulate(duration=duration)
+        #         self.ecw.freeze(self.freezed)
+        # elif proof_step.statement_name:
+        #     name = proof_step.statement_name
+        #     item = StatementsTreeWidgetItem.from_name.get(name)
+        #     if name:
+        #         await item.simulate(duration=duration)
 
     async def simulate_user_action(self,
                                    user_action: UserAction,
-                                   duration=0.4) -> (bool, str):
+                                   duration=0.4,
+                                   execute_action=True) -> (bool, str):
         """
         Simulate user_action as if buttons were actually pressed.
         Return True if the simulation was actually performed, and False with
         a detailed msg if not (useful for testing).
         This is called by Coordinator.process_automatic_actions.
+        If execute_action is True then the action is actually executed,
+        as if usr had press the button.
+        If not, the UI just shows buttons blinking ; this is used
+        when history_redo is executed, to keep all the following history.
         """
         log.debug("Simulating user action...")
         msg = ""
@@ -649,28 +669,31 @@ class ExerciseMainWindow(QMainWindow):
         self.simulate_selection(selection)
         self.user_input = user_action.user_input
 
-        button = user_action.button
-        statement = user_action.statement
+        button = user_action.button_name
+        statement_name = user_action.statement_name
         if button:
             msg += f"    -> click on button {button}"
             action_button = self.contextualised_button(button)
             if action_button:
                 self.ecw.freeze(False)
                 await action_button.simulate(duration=duration)
-                action_button.click()
+                if execute_action:  # Execute the action!
+                    action_button.click()
                 self.ecw.freeze(self.freezed)
                 return True, msg
             else:
                 return False, f"No button match {button}"
-        elif statement:
-            msg += f"    -> statement {statement} called"
-            statement_widget = self.ecw.statements_tree.from_name(statement)
+        elif statement_name:
+            msg += f"    -> statement {statement_name} called"
+            statement_widget = \
+                StatementsTreeWidgetItem.from_lean_name.get(statement_name)
             if statement_widget:
-                self.statement_triggered.emit(statement_widget)
+                if execute_action:  # Execute the action!
+                    self.statement_triggered.emit(statement_widget)
                 await statement_widget.simulate(duration=0.4)
                 return True, msg
             else:
-                return False, f"No statement match {statement}"
+                return False, f"No statement match {statement_name}"
 
         msg += "    ->(No button nor statement found)"
         return False, msg

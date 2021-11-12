@@ -115,6 +115,8 @@ class ActionButton(QPushButton):
     :attribute action_triggered (Signal(ActionButton)): A Signal with
         self as an argument, emitted when self is clicked on.
     """
+    from_name: dict = {}  # name -> ActionButton
+    # ! Must be updated to avoid pointing to deleted items !
 
     def __init__(self, action: Action):
         """
@@ -129,12 +131,13 @@ class ActionButton(QPushButton):
         super().__init__()
 
         self.action = action
-        # self.setText(action.symbol)
-        # self.setToolTip(action.caption)
         self.update()  # set symbol and tool tip
         self.clicked.connect(self._emit_action)
         # Modify arrow appearance when over a button
         self.setCursor(QCursor(Qt.PointingHandCursor))
+        # Update dictionary:
+        # self.from_name[action.symbol] = self
+        self.from_name[action.name] = self
 
     def update(self):
         """
@@ -175,12 +178,25 @@ class ActionButton(QPushButton):
 
     @property
     def symbol(self):
+        """
+        Actual text displayed on self (may be changed by usr).
+        """
         return self.action.symbol
+
+    @property
+    def name(self):
+        """
+        (Immutable) name of the corresponding action.
+        One of  ['and', 'or', 'not', 'implies', 'iff', 'forall', 'exists',
+                 'equal', 'map']
+        """
+        return self.action.name
 
     def has_symbol(self, symbol) -> bool:
         """
         Test if symbol is the symbol of (the action associated to) self.
         """
+        # TODO: obsolete (?)
         return self.action.symbol.startswith(symbol) \
             or self.action.symbol.startswith(symbol.replace('_', ' ')) \
             or _(self.action.symbol).startswith(_(symbol)) \
@@ -306,6 +322,8 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
     :attribute statement Statement: The instance of the class (or child
         of) Statement associated to self.
     """
+    from_lean_name : dict = {}  # Statement.lean_name --> item
+    # ! Must be updated to avoid pointing to deleted items !
 
     def __init__(self, statement: Statement):
         """
@@ -340,6 +358,8 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         elif isinstance(statement, Theorem):
             path = icons_dir / 't.png'
         self.setIcon(0, QIcon(str(path.resolve())))
+
+        self.from_lean_name[statement.lean_name] = self
 
         # Set tooltips: tooltips are set when item is put in the QTReeWidget
         # so that is_exercise property has a meaning
@@ -382,6 +402,10 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
             await sleep(2*duration)
             self.setBackground(0, QBrush())
             await sleep(duration)
+
+    @classmethod
+    def from_statement(cls, statement):
+        return cls.from_lean_name.get(statement.lean_name)
 
 
 class StatementsTreeWidgetNode(QTreeWidgetItem):
@@ -648,29 +672,33 @@ class StatementsTreeWidget(QTreeWidget):
             if traverse_node(item):
                 item.setExpanded(expand)
 
-    def from_name(self, lean_name: str) \
-            -> StatementsTreeWidgetItem:
+    @staticmethod
+    def item_from_lean_name(lean_name: str) -> StatementsTreeWidgetItem:
         """
         Return the StatementsTreeWidgetItem whose statement's pretty name is
         pretty_name.
         """
+        return StatementsTreeWidgetItem.from_name.get(lean_name)
 
-        items = []
+        # items = []
+        #
+        # def traverse_node(item: StatementsTreeWidgetItem):
+        #     if isinstance(item, StatementsTreeWidgetItem):
+        #         if item.statement.has_name(lean_name):
+        #             items.append(item)
+        #     for i in range(0, item.childCount()):
+        #         traverse_node(item.child(i))
+        #
+        # for i in range(self.topLevelItemCount()):
+        #     item = self.topLevelItem(i)
+        #     traverse_node(item)
+        # if items:
+        #     return items[0]
+        # else:
+        #     return None
 
-        def traverse_node(item: StatementsTreeWidgetItem):
-            if isinstance(item, StatementsTreeWidgetItem):
-                if item.statement.has_name(lean_name):
-                    items.append(item)
-            for i in range(0, item.childCount()):
-                traverse_node(item.child(i))
-
-        for i in range(self.topLevelItemCount()):
-            item = self.topLevelItem(i)
-            traverse_node(item)
-        if items:
-            return items[0]
-        else:
-            return None
+    def item_from_statement(self, statement):
+        return self.item_from_lean_name(statement.lean_name)
 
     @Slot()
     def update_tooltips(self):

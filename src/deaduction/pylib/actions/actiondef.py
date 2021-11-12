@@ -53,7 +53,7 @@ class Action:
         """
         "Symbol" of the action, to be put on the button
         (e.g. action_forall --> ∀)
-        This is the basic symbol, the actual symbol may be changed by user
+        This is the actual symbol that may be changed by user
         (cf config.toml).
         """
         return button_symbol(self.name)

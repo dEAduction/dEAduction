@@ -56,7 +56,9 @@ from deaduction.dui.utils               import   replace_widget_layout
 from deaduction.dui.elements            import ( ActionButton,
                                                  ActionButtonsWidget,
                                                  StatementsTreeWidget,
+                                                 StatementsTreeWidgetItem,
                                                  MathObjectWidget,
+                                                 MathObjectWidgetItem,
                                                  TargetWidget)
 from deaduction.dui.primitives          import DeaductionFonts
 
@@ -152,26 +154,20 @@ class ExerciseCentralWidget(QWidget):
         context_title = _('Context (objects and properties)')
         self.__actions_gb = QGroupBox(action_title)
         self.__context_gb = QGroupBox(context_title)
-        # ──────────────── Init Actions area ─────────────── #
 
+        # ──────────────── Init Actions area ─────────────── #
+        ActionButton.from_symbol = dict()
         self.logic_btns = ActionButtonsWidget(exercise.available_logic)
         self.proof_btns = ActionButtonsWidget(exercise.available_proof)
         self.magic_btns = ActionButtonsWidget(exercise.available_magic)
-
-        # Search for ActionButton corresponding to action_apply
-        # (which will be called by double-click):
-        # apply_buttons = [button for button in self.proof_btns.buttons
-        #                  if button.action.run == action_apply]
-        # if apply_buttons:
-        #     self.action_apply_button = apply_buttons[0]
-        # else:
-        #     self.action_apply_button = None
 
         statements           = exercise.available_statements
         outline              = exercise.course.outline
         self.statements_tree = StatementsTreeWidget(statements, outline)
 
         # ─────── Init goal (Context area and target) ────── #
+        MathObjectWidgetItem.from_math_object = dict()
+        StatementsTreeWidgetItem.from_name = dict()
         self.current_goal = None
         self.objects_wgt  = MathObjectWidget()
         self.props_wgt    = MathObjectWidget()
@@ -365,17 +361,18 @@ class ExerciseCentralWidget(QWidget):
         :param symbol: Symbol of som ActionButton, which is displayed on the
         button.
         """
-        # Allow name instead of symbol
-        if button_symbol(symbol):
-            symbol = button_symbol(symbol)
-        # ['∧', '∨', '¬', '⇒', '⇔', '∀', '∃', '=', 'Méthodes de preuve…',
-        # 'Nouvel Objet…', 'Appliquer', 'Calculer', 'But !']
-        buttons = [button for button in self.actions_buttons if
-                   button.has_symbol(symbol)]
-        if buttons:
-            return buttons[0]
-        else:
-            return None
+        # # Allow name instead of symbol
+        # if button_symbol(symbol):
+        #     symbol = button_symbol(symbol)
+        # # ['∧', '∨', '¬', '⇒', '⇔', '∀', '∃', '=', 'Méthodes de preuve…',
+        # # 'Nouvel Objet…', 'Appliquer', 'Calculer', 'But !']
+        # buttons = [button for button in self.actions_buttons if
+        #            button.has_symbol(symbol)]
+        # if buttons:
+        #     return buttons[0]
+        # else:
+        #     return None
+        return ActionButton.from_symbol.get(symbol)
 
     def freeze(self, yes=True):
         """

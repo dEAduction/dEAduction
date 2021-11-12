@@ -65,9 +65,9 @@ class ProofTreeWidgetItem(QTreeWidgetItem):
         else:
             self.setText(0, proof_item.txt)
             if proof_item.is_action_button():
-                self.setText(1, _(proof_item.button.symbol))
+                self.setText(1, _(proof_item.button_name))
             elif proof_item.is_statement():
-                name = proof_item.statement_item.statement.pretty_name
+                name = proof_item.statement.pretty_name
                 self.setText(1, name)
             selection_names = [item.display_name for item in
                                proof_item.selection]

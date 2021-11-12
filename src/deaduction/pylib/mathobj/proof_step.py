@@ -198,8 +198,8 @@ class ProofStep:
     # ──────────────── Input ─────────────── #
     selection      = None  # [MathObject]
     user_input     = None  # [str]
-    button         = None  # ActionButton or str, e.g. "history_undo".
-    statement_item = None  # StatementsTreeWidgetItem
+    button_name    = None  # str, e.g. "∃" or "history_undo".
+    statement      = None  # Statement
     lean_code      = None  # CodeForLean
     is_automatic   = False
 
@@ -329,6 +329,11 @@ class ProofStep:
     ##############
     # Properties #
     @property
+    def statement_lean_name(self):
+        if self.statement:
+            return self.statement.lean_name
+
+    @property
     def success_msg(self):
         if self._success_msg:
             return self._success_msg
@@ -380,16 +385,16 @@ class ProofStep:
         return self.delta_goals_count and self.delta_goals_count > 0
 
     def is_undo(self):
-        return self.button == 'history_undo'
+        return self.button_name == 'history_undo'
 
     def is_redo(self):
-        return self.button == 'history_redo'
+        return self.button_name == 'history_redo'
 
     def is_rewind(self):
-        return self.button == 'history_rewind'
+        return self.button_name == 'history_rewind'
 
     def is_goto(self):
-        return self.button == 'history_goto'
+        return self.button_name == 'history_goto'
 
     def is_history_move(self):
         return self.is_undo() or self.is_redo() \
@@ -398,23 +403,16 @@ class ProofStep:
     def is_error(self):
         return bool(self.error_type)
 
-    # def is_cqfd(self):
-    #     return hasattr(self.button, 'symbol') and \
-    #            self.button.symbol == _('Goal!')
-        # NB: this should be action_assumption.symbol,
-        # but unable to import this here
-
     def is_sorry(self):
         # Fixme: does not work
-        return hasattr(self.button, 'symbol') \
-            and self.button.symbol == _("Proof methods...") \
-            and self.selection == 3
+        return self.button_name == _("Proof methods...") \
+            and self.user_input == 3
 
     def is_action_button(self):
-        return hasattr(self.button, 'symbol')
+        return self.button_name is not None
 
     def is_statement(self):
-        return self.statement_item is not None
+        return self.statement is not None
 
     def compare(self, auto_test) -> (str, bool):
         """
@@ -469,11 +467,11 @@ class ProofStep:
         statement = ""
         history_move = ""
         if self.is_history_move():
-            history_move = self.button.replace("_", " ")
-        elif self.button and hasattr(self.button, 'symbol'):
-            button = self.button.symbol
-        elif self.statement_item:
-            statement = self.statement_item.statement.pretty_name
+            history_move = self.button_name.replace("_", " ")
+        elif self.button_name:
+            button = self.button_name  # FIXME: should be symbol?
+        elif self.statement:
+            statement = self.statement.pretty_name
 
         if self.is_error():
             error_msg = _("ERROR:") + " " + self.error_msg

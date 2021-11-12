@@ -474,24 +474,24 @@ class Coordinator(QObject):
                 ########################
                 if emission.is_from(self.toolbar.redo_action.triggered)\
                         and not self.lean_file.history_at_end:
-                    self.proof_step.button = 'history_redo'
+                    self.proof_step.button_name = 'history_redo'
                     proof_step = self.lean_file.next_proof_step
                     if proof_step:
                         await self.emw.simulate(proof_step)
                     add_task(self.servint.history_redo)
 
                 elif emission.is_from(self.toolbar.undo_action.triggered):
-                    self.proof_step.button = 'history_undo'
+                    self.proof_step.button_name = 'history_undo'
                     add_task(self.servint.history_undo)
 
                 elif emission.is_from(self.toolbar.rewind.triggered):
-                    self.proof_step.button = 'history_rewind'
+                    self.proof_step.button_name = 'history_rewind'
                     add_task(self.servint.history_rewind)
 
                 elif emission.is_from(self.proof_outline_window.history_goto):
                     history_nb = emission.args[0]
                     if history_nb != self.history_nb:
-                        self.proof_step.button = 'history_goto'
+                        self.proof_step.button_name = 'history_goto'
                         add_task(self.servint.history_goto, history_nb)
                     else:
                         self.unfreeze()
@@ -504,7 +504,7 @@ class Coordinator(QObject):
 
                 elif emission.is_from(self.action_triggered):
                     button = emission.args[0]  # ActionButton triggered by user
-                    self.proof_step.button = button
+                    self.proof_step.button_name = button.name
                     # # FIXME: no more double click
                     # if button == self.ecw.action_apply_button \
                     #         and self.double_clicked_item:
@@ -519,8 +519,9 @@ class Coordinator(QObject):
                 elif emission.is_from(self.statement_triggered):
                     # emission.args[0] is StatementTreeWidgetItem
                     if hasattr(emission.args[0], 'statement'):
-                        self.proof_step.statement_item = emission.args[0]
-                    self.__server_call_statement(emission.args[0])
+                        item = emission.args[0]
+                        self.proof_step.statement = item.statement
+                    self.__server_call_statement(item)
 
                 elif emission.is_from(self.apply_math_object_triggered):
                     # Fixme: causes freeze - no more double click
@@ -683,8 +684,12 @@ class Coordinator(QObject):
     @staticmethod
     def automatic_actions(goal: Goal) -> UserAction:
         """
-        Return a UserAction if automatic_intro is on and there is a
-        pertinent automatic action to perform.
+        Return a UserAction if some automatic_intro is on and there is a
+        pertinent automatic action to perform. Automatic actions include
+        - introduction of variables and hypotheses when target is a
+        universal statement or an implication,
+        - introduction of variable when some context property if an
+        existential statement.
         """
         target = goal.target
 
@@ -692,11 +697,18 @@ class Coordinator(QObject):
         # Check automatic intro of variables and hypotheses
         auto_for_all = cvars.get("functionality.automatic_intro_of" +
                                  "_variables_and_hypotheses")
+        auto_exists = cvars.get("functionality.automatic_intro_of_exists")
         if auto_for_all:
             if target.is_for_all():
                 user_action = UserAction.simple_action("forall")
             elif target.is_implication():
                 user_action = UserAction.simple_action("implies")
+        elif auto_exists:
+            for prop in goal.context_props:
+                if prop.is_exists():
+                    user_action = UserAction(selection=[prop],
+                                             button="exists")
+                    break
 
         return user_action
 
@@ -709,8 +721,6 @@ class Coordinator(QObject):
         user_action = Coordinator.automatic_actions(goal)
         if user_action:
             self.emw.automatic_action = True
-            # action = user_action.button if user_action.button else \
-            #     user_action.statement
             # log.debug(f"Automatic action: {action}")
             self.proof_step.is_automatic = True
             # Async call to emw.simulate_user_action:
@@ -749,7 +759,7 @@ class Coordinator(QObject):
 
     def process_failed_request_error(self, errors):
         lean_code = self.proof_step.lean_code
-        if lean_code.error_msg:
+        if lean_code and lean_code.error_msg:
             self.proof_step.error_msg = lean_code.error_msg
         else:
             self.proof_step.error_msg = _('Error')

@@ -121,23 +121,16 @@ class _TagIcon(QIcon):
         """
 
         icons_base_dir = cvars.get('icons.path')
-        icons_type = cvars.get('icons.context')  # e.g. 'blue'
-        icons_dir = path_helper(icons_base_dir) / icons_type
+        # icons_type = cvars.get('icons.context')  # e.g. 'blue'
+        # icons_dir = path_helper(icons_base_dir) / icons_type
 
+        icon_str = ''
         if tag not in ['=', '+', '≠']:
-            # TODO: catch the exception below?
             raise ValueError('tag must be one of "=", "+", "≠". tag: {tag}.')
-        elif tag == '=':
-            super().__init__('')  # No icon, empty icon trick
-            return None
-        elif tag == '+':
-            icon_path = icons_dir / 'tag_plus.png'
-        elif tag == '≠':
-            icon_path = icons_dir / 'tag_different.png'
-
-        # TODO: this overwrites previous code
-        icon_path = path_helper(icons_base_dir) / 'checked.png'
-        super().__init__(str(icon_path.resolve()))
+        elif tag in ('+', '≠'):
+            icon_path = path_helper(icons_base_dir) / 'checked.png'
+            icon_str = str(icon_path.resolve())
+        super().__init__(icon_str)
 
 
 # Classes for the two main widgets in 'Context' area of the exercise
@@ -189,19 +182,6 @@ class MathObjectWidgetItem(QStandardItem):
         self.setText(caption)
         self.setIcon(_TagIcon(self.tag))
 
-        # self.setSelectable(False)
-
-        # set tool_tips (merge several tool_tips if needed)
-        # tool_tips = explain_how_to_apply(context_math_object)
-        # if len(tool_tips) == 1:
-        #     tool_tip = _("Double click to") + " " + tool_tips[0]
-        #     self.setToolTip(tool_tip)
-        # elif len(tool_tips) > 1:
-        #     text = _("Double click to:")
-        #     for tool_tip in tool_tips:
-        #         text += "\n" + "• " + tool_tip
-        #     self.setToolTip(text)
-
     @property
     def math_object(self):
         return self.context_math_object
@@ -231,12 +211,7 @@ class MathObjectWidgetItem(QStandardItem):
         """
         Change self's background to green if yes or to normal color
         (e.g. white in light mode) if not yes.
-
-        :param yes: See paragraph above.
         """
-
-        # TODO: change color for double-click
-
         self.setBackground(QBrush(QColor('limegreen')) if yes else QBrush())
 
     # def has_math_object(self, math_object: MathObject) -> bool:
@@ -344,7 +319,7 @@ class MathObjectWidget(QListView):
         """
         Return MathObjectWidgetItem whose math_object is math_object.
         """
-
+        # Fixme: obsolete
         items = [item for item in self.items
                  if item.math_object == math_object]
         if items:

@@ -122,29 +122,42 @@ class UserAction:
     """
     A class for storing usr actions for one step.
     """
-    selection = None  # Union[QListWidgetItem, str]
-    button = None  # Union[QPushButton, str]
-    statement = None  # Union[StatementsTreeWidgetItem, str]
+    selection = None  # [ContextMathObject]
+    button_name = None  # str
+    statement_name = None  # str
     user_input = None  # Union[int, str]
 
     def __init__(self,
                  selection=None,
-                 button=None,
-                 statement=None,
+                 button_name=None,
+                 statement_name=None,
                  user_input=None):
         if selection is None:
             selection = []
         if user_input is None:
             user_input = []
         self.selection  = selection
-        self.button     = button
-        self.statement  = statement
+        self.button_name     = button_name
+        self.statement_name  = statement_name
         self.user_input = user_input
 
     @classmethod
     def simple_action(cls, symbol):
-        user_action = cls(button=symbol)
+        user_action = cls(button_name=symbol)
         return user_action
+
+    @classmethod
+    def from_proof_step(cls, proof_step: ProofStep):
+        return cls(selection=proof_step.selection,
+                   button_name=proof_step.button_name,
+                   statement_name=proof_step.statement_lean_name,
+                   user_input=proof_step.user_input)
+
+    def __repr__(self) -> str:
+        msg = f"UserAction with {len(self.selection)} selected objects, " \
+              f"button name = {self.button_name}, statement name = " \
+              f"{self.statement_name}, user input = {self.user_input}"
+        return msg
 
 
 class AutoStep(UserAction):
@@ -180,7 +193,7 @@ class AutoStep(UserAction):
     """
     # Inputs:
     # selection:  [str]
-    # button:     str
+    # button_name:     str
     # statement:  str
     # user_input: [str]
 
@@ -198,12 +211,13 @@ class AutoStep(UserAction):
                  4: 'UnicodeDecodeError',
                  5: 'No proof state'}
 
-    def __init__(self, selection, button, statement, user_input,
+    def __init__(self, selection, button_name, statement, user_input,
                  raw_string, error_type, error_mg, success_msg):
 
-        UserAction.__init__(self, selection, button, statement, user_input)
+        UserAction.__init__(self, selection, button_name,
+                            statement, user_input)
         # self.selection = selection
-        # self.button = button
+        # self.button_name = button_name
         # self.statement = statement
         # self.user_input = user_input
         self.raw_string = raw_string
@@ -309,16 +323,11 @@ class AutoStep(UserAction):
 
         # Button: '∧', '∨', '¬', '⇒', '⇔', '∀', '∃', 'compute', 'CQFD',
         #         'proof_methods', 'new_objects', 'apply'
-        button = ''
-        if proof_step.button:
-            button = proof_step.button.symbol \
-                if hasattr(proof_step.button, 'symbol') \
-                else proof_step.button.replace(' ', '_')
+        button = proof_step.button_name if proof_step.button_name else ''
 
         # Statement: short Lean name
-        statement = ''
-        if proof_step.statement_item:  # This is a TreeWidgetItem
-            statement = proof_step.statement_item.statement.lean_short_name
+        statement = proof_step.statement.lean_short_name \
+            if proof_step.statement else ''
 
         if not (button or statement):
             return None

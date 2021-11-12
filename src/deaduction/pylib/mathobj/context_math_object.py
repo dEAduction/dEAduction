@@ -62,7 +62,6 @@ class ContextMathObject(MathObject):
         self.is_modified = False
         self.has_been_applied_in_proof = False  # TODO: implement
         self.is_hidden = False
-
         # log.debug(f"Creating ContextMathPObject {self.to_display()},")
                   # f"dummy vars = "
                   # f"{[var.to_display() for var in self.bound_vars]}")
@@ -85,6 +84,10 @@ class ContextMathObject(MathObject):
         # if self.has_been_applied_in_the_proof:
         #     display = ['@applied_property', display]
         return display
+
+    @property
+    def identifier(self):
+        return self.info.get("id")
 
     # @property
     # def expanded_version(self):
