@@ -407,12 +407,11 @@ class Goal:
 
     def extract_vars_names(self) -> List[str]:
         """
-        provides the list of names of all variables in the context,
-        (but NOT bound variables, nor names of hypotheses)
-        :return: list of MathObject (variables names)
+        Provides the list of names of all variables in the context,
+        including names of hypotheses (but NOT bound variables).
         """
         names = [math_object.info['name'] for math_object in
-                 self.context_objects]
+                 self.context]
         return names
 
     ###################

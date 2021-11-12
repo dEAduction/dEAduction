@@ -615,11 +615,11 @@ class ExerciseMainWindow(QMainWindow):
         """
 
         user_action = UserAction.from_proof_step(proof_step)
-        log.info("Simulating proof_step with:")
-        print(user_action)
+        # log.info("Simulating proof_step with:")
+        # print(user_action)
         success, msg = await self.simulate_user_action(user_action, duration,
                                                        execute_action=False)
-        log.debug("  -->" + str(success) + msg)
+        # log.debug("  -->" + str(success) + msg)
         # self.simulate_selection(proof_step.selection)
         # # Check button or statement
         # if proof_step.button_name:
