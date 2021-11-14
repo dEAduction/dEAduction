@@ -49,7 +49,7 @@ allow_proof_by_sorry = true
 expanded_apply_button = false
 allow_implicit_use_of_definitions = false
 automatic_intro_of_variables_and_hypotheses = false
-automatic_intro_of_exists = false
+automatic_intro_of_exists = true
 save_solved_exercises_for_autotest = false
 
 

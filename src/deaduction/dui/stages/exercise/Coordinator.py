@@ -703,11 +703,13 @@ class Coordinator(QObject):
                 user_action = UserAction.simple_action("forall")
             elif target.is_implication():
                 user_action = UserAction.simple_action("implies")
-        elif auto_exists:
+            return user_action
+
+        if auto_exists:
             for prop in goal.context_props:
                 if prop.is_exists():
                     user_action = UserAction(selection=[prop],
-                                             button="exists")
+                                             button_name="exists")
                     break
 
         return user_action
