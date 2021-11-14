@@ -13,9 +13,11 @@ Authors: Frédéric Le Roux
 -/
 
 import data.set
+import data.real.basic
 import tactic
 import parser_analysis_definitions
 
+import user_notations
 
 namespace tactic.interactive
 open lean.parser tactic interactive
@@ -98,6 +100,9 @@ match e with
 | `({%%x, %%x', %%x''}) := return ("SET_EXTENSION3", [x, x', x''])
 | `({%%x, %%x'}) := return ("SET_EXTENSION2", [x, x'])
 | `({%%x}) := return ("SET_EXTENSION1", [x])
+-- | `(triplet %%x %%x' %%x'') := return ("SET_EXTENSION3", [x, x', x''])
+| `(paire %%x %%x') := return ("SET_EXTENSION2", [x, x'])
+| `(sing %%x) := return ("SET_EXTENSION1", [x])
 | `(_root_.set %%X) := return ("SET", [X])
 | `(set.prod %%A %%B) := return ("SET_PRODUCT", [A, B])
 | `(prod.mk %%x %%y) := return ("COUPLE", [x, y])
@@ -165,6 +170,8 @@ match e with
 | `(has_mul.mul %%a %%b) := return ("MULT", [a, b]) -- TODO: distinguish types/numbers
 | `(%%a × %%b) := return ("PRODUCT", [a, b]) -- TODO: distinguish types/numbers
 | `(%%a / %%b) := return ("DIV", [a, b])
+| `(%%a ^ %%b) := return ("POWER", [a, b])
+| `(real.sqrt %%a) := return ("SQRT", [a])
 ------------------------------ Leaves with data ---------------------------
 | (app function argument)   :=
     if is_numeral e
