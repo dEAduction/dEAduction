@@ -32,6 +32,8 @@ AvailableMagic
     assumption
 AvailableExercises
   UNTIL_NOW -image_directe_et_inclusion_II -image_reciproque_et_inclusion_II -image_directe_et_intersection_II
+AvailableDefinitions
+  UNTIL_NOW -singleton -paire
 -/
 
 local attribute [instance] classical.prop_decidable
@@ -112,6 +114,57 @@ lemma theorem.ensemble_non_vide
 begin
     todo
 end
+
+
+-- set_option toto
+lemma definition.singleton
+(x x_0: X) :
+(x ∈  (sing x_0) ) ↔ x=x_0
+:=
+begin
+    refl,
+end
+
+-- lemma definition.singleton
+-- (x x_0: X) :
+-- (x ∈ (@has_singleton.singleton X (set X) _ x_0) ) ↔ x=x_0
+-- :=
+-- begin
+--     refl,
+-- end
+
+-- example
+-- (x x_0: X) :
+-- (x ∈ (@has_singleton.singleton _ (set _) _ x_0 ) ↔ x=x_0
+-- :=
+-- begin
+--     refl,
+-- end
+
+-- example
+-- (x x_0: X) :
+-- (x ∈ ({x_0} : set X) ) ↔ x=x_0
+-- :=
+-- begin
+--     refl,
+-- end
+
+
+lemma definition.paire
+(x x_0 x_1: X) :
+(x ∈ (paire x_0 x_1) ) ↔ (x=x_0 ∨ x=x_1)
+:=
+begin
+    refl,
+end
+
+-- lemma definition.triplet
+-- (x x_0 x_1 x_2: X) :
+-- (x ∈ (triplet x_0 x_1 x_2) ) ↔  (x=x_0 ∨ x=x_1 ∨ x=x_2)
+-- :=
+-- begin
+--     refl,
+-- end
 
 end generalites
 
@@ -196,6 +249,24 @@ lemma theorem.image_directe :
 begin
     todo
 end
+
+lemma theorem.image_singleton :
+∀ f: X→Y, ∀{x_0: X},
+ f '' (sing x_0) = sing (f(x_0))
+:=
+begin
+    todo
+end
+
+lemma theorem.image_paire :
+∀ f: X→Y, ∀{x_0 x_1: X},
+ f '' (paire x_0 x_1) = paire (f x_0) (f x_1)
+:=
+begin
+    todo
+end
+
+
 
 lemma definition.image_reciproque (x:X) :
 x ∈ f  ⁻¹' B ↔ f(x) ∈ B
@@ -288,6 +359,34 @@ begin
   todo
 end
 
+namespace caracterisation
+/- dEAduction
+PrettyName
+  Caractérisation
+-/ 
+
+lemma exercise.image_directe_et_inclusion_IV :
+(injective f) ↔  (∀ A B: set X,  f '' (A) ⊆ f '' (B) → A ⊆ B)
+:=
+/- dEAduction
+PrettyName
+  Image directe et inclusion (iv)
+AvailableDefinitions
+  UNTIL_NOW
+-/
+begin
+    -- split, rotate, unfold injective, contrapose!, intro H,
+    -- rcases H with ⟨x, x', ⟨ Hf, H⟩⟩,
+    -- -- use (sing x), use (sing x'),
+    -- set A := (sing x) with HA,
+    -- set A' := (sing x') with HA',
+    -- use A, use A',
+    -- rw HA, rw HA',
+    -- split,
+  todo
+end
+
+end caracterisation
 end image_directe_inclusion
 
 
@@ -333,6 +432,26 @@ begin
   todo
 end
 
+namespace caracterisation
+/- dEAduction
+PrettyName
+  Caractérisation
+-/ 
+
+lemma exercise.image_reciproque_et_inclusion_IV :
+(surjective f) ↔ (∀ A' B': set Y,  f ⁻¹' (A') ⊆ f ⁻¹' (B') → A' ⊆ B')
+:=
+/- dEAduction
+PrettyName
+  Image réciproque et inclusion (iv)
+AvailableDefinitions
+  UNTIL_NOW
+-/
+begin
+  todo
+end
+
+end caracterisation
 end image_reciproque_inclusion
 
 
@@ -400,6 +519,37 @@ begin
   todo
 end
 
+namespace caracterisation
+/- dEAduction
+PrettyName
+  Caractérisation
+-/ 
+lemma exercise.image_de_image_reciproque_ter :
+(surjective f) ↔ (∀ A' : set Y, A' ⊆ f '' (f ⁻¹' (A')))
+:=
+/- dEAduction
+PrettyName
+  Image de l'image réciproque : inclusion réciproque
+AvailableDefinitions
+  UNTIL_NOW
+-/
+begin
+  todo
+end
+
+lemma exercise.image_reciproque_de_image_ter :
+(injective f) ↔ (∀ A : set X, f ⁻¹' (f '' (A)) ⊆ A)
+:=
+/- dEAduction
+PrettyName
+  Image réciproque de l'image : inclusion réciproque
+-/
+begin
+  todo
+end
+
+end caracterisation
+
 end inclusions_reciproques
 end image_et_image_reciproque
 
@@ -433,9 +583,8 @@ begin
   todo
 end
 
-lemma exercise.image_directe_et_intersection_III
-(H : injective f) :
-∀ A B: set X,  f '' (A) ∩ f '' (B) ⊆ f '' (A ∩ B)
+lemma exercise.image_directe_et_intersection_III :
+injective f → (∀ A B: set X,  f '' (A) ∩ f '' (B) ⊆ f '' (A ∩ B))
 :=
 /- dEAduction
 PrettyName
@@ -445,6 +594,26 @@ begin
   todo
 end
 
+namespace caracterisation
+/- dEAduction
+PrettyName
+  Caractérisation
+-/ 
+
+lemma exercise.image_directe_et_intersection_IV :
+injective f ↔ (∀ A B: set X,  f '' (A) ∩ f '' (B) ⊆ f '' (A ∩ B))
+:=
+/- dEAduction
+PrettyName
+  Image directe et intersection (iv)
+AvailableDefinitions
+  UNTIL_NOW
+-/
+begin
+  todo
+end
+
+end caracterisation
 end image_intersection
 
 
