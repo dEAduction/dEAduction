@@ -1,9 +1,13 @@
 --import data.set
 import tactic
 
--- dEAduction imports
-import utils
-import structures2
+-- dEAduction tactics
+import structures2      -- hypo_analysis, targets_analysis
+import utils            -- no_meta_vars
+import user_notations   -- notations that can be used in deaduction UI for a new object
+
+-- dEAduction definitions
+import set_definitions
 
 -- General principles :
 -- Type should be defined as parameters, in order to be implicit everywhere
@@ -178,14 +182,14 @@ begin
     refl,
 end
 
-lemma definition.singleton : ∀ {X : Type} {x y : X}, x ∈ ({y} : set X) ↔ x = y
+lemma definition.singleton {X : Type} {x y : X} : x ∈ ({y} : set X) ↔ x = y
 :=
 /- dEAduction
 PrettyName
     Singleton
 -/
 begin
-    intros X x y, exact mem_singleton_iff,
+    exact mem_singleton_iff,
 end
 
 lemma definition.double_inclusion (A A' : set X) :
@@ -771,7 +775,7 @@ begin
 end
 
 --𝒫(E ∪ {x}) = 𝒫(E) ∪ {A' | ∃A ∈ 𝒫(E), A' = A ∪ {x}} :=
-lemma exercise.question7_parties (F : Type) (E : set F) (x : F) (h : x ∉ E) :
+lemma exercise.question7 (F : Type) (E : set F) (x : F) (h : x ∉ E) :
 𝒫(E ∪ {x}) = 𝒫(E) ∪ {A' | ∃A ⊆ E, A' = A ∪ {x}} :=
 /- dEAduction
 PrettyName
@@ -903,11 +907,8 @@ begin
     todo,
 end
 
-lemma exercise.question8_3
-(A : Type) (R : set (A × A)) (h1 : relation_equivalence R) (a b : A) :
-classe_equivalence R h1 a ≠ classe_equivalence R h1 b →
-classe_equivalence R h1 a ∩ classe_equivalence R h1 b = ∅
-:=
+lemma exercise.question3 (A : Type) (R : set (A × A)) (h1 : relation_equivalence R) (a b : A) :
+classe_equivalence R h1 a ≠ classe_equivalence R h1 b → classe_equivalence R h1 a ∩ classe_equivalence R h1 b = ∅ :=
 /- dEAduction
 PrettyName
     Question 3
@@ -952,7 +953,7 @@ PrettyName
     Exercice 22
 -/
 
-lemma exercise.question1 (X Y : Type) (f : X → Y) (R : set (X × X)) (H1 : ∀x x', (x, x') ∈ R ↔ f x = f x') :
+lemma exercise.question22_1 (X Y : Type) (f : X → Y) (R : set (X × X)) (H1 : ∀x x', (x, x') ∈ R ↔ f x = f x') :
 relation_equivalence R :=
 /- dEAduction
 PrettyName

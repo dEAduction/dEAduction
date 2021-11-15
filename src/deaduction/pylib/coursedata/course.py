@@ -264,8 +264,9 @@ class Course:
                 if event_name == "exercise":
                     # Add values from course_metadata only if NOT already in
                     # exercise metadata,
-                    # so that global option like OpenQuestion may be modified
-                    # locally in the exercise's metadata
+                    # so that global option like OpenQuestion or
+                    # AvailableDefinitions
+                    # may be modified locally in the exercise's metadata
                     for field_name in course_metadata:
                         metadata.setdefault(field_name,
                                             course_metadata[field_name])

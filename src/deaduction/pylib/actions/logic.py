@@ -48,6 +48,8 @@ This file is part of dEAduction.
 import logging
 from typing import Union
 
+from deaduction.pylib.math_display.display_data import new_objects
+
 from deaduction.pylib.actions     import (action,
                                           InputType,
                                           MissingParametersError,
@@ -958,10 +960,10 @@ def construct_exists(proof_step, user_input: [str]) -> CodeForLean:
     """
 
     if not user_input:
+        output = _("Enter element you want to use:") + "\n \n \n" + new_objects
         raise MissingParametersError(InputType.Text,
                                      title=_("Exist"),
-                                     output=_(
-                                         "Enter element you want to use:"))
+                                     output=output)
     x = user_input[0]
     code = CodeForLean.from_string(f'use {x}, dsimp')
     code = code.or_else(f'use {x}')

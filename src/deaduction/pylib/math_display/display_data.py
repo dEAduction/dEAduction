@@ -62,7 +62,7 @@ global _
 latex_from_node = {
     "PROP_AND": (0, " " + _("and") + " ", 1),
     "PROP_OR": (0, " " + _("or") + " ", 1),
-    "PROP_FALSE": (r"\false", ),  # Macro to be defined
+    "PROP_FALSE": (r"\false", ),  # Macro to be defined by LateX
     "PROP_IFF": (0, r" \Leftrightarrow ", 1),
     # NB: negation has a special treatment in recursive_display!
     "PROP_NOT": (r"\not", 0),  # Macro to be defined.

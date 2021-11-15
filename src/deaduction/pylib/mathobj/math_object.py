@@ -1185,7 +1185,7 @@ class MathObject:
         if shape:
             # NEGATION:
             if negate:
-                shape = [" " + r'\not' + " ", shape]
+                shape = [" " + r'\not' + " ", r'\parentheses', shape]
             # log.debug(f"Shape from couples: {shape}")
         else:
             if self.node in latex_from_node:  # Generic case
@@ -1193,11 +1193,11 @@ class MathObject:
 
                 # NEGATION:
                 if negate:
-                    shape = [" " + r'\not' + " ", shape]
+                    shape = [" " + r'\not' + " ", r'\parentheses', shape]
             else:  # Node not found in dictionaries: try specific methods
                 shape = raw_latex_shape_from_specific_nodes(self, negate)
 
-        # log.debug(f"    --> Raw shape: {shape}")
+        log.debug(f"    --> Raw shape: {shape}")
         return shape
 
     def expanded_latex_shape(self, text_depth=0):

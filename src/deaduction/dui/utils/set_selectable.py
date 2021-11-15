@@ -38,7 +38,7 @@ def set_selectable(self, yes: bool = True):
 
     :param yes: See above.
     """
-
+    # FIXME: this does not work with Python3.10 ??
     if yes:
         new_flags = self.flags() & Qt.ItemIsSelectable
     else:

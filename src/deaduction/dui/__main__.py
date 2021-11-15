@@ -85,7 +85,8 @@ if os.getenv("DEADUCTION_DEV_MODE", False):
                    'deaduction.dui',
                    'deaduction.pylib',
                    'logic',
-                   'magic']
+                   'magic',
+                   'coursedata']
 
 
 logger.configure(domains=log_domains,

@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2021-11-11 12:49+0100\n"
-"PO-Revision-Date: 2021-11-11 12:49+0100\n"
+"POT-Creation-Date: 2021-11-15 12:45+0100\n"
+"PO-Revision-Date: 2021-11-15 12:46+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -19,21 +19,21 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: dui/elements/actions_widgets_classes.py:157
+#: dui/elements/actions_widgets_classes.py:160
 msgid "Button"
 msgstr "Bouton"
 
-#: dui/elements/actions_widgets_classes.py:157
+#: dui/elements/actions_widgets_classes.py:160
 #: dui/elements/config_window.py:301
 msgid ":"
 msgstr " :"
 
-#: dui/elements/actions_widgets_classes.py:604
-#: dui/elements/actions_widgets_classes.py:609
+#: dui/elements/actions_widgets_classes.py:628
+#: dui/elements/actions_widgets_classes.py:633
 msgid "Statements"
 msgstr "Enoncés"
 
-#: dui/elements/actions_widgets_classes.py:604
+#: dui/elements/actions_widgets_classes.py:628
 msgid "L∃∀N name"
 msgstr "Nom L∃∀N"
 
@@ -163,11 +163,11 @@ msgstr "Taille de la police pour les info-bulles"
 msgid "None"
 msgstr "Aucun(e)"
 
-#: dui/elements/context_widgets_classes.py:407
+#: dui/elements/context_widgets_classes.py:382
 msgid "Target"
 msgstr "But"
 
-#: dui/elements/context_widgets_classes.py:410
+#: dui/elements/context_widgets_classes.py:385
 msgid "To be proved"
 msgstr "A démontrer"
 
@@ -187,94 +187,94 @@ msgstr "Détails"
 msgid "Move to selected step"
 msgstr "Aller"
 
-#: dui/stages/exercise/Coordinator.py:658
+#: dui/stages/exercise/Coordinator.py:659
 msgid "Code from editor"
 msgstr "Code depuis l’éditeur"
 
-#: dui/stages/exercise/Coordinator.py:755 pylib/server/exceptions.py:39
+#: dui/stages/exercise/Coordinator.py:767 pylib/server/exceptions.py:39
 msgid "Error"
 msgstr "Erreur"
 
-#: dui/stages/exercise/Coordinator.py:771
+#: dui/stages/exercise/Coordinator.py:783
 msgid "I've got a headache, try again..."
 msgstr "Je n’y arrive pas, mais vous pouvez ré-essayer !"
 
-#: dui/stages/exercise/Coordinator.py:774
+#: dui/stages/exercise/Coordinator.py:786
 msgid "Unicode error, try again..."
 msgstr "Erreur de mémoire, ré-essayez !"
 
-#: dui/stages/exercise/Coordinator.py:777
+#: dui/stages/exercise/Coordinator.py:789
 msgid "Error, no proof state, try again..."
 msgstr "Erreur, je n’ai pas réussi à calculer l’état de preuve, ré-essayez !"
 
-#: dui/stages/exercise/Coordinator.py:805
+#: dui/stages/exercise/Coordinator.py:817
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/stages/exercise/Coordinator.py:806
+#: dui/stages/exercise/Coordinator.py:818
 msgid "The proof is complete!"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/Coordinator.py:810
+#: dui/stages/exercise/Coordinator.py:822
 msgid "Back to exercise"
 msgstr "Retour à l’exercice"
 
-#: dui/stages/exercise/Coordinator.py:812
-#: dui/stages/exercise/_exercise_main_window_widgets.py:637
-#: dui/stages/exercise/_exercise_main_window_widgets.py:644
+#: dui/stages/exercise/Coordinator.py:824
+#: dui/stages/exercise/_exercise_main_window_widgets.py:634
+#: dui/stages/exercise/_exercise_main_window_widgets.py:641
 msgid "Change exercise"
 msgstr "Changer d’exercice"
 
-#: dui/stages/exercise/Coordinator.py:818
+#: dui/stages/exercise/Coordinator.py:830
 msgid "Proof complete"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:151
+#: dui/stages/exercise/_exercise_main_window_widgets.py:153
 msgid "Actions (logical rules and statements)"
 msgstr "Actions (règles logiques et énoncés)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:152
-#: dui/stages/exercise/_exercise_main_window_widgets.py:222
-#: dui/stages/exercise/_exercise_main_window_widgets.py:336
+#: dui/stages/exercise/_exercise_main_window_widgets.py:154
+#: dui/stages/exercise/_exercise_main_window_widgets.py:218
+#: dui/stages/exercise/_exercise_main_window_widgets.py:332
 msgid "Context (objects and properties)"
 msgstr "Contexte (objets et propriétés)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:334
+#: dui/stages/exercise/_exercise_main_window_widgets.py:330
 msgid "Actions and statements (transform context and target)"
 msgstr "Actions et énoncés (transforment le contexte et le but)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:591
-#: dui/stages/exercise/_exercise_main_window_widgets.py:628
+#: dui/stages/exercise/_exercise_main_window_widgets.py:588
+#: dui/stages/exercise/_exercise_main_window_widgets.py:625
 msgid "Toolbar"
 msgstr "Barre d’outils"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:596
-#: dui/stages/exercise/_exercise_main_window_widgets.py:619
+#: dui/stages/exercise/_exercise_main_window_widgets.py:593
+#: dui/stages/exercise/_exercise_main_window_widgets.py:616
 msgid "Go back to beginning of proof"
 msgstr "Retour au début de la preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:599
-#: dui/stages/exercise/_exercise_main_window_widgets.py:620
+#: dui/stages/exercise/_exercise_main_window_widgets.py:596
+#: dui/stages/exercise/_exercise_main_window_widgets.py:617
 msgid "Undo action"
 msgstr "Annuler l’action"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:602
-#: dui/stages/exercise/_exercise_main_window_widgets.py:621
+#: dui/stages/exercise/_exercise_main_window_widgets.py:599
+#: dui/stages/exercise/_exercise_main_window_widgets.py:618
 msgid "Redo action"
 msgstr "Refaire l’action"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:606
-#: dui/stages/exercise/_exercise_main_window_widgets.py:623
+#: dui/stages/exercise/_exercise_main_window_widgets.py:603
+#: dui/stages/exercise/_exercise_main_window_widgets.py:620
 msgid "Toggle proof outline"
 msgstr "Fil de preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:610
-#: dui/stages/exercise/_exercise_main_window_widgets.py:622
+#: dui/stages/exercise/_exercise_main_window_widgets.py:607
+#: dui/stages/exercise/_exercise_main_window_widgets.py:619
 msgid "Toggle L∃∀N"
 msgstr "Console L∃∀N"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:633
-#: dui/stages/exercise/_exercise_main_window_widgets.py:645
+#: dui/stages/exercise/_exercise_main_window_widgets.py:630
+#: dui/stages/exercise/_exercise_main_window_widgets.py:642
 msgid "Settings"
 msgstr "Paramètres"
 
@@ -289,12 +289,12 @@ msgstr "Exercice"
 msgid "Exercise history"
 msgstr "Historique de l’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:701
-#: pylib/mathobj/proof_step.py:505
+#: dui/stages/exercise/exercise_main_window.py:724
+#: pylib/mathobj/proof_step.py:503
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:704
+#: dui/stages/exercise/exercise_main_window.py:727
 msgid "goals solved!"
 msgstr "buts atteints !"
 
@@ -983,7 +983,7 @@ msgid "Contradiction"
 msgstr "Contradiction"
 
 #: pylib/math_display/display_data.py:224
-#: pylib/math_display/display_math.py:992
+#: pylib/math_display/display_math.py:989
 msgid "proposition"
 msgstr "proposition"
 
@@ -993,7 +993,7 @@ msgstr "ensemble"
 
 #: pylib/math_display/display_data.py:226
 #: pylib/math_display/display_data.py:233
-#: pylib/math_display/display_math.py:996
+#: pylib/math_display/display_math.py:993
 msgid "not"
 msgstr "non"
 
@@ -1024,7 +1024,7 @@ msgstr "l’ensemble des parties de"
 #: pylib/math_display/display_data.py:250
 #: pylib/math_display/display_data.py:271
 #: pylib/math_display/display_data.py:371
-#: pylib/math_display/display_math.py:992
+#: pylib/math_display/display_math.py:989
 msgid "a proposition"
 msgstr "une proposition"
 
@@ -1083,8 +1083,8 @@ msgstr "est"
 msgid "is not"
 msgstr "n’est pas"
 
-#: pylib/math_display/display_data.py:270 pylib/proof_state/proof_state.py:713
-#: pylib/proof_state/proof_state.py:734
+#: pylib/math_display/display_data.py:270 pylib/proof_state/proof_state.py:712
+#: pylib/proof_state/proof_state.py:733
 msgid "Let {} be {}"
 msgstr "Soit {} {}"
 
@@ -1101,7 +1101,7 @@ msgid "sets"
 msgstr "ensembles"
 
 #: pylib/math_display/display_data.py:273
-#: pylib/math_display/display_math.py:991
+#: pylib/math_display/display_math.py:988
 msgid "a subset"
 msgstr "une partie"
 
@@ -1110,7 +1110,7 @@ msgid "subsets"
 msgstr "parties"
 
 #: pylib/math_display/display_data.py:274
-#: pylib/math_display/display_math.py:990
+#: pylib/math_display/display_math.py:987
 msgid "an element"
 msgstr "un élément"
 
@@ -1119,7 +1119,7 @@ msgid "elements"
 msgstr "éléments"
 
 #: pylib/math_display/display_data.py:275
-#: pylib/math_display/display_math.py:989
+#: pylib/math_display/display_math.py:986
 msgid "a function"
 msgstr "une fonction"
 
@@ -1322,13 +1322,6 @@ msgid "Examples of syntax:"
 msgstr "Exemples de syntaxe :"
 
 #: pylib/math_display/display_data.py:632
-#, fuzzy
-#| msgid ""
-#| "\n"
-#| "    x ∈ A ∩ B          --> x belongs (A cap B)\n"
-#| "    A ⊂ B               --> A subset B\n"
-#| "    A = ∅               --> A = emptyset\n"
-#| "    ∀x ∈ A ∩ A', x ∈ A   --> forall x dans (A inter A'), x dans A "
 msgid ""
 "\n"
 "    x ∈ A ∩ B          --> x belongs (A cap B)\n"
@@ -1371,31 +1364,31 @@ msgstr ""
 "    f∘g (x)         —> (composition f g)(x)\n"
 "    Et aussi f(x) ; x+1/2 ; 2*n, …\n"
 
-#: pylib/math_display/display_math.py:901
+#: pylib/math_display/display_math.py:898
 msgid "unknown object"
 msgstr "objet inconnu"
 
-#: pylib/math_display/display_math.py:903
+#: pylib/math_display/display_math.py:900
 msgid "All goals reached!"
 msgstr "Tous les buts ont été atteints !"
 
-#: pylib/math_display/display_math.py:989
+#: pylib/math_display/display_math.py:986
 msgid "function"
 msgstr "fonction"
 
-#: pylib/math_display/display_math.py:990
+#: pylib/math_display/display_math.py:987
 msgid "element"
 msgstr "élément"
 
-#: pylib/math_display/display_math.py:991
+#: pylib/math_display/display_math.py:988
 msgid "subset"
 msgstr "partie"
 
-#: pylib/math_display/display_math.py:993
+#: pylib/math_display/display_math.py:990
 msgid "a family"
 msgstr "une famille"
 
-#: pylib/math_display/display_math.py:993
+#: pylib/math_display/display_math.py:990
 msgid "family"
 msgstr "famille"
 
@@ -1459,28 +1452,28 @@ msgstr "Preuve du but intermédiaire : {}"
 msgid "Proof of new subgoal"
 msgstr "Preuve du but intermédiaire"
 
-#: pylib/mathobj/proof_step.py:356 pylib/proof_state/proof_state.py:546
-#: pylib/proof_state/proof_state.py:582
+#: pylib/mathobj/proof_step.py:361 pylib/proof_state/proof_state.py:545
+#: pylib/proof_state/proof_state.py:581
 msgid ": "
 msgstr " : "
 
-#: pylib/mathobj/proof_step.py:410 pylib/text/tooltips.py:117
+#: pylib/mathobj/proof_step.py:408 pylib/text/tooltips.py:117
 msgid "Proof methods..."
 msgstr "Méthodes de preuve…"
 
-#: pylib/mathobj/proof_step.py:479
+#: pylib/mathobj/proof_step.py:477
 msgid "ERROR:"
 msgstr "ERREUR :"
 
-#: pylib/mathobj/proof_step.py:483
+#: pylib/mathobj/proof_step.py:481
 msgid "Success:"
 msgstr "Succès :"
 
-#: pylib/mathobj/proof_step.py:509
+#: pylib/mathobj/proof_step.py:507
 msgid "(Current goal admitted)"
 msgstr "(But en cours admis)"
 
-#: pylib/mathobj/proof_step.py:513
+#: pylib/mathobj/proof_step.py:511
 msgid "Beginning of Proof"
 msgstr "Début de la preuve"
 
@@ -1586,47 +1579,47 @@ msgstr "Théorème :"
 msgid "All proof states received"
 msgstr "Etats de preuve reçu"
 
-#: pylib/proof_state/proof_state.py:463
+#: pylib/proof_state/proof_state.py:462
 msgid "Assume that"
 msgstr "Supposons que"
 
-#: pylib/proof_state/proof_state.py:502 pylib/proof_state/proof_state.py:549
+#: pylib/proof_state/proof_state.py:501 pylib/proof_state/proof_state.py:548
 msgid "Prove that"
 msgstr "Démontrer que"
 
-#: pylib/proof_state/proof_state.py:504
+#: pylib/proof_state/proof_state.py:503
 msgid "the negation"
 msgstr "la négation"
 
-#: pylib/proof_state/proof_state.py:505
+#: pylib/proof_state/proof_state.py:504
 msgid "Prove"
 msgstr "Démontrer"
 
-#: pylib/proof_state/proof_state.py:513 pylib/proof_state/proof_state.py:551
+#: pylib/proof_state/proof_state.py:512 pylib/proof_state/proof_state.py:550
 msgid "Then"
 msgstr "Alors"
 
-#: pylib/proof_state/proof_state.py:519 pylib/proof_state/proof_state.py:536
+#: pylib/proof_state/proof_state.py:518 pylib/proof_state/proof_state.py:535
 msgid "True or False?"
 msgstr "Vrai ou faux ?"
 
-#: pylib/proof_state/proof_state.py:538 pylib/proof_state/proof_state.py:571
+#: pylib/proof_state/proof_state.py:537 pylib/proof_state/proof_state.py:570
 msgid "Hypothesis:"
 msgstr "Hypothèse :"
 
-#: pylib/proof_state/proof_state.py:540 pylib/proof_state/proof_state.py:572
+#: pylib/proof_state/proof_state.py:539 pylib/proof_state/proof_state.py:571
 msgid "Hypotheses:"
 msgstr "Hypothèses :"
 
-#: pylib/proof_state/proof_state.py:569
+#: pylib/proof_state/proof_state.py:568
 msgid "Context:"
 msgstr "Contexte :"
 
-#: pylib/proof_state/proof_state.py:587
+#: pylib/proof_state/proof_state.py:586
 msgid "Goal:"
 msgstr "But :"
 
-#: pylib/proof_state/proof_state.py:589
+#: pylib/proof_state/proof_state.py:588
 msgid "Conclusion:"
 msgstr "Conclusion :"
 

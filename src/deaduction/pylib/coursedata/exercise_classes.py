@@ -30,7 +30,6 @@ from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
 import logging
 
-import deaduction.pylib.logger                  as logger
 import deaduction.pylib.config.vars             as cvars
 from deaduction.pylib.actions.actiondef     import Action
 import deaduction.pylib.actions.magic
@@ -105,8 +104,8 @@ class Statement:
         # extract_data = {attribute: data.setdefault(attribute, None)
         #                for attribute in attributes}
         # keep only the relevant data, i.e. the keys which corresponds to
-        # attribute of the class. The remaining information are put in the
-        # info dictionary attribute
+        # attribute of the class. The remaining information are put in
+        # the self.info dictionary
         for field_name in data:  # replace string by bool if needed
             if data[field_name] == 'True':
                 data[field_name] = True
@@ -121,7 +120,11 @@ class Statement:
     @classmethod
     def attributes(cls):
         """return the list of attributes of the class"""
-        return cls.__annotations__.keys()
+        # FIXME: deprecated in Python3.10, use inspect.get_annotations(cls)
+        attributes = Statement.__annotations__
+        if cls != Statement:
+            attributes.update(cls.__annotations__)
+        return attributes
 
     @property
     def lean_short_name(self):
