@@ -40,7 +40,8 @@ from PySide2.QtCore import    ( Slot,
                                 Qt)
 
 from PySide2.QtGui import     ( QIcon,
-                                QPixmap )
+                                QPixmap,
+                                QKeySequence)
 from PySide2.QtWidgets import ( QAction,
                                 QGroupBox,
                                 QHBoxLayout,
@@ -611,6 +612,8 @@ class ExerciseToolBar(QToolBar):
         self.addAction(self.redo_action)
         self.addAction(self.toggle_proof_outline_action)
         self.addAction(self.toggle_lean_editor_action)
+        self.undo_action.setShortcut(QKeySequence.Undo)
+        self.redo_action.setShortcut(QKeySequence.Redo)
 
     def update(self):
         self.rewind.setText(_('Go back to beginning of proof'))
@@ -628,7 +631,8 @@ class GlobalToolbar(QToolBar):
         self.settings_action = QAction(
                 QIcon(str((icons_dir / 'settings').resolve())),
                 _('Settings'), self)
-
+        self.settings_action.setShortcut(QKeySequence(
+                                                QKeySequence.Preferences))
         self.change_exercise_action = QAction(
                 QIcon(str((icons_dir / 'change_exercise.png').resolve())),
                 _('Change exercise'), self)

@@ -60,6 +60,8 @@ PRETTY_NAMES = {
         _("Allow implicit use of definitions"),
     'functionality.automatic_intro_of_variables_and_hypotheses':
         _("Automatic intro of variables and hypotheses"),
+    'functionality.automatic_intro_of_exists':
+        _("Automatic intro of existence properties"),
     'functionality.save_solved_exercises_for_autotest':
         _("Save exercises for autotest"),
     'logs.save_journal': _("Save journal"),

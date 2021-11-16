@@ -99,6 +99,7 @@ CONFIGS['Functionalities'] = [
     ('functionality.allow_proof_by_sorry', None, True),  # tested
     # ('functionality.expanded_apply_button', None, False),
     ('functionality.automatic_intro_of_variables_and_hypotheses', None, True),
+    ('functionality.automatic_intro_of_exists', None, True),
     ('functionality.allow_implicit_use_of_definitions', None, True)]
 
 CONFIGS["Language"] = [("i18n.select_language", ["en", "fr_FR"], True)]
