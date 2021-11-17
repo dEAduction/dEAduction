@@ -240,16 +240,16 @@ begin
     exact iff.rfl,
 end
 
-lemma definition.intersection_union (A B C : set X) :
-A ∩ (B ∪ C) = (A ∩ B) ∪ (A ∩ C) :=
+lemma definition.union_deux_ensembles {A B : set X} {x : X} :
+x ∈ A ∪ B ↔ ( x ∈ A ∨ x ∈ B) :=
 /- dEAduction
 PrettyName
-   Intersection avec une union
+    Union de deux ensembles
 ImplicitUse
     True
 -/
 begin
-  exact set.inter_distrib_left A B C,
+    exact iff.rfl,
 end
 
 lemma definition.partition 
@@ -693,6 +693,18 @@ PrettyName
 -/
 
 variables  {A B C : set X}
+
+
+lemma exercise.facile :
+B ⊆ A ∪ B  :=
+/- dEAduction
+PrettyName
+    L'union contient l'ensemble
+-/
+begin
+    todo,
+end
+
 
 namespace exercice2
 /- dEAduction
