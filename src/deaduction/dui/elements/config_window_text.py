@@ -67,5 +67,7 @@ PRETTY_NAMES = {
     'logs.save_journal': _("Save journal"),
     'display.main_font_size': _("Main font size"),
     'display.tooltips_font_size': _("Tooltips font size"),
+    'display.dubious_characters': _('Replace missing characters') +
+                              ': ℕ (N), ℤ (Z), ℚ (Q), ℝ (R), 𝒫 (P), ↦ (->)',
     'None': _('None')
 }

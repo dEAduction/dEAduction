@@ -32,6 +32,8 @@ color_for_variables = "Blue"
 color_for_dummy_variables = "DarkMagenta"
 color_for_selection = "LimeGreen"
 
+# Any modification of the following must be echoed
+# in the replace_dubious_characters function in in math_display.utils
 dubious_characters = "ℕ, ℤ, ℚ, ℝ, 𝒫, ↦"
 
 [logic]

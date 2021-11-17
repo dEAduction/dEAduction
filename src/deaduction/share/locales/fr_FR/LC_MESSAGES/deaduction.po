@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2021-11-16 14:46+0100\n"
-"PO-Revision-Date: 2021-11-16 14:47+0100\n"
+"POT-Creation-Date: 2021-11-16 15:03+0100\n"
+"PO-Revision-Date: 2021-11-16 15:04+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -24,7 +24,7 @@ msgid "Button"
 msgstr "Bouton"
 
 #: dui/elements/actions_widgets_classes.py:160
-#: dui/elements/config_window.py:302
+#: dui/elements/config_window.py:303
 msgid ":"
 msgstr " :"
 
@@ -37,29 +37,29 @@ msgstr "Enoncés"
 msgid "L∃∀N name"
 msgstr "Nom L∃∀N"
 
-#: dui/elements/config_window.py:142
+#: dui/elements/config_window.py:143
 #: dui/stages/exercise/exercise_main_window.py:223
 msgid "Preferences"
 msgstr "Préférences"
 
-#: dui/elements/config_window.py:153
+#: dui/elements/config_window.py:154
 msgid "Save preferences for next session"
 msgstr "Sauvegarder les préférences"
 
-#: dui/elements/config_window.py:166
+#: dui/elements/config_window.py:167
 msgid "Ok"
 msgstr "Ok"
 
-#: dui/elements/config_window.py:167
+#: dui/elements/config_window.py:168
 msgid "Cancel"
 msgstr "Annuler"
 
-#: dui/elements/config_window.py:168 pylib/coursedata/auto_steps.py:113
+#: dui/elements/config_window.py:169 pylib/coursedata/auto_steps.py:113
 #: pylib/text/tooltips.py:116
 msgid "Apply"
 msgstr "Appliquer"
 
-#: dui/elements/config_window.py:306
+#: dui/elements/config_window.py:307
 msgid "Browse directories"
 msgstr "Choisir un dossier"
 
@@ -164,6 +164,10 @@ msgid "Tooltips font size"
 msgstr "Taille de la police pour les info-bulles"
 
 #: dui/elements/config_window_text.py:70
+msgid "Replace missing characters"
+msgstr "Remplacer les caractères manquants"
+
+#: dui/elements/config_window_text.py:72
 msgid "None"
 msgstr "Aucun(e)"
 

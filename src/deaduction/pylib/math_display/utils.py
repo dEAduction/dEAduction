@@ -160,19 +160,21 @@ def first_descendant(l):
         return l
 
 
-dubious_characters = "ℕ, ℤ, ℚ, ℝ, 𝒫, ↦"
-replacement_characters = cvars.get("display.dubious_characters")
-if replacement_characters == dubious_characters:
-    def replace_dubious_characters(s):
+def replace_dubious_characters(s: str) -> str:
+    dubious_characters = "ℕ, ℤ, ℚ, ℝ, 𝒫, ↦"
+    replacement_characters: str = cvars.get("display.dubious_characters")
+    if replacement_characters == dubious_characters:
         return s
-else:
-    character_translation_dic = {}
-    dubious_characters = dubious_characters.split(', ')
-    replacement_characters = replacement_characters.split(', ')
-    for default, new in zip(dubious_characters, replacement_characters):
-        character_translation_dic[default] = new
+    else:
+        character_translation_dic = {}
+        default_list = dubious_characters.split(', ')
+        new_list = replacement_characters.split(',')
+        if len(default_list) != len(new_list):
+            return s
 
-    def replace_dubious_characters(s: str) -> str:
+        for default, new in zip(default_list, new_list):
+            character_translation_dic[default] = new.strip()
+
         new_string = ""
         for char in s:
             new_char = (character_translation_dic[char]
@@ -180,4 +182,3 @@ else:
                         else char)
             new_string += new_char
         return new_string
-

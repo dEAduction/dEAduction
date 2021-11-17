@@ -54,7 +54,8 @@ from PySide2.QtWidgets import ( QApplication,
                                 QFormLayout,
                                 QDialogButtonBox,
                                 QPushButton,
-                                QFileDialog)
+                                QFileDialog,
+                                QMessageBox)
 
 from deaduction.pylib.config.i18n import init_i18n
 import deaduction.pylib.config.vars      as      cvars
@@ -82,7 +83,8 @@ CONFIGS["Display"] = [
     ("display.main_font_size", None, True),
     ("display.tooltips_font_size", None, True),
     ('display.use_symbols_for_logic_button', None, True),
-    ('display.font_size_for_symbol_buttons', None, True)
+    ('display.font_size_for_symbol_buttons', None, True),
+    ('display.dubious_characters', None, True)
     # ('display.font_for_mathematics', "font", True)
     ]
 # ('display.mathematics_font', None, True),
@@ -179,12 +181,15 @@ class ConfigMainWindow(QDialog):
         Called when a button is clicked, e.g. the "Apply" button.
         """
         if btn == self.apply_btn:
+            if not self.check_settings():
+                return
             self.apply()
 
     def save(self):
         """
         Store new settings in  cvars and save cvars in the config.toml file
         """
+
         # Store new settings in cvars
         for setting in self.modified_settings:
             cvars.set(setting, self.modified_settings[setting])
@@ -235,20 +240,18 @@ class ConfigMainWindow(QDialog):
             window.modified_settings = new_modified_settings
         # Restore initial settings
         self.apply()  # Apply backwards
-        # for setting in self.initial_settings:
-        #     cvars.set(setting, self.initial_settings[setting])
-        # Emit the 'applied' signal to modify back in case modified settings
-        # had been applied before cancelling
-        # self.applied.emit(self.modified_settings)
-        # Bye
+
         self.reject()
 
-
     def accept(self):
-        # print("accept")
+        """
+        Called when usr clicks the "OK" button.
+        """
+        if not self.check_settings():
+            return
+
         self.apply()
         if self.save_btn.isChecked():
-            # print("saving")
             self.save()
         self.close()
 
@@ -272,6 +275,35 @@ class ConfigMainWindow(QDialog):
             modified_settings.update(window.modified_settings)
         return modified_settings
 
+    def check_settings(self) -> bool:
+        """
+        Check that the modified settings meet some requirements.
+        This method should be called before accepting changes.
+        """
+
+        info = ""
+        for window_ in self.__windows:
+            info += window_.check_settings()
+
+        if info:
+            title = _("Wrong settings!")
+            dialog = QMessageBox()
+            dialog.setText(title)
+            dialog.setInformativeText(info)
+            dialog.setIcon(QMessageBox.Warning)
+            dialog.exec()
+            self.set_all_values()
+            return False
+
+        return True
+
+    def set_all_values(self):
+        """
+        Set values in all widgets for display.
+        """
+        for window_ in self.__windows:
+            window_.set_values()
+
 
 class ConfigWindow(QDialog):
     """
@@ -288,9 +320,15 @@ class ConfigWindow(QDialog):
         super().__init__()
         self.initial_settings = dict()
         self.modified_settings = dict()
-        settings = CONFIGS.get(name)
+        self.widgets = dict()  # keys = settings, value = QWidget
+        self.settings = CONFIGS.get(name)
+        self.create_widgets()
+        self.set_values()
+
+    def create_widgets(self):
         layout = QFormLayout()
-        for setting, setting_list, enabled in settings:
+
+        for setting, setting_list, enabled in self.settings:
             setting_initial_value = cvars.get(setting, default_value="none")
             if setting_initial_value == "none":
                 setting_initial_value = None  # Avoid KeyError
@@ -309,18 +347,8 @@ class ConfigWindow(QDialog):
 
             # ───────── Case of choice into a list: combo box ─────────
             elif setting_list:
-                pretty_setting_list = [_(PRETTY_NAMES[setting])
-                                       if setting in PRETTY_NAMES
-                                       else setting
-                                       for setting in setting_list]
                 widget = QComboBox()
-                widget.addItems(pretty_setting_list)
-                widget.setting_list = setting_list
                 widget.setting = setting
-                if setting_initial_value:
-                    initial_index = setting_list.index(setting_initial_value)
-                    widget.setCurrentIndex(initial_index)
-
                 widget.currentIndexChanged.connect(self.combo_box_changed)
 
             # ───────── Case of bool: check box ─────────
@@ -346,8 +374,48 @@ class ConfigWindow(QDialog):
             # print("Adding wdgt", widget)
             widget.setEnabled(enabled)
             layout.addRow(title, widget)
+            self.widgets[setting] = widget
 
         self.setLayout(layout)
+
+    def set_values(self):
+        """
+        Set widgets' values for display according to modified_settings
+        (or to initial_settings for unmodified settings)
+        """
+        for setting, setting_list, enabled in self.settings:
+            if setting in self.modified_settings:
+                setting_value = self.modified_settings[setting]
+            else:
+                setting_value = cvars.get(setting, default_value="none")
+
+            widget = self.widgets[setting]
+            if setting_value == "none":
+                setting_value = None  # Avoid KeyError
+            self.initial_settings[setting] = setting_value
+
+            # ───────── Case of choice into a list: combo box ─────────
+            if setting_list and setting_list is not 'dir':
+                pretty_setting_list = [_(PRETTY_NAMES[setting])
+                                       if setting in PRETTY_NAMES
+                                       else setting
+                                       for setting in setting_list]
+                widget.setting_list = setting_list
+                widget.addItems(pretty_setting_list)
+                if setting_value:
+                    initial_index = setting_list.index(setting_value)
+                    widget.setCurrentIndex(initial_index)
+
+            # ───────── Case of bool: check box ─────────
+            elif isinstance(setting_value, bool):
+                if setting_value:
+                    widget.setChecked(setting_value)
+
+            # ───────── Case of str: QLineEdit ─────────
+            elif isinstance(setting_value, str):
+                if setting_value:
+                    initial_string = setting_value
+                    widget.setText(initial_string)
 
     # Handle choices
     @Slot()
@@ -374,6 +442,32 @@ class ConfigWindow(QDialog):
     def line_edit_changed(self):
         line_edit = self.sender()
         self.modified_settings[line_edit.setting] = line_edit.text()
+
+    def check_settings(self) -> str:
+        """
+        Check that the modified settings meet some requirements.
+        This method should be called before accepting changes.
+        """
+
+        info = ""
+        to_be_canceled: [str] = []
+        # Dubious characters
+        if 'display.dubious_characters' in self.modified_settings:
+            default: str = self.initial_settings['display.dubious_characters']
+            new = self.modified_settings['display.dubious_characters']
+            nb = default.count(',')
+            if nb != new.count(','):
+                info = _("Missing characters: Enter exactly {} strings "
+                         "separated by commas").format(nb)
+                to_be_canceled.append('display.dubious_characters')
+                widget = self.widgets['display.dubious_characters']
+                widget.setText(default)
+        # Cancel settings:
+        for item in to_be_canceled:
+            self.modified_settings[item] = self.initial_settings[item]
+            # TODO: change value in widget!
+
+        return info
 
 
 def get_pretty_name(setting: str) -> str:

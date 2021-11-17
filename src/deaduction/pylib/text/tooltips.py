@@ -29,6 +29,7 @@ This file is part of d∃∀duction.
 """
 
 import deaduction.pylib.config.vars as cvars
+from deaduction.pylib.math_display.utils import replace_dubious_characters
 
 
 ########################################################################
@@ -139,14 +140,16 @@ def button_symbol(name):
     logic_button_symbols = logic_button_symbols.split(", ")
     use_symbols = cvars.get('display.use_symbols_for_logic_button')
     if not use_symbols:
-        logic_button_symbols[0] = _("AND")
-        logic_button_symbols[1] = _("OR")
-        logic_button_symbols[2] = _("NOT")
+        logic_button_symbols[0] = "AND"
+        logic_button_symbols[1] = "OR"
+        logic_button_symbols[2] = "NOT"
 
     for key, value in zip(logic_buttons, logic_button_symbols):
         __buttons_symbols[key] = value
     if name in __buttons_symbols:
-        return __buttons_symbols[name]
+        symbol = __buttons_symbols[name]
+        symbol = replace_dubious_characters(symbol)
+        return symbol
 
 
 def button_tool_tip(name: str):
