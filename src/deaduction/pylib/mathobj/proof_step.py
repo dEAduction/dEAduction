@@ -184,7 +184,7 @@ class ProofStep:
                                          history_nb=-1,
                                          sub_proof=[])
     proof_nodes: [ProofNode] = None
-    property_counter: int    = 0
+    property_counter: int    = 1
     current_goal_number: int = 1  # Current number of goal in the proof history
     total_goals_counter: int = 1  # Total number of goals in the proof history
     parent                   = None  # Parent ProofNode
@@ -218,7 +218,7 @@ class ProofStep:
                  proof_nodes=None,
                  new_goals=None,
                  parent=None,
-                 property_counter=0,
+                 property_counter=1,
                  current_goal_number=1,
                  total_goals_counter=1,
                  proof_state=None,

@@ -311,7 +311,7 @@ def construct_or_on_hyp(proof_step,
         user_input = []
     possible_codes = []
     first_hypo_name = selected_property[0].info["name"]
-    hypo = selected_property[0].math_type.display_name
+    # hypo = selected_property[0].math_type.to_display()
 
     if len(selected_property) == 2:
         if not (selected_property[0].math_type.is_prop()
@@ -324,7 +324,7 @@ def construct_or_on_hyp(proof_step,
         if not selected_property[0].math_type.is_prop():
             error = _("Selected item is not a property")
             raise WrongUserInput(error)
-        if not user_input:
+        if not user_input:  # User has to choose 2nd property
             raise MissingParametersError(
                 InputType.Text,
                 title=_("Obtain 'P OR Q'"),
@@ -333,15 +333,15 @@ def construct_or_on_hyp(proof_step,
             second_selected_property = user_input[0]
             user_input = user_input[1:]
         
-    if not user_input:
+    if not user_input:  # Usr still has to choose side
         raise MissingParametersError(
             InputType.Choice,
             [(_("Left"),
-              f'({hypo}) OR ({second_selected_property})'),
+              f'({first_hypo_name}) OR ({second_selected_property})'),
              (_('Right'),
-              f'({second_selected_property}) OR ({hypo})')],
+              f'({second_selected_property}) OR ({first_hypo_name})')],
             title=_("Choose side"),
-            output=_(f'On which side do you want') + f' {hypo} ?')
+            output=_(f'On which side do you want') + f' {first_hypo_name} ?')
     
     new_hypo_name = get_new_hyp(proof_step)
     if user_input[0] == 0:
