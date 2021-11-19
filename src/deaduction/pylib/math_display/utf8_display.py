@@ -70,14 +70,20 @@ def sub_sup_to_utf8(string: str) -> str:
 #             else None)
 
 
-def remove_unnecessary_parentheses(l: list):
-    """Remove unnecessary leading parentheses."""
-
-    while isinstance(l, list) and len(l) == 1 and isinstance(l[0], list):
-        l = l[0]
-        # Remove global parentheses if any
-        if len(l) > 0 and  l[0] == r'\parentheses':
-            l.pop(0)
+def remove_leading_parentheses(l: list):
+    """Remove leading parentheses. e.g.
+    ['parentheses', ...] --> [...]
+    ['parentheses', [['parentheses', ...]] --> [...]
+    [['parentheses', [['parentheses', ...]]] --> [...]
+    but keep parentheses in
+    [['parentheses', ...], ... ]
+    """
+    if isinstance(l, list) and len(l) == 1 and isinstance(l[0], list):
+        remove_leading_parentheses(l[0])
+    elif len(l) > 0 and  l[0] == r'\parentheses':
+        l.pop(0)
+        if len(l) == 1:
+            remove_leading_parentheses(l)
 
 
 def add_parentheses(l: list, depth):
@@ -88,34 +94,15 @@ def add_parentheses(l: list, depth):
     """
     # Remove unnecessary leading parentheses #
     if depth == 0:
-        remove_unnecessary_parentheses(l)
+        remove_leading_parentheses(l)
 
-    # OBSOLETE:
-    # # Remove first parentheses at any depth if depth=0
-    # if depth == 0:
-    #     # Find first leaf of the tree
-    #     last_node = l
-    #     first_leaf = last_node[0]
-    #     while isinstance(first_leaf, list) and len(first_leaf) > 0:
-    #         last_node = first_leaf
-    #         first_leaf = last_node[0]
-    #     if first_leaf == r'\parentheses':
-    #         last_node.pop(0)
-    
     for index in range(len(l) - 1):
         if l[index] == r'\parentheses':
             l[index] = "("
-            l.append(")")
             if index == len(l)-2 and isinstance(l[-1], list):
-                remove_unnecessary_parentheses(l[-1])
+                remove_leading_parentheses(l[-1])
 
-            # OBSOLETE:
-            # next_child = l[index + 1]
-            # if (first_descendant(next_child) == r'\parentheses' or
-            #         (index == 0 and depth == 0)):
-            #     # Remove redundant parentheses
-            #     l[index] = ""
-            # else:
+            l.append(")")
 
 
 def recursive_utf8_display(l: list, depth) -> str:

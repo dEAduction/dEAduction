@@ -243,7 +243,7 @@ latex_to_utf8_dic = {
 #####################
 latex_to_text = {
     r'\Leftrightarrow': " " + _("if and only if") + " ",
-    r'\not': _("the negation of") + " ",
+    r'\not': _("the negation of") + _(":") + " ",
     r'\if': _("if") + " ",
     r'\Rightarrow': _("then"),
     r'\set_of_subsets': _("the set of subsets of") + " ",

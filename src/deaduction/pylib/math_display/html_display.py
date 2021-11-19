@@ -114,13 +114,17 @@ def color_props():
             else None)
 
 
-def recursive_html_display(l: list, depth) -> str:
+def recursive_html_display(l: Union[list, str], depth) -> str:
     """
     Use the following tags as first child:
     - \\sub, \\super for subscript/superscript
     - \\dummy_variable for dummy vars
     - \\applied_property for properties that have already been applied
     """
+    if isinstance(l, str):
+        return html_display_single_string(l)
+
+    assert isinstance(l, list)
     head = l[0]
     if head == r'\sub' or head == '_':
         return subscript(recursive_html_display(l[1:], depth))
@@ -154,24 +158,34 @@ def recursive_html_display(l: list, depth) -> str:
         add_parentheses(l, depth)
 
         # log.debug(f"Children to html: {l}")
-        strings = [html_display(child, depth+1) for child in l]
+        strings = [recursive_html_display(child, depth+1) for child in l]
         return ''.join(strings)
+
+
+def html_display_single_string(string: str) -> str:
+    # Do this BEFORE formatting:
+    string = reserve_special_char(string)
+    # Formatting subscript/superscript:
+    string = sub_sup_to_html(string)
+    return string
 
 
 def html_display(abstract_string: Union[str, list], depth=0) -> str:
     """
-    Return a html version of the string represented by string, which is a
-    tree of string.
+    Return a html version of the string represented by abstract_string,
+    which is a tree of string.
     """
     # FIXME: take tex_depth into account
-    if isinstance(abstract_string, list):
-        string = recursive_html_display(abstract_string, depth)
-    else:
-        # Do this BEFORE formatting:
-        abstract_string = reserve_special_char(abstract_string)
-        # Formatting subscript/superscript:
-        string = sub_sup_to_html(abstract_string)
-
-    return replace_dubious_characters(cut_spaces(string))
+    # if isinstance(abstract_string, list):
+    string = recursive_html_display(abstract_string, depth)
+    # else:
+    #     # Do this BEFORE formatting:
+    #     abstract_string = reserve_special_char(abstract_string)
+    #     # Formatting subscript/superscript:
+    #     string = sub_sup_to_html(abstract_string)
+    assert isinstance(string, str)
+    string = cut_spaces(string)
+    string = replace_dubious_characters(string)
+    return string
 
 

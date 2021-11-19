@@ -460,6 +460,9 @@ class Goal:
                 prop = math_object.math_type_to_display(format_=format_,
                                                         text_depth=text_depth)
                 assume_that = _("Assume that") + " "
+                if prop.startswith(_('the negation')):
+                    assume_that = _("Assume") + " "
+
                 if cvars.get('i18n.select_language') == 'fr_FR':
                     # "Supposons que il" --> "Supposons qu'il"
                     if (prop.startswith("un")

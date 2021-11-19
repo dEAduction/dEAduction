@@ -474,17 +474,17 @@ def raw_latex_shape_from_application(math_object, negate=False):
             # display_not = list(latex_from_constant_name[
             #                        'STANDARD_CONSTANT_NOT'])
 
-        ############
-        # NEGATION #
-        ############
-        if negate:
-            text_is = r'\text_is'
-            text_is_not = r'\text_is_not'
-            if text_is in display:
-                index = display.index(text_is)
-                display[index] = text_is_not
-            else:
-                display.insert(0, r'\not')
+    ############
+    # NEGATION #
+    ############
+    if negate:
+        text_is = r'\text_is'
+        text_is_not = r'\text_is_not'
+        if text_is in display:
+            index = display.index(text_is)
+            display[index] = text_is_not
+        else:
+            display.insert(0, r'\not')
 
     # (4) Finally: use functional notation for remaining arguments
     # ONLY if they are not type
@@ -503,7 +503,8 @@ def raw_latex_shape_from_application(math_object, negate=False):
             else:
                 log.debug(f"Implicit arg: {implicit_children[n].display_name}")
         if more_display:
-            display += ['('] + more_display + [')']
+            # display += ['('] + more_display + [')']
+            display += [r"\parentheses"] + more_display
             # NB: in generic case APP(f,x), this gives  ['(', 1, ')']
 
     return display

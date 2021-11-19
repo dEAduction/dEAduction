@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2021-11-16 15:03+0100\n"
-"PO-Revision-Date: 2021-11-16 15:04+0100\n"
+"POT-Creation-Date: 2021-11-19 15:43+0100\n"
+"PO-Revision-Date: 2021-11-19 15:44+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -24,44 +24,53 @@ msgid "Button"
 msgstr "Bouton"
 
 #: dui/elements/actions_widgets_classes.py:160
-#: dui/elements/config_window.py:303
+#: dui/elements/config_window.py:340 pylib/math_display/display_data.py:246
 msgid ":"
 msgstr " :"
 
-#: dui/elements/actions_widgets_classes.py:628
-#: dui/elements/actions_widgets_classes.py:633
+#: dui/elements/actions_widgets_classes.py:634
+#: dui/elements/actions_widgets_classes.py:639
 msgid "Statements"
 msgstr "Enoncés"
 
-#: dui/elements/actions_widgets_classes.py:628
+#: dui/elements/actions_widgets_classes.py:634
 msgid "L∃∀N name"
 msgstr "Nom L∃∀N"
 
-#: dui/elements/config_window.py:143
+#: dui/elements/config_window.py:144
 #: dui/stages/exercise/exercise_main_window.py:223
 msgid "Preferences"
 msgstr "Préférences"
 
-#: dui/elements/config_window.py:154
+#: dui/elements/config_window.py:155
 msgid "Save preferences for next session"
 msgstr "Sauvegarder les préférences"
 
-#: dui/elements/config_window.py:167
+#: dui/elements/config_window.py:168
 msgid "Ok"
 msgstr "Ok"
 
-#: dui/elements/config_window.py:168
+#: dui/elements/config_window.py:169
 msgid "Cancel"
 msgstr "Annuler"
 
-#: dui/elements/config_window.py:169 pylib/coursedata/auto_steps.py:113
-#: pylib/text/tooltips.py:116
+#: dui/elements/config_window.py:170 pylib/text/tooltips.py:117
 msgid "Apply"
 msgstr "Appliquer"
 
-#: dui/elements/config_window.py:307
+#: dui/elements/config_window.py:289
+msgid "Wrong settings!"
+msgstr "Valeurs incorrectes !"
+
+#: dui/elements/config_window.py:344
 msgid "Browse directories"
 msgstr "Choisir un dossier"
+
+#: dui/elements/config_window.py:460
+msgid "Missing characters: Enter exactly {} strings separated by commas"
+msgstr ""
+"Caractères manquants : entrer exactement {} groupes de caractères séparés "
+"par des virgules"
 
 #: dui/elements/config_window_text.py:37
 msgid "Display"
@@ -904,23 +913,6 @@ msgstr "Sauvegarde du fichier de configuration"
 msgid "Could not get config value: "
 msgstr "Impossible d’obtenir la valeur du fichier de configuration :"
 
-#: pylib/coursedata/auto_steps.py:111
-msgid "Proof methods"
-msgstr "Méthodes de preuve"
-
-#: pylib/coursedata/auto_steps.py:112
-msgid "New Object"
-msgstr "Nouvel Objet"
-
-#: pylib/coursedata/auto_steps.py:114 pylib/coursedata/auto_steps.py:115
-#: pylib/text/tooltips.py:120 pylib/text/tooltips.py:122
-msgid "Goal!"
-msgstr "But !"
-
-#: pylib/coursedata/auto_steps.py:116 pylib/text/tooltips.py:121
-msgid "Compute"
-msgstr "Calculer"
-
 #: pylib/coursedata/course.py:109
 msgid "no subtitle"
 msgstr "pas de sous-titre"
@@ -991,7 +983,7 @@ msgid "Contradiction"
 msgstr "Contradiction"
 
 #: pylib/math_display/display_data.py:224
-#: pylib/math_display/display_math.py:989
+#: pylib/math_display/display_math.py:990
 msgid "proposition"
 msgstr "proposition"
 
@@ -1001,7 +993,7 @@ msgstr "ensemble"
 
 #: pylib/math_display/display_data.py:226
 #: pylib/math_display/display_data.py:233
-#: pylib/math_display/display_math.py:993
+#: pylib/math_display/display_math.py:994
 msgid "not"
 msgstr "non"
 
@@ -1032,7 +1024,7 @@ msgstr "l’ensemble des parties de"
 #: pylib/math_display/display_data.py:250
 #: pylib/math_display/display_data.py:271
 #: pylib/math_display/display_data.py:371
-#: pylib/math_display/display_math.py:989
+#: pylib/math_display/display_math.py:990
 msgid "a proposition"
 msgstr "une proposition"
 
@@ -1091,8 +1083,8 @@ msgstr "est"
 msgid "is not"
 msgstr "n’est pas"
 
-#: pylib/math_display/display_data.py:270 pylib/proof_state/proof_state.py:712
-#: pylib/proof_state/proof_state.py:733
+#: pylib/math_display/display_data.py:270 pylib/proof_state/proof_state.py:715
+#: pylib/proof_state/proof_state.py:736
 msgid "Let {} be {}"
 msgstr "Soit {} {}"
 
@@ -1109,7 +1101,7 @@ msgid "sets"
 msgstr "ensembles"
 
 #: pylib/math_display/display_data.py:273
-#: pylib/math_display/display_math.py:988
+#: pylib/math_display/display_math.py:989
 msgid "a subset"
 msgstr "une partie"
 
@@ -1118,7 +1110,7 @@ msgid "subsets"
 msgstr "parties"
 
 #: pylib/math_display/display_data.py:274
-#: pylib/math_display/display_math.py:987
+#: pylib/math_display/display_math.py:988
 msgid "an element"
 msgstr "un élément"
 
@@ -1127,7 +1119,7 @@ msgid "elements"
 msgstr "éléments"
 
 #: pylib/math_display/display_data.py:275
-#: pylib/math_display/display_math.py:986
+#: pylib/math_display/display_math.py:987
 msgid "a function"
 msgstr "une fonction"
 
@@ -1372,31 +1364,31 @@ msgstr ""
 "    f∘g (x)         —> (composition f g)(x)\n"
 "    Et aussi f(x) ; x+1/2 ; 2*n, …\n"
 
-#: pylib/math_display/display_math.py:898
+#: pylib/math_display/display_math.py:899
 msgid "unknown object"
 msgstr "objet inconnu"
 
-#: pylib/math_display/display_math.py:900
+#: pylib/math_display/display_math.py:901
 msgid "All goals reached!"
 msgstr "Tous les buts ont été atteints !"
 
-#: pylib/math_display/display_math.py:986
+#: pylib/math_display/display_math.py:987
 msgid "function"
 msgstr "fonction"
 
-#: pylib/math_display/display_math.py:987
+#: pylib/math_display/display_math.py:988
 msgid "element"
 msgstr "élément"
 
-#: pylib/math_display/display_math.py:988
+#: pylib/math_display/display_math.py:989
 msgid "subset"
 msgstr "partie"
 
-#: pylib/math_display/display_math.py:990
+#: pylib/math_display/display_math.py:991
 msgid "a family"
 msgstr "une famille"
 
-#: pylib/math_display/display_math.py:990
+#: pylib/math_display/display_math.py:991
 msgid "family"
 msgstr "famille"
 
@@ -1460,12 +1452,12 @@ msgstr "Preuve du but intermédiaire : {}"
 msgid "Proof of new subgoal"
 msgstr "Preuve du but intermédiaire"
 
-#: pylib/mathobj/proof_step.py:361 pylib/proof_state/proof_state.py:545
-#: pylib/proof_state/proof_state.py:581
+#: pylib/mathobj/proof_step.py:361 pylib/proof_state/proof_state.py:548
+#: pylib/proof_state/proof_state.py:584
 msgid ": "
 msgstr " : "
 
-#: pylib/mathobj/proof_step.py:408 pylib/text/tooltips.py:117
+#: pylib/mathobj/proof_step.py:408 pylib/text/tooltips.py:118
 msgid "Proof methods..."
 msgstr "Méthodes de preuve…"
 
@@ -1591,43 +1583,47 @@ msgstr "Etats de preuve reçu"
 msgid "Assume that"
 msgstr "Supposons que"
 
-#: pylib/proof_state/proof_state.py:501 pylib/proof_state/proof_state.py:548
-msgid "Prove that"
-msgstr "Démontrer que"
-
-#: pylib/proof_state/proof_state.py:503
+#: pylib/proof_state/proof_state.py:463 pylib/proof_state/proof_state.py:506
 msgid "the negation"
 msgstr "la négation"
 
-#: pylib/proof_state/proof_state.py:504
+#: pylib/proof_state/proof_state.py:464
+msgid "Assume"
+msgstr "Supposons"
+
+#: pylib/proof_state/proof_state.py:504 pylib/proof_state/proof_state.py:551
+msgid "Prove that"
+msgstr "Démontrer que"
+
+#: pylib/proof_state/proof_state.py:507
 msgid "Prove"
 msgstr "Démontrer"
 
-#: pylib/proof_state/proof_state.py:512 pylib/proof_state/proof_state.py:550
+#: pylib/proof_state/proof_state.py:515 pylib/proof_state/proof_state.py:553
 msgid "Then"
 msgstr "Alors"
 
-#: pylib/proof_state/proof_state.py:518 pylib/proof_state/proof_state.py:535
+#: pylib/proof_state/proof_state.py:521 pylib/proof_state/proof_state.py:538
 msgid "True or False?"
 msgstr "Vrai ou faux ?"
 
-#: pylib/proof_state/proof_state.py:537 pylib/proof_state/proof_state.py:570
+#: pylib/proof_state/proof_state.py:540 pylib/proof_state/proof_state.py:573
 msgid "Hypothesis:"
 msgstr "Hypothèse :"
 
-#: pylib/proof_state/proof_state.py:539 pylib/proof_state/proof_state.py:571
+#: pylib/proof_state/proof_state.py:542 pylib/proof_state/proof_state.py:574
 msgid "Hypotheses:"
 msgstr "Hypothèses :"
 
-#: pylib/proof_state/proof_state.py:568
+#: pylib/proof_state/proof_state.py:571
 msgid "Context:"
 msgstr "Contexte :"
 
-#: pylib/proof_state/proof_state.py:586
+#: pylib/proof_state/proof_state.py:589
 msgid "Goal:"
 msgstr "But :"
 
-#: pylib/proof_state/proof_state.py:588
+#: pylib/proof_state/proof_state.py:591
 msgid "Conclusion:"
 msgstr "Conclusion :"
 
@@ -1639,159 +1635,167 @@ msgstr "Etat de preuve reçu"
 msgid "After request"
 msgstr "Après la requête"
 
-#: pylib/text/tooltips.py:52
+#: pylib/text/tooltips.py:53
 msgid "Split a property 'P AND Q' into the two properties 'P', 'Q'"
 msgstr "Sépare une propriété ‘P ET Q’ en deux propriétés ‘P’, ‘Q’"
 
-#: pylib/text/tooltips.py:53
+#: pylib/text/tooltips.py:54
 msgid "Conversely, assemble 'P' and 'Q' to get 'P AND Q'"
 msgstr "Inversement, assemble ‘P’, ‘Q’ pour obtenir ‘P ET Q’"
 
-#: pylib/text/tooltips.py:55
+#: pylib/text/tooltips.py:56
 msgid "Prove 'P OR Q' by proving either 'P' or 'Q'"
 msgstr "Prouve ‘P OU Q’ en choisissant de prouver ‘P’ ou bien ‘Q’"
 
-#: pylib/text/tooltips.py:56
+#: pylib/text/tooltips.py:57
 msgid "Use property 'P OR Q' by splitting cases"
 msgstr "Utilise la propriété ‘P OU Q’ en distinguant les cas"
 
-#: pylib/text/tooltips.py:58
+#: pylib/text/tooltips.py:59
 msgid "Try to simplify the property 'NOT P'"
 msgstr "Essaie de simplifier la propriété ‘NON P’"
 
-#: pylib/text/tooltips.py:60
+#: pylib/text/tooltips.py:61
 msgid "Prove 'P ⇒ Q' by assuming 'P', and proving 'Q'"
 msgstr "Démontre ‘P ⇒ Q’ en supposant ‘P’, et en démontrant ‘Q’"
 
-#: pylib/text/tooltips.py:61
+#: pylib/text/tooltips.py:62
 msgid "From 'P' and 'P ⇒ Q' get 'Q'"
 msgstr "De 'P' et 'P ⇒ Q' déduit 'Q'"
 
-#: pylib/text/tooltips.py:63
+#: pylib/text/tooltips.py:64
 msgid "Split 'P ⇔ Q' into two implications"
 msgstr "Sépare ‘P ⇔ Q’ en deux implications"
 
-#: pylib/text/tooltips.py:64
+#: pylib/text/tooltips.py:65
 msgid "From 'P ⇒ Q' and 'Q ⇒ P' get 'P ⇔ Q'"
 msgstr "De 'P ⇒ Q' et 'Q ⇒ P' déduit 'P ⇔ Q'"
 
-#: pylib/text/tooltips.py:66
+#: pylib/text/tooltips.py:67
 msgid "Prove '∀ x, P(x)' by introducing 'x'"
 msgstr "Démontre ‘∀ x, P(x)’ en introduisant ‘x’"
 
-#: pylib/text/tooltips.py:67
+#: pylib/text/tooltips.py:68
 msgid "From some 'x' and '∀ x, P(x)' get 'P(x)'"
 msgstr "D’un objet ‘x’ et ‘∀ x, P(x)’, déduit ‘P(x)’"
 
-#: pylib/text/tooltips.py:69
+#: pylib/text/tooltips.py:70
 msgid "Prove '∃ x, P(x)' by specifying some 'x'"
 msgstr "Prouve ‘∃ x, P(x)’ en choisissant ‘x’ et en prouvant ‘P(x)’"
 
-#: pylib/text/tooltips.py:70
+#: pylib/text/tooltips.py:71
 msgid "From '∃ x, P(x)' get an 'x' and 'P(x)'"
 msgstr "De ‘∃ x, P(x)’ obtient un ‘x’ et la propriété ‘P(x)’"
 
-#: pylib/text/tooltips.py:72
+#: pylib/text/tooltips.py:73
 msgid "Use an equality to substitute one term with the other"
 msgstr ""
 "Appliquer une égalité ou un « si et seulement si » pour substituer dans une "
 "propriété sélectionnée"
 
-#: pylib/text/tooltips.py:74 pylib/text/tooltips.py:77
+#: pylib/text/tooltips.py:75 pylib/text/tooltips.py:78
 msgid "Apply a function to an element or an equality"
 msgstr "Appliquer une fonction à un élément ou à une égalité"
 
-#: pylib/text/tooltips.py:79
+#: pylib/text/tooltips.py:80
 msgid "Choose some specific proof method"
 msgstr "Choisir une méthode de preuve :"
 
-#: pylib/text/tooltips.py:84
+#: pylib/text/tooltips.py:85
 msgid "Create a new object (e.g. 'f(x)' from 'f' and 'x'"
 msgstr "Créer un nouvel objet (par ex. ‘f(a)’, ‘ε/2’, …)"
 
-#: pylib/text/tooltips.py:85
+#: pylib/text/tooltips.py:86
 msgid "Create a new subgoal (a lemma)"
 msgstr "Créer un nouveau but (un lemme intermédiaire)"
 
-#: pylib/text/tooltips.py:86
+#: pylib/text/tooltips.py:87
 msgid "Create a function from X to Y from property '∀ x ∈ X, ∃ y ∈ Y, P(x,y)'"
 msgstr ""
 "A partir d’une propriété ‘∀ x ∈ X, ∃ y ∈ Y, P(x,y)’, obtenir une fonction de "
 "X dans Y"
 
-#: pylib/text/tooltips.py:89 pylib/text/tooltips.py:91
+#: pylib/text/tooltips.py:90 pylib/text/tooltips.py:92
 msgid "Terminate the proof when the target is obvious from the context"
 msgstr "Conclut la preuve lorsque le but est évident à partir du contexte"
 
-#: pylib/text/tooltips.py:93
+#: pylib/text/tooltips.py:94
 msgid "Terminate the proof when target results from manipulating numbers"
 msgstr ""
 "Conclut la preuve lorsque le but s’obtient en manipulant des égalités ou "
 "inégalités de nombres"
 
-#: pylib/text/tooltips.py:99
+#: pylib/text/tooltips.py:100
 msgid "apply this function to a selected object or equality"
 msgstr "appliquer cette fonction à un élément ou à une égalité sélectionnée"
 
-#: pylib/text/tooltips.py:101
+#: pylib/text/tooltips.py:102
 msgid "apply this implication to a selected property, or to modify the goal"
 msgstr ""
 "appliquer cette implication à une propriété sélectionnée, ou pour "
 "transformer le but"
 
-#: pylib/text/tooltips.py:103
+#: pylib/text/tooltips.py:104
 msgid "use to substitute in a selected property"
 msgstr "substituer dans une propriété sélectionnée"
 
-#: pylib/text/tooltips.py:105
+#: pylib/text/tooltips.py:106
 msgid "apply this property to a selected object"
 msgstr "appliquer cette propriété à un objet sélectionné"
 
-#: pylib/text/tooltips.py:107
+#: pylib/text/tooltips.py:108
 msgid "get a new object in the context"
 msgstr "obtenir un nouvel objet dans le contexte"
 
-#: pylib/text/tooltips.py:109
+#: pylib/text/tooltips.py:110
 msgid "split into two properties"
 msgstr "séparer en deux propriétés"
 
-#: pylib/text/tooltips.py:118
+#: pylib/text/tooltips.py:119
 msgid "New object..."
 msgstr "Nouvel Objet…"
 
-#: pylib/text/tooltips.py:126 pylib/text/tooltips.py:142
+#: pylib/text/tooltips.py:121 pylib/text/tooltips.py:123
+msgid "Goal!"
+msgstr "But !"
+
+#: pylib/text/tooltips.py:122
+msgid "Compute"
+msgstr "Calculer"
+
+#: pylib/text/tooltips.py:127
 msgid "AND"
 msgstr "ET"
 
-#: pylib/text/tooltips.py:126 pylib/text/tooltips.py:143
+#: pylib/text/tooltips.py:127
 msgid "OR"
 msgstr "OU"
 
-#: pylib/text/tooltips.py:126 pylib/text/tooltips.py:144
+#: pylib/text/tooltips.py:127
 msgid "NOT"
 msgstr "NON"
 
-#: pylib/text/tooltips.py:126
+#: pylib/text/tooltips.py:127
 msgid "IMPLIES"
 msgstr "IMPLIQUE"
 
-#: pylib/text/tooltips.py:126
+#: pylib/text/tooltips.py:127
 msgid "IFF"
 msgstr "SSI"
 
-#: pylib/text/tooltips.py:127
+#: pylib/text/tooltips.py:128
 msgid "FORALL"
 msgstr "POUR TOUT"
 
-#: pylib/text/tooltips.py:127
+#: pylib/text/tooltips.py:128
 msgid "EXISTS"
 msgstr "EXISTE"
 
-#: pylib/text/tooltips.py:127
+#: pylib/text/tooltips.py:128
 msgid "EQUAL"
 msgstr "EGAL"
 
-#: pylib/text/tooltips.py:127
+#: pylib/text/tooltips.py:128
 msgid "MAP"
 msgstr "APPLICATION"
 
@@ -1838,6 +1842,12 @@ msgstr "Progression : {:03d}%"
 #: pylib/utils/filesystem.py:249
 msgid "Download from {} to {}"
 msgstr "Téléchargé depuis {} vers {}"
+
+#~ msgid "Proof methods"
+#~ msgstr "Méthodes de preuve"
+
+#~ msgid "New Object"
+#~ msgstr "Nouvel Objet"
 
 #~ msgid ""
 #~ "Examples of syntax:\n"

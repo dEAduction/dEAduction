@@ -76,6 +76,8 @@ def cut_spaces(string: str) -> str:
     """
     while string.find("  ") != -1:
         string = string.replace("  ", " ")
+    string = string.replace("( ", "(")
+    string = string.replace(" )", ")")
     return string
 
 
