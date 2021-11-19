@@ -403,7 +403,7 @@ async def auto_test(wm: WindowManager):
 
                 report = f"Step {steps_counter}: " + report
                 if not emw.displayed_proof_step.success_msg \
-                        and emw.displayed_proof_step.button \
+                        and emw.displayed_proof_step.button_name \
                         and not emw.displayed_proof_step.is_cqfd \
                         and not emw.displayed_proof_step.is_error():
                     report += "(no success msg)"

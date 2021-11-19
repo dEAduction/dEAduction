@@ -421,7 +421,7 @@ class ExerciseMainWindow(QMainWindow):
             return history_buttons[string]
         log.warning(f"No button found from {string}")
 
-    def context_item_from_math_object(self,math_object) -> \
+    def context_item_from_math_object(self, math_object) -> \
             MathObjectWidgetItem:
         """
         Turn a MathObject into a MathObjectWidgetItem of the context.
@@ -455,7 +455,7 @@ class ExerciseMainWindow(QMainWindow):
                 name = name[1:]
             math_object = self.current_goal.math_object_from_name(name)
             if math_object:
-                item = self.math_object.widget_item
+                item = self.context_item_from_math_object(math_object)
         return item
     
     def contextualised_selection(self, selection: [Union[MathObject, str]])\
@@ -686,7 +686,7 @@ class ExerciseMainWindow(QMainWindow):
         elif statement_name:
             msg += f"    -> statement {statement_name} called"
             statement_widget = \
-                StatementsTreeWidgetItem.from_lean_name.get(statement_name)
+                StatementsTreeWidgetItem.from_end_of_lean_name(statement_name)
             if statement_widget:
                 if execute_action:  # Execute the action!
                     self.statement_triggered.emit(statement_widget)

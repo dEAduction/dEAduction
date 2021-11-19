@@ -100,27 +100,48 @@ BUTTONS_SYMBOLS = LOGIC_BUTTONS_SYMBOLS \
                   + PROOF_BUTTONS_SYMBOLS
 
 
-alternative_symbols = {'→': '⇒',
-                       '↔': '⇔',
-                       'forall': '∀',
-                       'exists': '∃',
-                       'and': '∧',
-                       'or': '∨',
-                       'not': '¬',
-                       'equal': '=',
-                       'proof_methods': _('Proof methods'),
-                       'new_object': _('New Object'),
-                       'apply': _('Apply'),
-                       'assumption': _('Goal!'),
-                       "CQFD": _('Goal!'),
-                       'compute': _('Compute'),
-                       'map': '↦'
-                       }
+# button_dict = {'→': '⇒',
+#                        '↔': '⇔',
+#                        'forall': '∀',
+#                        'exists': '∃',
+#                        'and': '∧',
+#                        'or': '∨',
+#                        'not': '¬',
+#                        'equal': '=',
+#                        'proof_methods': _('Proof methods'),
+#                        'new_object': _('New Object'),
+#                        'apply': _('Apply'),
+#                        'assumption': _('Goal!'),
+#                        "CQFD": _('Goal!'),
+#                        'compute': _('Compute'),
+#                        'map': '↦'
+#                        }
+
+button_dict = {'→': "implies",
+               '⇒': "implies",
+               '↔': "iff",
+               '⇔': "iff",
+               '∀': "forall",
+               '∃': "exists",
+               '∧': "and",
+               '∨': "or",
+               '¬': "not",
+               '=': "equal",
+               "CQFD": "assumption",
+               'compute': "assumption",
+               '↦': "map",
+               'proof': 'proof_methods',
+               'new': 'new_object',
+               'object': 'new_object'
+               }
 
 
 class UserAction:
     """
     A class for storing usr actions for one step.
+    Button name is the action name (e.g. "action_and --> name = "and")
+    Statement name is the end of the lean_name (e.g. definition.inclusion)
+        so that lean_name.endswith(statement_name) is True.
     """
     selection = None  # [ContextMathObject]
     button_name = None  # str
@@ -184,7 +205,7 @@ class AutoStep(UserAction):
     the context, e.g. @P1, @O2 for property n°1, object n°2 of the context.
 
     :attribute button: A button symbol or equivalent (cf BUTTON_SYMBOLS,
-    alternative_symbols).
+    button_dict).
 
     :attribute statement: statement short name,
     e.g. definition.intersection_two_sets
@@ -212,7 +233,7 @@ class AutoStep(UserAction):
                  5: 'No proof state'}
 
     def __init__(self, selection, button_name, statement, user_input,
-                 raw_string, error_type, error_mg, success_msg):
+                 raw_string, error_type, error_msg, success_msg):
 
         UserAction.__init__(self, selection, button_name,
                             statement, user_input)
@@ -222,7 +243,7 @@ class AutoStep(UserAction):
         # self.user_input = user_input
         self.raw_string = raw_string
         self.error_type = error_type
-        self.error_msg = error_mg
+        self.error_msg = error_msg
         self.success_msg = success_msg
 
     @classmethod
@@ -258,11 +279,14 @@ class AutoStep(UserAction):
                     or item.startswith('theorem'):
                 statement = item
                 button_or_statement_rank = items.index(item)
-            elif item in BUTTONS_SYMBOLS:
+            # elif item in BUTTONS_SYMBOLS:
+            #     button = item
+            #     button_or_statement_rank = items.index(item)
+            elif item in button_dict.values():
                 button = item
                 button_or_statement_rank = items.index(item)
-            elif item in alternative_symbols:
-                button = alternative_symbols[item]
+            elif item in button_dict:
+                button = button_dict[item]
                 button_or_statement_rank = items.index(item)
             elif item in ('WrongUserInput', 'WUI'):
                 error_type = 1
@@ -370,5 +394,5 @@ if __name__ == '__main__':
     # ['∧', '∨', '¬', '⇒', '⇔', '∀', '∃', 'Calculer', 'CQFD', 'Méthodes De
     # Preuve', 'Nouvel Objet', 'Appliquer']
     # please rather use english equivalents given in the above
-    # alternative_symbols dictionary.
+    # button_dict dictionary.
 

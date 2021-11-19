@@ -93,7 +93,7 @@ latex_from_node = {
     "SET_IMAGE": (0, r'\set_image', 1),
     "SET_INVERSE": (0, r'\set_inverse', 1),
     "SET_PRODUCT": (0, r'\times', 1),
-    "COUPLE": ('(', 0, ',', 1, ')'),
+    "COUPLE": (r'\parentheses', 0, ',', 1),
     "SET_INTENSION": (r"\no_text", r'\{', 1, r' \in ', 0, ' | ', 2, r'\}'),
     # FIXME: instantiate set extensions
     ############

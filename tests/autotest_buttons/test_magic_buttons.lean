@@ -3,7 +3,7 @@ import tactic
 
 -- dEAduction imports
 import structures2
-import notations_definitions
+import user_notations
 import compute
 import utils
 

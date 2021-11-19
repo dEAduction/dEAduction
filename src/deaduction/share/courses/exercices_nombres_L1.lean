@@ -11,7 +11,8 @@ import tactic
 import structures2      -- hypo_analysis, targets_analysis
 import utils            -- no_meta_vars
 import user_notations   -- notations that can be used in deaduction UI for a new object
-import compute          -- tactics for computation, used by the Goal! button
+import compute3          -- tactics for computation, used by the Goal! button
+
 
 -- dEAduction definitions
 -- import set_definitions
