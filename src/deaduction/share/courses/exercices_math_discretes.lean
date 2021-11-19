@@ -1,9 +1,13 @@
 --import data.set
 import tactic
 
--- dEAduction imports
-import utils
-import structures2
+-- dEAduction tactics
+import structures2      -- hypo_analysis, targets_analysis
+import utils            -- no_meta_vars
+import user_notations   -- notations that can be used in deaduction UI for a new object
+
+-- dEAduction definitions
+import set_definitions
 
 -- General principles :
 -- Type should be defined as parameters, in order to be implicit everywhere
@@ -178,14 +182,14 @@ begin
     refl,
 end
 
-lemma definition.singleton : ∀ {X : Type} {x y : X}, x ∈ ({y} : set X) ↔ x = y
+lemma definition.singleton {X : Type} {x y : X} : x ∈ ({y} : set X) ↔ x = y
 :=
 /- dEAduction
 PrettyName
     Singleton
 -/
 begin
-    intros X x y, exact mem_singleton_iff,
+    exact mem_singleton_iff,
 end
 
 lemma definition.double_inclusion (A A' : set X) :
@@ -236,16 +240,16 @@ begin
     exact iff.rfl,
 end
 
-lemma definition.intersection_union (A B C : set X) :
-A ∩ (B ∪ C) = (A ∩ B) ∪ (A ∩ C) :=
+lemma definition.union_deux_ensembles {A B : set X} {x : X} :
+x ∈ A ∪ B ↔ ( x ∈ A ∨ x ∈ B) :=
 /- dEAduction
 PrettyName
-   Intersection avec une union
+    Union de deux ensembles
 ImplicitUse
     True
 -/
 begin
-  exact set.inter_distrib_left A B C,
+    exact iff.rfl,
 end
 
 lemma definition.partition 
@@ -690,6 +694,18 @@ PrettyName
 
 variables  {A B C : set X}
 
+
+lemma exercise.facile :
+B ⊆ A ∪ B  :=
+/- dEAduction
+PrettyName
+    L'union contient l'ensemble
+-/
+begin
+    todo,
+end
+
+
 namespace exercice2
 /- dEAduction
 PrettyName
@@ -949,7 +965,7 @@ PrettyName
     Exercice 22
 -/
 
-lemma exercise.question1 (X Y : Type) (f : X → Y) (R : set (X × X)) (H1 : ∀x x', (x, x') ∈ R ↔ f x = f x') :
+lemma exercise.question22_1 (X Y : Type) (f : X → Y) (R : set (X × X)) (H1 : ∀x x', (x, x') ∈ R ↔ f x = f x') :
 relation_equivalence R :=
 /- dEAduction
 PrettyName
