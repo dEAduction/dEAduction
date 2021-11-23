@@ -35,13 +35,9 @@ import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.actions import (InputType,
                                       MissingParametersError,
                                       WrongUserInput,
-                                      test_selection,
                                       action,
                                       CodeForLean,
-                                      apply_exists,
-                                      apply_and,
-                                      apply_or,
-                                      apply_substitute)
+                                      apply_or)
 
 from deaduction.pylib.mathobj import (MathObject,
                                       get_new_hyp,

@@ -33,7 +33,7 @@ import                logging
 import                qtrio
 import trio
 from copy import      copy, deepcopy
-from pickle import  ( dump, HIGHEST_PROTOCOL )
+from typing import Optional
 
 from PySide2.QtCore import ( QObject,
                              Signal,
@@ -115,9 +115,9 @@ class Coordinator(QObject):
         self.emw.close_coordinator = self.closeEvent
 
         # Information
-        self.proof_step                     = None  # Set later
-        self.previous_proof_step            = None
-        self.journal                        = Journal()
+        self.proof_step: Optional[ProofStep]          = None  # Set later
+        self.previous_proof_step: Optional[ProofStep] = None
+        self.journal                                  = Journal()
 
         # Flags
         self.exercise_solved                = False

@@ -18,7 +18,7 @@ import utils
 -- logic names ['and', 'or', 'negate', 'implicate', 'iff', 'forall', 'exists']
 -- proofs names ['use_proof_methods', 'new_object', 'apply', 'assumption']
 -- magic names ['compute']
--- proof methods names ['cbr', 'contrapose', 'absurdum', 'sorry']
+-- proof methods names ['cbr', 'contrapose', 'absurdum', 'todo']
 
 
 
@@ -122,7 +122,7 @@ end
 -- (A ≠ ∅) ↔ ∃ x : X, x ∈ A
 -- :=
 -- begin
---     sorry
+--     todo
 -- end
 
 -- set_option pp.all true
@@ -190,7 +190,7 @@ AutoTest
     ∧ 0, CQFD, CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_construct_and_right
@@ -201,7 +201,7 @@ AutoTest
     ∧ 1, CQFD, CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_apply_and
@@ -213,7 +213,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_construct_and_hyp
@@ -224,7 +224,7 @@ AutoTest
     @P1 @P2 ∧, CQFD
 -/
 begin
-  sorry,
+  todo,
 end
 end tests_and
 
@@ -241,7 +241,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_construct_or_left
@@ -252,7 +252,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 
@@ -268,7 +268,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_apply_or_right
@@ -282,7 +282,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_construct_or_on_hyp_left
@@ -294,7 +294,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_construct_or_on_hyp_right
@@ -306,7 +306,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 end test_or
@@ -326,7 +326,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_action_negate_target
@@ -340,7 +340,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 end test_not
@@ -359,7 +359,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_apply_implicate
@@ -371,7 +371,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_apply_implicate_to_hyp
@@ -383,7 +383,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_apply_implicate_to_hyp_2
@@ -396,7 +396,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 end test_implicate
 
@@ -414,7 +414,7 @@ AutoTest
     ↔ 0, CQFD, CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_construct_iff_right
@@ -426,7 +426,19 @@ AutoTest
     ↔ 1, CQFD, CQFD
 -/
 begin
-  sorry
+  todo
+end
+
+lemma exercise.test_construct_iff_with_and
+(P Q : Prop) (H1: P → Q) (H2: Q → P):
+P ↔ Q
+:=
+/- dEAduction
+AutoTest
+    ∧ 0, CQFD, CQFD
+-/
+begin
+  todo
 end
 
 lemma exercise.test_destruct_iff
@@ -438,20 +450,21 @@ AutoTest
     ↔, CQFD
 -/
 begin
-  sorry,
+  todo,
 end
 
-lemma exercise.test_destruct_iff_on_hyp
-(P Q : Prop) (H1: P ↔ Q):
-(P → Q) ∧ (Q → P)
-:=
-/- dEAduction
-AutoTest
-    H1 ↔, CQFD
--/
-begin
-  sorry
-end
+-- lemma exercise.test_destruct_iff_on_hyp
+-- (P Q : Prop) (H1: P ↔ Q):
+-- (P → Q) ∧ (Q → P)
+-- :=
+-- /- dEAduction
+-- AutoTest
+--     H1 ↔, CQFD
+-- -/
+-- begin
+--   cases H1 with H1a H1b, split,
+--   assumption, assumption,
+-- end
 
 lemma exercise.test_construct_iff_on_hyp
 (P Q : Prop) (H1: P → Q) (H2: Q → P):
@@ -462,8 +475,37 @@ AutoTest
     H1 H2 ↔, CQFD
 -/
 begin
-  sorry
+  todo
 end
+
+
+lemma exercise.test_iff_as_implies_target
+(X: Type) (P Q : X → Prop)
+(H: ∀ x, (P x ↔ Q x))  (x:X) (H': P x) :
+Q x
+:=
+/- dEAduction
+AutoTest
+    H ↔, CQFD
+-/
+begin
+  todo
+end
+
+
+lemma exercise.test_iff_as_implies_hyp
+(X: Type) (P Q : X → Prop)
+(H: ∀ x, (P x ↔ Q x))  (x:X) (H': P x) :
+Q x
+:=
+/- dEAduction
+AutoTest
+    H H' ↔, CQFD
+-/
+begin
+  todo
+end
+
 
 end test_iff
 
@@ -483,7 +525,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_apply_forall_to_hyp
@@ -496,7 +538,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 end test_forall
 
@@ -516,7 +558,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_construct_exists_2
@@ -529,7 +571,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_apply_exists_and_construct_exists_on_hyp
@@ -546,7 +588,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end  
 end test_exists
 
@@ -565,7 +607,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_apply_equality_target1
@@ -576,7 +618,7 @@ AutoTest
     H = 0
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_apply_equality_target2
@@ -587,7 +629,7 @@ AutoTest
     H = 1
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_apply_equality_equality1
@@ -599,7 +641,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_apply_equality_equality2
@@ -611,7 +653,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_apply_equality_equality_and_direction1
@@ -623,7 +665,7 @@ AutoTest
     proof_methods 3
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_apply_equality_equality_and_direction2
@@ -635,7 +677,7 @@ AutoTest
     proof_methods 3
 -/
 begin
-  sorry
+  todo
 end
 lemma exercise.test_apply_equality_equality_and_direction3
 (x y z : X) (f: X → Y) (H: x = y) (H': x = y):
@@ -646,7 +688,7 @@ AutoTest
     proof_methods 3
 -/
 begin
-  sorry
+  todo
 end
 lemma exercise.test_apply_equality_equality_and_direction4
 (x y z : X) (f: X → Y) (H: x = y) (H': x = y):
@@ -657,7 +699,7 @@ AutoTest
     proof_methods 3
 -/
 begin
-  sorry
+  todo
 end
 
 end test_equality
@@ -676,7 +718,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_map_equality2
@@ -688,7 +730,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_map_element_1
@@ -700,7 +742,7 @@ AutoTest
     y exists
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_map_element_2
@@ -712,7 +754,7 @@ AutoTest
     y exists
 -/
 begin
-  sorry
+  todo
 end
 
 
@@ -725,7 +767,7 @@ AutoTest
     proof_methods 3
 -/
 begin
-  sorry
+  todo
 end
 
 

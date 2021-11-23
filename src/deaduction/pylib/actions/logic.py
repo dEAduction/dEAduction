@@ -5,7 +5,8 @@
 ############################################################
     
 Every function action_* takes the following arguments:
-- goal: the current goal, of class Goal
+- proof_step: the current proof_step, of class ProofStep, that contains
+various informations about the current proof state
 - selected_objects: a list of MathObject previously selected by the user
 - target_selected: a boolean that indicates if target is selected.
 The following alternative is assumed:
@@ -18,7 +19,7 @@ previous call of the same function.
 
 Most of these functions are just switches that call other more
 specialised functions, according to the number and nature of
-selected_objects. All these auxiliary functions occurs immmediately before the
+selected_objects. All these auxiliary functions occurs immediately before the
 function action_* in the present file.
 
 Author(s)     : - Marguerite Bin <bin.marguerite@gmail.com>
@@ -46,7 +47,7 @@ This file is part of dEAduction.
 """
 
 import logging
-from typing import Union
+from typing import Union, Optional
 
 from deaduction.pylib.math_display.display_data import new_objects
 
@@ -85,17 +86,17 @@ def rw_with_defi(definition, object=None):
 def construct_and(proof_step, user_input: [str]) -> CodeForLean:
     """
     Split the target 'P AND Q' into two sub-goals.
-    Handle the case of an implicit "and".
+    Handle the case of an implicit "and", and the case of IFF.
     """
     target = proof_step.goal.target.math_type
+    if target.is_iff(is_math_type=True):
+        return construct_iff(proof_step, user_input)
 
     implicit_definition = None
-    if not (target.is_and(is_math_type=True, implicit=True)
-            or target.is_iff(is_math_type=True)):
+    if not target.is_and(is_math_type=True, implicit=True):
         raise WrongUserInput(error=_("Target is not a conjunction 'P AND Q'"))
 
-    if not (target.is_and(is_math_type=True)
-            or target.is_iff(is_math_type=True)):
+    if not target.is_and(is_math_type=True):
         # Implicit "and"
         implicit_definition = MathObject.last_used_implicit_definition
         target              = MathObject.last_rw_object
@@ -120,14 +121,9 @@ def construct_and(proof_step, user_input: [str]) -> CodeForLean:
             code = CodeForLean.empty_code()
         if user_input[0] == 1:
             # Prove second property first
-            # if implicit_definition:
-            #     code_rw = rw_with_defi(implicit_definition)
-            #     code = code_rw.and_then("rw and.comm")
             if target.node == "PROP_∃":
                 # In this case, first rw target as a conjunction
                 code = code.and_then("rw exists_prop")
-                # code = CodeForLean.and_then_from_list(["rw exists_prop",
-                #                                        "rw and.comm"])
             code = code.and_then("rw and.comm")
             left, right = right, left
 
@@ -577,6 +573,24 @@ def action_implies(proof_step,
 # IFF #
 #######
 
+def choose_substitution(equality0: MathObject, equality1: MathObject):
+    """
+    Ask usr to choose between using equality0 t substitute in equality1 or
+    the converse. equality0, equality1 are assumed to be (universal)
+    equality or iff.
+    """
+    eq0 = equality0.to_display(format_="utf8")
+    eq1 = equality1.to_display(format_="utf8")
+    choice = _("Use for substitution in {}")
+    choices = [(eq0, choice.format(eq1)),
+               (eq1, choice.format(eq0))]
+    raise MissingParametersError(
+        InputType.Choice,
+        choices,
+        title=_("Precision of substitution"),
+        output=_("Choose which equality to use for substitution"))
+
+
 def construct_iff(proof_step, user_input: [str]) -> CodeForLean:
     """
     Assuming target is an iff, split into two implications.
@@ -637,6 +651,11 @@ def destruct_iff(proof_step) -> CodeForLean:
                 and right.is_implication(is_math_type=True):
             code = CodeForLean.from_string("apply iff_def.mp")
             code.add_success_msg(_("Target replaced by iff property"))
+            error_msg = _("The first implication is not the converse of the "
+                          "second one")
+        else:
+            error_msg = _("The conjunctions are not both implications")
+        code.add_error_msg(error_msg)
     return code
 
 
@@ -671,7 +690,24 @@ def construct_iff_on_hyp(proof_step,
     code = CodeForLean.from_string(code_string)
     code.add_success_msg(_("Logical equivalence {} added to the context").
                              format(new_hypo_name))
+    error_msg = _("The first implication is not the converse of the "
+                  "second one")
+    code.add_error_msg(error_msg)
     return code
+
+
+def rw_with_iff(rw_hyp: MathObject,
+                on_hyp: Optional[MathObject] = None) -> CodeForLean:
+    """
+    Try to use rw_hyp, assumed to be a (universal) iff,
+    to rewrite either on_hyp if any, or target.
+    """
+    code1 = code_for_substitution(rw_hyp, old_term=None, new_term=None,
+                                  on_hyp=on_hyp)
+    code2 = code_for_substitution(rw_hyp, old_term=None, new_term=None,
+                                  on_hyp=on_hyp, reverse=True)
+
+    return code1.or_else(code2)
 
 
 @action()
@@ -686,40 +722,75 @@ def action_iff(proof_step,
             introduce two subgoals, P⇒Q, and Q⇒P.
         If target is of the form (P → Q) ∧ (Q → P):
             replace by P ↔ Q
-    (2) 1 selected property, which is an iff P ⇔ Q:
-        split it into two implications P⇒Q, and Q⇒P.
+    (2) 1 selected property
+        - if a universal iff, try to rw target,
+        - if an iff, and rw failed, split it
     (3) 2 properties:
-        try to obtain P ⇔ Q.
+        - if one is a universal iff, try to rw the other,
+        - if none is an iff but both are implications, try to obtain P ⇔ Q.
     """
+    # TODO: a good part could be merged with action_equal,
+    #  in particular add testing of direction of substitution for a
+    #  non-universal iff.
+
     if user_input is None:
         user_input = []
 
     test_selection(selected_objects, target_selected)
     goal = proof_step.goal
+    code = CodeForLean.empty_code()
+    test_subst = [item.can_be_used_for_substitution()
+                  for item in selected_objects]
 
     if len(selected_objects) == 0:
-        if goal.target.math_type.node != "PROP_IFF":
+        if goal.target.math_type.node == "PROP_IFF":
+            return construct_iff(proof_step, user_input)
+        else:
             code = destruct_iff(proof_step)
             if code:
                 return code
             else:
-                raise WrongUserInput(
-                    error=_("Target is not an iff property 'P ⇔ Q'"))
-        else:
-            return construct_iff(proof_step, user_input)
+                error_msg = _("Target is not an iff property 'P ⇔ Q'")
+                raise WrongUserInput(error=error_msg)
+
     if len(selected_objects) == 1:
-        if selected_objects[0].math_type.node != "PROP_IFF":
+        [(test, eq)] = test_subst
+        if test:  # 1st selected object can be used for substitution
+            code = rw_with_iff(selected_objects[0])
+        elif not selected_objects[0].is_iff():
             error = _("Selected property is not an iff property 'P ⇔ Q'")
             raise WrongUserInput(error)
-        else:
-            return destruct_iff_on_hyp(proof_step, selected_objects)
+        if selected_objects[0].is_iff():
+            more_code = destruct_iff_on_hyp(proof_step, selected_objects)
+            code = code.or_else(more_code)
+        return code
+
     if len(selected_objects) == 2:
-        if not (selected_objects[0].math_type.is_prop()
-                and selected_objects[1].math_type.is_prop()):
+        [(test0, equality0), (test1, equality1)] = test_subst
+        if test0 and test1:
+            # Two iff: which one to use?
+            if not user_input:
+                choose_substitution(equality0, equality1)
+            elif user_input[0] == 0:
+                return rw_with_iff(selected_objects[0],
+                                   on_hyp=selected_objects[1])
+            else:
+                return rw_with_iff(selected_objects[1],
+                                   on_hyp=selected_objects[0])
+        elif test0:
+            return rw_with_iff(selected_objects[0],
+                               on_hyp= selected_objects[1])
+        elif test1:
+            return rw_with_iff(selected_objects[1],
+                               on_hyp= selected_objects[0])
+
+        elif not (selected_objects[0].is_implication()
+                  and selected_objects[1].is_implication()):
             error = _("Selected items should both be implications")
             raise WrongUserInput(error)
         else:
             return construct_iff_on_hyp(proof_step, selected_objects)
+
     raise WrongUserInput(error=_("Does not apply to more than two properties"))
 
 
@@ -1082,52 +1153,81 @@ def action_exists(proof_step,
 #########
 # EQUAL #
 #########
+def code_for_substitution(rw_hyp: MathObject,
+                          old_term: str = None, new_term: str = None,
+                          on_hyp: Optional[MathObject] = None,
+                          reverse=False) -> CodeForLean:
+    """
+    Return code for using rw_hyp to substitute in on_hyp
+    (or in target if on_hyp=None),
+    in reverse direction if reverse=True.
+    Success msg will display "old_term" replaced by "new_term".
+    """
+    rw_hyp_name = rw_hyp.info['name']
+    on_hyp_name = on_hyp.info['name'] if on_hyp else _("the target")
+
+    success_msg = _("{} replaced by {}").format(old_term, new_term) \
+        if old_term and new_term else \
+        _("Substitution using {}").format(rw_hyp_name)
+    success_msg += " " + _("in {}").format(on_hyp_name)
+    error_msg = _("Unable to substitute {} by {}").format(old_term, new_term) \
+    if old_term and new_term else _("Unable to use {} to substitute in {}"
+                                    ).format(rw_hyp_name, on_hyp_name)
+
+    reverse_code = " <- " if reverse else " "
+    rw_code = "rw" + reverse_code + "{}"
+    used_hyp = [rw_hyp]
+    if on_hyp:
+        used_hyp.append(on_hyp)
+        rw_code += " at {}"
+
+    simp_rw_code = "simp_" + rw_code
+    # Replace hyp by their names:
+    used_hyp = [hyp.info["name"] for hyp in used_hyp]
+    code_strings = [rw_code.format(*used_hyp), simp_rw_code.format(*used_hyp)]
+    code = CodeForLean.or_else_from_list(code_strings)
+    code.add_success_msg(success_msg)
+    code.add_error_msg(error_msg)
+    return code
 
 
 def apply_substitute(proof_step,
                      selected_objects: [MathObject],
                      user_input: [int],
-                     equality,
-                     equality_nb=-1):
+                     equality: MathObject,
+                     equality_nb=-1) -> CodeForLean:
     """
-    Try to rewrite the goal or the first selected property using the last
-    selected property.
+    Try to use the selected property indicated by equality_nb to rewrite the
+    goal or the other selected property:
+    - if there is exactly 1 selected property, rewrite the goal,
+    - if there are exactly 2 selected properties, rewrite the 1st one with
+    the equality contained in the second one.
+
+    In both cases, ask for the direction of rewriting if there is an ambiguity.
+    If no ambiguity is detected, successively try both directions.
     """
 
     goal = proof_step.goal
 
     codes = CodeForLean.empty_code()
     heq = selected_objects[equality_nb]  # Property to be used for substitution
-    heq_name = heq.info["name"]
-    left = equality.children[0]
-    right = equality.children[1]
+
+    left: MathObject = equality.children[0]
+    right: MathObject = equality.children[1]
     left_display = left.to_display(format_="utf8")
     right_display = right.to_display(format_="utf8")
-    success1 = ' ' + _("{} replaced by {}").format(left_display,
-                                                   right_display)\
-               + ' '
-    success2 = ' ' + _("{} replaced by {}").format(right_display,
-                                                   left_display)\
-               + ' '
-    choices = [(left_display,
-                f'Replace by {right_display}'),
-               (right_display,
-                f'Replace by {left_display}')]
+    choices = [(left_display, f'Replace by {right_display}'),
+               (right_display, f'Replace by {left_display}')]
 
     if len(selected_objects) == 1:
-        # If the user has chosen a direction, apply substitution
-        # else if both directions make sense, ask the user for a choice
-        # else try direct way or else reverse way.
-        # h = l[0].info["name"] Useless
         if len(user_input) > 0:
-            if user_input[0] == 1:
-                success_msg = success2 + _("in target")
-                more_code = CodeForLean.from_string(f'rw <- {heq_name}',
-                                                    success_msg=success_msg)
-            elif user_input[0] == 0:
-                success_msg = success1 + _("in target")
-                more_code = CodeForLean.from_string(f'rw {heq_name}',
-                                                    success_msg=success_msg)
+            if user_input[0] == 0:  # Direct substitution
+                more_code = code_for_substitution(heq,
+                                                  left_display, right_display)
+            elif user_input[0] == 1:  # Reverse substitution
+                more_code = code_for_substitution(heq,
+                                                  right_display, left_display,
+                                                  reverse=True)
             codes = codes.or_else(more_code)
         else:
             if goal.target.math_type.contains(left) and \
@@ -1138,36 +1238,28 @@ def apply_substitute(proof_step,
                     choices,
                     title=_("Precision of substitution"),
                     output=_("Choose which expression you want to replace"))
-            else:
-                msg2 = success2 + _("in target")
-                more_code2 = CodeForLean.from_string(f'rw <- {heq_name}',
-                                                     success_msg=msg2)
-                codes = codes.or_else(more_code2)
-                msg1 = success1 + _("in target")
-                more_code1 = CodeForLean.from_string(f'rw {heq_name}',
-                                                     success_msg=msg1)
-                codes = codes.or_else(more_code1)
+            else:  # Try both direction
+                more_code1 = code_for_substitution(heq,
+                                                   left_display, right_display)
+                more_code2 = code_for_substitution(heq,
+                                                   right_display, left_display,
+                                                   reverse=True)
+                codes = more_code1.or_else(more_code2)
 
     if len(selected_objects) == 2:
         prop_nb = 0 if equality_nb != 0 else 1
         prop = selected_objects[prop_nb]
-        prop_name = prop.info["name"]
-        # heq_name = l[-1].info["name"]
-        # Note that the pertinent user_input here is user_input[1]
-        #  (user_input[0] contains the choice of selected_object to be used
-        #  for substitution, or None if no choice)
         if len(user_input) > 1:
-            if user_input[1] == 1:
-                success_msg = success2 + _("in {}").format(prop_name)
-                more_code = CodeForLean.from_string(
-                                            f'rw <- {heq_name} at {prop_name}',
-                                            success_msg=success_msg)
+            if user_input[1] == 0:
+                more_code = code_for_substitution(heq,
+                                                  left_display, right_display,
+                                                  on_hyp=prop)
                 codes = codes.or_else(more_code)
-
-            elif user_input[1] == 0:
-                success_msg = success1 + _("in {}").format(prop_name)
-                more_code = CodeForLean.from_string(
-                    f'rw {heq_name} at {prop_name}', success_msg=success_msg)
+            elif user_input[1] == 1:
+                more_code = code_for_substitution(heq,
+                                                  right_display, left_display,
+                                                  on_hyp=prop,
+                                                  reverse=True)
                 codes = codes.or_else(more_code)
         else:
             if prop.math_type.contains(left) and \
@@ -1178,20 +1270,23 @@ def apply_substitute(proof_step,
                     title=_("Precision of substitution"),
                     output=_("Choose which expression you want to replace"))
 
-        msg2 = success2 + _("in {}").format(prop_name)
-        more_code2 = CodeForLean.from_string(f'rw <- {heq_name} at {prop_name}',
-                                             success_msg=msg2)
-        codes = codes.or_else(more_code2)
-        msg1 = success1 + _("in {}").format(prop_name)
-        more_code1 = CodeForLean.from_string(f'rw {heq_name} at {prop_name}',
-                                             success_msg=msg1)
-        codes = codes.or_else(more_code1)
+            else:  # We have not found possible rw, but maybe Lean will
+                more_code1 = code_for_substitution(heq,
+                                                   left_display, right_display,
+                                                   on_hyp=prop)
+                more_code2 = code_for_substitution(heq,
+                                                   right_display, left_display,
+                                                   on_hyp=prop,
+                                                   reverse=True)
+                codes = codes.or_else(more_code1)
+                codes = codes.or_else(more_code2)
 
     if heq.is_for_all():
         # if property is, e.g. "∀n, u n = c"
         # there is a risk of meta vars if Lean does not know to which n
-        # applying the equality
+        # apply the equality
         codes = codes.and_then('no_meta_vars')
+
     return codes
 
 
@@ -1207,7 +1302,7 @@ def action_equal(proof_step,
     TODO: implement iff substitution with iff button rather than equal
         button
     """
-    if user_input == None:
+    if user_input is None:
         user_input = []
 
     equality_nb = -1  # Default nb of property to be used for substitution
@@ -1219,13 +1314,6 @@ def action_equal(proof_step,
         raise WrongUserInput(error=_("Too many selected objects"))
 
     # Try all properties for substitution
-    # selected_objects.reverse()  # Last selected first
-    # for prop in selected_objects:
-    #     test, equality = prop.can_be_used_for_substitution()
-    #     if test:
-    #         selected_objects.remove(prop)
-    #         selected_objects.insert(0, prop)  # Put equality first ???
-    #         break
     elif len(selected_objects) == 2:
         prop0, prop1 = selected_objects[0], selected_objects[1]
         test0, equality0 = prop0.can_be_used_for_substitution()
@@ -1233,16 +1321,7 @@ def action_equal(proof_step,
         if test0 and test1:
             # Two equalities: which one to use?
             if not user_input:
-                eq0 = equality0.to_display(format_="utf8")
-                eq1 = equality1.to_display(format_="utf8")
-                choice = _("Use for substitution in {}")
-                choices = [(eq0, choice.format(eq1)),
-                           (eq1, choice.format(eq0))]
-                raise MissingParametersError(
-                    InputType.Choice,
-                    choices,
-                    title=_("Precision of substitution"),
-                    output=_("Choose which equality to use for substitution"))
+                choose_substitution(equality0, equality1)
             elif user_input[0] == 0:
                 equality = equality0
                 equality_nb = 0
@@ -1266,13 +1345,8 @@ def action_equal(proof_step,
             error = _("This cannot be used for substitution")
             raise WrongUserInput(error)
 
-    # selected_objects.reverse()  # Back in the original order
-    codes = CodeForLean.empty_code()
-    codes = codes.or_else(apply_substitute(proof_step,
-                                           selected_objects,
-                                           user_input,
-                                           equality,
-                                           equality_nb))
+    codes = apply_substitute(proof_step, selected_objects, user_input,
+                             equality, equality_nb)
     return codes
 
 

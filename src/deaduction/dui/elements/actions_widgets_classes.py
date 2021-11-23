@@ -407,11 +407,11 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
     def from_statement(cls, statement):
         return cls.from_lean_name.get(statement.lean_name)
 
+    @classmethod
     def from_end_of_lean_name(cls, name):
-        for key, value in cls.from_lean_name:
+        for key in cls.from_lean_name:
             if key.endswith(name):
-                return value
-
+                return cls.from_lean_name[key]
 
 
 class StatementsTreeWidgetNode(QTreeWidgetItem):
