@@ -1197,7 +1197,7 @@ class MathObject:
             else:  # Node not found in dictionaries: try specific methods
                 shape = raw_latex_shape_from_specific_nodes(self, negate)
 
-        log.debug(f"    --> Raw shape: {shape}")
+        # log.debug(f"    --> Raw shape: {shape}")
         return shape
 
     def expanded_latex_shape(self, text_depth=0):
@@ -1237,11 +1237,11 @@ class MathObject:
         #   then you probably have to do the same changes in
         #   ContextMathObject.math_type_to_display.
 
-        log.debug(f"Displaying: {self.display_name}...")
+        # log.debug(f"Displaying: {self.display_name}...")
         # (1) Latex shape, includes treatment of "in"
         # needs_paren is called --> '\parentheses'
         abstract_string = self.expanded_latex_shape(text_depth=text_depth)
-        log.debug(f"(1) --> abstract string: {abstract_string}")
+        # log.debug(f" --> abstract string: {abstract_string}")
         # (2) Replace some symbol by plain text:
         display = shallow_latex_to_text(abstract_string, text_depth)
         # log.debug(f"(2) --> to text: {abstract_string}")

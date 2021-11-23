@@ -551,8 +551,8 @@ class ExerciseStatusBar(QStatusBar):
         else:
             tmp_msg = proof_step.success_msg
         # Capitalize first char but do not un-capitalize the remaining
-        if tmp_msg:  # Fixme: remove and capitalize msgs correctly!
-            tmp_msg = tmp_msg[0].capitalize() + tmp_msg[1:]
+        # if tmp_msg:  # Fixme: remove and capitalize msgs correctly!
+        #     tmp_msg = tmp_msg[0].capitalize() + tmp_msg[1:]
 
         if proof_step.is_error():
             log.debug("StatusBar: " + tmp_msg)

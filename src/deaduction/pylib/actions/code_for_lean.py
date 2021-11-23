@@ -17,7 +17,8 @@ replace the original code by the effective simplified version via the
 
 
 Author(s)     : - Marguerite Bin <bin.marguerite@gmail.com>
-Maintainer(s) : - Marguerite Bin <bin.marguerite@gmail.com>
+                - Frédéric Le ROux <frederic.le-roux@imj-prg.fr>
+Maintainer(s) : - Frédéric Le ROux <frederic.le-roux@imj-prg.fr>
 Created       : July 2020 (creation)
 Repo          : https://github.com/dEAduction/dEAduction
 
@@ -45,7 +46,7 @@ from typing import Any, Union, List, Optional
 
 class LeanCombinator(str):
     """
-    Class clarifying combinators for CodeForLean
+    Class clarifying combinators for CodeForLean.
     """
     single_string =     ""
     and_then =          "and_then"
@@ -68,13 +69,13 @@ class CodeForLean:
     - a success_msg can be added, to be displayed in case of success
     (depending of the effective code in case of or_else combinator)
     """
-    instructions: [Any]   # [str or CodeForLean]
+    instructions: [Any]   # type: Union[str, CodeForLean]
     combinator:   str = LeanCombinator.single_string
     error_msg:    str = ""
     success_msg:  str = ""
-    conjunction       = None  # type: (Union[MathObject, str])
-    disjunction       = None  # type: (Union[MathObject, str])
-    subgoal           = None  # type: (Union[MathObject, str])
+    conjunction       = None  # type: Union[MathObject, str]
+    disjunction       = None  # type: Union[MathObject, str]
+    subgoal           = None  # type: Union[MathObject, str]
     # The following is used to store the number of an or_else instructions
     or_else_node_number:   Optional[int] = None
 
