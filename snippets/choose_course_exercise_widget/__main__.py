@@ -27,8 +27,7 @@ from PySide2.QtWidgets import ( QApplication,
                                 QVBoxLayout,
                                 QHBoxLayout)
 
-from deaduction.dui.utils import ( replace_delete_widget,
-                                   set_selectable)
+from deaduction.dui.utils import ( set_selectable)
 
 
 class DisclosureTree(QTreeWidget):
@@ -44,7 +43,8 @@ class DisclosureTree(QTreeWidget):
 
         self.setColumnCount(2)
         parent_item = QTreeWidgetItem(self, [f'{title} : '])
-        parent_item.set_selectable(False)
+        # parent_item.set_selectable(False)
+        parent_item.setFlags(Qt.ItemIsSelectable)
         self.addTopLevelItem(parent_item)
 
         for key, val in data.items():
@@ -52,7 +52,8 @@ class DisclosureTree(QTreeWidget):
             parent_item.addChild(item)
 
             # Cosmetics
-            item.set_selectable(False)
+            # item.set_selectable(False)
+            item.setFlags(Qt.NoItemFlags)
             item.setTextAlignment(0, Qt.AlignRight)
 
         # ──────────────────── Cosmetics ─────────────────── #

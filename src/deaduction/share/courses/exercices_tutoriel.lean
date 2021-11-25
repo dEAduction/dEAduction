@@ -30,7 +30,7 @@ Institution
 Description
     Ce fichier contient quelques exercices faciles et progressifs de théorie élémentaire
     des ensembles. Il peut être utilisé comme tutoriel pour d∃∀duction ; en particulier,
-    les boutons logiques sont introduits progrssivement.
+    les boutons logiques sont introduits progressivement.
 AvailableProof
     ALL -new_object
 AvailableMagic

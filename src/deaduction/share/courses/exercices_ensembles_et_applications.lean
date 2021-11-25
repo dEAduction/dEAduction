@@ -19,6 +19,8 @@ import set_definitions
 /- dEAduction
 Title
     Ensembles et applications
+Author
+    Frédéric Le Roux, Camille Lichère, Zoé Mesnil
 Institution
     Université du monde
 Description
@@ -27,7 +29,7 @@ Description
     les étudiant.e.s devraient avoir une bonne image mentale des définitions
     d'image directe et réciproque, ainsi que d'injectivité et de surjectivité.
 AvailableProof
-    proof_methods new_object apply
+    proof_methods new_object
 AvailableMagic
     assumption
 AvailableExercises

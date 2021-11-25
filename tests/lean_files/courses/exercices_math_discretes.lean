@@ -31,9 +31,7 @@ Title
 Author
     Alice Laroche
 Institution
-    
-AvailableMagic
-    ALL
+    Sorbonne Université    
 Description
     Exercices d'un cours de maths discrètes à Sorbonne Université.
     Les numéros de questions font référence à la feuille de TD.
@@ -794,7 +792,7 @@ PrettyName
     Question 7
 -/
 begin
-    todo,
+    targets_analysis,
 end
 
 end exercice2

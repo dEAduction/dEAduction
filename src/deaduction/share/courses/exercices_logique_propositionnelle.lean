@@ -15,6 +15,14 @@ import utils
 /- dEAduction
 Title
     Logique propositionnelle (tutorial)
+Author
+    Frédéric Le Roux
+Institution
+    Université du Monde
+Description
+    Ce fichier, qui peut servir de tutoriel, contient quelques énoncés de logiques propositionnelle.
+    Le but n'est pas de les démontrer du point de vue de la logique propositionnelle,
+    mais plutôt de voir comment l'interface fonctionne sur ces énoncés.
 DefaultAvailableProof
     NONE
 DefaultAvailableMagic
