@@ -25,11 +25,13 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
+# FIXME: the whole file is obsolete
 from PySide2.QtWidgets import QTreeWidgetItem
 from PySide2.QtCore    import Qt
+# from sys               import version_info
 
 
-def set_selectable(self, yes: bool = True):
+def set_selectable(self: QTreeWidgetItem, yes: bool = True):
     """
     This method is made for QTreeWidgetItem but probably works for other
     items as well. Make self to be selectable if yes or unselectable
@@ -38,11 +40,11 @@ def set_selectable(self, yes: bool = True):
 
     :param yes: See above.
     """
-    # FIXME: this does not work with Python3.10 ??
+
     if yes:
-        new_flags = self.flags() & Qt.ItemIsSelectable
+        self.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
     else:
-        new_flags = self.flags() & ~Qt.ItemIsSelectable
-    self.setFlags(new_flags)
+        self.setFlags(Qt.ItemIsEnabled)
+
 
 QTreeWidgetItem.set_selectable = set_selectable

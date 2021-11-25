@@ -436,8 +436,9 @@ class StatementsTreeWidgetNode(QTreeWidgetItem):
         super().__init__(None, [title])
 
         # Cosmetics
+        self.setFlags(Qt.ItemIsEnabled)
         self.setExpanded(True)
-        self.set_selectable(False)
+        # self.set_selectable(False)
 
     # @property
     # def is_exercise_list(self):

@@ -200,19 +200,20 @@ class AbstractCoExChooser(QWidget):
                                        'color:      gray;')
             subtitle_lyt.addWidget(subtitle_wgt)
             layout.addLayout(subtitle_lyt)
-        if details:
-            details_wgt = DisclosureTriangle('Details', details)
-            details_wgt.expand(expand_details)
-
-            layout.addWidget(details_wgt)
         if description:
             description_wgt = QLabel(description)
             description_wgt.setWordWrap(True)
             layout.addWidget(description_wgt)
+        if details:
+            details_wgt = DisclosureTriangle(_('Details:'), details)
+            details_wgt.expand(expand_details)
+
+            layout.addWidget(details_wgt)
+
+        layout.addStretch()  # Fixme: useless??
+
         if main_widget:
             layout.addWidget(main_widget)
-
-        # layout.addStretch()  # Fixme: useless??
 
         widget.setLayout(layout)
         replace_widget_layout(self.__main_layout, self.__preview_wgt, widget)
@@ -309,7 +310,7 @@ class CourseChooser(AbstractCoExChooser):
         description = course.description
 
         # Details
-        details = course.metadata
+        details = course.nice_metadata
         # Remove title, subtitle and description from details
         # TODO: Prevent user for using a 'Path' attribute (in the course
         # file) when writing a course.
