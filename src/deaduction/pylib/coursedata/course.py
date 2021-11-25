@@ -52,10 +52,13 @@ from deaduction.pylib.coursedata import (   Exercise,
                                             Definition,
                                             Theorem,
                                             Statement)
+
 import deaduction.pylib.coursedata.parser_course as parser_course
+from .course_metadata_translations import metadata_nice_text
 
 log = logging.getLogger(__name__)
 global _
+
 
 @dataclass
 class Course:
@@ -105,8 +108,8 @@ class Course:
         """
         if 'subtitle' in self.metadata:
             return self.metadata['subtitle']
-        else:
-            return _("no subtitle")
+        # else:
+            # return _("no subtitle")
 
     @property
     def description(self) -> str:
@@ -136,6 +139,38 @@ class Course:
     @property
     def initial_proofs_complete(self):
         return None not in [st.initial_proof_state for st in self.statements]
+
+    @property
+    def nice_metadata(self) -> dict:
+        """
+        Produce a "nice" metadata dict by replacing
+        - keys by their translation if they appear in metadata_nice_text,
+        - values by replacing '_' by space and words by their translations.
+        """
+        nice_dict = {}
+        for key in self.metadata:
+            alt_key = metadata_nice_text[key] if key in metadata_nice_text \
+                                              else key
+            value = self.metadata[key]
+            if value in metadata_nice_text:
+                alt_value = metadata_nice_text[value]
+            else:
+                words = value.strip().split(' ')
+                alt_words = []
+                except_ = False
+                for word in words:
+                    if word.startswith("-"):
+                        word = word[1:]
+                        except_ = True
+                    word = metadata_nice_text[word] if word in metadata_nice_text \
+                        else word
+                    alt_words.append(word)
+                if except_:
+                    alt_words.insert(1, _('except'))
+                alt_value = ' '.join(alt_words)
+            nice_dict[alt_key] = alt_value
+
+        return nice_dict
 
     @classmethod
     def from_file(cls, course_path: Path):

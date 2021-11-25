@@ -37,8 +37,6 @@ Institution
     Université de France
 Description
     Ce cours correspond à un cours standard de théorie "élémentaire" des ensembles.
-AvailableMagic
-    ALL -compute
 -/
 
 local attribute [instance] classical.prop_decidable

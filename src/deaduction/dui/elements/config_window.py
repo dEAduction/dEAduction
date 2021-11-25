@@ -395,7 +395,7 @@ class ConfigWindow(QDialog):
             self.initial_settings[setting] = setting_value
 
             # ───────── Case of choice into a list: combo box ─────────
-            if setting_list and setting_list is not 'dir':
+            if setting_list and setting_list != 'dir':
                 pretty_setting_list = [_(PRETTY_NAMES[setting])
                                        if setting in PRETTY_NAMES
                                        else setting
