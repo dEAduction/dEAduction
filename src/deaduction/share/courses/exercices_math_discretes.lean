@@ -27,13 +27,11 @@ import set_definitions
 
 /- dEAduction
 Title
-    exercices de mathématiques discretes.
+    Exercices de mathématiques discretes
 Author
     Alice Laroche
 Institution
-    
-AvailableMagic
-    ALL
+    Sorbonne Université
 Description
     Exercices d'un cours de maths discrètes à Sorbonne Université.
     Les numéros de questions font référence à la feuille de TD.
