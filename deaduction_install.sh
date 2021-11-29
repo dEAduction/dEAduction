@@ -12,6 +12,7 @@ set -u
 #############
 abort() {
   printf "%s\n" "Aborted: $@"
+  printf "(If this is a permission issue, you may retry with the sudo command)"
   exit 1
 }
 
@@ -344,14 +345,8 @@ if [[ $UBUNTU_DEBIAN == 1 ]] ; then
   ohai "apt install python3-setuptools"
   continue ">>>>> Proceed? (y/n)"
 
-  ohai "apt install python3-venv python3-pip"
-  execute "apt" "install" "python3-venv" "python3-pip"
-
-  ohai "pip3 install --upgrade setuptools"
-  execute "pip3" "install" --upgrade" setuptools"
-
-  ohai "apt install python3-setuptools"
-  execute "apt" "install" "python3-setuptools"
+  ohai "apt install python3-venv python3-pip python3-setuptools"
+  execute "apt" "install" "python3-venv" "python3-pip" "python3-setuptools"
 
 else
   echo -e "#!/bin/bash
