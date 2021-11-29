@@ -7,6 +7,9 @@ set -u
 # execute with:
 # /bin/bash -c "$(curl -L https://raw.githubusercontent.com/dEAduction/dEAduction/master/deaduction_install.sh)"
 
+#############
+# Utilities #
+#############
 abort() {
   printf "%s\n" "Aborted: $@"
   exit 1
@@ -24,10 +27,82 @@ continue() {
   done
 }
 
+
+unset HAVE_SUDO_ACCESS # unset this from the environment
+
+have_sudo_access() {
+  if [[ ! -x "/usr/bin/sudo" ]]
+  then
+    return 1
+  fi
+
+  local -a SUDO=("/usr/bin/sudo")
+  if [[ -n "${SUDO_ASKPASS-}" ]]
+  then
+    SUDO+=("-A")
+  elif [[ -n "${NONINTERACTIVE-}" ]]
+  then
+    SUDO+=("-n")
+  fi
+
+  if [[ -z "${HAVE_SUDO_ACCESS-}" ]]
+  then
+    if [[ -n "${NONINTERACTIVE-}" ]]
+    then
+      "${SUDO[@]}" -l mkdir &>/dev/null
+    else
+      "${SUDO[@]}" -v && "${SUDO[@]}" -l mkdir &>/dev/null
+    fi
+    HAVE_SUDO_ACCESS="$?"
+  fi
+
+  if [[ -z "${HOMEBREW_ON_LINUX-}" ]] && [[ "${HAVE_SUDO_ACCESS}" -ne 0 ]]
+  then
+    abort "Need sudo access on macOS (e.g. the user ${USER} needs to be an Administrator)!"
+  fi
+
+  return "${HAVE_SUDO_ACCESS}"
+}
+
+shell_join() {
+  local arg
+  printf "%s" "$1"
+  shift
+  for arg in "$@"
+  do
+    printf " "
+    printf "%s" "${arg// /\ }"
+  done
+}
+
+chomp() {
+  printf "%s" "${1/"$'\n'"/}"
+}
+
+ohai() {
+  printf "${tty_blue}==>${tty_bold} %s${tty_reset}\n" "$(shell_join "$@")"
+}
+
+warn() {
+  printf "${tty_red}Warning${tty_reset}: %s\n" "$(chomp "$1")"
+}
+
+execute() {
+  if ! "$@"
+  then
+    abort "$(printf "Failed during: %s" "$(shell_join "$@")")"
+  fi
+}
+
+
+##########
+# CHECKS #
+##########
+
 # Check old deaduction
 if [ -d "$HOME".deaduction ]; then
   echo "(Deaduction has already been installed on this computer)"
-  continue "Do you want to proceed anyway? (y/n)"
+  continue ">>>>> Do you want to proceed anyway? (y/n)"
 fi
 
 # Check bash
@@ -45,12 +120,13 @@ fi
 OS="$(uname)"
 if [[ "$OS" == "Linux" ]]; then
   DEADUCTION_ON_LINUX=1
-  echo "WARNING: if you are on DEBIAN or UBUNTU, then envconfig_user"
-  echo "is not adapted."
-  echo "(use envconfig_user_ubuntu, "
-  eco "with apt install python3.8-venv python3-pip, "
-  echo "also consider pip3 install --upgrade stetuptools "
-  echo " and apt install python3-setuptools )"
+  VERSION=$(cat /etc/issue)
+  if [[ ${VERSION::6} == "Ubuntu" -o ${VERSION::6} == "Debian" ]]; then
+    UBUNTU_DEBIAN=1
+    echo "(Ubuntu or Debian detected, the envconfig_user_ubuntu file will be
+     used)"
+  fi
+
 elif [[ "$OS" = "Darwin" ]]; then
   DEADUCTION_ON_LINUX=0
 else
@@ -60,7 +136,7 @@ fi
 # Machine hardware name
 CPU="$(/usr/bin/uname -m)"
 if [[ "$CPU" == "arm64" ]]; then
-  echo "WARNING: Brew has some issues on the new mac M1 (as of 06/21)"
+  warn "Brew has some issues on the new mac M1 (as of 06/21)"
   echo "which may affect gmp install"
   echo "see e.g. https://www.wisdomgeek.com/development/installing-intel-based-packages-using-homebrew-on-the-m1-mac/"
   echo "and specifically https://leanprover-community.github.io/archive/stream/113489-new-members/topic/M1.20macs.html"
@@ -73,7 +149,7 @@ fi
 ##########
 # Check the python and python3 commands, success if one refer
 # to python ≥ 3.7
-echo "Deaduction nees python ≥ 3.7"
+echo "Deaduction needs python ≥ 3.7"
 if which python; then
   echo "python ->"
   python --version
@@ -81,12 +157,12 @@ if which python; then
   or sys.version_info.minor < 7) \
   else exit(0)'
   if [ $? == 0 ]; then
-    echo ">>> (the command python will work)"
+    ohai "the command 'python' will work"
     #  CMD_PYTHON="python"
     #  echo "using python cmd"
   fi
 else
-  echo "(the command 'python' will not work)"
+  ohai "the command 'python' will not work"
 fi
 
 if which python3; then
@@ -98,10 +174,10 @@ else exit(0)'
   if [ $? == 0 ]; then
     #    CMD_PYTHON="python3"
     #    echo "using python3 cmd"
-    echo ">>> (the command python3 will work)"
+    ohai "the command 'python3' will work"
   fi
 else
-  echo "(the command 'python3' will not work)"
+  ohai "the command 'python3' will not work"
 fi
 
 echo ">>> Type the command that should be used to launch python"
@@ -115,12 +191,15 @@ or sys.version_info.minor < 7) \
 else exit(0)'` &> /dev/null
 
 if [ "$PYTHON_FOR_DEADUCTION" == "" -o $? == 1 ]; then
-  echo "No python command or invalid python command given."
+  warn "No python command or invalid python command given."
   echo "To install Python, please check"
   if [ "$DEADUCTION_ON_LINUX" == 1 ]; then
-    echo "https://installpython3.com/linux/"
+    echo "The following instructions should work (on Ubuntu/Debian):"
+    echo "sudo apt update"
+    echo "sudo apt install python3.7 (or posterior versions)"
+    echo "See https://installpython3.com/linux/ for details"
   else
-    echo "https://installpython3.com/mac/"
+    echo "https://www.python.org/downloads/"
   fi
   abort ""
 fi
@@ -146,9 +225,9 @@ if [ $DEADUCTION_ON_LINUX == 0 ]; then
   echo "Testing gmp (Gnu MultiPrecision, needed by Lean)"
   if [ $FOUND_BREW == 1 ]; then
     if brew info gmp &> /dev/null; then
-      echo "Found gmp !"
+      ohai "Found gmp !"
     else
-      echo "gmp not found"
+      ohai "gmp not found"
       if [[ "$CPU" == "arm64" ]]; then
         echo "(WARNING: see above issue for brew and gmp on Mac M1)"
       fi
@@ -167,10 +246,10 @@ fi
 # git #
 #######
 if which git &> /dev/null; then
-  echo "(Found git)"
+  ohai "Found git"
   FOUND_GIT=1
 else
-  echo "(git not found: see https://git-scm.com/book/fr/v2/D%C3%A9marrage-rapide-Installation-de-Git if needed)"
+  warning "git not found: see https://git-scm .com/book/fr/v2/D%C3%A9marrage-rapide-Installation-de-Git if needed"
   FOUND_GIT=0
   # TODO: handle git installation
   echo "If you want to use git to keep deaduction up-to-date,"
@@ -193,9 +272,9 @@ fi
 # TODO: choose location
 # TODO: tester si curl existe?
 
-  echo ">>> Deaduction will be installed inside a directory named 'dEAduction/'"
-  echo ">>> in the current directory."
-  continue ">>> Proceed with download? (y/n)"
+  ohai "Deaduction will be installed inside a directory named 'dEAduction/'"
+  echo "in the current directory."
+  continue ">>>>> Proceed with download? (y/n)"
 
 ############
 # DOWNLOAD #
@@ -230,24 +309,57 @@ cd dEAduction
 # The following will write a script with adequate name for the python cmd
 # and store it in deaduction_launcher.sh
 
-echo -e "#!/bin/bash
+if [[ $UBUNTU_DEBIAN == 1 ]] ; then
 
-# Necessary for envconfig_user:
-export PYTHON_FOR_DEADUCTION=$PYTHON_FOR_DEADUCTION
-export DEADUCTION_DIR=$(pwd)
+  echo -e "#!/bin/bash
 
-cd \$DEADUCTION_DIR
-source envconfig_user
-export PYTHONPATH=\$PYTHONPATH:\"$(pwd)/src\"
-cd src/deaduction
+  # Necessary for envconfig_user:
+  export PYTHON_FOR_DEADUCTION=$PYTHON_FOR_DEADUCTION
+  export DEADUCTION_DIR=$(pwd)
 
-$PYTHON_FOR_DEADUCTION -m dui" > ../deaduction_launcher.sh
+  cd \$DEADUCTION_DIR
+  source envconfig_user_ubuntu
+  export PYTHONPATH=\$PYTHONPATH:\"$(pwd)/src\"
+  cd src/deaduction
+
+  $PYTHON_FOR_DEADUCTION -m dui" > ../deaduction_launcher.sh
+
+  warn "Since you are on Ubuntu or Debian, We will now run the following commands:"
+  ohai "apt install python3-venv python3-pip"
+  ohai "pip3 install --upgrade setuptools"
+  ohai "apt install python3-setuptools"
+  continue ">>>>> Proceed? (y/n)"
+
+  ohai "apt install python3-venv python3-pip"
+  execute "apt" "install" "python3-venv" "python3-pip"
+
+  ohai "pip3 install --upgrade setuptools"
+  execute "pip3" "install" --upgrade" setuptools"
+
+  ohai "apt install python3-setuptools"
+  execute "apt" "install" "python3-setuptools"
+
+else
+  echo -e "#!/bin/bash
+
+  # Necessary for envconfig_user:
+  export PYTHON_FOR_DEADUCTION=$PYTHON_FOR_DEADUCTION
+  export DEADUCTION_DIR=$(pwd)
+
+  cd \$DEADUCTION_DIR
+  source envconfig_user
+  export PYTHONPATH=\$PYTHONPATH:\"$(pwd)/src\"
+  cd src/deaduction
+
+  $PYTHON_FOR_DEADUCTION -m dui" > ../deaduction_launcher.sh
+fi
 
 chmod u+x ../deaduction_launcher.sh
 
-echo ">>> You can now try to start deaduction by executing"
-echo "deaduction_launcher.sh"
-echo "(The launcher can be put anywhere,"
+echo "You can now try to start deaduction by executing"
+ohai "deaduction_launcher.sh"
+echo "(This launcher file can be put anywhere,"
 echo "e.g. in your Applications/ directory)"
 echo "First execution will download Lean and the Mathlib,"
 echo "and create a virtual env for Python (be patient...)"
+
