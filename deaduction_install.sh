@@ -27,6 +27,19 @@ continue() {
   done
 }
 
+# string formatters
+if [[ -t 1 ]]
+then
+  tty_escape() { printf "\033[%sm" "$1"; }
+else
+  tty_escape() { :; }
+fi
+tty_mkbold() { tty_escape "1;$1"; }
+tty_underline="$(tty_escape "4;39")"
+tty_blue="$(tty_mkbold 34)"
+tty_red="$(tty_mkbold 31)"
+tty_bold="$(tty_mkbold 39)"
+tty_reset="$(tty_escape 0)"
 
 unset HAVE_SUDO_ACCESS # unset this from the environment
 
@@ -100,7 +113,7 @@ execute() {
 ##########
 
 # Check old deaduction
-if [ -d "$HOME".deaduction ]; then
+if [ -d "$HOME/.deaduction" ]; then
   echo "(Deaduction has already been installed on this computer)"
   continue ">>>>> Do you want to proceed anyway? (y/n)"
 fi
@@ -118,6 +131,7 @@ fi
 
 # Check OS.
 OS="$(uname)"
+UBUNTU_DEBIAN=0
 if [[ "$OS" == "Linux" ]]; then
   DEADUCTION_ON_LINUX=1
   VERSION=$(cat /etc/issue)
@@ -356,7 +370,7 @@ fi
 
 chmod u+x ../deaduction_launcher.sh
 
-echo "You can now try to start deaduction by executing"
+ohai "You can now try to start deaduction by executing"
 ohai "deaduction_launcher.sh"
 echo "(This launcher file can be put anywhere,"
 echo "e.g. in your Applications/ directory)"
