@@ -22,7 +22,7 @@ import set_definitions
 
 /- dEAduction
 Title
-    Exercices TER L1
+    Tutoriel
 Author
     Camille Lichère
 Institution
