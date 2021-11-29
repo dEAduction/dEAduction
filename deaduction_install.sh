@@ -121,7 +121,7 @@ OS="$(uname)"
 if [[ "$OS" == "Linux" ]]; then
   DEADUCTION_ON_LINUX=1
   VERSION=$(cat /etc/issue)
-  if [[ ${VERSION::6} == "Ubuntu" -o ${VERSION::6} == "Debian" ]]; then
+  if [ ${VERSION::6} == "Ubuntu" -o ${VERSION::6} == "Debian" ]; then
     UBUNTU_DEBIAN=1
     echo "(Ubuntu or Debian detected, the envconfig_user_ubuntu file will be
      used)"
