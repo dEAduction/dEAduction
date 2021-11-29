@@ -660,6 +660,18 @@ end
 
 end egalites
 
+
+example (P Q : Prop) (H: P ∧ Q) : P :=
+begin
+  cases H with HP HQ,
+end
+
+
+
+
+
+
+
 end exercices
 
 end ensembles_et_applications

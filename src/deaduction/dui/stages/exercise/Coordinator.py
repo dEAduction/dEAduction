@@ -755,6 +755,7 @@ class Coordinator(QObject):
 
         This is called by a signal in servint.
         """
+        effective_lean_code = effective_lean_code.replace(", no_meta_vars", "")
         log.debug(f"Replacing code by effective code {effective_lean_code}")
         self.proof_step.effective_code = effective_lean_code
         self.servint.history_replace(effective_lean_code)
