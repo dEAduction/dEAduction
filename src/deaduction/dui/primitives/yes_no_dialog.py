@@ -64,7 +64,9 @@ class YesNoDialog(QMessageBox):
         self.setModal(True)
 
         self.__yes = False
-        self.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
+        # self.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
+        self.addButton(QMessageBox.No)
+        self.addButton(QMessageBox.Yes)
         self.button(QMessageBox.Yes).clicked.connect(self._set_yes_True)
 
     @Slot()
