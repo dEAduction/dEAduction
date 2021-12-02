@@ -622,7 +622,8 @@ class StatementsTreeWidget(QTreeWidget):
         """
 
         # TODO: get rid of self._init_tree ?
-
+        # IMPORTANT: re-initialize StatementsTreeWidgetItem dictionary
+        StatementsTreeWidgetItem.from_lean_name = {}
         super().__init__()
         self.items: [QTreeWidgetItem] = [] # List of items
         self._init_tree(statements, outline)

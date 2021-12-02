@@ -1297,13 +1297,13 @@ class MathObject:
         """
         cf MathObject.to_display. Lean format_ is not pertinent here.
         """
-        log.debug(f"Displaying math_type: {self.display_name}...")
+        # log.debug(f"Displaying math_type: {self.display_name}...")
 
         shape = self.raw_latex_shape_of_math_type(text_depth=text_depth)
         abstract_string = recursive_display(self.math_type,
                                             raw_display=shape,
                                             text_depth=text_depth)
-        log.debug(f"(1) --> abstract string: {abstract_string}")
+        # log.debug(f"(1) --> abstract string: {abstract_string}")
         # Replace some symbol by plain text:
         display = shallow_latex_to_text(abstract_string, text_depth)
         # Replace latex macro by utf8:

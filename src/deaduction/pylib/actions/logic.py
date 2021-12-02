@@ -1293,7 +1293,7 @@ def apply_substitute(proof_step,
 @action()
 def action_equal(proof_step,
                  selected_objects: [MathObject],
-                 user_input: [str] = None,
+                 user_input: [] = None,
                  target_selected: bool = True) -> CodeForLean:
     """
     Try to use one of the selected properties for substitution in the goal
@@ -1327,13 +1327,19 @@ def action_equal(proof_step,
                 equality_nb = 0
             else:
                 equality = equality1
-        elif test1:
-            equality = equality1
-            user_input.append(None)  # Make place for a potential second input
         elif test0:
             equality = equality0
             selected_objects.reverse()
-            user_input.append(None)
+            if not user_input:
+                user_input.append(0)  # Make place for a potential second input
+            else:
+                user_input[0] = 0
+        elif test1:
+            equality = equality1
+            if not user_input:
+                user_input.append(1)
+            else:
+                user_input[0] = 1
         else:  # No equality found
             error = _("This cannot be used for substitution")
             raise WrongUserInput(error)

@@ -27,7 +27,7 @@ import set_definitions
 
 /- dEAduction
 Title
-    exercices de mathématiques discretes.
+    Exercices de mathématiques discretes
 Author
     Alice Laroche
 Institution

@@ -749,7 +749,7 @@ class ServerInterface(QObject):
         self.lean_file.delete()
         await self.__update()
 
-    def history_replace(self, code):
+    def history_replace(self, code: CodeForLean):
         """
         Replace last entry in the lean_file by code without calling Lean.
         WARNING: code should be an effective code which is equivalent,
