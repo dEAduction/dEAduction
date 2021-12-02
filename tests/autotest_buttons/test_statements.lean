@@ -150,6 +150,21 @@ begin
     exact set.subset.antisymm_iff.mpr
 end
 
+variables (A: set X) (f: X → Y) (B: set Y)
+lemma definition.image_directe (y: Y) : y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y :=
+begin
+    todo
+end
+
+lemma theorem.image_directe (x: X) : x ∈ A → f(x) ∈ f '' A :=
+begin
+    todo
+end
+
+lemma definition.image_reciproque (x: X) : x ∈ f ⁻¹' B ↔ f x ∈ B :=
+begin
+    todo
+end
 lemma exercise.inclusion_transitive
 (A B C : set X) :
 (A ⊆ B ∧ B ⊆ C) → A ⊆ C
@@ -201,7 +216,7 @@ begin
   sorry
 end
 
-lemma exercise.test_theorem_target
+lemma exercise.test_theorem_target_1
 (A A' : set X) (H1: (A ⊆ A' ∧ A' ⊆ A)): 
 A = A' 
 :=
@@ -227,6 +242,38 @@ AutoTest
 begin
   sorry
 end
+
+-- Here we test that deaduction is not too powerfull, i.e. theorem.image_directe should NOT solve the goal
+-- (as the Lean `apply` tactic does, by unfolding the semi-reducible definition of inverse image)
+-- deaduction does not send the code `apply`, but `apply_with ... {md:=reducible}`)
+lemma exercise.test_theorem_target_2
+(x: X) (A: set X) (f: X → Y) (H: x ∈ A): 
+x ∈ f ⁻¹' (f '' A)
+:=
+/- dEAduction
+AutoTest
+    theorem.image_directe success=Théorème_ajouté_au_contexte,
+-/
+begin
+  todo
+end
+
+
+lemma exercise.test_theorem_target_3
+(x: X) (A: set X) (f: X → Y) (H: x ∈ A): 
+x ∈ f ⁻¹' (f '' A)
+:=
+/- dEAduction
+AutoTest
+    definition.image_reciproque,
+    theorem.image_directe success=Théorème_appliqué,
+    CQFD
+-/
+begin
+  todo
+end
+
+
 end tests_statements
 end theorie_des_ensembles
 end course

@@ -116,7 +116,7 @@ def action_theorem(proof_step,
     h = get_new_hyp(proof_step)
     th = theorem.lean_name
     if len(selected_objects) == 0:
-        codes = codes.or_else(f'apply {th}',
+        codes = codes.or_else(f'apply_with {th} {{md:=reducible}}',
                               success_msg=_('Theorem applied to target'))
         codes = codes.or_else(f'have {h} := @{th}',
                               success_msg=_('Theorem added to the context'))
@@ -126,8 +126,8 @@ def action_theorem(proof_step,
         names = [item.info['name'] for item in selected_objects]
         arguments = ' '.join(names)
         # up to 4 implicit arguments
-        more_codes = [f'apply {th} {arguments}',
-                      f'apply @{th} {arguments}']
+        more_codes = [f'apply_with ({th} {arguments})  {{md:=reducible}}',
+                      f'apply_with (@{th} {arguments})  {{md:=reducible}}']
         more_codes += [command + arguments,
                        command_implicit + arguments,
                        command + ' _ ' + arguments,
