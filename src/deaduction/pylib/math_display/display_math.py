@@ -1028,27 +1028,29 @@ def latex_to_text_func(string: str) -> (str, bool):
     return string, False
 
 
-def shallow_latex_to_text(string: Union[list, str], text_depth=0):
+def shallow_latex_to_text(abstract_string: Union[list, str], text_depth=0) \
+        -> Union[list, str]:
     """
     Try to change symbols for text in a tree representing some MathObject,
     but only until depth given by text_depth. The deepest branches are left
     untouched (so they still contain latex macro that are NOT suitable to
     display without either latex compilation or conversion to utf8).
     """
-    if isinstance(string, list):
+    if isinstance(abstract_string, list):
         # Stop conversion to text in some cases
-        if string[0] == r'\no_text':
+        if abstract_string[0] == r'\no_text':
             text_depth = 0
         # Recursion
-        string = [shallow_latex_to_text(item, text_depth-1) for item in string]
+        abstract_string = [shallow_latex_to_text(item, text_depth-1) for
+                           item in abstract_string]
         # log.debug(f"    --> Shallow_to_text: {string}")
-        return string
+        return abstract_string
 
-    elif isinstance(string, str):
+    elif isinstance(abstract_string, str):
         if text_depth > 0:  # Try to convert to text
-            string, success = latex_to_text_func(string)
+            string, success = latex_to_text_func(abstract_string)
         else:  # Try to shorten
-            string = shorten(string)
+            string = shorten(abstract_string)
         return string
 
 

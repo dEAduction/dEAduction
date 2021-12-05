@@ -146,7 +146,7 @@ def recursive_html_display(l: Union[list, str], depth) -> str:
             return html_color(formatted_string, color)
         else:
             return formatted_string
-    elif head == r'\applied_property':
+    elif head == r'\used_property':
         color = color_props()
         if color:
             return html_color(recursive_html_display(l[1:], depth), color)

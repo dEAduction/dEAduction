@@ -26,53 +26,33 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-# def mark_bound_vars(bound_var_1, bound_var_2):
-#     """
-#     Mark two bound variables with a common number, so that we can follow
-#     them along two quantified expressions and check if these expressions
-#     are identical
-#     """
-#     MathObject.bound_var_number += 1
-#     bound_var_1.info['bound_var_number'] = MathObject.bound_var_number
-#     bound_var_2.info['bound_var_number'] = MathObject.bound_var_number
-#
-#
-# def unmark_bound_vars(bound_var_1, bound_var_2):
-#     """
-#     Mark two bound variables with a common number, so that we can follow
-#     them along two quantified expressions and check tif these expressions
-#     are identical
-#     """
-#     bound_var_1.info.pop('bound_var_number')
-#     bound_var_2.info.pop('bound_var_number')
-
 import deaduction.pylib.config.vars as cvars
 
 
-def structured_display_to_string(structured_display) -> str:
-    """
-    Turn a (structured) latex or utf-8 display into a latex string.
-
-    :param structured_display:  type is recursively defined as str or list of
-                                structured_display
-    """
-    if isinstance(structured_display, str):
-        return structured_display
-    elif isinstance(structured_display, list):
-        string = ""
-        for lr in structured_display:
-            lr = structured_display_to_string(lr)
-            string += lr
-        return cut_spaces(string)
-    else:
-        print("error in list_string_join: argument should be list or "
-                    f"str, not {type(structured_display)}")
-        return "**"
+# def structured_display_to_string(structured_display) -> str:
+#     """
+#     Turn a (structured) latex or utf-8 display into a latex string.
+#
+#     :param structured_display:  type is recursively defined as str or list of
+#                                 structured_display
+#     """
+#     if isinstance(structured_display, str):
+#         return structured_display
+#     elif isinstance(structured_display, list):
+#         string = ""
+#         for lr in structured_display:
+#             lr = structured_display_to_string(lr)
+#             string += lr
+#         return cut_spaces(string)
+#     else:
+#         print("error in list_string_join: argument should be list or "
+#                     f"str, not {type(structured_display)}")
+#         return "**"
 
 
 def cut_spaces(string: str) -> str:
     """
-    Remove unnecessary spaces inside string
+    Remove unnecessary spaces inside string.
     """
     while string.find("  ") != -1:
         string = string.replace("  ", " ")

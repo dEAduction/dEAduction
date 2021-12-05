@@ -44,5 +44,6 @@ from .display_math import (recursive_display,
                            shallow_latex_to_text)
 from .html_display import html_display
 from .utf8_display import utf8_display
-from .utils import structured_display_to_string
+from .display import abstract_string_to_string
+# from .utils import structured_display_to_string
 
