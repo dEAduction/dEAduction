@@ -60,7 +60,7 @@ class ContextMathObject(MathObject):
         # Tags
         self.is_new = False
         self.is_modified = False
-        self.has_been_applied_in_proof = False  # TODO: implement
+        self.has_been_used_in_proof = False  # TODO: implement
         self.is_hidden = False
         # log.debug(f"Creating ContextMathPObject {self.to_display()},")
                   # f"dummy vars = "
@@ -75,7 +75,7 @@ class ContextMathObject(MathObject):
         return math_objects
 
     def copy_tags(self, other):
-        self.has_been_applied_in_proof = other.has_been_applied_in_proof
+        self.has_been_used_in_proof = other.has_been_used_in_proof
         self.is_hidden = other.is_hidden
 
     def raw_latex_shape(self, negate=False, text_depth=0):
@@ -83,8 +83,8 @@ class ContextMathObject(MathObject):
         Replace the raw_latex_shape method for MathObject.
         """
         shape = super().raw_latex_shape(negate, text_depth)
-        if (hasattr(self, 'has_been_used_in_the_proof')
-                and self.has_been_used_in_the_proof):
+        if (hasattr(self, 'has_been_used_in_proof')
+                and self.has_been_used_in_proof):
             shape = [r'\used_property'] + shape
         return shape
 
@@ -93,8 +93,8 @@ class ContextMathObject(MathObject):
         Replace the raw_latex_shape_of_math_type method for MathObject.
         """
         shape = super().raw_latex_shape_of_math_type(text_depth)
-        if (hasattr(self, 'has_been_used_in_the_proof')
-                and self.has_been_used_in_the_proof):
+        if (hasattr(self, 'has_been_used_in_proof')
+                and self.has_been_used_in_proof):
             shape = [r'\used_property'] + shape
         return shape
 

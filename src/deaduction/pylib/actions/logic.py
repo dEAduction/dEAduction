@@ -161,6 +161,8 @@ def construct_and_hyp(proof_step, selected_objects: [MathObject]) \
     new_hypo_name = get_new_hyp(proof_step)
     code = f'have {new_hypo_name} := and.intro {h1} {h2}'
     code = CodeForLean.from_string(code)
+    code = code.and_then(f"clear {h1}")
+    code = code.and_then(f"clear {h2}")
     code.add_success_msg(_("Conjunction {} added to the context").
                          format(new_hypo_name))
     return code
@@ -293,6 +295,7 @@ def apply_or(proof_step,
     code = code.and_then(f'cases {selected_hypo.info["name"]} with {h1} {h2}')
     code.add_success_msg(_("Proof by cases"))
     code.add_disjunction(selected_hypo, left, right)
+
     return code
 
 
@@ -315,7 +318,10 @@ def construct_or_on_hyp(proof_step,
             error = _("Selected items are not properties")
             raise WrongUserInput(error)
         else:
-            second_selected_property = selected_property[1].info["name"]
+            second_selected_property = selected_property[1]
+            second_name = second_selected_property.info["name"]
+            second_lean_code = \
+                second_selected_property.math_type.to_display(format_='lean')
     elif len(selected_property) == 1:
         if not selected_property[0].math_type.is_prop():
             error = _("Selected item is not a property")
@@ -324,29 +330,31 @@ def construct_or_on_hyp(proof_step,
             raise MissingParametersError(
                 InputType.Text,
                 title=_("Obtain 'P OR Q'"),
-                output=_("Enter the proposition you want to use:"))
+                output=_("Enter the property you want to use:"))
         else:
-            second_selected_property = user_input[0]
+            second_name = user_input[0]
+            second_lean_code = second_name
             user_input = user_input[1:]
         
     if not user_input:  # Usr still has to choose side
         raise MissingParametersError(
             InputType.Choice,
             [(_("Left"),
-              f'({first_hypo_name}) OR ({second_selected_property})'),
+              f'({first_hypo_name}) OR ({second_name})'),
              (_('Right'),
-              f'({second_selected_property}) OR ({first_hypo_name})')],
+              f'({second_name}) OR ({first_hypo_name})')],
             title=_("Choose side"),
             output=_(f'On which side do you want') + f' {first_hypo_name} ?')
     
     new_hypo_name = get_new_hyp(proof_step)
+    # Mind Lean syntax: @or.inl P Q HP ; @or.inr P Q HQ
     if user_input[0] == 0:
         possible_codes.append(f'have {new_hypo_name} := '
-                              f'@or.inl _ ({second_selected_property}) '
+                              f'@or.inl _ ({second_lean_code}) '
                               f'({first_hypo_name})')
     elif user_input[0] == 1:
         possible_codes.append(f'have {new_hypo_name} := '
-                              f'@or.inr ({second_selected_property}) _ '
+                              f'@or.inr ({second_lean_code}) _ '
                               f'({first_hypo_name})')
     else:
         raise WrongUserInput("Unexpected error")
@@ -452,10 +460,14 @@ def apply_implies(proof_step, selected_object: [MathObject]) -> CodeForLean:
     Here selected_object contains a single property which is an implication
     P ⇒ Q; if the target is Q then it will be replaced by P.
     """
-    selected_hypo = selected_object[0].info["name"]
-    code = CodeForLean.from_string(f'apply {selected_hypo}')
+    selected_hypo = selected_object[0]
+    selected_name = selected_hypo.info["name"]
+    code = CodeForLean.from_string(f'apply {selected_name}')
     code.add_success_msg(_("Target modified using implication {}").
-                         format(selected_hypo))
+                         format(selected_name))
+
+    code.add_used_properties(selected_hypo)
+
     return code
 
 
@@ -504,6 +516,9 @@ def have_new_property(arrow: MathObject,
     code = CodeForLean.or_else_from_list(possible_codes)
     code.add_success_msg(_("Property {} added to the context").
                          format(new_hypo_name))
+
+    # code.add_used_properties(arrow)
+
     return code
 
 
@@ -520,8 +535,10 @@ def apply_implies_to_hyp(proof_step,
     variable_names = [variable.info['name'] for variable in
                       selected_objects[:-1]]
 
-    return have_new_property(implication, variable_names, new_hypo_name)
+    code = have_new_property(implication, variable_names, new_hypo_name)
+    code.add_used_properties(selected_objects)
 
+    return code
 
 @action()
 def action_implies(proof_step,
@@ -693,6 +710,7 @@ def construct_iff_on_hyp(proof_step,
     error_msg = _("The first implication is not the converse of the "
                   "second one")
     code.add_error_msg(error_msg)
+    code.add_used_properties(selected_objects)
     return code
 
 
@@ -707,7 +725,10 @@ def rw_with_iff(rw_hyp: MathObject,
     code2 = code_for_substitution(rw_hyp, old_term=None, new_term=None,
                                   on_hyp=on_hyp, reverse=True)
 
-    return code1.or_else(code2)
+    code = code1.or_else(code2)
+    code.add_used_properties(rw_hyp)
+
+    return code
 
 
 @action()
@@ -955,6 +976,8 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
 
     code.add_success_msg(_("Property {} added to the context").
                          format(new_hypo_name))
+    code.add_used_properties(selected_objects)
+
     return code.and_then(more_code)
 
 
@@ -1098,8 +1121,11 @@ def construct_exists_on_hyp(proof_step,
         error = _("I cannot build an existential property with this")
         raise WrongUserInput(error)
     code = CodeForLean.from_string(code_string)
-    code.add_success_msg(_("Get new existential property {}").
-                             format(new_hypo))
+    code.add_success_msg(_("Get new existential property {}").format(
+                           new_hypo))
+
+    code.add_used_properties(selected_objects)
+
     return code
 
 
@@ -1188,6 +1214,8 @@ def code_for_substitution(rw_hyp: MathObject,
     code = CodeForLean.or_else_from_list(code_strings)
     code.add_success_msg(success_msg)
     code.add_error_msg(error_msg)
+
+    code.add_used_properties(rw_hyp)
     return code
 
 
@@ -1402,6 +1430,7 @@ def apply_function(proof_step, map_, arguments: [MathObject]):
             new_h = get_new_hyp(proof_step)
             codes = codes.and_then(f'have {new_h} := congr_arg {f} {h}')
             codes.add_success_msg(_("Map {} applied to {}").format(f, h))
+            codes.add_used_properties(arguments[0])
         else:
             # Function applied to element x:
             #   create new element y and new equality y=f(x)

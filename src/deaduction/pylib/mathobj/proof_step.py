@@ -501,6 +501,8 @@ class ProofStep:
         code = self.effective_code if self.effective_code else self.lean_code
         if code:
             return code.used_properties()
+        else:
+            return []
 
     # ──────────────── msgs ─────────────── #
     @property

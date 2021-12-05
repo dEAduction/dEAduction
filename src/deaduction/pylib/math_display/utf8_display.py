@@ -121,7 +121,7 @@ def recursive_utf8_display(l: list, depth) -> str:
     elif head == r'\super' or head == '^':
         return superscript(recursive_utf8_display(l[1:], depth))
     # No color in utf8 :-(
-    elif head in (r'\variable', r'\dummy_variable', r'\applied_property'):
+    elif head in (r'\variable', r'\dummy_variable', r'\used_property'):
         return recursive_utf8_display(l[1:], depth)
 
     else:  # Generic case

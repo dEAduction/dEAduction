@@ -641,16 +641,16 @@ class CodeForLean:
         all or_else alternatives. (This is probably useless if there are
         still some or_else alternative in self).
 
-        :return: [MathObject]
+        :return: [ContextMathObject]
         """
         up = []
         if self.is_single_code():
             instruction = self.instructions[0]
             assert isinstance(instruction, SingleCode)
             up = instruction.used_properties
-        if not self.is_or_else():
+        elif not self.is_or_else():
             for instruction in self.instructions:
-                up.append(instruction.used_properties())
+                up.extend(instruction.used_properties())
         else:  # Return prop that are in all instructions
             instructions = self.instructions
             if len(instructions) >= 1:

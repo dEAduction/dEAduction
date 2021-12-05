@@ -105,13 +105,12 @@ def action_theorem(proof_step,
 
     # test_selection(selected_objects, target_selected)
 
-    # TODO: For an iff statement, use rewriting
-    #  test for iff or equality is removed since it works only with
-    #  pkl files
-
     goal = proof_step.goal
+    codes = CodeForLean()
+    theorem_goal: Goal = theorem.initial_proof_state.goals[0]
 
-    codes = rw_using_statement(goal, selected_objects, theorem)
+    if theorem_goal.target.is_iff():
+        codes = rw_using_statement(goal, selected_objects, theorem)
 
     h = get_new_hyp(proof_step)
     th = theorem.lean_name
@@ -142,6 +141,8 @@ def action_theorem(proof_step,
         more_codes = CodeForLean.or_else_from_list(more_codes)
         context_msg = _('Theorem') + ' ' + _('applied to') + ' ' + arguments
         more_codes.add_success_msg(context_msg)
+        more_codes.add_used_properties(selected_objects)
+
         codes = codes.or_else(more_codes)
 
         codes.add_error_msg(_("Unable to apply theorem"))

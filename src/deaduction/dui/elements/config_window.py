@@ -94,7 +94,8 @@ CONFIGS["Display"] = [
 CONFIGS["Logic"] = [
     ("display.display_success_messages", None, True),
     ("logic.use_color_for_variables", None, True),
-    ("logic.use_color_for_dummy_variables", None, True)]
+    ("logic.use_color_for_dummy_variables", None, True),
+    ("use_color_for_applied_properties", None, True)]
 
 CONFIGS['Functionalities'] = [
     ('functionality.target_selected_by_default', None, True),
@@ -121,7 +122,7 @@ SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          "EXISTS_EQUAL_MAP",
                          'display.use_symbols_for_logic_button',
                          'display.font_size_for_symbol_buttons',
-                         'logic.color_for_used_properties',
+                         'logic.use_color_for_applied_properties',
                          'functionality.allow_proof_by_sorry',
                          'functionality.allow_implicit_use_of_definitions',
                          "i18n.select_language"
