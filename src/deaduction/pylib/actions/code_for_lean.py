@@ -616,6 +616,53 @@ class CodeForLean:
             return True in [instruction.could_have_meta_vars() for
                             instruction in self.instructions]
 
+    def add_used_properties(self, used_properties):
+        """
+        Add used properties to every single code instruction in self.
+
+        :param used_properties: MathObject or [MathObject]
+        """
+
+        if not isinstance(used_properties, list):
+            used_properties = [used_properties]
+
+        if self.is_single_code():
+            instruction = self.instructions[0]
+            assert isinstance(instruction, SingleCode)
+            instruction.used_properties.extend(used_properties)
+        else:
+            for instruction in self.instructions:
+                assert isinstance(instruction, CodeForLean)
+                instruction.add_used_properties(used_properties)
+
+    def used_properties(self):
+        """
+        Return used_properties appearing in self, provided they appear in
+        all or_else alternatives. (This is probably useless if there are
+        still some or_else alternative in self).
+
+        :return: [MathObject]
+        """
+        up = []
+        if self.is_single_code():
+            instruction = self.instructions[0]
+            assert isinstance(instruction, SingleCode)
+            up = instruction.used_properties
+        if not self.is_or_else():
+            for instruction in self.instructions:
+                up.append(instruction.used_properties())
+        else:  # Return prop that are in all instructions
+            instructions = self.instructions
+            if len(instructions) >= 1:
+                up = instructions[0].used_properties()
+                for instruction in instructions[1:]:
+                    # Remove element in up that are not in instruction
+                    new_up = []
+                    for prop in up:
+                        if prop in instruction.used_properties():
+                            new_up.append(prop)
+                    up = new_up
+        return up
 
 # _VAR_NB = 0
 # _FUN_NB = 0

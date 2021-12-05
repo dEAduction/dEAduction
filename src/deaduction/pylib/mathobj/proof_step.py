@@ -497,6 +497,11 @@ class ProofStep:
 
         return txt
 
+    def used_properties(self):
+        code = self.effective_code if self.effective_code else self.lean_code
+        if code:
+            return code.used_properties()
+
     # ──────────────── msgs ─────────────── #
     @property
     def current_goal_solved_msg(self):

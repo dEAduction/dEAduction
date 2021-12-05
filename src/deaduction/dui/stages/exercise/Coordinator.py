@@ -937,7 +937,6 @@ class Coordinator(QObject):
         self.proof_step.proof_state = proof_state
 
         if not self.proof_step.is_error():
-            # self.proof_step.proof_state = proof_state
             if not self.proof_step.is_history_move():
                 log.debug("     Storing proof step in lean_file info")
                 self.lean_file.state_info_attach(proof_step=self.proof_step)
@@ -953,9 +952,11 @@ class Coordinator(QObject):
         if self.logically_previous_proof_step:
             log.info("** Comparing new goal with previous one **")
             # Fixme: not when undoing history ?
-            new_goal = self.proof_step.goal
+            new_goal: Goal = self.proof_step.goal
             previous_goal = self.logically_previous_proof_step.goal
             Goal.compare(new_goal, previous_goal)  # Set tags
+            used_properties = self.proof_step.used_properties()
+            new_goal.mark_used_properties(used_properties)
 
         # ─────── Name all bound vars ─────── #
         log.info("** Naming dummy vars **")

@@ -414,6 +414,18 @@ class Goal:
                  self.context]
         return names
 
+    def mark_used_properties(self, used_properties:[ContextMathObject]):
+        """
+        Mark all properties of self that appear in used_properties as used.
+        """
+        for prop in self.context_props:
+            if prop in used_properties:
+                prop.has_been_used_in_the_proof = True
+                used_properties.remove(prop)
+        if used_properties:
+            log.warning(f"Used properties not found in goal: "
+                        f"{used_properties}")
+
     ###################
     # Display methods #
     ###################
