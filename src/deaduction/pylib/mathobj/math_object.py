@@ -47,7 +47,7 @@ This file is part of dEAduction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import          List, Any, Optional
+from typing import          List, Any, Optional, Union
 from copy import copy
 import logging
 
@@ -62,7 +62,7 @@ from deaduction.pylib.math_display import (HAVE_BOUND_VARS, INEQUALITIES,
                                            raw_latex_shape_from_couple_of_nodes,
                                            raw_latex_shape_from_specific_nodes,
                                            shallow_latex_to_text,
-                                           html_display, utf8_display)
+                                           abstract_string_to_string)
 
 from deaduction.pylib.mathobj.give_name import name_single_bound_var
 
@@ -1200,32 +1200,46 @@ class MathObject:
         # log.debug(f"    --> Raw shape: {shape}")
         return shape
 
-    def expanded_latex_shape(self, text_depth=0):
-        """
-        Recursively fill the children of raw_display.
-        e.g. if self is a MathObject coding for "f(x)=y", this method
-        will return something like [[["f"], [\\parentheses, "x"]], " = ", "y"].
-        If x is a dummy var then it will be replaced by [\\dummy_var, x].
-        """
-        # log.debug(f"Expanded latex shape for {self.display_debug}")
-        display = recursive_display(self, text_depth)
-        # log.debug(f"     Els--> {display}")
-        return display
+    # def expanded_latex_shape(self, text_depth=0):
+    #     """
+    #     Recursively fill the children of raw_display.
+    #     e.g. if self is a MathObject coding for "f(x)=y", this method
+    #     will return something like [[["f"], [\\parentheses, "x"]], " = ", "y"].
+    #     If x is a dummy var then it will be replaced by [\\dummy_var, x].
+    #     """
+    #     # log.debug(f"Expanded latex shape for {self.display_debug}")
+    #     display = recursive_display(self, text_depth)
+    #     # log.debug(f"     Els--> {display}")
+    #     return display
 
-    def to_display(self, format_="html", text_depth=0) -> str:
+    def to_abstract_string(self, text_depth=0) -> Union[list, str]:
         """
-        Return a displayable string version of self.
+        Return an abstract string representing self, as a tree of string.
 
         (1) First compute an "expanded latex shape", a tree of strings with
         latex macro.
         (2) if text_depth >0, replace some symbols by plain text. In any case,
         take care of '\\in' according to the context.
-        (3) Turn latex macro into utf8 text and/or html command.
+        """
+
+        # First level of the tree:
+        abstract_string = recursive_display(self, text_depth)
+
+        # Replace some symbols by plain text:
+        abstract_string = shallow_latex_to_text(abstract_string, text_depth)
+
+        return abstract_string
+
+    def to_display(self, format_="html", text_depth=0) -> str:
+        """
+        Return a displayable string version of self. First compute an
+        abstract_string (i.e. a tree version) taking text_depth into account,
+        then concatenate according to format_.
 
         Note that
         - nice display of "in" is treated in raw_latex_shape
         - nice display of negations is obtained in raw_latex_node
-        and recursive_display
+        and recursive_display.
 
         :param format_:     one of 'utf8', 'html', 'latex'
         :param text_depth:  if >0, will try to replace symbols by plain text
@@ -1240,23 +1254,30 @@ class MathObject:
         # log.debug(f"Displaying: {self.display_name}...")
         # (1) Latex shape, includes treatment of "in"
         # needs_paren is called --> '\parentheses'
-        abstract_string = self.expanded_latex_shape(text_depth=text_depth)
+        # abstract_string = self.expanded_latex_shape(text_depth=text_depth)
         # log.debug(f" --> abstract string: {abstract_string}")
         # (2) Replace some symbol by plain text:
-        display = shallow_latex_to_text(abstract_string, text_depth)
+        # abstract_string = shallow_latex_to_text(abstract_string, text_depth)
         # log.debug(f"(2) --> to text: {abstract_string}")
+
+        abstract_string = self.to_abstract_string(text_depth)
+        log.debug(f"abstract string: {abstract_string}")
+
+        # Adapt to format_ and concatenate to get a string
+        display = abstract_string_to_string(abstract_string, format_)
+
         # (3) Replace latex macro by utf8:
-        if format_ == 'lean':
-            display = latex_to_lean(display)
-        if format_ in ('lean', 'utf8', 'html'):
-            display = latex_to_utf8(display)
-        # (4) Final display: format for html and concatenate.
-        if format_ == 'html':
-            display = html_display(display)
-        elif format_ == 'utf8':
-            display = utf8_display(display)
-        elif format_ == 'lean':
-            display = utf8_display(display)  # FIXME: should be adapted to Lean
+        # if format_ == 'lean':
+        #     display = latex_to_lean(display)
+        # if format_ in ('lean', 'utf8', 'html'):
+        #     display = latex_to_utf8(display)
+        # # (4) Final display: format for html and concatenate.
+        # if format_ == 'html':
+        #     display = html_display(display)
+        # elif format_ == 'utf8':
+        #     display = utf8_display(display)
+        # elif format_ == 'lean':
+        #     display = utf8_display(display)  # FIXME: should be adapted to Lean
         # log.debug(f"    --> To html: {display}")
 
         return display
@@ -1293,27 +1314,43 @@ class MathObject:
         # log.debug(f"Raw shape of math type: {shape}")
         return shape
 
-    def math_type_to_display(self, format_="html", text_depth=0) -> str:
+    def math_type_to_abstract_string(self, text_depth=0):
         """
-        cf MathObject.to_display. Lean format_ is not pertinent here.
+        cf to_abstract_string.
+        :param text_depth:
+        :return:
         """
-        log.debug(f"Displaying math_type: {self.display_name}...")
 
         shape = self.raw_latex_shape_of_math_type(text_depth=text_depth)
         abstract_string = recursive_display(self.math_type,
                                             raw_display=shape,
                                             text_depth=text_depth)
-        log.debug(f"(1) --> abstract string: {abstract_string}")
+        # log.debug(f"(1) --> abstract string: {abstract_string}")
+
         # Replace some symbol by plain text:
-        display = shallow_latex_to_text(abstract_string, text_depth)
-        # Replace latex macro by utf8:
-        if format_ in ('utf8', 'html'):
-            display = latex_to_utf8(display)
-        if format_ == 'html':
-            display = html_display(display)
-        elif format_ == 'utf8':
-            display = utf8_display(display)
-        # log.debug(f"{self.old_to_display()} -> {display}")
+        abstract_string = shallow_latex_to_text(abstract_string, text_depth)
+
+        return abstract_string
+
+    def math_type_to_display(self, format_="html", text_depth=0) -> str:
+        """
+        cf MathObject.to_display. Lean format_ is not pertinent here.
+        """
+        # log.debug(f"Displaying math_type: {self.display_name}...")
+
+        abstract_string = self.math_type_to_abstract_string(text_depth)
+        # Adapt to format_ and concatenate to get a string
+        display = abstract_string_to_string(abstract_string, format_)
+
+        # # Replace latex macro by utf8:
+        # if format_ in ('utf8', 'html'):
+        #     display = latex_to_utf8(display)
+        # # Assemble abstract string
+        # if format_ == 'html':
+        #     display = html_display(display)
+        # elif format_ == 'utf8':
+        #     display = utf8_display(display)
+        # # log.debug(f"{self.old_to_display()} -> {display}")
 
         return display
 

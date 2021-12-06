@@ -52,7 +52,8 @@ PRETTY_NAMES = {
     'display.display_success_messages': _("Display success messages"),
     'logic.use_color_for_variables': _("Use color for variables"),
     'logic.use_color_for_dummy_variables': _("Use color for dummy variables"),
-    'logic.color_for_used_properties': _("Color for used properties"),
+    'logic.use_color_for_applied_properties': _("Use color for applied "
+                                                "properties"),
     'functionality.target_selected_by_default': _("Target selected by "
                                                   "default"),
     'functionality.allow_proof_by_sorry': _("Allow proof by sorry"),

@@ -172,6 +172,9 @@ class Coordinator(QObject):
         self.set_initial_proof_states()
 
         # Set implicit definitions
+        # Initialize the following lists to erase lists from previous exercise
+        MathObject.implicit_definitions = []
+        MathObject.definition_patterns = []
         self.set_definitions_for_implicit_use()
 
     def set_initial_proof_states(self):
@@ -207,7 +210,7 @@ class Coordinator(QObject):
     @Slot()
     def set_definitions_for_implicit_use(self):
         """
-        Set up definitions that will the user may use implicitely.
+        Set up definitions that will the user may use implicitly.
         For instance, say definition.inclusion is marked for implicit use in
         the lean exercise file:
             lemma definition.inclusion {A B : set X} :
@@ -233,6 +236,8 @@ class Coordinator(QObject):
                                 st.initial_proof_state]
         if len(definitions_with_ips) == len(MathObject.definition_patterns):
             # All definitions already set up
+            # Beware that MathObject.definition_patterns does not come from
+            # previous exercise
             return
         log.debug(f"Found {len(definitions)} definition(s) for implicit "
                   f"use...")
@@ -748,7 +753,7 @@ class Coordinator(QObject):
         self.emw.history_button_unfreeze(at_beginning, at_end)
 
     @Slot(CodeForLean)
-    def process_effective_code(self, effective_lean_code):
+    def process_effective_code(self, effective_lean_code: CodeForLean):
         """
         Replace the (maybe complicated) Lean code in the Lean file by the
         portion of the code that was effective.
@@ -932,7 +937,6 @@ class Coordinator(QObject):
         self.proof_step.proof_state = proof_state
 
         if not self.proof_step.is_error():
-            # self.proof_step.proof_state = proof_state
             if not self.proof_step.is_history_move():
                 log.debug("     Storing proof step in lean_file info")
                 self.lean_file.state_info_attach(proof_step=self.proof_step)
@@ -948,9 +952,11 @@ class Coordinator(QObject):
         if self.logically_previous_proof_step:
             log.info("** Comparing new goal with previous one **")
             # Fixme: not when undoing history ?
-            new_goal = self.proof_step.goal
+            new_goal: Goal = self.proof_step.goal
             previous_goal = self.logically_previous_proof_step.goal
             Goal.compare(new_goal, previous_goal)  # Set tags
+            used_properties = self.proof_step.used_properties()
+            new_goal.mark_used_properties(used_properties)
 
         # ─────── Name all bound vars ─────── #
         log.info("** Naming dummy vars **")

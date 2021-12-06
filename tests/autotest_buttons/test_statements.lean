@@ -247,7 +247,7 @@ end
 -- (as the Lean `apply` tactic does, by unfolding the semi-reducible definition of inverse image)
 -- deaduction does not send the code `apply`, but `apply_with ... {md:=reducible}`)
 lemma exercise.test_theorem_target_2
-(x: X) (A: set X) (f: X → Y) (H: x ∈ A): 
+(x: X) (A: set X) (f: X → Y) (H: x ∈ A):
 x ∈ f ⁻¹' (f '' A)
 :=
 /- dEAduction
@@ -260,7 +260,7 @@ end
 
 
 lemma exercise.test_theorem_target_3
-(x: X) (A: set X) (f: X → Y) (H: x ∈ A): 
+(x: X) (A: set X) (f: X → Y) (H: x ∈ A):
 x ∈ f ⁻¹' (f '' A)
 :=
 /- dEAduction

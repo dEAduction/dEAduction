@@ -749,7 +749,7 @@ class ServerInterface(QObject):
         self.lean_file.delete()
         await self.__update()
 
-    def history_replace(self, code):
+    def history_replace(self, code: CodeForLean):
         """
         Replace last entry in the lean_file by code without calling Lean.
         WARNING: code should be an effective code which is equivalent,
@@ -760,7 +760,7 @@ class ServerInterface(QObject):
         """
         if code:
             # Formatting
-            code_string = code.to_raw_string(exclude_no_meta_vars=True)
+            code_string = code.to_code(exclude_no_meta_vars=True)
             code_string = code_string.strip()
             if not code_string.endswith(","):
                 code_string += ","
@@ -785,7 +785,7 @@ class ServerInterface(QObject):
 
         # Add "no meta vars" + "effective code nb"
         # and keep track of node_counters
-        lean_code, code_string = lean_code.to_decorated_string()
+        lean_code, code_string = lean_code.to_decorated_code()
         code_string = code_string.strip()
         if not code_string.endswith(","):
             code_string += ","
@@ -793,7 +793,7 @@ class ServerInterface(QObject):
         if not code_string.endswith("\n"):
             code_string += "\n"
 
-        self.log.info("CodeForLean: ")
+        self.log.info("CodeForLean: " + lean_code.to_code())
         self.log.info(lean_code)
         # self.log.info("Code sent to Lean: " + code_string)
         # print("Code sent to Lean:")

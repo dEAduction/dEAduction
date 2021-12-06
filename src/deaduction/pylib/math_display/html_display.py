@@ -114,12 +114,17 @@ def color_props():
             else None)
 
 
-def recursive_html_display(l: Union[list, str], depth) -> str:
+def recursive_html_display(l: Union[list, str], depth, use_color=True) -> str:
     """
     Use the following tags as first child:
     - \\sub, \\super for subscript/superscript
     - \\dummy_variable for dummy vars
     - \\applied_property for properties that have already been applied
+
+    :param l: abstract_string, i.e. a tree of strings
+    :param depth: depth in the abstract_string tree
+    :param use_color: if True, allow the use of color. This parameter is set to
+                      False when the whole text should be grey.
     """
     if isinstance(l, str):
         return html_display_single_string(l)
@@ -127,38 +132,42 @@ def recursive_html_display(l: Union[list, str], depth) -> str:
     assert isinstance(l, list)
     head = l[0]
     if head == r'\sub' or head == '_':
-        return subscript(recursive_html_display(l[1:], depth))
+        return subscript(recursive_html_display(l[1:], depth, use_color))
     elif head == r'\super' or head == '^':
-        return superscript(recursive_html_display(l[1:], depth))
+        return superscript(recursive_html_display(l[1:], depth, use_color))
     elif head == r'\variable':
         color = color_variables()
-        raw_string = recursive_html_display(l[1:], depth)
+        raw_string = recursive_html_display(l[1:], depth, use_color)
         formatted_string = variable_style(raw_string)
-        if color:
+        if color and use_color:
             return html_color(formatted_string, color)
         else:
             return formatted_string
     elif head == r'\dummy_variable':
         color = color_dummy_variables()
-        raw_string = recursive_html_display(l[1:], depth)
+        raw_string = recursive_html_display(l[1:], depth, use_color)
         formatted_string = variable_style(raw_string)
-        if color:
+        if color and use_color:
             return html_color(formatted_string, color)
         else:
             return formatted_string
-    elif head == r'\applied_property':
+    elif head == r'\used_property':
         color = color_props()
-        if color:
-            return html_color(recursive_html_display(l[1:], depth), color)
+        if color and use_color:
+            # Use color and forbid other colors in the text
+            return html_color(recursive_html_display(l[1:], depth,
+                                                     use_color=False),
+                              color)
         else:
-            return recursive_html_display(l[1:], depth)
+            return recursive_html_display(l[1:], depth, use_color)
 
     else:
         # handle "\parentheses":
         add_parentheses(l, depth)
 
         # log.debug(f"Children to html: {l}")
-        strings = [recursive_html_display(child, depth+1) for child in l]
+        strings = [recursive_html_display(child, depth+1, use_color)
+                   for child in l]
         return ''.join(strings)
 
 

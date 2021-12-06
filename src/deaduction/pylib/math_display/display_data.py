@@ -95,6 +95,7 @@ latex_from_node = {
     "SET_PRODUCT": (0, r'\times', 1),
     "COUPLE": (r'\parentheses', 0, ',', 1),
     "SET_INTENSION": (r"\no_text", r'\{', 1, r' \in ', 0, ' | ', 2, r'\}'),
+    "SET_INTENSION_EXT": (r"\no_text", r'\{', 2, ' | ', 1, r' \in ', 0, r'\}'),
     # FIXME: instantiate set extensions
     ############
     # NUMBERS: #
