@@ -462,7 +462,8 @@ def apply_implies(proof_step, selected_object: [MathObject]) -> CodeForLean:
     """
     selected_hypo = selected_object[0]
     selected_name = selected_hypo.info["name"]
-    code = CodeForLean.from_string(f'apply {selected_name}')
+    code = CodeForLean.from_string(f'apply_with {selected_name} '
+                                   '{md:=reducible}')
     code.add_success_msg(_("Target modified using implication {}").
                          format(selected_name))
 
