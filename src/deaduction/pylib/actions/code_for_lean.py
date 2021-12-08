@@ -87,9 +87,11 @@ class SingleCode:
         """
         Return the code to be sent to Lean.
         """
-        names = [prop.display_name for prop in self.used_properties]
-        return self.string.format(*names)
-
+        if self.string.find("{}") != -1:
+            names = [prop.display_name for prop in self.used_properties]
+            return self.string.format(*names)
+        else:
+            return self.string
 
 class CodeForLean:
     """
