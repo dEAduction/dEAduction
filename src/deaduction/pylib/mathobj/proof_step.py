@@ -420,7 +420,8 @@ class ProofStep:
         events happened. This is used for auto_test.
 
         :return: a string containing a written report, and a bool which is
-        True iff everything is OK.
+        True iff everything is OK, None if the error or success msg differs,
+        and False if there is a more serious difference.
         """
         report = ''
         success = True
@@ -445,7 +446,7 @@ class ProofStep:
             if find == -1:
                 report += f'\nUnexpected error msg: {error_msg}, ' \
                           f'expected: {auto_test.error_msg}'
-                success = False
+                success = None
         # Success msg
         success_msg = self.success_msg
         if success_msg:
@@ -453,7 +454,7 @@ class ProofStep:
             if find == -1:
                 report += f'\nUnexpected success msg: {success_msg}, ' \
                           f'expected: {auto_test.success_msg}'
-                success = False
+                success = None
 
         return report, success
 

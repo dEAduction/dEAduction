@@ -334,7 +334,7 @@ def find_selection(auto_step, emw):
     return auto_selection, success
 
 
-COLOR = {True: 'green', False: 'red', None: 'orange'}
+COLOR = {True: 'green', False: 'red', None: 'orange', "Bad msgs": 'orange'}
 
 
 async def auto_test(wm: WindowManager):
@@ -393,8 +393,10 @@ async def auto_test(wm: WindowManager):
                     and steps_counter:
                 step = auto_steps[steps_counter-1]
                 report, step_success = emw.displayed_proof_step.compare(step)
-                if not step_success:
+                if step_success is False:
                     test_success = False
+                elif test_success is not False and step_success is None:
+                    test_success = "Bad msgs"
                 # test_success = test_success and step_success
                 if not report:
                     report = f'Success with {step.raw_string}'
