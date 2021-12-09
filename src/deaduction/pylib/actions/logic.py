@@ -830,17 +830,23 @@ def construct_forall(proof_step) -> CodeForLean:
     math_object = goal.target.math_type
 
     possible_codes = CodeForLean.empty_code()
-    if not math_object.is_for_all(is_math_type=True, implicit=False):
+    implicit = not math_object.is_for_all(is_math_type=True, implicit=False)
+    if implicit:
         # Implicit "for_all"
         implicit_definition = MathObject.last_used_implicit_definition
         math_object         = MathObject.last_rw_object
         possible_codes = rw_with_defi(implicit_definition)
 
-    math_type = math_object.children[0]
+    math_type: MathObject = math_object.children[0]
     variable = math_object.children[1]
     body = math_object.children[2]
-    hint = variable.display_name  # not optimal
-    strong_hint = hint
+    if not implicit or math_type.is_R():  # FIXME: experimental
+        hint = variable.display_name  # not optimal
+        hints = [hint]
+        strong_hint = hint
+    else:
+        hints = []
+        strong_hint = None
     if math_type.node == "PRODUCT":
         # [math_type_1, math_type_2] = math_type.children
         [x, y] = names_for_types(math_type.children, proof_step)
@@ -851,7 +857,7 @@ def construct_forall(proof_step) -> CodeForLean:
     else:
         x = give_global_name(proof_step=proof_step,
                              math_type=math_type,
-                             hints=[hint],
+                             hints=hints,
                              strong_hint=strong_hint)
         possible_codes = possible_codes.and_then(f'intro {x}')
         name = f"{x}"

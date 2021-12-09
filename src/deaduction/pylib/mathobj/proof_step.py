@@ -493,14 +493,14 @@ class ProofStep:
             user_input_txt = " " + user_input
 
         txt = selection_txt + action_txt + user_input_txt + "\n" \
-              + error_msg + success_msg + "\n" \
-              + goal_txt + "\n"
+            + error_msg + success_msg + "\n" \
+            + goal_txt + "\n"
 
         return txt
 
     def used_properties(self):
         code = self.effective_code if self.effective_code else self.lean_code
-        if code:
+        if code and not self.is_error():
             return code.used_properties()
         else:
             return []
