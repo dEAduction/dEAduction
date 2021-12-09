@@ -279,6 +279,12 @@ end unions_et_intersections
 -- SECTION 2 --
 ---------------
 namespace complementaire
+/- dEAduction
+PrettyName
+    Complémentaire
+-/
+
+
 -- variables complementaire --
 variables  {A B : set X}
 variables {I : index_set} {E F : I → set X}
@@ -1112,6 +1118,21 @@ end
 
 
 -- TODO: ajouter exoset ficall.pdf exos (140 bijections) 141 142 146
+
+lemma exercise.injectivite_surjecivite (f: X → Y) (g: Y → Z)
+(H1 : injective (composition g f)) (H2 : surjective f)
+:
+injective g
+:=
+/- dEAduction
+PrettyName
+    Injectivité et surjectivité
+-/
+begin
+    todo
+end
+
+
 
 lemma exercise.injectivite_categorielle
 (f: Y → Z):

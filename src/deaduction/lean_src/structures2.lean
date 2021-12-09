@@ -101,7 +101,7 @@ match e with
 | `({%%x, %%x'}) := return ("SET_EXTENSION2", [x, x'])
 | `({%%x}) := return ("SET_EXTENSION1", [x])
 -- | `(triplet %%x %%x' %%x'') := return ("SET_EXTENSION3", [x, x', x''])
-| `(paire %%x %%x') := return ("SET_EXTENSION2", [x, x'])
+| `(pair %%x %%x') := return ("SET_EXTENSION2", [x, x'])
 | `(sing %%x) := return ("SET_EXTENSION1", [x])
 | `(_root_.set %%X) := return ("SET", [X])
 | `(set.prod %%A %%B) := return ("SET_PRODUCT", [A, B])

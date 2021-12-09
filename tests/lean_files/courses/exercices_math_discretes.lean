@@ -349,8 +349,6 @@ lemma definition.complement {A : set X} {x : X} : x ∈ set.compl A ↔ x ∉ A 
 /- dEAduction
 PrettyName
     Complementaire
-ImplicitUse
-    False
 -/
 begin
     finish,
@@ -704,6 +702,16 @@ begin
 end
 
 
+lemma exercise.complement_complement : ∀ A: set X, set.compl (set.compl A) = A :=
+/- dEAduction
+PrettyName
+    Complementaire du complémentaire
+-/
+begin
+    todo
+end
+
+
 namespace exercice2
 /- dEAduction
 PrettyName
@@ -792,7 +800,7 @@ PrettyName
     Question 7
 -/
 begin
-    targets_analysis,
+    todo
 end
 
 end exercice2
