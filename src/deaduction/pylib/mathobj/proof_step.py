@@ -37,6 +37,7 @@ import logging
 
 import deaduction.pylib.logger as logger
 
+from deaduction.pylib.text.tooltips import button_symbol
 from deaduction.pylib.mathobj import MathObject
 
 log = logging.getLogger(__name__)
@@ -198,7 +199,7 @@ class ProofStep:
     # ──────────────── Input ─────────────── #
     selection      = None  # [MathObject]
     user_input     = None  # [str]
-    button_name    = None  # str, e.g. "∃" or "history_undo".
+    button_name    = None  # str, e.g. "exists" or "history_undo".
     statement      = None  # Statement
     lean_code      = None  # CodeForLean
     is_automatic   = False
@@ -329,6 +330,10 @@ class ProofStep:
 
     ##############
     # Properties #
+    @property
+    def button_symbol(self):
+        return button_symbol(self.button_name)
+
     @property
     def statement_lean_name(self):
         if self.statement:

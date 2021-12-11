@@ -326,21 +326,23 @@ class ExerciseMainWindow(QMainWindow):
     ######################
     ######################
 
-    @property
-    def target_selected_by_default(self):
-        return cvars.get('functionality.target_selected_by_default', False) \
-                or self.test_mode or self.automatic_action
+    # @property
+    # def target_selected_by_default(self):  # Fixme: obsolete here
+    #     return cvars.get('functionality.target_selected_by_default', False) \
+    #             or self.test_mode or self.automatic_action
 
     @property
     def target_selected(self):
         """
         Boolean, True iff target is selected.
         """
-        if not self.target_selected_by_default:
-            return self._target_selected
-        else:
-            # Target is selected by default if current_selection is empty
-            return not self.current_selection
+        # Fixme: obsolete
+        # if not self.target_selected_by_default:
+        #     return self._target_selected
+        # else:
+        #     # Target is selected by default if current_selection is empty
+        #     return not self.current_selection
+        return self._target_selected
 
     @target_selected.setter
     def target_selected(self, target_selected):
@@ -531,8 +533,8 @@ class ExerciseMainWindow(QMainWindow):
         for item in self.current_selection:
             item.mark_user_selected(False)
         self.current_selection = []
-        if self.target_selected_by_default:
-            self.ecw.target_wgt.mark_user_selected(self.target_selected)
+        # if self.target_selected_by_default:  # FIXME: obsolete
+        #     self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
     @Slot(MathObjectWidgetItem)
     def process_context_click(self, item: Union[QModelIndex,
@@ -550,12 +552,9 @@ class ExerciseMainWindow(QMainWindow):
             item = self.ecw.objects_wgt.item_from_index(index)
             if not item:
                 item = self.ecw.props_wgt.item_from_index(index)
-        # Once clicked, one does not want the item to remain visually
-        # selected
-        # item.setSelected(False)
-        # Un-select target
-        self.ecw.target_wgt.mark_user_selected(False)
-        self.target_selected = False
+        # Un-select target  # FIXME: obsolete
+        # self.ecw.target_wgt.mark_user_selected(False)
+        # self.target_selected = False
 
         if item not in self.current_selection:
             item.mark_user_selected(True)
@@ -564,9 +563,9 @@ class ExerciseMainWindow(QMainWindow):
             item.mark_user_selected(False)
             self.current_selection.remove(item)
 
-        if not self.current_selection and self.target_selected_by_default:
-            # Target is automatically selected if current_selection is empty
-            self.ecw.target_wgt.mark_user_selected(self.target_selected)
+        # if not self.current_selection and self.target_selected_by_default:
+        #     # Target is automatically selected if current_selection is empty
+        #     self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
     @Slot()
     def process_target_click(self, event):
@@ -577,8 +576,8 @@ class ExerciseMainWindow(QMainWindow):
         self.target_selected = not self.target_selected
         self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
-        # Un-select context items
-        self.empty_current_selection()
+        # # Un-select context items FIXME: obsolete
+        # self.empty_current_selection()
 
     def simulate_selection(self,
                            selection:
@@ -775,6 +774,8 @@ class ExerciseMainWindow(QMainWindow):
         # Here we do not use empty_current_selection since Widgets may have
         # been deleted, and anyway this is cosmetics since  widgets are
         # destroyed and re-created by "self.ecw.update_goal" just below
+        # if self.current_selection:  # Keep target selected only if no other sct
+        self.target_selected = False
         self.current_selection = []
 
         # Update UI and attributes. Target stay selected if it was.
@@ -790,7 +791,7 @@ class ExerciseMainWindow(QMainWindow):
         self.ecw.objects_wgt.clicked.connect(self.process_context_click)
         self.ecw.props_wgt.clicked.connect(self.process_context_click)
 
-        # NB: there seems to be abug in Qt,
+        # NB: there seems to be a bug in Qt,
         #  self.ecw.target_wgt.mousePressEvent is not called when
         #  self.ecw.target_wgt.target_label format is set to richText (!)
         #  so we call the event of the target_label instead.

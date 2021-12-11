@@ -572,12 +572,6 @@ class Coordinator(QObject):
 
         while True:
             try:
-                # if not self.emw.user_input:
-                #     lean_code = action.run(
-                #         self.proof_step,
-                #         selection,  # (TODO: selection is stored in proof_step)
-                #         target_selected=target_selected)
-                # else:
                 lean_code = action.run(self.proof_step,
                                        selection,
                                        self.emw.user_input,

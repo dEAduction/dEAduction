@@ -9,9 +9,8 @@ Every function action_* takes the following arguments:
 various informations about the current proof state
 - selected_objects: a list of MathObject previously selected by the user
 - target_selected: a boolean that indicates if target is selected.
-The following alternative is assumed:
-either target_selected is True,
-or selected_objects is non empty.
+If target_selected is False, (and the setting target_selected_by_default is
+not on) then selected_objects must be non-empty.
 
 Some of these functions take an optional argument:
 - user_input, an object reflecting a choice made by the user inside a
@@ -405,7 +404,7 @@ def action_or(proof_step,
 @action()
 def action_not(proof_step,
                selected_objects: [MathObject],
-               user_input = None,
+               user_input=None,
                target_selected: bool = True) -> CodeForLean:
     """
     Translate into string of lean code corresponding to the action
@@ -540,6 +539,7 @@ def apply_implies_to_hyp(proof_step,
     code.add_used_properties(selected_objects)
 
     return code
+
 
 @action()
 def action_implies(proof_step,
@@ -1453,9 +1453,9 @@ def apply_function(proof_step, map_, arguments: [MathObject]):
 
 @action()
 def action_map(proof_step,
-                  selected_objects: [MathObject],
-                  user_input: [str] = None,
-                  target_selected: bool = True) -> CodeForLean:
+               selected_objects: [MathObject],
+               user_input: [str] = None,
+               target_selected: bool = True) -> CodeForLean:
     """
     Apply a function, which must be one of the selected object,
     to an element or an equality.

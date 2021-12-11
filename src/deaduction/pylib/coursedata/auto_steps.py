@@ -100,23 +100,6 @@ BUTTONS_SYMBOLS = LOGIC_BUTTONS_SYMBOLS \
                   + PROOF_BUTTONS_SYMBOLS
 
 
-# button_dict = {'→': '⇒',
-#                        '↔': '⇔',
-#                        'forall': '∀',
-#                        'exists': '∃',
-#                        'and': '∧',
-#                        'or': '∨',
-#                        'not': '¬',
-#                        'equal': '=',
-#                        'proof_methods': _('Proof methods'),
-#                        'new_object': _('New Object'),
-#                        'apply': _('Apply'),
-#                        'assumption': _('Goal!'),
-#                        "CQFD": _('Goal!'),
-#                        'compute': _('Compute'),
-#                        'map': '↦'
-#                        }
-
 button_dict = {'→': "implies",
                '⇒': "implies",
                '↔': "iff",
@@ -143,7 +126,7 @@ class UserAction:
     Statement name is the end of the lean_name (e.g. definition.inclusion)
         so that lean_name.endswith(statement_name) is True.
     """
-    selection = None  # [ContextMathObject]
+    selection = None  # [ContextMathObject] or [str]
     button_name = None  # str
     statement_name = None  # str
     user_input = None  # Union[int, str]
@@ -393,6 +376,6 @@ if __name__ == '__main__':
     # french result :
     # ['∧', '∨', '¬', '⇒', '⇔', '∀', '∃', 'Calculer', 'CQFD', 'Méthodes De
     # Preuve', 'Nouvel Objet', 'Appliquer']
-    # please rather use english equivalents given in the above
+    # Rather use english equivalents given in the above
     # button_dict dictionary.
 
