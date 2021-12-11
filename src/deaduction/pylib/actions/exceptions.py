@@ -33,8 +33,9 @@ This file is part of dEAduction.
 """
 
 from enum                         import IntEnum
+import deaduction.pylib.config.vars as cvars
 
-# from deaduction.pylib.config.i18n import _
+global _
 
 
 class InputType(IntEnum):
@@ -60,10 +61,19 @@ class WrongUserInput(Exception):
 
 
 def test_selection(items_selected: [],
-                   selected_target: bool):
+                   selected_target: bool,
+                   exclusive=False):
     """
     Test that at least one of items_selected or selected_target is not empty.
+    If exclusive is True, then also test that both are not simultaneously
+    non empty.
     """
-    if not (items_selected or selected_target):
+    implicit_target = cvars.get("functionality.target_selected_by_default")
+
+    if not (items_selected or selected_target or implicit_target):
         error = _("Select at least one object, one property or the target")
+        raise WrongUserInput(error)
+
+    if exclusive and items_selected and selected_target:
+        error = _("I do not know what to do with this selection")
         raise WrongUserInput(error)

@@ -95,7 +95,7 @@ CONFIGS["Logic"] = [
     ("display.display_success_messages", None, True),
     ("logic.use_color_for_variables", None, True),
     ("logic.use_color_for_dummy_variables", None, True),
-    ("use_color_for_applied_properties", None, True)]
+    ("logic.use_color_for_applied_properties", None, True)]
 
 CONFIGS['Functionalities'] = [
     ('functionality.target_selected_by_default', None, True),
