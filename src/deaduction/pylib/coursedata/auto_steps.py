@@ -124,7 +124,7 @@ class UserAction:
     A class for storing usr actions for one step.
     Button name is the action name (e.g. "action_and --> name = "and")
     Statement name is the end of the lean_name (e.g. definition.inclusion)
-        so that lean_name.endswith(statement_name) is True.
+    so that lean_name.endswith(statement_name) is True.
     """
     selection = None  # [ContextMathObject] or [str]
     button_name = None  # str

@@ -1497,9 +1497,23 @@ def action_map(proof_step,
     raise WrongUserInput(error=error)
 
 
+@action()
+def action_apply(proof_step,
+                 selected_objects: [MathObject],
+                 user_input: [str] = None,
+                 target_selected: bool = True) -> CodeForLean:
+    """
+    This is a virtual action, in the sense that it should not be represented
+    as a button, but rather corresponds to a double-click on a
+    "self-actioning" item, e.g. applying a Statement with a
+    StatementTreeWidgetItem.
+    """
+    pass
+
 #########
 # utils #
 #########
+
 
 def which_number_set(string: str):
     """

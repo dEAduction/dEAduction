@@ -158,6 +158,8 @@ class ExerciseCentralWidget(QWidget):
 
         # ──────────────── Init Actions area ─────────────── #
         ActionButton.from_symbol = dict()
+        # Remove action apply (virtual action, no button):
+        exclude_action_apply(exercise.available_logic)
         self.logic_btns = ActionButtonsWidget(exercise.available_logic)
         self.proof_btns = ActionButtonsWidget(exercise.available_proof)
         self.magic_btns = ActionButtonsWidget(exercise.available_magic)
@@ -646,3 +648,8 @@ class GlobalToolbar(QToolBar):
         self.settings_action.setText(_("Settings"))
 
 
+def exclude_action_apply(actions: []):
+    for action in actions:
+        if action.name == "apply":
+            actions.remove(action)
+            break
