@@ -600,6 +600,9 @@ class ExerciseToolBar(QToolBar):
         self.redo_action = QAction(
                 QIcon(str((icons_dir / 'redo_action.png').resolve())),
                 _('Redo action'), self)
+        self.rewind.name = "history_rewind"
+        self.undo_action.name = "history_undo"
+        self.redo_action.name = "history_redo"
 
         self.toggle_proof_outline_action = QAction(
                 QIcon(str((icons_dir / 'proof_outline.png').resolve())),

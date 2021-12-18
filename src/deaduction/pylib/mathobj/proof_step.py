@@ -129,7 +129,7 @@ class NewGoal:
             msg = msg.format(target)
         elif self.node_type == 'or':
             if self.counter == 1:
-                msg = _("Fist case:")
+                msg = _("First case:")
             elif self.counter == 2:
                 msg=_("Second case:")
             if isinstance(self.new_hypo, str):

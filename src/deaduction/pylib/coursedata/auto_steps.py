@@ -220,10 +220,6 @@ class AutoStep(UserAction):
 
         UserAction.__init__(self, selection, button_name,
                             statement, user_input)
-        # self.selection = selection
-        # self.button_name = button_name
-        # self.statement = statement
-        # self.user_input = user_input
         self.raw_string = raw_string
         self.error_type = error_type
         self.error_msg = error_msg

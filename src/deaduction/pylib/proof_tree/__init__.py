@@ -25,3 +25,8 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
+
+from .lean_response import LeanResponse
+from .user_action import UserProofAction, UserHistoryAction
+from .proof_tree import ProofTreeItem, SubGoal, NewProofStep
+

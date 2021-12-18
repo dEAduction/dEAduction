@@ -69,6 +69,11 @@ from deaduction.pylib.actions           import (generic,
                                                 MissingParametersError,
                                                 WrongUserInput)
 
+from deaduction.pylib.proof_tree        import (UserProofAction,
+                                                UserHistoryAction,
+                                                LeanResponse,
+                                                ProofTreeItem)
+
 from deaduction.pylib.memory            import Journal
 
 log = logging.getLogger(__name__)
@@ -102,7 +107,7 @@ class Coordinator(QObject):
     For the moment, much info is passed through proof_step and lean_file.
     """
 
-    proof_step_updated = Signal()  # Listend by test_launcher (for testing)
+    proof_step_updated = Signal()  # Listened by test_launcher (for testing)
     close_server_task   = Signal()  # Send by self.closeEvent
 
     def __init__(self, exercise, servint):
@@ -115,9 +120,14 @@ class Coordinator(QObject):
         self.emw.close_coordinator = self.closeEvent
 
         # Information
+        # FIXME: suppress
         self.proof_step: Optional[ProofStep]          = None  # Set later
         self.previous_proof_step: Optional[ProofStep] = None
+
         self.journal                                  = Journal()
+        self.displayed_proof_tree_item: Optional[ProofTreeItem] = None
+        self.current_user_action: Optional[UserAction] = None
+        self.lean_code_sent: Optional[CodeForLean]          = None
 
         # Flags
         self.exercise_solved                = False
@@ -128,7 +138,7 @@ class Coordinator(QObject):
         # Initialization
         self.__connect_signals()
         self.__initialize_exercise()
-        # log.debug(f"Selected style: {self.emw.ecw.target_wgt.selected_style}")
+
     ######################
     ######################
     # Init/close methods #
@@ -479,27 +489,55 @@ class Coordinator(QObject):
                 ########################
                 if emission.is_from(self.toolbar.redo_action.triggered)\
                         and not self.lean_file.history_at_end:
-                    self.proof_step.button_name = 'history_redo'
-                    proof_step = self.lean_file.next_proof_step
-                    if proof_step:
-                        await self.emw.simulate(proof_step)
-                    add_task(self.servint.history_redo)
+                    self.process_history_move('history_redo')
 
                 elif emission.is_from(self.toolbar.undo_action.triggered):
-                    self.proof_step.button_name = 'history_undo'
-                    add_task(self.servint.history_undo)
+                    self.current_user_action = UserHistoryAction(
+                        'history_undo')
+                    self.process_history_move('history_undo')
 
                 elif emission.is_from(self.toolbar.rewind.triggered):
+                    self.current_user_action = UserHistoryAction(
+                        'history_rewind')
                     self.proof_step.button_name = 'history_rewind'
                     add_task(self.servint.history_rewind)
+                    self.process_history_move('history_rewind')
 
                 elif emission.is_from(self.proof_outline_window.history_goto):
                     history_nb = emission.args[0]
-                    if history_nb != self.history_nb:
-                        self.proof_step.button_name = 'history_goto'
-                        add_task(self.servint.history_goto, history_nb)
-                    else:
-                        self.unfreeze()
+                    self.process_history_move('history_goto', history_nb)
+
+                # if emission.is_from(self.toolbar.redo_action.triggered)\
+                #         and not self.lean_file.history_at_end:
+                #     self.current_user_action = UserHistoryAction(
+                #         'history_redo')
+                #     self.proof_step.button_name = 'history_redo'
+                #     proof_step = self.lean_file.next_proof_step
+                #     if proof_step:
+                #         await self.emw.simulate(proof_step)
+                #     add_task(self.servint.history_redo)
+                #
+                # elif emission.is_from(self.toolbar.undo_action.triggered):
+                #     self.current_user_action = UserHistoryAction(
+                #         'history_undo')
+                #     self.proof_step.button_name = 'history_undo'
+                #     add_task(self.servint.history_undo)
+                #
+                # elif emission.is_from(self.toolbar.rewind.triggered):
+                #     self.current_user_action = UserHistoryAction(
+                #         'history_rewind')
+                #     self.proof_step.button_name = 'history_rewind'
+                #     add_task(self.servint.history_rewind)
+                #
+                # elif emission.is_from(self.proof_outline_window.history_goto):
+                #     self.current_user_action = UserHistoryAction(
+                #         'history_goto')
+                #     history_nb = emission.args[0]
+                #     if history_nb != self.history_nb:
+                #         self.proof_step.button_name = 'history_goto'
+                #         add_task(self.servint.history_goto, history_nb)
+                #     else:
+                #         self.unfreeze()
 
                 ########################
                 # Code to Lean actions #
@@ -509,32 +547,28 @@ class Coordinator(QObject):
 
                 elif emission.is_from(self.action_triggered):
                     button = emission.args[0]  # ActionButton triggered by user
+                    self.current_user_action = UserProofAction(button.name)
                     self.proof_step.button_name = button.name
                     # # FIXME: no more double click
-                    # if button == self.ecw.action_apply_button \
-                    #         and self.double_clicked_item:
-                    #     # Make sure item is marked and added to selection
-                    #     item = self.double_clicked_item
-                    #     if item in self.current_selection:
-                    #         self.current_selection.remove(item)
-                    #     self.current_selection.append(item)  # Item is last
-                    #     self.emw.double_clicked_item = None
                     self.__server_call_action(emission.args[0])
 
                 elif emission.is_from(self.statement_triggered):
                     # emission.args[0] is StatementTreeWidgetItem
-                    if hasattr(emission.args[0], 'statement'):
-                        item = emission.args[0]
-                        self.proof_step.statement = item.statement
+                    item = emission.args[0]  # ActionButton triggered by user
+                    self.current_user_action = UserProofAction(
+                        statement_name=item.statement.lean_name)  # FIXME
+                    # if hasattr(emission.args[0], 'statement'):
+                    #     item = emission.args[0]
+                    self.proof_step.statement = item.statement
                     self.__server_call_statement(item)
 
-                elif emission.is_from(self.apply_math_object_triggered):
-                    # Fixme: causes freeze - no more double click
-                    self.emw.double_clicked_item = emission.args[0]
-                    # Emulate click on 'apply' button:
-                    self.emw.freeze(False)
-                    if self.ecw.action_apply_button:
-                        self.ecw.action_apply_button.animateClick(msec=500)
+                # elif emission.is_from(self.apply_math_object_triggered):
+                #     # Fixme: causes freeze - no more double click
+                #     self.emw.double_clicked_item = emission.args[0]
+                #     # Emulate click on 'apply' button:
+                #     self.emw.freeze(False)
+                #     if self.ecw.action_apply_button:
+                #         self.ecw.action_apply_button.animateClick(msec=500)
     ################################################
     # Actions that send code to Lean (via servint) #
     ################################################
@@ -562,13 +596,17 @@ class Coordinator(QObject):
 
         action     = action_btn.action
         log.debug(f'------ Calling action {action.symbol} ------')
+
         # Send action and catch exception when user needs to:
         #   - choose A or B when having to prove (A OR B) ;
         #   - enter an element when clicking on 'exists' button.
         #   - and so on.
+
         selection = self.current_selection_as_mathobjects
         self.proof_step.selection = selection
         target_selected = self.emw.target_selected
+        self.current_user_action.set_selection(selection)
+        self.current_user_action.set_target_selected(target_selected)
 
         while True:
             try:
@@ -589,8 +627,10 @@ class Coordinator(QObject):
                                                         e.output)
                 if ok:
                     self.emw.user_input.append(choice)
-                else:
+                    self.current_user_action.add_user_input(choice)
+                else:  # Abort
                     self.emw.user_input = []
+                    self.current_user_action = None
                     self.unfreeze()
                     break
 
@@ -604,6 +644,7 @@ class Coordinator(QObject):
                 self.proof_step.user_input = self.emw.user_input
 
                 # Update lean_file and call Lean server
+                self.lean_code_sent = lean_code
                 self.server_queue.add_task(self.servint.code_insert,
                                            action.symbol,
                                            lean_code,
@@ -620,6 +661,8 @@ class Coordinator(QObject):
         selection = self.current_selection_as_mathobjects
         self.proof_step.selection = selection
         target_selected = self.emw.target_selected
+        self.current_user_action.set_selection(selection)
+        self.current_user_action.set_target_selected(target_selected)
 
         try:
             item.setSelected(False)
@@ -644,6 +687,7 @@ class Coordinator(QObject):
             self.proof_step.lean_code = lean_code
 
             # Update lean_file and call Lean server
+            self.lean_code_sent = lean_code
             self.server_queue.add_task(self.servint.code_insert,
                                        statement.pretty_name,
                                        lean_code,
@@ -657,6 +701,39 @@ class Coordinator(QObject):
         self.server_queue.add_task(self.servint.code_set, None,
                                    _('Code from editor'),
                                    self.lean_editor.code_get())
+
+    #################
+    #################
+    # History moves #
+    #################
+    #################
+
+    def process_history_move(self, button_name, history_nb = None):
+        """
+        Process a history action: undo, redo, rewind, goto <history_nb>.
+        Param history_nb is assumed to be provided if
+        button_name=="history_goto".
+        """
+        self.current_user_action = UserHistoryAction(button_name=button_name)
+
+        if button_name == "history_undo":
+            self.lean_file.undo()
+        elif button_name == "history_redo":
+            self.lean_file.redo()
+            # TODO: simulation
+        elif button_name == "history_rewind":
+            self.lean_file.rewind()
+        elif button_name == "history_goto" and history_nb != self.history_nb:
+            self.lean_file.goto(history_nb)
+
+        self.displayed_proof_tree_item = self.lean_file.get_info(
+                                                            "new_proof_step")
+        # assert isinstance(self.displayed_proof_tree_item, ProofTreeItem)
+
+        proof_state = self.displayed_new_proof_tree_item.proof_state_after
+        self.unfreeze()
+        self.emw.update_goal(proof_state.goals[0])
+        self.invalidate_events()
 
     #########################
     #########################
@@ -857,13 +934,20 @@ class Coordinator(QObject):
 
         self.proof_step_updated.emit()  # Received in auto_test
 
+    def test_response_coherence(self, lean_response: LeanResponse):
+        return self.lean_code_sent is lean_response.lean_code
+
+    def invalidate_events(self):
+        self.current_user_action = None
+        self.lean_code_sent = None
+
     @Slot()
-    def process_lean_response(self,
-                              exercise,
-                              no_more_goals: bool,
-                              analysis: tuple,
-                              errors: list,
-                              error_type=0):
+    def process_lean_response(self, lean_response: LeanResponse):
+                              # exercise,
+                              # no_more_goals: bool,
+                              # analysis: tuple,
+                              # errors: list,
+                              # error_type=0):
         """
         This method processes Lean response after a request, and is a slot
         of a signal emitted by self.servint when all info have been received.
@@ -875,7 +959,7 @@ class Coordinator(QObject):
         Every action of the user (ie click on an ActionButton, a statement
         item, or a history move) which do not rise a WrongUserInput
         exception is passed to Lean, and then goes through this method.
-
+        FIXME
         :param exercise: should be equal to self.exercise.
         :param no_more_goals: True if no_more_goal: proof is complete!
         :param analysis: (hypo_analysis, targets_analysis),
@@ -885,22 +969,30 @@ class Coordinator(QObject):
             0 = no error, 1 = WUI (unused here),
             2 = FRE, 3 = Timeout, 4 = UnicodeError
         """
+
+        no_more_goals = lean_response.no_more_goals
+        error_type = lean_response.error_type
+        proof_state = lean_response.new_proof_state
+
         log.info("** Processing Lean's response **")
         history_nb = self.lean_file.target_idx
         log.info(f"History nb: {history_nb}")
-        self.emw.automatic_action = False
-        proof_state = None
+        self.emw.automatic_action = False  # FIXME: move
 
         # ─────── Errors ─────── #
+        # if self.lean_code_sent is not lean_response.lean_code:
+        #   log.warning("   not related to lean code sent, ignoring!")
+        #   return
+
         if error_type != 0:
             log.info("  -> error!")
-            self.process_error(error_type, errors)
+            self.process_error(error_type, lean_response.error_list)
             self.abort_process()
             return
 
-        if exercise != self.exercise:  # Should never happen
-            log.warning("    not from current exercise, ignoring")
-            return
+        # if exercise != self.exercise:  # Should never happen
+        #     log.warning("    not from current exercise, ignoring")
+        #     return
 
         # ─────── First step ─────── #
         if not self.server_task_started.is_set():
@@ -912,33 +1004,44 @@ class Coordinator(QObject):
             log.info("  -> proof completed!")
             proof_state = self.set_fireworks()
 
-        else:  # Generic step
-            hypo_analysis, targets_analysis = analysis
-            if hypo_analysis and targets_analysis:
-                log.info("** Creating new proof state **")
-                proof_state = ProofState.from_lean_data(hypo_analysis,
-                                                        targets_analysis,
-                                                        to_prove=True)
-            if proof_state:
-                self.lean_file.state_info_attach(ProofState=proof_state)
-            else:
-                # No proof state !? Maybe empty analysis ?
-                self.process_error(error_type=5, errors=[])
-                log.debug(f"Analysis: {hypo_analysis} /// {targets_analysis}")
-                self.abort_process()
-                return
+        # else:  # Generic step
+        #     hypo_analysis, targets_analysis = analysis
+        #     if hypo_analysis and targets_analysis:
+        #         log.info("** Creating new proof state **")
+        #         proof_state = ProofState.from_lean_data(hypo_analysis,
+        #                                                 targets_analysis)
+        #     if proof_state:
+        #         self.lean_file.state_info_attach(ProofState=proof_state)
+        #     else:
+        #         # No proof state !? Maybe empty analysis ?
+        #         self.process_error(error_type=5, errors=[])
+        #         log.debug(f"Analysis: {hypo_analysis} /// {targets_analysis}")
+        #         self.abort_process()
+        #         return
 
         self.proof_step.proof_state = proof_state
+        if self.current_user_action:
+            assert isinstance(self.current_user_action, UserProofAction)
+        new_displayed_step = ProofTreeItem.new_proof_item(
+                              old_proof_item=self.displayed_proof_tree_item,
+                              user_action=self.current_user_action,
+                              lean_response=lean_response)
+
+        self.displayed_new_proof_tree_item = new_displayed_step
+        print("psa:")
+        print(self.displayed_new_proof_tree_item.proof_state_after)
 
         if not self.proof_step.is_error():
-            if not self.proof_step.is_history_move():
-                log.debug("     Storing proof step in lean_file info")
-                self.lean_file.state_info_attach(proof_step=self.proof_step)
+                    if not self.proof_step.is_history_move():
+                        log.debug("     Storing proof step in lean_file info")
+                        self.lean_file.state_info_attach(proof_step=self.proof_step)
+                        self.lean_file.state_info_attach(
+                                            new_proof_step=new_displayed_step)
 
-            # ─────── Check for new goals ─────── #
-            delta = self.lean_file.delta_goals_count
-            self.proof_step.delta_goals_count = delta
-            self.proof_step.update_goals()
+                    # ─────── Check for new goals ─────── #
+                    delta = self.lean_file.delta_goals_count
+                    self.proof_step.delta_goals_count = delta
+                    self.proof_step.update_goals()
 
             # log.debug(f"    Target_idx: {self.lean_file.target_idx}")
 
@@ -976,3 +1079,44 @@ class Coordinator(QObject):
             self.process_automatic_actions(proof_state.goals[0])
 
         self.emw.ui_updated.emit()  # For testing
+
+        self.invalidate_events()
+
+    @Slot()
+    def new_process_lean_response(self, lean_response: LeanResponse):
+        """
+        This method processes Lean response after a request, and is a slot
+        of a signal emitted by self.servint when all info have been received.
+        There are exactly three mutually exclusive possibilities:
+        (1) Proof is complete,
+        (2) The request has failed,
+        (3) The request has succeeded but proof is not complete.
+
+        Every action of the user (ie click on an ActionButton, a statement
+        item, or a history move) which do not rise a WrongUserInput
+        exception is passed to Lean, and then goes through this method.
+        """
+        # TODO: history actions should NOT be passed to Lean.
+
+        # (1) Test Response corresponds to request
+        if not self.test_response_coherence(lean_response):
+            log.warning("Unexpected Lean response, ignoring")
+            return
+
+        # (2) Process error TODO
+        # (3) process no more goals ? cf self.fireworks TODO
+
+        assert isinstance(self.current_user_action, UserProofAction)
+        new_displayed_step = ProofTreeItem.new_proof_item(
+                                old_proof_item=self.displayed_proof_tree_item,
+                                user_action=self.current_user_action,
+                                lean_response=lean_response)
+
+        self.displayed_proof_tree_item = new_displayed_step
+
+        # Name dummy vars TODO
+        # Tag new goal, and update UI TODO
+        # Process automatic actions TODO
+
+
+        self.invalidate_events()

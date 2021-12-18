@@ -126,7 +126,7 @@ class ExerciseMainWindow(QMainWindow):
     ui_updated                   = Signal()
     # User action signals:
     action_triggered             = Signal(ActionButton)
-    apply_math_object_triggered  = Signal(MathObjectWidget)
+    apply_math_object_triggered  = Signal(MathObjectWidget)  # Fixme: useless?
     statement_triggered          = Signal(StatementsTreeWidgetItem)
 
     def __init__(self, exercise: Exercise):
@@ -762,7 +762,6 @@ class ExerciseMainWindow(QMainWindow):
         :param new_goal: The new Goal to update / set the interface to.
         (or None if it has not been received yet).
         """
-        # TODO: tags will be incorporated in ContextMathObjects
         log.info("Updating UI")
         self.manage_msgs(self.displayed_proof_step)
         self.user_input = []

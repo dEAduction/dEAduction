@@ -44,6 +44,8 @@ from deaduction.pylib.lean.server import LeanServer
 from deaduction.pylib.lean.installation import LeanEnvironment
 from deaduction.pylib.actions import CodeForLean, get_effective_code_numbers
 from deaduction.pylib.coursedata import Course
+from deaduction.pylib.proof_tree import LeanResponse
+
 
 import deaduction.pylib.config.site_installation as inst
 import deaduction.pylib.server.exceptions as exceptions
@@ -232,7 +234,8 @@ class ServerInterface(QObject):
     failed_request_errors       = Signal()  # FIXME: suppress?
 
     # Signal sending info from Lean
-    lean_response = Signal(Statement, bool, tuple, list, int)
+    # lean_response = Signal(Statement, bool, tuple, list, int)
+    lean_response = Signal(LeanResponse)
     # timeout_signal = Signal()
 
     # For functionality using ipf (tooltips, implicit definitions):
@@ -471,7 +474,7 @@ class ServerInterface(QObject):
             statements = self.__course_data.statements
             st = statements[index]
             if not st.initial_proof_state:
-                ps = ProofState.from_lean_data(hypo, target, to_prove=False)
+                ps = ProofState.from_lean_data(hypo, target)
                 st.initial_proof_state = ps
                 # Emit signal in case an exercise is waiting for its ips
                 self.initial_proof_state_set.emit()
@@ -627,12 +630,22 @@ class ServerInterface(QObject):
             pass
 
         error_type = 1 if error_list else 0
-        self.lean_response.emit(exercise,
-                                self.no_more_goals,
-                                (self.__tmp_hypo_analysis,
-                                 self.__tmp_targets_analysis),
-                                error_list,
-                                error_type)
+        effective_code = (None if self.__tmp_effective_code.is_empty()
+                          else self.__tmp_effective_code)
+        analysis = (self.__tmp_hypo_analysis, self.__tmp_targets_analysis)
+
+        lean_response = LeanResponse(lean_code, effective_code,
+                                     self.no_more_goals,
+                                     analysis,
+                                     error_type)
+        # self.lean_response.emit(exercise,
+        #                         self.no_more_goals,
+        #                         (self.__tmp_hypo_analysis,
+        #                          self.__tmp_targets_analysis),
+        #                         error_list,
+        #                         error_type)
+
+        self.lean_response.emit(lean_response)
 
     ###########################
     # Exercise initialisation #
@@ -777,7 +790,6 @@ class ServerInterface(QObject):
     ############################################
     # Code management
     ############################################
-    # @task_for_server_queue
     async def code_insert(self, label: str, lean_code: CodeForLean):
         """
         Inserts code in the Lean virtual file.

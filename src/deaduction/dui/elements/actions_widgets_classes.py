@@ -325,6 +325,8 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
     from_lean_name : dict = {}  # Statement.lean_name --> item
     # ! Must be updated to avoid pointing to deleted items !
 
+    name = "apply"  # Virtual button name
+
     def __init__(self, statement: Statement):
         """
         Init self with an instance of the class (or child of) Statement.

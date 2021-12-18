@@ -623,11 +623,10 @@ class ProofState:
     hypo_analysis only provide context of the main goal.
     """
     goals: List[Goal]
-    lean_data: Tuple[str, str] = None
+    lean_data: Tuple[str, str] = None  # Useless
 
     @classmethod
-    def from_lean_data(cls, hypo_analysis: str, targets_analysis: str,
-                       to_prove=True):
+    def from_lean_data(cls, hypo_analysis: str, targets_analysis: str):
         """
         :param hypo_analysis:    string from the lean tactic hypo_analysis
         :param targets_analysis: string from the lean tactic targets_analysis
