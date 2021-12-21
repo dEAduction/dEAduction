@@ -72,7 +72,7 @@ from deaduction.pylib.actions           import (generic,
 from deaduction.pylib.proof_tree        import (UserProofAction,
                                                 UserHistoryAction,
                                                 LeanResponse,
-                                                ProofTreeItem)
+                                                ProofTree)
 
 from deaduction.pylib.memory            import Journal
 
@@ -121,6 +121,7 @@ class Coordinator(QObject):
 
         # Information
         # FIXME: suppress
+        self.proof_tree = ProofTree()
         self.proof_step: Optional[ProofStep]          = None  # Set later
         self.previous_proof_step: Optional[ProofStep] = None
 
@@ -943,11 +944,6 @@ class Coordinator(QObject):
 
     @Slot()
     def process_lean_response(self, lean_response: LeanResponse):
-                              # exercise,
-                              # no_more_goals: bool,
-                              # analysis: tuple,
-                              # errors: list,
-                              # error_type=0):
         """
         This method processes Lean response after a request, and is a slot
         of a signal emitted by self.servint when all info have been received.
@@ -959,15 +955,6 @@ class Coordinator(QObject):
         Every action of the user (ie click on an ActionButton, a statement
         item, or a history move) which do not rise a WrongUserInput
         exception is passed to Lean, and then goes through this method.
-        FIXME
-        :param exercise: should be equal to self.exercise.
-        :param no_more_goals: True if no_more_goal: proof is complete!
-        :param analysis: (hypo_analysis, targets_analysis),
-                         = info to construct new proof_state
-        :param errors: list of errors, if non-empty then request has failed.
-        :param error_type: int
-            0 = no error, 1 = WUI (unused here),
-            2 = FRE, 3 = Timeout, 4 = UnicodeError
         """
 
         no_more_goals = lean_response.no_more_goals

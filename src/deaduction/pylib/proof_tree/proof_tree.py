@@ -307,18 +307,14 @@ class ProofTree:
     necessary.
     """
 
-    def __init__(self, initial_proof_state: ProofState):
+    def __init__(self, initial_proof_state: ProofState = None):
         """
-        Init an empty proof except for its initial proof state
+        Init an empty proof tree.
         """
         self.root_goal = SubGoal(parent=None, msg="Proof",
                                  proof_state_after=initial_proof_state)
         self.current_item = self.root_goal
         self.total_goals_counter = 1
-
-    # def insert_item(self, item: ProofTreeItem):
-    #     self.current_item.children.append(item)
-    #     self.current_item = item
 
     def new_item(self,
                  user_action: UserProofAction,
@@ -341,10 +337,12 @@ class ProofTree:
                                       lean_response=lean_response)
         proof_state = new_proof_step.proof_state_after
 
+        # Case of current goal solved:
         if new_proof_step.current_goal_solved:
             self.current_item: SubGoal = parent.next_sub_goal
             self.current_item.proof_state_after = proof_state
 
+        # Case of new goals created: bifurcation in the ProofTree:
         elif new_proof_step.new_goal_created:
             nb_new_goals = new_proof_step.delta_goals_count
             new_sub_goals = SubGoal.from_lean_code(LeanResponse.lean_code,
@@ -357,7 +355,8 @@ class ProofTree:
             self.current_item = new_sub_goals[0]
             self.current_item.proof_state_after = proof_state
 
-        else:  # Generic step
+        # Generic step:
+        else:
             self.current_item = new_proof_step
 
     @property
@@ -379,13 +378,3 @@ class ProofTree:
         """
         return self.current_item.sub_goal.sub_goal_number
 
-    # @property
-    # def total_goals_counter(self) -> int:
-    #     """
-    #     Total number of goals in the proof history.
-    #     """
-    #     sub_goal = self.current_item.sub_goal
-    #     while sub_goal.next_sub_goal:
-    #         sub_goal:SubGoal = self.next_sub_goal
-    #
-    #     return sub_goal.sub_goal_number

@@ -28,5 +28,5 @@ This file is part of d∃∀duction.
 
 from .lean_response import LeanResponse
 from .user_action import UserProofAction, UserHistoryAction
-from .proof_tree import ProofTreeItem, SubGoal, NewProofStep
+from .proof_tree import ProofTree  # ProofTreeItem, SubGoal, NewProofStep
 
