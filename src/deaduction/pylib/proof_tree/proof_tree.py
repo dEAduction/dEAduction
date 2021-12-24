@@ -150,15 +150,12 @@ class SubGoal(ProofTreeItem):
         self.msg = msg
         # Automatic numbering of sub-goals  FIXME!!
         if not parent:
-            sub_goal_nb = 1
+            self.sub_goal_nb = 1
         else:
             # The first child has the same sub-goal number as its parent.
-            sub_goal_nb = ( parent.sub_goal.sub_goal_number
-                          + len(parent.children) )
-
-        self.sub_goal_number = sub_goal_nb
-
-        self.parent.children.append(self)
+            self.sub_goal_nb = (parent.sub_goal.sub_goal_number
+                                + len(parent.children))
+            self.parent.children.append(self)
 
     def set_proof_state(self, proof_state):
         self.proof_state_after = proof_state
@@ -245,7 +242,7 @@ class NewProofStep(ProofTreeItem):
      - a given step never both create and solve goals.
     """
     counter: int = 0  # For debugging
-    property_counter: int = 1
+    # property_counter: int = 1
 
     def __init__(self, parent,
                  user_action: UserProofAction,
@@ -260,7 +257,7 @@ class NewProofStep(ProofTreeItem):
 
         self.counter = NewProofStep.counter
         NewProofStep.counter += 1
-        self.property_counter = self.previous_proof_step.property_counter
+        # self.property_counter = self.previous_proof_step.property_counter
         if parent:  # A ProofStep has no sister!
             parent.children = [self]
 
@@ -286,7 +283,7 @@ class NewProofStep(ProofTreeItem):
                        else len(parent.proof_state_after.goals))
         proof_state = self.proof_state_after
         if proof_state:
-            return len(proof_state) - previous_nb
+            return len(proof_state.goals) - previous_nb
         else:
             return 0
 
@@ -315,6 +312,7 @@ class ProofTree:
                                  proof_state_after=initial_proof_state)
         self.current_item = self.root_goal
         self.total_goals_counter = 1
+        self.property_counter = 1
 
     def new_item(self,
                  user_action: UserProofAction,
@@ -358,6 +356,8 @@ class ProofTree:
         # Generic step:
         else:
             self.current_item = new_proof_step
+
+        return self.current_item  # FIXME: useless?
 
     @property
     def current_sub_goal(self):

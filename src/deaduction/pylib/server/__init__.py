@@ -562,7 +562,7 @@ class ServerInterface(QObject):
         Call Lean server to update the proof_state.
             (for processing exercise only)
         """
-        exercise = self.__exercise_current
+        # exercise = self.__exercise_current
         first_line_of_change = self.lean_file.first_line_of_last_change
         self.log.debug(f"Updating, "
                        f"checking errors from line "

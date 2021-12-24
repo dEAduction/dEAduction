@@ -122,11 +122,11 @@ class Coordinator(QObject):
         # Information
         # FIXME: suppress
         self.proof_tree = ProofTree()
-        self.proof_step: Optional[ProofStep]          = None  # Set later
-        self.previous_proof_step: Optional[ProofStep] = None
+        self.proof_step: Optional[ProofStep]           = None  # Set later
+        self.previous_proof_step: Optional[ProofStep]  = None
 
-        self.journal                                  = Journal()
-        self.displayed_proof_tree_item: Optional[ProofTreeItem] = None
+        self.journal                                   = Journal()
+        self.proof_tree: Optional[ProofTree]           = None
         self.current_user_action: Optional[UserAction] = None
         self.lean_code_sent: Optional[CodeForLean]          = None
 
@@ -171,7 +171,7 @@ class Coordinator(QObject):
         if proof_state:
             goal = proof_state.goals[0]
             self.emw.ecw.update_goal(goal, 1, 1)
-
+            self.proof_tree = ProofTree(initial_proof_state=proof_state)
         # Set exercise. In particular, this will initialize servint.lean_file.
         self.server_queue.add_task(self.servint.set_exercise,
                                    self.exercise,
@@ -957,6 +957,11 @@ class Coordinator(QObject):
         exception is passed to Lean, and then goes through this method.
         """
 
+        # (1) Test Response corresponds to request FIXME: lean_code_nb
+        # if not self.test_response_coherence(lean_response):
+        #     log.warning("Unexpected Lean response, ignoring")
+        #     return
+
         no_more_goals = lean_response.no_more_goals
         error_type = lean_response.error_type
         proof_state = lean_response.new_proof_state
@@ -977,14 +982,12 @@ class Coordinator(QObject):
             self.abort_process()
             return
 
-        # if exercise != self.exercise:  # Should never happen
-        #     log.warning("    not from current exercise, ignoring")
-        #     return
-
         # ─────── First step ─────── #
         if not self.server_task_started.is_set():
             # log.debug("First proof step")
             self.start_server_task()
+        if not self.proof_tree:
+            self.proof_tree = ProofTree(lean_response.new_proof_state)
 
         # ─────── Compute proof state ─────── #
         if no_more_goals:
@@ -1009,10 +1012,9 @@ class Coordinator(QObject):
         self.proof_step.proof_state = proof_state
         if self.current_user_action:
             assert isinstance(self.current_user_action, UserProofAction)
-        new_displayed_step = ProofTreeItem.new_proof_item(
-                              old_proof_item=self.displayed_proof_tree_item,
-                              user_action=self.current_user_action,
-                              lean_response=lean_response)
+        new_displayed_step = self.proof_tree.new_item(
+                                        user_action=self.current_user_action,
+                                        lean_response=lean_response)
 
         self.displayed_new_proof_tree_item = new_displayed_step
         print("psa:")
@@ -1094,8 +1096,7 @@ class Coordinator(QObject):
         # (3) process no more goals ? cf self.fireworks TODO
 
         assert isinstance(self.current_user_action, UserProofAction)
-        new_displayed_step = ProofTreeItem.new_proof_item(
-                                old_proof_item=self.displayed_proof_tree_item,
+        new_displayed_step = self.proof_tree.new_item(
                                 user_action=self.current_user_action,
                                 lean_response=lean_response)
 
