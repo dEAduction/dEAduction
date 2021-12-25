@@ -759,7 +759,7 @@ class ServerInterface(QObject):
         :param code: CodeForLean
         """
         if code:
-            # Formatting
+            # Formatting. We do NOT want the "no_meta_vars" tactic!
             code_string = code.to_code(exclude_no_meta_vars=True)
             code_string = code_string.strip()
             if not code_string.endswith(","):
@@ -786,6 +786,7 @@ class ServerInterface(QObject):
         # Add "no meta vars" + "effective code nb"
         # and keep track of node_counters
         lean_code, code_string = lean_code.to_decorated_code()
+        # NB: lean_code now contains node_counters (and no_meta_vars)
         code_string = code_string.strip()
         if not code_string.endswith(","):
             code_string += ","
@@ -799,6 +800,7 @@ class ServerInterface(QObject):
         # print("Code sent to Lean:")
         # nice_display_tree(code_string)
 
+        self.log.debug("Code sent:" + code_string)
         self.lean_file.insert(label=label, add_txt=code_string)
 
         # Ensure content is not identical to last sent (void "no change")

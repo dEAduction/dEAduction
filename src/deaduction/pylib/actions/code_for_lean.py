@@ -327,10 +327,6 @@ class CodeForLean:
                            instructions=[self],
                            success_msg=success_msg)
 
-    @classmethod
-    def no_meta_vars(cls):
-        return cls("no_meta_vars")
-
     def try_(self, success_msg=""):
         """
         Turn self into
@@ -367,7 +363,7 @@ class CodeForLean:
         # TODO: handle error_msgs
         if self.is_empty():
             return ""
-        elif self is NO_META_VARS:
+        elif exclude_no_meta_vars and self.is_no_meta_vars():
             return ""
         elif self.is_single_code():
             code = self.instructions[0].to_code()
@@ -476,7 +472,7 @@ class CodeForLean:
         Add the "no_meta_vars" tactic after each piece of code that contains
         "apply"
         """
-        no_meta_vars_str = "no_meta_vars"
+
         if self.is_empty():
             return self
         elif not self.is_or_else():
@@ -615,8 +611,12 @@ class CodeForLean:
             return (code_.find("apply") != -1 or code_.find("have") != -1
                     or code_.find("rw") != -1)
         else:
-            return True in [instruction.could_have_meta_vars() for
-                            instruction in self.instructions]
+            return any(instruction.could_have_meta_vars() for
+                       instruction in self.instructions)
+
+    def is_no_meta_vars(self):
+        return (self.is_single_code() and
+                self.to_code() == NO_META_VARS.to_code())
 
     def add_used_properties(self, used_properties):
         """
@@ -723,9 +723,11 @@ if __name__ == '__main__':
     # code_ = code_.add_trace_effective_code_(42)
     # code_ = code_.add_no_meta_vars()
 
-    print(code_.to_code())
     code_, decorated_code_string = code_.to_decorated_code()
     print(decorated_code_string)
+    print(code_.to_code())
+    print("Exclude no_meta_vars:")
+    print(code_.to_code(True))
 
     for choice in [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (2, 0), (2, 1),
                    (3, 67)]:
