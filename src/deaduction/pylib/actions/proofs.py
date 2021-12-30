@@ -132,20 +132,34 @@ def method_contrapose(proof_step,
                       selected_objects: [MathObject]) -> CodeForLean:
     """
     If target is an implication, turn it to its contrapose.
+    If a property P is selected, and target is Q, then assume (not Q) and
+    change target to (not P).
     """
 
-    goal = proof_step.goal
+    target: MathObject = proof_step.goal.target
 
     if len(selected_objects) == 0:
-        if goal.target.math_type.node == "PROP_IMPLIES":
+        if target.is_implication():
             code = CodeForLean.from_string("contrapose")
             code.add_success_msg(_("Target replaced by contrapositive"))
             return code
         else:
             error = _('Proof by contraposition only applies when target is '
                       'an implication')
+    elif len(selected_objects) == 1:
+        prop: MathObject = selected_objects[0]
+        if prop.math_type.is_prop():
+            name = prop.info["name"]
+            h = get_new_hyp(proof_step)
+            code = CodeForLean.from_string(f"contrapose {name} with {h}")
+            code.add_success_msg(_("Proof by contraposition with hypothesis "
+                                   "{}").format(name))
+            return code
+        else:
+            error = _("Selected object should be a property")
+            raise WrongUserInput(error)
     else:
-        error = _('Proof by contraposition only applies to target')
+        error = _('There should be at most one selected property')
     raise WrongUserInput(error)
 
 
