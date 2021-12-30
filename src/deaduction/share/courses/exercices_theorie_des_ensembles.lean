@@ -708,13 +708,6 @@ PrettyName
 
 open applications_II.definitions
 
-
-example (f: X → Y) (x x' : X) (B: set Y) (H: f x' ∈ B) (H' : x=x') : f x ∈ B :=
-begin
-    cc,
-end
-
-
 lemma exercise.composition_injections
 (H1 : injective f) (H2 : injective g)
 :
