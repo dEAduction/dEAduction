@@ -141,7 +141,7 @@ class NewGoal:
             msg = _("Proof of new subgoal: {}").format(self.new_target)
         else:  # Generic case
             msg = _("Proof of new subgoal")
-        msg += " ..."
+        # msg += " ..."
         return msg
 
 
