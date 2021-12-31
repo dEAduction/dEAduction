@@ -272,8 +272,8 @@ class Goal:
 
             forb_vars = forb_vars + future_vars_of_type
             named_vars = glob_vars_of_type + future_vars_of_type
-            log.debug(f"Naming vars of type "
-                      f"{math_type.to_display()}")
+            # log.debug(f"Naming vars of type "
+            #           f"{math_type.to_display()}")
             if math_type.display_name == 'ℝ':
                 self.__name_real_bound_vars(math_type=math_type,
                                             unnamed_vars=dummy_vars_of_type,
@@ -286,8 +286,8 @@ class Goal:
             # Update forb_vars to prevent a name to be given in the next
             # math_type unnamed_vars:
             forb_vars += dummy_vars_of_type
-            log.debug(f"    --> "
-                      f"{[var.to_display() for var in dummy_vars_of_type]}")
+            # log.debug(f"    --> "
+            #           f"{[var.to_display() for var in dummy_vars_of_type]}")
 
     def __name_bound_vars_in_prop(self, prop: MathObject, future_vars):
         """
@@ -301,15 +301,15 @@ class Goal:
 
         glob_vars = self.context_objects
 
-        log.debug(f"Naming vars in {prop.to_display()}:")
+        # log.debug(f"Naming vars in {prop.to_display()}:")
         if prop.math_type.bound_vars:
-            log.debug(f"""-->Dummy vars types: {[var.math_type.to_display()
-                                  for var in prop.math_type.bound_vars]}""")
+            # log.debug(f"""-->Dummy vars types: {[var.math_type.to_display()
+            #                       for var in prop.math_type.bound_vars]}""")
             # Collect math_types of bound_vars with no rep
             math_types = inj_list([var.math_type for var in
                                    prop.math_type.bound_vars])
-            log.debug(f"-->Math_types : "
-                      f"{[mt.to_display() for mt in math_types]}")
+            # log.debug(f"-->Math_types : "
+            #           f"{[mt.to_display() for mt in math_types]}")
             forb_vars = glob_vars if not_glob \
                 else prop.math_type.extract_local_vars()
 

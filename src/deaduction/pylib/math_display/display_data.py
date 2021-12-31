@@ -229,7 +229,8 @@ latex_to_utf8_dic = {
     r'\set_inverse': [r'^', '-1'],
     r'\if': "",  # '\if' is just here for text mode
     r'\such_that': ", ",
-    r'\function_from': "",
+    r'\context_function_from': "",  # To avoid double ":" for context_math_obj
+    r'\function_from': ": ",
     r'\text_is': " ",  # " " + _("is") + " " ? Anyway 'is' will be removed?
     r'\text_is_not': " " + _('not') + " ",  # Idem
     r'\no_text': "",
@@ -254,9 +255,10 @@ latex_to_text = {
     r'\forall': _("for every") + " ",
     r'\exists': _("there exists") + " ",
     r"\exists_unique": _("there exists a unique") + " ",
+    r'\context_function_from': " " + _("a function from") + " ",
     r'\function_from': " " + _("a function from") + " ",
     r'\sequence_from': " " + _("a sequence from") + " ",  # FIXME...
-    r'\to': " " + _("in") + " ",
+    r'\to': " " + _("in") + " ",  # FIXME: OK in French but not in english!
     # r'\in': " " + _("belongs to") + " ",
     r'\in_prop': " " + _("is") + " ",
     r'\in_set': " " + _("is") + " ",

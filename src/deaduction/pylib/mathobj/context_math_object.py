@@ -96,6 +96,10 @@ class ContextMathObject(MathObject):
         if (hasattr(self, 'has_been_used_in_proof')
                 and self.has_been_used_in_proof):
             shape = [r'\used_property'] + shape
+        if self.is_function():
+            # Should be "a function from" in text mode,
+            # and nothing in symbol mode.
+            shape[0] = r"\context_function_from"
         return shape
 
     @property
