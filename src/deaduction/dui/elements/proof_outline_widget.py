@@ -124,7 +124,7 @@ class ProofOutlineTreeWidget(QTreeWidget):
 
         super().__init__()
         self.setColumnCount(3)
-        header_labels = ["Messages", "Action", "Objects involved"]
+        header_labels = [_("Messages"), _("Action"), _("Objects involved")]
         self.setHeaderLabels(header_labels)
         self.setSortingEnabled(False)
 
