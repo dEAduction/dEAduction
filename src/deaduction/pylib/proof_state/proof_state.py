@@ -272,8 +272,8 @@ class Goal:
 
             forb_vars = forb_vars + future_vars_of_type
             named_vars = glob_vars_of_type + future_vars_of_type
-            # log.debug(f"Naming vars of type "
-            #           f"{math_type.old_to_display()}")
+            log.debug(f"Naming vars of type "
+                      f"{math_type.to_display()}")
             if math_type.display_name == 'ℝ':
                 self.__name_real_bound_vars(math_type=math_type,
                                             unnamed_vars=dummy_vars_of_type,
@@ -283,8 +283,11 @@ class Goal:
                                 named_vars=named_vars,
                                 unnamed_vars=dummy_vars_of_type,
                                 forbidden_vars=forb_vars)
-            # log.debug(f"    --> "
-            #           f"{[var.to_display() for var in dummy_vars_of_type]}")
+            # Update forb_vars to prevent a name to be given in the next
+            # math_type unnamed_vars:
+            forb_vars += dummy_vars_of_type
+            log.debug(f"    --> "
+                      f"{[var.to_display() for var in dummy_vars_of_type]}")
 
     def __name_bound_vars_in_prop(self, prop: MathObject, future_vars):
         """
@@ -298,15 +301,15 @@ class Goal:
 
         glob_vars = self.context_objects
 
-        # log.debug(f"Naming vars in {prop.to_display()}:")
+        log.debug(f"Naming vars in {prop.to_display()}:")
         if prop.math_type.bound_vars:
-            # log.debug(f"""-->Dummy vars types: {[var.math_type.old_to_display()
-            #                       for var in prop.math_type.bound_vars]}""")
+            log.debug(f"""-->Dummy vars types: {[var.math_type.to_display()
+                                  for var in prop.math_type.bound_vars]}""")
             # Collect math_types of bound_vars with no rep
             math_types = inj_list([var.math_type for var in
                                    prop.math_type.bound_vars])
-            # log.debug(f"-->Math_types : "
-            #           f"{[mt.to_display() for mt in math_types]}")
+            log.debug(f"-->Math_types : "
+                      f"{[mt.to_display() for mt in math_types]}")
             forb_vars = glob_vars if not_glob \
                 else prop.math_type.extract_local_vars()
 
@@ -328,15 +331,18 @@ class Goal:
         * Level 2: dummy vars cannot share names with glob vars nor dummy vars
             of other props.
 
-        We first name dummy vars for target, and then estimate future
-        context vars from target. Note that those two sets of vars are not
-        disjoint but not identical: target usually contains dummy vars that
-        will not be introduced (e.g. existence quantifier, or any dummy var
-        in a premisse), and dummy vars will also appear in definitions
-        that have not been unfolded yet.
-        Those future vars will be considered as forbidden vars, to prevent
-        dummy vars name of context properties to from changing too much as
-        user unfolds the target.
+        We first name dummy vars for target.
+
+        Obsolete:
+            Then we estimate future
+            context vars from target. Note that those two sets of vars are not
+            disjoint but not identical: target usually contains dummy vars that
+            will not be introduced (e.g. existence quantifier, or any dummy var
+            in a premisse), and dummy vars will also appear in definitions
+            that have not been unfolded yet.
+            Those future vars will be considered as forbidden vars, to prevent
+            dummy vars name of context properties to from changing too much as
+            user unfolds the target.
         
         :param to_prove: True if this is the goal of the exercise currently
         being solved in the UI, as opposed to coming from the
@@ -358,16 +364,17 @@ class Goal:
 
         # (2) Estimate future context names from target (if to_prove == True)
         future_vars = []  # Future context vars to be named
-        if to_prove:
-            # First unfold definitions
-            math_type = self.target.math_type
-            rw_math_type = math_type.unfold_implicit_definition_recursively()
-            # log.debug(f"Rw math_type: {rw_math_type.to_display()}")
-            future_vars = rw_math_type.glob_vars_when_proving()
-            math_types = inj_list([var.math_type for var in future_vars])
-            data = (math_types, future_vars, self.context_objects, [])
-            # log.debug("Naming future vars:")
-            self.__name_bound_vars_in_data(*data)
+        # FIXME: future_vars is not efficient, suppressed
+        # if to_prove:
+        #     # First unfold definitions
+        #     math_type = self.target.math_type
+        #     rw_math_type = math_type.unfold_implicit_definition_recursively()
+        #     # log.debug(f"Rw math_type: {rw_math_type.to_display()}")
+        #     future_vars = rw_math_type.glob_vars_when_proving()
+        #     math_types = inj_list([var.math_type for var in future_vars])
+        #     data = (math_types, future_vars, self.context_objects, [])
+        #     # log.debug("Naming future vars:")
+        #     self.__name_bound_vars_in_data(*data)
 
         # (3) Name context dummy vars
         not_dummy = cvars.get("logic.do_not_name_dummy_vars_as_dummy_vars",
