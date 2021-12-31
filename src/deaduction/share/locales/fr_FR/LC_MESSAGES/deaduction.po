@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2021-12-25 12:36+0100\n"
-"PO-Revision-Date: 2021-12-25 12:38+0100\n"
+"POT-Creation-Date: 2021-12-31 03:52+0100\n"
+"PO-Revision-Date: 2021-12-31 03:54+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -193,6 +193,18 @@ msgstr "A démontrer"
 #: dui/elements/lean_editor.py:52
 msgid "Send to L∃∀N"
 msgstr "Envoyer à L∃∀N"
+
+#: dui/elements/proof_outline_widget.py:127
+msgid "Messages"
+msgstr "Messages"
+
+#: dui/elements/proof_outline_widget.py:127
+msgid "Action"
+msgstr "Action"
+
+#: dui/elements/proof_outline_widget.py:127
+msgid "Objects involved"
+msgstr "Objets utilisés"
 
 #: dui/elements/proof_outline_widget.py:304
 msgid "Expand all"
@@ -432,63 +444,63 @@ msgstr "Sélectionner au moins un objet, une propriété ou bien le but"
 msgid "I do not know what to do with this selection"
 msgstr "Je n’ai pas compris ce que vous voulez faire :-("
 
-#: pylib/actions/generic.py:56
+#: pylib/actions/generic.py:51
 msgid "Definition applied to target"
 msgstr "Définition appliquée au but"
 
-#: pylib/actions/generic.py:57
+#: pylib/actions/generic.py:52
 msgid "Definition applied to"
 msgstr "Définition appliquée à"
 
-#: pylib/actions/generic.py:59
+#: pylib/actions/generic.py:54
 msgid "Theorem applied to target"
 msgstr "Théorème appliqué au but"
 
-#: pylib/actions/generic.py:60
+#: pylib/actions/generic.py:55
 msgid "Theorem applied to"
 msgstr "Théorème appliqué à"
 
-#: pylib/actions/generic.py:62
+#: pylib/actions/generic.py:57
 msgid "Exercise applied to target"
 msgstr "Exercice appliqué au but"
 
-#: pylib/actions/generic.py:63
+#: pylib/actions/generic.py:58
 msgid "Exercise applied to"
 msgstr "Exercice appliqué à"
 
-#: pylib/actions/generic.py:91
+#: pylib/actions/generic.py:86
 msgid "Definition added to the context"
 msgstr "Définition ajoutée au contexte"
 
-#: pylib/actions/generic.py:93
+#: pylib/actions/generic.py:88
 msgid "Theorem added to the context"
 msgstr "Théorème ajouté au contexte"
 
-#: pylib/actions/generic.py:95
+#: pylib/actions/generic.py:90
 msgid "Exercise added to the context"
 msgstr "Exercice ajouté au contexte"
 
-#: pylib/actions/generic.py:119
+#: pylib/actions/generic.py:114
 msgid "Unable to apply definition"
 msgstr "La définition n’a pas pu être appliquée"
 
-#: pylib/actions/generic.py:153
+#: pylib/actions/generic.py:148
 msgid "Target replaced by applying theorem"
 msgstr "Le but a été remplacé en appliquant le théorème"
 
-#: pylib/actions/generic.py:164
+#: pylib/actions/generic.py:159
 msgid "Target replaced by applying theorem to "
 msgstr "Le but a été remplacé en appliquant le théorème à "
 
-#: pylib/actions/generic.py:178
+#: pylib/actions/generic.py:173
 msgid "Theorem"
 msgstr "Théorème"
 
-#: pylib/actions/generic.py:178
+#: pylib/actions/generic.py:173
 msgid "applied to"
 msgstr "appliqué à"
 
-#: pylib/actions/generic.py:186
+#: pylib/actions/generic.py:181
 msgid "Unable to apply theorem"
 msgstr "Le théorème n’a pas pu être appliqué"
 
@@ -851,92 +863,100 @@ msgstr "Entrez la propriété sur laquelle la preuve par cas sera fondée :"
 msgid "Selected property is not a disjunction"
 msgstr "La propriété sélectionnée n’est pas une disjonction ‘P OU Q’"
 
-#: pylib/actions/proofs.py:142
+#: pylib/actions/proofs.py:144
 msgid "Target replaced by contrapositive"
 msgstr "Le but est remplacé par sa contraposée"
 
-#: pylib/actions/proofs.py:145
+#: pylib/actions/proofs.py:147
 msgid "Proof by contraposition only applies when target is an implication"
 msgstr ""
 "La preuve par contraposée n’est pas possible, le but n’est pas une "
 "implication"
 
-#: pylib/actions/proofs.py:148
-msgid "Proof by contraposition only applies to target"
-msgstr "La preuve par contraposée ne s’applique qu’au but"
+#: pylib/actions/proofs.py:155
+msgid "Proof by contraposition with hypothesis {}"
+msgstr "Preuve par contraposée avec l’hypothèse {}"
 
 #: pylib/actions/proofs.py:159
+msgid "Selected object should be a property"
+msgstr "L’objet sélectionné devrait être une propriété"
+
+#: pylib/actions/proofs.py:162
+msgid "There should be at most one selected property"
+msgstr "Il devrait y avoir au plus une propriété selctionnée"
+
+#: pylib/actions/proofs.py:173
 msgid "Negation of target added to the context"
 msgstr "La négation du but est ajoutée au contexte"
 
-#: pylib/actions/proofs.py:162
+#: pylib/actions/proofs.py:176
 msgid "Proof by contradiction only applies to target"
 msgstr "La preuve par l’absurde ne s’applique qu’au but"
 
-#: pylib/actions/proofs.py:182
+#: pylib/actions/proofs.py:196
 msgid "Select a property \"∀ x, ∃ y, P(x,y)\" to get a function"
 msgstr ""
 "Sélectionner une propriété du type « ∀ x, ∃ y, P(x,y) » pour obtenir une "
 "fonction"
 
-#: pylib/actions/proofs.py:183
+#: pylib/actions/proofs.py:197
 msgid "Function {} and property {} added to the context"
 msgstr "La fonction {} et la propriété {} sont ajoutées au contexte"
 
-#: pylib/actions/proofs.py:229
+#: pylib/actions/proofs.py:243
 msgid "Object"
 msgstr "Objet"
 
-#: pylib/actions/proofs.py:229 pylib/actions/proofs.py:255
+#: pylib/actions/proofs.py:243 pylib/actions/proofs.py:269
 msgid "Introduce a new object"
 msgstr "Introduire un nouvel objet"
 
-#: pylib/actions/proofs.py:230
+#: pylib/actions/proofs.py:244
 msgid "Goal"
 msgstr "But"
 
-#: pylib/actions/proofs.py:230
+#: pylib/actions/proofs.py:244
 msgid "Introduce a new intermediate sub-goal"
 msgstr "Introduire un but intermédiaire"
 
-#: pylib/actions/proofs.py:232
+#: pylib/actions/proofs.py:246
 msgid "Function"
 msgstr "Fonction"
 
-#: pylib/actions/proofs.py:232
+#: pylib/actions/proofs.py:246
 msgid "Introduce a new function"
 msgstr "Introduire une nouvelle fonction"
 
-#: pylib/actions/proofs.py:234
+#: pylib/actions/proofs.py:248
 #: pylib/coursedata/course_metadata_translations.py:35
 msgid "New object"
 msgstr "Nouvel Objet"
 
-#: pylib/actions/proofs.py:235
+#: pylib/actions/proofs.py:249
 msgid "Choose what to introduce:"
 msgstr "Choisissez :"
 
-#: pylib/actions/proofs.py:241
+#: pylib/actions/proofs.py:255
 msgid "Name your object:"
 msgstr "Choisir une notation pour l’objet :"
 
-#: pylib/actions/proofs.py:248
+#: pylib/actions/proofs.py:262
 msgid "This name already exists, please give a new name:"
 msgstr "Ce nom existe déjà, choisissez un nouveau nom:"
 
-#: pylib/actions/proofs.py:265
+#: pylib/actions/proofs.py:279
 msgid "New object {} added to the context"
 msgstr "Nouvel objet {} ajouté au contexte"
 
-#: pylib/actions/proofs.py:270
+#: pylib/actions/proofs.py:284
 msgid "You might try the ∀ button..."
 msgstr "Vous pouvez essayer le boutton ‘∀’…"
 
-#: pylib/actions/proofs.py:277
+#: pylib/actions/proofs.py:291
 msgid "Introduce a new subgoal"
 msgstr "Introduire un but intermédiaire"
 
-#: pylib/actions/proofs.py:283
+#: pylib/actions/proofs.py:297
 msgid "New target will be added to the context after being proved"
 msgstr "Le nouveau but sera ajouté au contexte quand il aura été démontré"
 
@@ -1588,8 +1608,6 @@ msgid "Package check error: {}"
 msgstr "Erreur de vérification de paquet : {}"
 
 #: pylib/packager/package.py:77
-#, fuzzy
-#| msgid "invalid directory, must be in $HOME/.deaduction folder !!!"
 msgid "Directory should be $HOME/.deaduction folder !!!"
 msgstr "dossier invalide, doit être dans le dossier $HOME/.deaduction !!!"
 
@@ -1941,6 +1959,9 @@ msgstr "Progression : {:03d}%"
 msgid "Download from {} to {}"
 msgstr "Téléchargé depuis {} vers {}"
 
+#~ msgid "Proof by contraposition only applies to target"
+#~ msgstr "La preuve par contraposée ne s’applique qu’au but"
+
 #~ msgid "{} applied to target"
 #~ msgstr "{} appliqué au but"
 
@@ -2242,9 +2263,6 @@ msgstr "Téléchargé depuis {} vers {}"
 
 #~ msgid "Computation"
 #~ msgstr "Calcul"
-
-#~ msgid "selected objects are not properties"
-#~ msgstr "Les ob"
 
 #~ msgid "does not apply to more than to properties"
 #~ msgstr "ne s’applique à plus de d"
