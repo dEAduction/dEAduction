@@ -745,7 +745,7 @@ begin
     todo
 end
 
-lemma exercise.surjective_si_coompo_surjective
+lemma exercise.surjective_si_compo_surjective
 (H1 : surjective (composition g f)) :
 surjective g
 :=

@@ -152,7 +152,7 @@ end
 
 lemma definition.paire
 (x x_0 x_1: X) :
-(x ∈ (paire x_0 x_1) ) ↔ (x=x_0 ∨ x=x_1)
+(x ∈ (pair x_0 x_1) ) ↔ (x=x_0 ∨ x=x_1)
 :=
 begin
     refl,
@@ -260,7 +260,7 @@ end
 
 lemma theorem.image_paire :
 ∀ f: X→Y, ∀{x_0 x_1: X},
- f '' (paire x_0 x_1) = paire (f x_0) (f x_1)
+ f '' (pair x_0 x_1) = pair (f x_0) (f x_1)
 :=
 begin
     todo
@@ -659,17 +659,6 @@ end
 
 
 end egalites
-
-
-example (P Q : Prop) (H: P ∧ Q) : P :=
-begin
-  cases H with HP HQ,
-end
-
-
-
-
-
 
 
 end exercices

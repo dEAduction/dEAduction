@@ -37,6 +37,10 @@ AvailableExercises
   -image_de_image_reciproque_I -image_reciproque_de_image_II
   -injective_si_compo_injective_I -surjective_si_compo_surjective_II
   -image_directe_et_intersection_VI
+AvailableDefinitions
+  UNTIL_NOW -singleton -paire
+AvailableTheorems
+  UNTIL_NOW -image_singleton -image_paire
 -/
 
 local attribute [instance] classical.prop_decidable
@@ -96,7 +100,7 @@ A = A' ↔ (A ⊆ A' ∧ A' ⊆ A) :=
 PrettyName
     Egalité de deux ensembles : double inclusion
 ImplicitUse
-  False
+  True
 -/
 begin
     exact set.subset.antisymm_iff
@@ -116,6 +120,22 @@ lemma theorem.ensemble_non_vide
 :=
 begin
     todo
+end
+
+lemma definition.singleton
+(x x_0: X) :
+(x ∈  (sing x_0) ) ↔ x=x_0
+:=
+begin
+    refl,
+end
+
+lemma definition.paire
+(x x_0 x_1: X) :
+(x ∈ (pair x_0 x_1) ) ↔ (x=x_0 ∨ x=x_1)
+:=
+begin
+    refl,
 end
 
 end generalites
@@ -216,6 +236,30 @@ ImplicitUse
 -/
 begin
     refl,
+end
+
+lemma theorem.image_singleton :
+∀ f: X→Y, ∀{x_0: X},
+ f '' (sing x_0) = sing (f(x_0))
+:=
+/- dEAduction
+PrettyName
+  Image d'un singleton
+-/
+begin
+    todo
+end
+
+lemma theorem.image_paire :
+∀ f: X→Y, ∀{x_0 x_1: X},
+ f '' (pair x_0 x_1) = pair (f x_0) (f x_1)
+:=
+/- dEAduction
+PrettyName
+  Image d'une paire
+-/
+begin
+    todo
 end
 
 end applications
@@ -556,7 +600,7 @@ begin
     todo
 end
 
-lemma exercise.surjective_si_coompo_surjective_I
+lemma exercise.surjective_si_compo_surjective_I
 (H1 : surjective (composition g f)) :
 surjective g
 :=
@@ -715,10 +759,35 @@ PrettyName
   Formules caractérisant l'injectivité et la surjectivité
 -/
 
--- Il faut les defs de singletons, etc.
+lemma exercise.caracterisation_injectivite :
+∀ f: X→Y, (∀ A: set X, A = f ⁻¹' (f '' A)) → injective f
+:=
+/- dEAduction
+PrettyName
+  Une caractérisation de l'injectivité
+AvailableDefinitions
+  UNTIL_NOW
+AvailableTheorems
+  UNTIL_NOW
+-/
+begin
+  todo
+end
 
-
-
+lemma exercise.caracterisation_surjectivite :
+∀ f: X→Y, (∀ B: set Y, B = f '' (f ⁻¹' B) ) → surjective f
+:=
+/- dEAduction
+PrettyName
+  Une caractérisation de la surjectivité
+AvailableDefinitions
+  UNTIL_NOW
+AvailableTheorems
+  UNTIL_NOW
+-/
+begin
+  todo
+end
 
 
 end injectivite_surjectivite_caracterisation
@@ -731,15 +800,54 @@ PrettyName
 -/
 
 
+lemma exercise.injectivite_surjecivite (f: X → Y) (g: Y → Z)
+(H1 : injective (composition g f)) (H2 : surjective f)
+:
+injective g
+:=
+/- dEAduction
+PrettyName
+    Injectivité et surjectivité
+-/
+begin
+    todo
+end
 
 
+lemma exercise.injectivite_categorielle
+(f: Y → Z):
+(injective f) → (∀X: Type, ∀ g h : X → Y, (composition f g) = (composition f h) → g = h)
+:=
+/- dEAduction
+PrettyName
+    Injectivité catégorielle
+-/
+begin
+    todo
+end
+
+lemma exercise.surjectivite_categorielle
+(f: X → Y):
+(surjective f) →  (∀Z: Type, ∀ g h : Y → Z, (composition g f ) = (composition h f ) → g = h)
+:=
+/- dEAduction
+PrettyName
+    Surjectivité catégorielle
+-/
+begin
+    todo
+end
 
 
-
-end injectivite_surjectivite_autres
-
-namespace RAB
-
+lemma exercise.surjective_ssi_inverse_droite : (surjective f) ↔
+∃ F: Y → X, (composition f F) = Identite :=
+/- dEAduction
+PrettyName
+    (*) Surjectivité et inverse à droite
+-/
+begin
+    todo
+end
 
 lemma exercise.image_directe_et_inclusion_III :
 (injective f) →  (∀ A B: set X,  f '' (A) ⊆ f '' (B) → A ⊆ B)
@@ -763,10 +871,7 @@ begin
   todo
 end
 
-
-
-
-end RAB
+end injectivite_surjectivite_autres
 
 end exercices
 

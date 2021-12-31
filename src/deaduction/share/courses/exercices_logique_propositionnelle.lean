@@ -14,7 +14,7 @@ import utils
 -- no Magic button ("compute")
 /- dEAduction
 Title
-    Logique propositionnelle (tutorial)
+    Logique propositionnelle (tutoriel)
 Author
     Frédéric Le Roux
 Institution
