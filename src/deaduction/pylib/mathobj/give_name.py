@@ -644,8 +644,8 @@ def name_bound_vars(math_type,
         trials = []  # Each term will be a potential LIST of names
         if allow_primes:
             trials.append([hint, hint_prime])
-            if allow_seconds and hint_prime in named_vars_names:
-                # Consider second only if prime is already used
+            if allow_seconds: # and hint_prime in named_vars_names:
+                # Consider second only if prime is already used?
                 trials.append([hint,
                                hint_prime,
                                hint_second])
