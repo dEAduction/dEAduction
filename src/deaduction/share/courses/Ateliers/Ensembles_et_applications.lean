@@ -279,7 +279,7 @@ ANCIEN SCHEMA :
 1. ∀A,B⊆E A⊆B⇒f(A)⊆f(B)
 2. ∀A,B⊆E f(A)⊆f(B)⇒A⊆B
 3. Sif estinjective,alors∀A,B⊆E f(A)⊆f(B)⇒A⊆B
-4. f estinjectivesietseulementsi∀A,B⊆E f(A)⊆f(B)⇒A⊆B
+4. f est injective sietseulementsi ∀A,B⊆E f(A)⊆f(B)⇒A⊆B
 
 5. ∀A,B⊆F A⊆B⇒f−1(A)⊆f−1(B)
 6. ∀A,B⊆F f−1(A)⊆f−1(B)⇒A⊆B
@@ -305,63 +305,6 @@ ANCIEN SCHEMA :
 22. f(A∪B)=f(A)∪f(B)
 23. f−1(A ∩ B) = f−1(A) ∩ f−1(B) f−1(A ∪ B) = f−1(A) ∪ f−1(B)
 -/
-
-/-
-NOUVEAU SCHEMA :
-
-(1) Tutoriel
-
-RAB : 
-
-(2A) Images et images réciproques
-13. ∀A ⊆ E A ⊆ f−1(f(A))
-14. ∀A ⊆ E f−1(f(A)) ⊆ A
-
-(2B) Images et composition
-
-(2C) RAB = ??
-
-
-(3) Rédiger
-1. ∀A,B⊆E A⊆B⇒f(A)⊆f(B)
-5. ∀A,B⊆F A⊆B⇒f−1(A)⊆f−1(B)
-16. ∀A,B⊆E f(A∩B)⊆f(A)∩f(B)
-
-(4) Injectivité, surjectivité
-
-Composée de deux injections, de deux surjections.
-
-
-RAB : plein de choses, tous les exos impliquant injectivité / surjectivité...
-
-(5) Conjecturer, démontrer, rédiger
-
-???
-
-
-
-
-3. Sif estinjective,alors∀A,B⊆E f(A)⊆f(B)⇒A⊆B
-4. f estinjectivesietseulementsi∀A,B⊆E f(A)⊆f(B)⇒A⊆B
-
-7. Si f est surjective, alors ∀A,B ⊆ F f−1(A) ⊆ f−1(B) ⇒ A ⊆ B
-8. festsurjectivesietseulementsi∀A,B⊆F f−1(A)⊆f−1(B)⇒A⊆B
-
-11. Si f est surjective, alors ∀A ⊆ F A ⊆ f(f−1(A))
-12. f est surjective si et seulement si ∀A ⊆ F A = f(f−1(A))
-
-15. Si f est injective alors ∀A ⊆ E f−1(f(A)) ⊆ A
-16. f est injective si et seulement si ∀A ⊆ E f−1(f(A)) = A
-
-19. Sif estinjective,alors∀A,B⊆E f(A)∩f(B)⊆f(A∩B)
-20. f estinjectivesietseulementsi∀A,B⊆E f(A)∩f(B)=f(A∩B)
-
-21. ∀A,B⊆E 22.∀A,B⊆F 23.∀A,B⊆F
-22. f(A∪B)=f(A)∪f(B)
-23. f−1(A ∩ B) = f−1(A) ∩ f−1(B) f−1(A ∪ B) = f−1(A) ∪ f−1(B)
--/
-
-
 
 -----------------------------------------------------------
 -- Atelier 2 : images directe et réciproque, composition --
@@ -624,10 +567,6 @@ begin
     todo
 end
 
--------------
--- RAB !!!!!
----------------
-
 end injectivite_surjectivite_composition
 
 
@@ -686,7 +625,6 @@ begin
   todo
 end
 
-
 lemma exercise.image_reciproque_inter :
 ∀ A' B' : set Y, f ⁻¹' ( A' ∩ B') = f ⁻¹' (A') ∩ f ⁻¹' (B')
 :=
@@ -700,7 +638,7 @@ end
 
 end image_intersection
 
--------------
+
 namespace image_et_image_reciproque_II
 /- dEAduction
 PrettyName
@@ -753,6 +691,7 @@ end
 
 end image_et_image_reciproque_II
 
+
 namespace injectivite_surjectivite_caracterisation
 /- dEAduction
 PrettyName
@@ -789,6 +728,50 @@ begin
   todo
 end
 
+lemma exercise.caracterisation_injectivite_II :
+∀ f: X→Y, (∀ A A': set X, A ⊆ A' → f '' A ⊆ f '' A') → injective f
+:=
+/- dEAduction
+PrettyName
+  Une autre caractérisation de l'injectivité
+AvailableDefinitions
+  UNTIL_NOW
+AvailableTheorems
+  UNTIL_NOW
+-/
+begin
+  todo
+end
+
+lemma exercise.caracterisation_injectivite_III :
+∀ f: X→Y, (∀ A A': set X, f '' (A ∩  A') = f '' A ∩ f '' A' ) → injective f
+:=
+/- dEAduction
+PrettyName
+  Une autre caractérisation de l'injectivité
+AvailableDefinitions
+  UNTIL_NOW
+AvailableTheorems
+  UNTIL_NOW
+-/
+begin
+  todo
+end
+
+lemma exercise.caracterisation_surjectivite_II :
+∀ f: X→Y, (∀ B B': set Y, (f ⁻¹' B ⊆ f ⁻¹' B' → B ⊆ B') ) → surjective f
+:=
+/- dEAduction
+PrettyName
+  Une autre caractérisation de la surjectivité
+AvailableDefinitions
+  UNTIL_NOW
+AvailableTheorems
+  UNTIL_NOW
+-/
+begin
+  todo
+end
 
 end injectivite_surjectivite_caracterisation
 
@@ -798,7 +781,6 @@ namespace injectivite_surjectivite_autres
 PrettyName
   Injectivité/surjectivité : divers
 -/
-
 
 lemma exercise.injectivite_surjecivite (f: X → Y) (g: Y → Z)
 (H1 : injective (composition g f)) (H2 : surjective f)
@@ -812,7 +794,6 @@ PrettyName
 begin
     todo
 end
-
 
 lemma exercise.injectivite_categorielle
 (f: Y → Z):
@@ -837,7 +818,6 @@ PrettyName
 begin
     todo
 end
-
 
 lemma exercise.surjective_ssi_inverse_droite : (surjective f) ↔
 ∃ F: Y → X, (composition f F) = Identite :=
