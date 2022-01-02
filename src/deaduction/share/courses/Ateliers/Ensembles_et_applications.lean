@@ -390,9 +390,6 @@ end
 
 end image_et_image_reciproque
 
-/- RAB ???-/
-
-
 
 ------------------------------------
 -- Atelier 3 : Rédiger une preuve --
@@ -517,7 +514,6 @@ PrettyName
 begin
     todo
 end
-
 
 lemma exercise.injective_si_compo_injective_I
 (H1 : injective (composition g f)) :
@@ -729,7 +725,7 @@ begin
 end
 
 lemma exercise.caracterisation_injectivite_II :
-∀ f: X→Y, (∀ A A': set X, A ⊆ A' → f '' A ⊆ f '' A') → injective f
+∀ f: X→Y, (∀ A A': set X, f '' A ⊆ f '' A' → A ⊆ A' ) → injective f
 :=
 /- dEAduction
 PrettyName
