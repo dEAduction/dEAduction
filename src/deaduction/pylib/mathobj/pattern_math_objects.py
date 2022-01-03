@@ -33,6 +33,7 @@ if __name__ == "__main__":
 from deaduction.pylib.math_display        import HAVE_BOUND_VARS
 from deaduction.pylib.mathobj.math_object import MathObject
 
+
 log = logging.getLogger(__name__)
 
 
@@ -72,7 +73,8 @@ class PatternMathObject(MathObject):
     metavars        = None
     metavar_objects = None  # Objects matching metavars (see self.match)
 
-    def __init__(self, node, info, children, bound_vars, math_type):
+    def __init__(self, node, info=None, children=None,
+                 bound_vars=None, math_type=None):
         super().__init__(node=node,
                          info=info,
                          children=children,
@@ -361,6 +363,7 @@ PatternMathObject.NO_MATH_TYPE = PatternMathObject(node="not provided",
                                                    children=[],
                                                    bound_vars=[],
                                                    math_type=None)
+
 
 
 #########

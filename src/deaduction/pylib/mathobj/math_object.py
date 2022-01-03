@@ -167,10 +167,15 @@ class MathObject:
     last_used_implicit_definition = None
     last_rw_object                = None
 
-    def __init__(self, node, info, children, bound_vars=None, math_type=None):
+    def __init__(self, node, info=None, children=None,
+                 bound_vars=None, math_type=None):
         """
         Create a MathObject.
         """
+        if not info:
+            info = dict()
+        if not children:
+            children = []
         self.node = node
         self.info = info
         self.children = children
@@ -1382,7 +1387,6 @@ class MathObject:
         name_single_bound_var(bound_var)
         return bound_var, body
 
-
     @classmethod
     def new_bound_var(cls, math_type):
         """
@@ -1398,12 +1402,12 @@ class MathObject:
                         math_type=math_type)
         return bound_var
 
-    @classmethod
-    def PROP_AS_MATHOBJECT(cls):
-        return MathObject(node="PROP",
-                          info={},
-                          children=[],
-                          math_type=None)
+    # @classmethod
+    # def PROP_AS_MATHOBJECT(cls):
+    #     return MathObject(node="PROP",
+    #                       info={},
+    #                       children=[],
+    #                       math_type=None)
 
 
 MathObject.NO_MATH_TYPE = MathObject(node="not provided",
@@ -1417,6 +1421,11 @@ MathObject.NO_MORE_GOALS = MathObject(node="NO_MORE_GOAL",
                                       math_type=None)
 
 MathObject.PROP = MathObject(node="PROP",
+                             info={},
+                             children=[],
+                             math_type=None)
+
+MathObject.TYPE = MathObject(node="TYPE",
                              info={},
                              children=[],
                              math_type=None)
