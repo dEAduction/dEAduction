@@ -213,6 +213,26 @@ class MathObject:
                            children=self.children, math_type=self.math_type)
         return other
 
+    @classmethod
+    def recursive_duplicate(cls, math_object):
+        """
+        Create a copy of self, by duplicating the info dic.
+        This a recursive method, children and math_type are recursively
+        duplicated. In particular, this allows to have a version of a given
+        MathObject which is an instance of some subclass.
+        """
+
+        if math_object is cls.NO_MATH_TYPE:
+            return cls.NO_MATH_TYPE
+
+        new_children = [cls.recursive_duplicate(child)
+                        for child in math_object.children]
+        new_math_type = cls.recursive_duplicate(math_object.math_type)
+        new_info = copy(math_object.info)
+        other = MathObject(node=math_object.node, info=new_info,
+                           children=new_children, math_type=new_math_type)
+        return other
+
     @property
     def math_type(self) -> Any:
         """
@@ -1266,7 +1286,7 @@ class MathObject:
         # log.debug(f"(2) --> to text: {abstract_string}")
 
         abstract_string = self.to_abstract_string(text_depth)
-        log.debug(f"abstract string: {abstract_string}")
+        # log.debug(f"abstract string: {abstract_string}")
 
         # Adapt to format_ and concatenate to get a string
         display = abstract_string_to_string(abstract_string, format_)
@@ -1402,12 +1422,19 @@ class MathObject:
                         math_type=math_type)
         return bound_var
 
-    # @classmethod
-    # def PROP_AS_MATHOBJECT(cls):
-    #     return MathObject(node="PROP",
-    #                       info={},
-    #                       children=[],
-    #                       math_type=None)
+    @classmethod
+    def PROP(cls):
+        return cls(node="PROP",
+                   info={},
+                   children=[],
+                   math_type=None)
+
+    @classmethod
+    def TYPE(cls):
+        return cls(node="TYPE",
+                   info={},
+                   children=[],
+                   math_type=None)
 
 
 MathObject.NO_MATH_TYPE = MathObject(node="not provided",
@@ -1420,13 +1447,13 @@ MathObject.NO_MORE_GOALS = MathObject(node="NO_MORE_GOAL",
                                       children=[],
                                       math_type=None)
 
-MathObject.PROP = MathObject(node="PROP",
-                             info={},
-                             children=[],
-                             math_type=None)
+# MathObject.PROP = MathObject(node="PROP",
+#                              info={},
+#                              children=[],
+#                              math_type=None)
 
-MathObject.TYPE = MathObject(node="TYPE",
-                             info={},
-                             children=[],
-                             math_type=None)
+# MathObject.TYPE = MathObject(node="TYPE",
+#                              info={},
+#                              children=[],
+#                              math_type=None)
 

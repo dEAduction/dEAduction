@@ -26,7 +26,7 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from deaduction.pylib.mathobj.math_object import MathObject
+from deaduction.pylib.mathobj.math_object import MathObject, HAVE_BOUND_VARS
 from .context_math_object import                 ContextMathObject
 from .pattern_math_objects import                PatternMathObject
 from .proof_step import          (ProofStep,

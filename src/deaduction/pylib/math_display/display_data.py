@@ -40,7 +40,7 @@ from typing import Union
 # latex_to_utf8_dic
 
 global _
-# _ = lambda x: x  # FIXME: just for debugging:
+_ = lambda x: x  # FIXME: just for debugging:
 
 
 # NB Some latex macro have a special treatment elsewhere, e.g.
@@ -518,7 +518,7 @@ INEQUALITIES = ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥", "PROP_EQUAL_NOT")
 NATURE_LEAVES_LIST = ("PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                       "FUNCTION", "SEQUENCE", "SET_FAMILY",
                       "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY",
-                      "CONSTANT", "LOCAL_CONSTANT", "NONE")
+                      "CONSTANT", "LOCAL_CONSTANT", "NONE", "METAVAR")
 
 
 def needs_paren(parent, child, child_number, text_depth=0) -> bool:

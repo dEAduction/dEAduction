@@ -190,9 +190,9 @@ class PatternMathObject(MathObject):
         PatternMathObject.metavar_objects = []
         match = self.recursive_match(math_object)
         # log.debug(f"Matching...")
-        list_ = [(PatternMathObject.metavars[idx].to_display(),
-                  PatternMathObject.metavar_objects[idx].to_display())
-                 for idx in range(len(PatternMathObject.metavars))]
+        # list_ = [(PatternMathObject.metavars[idx].to_display(),
+        #           PatternMathObject.metavar_objects[idx].to_display())
+        #          for idx in range(len(PatternMathObject.metavars))]
         # log.debug(f"    Metavars, objects: {list_}")
         return match
 
@@ -305,7 +305,11 @@ class PatternMathObject(MathObject):
 
         return match
 
-    def math_object_from_metavar(self):
+    def math_object_from_metavar(self) -> MathObject:
+        """
+        Return the math_object of the PatternMathObject.metavar_objects list
+        corresponding to the metavar in the PatternMathObject.metavar list.
+        """
         if self not in PatternMathObject.metavars:
             return MathObject.NO_MATH_TYPE
         else:
@@ -363,7 +367,6 @@ PatternMathObject.NO_MATH_TYPE = PatternMathObject(node="not provided",
                                                    children=[],
                                                    bound_vars=[],
                                                    math_type=None)
-
 
 
 #########

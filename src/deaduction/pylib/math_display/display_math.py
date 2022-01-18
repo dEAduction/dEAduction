@@ -937,6 +937,13 @@ def recursive_display(math_object, text_depth=0, raw_display=None,
 
     # (1) Compute raw display, e.g. [0, "\text_is_not", 1]
 
+    if math_object.node == "METAVAR" and math_object.children:
+        raw_display = [0]
+        # if len(math_object.children) == 1:
+        #     math_object = math_object.children[0]
+        if len(math_object.children) != 1:
+            for i in range(1, len(math_object.children)):
+                raw_display.extend([", ", i])
     if not raw_display:
         raw_display = math_object.raw_latex_shape(negate, text_depth)
 
