@@ -258,8 +258,6 @@ begin
   todo
 end
 
-#check or.inl
-
 lemma exercise.test_theorem_target_3
 (x: X) (A: set X) (f: X → Y) (H: x ∈ A): 
 x ∈ f ⁻¹' (f '' A)

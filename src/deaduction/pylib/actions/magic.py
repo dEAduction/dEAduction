@@ -381,6 +381,9 @@ def action_assumption(proof_step,
     # (4) Add global msg
     code.add_error_msg(_("I don't know how to conclude"))
 
+    # (5) User can select objects to indicate used properties(?)
+    if selected_objects:
+        code.add_used_properties(selected_objects)
     # TODO:
     #   - add implicit definitions, for and / or only ? And only once ?
     #   (inter, union, borné, ...)

@@ -575,6 +575,18 @@ def display_quantifier(math_object) -> list:
     # belongs_to = display[2]
     such_that = display[4]
 
+    # First test if quantifier is an instance statement
+    # --> no display!
+    if math_object.is_for_all(is_math_type=True):
+        if variable.is_instance():
+            # ∀ _inst_1 : blabla, <prop>
+            # --> we want only <prop> to be displayed
+            display = [2]
+        if variable.is_R():
+            # ∀ RealSubGroup : Type, <prop>
+            # --> we only want prop
+            display = [2]
+
     # The following tests if math_object has the form
     # ∀ x:X, (x R ... ==> ...)
     # where R is some inequality relation
@@ -896,7 +908,7 @@ def raw_latex_shape_from_specific_nodes(math_object, negate=False):
     """
 
     node = math_object.node
-    display = display_error(_("unknown object"))
+    display = [display_error(_("unknown object"))]
     if node == "NO_MORE_GOAL":
         display = _("All goals reached!")
     elif node == "APPLICATION":

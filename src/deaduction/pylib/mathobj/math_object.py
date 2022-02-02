@@ -866,6 +866,18 @@ class MathObject:
             math_type = self.math_type
         return math_type.node in INEQUALITIES
 
+    def is_instance(self) -> bool:
+        """
+        Test if self is a variable whose name begins by "_inst";
+        that is, self represents a proof that some type is an instance of
+        some class (information that should not be displayed in deaduction)
+        """
+        lean_name = self.info.get("lean_name")
+        if lean_name:
+            if lean_name.startswith("_inst_"):
+                return True
+        return False
+
     def concerns_numbers(self) -> bool:
         """
         True iff self is an equality or an inequality between numbers,
@@ -890,7 +902,8 @@ class MathObject:
         return self.display_name == 'ℚ'
 
     def is_R(self):
-        return self.display_name == 'ℝ'
+        return (self.display_name == 'ℝ'
+                or self.display_name == 'RealSubGroup')
 
     def is_iff(self, is_math_type=False) -> bool:
         """

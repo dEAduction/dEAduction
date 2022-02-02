@@ -1,7 +1,7 @@
 import tactic
 import data.real.basic
 /-
-- nom des variables dans la def de limit !
+- nom des variables dans la def de limite !
 - variables muettes = variables globales : bof
 - calcul avec abs : abs (l'-l) /2 >0 ??
 (x ≠ 0 → |x| >0)
@@ -17,11 +17,22 @@ import data.real.basic
 import structures2      -- hypo_analysis, targets_analysis
 import utils            -- no_meta_vars
 import user_notations   -- notations that can be used in deaduction UI for a new object
-import compute3
+import compute
 
 -- dEAduction definitions
 -- import set_definitions
 import real_definitions
+
+
+-- class real_number_subgroup (α : Type) := 
+-- (subgroup : ((α = ℕ) ∨ (α = ℤ) ∨ (α = ℚ) ∨ (α = ℝ)) )
+
+-- lemma real_number_subgroup_nat : (nat = ℕ) ∨ (nat = ℤ) ∨ (nat = ℚ) ∨ (nat = ℝ) :=
+-- begin
+--   left, refl,
+-- end
+
+-- instance : real_number_subgroup nat := ⟨real_number_subgroup_nat⟩ 
 
 
 local attribute [instance] classical.prop_decidable
@@ -31,7 +42,7 @@ local attribute [instance] classical.prop_decidable
 definition limit (u : ℕ → ℝ) (l : ℝ) : Prop :=
 ∀ ε > 0, ∃ N, ∀ n ≥ N, | u n - l | < ε
 
-definition convergent (u : ℕ → ℝ) : Prop :=
+definition convergente (u : ℕ → ℝ) : Prop :=
 ∃ l, limit u l
 
 definition limit_plus_infinity (u : ℕ → ℝ) : Prop :=
@@ -93,43 +104,60 @@ end
 
 ----------------------------------
 namespace maximum
+-- The name RealSubGroup will be replaced by ℝ in d∃∀duction, 
+-- but allows to treat the cases of integers or rationals.
+variables {RealSubGroup : Type} [decidable_linear_order RealSubGroup] 
 
-lemma theorem.ppe_max_gauche : ∀ a b : ℝ, a ≤ max a b :=
+lemma theorem.ppe_max_gauche :
+∀ a b : RealSubGroup, a ≤ max a b :=
 begin
   intros a b,
-  exact le_max_left a b,
+  norm_num, tautology,
+  --exact le_max_left a b,
 end
 
-lemma theorem.ppe_max_droite : ∀ a b : ℝ,  b ≤ max a b :=
+lemma theorem.ppe_max_droite :
+∀ a b : RealSubGroup,  b ≤ max a b :=
 begin
-  intros a b,
-  exact le_max_right a b,
+  have H := @theorem.ppe_max_gauche,
+  intros a b, norm_num, tautology,
+  -- exact le_max_right a b,
 end
 
-lemma theorem.max_ppe (a b c : ℝ) (Ha: a ≤ c) (Hb: b ≤ c) : max a b ≤ c :=
+lemma theorem.max_ppe
+(a b c : RealSubGroup) (Ha: a ≤ c) (Hb: b ≤ c) :
+max a b ≤ c :=
 begin
-  exact max_le Ha Hb,
+  norm_num, tautology,
+  -- exact max_le Ha Hb,
 end
 
-lemma theorem.max_pp (a b c : ℝ) (Ha: a < c) (Hb: b < c) : max a b < c :=
+lemma theorem.max_pp
+(a b c : RealSubGroup) (Ha: a < c) (Hb: b < c) :
+max a b < c :=
 begin
-  exact max_lt Ha Hb,
+  norm_num, tautology,
+  -- exact max_lt Ha Hb,
 end
 
 end maximum
 
 namespace valeur_absolue
+variables {RealSubGroup : Type} [decidable_linear_ordered_comm_ring RealSubGroup] 
+-- [has_zero RealSubGroup]
 
+-- A modifier : faire une classe "nombres" ?
 lemma theorem.valeur_absolue
-(x : ℝ) : 
-((0 ≤ x) → (|x| = x)) and ((x ≤ 0) → (|x| = -x)) :=
+(x : RealSubGroup) : 
+((0:RealSubGroup) ≤ x) → (abs x = x) and ((x ≤ 0) → (abs x = -x)) :=
 begin
   split, exact abs_of_nonneg, exact abs_of_nonpos,
 end
 
 lemma theorem.majoration_valeur_absolue
-(x : ℝ) (r : ℝ) :
-(|x| < r) ↔ ((-r < x) ∧ (x < r))
+(x r : RealSubGroup) : 
+--(x : ℝ) (r : ℝ) :
+(abs x < r) ↔ ((-r < x) ∧ (x < r))
 := 
 /- dEAduction
 PrettyName
@@ -141,7 +169,7 @@ end
 
 
 lemma theorem.inegalite_triangulaire 
-(x : ℝ) (y : ℝ) : |x + y| ≤ |x| + |y|
+(x : RealSubGroup) (y : RealSubGroup) : |x + y| ≤ |x| + |y|
 := 
 /- dEAduction
 PrettyName
@@ -152,7 +180,7 @@ begin
 end
 
 lemma theorem.valeur_absolue_produit
-(x : ℝ) (y : ℝ) : |x * y| = |x| * |y|
+(x : RealSubGroup) (y : RealSubGroup) : |x * y| = |x| * |y|
 := 
 /- dEAduction
 PrettyName
@@ -165,7 +193,7 @@ end
 end valeur_absolue
 
 ------------------------------
--- Définitions de la limit --
+-- Définitions de la limite --
 ------------------------------
 
 lemma definition.limit 
@@ -180,12 +208,13 @@ ImplicitUse
   True
 -/
 begin
+  -- hypo_analysis,
   refl
 end
 
-lemma definition.convergent
+lemma definition.convergente
 {u : ℕ → ℝ} :
-(convergent u) ↔ 
+(convergente u) ↔ 
 ∃ l, limit u l
 := 
 /- dEAduction
@@ -200,7 +229,7 @@ end
 
 lemma definition.limit_plus_infinity
 {u : ℕ → ℝ} {l : ℝ} :
-(limit_plus_infinity u) ↔ 
+(limit_plus_infinity u) ↔
 ∀ M, ∃ N, ∀ n ≥ N, u n > M
 := 
 /- dEAduction
@@ -240,8 +269,10 @@ lemma exercise.test_compute
 :=
 begin
   split,
-  {compute_and_trace_code "1"},
-  {compute_and_trace_code "1"},
+  have H : 1+1=2, rotate,
+  compute_n 1,
+  compute_n 1,
+  todo
 end
 
 lemma exercise.test_compute_2
@@ -270,27 +301,29 @@ namespace exercices
 open definitions
 
 --------------------------------------------------
-namespace examples
+namespace exemples
 
 lemma exercise.ex_non_cv :
-¬ (convergent (λ n, (-1)^n))
+¬ (convergente (λ n, (-1)^n))
 :=
 /- dEAduction
 PrettyName
-  Un exemple de suite non convergent
+  Un exemple de suite non convergente
 -/
 begin
+  --targets_analysis,
   todo
 end
 
 lemma exercise.ex_cv :
-convergent (λ n, (1/n^2))
+convergente (λ n, (1/n^2))
 :=
 /- dEAduction
 PrettyName
-  Un exemple de suite convergent
+  Un exemple de suite convergente
 -/
 begin
+  -- targets_analysis,
   todo
 end
 
@@ -302,6 +335,7 @@ PrettyName
   Un exemple de suite divergente
 -/
 begin
+  -- targets_analysis,
   todo
 end
 
@@ -313,7 +347,7 @@ lemma exercise.limit_constante
 limit u c :=
 /- dEAduction
 PrettyName
-  La limit d'une suite constante
+  La limite d'une suite constante
 -/
 begin
 --   rw definition.limit,
@@ -325,7 +359,7 @@ begin
   todo
 end
 
-end examples
+end exemples
 
 -------------------------------------------------
 namespace premieres_proprietes
@@ -334,27 +368,31 @@ PrettyName
   Première propriétés
 -/
 
-lemma exercise.limit_unique
+lemma exercise.limite_unique
 (u : ℕ → ℝ) (l : ℝ)(l' : ℝ) (H : limit u l) (H' : limit u l') :
 l = l' 
 :=
 /- dEAduction
 PrettyName
-  Unicité de la limit
+  Unicité de la limite
 -/
 begin
-  -- by_contradiction,
-  -- wlog Hll': l < l',
+  by_contradiction,
+  wlog Hll': l < l',
   -- exact lt_or_gt_of_ne a,
-  -- set ε := (l'-l)/2 with Heps,
-  -- have Hpos: ε >0, by compute1,
-  -- specialize H ε Hpos, cases H with N1,
-  -- specialize H' ε Hpos, cases H' with N2,
-  -- set n := max N1 N2 with Hn,
-  -- have HnsuppN1: n ≥ N1, from le_max_left N1 N2,
-  -- have ineq1 := H_h n HnsuppN1,
-  -- have HnsuppN2: n ≥ N2, from le_max_right N1 N2,
-  -- have ineq1 := H'_h n HnsuppN2,
+  rotate,
+  set ε := (l'-l)/2 with Heps,
+  have Hpos: ε >0, rotate, -- by compute1,
+  specialize H ε Hpos, rotate 2,
+  rotate,
+  
+  cases H with N1,
+  specialize H' ε Hpos, cases H' with N2,
+  set n := max N1 N2 with Hn,
+  have HnsuppN1: n ≥ N1, from le_max_left N1 N2,
+  have ineq1 := H_h n HnsuppN1,
+  have HnsuppN2: n ≥ N2, from le_max_right N1 N2,
+  have ineq1 := H'_h n HnsuppN2,
 
   -- sorry,  
   todo
@@ -368,21 +406,32 @@ lemma exercise.def_alt
 :=
 /- dEAduction
 PrettyName
-  Définition alternative de la limit
+  Définition alternative de la limite
 -/
 begin
-  todo
+    split,
+  intro H1,
+  intro ε, intro H2,
+  rw definitions.definition.limit at H1,
+  have H3 := H1 ε H2,
+  cases H3 with n H4,
+  use n,
+  intro n', intro H5,
+  have H6 := H4 n' H5,
+  -- solve1 {linarith},
+  todo,
+  todo,
 end
 
 
-lemma definition.limit_infinity_alt
+lemma exercise.limit_infinity_alt
 {u : ℕ → ℝ} {l : ℝ} :
 (limit_plus_infinity u) ↔ 
 ∀ M>0, ∃ N, ∀ n ≥ N, u n > M
 := 
 /- dEAduction
 PrettyName
-  Définition alternative pour une limit infinie
+  Définition alternative pour une limite infinie
 -/
 begin
   todo
@@ -408,7 +457,7 @@ PrettyName
   Propriétés
 -/
 
-lemma exercise.limit_somme
+lemma exercise.limite_somme
 (u u': ℕ → ℝ) (l l' : ℝ) (H : limit u l)
 (H' : limit u' l') :
 limit (λn, u n + u' n) (l+l')
@@ -430,12 +479,29 @@ begin
 -- have H10 := H9 n n',
 -- -- norm_num at H10,
 -- rw H7 at H10,
-  todo
+  rw definitions.definition.limit,
+  intro ε, intro H1,
+  rw definitions.definition.limit at H H',
+  have H2: ((ε/2):ℝ) > 0, rotate, have H3 := H (ε/2) H2, rotate 1, solve1 {linarith only [H1] }, rotate,
+  have H4: ((ε/2):ℝ) > 0, rotate, have H5 := H' (ε/2) H4, rotate 1, solve1 {assumption}, rotate,
+  cases H3 with n H6,
+  cases H5 with n' H7,
+  use max n n',
+  intro n'', intro H8,
+  have H9: (n'':ℕ) ≥ n, rotate, have H10 := H6 n'' H9, rotate 1, solve1 {norm_num at *, tautology }, rotate,
+  have H11: (n'':ℕ) ≥ n', rotate, have H12 := H7 n'' H11, rotate 1, solve1 {norm_num at *, tautology }, rotate,
+  
+  rw definitions.valeur_absolue.theorem.majoration_valeur_absolue at H10 H12,
+  rw definitions.valeur_absolue.theorem.majoration_valeur_absolue,
+  cases H12 with Ha Hb, cases H10 with Hc Hd,
+  split,
+  linarith only [Ha, Hc],
+  linarith only [Hb, Hc, Hd],
 end
 
 
 -- preuve par DL ?
-lemma exercise.limit_produit
+lemma exercise.limite_produit
 (u u': ℕ → ℝ) (l l' : ℝ) (H : limit u l)
 (H' : limit u' l') :
 limit (λn, (u n) * (u' n)) (l*l')
@@ -448,7 +514,7 @@ begin
   todo
 end
 
-lemma exercise.limit_inegalites
+lemma exercise.limite_inegalites
 (u u': ℕ → ℝ) (l l' : ℝ) (H : limit u l)
 (H' : limit u' l')
 (H'' : ∀n, u n ≤ u' n ) :
@@ -456,10 +522,28 @@ l ≤ l'
 :=
 /- dEAduction
 PrettyName
-  Passage à la limit dans une inégalité
+  Passage à la limite dans une inégalité
 -/
 begin
-  todo
+  contrapose H'' with H1,
+  push_neg,
+  push_neg at H1,
+  let e := (l-l')/2, have H2 : e = (l-l')/2, refl, no_meta_vars,
+  rw definitions.definition.limit at H H',
+  have H3: (e:ℝ) > 0, rotate, have H4 := H e H3, rotate 1, rotate, rotate,
+  solve1 {norm_num at *, apply mul_pos, linarith, apply inv_pos.mpr, linarith},
+  have H5 := H' e H3,
+  cases H4 with n H6,
+  cases H5 with n' H7,
+  let n'' := max n n', have H8 : n'' = max n n', refl, no_meta_vars,
+  have H9: (n'':ℕ) ≥ n, rotate, have H10 := H6 n'' H9, rotate 1, solve1 {norm_num at *, tautology }, rotate,
+  have H11: (n'':ℕ) ≥ n', rotate, have H12 := H7 n'' H11, rotate 1, solve1 {norm_num at *, tautology }, rotate,
+  use n'',
+  rw definitions.valeur_absolue.theorem.majoration_valeur_absolue at H10,
+  cases H10 with H14 H15,
+  rw definitions.valeur_absolue.theorem.majoration_valeur_absolue at H12,
+  cases H12 with H17 H18,
+  linarith,
 end
 
 lemma exercise.gendarmes
@@ -494,6 +578,14 @@ end proprietes
 
 end exercices
 
+#print Exists
+#print has_lt.lt
+
+
+example (X: Type) (A: set X) (a:X) (P: X → Prop) : ∃ x ∈ A, P(x) :=
+begin
+  todo
+end
 
 
 end course

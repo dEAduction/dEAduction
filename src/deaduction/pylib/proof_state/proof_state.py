@@ -114,7 +114,13 @@ class Goal:
 
     @property
     def context_objects(self) -> [ContextMathObject]:
-        objects = [cmo for cmo in self.context if not cmo.math_type.is_prop()]
+        """
+        Return the list of objects of the context that are not proposition.
+        Note that instance witnesses are excluded
+        (i.e. variables whose name starts with "_inst_" )
+        """
+        objects = [cmo for cmo in self.context if not cmo.math_type.is_prop()
+                   and not cmo.is_instance()]
         return objects
 
     @property
@@ -426,7 +432,7 @@ class Goal:
         Mark all properties of self that appear in used_properties as used.
         """
         for prop in self.context_props:
-            if prop in used_properties:
+            if prop in used_properties: # or prop.display_name in used_properties:
                 prop.has_been_used_in_proof = True
                 used_properties.remove(prop)
         if used_properties:

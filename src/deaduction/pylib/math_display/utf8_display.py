@@ -46,8 +46,8 @@ def superscript(s: str) -> str:
 
 
 def sub_sup_to_utf8(string: str) -> str:
-    string = string.replace('_', r'\sub')
-    string = string.replace('^', r'\super')
+    string = string.replace(r'_', r'\sub')
+    string = string.replace(r'^', r'\super')
     if string.find(r'\sub') != -1:
         before, _, after = string.partition(r'\sub')
         string = before + subscript(after)

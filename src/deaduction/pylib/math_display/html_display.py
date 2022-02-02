@@ -131,9 +131,9 @@ def recursive_html_display(l: Union[list, str], depth, use_color=True) -> str:
 
     assert isinstance(l, list)
     head = l[0]
-    if head == r'\sub' or head == '_':
+    if head == r'\sub' or head == r'_':
         return subscript(recursive_html_display(l[1:], depth, use_color))
-    elif head == r'\super' or head == '^':
+    elif head == r'\super' or head == r'^':
         return superscript(recursive_html_display(l[1:], depth, use_color))
     elif head == r'\variable':
         color = color_variables()

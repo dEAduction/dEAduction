@@ -115,6 +115,7 @@ match e with
     end
 | `(index_set) := return ("TYPE", [])
 | `(set_family %%I %%X) := return ("SET_FAMILY", [I, X])
+-- | `(seq %%X) := return ("SEQUENCE", [X])
 | (pi name binder type body) := do
     let is_arr := is_arrow e,
     if is_arr
@@ -123,8 +124,11 @@ match e with
             if is_pro
                 then return ("PROP_IMPLIES", [type,body])
                 else match e with
-                    | `(%%X → %%Y) := match X with
-                        | `(ℕ) := return ("SEQUENCE", [X, Y])
+                    | `(%%X → %%Y) := match (X,Y) with
+                        | (`(ℕ), `(ℕ)) := return ("SEQUENCE", [X, Y])
+                        | (`(ℕ), `(ℤ)) := return ("SEQUENCE", [X, Y])
+                        | (`(ℕ), `(ℚ)) := return ("SEQUENCE", [X, Y])
+                        | (`(ℕ), `(ℝ)) := return ("SEQUENCE", [X, Y])
                         | _ := do X_type ← infer_type X,
                             match (X_type, Y) with
                         -- A set family is when source is an index_set
@@ -146,7 +150,15 @@ match e with
                 if is_pro
                     then return ("PROP_∃", [type, inst_body]) -- we do not care about var_
                     else return ("QUANT_∃", [type, var_, inst_body])
-    |  _ := return ("ERROR", [])
+    |  _ := do p_type ← infer_type p, match p_type with
+        | `(%%type → Prop) :=  do Q  ← to_expr ``(λ x: %%type,  (%%p x)), -- Do not work properly
+                                (var_, inst_body) ← instanciate Q,
+                                is_pro ← is_prop type,
+                if is_pro
+                    then return ("PROP_∃", [type, inst_body]) -- we do not care about var_
+                    else return ("QUANT_∃", [type, var_, inst_body])
+        | _ := return ("ERROR", [])
+        end
     end
 | `(exists_unique %%P) := do match P with
     | (lam name binder type body)   :=

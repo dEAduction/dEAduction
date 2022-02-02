@@ -30,7 +30,7 @@ DefaultAvailableMagic
 -/
 
 
--- logic names ['and', 'or', 'negate', 'implicate', 'iff', 'forall', 'exists']
+-- logic names ['and', 'or', 'negate', 'implies', 'iff', 'forall', 'exists']
 -- proofs names ['proof_methods', 'new_object', 'apply']
 -- magic names ['compute', 'assumption']
 
@@ -63,7 +63,7 @@ Description
     Le bouton "=>" permet de démontrer une implication : pour montrer
     "P => Q", on suppose P, et on montre Q.
 AvailableLogic
-    implicate
+    implies
 AvailableMagic
     assumption
 -/
@@ -80,7 +80,7 @@ PrettyName
 Description
     Le bouton "ET" permet de découper une hypothèse
 AvailableLogic
-    and implicate
+    and implies
 AvailableMagic
     assumption
 -/
@@ -97,7 +97,7 @@ PrettyName
 Description
     Le bouton "ET" permet aussi de découper le but en deux buts distincts
 AvailableLogic
-    and implicate
+    and implies
 AvailableMagic
     assumption
 -/
@@ -116,7 +116,7 @@ Description
     On peut alors appliquer le résultat de l'exercice précédent en le
     sélectionnant dans la liste...
 AvailableLogic
-    and iff implicate
+    and iff implies
 AvailableMagic
     assumption
 -/
@@ -135,7 +135,7 @@ Description
     dans le premier cas on suppose P, dans le second cas on suppose Q.
     Pour démontrer "Q OU P", on doit démontrer soit P, soit Q.
 AvailableLogic
-    and or implicate iff
+    and or implies iff
 AvailableMagic
     assumption
 -/
@@ -154,7 +154,7 @@ Description
     On peut l'utiliser uniquement sur les propriétés qui sont des négations,
     c'est-à-dire de la forme "NON (...)".
 AvailableLogic
-    and or negate implicate iff
+    and or negate implies iff
 AvailableMagic
     assumption
 -/
@@ -172,7 +172,7 @@ Description
     En général, le bouton "NON" tente de "pousser" la négation le long de la
     propriété.
 AvailableLogic
-    and or negate implicate iff
+    and or negate implies iff
 AvailableMagic
     assumption
 -/
@@ -190,7 +190,7 @@ PrettyName
 Description
     Le mécanisme de preuve inclus le tiers exclu, de façon un peu cachée...
 AvailableLogic
-    and or negate implicate iff
+    and or negate implies iff
 AvailableProof
     use_proof_methods
 AvailableMagic
@@ -211,7 +211,7 @@ Description
     propriété "P" pour obtenir la propriété "Q". Attention, avant de
     l'actionner il faut sélectionner toutes les propriétés requises !
 AvailableLogic
-    and or negate implicate iff
+    and or negate implies iff
 AvailableProof
     use_proof_methods apply
 AvailableMagic
@@ -230,7 +230,7 @@ PrettyName
 Description
     Cette propriété permet de transformer une implication en une disjonction
 AvailableLogic
-    and or negate implicate iff
+    and or negate implies iff
 AvailableProof
     use_proof_methods apply
 AvailableMagic
@@ -252,7 +252,7 @@ Description
     le résultat de l'exercice précédent. Pour cela, il faudra introduire
     un nouvel objet, avant de lui appliquer le résultat précédent...
 AvailableLogic
-    and or negate implicate iff
+    and or negate implies iff
 AvailableProof
     use_proof_methods new_object apply
 AvailableMagic

@@ -777,7 +777,7 @@ namespace injectivite_surjectivite_autres
 PrettyName
   Injectivité/surjectivité : divers
 -/
-
+ 
 lemma exercise.injectivite_surjecivite (f: X → Y) (g: Y → Z)
 (H1 : injective (composition g f)) (H2 : surjective f)
 :

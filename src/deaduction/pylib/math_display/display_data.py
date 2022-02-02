@@ -114,6 +114,8 @@ latex_from_node = {
     "PRODUCT": (0, r" \times ", 1),
     "DIV": (0, r"/", 1),
     "MINUS": ("-", 0),
+    "POWER": (0, [r'\super', 1]),
+    "SQRT": ('√', -1),
     ##################
     # GENERAL TYPES: #
     ##################
@@ -165,7 +167,8 @@ latex_from_constant_name = {
     "est_majore": (-1, r'\text_is', " majoré"),
     "est_minore": (-1, r'\text_is', " minoré"),
     "est_borne": (-1, r'\text_is', " borné"),
-    "limite": ("lim", -2, " = ", -1),
+    "limit": ("lim ", -2, " = ", -1),
+    "limit_plus_infinity": ("lim ", -1, " = +∞"),
     "abs": ('|', -1, '|'),
     "max": ("Max", r'\parentheses', -2, ",", -1),
     "inv": ([r'\parentheses', -1], [r'^', '-1']),
@@ -178,7 +181,10 @@ latex_from_constant_name = {
     "powerset": (r'\set_of_subsets', [r"\parentheses", -1]),
     "partition": (-1, " " + _("is a partition of") + " ", -2),
     "application": (-1, " " + _("is an application") + " "),
-    "application_bijective":  (-1, " " + _("is a bijective application") + " ")
+    "application_bijective":  (-1, " " + _("is a bijective application") + " "),
+    "bounded_sequence": (-1,  r'\text_is', " " + _("bounded")),
+    "RealSubGroup": (r"\real", ),
+    "even":  (-1,  r'\text_is', " " + _("even"))
 }
 
 
@@ -234,7 +240,8 @@ latex_to_utf8_dic = {
     r'\text_is': " ",  # " " + _("is") + " " ? Anyway 'is' will be removed?
     r'\text_is_not': " " + _('not') + " ",  # Idem
     r'\no_text': "",
-    r'\symbol_parentheses': r'\parentheses'  # True parentheses for symbols
+    r'\symbol_parentheses': r'\parentheses',  # True parentheses for symbols
+    r'\real': "ℝ"
 }
 
 
@@ -540,6 +547,10 @@ def needs_paren(parent, child, child_number, text_depth=0) -> bool:
 
     p_node = parent.node
     c_node = child.node if child is not None else "NONE"
+    if c_node == 'COE':  # Act as if COE node was replaced by its child
+        c_node = child.children[0].node
+    if p_node == 'COE':  # Should be treated at the previous level, see above
+        return False
     if (p_node in ("SET_IMAGE", "SET_INVERSE")
             and child_number == 1):  # f(A), f^{-1}(A)
         return True
@@ -651,6 +662,6 @@ _("""
     f∘g (x)         --> (composition f g)(x)
     {x}             --> sing x
     {x, x'}         --> pair x x'
-    And also f(x) ; x+1/2 ; 2*n, ...
+    And also f(x) ; x+1/2 ; 2*n, max m n, abs x...
 """) + "\n \n" + \
 _("In case of error, try with more parentheses.")

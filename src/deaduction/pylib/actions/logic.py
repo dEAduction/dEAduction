@@ -660,7 +660,7 @@ def destruct_iff(proof_step) -> CodeForLean:
     """
 
     goal = proof_step.goal
-    code = None
+    # code = None
     target = goal.target
     if target.is_and():
         left = target.math_type.children[0]
@@ -671,10 +671,11 @@ def destruct_iff(proof_step) -> CodeForLean:
             code.add_success_msg(_("Target replaced by iff property"))
             error_msg = _("The first implication is not the converse of the "
                           "second one")
+            code.add_error_msg(error_msg)
+            return code
         else:
-            error_msg = _("The conjunctions are not both implications")
-        code.add_error_msg(error_msg)
-    return code
+            error_msg = _("I do not know what to do")
+            raise WrongUserInput(error_msg)
 
 
 def destruct_iff_on_hyp(proof_step,
@@ -915,6 +916,8 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     #  to some object of wrong type (e.g. implication)
     #  For the moment "forall x, P->Q" works with "P->Q" and button forall
 
+    # Fixme: the inequality matching does not work with implicit definitions
+
     goal = proof_step.goal
     universal_property = selected_objects[-1]  # The property to be applied
     unsolved_inequality_counter = 0
@@ -922,6 +925,7 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     # inequalities that will be passed to universal_property
     variable_names = []
     code = CodeForLean.empty_code()
+    used_inequalities = []
     for potential_var in selected_objects[:-1]:
         # TODO: replace by pattern matching
         # Check for "∀x>0" (and variations)
@@ -933,7 +937,9 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
             if inequality in math_types:
                 # Check if inequality is in context:
                 index = math_types.index(inequality)
-                inequality_name = goal.context[index].display_name
+                context_inequality = goal.context[index]
+                used_inequalities.append(context_inequality)
+                inequality_name = context_inequality.display_name
                 variable_names.append(inequality_name)
             else:
                 # If not, assert inequality as a new goal:
@@ -956,17 +962,21 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     code = code.and_then(have_new_property(universal_property,
                                            variable_names,
                                            new_hypo_name))
+    if used_inequalities:
+        code.add_used_properties(used_inequalities)
 
-    # Code III: try to solve inequalities #     e.g.:
+    # Code III: try to solve inequalities # e.g.:
     #   iterate 2 { solve1 {try {norm_num at *}, try {compute_n 10}} <|>
     #               rotate},   rotate,
     more_code = CodeForLean.empty_code()
     if unsolved_inequality_counter:
         # Back to first inequality:
+        # Fixme: (1) no rotate if compute fails
+        #   (2) "Proof of intermediate subgoal" not appropriate...
         code = code.and_then(f"rotate {proof_step.nb_of_goals}")
         more_code1 = CodeForLean.from_string("norm_num at *")
         more_code1 = more_code1.try_()
-        more_code2 = CodeForLean.from_string("compute_n 1")
+        more_code2 = CodeForLean.from_string("compute_n 10")
         more_code2 = more_code2.try_()
         # Try to solve1 inequality by norm_num, maybe followed by compute:
         more_code = more_code1.and_then(more_code2)
@@ -979,7 +989,8 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
         code_list = [more_code] * unsolved_inequality_counter
         more_code = CodeForLean.and_then_from_list(code_list)
         # Finally come back to first inequality
-        more_code = more_code.and_then("rotate")
+        # FIXME: the following rotate is odd??
+        # more_code = more_code.and_then("rotate")
 
     code.add_success_msg(_("Property {} added to the context").
                          format(new_hypo_name))
@@ -1066,8 +1077,8 @@ def construct_exists(proof_step, user_input: [str]) -> CodeForLean:
                                      title=_("Exist"),
                                      output=output)
     x = user_input[0]
-    code = CodeForLean.from_string(f'use {x}, dsimp')
-    code = code.or_else(f'use {x}')
+    code = CodeForLean.from_string(f'use {x}')  # (f'use {x}, dsimp')
+    # code = code.or_else(f'use {x}')
     code.add_success_msg(_("Now prove {} suits our needs").format(x))
     return code
 

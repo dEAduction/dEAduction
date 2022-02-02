@@ -1,8 +1,8 @@
 import data.real.basic
 
 -- Some useful defs involving if-then-else
-notation `|`x`|`:= @abs ℝ _ x  -- valeur absolue sur ℝ
-
+-- absolute value on ℝ (or any instance of decidable_linear_ordered_add_com_group)
+notation `|`x`|`:= abs x  
 
 -- lemma definition.abs
 -- {a: ℝ} : abs a = if a ≤ 0 then -a else a :=
@@ -21,4 +21,3 @@ notation `|`x`|`:= @abs ℝ _ x  -- valeur absolue sur ℝ
 -- begin
 --     todo,
 -- end
-

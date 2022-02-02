@@ -341,7 +341,7 @@ Description
     Le complémentaire d'une réunion quelconque égale l'intersection des complémentaires
 -/
 begin
-    todo
+    -- hypo_analysis,
 end
 
 
@@ -1112,14 +1112,27 @@ end
 
 -- TODO: ajouter exoset ficall.pdf exos (140 bijections) 141 142 146
 
-lemma exercise.injectivite_surjecivite (f: X → Y) (g: Y → Z)
+lemma exercise.injectivite_surjecivite_1 (f: X → Y) (g: Y → Z)
 (H1 : injective (composition g f)) (H2 : surjective f)
 :
 injective g
 :=
 /- dEAduction
 PrettyName
-    Injectivité et surjectivité
+    Injectivité et surjectivité I
+-/
+begin
+    todo
+end
+
+lemma exercise.injectivite_surjecivite_2 (f: X → Y) (g: Y → Z)
+(H1 : surjective (composition g f)) (H2 : injective g)
+:
+surjective f
+:=
+/- dEAduction
+PrettyName
+    Injectivité et surjectivité II
 -/
 begin
     todo
