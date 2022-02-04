@@ -112,8 +112,8 @@ class CodeForLean:
     combinator:   str = LeanCombinator.single_code
     error_msg:    str = ""
     success_msg:  str = ""
-    conjunction       = None  # type: Union[MathObject, str]
-    disjunction       = None  # type: Union[MathObject, str]
+    conjunction       = None  # type: (Union[MathObject, str])
+    disjunction       = None  # type: (Union[MathObject, str])
     subgoal           = None  # type: Union[MathObject, str]
     # The following is used to store the number of an or_else instructions
     or_else_node_number:   Optional[int] = None
@@ -569,9 +569,8 @@ class CodeForLean:
 
     def add_subgoal(self, subgoal):
         """
-        Indicate that self will split a target disjunction 'P or Q',
-        and store 'P and Q', 'P', 'Q'. If not provided, P and Q are computed
-        as the children of p_or_q.
+        Indicate that self will create a new subgoal.
+
         :param subgoal: str or MathObject
         """
         self.subgoal = subgoal
