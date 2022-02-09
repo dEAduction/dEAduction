@@ -53,7 +53,7 @@ allow_implicit_use_of_definitions = false
 automatic_intro_of_variables_and_hypotheses = false
 automatic_intro_of_exists = false
 save_solved_exercises_for_autotest = false
-
+silently_solve_ineq_in_universal_prop = false
 
 [i18n]
 available_languages = ["en", "fr_FR"]

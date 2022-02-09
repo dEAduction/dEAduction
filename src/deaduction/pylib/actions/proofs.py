@@ -37,7 +37,9 @@ from deaduction.pylib.actions import (InputType,
                                       WrongUserInput,
                                       action,
                                       CodeForLean,
-                                      apply_or)
+                                      apply_or,
+                                      add_type_indication,
+                                      pre_process_lean_code)
 
 from deaduction.pylib.mathobj import (MathObject,
                                       get_new_hyp,
@@ -231,7 +233,7 @@ def action_new_object(proof_step,
                       user_input: [str] = None,
                       target_selected: bool = True) -> CodeForLean:
     """
-    Introduce new object / sub-goal / function
+    Introduce new object / sub-goal / function.
     """
 
     goal = proof_step.goal
@@ -272,9 +274,10 @@ def action_new_object(proof_step,
             name = user_input[1]
             new_hypo_name = get_new_hyp(proof_step)
             new_object = user_input[2]
-            codes = CodeForLean.from_string(f"let {name} := {new_object}")
+            new_object2 = pre_process_lean_code(new_object)
+            codes = CodeForLean.from_string(f"let {name} := {new_object2}")
             codes = codes.and_then(f"have {new_hypo_name} : {name} = "
-                                                     f"{new_object}")
+                                                     f"{new_object2}")
             codes = codes.and_then("refl")
             codes.add_success_msg(_("New object {} added to the context").
                                   format(name))
@@ -292,11 +295,12 @@ def action_new_object(proof_step,
                                          output=output)
         else:
             new_hypo_name = get_new_hyp(proof_step)
+            new_goal = pre_process_lean_code(user_input[1])
             codes = CodeForLean.from_string(f"have {new_hypo_name}:"
-                                                     f" ({user_input[1]})")
+                                                     f" ({new_goal})")
             codes.add_success_msg(_("New target will be added to the context "
                                     "after being proved"))
-            codes.add_subgoal(user_input[1])
+            codes.add_subgoal(new_goal)
     # Choice = new function
     elif user_input[0] == 2:
         return introduce_fun(proof_step, selected_objects)
@@ -306,52 +310,63 @@ def action_new_object(proof_step,
 #########
 # UTILS #
 #########
-
-def which_number_set(string: str):
-    """
-    Return 'ℕ', 'ℤ', 'ℚ', 'ℝ' if string represents a number, else None
-    """
-    ind = -1
-    if '.' in string or '/' in string:
-        ind = 2  # at least Q
-    string = string.replace('.', '')
-    string = string.replace('/', '')
-    if not string.isdigit():
-        return None
-    else:
-        return MathObject.NUMBER_SETS_LIST[ind]
-
-
-def add_type_indication(item: Union[str, MathObject],
-                        math_type: MathObject=None) -> Union[str, MathObject]:
-    """
-    Add type indication for Lean. e.g.
-    '0' -> (0:ℝ)
-    'x' -> (x:ℝ)
-    :param item:        either a string (provided by user in TextDialog) or
-    MathObject
-    :param math_type:   math_type indication to add. If None, largest number
-    set used in current context will be indicated
-    :return: either     string or MathObject, with type indication in name
-    """
-    if math_type:
-        number_type = math_type.which_number_set(is_math_type=True)
-    if isinstance(item, str):
-        number_set = which_number_set(item)
-        if number_set and ':' not in item:
-            if not math_type:
-                MathObject.add_numbers_set(number_set)
-                # Add type indication = largest set of numbers among used
-                number_type = MathObject.number_sets[-1]
-            item = f"({item}:{number_type})"  # e.g. (0:ℝ)
-        return item
-    else:
-        if not math_type:
-            number_type = MathObject.number_sets[-1]
-        if hasattr(item, 'info'):
-            name = item.display_name
-            # Do not put 2 type indications!!
-            if (':' not in name
-                    and hasattr(item, 'info')):
-                item.info['name'] = f"({name}:{number_type})"
-        return item
+#
+# def which_number_set(string: str):
+#     """
+#     Return 'ℕ', 'ℤ', 'ℚ', 'ℝ' if string represents a number, else None
+#     """
+#     ind = -1
+#     if '.' in string or '/' in string:
+#         ind = 2  # at least Q
+#     string = string.replace('.', '')
+#     string = string.replace('/', '')
+#     if not string.isdigit():
+#         return None
+#     else:
+#         return MathObject.NUMBER_SETS_LIST[ind]
+#
+#
+# def add_type_indication(item: Union[str, MathObject],
+#                         math_type: MathObject=None) -> Union[str, MathObject]:
+#     """
+#     Add type indication for Lean. e.g.
+#     '0' -> (0:ℝ)
+#     'x' -> (x:ℝ)
+#     :param item:        either a string (provided by user in TextDialog) or
+#     MathObject
+#     :param math_type:   math_type indication to add. If None, largest number
+#     set used in current context will be indicated
+#     :return: either     string or MathObject, with type indication in name
+#     """
+#     if math_type:
+#         number_type = math_type.which_number_set(is_math_type=True)
+#     if isinstance(item, str):
+#         number_set = which_number_set(item)
+#         if number_set and ':' not in item:
+#             if not math_type:
+#                 MathObject.add_numbers_set(number_set)
+#                 # Add type indication = largest set of numbers among used
+#                 number_type = MathObject.number_sets[-1]
+#             item = f"({item}:{number_type})"  # e.g. (0:ℝ)
+#         return item
+#     else:
+#         if not math_type:
+#             number_type = MathObject.number_sets[-1]
+#         if hasattr(item, 'info'):
+#             name = item.display_name
+#             # Do not put 2 type indications!!
+#             if (':' not in name
+#                     and hasattr(item, 'info')):
+#                 item.info['name'] = f"({name}:{number_type})"
+#         return item
+#
+#
+# lean_dic = {'epsilon': "ε"}
+#
+#
+# def pre_process_lean_code(lean_code: str) -> str:
+#     for key in lean_dic:
+#         lean_code = lean_code.replace(key, lean_dic[key])
+#     return lean_code
+#
+#

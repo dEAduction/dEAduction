@@ -700,18 +700,17 @@ class Coordinator(QObject):
         if auto_for_all:
             if target.is_for_all():
                 user_action = UserAction.simple_action("forall")
+                return user_action
             elif target.is_implication():
                 user_action = UserAction.simple_action("implies")
-            return user_action
+                return user_action
 
         if auto_exists:
             for prop in goal.context_props:
                 if prop.is_exists():
                     user_action = UserAction(selection=[prop],
                                              button_name="exists")
-                    break
-
-        return user_action
+                    return user_action
 
     def process_automatic_actions(self, goal):
         """

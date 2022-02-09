@@ -44,6 +44,12 @@ log = logging.getLogger(__name__)
 global _
 
 
+def display(prop: Union[MathObject, str]):
+    if isinstance(prop, MathObject):
+        prop = prop.to_display(format_="utf8")
+    return prop
+
+
 @dataclass()
 class NewGoal:
     """
@@ -112,33 +118,21 @@ class NewGoal:
                 msg = _("Proof of first property: {}")
             else:
                 msg = _("Proof of second property: {}")
-            if isinstance(self.new_target, str):
-                target = self.new_target
-            else:
-                target = self.new_target.to_display(format_="utf8")
-            msg = msg.format(target)
+            msg = msg.format(display(self.new_target))
         elif self.node_type == 'iff':
             if self.counter == 1:
                 msg = _("Proof of first implication: {}")
             else:
                 msg = _("Proof of second implication: {}")
-            if isinstance(self.new_target, str):
-                target = self.new_target
-            else:
-                target = self.new_target.to_display(format_="utf8")
-            msg = msg.format(target)
+            msg = msg.format(display(self.new_target))
         elif self.node_type == 'or':
             if self.counter == 1:
                 msg = _("Fist case:")
             elif self.counter == 2:
                 msg=_("Second case:")
-            if isinstance(self.new_hypo, str):
-                hypo = self.new_hypo
-            else:
-                hypo = self.new_hypo.to_display(format_="utf8")
-            msg += " " + _("assuming {}").format(hypo)
+            msg += " " + _("assuming {}").format(display(self.new_hypo))
         elif self.node_type == 'subgoal':
-            msg = _("Proof of new subgoal: {}").format(self.new_target)
+            msg = _("Proof of new subgoal: {}").format(display(self.new_target))
         else:  # Generic case
             msg = _("Proof of new subgoal")
         # msg += " ..."

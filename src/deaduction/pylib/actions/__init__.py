@@ -40,6 +40,8 @@ from .code_for_lean import (LeanCombinator,
 
 from .generic import action_definition
 
+from .utils import add_type_indication, pre_process_lean_code
+
 from .logic import (action_not,
                     action_implies,
                     action_and,
@@ -58,5 +60,6 @@ from .logic import (action_not,
                     apply_substitute)
 
 from .proofs import action_proof_methods
+
 from.magic import   action_assumption
 

@@ -70,6 +70,7 @@ class SingleCode:
         properties
     """
     def __init__(self, string: str, used_properties=None):
+        assert isinstance(string, str)
         self.string = string
         self.used_properties = used_properties if used_properties else []
 
@@ -92,6 +93,7 @@ class SingleCode:
             return self.string.format(*names)
         else:
             return self.string
+
 
 class CodeForLean:
     """

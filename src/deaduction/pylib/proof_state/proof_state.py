@@ -32,8 +32,7 @@ This file is part of dEAduction.
 
 from dataclasses import dataclass
 import logging
-from typing import List, Tuple, Any, Optional
-from copy import copy
+from typing import List, Tuple, Union
 
 import deaduction.pylib.logger as logger
 import deaduction.pylib.config.vars as cvars
@@ -427,17 +426,19 @@ class Goal:
                  self.context]
         return names
 
-    def mark_used_properties(self, used_properties: [ContextMathObject]):
+    def mark_used_properties(self,
+                             used_properties: [Union[str, ContextMathObject]]):
         """
         Mark all properties of self that appear in used_properties as used.
+        We can not avoid str type since some prop are defined before they are
+        created in Lean, so we just know their name.
         """
         for prop in self.context_props:
-            if prop in used_properties: # or prop.display_name in used_properties:
-                prop.has_been_used_in_proof = True
-                used_properties.remove(prop)
-        if used_properties:
-            log.warning(f"Used properties not found in goal: "
-                        f"{used_properties}")
+            for used_prop in used_properties:
+                if (isinstance(used_prop, MathObject) and prop == used_prop) \
+                        or (isinstance(used_prop, str) and prop.display_name ==
+                            used_prop):
+                    prop.has_been_used_in_proof = True
 
     ###################
     # Display methods #

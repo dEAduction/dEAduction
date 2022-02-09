@@ -48,6 +48,7 @@ This file is part of dEAduction.
 import logging
 from typing import Union, Optional
 
+import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.math_display.display_data import new_objects
 
 from deaduction.pylib.actions     import (action,
@@ -56,13 +57,16 @@ from deaduction.pylib.actions     import (action,
                                           WrongUserInput,
                                           test_selection,
                                           CodeForLean,
-                                          action_definition
+                                          add_type_indication,
+                                          pre_process_lean_code
                                           )
 
 from deaduction.pylib.mathobj     import (MathObject,
                                           give_global_name,
                                           names_for_types,
                                           get_new_hyp)
+
+# from .proofs import add_type_indication, pre_process_lean_code
 
 log = logging.getLogger("logic")
 global _
@@ -472,7 +476,7 @@ def apply_implies(proof_step, selected_object: [MathObject]) -> CodeForLean:
 
 
 def have_new_property(arrow: MathObject,
-                      variable_names: [str],
+                      variables: [Union[str, MathObject]],
                       new_hypo_name: str) -> CodeForLean:
     """
     Compute Lean code to apply an implication or a universal property to a
@@ -480,8 +484,12 @@ def have_new_property(arrow: MathObject,
 
     :param arrow:           a MathObject which is either an implication or a
                             universal property
-    :param variable_names:  a list of names of variables (or properties) to
-                            which "arrow" will be applied
+    :param variables:       a list of variables (or properties) to
+                            which "arrow" will be applied, or their names.
+                            We have to allow str here because in some cases
+                            the object will be created by the same Lean code,
+                            and thus only its name is available when the code
+                            is conceived.
     :param new_hypo_name:   a fresh name for the new property
 
     return:                 Lean Code to produce the wanted new property,
@@ -492,6 +500,9 @@ def have_new_property(arrow: MathObject,
     #  May even try to guess parameters from the context
     #  (e.g. if we need a function and there is only one in the context)
     selected_hypo = arrow.info["name"]
+    variable_names = [variable if isinstance(variable, str)
+                      else variable.info['name']
+                      for variable in variables]
 
     command = f'have {new_hypo_name} := {selected_hypo}'
     command_explicit = f'have {new_hypo_name} := @{selected_hypo}'
@@ -531,11 +542,10 @@ def apply_implies_to_hyp(proof_step,
     """
 
     implication = selected_objects[-1]
+    variables = selected_objects[:-1]
     new_hypo_name = get_new_hyp(proof_step)
-    variable_names = [variable.info['name'] for variable in
-                      selected_objects[:-1]]
 
-    code = have_new_property(implication, variable_names, new_hypo_name)
+    code = have_new_property(implication, variables, new_hypo_name)
     code.add_used_properties(selected_objects)
 
     return code
@@ -908,11 +918,13 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     """
     Try to apply last selected property on the other ones.
     The last property should be a universal property
-    (or equivalent to such after unfolding definitions)
-
-    :param selected_objects: list of MathObjects of length ≥ 2
+    (or equivalent to such after unfolding definitions),
+    and there should be at least two terms in selected_objects.
     """
-    # FIXME: return error msg if user try to apply "forall x:X, P(x)"
+    # FIXME : add selected objects to used_prop
+    assert len(selected_objects) >= 2
+
+    # FIXME(?): Return error msg if user try to apply "forall x:X, P(x)"
     #  to some object of wrong type (e.g. implication)
     #  For the moment "forall x, P->Q" works with "P->Q" and button forall
 
@@ -920,83 +932,102 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
 
     goal = proof_step.goal
     universal_property = selected_objects[-1]  # The property to be applied
-    unsolved_inequality_counter = 0
-    # Variable_names will contain the list of variables and proofs of
-    # inequalities that will be passed to universal_property
-    variable_names = []
-    code = CodeForLean.empty_code()
-    used_inequalities = []
-    for potential_var in selected_objects[:-1]:
-        # TODO: replace by pattern matching
-        # Check for "∀x>0" (and variations)
-        inequality = inequality_from_pattern_matching(universal_property,
-                                                      potential_var)
-        variable_names.append(potential_var.info['name'])
-        if inequality:
-            math_types = [p.math_type for p in goal.context]
-            if inequality in math_types:
-                # Check if inequality is in context:
-                index = math_types.index(inequality)
-                context_inequality = goal.context[index]
-                used_inequalities.append(context_inequality)
-                inequality_name = context_inequality.display_name
-                variable_names.append(inequality_name)
-            else:
-                # If not, assert inequality as a new goal:
-                inequality_name = get_new_hyp(proof_step)
-                variable_names.append(inequality_name)
-                unsolved_inequality_counter += 1
-                # Add type indication to the variable in inequality
-                math_type = inequality.children[1].math_type
-                # Variable is not used explicitly, but this affects inequality:
-                variable = inequality.children[0]
-                variable = add_type_indication(variable, math_type)
-                display_inequality = inequality.to_display(format_='lean')
-                # Code I: state corresponding inequality #
-                code = code.and_then(f"have {inequality_name}: "
-                                     f"{display_inequality}")
-                code = code.and_then("rotate")  # Back to main goal
-
-    # Code II: Apply universal_property #
     new_hypo_name = get_new_hyp(proof_step)
-    code = code.and_then(have_new_property(universal_property,
-                                           variable_names,
-                                           new_hypo_name))
-    if used_inequalities:
-        code.add_used_properties(used_inequalities)
+    main_code = have_new_property(universal_property,
+                                  selected_objects[:-1],
+                                  new_hypo_name)
+    main_code.add_used_properties(selected_objects)
 
-    # Code III: try to solve inequalities # e.g.:
-    #   iterate 2 { solve1 {try {norm_num at *}, try {compute_n 10}} <|>
-    #               rotate},   rotate,
-    more_code = CodeForLean.empty_code()
-    if unsolved_inequality_counter:
-        # Back to first inequality:
-        # Fixme: (1) no rotate if compute fails
-        #   (2) "Proof of intermediate subgoal" not appropriate...
-        code = code.and_then(f"rotate {proof_step.nb_of_goals}")
-        more_code1 = CodeForLean.from_string("norm_num at *")
-        more_code1 = more_code1.try_()
-        more_code2 = CodeForLean.from_string("compute_n 10")
-        more_code2 = more_code2.try_()
-        # Try to solve1 inequality by norm_num, maybe followed by compute:
-        more_code = more_code1.and_then(more_code2)
-        more_code = more_code.single_combinator("solve1")
-        # If it fails, rotate to next inequality
-        more_code = more_code.or_else("rotate")
-        # Do this for all inequalities
-        #   more_code = more_code.single_combinator(f"iterate
-        #   {unsolved_inequality_counter}") --> replaced by explicit iteration
-        code_list = [more_code] * unsolved_inequality_counter
-        more_code = CodeForLean.and_then_from_list(code_list)
-        # Finally come back to first inequality
-        # FIXME: the following rotate is odd??
-        # more_code = more_code.and_then("rotate")
+    if len(selected_objects) > 2:
+        return main_code
+    assert len(selected_objects) == 2
+
+    used_inequalities = None
+    variable = selected_objects[0]
+    arguments = [variable]  # To be passed to universal_property
+
+    # Check for "∀x>0" (and variations): TODO: replace by pattern matching
+    inequality = inequality_from_pattern_matching(universal_property,
+                                                  variable)
+    if not inequality:
+        return main_code
+    assert inequality is not None
+
+    # Check if inequality is in context; if so, add it to arguments
+    # if not, assert it as a new goal and add it to arguments
+    math_types = [p.math_type for p in goal.context_props]
+    if inequality in math_types:
+        index = math_types.index(inequality)
+        context_inequality = goal.context_props[index]
+        arguments.append(context_inequality)
+        main_code = have_new_property(universal_property,
+                                      arguments,
+                                      new_hypo_name)
+        main_code.add_used_properties(selected_objects)
+        main_code.add_used_properties(context_inequality)
+        return main_code
+
+    # From now on inequality is not in context
+    # We store display before weird Lean type annotation...
+    inequality_display = inequality.to_display(format_='utf8')
+    inequality_name = get_new_hyp(proof_step)
+    arguments.append(inequality_name)
+    # Add type indication to the variable in inequality
+    math_type = inequality.children[1].math_type
+    # Variable is not used explicitly, but this affects inequality:
+    variable = inequality.children[0]
+    variable = add_type_indication(variable, math_type)
+    display_inequality = inequality.to_display(format_='lean')
+    # State corresponding inequality:
+    state_ineq_code = CodeForLean(f"have {inequality_name}: "
+                                 f"{display_inequality}")
+
+    rotate_code_1 = CodeForLean(f"rotate")
+    main_code = have_new_property(universal_property,
+                                  arguments,
+                                  new_hypo_name)
+    main_code.add_used_properties([inequality_name])  # FIXME: test!
+    rotate_code_more = CodeForLean(f"rotate {proof_step.nb_of_goals}")
+
+    code_list = [state_ineq_code,
+                 rotate_code_1,  # Back to main goal
+                 main_code,
+                 rotate_code_more]  # Back to inequality
+
+    setting = 'functionality.silently_solve_ineq_in_universal_prop'
+    try_to_solve = cvars.get(setting, False)
+    if not try_to_solve:
+        code = CodeForLean.and_then_from_list(code_list)
+        code.add_used_properties(selected_objects)
+        code.add_success_msg(_("The new property will be added after "
+                               "inequality is checked").
+                             format(new_hypo_name))
+        code.add_subgoal(inequality_display)
+        return code
+
+    assert try_to_solve  # FIXME: stay on ineq if solve fails, add subgoal!
+    # Try to solve inequalities by norm_num, maybe followed by compute:
+    more_code1 = CodeForLean.from_string("norm_num at *")
+    more_code1 = more_code1.try_()
+    more_code2 = CodeForLean.from_string("compute_n 10")
+    more_code2 = more_code2.try_()
+    more_code = more_code1.and_then(more_code2)
+    # Solve ineq or else rotate back to main goal
+    more_code = more_code.single_combinator("solve1")
+
+    more_code = more_code.or_else("rotate")
+
+    code = CodeForLean.and_then_from_list([state_ineq_code,
+                                           rotate_code_1,  # Back to main goal
+                                           main_code,
+                                           rotate_code_more,  # Back to ineq
+                                           more_code])  # Try to solve ineq
 
     code.add_success_msg(_("Property {} added to the context").
                          format(new_hypo_name))
     code.add_used_properties(selected_objects)
 
-    return code.and_then(more_code)
+    return code
 
 
 @action()
@@ -1036,10 +1067,11 @@ def action_forall(proof_step,
                                              "Enter element on which you "
                                              "want to apply:"))
         else:
-            item = user_input[0]
+            item = pre_process_lean_code(user_input[0])
             item = add_type_indication(item)  # e.g. (0:ℝ)
             if item[0] != '(':
                 item = '(' + item + ')'
+            # TODO: create a new node "LEAN EXPR" ??
             potential_var = MathObject(node="LOCAL_CONSTANT",
                                        info={'name': item},
                                        children=[],
@@ -1527,36 +1559,37 @@ def which_number_set(string: str):
         return MathObject.NUMBER_SETS_LIST[ind]
 
 
-def add_type_indication(item: Union[str, MathObject],
-                        math_type: MathObject=None) -> Union[str, MathObject]:
-    """
-    Add type indication for Lean. e.g.
-    '0' -> (0:ℝ)
-    'x' -> (x:ℝ)
-    :param item:        either a string (provided by user in TextDialog) or
-    MathObject
-    :param math_type:   math_type indication to add. If None, largest number
-    set used in current context will be indicated
-    :return: either     string or MathObject, with type indication in name
-    """
-    if math_type:
-        number_type = math_type.which_number_set(is_math_type=True)
-    if isinstance(item, str):
-        number_set = which_number_set(item)
-        if number_set and ':' not in item:
-            if not math_type:
-                MathObject.add_numbers_set(number_set)
-                # Add type indication = largest set of numbers among used
-                number_type = MathObject.number_sets[-1]
-            item = f"({item}:{number_type})"  # e.g. (0:ℝ)
-        return item
-    else:
-        if not math_type:
-            number_type = MathObject.number_sets[-1]
-        if hasattr(item, 'info'):
-            name = item.display_name
-            # Do not put 2 type indications!!
-            if (':' not in name
-                    and hasattr(item, 'info')):
-                item.info['name'] = f"({name}:{number_type})"
-        return item
+
+# def add_type_indication(item: Union[str, MathObject],
+#                         math_type: MathObject = None) -> Union[str, MathObject]:
+#     """
+#     Add type indication for Lean. e.g.
+#     '0' -> (0:ℝ)
+#     'x' -> (x:ℝ)
+#     :param item:        either a string (provided by user in TextDialog) or
+#     MathObject
+#     :param math_type:   math_type indication to add. If None, largest number
+#     set used in current context will be indicated
+#     :return: either     string or MathObject, with type indication in name
+#     """
+#     if math_type:
+#         number_type = math_type.which_number_set(is_math_type=True)
+#     if isinstance(item, str):
+#         number_set = which_number_set(item)
+#         if number_set and ':' not in item:
+#             if not math_type:
+#                 MathObject.add_numbers_set(number_set)
+#                 # Add type indication = largest set of numbers among used
+#                 number_type = MathObject.number_sets[-1]
+#             item = f"({item}:{number_type})"  # e.g. (0:ℝ)
+#         return item
+#     else:
+#         if not math_type:
+#             number_type = MathObject.number_sets[-1]
+#         if hasattr(item, 'info'):
+#             name = item.display_name
+#             # Do not put 2 type indications!!
+#             if (':' not in name
+#                     and hasattr(item, 'info')):
+#                 item.info['name'] = f"({name}:{number_type})"
+#         return item
