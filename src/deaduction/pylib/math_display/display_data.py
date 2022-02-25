@@ -662,6 +662,6 @@ _("""
     f∘g (x)         --> (composition f g)(x)
     {x}             --> sing x
     {x, x'}         --> pair x x'
-    And also f(x) ; x+1/2 ; 2*n, max m n, abs x...
+    And also f(x) ; x+1/2 ; 2*n, max m n, abs x, epsilon, ...
 """) + "\n \n" + \
 _("In case of error, try with more parentheses.")

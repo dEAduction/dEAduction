@@ -999,6 +999,7 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     if not try_to_solve:
         code = CodeForLean.and_then_from_list(code_list)
         code.add_used_properties(selected_objects)
+        code.add_used_properties(inequality_name)
         code.add_success_msg(_("The new property will be added after "
                                "inequality is checked").
                              format(new_hypo_name))
@@ -1012,10 +1013,15 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     more_code2 = CodeForLean.from_string("compute_n 10")
     more_code2 = more_code2.try_()
     more_code = more_code1.and_then(more_code2)
-    # Solve ineq or else rotate back to main goal
+    # Try to solve ineq, or else add relevant msgs
     more_code = more_code.single_combinator("solve1")
-
-    more_code = more_code.or_else("rotate")
+    alt_code = CodeForLean("skip")
+    alt_code.add_subgoal()
+    alt_code.add_success_msg(_("The new property will be added after "
+                               "inequality is checked").
+                             format(new_hypo_name))
+    alt_code.add_subgoal(inequality_display)
+    more_code = more_code.or_else(alt_code)
 
     code = CodeForLean.and_then_from_list([state_ineq_code,
                                            rotate_code_1,  # Back to main goal
@@ -1026,6 +1032,7 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     code.add_success_msg(_("Property {} added to the context").
                          format(new_hypo_name))
     code.add_used_properties(selected_objects)
+    code.add_used_properties(inequality_name)
 
     return code
 
