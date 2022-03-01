@@ -469,6 +469,7 @@ class ExerciseStatusBar(QStatusBar):
     the action, with a new timeout ; this is why the cancelled msgs is
     erased but a blank msg stays in the list.
     """
+    time_before_subgoal_msg = 10000  # 10s before success msg is hidden
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -571,7 +572,8 @@ class ExerciseStatusBar(QStatusBar):
             if new_goal:
                 if tmp_msg:  # Add to pending msgs
                     self.pending_msgs.append(new_goal.msg)
-                    self.timer.singleShot(3000, self.show_pending_msgs)
+                    self.timer.singleShot(self.time_before_subgoal_msg,
+                                          self.show_pending_msgs)
                 else:  # Show immediately
                     self.show_normal_msg(new_goal.msg)
 

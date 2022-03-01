@@ -24,7 +24,7 @@ import utils
 
 /- dEAduction
 Title
-    Théorie des ensembles
+    Tests logic buttons
 Author
     Frédéric Le Roux
 Institution

@@ -484,7 +484,7 @@ class ProofStep:
         goal = self.proof_state.goals[0]
         goal_txt = goal.print_goal(to_prove=False)
 
-        action_txt =  button + statement + history_move
+        action_txt = button + statement + history_move
         selection_txt = ""
         if selection:
             selection_txt = selection + " "

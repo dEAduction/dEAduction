@@ -395,7 +395,9 @@ begin
   have ineq1 := H'_h n HnsuppN2,
 
   -- sorry,  
-  todo
+  todo,
+  todo,
+  todo,
 end
 
 

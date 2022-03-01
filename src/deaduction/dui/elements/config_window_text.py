@@ -69,8 +69,8 @@ PRETTY_NAMES = {
     'display.main_font_size': _("Main font size"),
     'display.tooltips_font_size': _("Tooltips font size"),
     'display.dubious_characters': _('Replace missing characters') +
-        ': ℕ (N), ℤ (Z), ℚ (Q), ℝ (R), 𝒫 (P), ↦ (->)',
+        ' ℕ (N), ℤ (Z), ℚ (Q), ℝ (R), 𝒫 (P), ↦ (->)',
     'functionality.silently_solve_ineq_in_universal_prop':
-        _("Silently solve inequality in universal prop"),
+        _('Silently solve inequality as in "∀ ε >0"'),
     'None': _('None')
 }

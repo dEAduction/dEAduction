@@ -1007,7 +1007,7 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
         return code
 
     assert try_to_solve  # FIXME: stay on ineq if solve fails, add subgoal!
-    # Try to solve inequalities by norm_num, maybe followed by compute:
+    # Try to solve inequality by norm_num, maybe followed by compute:
     more_code1 = CodeForLean.from_string("norm_num at *")
     more_code1 = more_code1.try_()
     more_code2 = CodeForLean.from_string("compute_n 10")
@@ -1016,7 +1016,6 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     # Try to solve ineq, or else add relevant msgs
     more_code = more_code.single_combinator("solve1")
     alt_code = CodeForLean("skip")
-    alt_code.add_subgoal()
     alt_code.add_success_msg(_("The new property will be added after "
                                "inequality is checked").
                              format(new_hypo_name))

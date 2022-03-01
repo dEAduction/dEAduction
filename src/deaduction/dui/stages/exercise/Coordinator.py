@@ -482,6 +482,13 @@ class Coordinator(QObject):
                     self.proof_step.button_name = 'history_redo'
                     proof_step = self.lean_file.next_proof_step
                     if proof_step:
+                        # Copy code so that used_properties work correctly:
+                        if proof_step.effective_code:
+                            self.proof_step.effective_code = \
+                                proof_step.effective_code
+                        elif proof_step.lean_code:
+                            self.proof_step.lean_code = \
+                                proof_step.lean_code
                         await self.emw.simulate(proof_step)
                     add_task(self.servint.history_redo)
 
