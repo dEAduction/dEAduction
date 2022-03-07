@@ -26,6 +26,8 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from copy import copy, deepcopy
+
 import logging
 if __name__ == "__main__":
     import deaduction.pylib.config.i18n
@@ -38,7 +40,7 @@ log = logging.getLogger(__name__)
 
 class PatternMathObject(MathObject):
     """
-    A class for MathObject that may contains metavariables. Metavariables
+    A class for MathObject that may contain metavariables. Metavariables
     are represented by PatternMathObject whose node is 'METAVAR".
     e.g. The PatternMathObject representing the definition of injectivity
     looks like:
@@ -52,11 +54,17 @@ class PatternMathObject(MathObject):
          math_object = 'g∘f is injective'
     then
         left.match(math_object)
-    will be True. Note the the math_types should also match.
+    will be True. Note that the math_types should also match.
 
+    TODO: modify this:
     After a successful matching test, the matching values of the metavars are
-    stored in the metavar_objects class attribute as a list of MathObject
-    instances. Then the apply_matching() method will substitute metavars in
+    stored
+    FIXME: obsolete:
+        in the metavar_objects class attribute as a list of MathObject
+        instances.
+    FIXME: New version:
+    as children of each assigned metavar.
+    Then the apply_matching() method will substitute metavars in
     some MathObject. For instance after the previous example, if right is the
     PatternMathObject
         (∀x ∈ metavar_26, ∀x' ∈ metavar_26,
@@ -65,8 +73,8 @@ class PatternMathObject(MathObject):
         ∀x ∈ X, ∀x' ∈ X, (g∘f(x) = g∘f(x') ⇒ x = x')
     """
     metavar_nb = 0
-    metavars_csts           = []  # List of all metavars in all patterns
-    loc_csts_for_metavars   = []  # and corresponding local constants
+    metavars_csts               = []  # List of all metavars in all patterns
+    loc_csts_for_metavars       = []  # and corresponding local constants
     __tmp_metavars_csts         = None
     __tmp_loc_csts_for_metavars = None
     metavars        = None
@@ -109,7 +117,7 @@ class PatternMathObject(MathObject):
         Of course all occurrences of a given local constant must be replaced
         by the same metavar.
         This is obviously a recursive method. The lists loc_csts, metavars
-        allow to keep track of the correspondence between the local
+        allow keeping track of the correspondence between the local
         constants that have been previously replaced and the metavars.
 
         :param loc_csts: list of local constants
@@ -174,7 +182,29 @@ class PatternMathObject(MathObject):
     def is_metavar(self):
         return self.node == "METAVAR"
 
-    def match(self, math_object: MathObject) -> bool:
+    def is_unassigned_mvar(self, selected_objects=None) -> bool:
+        """
+        Return True if self has been assigned. If selected_objects is not None,
+        then the assignment must belong to selected_objects.
+        """
+        if selected_objects is None:
+            return self.is_metavar() and not self.children
+        else:
+            return (self.is_metavar()
+                    and (not self.children
+                         or self.children[0] not in selected_objects))
+
+    def set_explicitly_assigned(self, OK=True):
+        assert self.is_metavar()
+        if OK:
+            self.info["assigned"] = "explicit"
+        else:
+            self.info["assigned"] = None
+
+    def is_explicitly_assigned(self):
+        return self.is_metavar() and self.info.get("assigned") == "explicit"
+
+    def match(self, math_object: MathObject, assign=False) -> bool:
         """
         Test if math_object match self. This is a recursive test.
         The list PatternMathObject.metavars contains the metavars that have
@@ -182,11 +212,14 @@ class PatternMathObject(MathObject):
         same index in the list PatternMathObject.metavar_objects.
         e.g. 'g∘f is injective' matches 'metavar_28 is injective'
         (note that math_types of metavars should also match).
+        If assign=True then all metavars that match are "assigned", i.e.
+        the corresponding math_object is stored as their child. This option
+        should be used only after having checked that self and math_object do
+        match.
         """
-
         PatternMathObject.metavars = []
         PatternMathObject.metavar_objects = []
-        match = self.recursive_match(math_object)
+        match = self.recursive_match(math_object, assign)
         # log.debug(f"Matching...")
         list_ = [(PatternMathObject.metavars[idx].to_display(),
                   PatternMathObject.metavar_objects[idx].to_display())
@@ -194,13 +227,15 @@ class PatternMathObject(MathObject):
         # log.debug(f"    Metavars, objects: {list_}")
         return match
 
-    def recursive_match(self, math_object: MathObject) -> bool:
+    def recursive_match(self, math_object: MathObject, assign=False,
+                        is_math_type=False) -> bool:
         """
         Test if math_object match self. This is a recursive test.
         The list metavars contains the metavars that have already been
         matched against a math_object, and this object is stored with the same
         index in the metavar_objects list.
         """
+        # FIXME: take assigned mvars into account.
 
         metavars = PatternMathObject.metavars
         metavar_objects = PatternMathObject.metavar_objects
@@ -209,7 +244,7 @@ class PatternMathObject(MathObject):
 
         node = self.node
         # Case of NO_MATH_TYPE (avoid infinite recursion!)
-        if self is PatternMathObject.NO_MATH_TYPE:
+        if node == "not provided" or math_object.node == "not provided":
             return True
 
         # METAVAR
@@ -221,13 +256,19 @@ class PatternMathObject(MathObject):
             if self in metavars:
                 corresponding_object = self.math_object_from_metavar()
                 match = (math_object == corresponding_object)
+            elif self.children:  # Another way to assign the mvar
+                match = (math_object == self.children[0])
             else:
                 mvar_type = self.math_type
                 math_type = math_object.math_type
-                match = mvar_type.recursive_match(math_type)
+                match = mvar_type.recursive_match(math_type, assign,
+                                                  is_math_type=True)
                 if match:
                     metavars.append(self)
                     metavar_objects.append(math_object)
+                    # Assign self to math_object:
+                    if assign:
+                        self.children = [math_object]
                 # match = True
             return match
         # Node
@@ -281,9 +322,13 @@ class PatternMathObject(MathObject):
                     # log.debug(f"distinct names "
                     #        f"{self.info['name'], math_object.info['name']}")
 
-        # Recursively test for math_types
+        # Recursively test for math_types (but not math_types of math_type)
         #  (added: also when names)
-        if not self.math_type.recursive_match(math_object.math_type):
+        # FIXME: Remove to activate the fact that type of
+        #  type is considered irrelevant:
+        is_math_type = False
+        if not is_math_type and not self.math_type.recursive_match(
+                math_object.math_type, assign, is_math_type=True):
             # log.debug(f"distinct types {self.math_type}")
             # log.debug(f"math_object type     "
             #           f"{math_object.math_type.to_display()}")
@@ -294,7 +339,7 @@ class PatternMathObject(MathObject):
             match = False
         else:
             for child0, child1 in zip(self.children, math_object.children):
-                if not child0.recursive_match(child1):
+                if not child0.recursive_match(child1, assign):
                     match = False
 
         # Unmark bound_vars, in prevision of future tests
@@ -355,6 +400,241 @@ class PatternMathObject(MathObject):
                 MathObject.definition_patterns.append(pattern)
                 definition.implicit_use_activated = True
 
+    @classmethod
+    def from_universal_prop(cls, math_object: MathObject, mvars=None,
+                            mvar_objects=None, insert_mvar=True):
+        """
+        Create a PatternMathObject by changing each universally quantified
+        dummy var, and also each premise at the beginning of prop into ah
+        metavar. e.g. if math_object corresponds to
+                ∀ f: X→Y, ∀{A: set X}, ∀{x: X}, (x ∈ A → f x ∈ f '' A)
+            then the fct will return
+             ∀?₃ : (?₁)→(?₂), ∀?₄ ⊂ (?₁), ∀?₅ ∈ ?₁, ((?₆) ⇒ ?₃(?₅) ∈ ?₃(?₄))
+        Note that all local constants are also turned into mvars. This fct
+        will be called with initial_proof_state of some theorem, and the
+        idea is that local constant that are not dummy var are implicit
+        parameters of the theorem, and shoud be treated as dummy vars.
+
+        The metavars in mvars should be substituted by the
+        corresponding mvar_objects. insert_mvar will be set to FALSE for
+        recursion when we are running through the part of prop where dummy
+        var should NOT be replaced by mvars anymore. Namely, dummy var should be
+        further replaced only in the body of a universal property in which
+        dummy var has been replaced.
+
+        Note that this function has side effect on mvars and mvar_objects:
+        if lists are provided then they are updated with the new mvars.
+        Except for recursion, the function should be called with an empty
+        list, which will be filled by the mvars.
+        """
+
+        if mvars is None:
+            mvars = []
+        if mvar_objects is None:
+            mvar_objects = []
+
+        node = math_object.node
+        info = copy(math_object.info)
+        children = math_object.children
+        math_type = math_object.math_type
+
+        if math_object.is_local_constant():  # Search if replaced by mvar
+            for mvar, mobj in zip(mvars, mvar_objects):
+                if mobj.info["identifier"] == math_object.info["identifier"]:
+                    return mvar
+
+        # Recursively compute new math_type:
+        new_math_type = PatternMathObject.NO_MATH_TYPE \
+            if math_type is MathObject.NO_MATH_TYPE \
+            else cls.from_universal_prop(math_type, mvars, mvar_objects, False)
+
+        if math_object.is_local_constant():  # Make it a metavar!
+            mvar = PatternMathObject.new_metavar(new_math_type)
+            mvars.append(mvar)
+            mvar_objects.append(math_object)
+            return mvar
+
+        # It remains to compute new children, by cases:
+        if insert_mvar and math_object.is_for_all(is_math_type=True):
+            # Replace var by mvar, and recursively in body
+            typ = children[0]
+            var = children[1]
+            body = children[2]
+            new_type = cls.from_universal_prop(typ, mvars, mvar_objects, False)
+            mvar = PatternMathObject.new_metavar(new_type)
+            mvars.append(mvar)
+            mvar_objects.append(var)
+            new_body = cls.from_universal_prop(body, mvars, mvar_objects, True)
+            new_children = [new_type, mvar, new_body]
+
+        elif insert_mvar and math_object.is_implication(is_math_type=True):
+            # Replace premise by mvar:
+            new_premise = cls.from_universal_prop(children[0], mvars,
+                                                  mvar_objects, False)
+            mvar = PatternMathObject.new_metavar(new_premise)
+            mvars.append(mvar)
+            mvar_objects.append(new_premise)
+            new_conclusion = cls.from_universal_prop(children[1], mvars,
+                                                     mvar_objects, False)
+            new_children = [mvar, new_conclusion]
+
+        else:
+            new_children = [cls.from_universal_prop(child, mvars,
+                                                    mvar_objects, False)
+                            for child in children]
+
+        return cls(node=node, info=info, children=new_children,
+                   math_type=new_math_type, bound_vars=None)
+
+
+def mvars_assign(mvars: [PatternMathObject],
+                 math_objects: [MathObject],
+                 start_idx=0) -> [[PatternMathObject]]:
+    """
+    Try to assign all math_objects to mvars, and return all possible lists of
+    mvars where all objects have been successfully assigned. Assignation is
+    done preferentially preserving the order of math_objects, and the order
+    of the resulting list reflects that preference. For that the
+    search in mvars starts at index start_idx.
+
+    param mvars: a list of metavars, some of them assigned (i.e. have a child
+    MathObject).
+    """
+    if not math_objects:  # All objects are assigned, success!
+        return [mvars]
+
+    success_list = []
+    math_object = math_objects[0]
+    # log.debug(f"Affecting {math_object.to_display(format_='utf8')}...")
+    idx = start_idx  # Idx of mvar in mvars with ORIGINAL order.
+    for mvar in mvars[start_idx:] + mvars[:start_idx]:  # Start at start_idx.
+        if not mvar.children:  # Do not try to match assigned mvars
+            match = mvar.match(math_object)
+            if match:  # Replace mvar by its assigned version to get a new list.
+                assigned_mvars = deepcopy(mvars)
+                assigned_mvar = assigned_mvars[idx]
+                assigned_mvar.match(math_object, assign=True)
+                assigned_mvar.set_explicitly_assigned()
+                success_list.append((assigned_mvars, idx))
+        idx = idx + 1 if idx < len(mvars) else 0
+
+    # Now the recursion: for each success, try to match the remaining obj.
+    new_math_objects = math_objects[1:]
+    assigned_mvars_list = []
+    for assigned_mvars, idx in success_list:
+        new_assigned_mvars = mvars_assign(assigned_mvars, new_math_objects,
+                                          start_idx=idx + 1)
+        assigned_mvars_list.extend(new_assigned_mvars)
+    return assigned_mvars_list
+
+
+def first_unassigned_mvar(mvars: [PatternMathObject]):
+    """
+    Return first unassigned mvar in mvars, if any.
+    """
+    for mvar in mvars:
+        if mvar.is_unassigned_mvar():
+            return mvar
+    return None
+
+
+def mvars_assign_some(mvars: [PatternMathObject],
+                      math_objects: [MathObject]) -> [[PatternMathObject]]:
+    """
+    Try to assign some math_objects to mvars, and return ONE possible list of
+    mvars where all mvars have been successfully assigned.
+
+    Note that the mvars_assign() function tries to assign all objects to some
+    mvars, whereas mvars_assign_some() tries to assign all mvars to some object.
+
+    param mvars: a list of metavars, some of them assigned (i.e. have a child
+    MathObject).
+    """
+
+    mvar = first_unassigned_mvar(mvars)
+    if not mvar:  # ALl mvars assigned!
+        return mvars
+
+    # Try to assign mvar
+    success_object = None
+    for math_object in math_objects:
+        match = mvar.match(math_object)
+        if match:
+            success_object = math_object
+            mvar.match(math_object, assign=True)
+            mvar.set_explicitly_assigned()
+            break
+
+    if not success_object:  # No way to assign all mvars
+        return None
+
+    # Now the recursion: assign mvars to remaining objects
+    new_math_objects = math_objects[:]  # No side effect on math_objects!
+    new_math_objects.remove(success_object)
+
+    return mvars_assign_some(mvars, new_math_objects)
+
+# class Mvars(list):
+#     """
+#     A class for storing lists of assigned metavars and info about their
+#     assignments. Attribute _assignments is a list of the same length as self,
+#     and entries that are not None contain math_objects the corresponding mvar
+#     has been assigned to.
+#     """
+#     def __init__(self, arg):
+#         super().__init__(arg)
+#         self._assignments = [None] * len(self)
+#
+#     def append(self, object_) -> None:
+#         super().append(self)
+#         self._assignments.append(None)
+#
+#     def remove_last_unassigned(self, objects):
+#         while not self._assignments[-1]:
+#             self.pop()
+#             self._assignments.pop()
+#
+#     def assign(self, math_objects, start_idx=0):
+#         """
+#         Try to assign all math_objects to mvars, and return all possible lists of
+#         mvars where all objects have been successfully assigned. Assignation is
+#         done preferentially preserving the order of math_objects, and the order
+#         of the resulting list reflects that preference. For that the
+#         search in mvars starts at index start_idx.
+#
+#         param mvars: a list of metavars, some of them assigned (i.e. have a child
+#         MathObject)g.
+#         """
+#         mvars = self
+#         if not math_objects:  # All objects are assigned, success!
+#             return [mvars]
+#
+#         success_list = []
+#         math_object = math_objects[0]
+#         # log.debug(f"Affecting {math_object.to_display(format_='utf8')}...")
+#         idx = start_idx  # Idx of mvar in mvars with ORIGINAL order.
+#         for mvar in mvars[start_idx:] + mvars[
+#                                         :start_idx]:  # Start at start_idx.
+#             if not mvar.children:  # Do not try to match assigned mvars
+#                 match = mvar.match(math_object)
+#                 if match:
+#                     # Replace mvar by its assigned version to get a new list.
+#                     assigned_mvars = deepcopy(mvars)
+#                     assigned_mvars._assignments[idx] = math_object
+#                     assigned_mvar = assigned_mvars[idx]
+#                     assigned_mvar.match(math_object, assign=True)
+#                     success_list.append((assigned_mvars, idx))
+#             idx = idx + 1 if idx < len(mvars) else 0
+#
+#         # Now the recursion: for each success, try to match the remaining obj.
+#         new_math_objects = math_objects[1:]
+#         assigned_mvars_list = []
+#         for assigned_mvars, idx in success_list:
+#             new_assigned_mvars = assigned_mvars.assign(new_math_objects,
+#                                                        start_idx=idx + 1)
+#             assigned_mvars_list.extend(new_assigned_mvars)
+#         return assigned_mvars_list
+
 
 PatternMathObject.NO_MATH_TYPE = PatternMathObject(node="not provided",
                                                    info={},
@@ -381,18 +661,59 @@ if __name__ == '__main__':
     targets_analysis.append("""¿¿¿property¿[pp_type: x ∈ A ∪ B ↔ x ∈ A ∨ x ∈ B¿]: METAVAR¿[name: _mlocal._fresh.326.17524¿]¿= PROP_IFF¿[type: PROP¿]¿(PROP_BELONGS¿[type: PROP¿]¿(LOCAL_CONSTANT¿[name: x¿/ identifier: 0._fresh.325.14324¿]¿, SET_UNION¿[type: SET¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.325.14312¿]¿)¿]¿(LOCAL_CONSTANT¿[name: A¿/ identifier: 0._fresh.325.14316¿]¿, LOCAL_CONSTANT¿[name: B¿/ identifier: 0._fresh.325.14321¿]¿)¿)¿, PROP_OR¿[type: PROP¿]¿(PROP_BELONGS¿[type: PROP¿]¿(LOCAL_CONSTANT¿[name: x¿/ identifier: 0._fresh.325.14324¿]¿, LOCAL_CONSTANT¿[name: A¿/ identifier: 0._fresh.325.14316¿]¿)¿, PROP_BELONGS¿[type: PROP¿]¿(LOCAL_CONSTANT¿[name: x¿/ identifier: 0._fresh.325.14324¿]¿, LOCAL_CONSTANT¿[name: B¿/ identifier: 0._fresh.325.14321¿]¿)¿)¿)""")
     targets_analysis.append("""¿¿¿property¿[pp_type: injective f ↔ ∀ (x y : X), f x = f y → x = y¿]: METAVAR¿[name: _mlocal._fresh.307.5511¿]¿= PROP_IFF¿[type: PROP¿]¿(APPLICATION¿[type: PROP¿]¿(APPLICATION¿[type: FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.307.5242¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.307.5244¿]¿)¿, PROP¿)¿]¿(APPLICATION¿[type: QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.307.5869¿]¿, FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.307.5242¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.307.5869¿]¿)¿, PROP¿)¿)¿]¿(CONSTANT¿[name: injective¿]¿[type: QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: X¿/ identifier: _fresh.307.5896¿]¿, QUANT_∀¿(TYPE¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.307.5908¿]¿, FUNCTION¿(FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: _fresh.307.5896¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.307.5908¿]¿)¿, PROP¿)¿)¿)¿]¿, LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.307.5242¿]¿)¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.307.5244¿]¿)¿, LOCAL_CONSTANT¿[name: f¿/ identifier: 0._fresh.307.5247¿]¿)¿, QUANT_∀¿[type: PROP¿]¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.307.5242¿]¿, LOCAL_CONSTANT¿[name: x¿/ identifier: _fresh.307.5927¿]¿, QUANT_∀¿[type: PROP¿]¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.307.5242¿]¿, LOCAL_CONSTANT¿[name: y¿/ identifier: _fresh.307.5937¿]¿, PROP_IMPLIES¿[type: PROP¿]¿(PROP_EQUAL¿[type: PROP¿]¿(APPLICATION¿[type: LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.307.5244¿]¿]¿(LOCAL_CONSTANT¿[name: f¿/ identifier: 0._fresh.307.5247¿]¿, LOCAL_CONSTANT¿[name: x¿/ identifier: _fresh.307.5927¿]¿)¿, APPLICATION¿[type: LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.307.5244¿]¿]¿(LOCAL_CONSTANT¿[name: f¿/ identifier: 0._fresh.307.5247¿]¿, LOCAL_CONSTANT¿[name: y¿/ identifier: _fresh.307.5937¿]¿)¿)¿, PROP_EQUAL¿[type: PROP¿]¿(LOCAL_CONSTANT¿[name: x¿/ identifier: _fresh.307.5927¿]¿, LOCAL_CONSTANT¿[name: y¿/ identifier: _fresh.307.5937¿]¿)¿)¿)¿)¿)""")
     hypo = """¿¿¿property¿[pp_type: x ∈ A ∩ (B ∪ C)¿]: LOCAL_CONSTANT¿[name: H¿/ identifier: 0._fresh.340.35755¿]¿= PROP_BELONGS¿[type: PROP¿]¿(LOCAL_CONSTANT¿[name: x¿/ identifier: 0._fresh.340.35743¿]¿, SET_INTER¿[type: SET¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.338.29051¿]¿)¿]¿(LOCAL_CONSTANT¿[name: A¿/ identifier: 0._fresh.338.29052¿]¿, SET_UNION¿[type: SET¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.338.29051¿]¿)¿]¿(LOCAL_CONSTANT¿[name: B¿/ identifier: 0._fresh.338.29054¿]¿, LOCAL_CONSTANT¿[name: C¿/ identifier: 0._fresh.338.29056¿]¿)¿)¿)"""
-
+    # Statement of theorem_image_directe
+    targets_analysis.append("""¿¿¿property¿[pp_type: ∀ (f : X → Y) {A : set X} {x : X}, x ∈ A → f x ∈ f '' A¿]: METAVAR¿[name: _mlocal._fresh.512.3669¿]¿= QUANT_∀¿[type: PROP¿]¿(FUNCTION¿[type: TYPE¿]¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.508.4189¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.508.4191¿]¿)¿, LOCAL_CONSTANT¿[name: f¿/ identifier: _fresh.512.4028¿]¿, QUANT_∀¿[type: PROP¿]¿(SET¿[type: TYPE¿]¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.508.4189¿]¿)¿, LOCAL_CONSTANT¿[name: A¿/ identifier: _fresh.512.4040¿]¿, QUANT_∀¿[type: PROP¿]¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.508.4189¿]¿, LOCAL_CONSTANT¿[name: x¿/ identifier: _fresh.512.4050¿]¿, PROP_IMPLIES¿[type: PROP¿]¿(PROP_BELONGS¿[type: PROP¿]¿(LOCAL_CONSTANT¿[name: x¿/ identifier: _fresh.512.4050¿]¿, LOCAL_CONSTANT¿[name: A¿/ identifier: _fresh.512.4040¿]¿)¿, PROP_BELONGS¿[type: PROP¿]¿(APPLICATION¿[type: LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.508.4191¿]¿]¿(LOCAL_CONSTANT¿[name: f¿/ identifier: _fresh.512.4028¿]¿, LOCAL_CONSTANT¿[name: x¿/ identifier: _fresh.512.4050¿]¿)¿, SET_IMAGE¿[type: SET¿(LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.508.4191¿]¿)¿]¿(LOCAL_CONSTANT¿[name: f¿/ identifier: _fresh.512.4028¿]¿, LOCAL_CONSTANT¿[name: A¿/ identifier: _fresh.512.4040¿]¿)¿)¿)¿)¿)¿)""")
+    # The same but with implicit vars
+    targets_analysis.append("""¿¿¿property¿[pp_type: ∀ {X Y : Type} (f : X → Y) {A : set X} {x : X}, x ∈ A → f x ∈ f '' A¿]: LOCAL_CONSTANT¿[name: H¿/ identifier: 0._fresh.616.13669¿]¿= QUANT_∀¿[type: PROP¿]¿(TYPE¿[type: TYPE¿]¿, LOCAL_CONSTANT¿[name: X¿/ identifier: _fresh.616.13727¿]¿, QUANT_∀¿[type: PROP¿]¿(TYPE¿[type: TYPE¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.616.13743¿]¿, QUANT_∀¿[type: PROP¿]¿(FUNCTION¿[type: TYPE¿]¿(LOCAL_CONSTANT¿[name: X¿/ identifier: _fresh.616.13727¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.616.13743¿]¿)¿, LOCAL_CONSTANT¿[name: f¿/ identifier: _fresh.616.13763¿]¿, QUANT_∀¿[type: PROP¿]¿(SET¿[type: TYPE¿]¿(LOCAL_CONSTANT¿[name: X¿/ identifier: _fresh.616.13727¿]¿)¿, LOCAL_CONSTANT¿[name: A¿/ identifier: _fresh.616.13780¿]¿, QUANT_∀¿[type: PROP¿]¿(LOCAL_CONSTANT¿[name: X¿/ identifier: _fresh.616.13727¿]¿, LOCAL_CONSTANT¿[name: x¿/ identifier: _fresh.616.13790¿]¿, PROP_IMPLIES¿[type: PROP¿]¿(PROP_BELONGS¿[type: PROP¿]¿(LOCAL_CONSTANT¿[name: x¿/ identifier: _fresh.616.13790¿]¿, LOCAL_CONSTANT¿[name: A¿/ identifier: _fresh.616.13780¿]¿)¿, PROP_BELONGS¿[type: PROP¿]¿(APPLICATION¿[type: LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.616.13743¿]¿]¿(LOCAL_CONSTANT¿[name: f¿/ identifier: _fresh.616.13763¿]¿, LOCAL_CONSTANT¿[name: x¿/ identifier: _fresh.616.13790¿]¿)¿, SET_IMAGE¿[type: SET¿(LOCAL_CONSTANT¿[name: Y¿/ identifier: _fresh.616.13743¿]¿)¿]¿(LOCAL_CONSTANT¿[name: f¿/ identifier: _fresh.616.13763¿]¿, LOCAL_CONSTANT¿[name: A¿/ identifier: _fresh.616.13780¿]¿)¿)¿)¿)¿)¿)¿)¿)""")
     # Test is_and
-    nb = 0
-    tree = lean_expr_with_type_grammar.parse(targets_analysis[nb])
-    mo = LeanEntryVisitor().visit(tree)
-    mt = mo.math_type
+    math_types = []
+    for target in targets_analysis:
+        tree = lean_expr_with_type_grammar.parse(target)
+        mo = LeanEntryVisitor().visit(tree)
+        mt = mo.math_type
+        math_types.append(mt)
 
-    pattern = PatternMathObject.from_math_object(mt)
+    # pattern = PatternMathObject.from_math_object(mt)
+    mt = math_types[4]
+    mvars = []
+    pattern = PatternMathObject.from_universal_prop(mt, mvars)
     print("Pattern:")
-    print("    ", pattern.to_display())
+    print("    ", pattern.to_display(format_="utf8"))
+    print("mvars:", [mvar.to_display(format_="utf8") for mvar in mvars])
+    print("mvars types:", [mvar.math_type.to_display(format_="utf8") for mvar
+                           in mvars])
     # print("Pattern matches left?")
     # print(pattern.match(left))
+
+    hypo_analysis = []
+    # hypo_analysis.append("""¿¿¿object: LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.670.22324¿]¿= TYPE""")
+    # hypo_analysis.append("""¿¿¿object: LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.670.22326¿]¿= TYPE""")
+    hypo_analysis.append("""¿¿¿object: LOCAL_CONSTANT¿[name: f¿/ identifier: 0._fresh.669.20887¿]¿= FUNCTION¿(LOCAL_CONSTANT¿[name: X¿/ identifier: 0._fresh.670.22324¿]¿, LOCAL_CONSTANT¿[name: Y¿/ identifier: 0._fresh.670.22326¿]¿)""")
+    hypo_analysis.append("""¿¿¿property¿[pp_type: x ∈ A¿]: LOCAL_CONSTANT¿[name: H¿/ identifier: 0._fresh.669.20893¿]¿= PROP_BELONGS¿[type: PROP¿]¿(LOCAL_CONSTANT¿[name: x¿/ identifier: 0._fresh.669.20891¿]¿, LOCAL_CONSTANT¿[name: A¿/ identifier: 0._fresh.669.20889¿]¿)""")
+    hypos = []
+    for hypo in hypo_analysis:
+        tree = lean_expr_with_type_grammar.parse(hypo)
+        mo = LeanEntryVisitor().visit(tree)
+        # mt = mo.math_type
+        hypos.append(mo)
+
+    hypo0 = hypos[0]
+    hypo1 = hypos[1]
+    print("hypos:", [hypo.to_display(format_="utf8") for hypo in hypos])
+    hypos0 = [hypo0]
+    hypos1 = [hypo1]
+    ass_mvars = mvars_assign(mvars, hypos0)
+    ass_mvars2 = mvars_assign(ass_mvars[0], hypos1)
+
+    print("Assigned lists:")
+    print("     ", [[mvar.children[0].to_display(format_="utf8") if
+                     mvar.children else mvar.to_display(format_="utf8")
+                     for mvar in mvars]
+                    for mvars in ass_mvars])
+    print("     ", [[mvar.children[0].to_display(format_="utf8") if
+                     mvar.children else mvar.to_display(format_="utf8")
+                     for mvar in mvars]
+                    for mvars in ass_mvars2])
 
 
     MathObject.definition_patterns.append(pattern)
@@ -402,3 +723,6 @@ if __name__ == '__main__':
     print(f"{mt.to_display()} matches {pattern.to_display()} ?")
     print(pattern.children[0].match(mt))
     print(pattern.children[1].apply_matching().to_display())
+
+
+

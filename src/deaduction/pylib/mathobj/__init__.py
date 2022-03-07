@@ -28,7 +28,10 @@ This file is part of dEAduction.
 
 from deaduction.pylib.mathobj.math_object import MathObject
 from .context_math_object import                 ContextMathObject
-from .pattern_math_objects import                PatternMathObject
+from .pattern_math_objects import                (PatternMathObject,
+                                                  mvars_assign,
+                                                  mvars_assign_some,
+                                                  first_unassigned_mvar)
 from .proof_step import          (ProofStep,
                                   NewGoal)
 

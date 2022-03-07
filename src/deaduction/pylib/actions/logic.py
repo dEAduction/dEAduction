@@ -56,7 +56,7 @@ from deaduction.pylib.actions     import (action,
                                           WrongUserInput,
                                           test_selection,
                                           CodeForLean,
-                                          action_definition
+                                          smart_have
                                           )
 
 from deaduction.pylib.mathobj     import (MathObject,
@@ -941,7 +941,7 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
                 used_inequalities.append(context_inequality)
                 inequality_name = context_inequality.display_name
                 variable_names.append(inequality_name)
-            else:
+            else:  # FIXME: check this works for several ineq (∀x>0, ∀y>0, ...)
                 # If not, assert inequality as a new goal:
                 inequality_name = get_new_hyp(proof_step)
                 variable_names.append(inequality_name)
@@ -1057,6 +1057,12 @@ def action_forall(proof_step,
             selected_objects.remove(item)
             selected_objects.reverse()
             selected_objects.append(item)
+            # FIXME: TEST!!
+            trial = smart_have(arrow=selected_objects[-1],
+                              selected_objects=selected_objects[:-1],
+                              context=proof_step.goal.context,
+                              new_hypo_name=get_new_hyp(proof_step))
+
             return apply_forall(proof_step, selected_objects)
     raise WrongUserInput(error=_("No universal property among selected"))
 

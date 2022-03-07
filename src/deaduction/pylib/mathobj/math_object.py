@@ -198,14 +198,17 @@ class MathObject:
             self.children = [bound_var_type, bound_var, body]
             self.node += "_EXPANDED_" + self.math_type.node
 
-    def duplicate(self):
+    @classmethod
+    def duplicate(cls, obj):
         """
-        Create a copy of self, by duplicating the info dic.
+        Create a copy of self, by duplicating the info dic,
+        and the children list.
         Beware that children of duplicates are children of self, not copies!
         """
-        new_info = copy(self.info)
-        other = MathObject(node=self.node, info=new_info,
-                           children=self.children, math_type=self.math_type)
+        new_info = copy(obj.info)
+        other = cls(node=obj.node, info=new_info,
+                    children=copy(obj.children), bound_vars=obj.bound_vars,
+                    math_type=obj.math_type)
         return other
 
     @property
@@ -959,6 +962,9 @@ class MathObject:
     def is_constant(self):
         return self.node == "CONSTANT"
 
+    def is_local_constant(self):
+        return self.node == "LOCAL_CONSTANT"
+
     def is_implicit_arg(self):
         if (self.node == "TYPE"
                 or (self.is_constant() and self.display_name in
@@ -1111,7 +1117,7 @@ class MathObject:
             # This is where we find a new var!! #
             #####################################
             # vars.append(copy(math_type.children[1])) BUG!!
-            vars.append(math_type.children[1].duplicate())
+            vars.append(MathObject.duplicate(math_type.children[1]))
             children = [math_type.children[2]]
         elif (self.is_and(is_math_type=True, implicit=False)
                 or self.is_or(is_math_type=True, implicit=False)
@@ -1383,7 +1389,7 @@ class MathObject:
             # NB: math_type is "SET FAMILY ( X, set Y)"
             #   or "SEQUENCE( N, Y)
             # Change type to avoid infinite recursion:
-            raw_version = self.duplicate()
+            raw_version = MathObject.duplicate(self)
             bound_var_type = self.math_type.children[0]
             bound_var = MathObject.new_bound_var(bound_var_type)
             math_type = self.math_type.children[1]
@@ -1394,7 +1400,6 @@ class MathObject:
 
         name_single_bound_var(bound_var)
         return bound_var, body
-
 
     @classmethod
     def new_bound_var(cls, math_type):

@@ -40,6 +40,8 @@ from .code_for_lean import (LeanCombinator,
 
 from .generic import action_definition
 
+from .smart_have import smart_have
+
 from .logic import (action_not,
                     action_implies,
                     action_and,
