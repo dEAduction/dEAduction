@@ -180,7 +180,15 @@ begin
     exact not_le
 end
 
-
+lemma theorem.double_negation (P: Prop) :
+(non non P) ↔ P :=
+/- dEAduction
+PrettyName
+    Double négation
+-/
+begin
+    todo
+end
 
 
 end negation
