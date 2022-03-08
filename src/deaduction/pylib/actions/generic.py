@@ -138,7 +138,8 @@ def action_theorem(proof_step,
         codes = add_statement_to_context(proof_step, theorem)
         return codes
 
-    if theorem_goal.target.is_iff():
+    substitution, equality = theorem_goal.target.can_be_used_for_substitution()
+    if substitution:
         codes = rw_using_statement(goal, selected_objects, theorem)
 
     h = get_new_hyp(proof_step)
