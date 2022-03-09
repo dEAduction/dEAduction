@@ -1062,8 +1062,12 @@ def action_forall(proof_step,
                               selected_objects=selected_objects[:-1],
                               context=proof_step.goal.context,
                               new_hypo_name=get_new_hyp(proof_step))
-
-            return apply_forall(proof_step, selected_objects)
+            if trial:
+                code = trial
+            else:
+                code = CodeForLean.empty_code()
+            more_code = apply_forall(proof_step, selected_objects)
+            return code.or_else(more_code)
     raise WrongUserInput(error=_("No universal property among selected"))
 
 

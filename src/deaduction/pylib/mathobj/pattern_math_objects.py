@@ -204,6 +204,15 @@ class PatternMathObject(MathObject):
     def is_explicitly_assigned(self):
         return self.is_metavar() and self.info.get("assigned") == "explicit"
 
+    def display_mvar(self):
+        """Display mvar as is, or as its assignment if any."""
+
+        if self.is_metavar():
+            if self.children:
+                return self.children[0].to_display(format_="utf8")
+            else:
+                return self.to_display(format_="utf8")
+
     def match(self, math_object: MathObject, assign=False) -> bool:
         """
         Test if math_object match self. This is a recursive test.
@@ -405,15 +414,16 @@ class PatternMathObject(MathObject):
                             mvar_objects=None, insert_mvar=True):
         """
         Create a PatternMathObject by changing each universally quantified
-        dummy var, and also each premise at the beginning of prop into ah
+        dummy var, and also each premise at the beginning of prop into a
         metavar. e.g. if math_object corresponds to
                 ∀ f: X→Y, ∀{A: set X}, ∀{x: X}, (x ∈ A → f x ∈ f '' A)
             then the fct will return
              ∀?₃ : (?₁)→(?₂), ∀?₄ ⊂ (?₁), ∀?₅ ∈ ?₁, ((?₆) ⇒ ?₃(?₅) ∈ ?₃(?₄))
+             with metavars created with the relevant type.
         Note that all local constants are also turned into mvars. This fct
         will be called with initial_proof_state of some theorem, and the
         idea is that local constant that are not dummy var are implicit
-        parameters of the theorem, and shoud be treated as dummy vars.
+        parameters of the theorem, and should be treated as dummy vars.
 
         The metavars in mvars should be substituted by the
         corresponding mvar_objects. insert_mvar will be set to FALSE for
@@ -516,7 +526,7 @@ def mvars_assign(mvars: [PatternMathObject],
                 assigned_mvar.match(math_object, assign=True)
                 assigned_mvar.set_explicitly_assigned()
                 success_list.append((assigned_mvars, idx))
-        idx = idx + 1 if idx < len(mvars) else 0
+        idx = idx + 1 if idx < len(mvars) - 1 else 0
 
     # Now the recursion: for each success, try to match the remaining obj.
     new_math_objects = math_objects[1:]
@@ -541,8 +551,10 @@ def first_unassigned_mvar(mvars: [PatternMathObject]):
 def mvars_assign_some(mvars: [PatternMathObject],
                       math_objects: [MathObject]) -> [[PatternMathObject]]:
     """
-    Try to assign some math_objects to mvars, and return ONE possible list of
-    mvars where all mvars have been successfully assigned.
+    Try to assign some math_objects to mvars, and return all possible
+    list of mvars where all mvars have been successfully assigned.
+    This is used with math_objects = all context objects, to try to complete
+    the user_selection.
 
     Note that the mvars_assign() function tries to assign all objects to some
     mvars, whereas mvars_assign_some() tries to assign all mvars to some object.
@@ -553,26 +565,27 @@ def mvars_assign_some(mvars: [PatternMathObject],
 
     mvar = first_unassigned_mvar(mvars)
     if not mvar:  # ALl mvars assigned!
-        return mvars
+        return [mvars]
 
+    success_list = []
     # Try to assign mvar
-    success_object = None
     for math_object in math_objects:
         match = mvar.match(math_object)
         if match:
-            success_object = math_object
-            mvar.match(math_object, assign=True)
-            mvar.set_explicitly_assigned()
-            break
+            assigned_mvars = deepcopy(mvars)
+            idx = mvars.index(mvar)
+            assigned_mvar = assigned_mvars[idx]
+            assigned_mvar.match(math_object, assign=True)
+            assigned_mvar.set_explicitly_assigned()
+            success_list.append(assigned_mvars)
 
-    if not success_object:  # No way to assign all mvars
-        return None
-
-    # Now the recursion: assign mvars to remaining objects
-    new_math_objects = math_objects[:]  # No side effect on math_objects!
-    new_math_objects.remove(success_object)
-
-    return mvars_assign_some(mvars, new_math_objects)
+    # Now the recursion: assign other mvars. We keep all math_objects since
+    # there is no reason not to assign the same math_object twice
+    assigned_mvars_list = []
+    for assigned_mvars in success_list:
+        new_assigned_mvars = mvars_assign_some(assigned_mvars, math_objects)
+        assigned_mvars_list.extend(new_assigned_mvars)
+    return assigned_mvars_list
 
 # class Mvars(list):
 #     """

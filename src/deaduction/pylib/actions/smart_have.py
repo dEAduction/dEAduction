@@ -60,9 +60,6 @@ def to_code_names(assigned_mvars):
     and "_" for the other ones.
     """
 
-    # Check all mvars assigned
-    assert first_unassigned_mvar(assigned_mvars) is None
-
     code_names = [mvar.children[0].display_name if mvar.is_explicitly_assigned()
                   else "_" for mvar in assigned_mvars]
     return code_names
@@ -72,7 +69,7 @@ def smart_have(arrow: MathObject,
                selected_objects,
                context,
                new_hypo_name: str,
-               explicit=False) -> CodeForLean:
+               explicit=True) -> CodeForLean:
     """
     Compute Lean code to apply an implication or a universal property to a
     property and/or some local constant. But contrary to the function
@@ -86,7 +83,7 @@ def smart_have(arrow: MathObject,
     command = f'have {new_hypo_name} := {selected_hypo}'
 
     mvars = []
-    pattern = PatternMathObject.from_universal_prop(arrow, mvars)
+    pattern = PatternMathObject.from_universal_prop(arrow.math_type, mvars)
 
     # DEBUG:
     print("Pattern:")
@@ -95,26 +92,31 @@ def smart_have(arrow: MathObject,
     print("mvars types:", [mvar.math_type.to_display(format_="utf8") for mvar
                            in mvars])
 
+    # Try to assign selected objects, get all possible results
     assigned_mvars_list = mvars_assign(mvars, selected_objects)
 
+    # Now try to assign "holes"
+    nb = 0
     for mvars in assigned_mvars_list:
         # Remove last unassigned:
         while not mvars[-1].is_explicitly_assigned():
             mvars.pop()
-        code_names = ""
-        mvar = first_unassigned_mvar(mvars)
-        if not mvar:  # All mvars assigned!
-            code_names = to_code_names(mvars, selected_objects)
-        else:
-            # TODO: Remove selected_obj?
-            success = mvars_assign_some(mvars, context)
-            if success:
-                code_names = to_code_names(mvars)
-        if code_names:
-            code = command + " " + " ".join(code_names)
-            codes.append(code)
+        nb += 1
+        print(f"Assigned mvars {nb}:")
+        print("From selection: ", [mvar.display_mvar() for mvar in
+                                   mvars])
+        more_mvars_list = mvars_assign_some(mvars, context)
+        if more_mvars_list:
+            for more_mvars in more_mvars_list:
+                print("From context: ", [mvar.display_mvar() for mvar in
+                                         more_mvars])
+                code_names = to_code_names(more_mvars)
+                code = command + " " + " ".join(code_names)
+                print(f"code: {code}")
+                codes.append(code)
+
     if codes:
         return CodeForLean.or_else_from_list(codes)
     else:
-        return None
+        print("Smart have failed...")
 
