@@ -116,7 +116,9 @@ def smart_have(arrow: MathObject,
                 codes.append(code)
 
     if codes:
-        return CodeForLean.or_else_from_list(codes)
+        code = CodeForLean.or_else_from_list(codes)
+        code.add_used_properties([arrow] + selected_objects)
+        return code
     else:
         print("Smart have failed...")
 

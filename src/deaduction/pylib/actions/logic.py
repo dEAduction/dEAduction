@@ -544,7 +544,7 @@ def apply_implies_to_hyp(proof_step,
 @action()
 def action_implies(proof_step,
                    selected_objects: [MathObject],
-                   user_input = None,
+                   user_input=None,
                    target_selected: bool = True) -> CodeForLean:
     """
     Three cases:
