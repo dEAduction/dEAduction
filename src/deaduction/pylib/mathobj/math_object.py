@@ -416,6 +416,23 @@ class MathObject:
             display += ', children: **' + display_child + '**'
         return display
 
+    @property
+    def dummy_var(self):
+        if (self.is_for_all(is_math_type=True)
+                or self.is_exists(is_math_type=True)):
+            return self.children[1]
+
+    @property
+    def prop(self):
+        if (self.is_for_all(is_math_type=True)
+                or self.is_exists(is_math_type=True)):
+            return self.children[2]
+
+    @property
+    def premise(self):
+        if self.is_implication(is_math_type=True):
+            return self.children[0]
+
     # def has_expanded_version(self):
     #     return hasattr(self, "expanded_version") and \
     #             self.expanded_version
@@ -827,6 +844,25 @@ class MathObject:
         else:
             math_type = self.math_type
         return math_type.node == "QUANT_∀"
+
+    def set_bounded_quantification(self):
+        self.info['bounded_quantification'] = True
+
+    def has_bounded_quantification(self):
+        """
+        This should be True if self is a quantified property with bounded
+        quantification, and displayed as such, as in
+            ∀x ∈ A, ...     or  ∀x>0, ...
+        as opposed to
+            ∀x ∈ X, (x ∈ A => ...)  or  ∀x∈R, (x>0 => ...)
+        This is set when computing display of self, since this should really
+        reflect the way the property is displayed on screen.
+        """
+        return self.info.get('bounded_quantification')
+
+    def bounded_quantification(self):
+        if self.has_bounded_quantification():
+            return self.prop.premise
 
     def is_quantifier(self, is_math_type=False) -> bool:
         """

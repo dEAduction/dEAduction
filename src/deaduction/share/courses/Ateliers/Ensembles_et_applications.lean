@@ -123,7 +123,7 @@ begin
 end
 
 lemma definition.singleton
-(x x_0: X) :
+{x x_0: X} :
 (x ∈  (sing x_0) ) ↔ x=x_0
 :=
 begin
@@ -131,7 +131,7 @@ begin
 end
 
 lemma definition.paire
-(x x_0 x_1: X) :
+{x x_0 x_1: X} :
 (x ∈ (pair x_0 x_1) ) ↔ (x=x_0 ∨ x=x_1)
 :=
 begin
@@ -239,7 +239,7 @@ begin
 end
 
 lemma theorem.image_singleton :
-∀ f: X→Y, ∀{x_0: X},
+∀ {f: X→Y}, ∀{x_0: X},
  f '' (sing x_0) = sing (f(x_0))
 :=
 /- dEAduction
@@ -251,7 +251,7 @@ begin
 end
 
 lemma theorem.image_paire :
-∀ f: X→Y, ∀{x_0 x_1: X},
+∀ {f: X→Y}, ∀{x_0 x_1: X},
  f '' (pair x_0 x_1) = pair (f x_0) (f x_1)
 :=
 /- dEAduction
@@ -844,7 +844,10 @@ PrettyName
   Image réciproque et inclusion (iii)
 -/
 begin
-  todo
+  intros surj_f A B incl y y_dans_A,
+  have ex_x := surj_f y, cases ex_x with x eq,
+  have but: (x dans (set.preimage f A)),
+
 end
 
 end injectivite_surjectivite_autres

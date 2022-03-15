@@ -132,7 +132,7 @@ begin
 end
 
 
-lemma theorem.negation_existe  {X : Sort*} {P : X → Prop} :
+lemma theorem.negation_existe  {X : Type} {P : X → Prop} :
 ( ( not ∃ (x:X), P x  ) ↔ ∀ x:X, not P x )
 :=
 /- dEAduction
@@ -145,7 +145,7 @@ end
 
 
 
-lemma theorem.negation_pour_tout {X : Sort*} {P : X → Prop} :
+lemma theorem.negation_pour_tout {X : Type} {P : X → Prop} :
 ( not (∀x, P x ) ) ↔ ∃x, not P x
 :=
 /- dEAduction
@@ -180,7 +180,15 @@ begin
     exact not_le
 end
 
-
+lemma theorem.double_negation (P: Prop) :
+(non non P) ↔ P :=
+/- dEAduction
+PrettyName
+    Double négation
+-/
+begin
+    todo
+end
 
 
 end negation

@@ -263,6 +263,15 @@ class Statement:
         elif self.is_exercise():
             return _('exercise')
 
+    @property
+    def target(self):
+        """
+        Return self.target with usable name.
+        """
+        target = self.initial_proof_state.goals[0].target
+        target.info['name'] = self.lean_name
+        return target
+
 
 class Definition(Statement):
     # def __init__(self, **data):

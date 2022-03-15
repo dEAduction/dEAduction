@@ -342,6 +342,7 @@ text_from_node = {
     # "FUNCTION": (_("a function from") + " ", 0, " " + _("to") + " ", 1),
 }
 
+# FIXME: suppress?
 text_from_all_nodes = {
     "PROP_AND": (0, " " + _("and") + " ", 1),
     "PROP_OR": (0, " " + _("or") + " ", 1),
@@ -383,6 +384,7 @@ text_from_all_nodes = {
     "FUNCTION": (_("a function from") + " ", 0, " " + _("to") + " ", 1),
 }
 
+# FIXME: suppress?
 text_from_quant_node = {
     "QUANT_∀": (_("for every") + " ", 1, " " + _("in") + " ", 0,
                 ", ", 2),

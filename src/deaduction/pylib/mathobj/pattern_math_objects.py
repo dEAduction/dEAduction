@@ -120,8 +120,6 @@ class PatternMathObject(MathObject):
         allow keeping track of the correspondence between the local
         constants that have been previously replaced and the metavars.
 
-        :param loc_csts: list of local constants
-        :param metavars: corresponding list of metavars
         :return:         new PatternMathObject
         """
         # log.debug(f"Patterning mo {math_object.to_display()}")
@@ -420,10 +418,6 @@ class PatternMathObject(MathObject):
             then the fct will return
              ∀?₃ : (?₁)→(?₂), ∀?₄ ⊂ (?₁), ∀?₅ ∈ ?₁, ((?₆) ⇒ ?₃(?₅) ∈ ?₃(?₄))
              with metavars created with the relevant type.
-        Note that all local constants are also turned into mvars. This fct
-        will be called with initial_proof_state of some theorem, and the
-        idea is that local constant that are not dummy var are implicit
-        parameters of the theorem, and should be treated as dummy vars.
 
         The metavars in mvars should be substituted by the
         corresponding mvar_objects. insert_mvar will be set to FALSE for
@@ -450,7 +444,8 @@ class PatternMathObject(MathObject):
 
         if math_object.is_local_constant():  # Search if replaced by mvar
             for mvar, mobj in zip(mvars, mvar_objects):
-                if mobj.info["identifier"] == math_object.info["identifier"]:
+                if mobj.info.get("identifier") == math_object.info.get(
+                                                  "identifier"):
                     return mvar
 
         # Recursively compute new math_type:
@@ -458,11 +453,12 @@ class PatternMathObject(MathObject):
             if math_type is MathObject.NO_MATH_TYPE \
             else cls.from_universal_prop(math_type, mvars, mvar_objects, False)
 
-        if math_object.is_local_constant():  # Make it a metavar!
-            mvar = PatternMathObject.new_metavar(new_math_type)
-            mvars.append(mvar)
-            mvar_objects.append(math_object)
-            return mvar
+        # FIXME: remove
+        # if math_object.is_local_constant():  # Make it a metavar!
+        #     mvar = PatternMathObject.new_metavar(new_math_type)
+        #     mvars.append(mvar)
+        #     mvar_objects.append(math_object)
+        #     return mvar
 
         # It remains to compute new children, by cases:
         if insert_mvar and math_object.is_for_all(is_math_type=True):
@@ -485,7 +481,7 @@ class PatternMathObject(MathObject):
             mvars.append(mvar)
             mvar_objects.append(new_premise)
             new_conclusion = cls.from_universal_prop(children[1], mvars,
-                                                     mvar_objects, False)
+                                                     mvar_objects, True)
             new_children = [mvar, new_conclusion]
 
         else:

@@ -934,8 +934,7 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
         variable_names.append(potential_var.info['name'])
         if inequality:
             math_types = [p.math_type for p in goal.context]
-            if inequality in math_types:
-                # Check if inequality is in context:
+            if inequality in math_types:  # Check if inequality is in context
                 index = math_types.index(inequality)
                 context_inequality = goal.context[index]
                 used_inequalities.append(context_inequality)
@@ -1059,9 +1058,10 @@ def action_forall(proof_step,
             selected_objects.append(item)
             # FIXME: TEST!!
             trial = smart_have(arrow=selected_objects[-1],
-                              selected_objects=selected_objects[:-1],
-                              context=proof_step.goal.context,
-                              new_hypo_name=get_new_hyp(proof_step))
+                               implicit_context=[],
+                               selected_objects=selected_objects[:-1],
+                               context=proof_step.goal.context,
+                               new_hypo_name=get_new_hyp(proof_step))
             if trial:
                 code = trial
             else:

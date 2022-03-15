@@ -598,6 +598,7 @@ def display_quantifier(math_object) -> list:
                 if item == variable:
                     # (2,0), (2,1) code for descendants:
                     display = [quantifier, (2, 0), such_that, (2, 1)]
+                    math_object.set_bounded_quantification()
 
     if math_object.is_exists(is_math_type=True):
         if property.is_and(is_math_type=True):
@@ -607,6 +608,7 @@ def display_quantifier(math_object) -> list:
                 if item == variable:
                     # (2,0), (2,1) code for descendants:
                     display = [quantifier, (2, 0), such_that, (2, 1)]
+                    math_object.set_bounded_quantification()
 
     return display
 
@@ -940,7 +942,7 @@ def recursive_display(math_object, text_depth=0, raw_display=None,
                       negate=False):
     """
     Compute raw display of self, e.g. [0, "\text_is_not", 1],
-    then recursively replace integeres by the raw_latex_shape of
+    then recursively replace integers by the raw_latex_shape of
     corresponding children.
 
     Take care of parentheses:

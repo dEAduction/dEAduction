@@ -27,7 +27,7 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from deaduction.pylib.actions import CodeForLean
+from deaduction.pylib.actions import CodeForLean, generic_have
 from deaduction.pylib.mathobj import (MathObject,
                                       get_new_hyp)
 
@@ -170,6 +170,15 @@ def action_theorem(proof_step,
                           command + ' _ _ _ _ ' + arguments,
                           command_implicit + ' _ _ _ _ ' + arguments
                           ]
+
+            more_code = generic_have(arrow=theorem.target,
+                                     implicit_context=theorem_goal.context,
+                                     selected_objects=selected_objects,
+                                     proof_step=proof_step,
+                                     new_hypo_name=h,
+                                     explicit=True)
+            if more_code:
+                more_codes = [more_code] + more_codes
             success_msg = (_('Theorem') + ' ' + _('applied to') + ' '
                            + arguments)
 

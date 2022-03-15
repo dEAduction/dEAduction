@@ -53,7 +53,14 @@ definition bounded_sequence (u : ℕ → ℝ) : Prop :=
 
 definition even (n:ℕ) : Prop := ∃ n', n=2 * n'
 
+definition limit_fun (f : ℝ → ℝ) (a : ℝ) (l : ℝ) : Prop :=
+∀ ε > 0, ∃ δ>0, ∀ x: ℝ, ( | x-a | < δ → | f x  - l | < ε )
 
+definition continuous_at (f : ℝ → ℝ) (a : ℝ) : Prop :=
+limit_fun f a (f a)
+
+definition continuous (f: ℝ → ℝ) : Prop :=
+∀ a, continuous_at f a
 
 section course
 open tactic.interactive
@@ -66,6 +73,13 @@ namespace definitions
 /- dEAduction
 PrettyName
   Définitions
+-/
+
+
+namespace generalites
+/- dEAduction
+PrettyName
+  Généralités
 -/
 
 /-
@@ -192,6 +206,9 @@ end
 
 end valeur_absolue
 
+end generalites
+namespace suites
+
 ------------------------------
 -- Définitions de la limite --
 ------------------------------
@@ -208,7 +225,6 @@ ImplicitUse
   True
 -/
 begin
-  -- hypo_analysis,
   refl
 end
 
@@ -257,6 +273,31 @@ begin
   refl
 end
 
+end suites
+
+namespace fonctions
+
+lemma definition.limit_fun (f : ℝ → ℝ) (a : ℝ) (l : ℝ) : 
+limit_fun f a l ↔ 
+( ∀ ε > 0, ∃ δ>0, ∀ x: ℝ, ( | x-a | < δ → | f x  - l | < ε ) ):=
+begin
+  refl
+end
+
+lemma definition.continuous_at (f : ℝ → ℝ) (a : ℝ) :
+(continuous_at f a) ↔ (limit_fun f a (f a)) :=
+begin
+  refl
+end
+
+lemma definition.continuous (f: ℝ → ℝ) :
+(continuous f) ↔ ∀ a, continuous_at f a :=
+begin
+  refl
+end
+
+
+end fonctions
 
 end definitions
 
@@ -268,11 +309,12 @@ lemma exercise.test_compute
 0 ≤ 1 ∧ 2+2 = 4
 :=
 begin
-  split,
-  have H : 1+1=2, rotate,
-  compute_n 1,
-  compute_n 1,
   todo
+  -- split,
+  -- have H : 1+1=2, rotate,
+  -- compute_n 1,
+  -- compute_n 1,
+  -- todo
 end
 
 lemma exercise.test_compute_2
@@ -297,7 +339,12 @@ end tests
 -----------------
 --  exercices  --
 -----------------
-namespace exercices
+namespace exercices_suites
+/- dEAduction
+PrettyName
+  Exercices sur les suites
+-/
+
 open definitions
 
 --------------------------------------------------
@@ -311,7 +358,6 @@ PrettyName
   Un exemple de suite non convergente
 -/
 begin
-  --targets_analysis,
   todo
 end
 
@@ -323,7 +369,6 @@ PrettyName
   Un exemple de suite convergente
 -/
 begin
-  -- targets_analysis,
   todo
 end
 
@@ -335,7 +380,6 @@ PrettyName
   Un exemple de suite divergente
 -/
 begin
-  -- targets_analysis,
   todo
 end
 
@@ -377,25 +421,27 @@ PrettyName
   Unicité de la limite
 -/
 begin
-  by_contradiction,
-  wlog Hll': l < l',
-  -- exact lt_or_gt_of_ne a,
-  rotate,
-  set ε := (l'-l)/2 with Heps,
-  have Hpos: ε >0, rotate, -- by compute1,
-  specialize H ε Hpos, rotate 2,
-  rotate,
+  -- by_contradiction,
+  -- wlog Hll': l < l',
+  -- -- exact lt_or_gt_of_ne a,
+  -- rotate,
+  -- set ε := (l'-l)/2 with Heps,
+  -- have Hpos: ε >0, rotate, -- by compute1,
+  -- specialize H ε Hpos, rotate 2,
+  -- rotate,
   
-  cases H with N1,
-  specialize H' ε Hpos, cases H' with N2,
-  set n := max N1 N2 with Hn,
-  have HnsuppN1: n ≥ N1, from le_max_left N1 N2,
-  have ineq1 := H_h n HnsuppN1,
-  have HnsuppN2: n ≥ N2, from le_max_right N1 N2,
-  have ineq1 := H'_h n HnsuppN2,
+  -- cases H with N1,
+  -- specialize H' ε Hpos, cases H' with N2,
+  -- set n := max N1 N2 with Hn,
+  -- have HnsuppN1: n ≥ N1, from le_max_left N1 N2,
+  -- have ineq1 := H_h n HnsuppN1,
+  -- have HnsuppN2: n ≥ N2, from le_max_right N1 N2,
+  -- have ineq1 := H'_h n HnsuppN2,
 
-  -- sorry,  
-  todo
+  -- -- sorry,  
+  -- todo,
+  -- todo,
+  todo,
 end
 
 
@@ -409,17 +455,17 @@ PrettyName
   Définition alternative de la limite
 -/
 begin
-    split,
-  intro H1,
-  intro ε, intro H2,
-  rw definitions.definition.limit at H1,
-  have H3 := H1 ε H2,
-  cases H3 with n H4,
-  use n,
-  intro n', intro H5,
-  have H6 := H4 n' H5,
-  -- solve1 {linarith},
-  todo,
+  -- split,
+  -- intro H1,
+  -- intro ε, intro H2,
+  -- rw limit at H1,
+  -- have H3 := H1 ε H2,
+  -- cases H3 with n H4,
+  -- use n,
+  -- intro n', intro H5,
+  -- have H6 := H4 n' H5,
+  -- -- solve1 {linarith},
+  -- todo,
   todo,
 end
 
@@ -436,17 +482,6 @@ PrettyName
 begin
   todo
 end
-
-
-
-
-
-
-
-
-
-
-
 
 end premieres_proprietes
 
@@ -479,40 +514,27 @@ begin
 -- have H10 := H9 n n',
 -- -- norm_num at H10,
 -- rw H7 at H10,
-  rw definitions.definition.limit,
-  intro ε, intro H1,
-  rw definitions.definition.limit at H H',
-  have H2: ((ε/2):ℝ) > 0, rotate, have H3 := H (ε/2) H2, rotate 1, solve1 {linarith only [H1] }, rotate,
-  have H4: ((ε/2):ℝ) > 0, rotate, have H5 := H' (ε/2) H4, rotate 1, solve1 {assumption}, rotate,
-  cases H3 with n H6,
-  cases H5 with n' H7,
-  use max n n',
-  intro n'', intro H8,
-  have H9: (n'':ℕ) ≥ n, rotate, have H10 := H6 n'' H9, rotate 1, solve1 {norm_num at *, tautology }, rotate,
-  have H11: (n'':ℕ) ≥ n', rotate, have H12 := H7 n'' H11, rotate 1, solve1 {norm_num at *, tautology }, rotate,
-  
-  rw definitions.valeur_absolue.theorem.majoration_valeur_absolue at H10 H12,
-  rw definitions.valeur_absolue.theorem.majoration_valeur_absolue,
-  cases H12 with Ha Hb, cases H10 with Hc Hd,
-  split,
-  linarith only [Ha, Hc],
-  linarith only [Hb, Hc, Hd],
-end
-
-
--- preuve par DL ?
-lemma exercise.limite_produit
-(u u': ℕ → ℝ) (l l' : ℝ) (H : limit u l)
-(H' : limit u' l') :
-limit (λn, (u n) * (u' n)) (l*l')
-:=
-/- dEAduction
-PrettyName
-  Limite d'un produit
--/
-begin
   todo
+  -- rw limit,
+  -- intro ε, intro H1,
+  -- rw limit at H H',
+  -- have H2: ((ε/2):ℝ) > 0, rotate, have H3 := H (ε/2) H2, rotate 1, solve1 {linarith only [H1] }, rotate,
+  -- have H4: ((ε/2):ℝ) > 0, rotate, have H5 := H' (ε/2) H4, rotate 1, solve1 {assumption}, rotate,
+  -- cases H3 with n H6,
+  -- cases H5 with n' H7,
+  -- use max n n',
+  -- intro n'', intro H8,
+  -- have H9: (n'':ℕ) ≥ n, rotate, have H10 := H6 n'' H9, rotate 1, solve1 {norm_num at *, tautology }, rotate,
+  -- have H11: (n'':ℕ) ≥ n', rotate, have H12 := H7 n'' H11, rotate 1, solve1 {norm_num at *, tautology }, rotate,
+  
+  -- rw generalites.valeur_absolue.theorem.majoration_valeur_absolue at H10 H12,
+  -- rw generalites.valeur_absolue.theorem.majoration_valeur_absolue,
+  -- cases H12 with Ha Hb, cases H10 with Hc Hd,
+  -- split,
+  -- linarith only [Ha, Hc],
+  -- linarith only [Hb, Hc, Hd],
 end
+
 
 lemma exercise.limite_inegalites
 (u u': ℕ → ℝ) (l l' : ℝ) (H : limit u l)
@@ -525,25 +547,26 @@ PrettyName
   Passage à la limite dans une inégalité
 -/
 begin
-  contrapose H'' with H1,
-  push_neg,
-  push_neg at H1,
-  let e := (l-l')/2, have H2 : e = (l-l')/2, refl, no_meta_vars,
-  rw definitions.definition.limit at H H',
-  have H3: (e:ℝ) > 0, rotate, have H4 := H e H3, rotate 1, rotate, rotate,
-  solve1 {norm_num at *, apply mul_pos, linarith, apply inv_pos.mpr, linarith},
-  have H5 := H' e H3,
-  cases H4 with n H6,
-  cases H5 with n' H7,
-  let n'' := max n n', have H8 : n'' = max n n', refl, no_meta_vars,
-  have H9: (n'':ℕ) ≥ n, rotate, have H10 := H6 n'' H9, rotate 1, solve1 {norm_num at *, tautology }, rotate,
-  have H11: (n'':ℕ) ≥ n', rotate, have H12 := H7 n'' H11, rotate 1, solve1 {norm_num at *, tautology }, rotate,
-  use n'',
-  rw definitions.valeur_absolue.theorem.majoration_valeur_absolue at H10,
-  cases H10 with H14 H15,
-  rw definitions.valeur_absolue.theorem.majoration_valeur_absolue at H12,
-  cases H12 with H17 H18,
-  linarith,
+  -- contrapose H'' with H1,
+  -- push_neg,
+  -- push_neg at H1,
+  -- let e := (l-l')/2, have H2 : e = (l-l')/2, refl, no_meta_vars,
+  -- rw limit at H H',
+  -- have H3: (e:ℝ) > 0, rotate, have H4 := H e H3, rotate 1, rotate, rotate,
+  -- solve1 {norm_num at *, apply mul_pos, linarith, apply inv_pos.mpr, linarith},
+  -- have H5 := H' e H3,
+  -- cases H4 with n H6,
+  -- cases H5 with n' H7,
+  -- let n'' := max n n', have H8 : n'' = max n n', refl, no_meta_vars,
+  -- have H9: (n'':ℕ) ≥ n, rotate, have H10 := H6 n'' H9, rotate 1, solve1 {norm_num at *, tautology }, rotate,
+  -- have H11: (n'':ℕ) ≥ n', rotate, have H12 := H7 n'' H11, rotate 1, solve1 {norm_num at *, tautology }, rotate,
+  -- use n'',
+  -- rw generalites.valeur_absolue.theorem.majoration_valeur_absolue at H10,
+  -- cases H10 with H14 H15,
+  -- rw generalites.valeur_absolue.theorem.majoration_valeur_absolue at H12,
+  -- cases H12 with H17 H18,
+  -- linarith,
+  todo
 end
 
 lemma exercise.gendarmes
@@ -560,9 +583,6 @@ begin
   todo
 end
 
-
-
-
 -- Let's make a new definition.
 definition is_bounded (a : ℕ → ℝ) := ∃ B, ∀ n, |a n| ≤ B
 
@@ -574,12 +594,49 @@ begin
   todo,
 end
 
+/-
+A essayer : appliquer somme, CV implique borné, borné x 0
+-/
+lemma exercise.limite_produit
+(u u': ℕ → ℝ) (l l' : ℝ) (H : limit u l)
+(H' : limit u' l') :
+limit (λn, (u n) * (u' n)) (l*l')
+:=
+/- dEAduction
+PrettyName
+  Limite d'un produit
+-/
+begin
+  todo
+end
+
+
 end proprietes
 
-end exercices
 
-#print Exists
-#print has_lt.lt
+end exercices_suites
+
+namespace exercices_fonctions
+/- dEAduction
+PrettyName
+  Exercices sur les fonctions
+-/
+
+open definitions
+
+lemma exercise.image_convergente (u: ℕ → ℝ) (l : ℝ) (f: ℝ → ℝ)
+(H: limit u l) (H': continuous f):
+limit (λ n, f (u n)) (f l) :=
+/- dEAduction
+PrettyName
+  Image d'une suite convergente
+-/
+begin 
+  todo
+end
+
+end exercices_fonctions
+
 
 
 example (X: Type) (A: set X) (a:X) (P: X → Prop) : ∃ x ∈ A, P(x) :=
