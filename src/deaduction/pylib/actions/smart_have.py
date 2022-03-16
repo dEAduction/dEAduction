@@ -84,11 +84,14 @@ def smart_have(arrow: MathObject,
     codes = []
     command = f'have {new_hypo_name} := {selected_hypo}'
 
+    # Take care of implicit context
     mvars = [PatternMathObject.from_math_object(obj) for obj in
              implicit_context]
     mobjs = [obj for obj in implicit_context]
     print("mvars types:", [mvar.math_type.to_display(format_="utf8") for mvar
                            in mvars])
+
+    # Get mvars from universal prop
     pattern = PatternMathObject.from_universal_prop(arrow.math_type,
                                                     mvars=mvars,
                                                     mvar_objects=mobjs)
@@ -100,10 +103,10 @@ def smart_have(arrow: MathObject,
     print("mvars types:", [mvar.math_type.to_display(format_="utf8") for mvar
                            in mvars])
 
-    # Try to assign selected objects, get all possible results
+    # Try to assign selected objects to mvars, get all possible results
     assigned_mvars_list = mvars_assign(mvars, selected_objects)
 
-    # Now try to assign "holes"
+    # Now try to assign "holes" with context$
     nb = 0
     for mvars in assigned_mvars_list:
         # Remove last unassigned:
