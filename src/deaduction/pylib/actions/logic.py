@@ -551,8 +551,8 @@ def action_implies(proof_step,
     (1) No property selected:
         If the target is of the form P ⇒ Q: introduce the hypothesis P in
         the properties and transform the target into Q.
-    (2) A single selected property, of the form P ⇒ Q: If the target was Q,
-    it is replaced by P
+    (2) A single selected property, of the form P ⇒ Q, and the target is
+    selected: igf the target was Q, it is replaced by P.
     (3) Exactly two selected property, on of which is an implication P ⇒ Q
     and the other is P: Add Q to the context
     """
@@ -571,7 +571,13 @@ def action_implies(proof_step,
             raise WrongUserInput(
                 error=_("Selected property is not an implication 'P ⇒ Q'"))
         else:
-            return apply_implies(proof_step, selected_objects)
+            if target_selected:
+                return apply_implies(proof_step, selected_objects)
+            else:
+                raise WrongUserInput(
+                    error=_("You need to select another property in order to "
+                            "apply this implication"))
+
     elif len(selected_objects) == 2:
         if not selected_objects[1].can_be_used_for_implication(implicit=True):
             if not selected_objects[0].can_be_used_for_implication(
