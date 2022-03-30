@@ -970,7 +970,7 @@ class StartCoExStartup(AbstractStartCoEx):
                          servint=servint)
 
 
-class StartCoExExerciseFinpoished(AbstractStartCoEx):
+class StartCoExExerciseFinished(AbstractStartCoEx):
     """
     The CoEx chooser after usr just finished an exercise. It displays
     a CoEx chooser with the finished exercise
