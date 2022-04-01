@@ -111,6 +111,8 @@ class GoalBlockContent(QWidget):
     This widget draws the content of some GoalBlock.
     """
 
+    # FIXME: bad frame line, add an empty widget with width = title_width
+    #  as a first widget?
     def __init__(self, title_width: callable, end_msg=""):
         super().__init__()
         self.title_width = title_width  # NB: this is a function (real time)
@@ -141,6 +143,9 @@ class GoalBlockContent(QWidget):
         painter.end()
 
     def add_child(self, child: QWidget):
+        """
+        Add the child just before the last widget (which is the end msg)
+        """
         self.vert_layout.insertWidget(self.vert_layout.count()-1, child)
 
     def set_end_msg(self, msg):
@@ -153,8 +158,7 @@ class GoalBlock(QWidget):
     what is proved. The display has two versions, hidden or disclosed.
     """
 
-    def __init__(self, title="My beautiful proof title", hidden=False,
-                 cqfd=False):
+    def __init__(self, title="", hidden=False, cqfd=False):
         super().__init__()
         self.hidden = False
         self.children: [Union[GoalBlock, ProofStepBlock]] = []
@@ -164,7 +168,7 @@ class GoalBlock(QWidget):
         # Layout
         self.triangle = DisclosureTriangle(self.disclose, hidden=hidden)
         self.triangle.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.title_label = QLabel(text=self.title + ":")
+        self.title_label = QLabel(text=self.title + ":")  # Fixme: translation
         self.title_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.content = GoalBlockContent(title_width=self.title_label.width,
                                         end_msg=self.end_msg)
@@ -238,12 +242,12 @@ class GraphicProof(QScrollArea):
         self.setWidget(main_proof_block)
         self.setWindowTitle("Proof Tree")
 
-    # def add_child(self, child: Union[GoalBlock, ProofStepBlock]):
-    #     # if self.current_goal_block.is_solved():
-    #     #     pass
-    #     self.current_goal_block.add_child(child)
-    #     # if isinstance(child, GoalBlock):
-    #     #     self.current_goal_block = child  # Fixme
+    def add_child(self, child: Union[GoalBlock, ProofStepBlock]):
+        # if self.current_goal_block.is_solved():
+        #     pass
+        self.widget().add_child(child)
+        # if isinstance(child, GoalBlock):
+        #     self.current_goal_block = child  # Fixme
 
     @classmethod
     def from_proof_tree(cls):
@@ -253,6 +257,7 @@ class GraphicProof(QScrollArea):
 def main():
     app = QApplication()
 
+    # Tests
     child3 = GoalBlock(title="SubGoal1bis", hidden=False, cqfd=True)
     child3.add_child(ProofStepBlock([], "", []))
     child4 = GoalBlock(title="SubGoal2", hidden=False)
