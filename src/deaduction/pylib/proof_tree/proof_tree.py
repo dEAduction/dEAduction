@@ -162,7 +162,8 @@ class ProofTree:
         new_proof_state = new_proof_step.proof_state
         assert new_proof_state is not None
 
-        if not self.root_node:  # Very first step!
+        # ─────── Very first step ─────── #
+        if not self.root_node:
             self.root_node = GoalNode(parent=new_proof_step,
                                       goal=new_proof_state.goals[0])
             self.unsolved_goal_nodes.append(self.root_node)
@@ -172,22 +173,15 @@ class ProofTree:
         # ─────── Connect new_proof_step to ProofTree ─────── #
         self.current_goal_node.set_child_proof_step(new_proof_step)
 
-        # ─────── Compare with previous state and tag properties ─────── #
-        previous_goal = self.current_goal_node.goal
-        new_goal = new_proof_state.goals[0]
-        Goal.compare(new_goal, previous_goal)  # Set tags
-        # FIXME: serious treatment of used props
-        # used_properties = new_proof_step.used_properties()
-        # new_goal.mark_used_properties(used_properties)
-
         # ─────── Create new GoalNodes ─────── #
-        # previous_proof_state = self.current_goal_node.parent.proof_state
+        new_goal = new_proof_state.goals[0]
         delta_goal = (len(new_proof_state.goals) -
                       len(self.unsolved_goal_nodes))
         if delta_goal == -1:  # current goal solved
             children = [GoalNode.goal_solved(new_proof_step)]
             new_proof_step.set_children_goal_nodes(children)
             self.set_current_goal_solved()
+            self.current_goal_node.set_goal(new_goal)
         elif delta_goal == 0:  # Generic case
             next_goal_node = GoalNode(parent=new_proof_step, goal=new_goal)
             children = [next_goal_node]
@@ -202,6 +196,13 @@ class ProofTree:
             new_proof_step.set_children_goal_nodes(children)
             self.set_bifurcation(other_goal_node)
             self.move_next_node()
+
+        # ─────── Compare with previous state and tag properties ─────── #
+        previous_goal = self.current_goal_node.parent_node.goal
+        Goal.compare(new_goal, previous_goal)
+        # FIXME: serious treatment of used props
+        # used_properties = new_proof_step.used_properties()
+        # new_goal.mark_used_properties(used_properties)
 
         # DEBUG
         print("ProofTree:")
