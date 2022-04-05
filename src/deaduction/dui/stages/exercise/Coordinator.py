@@ -61,7 +61,7 @@ from deaduction.pylib.mathobj import           (MathObject,
                                                 ProofStep)
 from deaduction.pylib.proof_state import       (Goal,
                                                 ProofState)
-
+from deaduction.pylib.proof_tree import ProofTree
 
 from deaduction.pylib.actions           import (generic,
                                                 InputType,
@@ -155,7 +155,8 @@ class Coordinator(QObject):
         # Try to display initial proof state of self.exercise prior to anything
         #  (so that user may start thinking, even if UI stay frozen for a
         #  while.)
-        self.proof_step                     = ProofStep()
+        self.proof_tree = ProofTree()
+        self.proof_step = ProofStep()
         proof_state = self.exercise.initial_proof_state
         if proof_state:
             goal = proof_state.goals[0]
@@ -853,7 +854,7 @@ class Coordinator(QObject):
         self.emw.displayed_proof_step = copy(self.proof_step)
         self.proof_step = ProofStep.next_(self.lean_file.current_proof_step,
                                           self.lean_file.target_idx)
-
+        self.proof_step.set_parent_goal_node(self.proof_tree.current_goal_node)
         self.proof_step_updated.emit()  # Received in auto_test
 
     @Slot()
@@ -927,12 +928,13 @@ class Coordinator(QObject):
                 self.abort_process()
                 return
 
-        self.proof_step.proof_state = proof_state
+        self.proof_step.proof_state = proof_state  # FIXME
 
         if not self.proof_step.is_error():
             if not self.proof_step.is_history_move():
                 log.debug("     Storing proof step in lean_file info")
                 self.lean_file.state_info_attach(proof_step=self.proof_step)
+                self.proof_tree.process_new_proof_step(self.proof_step)
 
             # ─────── Check for new goals ─────── #
             delta = self.lean_file.delta_goals_count
@@ -944,10 +946,10 @@ class Coordinator(QObject):
         # ─────── Tag and sort new goal ─────── #
         if self.logically_previous_proof_step:
             log.info("** Comparing new goal with previous one **")
-            # Fixme: not when undoing history ?
+            # Fixme: not when undoing history ? Move to ProofTree
             new_goal: Goal = self.proof_step.goal
-            previous_goal = self.logically_previous_proof_step.goal
-            Goal.compare(new_goal, previous_goal)  # Set tags
+            # previous_goal = self.logically_previous_proof_step.goal
+            # Goal.compare(new_goal, previous_goal)  # Set tags
             used_properties = self.proof_step.used_properties()
             new_goal.mark_used_properties(used_properties)
 

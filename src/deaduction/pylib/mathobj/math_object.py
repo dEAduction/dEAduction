@@ -1429,6 +1429,11 @@ MathObject.NO_MORE_GOALS = MathObject(node="NO_MORE_GOAL",
                                       children=[],
                                       math_type=None)
 
+MathObject.CURRENT_GOAL_SOLVED = MathObject(node="CURRENT_GOAL_SOLVED",
+                                            info={},
+                                            children=[],
+                                            math_type=None)
+
 MathObject.PROP = MathObject(node="PROP",
                              info={},
                              children=[],

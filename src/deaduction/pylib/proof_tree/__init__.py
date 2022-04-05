@@ -22,5 +22,5 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-# from .proof_tree import ProofTree
+from .proof_tree import ProofTree
 

@@ -911,6 +911,8 @@ def raw_latex_shape_from_specific_nodes(math_object, negate=False):
     display = [display_error(_("unknown object"))]
     if node == "NO_MORE_GOAL":
         display = _("All goals reached!")
+    elif node == "CURRENT_GOAL_SOLVED":
+        display = _("Current goal solved")
     elif node == "APPLICATION":
         # This one returns a shape, to handle supplementary children
         display = raw_latex_shape_from_application(math_object, negate)

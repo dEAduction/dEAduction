@@ -328,6 +328,12 @@ class ProofStep:
                 if imminent_new_node is not ProofStep.initial_proof_node:
                     self.imminent_new_node = imminent_new_node
 
+    def set_children_goal_nodes(self, goal_nodes):
+        self.children_goal_nodes = goal_nodes
+
+    def set_parent_goal_node(self, goal_node):
+        self.parent_goal_node = goal_node
+
     ##############
     # Properties #
     @property
