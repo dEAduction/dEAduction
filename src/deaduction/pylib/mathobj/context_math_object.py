@@ -62,10 +62,10 @@ class ContextMathObject(MathObject):
         self.child_context_math_object = None
 
         # Tags
-        self.is_new_ = False  # FIXME
-        self.is_modified_ = False  # FIXME
+        self.is_new_ = False  # FIXME: obsolete
+        self.is_modified_ = False  # FIXME: obsolete
         self.has_been_used_in_proof = False  # TODO: implement
-        self.is_hidden = False
+        self.is_hidden = False # TODO
         # log.debug(f"Creating ContextMathPObject {self.to_display()},")
                   # f"dummy vars = "
                   # f"{[var.to_display() for var in self.bound_vars]}")
@@ -90,6 +90,9 @@ class ContextMathObject(MathObject):
     def copy_tags(self, other):
         self.has_been_used_in_proof = other.has_been_used_in_proof
         self.is_hidden = other.is_hidden
+
+    def remove_future_info(self):
+        self.child_context_math_object = None
 
     def raw_latex_shape(self, negate=False, text_depth=0):
         """

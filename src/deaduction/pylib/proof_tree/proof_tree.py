@@ -198,6 +198,11 @@ class GoalNode:
             self._html_msg = _("Proof of {}").format(html_target)
             return self._msg
 
+        elif self.goal.target is MathObject.NO_MORE_GOALS:
+            self._msg = self.goal.target.math_type.to_display(format_="utf8")
+            self._html_msg = _("Goal!")
+            return self._msg
+
         else:  # TODO: refine this, taking into account auxiliary goal
             utf8_target = self.goal.target.math_type.to_display(format_="utf8")
             html_target = self.goal.target.math_type.to_display(format_="html")
@@ -241,7 +246,10 @@ class GoalNode:
         goal_node = proof_step.parent_goal_node
         goal = deepcopy(goal_node.goal)
         goal.target.math_type = MathObject.CURRENT_GOAL_SOLVED
-        return cls(proof_step, goal, is_solved=True)
+        goal_node = cls(proof_step, goal, is_solved=True)
+        goal_node._msg = goal.target.math_type.to_display(format_="utf8")
+        goal_node._html_msg = _("Goal!")
+        return goal_node
 
     def total_degree(self):
         """
@@ -264,10 +272,22 @@ class GoalNode:
             main_str += str(child) + separator
         return main_str
 
-# class GoalRoot(GoalNode):
-#     def __init__(self, initial_proof_state: Optional[ProofState]):
-#         super().__init__(parent=None)
-#         self.proof_state = initial_proof_state
+    def prune(self, proof_step_nb):
+        """
+        Remove all info posterior to proof_step_number in the subtree under
+        self.
+        """
+        proof_step = self.child_proof_step
+        if not proof_step:
+            return
+        if proof_step.pf_nb <= proof_step_nb:
+            # Keep this one, prune children
+            for child in proof_step.children_goal_nodes:
+                child.prune(proof_step_nb)
+        else:
+            # Remove!
+            self.child_proof_step = None
+            self.goal.remove_future_info()
 
 
 class ProofTree:
@@ -296,6 +316,9 @@ class ProofTree:
     def set_current_goal_solved(self):
         self.unsolved_goal_nodes.pop(0)
 
+    def set_unsolved_goals(self, goal_nodes):
+        self.unsolved_goal_nodes = goal_nodes
+
     def move_next_node(self):
         self.unsolved_goal_nodes[0] = \
             self.unsolved_goal_nodes[0].children_goal_nodes[0]
@@ -320,6 +343,11 @@ class ProofTree:
             self.unsolved_goal_nodes.append(self.root_node)
             new_proof_step.set_children_goal_nodes([self.root_node])
             return
+
+        # ─────── Case of history move ─────── #
+        if self.current_goal_node.child_proof_step:
+            # Remove everything beyond parent_proof_step before proceeding
+            self.prune(self.current_goal_node.parent.pf_nb)
 
         # ─────── Connect new_proof_step to ProofTree ─────── #
         self.current_goal_node.set_child_proof_step(new_proof_step)
@@ -358,6 +386,16 @@ class ProofTree:
         # DEBUG
         print("ProofTree:")
         print(str(self))
+
+    def prune(self, proof_step_nb):
+        """
+        Remove from self all information posterior to the given proof_step.
+        This includes info on ContextMathObjects, so that self should be as
+        it was before.
+        Value proof_step_nb = 0 corresponds to initial goal (as this is the
+        step number of self.root_node.parent).
+        """
+        self.root_node.prune(proof_step_nb)
 
     def __str__(self):
         return str(self.root_node)

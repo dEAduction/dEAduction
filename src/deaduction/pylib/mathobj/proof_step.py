@@ -214,6 +214,7 @@ class ProofStep:
     _success_msg: str         = ''
     # AutoStep version, computed in Coordinator.update_proof_step():
     auto_step                 = None
+    unsolved_goal_nodes_after = None  # Copy of the proof_tree, for history move
 
     def __init__(self,
                  proof_nodes=None,
@@ -224,6 +225,7 @@ class ProofStep:
                  total_goals_counter=1,
                  proof_state=None,
                  history_nb=-1):
+        self.unsolved_goal_nodes_after = []
         self.property_counter    = property_counter
         self.current_goal_number = current_goal_number
         self.total_goals_counter = total_goals_counter

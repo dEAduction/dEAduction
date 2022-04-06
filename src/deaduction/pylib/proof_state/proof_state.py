@@ -136,6 +136,10 @@ class Goal:
         return [cmo for cmo in self.context if not
                 cmo.parent_context_math_object]
 
+    def remove_future_info(self):
+        for obj in self.context:
+            obj.remove_future_info()
+
     def math_object_from_name(self, name: str) -> MathObject:
         """
         Return the MathObject whose name is name.

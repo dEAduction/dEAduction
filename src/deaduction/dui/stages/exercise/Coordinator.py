@@ -484,21 +484,25 @@ class Coordinator(QObject):
                     proof_step = self.lean_file.next_proof_step
                     if proof_step:
                         await self.emw.simulate(proof_step)
-                    add_task(self.servint.history_redo)
+                    self.history_redo()
+                    # add_task(self.servint.history_redo)
 
                 elif emission.is_from(self.toolbar.undo_action.triggered):
                     self.proof_step.button_name = 'history_undo'
-                    add_task(self.servint.history_undo)
+                    # add_task(self.servint.history_undo)
+                    self.history_undo()
 
                 elif emission.is_from(self.toolbar.rewind.triggered):
                     self.proof_step.button_name = 'history_rewind'
-                    add_task(self.servint.history_rewind)
+                    # add_task(self.servint.history_rewind)
+                    self.history_rewind()
 
                 elif emission.is_from(self.proof_outline_window.history_goto):
                     history_nb = emission.args[0]
                     if history_nb != self.history_nb:
                         self.proof_step.button_name = 'history_goto'
-                        add_task(self.servint.history_goto, history_nb)
+                        # add_task(self.servint.history_goto, history_nb)
+                        self.history_goto(history_nb)
                     else:
                         self.unfreeze()
 
@@ -536,6 +540,63 @@ class Coordinator(QObject):
                     self.emw.freeze(False)
                     if self.ecw.action_apply_button:
                         self.ecw.action_apply_button.animateClick(msec=500)
+
+    ###################
+    # History actions #
+    ###################
+    def history_undo(self):
+        """
+        Go one step forward in history in the lean_file.
+        """
+        self.lean_file.undo()
+        self.process_history_move()
+
+    def history_redo(self):
+        """
+        Go one step backward in history in the lean_file.
+        """
+        self.lean_file.redo()
+        self.process_history_move()
+
+    def history_rewind(self):
+        """
+        Go to beginning of history in the lean_file.
+        """
+        self.lean_file.rewind()
+        self.process_history_move()
+
+    def history_goto(self, history_nb):
+        """
+        Move to a specific place in the history of the Lean file.
+        """
+        self.lean_file.goto(history_nb)
+        self.process_history_move()
+
+    def process_history_move(self):
+        """
+        Update self.proof_tree, including the unsolved goals pile.
+        Update interface, and prepare next proof_step.
+        """
+        proof_step = self.lean_file.current_proof_step
+        proof_state = proof_step.proof_state
+        self.proof_step.proof_state = proof_state
+        self.proof_step.children_goal_nodes = proof_step.children_goal_nodes
+        # Update unsolved goals pile
+        self.proof_tree.set_unsolved_goals(proof_step.unsolved_goal_nodes_after)
+
+        # ─────── Update proof_step ─────── #
+        # From here, self.proof_step is replaced by a new proof_step!
+        self.previous_proof_step = self.proof_step
+        self.update_proof_step()
+
+        # ─────── Update UI ─────── #
+        log.info("** Updating UI **")
+        self.unfreeze()
+        if self.proof_step.is_error():
+            self.emw.update_goal(None)
+        else:
+            self.emw.update_goal(proof_state.goals[0])
+
     ################################################
     # Actions that send code to Lean (via servint) #
     ################################################
@@ -793,10 +854,14 @@ class Coordinator(QObject):
         log.debug("Aborting process")
         if not self.servint.lean_file.history_at_beginning:
             # Abort and go back to last goal
-            self.server_queue.add_task(self.servint.history_delete)
+            # self.server_queue.add_task(self.servint.history_delete)
+            self.lean_file.delete()
+            self.unfreeze()
+            self.update_proof_step()
+            self.emw.update_goal(None)
+
         else:
             # Resent the whole code
-
             self.__initialize_exercise()
 
     @Slot()
@@ -851,7 +916,7 @@ class Coordinator(QObject):
                                                             emw=self.emw)
 
         # Create next proof_step
-        self.emw.displayed_proof_step = copy(self.proof_step)
+        self.emw.displayed_proof_step = copy(self.proof_step)  # FIXME
         self.proof_step = ProofStep.next_(self.lean_file.current_proof_step,
                                           self.lean_file.target_idx)
         self.proof_step.set_parent_goal_node(self.proof_tree.current_goal_node)
@@ -935,6 +1000,8 @@ class Coordinator(QObject):
                 log.debug("     Storing proof step in lean_file info")
                 self.lean_file.state_info_attach(proof_step=self.proof_step)
                 self.proof_tree.process_new_proof_step(self.proof_step)
+                self.proof_step.unsolved_goal_nodes_after = \
+                    copy(self.proof_tree.unsolved_goal_nodes)
 
             # ─────── Check for new goals ─────── # FIXME
             delta = self.lean_file.delta_goals_count
