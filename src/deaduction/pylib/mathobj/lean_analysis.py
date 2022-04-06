@@ -126,7 +126,7 @@ class LeanEntryVisitor(NodeVisitor):
         T[1] a dictionary containing pertinent information
     """
 
-    def visit_ENTRY(self, node, visited_children):
+    def visit_ENTRY(self, node, visited_children) -> ContextMathObject:
         """
         Create a global_var corresponding to the entry
         According to the rules, Entry has three children

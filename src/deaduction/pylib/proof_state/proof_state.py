@@ -97,14 +97,14 @@ class Goal:
         # Put back "¿¿¿" and remove '\n', getting rid of the title line
         # ("context:")
         lines = ['¿¿¿' + item.replace('\n', '') for item in lines[1:]]
-        context = []
+        context: [ContextMathObject] = []
         for math_obj_string in lines:
             if math_obj_string.startswith("context:"):
                 continue
             else:
                 # Applying the parser
                 tree = lean_expr_with_type_grammar.parse(math_obj_string)
-                math_object = LeanEntryVisitor().visit(tree)
+                math_object:ContextMathObject = LeanEntryVisitor().visit(tree)
                 context.append(math_object)
 
         tree = lean_expr_with_type_grammar.parse(target_analysis)
@@ -126,6 +126,15 @@ class Goal:
     def context_props(self) -> [ContextMathObject]:
         props = [cmo for cmo in self.context if cmo.math_type.is_prop()]
         return props
+
+    @property
+    def new_context(self):
+        """
+        Return objects and props of the context that are new, i.e. they have
+        no parent.
+        """
+        return [cmo for cmo in self.context if not
+                cmo.parent_context_math_object]
 
     def math_object_from_name(self, name: str) -> MathObject:
         """

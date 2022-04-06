@@ -936,7 +936,7 @@ class Coordinator(QObject):
                 self.lean_file.state_info_attach(proof_step=self.proof_step)
                 self.proof_tree.process_new_proof_step(self.proof_step)
 
-            # ─────── Check for new goals ─────── #
+            # ─────── Check for new goals ─────── # FIXME
             delta = self.lean_file.delta_goals_count
             self.proof_step.delta_goals_count = delta
             self.proof_step.update_goals()

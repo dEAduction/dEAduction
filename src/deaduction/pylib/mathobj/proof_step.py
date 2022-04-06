@@ -390,6 +390,11 @@ class ProofStep:
         if self.new_goals:
             return self.new_goals[-1]
 
+    @property
+    def main_hypo(self):
+        if self.selection:
+            return self.selection[0]
+
     def is_node(self):
         """
         True if self is a proof node (a new goal has appeared).

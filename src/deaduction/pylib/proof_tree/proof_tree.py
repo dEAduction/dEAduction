@@ -28,9 +28,12 @@ This file is part of d∃∀duction.
 
 from copy import deepcopy
 from typing import Optional
+import logging
 
 from deaduction.pylib.proof_state import Goal, ProofState
 from deaduction.pylib.mathobj import ProofStep, MathObject
+log = logging.getLogger(__name__)
+global _
 
 
 class GoalNode:
@@ -38,6 +41,11 @@ class GoalNode:
     A class for storing a node of the proof tree corresponding to one
     ProofState's goal. It may have as a child a ProofStep instance,
     which itself has children GoalNode instances.
+
+    Methods include test to know if GoalNode was obtained as a result of a
+    proof by case, or proof of conjunction, and so on. These tests should not
+    be based on user actions, since this would forbid to use them in case of
+    direct Lean code.
     """
 
     def __init__(self, parent: Optional[ProofStep] = None, goal: Goal = None,
@@ -46,6 +54,11 @@ class GoalNode:
         self.goal = goal
         self.child_proof_step = child_proof_step
         self._is_solved = is_solved
+        self._msg = None
+        self._html_msg = None
+        self._is_by_cases = None
+        self._is_conjunction = None  # Beware that this refers to parent_node!!
+        self._is_double_implication = None
 
     @property
     def children_goal_nodes(self):
@@ -61,6 +74,147 @@ class GoalNode:
         else:
             return None
 
+    @property
+    def is_fork_node(self):
+        return len(self.children_goal_nodes) > 1
+
+    @property
+    def brother_number(self):
+        if self.parent_node:
+            if self in self.parent_node.children_goal_nodes:
+                return self.parent_node.children_goal_nodes.index(self)
+
+    @property
+    def brother(self):
+        if self.brother_number is not None:
+            return self.parent_node.children_goal_nodes[1-self.brother_number]
+
+    @property
+    def target_has_changed(self):
+        if self.parent_node:
+            return (self.parent_node.goal.target.math_type !=
+                    self.goal.target.math_type)
+
+    @property
+    def is_by_cases(self):
+        """
+        True iff this node is one of the brother nodes of a proof by cases.
+        Return self._is_by_cases if this has been set explicitly, else try
+        to guess by comparing targets and contexts with previous goal.
+        Precisely, self is by cases if targets equal parent's target,
+        and new_context has exactly one more element, and this is also true
+        for the brother.
+        """
+        if self._is_by_cases is not None:
+            return self._is_by_cases
+        parent_node = self.parent_node
+        if not parent_node or not parent_node.is_fork_node:
+            return False
+        # Now self has a brother
+        tests = [not self.target_has_changed,
+                 (not self.goal.context) or len(self.goal.new_context) == 1,
+                 not self.brother.target_has_changed,
+                 (not self.brother.goal.context) or
+                 len(self.brother.goal.new_context) == 1,
+                 ]
+        self._is_by_cases = all(tests)
+        return self._is_by_cases
+
+    @property
+    def is_conjunction(self):
+        """
+        Self is the node of a conjunction proof iff its parent's target is a
+        conjunction whose children contain self's target.
+        """
+        if self._is_conjunction is not None:
+            return self._is_conjunction
+        parent_node = self.parent_node
+        if not parent_node or not parent_node.is_fork_node:
+            return False
+        target = self.goal.target.math_type
+        parent_target = parent_node.goal.target.math_type
+        test_and = parent_target.is_and(is_math_type=True, implicit=True)
+        if test_and and not parent_target.is_and(is_math_type=True):
+            parent_target = MathObject.last_rw_object  # "Implicit and" case
+        tests = [parent_target.is_and(is_math_type=True),
+                 target in parent_target.children]
+        self._is_conjunction = all(tests)
+        return self._is_conjunction
+
+    @property
+    def is_double_implication(self):
+        """
+        Self is the node of a conjunction proof iff its parent's target is a
+        conjunction whose children contain self's target.
+        """
+        if self._is_double_implication is not None:
+            return self._is_double_implication
+        parent_node = self.parent_node
+        if not parent_node or not parent_node.is_fork_node:
+            return False
+        target = self.goal.target.math_type
+        parent_target = parent_node.goal.target.math_type
+        tests = [parent_target.is_iff(is_math_type=True),
+                 target in parent_target.children]
+        self._is_double_implication = all(tests)
+        return self._is_double_implication
+
+    @property
+    def msg(self):
+        """
+        Compute a msg to be displayed as the header of the proof below this
+        node. Generic msg is "Proof of <target>", but a different msg is
+        displayed e.g. for proof by cases.
+        """
+        if self._msg:
+            return self._msg
+        elif self.is_by_cases:
+            case_nb = self.brother_number
+            case_txt_nb = _("First case") if case_nb == 0 else _("Second case")
+            self._html_msg = case_nb
+            # For second case we may not have the context...
+            hypo = None
+            if self.goal.new_context:
+                hypo = self.goal.new_context[0].math_type
+            if hypo:
+                hypo_txt = hypo.to_display(format_="utf8")
+                self._msg = (case_txt_nb + _(":") + " " +
+                             _("assuming {}").format(hypo_txt))
+            else:  # Do not assign self._msg since we may get hypo next time
+                return case_txt_nb
+            return self._msg
+        elif self.is_conjunction:
+            target_nb = self.brother_number
+            self._msg = (_("Proof of first property") if target_nb == 0
+                         else _("Proof of second property"))
+            html_target = self.goal.target.math_type.to_display(format_="html")
+            self._html_msg = _("Proof of {}").format(html_target)
+            return self._msg
+        elif self.is_double_implication:
+            target_nb = self.brother_number
+            self._msg = (_("Proof of first implication") if target_nb == 0
+                         else _("Proof of second implication"))
+            html_target = self.goal.target.math_type.to_display(format_="html")
+            self._html_msg = _("Proof of {}").format(html_target)
+            return self._msg
+
+        else:  # TODO: refine this, taking into account auxiliary goal
+            utf8_target = self.goal.target.math_type.to_display(format_="utf8")
+            html_target = self.goal.target.math_type.to_display(format_="html")
+            self._msg = _("Proof of {}").format(utf8_target)
+            self._html_msg = _("Proof of {}").format(html_target)
+            return self._msg
+
+    def html_msg(self):
+        if self._html_msg:
+            return self._html_msg
+        else: # Compute msg since this also compute html_msg, and try again...
+            txt = self.msg
+            if self._html_msg:
+                return self._html_msg
+
+        return self.msg
+
     def set_goal(self, goal):
         self.goal = goal
 
@@ -73,8 +227,9 @@ class GoalNode:
 
         if self._is_solved:
             return True
-        elif self.children_goal_nodes():
-            return all([child.is_solved() for child in self.children_goal_nodes()])
+        elif self.children_goal_nodes:
+            return all([child.is_solved()
+                        for child in self.children_goal_nodes])
         else:
             return False
 
@@ -88,27 +243,23 @@ class GoalNode:
         goal.target.math_type = MathObject.CURRENT_GOAL_SOLVED
         return cls(proof_step, goal, is_solved=True)
 
-    def is_bifurcation_node(self):
-        return len(self.children_goal_nodes)>1
-
-    def ramification_degree(self):
+    def total_degree(self):
         """
         Number of bifurcations from root node to self in ProofTree.
         """
         if not self.parent_node:
             return 0
         parent = self.parent_node
-        degree = self.parent_node.ramification_degree()
-        if parent.is_bifurcation_node():
-            degree += 1
-        return degree
+        parent_degree = self.parent_node.total_degree()
+        if parent.is_fork_node:
+            parent_degree += 1
+        return parent_degree
 
     def __str__(self):
-        indent = " |" * self.ramification_degree()
-        separator = indent + " |___" + "\n" if self.is_bifurcation_node() \
+        indent = " |" * self.total_degree()
+        separator = indent + " |___" + "\n" if self.is_fork_node \
             else ""
-        main_str = indent + self.goal.target.math_type.to_display(
-            format_="utf8") + "\n"
+        main_str = indent + self.msg + "\n"
         for child in self.children_goal_nodes:
             main_str += str(child) + separator
         return main_str
