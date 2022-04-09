@@ -59,6 +59,30 @@ class GoalNode:
         self._is_by_cases = None
         self._is_conjunction = None  # Beware that this refers to parent_node!!
         self._is_double_implication = None
+        self._is_intro = None
+        self._is_pure_context = None
+
+    @classmethod
+    def root_node(cls, parent_proof_step, initial_goal):
+        root_node = cls(parent_proof_step, initial_goal)
+        root_node._is_intro = False
+        root_node._is_conjunction = False
+        root_node._is_double_implication = False
+        root_node._is_by_cases = False
+        return root_node
+
+    @classmethod
+    def goal_solved(cls, proof_step):
+        """
+        Return a copy of goal_node where target is a msg that goal is solved.
+        """
+        goal_node = proof_step.parent_goal_node
+        goal = deepcopy(goal_node.goal)
+        goal.target.math_type = MathObject.CURRENT_GOAL_SOLVED
+        goal_node = cls(proof_step, goal, is_solved=True)
+        goal_node._msg = goal.target.math_type.to_display(format_="utf8")
+        goal_node._html_msg = _("Goal!")
+        return goal_node
 
     @property
     def children_goal_nodes(self):
@@ -160,6 +184,42 @@ class GoalNode:
         return self._is_double_implication
 
     @property
+    def is_intro(self):
+        """
+        True if self corresponds to introduction of objects (in order to
+        prove a universal property or an implication). This is characterised
+        by
+        - parent is not a fork node,
+        - new context objects
+        - and new target which is contained in the previous target.
+        """
+        if self._is_intro is not None:
+            return self._is_intro
+        parent_node = self.parent_node
+        if not parent_node:
+            return False
+        tests = [not parent_node.is_fork_node,
+                 self.goal.new_context,
+                 self.goal.target in parent_node.goal.target]
+        return all(tests)
+
+    @property
+    def is_pure_context(self):
+        """
+        True if parent is not a fork node and target has not changed.
+        """
+        if self._is_pure_context is not None:
+            return self._is_pure_context
+        parent_node = self.parent_node
+        if not parent_node:
+            return False
+        tests = [not parent_node.is_fork_node,
+                 self.goal.new_context,
+                 not self.target_has_changed
+                 ]
+        return all(tests)
+
+    @property
     def msg(self):
         """
         Compute a msg to be displayed as the header of the proof below this
@@ -237,19 +297,6 @@ class GoalNode:
                         for child in self.children_goal_nodes])
         else:
             return False
-
-    @classmethod
-    def goal_solved(cls, proof_step):
-        """
-        Return a copy of goal_node where target is a msg that goal is solved.
-        """
-        goal_node = proof_step.parent_goal_node
-        goal = deepcopy(goal_node.goal)
-        goal.target.math_type = MathObject.CURRENT_GOAL_SOLVED
-        goal_node = cls(proof_step, goal, is_solved=True)
-        goal_node._msg = goal.target.math_type.to_display(format_="utf8")
-        goal_node._html_msg = _("Goal!")
-        return goal_node
 
     def total_degree(self):
         """
@@ -338,8 +385,8 @@ class ProofTree:
 
         # ─────── Very first step ─────── #
         if not self.root_node:
-            self.root_node = GoalNode(parent=new_proof_step,
-                                      goal=new_proof_state.goals[0])
+            self.root_node = GoalNode.root_node(parent=new_proof_step,
+                                                goal=new_proof_state.goals[0])
             self.unsolved_goal_nodes.append(self.root_node)
             new_proof_step.set_children_goal_nodes([self.root_node])
             return
@@ -366,7 +413,7 @@ class ProofTree:
             children = [next_goal_node]
             new_proof_step.set_children_goal_nodes(children)
             self.move_next_node()
-        else:  # Bifurcation
+        else:  # Fork node: two sub-goals
             assert delta_goal == 1
             next_goal_node = GoalNode(parent=new_proof_step, goal=new_goal)
             other_goal = new_proof_state.goals[1]

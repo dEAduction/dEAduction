@@ -66,6 +66,41 @@ class DisclosureTriangle(QLabel):
         self.slot()
 
 
+class Object(QLabel):
+    """
+    Display a MathObject which is not a property.
+    """
+    def __init__(self, math_object):
+        super().__init__()
+        txt = math_object.to_display(format_="html")
+        self.setTextFormat(Qt.RichText)
+        self.setText(txt)
+
+
+class Property(QLabel):
+    """
+    Display a MathObject which is a property.
+    """
+
+    def __init__(self, math_object):
+        super().__init__()
+        txt = math_object.to_display(format_="html")
+        self.setTextFormat(Qt.RichText)
+        self.setText(txt)
+
+
+class OperatorProperty(QLabel):
+    """
+    Display a MathObject which is a property.
+    """
+
+    def __init__(self, math_object):
+        super().__init__()
+        txt = math_object.to_display(format_="html")
+        self.setTextFormat(Qt.RichText)
+        self.setText(txt)
+
+
 class ProofStepBlock(QWidget):
     """
     This widget is responsible for displaying one step of a proof, involving
@@ -154,7 +189,7 @@ class GoalBlockContent(QWidget):
 
 class GoalBlock(QWidget):
     """
-    This widget displays a proof block, with a title which indicates
+    This widget displays a proof block, with a target_msg which indicates
     what is proved. The display has two versions, hidden or disclosed.
     """
 
@@ -243,6 +278,7 @@ class GraphicProof(QScrollArea):
         self.setWindowTitle("Proof Tree")
 
     def add_child(self, child: Union[GoalBlock, ProofStepBlock]):
+        # FIXME: remove this
         # if self.current_goal_block.is_solved():
         #     pass
         self.widget().add_child(child)
@@ -271,8 +307,8 @@ def main():
     proof.show()
 
     proof.add_child(QLabel("f surjective"))
-    proof.add_child(QLabel("A ⊂ Y"))
-    proof.add_child(QLabel("A' ⊂ Y"))
+    proof.add_child(QLabel("A: subset of Y"))
+    proof.add_child(QLabel("A': subset of Y"))
     proof.add_child(QLabel("f⁻¹(A) ⊂ f⁻¹(A')"))
     child1 = GoalBlock(title="Proof of A ⊂ A'", cqfd=True)
     proof.add_child(child1)
