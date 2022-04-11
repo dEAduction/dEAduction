@@ -40,16 +40,19 @@ class GoalNode:
     """
     A class for storing a node of the proof tree corresponding to one
     ProofState's goal. It may have as a child a ProofStep instance,
-    which itself has children GoalNode instances.
+    which itself has 1 or 2 children which are GoalNode instances.
 
     Methods include test to know if GoalNode was obtained as a result of a
     proof by case, or proof of conjunction, and so on. These tests should not
     be based on user actions, since this would forbid to use them in case of
     direct Lean code.
     """
+    goal_nb = 0
 
     def __init__(self, parent: Optional[ProofStep] = None, goal: Goal = None,
                  child_proof_step=None, is_solved=False):
+        self.goal_nb = GoalNode.goal_nb
+        GoalNode.goal_nb += 1
         self.parent = parent
         self.goal = goal
         self.child_proof_step = child_proof_step

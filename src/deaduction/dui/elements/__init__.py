@@ -55,7 +55,7 @@ from .recent_courses_widgets import (
 from .config_window import ConfigMainWindow
 
 from .proof_outline_widget import ProofOutlineWindow
-from .proof_tree_widget import (ProofTreeWindow, GoalBlock, IntroBlock,
+from .proof_tree_widget import (ProofTreeWindow, WidgetGoalBlock, IntroWGB,
                                 ByCasesBlock,
                                 PureContextBlock)
 

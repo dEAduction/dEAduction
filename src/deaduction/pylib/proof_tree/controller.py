@@ -26,18 +26,22 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from deaduction.dui.elements import (ProofTreeWindow, GoalBlock, IntroBlock,
+from deaduction.dui.elements import (ProofTreeWindow, WidgetGoalBlock, IntroWGB,
                                      ByCasesBlock, PureContextBlock)
 from .proof_tree import ProofTree
 
 
-class Controller():
+class Controller:
     """
     A class to create and update a ProofTreeWindow that reflects a ProofTree.
     """
+
     def __init__(self, proof_tree):
         self.proof_tree = proof_tree
         self.proof_tree_window = ProofTreeWindow()
+        self.update()
 
+    def update(self):
+        pass
 
 

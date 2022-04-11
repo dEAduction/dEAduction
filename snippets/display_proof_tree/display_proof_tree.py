@@ -143,7 +143,7 @@ class ProofStepBlock(QWidget):
 
 class GoalBlockContent(QWidget):
     """
-    This widget draws the content of some GoalBlock.
+    This widget draws the content of some WidgetGoalBlock.
     """
 
     # FIXME: bad frame line, add an empty widget with width = title_width
@@ -268,7 +268,7 @@ class GoalBlock(QWidget):
 class GraphicProof(QScrollArea):
     """
     This class holds the main proof tree window.
-    Its widget is a GoalBlock that holds the initial goal of the proof.
+    Its widget is a WidgetGoalBlock that holds the initial goal of the proof.
     """
     def __init__(self, title):
         super().__init__()
@@ -282,7 +282,7 @@ class GraphicProof(QScrollArea):
         # if self.current_goal_block.is_solved():
         #     pass
         self.widget().add_child(child)
-        # if isinstance(child, GoalBlock):
+        # if isinstance(child, WidgetGoalBlock):
         #     self.current_goal_block = child  # Fixme
 
     @classmethod
