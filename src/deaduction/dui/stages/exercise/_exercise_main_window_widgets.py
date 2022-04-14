@@ -603,6 +603,10 @@ class ExerciseToolBar(QToolBar):
                 QIcon(str((icons_dir / 'proof_outline.png').resolve())),
             _('Toggle proof outline'), self)
 
+        self.toggle_proof_tree = QAction(
+                QIcon(str((icons_dir / 'proof_tree.png').resolve())),
+            _('Toggle proof tree'), self)
+
         self.toggle_lean_editor_action = QAction(
                 QIcon(str((icons_dir / 'lean_editor.png').resolve())),
                 _('Toggle L∃∀N'), self)
@@ -611,6 +615,7 @@ class ExerciseToolBar(QToolBar):
         self.addAction(self.undo_action)
         self.addAction(self.redo_action)
         self.addAction(self.toggle_proof_outline_action)
+        self.addAction(self.toggle_proof_tree)
         self.addAction(self.toggle_lean_editor_action)
         self.undo_action.setShortcut(QKeySequence.Undo)
         self.redo_action.setShortcut(QKeySequence.Redo)

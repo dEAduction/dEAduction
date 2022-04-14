@@ -116,6 +116,7 @@ class Coordinator(QObject):
 
         # Information
         self.proof_step: Optional[ProofStep]          = None  # Set later
+        self.proof_tree: Optional[ProofTree]          = None
         self.previous_proof_step: Optional[ProofStep] = None
         self.journal                                  = Journal()
 
@@ -156,6 +157,7 @@ class Coordinator(QObject):
         #  (so that user may start thinking, even if UI stay frozen for a
         #  while.)
         self.proof_tree = ProofTree()
+        self.emw.proof_tree_controller.set_proof_tree(self.proof_tree)
         self.proof_step = ProofStep()
         proof_state = self.exercise.initial_proof_state
         if proof_state:

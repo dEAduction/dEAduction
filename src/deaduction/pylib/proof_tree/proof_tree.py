@@ -63,6 +63,7 @@ class GoalNode:
         self._is_conjunction = None  # Beware that this refers to parent_node!!
         self._is_double_implication = None
         self._is_intro = None
+        self._is_implies = None
         self._is_pure_context = None
 
     @classmethod
@@ -189,21 +190,53 @@ class GoalNode:
     @property
     def is_intro(self):
         """
-        True if self corresponds to introduction of objects (in order to
-        prove a universal property or an implication). This is characterised
+        True if self corresponds to introduction of objects in order to
+        prove a universal property (but NOT an implication). This is
+        characterised
         by
         - parent is not a fork node,
         - new context objects
         - and new target which is contained in the previous target.
         """
+        # FIXME: case of implicit forall
         if self._is_intro is not None:
             return self._is_intro
         parent_node = self.parent_node
         if not parent_node:
             return False
+        target = self.goal.target.math_type
+        parent_target = self.parent_node.goal.target.math_type
         tests = [not parent_node.is_fork_node,
                  self.goal.new_context,
-                 self.goal.target in parent_node.goal.target]
+                 parent_target.is_for_all(implicit=True),
+                 parent_target.contains(target)]  # fixme: implicit
+        return all(tests)
+
+    @property
+    def is_implies(self):
+        """
+        True if self corresponds to introduction of objects to prove an
+        implication. This is characterised
+        by
+        - parent is not a fork node,
+        - new context objects
+        - TODO: old target is (maybe implicit) implication
+        - and new target which is contained in the previous target
+        or self has no parent_node (is root_node).
+        """
+        # FIXME: case of implicit implication
+        if self._is_implies is not None:
+            return self._is_implies
+
+        parent_node = self.parent_node
+        if not parent_node:
+            return True  # Self is root_node.
+        target = self.goal.target.math_type
+        parent_target = self.parent_node.goal.target.math_type
+        tests = [not parent_node.is_fork_node,
+                 self.goal.new_context,
+                 parent_target.is_implication(implicit=True),
+                 parent_target.contains(target)]
         return all(tests)
 
     @property
@@ -216,11 +249,18 @@ class GoalNode:
         parent_node = self.parent_node
         if not parent_node:
             return False
+        selected_objects = self.parent.selection
         tests = [not parent_node.is_fork_node,
                  self.goal.new_context,
-                 not self.target_has_changed
-                 ]
-        return all(tests)
+                 not self.target_has_changed,
+                 selected_objects]
+        if all(tests):
+            conclusions = self.goal.new_context
+            operator = selected_objects[0]
+            premises = selected_objects[1:]
+            return premises, operator, conclusions
+        else:
+            return False
 
     @property
     def msg(self):
@@ -357,10 +397,12 @@ class ProofTree:
         self.root_node = GoalNode(parent=None, goal=initial_goal) \
             if initial_goal else None
         self.unsolved_goal_nodes = [self.root_node] if self.root_node else []
+        self.previous_goal_node = None
 
     @property
     def current_goal_node(self):
-        return self.unsolved_goal_nodes[0]
+        if self.unsolved_goal_nodes:
+            return self.unsolved_goal_nodes[0]
 
     # ─────── Handling unsolved_goal_nodes ─────── #
     def set_current_goal_solved(self):
@@ -373,7 +415,7 @@ class ProofTree:
         self.unsolved_goal_nodes[0] = \
             self.unsolved_goal_nodes[0].children_goal_nodes[0]
 
-    def set_bifurcation(self, new_goal_node):
+    def set_fork_node(self, new_goal_node):
         self.unsolved_goal_nodes.insert(1, new_goal_node)
 
     def process_new_proof_step(self, new_proof_step: ProofStep):
@@ -382,14 +424,14 @@ class ProofTree:
         First call creates the main_goal. The next proof_step should be created
         after this is called, with current_goal_node as a parent.
         """
-
+        self.previous_goal_node = self.current_goal_node
         new_proof_state = new_proof_step.proof_state
         assert new_proof_state is not None
 
         # ─────── Very first step ─────── #
         if not self.root_node:
-            self.root_node = GoalNode.root_node(parent=new_proof_step,
-                                                goal=new_proof_state.goals[0])
+            self.root_node = GoalNode.root_node(new_proof_step,
+                                                new_proof_state.goals[0])
             self.unsolved_goal_nodes.append(self.root_node)
             new_proof_step.set_children_goal_nodes([self.root_node])
             return
@@ -423,7 +465,7 @@ class ProofTree:
             other_goal_node = GoalNode(parent=new_proof_step, goal=other_goal)
             children = [next_goal_node, other_goal_node]
             new_proof_step.set_children_goal_nodes(children)
-            self.set_bifurcation(other_goal_node)
+            self.set_fork_node(other_goal_node)
             self.move_next_node()
 
         # ─────── Compare with previous state and tag properties ─────── #

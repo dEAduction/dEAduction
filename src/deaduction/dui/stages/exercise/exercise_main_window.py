@@ -52,7 +52,8 @@ from deaduction.dui.elements            import (ActionButton,
                                                 MenuBar,
                                                 MenuBarAction,
                                                 ConfigMainWindow,
-                                                ProofOutlineWindow)
+                                                ProofOutlineWindow,
+                                                ProofTreeController)
 from ._exercise_main_window_widgets     import (ExerciseCentralWidget,
                                                 ExerciseStatusBar,
                                                 ExerciseToolBar,
@@ -160,6 +161,7 @@ class ExerciseMainWindow(QMainWindow):
         self.exercise_toolbar              = ExerciseToolBar()
         self.global_toolbar       = GlobalToolbar()
         self.proof_outline_window = ProofOutlineWindow()
+        self.proof_tree_controller= ProofTreeController()
         self.statusBar            = ExerciseStatusBar(self)
         self.config_window        = None
 
@@ -209,6 +211,8 @@ class ExerciseMainWindow(QMainWindow):
                 self.lean_editor.toggle)
         self.exercise_toolbar.toggle_proof_outline_action.triggered.connect(
                 self.proof_outline_window.toggle)
+        self.exercise_toolbar.toggle_proof_tree.triggered.connect(
+                self.proof_tree_window.toggle)
         self.global_toolbar.change_exercise_action.triggered.connect(
                                                     self.change_exercise)
         self.global_toolbar.settings_action.triggered.connect(
@@ -250,6 +254,7 @@ class ExerciseMainWindow(QMainWindow):
         # Close children
         self.lean_editor.close()
         self.proof_outline_window.close()
+        self.proof_tree_window.close()
 
         # Save window geometry
         # FIXME: does not work
@@ -326,10 +331,9 @@ class ExerciseMainWindow(QMainWindow):
     ######################
     ######################
 
-    # @property
-    # def target_selected_by_default(self):  # Fixme: obsolete here
-    #     return cvars.get('functionality.target_selected_by_default', False) \
-    #             or self.test_mode or self.automatic_action
+    @property
+    def proof_tree_window(self):
+        return self.proof_tree_controller.proof_tree_window
 
     @property
     def target_selected(self):
@@ -764,6 +768,7 @@ class ExerciseMainWindow(QMainWindow):
         """
         # TODO: tags will be incorporated in ContextMathObjects
         log.info("Updating UI")
+        self.proof_tree_controller.update()
         self.manage_msgs(self.displayed_proof_step)
         self.user_input = []
 
