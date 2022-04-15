@@ -58,7 +58,13 @@ log = logging.getLogger(__name__)
 #
 #    # Load configuration file
 if FACTORY_CONFIG_FILE_PATH.exists():
+    # print('path exists')
     __dict_factory.update(toml.load(str(FACTORY_CONFIG_FILE_PATH)))
+    # from pprint import pprint
+    # pprint(__dict_factory)
+else:
+    # breakpoint()
+    print('path DOES NOT exist')
 
 if USER_CONFIG_FILE_PATH.exists():
     __dict_user.update(toml.load(str(USER_CONFIG_FILE_PATH)))
