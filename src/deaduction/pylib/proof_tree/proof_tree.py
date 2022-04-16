@@ -208,7 +208,7 @@ class GoalNode:
         parent_target = self.parent_node.goal.target.math_type
         tests = [not parent_node.is_fork_node,
                  self.goal.new_context,
-                 parent_target.is_for_all(implicit=True),
+                 parent_target.is_for_all(is_math_type=True, implicit=True),
                  parent_target.contains(target)]  # fixme: implicit
         return all(tests)
 
@@ -235,7 +235,7 @@ class GoalNode:
         parent_target = self.parent_node.goal.target.math_type
         tests = [not parent_node.is_fork_node,
                  self.goal.new_context,
-                 parent_target.is_implication(implicit=True),
+                 parent_target.is_implication(is_math_type=True, implicit=True),
                  parent_target.contains(target)]
         return all(tests)
 
@@ -274,7 +274,7 @@ class GoalNode:
         elif self.is_by_cases:
             case_nb = self.brother_number
             case_txt_nb = _("First case") if case_nb == 0 else _("Second case")
-            self._html_msg = case_nb
+            self._html_msg = case_txt_nb
             # For second case we may not have the context...
             hypo = None
             if self.goal.new_context:
@@ -329,17 +329,23 @@ class GoalNode:
     def set_child_proof_step(self, proof_step):
         self.child_proof_step = proof_step
 
-    def is_solved(self):
+    def is_recursively_solved(self):
         """self is solved if it is explicitly solved, or it has children and
         they are all solved."""
 
         if self._is_solved:
             return True
         elif self.children_goal_nodes:
-            return all([child.is_solved()
+            return all([child.is_recursively_solved()
                         for child in self.children_goal_nodes])
         else:
             return False
+
+    def is_goal_solved(self):
+        """
+        True if self is a fake goal with target = "goal solved".
+        """
+        return self.goal.target.math_type == MathObject.CURRENT_GOAL_SOLVED
 
     def total_degree(self):
         """
