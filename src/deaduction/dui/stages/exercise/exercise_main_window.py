@@ -779,7 +779,6 @@ class ExerciseMainWindow(QMainWindow):
         # Here we do not use empty_current_selection since Widgets may have
         # been deleted, and anyway this is cosmetics since  widgets are
         # destroyed and re-created by "self.ecw.update_goal" just below
-        # if self.current_selection:  # Keep target selected only if no other sct
         self.target_selected = False
         self.current_selection = []
 

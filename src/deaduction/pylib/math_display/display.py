@@ -29,7 +29,8 @@ from .html_display import html_display
 from deaduction.pylib.math_display import latex_to_utf8, latex_to_lean
 
 
-def abstract_string_to_string(abstract_string: Union[list, str], format_) \
+def abstract_string_to_string(abstract_string: Union[list, str], format_,
+                              use_color=True) \
         -> str:
     """
     Turn an abstract string into a string in various formats.
@@ -45,7 +46,7 @@ def abstract_string_to_string(abstract_string: Union[list, str], format_) \
                          "'html'")
     # Concatenate and format:
     if format_ == 'html':
-        display = html_display(abstract_string)
+        display = html_display(abstract_string, use_color=use_color)
     elif format_ == 'utf8':
         display = utf8_display(abstract_string)
     elif format_ == 'lean':  # FIXME: should be adapted to Lean

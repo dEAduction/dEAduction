@@ -579,12 +579,14 @@ class Coordinator(QObject):
         Update self.proof_tree, including the unsolved goals pile.
         Update interface, and prepare next proof_step.
         """
-        proof_step = self.lean_file.current_proof_step
-        proof_state = proof_step.proof_state
+        historic_proof_step = self.lean_file.current_proof_step
+        proof_state = historic_proof_step.proof_state
         self.proof_step.proof_state = proof_state
-        self.proof_step.children_goal_nodes = proof_step.children_goal_nodes
+        self.proof_step.children_goal_nodes = \
+            historic_proof_step.children_goal_nodes
         # Update unsolved goals pile
-        self.proof_tree.set_unsolved_goals(proof_step.unsolved_goal_nodes_after)
+        self.proof_tree.set_unsolved_goals(
+            historic_proof_step.unsolved_goal_nodes_after)
 
         # ─────── Update proof_step ─────── #
         # From here, self.proof_step is replaced by a new proof_step!

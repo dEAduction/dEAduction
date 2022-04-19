@@ -201,16 +201,18 @@ class GoalNode:
         # FIXME: case of implicit forall
         if self._is_intro is not None:
             return self._is_intro
-        parent_node = self.parent_node
-        if not parent_node:
-            return False
-        target = self.goal.target.math_type
-        parent_target = self.parent_node.goal.target.math_type
-        tests = [not parent_node.is_fork_node,
-                 self.goal.new_context,
-                 parent_target.is_for_all(is_math_type=True, implicit=True),
-                 parent_target.contains(target)]  # fixme: implicit
-        return all(tests)
+        else:
+            return self.parent.is_intro_forall()
+        # parent_node = self.parent_node
+        # if not parent_node:
+        #     return False
+        # target = self.goal.target.math_type
+        # parent_target = self.parent_node.goal.target.math_type
+        # tests = [not parent_node.is_fork_node,
+        #          self.goal.new_context,
+        #          parent_target.is_for_all(is_math_type=True, implicit=True),
+        #          parent_target.contains(target)]  # fixme: implicit
+        # return all(tests)
 
     @property
     def is_implies(self):
@@ -227,6 +229,8 @@ class GoalNode:
         # FIXME: case of implicit implication
         if self._is_implies is not None:
             return self._is_implies
+        # else:
+        #     return self.parent.is_intro_implies()
 
         parent_node = self.parent_node
         if not parent_node:
@@ -238,6 +242,13 @@ class GoalNode:
                  parent_target.is_implication(is_math_type=True, implicit=True),
                  parent_target.contains(target)]
         return all(tests)
+
+    @property
+    def is_context_substitution(self):
+        # FIXME: the statement could be a rw theorem ;
+        test = (self.parent.is_definition()) or \
+               (self.parent.button_name == "equal" and self.parent.selection)
+        return test
 
     @property
     def is_pure_context(self):
@@ -262,66 +273,69 @@ class GoalNode:
         else:
             return False
 
-    @property
-    def msg(self):
+    def __msg(self, format_, use_color=True):
         """
         Compute a msg to be displayed as the header of the proof below this
         node. Generic msg is "Proof of <target>", but a different msg is
         displayed e.g. for proof by cases.
+        :param format_ : "html" or "utf8"
         """
         if self._msg:
             return self._msg
         elif self.is_by_cases:
             case_nb = self.brother_number
             case_txt_nb = _("First case") if case_nb == 0 else _("Second case")
-            self._html_msg = case_txt_nb
+            html_msg = case_txt_nb
             # For second case we may not have the context...
             hypo = None
             if self.goal.new_context:
                 hypo = self.goal.new_context[0].math_type
             if hypo:
                 hypo_txt = hypo.to_display(format_="utf8")
-                self._msg = (case_txt_nb + _(":") + " " +
-                             _("assuming {}").format(hypo_txt))
+                msg = (case_txt_nb + _(":") + " " +
+                      _("assuming {}").format(hypo_txt))
             else:  # Do not assign self._msg since we may get hypo next time
-                return case_txt_nb
-            return self._msg
+                msg = case_txt_nb
         elif self.is_conjunction:
+            target = self.goal.target.math_type
             target_nb = self.brother_number
-            self._msg = (_("Proof of first property") if target_nb == 0
-                         else _("Proof of second property"))
-            html_target = self.goal.target.math_type.to_display(format_="html")
-            self._html_msg = _("Proof of {}").format(html_target)
-            return self._msg
+            msg = (_("Proof of first property") if target_nb == 0
+                   else _("Proof of second property"))
+            html_target = target.to_display(format_="html", use_color=use_color)
+            html_msg = _("Proof of {}").format(html_target)
         elif self.is_double_implication:
+            target = self.goal.target.math_type
             target_nb = self.brother_number
-            self._msg = (_("Proof of first implication") if target_nb == 0
-                         else _("Proof of second implication"))
-            html_target = self.goal.target.math_type.to_display(format_="html")
-            self._html_msg = _("Proof of {}").format(html_target)
-            return self._msg
+            msg = (_("Proof of first implication") if target_nb == 0
+                   else _("Proof of second implication"))
+            html_target = target.to_display(format_="html", use_color=use_color)
+            html_msg = _("Proof of {}").format(html_target)
 
         elif self.goal.target is MathObject.NO_MORE_GOALS:
-            self._msg = self.goal.target.math_type.to_display(format_="utf8")
-            self._html_msg = _("Goal!")
-            return self._msg
+            msg = self.goal.target.math_type.to_display(format_="utf8")
+            html_msg = _("Goal!")
 
         else:  # TODO: refine this, taking into account auxiliary goal
-            utf8_target = self.goal.target.math_type.to_display(format_="utf8")
-            html_target = self.goal.target.math_type.to_display(format_="html")
-            self._msg = _("Proof of {}").format(utf8_target)
-            self._html_msg = _("Proof of {}").format(html_target)
-            return self._msg
+            target = self.goal.target.math_type
+            utf8_target = target.to_display(format_="utf8")
+            html_target = target.to_display(format_="html", use_color=use_color)
+            msg = _("Proof of {}").format(utf8_target)
+            html_msg = _("Proof of {}").format(html_target)
 
-    def html_msg(self):
-        if self._html_msg:
-            return self._html_msg
-        else: # Compute msg since this also compute html_msg, and try again...
-            txt = self.msg
-            if self._html_msg:
-                return self._html_msg
+        return msg if format_ == "utf8" else html_msg
 
-        return self.msg
+    def msg(self):
+        return self.__msg(format_="utf8")
+
+    def html_msg(self, use_color=True):
+        return self.__msg(format_="html", use_color=use_color)
+        # if self._html_msg:
+        #     return self._html_msg
+        # else: # Compute msg since this also compute html_msg, and try again...
+        #     txt = self.msg
+        #     if self._html_msg:
+        #         return self._html_msg
+        # return self.msg
 
     def set_goal(self, goal):
         self.goal = goal
@@ -363,7 +377,7 @@ class GoalNode:
         indent = " |" * self.total_degree()
         separator = indent + " |___" + "\n" if self.is_fork_node \
             else ""
-        main_str = indent + self.msg + "\n"
+        main_str = indent + self.msg() + "\n"
         for child in self.children_goal_nodes:
             main_str += str(child) + separator
         return main_str

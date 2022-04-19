@@ -30,7 +30,7 @@ from PySide2.QtWidgets import (QApplication, QFrame, QLayout,
                                QLineEdit, QListWidget, QWidget, QGroupBox,
                                QLabel, QTextEdit, QSizePolicy)
 from PySide2.QtWidgets import QScrollArea
-from PySide2.QtCore import Qt, Signal, Slot, QSettings
+from PySide2.QtCore import Qt, Signal, Slot, QSettings, QEvent
 from PySide2.QtGui import QFont, QColor, QPalette, QIcon, QPainter, QPixmap
 import sys
 
@@ -104,30 +104,62 @@ class VertBar(QFrame):
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.MinimumExpanding)
 
 
-class LabelMathObject(QLabel):
+class RawLabelMathObject(QLabel):
     """
-    Display a MathObject which is not a property.
+    Mother class for displaying a MathObject.
     """
 
-    def __init__(self, math_object, new=True):
+    def __init__(self, math_object=None, html_msg: callable = None):
+        """
+        Either math_object or html_msg is not None. If html_msg is not None
+        then it ias a callable with parameter use_color.
+        """
         super().__init__()
-        txt = math_object  # FIXME .to_display(format_="html")
+        assert math_object or html_msg
+        self.html_msg = html_msg
+        self.math_object = math_object
         self.setTextFormat(Qt.RichText)
-        self.setText(txt)
-        # TODO: distinguish objects / props
-        if new:
-            self.setStyleSheet("padding: 5px;"
-                               "border-width: 2px;"
-                               "border-color: blue;"
-                               "border-style: solid;"
-                               "border-radius: 10px;")
+        self.setText(self.txt)
 
+    @property
+    def is_prop(self):
+        if self.math_object:
+            return self.math_object.math_type.is_prop()
+
+    @property
+    def txt(self):
+        if self.html_msg:
+            return self.html_msg(use_color=self.isEnabled())
+
+        use_color = self.isEnabled()
+        if isinstance(self.math_object, str):
+            return self.math_object
         else:
-            self.setStyleSheet("padding: 5px;"
-                               "border-width: 1px;"
-                               "border-color: blue;"
-                               "border-style: dotted;"
-                               "border-radius: 10px;")
+            txt = (self.math_object.math_type.to_display(format_="html",
+                                                         use_color=use_color)
+                   if self.is_prop
+                   else self.math_object.to_display(format_="html",
+                                                    use_color=use_color))
+        return txt
+
+    def changeEvent(self, event) -> None:
+        """
+        In case object is enabled/disabled, change to display colored variables.
+        """
+        self.setText(self.txt)
+        event.accept()
+
+
+class GenericLMO(RawLabelMathObject):
+    """
+    A class for displaying MathObject inside a frame.
+    """
+    def __init__(self, math_object, new=True):
+        super().__init__(math_object)
+        # The following is used in the style sheet
+        is_new = "new" if new else "old"
+        is_prop = "prop" if self.is_prop else "obj"
+        self.setObjectName(is_new + "_" + is_prop)
 
 
 class LayoutMathObject(QHBoxLayout):
@@ -139,14 +171,14 @@ class LayoutMathObject(QHBoxLayout):
         super().__init__()
         if align in (None, "right"):
             self.addStretch(1)
-        self.addWidget(LabelMathObject(math_object, new=new))
+        self.addWidget(GenericLMO(math_object, new=new))
         if align in (None, "left"):
             self.addStretch(1)
 
 
-class LayoutMathobjects(QVBoxLayout):
+class LayoutMathObjects(QVBoxLayout):
     """
-    Display a vertical pile of LayoutMathobjects.
+    Display a vertical pile of LayoutMathObjects.
     """
 
     def __init__(self, math_objects, align=None, new=True):
@@ -157,34 +189,26 @@ class LayoutMathobjects(QVBoxLayout):
         self.addStretch(1)
 
 
-class LabelOperator(QLabel):
+class OperatorLMO(RawLabelMathObject):
     """
     Display a MathObject which is a property operating on other objects.
     """
 
     def __init__(self, math_object):
-        super().__init__()
-        txt = math_object  # FIXME .to_display(format_="html")
-        self.setTextFormat(Qt.RichText)
-        self.setText(txt)
-        self.setStyleSheet("padding: 5px;"
-                           "border-width: 4px;"
-                           "border-color: red;"
-                           "border-style: solid;"
-                           "border-radius: 10px;")
-        self.setWordWrap(True)
+        super().__init__(math_object)
+        self.setObjectName("operator")
 
 
 class LayoutOperator(QWidget):
     """
-    Display a LabelOperator inside a v-layout so that the box is not too big.
+    Display a OperatorLMO inside a v-layout so that the box is not too big.
     """
 
     def __init__(self, math_object):
         super().__init__()
         layout = QVBoxLayout()
         layout.addStretch(1)
-        layout.addWidget(LabelOperator(math_object))
+        layout.addWidget(OperatorLMO(math_object))
         layout.addStretch(1)
         self.setLayout(layout)
 
@@ -214,7 +238,7 @@ class ContextWidget(QWidget):
         """
         # FIXME: unused?
         self.math_objects.append(math_object)
-        item = LabelMathObject(math_object)
+        item = GenericLMO(math_object)
         self.layout.insertWidget(self.layout.count()-1, item)
 
 
@@ -229,13 +253,14 @@ class PureContextWidget(ContextWidget):
     def __init__(self, premises, operator, conclusions):
         super().__init__([])
 
-        input_layout = LayoutMathobjects(premises, align="right", new=False)
-        output_layout = LayoutMathobjects(conclusions, align="left")
+        input_layout = LayoutMathObjects(premises, align="right", new=False)
+        output_layout = LayoutMathObjects(conclusions, align="left")
         operator_wdg = LayoutOperator(operator)
 
         # Input -> Operator -> output:
-        self.layout.addLayout(input_layout)
-        self.layout.addWidget(operator_arrow())
+        if premises:
+            self.layout.addLayout(input_layout)
+            self.layout.addWidget(operator_arrow())
         self.layout.addWidget(operator_wdg)
         self.layout.addWidget(operator_arrow())
         self.layout.addLayout(output_layout)
@@ -267,7 +292,7 @@ class TargetWidget(QWidget):
     The status_label display the status of the target (goal solved?).
     """
 
-    def __init__(self, parent_wgb, target_msg="", hidden=False):
+    def __init__(self, parent_wgb, target_msg:callable, hidden=False):
         super().__init__()
         self.hidden = False
         self.target_msg = target_msg
@@ -277,7 +302,7 @@ class TargetWidget(QWidget):
         self.triangle = DisclosureTriangle(self.toggle, hidden=False)
         self.triangle.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.vert_bar = VertBar()
-        self.title_label = QLabel(text=self.target_msg)
+        self.title_label = RawLabelMathObject(html_msg=self.target_msg)
         self.title_label.setTextFormat(Qt.RichText)
         self.title_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
@@ -341,52 +366,17 @@ class TargetWidget(QWidget):
     #     self.set_status()
 
     def set_status(self):
-        self.status_label.setText(self.status_msg)
+        if not self.status_msg:
+            self.status_label.hide()
+        else:
+            self.status_label.show()
+            self.status_label.setText(self.status_msg)
 
     def add_child(self, child):
         self.children_layout.addWidget(child)
 
     def remove_child(self, child):
         self.children_layout.removeWidget(child)
-
-#
-# class SwitchWidget(QWidget):
-#     """
-#     A container widget that is used to switch between explicit or implicit
-#     versions of WidgetGoalBlock. This class has attributes explicit,
-#     main_widget and children_widget. The hypotheses are:
-#      - main_widget as methods add_children_widget, remove_children_widget.
-#      -  if explicit is True then children_widget is in
-#      main_widget_children_layout, and main_widget is the active widget.
-#      - if explicit is False then children_widget is the active widget.
-#      """
-#     def __init__(self, main_widget, children_widget, explicit=True):
-#         super().__init__()
-#         self.switch_layout = QVBoxLayout()
-#         self.main_widget = main_widget
-#         self.children_widget = children_widget
-#         self.explicit = explicit
-#         self.switch_layout.addWidget(self.active_widget)
-#         self.setLayout(self.switch_layout)
-#
-#     @property
-#     def active_widget(self):
-#         """
-#         Return the active widget.
-#         """
-#         return self.main_widget if self.explicit else self.children_widget
-#
-#     def set_active_widget(self, explicit=True):
-#         if explicit == self.explicit:
-#             return
-#         elif explicit:  # From implicit to explicit
-#             self.switch_layout.removeWidget(self.children_widget)
-#             self.main_widget.set_children_widget()
-#         else:  # From explicit to implicit
-#             self.main_widget.remove_children_widget()
-#
-#         self.explicit = explicit
-#         self.switch_layout.addWidget(self.active_widget)
 
 
 ########################
@@ -407,9 +397,9 @@ class AbstractGoalBlock:
                  context1=None, target=None, context2=None,
                  merge_up=False, merge_down=False, rw=None):
 
-        self._context1 = display_object(context1) if context1 else []
-        self._target = display_object(target)
-        self.context2 = display_object(context2) if context2 else []
+        self._context1 = context1 if context1 else []
+        self._target = target
+        self.context2 = context2 if context2 else []
 
         self.logical_parent = logical_parent  # Usually set by parent
         self.logical_children = []
@@ -428,7 +418,8 @@ class AbstractGoalBlock:
     @property
     def merge_up(self):
         """
-        True if self's content should be merged with parent's.
+        True if self's content should be merged with parent's
+        (assuming everyone is visible and enabled).
         """
         return (AbstractGoalBlock.merge
                 and self.wanna_merge_up and self.logical_parent is not None
@@ -449,14 +440,14 @@ class AbstractGoalBlock:
         Fusion self 's _context with child's context. Note that this will call
         recursively to all descendant's _context, as far as they are IntroWGB.
         """
-        if self.merge_down:
+        if self.merge_down and self.logical_children[0].isEnabled():
             return self._context1 + self.logical_children[0].context1
         else:
             return self._context1
 
     @property
     def target(self):
-        if self.merge_down:
+        if self.merge_down and self.logical_children[0].isEnabled():
             return self.logical_children[0].target
         else:
             return self._target
@@ -516,7 +507,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
         if logical_parent:
-            self.logical_parent._add_logical_child(self)
+            self.logical_parent.add_logical_child(self)
         self.set_layout_without_children()
 
     def set_invisible(self, yes=True):
@@ -570,11 +561,11 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         return self.displayable_children + self._non_displayed_descendants
 
     @property
-    def target_msg(self):
+    def target_msg(self) -> callable:
         if self.merge_down:
             return self.logical_children[0].target_msg
         else:
-            return self.goal_node.html_msg()
+            return self.goal_node.html_msg
 
     def set_layout_without_children(self):
         """
@@ -582,12 +573,14 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         """
 
         # Clear target and context.
-        if self.context2_widget:
-            self.context2_widget.deleteLater()
-        if self.target_widget:
-            self.target_widget.deleteLater()
-        if self.context1_widget:
-            self.context1_widget.deleteLater()
+        for wdg in (self.target_widget,
+                    self.context1_widget):
+            if wdg and self.main_layout.indexOf(wdg) != -1:
+                self.main_layout.removeWidget(wdg)
+                wdg.deleteLater()
+            self.context1_widget = None
+            self.context2_widget = None
+            self.target_widget = None
 
         if self.merge_up:
             # Children must be added afterwards
@@ -616,6 +609,12 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
             self.context2_widget = ContextWidget(self.context2)
             self.children_layout.addWidget(self.context2_widget)
 
+    # def changeEvent(self, event) -> None:
+    #     if self.merge_up:
+    #         print(f"Widget Goal node {self.goal_node} updated")
+    #         # Children must be added afterwards
+    #         self.logical_parent.set_layout_without_children()
+
     def add_widget_child(self, child):
         """
         Add the child if self has a children_layout, else call parent.
@@ -627,7 +626,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         else:
             self.logical_parent.add_widget_child(child)
 
-    def _add_logical_child(self, child):
+    def add_logical_child(self, child):
         """
         This method must be called to add a new child.
         """
@@ -635,28 +634,6 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         self.add_widget_child(child)
         if self.target_widget:
             self.target_widget.set_status()
-
-    # def set_new_logical_children_from_scratch(self, children):
-    #     self.set_layout()
-    #     for child in children:
-    #         self.add_logical_child(child)
-    #
-    # def remove_widget_child(self, child):
-    #     """
-    #     Remove child from children_layout or call parent.
-    #     """
-    #     if self.children_layout:
-    #         self.children_layout.removeWidget(child)
-    #     else:
-    #         self.logical_parent.remove_widget_child(child)
-    #
-    # def remove_logical_children(self):
-    #     """
-    #     Remove all logical children and their widgets.
-    #     """
-    #     for child in self.logical_children:
-    #         self.remove_widget_child(child)
-    #     self.logical_children = []
 
     def set_children_widgets(self):
         for child in self.descendants_to_be_displayed:
@@ -684,6 +661,18 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         else:
             return all([child.target or child.is_conditionally_solved() or
                         child.is_solved() for child in self.logical_children])
+
+    def enable_recursively(self, till_goal_nb):
+        """
+        Recursively disable self from the indicated goal_node nb.
+        Note that tree must be updated to adapt merging.
+        """
+        if self.goal_nb > till_goal_nb:
+            self.setEnabled(False)
+        else:
+            self.setEnabled(True)
+        for child in self.logical_children:
+            child.enable_recursively(till_goal_nb)
 
 
 class GoalSolvedWGB(WidgetGoalBlock):
@@ -734,6 +723,14 @@ class PureContextWGB(WidgetGoalBlock):
                          context1=(premises, operator, conclusions))
 
 
+class SubstitutionWGB(WidgetGoalBlock):
+
+    def __init__(self, logical_parent, goal_node,
+                 premises, definition, conclusions):
+        super().__init__(logical_parent, goal_node,
+                         context1=(premises, definition, conclusions))
+
+
 ###############
 # Main Window #
 ###############
@@ -763,6 +760,68 @@ class ProofTreeWindow(QWidget):
         self.setLayout(main_layout)
 
         self.main_block = None
+
+        self.set_style_sheet()
+
+    def set_style_sheet(self):
+        color_var = cvars.get("display.color_for_variables")
+        color_prop = cvars.get("display.color_for_props")
+        color_op = cvars.get("display.color_for_operator_props")
+        new_border_width = "2px"
+        old_border_width = "1px"
+        op_border_width = "4px"
+        old_border_style = "dotted"
+        self.setStyleSheet("QLabel#new_obj:enabled {padding: 5px;"
+                               f"border-width: {new_border_width};"
+                               f"border-color: {color_var};"
+                               "border-style: solid;"
+                               "border-radius: 10px;}"
+                           "QLabel#new_obj:!enabled {padding: 5px;"
+                                f"border-width: {new_border_width};"
+                                "border-color: lightgrey;"
+                                "border-style: solid;"
+                                "border-radius: 10px;}"
+                           "QLabel#old_obj:enabled {padding: 5px;"
+                               f"border-width: {old_border_width};"
+                               f"border-color: {color_var};"
+                               f"border-style: {old_border_style};"
+                               "border-radius: 10px;}"
+                           "QLabel#old_obj:!enabled {padding: 5px;"
+                               f"border-width: {old_border_width};"
+                               "border-color: lightgrey;"
+                               f"border-style: {old_border_style};"
+                               "border-radius: 10px;}"
+                           "QLabel#new_prop:enabled {padding: 5px;"
+                               f"border-width: 2px;"
+                               f"border-color: {color_prop};"
+                               "border-style: solid;"
+                               "border-radius: 10px;}"
+                           "QLabel#new_prop:!enabled {padding: 5px;"
+                               f"border-width: {new_border_width};"
+                               "border-color: lightgrey;"
+                               "border-style: solid;"
+                               "border-radius: 10px;}"
+                           "QLabel#old_prop:enabled {padding: 5px;"
+                               f"border-width: {old_border_width};"
+                               f"border-color: {color_prop};"
+                               f"border-style: {old_border_style};"
+                               "border-radius: 10px;}"
+                           "QLabel#old_prop:!enabled {padding: 5px;"
+                               f"border-width: {old_border_width};"
+                               "border-color: lightgrey;"
+                               f"border-style: {old_border_style};"
+                               "border-radius: 10px;}"
+                           "OperatorLMO:enabled {padding: 5px;"
+                               f"border-width: {op_border_width};"
+                               f"border-color: {color_op};"
+                               "border-style: solid;"
+                               "border-radius: 10px;}"
+                           "OperatorLMO:!enabled {padding: 5px;" 
+                               f"border-width: {op_border_width};"
+                               "border-color: lightgrey;"
+                               "border-style: solid;"
+                               "border-radius: 10px;}"
+                           )
 
     def set_main_block(self, block: WidgetGoalBlock):
         self.main_block = block
@@ -811,6 +870,17 @@ def widget_goal_block(parent_widget: Optional[WidgetGoalBlock],
                              premises, operator, conclusions)
     elif goal_node.is_goal_solved():
         wgb = GoalSolvedWGB(parent_widget, goal_node)
+    elif goal_node.is_context_substitution:  # TODO: clean this up
+        if goal_node.parent.statement:
+            definition = goal_node.parent.statement.pretty_name
+            premises = goal_node.parent.selection
+        else:
+            definition = goal_node.parent.selection[0]
+            premises = goal_node.parent.selection[1:]
+        conclusions = goal_node.goal.new_context
+
+        wgb = SubstitutionWGB(parent_widget, goal_node,
+                              premises, definition, conclusions)
     else:
         wgb = WidgetGoalBlock(logical_parent=parent_widget,
                               goal_node=goal_node,
@@ -864,6 +934,10 @@ class ProofTreeController:
     def set_proof_tree(self, proof_tree):
         self.proof_tree = proof_tree
 
+    def enable(self, till_goal_nb):
+        main_block = self.proof_tree_window.main_block
+        main_block.enable_recursively(till_goal_nb=till_goal_nb)
+
     def update(self):
         if not self.proof_tree.root_node:
             return
@@ -872,6 +946,10 @@ class ProofTreeController:
                                            self.proof_tree.root_node)
             self.proof_tree_window.set_main_block(main_block)
 
+        current_goal_node = self.proof_tree.current_goal_node
+        if current_goal_node:
+            goal_nb = current_goal_node.goal_nb
+            self.enable(till_goal_nb=goal_nb)
         update_from_node(self.proof_tree_window.main_block,
                          self.proof_tree.root_node)
 

@@ -433,6 +433,28 @@ class ProofStep:
     def is_statement(self):
         return self.statement is not None
 
+    def is_definition(self):
+        return self.statement and self.statement.is_definition()
+
+    def is_intro_implies(self):
+        if not self.parent_goal_node:
+            return False
+        tests = [self.button_name is "implies",
+                 not self.selection,
+                 self.parent_goal_node.goal.target.is_implication(
+                                                                himplicit=True),
+                 not self.is_error()]
+        return all(tests)
+
+    def is_intro_forall(self):
+        if not self.parent_goal_node:
+            return False
+        tests = [self.button_name == "forall",
+                 not self.selection,
+                 self.parent_goal_node.goal.target.is_for_all(implicit=True),
+                 not self.is_error()]
+        return all(tests)
+
     def compare(self, auto_test) -> (str, bool):
         """
         Compare self to an auto_test, and write a report if unexpected
