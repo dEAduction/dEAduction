@@ -66,7 +66,8 @@ display_level = "info"
 domains = [""]
 
 [others]
-course_directory = ""
+usr_version_nb = "-1"  # Do not modify!
+version_nb = "0.3"
 
 #########################
 # All Plateform packages

@@ -37,7 +37,7 @@ from PySide2.QtWidgets import ( QListWidget,
                                 QListWidgetItem)
 
 from deaduction.pylib.config.course import get_recent_courses
-
+global _
 
 class RecentCoursesLW(QListWidget):
     """

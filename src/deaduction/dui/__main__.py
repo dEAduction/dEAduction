@@ -30,6 +30,8 @@ This file is part of d∃∀duction.
 """
 
 from sys import argv
+from shutil import copytree, rmtree
+
 import logging
 import threading
 import trio
@@ -177,6 +179,75 @@ async def site_installation_check(nursery):
                     if emission.is_from(inst_stg.start_deaduction):
                         break
                 inst_stg.stop()
+
+
+def language_check():
+    language = deaduction.pylib.config.i18n.init_i18n()
+    if language == "no_language":
+        selected_language, ok = select_language()
+        if not selected_language:
+            selected_language = 'en'
+        cvars.set('i18n.select_language', selected_language)
+        deaduction.pylib.config.i18n.init_i18n()
+        if ok:
+            cvars.save()  # Do not ask next time!
+
+
+def copy_lean_files_to_home():
+    """
+    Copy recursively the directory containing factory lean files for
+    exercises to the usr directory.
+    """
+    exercises_dir = cdirs.courses
+    usr_exercises_dir = cdirs.usr_lean_exercises_dir
+    if usr_exercises_dir.exists():
+        rmtree(str(usr_exercises_dir), ignore_errors=True)
+    copytree(str(exercises_dir),
+             str(usr_exercises_dir),
+             ignore_dangling_symlinks=True)
+    # Only in Python3.10: dirs_exist_ok=True)
+
+
+def erase_proof_states():
+    """
+    Move initial_proof_states dir to old_initial_proof_state dir.
+    """
+    ips_dir = cdirs.all_courses_ipf_dir
+    if ips_dir.exists():
+        rmtree(str(ips_dir), ignore_errors=True)
+
+
+def check_new_version():
+    """
+    The usr config var usr_version_nb refers to the nb of the last executed
+    version of deaduction. The factory var version_nb is the actual current
+    version. Both should be equal after executing adapt_to_new_version.
+    """
+    version_nb = cvars.get("others.version_nb")
+    usr_version_nb = cvars.get("others.usr_version_nb")
+    if version_nb != usr_version_nb:
+        log.debug(f"New version detected, {usr_version_nb} --> {version_nb}")
+        return True
+
+
+def adapt_to_new_version():
+    """
+    If a new version of deaduction is detected, then initial_proof_states
+    have to be computed again to avoid errors. Furthermore, exercises are
+    copied to the usr exercises dir.
+    """
+    if check_new_version():
+        log.debug("Adapting to new version...")
+        log.debug("Copying Lean files to home dir")
+        copy_lean_files_to_home()
+        log.debug("Erasing previous initial proof states")
+        erase_proof_states()
+        # Create empty dir again:
+        cdirs.init()
+        # Write new version nb in usr config.toml:
+        log.debug("Setting new version nb in usr config file")
+        cvars.set("others.usr_version_nb", cvars.get("others.version_nb"))
+        cvars.save()
 
 
 ###############################################
@@ -363,7 +434,14 @@ async def main():
     """
 
     async with trio.open_nursery() as nursery:
+        # Check Lean and mathlib install
         await site_installation_check(nursery)
+
+        # Check language
+        language_check()
+
+        # Check if version has changed
+        adapt_to_new_version()
 
         # Create wm and start Lean server
         wm = WindowManager(nursery)
@@ -419,19 +497,6 @@ if __name__ == '__main__':
     cenv.init()
     cdirs.init()
     inst.init()
-
-    ############################
-    # First choice of language #
-    ############################
-    language = deaduction.pylib.config.i18n.init_i18n()
-    if language == "no_language":
-        selected_language, ok = select_language()
-        if not selected_language:
-            selected_language = 'en'
-        cvars.set('i18n.select_language', selected_language)
-        deaduction.pylib.config.i18n.init_i18n()
-        if ok:
-            cvars.save()  # Do not ask next time!
 
     #################
     # Run main loop #

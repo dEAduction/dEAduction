@@ -243,7 +243,7 @@ class CourseChooser(AbstractCoExChooser):
         self.servint: ServerInterface = servint
 
         # Browse button
-        self.__browse_btn = QPushButton(_('Browse files for course...'))
+        self.__browse_btn = QPushButton(_('Browse files...'))
         self.__browse_btn.setAutoDefault(False)
         self.__browse_btn.clicked.connect(self.__browse_courses)
 
@@ -251,6 +251,8 @@ class CourseChooser(AbstractCoExChooser):
         self.__recent_courses_wgt = RecentCoursesLW()
         browser_layout = QVBoxLayout()
         browser_layout.addWidget(self.__browse_btn)
+        label_title = QLabel(_("Recent files") + _(":"))
+        browser_layout.addWidget(label_title)
         browser_layout.addWidget(self.__recent_courses_wgt)
 
         # Signals
@@ -371,9 +373,8 @@ class CourseChooser(AbstractCoExChooser):
         course-file, a Course object is instantiated and the method
         set_preview is called.
         """
-        directory = cvars.get('others.course_directory', str(cdirs.courses))
-        if not directory:
-            directory = str(cdirs.courses)
+        directory = cvars.get('others.course_directory',
+                              str(cdirs.usr_lean_exercises_dir))
         dialog = QFileDialog(directory=directory)
         dialog.setFileMode(QFileDialog.ExistingFile)
         dialog.setNameFilter('*.lean')
@@ -770,8 +771,8 @@ class AbstractStartCoEx(QDialog):
         # ───────────────────── Layouts ──────────────────── #
 
         self.__tabwidget = QTabWidget()
-        self.__tabwidget.addTab(self.course_chooser, _('Course'))
-        self.__tabwidget.addTab(self.__exercise_chooser, _('Exercise'))
+        self.__tabwidget.addTab(self.course_chooser, _('Files'))
+        self.__tabwidget.addTab(self.__exercise_chooser, _('Exercises'))
 
         buttons_lyt = QHBoxLayout()
         buttons_lyt.addStretch()
@@ -963,14 +964,14 @@ class StartCoExStartup(AbstractStartCoEx):
         Init self.
         """
         log.debug("Starting chooser window")
-        title = _('Choose course and exercise — d∃∀duction')
+        title = _('Choose file and exercise — d∃∀duction')
         super().__init__(title=title,
                          widget=None,
                          exercise=exercise,
                          servint=servint)
 
 
-class StartCoExExerciseFinpoished(AbstractStartCoEx):
+class StartCoExExerciseFinished(AbstractStartCoEx):
     """
     The CoEx chooser after usr just finished an exercise. It displays
     a CoEx chooser with the finished exercise
