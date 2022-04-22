@@ -55,7 +55,7 @@ class GoalNode:
         GoalNode.goal_nb += 1
         self.parent = parent
         self.goal = goal
-        self.child_proof_step = child_proof_step
+        self._child_proof_step = child_proof_step
         self._is_solved = is_solved
         self._msg = None
         self._html_msg = None
@@ -340,8 +340,13 @@ class GoalNode:
     def set_goal(self, goal):
         self.goal = goal
 
-    def set_child_proof_step(self, proof_step):
-        self.child_proof_step = proof_step
+    @property
+    def child_proof_step(self):
+        return self._child_proof_step
+
+    @child_proof_step.setter
+    def child_proof_step(self, proof_step):
+        self._child_proof_step = proof_step
 
     def is_recursively_solved(self):
         """self is solved if it is explicitly solved, or it has children and
@@ -360,6 +365,47 @@ class GoalNode:
         True if self is a fake goal with target = "goal solved".
         """
         return self.goal.target.math_type == MathObject.CURRENT_GOAL_SOLVED
+
+    def is_all_goals_solved(self):
+        """
+        True if self is a fake goal with target = "goal solved".
+        """
+        return self.goal.target.math_type == MathObject.NO_MORE_GOALS
+
+    @property
+    def unsolved_leaves(self):
+        """
+        Return the list of unsolved leaves of self.
+        """
+        if self.is_recursively_solved():
+            return []
+        elif not self.children_goal_nodes:
+            return [self]
+        else:
+            unsolved_leaves = []
+            for child in self.children_goal_nodes:
+                unsolved_leaves.extend(child.unsolved_leaves)
+            return unsolved_leaves
+
+    def truncated_unsolved_leaves(self, till_goal_nb=None):
+        """
+        Return the list of unsolved leaves of self (truncated at "till_goal_nb")
+        """
+        if not till_goal_nb:
+            return self.unsolved_leaves
+
+        if self._is_solved:  # self is a solved leaf
+            return []
+        truncated_children = [child for child in self.children_goal_nodes
+                              if child.goal_number <= till_goal_nb]
+        if not truncated_children:  # self is an unsolved leaf
+            return [self]
+
+        unsolved_leaves = []
+        for child in truncated_children:
+            child_leaves = child.truncated_unsolved_leaves(till_goal_nb)
+            unsolved_leaves.extend(child_leaves)
+        return unsolved_leaves
 
     def total_degree(self):
         """
@@ -409,6 +455,7 @@ class ProofTree:
     First unsolved_goal_node is the current goal.
     """
 
+    # TODO: add a permutation to reflect Lean's own list of unsolved goals.
     def __init__(self, initial_goal=None):
         """
         Note that if initial goal is not provided, then root_node has to be
@@ -416,27 +463,47 @@ class ProofTree:
         """
         self.root_node = GoalNode(parent=None, goal=initial_goal) \
             if initial_goal else None
-        self.unsolved_goal_nodes = [self.root_node] if self.root_node else []
+        # self._unsolved_goal_nodes = [self.root_node] if self.root_node else []
+        self._current_goal_node = self.root_node
         self.previous_goal_node = None
 
     @property
     def current_goal_node(self):
-        if self.unsolved_goal_nodes:
-            return self.unsolved_goal_nodes[0]
+        # if (self._unsolved_goal_nodes
+        #         and self.unsolved_goal_nodes[0] != self._current_goal_node):
+        #     log.warning(f"Strange current goal node: "
+        #                 f"{self.unsolved_goal_nodes[0]} vs "
+        #                 f"{self._current_goal_node}")
+        return self._current_goal_node
+
+    @current_goal_node.setter
+    def current_goal_node(self, goal_node):
+        self._current_goal_node = goal_node
+
+    def unsolved_goal_nodes(self, till_goal_nb=None):
+        """
+        Compute from the proof tree (truncated at "till_goal_nb") the list of
+        unsolved goal_nodes. This is the ordered list of unsolved leaves of
+        the tree.
+        """
+        return self.root_node.truncated_unsolved_leaves(till_goal_nb)
 
     # ─────── Handling unsolved_goal_nodes ─────── #
-    def set_current_goal_solved(self):
-        self.unsolved_goal_nodes.pop(0)
+    # def set_current_goal_solved(self):
+    #     self.unsolved_goal_nodes.pop(0)
+    #
+    # def set_unsolved_goals(self, goal_nodes):
+    #     log.debug(f"Set unsolved gn to "
+    #               f"{[goal_node.goal_nb for goal_node in goal_nodes]}")
+    #     self.unsolved_goal_nodes = goal_nodes
 
-    def set_unsolved_goals(self, goal_nodes):
-        self.unsolved_goal_nodes = goal_nodes
+    def go_to_first_unsolved_node(self):
+        self.current_goal_node = self.unsolved_goal_nodes()[0]
+        # self.unsolved_goal_nodes[0] = \
+        #     self.unsolved_goal_nodes[0].children_goal_nodes[0]
 
-    def move_next_node(self):
-        self.unsolved_goal_nodes[0] = \
-            self.unsolved_goal_nodes[0].children_goal_nodes[0]
-
-    def set_fork_node(self, new_goal_node):
-        self.unsolved_goal_nodes.insert(1, new_goal_node)
+    # def set_fork_node(self, new_goal_node):
+    #     self.unsolved_goal_nodes.insert(1, new_goal_node)
 
     def process_new_proof_step(self, new_proof_step: ProofStep):
         """
@@ -452,41 +519,41 @@ class ProofTree:
         if not self.root_node:
             self.root_node = GoalNode.root_node(new_proof_step,
                                                 new_proof_state.goals[0])
-            self.unsolved_goal_nodes.append(self.root_node)
-            new_proof_step.set_children_goal_nodes([self.root_node])
+            # self.unsolved_goal_nodes.append(self.root_node)
+            new_proof_step.children_goal_nodes = [self.root_node]
+            self.current_goal_node = self.root_node
             return
 
-        # ─────── Case of history move ─────── #
+        # ─────── Case of new step after history move ─────── #
         if self.current_goal_node.child_proof_step:
             # Remove everything beyond parent_proof_step before proceeding
             self.prune(self.current_goal_node.parent.pf_nb)
 
         # ─────── Connect new_proof_step to ProofTree ─────── #
-        self.current_goal_node.set_child_proof_step(new_proof_step)
+        self.current_goal_node.child_proof_step = new_proof_step
 
         # ─────── Create new GoalNodes ─────── #
         new_goal = new_proof_state.goals[0]
         delta_goal = (len(new_proof_state.goals) -
-                      len(self.unsolved_goal_nodes))
+                      len(self.unsolved_goal_nodes()))
         if delta_goal == -1:  # current goal solved
             children = [GoalNode.goal_solved(new_proof_step)]
-            new_proof_step.set_children_goal_nodes(children)
-            self.set_current_goal_solved()
-            self.current_goal_node.set_goal(new_goal)
+            new_proof_step.children_goal_nodes = children
+            self.go_to_first_unsolved_node()
+            self.current_goal_node.set_goal(new_goal)  # Refresh goal
         elif delta_goal == 0:  # Generic case
             next_goal_node = GoalNode(parent=new_proof_step, goal=new_goal)
             children = [next_goal_node]
-            new_proof_step.set_children_goal_nodes(children)
-            self.move_next_node()
+            new_proof_step.children_goal_nodes = children
+            self.current_goal_node = next_goal_node
         else:  # Fork node: two sub-goals
             assert delta_goal == 1
             next_goal_node = GoalNode(parent=new_proof_step, goal=new_goal)
             other_goal = new_proof_state.goals[1]
             other_goal_node = GoalNode(parent=new_proof_step, goal=other_goal)
             children = [next_goal_node, other_goal_node]
-            new_proof_step.set_children_goal_nodes(children)
-            self.set_fork_node(other_goal_node)
-            self.move_next_node()
+            new_proof_step.children_goal_nodes = children
+            self.current_goal_node = next_goal_node
 
         # ─────── Compare with previous state and tag properties ─────── #
         previous_goal = self.current_goal_node.parent_node.goal

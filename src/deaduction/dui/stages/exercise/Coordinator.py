@@ -580,13 +580,12 @@ class Coordinator(QObject):
         Update interface, and prepare next proof_step.
         """
         historic_proof_step = self.lean_file.current_proof_step
+        children_goal_nodes = historic_proof_step.children_goal_nodes
         proof_state = historic_proof_step.proof_state
         self.proof_step.proof_state = proof_state
-        self.proof_step.children_goal_nodes = \
-            historic_proof_step.children_goal_nodes
-        # Update unsolved goals pile
-        self.proof_tree.set_unsolved_goals(
-            historic_proof_step.unsolved_goal_nodes_after)
+        self.proof_step.children_goal_nodes = children_goal_nodes
+        # Update proof_tree
+        self.proof_tree.current_goal_node = children_goal_nodes[0]
 
         # ─────── Update proof_step ─────── #
         # From here, self.proof_step is replaced by a new proof_step!
@@ -923,7 +922,7 @@ class Coordinator(QObject):
         self.emw.displayed_proof_step = copy(self.proof_step)  # FIXME
         self.proof_step = ProofStep.next_(self.lean_file.current_proof_step,
                                           self.lean_file.target_idx)
-        self.proof_step.set_parent_goal_node(self.proof_tree.current_goal_node)
+        self.proof_step.parent_goal_node = self.proof_tree.current_goal_node
         self.proof_step_updated.emit()  # Received in auto_test
 
     @Slot()
@@ -1004,10 +1003,10 @@ class Coordinator(QObject):
                 log.debug("     Storing proof step in lean_file info")
                 self.lean_file.state_info_attach(proof_step=self.proof_step)
                 self.proof_tree.process_new_proof_step(self.proof_step)
-                self.proof_step.unsolved_goal_nodes_after = \
-                    copy(self.proof_tree.unsolved_goal_nodes)
-                ugn = [gn.goal_nb for gn in self.proof_tree.unsolved_goal_nodes]
-                log.debug(f"Ps_unsolved_gn_after: {ugn}")
+                # self.proof_step.unsolved_goal_nodes_after = \
+                #     copy(self.proof_tree.unsolved_goal_nodes)
+                # ugn = [gn.goal_nb for gn in self.proof_tree.unsolved_goal_nodes]
+                # log.debug(f"Ps_unsolved_gn_after: {ugn}")
 
             # ─────── Check for new goals ─────── # FIXME
             delta = self.lean_file.delta_goals_count

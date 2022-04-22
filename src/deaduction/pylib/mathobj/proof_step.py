@@ -225,7 +225,8 @@ class ProofStep:
                  total_goals_counter=1,
                  proof_state=None,
                  history_nb=-1):
-        self.unsolved_goal_nodes_after = []
+        self._children_goal_nodes = None
+        self._parent_goal_node = None
         self.property_counter    = property_counter
         self.current_goal_number = current_goal_number
         self.total_goals_counter = total_goals_counter
@@ -330,11 +331,21 @@ class ProofStep:
                 if imminent_new_node is not ProofStep.initial_proof_node:
                     self.imminent_new_node = imminent_new_node
 
-    def set_children_goal_nodes(self, goal_nodes):
-        self.children_goal_nodes = goal_nodes
+    @property
+    def children_goal_nodes(self):
+        return self._children_goal_nodes
 
-    def set_parent_goal_node(self, goal_node):
-        self.parent_goal_node = goal_node
+    @children_goal_nodes.setter
+    def children_goal_nodes(self, goal_nodes):
+        self._children_goal_nodes = goal_nodes
+
+    @property
+    def parent_goal_node(self):
+        return self._parent_goal_node
+
+    @parent_goal_node.setter
+    def parent_goal_node(self, goal_node):
+        self._parent_goal_node = goal_node
 
     ##############
     # Properties #
