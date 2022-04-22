@@ -292,11 +292,10 @@ class ExerciseCentralWidget(QWidget):
         target_lbl.setFont(target_math_font)
         # Setting selected / unselected style:
         self.target_wgt.unselected_style = f'font-size: {target_size};'
-        background_color = cvars.get("display.selection_color", "limegreen")
+        background_color = cvars.get("display.color_for_selection", "limegreen")
         self.target_wgt.selected_style = self.target_wgt.unselected_style \
             + f'background-color: {background_color};'
         self.target_wgt.setStyleSheet(self.target_wgt.unselected_style)
-
 
     def organise_main_layout(self):
         """

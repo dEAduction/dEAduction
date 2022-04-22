@@ -24,6 +24,7 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import logging
 from typing import Union, Optional
 from PySide2.QtWidgets import (QApplication, QFrame, QLayout,
                                QHBoxLayout, QVBoxLayout, QGridLayout,
@@ -39,10 +40,11 @@ import deaduction.pylib.config.dirs as cdirs
 
 if __name__ != "__main__":
     from deaduction.pylib.proof_tree import GoalNode
+    from deaduction.pylib.mathobj import MathObject
 
-
+log = logging.getLogger(__name__)
 global _
-_ = lambda x: x
+# _ = lambda x: x
 
 
 def display_object(math_objects):
@@ -252,6 +254,9 @@ class PureContextWidget(ContextWidget):
 
     def __init__(self, premises, operator, conclusions):
         super().__init__([])
+        self.premises = premises
+        self.operator = operator
+        self.conclusions = conclusions
 
         input_layout = LayoutMathObjects(premises, align="right", new=False)
         output_layout = LayoutMathObjects(conclusions, align="left")
@@ -292,9 +297,11 @@ class TargetWidget(QWidget):
     The status_label display the status of the target (goal solved?).
     """
 
-    def __init__(self, parent_wgb, target_msg:callable, hidden=False):
+    def __init__(self, parent_wgb, target: MathObject, target_msg: callable,
+                 hidden=False):
         super().__init__()
         self.hidden = False
+        self.target = target
         self.target_msg = target_msg
         self.parent_wgb = parent_wgb
 
@@ -390,16 +397,19 @@ class AbstractGoalBlock:
     target.
     - rw = None / "rw" / "implicit_rw".
     """
-    merge = True
+    merge = True  # Set to False to prevent any merging
     goal_nb = 0
 
     def __init__(self, logical_parent, goal_node,
-                 context1=None, target=None, context2=None,
+                 context1: [MathObject] = None,
+                 target: MathObject = None, context2=None,
+                 pure_context: tuple = None,
                  merge_up=False, merge_down=False, rw=None):
 
         self._context1 = context1 if context1 else []
         self._target = target
         self.context2 = context2 if context2 else []
+        self.pure_context = pure_context if pure_context else ()
 
         self.logical_parent = logical_parent  # Usually set by parent
         self.logical_children = []
@@ -418,12 +428,12 @@ class AbstractGoalBlock:
     @property
     def merge_up(self):
         """
-        True if self's content should be merged with parent's
-        (assuming everyone is visible and enabled).
+        True if self's content should be merged with parent's.
         """
         return (AbstractGoalBlock.merge
                 and self.wanna_merge_up and self.logical_parent is not None
-                and self.logical_parent.wanna_merge_down)
+                and self.logical_parent.wanna_merge_down
+                and self.isEnabled() == self.logical_parent.isEnabled())
 
     @property
     def merge_down(self):
@@ -432,7 +442,8 @@ class AbstractGoalBlock:
         """
         return (AbstractGoalBlock.merge
                 and self.wanna_merge_down and len(self.logical_children) == 1
-                and self.logical_children[0].wanna_merge_up)
+                and self.logical_children[0].wanna_merge_up
+                and self.isEnabled() == self.logical_children[0].isEnabled())
 
     @property
     def context1(self):
@@ -440,17 +451,78 @@ class AbstractGoalBlock:
         Fusion self 's _context with child's context. Note that this will call
         recursively to all descendant's _context, as far as they are IntroWGB.
         """
-        if self.merge_down and self.logical_children[0].isEnabled():
+        if self.merge_down:
             return self._context1 + self.logical_children[0].context1
         else:
             return self._context1
 
     @property
     def target(self):
-        if self.merge_down and self.logical_children[0].isEnabled():
+        if self.merge_down:
             return self.logical_children[0].target
         else:
             return self._target
+
+    def set_invisible(self, yes=True):
+        """
+        This is used for instance for WGB corresponding to end of proof,
+        which are not supposed to be displayed.
+        """
+        self._is_visible = not yes
+
+    def is_visible(self, reference_level=-1):
+        if self._is_visible is not None:
+            return self._is_visible
+
+        if reference_level == -1:
+            reference_level = WidgetGoalBlock.rw_level
+        return self.rw_level <= reference_level
+        # and not self.merge_up
+
+    @property
+    def displayable_children(self):
+        """
+        Return the list of children that should be displayed (either here or
+        by an ascendant).
+        """
+        return [child for child in self.logical_children if
+                child.is_visible() and not child.merge_up]
+
+    @property
+    def descendants_not_displayed_by_self(self):
+        """
+        Return the ordered list of descendants that are not displayed by their
+        parent, and should be displayed by one of self's ascendants.
+        """
+        if self.is_visible() and not self.merge_up:
+            # Self will handle descendants
+            return []
+        else:
+            descendants = []
+            for child in self.logical_children:
+                descendants.extend(child.descendants_not_displayed_by_self)
+            return self.displayable_children + descendants
+
+    @property
+    def descendants_displayed_by_self(self):
+        """
+        Determine the ordered list of widgets that should be displayed in
+        self.children_layout.
+        """
+        if not self.is_visible() or self.merge_up:
+            return []
+        else:
+            descendants = []
+            for child in self.logical_children:
+                descendants.extend(child.descendants_not_displayed_by_self)
+            return self.displayable_children + descendants
+
+    @property
+    def target_msg(self) -> callable:
+        if self.merge_down:
+            return self.logical_children[0].target_msg  # No parentheses!
+        else:
+            return self.goal_node.html_msg  # (callable)
 
     def add_logical_child(self, child):
         self.logical_children.append(child)
@@ -479,7 +551,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
     rw_level = 1  # show rw but not implicit rw
 
     def __init__(self, logical_parent, goal_node,
-                 context1=None, target=None, context2=None,
+                 context1=None, target=None, context2=None, pure_context=None,
                  merge_down=False, merge_up=False, rw_level=0):
         """
         rw_level =  0 if self is not a rw operation,
@@ -487,16 +559,23 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
                     2 if self is an implicit rw operation
         self will be displayed only if self.rw_level <= cls.rw_level.
         """
+        assert (pure_context is None or (context1 is None and target is None
+                                         and context2 is None))
         super().__init__()
         AbstractGoalBlock.__init__(self, logical_parent=logical_parent,
                                    goal_node=goal_node,
                                    context1=context1,
                                    target=target, context2=context2,
+                                   pure_context=pure_context,
                                    merge_down=merge_down, merge_up=merge_up)
         self._is_visible = None
-        self.context1_widget: QWidget = None  # Created by set_layout().
-        self.target_widget: TargetWidget = None
-        self.context2_widget: QWidget = None
+
+        # Main widgets containers:
+        self.pure_context_widget: Optional[PureContextWidget] = None
+        self.context1_widget: Optional[ContextWidget] = None
+        self.target_widget: Optional[TargetWidget] = None
+        self.context2_widget: Optional[ContextWidget] = None
+        self.children_widgets = []
 
         # Set main_layout with just one stretch
         self.main_layout = QVBoxLayout()
@@ -510,17 +589,24 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
             self.logical_parent.add_logical_child(self)
         self.set_layout_without_children()
 
-    def set_invisible(self, yes=True):
-        self._is_visible = not yes
+    def __repr__(self):
+        return self.context1, self.target, self.context2, self.pure_context
 
-    def is_visible(self, reference_level=-1):
-        if self._is_visible is not None:
-            return self._is_visible
-
-        if reference_level == -1:
-            reference_level = WidgetGoalBlock.rw_level
-        return self.rw_level <= reference_level
-        # and not self.merge_up
+    # def set_invisible(self, yes=True):
+    #     """
+    #     This is used for instance for WGB corresponding to end of proof,
+    #     which are not supposed to be displayed.
+    #     """
+    #     self._is_visible = not yes
+    #
+    # def is_visible(self, reference_level=-1):
+    #     if self._is_visible is not None:
+    #         return self._is_visible
+    #
+    #     if reference_level == -1:
+    #         reference_level = WidgetGoalBlock.rw_level
+    #     return self.rw_level <= reference_level
+    #     # and not self.merge_up
 
     @property
     def children_layout(self):
@@ -529,58 +615,60 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         else:
             return None
 
-    @property
-    def displayable_children(self):
-        """
-        Return the list of children that should be displayed (either here or
-        by an ascendant).
-        """
-        return [child for child in self.logical_children if
-                child.is_visible() and not child.merge_up]
-
-    @property
-    def _non_displayed_descendants(self):
-        """
-        Return the ordered list of descendants that are not displayed by their
-        parent, and should be displayed by self or its parent.
-        """
-        if self.is_visible() and not self.merge_up:
-            # Self will handle children
-            return []
-        else:
-            return self.displayable_children + self._non_displayed_descendants
-
-    @property
-    def descendants_to_be_displayed(self):
-        """
-        Determine the ordered list of widgets that should be displayed in
-        self.children_layout.
-        """
-        if not self.is_visible() or self.merge_up:
-            return []
-        return self.displayable_children + self._non_displayed_descendants
-
-    @property
-    def target_msg(self) -> callable:
-        if self.merge_down:
-            return self.logical_children[0].target_msg
-        else:
-            return self.goal_node.html_msg
+    # @property
+    # def displayable_children(self):
+    #     """
+    #     Return the list of children that should be displayed (either here or
+    #     by an ascendant).
+    #     """
+    #     return [child for child in self.logical_children if
+    #             child.is_visible() and not child.merge_up]
+    #
+    # @property
+    # def _non_displayed_descendants(self):
+    #     """
+    #     Return the ordered list of descendants that are not displayed by their
+    #     parent, and should be displayed by self or its parent.
+    #     """
+    #     if self.is_visible() and not self.merge_up:
+    #         # Self will handle children
+    #         return []
+    #     else:
+    #         return self.displayable_children + self._non_displayed_descendants
+    #
+    # @property
+    # def descendants_to_be_displayed(self):
+    #     """
+    #     Determine the ordered list of widgets that should be displayed in
+    #     self.children_layout.
+    #     """
+    #     if not self.is_visible() or self.merge_up:
+    #         return []
+    #     return self.displayable_children + self._non_displayed_descendants
+    #
+    # @property
+    # def target_msg(self) -> callable:
+    #     if self.merge_down:
+    #         return self.logical_children[0].target_msg
+    #     else:
+    #         return self.goal_node.html_msg
 
     def set_layout_without_children(self):
         """
         Populate main_layout from scratch, but does NOT take care of children.
         """
 
-        # Clear target and context.
-        for wdg in (self.target_widget,
+        # Clear target and context. Context2_widget is a child of target_widget.
+        for wdg in (self.pure_context_widget,
+                    self.target_widget,
                     self.context1_widget):
             if wdg and self.main_layout.indexOf(wdg) != -1:
                 self.main_layout.removeWidget(wdg)
-                wdg.deleteLater()
+                wdg.hide()
             self.context1_widget = None
             self.context2_widget = None
             self.target_widget = None
+            self.pure_context_widget = None
 
         if self.merge_up:
             # Children must be added afterwards
@@ -590,63 +678,66 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
             return
 
         # Create and insert new widgets (at pole position, in reverse order):
+        if self.pure_context:
+            premises, operator, conclusions = self.pure_context
+            self.pure_context_widget = PureContextWidget(premises, operator,
+                                                         conclusions)
+            self.main_layout.insertWidget(0, self.pure_context_widget)
+
         if self.target:
-            self.target_widget = TargetWidget(self, self.target_msg)
+            self.target_widget = TargetWidget(self, self.target,
+                                              self.target_msg)
             self.main_layout.insertWidget(0, self.target_widget)
-        else:
-            self.target_widget = None
 
         if self.context1:
-            if isinstance(self.context1, list):
-                self.context1_widget = ContextWidget(self.context1)
-            elif isinstance(self.context1, tuple):
-                premises, operator, conclusions = self.context1
-                self.context1_widget = PureContextWidget(premises, operator,
-                                                         conclusions)
+            self.context1_widget = ContextWidget(self.context1)
             self.main_layout.insertWidget(0, self.context1_widget)
 
         if self.context2 and self.target_widget:
             self.context2_widget = ContextWidget(self.context2)
             self.children_layout.addWidget(self.context2_widget)
 
-    # def changeEvent(self, event) -> None:
-    #     if self.merge_up:
-    #         print(f"Widget Goal node {self.goal_node} updated")
-    #         # Children must be added afterwards
-    #         self.logical_parent.set_layout_without_children()
-
     def add_widget_child(self, child):
         """
-        Add the child if self has a children_layout, else call parent.
+        Add the child if self has a children_layout, else call parent.This
+        method is called when adding a logical child or by a child who
+        delegates the display of its children widgets.
         """
         if not child.is_visible() or child.merge_up:
             return
         if self.children_layout:
+            self.children_widgets.append(child)
             self.children_layout.addWidget(child)
         else:
             self.logical_parent.add_widget_child(child)
 
     def add_logical_child(self, child):
         """
-        This method must be called to add a new child.
+        This method must be called to add a new child, but NOT to reset an
+        existing child.
         """
         super().add_logical_child(child)
         self.add_widget_child(child)
-        if self.target_widget:
+        if self.target_widget:  # Maybe goal has been solved by child
             self.target_widget.set_status()
 
     def set_children_widgets(self):
-        for child in self.descendants_to_be_displayed:
-            self.add_widget_child(child)
+        """
+        Display directly descendants_to_be_displayed.
+        """
+        if self.children_layout:
+            for child in self.descendants_displayed_by_self:
+                self.children_widgets.append(child)
+                self.children_layout.addWidget(child)
 
-    def recursive_update(self):
-        """
-        Perform an update, e.g. after a change of details level.
-        """
-        for child in self.logical_children:
-            child.recursive_update()
-        self.set_layout_without_children()
-        self.set_children_widgets()
+    # def recursive_update(self):
+    #     """
+    #     Perform an update, e.g. after a change of details level.
+    #     """
+    #     for child in self.logical_children:
+    #         child.recursive_update()
+    #     self.set_layout_without_children()
+    #     self.set_children_widgets()
 
     def is_solved(self):
         self.goal_node.is_recursively_solved()
@@ -658,6 +749,8 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         """
         if self.is_solved() or not self.logical_children:
             return False
+        if self.merge_down:
+            return self.logical_children [0].is_conditionally_solved()
         else:
             return all([child.target or child.is_conditionally_solved() or
                         child.is_solved() for child in self.logical_children])
@@ -673,6 +766,80 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
             self.setEnabled(True)
         for child in self.logical_children:
             child.enable_recursively(till_goal_nb)
+
+    def check_context1(self):
+        """
+        Check if context1_widget displays the content of context1.
+        """
+        if not self.context1:
+            return self.context1_widget is None
+        elif not self.context1_widget:
+            return False
+
+        if len(self.context1) != len(self.context1_widget.math_objects):
+            return False
+        tests = [math_obj in self.context1 for math_obj in
+                 self.context1_widget.math_objects]
+        return all(tests)
+
+    def check_context2(self):
+        """
+        Check if context1_widget displays the content of context1.
+        """
+        if not self.context2:
+            return self.context2_widget is None
+        elif not self.context2_widget:
+            return False
+        if len(self.context2) != len(self.context2_widget.math_objects):
+            return False
+        tests = [math_obj in self.context2 for math_obj in
+                 self.context2_widget.math_objects]
+        return all(tests)
+
+    def check_target(self):
+        """
+        Check if target_widget displays the content of target.
+        """
+        if not self.target_widget:
+            return self.target is None
+        else:
+            return self.target == self.target_widget.target
+
+    def check_children(self):
+        """
+        Check if children_widget displays descendants_to_be_displayed.
+        """
+        return self.children_widgets == self.descendants_displayed_by_self
+
+    def is_up_to_date(self):
+        """
+        Check if display is coherent with datas. Specifically,
+        compare the contents of
+        - context1 and context1_widget,
+        - target and target_widget,
+        - context2 and context2_widget,
+        - descendants_to_be_displayed and children_widgets.
+        """
+        return all([self.check_context1(),
+                    self.check_target(),
+                    self.check_context2(),
+                    self.check_children()])
+
+    def update(self):
+        log.debug(f"Updating WGB for nb {self.goal_nb}: {self.goal_node}...")
+        log.debug(f"merge down: {self.merge_down}, enabled: {self.isEnabled()}")
+        if self.is_up_to_date():
+            log.debug("... is up to date")
+            return
+        else:
+            log.debug("...setting layout and children")
+            self.set_layout_without_children()
+            self.set_children_widgets()
+
+    def update_recursively(self):
+        self.update()
+        for child in self.logical_children:
+            child.update_recursively()
 
 
 class GoalSolvedWGB(WidgetGoalBlock):
@@ -720,7 +887,7 @@ class PureContextWGB(WidgetGoalBlock):
     def __init__(self, logical_parent, goal_node,
                  premises, operator, conclusions):
         super().__init__(logical_parent, goal_node,
-                         context1=(premises, operator, conclusions))
+                         pure_context=(premises, operator, conclusions))
 
 
 class SubstitutionWGB(WidgetGoalBlock):
@@ -728,7 +895,7 @@ class SubstitutionWGB(WidgetGoalBlock):
     def __init__(self, logical_parent, goal_node,
                  premises, definition, conclusions):
         super().__init__(logical_parent, goal_node,
-                         context1=(premises, definition, conclusions))
+                         pure_context=(premises, definition, conclusions))
 
 
 ###############
@@ -827,6 +994,10 @@ class ProofTreeWindow(QWidget):
         self.main_block = block
         self.main_window.setWidget(block)
 
+    def update(self):
+        if self.main_block:
+            self.main_block.update_recursively()
+
     def closeEvent(self, event):
         # Save window geometry
         settings = QSettings("deaduction")
@@ -868,7 +1039,7 @@ def widget_goal_block(parent_widget: Optional[WidgetGoalBlock],
         premises, operator, conclusions = goal_node.is_pure_context
         wgb = PureContextWGB(parent_widget, goal_node,
                              premises, operator, conclusions)
-    elif goal_node.is_goal_solved():
+    elif goal_node.is_goal_solved() or goal_node.is_all_goals_solved():
         wgb = GoalSolvedWGB(parent_widget, goal_node)
     elif goal_node.is_context_substitution:  # TODO: clean this up
         if goal_node.parent.statement:
@@ -905,6 +1076,7 @@ def update_from_node(wgb: WidgetGoalBlock, gn: GoalNode):
         or any([child_wgb.goal_node is not child_gn
                 for child_wgb, child_gn in pairs])):
         # Case 1: Some child_wgb is obsolete: reset all children
+        wgb.logical_children = []
         wgb.set_layout_without_children()
         for child_gn in gn.children_goal_nodes:
             child_wgb = widget_goal_block(wgb, child_gn)
@@ -935,6 +1107,11 @@ class ProofTreeController:
         self.proof_tree = proof_tree
 
     def enable(self, till_goal_nb):
+        """
+        Enable all WGB until a given goal_nb, disabled the others.
+        Disabled WGB will be displayed in light grey. This is used when usr
+        moves in the history.
+        """
         main_block = self.proof_tree_window.main_block
         main_block.enable_recursively(till_goal_nb=till_goal_nb)
 
@@ -947,9 +1124,15 @@ class ProofTreeController:
             self.proof_tree_window.set_main_block(main_block)
 
         current_goal_node = self.proof_tree.current_goal_node
+        # Adapt display to history move:
+        # FIXME: this should be useless except in case of history move.
         if current_goal_node:
             goal_nb = current_goal_node.goal_nb
+            log.debug(f"Enabling till {goal_nb}")
             self.enable(till_goal_nb=goal_nb)
+            self.proof_tree_window.update()
+
+        # Adapt display of ProofTreeWindow to ProofTree:
         update_from_node(self.proof_tree_window.main_block,
                          self.proof_tree.root_node)
 

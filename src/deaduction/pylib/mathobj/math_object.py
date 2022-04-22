@@ -177,6 +177,9 @@ class MathObject:
         self.bound_vars = bound_vars
         self.math_type = math_type
 
+    def __repr__(self):
+        return self.to_display(format_="utf8")
+
     def process_sequences_and_likes(self):
         """
         This method is called at each MathObject instantiation from lean

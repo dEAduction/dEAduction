@@ -1006,6 +1006,8 @@ class Coordinator(QObject):
                 self.proof_tree.process_new_proof_step(self.proof_step)
                 self.proof_step.unsolved_goal_nodes_after = \
                     copy(self.proof_tree.unsolved_goal_nodes)
+                ugn = [gn.goal_nb for gn in self.proof_tree.unsolved_goal_nodes]
+                log.debug(f"Ps_unsolved_gn_after: {ugn}")
 
             # ─────── Check for new goals ─────── # FIXME
             delta = self.lean_file.delta_goals_count
