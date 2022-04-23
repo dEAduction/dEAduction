@@ -31,20 +31,33 @@ from PySide2.QtWidgets import (QApplication, QFrame, QLayout,
                                QLineEdit, QListWidget, QWidget, QGroupBox,
                                QLabel, QTextEdit, QSizePolicy)
 from PySide2.QtWidgets import QScrollArea
-from PySide2.QtCore import Qt, Signal, Slot, QSettings, QEvent
-from PySide2.QtGui import QFont, QColor, QPalette, QIcon, QPainter, QPixmap
+from PySide2.QtCore import Qt, Signal, Slot, QSettings, QEvent, QRect, \
+    QPoint
+from PySide2.QtGui import QFont, QColor, QPalette, QIcon, QPainter, QPixmap, \
+    QPainterPath, QPolygon, QPen, QBrush
+
 import sys
 
 import deaduction.pylib.config.vars as cvars
 import deaduction.pylib.config.dirs as cdirs
 
+global _
+
 if __name__ != "__main__":
     from deaduction.pylib.proof_tree import GoalNode
     from deaduction.pylib.mathobj import MathObject
+else:
+    def _(x):
+        return x
+
+    class MathObject:
+        pass
+
+    class GoalNode:
+        pass
+
 
 log = logging.getLogger(__name__)
-global _
-# _ = lambda x: x
 
 
 def display_object(math_objects):
@@ -66,6 +79,18 @@ def display_object(math_objects):
             return math_objects.to_display(format_="html")
 
 
+def middle(p, q) -> QPoint:
+    return (p+q)/2
+
+
+def mid_left(rect: QRect) -> QPoint:
+    return middle(rect.topLeft(), rect.bottomLeft())
+
+
+def mid_right(rect: QRect) -> QPoint:
+    return middle(rect.topRight(), rect.bottomRight())
+
+
 def operator_arrow():
     # arrow_label.setScaledContents(True)
     # arrow_label.setMaximumSize(self.height(), self.height())
@@ -75,6 +100,67 @@ def operator_arrow():
     arrow_label.setPixmap(pixmap)
 
     return arrow_label
+
+
+class HorizontalArrow(QWidget):
+    def __init__(self, width=50, arrow_height=4, style=Qt.SolidLine):
+        super(HorizontalArrow, self).__init__()
+        self.color = cvars.get("display.color_for_operator_props")
+        self.style = style
+        self.width = width
+        self.setFixedWidth(width)
+        self.setFixedHeight(arrow_height*3)
+        self.pen_width = 1
+        self.arrow_height = arrow_height + self.pen_width
+
+    def paintEvent(self, e):
+        painter = QPainter(self)
+        pen = QPen()
+        pen.setColor(QColor(self.color))
+        pen.setWidth(self.pen_width)
+        pen.setJoinStyle(Qt.MiterJoin)
+        pen.setCapStyle(Qt.FlatCap)
+        painter.setPen(pen)
+        rectangle = self.rect()
+        # self.paint_arrow(painter, mid_left(rectangle), mid_right(rectangle))
+
+        origin = mid_left(rectangle)
+        end = mid_right(rectangle)
+        arrow_height = self.arrow_height
+        vect_x = QPoint(arrow_height, 0)
+        vect_y = QPoint(0, arrow_height)
+        end = end - vect_x
+        pen.setStyle(self.style)
+        painter.setPen(pen)
+        painter.drawLine(origin, end-2*vect_x)
+        # Triangle
+        brush = QBrush(self.color, Qt.SolidPattern)
+        painter.setBrush(brush)
+        pen.setStyle(Qt.SolidLine)
+        pen.setWidth(1)
+        painter.setPen(pen)
+        upper_vertex = end-2*vect_x - vect_y
+        lower_vertex = end-2*vect_x + vect_y
+        triangle = QPolygon([end, upper_vertex, lower_vertex, end])
+        painter.drawPolygon(triangle)
+        painter.end()
+
+    # def paint_arrow(self, painter: QPainter, origin: QPoint, end: QPoint):
+    #     arrow_height = self.arrow_height
+    #     vect_x = QPoint(arrow_height, 0)
+    #     vect_y = QPoint(0, arrow_height)
+    #     end = end - vect_x
+    #     painter.pen().setStyle(self.style)
+    #     # painter.drawLine(origin, end-vect_x)
+    #     # Triangle
+    #     painter.pen().setStyle(Qt.SolidLine)
+    #     upper_vertex = end-2*vect_x - vect_y
+    #     lower_vertex = end-2*vect_x + vect_y
+    #     triangle = QPolygon([end, upper_vertex, lower_vertex, end])
+    #     painter.drawPolygon(triangle)
+
+    def set_width(self, width):
+        self.setFixedWidth(width)
 
 
 class DisclosureTriangle(QLabel):
@@ -111,10 +197,11 @@ class RawLabelMathObject(QLabel):
     Mother class for displaying a MathObject.
     """
 
-    def __init__(self, math_object=None, html_msg: callable = None):
+    def __init__(self, math_object=None,
+                 html_msg: Optional[callable] = None):
         """
         Either math_object or html_msg is not None. If html_msg is not None
-        then it ias a callable with parameter use_color.
+        then it is a callable with parameter use_color.
         """
         super().__init__()
         assert math_object or html_msg
@@ -125,7 +212,7 @@ class RawLabelMathObject(QLabel):
 
     @property
     def is_prop(self):
-        if self.math_object:
+        if self.math_object and isinstance(self.math_object, MathObject):
             return self.math_object.math_type.is_prop()
 
     @property
@@ -215,6 +302,51 @@ class LayoutOperator(QWidget):
         self.setLayout(layout)
 
 
+class SubstitutionArrow(QWidget):
+    """
+    Display an arrow labelled by some Generic LMO, e.g. a rewriting rule as in
+                f(x) = y
+            ------------------>.
+    """
+    def __init__(self, rw_rule):
+        super().__init__()
+        layout = QVBoxLayout()
+        layout.addStretch(1)
+        # Label
+        label_layout = QHBoxLayout()
+        self.rw_label = GenericLMO(rw_rule, new=False)
+        self.rw_label.show()
+        self.label_width = self.rw_label.geometry().width()
+        # self.rw_label.hide()
+        label_layout.addStretch(1)
+        label_layout.addWidget(self.rw_label)
+        label_layout.addStretch(1)
+        layout.addLayout(label_layout)
+
+        # Arrow
+        arrow_layout = QHBoxLayout()
+        self.arrow_wdg = HorizontalArrow(width=self.label_width + 100,
+                                         style=Qt.DashLine)
+        arrow_layout.addStretch(1)
+        arrow_layout.addWidget(self.arrow_wdg)
+        arrow_layout.addStretch(1)
+        layout.addLayout(arrow_layout)
+
+        # Get a symmetric geometry:
+        fake_label = GenericLMO(rw_rule, new=False)
+        size_pol = fake_label.sizePolicy()
+        size_pol.setRetainSizeWhenHidden(True)
+        fake_label.setSizePolicy(size_pol)
+        layout.addWidget(fake_label)
+        layout.addStretch(1)
+        self.setLayout(layout)  # FIXME: arrow does not show!
+        fake_label.hide()
+
+    # def changeEvent(self, e):
+    #     label_width = self.rw_label.geometry().width()
+    #     self.arrow_wdg.set_width(label_width)
+
+
 ###########################
 # Context / target blocks #
 ###########################
@@ -265,9 +397,36 @@ class PureContextWidget(ContextWidget):
         # Input -> Operator -> output:
         if premises:
             self.layout.addLayout(input_layout)
-            self.layout.addWidget(operator_arrow())
+            self.layout.addWidget(HorizontalArrow())
         self.layout.addWidget(operator_wdg)
-        self.layout.addWidget(operator_arrow())
+        self.layout.addWidget(HorizontalArrow())
+        self.layout.addLayout(output_layout)
+
+        self.layout.addStretch(1)
+
+
+class SubstitutionContextWidget(ContextWidget):
+    """
+    A widget for displaying new context object from a rewriting, e.g.
+            f(x) = y
+    y in A ----------> f(x) in A.
+    """
+
+    def __init__(self, premises, operator, conclusions):
+        super().__init__([])
+        self.premises = premises
+        self.operator = operator
+        self.conclusions = conclusions
+
+        input_layout = LayoutMathObjects(premises, align="right", new=False)
+        output_layout = LayoutMathObjects(conclusions, align="left")
+        operator_wdg = SubstitutionArrow(operator)
+
+        # Input -> Operator -> output:
+        self.layout.addLayout(input_layout)
+        # self.layout.addWidget(HorizontalArrow())
+        self.layout.addWidget(operator_wdg)
+        # self.layout.addWidget(HorizontalArrow())
         self.layout.addLayout(output_layout)
 
         self.layout.addStretch(1)
@@ -515,7 +674,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
     __init__() method calls set_layout_without_children, but does not add
     children.
     """
-    rw_level = 1  # show rw but not implicit rw
+    rw_level = 1  # show rw but not implicit rw  # FIXME: not implemented
 
     def __init__(self, logical_parent, goal_node,
                  context1=None, target=None, context2=None, pure_context=None,
@@ -1106,65 +1265,70 @@ class ProofTreeController:
 
 def main():
     app = QApplication()
-    main_window = ProofTreeWindow()
-    AbstractGoalBlock.merge = True
-
-    context0 = ["X", "Y", "f"]
-    target0 = "f surjective ⇒ (∀A ⊂ Y, ∀A' ⊂ Y, ( f⁻¹(A) ⊂ f⁻¹(A') ⇒ A ⊂ A' ) )"
-    main_block = WidgetGoalBlock(logical_parent=None,
-                                 context1=context0, target=target0)
-
-    main_window.set_main_block(main_block)
-    main_window.show()
-
-    # TODO: change to successive IntroBlocks:
-    intro1 = IntroImpliesWGB(logical_parent=main_block,
-                             context=["f surjective"],
-                             target="(∀A ⊂ Y, ∀A' ⊂ Y, ( f⁻¹(A) ⊂ f⁻¹(A')"
-                                    " ⇒ A ⊂ A' ) )")
-    intro2a = IntroWGB(logical_parent=intro1,
-                       context=["A"],
-                       target="∀A' ⊂ Y, f⁻¹(A) ⊂ f⁻¹(A') ⇒ A ⊂ A'")
-    intro2b = IntroWGB(logical_parent=intro2a,
-                       context=["A'"], target="f⁻¹(A) ⊂ f⁻¹(A') ⇒ A ⊂ A'")
-    intro3 = IntroImpliesWGB(logical_parent=intro2b,
-                             context=["f⁻¹(A) ⊂ f⁻¹(A')"], target="A ⊂ A'")
-
-    intro4 = IntroWGB(logical_parent=intro3,
-                      context=["y"], target="y ∈ A => y ∈ A'")
-    intro5 = IntroWGB(logical_parent=intro4,
-                             context=["y ∈ A"], target="y ∈ A'")
-    # intro2b.show()
-
-
-    operator = [(["y"], "f surjective", ["x", "y = f(x)"]),
-                (["y ∈ A"], "y = f(x)", ["f(x) ∈ A"]),
-                (["f(x) ∈ A"], "definition image réciproque", ["x ∈ f⁻¹(A)"]),
-                (["x ∈ f⁻¹(A)"], "f⁻¹(A) ⊂ f⁻¹(A')", ["x ∈ f⁻¹(A')"]),
-                (["x ∈ f⁻¹(A')"], "definition image réciproque", ["f(x) ∈ A'"]),
-                (["f(x) ∈ A'"], "y = f(x)", ["y ∈ A'"])]
-    previous_block = intro5
-    # op = operator[0]
-    # pure_block0 = PureContextWGB(logical_parent=None,
-    #                              premises=op[0],
-    #                              operator=op[1],
-    #                              conclusions=op[2])
-    # pure_block0.show()
-    for op in operator:
-        pure_block = PureContextWGB(previous_block,
-                                    premises=op[0],
-                                    operator=op[1],
-                                    conclusions=op[2])
-        previous_block.add_logical_child(pure_block)
-        previous_block = pure_block
-
-    # case_block1 = ByCasesWGB(logical_parent=previous_block,
-    #                          context=["y ∈ A"], target="First case: y ∈ A")
-    # case_block2 = ByCasesWGB(logical_parent=previous_block,
-    #                          context=["y ∉ A"], target="Second case: y ∉ A")
-    # case_block1.show()
-    # previous_block.set_children([case_block1, case_block2])
+    # pcw = HorizontalArrow(100)
+    # pcw = SubstitutionArrow("f(x)=y mais aussi TOTO le clown")
+    pcw = SubstitutionContextWidget(["y dans A"], "f(x)=y et aussi toto",
+                                    ["f(x) dans A"])
+    pcw.show()
+    # main_window = ProofTreeWindow()
+    # AbstractGoalBlock.merge = True
     #
+    # context0 = ["X", "Y", "f"]
+    # target0 = "f surjective ⇒ (∀A ⊂ Y, ∀A' ⊂ Y, ( f⁻¹(A) ⊂ f⁻¹(A') ⇒ A ⊂ A' ) )"
+    # main_block = WidgetGoalBlock(logical_parent=None, goal_node = None,
+    #                              context1=context0, target=target0)
+    #
+    # main_window.set_main_block(main_block)
+    # main_window.show()
+    #
+    # # TODO: change to successive IntroBlocks:
+    # intro1 = IntroImpliesWGB(logical_parent=main_block,
+    #                          context=["f surjective"],
+    #                          target="(∀A ⊂ Y, ∀A' ⊂ Y, ( f⁻¹(A) ⊂ f⁻¹(A')"
+    #                                 " ⇒ A ⊂ A' ) )")
+    # intro2a = IntroWGB(logical_parent=intro1,
+    #                    context=["A"],
+    #                    target="∀A' ⊂ Y, f⁻¹(A) ⊂ f⁻¹(A') ⇒ A ⊂ A'")
+    # intro2b = IntroWGB(logical_parent=intro2a,
+    #                    context=["A'"], target="f⁻¹(A) ⊂ f⁻¹(A') ⇒ A ⊂ A'")
+    # intro3 = IntroImpliesWGB(logical_parent=intro2b,
+    #                          context=["f⁻¹(A) ⊂ f⁻¹(A')"], target="A ⊂ A'")
+    #
+    # intro4 = IntroWGB(logical_parent=intro3,
+    #                   context=["y"], target="y ∈ A => y ∈ A'")
+    # intro5 = IntroWGB(logical_parent=intro4,
+    #                          context=["y ∈ A"], target="y ∈ A'")
+    # # intro2b.show()
+    #
+    #
+    # operator = [(["y"], "f surjective", ["x", "y = f(x)"]),
+    #             (["y ∈ A"], "y = f(x)", ["f(x) ∈ A"]),
+    #             (["f(x) ∈ A"], "definition image réciproque", ["x ∈ f⁻¹(A)"]),
+    #             (["x ∈ f⁻¹(A)"], "f⁻¹(A) ⊂ f⁻¹(A')", ["x ∈ f⁻¹(A')"]),
+    #             (["x ∈ f⁻¹(A')"], "definition image réciproque", ["f(x) ∈ A'"]),
+    #             (["f(x) ∈ A'"], "y = f(x)", ["y ∈ A'"])]
+    # previous_block = intro5
+    # # op = operator[0]
+    # # pure_block0 = PureContextWGB(logical_parent=None,
+    # #                              premises=op[0],
+    # #                              operator=op[1],
+    # #                              conclusions=op[2])
+    # # pure_block0.show()
+    # for op in operator:
+    #     pure_block = PureContextWGB(previous_block,
+    #                                 premises=op[0],
+    #                                 operator=op[1],
+    #                                 conclusions=op[2])
+    #     previous_block.add_logical_child(pure_block)
+    #     previous_block = pure_block
+    #
+    # # case_block1 = ByCasesWGB(logical_parent=previous_block,
+    # #                          context=["y ∈ A"], target="First case: y ∈ A")
+    # # case_block2 = ByCasesWGB(logical_parent=previous_block,
+    # #                          context=["y ∉ A"], target="Second case: y ∉ A")
+    # # case_block1.show()
+    # # previous_block.set_children([case_block1, case_block2])
+    # #
     sys.exit(app.exec_())
 
 
