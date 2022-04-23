@@ -227,6 +227,7 @@ class GoalNode:
         or self has no parent_node (is root_node).
         """
         # FIXME: case of implicit implication
+        #  plus test that self is conclusion of parent target
         if self._is_implies is not None:
             return self._is_implies
         # else:
@@ -239,6 +240,7 @@ class GoalNode:
         parent_target = self.parent_node.goal.target.math_type
         tests = [not parent_node.is_fork_node,
                  self.goal.new_context,
+                 self.target_has_changed,
                  parent_target.is_implication(is_math_type=True, implicit=True),
                  parent_target.contains(target)]
         return all(tests)

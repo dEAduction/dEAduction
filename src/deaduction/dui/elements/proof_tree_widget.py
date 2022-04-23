@@ -386,6 +386,7 @@ class TargetWidget(QWidget):
     #     self.children_layout.removeWidget(child)
     #
 
+
 ########################
 # Abstract Goal blocks #
 ########################
@@ -482,44 +483,6 @@ class AbstractGoalBlock:
             reference_level = WidgetGoalBlock.rw_level
         return self.rw_level <= reference_level
         # and not self.merge_up
-
-    @property
-    def displayable_children(self):
-        """
-        Return the list of children that should be displayed (either here or
-        by an ascendant).
-        """
-        return [child for child in self.logical_children if
-                child.is_visible() and not child.merge_up]
-
-    @property
-    def descendants_not_displayed_by_self(self):
-        """
-        Return the ordered list of descendants that are not displayed by their
-        parent, and should be displayed by one of self's ascendants.
-        """
-        if self.is_visible() and not self.merge_up:
-            # Self will handle descendants
-            return []
-        else:
-            descendants = []
-            for child in self.logical_children:
-                descendants.extend(child.descendants_not_displayed_by_self)
-            return self.displayable_children + descendants
-
-    @property
-    def descendants_displayed_by_self(self):
-        """
-        Determine the ordered list of widgets that should be displayed in
-        self.children_layout.
-        """
-        if not self.is_visible() or self.merge_up:
-            return []
-        else:
-            descendants = []
-            for child in self.logical_children:
-                descendants.extend(child.descendants_not_displayed_by_self)
-            return self.displayable_children + descendants
 
     @property
     def target_msg(self) -> callable:
@@ -654,21 +617,52 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
             self.context2_widget = ContextWidget(self.context2)
             self.children_layout.addWidget(self.context2_widget)
 
+    @property
+    def displayable_children(self):
+        """
+        Return the list of children that should be displayed (either here or
+        by an ascendant).
+        """
+        return [child for child in self.logical_children if
+                child.is_visible() and not child.merge_up]
+
+    @property
+    def descendants_not_displayed_by_self(self):
+        """
+        Return the ordered list of descendants that are not displayed by their
+        parent, and should be displayed by one of self's ascendants.
+        """
+        if self.children_layout and not self.merge_up:
+            # Self will handle descendants
+            return []
+        else:
+            descendants = []
+            for child in self.logical_children:
+                descendants.extend(child.descendants_not_displayed_by_self)
+            return self.displayable_children + descendants
+
+    @property
+    def descendants_displayed_by_self(self):
+        """
+        Determine the ordered list of widgets that should be displayed in
+        self.children_layout.
+        """
+        if not self.children_layout or self.merge_up:
+            return []
+        else:
+            descendants = []
+            for child in self.logical_children:
+                descendants.extend(child.descendants_not_displayed_by_self)
+            return self.displayable_children + descendants
 
     def add_widget_child(self, child):
         """
         Add the child if self has a children_layout, else call parent.This
         method is called when adding a logical child or by a child who
         delegates the display of its children widgets.
-        Note that tree must be updated recursively so that child merges up
-        correctly.
         """
-        # if not child.is_visible() or child.merge_up:
-        #     return
         if not child.is_visible():
             return
-        # elif child.merge_up:
-        #     self.update()
 
         if self.children_layout:
             self.children_widgets.append(child)
@@ -699,14 +693,6 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
                 self.children_layout.addWidget(child)
 
             log.debug(f"--> {self.children_layout.count()} displayed children")
-    # def recursive_update(self):
-    #     """
-    #     Perform an update, e.g. after a change of details level.
-    #     """
-    #     for child in self.logical_children:
-    #         child.recursive_update()
-    #     self.set_layout_without_children()
-    #     self.set_children_widgets()
 
     def is_solved(self):
         self.goal_node.is_recursively_solved()

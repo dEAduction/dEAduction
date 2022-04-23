@@ -83,7 +83,7 @@ if os.getenv("DEADUCTION_DEV_MODE", False):
                    'ServerQueue',
                    # 'lean',
                    'deaduction.dui',
-                   'deaduction.pylib',
+                   # 'deaduction.pylib',
                    'logic',
                    'magic',
                    'coursedata']
