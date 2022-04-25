@@ -576,14 +576,17 @@ class Coordinator(QObject):
 
     def process_history_move(self):
         """
-        Update self.proof_tree, including the unsolved goals pile.
-        Update interface, and prepare next proof_step.
+        This method is called after lean_file has been updated according to
+        the history move.
+        - update self.proof_tree, including the unsolved goals pile.
+        - Update interface, and prepare next proof_step.
         """
         historic_proof_step = self.lean_file.current_proof_step
         children_goal_nodes = historic_proof_step.children_goal_nodes
         proof_state = historic_proof_step.proof_state
         self.proof_step.proof_state = proof_state
         self.proof_step.children_goal_nodes = children_goal_nodes
+
         # Update proof_tree
         self.proof_tree.current_goal_node = children_goal_nodes[0]
 

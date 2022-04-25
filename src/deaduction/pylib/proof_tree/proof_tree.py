@@ -51,12 +51,14 @@ class GoalNode:
 
     def __init__(self, parent: Optional[ProofStep] = None, goal: Goal = None,
                  child_proof_step=None, is_solved=False):
+
         self.goal_nb = GoalNode.goal_nb
         GoalNode.goal_nb += 1
         self.parent = parent
         self.goal = goal
         self._child_proof_step = child_proof_step
         self._is_solved = is_solved
+
         self._msg = None
         self._html_msg = None
         self._is_by_cases = None
@@ -75,22 +77,32 @@ class GoalNode:
         root_node._is_by_cases = False
         return root_node
 
-    @classmethod
-    def goal_solved(cls, proof_step):
+    # @classmethod
+    # def goal_solved(cls, proof_step):
+    #     """
+    #     Return a copy of goal_node where target is a msg that goal is solved.
+    #     """
+    #     goal_node = proof_step.parent_goal_node
+    #     goal = deepcopy(goal_node.goal)
+    #     goal.target.math_type = MathObject.CURRENT_GOAL_SOLVED
+    #     goal_node = cls(proof_step, goal, is_solved=True)
+    #     goal_node._msg = goal.target.math_type.to_display(format_="utf8")
+    #     goal_node._html_msg = _("Goal!")
+    #     return goal_node
+
+    @property
+    def next_goal_node(self):
         """
-        Return a copy of goal_node where target is a msg that goal is solved.
+        Return next goal node in the proof tree.
         """
-        goal_node = proof_step.parent_goal_node
-        goal = deepcopy(goal_node.goal)
-        goal.target.math_type = MathObject.CURRENT_GOAL_SOLVED
-        goal_node = cls(proof_step, goal, is_solved=True)
-        goal_node._msg = goal.target.math_type.to_display(format_="utf8")
-        goal_node._html_msg = _("Goal!")
-        return goal_node
+        if self.child_proof_step and self.child_proof_step.children_goal_nodes:
+            return self.child_proof_step.children_goal_nodes[0]
 
     @property
     def children_goal_nodes(self):
-        if self.child_proof_step:
+        if self._is_solved:
+            return []
+        elif self.child_proof_step:
             return self.child_proof_step.children_goal_nodes
         else:
             return []
@@ -101,6 +113,11 @@ class GoalNode:
             return self.parent.parent_goal_node
         else:
             return None
+
+    @property
+    def proof_step_nb(self):
+        if self.parent:
+            return self.parent.pf_nb
 
     @property
     def is_fork_node(self):
@@ -275,12 +292,14 @@ class GoalNode:
         else:
             return False
 
-    def __msg(self, format_, use_color=True):
+    def __msg(self, format_, use_color=True, bf=False):
         """
         Compute a msg to be displayed as the header of the proof below this
         node. Generic msg is "Proof of <target>", but a different msg is
         displayed e.g. for proof by cases.
         :param format_ : "html" or "utf8"
+        :param use_color: enable or disable colors
+        :param bf: use boldface fonts.
         """
         if self._msg:
             return self._msg
@@ -303,14 +322,18 @@ class GoalNode:
             target_nb = self.brother_number
             msg = (_("Proof of first property") if target_nb == 0
                    else _("Proof of second property"))
-            html_target = target.to_display(format_="html", use_color=use_color)
+            html_target = target.to_display(format_="html",
+                                            use_color=use_color,
+                                            bf=bf)
             html_msg = _("Proof of {}").format(html_target)
         elif self.is_double_implication:
             target = self.goal.target.math_type
             target_nb = self.brother_number
             msg = (_("Proof of first implication") if target_nb == 0
                    else _("Proof of second implication"))
-            html_target = target.to_display(format_="html", use_color=use_color)
+            html_target = target.to_display(format_="html",
+                                            use_color=use_color,
+                                            bf=bf)
             html_msg = _("Proof of {}").format(html_target)
 
         elif self.goal.target is MathObject.NO_MORE_GOALS:
@@ -320,7 +343,9 @@ class GoalNode:
         else:  # TODO: refine this, taking into account auxiliary goal
             target = self.goal.target.math_type
             utf8_target = target.to_display(format_="utf8")
-            html_target = target.to_display(format_="html", use_color=use_color)
+            html_target = target.to_display(format_="html",
+                                            use_color=use_color,
+                                            bf=bf)
             msg = _("Proof of {}").format(utf8_target)
             html_msg = _("Proof of {}").format(html_target)
 
@@ -329,15 +354,8 @@ class GoalNode:
     def msg(self):
         return self.__msg(format_="utf8")
 
-    def html_msg(self, use_color=True):
-        return self.__msg(format_="html", use_color=use_color)
-        # if self._html_msg:
-        #     return self._html_msg
-        # else: # Compute msg since this also compute html_msg, and try again...
-        #     txt = self.msg
-        #     if self._html_msg:
-        #         return self._html_msg
-        # return self.msg
+    def html_msg(self, use_color=True, bf=False):
+        return self.__msg(format_="html", use_color=use_color, bf=bf)
 
     def set_goal(self, goal):
         self.goal = goal
@@ -361,6 +379,9 @@ class GoalNode:
                         for child in self.children_goal_nodes])
         else:
             return False
+
+    def set_solved(self):
+        self._is_solved = True
 
     def is_goal_solved(self):
         """
@@ -462,11 +483,15 @@ class ProofTree:
         """
         Note that if initial goal is not provided, then root_node has to be
         set by the first call to process_new_proof_step.
+
+        - self.last_proof_step is the last ProofStep instance received by
+        the ProofTree, responsible for the present state.
         """
         self.root_node = GoalNode(parent=None, goal=initial_goal) \
             if initial_goal else None
         # self._unsolved_goal_nodes = [self.root_node] if self.root_node else []
         self._current_goal_node = self.root_node
+        # self.last_proof_step: Optional[ProofStep] = None
         self.previous_goal_node = None
 
     @property
@@ -481,6 +506,25 @@ class ProofTree:
     @current_goal_node.setter
     def current_goal_node(self, goal_node):
         self._current_goal_node = goal_node
+
+    def is_at_end(self):
+        """
+        True if self is at the end of history.
+        """
+        return self.current_goal_node.child_proof_step is None
+
+    @property
+    def next_proof_step_nb(self):
+        proof_step = self.current_goal_node.child_proof_step
+        if proof_step:
+            return proof_step.pf_nb
+        else:
+            return None
+
+    # @property
+    # def last_proof_step_nb(self):
+    #     if self.last_proof_step:
+    #         return self.last_proof_step.pf_nb
 
     def unsolved_goal_nodes(self, till_goal_nb=None):
         """
@@ -513,6 +557,7 @@ class ProofTree:
         First call creates the main_goal. The next proof_step should be created
         after this is called, with current_goal_node as a parent.
         """
+
         self.previous_goal_node = self.current_goal_node
         new_proof_state = new_proof_step.proof_state
         assert new_proof_state is not None
@@ -521,7 +566,6 @@ class ProofTree:
         if not self.root_node:
             self.root_node = GoalNode.root_node(new_proof_step,
                                                 new_proof_state.goals[0])
-            # self.unsolved_goal_nodes.append(self.root_node)
             new_proof_step.children_goal_nodes = [self.root_node]
             self.current_goal_node = self.root_node
             return
@@ -539,9 +583,10 @@ class ProofTree:
         delta_goal = (len(new_proof_state.goals) -
                       len(self.unsolved_goal_nodes()))
         if delta_goal == -1:  # current goal solved
-            children = [GoalNode.goal_solved(new_proof_step)]
-            new_proof_step.children_goal_nodes = children
+            # children = [GoalNode.goal_solved(new_proof_step)]
+            self.current_goal_node.set_solved()
             self.go_to_first_unsolved_node()
+            new_proof_step.children_goal_nodes = [self.current_goal_node]
             self.current_goal_node.set_goal(new_goal)  # Refresh goal
         elif delta_goal == 0:  # Generic case
             next_goal_node = GoalNode(parent=new_proof_step, goal=new_goal)
