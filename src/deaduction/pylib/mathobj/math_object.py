@@ -1247,7 +1247,7 @@ class MathObject:
         return abstract_string
 
     def to_display(self, format_="html", text_depth=0,
-                   use_color=True) -> str:
+                   use_color=True, bf=False) -> str:
         """
         Return a displayable string version of self. First compute an
         abstract_string (i.e. a tree version) taking text_depth into account,
@@ -1260,8 +1260,9 @@ class MathObject:
 
         :param format_:     one of 'utf8', 'html', 'latex'
         :param text_depth:  if >0, will try to replace symbols by plain text
-        for the upper branches of the MathObject tree.
-        :param use_color: use colors in html format.
+        for the upper branches of the MathObject tree
+        :param use_color: use colors in html format
+        :param bf: use boldface fonts in html format.
         """
         # TODO: the case when text_depth is >0 but not "infinity" has not
         #  been tested.
@@ -1283,7 +1284,7 @@ class MathObject:
 
         # Adapt to format_ and concatenate to get a string
         display = abstract_string_to_string(abstract_string, format_,
-                                            use_color=use_color)
+                                            use_color=use_color, bf=bf)
 
         # (3) Replace latex macro by utf8:
         # if format_ == 'lean':

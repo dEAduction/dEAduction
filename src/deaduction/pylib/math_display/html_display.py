@@ -116,6 +116,15 @@ def color_props():
             else None)
 
 
+def font_wrapper(s: str, bf=True):
+    if not bf:
+        return s
+    else:
+        html_pre = "<b>"
+        html_post = "</b>"
+        return html_pre + s + html_post
+
+
 def html_class_wrapper(s: str, class_name: str):
     html_pre = f"<font class='{class_name}'>"
     html_post = '</font>'
@@ -131,9 +140,6 @@ def html_style_classes(color=True):
                 "</style>"
     else:
         style = ""
-                # "<style>" \
-                # f".variable  {{}}" \
-                # "</style>"
     return style
 
 
@@ -204,7 +210,8 @@ def recursive_html_display(l: Union[list, str], depth, use_color=True) -> str:
 
 
 def html_display(abstract_string: Union[str, list], depth=0,
-                 use_color=True) -> str:
+                 use_color=True,
+                 bf=False) -> str:
     """
     Return a html version of the string represented by abstract_string,
     which is a tree of string.
@@ -220,7 +227,7 @@ def html_display(abstract_string: Union[str, list], depth=0,
     assert isinstance(string, str)
     string = cut_spaces(string)
     string = replace_dubious_characters(string)
-    string = string
+    string = font_wrapper(string, bf)  # Maybe use boldface fonts
     style = html_style_classes(use_color)
     return style + string
 
