@@ -136,6 +136,8 @@ def update_from_node(wgb: WidgetGoalBlock, gn: GoalNode):
     """
     pairs = list(zip(wgb.logical_children, gn.children_goal_nodes))
     if (len(wgb.logical_children) > len(gn.children_goal_nodes)
+        or any([child_gn.goal_has_changed for child_gn in
+                gn.children_goal_nodes])
         or any([child_wgb.goal_node is not child_gn
                 for child_wgb, child_gn in pairs])):
         # Case 1: Some child_wgb is obsolete: reset all children
@@ -191,7 +193,7 @@ class ProofTreeController:
 
         current_goal_node = self.proof_tree.current_goal_node
         # Adapt display of ProofTreeWindow to ProofTree:
-        log.info("Updating proof tree widget from proof tree.")
+        # log.info("Updating proof tree widget from proof tree.")
         update_from_node(self.proof_tree_window.main_block,
                          self.proof_tree.root_node)
 
@@ -200,17 +202,17 @@ class ProofTreeController:
         # deleted if usr starts a new branch from here
         proof_step_nb = self.proof_tree.next_proof_step_nb
         if proof_step_nb is not None:
-            log.debug(f"Enabling till {proof_step_nb-1}")
+            # log.debug(f"Enabling till {proof_step_nb-1}")
             self.enable(till_step_nb=proof_step_nb-1)
         else:
             self.enable(till_step_nb=1000000)
-        log.info("Updating display")
+        # log.info("Updating display")
 
         # Update display:
         self.proof_tree_window.update_display()
 
         # Set current target:
-        log.info("Setting current target")
+        # log.info("Setting current target")
         goal_nb = current_goal_node.goal_nb
         self.proof_tree_window.set_current_target(goal_nb,
                                                   blinking=self.is_at_end())

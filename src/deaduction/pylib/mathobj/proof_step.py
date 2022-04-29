@@ -225,7 +225,7 @@ class ProofStep:
                  total_goals_counter=1,
                  proof_state=None,
                  history_nb=-1):
-        self._children_goal_nodes = None
+        self._children_goal_nodes = []
         self._parent_goal_node = None
         self.property_counter    = property_counter
         self.current_goal_number = current_goal_number

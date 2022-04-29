@@ -58,6 +58,7 @@ class GoalNode:
         self.goal = goal
         self._child_proof_step = child_proof_step
         self._is_solved = is_solved
+        self.goal_has_changed = False
 
         self._msg = None
         self._html_msg = None
@@ -270,7 +271,7 @@ class GoalNode:
         rw_item = None
         proof_step = self.parent
         if proof_step.is_statement() and proof_step.is_on_target():
-            rw_item = proof_step.rw_item()
+            rw_item = proof_step.rw_item
         elif proof_step.button_name == "equal" \
                 and len(proof_step.selection) == 1:
             rw_item = proof_step.rw_item
@@ -443,8 +444,8 @@ class GoalNode:
     def is_sorry(self):
         return self.parent.is_sorry()
 
-    def set_solved(self):
-        self._is_solved = True
+    def set_solved(self, yes=True):
+        self._is_solved = yes
 
     def is_goal_solved(self):
         """
@@ -483,7 +484,7 @@ class GoalNode:
         if self._is_solved:  # self is a solved leaf
             return []
         truncated_children = [child for child in self.children_goal_nodes
-                              if child.goal_number <= till_goal_nb]
+                              if child.goal_nb <= till_goal_nb]
         if not truncated_children:  # self is an unsolved leaf
             return [self]
 
@@ -528,6 +529,7 @@ class GoalNode:
                 child.prune(proof_step_nb)
         else:
             # Remove!
+            self.set_solved(False)  # VERY important!
             self.child_proof_step = None
             self.goal.remove_future_info()
 
@@ -592,6 +594,10 @@ class ProofTree:
         """
         return self.root_node.truncated_unsolved_leaves(till_goal_nb)
 
+    # def current_unsolved_goal_nodes(self):
+    #     current_goal_nb = self.current_goal_node.goal_nb
+    #     return self.unsolved_goal_nodes(till_goal_nb=current_goal_nb)
+
     def go_to_first_unsolved_node(self):
         self.current_goal_node = self.unsolved_goal_nodes()[0]
 
@@ -624,13 +630,20 @@ class ProofTree:
 
         # ─────── Create new GoalNodes ─────── #
         new_goal = new_proof_state.goals[0]
-        delta_goal = (len(new_proof_state.goals) -
-                      len(self.unsolved_goal_nodes()))
+        unsolved_gn = self.unsolved_goal_nodes()
+        delta_goal = (len(new_proof_state.goals)
+                      - len(unsolved_gn))
+        log.info("Current unsolved goal nb:")
+        log.debug([g.goal_nb for g in unsolved_gn])
+        log.info(f"Delta goals: {delta_goal}")
+
         if delta_goal == -1:  # current goal solved
             self.current_goal_node.set_solved()
             self.go_to_first_unsolved_node()
             new_proof_step.children_goal_nodes = [self.current_goal_node]
-            self.current_goal_node.set_goal(new_goal)  # Refresh goal
+            #  Refresh goal and set tag:
+            self.current_goal_node.set_goal(new_goal)
+            self.current_goal_node.goal_has_changed = True
         elif delta_goal == 0:  # Generic case
             next_goal_node = GoalNode(parent=new_proof_step, goal=new_goal)
             children = [next_goal_node]
