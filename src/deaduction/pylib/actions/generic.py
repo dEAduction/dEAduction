@@ -75,10 +75,12 @@ def rw_using_statement(goal: Goal, selected_objects: [MathObject],
         codes = codes.or_else(f'simp_rw <- {defi} at {arguments}')
         codes.add_success_msg(context_msg)
 
+    codes.rw_item = (statement.type_, statement.pretty_name)
     return codes
 
 
 def add_statement_to_context(proof_step, statement) -> CodeForLean:
+    # TODO: store statement name in the ContextMO as a synthetic name
     h = get_new_hyp(proof_step)
     name = statement.lean_name
 

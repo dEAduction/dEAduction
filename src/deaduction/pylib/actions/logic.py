@@ -517,6 +517,7 @@ def have_new_property(arrow: MathObject,
     code.add_success_msg(_("Property {} added to the context").
                          format(new_hypo_name))
 
+    code.operator = arrow
     # code.add_used_properties(arrow)
 
     return code
@@ -599,9 +600,9 @@ def action_implies(proof_step,
 
 def choose_substitution(equality0: MathObject, equality1: MathObject):
     """
-    Ask usr to choose between using equality0 t substitute in equality1 or
+    Ask usr to choose between using equality0 to substitute in equality1 or
     the converse. equality0, equality1 are assumed to be (universal)
-    equality or iff.
+    equalities or iff.
     """
     eq0 = equality0.to_display(format_="utf8")
     eq1 = equality1.to_display(format_="utf8")
@@ -735,7 +736,7 @@ def rw_with_iff(rw_hyp: MathObject,
 
     code = code1.or_else(code2)
     code.add_used_properties(rw_hyp)
-
+    code.rw_item = rw_hyp
     return code
 
 
@@ -1120,6 +1121,7 @@ def apply_exists(proof_step, selected_object: [MathObject]) -> CodeForLean:
         code = code.and_then(f'simp at {new_hypo_name}')
     code.add_success_msg(_("New object {} with property {}").
                          format(x, new_hypo_name))
+    code.operator = selected_object[0]
     return code
 
 
@@ -1240,6 +1242,7 @@ def code_for_substitution(rw_hyp: MathObject,
     code.add_error_msg(error_msg)
 
     code.add_used_properties(rw_hyp)
+    code.rw_item = rw_hyp
     return code
 
 

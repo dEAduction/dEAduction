@@ -133,8 +133,15 @@ class Goal:
         Return objects and props of the context that are new, i.e. they have
         no parent.
         """
-        return [cmo for cmo in self.context if not
-                cmo.parent_context_math_object]
+        return [cmo for cmo in self.context if cmo.is_new]
+
+    @property
+    def modified_context(self):
+        """
+        Return objects and props of the context that are new, i.e. they have
+        no parent.
+        """
+        return [cmo for cmo in self.context if cmo.is_modified]
 
     def remove_future_info(self):
         for obj in self.context:

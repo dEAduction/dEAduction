@@ -66,12 +66,21 @@ class SingleCode:
     information of which MathObject are used by the instruction.
 
     Ex: SingleCode.string = and.intro {} {}
-        SingleCode.used_properties = list of 2 MathObjects represnting the
-        properties
+        SingleCode.used_properties = list of 2 MathObjects representing the
+        properties.
+    The operator and rw_item attributes are used to build the
+    proof tree widget.
+
+    :param rw_item: the property used for a substitution, e.g. "f(
+    x)=y", or a definition or theorem.
+
     """
-    def __init__(self, string: str, used_properties=None):
+    def __init__(self, string: str, used_properties=None,
+                 operator=None, rw_item=None):
         self.string = string
         self.used_properties = used_properties if used_properties else []
+        self.operator = operator
+        self.rw_item = rw_item
 
     def __repr__(self):
         attributes = []
@@ -92,6 +101,7 @@ class SingleCode:
             return self.string.format(*names)
         else:
             return self.string
+
 
 class CodeForLean:
     """
@@ -143,7 +153,7 @@ class CodeForLean:
             if not isinstance(instruction, SingleCode):
                 instruction = SingleCode(instruction)
         if len(args) == 2:
-            instruction = SingleCode(*args)
+            instruction = SingleCode()
         if args:
             self.instructions = [instruction]
         else:
@@ -185,13 +195,16 @@ class CodeForLean:
     def from_string(cls,
                     string: str,
                     used_properties=None,  # type: MathObject
+                    operator=None,
+                    rw_prop_or_statement=None,
                     error_msg: str = "",
                     success_msg: str = ""):
         """
         Create a CodeForLean with a single instruction, with no used
         properties.
         """
-        instruction = SingleCode(string, used_properties)
+        instruction = SingleCode(string, used_properties, operator=None,
+                                 rw_item=None)
         return cls(instructions=[instruction],
                    error_msg=error_msg,
                    success_msg=success_msg)
@@ -257,6 +270,51 @@ class CodeForLean:
                              combinator=LeanCombinator.and_then,
                              error_msg=error_msg,
                              global_success_msg=global_success_msg)
+
+    @property
+    def operator(self):
+        """
+        Return the operator attribute of the first SingleCode found in self.
+        """
+        if not self.instructions:
+            return None
+        instruction = self.instructions[0]
+        return instruction.operator
+
+    @operator.setter
+    def operator(self, operator):
+        """
+        Set the operator attribute of the first SingleCode in self.
+        """
+        if self.is_or_else():
+            for instruction in self.instructions:
+                instruction.operator = operator
+        elif self.instructions:
+            instruction = self.instructions[0]
+            instruction.operator = operator
+
+    @property
+    def rw_item(self):
+        """
+        Return the operator attribute of the first SingleCode found in self.
+        """
+        if not self.instructions:
+            return None
+        instruction = self.instructions[0]
+        return instruction.rw_item
+
+    @rw_item.setter
+    def rw_item(self, rw_item):
+        """
+        Set the rw_item attribute of the first SingleCode in self, or of all
+        the codes if self is or_else.
+        """
+        if self.is_or_else():
+            for instruction in self.instructions:
+                instruction.rw_item = rw_item
+        elif self.instructions:
+            instruction = self.instructions[0]
+            instruction.rw_item = rw_item
 
     def or_else(self, other, success_msg=""):
         """

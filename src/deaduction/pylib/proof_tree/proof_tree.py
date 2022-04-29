@@ -175,33 +175,49 @@ class GoalNode:
             return self._is_conjunction
         parent_node = self.parent_node
         if not parent_node or not parent_node.is_fork_node:
-            return False
-        target = self.goal.target.math_type
+            self._is_conjunction = False
+        # Now self has a brother
         parent_target = parent_node.goal.target.math_type
-        test_and = parent_target.is_and(is_math_type=True, implicit=True)
-        if test_and and not parent_target.is_and(is_math_type=True):
-            parent_target = MathObject.last_rw_object  # "Implicit and" case
-        tests = [parent_target.is_and(is_math_type=True),
-                 target in parent_target.children]
-        self._is_conjunction = all(tests)
+        conjunction = parent_target.implicit(MathObject.is_and)
+        if not conjunction:
+            self._is_conjunction = False
+        else:
+            target = self.goal.target.math_type
+            brother_target = self.brother.goal.target.math_type
+            tests = [target in conjunction.children,
+                     brother_target in conjunction.children]
+            self._is_conjunction = all(tests)
+        # test_and = parent_target.is_and(is_math_type=True, implicit=True)
+        # if test_and and not parent_target.is_and(is_math_type=True):
+        #     parent_target = MathObject.last_rw_object  # "Implicit and" case
+        # tests = [parent_target.is_and(is_math_type=True),
+        #          target in parent_target.children]
+        # self._is_conjunction = all(tests)
         return self._is_conjunction
 
     @property
     def is_double_implication(self):
         """
-        Self is the node of a conjunction proof iff its parent's target is a
-        conjunction whose children contain self's target.
+        Self is the node of a double implication proof iff its parent's target
+        is a double implication whose children contain self's target.
         """
         if self._is_double_implication is not None:
             return self._is_double_implication
         parent_node = self.parent_node
         if not parent_node or not parent_node.is_fork_node:
             return False
-        target = self.goal.target.math_type
+
+        # Now self has a brother
         parent_target = parent_node.goal.target.math_type
-        tests = [parent_target.is_iff(is_math_type=True),
-                 target in parent_target.children]
-        self._is_double_implication = all(tests)
+        iff = parent_target.implicit(MathObject.is_and)
+        if not iff:
+            self._is_double_implication = False
+        else:
+            target = self.goal.target.math_type
+            brother_target = self.brother.goal.target.math_type
+            tests = [target in iff.children,
+                     brother_target in iff.children]
+            self._is_double_implication = all(tests)
         return self._is_double_implication
 
     @property
@@ -215,59 +231,79 @@ class GoalNode:
         - new context objects
         - and new target which is contained in the previous target.
         """
-        # FIXME: case of implicit forall
         if self._is_intro is not None:
             return self._is_intro
         else:
             return self.parent.is_intro_forall()
-        # parent_node = self.parent_node
-        # if not parent_node:
-        #     return False
-        # target = self.goal.target.math_type
-        # parent_target = self.parent_node.goal.target.math_type
-        # tests = [not parent_node.is_fork_node,
-        #          self.goal.new_context,
-        #          parent_target.is_for_all(is_math_type=True, implicit=True),
-        #          parent_target.contains(target)]  # fixme: implicit
-        # return all(tests)
 
     @property
     def is_implies(self):
         """
         True if self corresponds to introduction of objects to prove an
-        implication. This is characterised
-        by
-        - parent is not a fork node,
-        - new context objects
-        - TODO: old target is (maybe implicit) implication
-        - and new target which is contained in the previous target
-        or self has no parent_node (is root_node).
+        implication.
         """
-        # FIXME: case of implicit implication
-        #  plus test that self is conclusion of parent target
+
         if self._is_implies is not None:
             return self._is_implies
-        # else:
-        #     return self.parent.is_intro_implies()
+        else:
+            return self.parent.is_intro_implies()
 
-        parent_node = self.parent_node
-        if not parent_node:
-            return True  # Self is root_node.
-        target = self.goal.target.math_type
-        parent_target = self.parent_node.goal.target.math_type
-        tests = [not parent_node.is_fork_node,
-                 self.goal.new_context,
-                 self.target_has_changed,
-                 parent_target.is_implication(is_math_type=True, implicit=True),
-                 parent_target.contains(target)]
-        return all(tests)
+        # parent_node = self.parent_node
+        # if not parent_node:
+        #     return True  # Self is root_node.
+        # target = self.goal.target.math_type
+        # parent_target = self.parent_node.goal.target.math_type
+        # tests = [not parent_node.is_fork_node,
+        #          self.goal.new_context,
+        #          self.target_has_changed,
+        #          parent_target.is_implication(is_math_type=True, implicit=True),
+        #          parent_target.contains(target)]
+        # return all(tests)
+
+    @property
+    def is_target_substitution(self):
+        """
+        If self is a substitution occurring on the target, return the prop
+        or statement used for substitution.
+        """
+
+        rw_item = None
+        proof_step = self.parent
+        if proof_step.is_statement() and proof_step.is_on_target():
+            rw_item = proof_step.rw_item()
+        elif proof_step.button_name == "equal" \
+                and len(proof_step.selection) == 1:
+            rw_item = proof_step.rw_item
+        elif proof_step.is_push_neg() and proof_step.is_on_target():
+            rw_item = _("Pushing"), _("negation")
+        elif proof_step.is_by_contraposition():
+            rw_item = _("")
+        return rw_item
 
     @property
     def is_context_substitution(self):
-        # FIXME: the statement could be a rw theorem ;
-        test = (self.parent.is_definition()) or \
-               (self.parent.button_name == "equal" and self.parent.selection)
-        return test
+        """
+        If self is a substitution occurring on the context, return the prop
+        or statement used for substitution, as well as premises and conclusions.
+        """
+
+        rw_item = None
+        proof_step = self.parent
+        if proof_step.is_statement() and not proof_step.is_on_target():
+            rw_item = proof_step.rw_item
+        elif (proof_step.is_equal() or proof_step.is_iff()) and \
+                len(proof_step.selection) >= 2:
+            rw_item = proof_step.rw_item
+        elif proof_step.is_push_neg() and not proof_step.is_on_target():
+            rw_item = _("Pushing"), _("negation")
+
+        if rw_item:
+            selection = proof_step.selection
+            premises = [obj for obj in selection if rw_item != obj]
+            conclusions = (proof_step.goal.new_context
+                           + proof_step.goal.modified_context)
+
+            return premises, rw_item, conclusions
 
     @property
     def is_pure_context(self):
@@ -286,21 +322,42 @@ class GoalNode:
                  selected_objects]
         if all(tests):
             conclusions = self.goal.new_context
-            operator = selected_objects[0]
-            premises = selected_objects[1:]
+            operator = self.parent.operator
+            premises = [obj for obj in selected_objects if obj != operator]
             return premises, operator, conclusions
         else:
             return False
+
+    @property
+    def is_context_and(self):
+        if not (self.parent.is_and() or self.parent.is_iff()):
+            return False
+        if self.parent.is_on_target():
+            return False
+        selection = self.parent.selection
+        if self.parent.is_iff() and len(selection) == 2 and \
+                (selection[0].is_iff() or selection[1].is_iff()):
+            # This is a substitution
+            return False
+        return True
 
     def __msg(self, format_, use_color=True, bf=False):
         """
         Compute a msg to be displayed as the header of the proof below this
         node. Generic msg is "Proof of <target>", but a different msg is
         displayed e.g. for proof by cases.
+
+        html_msg is displayed in the proof tree widget,
+        msg is displayed in the status bar in case of a fork node.
+
         :param format_ : "html" or "utf8"
         :param use_color: enable or disable colors
         :param bf: use boldface fonts.
         """
+
+        msg = ""
+        html_msg = ""
+
         if self._msg:
             return self._msg
         elif self.is_by_cases:
@@ -335,6 +392,9 @@ class GoalNode:
                                             use_color=use_color,
                                             bf=bf)
             html_msg = _("Proof of {}").format(html_target)
+
+        elif self.parent.is_by_contradiction():
+            html_msg = _("Proof by contradiction")
 
         elif self.goal.target is MathObject.NO_MORE_GOALS:
             msg = self.goal.target.math_type.to_display(format_="utf8")
@@ -379,6 +439,9 @@ class GoalNode:
                         for child in self.children_goal_nodes])
         else:
             return False
+
+    def is_sorry(self):
+        return self.parent.is_sorry()
 
     def set_solved(self):
         self._is_solved = True
@@ -496,11 +559,6 @@ class ProofTree:
 
     @property
     def current_goal_node(self):
-        # if (self._unsolved_goal_nodes
-        #         and self.unsolved_goal_nodes[0] != self._current_goal_node):
-        #     log.warning(f"Strange current goal node: "
-        #                 f"{self.unsolved_goal_nodes[0]} vs "
-        #                 f"{self._current_goal_node}")
         return self._current_goal_node
 
     @current_goal_node.setter
@@ -534,22 +592,8 @@ class ProofTree:
         """
         return self.root_node.truncated_unsolved_leaves(till_goal_nb)
 
-    # ─────── Handling unsolved_goal_nodes ─────── #
-    # def set_current_goal_solved(self):
-    #     self.unsolved_goal_nodes.pop(0)
-    #
-    # def set_unsolved_goals(self, goal_nodes):
-    #     log.debug(f"Set unsolved gn to "
-    #               f"{[goal_node.goal_nb for goal_node in goal_nodes]}")
-    #     self.unsolved_goal_nodes = goal_nodes
-
     def go_to_first_unsolved_node(self):
         self.current_goal_node = self.unsolved_goal_nodes()[0]
-        # self.unsolved_goal_nodes[0] = \
-        #     self.unsolved_goal_nodes[0].children_goal_nodes[0]
-
-    # def set_fork_node(self, new_goal_node):
-    #     self.unsolved_goal_nodes.insert(1, new_goal_node)
 
     def process_new_proof_step(self, new_proof_step: ProofStep):
         """
@@ -583,7 +627,6 @@ class ProofTree:
         delta_goal = (len(new_proof_state.goals) -
                       len(self.unsolved_goal_nodes()))
         if delta_goal == -1:  # current goal solved
-            # children = [GoalNode.goal_solved(new_proof_step)]
             self.current_goal_node.set_solved()
             self.go_to_first_unsolved_node()
             new_proof_step.children_goal_nodes = [self.current_goal_node]
@@ -597,6 +640,7 @@ class ProofTree:
             assert delta_goal == 1
             next_goal_node = GoalNode(parent=new_proof_step, goal=new_goal)
             other_goal = new_proof_state.goals[1]
+            # Provisionally create other goal node
             other_goal_node = GoalNode(parent=new_proof_step, goal=other_goal)
             children = [next_goal_node, other_goal_node]
             new_proof_step.children_goal_nodes = children

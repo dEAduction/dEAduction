@@ -183,8 +183,8 @@ class ExerciseMainWindow(QMainWindow):
         log.debug(f"maximised: {maximised}")
         if geometry:
             self.restoreGeometry(geometry)
-            if maximised:
-                self.showMaximized()
+            # if maximised:  # FIXME: Does not work on Linux?!
+                # self.showMaximized()
 
         self.close_coordinator = None  # Method set up by Coordinator
 
@@ -260,7 +260,7 @@ class ExerciseMainWindow(QMainWindow):
         # FIXME: does not work
         settings = QSettings("deaduction")
         is_maximised = self.isMaximized()
-        # log.debug(f"Maximised: {is_maximised}")
+        log.debug(f"Maximised: {is_maximised}")
         settings.setValue("emw/isMaximised", is_maximised)
         self.showNormal()
         settings.setValue("emw/Geometry", self.saveGeometry())

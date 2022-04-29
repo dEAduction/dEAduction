@@ -152,6 +152,14 @@ class Statement:
             text = ""
         return text
 
+    @property
+    def target(self):
+        """
+        Return target of main goal, whose math_type is the target property.
+        """
+        if self.initial_proof_state:
+            return self.initial_proof_state.goals[0].target
+
     def pretty_hierarchy(self, outline):
         """
         Return the ordered (chapter > section > …) list of sections pretty
@@ -256,6 +264,15 @@ class Statement:
 
     @property
     def type(self):
+        if self.is_definition():
+            return _('definition')
+        elif self.is_theorem():
+            return _('theorem')
+        elif self.is_exercise():
+            return _('exercise')
+
+    @property
+    def type_(self):
         if self.is_definition():
             return _('definition')
         elif self.is_theorem():

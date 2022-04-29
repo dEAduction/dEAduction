@@ -527,9 +527,9 @@ class MathObject:
         # Include case of NO_MATH_TYPE (avoid infinite recursion!)
         if self is other:
             return True
-        # if self is NO_MATH_TYPE \
-        #         and other is NO_MATH_TYPE:
-        #     return True
+
+        if other is None or not isinstance(other, MathObject):
+            return False
 
         # Node
         elif node != other.node:
@@ -827,6 +827,32 @@ class MathObject:
         else:
             math_type = self.math_type
         return math_type.node == "QUANT_∀"
+
+    # def implicit_for_all(self):
+    #     test = self.is_for_all(implicit=True)
+    #     if not test:
+    #         return None
+    #     if self.is_for_all():
+    #         return self
+    #     else:
+    #         return self.last_rw_object
+
+    def implicit(self, test: callable):
+        """
+        Call the implicit version of test.
+         - if test is False, return None,
+         - if test  is explicitly True, return self,
+         - if test is implicitly True, return the implicit version of self.
+
+         :param test: one of is_and, is_or, is_implication, is_exists,
+                      is_for_all.
+        """
+        if not test(self, implicit=True):
+            return None
+        if test(self):
+            return self
+        else:
+            return self.last_rw_object
 
     def is_quantifier(self, is_math_type=False) -> bool:
         """
