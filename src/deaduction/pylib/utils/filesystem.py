@@ -193,14 +193,13 @@ class HashList:
 ############################################
 # Download utilities
 ############################################
-def download(url: str, fhandle: BufferedWriter, on_progress: Callable = None):
+def download(url: str, fhandle: BufferedWriter, on_progress = None):
     """
     Download a file to a specific target. Inspired from
     Patrick Massot's code in leanproject.
 
     :param url: HTTP(s) url to download file from (GET request)
-    :param path: File path on local filesystem
-    :param on_progress: callback(idx,count, progress)
+    :param on_progress: PyQT Signal(url, downloaded, total, progress)
                         to monitor download progress.
     :return: the sha1 checksum of the downloaded file
     """
@@ -238,7 +237,7 @@ def download(url: str, fhandle: BufferedWriter, on_progress: Callable = None):
 
             # Trigger progress callback
             if on_progress is not None:
-                on_progress(dl_size, tot_len, progress)
+                on_progress.emit(url, dl_size, tot_len, progress)
 
     return sha1.hexdigest()
 

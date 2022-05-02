@@ -326,7 +326,7 @@ class Coordinator(QObject):
                 self.lean_file.save_exercise_for_autotest(self)
 
         # Emit close_server_task signal and wait for effect
-        tasks = self.servint.nursery.child_tasks
+        # tasks = self.servint.nursery.child_tasks
         # log.debug(f"{len(tasks)} nursery tasks:")
         # log.debug([task.name for task in tasks])
         # log.debug("Closing server task")

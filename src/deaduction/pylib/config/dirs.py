@@ -55,7 +55,8 @@ test_exercises = (local / "test_exercises")  # .resolve()
 all_courses_ipf_dir = (local / "initial_proof_states").resolve()
 all_courses_ipf_old = (local / "old_initial_proof_states").resolve()
 usr_lean_exercises_dir = (local / "lean_exercises_dir").resolve()
-
+lean = local / "lean"
+mathlib = local / "mathlib"
 
 ############################################
 # Utilities

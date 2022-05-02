@@ -43,6 +43,7 @@ __platform_os = platform.system().lower() # Evaluated at first module import,
 packages = dict()                         # this dict. contains Package object
                                           # that are found in config.
 
+
 def init():
     global packages
 
@@ -77,6 +78,7 @@ def check():
             failed_checks.append((pkg_name, pkg, exc,))
         
     return failed_checks
+
 
 def has_package(name):
     if not name in packages:

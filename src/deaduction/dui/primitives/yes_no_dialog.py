@@ -28,6 +28,7 @@ This file is part of d∃∀duction.
 from PySide2.QtCore    import Slot
 from PySide2.QtWidgets import QMessageBox
 
+global _
 
 class YesNoDialog(QMessageBox):
     """
@@ -68,6 +69,8 @@ class YesNoDialog(QMessageBox):
         self.addButton(QMessageBox.No)
         self.addButton(QMessageBox.Yes)
         self.button(QMessageBox.Yes).clicked.connect(self._set_yes_True)
+        self.setButtonText(QMessageBox.Yes, _("Yes"))
+        self.setButtonText(QMessageBox.No, _("No"))
 
     @Slot()
     def _set_yes_True(self):

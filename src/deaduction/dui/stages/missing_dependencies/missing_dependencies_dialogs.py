@@ -47,7 +47,8 @@ from PySide2.QtWidgets import ( QDialog,
                                 QMessageBox,
                                 QPushButton,
                                 QHBoxLayout,
-                                QVBoxLayout )
+                                QVBoxLayout,
+                                QProgressBar)
 
 from deaduction.dui.primitives    import ( TextEditLogger,
                                            TextEditLoggerHandler,
@@ -59,6 +60,8 @@ from deaduction.dui.stages.quit_deaduction import ( ReallyWantQuit )
 # Tests only
 import sys
 from PySide2.QtWidgets import QApplication
+
+global _
 
 
 class WantInstallMissingDependencies(YesNoDialog):
@@ -77,14 +80,13 @@ class WantInstallMissingDependencies(YesNoDialog):
         :param missing_dependencies: List of missing dependencies to be
                                      displayed.
         """
-        # @Florian: If you want I can do some more formatting for the
-        # list of dependencied
 
         super().__init__()
 
         self.setText(_('Missing dependencies'))
-        self.setInformativeText(_('Some dependencies are missing. Do you want'\
-                                  ' to install them?'))
+        self.setInformativeText(_('Some necessary dependencies are missing. '
+                                  'Do you want to install them?\n'
+                                  '(If not, d∃∀duction will stop.)'))
         self.setDetailedText('— ' + '\n— '.join(missing_dependencies))
         self.setIcon(QMessageBox.Warning)
         self.setDefaultButton(QMessageBox.Yes)
@@ -110,7 +112,9 @@ class InstallingMissingDependencies(QDialog):
     plz_start_deaduction = Signal()
     plz_quit             = Signal()
 
-    def __init__(self, log_format: str = '%(asctime)s - %(levelname)s - %(message)s'):
+    def __init__(self,
+                 missing_packages,
+                 log_format: str = '%(asctime)s - %(levelname)s - %(message)s'):
         """
         Init self with a logger formater (so specify the layout of the
         log entries, see logging module documentation), e.g.
@@ -120,12 +124,23 @@ class InstallingMissingDependencies(QDialog):
         """
 
         super().__init__()
+        self.missing_packages = missing_packages
         self.setModal(True)
 
-        self.setWindowTitle(f"{_('Installing missing dependencies')}" \
-                             " — d∃∀duction")
-        self.__text_edit_logger = TextEditLogger()
+        self.setWindowTitle(_("Installing — d∃∀duction"))
+        # self.__text_edit_logger = TextEditLogger()
         self.__confirm_quit     = True
+
+        # Progress bars
+        self.__urls = []
+        self.__bar_labels = []
+        self.__progress_bars = []
+        for pkg_name, pkg_desc, pkg_exc in self.missing_packages:
+            label = QLabel(pkg_name + _(":"))
+            bar = QProgressBar()
+            self.__urls.append(pkg_desc.archive_url)
+            self.__bar_labels.append(label)
+            self.__progress_bars.append(bar)
 
         # Buttons
         self.__quit_btn       = QPushButton(_('Quit'))
@@ -137,31 +152,45 @@ class InstallingMissingDependencies(QDialog):
 
         # Layouts
         self.__main_layout = QVBoxLayout()
+        bars_layout = QVBoxLayout()
+        for name, bar in zip(self.__bar_labels, self.__progress_bars):
+            bars_layout.addWidget(name)
+            bars_layout.addWidget(bar)
         btns_layout        = QHBoxLayout()
         btns_layout.addStretch()
         btns_layout.addWidget(self.__quit_btn)
         btns_layout.addWidget(self.__start_dead_btn)
-        self.__main_layout.addWidget(self.__text_edit_logger)
+        # self.__main_layout.addWidget(self.__text_edit_logger)
+        self.__main_layout.addLayout(bars_layout)
         self.__main_layout.addLayout(btns_layout)
         self.setLayout(self.__main_layout)
 
         # Logging facilities, avoid some segfault and thread-related nastyness
-        self.__text_edit_logger_handler = TextEditLoggerHandler(self.__text_edit_logger, log_format)
-        self.__log_queue     = Queue(-1)
-        self.__queue_handler = QueueHandler(self.__log_queue)
-        self.__queue_listener= QueueListener(self.__log_queue, self.__text_edit_logger_handler)
+        # self.__text_edit_logger_handler = TextEditLoggerHandler(self.__text_edit_logger, log_format)
+        # self.__log_queue     = Queue(-1)
+        # self.__queue_handler = QueueHandler(self.__log_queue)
+        # self.__queue_listener= QueueListener(self.__log_queue, self.__text_edit_logger_handler)
 
-    def log_attach(self, log_obj: logging.Logger):
-        log_obj.addHandler(self.__queue_handler)
+    # def log_attach(self, log_obj: logging.Logger):
+    #     log_obj.addHandler(self.__queue_handler)
+    #
+    # def log_dettach(self, log_obj: logging.Logger):
+    #     log_obj.removeHandler(self.__queue_handler)
+    #
+    # def log_start(self):
+    #     self.__queue_listener.start()
 
-    def log_dettach(self, log_obj: logging.Logger):
-        log_obj.removeHandler(self.__queue_handler)
+    # def log_stop(self):
+    #     self.__queue_listener.stop()
 
-    def log_start(self):
-        self.__queue_listener.start()
-
-    def log_stop(self):
-        self.__queue_listener.stop()
+    @Slot()
+    def on_progress(self, url, downloaded_size, total_size, progress):
+        """
+        This method is called by the QThread that holds the installation of
+        the missing packages. It sets the values of the QProgressBar.
+        """
+        idx = self.__urls.index(url)
+        self.__progress_bars[idx].setValue(progress)
 
     @Slot()
     def installation_completed(self):
@@ -179,7 +208,7 @@ class InstallingMissingDependencies(QDialog):
         """
 
         self.__confirm_quit = False
-        self.__text_edit_logger.setStyleSheet('background: SpringGreen;')
+        # self.__text_edit_logger.setStyleSheet('background: SpringGreen;')
         self.__main_layout.insertWidget(1,
                 QLabel(_('Missing dependencies installed.')))
         self.__start_dead_btn.setEnabled(True)

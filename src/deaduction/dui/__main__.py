@@ -31,14 +31,16 @@ This file is part of d∃∀duction.
 
 from sys import argv
 from shutil import copytree, rmtree
+from requests import HTTPError
 
 import logging
-import threading
+# import threading
 import trio
 import argparse
 import os
 
 from PySide2.QtCore import ( QObject,
+                             QThread,
                              Signal,
                              Slot  )
 
@@ -106,63 +108,96 @@ arg_parser.add_argument('--course', '-c', help="Course filename")
 arg_parser.add_argument('--exercise', '-e', help="Exercise (piece of) name")
 
 
+class InstallDependenciesThread(QThread):
+    """
+    A QThread for downloading dependencies without freezing the GUI.
+    """
+    install_completed = Signal()
+    on_progress = Signal(str, int, int, int)
+
+    def __init__(self, missing_packages, on_progress: Signal):
+        super(InstallDependenciesThread, self).__init__()
+        self.missing_packages      = missing_packages
+        self.on_progress.connect(on_progress)
+
+    def run(self):
+        try:
+            for pkg_name, pkg_desc, pkg_exc in self.missing_packages:
+                pkg_desc.install(self.on_progress)
+        except ConnectionError:
+            print("No connection!")
+        except HTTPError:
+            print("Wrong url!")
+        except SystemExit:
+            print("System exit!")
+        finally:
+            self.install_completed.emit()
+
+
 ############################
 # Check dependencies stage #
 ############################
-class Install_Dependencies_Stage(QObject):
-    install_completed = Signal()
+class InstallDependenciesStage(QObject):
+    """
+    Launch a QDialog for user to interact with package installing.
+    """
+    # install_completed = Signal()
     start_deaduction  = Signal()
+    quit_deduction    = Signal()
 
-    def __init__(self, nursery, missing_packages):
+    def __init__(self, missing_packages):
         super().__init__()
 
-        self.nursery: trio.Nursery = nursery
-        self.missing_packages      = missing_packages
+        # self.nursery: trio.Nursery = nursery
+        # self.missing_packages      = missing_packages
 
-        self.install_dialog        = InstallingMissingDependencies()
-        self.thread                = threading.Thread(target=self.do_install,
-                                                      daemon=True)
+        self.install_dialog = InstallingMissingDependencies(missing_packages)
+        # self.thread                = threading.Thread(target=self.do_install,
+        #                                               daemon=True)
+        self.thread = InstallDependenciesThread(missing_packages,
+                self.install_dialog.on_progress)
 
         # Connect log display
-        self.install_dialog.log_attach(logging.getLogger(""))
+        # self.install_dialog.log_attach(logging.getLogger(""))
 
         # Connect
-        self.install_dialog.plz_start_deaduction.connect(self.plz_start_deaduction)
+        self.install_dialog.plz_start_deaduction.connect(
+            self.plz_start_deaduction)
         self.install_dialog.plz_quit.connect(self.plz_quit)
 
-        self.install_completed.connect(self.install_dialog.installation_completed)
+        self.thread.install_completed.connect(
+            self.install_dialog.installation_completed)
 
     def start(self):
         # Show dialog, start thread
-        self.install_dialog.log_start()
-
         self.install_dialog.show()
         self.thread.start()
 
     def stop(self):
-        self.thread.join()
-
-        self.install_dialog.log_stop()
-        self.install_dialog.log_dettach(logging.getLogger(""))
         self.install_dialog.close()
-
-    def do_install(self):
-        try:
-            for pkg_name, pkg_desc, pkg_exc in self.missing_packages:
-                pkg_desc.install()
-        finally:
-            self.install_completed.emit()
+        self.thread.quit()
+        raise SystemExit
 
     @Slot()
     def plz_quit(self):
-        raise SystemExit()
+        if self.thread.isRunning():
+            self.thread.quit()
+        self.quit_deduction.emit()
 
     @Slot()
     def plz_start_deaduction(self):
         self.start_deaduction.emit()
 
 
-async def site_installation_check(nursery):
+async def site_installation_check():
+    """
+    Check if some packages are missing. If so, ask usr if they want to install.
+    Return True is everything is OK; otherwise deaduction should stop.
+    """
+    # FOR DEBUGGING ONLY #
+    erase_lean()
+    # FOR DEBUGGING ONLY #
+
     missing_packages = inst.check()
     
     if missing_packages:
@@ -170,15 +205,59 @@ async def site_installation_check(nursery):
         want_install_dialog.exec_()
 
         if want_install_dialog.yes:
-            inst_stg = Install_Dependencies_Stage(nursery, missing_packages)
-            async with qtrio.enter_emissions_channel(signals=[inst_stg.start_deaduction]) as \
-                       emissions:
-
+            inst_stg = InstallDependenciesStage(missing_packages)
+            async with qtrio.enter_emissions_channel(
+                    signals=[inst_stg.start_deaduction,
+                             inst_stg.quit_deduction]) as emissions:
+                wanna_quit = False
                 inst_stg.start()
                 async for emission in emissions.channel:
                     if emission.is_from(inst_stg.start_deaduction):
                         break
+                    elif emission.is_from(inst_stg.quit_deduction):
+                        wanna_quit = True
+                        break
                 inst_stg.stop()
+            return wanna_quit
+        else:
+            return False
+    else:
+        return True
+
+
+def erase_lean():
+    """
+    Move initial_proof_states dir to old_initial_proof_state dir.
+    """
+    lean_dir = cdirs.lean
+    mathlib_dir = cdirs.mathlib
+    if lean_dir.exists():
+        log.debug("Erasing Lean")
+        rmtree(str(lean_dir), ignore_errors=True)
+    if mathlib_dir.exists():
+        rmtree(str(mathlib_dir), ignore_errors=True)
+
+
+def debug_installation_check():
+    """
+    Sync version of the previous one. For debug.
+    """
+
+    # FOR DEBUGGING ONLY #
+    erase_lean()
+    # FOR DEBUGGING ONLY #
+
+    missing_packages = inst.check()
+    if missing_packages:
+        # want_install_dialog = WantInstallMissingDependencies(
+        #     map(lambda x: x[0], missing_packages))
+        # want_install_dialog.exec_()
+        #
+        # if want_install_dialog.yes:
+        for pkg_name, pkg_desc, pkg_exc in missing_packages:
+            pkg_desc.install()
+        # else:
+        #     quit()
 
 
 def language_check():
@@ -433,10 +512,15 @@ async def main():
     server that may be running and closing the trio's nursery.
     """
 
+    # Check Lean and mathlib install
+    # debug_installation_check()
+
     async with trio.open_nursery() as nursery:
         # Check Lean and mathlib install
-        await site_installation_check(nursery)
-
+        ok = await site_installation_check()
+        print(f"ok={ok}")
+        if not ok:
+            nursery.cancel_scope.cancel()
         # Check language
         language_check()
 

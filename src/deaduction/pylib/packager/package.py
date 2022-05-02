@@ -30,6 +30,7 @@ from   pathlib import Path
 import tempfile
 import shutil
 import traceback
+import time
 
 import logging
 
@@ -93,6 +94,7 @@ class Package:
                                         .format(str(self.path)),
                                         dbg_info=e )
 
+
 # ┌────────────────────────────────────────┐
 # │ ArchivePackage class                   │
 # └────────────────────────────────────────┘
@@ -103,7 +105,6 @@ class ArchivePackage(Package):
                  archive_hlist: Path   = None,
                  archive_root: Path    = None,        # Root folder
                  archive_type: str     = "tar"):      # can be "tar" or "zip"
-                 
 
         super().__init__(path)
 
@@ -166,12 +167,17 @@ class ArchivePackage(Package):
 
         if self.archive_hlist is not None:
             log.info(_("Checking files for {}").format(self.path))
-            hlist_ref  = fs.HashList.from_file(self.archive_hlist)
+            # Crash 5 here
+            hlist_ref  = fs.HashList.from_file(self.archive_hlist)  #Crash 6
+            log.debug("step 1")
             hlist_dest = fs.HashList.from_path(self.path)
+            log.debug("step 2")
 
             diff       = list(hlist_dest.diff(hlist_ref))
+            log.debug(f"step 3: {len(diff)}")
 
             for dd in diff:
+                log.debug("step 4...")
                 # Shape: ('add', '', [ (path, data), (path, data), ... ] )
                 if   dd[0] == "add":
                     raise PackageCheckError( self, _("Missing files {}, reinstalling package!").format(dd[2]))
@@ -201,10 +207,11 @@ class ArchivePackage(Package):
 
                 else:
                     raise PackageCheckError( self, _("Uknown dict differ {}, reinstalling package").format(dd) )
+            log.debug("Files checked")
 
     def check(self):
         self._check_folder()
-        self._check_files()
+        self._check_files()  # Crash 2&5 here after 1st package
 
         #try:
         #    self._check_folder()
@@ -230,10 +237,18 @@ class ArchivePackage(Package):
             archive_root that is moved.
         """
         self.remove()
-
+        log.debug("(pause)")
+        # A = input("Toto")
         log.info(_("Installing package {} from archive").format(self.path))
+        # Crash 1&3 here for 2nd package
         with TemporaryFile() as fhandle:
+            # TODO: handle no connection
+            log.debug("Downloading...")
             checksum = fs.download(self.archive_url, fhandle, on_progress)
+
+            log.debug("...done")
+            # time.sleep(1)
+            log.debug("(pause 1 ended)")
             if self.archive_checksum and (self.archive_checksum != checksum):
                 raise AssertionError(_("Invalid checksum: {}, expected {}").format(
                     checksum, self.archive_checksum))
@@ -268,15 +283,20 @@ class ArchivePackage(Package):
                 log.info(_("→ Move {} to {}").format(tpath, self.path))
                 shutil.move(str(tpath), str(self.path))
 
-
+        log.debug("Checking package")
         try:
+            # time.sleep(1)
+            log.debug("Start checking...")
             self.check()
+            log.debug("...end checking")
+            # time.sleep(1)
+            log.debug("pause 3 ended")
         except PackageCheckError as e:
             log.error(_("Failed to install Package to {}: {}").format(str(self.path), str(e)))
             raise e
 
         log.info(_("Installed Package to {}").format(self.path))
-
+        # Crash 4 here after 2nd package
 # ┌────────────────────────────────────────┐
 # │ GitPackage class                       │
 # └────────────────────────────────────────┘
