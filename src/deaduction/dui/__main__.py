@@ -232,7 +232,7 @@ async def site_installation_check():
     Return True is everything is OK; otherwise deaduction should stop.
     """
     # FOR DEBUGGING ONLY #
-    erase_lean()
+    # erase_lean()
     # FOR DEBUGGING ONLY #
 
     missing_packages = inst.check()

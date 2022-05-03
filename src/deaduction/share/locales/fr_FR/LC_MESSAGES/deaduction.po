@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-05-03 17:21+0200\n"
-"PO-Revision-Date: 2022-05-03 17:21+0200\n"
+"POT-Creation-Date: 2022-05-03 18:49+0200\n"
+"PO-Revision-Date: 2022-05-03 18:50+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -35,7 +35,7 @@ msgstr "Téléchargement interrompu !"
 msgid "Download interrupted by user."
 msgstr "Téléchargement interrompu par l’utilisateur."
 
-#: dui/__main__.py:209
+#: dui/__main__.py:211
 msgid ""
 "Missing packages have been installed, but user decided to quit without "
 "launching d∃∀duction."
@@ -43,7 +43,7 @@ msgstr ""
 "Les dépendances manquantes ont été installées, mais l’utilisateur a décidé "
 "de quitter sans lancer d∃∀duction."
 
-#: dui/__main__.py:217
+#: dui/__main__.py:219
 msgid "Quitting d∃∀duction"
 msgstr "Quitter d∃∀duction"
 
@@ -256,45 +256,49 @@ msgstr "Oui"
 msgid "No"
 msgstr "Non"
 
-#: dui/stages/exercise/Coordinator.py:658
+#: dui/stages/exercise/Coordinator.py:115
+msgid "(initializing...)"
+msgstr "(initialisation…)"
+
+#: dui/stages/exercise/Coordinator.py:659
 msgid "Code from editor"
 msgstr "Code depuis l’éditeur"
 
-#: dui/stages/exercise/Coordinator.py:766 pylib/server/exceptions.py:39
+#: dui/stages/exercise/Coordinator.py:767 pylib/server/exceptions.py:39
 msgid "Error"
 msgstr "Erreur"
 
-#: dui/stages/exercise/Coordinator.py:782
+#: dui/stages/exercise/Coordinator.py:783
 msgid "I've got a headache, try again..."
 msgstr "Je n’y arrive pas, mais vous pouvez ré-essayer !"
 
-#: dui/stages/exercise/Coordinator.py:785
+#: dui/stages/exercise/Coordinator.py:786
 msgid "Unicode error, try again..."
 msgstr "Erreur de mémoire, ré-essayez !"
 
-#: dui/stages/exercise/Coordinator.py:788
+#: dui/stages/exercise/Coordinator.py:789
 msgid "Error, no proof state, try again..."
 msgstr "Erreur, je n’ai pas réussi à calculer l’état de preuve, ré-essayez !"
 
-#: dui/stages/exercise/Coordinator.py:816
+#: dui/stages/exercise/Coordinator.py:817
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/stages/exercise/Coordinator.py:817
+#: dui/stages/exercise/Coordinator.py:818
 msgid "The proof is complete!"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/Coordinator.py:821
+#: dui/stages/exercise/Coordinator.py:822
 msgid "Back to exercise"
 msgstr "Retour à l’exercice"
 
-#: dui/stages/exercise/Coordinator.py:823
+#: dui/stages/exercise/Coordinator.py:824
 #: dui/stages/exercise/_exercise_main_window_widgets.py:638
 #: dui/stages/exercise/_exercise_main_window_widgets.py:645
 msgid "Change exercise"
 msgstr "Changer d’exercice"
 
-#: dui/stages/exercise/Coordinator.py:829
+#: dui/stages/exercise/Coordinator.py:830
 msgid "Proof complete"
 msgstr "La preuve est terminée !"
 
@@ -391,11 +395,11 @@ msgstr "Quitter"
 msgid "Start d∃∀duction"
 msgstr "Démarrer d∃∀duction"
 
-#: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:213
+#: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:195
 msgid "Missing dependencies installed."
 msgstr "Dépendances manquantes installées."
 
-#: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:229
+#: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:211
 msgid "All downloaded data will be lost."
 msgstr "Toutes les données téléchargées seront perdues."
 
@@ -1671,7 +1675,7 @@ msgstr "Vérification du dossier de paquet pour {}"
 msgid "Failed to check for folder at {}"
 msgstr "Echec de vérification du dossier dans {}"
 
-#: pylib/packager/package.py:170 pylib/packager/package.py:355
+#: pylib/packager/package.py:170 pylib/packager/package.py:363
 msgid "Checking files for {}"
 msgstr "Vérification des fichiers dans {}"
 
@@ -1695,47 +1699,47 @@ msgstr ""
 msgid "Uknown dict differ {}, reinstalling package"
 msgstr ""
 
-#: pylib/packager/package.py:241
+#: pylib/packager/package.py:242
 msgid "Installing package {} from archive"
 msgstr "Installation du paquet {} depuis l’archive"
 
-#: pylib/packager/package.py:253
+#: pylib/packager/package.py:254
 msgid "Invalid checksum: {}, expected {}"
 msgstr "Somme de contrôle invalide : {}, somme attendue {}"
 
-#: pylib/packager/package.py:258
+#: pylib/packager/package.py:259
 msgid "Extract file to {}"
 msgstr "Extraction du fichier vers {}"
 
-#: pylib/packager/package.py:265
+#: pylib/packager/package.py:266
 msgid "Invalid archive type {}"
 msgstr "Type d’archive invalide : {}"
 
-#: pylib/packager/package.py:271
+#: pylib/packager/package.py:272
 msgid "Temporary path is {}"
 msgstr "Le dossier temporaire est {}"
 
-#: pylib/packager/package.py:279
+#: pylib/packager/package.py:283
 msgid "→ Move {} to {}"
 msgstr "→ Dossier {} déplacé vers {}"
 
-#: pylib/packager/package.py:286
+#: pylib/packager/package.py:290
 msgid "Failed to install Package to {}: {}"
 msgstr "Echec dans l’installation du paquet {}: {}"
 
-#: pylib/packager/package.py:289
+#: pylib/packager/package.py:293
 msgid "Installed Package to {}"
 msgstr "Paquet installé dans {}"
 
-#: pylib/packager/package.py:362
+#: pylib/packager/package.py:370
 msgid "Found differences in files, reinstall."
 msgstr "Différences dans les fichiers, ré-installer."
 
-#: pylib/packager/package.py:388
+#: pylib/packager/package.py:396
 msgid "Excepted \"type\" key in package config."
 msgstr ""
 
-#: pylib/packager/package.py:392
+#: pylib/packager/package.py:400
 msgid "Uknown package type {}, excepted {}"
 msgstr ""
 
@@ -2003,11 +2007,11 @@ msgstr "Chargement de la liste de hachage depuis le chemin {}"
 msgid "Cannot parse line: {}"
 msgstr "Impossible de lire la ligne : {}"
 
-#: pylib/utils/filesystem.py:251
+#: pylib/utils/filesystem.py:247
 msgid "Progress : {:03d}%"
 msgstr "Progression : {:03d}%"
 
-#: pylib/utils/filesystem.py:262
+#: pylib/utils/filesystem.py:258
 msgid "Download from {} to {}"
 msgstr "Téléchargé depuis {} vers {}"
 
