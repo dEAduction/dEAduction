@@ -143,11 +143,11 @@ class InstallDependenciesThread(QThread):
                 self.current_package = pkg_desc
                 self.current_package.install(self.on_progress)
         except ConnectionError:
-            print("No connection!")
+            log.debug("No connection!")
             self.download_interrupted.emit(_("No connection! "
                                              "Maybe your wifi is off?"))
         except HTTPError:
-            print("Wrong url!")
+            log.debug("Wrong url!")
             self.download_interrupted.emit(_("Wrong url!"))
         except AssertionError:
             self.download_interrupted.emit(_("Download interrupted!"))
@@ -195,8 +195,9 @@ class InstallDependenciesStage(QObject):
         self.thread.start()
 
     def stop(self):
+        # self.thread.quit()
+        log.debug("Stopping install_dialog")
         self.install_dialog.close()
-        self.thread.quit()
 
     @Slot()
     def plz_quit(self):
@@ -204,7 +205,8 @@ class InstallDependenciesStage(QObject):
         if self.thread.isRunning():
             self.thread.wanna_quit()
             self.thread.wait(5000)
-            self.thread.terminate()
+            if self.thread.isRunning():
+                self.thread.terminate()
         else:
             self.really_quit(_("Missing packages have been installed, "
                                "but user decided to quit without launching "
@@ -214,7 +216,7 @@ class InstallDependenciesStage(QObject):
     def really_quit(self, reason: str):
         # log.debug("really_quit")
         msg_box = QMessageBox()
-        msg_box.setText("Quitting d∃∀duction")
+        msg_box.setText(_("Quitting d∃∀duction"))
         msg_box.setInformativeText(reason)
         msg_box.exec()
         self.quit_deduction.emit()

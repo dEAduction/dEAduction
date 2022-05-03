@@ -211,6 +211,7 @@ class ArchivePackage(Package):
             log.debug("Files checked")
 
     def check(self):
+        log.debug("Checking package...")
         self._check_folder()
         self._check_files()  # Crash 2&5 here after 1st package
 
@@ -246,8 +247,8 @@ class ArchivePackage(Package):
                                             on_progress)
             checksum = self.downloader.download()
 
-            if self.downloader.abort:
-                pass
+            if self.downloader.wanna_abort:
+                raise SystemExit
 
             if self.archive_checksum and (self.archive_checksum != checksum):
                 raise AssertionError(_("Invalid checksum: {}, expected {}").format(
@@ -273,6 +274,9 @@ class ArchivePackage(Package):
             with archive_module(fhandle) as tf:
                 tf.extractall(path=str(tpath))
 
+                if self.downloader.wanna_abort:
+                    raise SystemExit
+
                 if self.archive_root:
                     tpath = (tpath / self.archive_root).resolve()
 
@@ -287,6 +291,10 @@ class ArchivePackage(Package):
             raise e
 
         log.info(_("Installed Package to {}").format(self.path))
+
+        if self.downloader.wanna_abort:
+            raise SystemExit
+
 
 # ┌────────────────────────────────────────┐
 # │ GitPackage class                       │

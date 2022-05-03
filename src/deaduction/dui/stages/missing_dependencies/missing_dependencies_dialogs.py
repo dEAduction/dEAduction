@@ -165,24 +165,6 @@ class InstallingMissingDependencies(QDialog):
         self.__main_layout.addLayout(btns_layout)
         self.setLayout(self.__main_layout)
 
-        # Logging facilities, avoid some segfault and thread-related nastyness
-        # self.__text_edit_logger_handler = TextEditLoggerHandler(self.__text_edit_logger, log_format)
-        # self.__log_queue     = Queue(-1)
-        # self.__queue_handler = QueueHandler(self.__log_queue)
-        # self.__queue_listener= QueueListener(self.__log_queue, self.__text_edit_logger_handler)
-
-    # def log_attach(self, log_obj: logging.Logger):
-    #     log_obj.addHandler(self.__queue_handler)
-    #
-    # def log_dettach(self, log_obj: logging.Logger):
-    #     log_obj.removeHandler(self.__queue_handler)
-    #
-    # def log_start(self):
-    #     self.__queue_listener.start()
-
-    # def log_stop(self):
-    #     self.__queue_listener.stop()
-
     @Slot()
     def on_progress(self, url, downloaded_size, total_size, progress):
         """

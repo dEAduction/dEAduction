@@ -214,10 +214,6 @@ class Downloader():
         :return: the sha1 checksum of the downloaded file
         """
 
-        # TODO(florian): better error handling ?
-        # -> ConnectionError raised by requests.get
-        # -> HTTPError raised by raise_for_status
-
         sha1 = hashlib.sha1()
         try:
             response = requests.get(self.url, stream=True)

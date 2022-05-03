@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-05-02 16:07+0200\n"
-"PO-Revision-Date: 2022-05-02 16:07+0200\n"
+"POT-Creation-Date: 2022-05-03 17:21+0200\n"
+"PO-Revision-Date: 2022-05-03 17:21+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -19,13 +19,41 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Poedit-SearchPath-0: .\n"
 
+#: dui/__main__.py:147
+msgid "No connection! Maybe your wifi is off?"
+msgstr "Pas de connexion ! Le wifi est peut-être désactivé ?"
+
+#: dui/__main__.py:151
+msgid "Wrong url!"
+msgstr "Mauvaise url !"
+
+#: dui/__main__.py:153
+msgid "Download interrupted!"
+msgstr "Téléchargement interrompu !"
+
+#: dui/__main__.py:156
+msgid "Download interrupted by user."
+msgstr "Téléchargement interrompu par l’utilisateur."
+
+#: dui/__main__.py:209
+msgid ""
+"Missing packages have been installed, but user decided to quit without "
+"launching d∃∀duction."
+msgstr ""
+"Les dépendances manquantes ont été installées, mais l’utilisateur a décidé "
+"de quitter sans lancer d∃∀duction."
+
+#: dui/__main__.py:217
+msgid "Quitting d∃∀duction"
+msgstr "Quitter d∃∀duction"
+
 #: dui/elements/actions_widgets_classes.py:160
 msgid "Button"
 msgstr "Bouton"
 
 #: dui/elements/actions_widgets_classes.py:160
 #: dui/elements/config_window.py:341 dui/primitives/disclosure_triangle.py:81
-#: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:138
+#: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:139
 #: dui/stages/start_coex/start_coex_widgets.py:254
 #: pylib/math_display/display_data.py:248
 msgid ":"
@@ -220,17 +248,13 @@ msgstr "Détails"
 msgid "Move to selected step"
 msgstr "Aller"
 
-#: dui/primitives/yes_no_dialog.py:72
+#: dui/primitives/yes_no_dialog.py:73
 msgid "Yes"
 msgstr "Oui"
 
-#: dui/primitives/yes_no_dialog.py:73
+#: dui/primitives/yes_no_dialog.py:74
 msgid "No"
 msgstr "Non"
-
-#: dui/primitives/yes_no_dialog.py:74
-msgid "Show details..."
-msgstr "Détails…"
 
 #: dui/stages/exercise/Coordinator.py:658
 msgid "Code from editor"
@@ -347,27 +371,31 @@ msgid "Missing dependencies"
 msgstr "Dépendances manquants"
 
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:87
-msgid "Some dependencies are missing. Do you want to install them?"
-msgstr "Il manque des dépendances. Voulez-vous les installer ?"
+msgid ""
+"Some necessary dependencies are missing. Do you want to install them?\n"
+"(If not, d∃∀duction will stop.)"
+msgstr ""
+"Il manque des dépendances indispensables. Voulez-vous les installer ? \n"
+"(Dans le cas contraire, d∃∀duction s’arrêtera.)"
 
-#: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:129
+#: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:130
 msgid "Installing — d∃∀duction"
 msgstr "Installation — d∃∀duction"
 
-#: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:145
+#: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:146
 #: dui/stages/start_coex/start_coex_widgets.py:760
 msgid "Quit"
 msgstr "Quitter"
 
-#: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:146
+#: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:147
 msgid "Start d∃∀duction"
 msgstr "Démarrer d∃∀duction"
 
-#: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:212
+#: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:213
 msgid "Missing dependencies installed."
 msgstr "Dépendances manquantes installées."
 
-#: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:228
+#: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:229
 msgid "All downloaded data will be lost."
 msgstr "Toutes les données téléchargées seront perdues."
 
@@ -464,8 +492,6 @@ msgid "Select at least one object, one property or the target"
 msgstr "Sélectionner au moins un objet, une propriété ou bien le but"
 
 #: pylib/actions/exceptions.py:78
-#, fuzzy
-#| msgid "don't know what to do with your input!"
 msgid "I do not know what to do with this selection"
 msgstr "Je n’ai pas compris ce que vous voulez faire :-("
 
@@ -1645,31 +1671,31 @@ msgstr "Vérification du dossier de paquet pour {}"
 msgid "Failed to check for folder at {}"
 msgstr "Echec de vérification du dossier dans {}"
 
-#: pylib/packager/package.py:169 pylib/packager/package.py:364
+#: pylib/packager/package.py:170 pylib/packager/package.py:355
 msgid "Checking files for {}"
 msgstr "Vérification des fichiers dans {}"
 
-#: pylib/packager/package.py:183
+#: pylib/packager/package.py:184
 msgid "Missing files {}, reinstalling package!"
 msgstr "Fichiers manquant {}, le paquet doit être réinstallé !"
 
-#: pylib/packager/package.py:187
+#: pylib/packager/package.py:188
 msgid "Additional file {} found in directory"
 msgstr "Fichier additionnel {} trouvé dans le dossier"
 
-#: pylib/packager/package.py:201
+#: pylib/packager/package.py:202
 msgid "File {} is invalid, reinstalling package"
 msgstr "Fichier {} non valide, le paquet doit être réinstallé"
 
-#: pylib/packager/package.py:205
+#: pylib/packager/package.py:206
 msgid "File {} has permissions {}, excepted {}, updating"
 msgstr ""
 
-#: pylib/packager/package.py:209
+#: pylib/packager/package.py:210
 msgid "Uknown dict differ {}, reinstalling package"
 msgstr ""
 
-#: pylib/packager/package.py:242
+#: pylib/packager/package.py:241
 msgid "Installing package {} from archive"
 msgstr "Installation du paquet {} depuis l’archive"
 
@@ -1681,35 +1707,35 @@ msgstr "Somme de contrôle invalide : {}, somme attendue {}"
 msgid "Extract file to {}"
 msgstr "Extraction du fichier vers {}"
 
-#: pylib/packager/package.py:269
+#: pylib/packager/package.py:265
 msgid "Invalid archive type {}"
 msgstr "Type d’archive invalide : {}"
 
-#: pylib/packager/package.py:275
+#: pylib/packager/package.py:271
 msgid "Temporary path is {}"
 msgstr "Le dossier temporaire est {}"
 
-#: pylib/packager/package.py:283
+#: pylib/packager/package.py:279
 msgid "→ Move {} to {}"
 msgstr "→ Dossier {} déplacé vers {}"
 
-#: pylib/packager/package.py:295
+#: pylib/packager/package.py:286
 msgid "Failed to install Package to {}: {}"
 msgstr "Echec dans l’installation du paquet {}: {}"
 
-#: pylib/packager/package.py:298
+#: pylib/packager/package.py:289
 msgid "Installed Package to {}"
 msgstr "Paquet installé dans {}"
 
-#: pylib/packager/package.py:371
+#: pylib/packager/package.py:362
 msgid "Found differences in files, reinstall."
 msgstr "Différences dans les fichiers, ré-installer."
 
-#: pylib/packager/package.py:397
+#: pylib/packager/package.py:388
 msgid "Excepted \"type\" key in package config."
 msgstr ""
 
-#: pylib/packager/package.py:401
+#: pylib/packager/package.py:392
 msgid "Uknown package type {}, excepted {}"
 msgstr ""
 
@@ -1977,13 +2003,16 @@ msgstr "Chargement de la liste de hachage depuis le chemin {}"
 msgid "Cannot parse line: {}"
 msgstr "Impossible de lire la ligne : {}"
 
-#: pylib/utils/filesystem.py:236
+#: pylib/utils/filesystem.py:251
 msgid "Progress : {:03d}%"
 msgstr "Progression : {:03d}%"
 
-#: pylib/utils/filesystem.py:248
+#: pylib/utils/filesystem.py:262
 msgid "Download from {} to {}"
 msgstr "Téléchargé depuis {} vers {}"
+
+#~ msgid "Show details..."
+#~ msgstr "Détails…"
 
 #~ msgid "Course"
 #~ msgstr "Cours"
