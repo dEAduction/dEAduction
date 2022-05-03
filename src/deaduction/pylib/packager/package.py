@@ -39,7 +39,7 @@ from gettext import gettext as _
 from deaduction.pylib.utils import filesystem as fs
 from tempfile import TemporaryFile
 import os.path
-#import git
+# import git
 
 from .exceptions import (PackageCheckError)
 
@@ -113,6 +113,7 @@ class ArchivePackage(Package):
         self.archive_hlist    = fs.path_helper(archive_hlist)
         self.archive_root     = archive_root
         self.archive_type     = archive_type
+        self.downloader = None
 
     def _check_files(self):
         """
@@ -237,18 +238,17 @@ class ArchivePackage(Package):
             archive_root that is moved.
         """
         self.remove()
-        log.debug("(pause)")
-        # A = input("Toto")
         log.info(_("Installing package {} from archive").format(self.path))
-        # Crash 1&3 here for 2nd package
         with TemporaryFile() as fhandle:
-            # TODO: handle no connection
             log.debug("Downloading...")
-            checksum = fs.download(self.archive_url, fhandle, on_progress)
+            self.downloader = fs.Downloader(self.archive_url,
+                                            fhandle,
+                                            on_progress)
+            checksum = self.downloader.download()
 
-            log.debug("...done")
-            # time.sleep(1)
-            log.debug("(pause 1 ended)")
+            if self.downloader.abort:
+                pass
+
             if self.archive_checksum and (self.archive_checksum != checksum):
                 raise AssertionError(_("Invalid checksum: {}, expected {}").format(
                     checksum, self.archive_checksum))
@@ -256,10 +256,6 @@ class ArchivePackage(Package):
             fhandle.seek(0)
 
             log.info(_("Extract file to {}").format(self.path))
-
-            # Create destination folder
-            #self.path.mkdir(exist_ok=True) # exist_ok=True → Don't bother if
-            #                               # path already exists
 
             # Get correct archiving module to extract the file
             archive_open_fkt    = { "tar": lambda x: tarfile.open(fileobj=x),
@@ -283,20 +279,15 @@ class ArchivePackage(Package):
                 log.info(_("→ Move {} to {}").format(tpath, self.path))
                 shutil.move(str(tpath), str(self.path))
 
-        log.debug("Checking package")
         try:
-            # time.sleep(1)
-            log.debug("Start checking...")
             self.check()
-            log.debug("...end checking")
-            # time.sleep(1)
-            log.debug("pause 3 ended")
+
         except PackageCheckError as e:
             log.error(_("Failed to install Package to {}: {}").format(str(self.path), str(e)))
             raise e
 
         log.info(_("Installed Package to {}").format(self.path))
-        # Crash 4 here after 2nd package
+
 # ┌────────────────────────────────────────┐
 # │ GitPackage class                       │
 # └────────────────────────────────────────┘

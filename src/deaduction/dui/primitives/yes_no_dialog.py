@@ -30,6 +30,7 @@ from PySide2.QtWidgets import QMessageBox
 
 global _
 
+
 class YesNoDialog(QMessageBox):
     """
     This class is a modal QMessageBox with two buttons: Yes and No. Usr

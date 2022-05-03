@@ -34,7 +34,6 @@ from shutil import copytree, rmtree
 from requests import HTTPError
 
 import logging
-# import threading
 import trio
 import argparse
 import os
@@ -43,6 +42,8 @@ from PySide2.QtCore import ( QObject,
                              QThread,
                              Signal,
                              Slot  )
+
+from PySide2.QtWidgets import QMessageBox
 
 import qtrio
 
@@ -66,6 +67,8 @@ from deaduction.pylib.coursedata                 import Exercise
 from deaduction.pylib                            import logger
 from deaduction.pylib.server                     import ServerInterface
 from deaduction.pylib.autotest import                   select_exercise
+
+global _
 
 # (non-exhaustive) list of logger domains:
 # ['lean', 'ServerInterface', 'ServerQueue', 'Course', 'deaduction.dui',
@@ -108,30 +111,56 @@ arg_parser.add_argument('--course', '-c', help="Course filename")
 arg_parser.add_argument('--exercise', '-e', help="Exercise (piece of) name")
 
 
+############################
+############################
+############################
+# Classes for installation #
+############################
+############################
+############################
 class InstallDependenciesThread(QThread):
     """
     A QThread for downloading dependencies without freezing the GUI.
+    The Signal on_progress is used to display downloading progress in
+    QProgressBars.
+    User may quit during downloading: abort is done by calling the
+    self.current_package.downloader.abort method, which raises the
+    SystemExit exception.
     """
     install_completed = Signal()
     on_progress = Signal(str, int, int, int)
+    download_interrupted = Signal(str)
 
     def __init__(self, missing_packages, on_progress: Signal):
         super(InstallDependenciesThread, self).__init__()
         self.missing_packages      = missing_packages
         self.on_progress.connect(on_progress)
+        self.current_package = None
 
     def run(self):
         try:
             for pkg_name, pkg_desc, pkg_exc in self.missing_packages:
-                pkg_desc.install(self.on_progress)
+                self.current_package = pkg_desc
+                self.current_package.install(self.on_progress)
         except ConnectionError:
             print("No connection!")
+            self.download_interrupted.emit(_("No connection! "
+                                             "Maybe your wifi is off?"))
         except HTTPError:
             print("Wrong url!")
+            self.download_interrupted.emit(_("Wrong url!"))
+        except AssertionError:
+            self.download_interrupted.emit(_("Download interrupted!"))
         except SystemExit:
-            print("System exit!")
-        finally:
+            log.debug("System exit in QThread")
+            self.download_interrupted.emit(_("Download interrupted by user."))
+        else:
             self.install_completed.emit()
+
+    def wanna_quit(self):
+        log.debug("QThread wanna quit")
+        if self.current_package and self.current_package.downloader:
+            self.current_package.downloader.abort()
 
 
 ############################
@@ -141,32 +170,24 @@ class InstallDependenciesStage(QObject):
     """
     Launch a QDialog for user to interact with package installing.
     """
-    # install_completed = Signal()
     start_deaduction  = Signal()
     quit_deduction    = Signal()
 
     def __init__(self, missing_packages):
         super().__init__()
 
-        # self.nursery: trio.Nursery = nursery
-        # self.missing_packages      = missing_packages
-
         self.install_dialog = InstallingMissingDependencies(missing_packages)
-        # self.thread                = threading.Thread(target=self.do_install,
-        #                                               daemon=True)
         self.thread = InstallDependenciesThread(missing_packages,
-                self.install_dialog.on_progress)
+                                            self.install_dialog.on_progress)
 
-        # Connect log display
-        # self.install_dialog.log_attach(logging.getLogger(""))
-
-        # Connect
+        # Connect Signals
         self.install_dialog.plz_start_deaduction.connect(
             self.plz_start_deaduction)
         self.install_dialog.plz_quit.connect(self.plz_quit)
 
         self.thread.install_completed.connect(
             self.install_dialog.installation_completed)
+        self.thread.download_interrupted.connect(self.really_quit)
 
     def start(self):
         # Show dialog, start thread
@@ -176,12 +197,26 @@ class InstallDependenciesStage(QObject):
     def stop(self):
         self.install_dialog.close()
         self.thread.quit()
-        raise SystemExit
 
     @Slot()
     def plz_quit(self):
+        # log.debug("plz_quit")
         if self.thread.isRunning():
-            self.thread.quit()
+            self.thread.wanna_quit()
+            self.thread.wait(5000)
+            self.thread.terminate()
+        else:
+            self.really_quit(_("Missing packages have been installed, "
+                               "but user decided to quit without launching "
+                               "d∃∀duction."))
+
+    @Slot()
+    def really_quit(self, reason: str):
+        # log.debug("really_quit")
+        msg_box = QMessageBox()
+        msg_box.setText("Quitting d∃∀duction")
+        msg_box.setInformativeText(reason)
+        msg_box.exec()
         self.quit_deduction.emit()
 
     @Slot()
@@ -201,7 +236,8 @@ async def site_installation_check():
     missing_packages = inst.check()
     
     if missing_packages:
-        want_install_dialog = WantInstallMissingDependencies(map(lambda x: x[0], missing_packages))
+        want_install_dialog = WantInstallMissingDependencies(
+                                    map(lambda x: x[0], missing_packages))
         want_install_dialog.exec_()
 
         if want_install_dialog.yes:
@@ -209,16 +245,17 @@ async def site_installation_check():
             async with qtrio.enter_emissions_channel(
                     signals=[inst_stg.start_deaduction,
                              inst_stg.quit_deduction]) as emissions:
-                wanna_quit = False
+                go_on_deaduction = True
                 inst_stg.start()
                 async for emission in emissions.channel:
                     if emission.is_from(inst_stg.start_deaduction):
                         break
                     elif emission.is_from(inst_stg.quit_deduction):
-                        wanna_quit = True
+                        # log.debug("emission from quit_deaduction")
+                        go_on_deaduction = False
                         break
                 inst_stg.stop()
-            return wanna_quit
+            return go_on_deaduction
         else:
             return False
     else:
@@ -227,7 +264,7 @@ async def site_installation_check():
 
 def erase_lean():
     """
-    Move initial_proof_states dir to old_initial_proof_state dir.
+    Erase Lean and Mathlib. For debugging only.
     """
     lean_dir = cdirs.lean
     mathlib_dir = cdirs.mathlib
@@ -240,7 +277,7 @@ def erase_lean():
 
 def debug_installation_check():
     """
-    Sync version of the previous one. For debug.
+    Sync version of the previous one. For debugging only.
     """
 
     # FOR DEBUGGING ONLY #
@@ -329,9 +366,13 @@ def adapt_to_new_version():
         cvars.save()
 
 
-###############################################
-# Container class, managing signals and slots #
-###############################################
+#################################################################
+#################################################################
+#################################################################
+# Container class, managing signals and slots for the main loop #
+#################################################################
+#################################################################
+#################################################################
 class WindowManager(QObject):
     """
     This class is responsible for keeping the memory of open windows
@@ -500,9 +541,9 @@ def exercise_from_argv() -> Exercise:
     return exercise
 
 
-##############################################################
-# Main event loop: init wm and wait for window closed #
-##############################################################
+##################################################################
+# Main event loop: init WindowManager and wait for window closed #
+##################################################################
 async def main():
     """
     This is the main loop. It opens a trio.nursery, instantiate a Container
@@ -518,7 +559,7 @@ async def main():
     async with trio.open_nursery() as nursery:
         # Check Lean and mathlib install
         ok = await site_installation_check()
-        print(f"ok={ok}")
+        # print(f"ok={ok}")
         if not ok:
             nursery.cancel_scope.cancel()
         # Check language
