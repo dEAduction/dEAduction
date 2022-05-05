@@ -59,7 +59,7 @@ global _
 @action()
 def action_proof_methods(proof_step,
                          selected_objects: [MathObject],
-                         user_input: [str],
+                         user_input: [],
                          target_selected: bool = True) -> CodeForLean:
 
     # 1st call, choose proof method

@@ -517,15 +517,6 @@ class Coordinator(QObject):
                 elif emission.is_from(self.action_triggered):
                     button = emission.args[0]  # ActionButton triggered by user
                     self.proof_step.button_name = button.name
-                    # # FIXME: no more double click
-                    # if button == self.ecw.action_apply_button \
-                    #         and self.double_clicked_item:
-                    #     # Make sure item is marked and added to selection
-                    #     item = self.double_clicked_item
-                    #     if item in self.current_selection:
-                    #         self.current_selection.remove(item)
-                    #     self.current_selection.append(item)  # Item is last
-                    #     self.emw.double_clicked_item = None
                     self.__server_call_action(emission.args[0])
 
                 elif emission.is_from(self.statement_triggered):
@@ -879,8 +870,6 @@ class Coordinator(QObject):
         """
         # Display msg_box unless redoing /moving or test mode
         # TODO: add click to MessageBox in test_mode
-        # if self.test_mode:
-        #     self.proof_no_goals.emit()  # FIXME: deprecated
         if not self.proof_step.is_redo() \
                 and not self.proof_step.is_goto()\
                 and not self.test_mode:

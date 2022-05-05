@@ -497,16 +497,16 @@ class ProofStep:
     #             return None
 
     def is_by_contraposition(self):
-        if self.button_name == "proof_methods":
-            return self.user_input == 1
+        if self.button_name == "proof_methods" and self.user_input:
+            return self.user_input[0] == 1
 
     def is_by_contradiction(self):
-        if self.button_name == "proof_methods":
-            return self.user_input == 2
+        if self.button_name == "proof_methods" and self.user_input:
+            return self.user_input[0] == 2
 
     def is_sorry(self):
-        if self.button_name == "proof_methods":
-            return self.user_input == 3
+        if self.button_name == "proof_methods" and self.user_input:
+            return self.user_input[0] == 3
 
     def compare(self, auto_test) -> (str, bool):
         """
