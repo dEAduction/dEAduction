@@ -41,10 +41,7 @@ log = logging.getLogger(__name__)
 
 def init_i18n():
     log.info("Init i18n")
-    # available_languages = cvars.get("i18n.available_languages", "en")
     select_language     = cvars.get('i18n.select_language', "en")
-
-    # log.info(f"available_languages = {available_languages}")
     log.info(f"selected language     = {select_language}")
 
     language_dir_path   = fs.path_helper(cdirs.share / "locales")

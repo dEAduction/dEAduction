@@ -70,36 +70,9 @@ from deaduction.pylib.autotest import                   select_exercise
 
 global _
 
-# (non-exhaustive) list of logger domains:
-# ['lean', 'ServerInterface', 'ServerQueue', 'Course', 'deaduction.dui',
-#  'deaduction.pylib.coursedata', 'deaduction.pylib.mathobj', 'LeanServer']
-
-###################
-# Configuring log #
-###################
-# Change your own settings in .deaduction-dev/config.toml
-log_domains = cvars.get("logs.domains", "")
-log_level = cvars.get("logs.display_level", 'info')
-
-if os.getenv("DEADUCTION_DEV_MODE", False):
-    log_level = 'debug'
-    log_domains = ["deaduction", "__main__",  # 'lean',
-                   'ServerInterface', 'ServerQueue']
-    log_domains = ["__main__",
-                   'ServerInterface',
-                   'ServerQueue',
-                   # 'lean',
-                   'deaduction.dui',
-                   'deaduction.pylib',
-                   'logic',
-                   'magic',
-                   'coursedata']
-
-
-logger.configure(domains=log_domains,
-                 display_level=log_level)
 
 log = logging.getLogger(__name__)
+
 
 ###########################
 # Configuring args parser #
@@ -109,6 +82,42 @@ arg_parser = argparse.ArgumentParser("Start deaduction graphical interface "
                                      "for Lean theorem prover")
 arg_parser.add_argument('--course', '-c', help="Course filename")
 arg_parser.add_argument('--exercise', '-e', help="Exercise (piece of) name")
+
+
+###################
+# Configuring log #
+###################
+def set_logger():
+    """
+    Configuring log.
+    """
+    # Change your own settings in .deaduction-dev/config.toml
+    # (non-exhaustive) list of logger domains:
+    # ['lean', 'ServerInterface', 'ServerQueue', 'Course', 'deaduction.dui',
+    #  'deaduction.pylib.coursedata', 'deaduction.pylib.mathobj', 'LeanServer']
+
+    log_domains = cvars.get("logs.domains", "")
+    log_level = cvars.get("logs.display_level", 'info')
+    log_to_file = cvars.get("logs.log_to_file", True)
+
+    if os.getenv("DEADUCTION_DEV_MODE", False):  # Set log domains in dev mode
+        log_level = 'debug'
+        # log_domains = ["deaduction", "__main__",  # 'lean',
+        #                'ServerInterface', 'ServerQueue']
+        log_domains = ["__main__",
+                       'ServerInterface',
+                       'ServerQueue',
+                       # 'lean',
+                       'deaduction.dui',
+                       'deaduction.pylib',
+                       'logic',
+                       'magic',
+                       'coursedata']
+        log_domains = [""]
+
+    logger.configure(domains=log_domains,
+                     display_level=log_level,
+                     filename=cdirs.log_file if log_to_file else None)
 
 
 ############################
@@ -300,6 +309,7 @@ def debug_installation_check():
 
 
 def language_check():
+    log.debug("Language check")
     language = deaduction.pylib.config.i18n.init_i18n()
     if language == "no_language":
         selected_language, ok = select_language()
@@ -354,6 +364,9 @@ def adapt_to_new_version():
     have to be computed again to avoid errors. Furthermore, exercises are
     copied to the usr exercises dir.
     """
+
+    log.debug("Checking version")
+
     if check_new_version():
         log.debug("Adapting to new version...")
         log.debug("Copying Lean files to home dir")
@@ -555,9 +568,6 @@ async def main():
     server that may be running and closing the trio's nursery.
     """
 
-    # Check Lean and mathlib install
-    # debug_installation_check()
-
     async with trio.open_nursery() as nursery:
         # Check Lean and mathlib install
         ok = await site_installation_check()
@@ -574,6 +584,9 @@ async def main():
         wm = WindowManager(nursery)
         await wm.check_lean_server()
 
+        #################################
+        # Deaduction really starts here #
+        #################################
         try:
             # Choose first exercise
             exercise = exercise_from_argv()
@@ -618,12 +631,14 @@ async def main():
 if __name__ == '__main__':
     log.info("Starting...")
     #################################################################
-    # Init environment variables, directories, and install packages #
+    # Init environment variables, directories, and configure logger #
     #################################################################
 
     cenv.init()
     cdirs.init()
     inst.init()
+
+    set_logger()
 
     #################
     # Run main loop #

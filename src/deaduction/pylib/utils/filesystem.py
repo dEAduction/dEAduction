@@ -80,6 +80,7 @@ def file_permissions_octal(fp: Path):
 
     return "{:03o}".format(fp.stat().st_mode & 0x1FF)
 
+
 ############################################
 # Checking utilities
 ############################################

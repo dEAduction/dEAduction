@@ -64,6 +64,7 @@ select_language = "no_language"
 save_journal = false
 display_level = "info"
 domains = [""]
+log_to_file = true
 
 [others]
 usr_version_nb = "-1"  # Do not modify!

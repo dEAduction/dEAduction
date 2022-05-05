@@ -25,6 +25,8 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
+import logging
+
 from locale import getdefaultlocale
 from PySide2.QtWidgets import   ( QApplication,
                                   QWidget,
@@ -35,27 +37,36 @@ import deaduction.pylib.config.vars as cvars
 PRETTY_NAMES = {"en": "English",
                 'fr_FR': "Français"}
 
+log = logging.getLogger(__name__)
+
 
 def select_language():
+    log.debug("Selecting language")
     available_languages = cvars.get("i18n.available_languages", ["en"])
+    log.debug("Get default local:")
     language, font_enc = getdefaultlocale()
+    log.debug(f"Language: {language}")
+    # language = None
     if language in available_languages:
+        log.debug(f"Found default language {language}")
         return language, True
-    else:
+    elif language and len(language) >= 2:
+        log.debug("Choosing language")
         for lang in available_languages:
+            log.debug(f"Trying {lang}")
             if lang[:2] == language[:2]:
                 return lang, True
     pretty_languages_list = [PRETTY_NAMES[setting] if setting in PRETTY_NAMES
                              else setting for setting in available_languages]
-    app = QApplication()
+    # app = QApplication()  # Fixed: there is already one
     parent = QWidget()
-
+    log.debug("Start Dialog:")
     language, ok = QInputDialog.getItem(parent,
-                                    "Select language",
-                                    "Available languages:",
-                                    pretty_languages_list,
-                                    0,
-                                    False)
+                                        "Select language",
+                                        "Available languages:",
+                                        pretty_languages_list,
+                                        0,
+                                        False)
     for key in PRETTY_NAMES:
         if PRETTY_NAMES[key] == language:
             return key, ok

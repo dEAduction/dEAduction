@@ -47,16 +47,19 @@ courses        = (share / "courses").resolve()
 # Home paths
 home     = Path.home()
 if os.getenv("DEADUCTION_DEV_MODE", '0') == '1':
-    local = (home / ".deaduction-dev")  # .resolve()
+    local = (home / ".deaduction-dev").resolve()
 else:
-    local = (home / ".deaduction")  # .resolve()
-journal        = (local / "deaduction_journal")  # .resolve()
-test_exercises = (local / "test_exercises")  # .resolve()
+    local = (home / ".deaduction").resolve()
+journal        = (local / "deaduction_journal").resolve()
+test_exercises = (local / "test_exercises").resolve()
 all_courses_ipf_dir = (local / "initial_proof_states").resolve()
 all_courses_ipf_old = (local / "old_initial_proof_states").resolve()
 usr_lean_exercises_dir = (local / "lean_exercises_dir").resolve()
 lean = local / "lean"
 mathlib = local / "mathlib"
+
+log_file = (local / "deaduction.log").resolve()
+
 
 ############################################
 # Utilities
@@ -66,3 +69,4 @@ def init():
     fs.check_dir(all_courses_ipf_dir, create=True)
     fs.check_dir(journal)
     fs.check_dir(test_exercises)
+
