@@ -30,15 +30,20 @@ This file is part of d∃∀duction.
 """
 
 from sys import argv
+from shutil import copytree, rmtree
+from requests import HTTPError
+
 import logging
-import threading
 import trio
 import argparse
 import os
 
 from PySide2.QtCore import ( QObject,
+                             QThread,
                              Signal,
                              Slot  )
+
+from PySide2.QtWidgets import QMessageBox
 
 import qtrio
 
@@ -63,36 +68,11 @@ from deaduction.pylib                            import logger
 from deaduction.pylib.server                     import ServerInterface
 from deaduction.pylib.autotest import                   select_exercise
 
-# (non-exhaustive) list of logger domains:
-# ['lean', 'ServerInterface', 'ServerQueue', 'Course', 'deaduction.dui',
-#  'deaduction.pylib.coursedata', 'deaduction.pylib.mathobj', 'LeanServer']
+global _
 
-###################
-# Configuring log #
-###################
-# Change your own settings in .deaduction-dev/config.toml
-log_domains = cvars.get("logs.domains", "")
-log_level = cvars.get("logs.display_level", 'info')
-
-if os.getenv("DEADUCTION_DEV_MODE", False):
-    log_level = 'debug'
-    log_domains = ["deaduction", "__main__",  # 'lean',
-                   'ServerInterface', 'ServerQueue']
-    log_domains = ["__main__",
-                   'ServerInterface',
-                   'ServerQueue',
-                   # 'lean',
-                   'deaduction.dui',
-                   'deaduction.pylib',
-                   'logic',
-                   'magic',
-                   'coursedata']
-
-
-logger.configure(domains=log_domains,
-                 display_level=log_level)
 
 log = logging.getLogger(__name__)
+
 
 ###########################
 # Configuring args parser #
@@ -104,84 +84,310 @@ arg_parser.add_argument('--course', '-c', help="Course filename")
 arg_parser.add_argument('--exercise', '-e', help="Exercise (piece of) name")
 
 
+###################
+# Configuring log #
+###################
+def set_logger():
+    """
+    Configuring log.
+    """
+    # Change your own settings in .deaduction-dev/config.toml
+    # (non-exhaustive) list of logger domains:
+    # ['lean', 'ServerInterface', 'ServerQueue', 'Course', 'deaduction.dui',
+    #  'deaduction.pylib.coursedata', 'deaduction.pylib.mathobj', 'LeanServer']
+
+    log_domains = cvars.get("logs.domains", "")
+    log_level = cvars.get("logs.display_level", 'info')
+    log_to_file = cvars.get("logs.log_to_file", True)
+
+    if os.getenv("DEADUCTION_DEV_MODE", False):  # Set log domains in dev mode
+        log_level = 'debug'
+        # log_domains = ["deaduction", "__main__",  # 'lean',
+        #                'ServerInterface', 'ServerQueue']
+        log_domains = ["__main__",
+                       'ServerInterface',
+                       'ServerQueue',
+                       # 'lean',
+                       'deaduction.dui',
+                       'deaduction.pylib',
+                       'logic',
+                       'magic',
+                       'coursedata']
+        log_domains = [""]
+
+    logger.configure(domains=log_domains,
+                     display_level=log_level,
+                     filename=cdirs.log_file if log_to_file else None)
+
+
+############################
+############################
+############################
+# Classes for installation #
+############################
+############################
+############################
+class InstallDependenciesThread(QThread):
+    """
+    A QThread for downloading dependencies without freezing the GUI.
+    The Signal on_progress is used to display downloading progress in
+    QProgressBars.
+    User may quit during downloading: abort is done by calling the
+    self.current_package.downloader.abort method, which raises the
+    SystemExit exception.
+    """
+    install_completed = Signal()
+    on_progress = Signal(str, int, int, int)
+    download_interrupted = Signal(str)
+
+    def __init__(self, missing_packages, on_progress: Signal):
+        super(InstallDependenciesThread, self).__init__()
+        self.missing_packages      = missing_packages
+        self.on_progress.connect(on_progress)
+        self.current_package = None
+
+    def run(self):
+        try:
+            for pkg_name, pkg_desc, pkg_exc in self.missing_packages:
+                self.current_package = pkg_desc
+                self.current_package.install(self.on_progress)
+        except ConnectionError:
+            log.debug("No connection!")
+            self.download_interrupted.emit(_("No connection! "
+                                             "Maybe your wifi is off?"))
+        except HTTPError:
+            log.debug("Wrong url!")
+            self.download_interrupted.emit(_("Wrong url!"))
+        except AssertionError:
+            self.download_interrupted.emit(_("Download interrupted!"))
+        except SystemExit:
+            log.debug("System exit in QThread")
+            self.download_interrupted.emit(_("Download interrupted by user."))
+        else:
+            self.install_completed.emit()
+
+    def wanna_quit(self):
+        log.debug("QThread wanna quit")
+        if self.current_package and self.current_package.downloader:
+            self.current_package.downloader.abort()
+
+
 ############################
 # Check dependencies stage #
 ############################
-class Install_Dependencies_Stage(QObject):
-    install_completed = Signal()
+class InstallDependenciesStage(QObject):
+    """
+    Launch a QDialog for user to interact with package installing.
+    """
     start_deaduction  = Signal()
+    quit_deduction    = Signal()
 
-    def __init__(self, nursery, missing_packages):
+    def __init__(self, missing_packages):
         super().__init__()
 
-        self.nursery: trio.Nursery = nursery
-        self.missing_packages      = missing_packages
+        self.install_dialog = InstallingMissingDependencies(missing_packages)
+        self.thread = InstallDependenciesThread(missing_packages,
+                                            self.install_dialog.on_progress)
 
-        self.install_dialog        = InstallingMissingDependencies()
-        self.thread                = threading.Thread(target=self.do_install,
-                                                      daemon=True)
-
-        # Connect log display
-        self.install_dialog.log_attach(logging.getLogger(""))
-
-        # Connect
-        self.install_dialog.plz_start_deaduction.connect(self.plz_start_deaduction)
+        # Connect Signals
+        self.install_dialog.plz_start_deaduction.connect(
+            self.plz_start_deaduction)
         self.install_dialog.plz_quit.connect(self.plz_quit)
 
-        self.install_completed.connect(self.install_dialog.installation_completed)
+        self.thread.install_completed.connect(
+            self.install_dialog.installation_completed)
+        self.thread.download_interrupted.connect(self.really_quit)
 
     def start(self):
         # Show dialog, start thread
-        self.install_dialog.log_start()
-
         self.install_dialog.show()
         self.thread.start()
 
     def stop(self):
-        self.thread.join()
-
-        self.install_dialog.log_stop()
-        self.install_dialog.log_dettach(logging.getLogger(""))
+        # self.thread.quit()
+        log.debug("Stopping install_dialog")
         self.install_dialog.close()
-
-    def do_install(self):
-        try:
-            for pkg_name, pkg_desc, pkg_exc in self.missing_packages:
-                pkg_desc.install()
-        finally:
-            self.install_completed.emit()
 
     @Slot()
     def plz_quit(self):
-        raise SystemExit()
+        # log.debug("plz_quit")
+        if self.thread.isRunning():
+            self.thread.wanna_quit()
+            self.thread.wait(5000)
+            if self.thread.isRunning():
+                self.thread.terminate()
+        else:
+            self.really_quit(_("Missing packages have been installed, "
+                               "but user decided to quit without launching "
+                               "d∃∀duction."))
+
+    @Slot()
+    def really_quit(self, reason: str):
+        # log.debug("really_quit")
+        msg_box = QMessageBox()
+        msg_box.setText(_("Quitting d∃∀duction"))
+        msg_box.setInformativeText(reason)
+        msg_box.exec()
+        self.quit_deduction.emit()
 
     @Slot()
     def plz_start_deaduction(self):
         self.start_deaduction.emit()
 
 
-async def site_installation_check(nursery):
+async def site_installation_check():
+    """
+    Check if some packages are missing. If so, ask usr if they want to install.
+    Return True is everything is OK; otherwise deaduction should stop.
+    """
+    # FOR DEBUGGING ONLY #
+    # erase_lean()
+    # FOR DEBUGGING ONLY #
+
     missing_packages = inst.check()
     
     if missing_packages:
-        want_install_dialog = WantInstallMissingDependencies(map(lambda x: x[0], missing_packages))
+        want_install_dialog = WantInstallMissingDependencies(
+                                    map(lambda x: x[0], missing_packages))
         want_install_dialog.exec_()
 
         if want_install_dialog.yes:
-            inst_stg = Install_Dependencies_Stage(nursery, missing_packages)
-            async with qtrio.enter_emissions_channel(signals=[inst_stg.start_deaduction]) as \
-                       emissions:
-
+            inst_stg = InstallDependenciesStage(missing_packages)
+            async with qtrio.enter_emissions_channel(
+                    signals=[inst_stg.start_deaduction,
+                             inst_stg.quit_deduction]) as emissions:
+                go_on_deaduction = True
                 inst_stg.start()
                 async for emission in emissions.channel:
                     if emission.is_from(inst_stg.start_deaduction):
                         break
+                    elif emission.is_from(inst_stg.quit_deduction):
+                        # log.debug("emission from quit_deaduction")
+                        go_on_deaduction = False
+                        break
                 inst_stg.stop()
+            return go_on_deaduction
+        else:
+            return False
+    else:
+        return True
 
 
-###############################################
-# Container class, managing signals and slots #
-###############################################
+def erase_lean():
+    """
+    Erase Lean and Mathlib. For debugging only.
+    """
+    lean_dir = cdirs.lean
+    mathlib_dir = cdirs.mathlib
+    if lean_dir.exists():
+        log.debug("Erasing Lean")
+        rmtree(str(lean_dir), ignore_errors=True)
+    if mathlib_dir.exists():
+        rmtree(str(mathlib_dir), ignore_errors=True)
+
+
+def debug_installation_check():
+    """
+    Sync version of the previous one. For debugging only.
+    """
+
+    # FOR DEBUGGING ONLY #
+    erase_lean()
+    # FOR DEBUGGING ONLY #
+
+    missing_packages = inst.check()
+    if missing_packages:
+        # want_install_dialog = WantInstallMissingDependencies(
+        #     map(lambda x: x[0], missing_packages))
+        # want_install_dialog.exec_()
+        #
+        # if want_install_dialog.yes:
+        for pkg_name, pkg_desc, pkg_exc in missing_packages:
+            pkg_desc.install()
+        # else:
+        #     quit()
+
+
+def language_check():
+    log.debug("Language check")
+    language = deaduction.pylib.config.i18n.init_i18n()
+    if language == "no_language":
+        selected_language, ok = select_language()
+        if not selected_language:
+            selected_language = 'en'
+        cvars.set('i18n.select_language', selected_language)
+        deaduction.pylib.config.i18n.init_i18n()
+        if ok:
+            cvars.save()  # Do not ask next time!
+
+
+def copy_lean_files_to_home():
+    """
+    Copy recursively the directory containing factory lean files for
+    exercises to the usr directory.
+    """
+    exercises_dir = cdirs.courses
+    usr_exercises_dir = cdirs.usr_lean_exercises_dir
+    if usr_exercises_dir.exists():
+        rmtree(str(usr_exercises_dir), ignore_errors=True)
+    copytree(str(exercises_dir),
+             str(usr_exercises_dir),
+             ignore_dangling_symlinks=True)
+    # Only in Python3.10: dirs_exist_ok=True)
+
+
+def erase_proof_states():
+    """
+    Move initial_proof_states dir to old_initial_proof_state dir.
+    """
+    ips_dir = cdirs.all_courses_ipf_dir
+    if ips_dir.exists():
+        rmtree(str(ips_dir), ignore_errors=True)
+
+
+def check_new_version():
+    """
+    The usr config var usr_version_nb refers to the nb of the last executed
+    version of deaduction. The factory var version_nb is the actual current
+    version. Both should be equal after executing adapt_to_new_version.
+    """
+    version_nb = cvars.get("others.version_nb")
+    usr_version_nb = cvars.get("others.usr_version_nb")
+    if version_nb != usr_version_nb:
+        log.debug(f"New version detected, {usr_version_nb} --> {version_nb}")
+        return True
+
+
+def adapt_to_new_version():
+    """
+    If a new version of deaduction is detected, then initial_proof_states
+    have to be computed again to avoid errors. Furthermore, exercises are
+    copied to the usr exercises dir.
+    """
+
+    log.debug("Checking version")
+
+    if check_new_version():
+        log.debug("Adapting to new version...")
+        log.debug("Copying Lean files to home dir")
+        copy_lean_files_to_home()
+        log.debug("Erasing previous initial proof states")
+        erase_proof_states()
+        # Create empty dir again:
+        cdirs.init()
+        # Write new version nb in usr config.toml:
+        log.debug("Setting new version nb in usr config file")
+        cvars.set("others.usr_version_nb", cvars.get("others.version_nb"))
+        cvars.save()
+
+
+#################################################################
+#################################################################
+#################################################################
+# Container class, managing signals and slots for the main loop #
+#################################################################
+#################################################################
+#################################################################
 class WindowManager(QObject):
     """
     This class is responsible for keeping the memory of open windows
@@ -350,9 +556,9 @@ def exercise_from_argv() -> Exercise:
     return exercise
 
 
-##############################################################
-# Main event loop: init wm and wait for window closed #
-##############################################################
+##################################################################
+# Main event loop: init WindowManager and wait for window closed #
+##################################################################
 async def main():
     """
     This is the main loop. It opens a trio.nursery, instantiate a Container
@@ -363,12 +569,24 @@ async def main():
     """
 
     async with trio.open_nursery() as nursery:
-        await site_installation_check(nursery)
+        # Check Lean and mathlib install
+        ok = await site_installation_check()
+        # print(f"ok={ok}")
+        if not ok:
+            nursery.cancel_scope.cancel()
+        # Check language
+        language_check()
+
+        # Check if version has changed
+        adapt_to_new_version()
 
         # Create wm and start Lean server
         wm = WindowManager(nursery)
         await wm.check_lean_server()
 
+        #################################
+        # Deaduction really starts here #
+        #################################
         try:
             # Choose first exercise
             exercise = exercise_from_argv()
@@ -413,25 +631,14 @@ async def main():
 if __name__ == '__main__':
     log.info("Starting...")
     #################################################################
-    # Init environment variables, directories, and install packages #
+    # Init environment variables, directories, and configure logger #
     #################################################################
 
     cenv.init()
     cdirs.init()
     inst.init()
 
-    ############################
-    # First choice of language #
-    ############################
-    language = deaduction.pylib.config.i18n.init_i18n()
-    if language == "no_language":
-        selected_language, ok = select_language()
-        if not selected_language:
-            selected_language = 'en'
-        cvars.set('i18n.select_language', selected_language)
-        deaduction.pylib.config.i18n.init_i18n()
-        if ok:
-            cvars.save()  # Do not ask next time!
+    set_logger()
 
     #################
     # Run main loop #

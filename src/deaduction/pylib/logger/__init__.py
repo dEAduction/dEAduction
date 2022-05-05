@@ -31,6 +31,7 @@ import os
 
 import deaduction.pylib.utils.ansiterm as ansiterm
 
+
 ############################################
 # Logger classes
 ############################################
@@ -81,15 +82,17 @@ class Color_Formatter(logging.Formatter):
 # Logger procedures
 ############################################
 def configure(display_level: str = "debug",
-              domains: [str] = ['']):
+              domains: [str] = [''],
+              filename=None):
     """
     Configures the logging module for use with d∃∀duction.
 
     :param domains: list of names of loggers
     :param display_level: one of "debug", "info", "warning"
+    :param filename: name of the log file, if any.
     """
 
-    root          = logging.getLogger("") # Get the root logger
+    root          = logging.getLogger("")  # Get the root logger
     force_color   = bool(os.getenv("DEADUCTION_USE_COLOR", False))
 
     # Creating basic handler and format
@@ -106,6 +109,11 @@ def configure(display_level: str = "debug",
     sh.addFilter(filter)
 
     root.addHandler(sh)
+
+    if filename:
+        fh = logging.FileHandler(filename)
+        fh.setLevel(logging.DEBUG)
+        root.addHandler(fh)
 
     # Set message level
     if display_level == "debug":

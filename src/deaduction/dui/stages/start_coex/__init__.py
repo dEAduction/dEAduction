@@ -26,4 +26,3 @@ This file is part of d∃∀duction.
 """
 
 from .start_coex_widgets import StartCoExStartup
-    # StartCoExExerciseFinished

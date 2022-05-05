@@ -42,7 +42,7 @@ class FileDontExistError(FileCheckError):
 
 class FileNotDirectoryError(FileCheckError):
     def __init__(self, path: Path):
-        super().__init__(path, _("Path {} is not a directory"), path)
+        super().__init__(path, _("Path {} is not a directory"))
 
 class FileNotExploitableError(Exception):
     def __init__(self, path: Path):

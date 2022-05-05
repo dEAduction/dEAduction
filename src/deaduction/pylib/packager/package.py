@@ -30,6 +30,7 @@ from   pathlib import Path
 import tempfile
 import shutil
 import traceback
+import time
 
 import logging
 
@@ -38,7 +39,7 @@ from gettext import gettext as _
 from deaduction.pylib.utils import filesystem as fs
 from tempfile import TemporaryFile
 import os.path
-#import git
+# import git
 
 from .exceptions import (PackageCheckError)
 
@@ -93,6 +94,7 @@ class Package:
                                         .format(str(self.path)),
                                         dbg_info=e )
 
+
 # ┌────────────────────────────────────────┐
 # │ ArchivePackage class                   │
 # └────────────────────────────────────────┘
@@ -103,7 +105,6 @@ class ArchivePackage(Package):
                  archive_hlist: Path   = None,
                  archive_root: Path    = None,        # Root folder
                  archive_type: str     = "tar"):      # can be "tar" or "zip"
-                 
 
         super().__init__(path)
 
@@ -112,6 +113,7 @@ class ArchivePackage(Package):
         self.archive_hlist    = fs.path_helper(archive_hlist)
         self.archive_root     = archive_root
         self.archive_type     = archive_type
+        self.downloader = None
 
     def _check_files(self):
         """
@@ -166,12 +168,17 @@ class ArchivePackage(Package):
 
         if self.archive_hlist is not None:
             log.info(_("Checking files for {}").format(self.path))
-            hlist_ref  = fs.HashList.from_file(self.archive_hlist)
+            # Crash 5 here
+            hlist_ref  = fs.HashList.from_file(self.archive_hlist)  #Crash 6
+            log.debug("step 1")
             hlist_dest = fs.HashList.from_path(self.path)
+            log.debug("step 2")
 
             diff       = list(hlist_dest.diff(hlist_ref))
+            log.debug(f"step 3: {len(diff)}")
 
             for dd in diff:
+                log.debug("step 4...")
                 # Shape: ('add', '', [ (path, data), (path, data), ... ] )
                 if   dd[0] == "add":
                     raise PackageCheckError( self, _("Missing files {}, reinstalling package!").format(dd[2]))
@@ -201,10 +208,12 @@ class ArchivePackage(Package):
 
                 else:
                     raise PackageCheckError( self, _("Uknown dict differ {}, reinstalling package").format(dd) )
+            log.debug("Files checked")
 
     def check(self):
+        log.debug("Checking package...")
         self._check_folder()
-        self._check_files()
+        self._check_files()  # Crash 2&5 here after 1st package
 
         #try:
         #    self._check_folder()
@@ -230,10 +239,17 @@ class ArchivePackage(Package):
             archive_root that is moved.
         """
         self.remove()
-
         log.info(_("Installing package {} from archive").format(self.path))
         with TemporaryFile() as fhandle:
-            checksum = fs.download(self.archive_url, fhandle, on_progress)
+            log.debug("Downloading...")
+            self.downloader = fs.Downloader(self.archive_url,
+                                            fhandle,
+                                            on_progress)
+            checksum = self.downloader.download()
+
+            if self.downloader.wanna_abort:
+                raise SystemExit
+
             if self.archive_checksum and (self.archive_checksum != checksum):
                 raise AssertionError(_("Invalid checksum: {}, expected {}").format(
                     checksum, self.archive_checksum))
@@ -241,10 +257,6 @@ class ArchivePackage(Package):
             fhandle.seek(0)
 
             log.info(_("Extract file to {}").format(self.path))
-
-            # Create destination folder
-            #self.path.mkdir(exist_ok=True) # exist_ok=True → Don't bother if
-            #                               # path already exists
 
             # Get correct archiving module to extract the file
             archive_open_fkt    = { "tar": lambda x: tarfile.open(fileobj=x),
@@ -262,20 +274,27 @@ class ArchivePackage(Package):
             with archive_module(fhandle) as tf:
                 tf.extractall(path=str(tpath))
 
+                if self.downloader.wanna_abort:
+                    raise SystemExit
+
                 if self.archive_root:
                     tpath = (tpath / self.archive_root).resolve()
 
                 log.info(_("→ Move {} to {}").format(tpath, self.path))
                 shutil.move(str(tpath), str(self.path))
 
-
         try:
             self.check()
+
         except PackageCheckError as e:
             log.error(_("Failed to install Package to {}: {}").format(str(self.path), str(e)))
             raise e
 
         log.info(_("Installed Package to {}").format(self.path))
+
+        if self.downloader.wanna_abort:
+            raise SystemExit
+
 
 # ┌────────────────────────────────────────┐
 # │ GitPackage class                       │

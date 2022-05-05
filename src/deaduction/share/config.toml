@@ -64,9 +64,11 @@ select_language = "no_language"
 save_journal = false
 display_level = "info"
 domains = [""]
+log_to_file = true
 
 [others]
-course_directory = ""
+usr_version_nb = "-1"  # Do not modify!
+version_nb = "0.3"
 
 #########################
 # All Plateform packages
