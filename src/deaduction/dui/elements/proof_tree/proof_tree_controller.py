@@ -68,6 +68,13 @@ def widget_goal_block(parent_widget: Optional[WidgetGoalBlock],
     new_context = goal_node.goal.new_context
     target = goal_node.goal.target.math_type
 
+    if not parent_widget:
+        log.debug("First generic WGB created")
+        # Ensure wgb has a children_layout!!
+        return WidgetGoalBlock(logical_parent=parent_widget,
+                               goal_node=goal_node,
+                               target=target, context2=new_context)
+
     pure_context = goal_node.is_pure_context
     context_rw = goal_node.is_context_substitution
     target_rw = goal_node.is_target_substitution
@@ -113,6 +120,14 @@ def widget_goal_block(parent_widget: Optional[WidgetGoalBlock],
     elif goal_node.is_context_and:
         wgb = EmptyWGB(logical_parent=parent_widget, goal_node=goal_node)
         log.debug("Empty WGB created")
+
+    elif not goal_node.target_has_changed:
+        premises = goal_node.parent.selection
+        operator = None
+        conclusions = (goal_node.goal.modified_context
+                       + goal_node.goal.new_context)
+        wgb = PureContextWGB(parent_widget, goal_node,
+                             premises, operator, conclusions)
 
     else:
         wgb = WidgetGoalBlock(logical_parent=parent_widget,
@@ -217,9 +232,12 @@ class ProofTreeController:
         self.proof_tree_window.set_current_target(goal_nb,
                                                   blinking=self.is_at_end())
 
+        # current_widget = self.wgb_from_goal_nb(goal_nb=goal_nb)
+        # self.proof_tree_window.main_window.ensureWidgetVisible(current_widget)
+
     def wgb_from_goal_nb(self, goal_nb: int, from_wgb=None) -> \
             WidgetGoalBlock:
-        """ For debugging only."""
+
         if not from_wgb:
             from_wgb = self.proof_tree_window.main_block
         if from_wgb.goal_nb == goal_nb:

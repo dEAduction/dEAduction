@@ -444,6 +444,7 @@ class SubstitutionArrow(QWidget):
         layout.addWidget(fake_label)
         layout.addStretch(1)
         self.setLayout(layout)
+        self.rw_label.show()
         fake_label.hide()
 
     # def changeEvent(self, e):
@@ -623,13 +624,17 @@ class TargetWidget(QWidget):
     def set_as_current_target(self, yes=True, blinking=True):
         if yes:
             self.title_label.set_bold(True)
+            # self.set_status()
             if blinking:
                 self.status_label.start_blinking()
+                self.parent_wgb.make_visible(self.status_label)  # Fixme
             else:
                 self.status_label.stop_blinking()
+                # This is not pertinent:
+                # self.parent_wgb.make_visible(self.title_label)
         else:
             self.status_label.stop_blinking()
-            self.set_status()
+            # self.set_status()
             self.title_label.set_bold(False)
 
     def toggle(self):
@@ -647,8 +652,10 @@ class TargetWidget(QWidget):
     @property
     def status_msg(self) -> Optional[str]:
         if self.parent_wgb.is_recursively_solved():
-            if self.parent_wgb.is_sorry():
+            if self.parent_wgb.is_recursively_sorry():
                 return _("(admitted)")
+            elif self.parent_wgb.is_all_goals_solved():
+                return _("THE END!!")
             else:
                 return _("Goal!")
         elif self.parent_wgb.is_conditionally_solved():

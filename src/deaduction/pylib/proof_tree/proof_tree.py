@@ -429,11 +429,14 @@ class GoalNode:
     def child_proof_step(self, proof_step):
         self._child_proof_step = proof_step
 
-    def is_recursively_solved(self):
-        """self is solved if it is explicitly solved, or it has children and
-        they are all solved."""
+    def is_all_goals_solved(self):
+        return self.child_proof_step and self.child_proof_step.no_more_goal
 
-        if self._is_solved:
+    def is_recursively_solved(self):
+        """self is recursively solved if it is explicitly solved, or it has
+        children and they are all solved."""
+
+        if self._is_solved or self.is_all_goals_solved():
             return True
         elif self.children_goal_nodes:
             return all([child.is_recursively_solved()
@@ -442,22 +445,29 @@ class GoalNode:
             return False
 
     def is_sorry(self):
-        return self.parent.is_sorry()
+        return self.child_proof_step.is_sorry()
+
+    def is_recursively_sorry(self):
+        """
+        Self is "admitted" if it solved, and has been obtained by a proof by
+        "sorry", or so is any of its children.
+        """
+        if self.is_sorry():
+            return True
+        elif not self.is_recursively_solved():
+            return False
+        else:
+            return any([child.is_recursively_sorry()
+                        for child in self.children_goal_nodes])
 
     def set_solved(self, yes=True):
         self._is_solved = yes
 
-    def is_goal_solved(self):
-        """
-        True if self is a fake goal with target = "goal solved".
-        """
-        return self.goal.target.math_type == MathObject.CURRENT_GOAL_SOLVED
-
-    def is_all_goals_solved(self):
-        """
-        True if self is a fake goal with target = "goal solved".
-        """
-        return self.goal.target.math_type == MathObject.NO_MORE_GOALS
+    # def is_goal_solved(self):
+    #     """
+    #     True if self is a fake goal with target = "goal solved".
+    #     """
+    #     return self.goal.target.math_type == MathObject.CURRENT_GOAL_SOLVED
 
     @property
     def unsolved_leaves(self):
@@ -601,6 +611,9 @@ class ProofTree:
     def go_to_first_unsolved_node(self):
         self.current_goal_node = self.unsolved_goal_nodes()[0]
 
+    def is_all_goals_solved(self):
+        return not self.unsolved_goal_nodes()
+
     def process_new_proof_step(self, new_proof_step: ProofStep):
         """
         Create new GoalNodes and add them into the tree according to the data.
@@ -627,6 +640,8 @@ class ProofTree:
 
         # ─────── Connect new_proof_step to ProofTree ─────── #
         self.current_goal_node.child_proof_step = new_proof_step
+        if self.is_all_goals_solved():  # All goals solved!
+            return
 
         # ─────── Create new GoalNodes ─────── #
         new_goal = new_proof_state.goals[0]
@@ -667,8 +682,8 @@ class ProofTree:
         # new_goal.mark_used_properties(used_properties)
 
         # DEBUG
-        print("ProofTree:")
-        print(str(self))
+        # print("ProofTree:")
+        # print(str(self))
 
     def prune(self, proof_step_nb):
         """
