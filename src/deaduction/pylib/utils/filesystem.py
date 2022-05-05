@@ -195,6 +195,12 @@ class HashList:
 # Download utilities
 ############################################
 class Downloader():
+    """
+    A class for handling download. Aborting is allowed by calling th abort()
+    method, which sets the self.wanna_abort attribute to True. This
+    attribute is tested periodically, and if True, a SystemExit exception is
+    raised.
+    """
     def __init__(self, url: str, fhandle: BufferedWriter, on_progress=None):
         self.url = url
         self.fhandle = fhandle

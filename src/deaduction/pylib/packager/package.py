@@ -213,20 +213,7 @@ class ArchivePackage(Package):
     def check(self):
         log.debug("Checking package...")
         self._check_folder()
-        self._check_files()  # Crash 2&5 here after 1st package
-
-        #try:
-        #    self._check_folder()
-        #    self._check_files()
-        #except Exception as e:
-        #    log.warning(_("Failed check package {}, reinstall")
-        #                .format(self.path))
-        #    log.debug(traceback.format_exc())
-
-        #    if self.path.exists():
-        #        self.remove()
-        #    self.install() # TODO # if error, only raise exception, don't
-        #                   #  install !!!
+        self._check_files()
 
     def install(self, on_progress: Callable = None):
         """
@@ -237,6 +224,11 @@ class ArchivePackage(Package):
             → Then, if archive_root is given, the whole temp path is moved to
             the destination, else, it is only the component given by
             archive_root that is moved.
+        This methods create an instance of the Downloader class. This allows
+        aborting download by calling the Downloader.abort() method. This
+        methods sets the Downloader.wanna_abort attribute to True. This
+        attribute is checked between each operation, and if True, a SystemExit
+        exception is raised.
         """
         self.remove()
         log.info(_("Installing package {} from archive").format(self.path))
