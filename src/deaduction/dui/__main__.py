@@ -3,6 +3,8 @@
 # __main__.py :  #
 ##################
 
+This is the entry point for deaduction.
+
 Author(s)      : - Kryzar <antoine@hugounet.com>
                  - Florian Dupeyron <florian.dupeyron@mugcat.fr>
                  - Frédéric Le Roux <frederic.le-roux@imj-prg.fr>
@@ -133,8 +135,13 @@ class InstallDependenciesThread(QThread):
     The Signal on_progress is used to display downloading progress in
     QProgressBars.
     User may quit during downloading: abort is done by calling the
-    self.current_package.downloader.abort method, which raises the
-    SystemExit exception.
+    self.current_package.downloader.abort() method, which raises the
+    SystemExit exception. THis exception is caught by the self.run() method,
+    and the signal download_interrupted is emitted (the same happens in case
+     of connection error).
+
+    The current_package attribute, when not None, holds the package which is
+    begin currently installed.
     """
     install_completed = Signal()
     on_progress = Signal(str, int, int, int)
@@ -177,7 +184,20 @@ class InstallDependenciesThread(QThread):
 ############################
 class InstallDependenciesStage(QObject):
     """
-    Launch a QDialog for user to interact with package installing.
+    Launch a QDialog subclass, InstallingMissingDependencies, for user to
+    interact with package installing. To avoid freezing interface,
+    the downloading is made in an auxiliary thread, an instance of
+    InstallDependenciesThread.
+
+    The main issue is to allow user to
+    quit. For this, the quit button of InstallingMissingDependencies emit
+    the signal plz_quit which is connected to the slot self.plz_quit().
+    This method tells InstallDependenciesThread to try to abort by calling
+    its wanna_quit() method. When the thread succeed aborting it emits the
+    download_interrupted signal, which is connected to self.really_quit()
+    method. Then the user is told that deaduction is quitting, and the
+    quit_deaduction signal is emitted.
+
     """
     start_deaduction  = Signal()
     quit_deduction    = Signal()
@@ -239,6 +259,29 @@ async def site_installation_check():
     """
     Check if some packages are missing. If so, ask usr if they want to install.
     Return True is everything is OK; otherwise deaduction should stop.
+
+    Here are some details about the methods that are called:
+
+    - The async site_installation_check function creates a
+        InstallDependenciesStage instance, and listen for signals
+        inst_stage.start_deaduction and inst_stg.quit_deaduction.
+
+    - The InstallDependenciesStage class creates
+        - an InstallingMissingDependencies instance, a QDialog which
+        displays progress bars for each missing package, and allow user
+        either to interrupt the installation process by pressing the Quit
+        button, or to start deaduction when the installation is complete.
+        - an InstallDependenciesThread instance, which runs the install()
+        method on each missing package, and catch exceptions which are
+        raised in case of a connection error or when usr press the Quit
+        button, in which case it emits the download_interrupted signal.
+
+    More precisely, the quit button triggers the wanna_quit() method of
+    InstallDependenciesThread, which in turn triggers the abort() method of
+    the Downloader class which is responsible for the downloading. This sets a
+    flag which is checked periodically during downloading and unpacking to
+    allow clean interruption by raising the SystemExit exception caught by
+    InstallDependenciesThread.run().
     """
     # FOR DEBUGGING ONLY #
     # erase_lean()

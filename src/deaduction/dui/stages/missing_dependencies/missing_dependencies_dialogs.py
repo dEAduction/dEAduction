@@ -113,15 +113,7 @@ class InstallingMissingDependencies(QDialog):
     plz_quit             = Signal()
 
     def __init__(self,
-                 missing_packages,
-                 log_format: str = '%(asctime)s - %(levelname)s - %(message)s'):
-        """
-        Init self with a logger formater (so specify the layout of the
-        log entries, see logging module documentation), e.g.
-        '%(asctime)s - %(levelname)s - %(message)s'.
-
-        :param log_format: Logger formatter for the log entries.
-        """
+                 missing_packages):
 
         super().__init__()
         self.missing_packages = missing_packages
