@@ -362,17 +362,6 @@ class ExerciseCentralWidget(QWidget):
         :param symbol: Symbol of som ActionButton, which is displayed on the
         button.
         """
-        # # Allow name instead of symbol
-        # if button_symbol(symbol):
-        #     symbol = button_symbol(symbol)
-        # # ['∧', '∨', '¬', '⇒', '⇔', '∀', '∃', '=', 'Méthodes de preuve…',
-        # # 'Nouvel Objet…', 'Appliquer', 'Calculer', 'But !']
-        # buttons = [button for button in self.actions_buttons if
-        #            button.has_symbol(symbol)]
-        # if buttons:
-        #     return buttons[0]
-        # else:
-        #     return None
         return ActionButton.from_symbol.get(symbol)
 
     def freeze(self, yes=True):
@@ -473,6 +462,10 @@ class ExerciseStatusBar(QStatusBar):
     def __init__(self, parent):
         super().__init__(parent)
 
+        # Waiting timer
+        self.waiting_timer = QTimer(self)
+        self.waiting_timer.timeout.connect(self.add_point)
+
         # Pending msgs
         self.timer = QTimer(self)
         self.pending_msgs = []
@@ -495,6 +488,32 @@ class ExerciseStatusBar(QStatusBar):
         self.insertWidget(1, self.messageWidget)
         self.show_success_icon()  # Trick: the status bar adapts its height
         self.hide_icon()
+
+    @property
+    def display_success_msgs(self):
+        return cvars.get('display.display_success_messages', True)
+
+    @Slot()
+    def add_point(self):
+        """
+        Add a point (.) at the end of the msg.
+        """
+        msg = self.messageWidget.text()
+        self.messageWidget.setText(msg + '.')
+
+    def display_thinking_bar(self):
+        self.set_message(_("    Thinking"))
+        self.messageWidget.setStyleSheet("font-style: italic")
+        self.waiting_timer.start(1000)
+
+    def display_initializing_bar(self):
+        self.set_message(_("    Initializing"))
+        self.messageWidget.setStyleSheet("font-style: italic")
+        self.waiting_timer.start(500)
+
+    def stop_thinking(self):
+        self.waiting_timer.stop()
+        self.messageWidget.setStyleSheet("font-style: normal")
 
     def show_pending_msgs(self):
         """
@@ -523,6 +542,7 @@ class ExerciseStatusBar(QStatusBar):
         self.iconWidget.hide()
 
     def set_message(self, msg: str):
+        self.stop_thinking()
         self.messageWidget.setText(msg)
 
     def erase(self):
@@ -574,10 +594,6 @@ class ExerciseStatusBar(QStatusBar):
                     self.timer.singleShot(3000, self.show_pending_msgs)
                 else:  # Show immediately
                     self.show_normal_msg(new_goal.msg)
-
-    @property
-    def display_success_msgs(self):
-        return cvars.get('display.display_success_messages', True)
 
 
 class ExerciseToolBar(QToolBar):

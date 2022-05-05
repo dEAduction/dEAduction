@@ -112,7 +112,7 @@ class Coordinator(QObject):
 
         # Exercise main window
         self.emw = ExerciseMainWindow(exercise)
-        self.emw.statusBar.set_message(_("(initializing...)"))
+        self.emw.statusBar.display_initializing_bar()
         self.emw.close_coordinator = self.closeEvent
 
         # Information
