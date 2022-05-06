@@ -735,11 +735,11 @@ class AbstractStartCoEx(QDialog):
 
         settings = QSettings("deaduction")
         geometry = settings.value("coex_chooser/Geometry")
-        maximised = settings.value("coex_chooser/isMaximised")
+        # maximised = settings.value("coex_chooser/isMaximised")
         if geometry:
             self.restoreGeometry(geometry)
-            if maximised:
-                self.showMaximized()
+            # if maximised:
+            #     self.showMaximized()
 
         self.servint = servint
         if title:
