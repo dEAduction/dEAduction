@@ -158,6 +158,7 @@ class Coordinator(QObject):
         #  while.)
         self.proof_tree = ProofTree()
         self.emw.proof_tree_controller.set_proof_tree(self.proof_tree)
+        self.emw.set_msgs_for_status_bar(self.proof_tree.current_proof_msg)
         self.proof_step = ProofStep()
         proof_state = self.exercise.initial_proof_state
         if proof_state:

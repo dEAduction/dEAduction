@@ -232,7 +232,8 @@ class ExerciseMainWindow(QMainWindow):
                              [self.exercise_toolbar.rewind,
                               self.exercise_toolbar.undo_action,
                               self.exercise_toolbar.redo_action,
-                              self.exercise_toolbar.toggle_proof_outline_action
+                              self.exercise_toolbar.toggle_proof_outline_action,
+                              self.exercise_toolbar.toggle_proof_tree
                               ]),
                          self.exercise_toolbar.toggle_lean_editor_action,
                          self.global_toolbar.change_exercise_action])
@@ -273,6 +274,9 @@ class ExerciseMainWindow(QMainWindow):
         # event.accept()  # THIS create crash after the second closing!!
         super().closeEvent(event)
         self.deleteLater()
+
+    def set_msgs_for_status_bar(self, proof_msg: callable):
+        self.statusBar.proof_msg = proof_msg
 
     ##################
     # Config methods #
@@ -517,8 +521,8 @@ class ExerciseMainWindow(QMainWindow):
         self.freezed = yes
         self.ecw.freeze(yes)
         self.exercise_toolbar.setEnabled(not yes)
-        if yes:
-            self.statusBar.cancel_pending_msgs()
+        # if yes:
+        #     self.statusBar.cancel_pending_msgs()
 
     def history_button_unfreeze(self, at_beginning, at_end):
         """

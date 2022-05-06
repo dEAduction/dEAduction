@@ -125,6 +125,23 @@ class GoalNode:
         return len(self.children_goal_nodes) > 1
 
     @property
+    def is_new_subgoal(self):
+        return self.parent_node and self.parent_node.is_fork_node
+
+    @property
+    def last_child_fork_node(self):
+        """
+        Recursively climb the tree until it finds the child of a fork node.
+        """
+
+        if self.is_new_subgoal:
+            return self
+        elif self.parent_node:
+            return self.parent_node.last_child_fork_node
+        else:
+            return None
+
+    @property
     def brother_number(self):
         if self.parent_node:
             if self in self.parent_node.children_goal_nodes:
@@ -172,13 +189,14 @@ class GoalNode:
         Self is the node of a conjunction proof iff its parent's target is a
         conjunction whose children contain self's target.
         """
+
         if self._is_conjunction is not None:
             return self._is_conjunction
-        parent_node = self.parent_node
-        if not parent_node or not parent_node.is_fork_node:
+        if not self.is_new_subgoal:
             self._is_conjunction = False
+            return False
         # Now self has a brother
-        parent_target = parent_node.goal.target.math_type
+        parent_target = self.parent_node.goal.target.math_type
         conjunction = parent_target.implicit(MathObject.is_and)
         if not conjunction:
             self._is_conjunction = False
@@ -202,23 +220,24 @@ class GoalNode:
         Self is the node of a double implication proof iff its parent's target
         is a double implication whose children contain self's target.
         """
-        if self._is_double_implication is not None:
-            return self._is_double_implication
+
+        # if self._is_double_implication is not None:
+        #     return self._is_double_implication
         parent_node = self.parent_node
         if not parent_node or not parent_node.is_fork_node:
+            self._is_double_implication = False
             return False
 
         # Now self has a brother
-        parent_target = parent_node.goal.target.math_type
-        iff = parent_target.implicit(MathObject.is_and)
-        if not iff:
-            self._is_double_implication = False
-        else:
-            target = self.goal.target.math_type
-            brother_target = self.brother.goal.target.math_type
-            tests = [target in iff.children,
-                     brother_target in iff.children]
-            self._is_double_implication = all(tests)
+        iff = parent_node.goal.target.math_type
+        target = self.goal.target.math_type
+        brother_target = self.brother.goal.target.math_type
+        tests = [iff.is_iff(is_math_type=True),
+                 target.is_implication(is_math_type=True),
+                 brother_target.is_implication(is_math_type=True),
+                 target.children[0] == brother_target.children[1],
+                 target.children[1] == brother_target.children[0]]
+        self._is_double_implication = all(tests)
         return self._is_double_implication
 
     @property
@@ -276,9 +295,9 @@ class GoalNode:
                 and len(proof_step.selection) == 1:
             rw_item = proof_step.rw_item
         elif proof_step.is_push_neg() and proof_step.is_on_target():
-            rw_item = _("Pushing"), _("negation")
+            rw_item = _("Pushing negation")
         elif proof_step.is_by_contraposition():
-            rw_item = _("")
+            rw_item = _("Contraposition")
         return rw_item
 
     @property
@@ -296,7 +315,7 @@ class GoalNode:
                 len(proof_step.selection) >= 2:
             rw_item = proof_step.rw_item
         elif proof_step.is_push_neg() and not proof_step.is_on_target():
-            rw_item = _("Pushing"), _("negation")
+            rw_item = _("Pushing negation")
 
         if rw_item:
             selection = proof_step.selection
@@ -349,7 +368,10 @@ class GoalNode:
         displayed e.g. for proof by cases.
 
         html_msg is displayed in the proof tree widget,
-        msg is displayed in the status bar in case of a fork node.
+        msg is displayed in the status bar, exclusively in case of a fork node.
+
+        msg is supposed to be a synthetic version of html_msg
+            e.g. "Proof of first property" vs "Proof of <first property>".
 
         :param format_ : "html" or "utf8"
         :param use_color: enable or disable colors
@@ -375,20 +397,24 @@ class GoalNode:
                       _("assuming {}").format(hypo_txt))
             else:  # Do not assign self._msg since we may get hypo next time
                 msg = case_txt_nb
-        elif self.is_conjunction:
-            target = self.goal.target.math_type
-            target_nb = self.brother_number
-            msg = (_("Proof of first property") if target_nb == 0
-                   else _("Proof of second property"))
-            html_target = target.to_display(format_="html",
-                                            use_color=use_color,
-                                            bf=bf)
-            html_msg = _("Proof of {}").format(html_target)
+
         elif self.is_double_implication:
             target = self.goal.target.math_type
             target_nb = self.brother_number
             msg = (_("Proof of first implication") if target_nb == 0
                    else _("Proof of second implication"))
+            html_target = target.to_display(format_="html",
+                                            use_color=use_color,
+                                            bf=bf)
+            html_msg = _("Proof of {}").format(html_target)
+
+        # NB: test double implication BEFORE conjunction, since iff is more
+        #  specific than and.
+        elif self.is_conjunction:
+            target = self.goal.target.math_type
+            target_nb = self.brother_number
+            msg = (_("Proof of first property") if target_nb == 0
+                   else _("Proof of second property"))
             html_target = target.to_display(format_="html",
                                             use_color=use_color,
                                             bf=bf)
@@ -407,8 +433,12 @@ class GoalNode:
             html_target = target.to_display(format_="html",
                                             use_color=use_color,
                                             bf=bf)
-            msg = _("Proof of {}").format(utf8_target)
-            html_msg = _("Proof of {}").format(html_target)
+            if self.is_new_subgoal:
+                msg = _("Proof of sub-goal: {}").format(utf8_target)
+                html_msg = _("Proof of sub-goal: {}").format(html_target)
+            else:
+                msg = _("Proof of {}").format(utf8_target)
+                html_msg = _("Proof of {}").format(html_target)
 
         return msg if format_ == "utf8" else html_msg
 
@@ -576,6 +606,18 @@ class ProofTree:
     @current_goal_node.setter
     def current_goal_node(self, goal_node):
         self._current_goal_node = goal_node
+
+    def last_fork_node(self):
+        """
+        Return the last ancestor of current_goal_node which is a fork node.
+        This is the pertinent goal_node for the proof msg to be displayed in
+        the status bar.
+        """
+        return self.current_goal_node.last_child_fork_node
+
+    def current_proof_msg(self) -> Optional[str]:
+        if self.last_fork_node():
+            return self.last_fork_node().msg()
 
     def is_at_end(self):
         """

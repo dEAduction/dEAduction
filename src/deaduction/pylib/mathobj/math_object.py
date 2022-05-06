@@ -847,9 +847,9 @@ class MathObject:
          :param test: one of is_and, is_or, is_implication, is_exists,
                       is_for_all.
         """
-        if not test(self, implicit=True):
+        if not test(self, implicit=True, is_math_type=True):
             return None
-        if test(self):
+        if test(self, implicit=False, is_math_type=True):
             return self
         else:
             return self.last_rw_object
