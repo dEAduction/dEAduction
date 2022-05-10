@@ -113,7 +113,7 @@ def widget_goal_block(parent_widget: Optional[WidgetGoalBlock],
                          context=new_context, target=target)
         log.debug("By Cases WGB created")
 
-    elif goal_node.is_all_goals_solved():  # or goal_node.is_goals_solved():
+    elif goal_node.is_no_more_goals():  # or goal_node.is_goals_solved():
         wgb = GoalSolvedWGB(parent_widget, goal_node)
         log.debug("End WGB created")
 

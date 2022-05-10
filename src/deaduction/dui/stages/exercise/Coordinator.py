@@ -983,7 +983,7 @@ class Coordinator(QObject):
             if proof_state:
                 self.lean_file.state_info_attach(ProofState=proof_state)
             else:
-                # No proof state !? Maybe empty analysis ?
+                # No proof state!? Maybe empty analysis?
                 self.process_error(error_type=5, errors=[])
                 log.debug(f"Analysis: {hypo_analysis} /// {targets_analysis}")
                 self.abort_process()
@@ -1001,7 +1001,7 @@ class Coordinator(QObject):
                 # ugn = [gn.goal_nb for gn in self.proof_tree.unsolved_goal_nodes]
                 # log.debug(f"Ps_unsolved_gn_after: {ugn}")
 
-            # ─────── Check for new goals ─────── # FIXME
+            # ─────── Check for new goals ─────── # FIXME: obsolete
             delta = self.lean_file.delta_goals_count
             self.proof_step.delta_goals_count = delta
             self.proof_step.update_goals()

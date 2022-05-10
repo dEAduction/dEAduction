@@ -78,18 +78,18 @@ class GoalNode:
         root_node._is_by_cases = False
         return root_node
 
-    # @classmethod
-    # def goal_solved(cls, proof_step):
-    #     """
-    #     Return a copy of goal_node where target is a msg that goal is solved.
-    #     """
-    #     goal_node = proof_step.parent_goal_node
-    #     goal = deepcopy(goal_node.goal)
-    #     goal.target.math_type = MathObject.CURRENT_GOAL_SOLVED
-    #     goal_node = cls(proof_step, goal, is_solved=True)
-    #     goal_node._msg = goal.target.math_type.to_display(format_="utf8")
-    #     goal_node._html_msg = _("Goal!")
-    #     return goal_node
+    @classmethod
+    def no_more_goals(cls, proof_step):
+        """
+        Return a copy of goal_node where target is a msg that goal is solved.
+        """
+        goal_node = proof_step.parent_goal_node
+        goal = deepcopy(goal_node.goal)
+        goal.target.math_type = MathObject.NO_MORE_GOALS
+        goal_node = cls(proof_step, goal, is_solved=True)
+        goal_node._msg = goal.target.math_type.to_display(format_="utf8")
+        goal_node._html_msg = _("No more goal!")
+        return goal_node
 
     @property
     def next_goal_node(self):
@@ -423,9 +423,9 @@ class GoalNode:
         elif self.parent.is_by_contradiction():
             html_msg = _("Proof by contradiction")
 
-        elif self.goal.target is MathObject.NO_MORE_GOALS:
+        elif self.goal.target.math_type is MathObject.NO_MORE_GOALS:
             msg = self.goal.target.math_type.to_display(format_="utf8")
-            html_msg = _("Goal!")
+            html_msg = self.goal.target.math_type.to_display(format_="html")
 
         else:  # TODO: refine this, taking into account auxiliary goal
             target = self.goal.target.math_type
@@ -459,14 +459,15 @@ class GoalNode:
     def child_proof_step(self, proof_step):
         self._child_proof_step = proof_step
 
-    def is_all_goals_solved(self):
-        return self.child_proof_step and self.child_proof_step.no_more_goal
+    def is_no_more_goals(self):
+        return self.goal.target.math_type == MathObject.NO_MORE_GOALS
+        # return self.child_proof_step and self.child_proof_step.no_more_goal
 
     def is_recursively_solved(self):
         """self is recursively solved if it is explicitly solved, or it has
         children and they are all solved."""
 
-        if self._is_solved or self.is_all_goals_solved():
+        if self._is_solved or self.is_no_more_goals():
             return True
         elif self.children_goal_nodes:
             return all([child.is_recursively_solved()
@@ -646,15 +647,18 @@ class ProofTree:
         """
         return self.root_node.truncated_unsolved_leaves(till_goal_nb)
 
-    # def current_unsolved_goal_nodes(self):
-    #     current_goal_nb = self.current_goal_node.goal_nb
-    #     return self.unsolved_goal_nodes(till_goal_nb=current_goal_nb)
-
     def go_to_first_unsolved_node(self):
-        self.current_goal_node = self.unsolved_goal_nodes()[0]
+        unsolved_goal_nodes = self.unsolved_goal_nodes()
+        if unsolved_goal_nodes:
+            self.current_goal_node = unsolved_goal_nodes[0]
 
-    def is_all_goals_solved(self):
-        return not self.unsolved_goal_nodes()
+    def set_no_more_goals(self):
+        proof_step = self.current_goal_node.child_proof_step
+        no_more_goals = GoalNode.no_more_goals(proof_step)
+        self.current_goal_node = no_more_goals
+
+    # def is_all_goals_solved(self):
+    #     return not self.unsolved_goal_nodes()
 
     def process_new_proof_step(self, new_proof_step: ProofStep):
         """
@@ -682,8 +686,8 @@ class ProofTree:
 
         # ─────── Connect new_proof_step to ProofTree ─────── #
         self.current_goal_node.child_proof_step = new_proof_step
-        if self.is_all_goals_solved():  # All goals solved!
-            return
+        # if self.is_all_goals_solved():  # All goals solved!
+        #     return
 
         # ─────── Create new GoalNodes ─────── #
         new_goal = new_proof_state.goals[0]
@@ -696,7 +700,10 @@ class ProofTree:
 
         if delta_goal == -1:  # current goal solved
             self.current_goal_node.set_solved()
-            self.go_to_first_unsolved_node()
+            if unsolved_gn:
+                self.go_to_first_unsolved_node()
+            else:  # No more goals!
+                self.set_no_more_goals()
             new_proof_step.children_goal_nodes = [self.current_goal_node]
             #  Refresh goal and set tag:
             self.current_goal_node.set_goal(new_goal)

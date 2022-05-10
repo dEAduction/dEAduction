@@ -403,8 +403,8 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
                         child.is_recursively_solved()
                         for child in self.logical_children])
 
-    def is_all_goals_solved(self):
-        return self.goal_node.is_all_goals_solved()
+    def is_no_more_goals(self):
+        return self.goal_node.is_no_more_goals()
 
     def enable_recursively(self, till_step_nb):
         """
@@ -517,6 +517,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         """
         if self.target_widget:
             self.target_widget.set_as_current_target(yes, blinking)
+            # TODO: set visible in scroll area
         elif yes and self.logical_parent:
             self.logical_parent.set_as_current_target(True, blinking)
         # if self.target_widget and not self.merge_up:
@@ -555,8 +556,9 @@ class GoalSolvedWGB(WidgetGoalBlock):
     "goal solved". It should remain invisible.
     """
     def __init__(self, logical_parent, goal_node):
-        super().__init__(logical_parent, goal_node)
-        self.set_invisible()
+        target = goal_node.goal.target.math_type
+        super().__init__(logical_parent, goal_node, target=target)
+        # self.set_invisible()
 
 
 class ByCasesWGB(WidgetGoalBlock):

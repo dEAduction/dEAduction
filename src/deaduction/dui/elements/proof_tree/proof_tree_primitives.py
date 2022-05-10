@@ -652,10 +652,10 @@ class TargetWidget(QWidget):
     @property
     def status_msg(self) -> Optional[str]:
         if self.parent_wgb.is_recursively_solved():
-            if self.parent_wgb.is_recursively_sorry():
+            if self.parent_wgb.is_no_more_goals():
+                return _("THE END")
+            elif self.parent_wgb.is_recursively_sorry():
                 return _("(admitted)")
-            elif self.parent_wgb.is_all_goals_solved():
-                return _("THE END!!")
             else:
                 return _("Goal!")
         elif self.parent_wgb.is_conditionally_solved():
