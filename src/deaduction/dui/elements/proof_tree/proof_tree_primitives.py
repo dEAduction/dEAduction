@@ -26,18 +26,13 @@ This file is part of dEAduction.
 
 import logging
 from typing import Union, Optional
-from PySide2.QtWidgets import (QApplication, QFrame, QLayout,
+from PySide2.QtWidgets import (QFrame, QLayout,
                                QHBoxLayout, QVBoxLayout, QGridLayout,
-                               QLineEdit, QListWidget, QWidget, QGroupBox,
-                               QLabel, QTextEdit, QSizePolicy)
-from PySide2.QtWidgets import QScrollArea
-from PySide2.QtCore import Qt, Signal, Slot, QSettings, QEvent, QRect, \
-    QPoint, QTimer
-from PySide2.QtGui import QFont, QColor, QPalette, QIcon, QPainter, QPixmap, \
-    QPainterPath, QPolygon, QPen, QBrush
+                               QWidget, QLabel, QSizePolicy)
+from PySide2.QtCore import Qt, QRect, QPoint, QTimer, QPointF
+from PySide2.QtGui import QColor, QPainter, QPolygon, QPen, QBrush
 
 import deaduction.pylib.config.vars as cvars
-import deaduction.pylib.config.dirs as cdirs
 
 global _
 
@@ -55,6 +50,36 @@ else:
 
 
 log = logging.getLogger(__name__)
+
+
+def paint_layout(painter, item, item_depth=0, max_depth=10):
+    if isinstance(item, QWidget):
+        layout = item.layout()
+        # geometry = item.geometry()
+        # contents = item.contentsRect()
+    elif isinstance(item, QLayout):
+        layout = item
+        # geometry = item.contentsRect()
+    else:
+        return
+    if layout and item_depth < max_depth:
+        for idx in range(layout.count()):
+            layout_item = layout.itemAt(idx)
+            paint_layout(painter, layout_item, item_depth+1)
+    pen = QPen()
+    pen.setColor("blue")
+    pen.setWidth(2)
+    painter.setPen(pen)
+    painter.drawRect(item.contentsRect())
+    # pen.setColor(QColor("purple"))
+    pen.setColor("purple")
+    pen.setWidth(1)
+    painter.setPen(pen)
+    color = QColor()
+    color.setHsv((item_depth+1)*50, 100, 255-(item_depth+1) * 50)
+    brush = QBrush(color)
+    # painter.setBrush(brush)
+    painter.drawRect(item.geometry())
 
 
 class BlinkingLabel(QLabel):
@@ -109,46 +134,54 @@ def mid_right(rect: QRect) -> QPoint:
     return middle(rect.topRight(), rect.bottomRight())
 
 
-def operator_arrow():
-    # FIXME: obsolete
-    # arrow_label.setScaledContents(True)
-    # arrow_label.setMaximumSize(self.height(), self.height())
-    arrow_label = QLabel()
-    arrow_icon_path = cdirs.icons / "right_arrow.png"
-    pixmap = QPixmap(str(arrow_icon_path.resolve()))
-    arrow_label.setPixmap(pixmap)
+def mid_top(rect: QRect) -> QPoint:
+    return middle(rect.topRight(), rect.topLeft())
 
-    return arrow_label
+
+def mid_bottom(rect: QRect) -> QPoint:
+    return middle(rect.bottomRight(), rect.bottomLeft())
 
 
 def paint_arrow(origin, end, painter: QPainter,
                 arrow_height=4, style=Qt.SolidLine,
-                color=None, pen_width=1):
+                color=None, pen_width=1,
+                direction="horizontal"):
     if not color:
         color = cvars.get("display.color_for_operator_props")
 
-    # painter.begin()  # FIXME: already started?
+    # Coordinates
+    vect_x = QPoint(arrow_height, 0)
+    vect_y = QPoint(0, arrow_height)
+    if direction == "horizontal":
+        end = end - vect_x
+        upper_vertex = end - 2 * vect_x - vect_y
+        lower_vertex = end - 2 * vect_x + vect_y
+        end_line = end - 2*vect_x
+    elif direction == "vertical":
+        end = end - vect_y
+        upper_vertex = end - 2 * vect_y + vect_x
+        lower_vertex = end - 2 * vect_y - vect_x
+        end_line = end - 2*vect_y
+
+    # Pen
     pen = QPen()
     pen.setColor(QColor(color))
     pen.setWidth(pen_width)
     pen.setJoinStyle(Qt.MiterJoin)
     pen.setCapStyle(Qt.FlatCap)
     painter.setPen(pen)
-    arrow_height = arrow_height
-    vect_x = QPoint(arrow_height, 0)
-    vect_y = QPoint(0, arrow_height)
-    end = end - vect_x
+
+    # Draw line
     pen.setStyle(style)
     painter.setPen(pen)
-    painter.drawLine(origin, end - 2 * vect_x)
-    # Triangle
+    painter.drawLine(origin, end_line)
+
+    # Draw arrow
     brush = QBrush(color, Qt.SolidPattern)
     painter.setBrush(brush)
     pen.setStyle(Qt.SolidLine)
     pen.setWidth(1)
     painter.setPen(pen)
-    upper_vertex = end - 2 * vect_x - vect_y
-    lower_vertex = end - 2 * vect_x + vect_y
     triangle = QPolygon([end, upper_vertex, lower_vertex, end])
     painter.drawPolygon(triangle)
     painter.end()
@@ -161,16 +194,32 @@ def rectangle(item):
         return item.contentsRect()
 
 
-def arrow(item1, item2, painter):
-    """
-    Paint an arrow between two widgets.
-    """
-    rect1 = rectangle(item1)
-    rect2 = rectangle(item2)
-    if rect1.right() < rect2.left():
-        origin = mid_right(rect1)
-        end = mid_left(rect2)
-        paint_arrow(origin, end, painter)
+class VerticalArrow(QWidget):
+    def __init__(self, minimum_height=60, arrow_width=4, style=Qt.DashLine):
+        super(VerticalArrow, self).__init__()
+        self.setMinimumHeight(minimum_height)
+        self.setFixedWidth(arrow_width*3)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+        self.pen_width = 1
+        self.arrow_width = arrow_width + self.pen_width
+        self.style = style
+
+    def color(self):
+        if self.isEnabled():
+            return cvars.get("display.color_for_operator_props")
+        else:
+            return "lightgrey"
+
+    def paintEvent(self, e):
+        painter = QPainter(self)
+
+        rectangle = self.rect()
+        origin = mid_top(rectangle)
+        end = mid_bottom(rectangle)
+
+        paint_arrow(origin=origin, end=end, painter=painter,
+                    arrow_height=self.arrow_width, style=self.style,
+                    color=self.color(), direction="vertical")
 
 
 class HorizontalArrow(QWidget):
@@ -191,49 +240,41 @@ class HorizontalArrow(QWidget):
 
     def paintEvent(self, e):
         painter = QPainter(self)
-        pen = QPen()
-        pen.setColor(QColor(self.color()))
-        pen.setWidth(self.pen_width)
-        pen.setJoinStyle(Qt.MiterJoin)
-        pen.setCapStyle(Qt.FlatCap)
-        painter.setPen(pen)
+
         rectangle = self.rect()
-        # self.paint_arrow(painter, mid_left(rectangle), mid_right(rectangle))
 
         origin = mid_left(rectangle)
         end = mid_right(rectangle)
-        arrow_height = self.arrow_height
-        vect_x = QPoint(arrow_height, 0)
-        vect_y = QPoint(0, arrow_height)
-        end = end - vect_x
-        pen.setStyle(self.style)
-        painter.setPen(pen)
-        painter.drawLine(origin, end-2*vect_x)
-        # Triangle
-        brush = QBrush(self.color(), Qt.SolidPattern)
-        painter.setBrush(brush)
-        pen.setStyle(Qt.SolidLine)
-        pen.setWidth(1)
-        painter.setPen(pen)
-        upper_vertex = end-2*vect_x - vect_y
-        lower_vertex = end-2*vect_x + vect_y
-        triangle = QPolygon([end, upper_vertex, lower_vertex, end])
-        painter.drawPolygon(triangle)
-        painter.end()
+        paint_arrow(origin=origin, end=end, painter=painter,
+                    arrow_height=self.arrow_height, style=self.style,
+                    color=self.color(),
+                    direction="horizontal")
 
-    # def paint_arrow(self, painter: QPainter, origin: QPoint, end: QPoint):
-    #     arrow_height = self.arrow_height
-    #     vect_x = QPoint(arrow_height, 0)
-    #     vect_y = QPoint(0, arrow_height)
-    #     end = end - vect_x
-    #     painter.pen().setStyle(self.style)
-    #     # painter.drawLine(origin, end-vect_x)
-    #     # Triangle
-    #     painter.pen().setStyle(Qt.SolidLine)
-    #     upper_vertex = end-2*vect_x - vect_y
-    #     lower_vertex = end-2*vect_x + vect_y
-    #     triangle = QPolygon([end, upper_vertex, lower_vertex, end])
-    #     painter.drawPolygon(triangle)
+        # pen = QPen()
+        # pen.setColor(QColor(self.color()))
+        # pen.setWidth(self.pen_width)
+        # pen.setJoinStyle(Qt.MiterJoin)
+        # pen.setCapStyle(Qt.FlatCap)
+        # painter.setPen(pen)
+        # arrow_height = self.arrow_height
+        # vect_x = QPoint(arrow_height, 0)
+        # vect_y = QPoint(0, arrow_height)
+        # end = end - vect_x
+        #
+        # pen.setStyle(self.style)
+        # painter.setPen(pen)
+        # painter.drawLine(origin, end-2*vect_x)
+        # # Triangle
+        # brush = QBrush(self.color(), Qt.SolidPattern)
+        # painter.setBrush(brush)
+        # pen.setStyle(Qt.SolidLine)
+        # pen.setWidth(1)
+        # painter.setPen(pen)
+        # upper_vertex = end-2*vect_x - vect_y
+        # lower_vertex = end-2*vect_x + vect_y
+        # triangle = QPolygon([end, upper_vertex, lower_vertex, end])
+        # painter.drawPolygon(triangle)
+        # painter.end()
 
     def set_width(self, width):
         self.setFixedWidth(width)
@@ -312,13 +353,13 @@ class RawLabelMathObject(QLabel):
         if self.html_msg:
             return pre + self.html_msg(use_color=self.isEnabled()) + post
 
-        use_color = self.isEnabled()
         if isinstance(self.math_object, str):
             return self.math_object
         else:
             math_object = (self.math_object.math_type if self.is_prop
                            else self.math_object)
-            txt = math_object.to_display(format_="html", use_color=use_color)
+            txt = math_object.to_display(format_="html",
+                                         use_color=self.isEnabled())
         return txt
 
     def changeEvent(self, event) -> None:
@@ -402,6 +443,41 @@ class LayoutOperator(QWidget):
         self.setLayout(layout)
 
 
+class TargetSubstitutionArrow(QWidget):
+    """
+    Display an arrow labelled by some Generic LMO, e.g. a rewriting rule as in
+            |
+            |    f(x) = y
+            |
+            V
+    """
+    def __init__(self, rw_item):
+        if isinstance(rw_item, tuple):  # FIXME: this is just for now...
+            rw_item = rw_item[0] + " " + rw_item[1]
+
+        super().__init__()
+        layout = QHBoxLayout()
+        layout.addStretch(1)
+
+        # Arrow
+        arrow_layout = QVBoxLayout()
+        self.arrow_wdg = VerticalArrow()
+        arrow_layout.addStretch(1)
+        arrow_layout.addWidget(self.arrow_wdg)
+        arrow_layout.addStretch(1)
+        layout.addLayout(arrow_layout)
+
+        # Label
+        label_layout = QVBoxLayout()
+        self.rw_label = RwItemLMO(rw_item)
+        label_layout.addStretch(1)
+        label_layout.addWidget(self.rw_label)
+        label_layout.addStretch(1)
+        layout.addLayout(label_layout)
+
+        self.setLayout(layout)
+
+
 class SubstitutionArrow(QWidget):
     """
     Display an arrow labelled by some Generic LMO, e.g. a rewriting rule as in
@@ -418,7 +494,6 @@ class SubstitutionArrow(QWidget):
         # Label
         label_layout = QHBoxLayout()
         self.rw_label = RwItemLMO(rw_item)
-        # self.rw_label = OperatorLMO(rw_item)
         self.rw_label.show()
         self.label_width = self.rw_label.geometry().width()
         self.rw_label.hide()
@@ -446,10 +521,6 @@ class SubstitutionArrow(QWidget):
         self.setLayout(layout)
         self.rw_label.show()
         fake_label.hide()
-
-    # def changeEvent(self, e):
-    #     label_width = self.rw_label.geometry().width()
-    #     self.arrow_wdg.set_width(label_width)
 
 
 ###########################
@@ -567,64 +638,83 @@ class TargetWidget(QWidget):
 
     The content_layout contains
         - self.children_layout
-        _ self.status_label
+        _ self.target_substitution_arrow, if not None.
     The children_layout is designed to welcome the content of the
     logical_children of the WidgetGoalBlock to which the TargetWidget belongs,
-    which will be gathered in a single widget.
+    which will be gathered in a single widget. It ends with the status_label.
     The status_label display the status of the target (goal solved?).
     Attribute html_msg is a callable that takes a parameter color=True/False.
+
+    There is a special case when target has been re-written. Then an attribute
+    target_substitution_arrow is provided (a QWidget), which will be displayed
+    in a horizontal widget together with the main_widget that contains all other
+    children widgets. In this case the status msg should not be displayed.
+
+    If indent_target is False, then the disclosure triangle and the vertical
+    bar are not displayed.
     """
 
     def __init__(self, parent_wgb, target: MathObject, target_msg: callable,
-                 hidden=False):
+                 hidden=False, is_target_substitution=False):
         super().__init__()
         self.hidden = False
         self.target = target
         self.target_msg = target_msg
         self.parent_wgb = parent_wgb
+        self.is_target_substitution = is_target_substitution
 
-        # Title and frame:
-        self.triangle = DisclosureTriangle(self.toggle, hidden=False)
-        self.triangle.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.vert_bar = VertBar()
+        # Title and status:
         self.title_label = RawLabelMathObject(html_msg=self.target_msg)
         self.title_label.setTextFormat(Qt.RichText)
         self.title_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
-        # Children, status:
-        self.content_layout = QVBoxLayout()
-        self.children_layout = QVBoxLayout()
         self.status_label = BlinkingLabel(self.status_msg)
-        self.status_label.setStyleSheet("font-style: italic;")
-        self.content_layout.addLayout(self.children_layout, 0)
-        self.content_layout.addWidget(self.status_label, 1)
-        # self.content_layout.addWidget(QLabel(""), 0, 2)  # Just to add stretch
-        # self.content_layout.setColumnStretch(2, 1)
-        self.status_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        # self.children_wgt = []
+        # self.status_label.setStyleSheet("font-style: italic;")
+        self.status_label.setSizePolicy(QSizePolicy.Fixed,
+                                        QSizePolicy.Fixed)
 
-        layout = QGridLayout()  # 2x3, five items
-        layout.addWidget(self.triangle, 0, 0)
-        layout.addWidget(self.vert_bar, 1, 0)
-        layout.addWidget(self.title_label, 0, 1)
-        layout.addWidget(QLabel(""), 0, 2)  # Just to add stretch
-        layout.addLayout(self.content_layout, 1, 1)
+        if not self.is_target_substitution:
+            # Disclosure triangle and vertical line
+            self.triangle = DisclosureTriangle(self.toggle, hidden=False)
+            self.triangle.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+            self.vert_bar = VertBar()
 
-        # layout.setSizeConstraint(QLayout.SetMinAndMaxSize)
+            # Layouts
+            self.content_layouts = [QVBoxLayout()]
+            self.main_layout = QGridLayout()  # 2x3, five items
+            self.main_layout.addWidget(self.triangle, 0, 0)
+            self.main_layout.addWidget(self.vert_bar, 1, 0, -1, 1)
+            self.main_layout.addWidget(self.title_label, 0, 1)
+            self.main_layout.addWidget(QLabel(""), 0, 3)  # Just to add stretch
+            self.main_layout.addLayout(self.content_layout, 1, 1)
+            self.main_layout.addWidget(self.status_label, 2, 1)
 
-        layout.setColumnStretch(2, 1)
-        layout.setAlignment(self.triangle, Qt.AlignHCenter)
-        layout.setAlignment(self.vert_bar, Qt.AlignHCenter)
-        self.main_layout = layout
-        self.setLayout(layout)
+            # layout.setSizeConstraint(QLayout.SetMinAndMaxSize)
+            self.main_layout.setColumnStretch(3, 1)
+            self.main_layout.setAlignment(self.triangle, Qt.AlignHCenter)
+            self.main_layout.setAlignment(self.vert_bar, Qt.AlignHCenter)
 
-        if hidden:
-            self.toggle()
+            self.setLayout(self.main_layout)
+
+            if hidden:
+                assert self.indent_target
+                self.toggle()
+
+    @property
+    def content_layout(self) -> QVBoxLayout:
+        """
+        The children should be added in the content_layout of the last
+        substituted target.
+        """
+        return self.content_layouts[-1]
+
+    @property
+    def children_layout(self):
+        return self.content_layout
 
     def set_as_current_target(self, yes=True, blinking=True):
         if yes:
             self.title_label.set_bold(True)
-            # self.set_status()
             if blinking:
                 self.status_label.start_blinking()
                 self.parent_wgb.make_visible(self.status_label)  # Fixme
@@ -641,16 +731,24 @@ class TargetWidget(QWidget):
         """
         Toggle on / off the display of the content.
         """
+
+        # FIXME with susbstituted_target?
         self.hidden = not self.hidden
         if self.hidden:  # Content_layout is the fourth layoutItem
             self.main_layout.takeAt(4)
             self.status_label.hide()
         else:
             self.main_layout.addLayout(self.content_layout, 1, 1)
-            self.status_label.show()
+            # self.status_label.show()
+            self.set_status()
 
     @property
     def status_msg(self) -> Optional[str]:
+        """
+        Compute the status msg for this part of the proof, to be displayed at
+        the end of the block.
+        """
+
         if self.parent_wgb.is_recursively_solved():
             if self.parent_wgb.is_no_more_goals():
                 return _("THE END")
@@ -664,26 +762,45 @@ class TargetWidget(QWidget):
             return "( ... under construction... )"
 
     def set_status(self):
+        """
+        Display the status msg, if any.
+        """
         if not self.status_msg:
             self.status_label.hide()
         else:
             self.status_label.show()
             self.status_label.setText(self.status_msg)
 
-    def merge_down(self):
+    def add_child_wgb(self, child: QWidget):
         """
-        When a target undergoes a substitution, it merges down with the new
-        target block. This method then turns the layout to display into
-
-        triangle     |  "Proof of target"
-        -----------------------------
-        vertical bar | arrow_layout
-        -----------------------------
-        children_layout (which then contains a new target block).
-
-        The status_label is not displayed.
+        Add a WidgetGoalBlock in self.content_layout. Handle the case of a
+        substituted target: the title_lbl and status_lbl are "stolen" from
+        the WGB, which is not displayed.
         """
-        pass
+        if not hasattr(child, "substitution_arrow"):
+            child.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+            self.content_layout.addWidget(child)
+            self.content_layout.setAlignment(child, Qt.AlignLeft)
+        else:
+            # log.debug("Adding target substitution child")
+            nb_targets = len(self.content_layouts)
+            child_title_lbl_pos = nb_targets*2
+            self.main_layout.removeWidget(self.status_label)
+
+            child_title_lbl = child.target_widget.title_label
+            child_status_lbl = child.target_widget.status_label
+            self.main_layout.addWidget(child_title_lbl,
+                                       child_title_lbl_pos, 1)
+            self.content_layouts.append(QVBoxLayout())
+            self.main_layout.addLayout(self.content_layout,
+                                       child_title_lbl_pos+1, 1)
+            self.main_layout.addWidget(child_status_lbl, child_title_lbl_pos+2,
+                                       1)
+            self.main_layout.addWidget(self.vert_bar, 1, 0,
+                                       child_title_lbl_pos+2, 1)
+
+            self.main_layout.addWidget(child.substitution_arrow,
+                                       child_title_lbl_pos-2, 2, 3, 1)
 
 
 

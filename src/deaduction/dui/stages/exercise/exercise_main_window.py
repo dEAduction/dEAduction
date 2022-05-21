@@ -179,13 +179,15 @@ class ExerciseMainWindow(QMainWindow):
         # Restore geometry
         settings = QSettings("deaduction")
         geometry = settings.value("emw/Geometry")
-        maximised = settings.value("emw/isMaximised")
-        log.debug(f"maximised: {maximised}")
+        # maximised = settings.value("emw/isMaximised")
+        # log.debug(f"maximised: {maximised}")
         if geometry:
             self.restoreGeometry(geometry)
             # if maximised:  # FIXME: Does not work on Linux?!
-                # self.showMaximized()
-
+            # self.showMaximized()
+        proof_tree_is_visible = settings.value("emw/ShowProofTree")
+        if proof_tree_is_visible:
+            self.proof_tree_window.setVisible(True)
         self.close_coordinator = None  # Method set up by Coordinator
 
         self.__connect_signals()
@@ -265,6 +267,8 @@ class ExerciseMainWindow(QMainWindow):
         settings.setValue("emw/isMaximised", is_maximised)
         self.showNormal()
         settings.setValue("emw/Geometry", self.saveGeometry())
+        settings.setValue("emw/ShowProofTree",
+                          self.proof_tree_window.isVisible())
 
         if self.close_coordinator:
             # Set up by Coordinator

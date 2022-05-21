@@ -73,7 +73,7 @@ def widget_goal_block(parent_widget: Optional[WidgetGoalBlock],
         # Ensure wgb has a children_layout!!
         return WidgetGoalBlock(logical_parent=parent_widget,
                                goal_node=goal_node,
-                               target=target, context2=new_context)
+                               target=target, context1=new_context)
 
     pure_context = goal_node.is_pure_context
     context_rw = goal_node.is_context_substitution
@@ -140,7 +140,8 @@ def widget_goal_block(parent_widget: Optional[WidgetGoalBlock],
 
 def update_from_node(wgb: WidgetGoalBlock, gn: GoalNode):
     """
-    Recursively update the WidgetProofTree from (under) the given node.
+    Recursively update the WidgetProofTree from (under) the given node,
+    so that its structure will reflect that of the ProofTree.
     We have the following alternative:
     - either there is a new child goal_node for which we will create a
     child wgb;
@@ -148,6 +149,10 @@ def update_from_node(wgb: WidgetGoalBlock, gn: GoalNode):
     in this case all children_wgb should be deleted and new ones will be
     created.
     - or all children wgb match corresponding children goal_nodes.
+
+    Noe that this is NOT redundant with the update_display method of the
+    proof_tree_window, which ensures that the WidgetProofTree is correctly
+    displayed on screen, and should be called later on.
     """
     pairs = list(zip(wgb.logical_children, gn.children_goal_nodes))
     if (len(wgb.logical_children) > len(gn.children_goal_nodes)
@@ -199,6 +204,12 @@ class ProofTreeController:
         return self.proof_tree.is_at_end()
 
     def update(self):
+        """
+        Update self.proof_tree_widget according to self.proof_tree.
+        The update_from_node method creates the pertinent WidgetGoalBlocks
+        that reflects the GoalNodes of the proof tree. Then these new widgets
+        are inserted by the update_display method.
+        """
         if not self.proof_tree.root_node:
             return
         elif not self.proof_tree_window.main_block:
@@ -212,6 +223,9 @@ class ProofTreeController:
         update_from_node(self.proof_tree_window.main_block,
                          self.proof_tree.root_node)
 
+        # Update display:
+        self.proof_tree_window.update_display()
+
         # Enable / disable to adapt to history move:
         # proof_tree.next_proof_step_nb is the first proof_step that will be
         # deleted if usr starts a new branch from here
@@ -222,9 +236,6 @@ class ProofTreeController:
         else:
             self.enable(till_step_nb=1000000)
         # log.info("Updating display")
-
-        # Update display:
-        self.proof_tree_window.update_display()
 
         # Set current target:
         # log.info("Setting current target")
