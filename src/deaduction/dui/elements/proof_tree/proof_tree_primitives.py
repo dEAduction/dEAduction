@@ -635,23 +635,17 @@ class TargetWidget(QWidget):
     triangle     |  "Proof of target"
     -----------------------------
     vertical bar | content_layout
+    -----------------------------
+    vertical bar | status_label
 
-    The content_layout contains
-        - self.children_layout
-        _ self.target_substitution_arrow, if not None.
-    The children_layout is designed to welcome the content of the
+    The content_layout contains is designed to welcome the content of the
     logical_children of the WidgetGoalBlock to which the TargetWidget belongs,
-    which will be gathered in a single widget. It ends with the status_label.
+     It ends with the status_label.
     The status_label display the status of the target (goal solved?).
     Attribute html_msg is a callable that takes a parameter color=True/False.
 
     There is a special case when target has been re-written. Then an attribute
-    target_substitution_arrow is provided (a QWidget), which will be displayed
-    in a horizontal widget together with the main_widget that contains all other
-    children widgets. In this case the status msg should not be displayed.
-
-    If indent_target is False, then the disclosure triangle and the vertical
-    bar are not displayed.
+    target_substitution_arrow is provided (a QWidget).
     """
 
     def __init__(self, parent_wgb, target: MathObject, target_msg: callable,
@@ -735,11 +729,22 @@ class TargetWidget(QWidget):
         # FIXME with susbstituted_target?
         self.hidden = not self.hidden
         if self.hidden:  # Content_layout is the fourth layoutItem
-            self.main_layout.takeAt(4)
             self.status_label.hide()
+            self.vert_bar.hide()
+            for layout in self.content_layouts:
+                wdgs = [layout.itemAt(i) for i in range(layout.count())]
+                for wdg in wdgs:
+                    wdg.widget().hide()
         else:
-            self.main_layout.addLayout(self.content_layout, 1, 1)
+            # self.main_layout.addLayout(self.content_layout, 1, 1)
             # self.status_label.show()
+            self.status_label.show()
+            self.vert_bar.show()
+            for layout in self.content_layouts:
+                wdgs = [layout.itemAt(i) for i in range(layout.count())]
+                for wdg in wdgs:
+                    wdg.widget().show()
+
             self.set_status()
 
     @property

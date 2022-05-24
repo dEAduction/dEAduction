@@ -272,9 +272,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         they should be passed to self's parent.
         """
         if self.is_visible() and self.target_widget \
-                and not self.isHidden():  # E.g. if self.is_target_substitution
-            # and not self.is_target_substitution:
-            # and len(self.children_widgets) < self.max_nb_children_wdg):
+                and not self.is_target_substitution:
             return self.target_widget.children_layout
         else:
             return None
@@ -440,7 +438,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
     def set_enabled(self, yes=True):
         """
         This allows re-implementation by subclasses, to handle EnabledEvents
-        event when widget is not visible.
+        when widget is not visible.
         """
         self.setEnabled(yes)
 

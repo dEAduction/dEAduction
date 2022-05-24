@@ -54,7 +54,8 @@ def widget_goal_block(parent_widget: Optional[WidgetGoalBlock],
                       goal_node: GoalNode) -> WidgetGoalBlock:
     """
     All WidgetGoalBlock to be inserted in the ProofTreeWidget should be
-    created by calling this method.
+    created by calling this method. A WGB corresponding to goal_node is
+    created, with parent_widget as its logical parent.
     """
 
     # TODO:
@@ -162,7 +163,7 @@ def update_from_node(wgb: WidgetGoalBlock, gn: GoalNode):
                 for child_wgb, child_gn in pairs])):
         # Case 1: Some child_wgb is obsolete: reset all children
         wgb.logical_children = []
-        wgb.set_layout_without_children()
+        # wgb.set_layout_without_children()  FIXME: useless??
         for child_gn in gn.children_goal_nodes:
             child_wgb = widget_goal_block(wgb, child_gn)
         pairs = zip(wgb.logical_children, gn.children_goal_nodes)
@@ -218,15 +219,12 @@ class ProofTreeController:
             self.proof_tree_window.set_main_block(main_block)
 
         current_goal_node = self.proof_tree.current_goal_node
-        # Adapt display of ProofTreeWindow to ProofTree:
+        # (1) Adapt ProofTreeWindow to ProofTree:
         # log.info("Updating proof tree widget from proof tree.")
         update_from_node(self.proof_tree_window.main_block,
                          self.proof_tree.root_node)
 
-        # Update display:
-        self.proof_tree_window.update_display()
-
-        # Enable / disable to adapt to history move:
+        # (2) Enable / disable to adapt to history move:
         # proof_tree.next_proof_step_nb is the first proof_step that will be
         # deleted if usr starts a new branch from here
         proof_step_nb = self.proof_tree.next_proof_step_nb
@@ -237,14 +235,14 @@ class ProofTreeController:
             self.enable(till_step_nb=1000000)
         # log.info("Updating display")
 
-        # Set current target:
+        # (3) Update display of ProofTreeWindow subwidgets:
+        self.proof_tree_window.update_display()
+
+        # (4) Set current target:
         # log.info("Setting current target")
         goal_nb = current_goal_node.goal_nb
         self.proof_tree_window.set_current_target(goal_nb,
                                                   blinking=self.is_at_end())
-
-        # current_widget = self.wgb_from_goal_nb(goal_nb=goal_nb)
-        # self.proof_tree_window.main_window.ensureWidgetVisible(current_widget)
 
     def wgb_from_goal_nb(self, goal_nb: int, from_wgb=None) -> \
             WidgetGoalBlock:

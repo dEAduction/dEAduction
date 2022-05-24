@@ -476,7 +476,8 @@ class GoalNode:
             return False
 
     def is_sorry(self):
-        return self.child_proof_step.is_sorry()
+        if self.child_proof_step:
+            return self.child_proof_step.is_sorry()
 
     def is_recursively_sorry(self):
         """
