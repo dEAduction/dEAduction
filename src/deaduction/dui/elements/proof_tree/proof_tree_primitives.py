@@ -708,6 +708,8 @@ class TargetWidget(QWidget):
 
     def set_as_current_target(self, yes=True, blinking=True):
         if yes:
+            log.debug(f"Setting goal nb {self.parent_wgb.goal_nb} as current "
+                      f"target")
             self.title_label.set_bold(True)
             if blinking:
                 self.status_label.start_blinking()

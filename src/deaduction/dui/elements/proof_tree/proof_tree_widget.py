@@ -143,6 +143,8 @@ class AbstractGoalBlock:
     def target(self):
         if self.merge_down:
             return self.logical_children[0].target
+        elif self.merge_up:
+            return None
         else:
             return self._target
 
@@ -249,21 +251,9 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
 
         if self.logical_parent:  # Case of root
             self.logical_parent.add_logical_child(self)
-        # if self.merge_up:
-        #     self.logical_parent.update()
-        # else:
-        #     self.set_layout_without_children()
-        # self.set_layout_without_children()
-        # if not self.merge_up:
-        #     self.set_layout_without_children()
 
     def __repr__(self):
         return self.context1, self.target, self.context2, self.pure_context
-
-    # def paintEvent(self, event):
-    #     """ For debugging. """
-    #     painter = QPainter(self)
-    #     paint_layout(painter, self)
 
     @property
     def children_layout(self):
@@ -276,6 +266,29 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
             return self.target_widget.children_layout
         else:
             return None
+
+    def parent_wgb(self):
+        parent = self.parent()
+        while parent and not isinstance(parent, WidgetGoalBlock):
+            parent = parent.parent()
+        return parent
+
+    def is_conditionally_solved(self):
+        """
+        True if self is not solved but will be as soon as the descendant
+        target are.
+        """
+        if self.is_recursively_solved() or not self.logical_children:
+            return False
+        if self.merge_down:
+            return self.logical_children[0].is_conditionally_solved()
+        else:
+            return all([child.target or child.is_conditionally_solved() or
+                        child.is_recursively_solved()
+                        for child in self.logical_children])
+
+    def is_no_more_goals(self):
+        return self.goal_node.is_no_more_goals()
 
     def set_layout_without_children(self):
         """
@@ -319,6 +332,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
             return
 
         if self.target:
+            log.debug(f"Creating TargetWidget for goal nb {self.goal_nb}.")
             self.target_widget = TargetWidget(parent_wgb=self,
                                               target=self.target,
                                               target_msg=self.target_msg,
@@ -334,6 +348,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
             self.context2_widget = ContextWidget(self.context2)
             self.children_layout.addWidget(self.context2_widget)
 
+    # ───────────────────── Add children methods ──────────────────── #
     @property
     def displayable_children(self):
         """
@@ -394,14 +409,6 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         else:
             self.logical_parent.add_widget_child(child)
 
-    # def add_logical_child(self, child):
-    #     """
-    #     This method must be called to add a new child, but NOT to reset an
-    #     existing child.
-    #     """
-    #     super().add_logical_child(child)
-    #     # self.add_widget_child(child)  # Useless: set up by update_display
-
     def set_children_widgets(self):
         """
         Display directly descendants_to_be_displayed.
@@ -418,23 +425,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
                 # self.children_layout.setAlignment(child, Qt.AlignLeft)
             # log.debug(f"--> {self.children_layout.count()} displayed children")
 
-    def is_conditionally_solved(self):
-        """
-        True if self is not solved but will be as soon as the descendant
-        target are.
-        """
-        if self.is_recursively_solved() or not self.logical_children:
-            return False
-        if self.merge_down:
-            return self.logical_children[0].is_conditionally_solved()
-        else:
-            return all([child.target or child.is_conditionally_solved() or
-                        child.is_recursively_solved()
-                        for child in self.logical_children])
-
-    def is_no_more_goals(self):
-        return self.goal_node.is_no_more_goals()
-
+    # ───────────────────── Enabling methods ──────────────────── #
     def set_enabled(self, yes=True):
         """
         This allows re-implementation by subclasses, to handle EnabledEvents
@@ -454,6 +445,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         for child in self.logical_children:
             child.enable_recursively(till_step_nb)
 
+    # ───────────────────── Update methods ──────────────────── #
     def check_context1(self):
         """
         Check if context1_widget displays the content of context1.
@@ -506,10 +498,6 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         else:
             return self.target == self.target_widget.target
 
-            # return (self.target == self.target_widget.target and
-            #         self.target_substitution_arrow ==
-            #         self.target_widget.target_substitution_arrow)
-
     def check_children(self):
         """
         Check if children_widget displays descendants_to_be_displayed.
@@ -553,6 +541,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
 
         self.update_display()
 
+    # ───────────────────── Set current target methods ──────────────────── #
     def set_as_current_target(self, yes=True, blinking=True):
         """
         If self has a target_widget, then its target will be set as current.
@@ -578,6 +567,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         """
         Recursively call to parent to make wgb visible in the scrollArea.
         """
+        # FIXME: does not work??
         parent = self.parent()
         while not hasattr(parent, "ensureWidgetVisible"):
             if not hasattr(parent, "parent"):
@@ -586,12 +576,6 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
             parent = parent.parent()
 
         parent.ensureWidgetVisible(wdg, ymargin=100)
-
-    def parent_wgb(self):
-        parent = self.parent()
-        while parent and not isinstance(parent, WidgetGoalBlock):
-            parent = parent.parent()
-        return parent
 
 
 class GoalSolvedWGB(WidgetGoalBlock):

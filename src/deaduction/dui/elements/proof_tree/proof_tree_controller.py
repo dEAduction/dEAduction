@@ -236,11 +236,12 @@ class ProofTreeController:
         # log.info("Updating display")
 
         # (3) Update display of ProofTreeWindow subwidgets:
+        log.info(f"Updating...")
         self.proof_tree_window.update_display()
 
         # (4) Set current target:
-        # log.info("Setting current target")
         goal_nb = current_goal_node.goal_nb
+        log.info(f"Setting current target, current goal nb {goal_nb}...")
         self.proof_tree_window.set_current_target(goal_nb,
                                                   blinking=self.is_at_end())
 
