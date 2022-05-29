@@ -544,8 +544,9 @@ class ServerInterface(QObject):
         elif msg.text.startswith(LEAN_UNRESOLVED_TEXT):
             pass
         # Ignore messages that do not concern current proof
-        elif msg.pos_line < self.lean_file.first_line_of_last_change \
-                or msg.pos_line > self.lean_file.last_line_of_inner_content:
+        elif self.lean_file and \
+                (msg.pos_line < self.lean_file.first_line_of_last_change or
+                 msg.pos_line > self.lean_file.last_line_of_inner_content):
             pass
         else:
             self.error_send.send_nowait(msg)
