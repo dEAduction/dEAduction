@@ -260,19 +260,26 @@ class LeanServer:
         await self.running_monitor.open()
         await self.pending_reqs.open()
         
-        self.log.info(_("Preparing folder for launch"))
-        tmp_path = Path(tempfile.mkdtemp())
-        self.log.debug(_("Launch folder: {}").format(tmp_path))
+        # self.log.info(_("Preparing folder for launch"))
+        # tmp_path = Path(tempfile.mkdtemp())
+        # self.log.debug(_("Launch folder: {}").format(tmp_path))
+        #
+        # self.env.write_lean_path(tmp_path / "leanpkg.path")
 
-        self.env.write_lean_path(tmp_path / "leanpkg.path")
+        self.log.debug("Writing leanpkg.path")
+        lean_cwd = self.env.leanpkg_path_dir
 
+        self.env.write_lean_path()
+
+        # NB: Lean cwd can probably be anywhere, but the paths in the
+        # leanpkg.path MUST be relative to that path dir.
         self.process = await trio.open_process(
             [str(self.env.lean_bin), "--json", "--server"],
             stdin=PIPE,
             stdout=PIPE,
-            cwd=str(tmp_path)
+            cwd=str(lean_cwd)
         )
-        self.log.info("Started server")
+        self.log.info("Started Lean server")
 
         self.nursery.start_soon(self.receiver)
 

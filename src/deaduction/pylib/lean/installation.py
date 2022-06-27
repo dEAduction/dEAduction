@@ -32,6 +32,7 @@ import deaduction.pylib.utils.filesystem as fs
 
 from   pathlib import Path
 
+
 class LeanEnvironment:
     def __init__(self, inst):
         # Check for packages
@@ -41,27 +42,37 @@ class LeanEnvironment:
         # Get path information
         self.lean_path    = inst.packages["lean"].path
         self.mathlib_path = inst.packages["mathlib"].path
+        self.leanpkg_path_dir = cdirs.local
+
+    @property
+    def absolute_lean_libs(self):
+        """
+        Construct path information to be put in leanpkg.path file.
+        Absolute paths are used. This is obsolete due to Lean for Windows
+        which does not accept absolute paths. Use lean_libs instead.
+        """
+        # Respectively paths to the Lean library, the Mathlib library,
+        #  the deaduction lean src.
+        paths = [(self.lean_path / "lib" / "lean" / "library").resolve(),
+                (self.mathlib_path / "src").resolve(),
+                cdirs.usr_lean_rsc_dir]
+
+        return paths
 
     @property
     def lean_libs(self):
         """
-        Construct path information to be
-        put in leanpkg.path file.
+        Construct path information to be put in leanpkg.path file.
+        Relative paths are used, relative to dst_path.
         """
 
-        r = []
+        paths = [(self.lean_path / "lib" / "lean" / "library"),
+                (self.mathlib_path / "src"),
+                cdirs.usr_lean_rsc_dir]
 
-        # Path to construct :
-        # → Path to the lean library
-        r.append( (self.lean_path / "lib" / "lean" / "library").resolve() )
+        rel_paths = [path.relative_to(self.leanpkg_path_dir) for path in paths]
 
-        # → Path to the mathlib files
-        r.append( (self.mathlib_path / "src").resolve() )
-
-        # → Path to the deaduction lib files
-        r.append( (cdirs.pkg_dir / "lean_src").resolve() )
-
-        return r
+        return rel_paths
 
     @property
     def lean_bin(self):
@@ -70,11 +81,14 @@ class LeanEnvironment:
         """
         return (self.lean_path / "bin" / "lean").resolve()
 
-    def write_lean_path(self, dst_path: Path):
+    def write_lean_path(self):
         """
-        Writes the leanpkg.path file to the pointed
-        file path.
+        Writes the leanpkg.path file content to the file path
+        self.leanpkg_path_dir. Note that the paths in the leanpkg.path file
+        MUST be relative to dst_path, where that file is written.
         """
+
+        dst_path = self.leanpkg_path_dir / "leanpkg.path"
 
         with open(str(fs.path_helper(dst_path)), "w") as fhandle:
             for pp in self.lean_libs:

@@ -369,6 +369,7 @@ def copy_lean_files_to_home():
     Copy recursively the directory containing factory lean files for
     exercises to the usr directory.
     """
+    # Copy Exercises:
     exercises_dir = cdirs.courses
     usr_exercises_dir = cdirs.usr_lean_exercises_dir
     if usr_exercises_dir.exists():
@@ -377,6 +378,26 @@ def copy_lean_files_to_home():
              str(usr_exercises_dir),
              ignore_dangling_symlinks=True)
     # Only in Python3.10: dirs_exist_ok=True)
+
+    # Copy Lean src:
+    lean_src_dir = cdirs.lean_src_dir
+    usr_lean_src_dir = cdirs.usr_lean_rsc_dir
+    if usr_lean_src_dir.exists():
+        rmtree(str(usr_lean_src_dir), ignore_errors=True)
+    copytree(str(lean_src_dir),
+             str(usr_lean_src_dir),
+             ignore_dangling_symlinks=True)
+
+
+def check_lean_src():
+    """
+    Check if the deaduction lean_src dir exists in the local dir, and if
+    not, call copy_lean_files_to_home.
+    """
+
+    usr_lean_src_dir = cdirs.usr_lean_rsc_dir
+    if not usr_lean_src_dir.exists():
+        copy_lean_files_to_home()
 
 
 def erase_proof_states():
@@ -620,8 +641,9 @@ async def main():
         # Check language
         language_check()
 
-        # Check if version has changed
+        # Check if version has changed. Anyway, add lean_src if not exist.
         adapt_to_new_version()
+        check_lean_src()
 
         # Create wm and start Lean server
         wm = WindowManager(nursery)
