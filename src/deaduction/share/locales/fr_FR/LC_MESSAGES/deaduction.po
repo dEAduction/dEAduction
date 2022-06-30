@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-05-06 17:00+0200\n"
-"PO-Revision-Date: 2022-05-06 17:02+0200\n"
+"POT-Creation-Date: 2022-06-05 18:42+0200\n"
+"PO-Revision-Date: 2022-06-05 18:44+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -39,7 +39,7 @@ msgid "L∃∀N name"
 msgstr "Nom L∃∀N"
 
 #: dui/elements/config_window.py:145
-#: dui/stages/exercise/exercise_main_window.py:227
+#: dui/stages/exercise/exercise_main_window.py:229
 msgid "Preferences"
 msgstr "Préférences"
 
@@ -218,18 +218,17 @@ msgstr "Détails"
 msgid "Move to selected step"
 msgstr "Aller"
 
-#: dui/elements/proof_tree/proof_tree_primitives.py:656
+#: dui/elements/proof_tree/proof_tree_primitives.py:768
+msgid "THE END"
+msgstr "FIN !"
+
+#: dui/elements/proof_tree/proof_tree_primitives.py:770
 msgid "(admitted)"
 msgstr "(admis)"
 
-#: dui/elements/proof_tree/proof_tree_primitives.py:658
-msgid "THE END!!"
-msgstr "FIN !!"
-
-#: dui/elements/proof_tree/proof_tree_primitives.py:660
+#: dui/elements/proof_tree/proof_tree_primitives.py:772
 #: pylib/coursedata/course_metadata_translations.py:32
-#: pylib/proof_tree/proof_tree.py:428 pylib/text/tooltips.py:121
-#: pylib/text/tooltips.py:123
+#: pylib/text/tooltips.py:121 pylib/text/tooltips.py:123
 msgid "Goal!"
 msgstr "But !"
 
@@ -328,23 +327,23 @@ msgstr "Console L∃∀N"
 msgid "Settings"
 msgstr "Paramètres"
 
-#: dui/stages/exercise/exercise_main_window.py:230
+#: dui/stages/exercise/exercise_main_window.py:232
 #: dui/stages/start_coex/start_coex_widgets.py:774
 #: dui/stages/start_coex/start_coex_widgets.py:896
 #: pylib/pre_processing/__main__.py:210 pylib/pre_processing/__main__.py:232
 msgid "Exercise"
 msgstr "Exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:231
+#: dui/stages/exercise/exercise_main_window.py:233
 msgid "Exercise history"
 msgstr "Historique de l’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:731
+#: dui/stages/exercise/exercise_main_window.py:735
 #: pylib/math_display/display_math.py:915 pylib/mathobj/proof_step.py:605
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:734
+#: dui/stages/exercise/exercise_main_window.py:738
 msgid "goals solved!"
 msgstr "buts atteints !"
 
@@ -1771,6 +1770,10 @@ msgstr "But :"
 msgid "Conclusion:"
 msgstr "Conclusion :"
 
+#: pylib/proof_tree/proof_tree.py:91
+msgid "No more goal!"
+msgstr "Tous les buts ont été atteints!"
+
 #: pylib/proof_tree/proof_tree.py:298 pylib/proof_tree/proof_tree.py:318
 msgid "Pushing negation"
 msgstr "Négation poussée"
@@ -2346,9 +2349,6 @@ msgstr "Téléchargé depuis {} vers {}"
 
 #~ msgid "Action not understood"
 #~ msgstr "L∃∀N n’a pas compris !"
-
-#~ msgid "No more goal"
-#~ msgstr "Pas de but"
 
 #~ msgid "Target solved!"
 #~ msgstr "La preuve est terminée !"

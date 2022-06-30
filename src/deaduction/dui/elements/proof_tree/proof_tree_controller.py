@@ -237,6 +237,7 @@ class ProofTreeController:
 
         # (3) Update display of ProofTreeWindow subwidgets:
         log.info(f"Updating...")
+        self.proof_tree_window.unset_current_target()
         self.proof_tree_window.update_display()
 
         # (4) Set current target:
@@ -244,6 +245,10 @@ class ProofTreeController:
         log.info(f"Setting current target, current goal nb {goal_nb}...")
         self.proof_tree_window.set_current_target(goal_nb,
                                                   blinking=self.is_at_end())
+        wgb = self.wgb_from_goal_nb(1)
+        if wgb and wgb.target_widget:
+            log.debug(f"Current status_msg for gn1 is "
+                      f"{wgb.status_msg()}")
 
     def wgb_from_goal_nb(self, goal_nb: int, from_wgb=None) -> \
             WidgetGoalBlock:
