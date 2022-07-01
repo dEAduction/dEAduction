@@ -173,15 +173,16 @@ class CodeForLean:
             raise AttributeError("Bad Lean combinator: single string for "
                                  "several instructions")
 
-    def __repr__(self):
-        attributes = []
-        for key in self.__dict__:
-            attribute = self.__getattribute__(key)
-            attribute = ('"' + attribute + '"' if isinstance(attribute, str)
-                         else str(attribute))
-            attributes.append(key + "=" + attribute)
-        string = "CodeForLean(" + ", ".join(attributes) + ")"
-        return string
+    # The following entails crash when self.operator is a Statement:
+    # def __repr__(self):
+    #     attributes = []
+    #     for key in self.__dict__:
+    #         attribute = self.__getattribute__(key)
+    #         attribute = ('"' + attribute + '"' if isinstance(attribute, str)
+    #                      else str(attribute))
+    #         attributes.append(key + "=" + attribute)
+    #     string = "CodeForLean(" + ", ".join(attributes) + ")"
+    #     return string
 
     @classmethod
     def empty_code(cls, error_msg: str = ''):

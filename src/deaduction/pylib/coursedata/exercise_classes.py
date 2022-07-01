@@ -88,6 +88,9 @@ class Statement:
     info:                   Dict[str, Any]  = None
     # Any other (non-essential) information
 
+    # def __repr__(self):
+    #     return self.pretty_name if self.pretty_name else self.lean_name
+
     @classmethod
     def from_parser_data(cls, **data):
         """
