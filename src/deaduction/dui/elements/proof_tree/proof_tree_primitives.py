@@ -38,6 +38,7 @@ global _
 
 if __name__ != "__main__":
     from deaduction.pylib.mathobj import MathObject
+    from deaduction.pylib.coursedata import Statement
 else:
     def _(x):
         return x
@@ -331,6 +332,8 @@ class RawLabelMathObject(QLabel):
     the callable html_msg, which takes parameter use_color and bf.
     This allows to disable self by setting use_color=False, or to highlight
     it by setting bf=True.
+
+    Param math_object may be a MathObject instance or a string or a Statement.
     """
 
     def __init__(self, math_object=None,
@@ -374,7 +377,9 @@ class RawLabelMathObject(QLabel):
 
         if isinstance(self.math_object, str):
             return self.math_object
-        else:
+        elif isinstance(self.math_object, Statement):
+            return self.math_object.pretty_name
+        elif isinstance(self.math_object, MathObject):
             math_object = (self.math_object.math_type if self.is_prop
                            else self.math_object)
             txt = math_object.to_display(format_="html",
@@ -404,7 +409,8 @@ class ProofTitleLabel(RawLabelMathObject):
 
 class GenericLMO(RawLabelMathObject):
     """
-    A class for displaying MathObject inside a frame.
+    A class for displaying MathObject inside a frame. math_object can be a
+    MathObject instance or a string (e.g. a statement name).
     """
     def __init__(self, math_object, new=True):
         super().__init__(math_object)
@@ -412,6 +418,10 @@ class GenericLMO(RawLabelMathObject):
         is_new = "new" if new else "old"
         is_prop = "prop" if self.is_prop else "obj"
         self.setObjectName(is_new + "_" + is_prop)
+        if isinstance(math_object, MathObject) and not self.is_prop:
+            # print("Setting tooltip")
+            tooltip = math_object.math_type_to_display(format_="utf8")
+            self.setToolTip(tooltip)
 
 
 class LayoutMathObject(QHBoxLayout):
@@ -448,7 +458,6 @@ class OperatorLMO(RawLabelMathObject):
 
     def __init__(self, math_object):
         super().__init__(math_object)
-        # self.setObjectName("operator")
 
 
 class RwItemLMO(RawLabelMathObject):
@@ -458,7 +467,6 @@ class RwItemLMO(RawLabelMathObject):
 
     def __init__(self, math_object):
         super().__init__(math_object)
-        # self.setObjectName("operator")
 
 
 class LayoutOperator(QWidget):
@@ -594,9 +602,9 @@ class PureContextWidget(ContextWidget):
 
     def __init__(self, premises, operator, conclusions):
         super().__init__([])
-        self.premises = premises
-        self.operator = operator
-        self.conclusions = conclusions
+        self.premises: [MathObject] = premises
+        self.operator: Union[MathObject, Statement] = operator
+        self.conclusions: [MathObject] = conclusions
         self.type_ = "operator"
 
         assert conclusions

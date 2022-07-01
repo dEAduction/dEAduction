@@ -182,5 +182,6 @@ def action_theorem(proof_step,
 
         codes = codes.or_else(more_codes)
         codes.add_error_msg(_("Unable to apply theorem"))
+        codes.operator = theorem
 
     return codes
