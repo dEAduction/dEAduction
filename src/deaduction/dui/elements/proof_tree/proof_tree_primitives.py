@@ -30,14 +30,14 @@ from PySide2.QtWidgets import (QFrame, QLayout,
                                QHBoxLayout, QVBoxLayout, QGridLayout,
                                QWidget, QLabel, QSizePolicy)
 from PySide2.QtCore import Qt, QRect, QPoint, QTimer, QPointF
-from PySide2.QtGui import QColor, QPainter, QPolygon, QPen, QBrush
+from PySide2.QtGui import QColor, QPainter, QPolygon, QPen, QBrush, QPainterPath
 
 import deaduction.pylib.config.vars as cvars
 
 global _
 
 if __name__ != "__main__":
-    from deaduction.pylib.mathobj import MathObject
+    from deaduction.pylib.mathobj import MathObject, ContextMathObject
     from deaduction.pylib.coursedata import Statement
 else:
     def _(x):
@@ -49,11 +49,17 @@ else:
     class GoalNode:
         pass
 
+    class Statement:
+        pass
+
 
 log = logging.getLogger(__name__)
 
 
 def paint_layout(painter, item, item_depth=0, max_depth=10):
+    """
+    For debugging. Display all sub-widgets geometries.
+    """
     if isinstance(item, QWidget):
         layout = item.layout()
         # geometry = item.geometry()
@@ -94,30 +100,58 @@ class BlinkingLabel(QLabel):
         # self.start_blinking()
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self._is_deactivated = False
+        self.disclosed = True
 
     def start_blinking(self):
+        """
+        The size policy is modified to retain size, to avoid layout changes
+        when blinking. It must be reset to retainSizeWhenHidden(False) when
+        blinking stops, in case the msg will be hidden.
+        """
+        sp = self.sizePolicy()
+        sp.setRetainSizeWhenHidden(True)
+        self.setSizePolicy(sp)
         self.flag = True
+        self.set_bold(True)
         self.timer.start()
         # log.debug(f"Starting blinking gn {self.goal_nb}, text = {self.text}")
 
     def stop_blinking(self):
         # log.debug(f"Stop blinking gn {self.goal_nb}")
+        sp = self.sizePolicy()
+        sp.setRetainSizeWhenHidden(False)
+        self.setSizePolicy(sp)
+        self.set_bold(False)
         self.timer.stop()
 
     def blink(self):
-        self.setText(" "*len(self.text()) if self.flag else self.text())
+        # self.setText(" "*len(self.text()) if self.flag else self.text())
+        if self.flag:
+            self.hide()
+        elif self.disclosed:
+            self.show()
         self.flag = not self.flag
         # log.debug(f"Blinking gn {self.goal_nb}, text = {self.text}")
 
     def deactivate(self, yes=True):
         self._is_deactivated = yes
 
+    def update_text(self):
+        self.setText(self.text())
+
     def set_msg(self):
         if not self.text():
             self.hide()
         elif not self._is_deactivated:
-            self.setText(self.text())
+            self.update_text()
             self.show()
+
+    def set_bold(self, yes=True):
+        self.bold = yes
+        if yes:
+            self.setStyleSheet("font-weight: bold;")
+        else:
+            self.setStyleSheet("")
 
 
 def display_object(math_objects):
@@ -163,6 +197,9 @@ def paint_arrow(origin, end, painter: QPainter,
                 arrow_height=4, style=Qt.SolidLine,
                 color=None, pen_width=1,
                 direction="horizontal"):
+    """
+    Display a straight arrow.
+    """
     if not color:
         color = cvars.get("display.color_for_operator_props")
 
@@ -204,11 +241,106 @@ def paint_arrow(origin, end, painter: QPainter,
     painter.end()
 
 
+def points_for_curved_arrow(origin_wdg: QWidget, end_wdg: QWidget,
+                            parent_wdg: QWidget) -> [QPoint]:
+    """
+    Compute points for tracing a curved arrow from origin_wdg to end_wdg
+    within parent_wdg.
+    """
+    rel_origin = mid_bottom(origin_wdg.rect())
+    origin = origin_wdg.mapTo(parent_wdg, rel_origin)
+    rel_end = mid_top(end_wdg.rect())
+    end = end_wdg.mapTo(parent_wdg, rel_end)
+    mid = middle(origin, end)
+    control1 = QPoint(origin.x(), mid.y())
+    control2 = QPoint(end.x(), mid.y())
+
+    return [origin, control1, mid, control2, end]
+
+
+def paint_curved_arrow(points: [QPoint],
+                       painter: QPainter,
+                       arrow_height=4, style=Qt.SolidLine,
+                       color=None, pen_width=1):
+    """
+    Use painter to draw a (quadratic Bezier) curved arrow.
+    """
+    assert len(points) == 5
+    if color is None:
+        color = "Black"
+    path = QPainterPath()
+    path.moveTo(points[0])
+    path.quadTo(points[1], points[2])
+    path.quadTo(points[3], points[4])
+    pen = QPen(QColor(color))
+    pen.setStyle(Qt.DotLine)
+    painter.setPen(pen)
+    painter.drawPath(path)
+
+
 def rectangle(item):
     if isinstance(item, QWidget):
         return item.rect()
     elif isinstance(item, QLayout):
         return item.contentsRect()
+
+
+class CurvedArrow:
+    def __init__(self, origin_wdg: QWidget, end_wdg: QWidget, parent):
+        # super().__init__(parent=parent)
+        color_var = cvars.get("display.color_for_variables")
+        color_prop = cvars.get("display.color_for_props")
+        self.origin_wdg = origin_wdg
+        self.end_wdg = end_wdg
+        self.parent_wdg = parent
+        self.color = color_prop if self.origin_wdg.is_prop else color_var
+        # rel_origin = mid_bottom(origin_wdg.rect())
+        # self.origin = origin_wdg.mapTo(parent, rel_origin)
+        # rel_end = mid_top(end_wdg.rect())
+        # self.end = end_wdg.mapTo(parent, rel_end)
+        #
+        # # top_left = QPoint(min(self.origin.x(), self.end.x()),
+        # #                   self.origin.y())
+        # # bottom_right = QPoint(max(self.origin.x(), self.end.x()),
+        # #                       self.end.y())
+        # #
+        # # rect = QRect(top_left, bottom_right)
+        # # self.setGeometry(parent.geometry())
+        # self.mid = middle(self.origin, self.end)
+        # self.control1 = QPoint(self.origin.x(), self.mid.y())
+        # self.control2 = QPoint(self.end.x(), self.mid.y())
+
+        # rel_origin = mid_bottom(self.origin_wdg.rect())
+        # origin = self.origin_wdg.mapTo(self.parent_wdg, rel_origin)
+        # rel_end = mid_top(self.end_wdg.rect())
+        # end = self.end_wdg.mapTo(self.parent_wdg, rel_end)
+        # top_left = QPoint(min(origin.x(), end.x()), origin.y())
+        # bottom_right = QPoint(max(origin.x(), end.x()), end.y())
+        #
+        # rect = QRect(top_left, bottom_right)
+        # self.setGeometry(rect)
+        # mid = middle(origin, end)
+        # control1 = QPoint(origin.x(), mid.y())
+        # control2 = QPoint(end.x(), mid.y())
+
+        # self.points = [self.origin, self.control1, self.mid,
+        #                self.control2, self.end]
+
+    # def paintEvent(self, event):
+    #     rel_origin = mid_bottom(self.origin_wdg.rect())
+    #     origin = self.origin_wdg.mapTo(self.parent_wdg, rel_origin)
+    #     rel_end = mid_top(self.end_wdg.rect())
+    #     end = self.end_wdg.mapTo(self.parent_wdg, rel_end)
+    #     mid = middle(origin, end)
+    #     control1 = QPoint(origin.x(), mid.y())
+    #     control2 = QPoint(end.x(), mid.y())
+    #
+    #     points = [origin, control1, mid, control2, end]
+    #     self.setGeometry(self.parent_wdg.geometry())
+    #
+    #     # points = [self.origin, self.control1, self.mid, self.control2, self.end]
+    #     painter = QPainter(self)
+    #     paint_curved_arrow(points, painter)
 
 
 class VerticalArrow(QWidget):
@@ -267,32 +399,6 @@ class HorizontalArrow(QWidget):
                     color=self.color(),
                     direction="horizontal")
 
-        # pen = QPen()
-        # pen.setColor(QColor(self.color()))
-        # pen.setWidth(self.pen_width)
-        # pen.setJoinStyle(Qt.MiterJoin)
-        # pen.setCapStyle(Qt.FlatCap)
-        # painter.setPen(pen)
-        # arrow_height = self.arrow_height
-        # vect_x = QPoint(arrow_height, 0)
-        # vect_y = QPoint(0, arrow_height)
-        # end = end - vect_x
-        #
-        # pen.setStyle(self.style)
-        # painter.setPen(pen)
-        # painter.drawLine(origin, end-2*vect_x)
-        # # Triangle
-        # brush = QBrush(self.color(), Qt.SolidPattern)
-        # painter.setBrush(brush)
-        # pen.setStyle(Qt.SolidLine)
-        # pen.setWidth(1)
-        # painter.setPen(pen)
-        # upper_vertex = end-2*vect_x - vect_y
-        # lower_vertex = end-2*vect_x + vect_y
-        # triangle = QPolygon([end, upper_vertex, lower_vertex, end])
-        # painter.drawPolygon(triangle)
-        # painter.end()
-
     def set_width(self, width):
         self.setFixedWidth(width)
 
@@ -349,7 +455,7 @@ class RawLabelMathObject(QLabel):
         self.setTextFormat(Qt.RichText)
         self.bold = False
 
-        self.setText(self.txt())
+        # self.setText(self.txt())
 
     def set_bold(self, yes=True):
         self.bold = yes
@@ -371,7 +477,7 @@ class RawLabelMathObject(QLabel):
         post = "</b>" if self.bold else ""
         if self.html_msg:
             txt = self.html_msg(use_color=self.isEnabled())
-            if isinstance(self, ProofTitleLabel):
+            if isinstance(self, ProofTitleLabel) and self.disclosed:
                 txt += _(":")
             return pre + txt + post
 
@@ -386,6 +492,9 @@ class RawLabelMathObject(QLabel):
                                          use_color=self.isEnabled())
         return txt
 
+    def update(self):
+        self.setText(self.txt())
+
     def changeEvent(self, event) -> None:
         """
         In case object is enabled/disabled, change to properly display colored
@@ -397,14 +506,13 @@ class RawLabelMathObject(QLabel):
 
 class ProofTitleLabel(RawLabelMathObject):
     """
-    A QLabel to display a mgs like "Proof of ...:".
-    The colon is added on top of html_msg.
+    A QLabel to display a mgs like "Proof of ...".
+    The colon is added on top of html_msg by super class RawLabelMathObject
+    iff self.disclosed is True.
     """
     def __init__(self, html_msg):
-        # def html_msg_with_colon(**kwargs):
-        #     return html_msg(kwargs) + _(":")
-        # super().__init__(html_msg=html_msg_with_colon)
         super().__init__(html_msg=html_msg)
+        self.disclosed = True
 
 
 class GenericLMO(RawLabelMathObject):
@@ -431,9 +539,11 @@ class LayoutMathObject(QHBoxLayout):
 
     def __init__(self, math_object, align=None, new=True):
         super().__init__()
+        self.core_wdg = GenericLMO(math_object, new=new)
+
         if align in (None, "right"):
             self.addStretch(1)
-        self.addWidget(GenericLMO(math_object, new=new))
+        self.addWidget(self.core_wdg)
         if align in (None, "left"):
             self.addStretch(1)
 
@@ -445,10 +555,66 @@ class LayoutMathObjects(QVBoxLayout):
 
     def __init__(self, math_objects, align=None, new=True):
         super().__init__()
+        # self.math_objects = math_objects
+        # self.lyt_math_objects = []
         self.addStretch(1)
         for math_object in math_objects:
-            self.addLayout(LayoutMathObject(math_object, align=align, new=new))
+            lyt = LayoutMathObject(math_object, align=align, new=new)
+            # self.lyt_math_objects.append(lyt)
+            self.addLayout(lyt)
         self.addStretch(1)
+
+    @property
+    def nb_objects(self):
+        return self.layout().count()-2
+
+    @property
+    def lyt_math_objects(self):
+        lyt = self.layout()
+        return [lyt.itemAt(i+1) for i in range(self.nb_objects)]
+
+    def core_wdg_at(self, i):
+        return self.lyt_math_objects[i].core_wdg
+
+    def math_object_at(self, i):
+        return self.core_wdg_at(i).math_object
+
+    @property
+    def math_objects(self):
+        return [self.math_object_at(i) for i in range(self.nb_objects)]
+
+    @property
+    def math_object_wdg_at_beginning(self):
+        return self.core_wdg_at(0)
+
+    @property
+    def math_object_wdg_at_end(self):
+        return self.core_wdg_at(self.nb_objects-1)
+
+    # @property
+    # def math_object_at_beginning(self):
+    #     return self.math_objects[0]
+    #
+    # @property
+    # def math_object_at_end(self):
+    #     return self.math_objects[self.nb_objects-1]
+
+    def put_at_end(self, i):
+        """
+        Put at the end (before stretch) the object currently at position i.
+        Mind that index of math_object is 1 less than index in layout,
+        because of QSpacerItem at position 0.
+        """
+        item = self.layout().takeAt(i+1)
+        end_pos = self.layout().count()-1
+        self.layout().insertItem(end_pos, item)
+
+    def put_at_beginning(self, j):
+        """
+        Put at the beginning (after stretch) the object currently at position i.
+        """
+        item = self.layout().takeAt(j+1)
+        self.layout().insertItem(1, item)
 
 
 class OperatorLMO(RawLabelMathObject):
@@ -462,7 +628,7 @@ class OperatorLMO(RawLabelMathObject):
 
 class RwItemLMO(RawLabelMathObject):
     """
-    Display a MathObject which is a property operating on other objects.
+    Display a MathObject which is a property used for rewriting.
     """
 
     def __init__(self, math_object):
@@ -476,9 +642,10 @@ class LayoutOperator(QWidget):
 
     def __init__(self, math_object):
         super().__init__()
+        self.core_wdg = OperatorLMO(math_object)
         layout = QVBoxLayout()
         layout.addStretch(1)
-        layout.addWidget(OperatorLMO(math_object))
+        layout.addWidget(self.core_wdg)
         layout.addStretch(1)
         self.setLayout(layout)
 
@@ -568,13 +735,18 @@ class SubstitutionArrow(QWidget):
 ###########################
 class ContextWidget(QWidget):
     """
-    A widget for displaying new context object on one line.
+    A widget for displaying new context objects on one line.
+    If called with math_objects, will just display those math_objects on 1 line.
+    Descendant class PureContextWidget displays a logical inference.
+    Descendant class SubstitutionContextWidget displays some context rewriting.
     """
 
     def __init__(self, math_objects):
         super().__init__()
         self.layout = QHBoxLayout()
         self.layout.addStretch(1)
+        self.input_layout: Optional[LayoutMathObjects] = None
+        self.output_layout: Optional[LayoutMathObjects] = None
 
         self.math_objects = []
         for math_object in math_objects:
@@ -586,10 +758,82 @@ class ContextWidget(QWidget):
         """
         Insert a child math_object at the end, just before the stretch item.
         """
-        # FIXME: unused?
         self.math_objects.append(math_object)
         item = GenericLMO(math_object)
         self.layout.insertWidget(self.layout.count()-1, item)
+
+    @property
+    def premises(self):
+        if not self.input_layout:
+            return []
+        return self.input_layout.math_objects
+
+    @property
+    def operator_wdg(self):
+        """
+        To be redefined in derived classes.
+        """
+        return None
+
+    @property
+    def conclusions(self):
+        if not self.output_layout:
+            return []
+        return self.output_layout.math_objects
+
+    def match_premises_conclusions(self, other):
+        """
+        Check if some math_objects of self.premises is a descendant of one
+        math_object of other.conclusions. If so, return a couple (i,j)
+        where self.premises[i] is a descendant of other.conclusions[j].
+        """
+
+        match = None
+        for mo1 in self.premises:
+            for mo2 in other.conclusions:
+                if mo1 == mo2 or mo1.is_descendant_of(mo2):
+                    match = (mo1, mo2)
+        if match:
+            return self.premises.index(mo1), other.conclusions.index(mo2)
+
+    def match_operator_conclusions(self, other):
+        if not self.operator_wdg:
+            return
+        match = None
+        operator = self.operator_wdg.math_object
+        if not isinstance(operator, ContextMathObject):
+            return
+        for mo in other.conclusions:
+            if operator == mo or operator.is_descendant_of(mo):
+                match = mo
+        if match:
+            return other.conclusions.index(match)
+
+    def find_link(self, other):
+        """
+        Search if some object in self.conclusions match either a premise or
+        the operator of other. If so, make sure that the matched conclusion
+        is at the end of the conclusions (by swapping if necessary),
+        and similarly make sure that the matched premise is at the beginning
+        of the pile of premises.
+        Return the couple of widgets corresponding to linked objects (or None).
+        """
+        # todo: Add operator checking
+        match = self.match_premises_conclusions(other)
+        if match:
+            i, j = match
+            print("Link found:")
+            print(match)
+            self.input_layout.put_at_beginning(i)
+            other.output_layout.put_at_end(j)
+            return (other.output_layout.math_object_wdg_at_end,
+                    self.input_layout.math_object_wdg_at_beginning)
+
+        match = self.match_operator_conclusions(other)
+        if match is not None:
+            other.output_layout.put_at_end(match)
+            return (other.output_layout.math_object_wdg_at_end,
+                    self.operator_wdg)
 
 
 class PureContextWidget(ContextWidget):
@@ -602,28 +846,35 @@ class PureContextWidget(ContextWidget):
 
     def __init__(self, premises, operator, conclusions):
         super().__init__([])
-        self.premises: [MathObject] = premises
+        # self.premises: [MathObject] = premises
         self.operator: Union[MathObject, Statement] = operator
-        self.conclusions: [MathObject] = conclusions
+        # self.conclusions: [MathObject] = conclusions
         self.type_ = "operator"
+        self.input_layout = None
+        self.operator_layout = None
 
         assert conclusions
-        output_layout = LayoutMathObjects(conclusions, align="left")
+        self.output_layout = LayoutMathObjects(conclusions, align="left")
 
         # Input -> Operator -> output:
         if premises:
-            input_layout = LayoutMathObjects(premises, align="right", new=False)
-            self.layout.addLayout(input_layout)
+            self.input_layout = LayoutMathObjects(premises, align="right",
+                                                  new=False)
+            self.layout.addLayout(self.input_layout)
             self.layout.addWidget(HorizontalArrow())
 
         if operator:
-            operator_wdg = LayoutOperator(operator)
-            self.layout.addWidget(operator_wdg)
+            self.operator_layout = LayoutOperator(operator)
+            self.layout.addWidget(self.operator_layout)
             self.layout.addWidget(HorizontalArrow())
 
-        self.layout.addLayout(output_layout)
+        self.layout.addLayout(self.output_layout)
 
         self.layout.addStretch(1)
+
+    @property
+    def operator_wdg(self):
+        return self.operator_layout.core_wdg
 
 
 class SubstitutionContextWidget(ContextWidget):
@@ -639,11 +890,11 @@ class SubstitutionContextWidget(ContextWidget):
         MathObjects/strings to be written above and below the arrow.
         """
 
-        #FIXME!!!!
+        # FIXME: arrow length should never be less than operator length.
         super().__init__([])
-        self.premises = premises
+        # self.premises = premises
         self.operator = rw_item
-        self.conclusions = conclusions
+        # self.conclusions = conclusions
         self.type_ = "substitution"
 
         self.input_layout = LayoutMathObjects(premises, align="right",
@@ -661,9 +912,9 @@ class SubstitutionContextWidget(ContextWidget):
 
         self.layout.addStretch(1)
 
-    # def paintEvent(self, e):
-    #     painter = QPainter(self)
-    #     arrow(self.input_layout, self.output_layout, painter)
+    @property
+    def operator_wdg(self):
+        return self.arrow_wdg.rw_label
 
 
 class TargetWidget(QWidget):
@@ -671,32 +922,32 @@ class TargetWidget(QWidget):
     A widget for displaying a new target, with a target_msg (generally "Proof of
     ...") and a layout for displaying the proof of the new target.
     A disclosure triangle allows showing / hiding the proof.
-    The layout is a 4x2 grid layout, with the following ingredients:
+    The layout is a grid layout, with the following ingredients:
     triangle     |  "Proof of target"
     -----------------------------
     vertical bar | content_layout
                  |----------------
                  | status_label
 
+    This grid may be extended when adding a child with target substitution (
+    see below).
     The content_layout contains is designed to welcome the content of the
-    logical_children of the WidgetGoalBlock to which the TargetWidget belongs,
-     It ends with the status_label.
+    logical_children of the WidgetGoalBlock to which the TargetWidget belongs.
     The status_label display the status of the target (goal solved?).
-    Attribute html_msg is a callable that takes a parameter color=True/False.
-
-    There is a special case when target has been re-written. Then an attribute
-    target_substitution_arrow is provided (a QWidget).
+    Attribute target_msg is a callable that takes a parameter color=True/False.
+    This is used for disabling colors when widget is disabled.
     """
 
     def __init__(self, parent_wgb, target: MathObject, target_msg: callable,
-                 hidden=False, status_label=None, title_label=None):
+                 hidden=False,
+                 status_label: Optional[BlinkingLabel] = None,
+                 title_label: Optional[ProofTitleLabel] = None):
         super().__init__()
-        self.hidden = False
         self.target = target
         self.target_msg = target_msg
         self.parent_wgb = parent_wgb
-        # self.is_target_substitution = is_target_substitution
         self.content_layouts = []
+        self.curved_arrows = []
 
         # Title and status:
         self.title_label = title_label
@@ -705,15 +956,9 @@ class TargetWidget(QWidget):
         self.status_lbls = [status_label] if status_label else []
         self.substituted_title_lbls = []
         self.substitution_arrows = []
-        # self.status_label = BlinkingLabel(self.status_msg,
-        #                                   goal_nb=self.parent_wgb.goal_nb)
-        # self.status_label.setStyleSheet("font-style: italic;")
-        # self.status_label.setSizePolicy(QSizePolicy.Fixed,
-        #                                 QSizePolicy.Fixed)
-        # self.status_lbls.append(self.status_label)
 
         # Disclosure triangle and vertical line
-        self.triangle = DisclosureTriangle(self.toggle, hidden=False)
+        self.triangle = DisclosureTriangle(self.toggle)
         self.triangle.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.vert_bar = VertBar()
 
@@ -746,22 +991,12 @@ class TargetWidget(QWidget):
         return self.content_layouts[-1]
 
     @property
-    def current_status_label(self):
+    def current_status_label(self) -> BlinkingLabel:
         return self.status_lbls[-1]
 
     @property
     def children_layout(self):
         return self.content_layout
-
-    # @property
-    # def target_is_substituted(self):
-    #     """
-    #     True if target has been substituted. This has several implications,
-    #     e.g. status_label should never be shown since it is replaced by
-    #     child's status_label.
-    #     """
-    #     # FIXME: does not work if self is itself a substitution
-    #     return len(self.content_layouts) > 1
 
     def set_as_current_target(self, yes=True, blinking=True):
         if yes:
@@ -783,6 +1018,7 @@ class TargetWidget(QWidget):
             # self.set_status()
             self.title_label.set_bold(False)
 
+    @property
     def all_widgets(self):
         widgets = (self.substituted_title_lbls + self.substitution_arrows +
                    [self.current_status_label, self.vert_bar])
@@ -793,73 +1029,60 @@ class TargetWidget(QWidget):
 
     def toggle(self):
         """
-        Toggle on / off the display of the content.
+        Toggle on / off the display of the all content. The proof title is
+        untouched, except for the "colon" at the end which should be there
+        only when content is displayed.
         """
 
-        # FIXME
-        self.hidden = not self.hidden
-        for wdg in self.all_widgets():
-            wdg.hide() if self.hidden else wdg.show()
+        # FIXME: colon, status_msg
+        # self.hidden = not self.hidden
+        self.title_label.disclosed = not self.title_label.disclosed
+        self.title_label.update()
+        self.current_status_label.disclosed = self.title_label.disclosed
+        self.current_status_label.update_text()
+        for wdg in self.all_widgets:
+            wdg.show() if self.title_label.disclosed else wdg.hide()
 
-            # if self.hidden:
-            # self.current_status_label.hide()
-            # self.vert_bar.hide()
-            # for wdg in self.substituted_title_lbls:
-            #     wdg.hide()
-            # for arrow in self.substitution_arrows:
-            #     arrow.hide()
-            # for layout in self.content_layouts:
-            #     wdgs = [layout.itemAt(i) for i in range(layout.count())]
-            #     for wdg in wdgs:
-            #         wdg.widget().hide()
-        # else:
-            # self.status_label.show()
-            # self.vert_bar.show()
-            # for layout in self.content_layouts:
-            #     wdgs = [layout.itemAt(i) for i in range(layout.count())]
-            #     for wdg in wdgs:
-            #         wdg.widget().show()
-
-            # self.set_status()
-
-    # @property
-    # def status_msg(self) -> Optional[str]:
+    # def set_status(self):
     #     """
-    #     Compute the status msg for this part of the proof, to be displayed at
-    #     the end of the block.
+    #     Display the status msg, if any.
     #     """
+    #     # FIXME: should be useless
+    #     # log.debug(f"Setting status msg {self.status_msg} for goal nb "
+    #     #           f"{self.parent_wgb.goal_nb}")
     #
-    #     if self.parent_wgb.is_recursively_solved():
-    #         if self.parent_wgb.is_no_more_goals():
-    #             msg = _("THE END")
-    #         elif self.parent_wgb.is_recursively_sorry():
-    #             msg = _("(admitted)")
-    #         else:
-    #             msg = _("Goal!") + str(self.parent_wgb.goal_nb)  # debug
-    #     elif self.parent_wgb.is_conditionally_solved():
-    #         msg = None
-    #     else:
-    #         msg = _("( ... under construction... )")
-    #     # log.debug(f"Status msg for goal nb {self.parent_wgb.goal_nb} is {msg}")
-    #     return msg
+    #     # if self.target_is_substituted:
+    #     #     self.status_label.hide()
+    #     # elif not self.status_msg:
+    #     #     self.status_label.hide()
+    #     # else:
+    #     #     self.status_label.show()
+    #     #     self.status_label.setText(self.status_msg)
+    #     #     self.status_label.text = self.status_msg
+    #     self.current_status_label.set_msg()
 
-    def set_status(self):
+    def link_last_child(self):
         """
-        Display the status msg, if any.
+        Try to link input / operator of last child to output of previous child.
         """
-        # FIXME: should be useless
-        # log.debug(f"Setting status msg {self.status_msg} for goal nb "
-        #           f"{self.parent_wgb.goal_nb}")
-
-        # if self.target_is_substituted:
-        #     self.status_label.hide()
-        # elif not self.status_msg:
-        #     self.status_label.hide()
-        # else:
-        #     self.status_label.show()
-        #     self.status_label.setText(self.status_msg)
-        #     self.status_label.text = self.status_msg
-        self.current_status_label.set_msg()
+        # TODO: try to link self.context2. Add color.
+        match = None
+        nb = self.content_layout.count()
+        if nb < 2:
+            return
+        # Last two children:
+        child1 = self.content_layout.itemAt(nb-1).widget()  # WidgetGoalBlock
+        child2 = self.content_layout.itemAt(nb-2).widget()
+        child1_widget = child1.pure_context_widget
+        child2_widget = child2.pure_context_widget
+        if child1_widget:
+            match = child1_widget.find_link(
+                child2_widget)
+        if not match:
+            return
+        source_wdg, target_wdg = match
+        arrow = CurvedArrow(source_wdg, target_wdg, self)
+        self.curved_arrows.append(arrow)
 
     def add_child_wgb(self, child: QWidget):
         """
@@ -881,20 +1104,23 @@ class TargetWidget(QWidget):
             child.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
             self.content_layout.addWidget(child)
             self.content_layout.setAlignment(child, Qt.AlignLeft)
+            self.link_last_child()
         else:
             # log.debug("Adding target substitution child")
-            # self.parent_wgb.set_target_substituted(True)
-            nb_targets = len(self.content_layouts)
-            child_title_lbl_pos = nb_targets*2
+            # Status label should not be displayed anymore:
             self.main_layout.removeWidget(self.current_status_label)
             self.current_status_label.hide()
             self.current_status_label.deactivate()
 
-            # child_title_lbl = RawLabelMathObject(html_msg=child.target_msg)
+            nb_targets = len(self.content_layouts)
+            child_title_lbl_pos = nb_targets*2
             child_title_lbl = child.proof_title_label
             child_status_lbl = child.status_label
+            # Record new title and status labels:
             self.substituted_title_lbls.append(child_title_lbl)
             self.status_lbls.append(child_status_lbl)
+
+            # Display new title, content, and status ; modify vertical bar:
             self.main_layout.addWidget(child_title_lbl,
                                        child_title_lbl_pos, 1)
             self.content_layouts.append(QVBoxLayout())
@@ -906,9 +1132,21 @@ class TargetWidget(QWidget):
             self.main_layout.addWidget(self.vert_bar, 1, 0,
                                        child_title_lbl_pos+2, 1)
 
+            # Display and record substitution arrow:
             self.main_layout.addWidget(child.substitution_arrow,
                                        child_title_lbl_pos-2, 2, 3, 1)
             self.substitution_arrows.append(child.substitution_arrow)
 
+    def paintEvent(self, event):
+        """
+        Paint the curved arrows linking successive output / inputs.
+        """
 
+        painter = QPainter(self)
+        for arrow in self.curved_arrows:
+            # if arrow.origin_wdg.isEnabled() and arrow.end_wdg.isEnabled():
+            points = points_for_curved_arrow(arrow.origin_wdg,
+                                             arrow.end_wdg,
+                                             arrow.parent_wdg)
+            paint_curved_arrow(points, painter, color=arrow.color)
 

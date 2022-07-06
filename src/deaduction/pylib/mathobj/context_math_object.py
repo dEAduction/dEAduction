@@ -79,6 +79,14 @@ class ContextMathObject(MathObject):
         return (self.parent_context_math_object
                 and self.parent_context_math_object.math_type != self.math_type)
 
+    def is_descendant_of(self, other):
+        """
+        True is self is a (strict) descendant of other.
+        """
+        parent = self.parent_context_math_object
+        if parent:
+            return parent == other or parent.is_descendant_of(other)
+
     @classmethod
     def whose_math_type_is(cls, math_type: MathObject):
         """
