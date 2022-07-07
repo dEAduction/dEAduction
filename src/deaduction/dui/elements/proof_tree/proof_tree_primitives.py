@@ -740,6 +740,7 @@ class ContextWidget(QWidget):
     def __init__(self, math_objects):
         super().__init__()
         self.operator = None
+        self.type_ = None
         self.layout = QHBoxLayout()
         self.layout.addStretch(1)
         self.input_layout: Optional[LayoutMathObjects] = None
@@ -761,7 +762,14 @@ class ContextWidget(QWidget):
 
     def math_wdg_at(self, i):
         if i < len(self.math_objects) and i < self.layout.count()-1:
-            return self.layout.itemAt(i+1).widget()
+            return self.layout.itemAt(i).widget()
+
+    @property
+    def pure_context_widget(self):
+        """
+        Artificial way of disguising self into a PureContextWGB.
+        """
+        return self
 
     @property
     def premises(self):
@@ -864,8 +872,8 @@ class ContextWidget(QWidget):
             match = self.match_premises_math_object(other)
             if match:
                 i, j = match
-                # print("Link found math_objects:")
-                # print(match)
+                print("Link found math_objects:")
+                print(match)
                 self.input_layout.put_at_beginning(i)
                 return (other.math_wdg_at(j),
                         self.input_layout.math_wdg_at_beginning)
@@ -1101,29 +1109,14 @@ class TargetWidget(QWidget):
         for wdg in self.all_widgets:
             wdg.show() if self.title_label.disclosed else wdg.hide()
 
-    # def set_status(self):
-    #     """
-    #     Display the status msg, if any.
-    #     """
-    #     # FIXME: should be useless
-    #     # log.debug(f"Setting status msg {self.status_msg} for goal nb "
-    #     #           f"{self.parent_wgb.goal_nb}")
-    #
-    #     # if self.target_is_substituted:
-    #     #     self.status_label.hide()
-    #     # elif not self.status_msg:
-    #     #     self.status_label.hide()
-    #     # else:
-    #     #     self.status_label.show()
-    #     #     self.status_label.setText(self.status_msg)
-    #     #     self.status_label.text = self.status_msg
-    #     self.current_status_label.set_msg()
-
     def link_last_child(self):
         """
         Try to link input / operator of last child to output of previous child.
+        Previous child's class is either WidgetGoalBlock, or ContextWidget
+        (as context2 of a WidgetGoalBlock inserted as first child of
+        self.content_layout).
         """
-        # TODO: try to link self.context2. Add color.
+        # TODO: try to link self.context2.
         match = None
         nb = self.content_layout.count()
         if nb < 2:
@@ -1132,10 +1125,11 @@ class TargetWidget(QWidget):
         child1 = self.content_layout.itemAt(nb-1).widget()  # WidgetGoalBlock
         child2 = self.content_layout.itemAt(nb-2).widget()
         child1_widget = child1.pure_context_widget
+        # NB: child2 may be a ContextWidget, in which case
+        # child2.pure_context_widget artificially refers to child2.
         child2_widget = child2.pure_context_widget
         if child1_widget:
-            match = child1_widget.find_link(
-                child2_widget)
+            match = child1_widget.find_link(child2_widget)
         if not match:
             return
         source_wdg, target_wdg = match
