@@ -872,8 +872,8 @@ class ContextWidget(QWidget):
             match = self.match_premises_math_object(other)
             if match:
                 i, j = match
-                print("Link found math_objects:")
-                print(match)
+                # print("Link found math_objects:")
+                # print(match)
                 self.input_layout.put_at_beginning(i)
                 return (other.math_wdg_at(j),
                         self.input_layout.math_wdg_at_beginning)
@@ -1064,7 +1064,13 @@ class TargetWidget(QWidget):
     def children_layout(self):
         return self.content_layout
 
-    def set_as_current_target(self, yes=True, blinking=True):
+    def set_as_current_target(self, yes=True, blinking=True) \
+            -> Optional[QWidget]:
+        """
+        Set self as current target, i.e. highlight target in boldface and make
+        status_msg blinks. Return current_status_label, that should be made
+        visible in the ScrollArea.
+        """
         if yes:
             log.debug(f"Setting goal nb {self.parent_wgb.goal_nb} as current "
                       f"target")
@@ -1074,7 +1080,8 @@ class TargetWidget(QWidget):
             if blinking:
                 # self.set_status()
                 self.current_status_label.start_blinking()
-                self.parent_wgb.make_visible(self.current_status_label)  # Fixme
+                # self.parent_wgb.make_visible(self.current_status_label)
+                return self.current_status_label
             else:
                 self.current_status_label.stop_blinking()
                 # This is not pertinent:

@@ -29,7 +29,7 @@ from typing import Union, Optional
 from PySide2.QtWidgets import (QApplication, QLayout, QVBoxLayout, QWidget,
                                QSizePolicy)
 from PySide2.QtWidgets import QScrollArea
-from PySide2.QtCore import Slot, QSettings, QEvent
+from PySide2.QtCore import Slot, QSettings, QTimer
 from PySide2.QtGui import QPainter
 
 import sys
@@ -588,12 +588,15 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         If self has a target_widget, then its target will be set as current.
         If not, then self is inside a children_layout, of some target_widget
         of some ascendant, and this target_widget should be set as current.
+        If some widget is made blinking then it will be returned, to be made
+        visible in the ScrollArea.
         """
         if self.target_widget:
-            self.target_widget.set_as_current_target(yes, blinking)
-            # TODO: set visible in scroll area
+            wdg = self.target_widget.set_as_current_target(yes, blinking)
+            return wdg
         elif yes and self.logical_parent:
-            self.logical_parent.set_as_current_target(True, blinking)
+            wdg = self.logical_parent.set_as_current_target(True, blinking)
+            return wdg
 
     def unset_current_target_recursively(self):
         self.set_as_current_target(False)
@@ -601,14 +604,19 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         for child in self.logical_children:
             child.unset_current_target_recursively()
 
-    def set_current_target_recursively(self, goal_nb, blinking=True):
+    def set_current_target_recursively(self, goal_nb, blinking=True) \
+            -> Optional[QWidget]:
         if self.goal_nb == goal_nb:
-            self.set_as_current_target(yes=True, blinking=blinking)
+            wdg = self.set_as_current_target(yes=True, blinking=blinking)
+            return wdg
         # else:
         #     self.set_as_current_target(False)
 
         for child in self.logical_children:
-            child.set_current_target_recursively(goal_nb, blinking=blinking)
+            wdg = child.set_current_target_recursively(goal_nb,
+                                                      blinking=blinking)
+            if wdg:
+                return wdg
 
     def make_visible(self, wdg: QWidget):
         """
@@ -773,6 +781,56 @@ class ProofTreeWindow(QWidget):
 
         self.set_style_sheet()
 
+        if settings.value("isVisible"):
+            self.setVisible(bool(settings.value("isVisible")))
+
+    def set_main_block(self, block: WidgetGoalBlock):
+        self.main_block = block
+        self.main_window.setWidget(block)
+        self.current_wgb = block
+        # self.main_block.set_as_current_target()
+
+    def update_display(self):
+        if self.main_block:
+            self.main_block.update_display_recursively()
+
+    def unset_current_target(self):
+        self.main_block.unset_current_target_recursively()
+
+    def set_current_target(self, goal_nb, blinking=True) -> Optional[QWidget]:
+        wdg = self.main_block.set_current_target_recursively(goal_nb, blinking)
+        return wdg
+
+    def closeEvent(self, event):
+        # Save window geometry
+        settings = QSettings("deaduction")
+        settings.setValue("proof_tree/geometry", self.saveGeometry())
+        settings.setValue("isVisible", self.isVisible())
+        event.accept()
+        self.hide()
+        # TODO: save tree state
+
+    @Slot()
+    def toggle(self):
+        self.setVisible(not self.isVisible())
+
+    # def paintEvent(self, event):
+    #     """ For debugging. """
+    #     painter = QPainter(self)
+    #     paint_layout(painter, self.main_block)
+
+    def make_visible(self, wdg):
+        """
+        Scroll to make wdg visible. We use a Qtimer because we have to wait
+        that all widgets are shown, so that their size is determined, before
+        calling ensureVisible.
+        """
+        def make_vis():
+            # print("Pan!")
+            self.main_window.ensureWidgetVisible(wdg)
+        QTimer.singleShot(0, make_vis)
+        # self.main_window.ensureWidgetVisible(wdg)
+
     def set_style_sheet(self):
         color_var = cvars.get("display.color_for_variables")
         color_prop = cvars.get("display.color_for_props")
@@ -843,39 +901,6 @@ class ProofTreeWindow(QWidget):
                            #     "border-style: solid;"
                            #     "border-radius: 10px;}"
                            )
-
-    def set_main_block(self, block: WidgetGoalBlock):
-        self.main_block = block
-        self.main_window.setWidget(block)
-        self.current_wgb = block
-        # self.main_block.set_as_current_target()
-
-    def update_display(self):
-        if self.main_block:
-            self.main_block.update_display_recursively()
-
-    def unset_current_target(self):
-        self.main_block.unset_current_target_recursively()
-
-    def set_current_target(self, goal_nb, blinking=True):
-        self.main_block.set_current_target_recursively(goal_nb, blinking)
-
-    def closeEvent(self, event):
-        # Save window geometry
-        settings = QSettings("deaduction")
-        settings.setValue("proof_tree/geometry", self.saveGeometry())
-        event.accept()
-        self.hide()
-        # TODO: save tree state
-
-    @Slot()
-    def toggle(self):
-        self.setVisible(not self.isVisible())
-
-    # def paintEvent(self, event):
-    #     """ For debugging. """
-    #     painter = QPainter(self)
-    #     paint_layout(painter, self.main_block)
 
 
 def main():

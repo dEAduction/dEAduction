@@ -211,17 +211,18 @@ class ProofTreeController:
         that reflects the GoalNodes of the proof tree. Then these new widgets
         are inserted by the update_display method.
         """
+        ptw = self.proof_tree_window
         if not self.proof_tree.root_node:
             return
-        elif not self.proof_tree_window.main_block:
+        elif not ptw.main_block:
             main_block = widget_goal_block(None,
                                            self.proof_tree.root_node)
-            self.proof_tree_window.set_main_block(main_block)
+            ptw.set_main_block(main_block)
 
         current_goal_node = self.proof_tree.current_goal_node
         # (1) Adapt ProofTreeWindow to ProofTree:
         # log.info("Updating proof tree widget from proof tree.")
-        update_from_node(self.proof_tree_window.main_block,
+        update_from_node(ptw.main_block,
                          self.proof_tree.root_node)
 
         # (2) Enable / disable to adapt to history move:
@@ -237,14 +238,18 @@ class ProofTreeController:
 
         # (3) Update display of ProofTreeWindow subwidgets:
         log.info(f"Updating...")
-        self.proof_tree_window.unset_current_target()
-        self.proof_tree_window.update_display()
+        ptw.unset_current_target()
+        ptw.update_display()
 
         # (4) Set current target:
         goal_nb = current_goal_node.goal_nb
         log.info(f"Setting current target, current goal nb {goal_nb}...")
-        self.proof_tree_window.set_current_target(goal_nb,
-                                                  blinking=self.is_at_end())
+        wdg = ptw.set_current_target(goal_nb, blinking=self.is_at_end())
+        if wdg:
+            # print("Ensuring visible")
+            ptw.make_visible(wdg)
+            # ptw.main_window.ensureWidgetVisible(wdg, ymargin=0)
+
         wgb = self.wgb_from_goal_nb(1)
         if wgb and wgb.target_widget:
             log.debug(f"Current status_msg for gn1 is "
