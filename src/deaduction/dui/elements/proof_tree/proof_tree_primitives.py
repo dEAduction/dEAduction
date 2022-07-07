@@ -372,10 +372,16 @@ class VerticalArrow(QWidget):
 
 
 class HorizontalArrow(QWidget):
-    def __init__(self, width=50, arrow_height=4, style=Qt.SolidLine):
+    """
+    Display a horizontal arrow. The width is computed via a callable, so that
+    it can be determined on the flight, after the label widget is shown.
+    """
+    def __init__(self, width=50, arrow_height=4, style=Qt.SolidLine,
+                 callable_width=None):
         super(HorizontalArrow, self).__init__()
         self.style = style
         self.width = width
+        self.callable_width = callable_width
         self.setFixedWidth(width)
         self.setFixedHeight(arrow_height*3)
         self.pen_width = 1
@@ -394,6 +400,8 @@ class HorizontalArrow(QWidget):
 
         origin = mid_left(rectangle)
         end = mid_right(rectangle)
+        if self.callable_width:
+            self.set_width(self.callable_width())
         paint_arrow(origin=origin, end=end, painter=painter,
                     arrow_height=self.arrow_height, style=self.style,
                     color=self.color(),
@@ -707,8 +715,9 @@ class SubstitutionArrow(QWidget):
 
         # Arrow
         arrow_layout = QHBoxLayout()
-        self.arrow_wdg = HorizontalArrow(width=self.label_width + 100,
-                                         style=Qt.DashLine)
+        self.arrow_wdg = HorizontalArrow(style=Qt.DashLine,
+                                         callable_width=self.dynamic_width)
+                                         # width=self.label_width + 100)
         arrow_layout.addStretch(1)
         arrow_layout.addWidget(self.arrow_wdg)
         arrow_layout.addStretch(1)
@@ -724,6 +733,9 @@ class SubstitutionArrow(QWidget):
         self.setLayout(layout)
         self.rw_label.show()
         fake_label.hide()
+
+    def dynamic_width(self):
+        return self.rw_label.geometry().width() + 50
 
 
 ###########################
