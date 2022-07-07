@@ -38,7 +38,7 @@ import deaduction.pylib.config.vars as cvars
 
 from deaduction.dui.elements.proof_tree.proof_tree_primitives import \
     BlinkingLabel, ProofTitleLabel, \
-    ContextWidget, TargetWidget, PureContextWidget, SubstitutionContextWidget, \
+    ContextWidget, TargetWidget, OperatorContextWidget, SubstitutionContextWidget, \
     TargetSubstitutionArrow, paint_layout
 
 global _
@@ -241,7 +241,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         self._is_target_substituted = False
 
         # Main widgets containers:
-        self.pure_context_widget: Optional[PureContextWidget] = None
+        self.pure_context_widget: Optional[OperatorContextWidget] = None
         self.context1_widget: Optional[ContextWidget] = None
         self.target_widget: Optional[TargetWidget] = None
         if self.target:
@@ -360,14 +360,16 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         if self.pure_context:
             premises, operator, conclusions, type_ = self.pure_context
             if type_ == "operator":
-                self.pure_context_widget = PureContextWidget(premises,
-                                                             operator,
-                                                             conclusions)
+                self.pure_context_widget = OperatorContextWidget(premises,
+                                                                 operator,
+                                                                 conclusions)
             elif type_ == "substitution":
                 self.pure_context_widget = SubstitutionContextWidget(premises,
                                                                      operator,
                                                                      conclusions
                                                                      )
+            elif type_ == "no operator":
+                self.pure_context_widget = ContextWidget(conclusions)
 
             self.main_layout.insertWidget(0, self.pure_context_widget)
             return
@@ -668,11 +670,14 @@ class PureContextWGB(WidgetGoalBlock):
 
     def __init__(self, logical_parent, goal_node,
                  premises, operator, conclusions):
-        super().__init__(logical_parent, goal_node,
-                         pure_context=(premises, operator, conclusions,
-                                       "operator"))
-        # TODO: merge with child PureContextWGB if child's premises == self's
-        #  conclusion
+        if operator:
+            super().__init__(logical_parent, goal_node,
+                             pure_context=(premises, operator, conclusions,
+                                           "operator"))
+        else:
+            super().__init__(logical_parent, goal_node,
+                             pure_context=(premises, None, conclusions,
+                                           "no operator"))
 
 
 class SubstitutionWGB(WidgetGoalBlock):
@@ -682,8 +687,6 @@ class SubstitutionWGB(WidgetGoalBlock):
         super().__init__(logical_parent, goal_node,
                          pure_context=(premises, rw_item, conclusions,
                                        "substitution"))
-        # TODO: merge with child SubstitutionWGB if child's premises == self's
-        #  conclusion
 
 
 class TargetSubstitutionWGB(WidgetGoalBlock):
@@ -747,6 +750,7 @@ class ProofTreeWindow(QWidget):
         Context and target are the elements of the initial goal, if any.
         """
         super().__init__()
+        log.info("Creating new ProofTreeWindow")
         self.setWindowTitle("Proof Tree")
         self.current_wgb = None
         settings = QSettings("deaduction")
@@ -879,8 +883,8 @@ def main():
     # label_bf.setStyleSheet("{font-weight: bold;}")
     # pcw = HorizontalArrow(100)
     # pcw = SubstitutionArrow("f(x)=y mais aussi TOTO le clown")
-    pcw = PureContextWidget(["y dans A"], "f(x)=y et aussi toto",
-                                    ["f(x) dans A"])
+    pcw = OperatorContextWidget(["y dans A"], "f(x)=y et aussi toto",
+                                ["f(x) dans A"])
     pcw.show()
 
     # main_window = ProofTreeWindow()

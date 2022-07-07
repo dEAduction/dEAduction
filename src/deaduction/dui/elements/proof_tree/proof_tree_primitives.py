@@ -539,13 +539,17 @@ class LayoutMathObject(QHBoxLayout):
 
     def __init__(self, math_object, align=None, new=True):
         super().__init__()
-        self.core_wdg = GenericLMO(math_object, new=new)
+        self.math_wdg = GenericLMO(math_object, new=new)
 
         if align in (None, "right"):
             self.addStretch(1)
-        self.addWidget(self.core_wdg)
+        self.addWidget(self.math_wdg)
         if align in (None, "left"):
             self.addStretch(1)
+
+    @property
+    def math_object(self):
+        return self.math_wdg.math_object
 
 
 class LayoutMathObjects(QVBoxLayout):
@@ -573,31 +577,23 @@ class LayoutMathObjects(QVBoxLayout):
         lyt = self.layout()
         return [lyt.itemAt(i+1) for i in range(self.nb_objects)]
 
-    def core_wdg_at(self, i):
-        return self.lyt_math_objects[i].core_wdg
+    def math_wdg_at(self, i):
+        return self.lyt_math_objects[i].math_wdg
 
     def math_object_at(self, i):
-        return self.core_wdg_at(i).math_object
+        return self.math_wdg_at(i).math_object
 
     @property
     def math_objects(self):
         return [self.math_object_at(i) for i in range(self.nb_objects)]
 
     @property
-    def math_object_wdg_at_beginning(self):
-        return self.core_wdg_at(0)
+    def math_wdg_at_beginning(self):
+        return self.math_wdg_at(0)
 
     @property
-    def math_object_wdg_at_end(self):
-        return self.core_wdg_at(self.nb_objects-1)
-
-    # @property
-    # def math_object_at_beginning(self):
-    #     return self.math_objects[0]
-    #
-    # @property
-    # def math_object_at_end(self):
-    #     return self.math_objects[self.nb_objects-1]
+    def math_wdg_at_end(self):
+        return self.math_wdg_at(self.nb_objects-1)
 
     def put_at_end(self, i):
         """
@@ -642,10 +638,10 @@ class LayoutOperator(QWidget):
 
     def __init__(self, math_object):
         super().__init__()
-        self.core_wdg = OperatorLMO(math_object)
+        self.math_wdg = OperatorLMO(math_object)
         layout = QVBoxLayout()
         layout.addStretch(1)
-        layout.addWidget(self.core_wdg)
+        layout.addWidget(self.math_wdg)
         layout.addStretch(1)
         self.setLayout(layout)
 
@@ -737,18 +733,19 @@ class ContextWidget(QWidget):
     """
     A widget for displaying new context objects on one line.
     If called with math_objects, will just display those math_objects on 1 line.
-    Descendant class PureContextWidget displays a logical inference.
+    Descendant class OperatorContextWidget displays a logical inference.
     Descendant class SubstitutionContextWidget displays some context rewriting.
     """
 
     def __init__(self, math_objects):
         super().__init__()
+        self.operator = None
         self.layout = QHBoxLayout()
         self.layout.addStretch(1)
         self.input_layout: Optional[LayoutMathObjects] = None
         self.output_layout: Optional[LayoutMathObjects] = None
 
-        self.math_objects = []
+        self.math_objects = math_objects if math_objects else []
         for math_object in math_objects:
             self.add_child(math_object)
 
@@ -758,9 +755,13 @@ class ContextWidget(QWidget):
         """
         Insert a child math_object at the end, just before the stretch item.
         """
-        self.math_objects.append(math_object)
+        # self.math_objects.append(math_object)
         item = GenericLMO(math_object)
         self.layout.insertWidget(self.layout.count()-1, item)
+
+    def math_wdg_at(self, i):
+        if i < len(self.math_objects) and i < self.layout.count()-1:
+            return self.layout.itemAt(i+1).widget()
 
     @property
     def premises(self):
@@ -781,6 +782,20 @@ class ContextWidget(QWidget):
             return []
         return self.output_layout.math_objects
 
+    def match_premises_math_object(self, other):
+        """
+        Check if some math_objects of self.premises is a descendant of one
+        other.math_objects. If so, return a couple (i,j)
+        where self.premises[i] is a descendant of other.math_objects[j].
+        """
+        match = None
+        for mo1 in self.premises:
+            for mo2 in other.math_objects:
+                if mo1 == mo2 or mo1.is_descendant_of(mo2):
+                    match = (mo1, mo2)
+        if match:
+            return self.premises.index(mo1), other.math_objects.index(mo2)
+
     def match_premises_conclusions(self, other):
         """
         Check if some math_objects of self.premises is a descendant of one
@@ -796,7 +811,30 @@ class ContextWidget(QWidget):
         if match:
             return self.premises.index(mo1), other.conclusions.index(mo2)
 
+    def match_operator_math_objects(self, other):
+        """
+        Check if the math_object represented by self.operator_wdg is a
+        descendant of one math_object of other.conclusions. If so, return the
+        index of the matching conclusion.
+        """
+        if not self.operator_wdg:
+            return
+        match = None
+        operator = self.operator_wdg.math_object
+        if not isinstance(operator, ContextMathObject):
+            return
+        for mo in other.math_objects:
+            if operator == mo or operator.is_descendant_of(mo):
+                match = mo
+        if match:
+            return other.math_objects.index(match)
+
     def match_operator_conclusions(self, other):
+        """
+        Check if the math_object represented by self.operator_wdg is a 
+        descendant of one math_object of other.conclusions. If so, return the
+        index of the matching conclusion.
+        """
         if not self.operator_wdg:
             return
         match = None
@@ -818,25 +856,45 @@ class ContextWidget(QWidget):
         of the pile of premises.
         Return the couple of widgets corresponding to linked objects (or None).
         """
-        # todo: Add operator checking
-        match = self.match_premises_conclusions(other)
-        if match:
-            i, j = match
-            print("Link found:")
-            print(match)
-            self.input_layout.put_at_beginning(i)
-            other.output_layout.put_at_end(j)
-            return (other.output_layout.math_object_wdg_at_end,
-                    self.input_layout.math_object_wdg_at_beginning)
+        assert isinstance(other, ContextWidget)
 
-        match = self.match_operator_conclusions(other)
-        if match is not None:
-            other.output_layout.put_at_end(match)
-            return (other.output_layout.math_object_wdg_at_end,
-                    self.operator_wdg)
+        # (1) Try other.math_objects
+        if other.math_objects:
+            # (1.1) With premises
+            match = self.match_premises_math_object(other)
+            if match:
+                i, j = match
+                # print("Link found math_objects:")
+                # print(match)
+                self.input_layout.put_at_beginning(i)
+                return (other.math_wdg_at(j),
+                        self.input_layout.math_wdg_at_beginning)
+            else:
+                # (1.2) With operator
+                match = self.match_operator_math_objects(other)
+                if match is not None:
+                    return (other.math_wdg_at(match),
+                            self.operator_wdg)
+
+        else:  # (2) Try other.conclusions, with premises and operator
+            match = self.match_premises_conclusions(other)
+            if match:
+                i, j = match
+                # print("Link found premises:")
+                # print(match)
+                self.input_layout.put_at_beginning(i)
+                other.output_layout.put_at_end(j)
+                return (other.output_layout.math_wdg_at_end,
+                        self.input_layout.math_wdg_at_beginning)
+            else:
+                match = self.match_operator_conclusions(other)
+                if match is not None:
+                    other.output_layout.put_at_end(match)
+                    return (other.output_layout.math_wdg_at_end,
+                            self.operator_wdg)
 
 
-class PureContextWidget(ContextWidget):
+class OperatorContextWidget(ContextWidget):
     """
     A widget for displaying new context object from a pure context step,
     e.g. modus ponens, shown as output of an "operator" object receiving some
@@ -853,7 +911,7 @@ class PureContextWidget(ContextWidget):
         self.input_layout = None
         self.operator_layout = None
 
-        assert conclusions
+        assert operator and conclusions
         self.output_layout = LayoutMathObjects(conclusions, align="left")
 
         # Input -> Operator -> output:
@@ -874,7 +932,7 @@ class PureContextWidget(ContextWidget):
 
     @property
     def operator_wdg(self):
-        return self.operator_layout.core_wdg
+        return self.operator_layout.math_wdg
 
 
 class SubstitutionContextWidget(ContextWidget):
@@ -1141,7 +1199,8 @@ class TargetWidget(QWidget):
         """
         Paint the curved arrows linking successive output / inputs.
         """
-
+        # FIXME: this way of doing is not compatible with disabling arrow.
+        #  --> put the arrow in a widget, that can be disabled.
         painter = QPainter(self)
         for arrow in self.curved_arrows:
             # if arrow.origin_wdg.isEnabled() and arrow.end_wdg.isEnabled():

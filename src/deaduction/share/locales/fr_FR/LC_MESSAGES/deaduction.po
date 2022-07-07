@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-06-05 18:42+0200\n"
-"PO-Revision-Date: 2022-06-05 18:44+0200\n"
+"POT-Creation-Date: 2022-07-06 15:50+0200\n"
+"PO-Revision-Date: 2022-07-06 15:50+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "Generated-By: pygettext.py 1.5\n"
-"X-Generator: Poedit 3.0.1\n"
+"X-Generator: Poedit 3.1\n"
 "X-Poedit-Basepath: ../../../..\n"
 "X-Poedit-SearchPath-0: .\n"
 
@@ -24,7 +24,9 @@ msgid "Button"
 msgstr "Bouton"
 
 #: dui/elements/actions_widgets_classes.py:160
-#: dui/elements/config_window.py:341 dui/primitives/disclosure_triangle.py:81
+#: dui/elements/config_window.py:341
+#: dui/elements/proof_tree/proof_tree_primitives.py:481
+#: dui/primitives/disclosure_triangle.py:81
 #: pylib/math_display/display_data.py:255 pylib/proof_tree/proof_tree.py:396
 msgid ":"
 msgstr " :"
@@ -218,19 +220,23 @@ msgstr "Détails"
 msgid "Move to selected step"
 msgstr "Aller"
 
-#: dui/elements/proof_tree/proof_tree_primitives.py:768
+#: dui/elements/proof_tree/proof_tree_widget.py:320
 msgid "THE END"
 msgstr "FIN !"
 
-#: dui/elements/proof_tree/proof_tree_primitives.py:770
+#: dui/elements/proof_tree/proof_tree_widget.py:322
 msgid "(admitted)"
 msgstr "(admis)"
 
-#: dui/elements/proof_tree/proof_tree_primitives.py:772
+#: dui/elements/proof_tree/proof_tree_widget.py:324
 #: pylib/coursedata/course_metadata_translations.py:32
 #: pylib/text/tooltips.py:121 pylib/text/tooltips.py:123
 msgid "Goal!"
 msgstr "But !"
+
+#: dui/elements/proof_tree/proof_tree_widget.py:328
+msgid "( ... under construction... )"
+msgstr "(... preuve en cours...)"
 
 #: dui/stages/exercise/Coordinator.py:718
 msgid "Code from editor"
@@ -1052,22 +1058,22 @@ msgstr "Boutons « preuve »"
 msgid "Exercises in statements list"
 msgstr "Exercices dans la liste d’énoncés"
 
-#: pylib/coursedata/exercise_classes.py:220
+#: pylib/coursedata/exercise_classes.py:223
 msgid "implicit use allowed"
 msgstr "peut être utilisée implicitement"
 
-#: pylib/coursedata/exercise_classes.py:268
-#: pylib/coursedata/exercise_classes.py:277
+#: pylib/coursedata/exercise_classes.py:271
+#: pylib/coursedata/exercise_classes.py:280
 msgid "definition"
 msgstr "définition"
 
-#: pylib/coursedata/exercise_classes.py:270
-#: pylib/coursedata/exercise_classes.py:279
+#: pylib/coursedata/exercise_classes.py:273
+#: pylib/coursedata/exercise_classes.py:282
 msgid "theorem"
 msgstr "théorème"
 
-#: pylib/coursedata/exercise_classes.py:272
-#: pylib/coursedata/exercise_classes.py:281
+#: pylib/coursedata/exercise_classes.py:275
+#: pylib/coursedata/exercise_classes.py:284
 msgid "exercise"
 msgstr "exercice"
 

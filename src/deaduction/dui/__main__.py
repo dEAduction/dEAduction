@@ -204,7 +204,7 @@ class WindowManager(QObject):
     def __init__(self, nursery, exercise=None):
         super().__init__()
 
-        self.coordinator: Coordinator            = None
+        self.coordinator:     Coordinator        = None
         self.chooser_window:  StartCoExStartup   = None
         self.servint:         ServerInterface    = None
         self.test_window:     QTestWindow        = None

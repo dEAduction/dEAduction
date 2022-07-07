@@ -29,8 +29,8 @@ from typing import Union, Optional
 
 from deaduction.dui.elements.proof_tree.proof_tree_widget import \
     (ProofTreeWindow, WidgetGoalBlock, ByCasesWGB, SubstitutionWGB,
-        PureContextWGB, EmptyWGB, GoalSolvedWGB, TargetSubstitutionWGB,
-        IntroWGB, IntroImpliesWGB)
+     ContextWidget, PureContextWGB, EmptyWGB, GoalSolvedWGB,
+     TargetSubstitutionWGB, IntroWGB, IntroImpliesWGB)
 
 global _
 
