@@ -99,7 +99,7 @@ class BlinkingLabel(QLabel):
         self.timer.timeout.connect(self.blink)
         # self.start_blinking()
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self._is_deactivated = False
+        self._is_activated = None
         self.disclosed = True
 
     def start_blinking(self):
@@ -133,8 +133,12 @@ class BlinkingLabel(QLabel):
         self.flag = not self.flag
         # log.debug(f"Blinking gn {self.goal_nb}, text = {self.text}")
 
-    def deactivate(self, yes=True):
-        self._is_deactivated = yes
+    def activate(self, yes=True):
+        """
+        A blinking label will be shown ONLY IF activated. The only way to be
+        activated is to be displayed in a TargetWidget.
+        """
+        self._is_activated = yes
 
     def update_text(self):
         self.setText(self.text())
@@ -142,7 +146,7 @@ class BlinkingLabel(QLabel):
     def set_msg(self):
         if not self.text():
             self.hide()
-        elif not self._is_deactivated:
+        elif self._is_activated:
             self.update_text()
             self.show()
 
@@ -1031,7 +1035,8 @@ class TargetWidget(QWidget):
         self.title_label = title_label
         self.title_label.setTextFormat(Qt.RichText)
         self.title_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.status_lbls = [status_label] if status_label else []
+        self.status_lbls: [BlinkingLabel] = []
+        self.add_status_lbl(status_label)
         self.substituted_title_lbls = []
         self.substitution_arrows = []
 
@@ -1071,6 +1076,13 @@ class TargetWidget(QWidget):
     @property
     def current_status_label(self) -> BlinkingLabel:
         return self.status_lbls[-1]
+
+    def add_status_lbl(self, child_status_lbl):
+        if self.status_lbls:
+            self.current_status_label.activate(False)
+        # self.current_status_label.deactivate()
+        child_status_lbl.activate()
+        self.status_lbls.append(child_status_lbl)
 
     @property
     def children_layout(self):
@@ -1189,7 +1201,8 @@ class TargetWidget(QWidget):
             child_status_lbl = child.status_label
             # Record new title and status labels:
             self.substituted_title_lbls.append(child_title_lbl)
-            self.status_lbls.append(child_status_lbl)
+            self.add_status_lbl(child_status_lbl)
+            # self.status_lbls.append(child_status_lbl)
 
             # Display new title, content, and status ; modify vertical bar:
             self.main_layout.addWidget(child_title_lbl,
