@@ -566,7 +566,8 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
             log.debug(f"Updating WGB for goal_nb {self.goal_nb}")
             self.set_layout_without_children()
             self.set_children_widgets()
-        # if self.target_widget:
+        if self.target_widget:
+            self.target_widget.update()
         #     self.target_widget.set_status()
         if self.status_label:
             self.status_label.set_msg()

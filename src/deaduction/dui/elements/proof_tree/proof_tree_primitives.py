@@ -264,7 +264,7 @@ def points_for_curved_arrow(origin_wdg: QWidget, end_wdg: QWidget,
 
 def paint_curved_arrow(points: [QPoint],
                        painter: QPainter,
-                       arrow_height=4, style=Qt.SolidLine,
+                       style=Qt.DotLine,
                        color=None, pen_width=1):
     """
     Use painter to draw a (quadratic Bezier) curved arrow.
@@ -277,7 +277,8 @@ def paint_curved_arrow(points: [QPoint],
     path.quadTo(points[1], points[2])
     path.quadTo(points[3], points[4])
     pen = QPen(QColor(color))
-    pen.setStyle(Qt.DotLine)
+    pen.setStyle(style)
+    pen.setWidth(pen_width)
     painter.setPen(pen)
     painter.drawPath(path)
 
@@ -1193,7 +1194,7 @@ class TargetWidget(QWidget):
             # Status label should not be displayed anymore:
             self.main_layout.removeWidget(self.current_status_label)
             self.current_status_label.hide()
-            self.current_status_label.deactivate()
+            self.current_status_label.activate(yes=False)
 
             nb_targets = len(self.content_layouts)
             child_title_lbl_pos = nb_targets*2
@@ -1229,9 +1230,9 @@ class TargetWidget(QWidget):
         #  --> put the arrow in a widget, that can be disabled.
         painter = QPainter(self)
         for arrow in self.curved_arrows:
-            # if arrow.origin_wdg.isEnabled() and arrow.end_wdg.isEnabled():
-            points = points_for_curved_arrow(arrow.origin_wdg,
-                                             arrow.end_wdg,
-                                             arrow.parent_wdg)
-            paint_curved_arrow(points, painter, color=arrow.color)
+            if arrow.origin_wdg.isEnabled() and arrow.end_wdg.isEnabled():
+                points = points_for_curved_arrow(arrow.origin_wdg,
+                                                 arrow.end_wdg,
+                                                 arrow.parent_wdg)
+                paint_curved_arrow(points, painter, color=arrow.color)
 
