@@ -240,8 +240,8 @@ class ProofOutlineTreeWidget(QTreeWidget):
         new_widget_item = ProofTreeWidgetItem(parent=parent_item,
                                               proof_item=proof_item)
         self.widgets.append(new_widget_item)
-        log.debug("New list:")
-        log.debug(self.widgets_debug)
+        # log.debug("New list:")
+        # log.debug(self.widgets_debug)
         return new_widget_item
 
     def delete_and_insert(self, proof_step: ProofStep):

@@ -56,3 +56,5 @@ from .config_window import ConfigMainWindow
 
 from .proof_outline_widget import ProofOutlineWindow
 
+from .proof_tree import ProofTreeController
+

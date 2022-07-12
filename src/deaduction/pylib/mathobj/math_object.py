@@ -177,6 +177,9 @@ class MathObject:
         self.bound_vars = bound_vars
         self.math_type = math_type
 
+    def __repr__(self):
+        return self.to_display(format_="utf8")
+
     def process_sequences_and_likes(self):
         """
         This method is called at each MathObject instantiation from lean
@@ -524,9 +527,9 @@ class MathObject:
         # Include case of NO_MATH_TYPE (avoid infinite recursion!)
         if self is other:
             return True
-        # if self is NO_MATH_TYPE \
-        #         and other is NO_MATH_TYPE:
-        #     return True
+
+        if other is None or not isinstance(other, MathObject):
+            return False
 
         # Node
         elif node != other.node:
@@ -824,6 +827,32 @@ class MathObject:
         else:
             math_type = self.math_type
         return math_type.node == "QUANT_∀"
+
+    # def implicit_for_all(self):
+    #     test = self.is_for_all(implicit=True)
+    #     if not test:
+    #         return None
+    #     if self.is_for_all():
+    #         return self
+    #     else:
+    #         return self.last_rw_object
+
+    def implicit(self, test: callable):
+        """
+        Call the implicit version of test.
+         - if test is False, return None,
+         - if test  is explicitly True, return self,
+         - if test is implicitly True, return the implicit version of self.
+
+         :param test: one of is_and, is_or, is_implication, is_exists,
+                      is_for_all.
+        """
+        if not test(self, implicit=True, is_math_type=True):
+            return None
+        if test(self, implicit=False, is_math_type=True):
+            return self
+        else:
+            return self.last_rw_object
 
     def is_quantifier(self, is_math_type=False) -> bool:
         """
@@ -1243,7 +1272,8 @@ class MathObject:
 
         return abstract_string
 
-    def to_display(self, format_="html", text_depth=0) -> str:
+    def to_display(self, format_="html", text_depth=0,
+                   use_color=True, bf=False) -> str:
         """
         Return a displayable string version of self. First compute an
         abstract_string (i.e. a tree version) taking text_depth into account,
@@ -1256,7 +1286,9 @@ class MathObject:
 
         :param format_:     one of 'utf8', 'html', 'latex'
         :param text_depth:  if >0, will try to replace symbols by plain text
-        for the upper branches of the MathObject tree.
+        for the upper branches of the MathObject tree
+        :param use_color: use colors in html format
+        :param bf: use boldface fonts in html format.
         """
         # TODO: the case when text_depth is >0 but not "infinity" has not
         #  been tested.
@@ -1277,7 +1309,8 @@ class MathObject:
         log.debug(f"abstract string: {abstract_string}")
 
         # Adapt to format_ and concatenate to get a string
-        display = abstract_string_to_string(abstract_string, format_)
+        display = abstract_string_to_string(abstract_string, format_,
+                                            use_color=use_color, bf=bf)
 
         # (3) Replace latex macro by utf8:
         # if format_ == 'lean':
@@ -1428,6 +1461,11 @@ MathObject.NO_MORE_GOALS = MathObject(node="NO_MORE_GOAL",
                                       info={},
                                       children=[],
                                       math_type=None)
+
+MathObject.CURRENT_GOAL_SOLVED = MathObject(node="CURRENT_GOAL_SOLVED",
+                                            info={},
+                                            children=[],
+                                            math_type=None)
 
 MathObject.PROP = MathObject(node="PROP",
                              info={},

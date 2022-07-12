@@ -70,6 +70,8 @@ def html_color(s: str, color: str) -> str:
     # html_post = '</div>'
     html_pre = f"<font style='color:{color};'>"
     html_post = '</font>'
+    # html_pre = f"<font id='color'>"
+    # html_post = '</font>'
     return html_pre + s + html_post
 
 
@@ -114,6 +116,41 @@ def color_props():
             else None)
 
 
+def font_wrapper(s: str, bf=True):
+    if not bf:
+        return s
+    else:
+        html_pre = "<b>"
+        html_post = "</b>"
+        return html_pre + s + html_post
+
+
+def html_class_wrapper(s: str, class_name: str):
+    html_pre = f"<font class='{class_name}'>"
+    html_post = '</font>'
+    return html_pre + s + html_post
+
+
+def html_style_classes(color=True):
+    if color:
+        style = "<style>" \
+                f".variable  {{ color: {color_variables()} }}" \
+                f".dummy_variable  {{ color: {color_dummy_variables()} }}" \
+                f".used_prop  {{ color: {color_props()} }}" \
+                "</style>"
+    else:
+        style = ""
+    return style
+
+
+def html_display_single_string(string: str) -> str:
+    # Do this BEFORE formatting:
+    string = reserve_special_char(string)
+    # Formatting subscript/superscript:
+    string = sub_sup_to_html(string)
+    return string
+
+
 def recursive_html_display(l: Union[list, str], depth, use_color=True) -> str:
     """
     Use the following tags as first child:
@@ -136,28 +173,29 @@ def recursive_html_display(l: Union[list, str], depth, use_color=True) -> str:
     elif head == r'\super' or head == r'^':
         return superscript(recursive_html_display(l[1:], depth, use_color))
     elif head == r'\variable':
-        color = color_variables()
+        # color = color_variables()
         raw_string = recursive_html_display(l[1:], depth, use_color)
         formatted_string = variable_style(raw_string)
-        if color and use_color:
-            return html_color(formatted_string, color)
+        if use_color:
+            return html_class_wrapper(formatted_string, class_name="variable")
         else:
             return formatted_string
     elif head == r'\dummy_variable':
-        color = color_dummy_variables()
+        # color = color_dummy_variables()
         raw_string = recursive_html_display(l[1:], depth, use_color)
         formatted_string = variable_style(raw_string)
-        if color and use_color:
-            return html_color(formatted_string, color)
+        if use_color:
+            return html_class_wrapper(formatted_string,
+                                      class_name="dummy_variable")
         else:
             return formatted_string
     elif head == r'\used_property':
-        color = color_props()
-        if color and use_color:
+        # color = color_props()
+        if use_color:
             # Use color and forbid other colors in the text
-            return html_color(recursive_html_display(l[1:], depth,
-                                                     use_color=False),
-                              color)
+            return html_class_wrapper(recursive_html_display(l[1:], depth,
+                                      use_color=False),
+                                      class_name="used_prop")
         else:
             return recursive_html_display(l[1:], depth, use_color)
 
@@ -171,22 +209,16 @@ def recursive_html_display(l: Union[list, str], depth, use_color=True) -> str:
         return ''.join(strings)
 
 
-def html_display_single_string(string: str) -> str:
-    # Do this BEFORE formatting:
-    string = reserve_special_char(string)
-    # Formatting subscript/superscript:
-    string = sub_sup_to_html(string)
-    return string
-
-
-def html_display(abstract_string: Union[str, list], depth=0) -> str:
+def html_display(abstract_string: Union[str, list], depth=0,
+                 use_color=True,
+                 bf=False) -> str:
     """
     Return a html version of the string represented by abstract_string,
     which is a tree of string.
     """
     # FIXME: take tex_depth into account
     # if isinstance(abstract_string, list):
-    string = recursive_html_display(abstract_string, depth)
+    string = recursive_html_display(abstract_string, depth, use_color=use_color)
     # else:
     #     # Do this BEFORE formatting:
     #     abstract_string = reserve_special_char(abstract_string)
@@ -195,6 +227,8 @@ def html_display(abstract_string: Union[str, list], depth=0) -> str:
     assert isinstance(string, str)
     string = cut_spaces(string)
     string = replace_dubious_characters(string)
-    return string
+    string = font_wrapper(string, bf)  # Maybe use boldface fonts
+    style = html_style_classes(use_color)
+    return style + string
 
 

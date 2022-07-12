@@ -212,7 +212,9 @@ class MathObjectWidgetItem(QStandardItem):
         Change self's background to green if yes or to normal color
         (e.g. white in light mode) if not yes.
         """
-        self.setBackground(QBrush(QColor('limegreen')) if yes else QBrush())
+        background_color = cvars.get("display.color_for_selection", "LimeGreen")
+        self.setBackground(QBrush(QColor(background_color)) if yes
+                           else QBrush())
 
     # def has_math_object(self, math_object: MathObject) -> bool:
     #     return self.math_object is MathObject

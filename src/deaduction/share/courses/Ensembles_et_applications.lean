@@ -259,6 +259,7 @@ PrettyName
   Image d'une paire
 -/
 begin
+  targets_analysis,
     todo
 end
 
@@ -320,8 +321,6 @@ PrettyName
     Image directe par une composition
 -/
 begin
-    have H:= @definitions.applications.theorem.image_directe,
-    hypo_analysis,
     todo
 end
 
@@ -846,7 +845,10 @@ PrettyName
   Image réciproque et inclusion (iii)
 -/
 begin
-  todo
+  intros surj_f A B incl y y_dans_A,
+  have ex_x := surj_f y, cases ex_x with x eq,
+  have but: (x dans (set.preimage f A)),
+  todo, todo, assumption,
 end
 
 end injectivite_surjectivite_autres

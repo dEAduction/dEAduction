@@ -1,1 +1,3 @@
 Icons are from icons8.com. Style is 'Fluent'.
+
+right_arrow is 48x48

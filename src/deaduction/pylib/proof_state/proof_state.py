@@ -76,7 +76,6 @@ class Goal:
     """
     context:        [ContextMathObject]
     target:         ContextMathObject
-    future_tags:    [] = None
 
     @classmethod
     def from_lean_data(cls, hypo_analysis: str, target_analysis: str):
@@ -98,14 +97,14 @@ class Goal:
         # Put back "¿¿¿" and remove '\n', getting rid of the title line
         # ("context:")
         lines = ['¿¿¿' + item.replace('\n', '') for item in lines[1:]]
-        context = []
+        context: [ContextMathObject] = []
         for math_obj_string in lines:
             if math_obj_string.startswith("context:"):
                 continue
             else:
                 # Applying the parser
                 tree = lean_expr_with_type_grammar.parse(math_obj_string)
-                math_object = LeanEntryVisitor().visit(tree)
+                math_object:ContextMathObject = LeanEntryVisitor().visit(tree)
                 context.append(math_object)
 
         tree = lean_expr_with_type_grammar.parse(target_analysis)
@@ -127,6 +126,26 @@ class Goal:
     def context_props(self) -> [ContextMathObject]:
         props = [cmo for cmo in self.context if cmo.math_type.is_prop()]
         return props
+
+    @property
+    def new_context(self):
+        """
+        Return objects and props of the context that are new, i.e. they have
+        no parent.
+        """
+        return [cmo for cmo in self.context if cmo.is_new]
+
+    @property
+    def modified_context(self):
+        """
+        Return objects and props of the context that are new, i.e. they have
+        no parent.
+        """
+        return [cmo for cmo in self.context if cmo.is_modified]
+
+    def remove_future_info(self):
+        for obj in self.context:
+            obj.remove_future_info()
 
     def math_object_from_name(self, name: str) -> MathObject:
         """
@@ -161,12 +180,11 @@ class Goal:
 
         :return: no direct return, but
             - the context is permuted (see the Goal class documentation)
-            - the future_tags attribute are set, as a list of tags,
-            each element being the tag of the corresponding element in the
-            context list.
+            - objects of the context are linked to objects of the previous
+            context via the parent/child attribute.
         """
 
-        # TODO: copy old tags (attributes of ContextMathObject) to new object
+        # FIXME: tags are now useless?
         new_goal = self
         new_context = new_goal.context.copy()
         old_context = old_goal.context.copy()
@@ -177,7 +195,6 @@ class Goal:
         # None objects (corresponding to object that have disappeared) will be
         # removed from the list
         permuted_new_context = [None] * len(old_context)
-        permuted_new_tags    = [None] * len(old_context)
 
         log.info("Comparing and tagging old goal and new goal")
         # log.debug(old_context)
@@ -195,23 +212,17 @@ class Goal:
                 old_index = None
                 # New objects at the end
                 permuted_new_context.append(math_object)
-                permuted_new_tags.append("+")
-                math_object.is_new = True
             else:
                 # Put new object at old index, copy tags for ui,
-                #  and check for modifications
+                #  and link to parent object
                 old_object = old_context[old_index]
                 permuted_new_context[old_index] = math_object
                 math_object.copy_tags(old_object)
-                old_math_type = old_object.math_type
-                new_math_type = math_object.math_type
-                # (3) Check if the object has the same type
-                if old_math_type == new_math_type:
-                    permuted_new_tags[old_index] = "="
-                else:  # (4) If not, object has been modified
-                    permuted_new_tags[old_index] = "≠"
-                    math_object.is_modified = True
-                    math_object.is_hidden = False  # Reveal if modified?
+                math_object.parent_context_math_object = old_object
+                old_object.child_context_math_object = math_object
+                # (3) Reveal if modified(?)
+                if old_object.math_type != math_object.math_type:
+                    math_object.is_hidden = False
 
             if old_index is not None:
                 # Will not be considered anymore:
@@ -221,12 +232,9 @@ class Goal:
         # (5) Remove 'None' entries
         clean_permuted_new_context = [item for item in permuted_new_context
                                       if item is not None]
-        clean_permuted_new_tags    = [item for item in permuted_new_tags
-                                      if item is not None]
 
-        # Finally modify order and set tags
-        self.context     = clean_permuted_new_context
-        self.future_tags = clean_permuted_new_tags
+        # Finally, modify order and set tags
+        self.context = clean_permuted_new_context
 
     def __name_real_bound_vars(self, math_type, unnamed_vars, forb_vars):
         """

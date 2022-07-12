@@ -88,6 +88,9 @@ class Statement:
     info:                   Dict[str, Any]  = None
     # Any other (non-essential) information
 
+    # def __repr__(self):
+    #     return self.pretty_name if self.pretty_name else self.lean_name
+
     @classmethod
     def from_parser_data(cls, **data):
         """
@@ -151,6 +154,14 @@ class Statement:
         else:
             text = ""
         return text
+
+    @property
+    def target(self):
+        """
+        Return target of main goal, whose math_type is the target property.
+        """
+        if self.initial_proof_state:
+            return self.initial_proof_state.goals[0].target
 
     def pretty_hierarchy(self, outline):
         """
@@ -256,6 +267,15 @@ class Statement:
 
     @property
     def type(self):
+        if self.is_definition():
+            return _('definition')
+        elif self.is_theorem():
+            return _('theorem')
+        elif self.is_exercise():
+            return _('exercise')
+
+    @property
+    def type_(self):
         if self.is_definition():
             return _('definition')
         elif self.is_theorem():

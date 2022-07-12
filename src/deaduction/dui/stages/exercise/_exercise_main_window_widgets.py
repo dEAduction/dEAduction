@@ -72,6 +72,8 @@ from deaduction.pylib.text.tooltips import button_symbol
 
 log = logging.getLogger(__name__)
 
+global _
+
 
 class ExerciseCentralWidget(QWidget):
     """
@@ -292,11 +294,10 @@ class ExerciseCentralWidget(QWidget):
         target_lbl.setFont(target_math_font)
         # Setting selected / unselected style:
         self.target_wgt.unselected_style = f'font-size: {target_size};'
-        background_color = cvars.get("display.selection_color", "limegreen")
+        background_color = cvars.get("display.color_for_selection", "limegreen")
         self.target_wgt.selected_style = self.target_wgt.unselected_style \
             + f'background-color: {background_color};'
         self.target_wgt.setStyleSheet(self.target_wgt.unselected_style)
-
 
     def organise_main_layout(self):
         """
@@ -468,7 +469,8 @@ class ExerciseStatusBar(QStatusBar):
 
         # Pending msgs
         self.timer = QTimer(self)
-        self.pending_msgs = []
+        # self.pending_msgs = []
+        self.proof_msg: callable = None  # This will be set from outside
 
         # Icon
         self.iconWidget = QLabel(self)
@@ -520,15 +522,19 @@ class ExerciseStatusBar(QStatusBar):
         This method is called by the timer, when there is a new_goal msg to
         display on top of the usual success/error msgs.
         """
-        if self.pending_msgs:
-            msg = self.pending_msgs.pop(0)
-            if msg:
-                self.show_normal_msg(msg)
+        # if self.pending_msgs:
+        #     msg = self.pending_msgs.pop(0)
+        #     if msg:
+        #         self.show_normal_msg(msg)
 
-    def cancel_pending_msgs(self):
-        if self.pending_msgs:
-            log.debug("(Cancelling first pending msg)")
-            self.pending_msgs = [""] * len(self.pending_msgs)
+        proof_msg = self.proof_msg()
+        if proof_msg:
+            self.show_normal_msg(proof_msg)
+
+    # def cancel_pending_msgs(self):
+    #     if self.pending_msgs:
+    #         log.debug("(Cancelling first pending msg)")
+    #         self.pending_msgs = [""] * len(self.pending_msgs)
 
     def show_error_icon(self):
         self.iconWidget.setPixmap(self.error_pixmap)
@@ -551,7 +557,7 @@ class ExerciseStatusBar(QStatusBar):
 
     @Slot()
     def show_normal_msg(self, msg):
-        log.debug("StatusBar: show " + msg)
+        # log.debug("StatusBar: show " + msg)
         self.hide_icon()
         self.set_message(msg)
 
@@ -565,14 +571,13 @@ class ExerciseStatusBar(QStatusBar):
         - success and error msgs are temporary msgs.
         """
 
+        if self.timer.isSingleShot():
+            self.timer.stop()
         # self.enable_msgs()
         if proof_step.is_error():
             tmp_msg = proof_step.error_msg
         else:
             tmp_msg = proof_step.success_msg
-        # Capitalize first char but do not un-capitalize the remaining
-        # if tmp_msg:  # Fixme: remove and capitalize msgs correctly!
-        #     tmp_msg = tmp_msg[0].capitalize() + tmp_msg[1:]
 
         if proof_step.is_error():
             log.debug("StatusBar: " + tmp_msg)
@@ -586,14 +591,20 @@ class ExerciseStatusBar(QStatusBar):
             self.hide_icon()
             tmp_msg = ""
 
-        if proof_step.new_goals:
-            new_goal = proof_step.new_goals[-1]
-            if new_goal:
-                if tmp_msg:  # Add to pending msgs
-                    self.pending_msgs.append(new_goal.msg)
-                    self.timer.singleShot(3000, self.show_pending_msgs)
-                else:  # Show immediately
-                    self.show_normal_msg(new_goal.msg)
+        # if proof_step.new_goals:
+        #     new_goal = proof_step.new_goals[-1]
+        #     if new_goal:
+        #         if tmp_msg:  # Add to pending msgs
+        #             self.pending_msgs.append(new_goal.msg)
+        #             self.timer.singleShot(3000, self.show_pending_msgs)
+        #         else:  # Show immediately
+        #             self.show_normal_msg(new_goal.msg)
+
+        # Show proof psg if any:
+        if tmp_msg:
+            self.timer.singleShot(3000, self.show_pending_msgs)
+        else:  # Show immediately
+            self.show_pending_msgs()
 
 
 class ExerciseToolBar(QToolBar):
@@ -619,6 +630,10 @@ class ExerciseToolBar(QToolBar):
                 QIcon(str((icons_dir / 'proof_outline.png').resolve())),
             _('Toggle proof outline'), self)
 
+        self.toggle_proof_tree = QAction(
+                QIcon(str((icons_dir / 'proof_tree.png').resolve())),
+            _('Toggle proof tree'), self)
+
         self.toggle_lean_editor_action = QAction(
                 QIcon(str((icons_dir / 'lean_editor.png').resolve())),
                 _('Toggle L∃∀N'), self)
@@ -627,6 +642,7 @@ class ExerciseToolBar(QToolBar):
         self.addAction(self.undo_action)
         self.addAction(self.redo_action)
         self.addAction(self.toggle_proof_outline_action)
+        self.addAction(self.toggle_proof_tree)
         self.addAction(self.toggle_lean_editor_action)
         self.undo_action.setShortcut(QKeySequence.Undo)
         self.redo_action.setShortcut(QKeySequence.Redo)

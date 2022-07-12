@@ -61,7 +61,7 @@ from deaduction.pylib.mathobj import           (MathObject,
                                                 ProofStep)
 from deaduction.pylib.proof_state import       (Goal,
                                                 ProofState)
-
+from deaduction.pylib.proof_tree import ProofTree
 
 from deaduction.pylib.actions           import (generic,
                                                 InputType,
@@ -102,8 +102,8 @@ class Coordinator(QObject):
     For the moment, much info is passed through proof_step and lean_file.
     """
 
-    proof_step_updated = Signal()  # Listend by test_launcher (for testing)
-    close_server_task   = Signal()  # Send by self.closeEvent
+    proof_step_updated = Signal()  # Listened by test_launcher (for testing)
+    close_server_task  = Signal()  # Send by self.closeEvent
 
     def __init__(self, exercise, servint):
         super().__init__()
@@ -117,6 +117,7 @@ class Coordinator(QObject):
 
         # Information
         self.proof_step: Optional[ProofStep]          = None  # Set later
+        self.proof_tree: Optional[ProofTree]          = None
         self.previous_proof_step: Optional[ProofStep] = None
         self.journal                                  = Journal()
 
@@ -156,7 +157,10 @@ class Coordinator(QObject):
         # Try to display initial proof state of self.exercise prior to anything
         #  (so that user may start thinking, even if UI stay frozen for a
         #  while.)
-        self.proof_step                     = ProofStep()
+        self.proof_tree = ProofTree()
+        self.emw.proof_tree_controller.set_proof_tree(self.proof_tree)
+        self.emw.set_msgs_for_status_bar(self.proof_tree.current_proof_msg)
+        self.proof_step = ProofStep()
         proof_state = self.exercise.initial_proof_state
         if proof_state:
             goal = proof_state.goals[0]
@@ -484,21 +488,25 @@ class Coordinator(QObject):
                     proof_step = self.lean_file.next_proof_step
                     if proof_step:
                         await self.emw.simulate(proof_step)
-                    add_task(self.servint.history_redo)
+                    self.history_redo()
+                    # add_task(self.servint.history_redo)
 
                 elif emission.is_from(self.toolbar.undo_action.triggered):
                     self.proof_step.button_name = 'history_undo'
-                    add_task(self.servint.history_undo)
+                    # add_task(self.servint.history_undo)
+                    self.history_undo()
 
                 elif emission.is_from(self.toolbar.rewind.triggered):
                     self.proof_step.button_name = 'history_rewind'
-                    add_task(self.servint.history_rewind)
+                    # add_task(self.servint.history_rewind)
+                    self.history_rewind()
 
                 elif emission.is_from(self.proof_outline_window.history_goto):
                     history_nb = emission.args[0]
                     if history_nb != self.history_nb:
                         self.proof_step.button_name = 'history_goto'
-                        add_task(self.servint.history_goto, history_nb)
+                        # add_task(self.servint.history_goto, history_nb)
+                        self.history_goto(history_nb)
                     else:
                         self.unfreeze()
 
@@ -511,15 +519,6 @@ class Coordinator(QObject):
                 elif emission.is_from(self.action_triggered):
                     button = emission.args[0]  # ActionButton triggered by user
                     self.proof_step.button_name = button.name
-                    # # FIXME: no more double click
-                    # if button == self.ecw.action_apply_button \
-                    #         and self.double_clicked_item:
-                    #     # Make sure item is marked and added to selection
-                    #     item = self.double_clicked_item
-                    #     if item in self.current_selection:
-                    #         self.current_selection.remove(item)
-                    #     self.current_selection.append(item)  # Item is last
-                    #     self.emw.double_clicked_item = None
                     self.__server_call_action(emission.args[0])
 
                 elif emission.is_from(self.statement_triggered):
@@ -536,6 +535,67 @@ class Coordinator(QObject):
                     self.emw.freeze(False)
                     if self.ecw.action_apply_button:
                         self.ecw.action_apply_button.animateClick(msec=500)
+
+    ###################
+    # History actions #
+    ###################
+    def history_undo(self):
+        """
+        Go one step forward in history in the lean_file.
+        """
+        self.lean_file.undo()
+        self.process_history_move()
+
+    def history_redo(self):
+        """
+        Go one step backward in history in the lean_file.
+        """
+        self.lean_file.redo()
+        self.process_history_move()
+
+    def history_rewind(self):
+        """
+        Go to beginning of history in the lean_file.
+        """
+        self.lean_file.rewind()
+        self.process_history_move()
+
+    def history_goto(self, history_nb):
+        """
+        Move to a specific place in the history of the Lean file.
+        """
+        self.lean_file.goto(history_nb)
+        self.process_history_move()
+
+    def process_history_move(self):
+        """
+        This method is called after lean_file has been updated according to
+        the history move.
+        - update self.proof_tree, including the unsolved goals pile.
+        - Update interface, and prepare next proof_step.
+        """
+        historic_proof_step = self.lean_file.current_proof_step
+        children_goal_nodes = historic_proof_step.children_goal_nodes
+        proof_state = historic_proof_step.proof_state
+        self.proof_step.proof_state = proof_state
+        self.proof_step.children_goal_nodes = children_goal_nodes
+
+        # ─────── Update proof_tree ─────── #
+        self.proof_tree.current_goal_node = children_goal_nodes[0]
+
+        # ─────── Update proof_step ─────── #
+        # From here, self.proof_step is replaced by a new proof_step!
+        self.previous_proof_step = self.proof_step
+        self.update_proof_step()
+
+        # ─────── Update UI ─────── #
+        log.info("** Updating UI **")
+        self.unfreeze()
+        if self.proof_step.is_error():
+            self.emw.update_goal(None)
+        else:
+            self.emw.update_goal(proof_state.goals[0])
+
     ################################################
     # Actions that send code to Lean (via servint) #
     ################################################
@@ -793,10 +853,14 @@ class Coordinator(QObject):
         log.debug("Aborting process")
         if not self.servint.lean_file.history_at_beginning:
             # Abort and go back to last goal
-            self.server_queue.add_task(self.servint.history_delete)
+            # self.server_queue.add_task(self.servint.history_delete)
+            self.lean_file.delete()
+            self.unfreeze()
+            self.update_proof_step()
+            self.emw.update_goal(None)
+
         else:
             # Resent the whole code
-
             self.__initialize_exercise()
 
     @Slot()
@@ -808,8 +872,6 @@ class Coordinator(QObject):
         """
         # Display msg_box unless redoing /moving or test mode
         # TODO: add click to MessageBox in test_mode
-        # if self.test_mode:
-        #     self.proof_no_goals.emit()  # FIXME: deprecated
         if not self.proof_step.is_redo() \
                 and not self.proof_step.is_goto()\
                 and not self.test_mode:
@@ -851,11 +913,18 @@ class Coordinator(QObject):
                                                             emw=self.emw)
 
         # Create next proof_step
-        self.emw.displayed_proof_step = copy(self.proof_step)
+        self.emw.displayed_proof_step = copy(self.proof_step)  # FIXME
         self.proof_step = ProofStep.next_(self.lean_file.current_proof_step,
                                           self.lean_file.target_idx)
-
+        self.proof_step.parent_goal_node = self.proof_tree.current_goal_node
         self.proof_step_updated.emit()  # Received in auto_test
+
+        # TODO: replace goal counts by proof_tree API
+        # unsolved_goal_nodes = self.proof_tree.unsolved_goal_nodes()
+        # total_gn = len(unsolved_goal_nodes)
+        # index = unsolved_goal_nodes.index(self.proof_tree.current_goal_node) + 1
+        # print(f"Buts: {index}/{total_gn}")
+        # print(total_gn == self.proof_step.total_goals_counter)
 
     @Slot()
     def process_lean_response(self,
@@ -922,20 +991,25 @@ class Coordinator(QObject):
             if proof_state:
                 self.lean_file.state_info_attach(ProofState=proof_state)
             else:
-                # No proof state !? Maybe empty analysis ?
+                # No proof state!? Maybe empty analysis?
                 self.process_error(error_type=5, errors=[])
                 log.debug(f"Analysis: {hypo_analysis} /// {targets_analysis}")
                 self.abort_process()
                 return
 
-        self.proof_step.proof_state = proof_state
+        self.proof_step.proof_state = proof_state  # FIXME
 
         if not self.proof_step.is_error():
             if not self.proof_step.is_history_move():
                 log.debug("     Storing proof step in lean_file info")
                 self.lean_file.state_info_attach(proof_step=self.proof_step)
+                self.proof_tree.process_new_proof_step(self.proof_step)
+                # self.proof_step.unsolved_goal_nodes_after = \
+                #     copy(self.proof_tree.unsolved_goal_nodes)
+                # ugn = [gn.goal_nb for gn in self.proof_tree.unsolved_goal_nodes]
+                # log.debug(f"Ps_unsolved_gn_after: {ugn}")
 
-            # ─────── Check for new goals ─────── #
+            # ─────── Check for new goals ─────── # FIXME: obsolete
             delta = self.lean_file.delta_goals_count
             self.proof_step.delta_goals_count = delta
             self.proof_step.update_goals()
@@ -945,10 +1019,10 @@ class Coordinator(QObject):
         # ─────── Tag and sort new goal ─────── #
         if self.logically_previous_proof_step:
             log.info("** Comparing new goal with previous one **")
-            # Fixme: not when undoing history ?
+            # Fixme: not when undoing history ? Move to ProofTree
             new_goal: Goal = self.proof_step.goal
-            previous_goal = self.logically_previous_proof_step.goal
-            Goal.compare(new_goal, previous_goal)  # Set tags
+            # previous_goal = self.logically_previous_proof_step.goal
+            # Goal.compare(new_goal, previous_goal)  # Set tags
             used_properties = self.proof_step.used_properties()
             new_goal.mark_used_properties(used_properties)
 

@@ -85,7 +85,10 @@ match e with
 ------------------------- SET THEORY -------------------------
 | `(%%A ∩ %%B) := return ("SET_INTER", [A,B])
 | `(%%A ∪ %%B) := return ("SET_UNION", [A,B])
-| `(set.compl %%A) := return ("SET_COMPLEMENT", [A])
+| `(set.compl %%A) := do e_type ← infer_type e, match e_type with
+    | `(_root_.set %%X) := return ("SET_COMPLEMENT", [X, A])
+    | _ := return ("", [])
+    end
 -- | `(set.symmetric_difference %%A %%B) := return ("SET_DIFF_SYM", [A,B])
 | `(%%A \ %%B) := return ("SET_DIFF", [A,B])
 | `(%%A ⊆ %%B) := return ("PROP_INCLUDED", [A,B])

@@ -47,8 +47,8 @@ class ContextMathObject(MathObject):
     Attributes allow to keep track of some additional information.
     """
     list_: [Any] = []  # List of all ContextMathObject in the current context
-    is_new: bool  # True if self was not present in previous context
-    is_modified: bool  # True if self is modified from previous context
+    is_new_: bool  # True if self was not present in previous context FIXME
+    is_modified_: bool  # True if self is modified from previous context FIXME
     is_hidden: bool  # True if self should not be dispplayed in ui
     has_been_used_in_the_proof: bool
 
@@ -57,14 +57,35 @@ class ContextMathObject(MathObject):
 
         ContextMathObject.list_.append(self)
 
+        # Ancestor in logically previous context
+        self.parent_context_math_object = None
+        self.child_context_math_object = None
+
         # Tags
-        self.is_new = False
-        self.is_modified = False
+        self.is_new_ = False  # FIXME: obsolete
+        self.is_modified_ = False  # FIXME: obsolete
         self.has_been_used_in_proof = False  # TODO: implement
-        self.is_hidden = False
+        self.is_hidden = False # TODO
         # log.debug(f"Creating ContextMathPObject {self.to_display()},")
                   # f"dummy vars = "
                   # f"{[var.to_display() for var in self.bound_vars]}")
+
+    @property
+    def is_new(self):
+        return self.parent_context_math_object is None
+
+    @property
+    def is_modified(self):
+        return (self.parent_context_math_object
+                and self.parent_context_math_object.math_type != self.math_type)
+
+    def is_descendant_of(self, other):
+        """
+        True is self is a (strict) descendant of other.
+        """
+        parent = self.parent_context_math_object
+        if parent:
+            return parent == other or parent.is_descendant_of(other)
 
     @classmethod
     def whose_math_type_is(cls, math_type: MathObject):
@@ -77,6 +98,9 @@ class ContextMathObject(MathObject):
     def copy_tags(self, other):
         self.has_been_used_in_proof = other.has_been_used_in_proof
         self.is_hidden = other.is_hidden
+
+    def remove_future_info(self):
+        self.child_context_math_object = None
 
     def raw_latex_shape(self, negate=False, text_depth=0):
         """

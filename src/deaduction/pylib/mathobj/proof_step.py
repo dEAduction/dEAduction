@@ -214,6 +214,7 @@ class ProofStep:
     _success_msg: str         = ''
     # AutoStep version, computed in Coordinator.update_proof_step():
     auto_step                 = None
+    unsolved_goal_nodes_after = None  # Copy of the proof_tree, for history move
 
     def __init__(self,
                  proof_nodes=None,
@@ -224,6 +225,8 @@ class ProofStep:
                  total_goals_counter=1,
                  proof_state=None,
                  history_nb=-1):
+        self._children_goal_nodes = []
+        self._parent_goal_node = None
         self.property_counter    = property_counter
         self.current_goal_number = current_goal_number
         self.total_goals_counter = total_goals_counter
@@ -328,6 +331,22 @@ class ProofStep:
                 if imminent_new_node is not ProofStep.initial_proof_node:
                     self.imminent_new_node = imminent_new_node
 
+    @property
+    def children_goal_nodes(self):
+        return self._children_goal_nodes
+
+    @children_goal_nodes.setter
+    def children_goal_nodes(self, goal_nodes):
+        self._children_goal_nodes = goal_nodes
+
+    @property
+    def parent_goal_node(self):
+        return self._parent_goal_node
+
+    @parent_goal_node.setter
+    def parent_goal_node(self, goal_node):
+        self._parent_goal_node = goal_node
+
     ##############
     # Properties #
     @property
@@ -384,6 +403,21 @@ class ProofStep:
         if self.new_goals:
             return self.new_goals[-1]
 
+    @property
+    def main_hypo(self):
+        if self.selection:
+            return self.selection[0]
+
+    @property
+    def operator(self):
+        code = self.effective_code if self.effective_code else self.lean_code
+        return code.operator
+
+    @property
+    def rw_item(self):
+        code = self.effective_code if self.effective_code else self.lean_code
+        return code.rw_item
+
     def is_node(self):
         """
         True if self is a proof node (a new goal has appeared).
@@ -409,16 +443,70 @@ class ProofStep:
     def is_error(self):
         return bool(self.error_type)
 
-    def is_sorry(self):
-        # Fixme: does not work
-        return self.button_name == _("Proof methods...") \
-            and self.user_input == 3
-
     def is_action_button(self):
         return self.button_name is not None
 
     def is_statement(self):
         return self.statement is not None
+
+    def is_definition(self):
+        return self.statement and self.statement.is_definition()
+
+    def is_intro_implies(self):
+        if not self.parent_goal_node:
+            return False
+        target = self.parent_goal_node.goal.target
+        tests = [self.button_name == "implies",
+                 not self.selection,
+                 target.is_implication(implicit=True),
+                 not self.is_error()]
+        return all(tests)
+
+    def is_intro_forall(self):
+        if not self.parent_goal_node:
+            return False
+        tests = [self.button_name == "forall",
+                 not self.selection,
+                 self.parent_goal_node.goal.target.is_for_all(implicit=True),
+                 not self.is_error()]
+        return all(tests)
+
+    def is_push_neg(self):
+        return self.button_name == "not" and not self.is_error()
+
+    def is_on_target(self):
+        return not self.selection
+
+    def is_and(self):
+        return self.button_name == "and"
+
+    def is_iff(self):
+        return self.button_name == "iff"
+
+    def is_equal(self):
+        return self.button_name == "equal"
+
+    # def rw_item(self):
+    #     if self.is_definition():
+    #         return _("Definition"), self.statement.pretty_name
+    #     elif self.is_statement():
+    #         target = self.statement.target
+    #         if target.can_be_used_for_substitution():
+    #             return _("Theorem"), self.statement.pretty_name
+    #         else:
+    #             return None
+
+    def is_by_contraposition(self):
+        if self.button_name == "proof_methods" and self.user_input:
+            return self.user_input[0] == 1
+
+    def is_by_contradiction(self):
+        if self.button_name == "proof_methods" and self.user_input:
+            return self.user_input[0] == 2
+
+    def is_sorry(self):
+        if self.button_name == "proof_methods" and self.user_input:
+            return self.user_input[0] == 3
 
     def compare(self, auto_test) -> (str, bool):
         """

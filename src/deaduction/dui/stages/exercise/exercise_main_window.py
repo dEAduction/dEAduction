@@ -52,7 +52,8 @@ from deaduction.dui.elements            import (ActionButton,
                                                 MenuBar,
                                                 MenuBarAction,
                                                 ConfigMainWindow,
-                                                ProofOutlineWindow)
+                                                ProofOutlineWindow,
+                                                ProofTreeController)
 from ._exercise_main_window_widgets     import (ExerciseCentralWidget,
                                                 ExerciseStatusBar,
                                                 ExerciseToolBar,
@@ -160,6 +161,7 @@ class ExerciseMainWindow(QMainWindow):
         self.exercise_toolbar              = ExerciseToolBar()
         self.global_toolbar       = GlobalToolbar()
         self.proof_outline_window = ProofOutlineWindow()
+        self.proof_tree_controller= ProofTreeController()
         self.statusBar            = ExerciseStatusBar(self)
         self.config_window        = None
 
@@ -177,13 +179,15 @@ class ExerciseMainWindow(QMainWindow):
         # Restore geometry
         settings = QSettings("deaduction")
         geometry = settings.value("emw/Geometry")
-        maximised = settings.value("emw/isMaximised")
-        log.debug(f"maximised: {maximised}")
+        # maximised = settings.value("emw/isMaximised")
+        # log.debug(f"maximised: {maximised}")
         if geometry:
             self.restoreGeometry(geometry)
-            if maximised:
-                self.showMaximized()
-
+            # if maximised:  # FIXME: Does not work on Linux?!
+            # self.showMaximized()
+        proof_tree_is_visible = settings.value("emw/ShowProofTree")
+        if proof_tree_is_visible:
+            self.proof_tree_window.setVisible(True)
         self.close_coordinator = None  # Method set up by Coordinator
 
         self.__connect_signals()
@@ -209,6 +213,8 @@ class ExerciseMainWindow(QMainWindow):
                 self.lean_editor.toggle)
         self.exercise_toolbar.toggle_proof_outline_action.triggered.connect(
                 self.proof_outline_window.toggle)
+        self.exercise_toolbar.toggle_proof_tree.triggered.connect(
+                self.proof_tree_window.toggle)
         self.global_toolbar.change_exercise_action.triggered.connect(
                                                     self.change_exercise)
         self.global_toolbar.settings_action.triggered.connect(
@@ -228,7 +234,8 @@ class ExerciseMainWindow(QMainWindow):
                              [self.exercise_toolbar.rewind,
                               self.exercise_toolbar.undo_action,
                               self.exercise_toolbar.redo_action,
-                              self.exercise_toolbar.toggle_proof_outline_action
+                              self.exercise_toolbar.toggle_proof_outline_action,
+                              self.exercise_toolbar.toggle_proof_tree
                               ]),
                          self.exercise_toolbar.toggle_lean_editor_action,
                          self.global_toolbar.change_exercise_action])
@@ -250,15 +257,18 @@ class ExerciseMainWindow(QMainWindow):
         # Close children
         self.lean_editor.close()
         self.proof_outline_window.close()
+        self.proof_tree_window.close()
 
         # Save window geometry
         # FIXME: does not work
         settings = QSettings("deaduction")
         is_maximised = self.isMaximized()
-        # log.debug(f"Maximised: {is_maximised}")
+        log.debug(f"Maximised: {is_maximised}")
         settings.setValue("emw/isMaximised", is_maximised)
         self.showNormal()
         settings.setValue("emw/Geometry", self.saveGeometry())
+        settings.setValue("emw/ShowProofTree",
+                          self.proof_tree_window.isVisible())
 
         if self.close_coordinator:
             # Set up by Coordinator
@@ -268,6 +278,9 @@ class ExerciseMainWindow(QMainWindow):
         # event.accept()  # THIS create crash after the second closing!!
         super().closeEvent(event)
         self.deleteLater()
+
+    def set_msgs_for_status_bar(self, proof_msg: callable):
+        self.statusBar.proof_msg = proof_msg
 
     ##################
     # Config methods #
@@ -326,10 +339,9 @@ class ExerciseMainWindow(QMainWindow):
     ######################
     ######################
 
-    # @property
-    # def target_selected_by_default(self):  # Fixme: obsolete here
-    #     return cvars.get('functionality.target_selected_by_default', False) \
-    #             or self.test_mode or self.automatic_action
+    @property
+    def proof_tree_window(self):
+        return self.proof_tree_controller.proof_tree_window
 
     @property
     def target_selected(self):
@@ -513,8 +525,8 @@ class ExerciseMainWindow(QMainWindow):
         self.freezed = yes
         self.ecw.freeze(yes)
         self.exercise_toolbar.setEnabled(not yes)
-        if yes:
-            self.statusBar.cancel_pending_msgs()
+        # if yes:
+        #     self.statusBar.cancel_pending_msgs()
 
     def history_button_unfreeze(self, at_beginning, at_end):
         """
@@ -764,6 +776,7 @@ class ExerciseMainWindow(QMainWindow):
         """
         # TODO: tags will be incorporated in ContextMathObjects
         log.info("Updating UI")
+        self.proof_tree_controller.update()
         self.manage_msgs(self.displayed_proof_step)
         self.user_input = []
 
@@ -774,7 +787,6 @@ class ExerciseMainWindow(QMainWindow):
         # Here we do not use empty_current_selection since Widgets may have
         # been deleted, and anyway this is cosmetics since  widgets are
         # destroyed and re-created by "self.ecw.update_goal" just below
-        # if self.current_selection:  # Keep target selected only if no other sct
         self.target_selected = False
         self.current_selection = []
 
