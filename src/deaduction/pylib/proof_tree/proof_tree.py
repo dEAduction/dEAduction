@@ -68,6 +68,8 @@ class GoalNode:
         self._is_intro = None
         self._is_implies = None
         self._is_pure_context = None
+        self._is_auxiliary_goal = None
+        self._is_auxiliary_goal_brother = None
 
     @classmethod
     def root_node(cls, parent_proof_step, initial_goal):
@@ -125,7 +127,7 @@ class GoalNode:
         return len(self.children_goal_nodes) > 1
 
     @property
-    def is_new_subgoal(self):
+    def is_child_fork_node(self):
         return self.parent_node and self.parent_node.is_fork_node
 
     @property
@@ -134,7 +136,7 @@ class GoalNode:
         Recursively climb the tree until it finds the child of a fork node.
         """
 
-        if self.is_new_subgoal:
+        if self.is_child_fork_node:
             return self
         elif self.parent_node:
             return self.parent_node.last_child_fork_node
@@ -149,7 +151,8 @@ class GoalNode:
 
     @property
     def brother(self):
-        if self.brother_number is not None:
+        if (self.brother_number is not None
+                and len(self.parent_node.children_goal_nodes) == 2):
             return self.parent_node.children_goal_nodes[1-self.brother_number]
 
     @property
@@ -192,7 +195,7 @@ class GoalNode:
 
         if self._is_conjunction is not None:
             return self._is_conjunction
-        if not self.is_new_subgoal:
+        if not self.is_child_fork_node:
             self._is_conjunction = False
             return False
         # Now self has a brother
@@ -361,6 +364,29 @@ class GoalNode:
             return False
         return True
 
+    @property
+    def is_auxiliary_goal(self):
+        """
+        True if self.target is new and brother.target is not new.
+        """
+        if self._is_auxiliary_goal is not None:
+            return self._is_auxiliary_goal
+        parent_node = self.parent_node
+        if not parent_node or not parent_node.is_fork_node:
+            self._is_auxiliary_goal = False
+            return False
+        tests = self.target_has_changed and not self.brother.target_has_changed
+        self._is_auxiliary_goal = tests
+        self.brother._is_auxiliary_goal_brother = tests
+        return tests
+
+    @property
+    def is_auxiliary_goal_brother(self):
+        if self._is_auxiliary_goal_brother is not None:
+            return self._is_auxiliary_goal_brother
+        tests = self.brother and self.brother.is_auxiliary_goal
+        return tests
+
     def __msg(self, format_, use_color=True, bf=False):
         """
         Compute a msg to be displayed as the header of the proof below this
@@ -433,7 +459,10 @@ class GoalNode:
             html_target = target.to_display(format_="html",
                                             use_color=use_color,
                                             bf=bf)
-            if self.is_new_subgoal:
+            if self.is_auxiliary_goal_brother:
+                msg = _("Back to proof of {}").format(utf8_target)
+                html_msg = _("Back to proof of {}").format(html_target)
+            elif self.is_child_fork_node:
                 msg = _("Proof of sub-goal: {}").format(utf8_target)
                 html_msg = _("Proof of sub-goal: {}").format(html_target)
             else:
@@ -516,7 +545,7 @@ class GoalNode:
                 unsolved_leaves.extend(child.unsolved_leaves)
             return unsolved_leaves
 
-    def truncated_unsolved_leaves(self, till_goal_nb=None):
+    def truncated_unsolved_leaves(self, till_goal_nb=None) -> []:
         """
         Return the list of unsolved leaves of self (truncated at "till_goal_nb")
         """
@@ -525,6 +554,7 @@ class GoalNode:
 
         if self._is_solved:  # self is a solved leaf
             return []
+
         truncated_children = [child for child in self.children_goal_nodes
                               if child.goal_nb <= till_goal_nb]
         if not truncated_children:  # self is an unsolved leaf

@@ -29,22 +29,23 @@ from typing import Union, Optional
 from PySide2.QtWidgets import (QApplication, QLayout, QVBoxLayout, QWidget,
                                QSizePolicy)
 from PySide2.QtWidgets import QScrollArea
-from PySide2.QtCore import Slot, QSettings, QTimer
+from PySide2.QtCore import Slot, QSettings, QTimer, Signal
 from PySide2.QtGui import QPainter
 
 import sys
+from functools import partial
 
 import deaduction.pylib.config.vars as cvars
 
 from deaduction.dui.elements.proof_tree.proof_tree_primitives import \
-    BlinkingLabel, ProofTitleLabel, \
+    BlinkingLabel, ProofTitleLabel, RawLabelMathObject, \
     ContextWidget, TargetWidget, OperatorContextWidget, SubstitutionContextWidget, \
     TargetSubstitutionArrow, paint_layout
 
 global _
 
 if __name__ != "__main__":
-    from deaduction.pylib.mathobj import MathObject
+    from deaduction.pylib.mathobj import MathObject, ContextMathObject
 else:
     def _(x):
         return x
@@ -241,7 +242,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         self._is_target_substituted = False
 
         # Main widgets containers:
-        self.pure_context_widget: Optional[OperatorContextWidget] = None
+        self.pure_context_widget: Optional[ContextWidget] = None
         self.context1_widget: Optional[ContextWidget] = None
         self.target_widget: Optional[TargetWidget] = None
         if self.target:
@@ -633,6 +634,38 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
 
         parent.ensureWidgetVisible(wdg, ymargin=100)
 
+    @property
+    def math_widgets(self) -> [RawLabelMathObject]:
+        """
+        Return all math widgets displayed by self which are not targets.
+        """
+        wdgs = []
+        for wdg in [self.pure_context_widget, self.context1_widget,
+                    self.context2_widget]:
+            if wdg:
+                wdgs.extend(wdg.math_wdgs)
+
+        return wdgs
+
+    def highlight_math_widgets(self, math_object: ContextMathObject, yes):
+        """
+        Highlight all RawLabelMathObjects which are related to math_object.
+        """
+        if not isinstance(math_object, ContextMathObject):
+            return
+        for math_wdg in self.math_widgets:
+            other = math_wdg.math_object
+            if isinstance(other, ContextMathObject) and \
+                    ( math_object == other
+                      or math_object.is_descendant_of(other)
+                      or other.is_descendant_of(math_object) ):
+                math_wdg.highlight(yes)
+
+    def recursively_highlight(self, math_object, yes):
+        self.highlight_math_widgets(math_object, yes)
+        for wgb in self.logical_children:
+            wgb.recursively_highlight(math_object, yes)
+
 
 class GoalSolvedWGB(WidgetGoalBlock):
     """
@@ -679,7 +712,7 @@ class PureContextWGB(WidgetGoalBlock):
 
     def __init__(self, logical_parent, goal_node,
                  premises, operator, conclusions):
-        if operator:
+        if operator or premises:
             super().__init__(logical_parent, goal_node,
                              pure_context=(premises, operator, conclusions,
                                            "operator"))
@@ -782,6 +815,9 @@ class ProofTreeWindow(QWidget):
 
         self.set_style_sheet()
 
+        # RawLabelMathObject.highlight_in_tree.connect(self.highlight)
+        RawLabelMathObject.highlight_in_tree = self.highlight_from_math_wdg
+
         if settings.value("isVisible"):
             self.setVisible(bool(settings.value("isVisible")))
 
@@ -790,6 +826,15 @@ class ProofTreeWindow(QWidget):
         self.main_window.setWidget(block)
         self.current_wgb = block
         # self.main_block.set_as_current_target()
+
+    def closeEvent(self, event):
+        # Save window geometry
+        settings = QSettings("deaduction")
+        settings.setValue("proof_tree/geometry", self.saveGeometry())
+        settings.setValue("isVisible", self.isVisible())
+        event.accept()
+        self.hide()
+        # TODO: save tree state
 
     def update_display(self):
         if self.main_block:
@@ -801,15 +846,6 @@ class ProofTreeWindow(QWidget):
     def set_current_target(self, goal_nb, blinking=True) -> Optional[QWidget]:
         wdg = self.main_block.set_current_target_recursively(goal_nb, blinking)
         return wdg
-
-    def closeEvent(self, event):
-        # Save window geometry
-        settings = QSettings("deaduction")
-        settings.setValue("proof_tree/geometry", self.saveGeometry())
-        settings.setValue("isVisible", self.isVisible())
-        event.accept()
-        self.hide()
-        # TODO: save tree state
 
     @Slot()
     def toggle(self):
@@ -831,6 +867,17 @@ class ProofTreeWindow(QWidget):
             self.main_window.ensureWidgetVisible(wdg)
         QTimer.singleShot(0, make_vis)
         # self.main_window.ensureWidgetVisible(wdg)
+
+    @Slot()
+    def highlight(self, math_object, yes):
+        """
+        Highlight all instances of math_widgets  in the ProofTreeWidget which
+        are related to math_object.
+        """
+        self.main_block.recursively_highlight(math_object, yes)
+
+    def highlight_from_math_wdg(self, math_object, yes):
+        self.highlight(math_object, yes)
 
     def set_style_sheet(self):
         color_var = cvars.get("display.color_for_variables")

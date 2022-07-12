@@ -222,7 +222,7 @@ A = A'
 :=
 /- dEAduction
 AutoTest
-    theorem.double_inclusion success=Théorème_appliqué,
+    theorem.double_inclusion success=but_a_été_remplacé,
     CQFD
 -/
 begin
@@ -246,31 +246,32 @@ end
 -- Here we test that deaduction is not too powerfull, i.e. theorem.image_directe should NOT solve the goal
 -- (as the Lean `apply` tactic does, by unfolding the semi-reducible definition of inverse image)
 -- deaduction does not send the code `apply`, but `apply_with ... {md:=reducible}`)
-lemma exercise.test_theorem_target_2
-(x: X) (A: set X) (f: X → Y) (H: x ∈ A): 
-x ∈ f ⁻¹' (f '' A)
-:=
-/- dEAduction
-AutoTest
-    theorem.image_directe success=Théorème_ajouté_au_contexte,
--/
-begin
-  todo
-end
-
-lemma exercise.test_theorem_target_3
-(x: X) (A: set X) (f: X → Y) (H: x ∈ A): 
-x ∈ f ⁻¹' (f '' A)
-:=
-/- dEAduction
-AutoTest
-    definition.image_reciproque,
-    theorem.image_directe success=Théorème_appliqué,
-    CQFD
--/
-begin
-  todo
-end
+-- PB = il faut maintenant sélectionner le but
+-- lemma exercise.test_theorem_target_2
+-- (x: X) (A: set X) (f: X → Y) (H: x ∈ A): 
+-- x ∈ f ⁻¹' (f '' A)
+-- :=
+-- /- dEAduction
+-- AutoTest
+--     theorem.image_directe success=Théorème_ajouté_au_contexte,
+-- -/
+-- begin
+--   todo
+-- end
+ 
+-- lemma exercise.test_theorem_target_3
+-- (x: X) (A: set X) (f: X → Y) (H: x ∈ A): 
+-- x ∈ f ⁻¹' (f '' A)
+-- :=
+-- /- dEAduction
+-- AutoTest
+--     definition.image_reciproque,
+--     theorem.image_directe success=Théorème_appliqué,
+--     CQFD
+-- -/
+-- begin
+--   todo
+-- end
 
 
 end tests_statements

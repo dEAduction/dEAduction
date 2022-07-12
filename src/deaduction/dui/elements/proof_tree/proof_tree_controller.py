@@ -68,6 +68,7 @@ def widget_goal_block(parent_widget: Optional[WidgetGoalBlock],
 
     new_context = goal_node.goal.new_context
     target = goal_node.goal.target.math_type
+    log.debug(f"Goal nb {goal_node.goal_nb}")
 
     if not parent_widget:
         log.debug("First generic WGB created")
@@ -121,6 +122,12 @@ def widget_goal_block(parent_widget: Optional[WidgetGoalBlock],
     elif goal_node.is_context_and:
         wgb = EmptyWGB(logical_parent=parent_widget, goal_node=goal_node)
         log.debug("Empty WGB created")
+
+    elif goal_node.is_auxiliary_goal_brother:
+        premises, operator, conclusions = None, None, new_context
+        wgb = PureContextWGB(parent_widget, goal_node,
+                             premises, operator, conclusions)
+        log.debug("Pure context WGB created for auxiliary goal brother")
 
     elif not goal_node.target_has_changed:
         premises = goal_node.parent.selection

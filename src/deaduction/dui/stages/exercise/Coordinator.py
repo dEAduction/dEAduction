@@ -102,8 +102,8 @@ class Coordinator(QObject):
     For the moment, much info is passed through proof_step and lean_file.
     """
 
-    proof_step_updated = Signal()  # Listend by test_launcher (for testing)
-    close_server_task   = Signal()  # Send by self.closeEvent
+    proof_step_updated = Signal()  # Listened by test_launcher (for testing)
+    close_server_task  = Signal()  # Send by self.closeEvent
 
     def __init__(self, exercise, servint):
         super().__init__()
@@ -579,7 +579,7 @@ class Coordinator(QObject):
         self.proof_step.proof_state = proof_state
         self.proof_step.children_goal_nodes = children_goal_nodes
 
-        # Update proof_tree
+        # ─────── Update proof_tree ─────── #
         self.proof_tree.current_goal_node = children_goal_nodes[0]
 
         # ─────── Update proof_step ─────── #
@@ -917,6 +917,13 @@ class Coordinator(QObject):
                                           self.lean_file.target_idx)
         self.proof_step.parent_goal_node = self.proof_tree.current_goal_node
         self.proof_step_updated.emit()  # Received in auto_test
+
+        # TODO: replace goal counts by proof_tree API
+        # unsolved_goal_nodes = self.proof_tree.unsolved_goal_nodes()
+        # total_gn = len(unsolved_goal_nodes)
+        # index = unsolved_goal_nodes.index(self.proof_tree.current_goal_node) + 1
+        # print(f"Buts: {index}/{total_gn}")
+        # print(total_gn == self.proof_step.total_goals_counter)
 
     @Slot()
     def process_lean_response(self,

@@ -29,7 +29,7 @@ from typing import Union, Optional
 from PySide2.QtWidgets import (QFrame, QLayout,
                                QHBoxLayout, QVBoxLayout, QGridLayout,
                                QWidget, QLabel, QSizePolicy)
-from PySide2.QtCore import Qt, QRect, QPoint, QTimer, QPointF
+from PySide2.QtCore import Qt, QRect, QPoint, QTimer, Signal
 from PySide2.QtGui import QColor, QPainter, QPolygon, QPen, QBrush, QPainterPath
 
 import deaduction.pylib.config.vars as cvars
@@ -454,6 +454,8 @@ class RawLabelMathObject(QLabel):
 
     Param math_object may be a MathObject instance or a string or a Statement.
     """
+    # highlight_in_tree = Signal(ContextMathObject)
+    highlight_in_tree: callable = None
 
     def __init__(self, math_object=None,
                  html_msg: Optional[callable] = None):
@@ -515,6 +517,32 @@ class RawLabelMathObject(QLabel):
         """
         self.setText(self.txt())
         event.accept()
+
+    def highlight(self, yes=True):
+        color = cvars.get("display.color_for_highlighted_math_obj", "green")
+        self.setStyleSheet(f'background-color: {color};' if yes
+                           else 'background-color:;')
+
+    def enterEvent(self, event):
+        """
+        If self display a ContextMathObject, call self.highlight_in_tree.
+        to highlight all related RawLabelMO in the proof tree widget.
+        """
+        super().enterEvent(event)
+        # print("Coucou !")
+        if isinstance(self.math_object, ContextMathObject):
+            self.highlight()
+            # self.highlight_in_tree.emit(self.math_object)
+            if self.highlight_in_tree:
+                self.highlight_in_tree(self.math_object, True)
+
+    def leaveEvent(self, event):
+        super().leaveEvent(event)
+        # print("Bye...")
+        if isinstance(self.math_object, ContextMathObject):
+            self.highlight(False)
+            if self.highlight_in_tree:
+                self.highlight_in_tree(self.math_object, False)
 
 
 class ProofTitleLabel(RawLabelMathObject):
@@ -592,6 +620,10 @@ class LayoutMathObjects(QVBoxLayout):
 
     def math_wdg_at(self, i):
         return self.lyt_math_objects[i].math_wdg
+
+    @property
+    def math_wdgs(self):
+        return [self.math_wdg_at(i) for i in range(self.nb_objects)]
 
     def math_object_at(self, i):
         return self.math_wdg_at(i).math_object
@@ -782,6 +814,23 @@ class ContextWidget(QWidget):
             return self.layout.itemAt(i).widget()
 
     @property
+    def math_wdgs(self) -> [RawLabelMathObject]:
+        """
+        Return all math widgets displayed by self.
+        """
+        wdgs = []
+        if self.math_objects:
+            wdgs = [self.math_wdg_at(i) for i in range(len(self.math_objects))]
+        if self.input_layout:
+            wdgs.extend(self.input_layout.math_wdgs)
+        if self.operator:
+            wdgs.append(self.operator_wdg)
+        if self.output_layout:
+            wdgs.extend(self.output_layout.math_wdgs)
+
+        return wdgs
+
+    @property
     def pure_context_widget(self):
         """
         Artificial way of disguising self into a PureContextWGB.
@@ -881,7 +930,8 @@ class ContextWidget(QWidget):
         of the pile of premises.
         Return the couple of widgets corresponding to linked objects (or None).
         """
-        assert isinstance(other, ContextWidget)
+        if not isinstance(other, ContextWidget):
+            return
 
         # (1) Try other.math_objects
         if other.math_objects:
@@ -936,7 +986,7 @@ class OperatorContextWidget(ContextWidget):
         self.input_layout = None
         self.operator_layout = None
 
-        assert operator and conclusions
+        assert conclusions
         self.output_layout = LayoutMathObjects(conclusions, align="left")
 
         # Input -> Operator -> output:
@@ -958,6 +1008,11 @@ class OperatorContextWidget(ContextWidget):
     @property
     def operator_wdg(self):
         return self.operator_layout.math_wdg
+
+    # @property
+    # def math_wdgs(self):
+    #     return (self.input_layout.math_wdgs + [self.operator_wdg]
+    #             + self.output_layout.math_wdgs)
 
 
 class SubstitutionContextWidget(ContextWidget):
@@ -1156,6 +1211,9 @@ class TargetWidget(QWidget):
         # Last two children:
         child1 = self.content_layout.itemAt(nb-1).widget()  # WidgetGoalBlock
         child2 = self.content_layout.itemAt(nb-2).widget()
+        # if not (hasattr(child1, "pure_context_widget")
+        #         and hasattr(child1, "pure_context_widget")):
+        #     return
         child1_widget = child1.pure_context_widget
         # NB: child2 may be a ContextWidget, in which case
         # child2.pure_context_widget artificially refers to child2.

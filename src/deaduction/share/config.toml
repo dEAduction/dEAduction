@@ -33,6 +33,7 @@ color_for_dummy_variables = ""  # 33cccc #00cc99
 color_for_selection = "LimeGreen"  #LimeGreen  #ffff99
 color_for_props = "Fuchsia"
 color_for_operator_props = "Red"
+color_for_highlighted_math_obj = "Yellow"
 
 # Any modification of the following must be echoed
 # in the replace_dubious_characters function in in math_display.utils
