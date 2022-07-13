@@ -894,7 +894,7 @@ class AbstractStartCoEx(QDialog):
         self.__tabwidget.removeTab(1)
         self.__tabwidget.setTabEnabled(1, True)
         self.__exercise_chooser = ExerciseChooser(course, self.servint)
-        self.__tabwidget.addTab(self.__exercise_chooser, _('Exercise'))
+        self.__tabwidget.addTab(self.__exercise_chooser, _('Exercises'))
 
         self.__exercise_chooser.exercise_previewed.connect(
                 self.__enable_start_ex_btn)

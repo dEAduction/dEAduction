@@ -69,4 +69,4 @@ def init():
     fs.check_dir(all_courses_ipf_dir, create=True)
     fs.check_dir(journal)
     fs.check_dir(test_exercises)
-
+    fs.check_dir(usr_lean_exercises_dir, create=True)

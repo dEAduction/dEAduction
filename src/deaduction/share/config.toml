@@ -71,7 +71,7 @@ log_to_file = true
 
 [others]
 usr_version_nb = "-1"  # Do not modify!
-version_nb = "0.3"
+version_nb = "0.31"
 
 #########################
 # All Plateform packages
