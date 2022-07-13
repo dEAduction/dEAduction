@@ -315,6 +315,7 @@ class ExerciseMainWindow(QMainWindow):
             if not self.freezed:  # If freezed then maybe goal has not been set
                 self.ecw.update_goal(
                                  self.current_goal,
+                                 self.pending_goals,
                                  self.displayed_proof_step.current_goal_number,
                                  self.displayed_proof_step.total_goals_counter)
             self.exercise_toolbar.update()
@@ -395,6 +396,12 @@ class ExerciseMainWindow(QMainWindow):
     def properties(self):
         """ MathObject's instances displayed as properties"""
         return [item.math_object for item in self.ecw.props_wgt.items]
+
+    @property
+    def pending_goals(self):
+        proof_tree = self.proof_tree_controller.proof_tree
+        pgs = [gn.goal for gn in proof_tree.pending_goal_nodes()]
+        return pgs
 
     @property
     def current_selection_as_mathobjects(self):
@@ -794,6 +801,7 @@ class ExerciseMainWindow(QMainWindow):
         # statements_scroll = self.ecw.statements_tree.verticalScrollBar(
         #                                                            ).value()
         self.ecw.update_goal(new_goal,
+                             self.pending_goals,
                              self.displayed_proof_step.current_goal_number,
                              self.displayed_proof_step.total_goals_counter)
         self.ecw.target_wgt.mark_user_selected(self.target_selected)

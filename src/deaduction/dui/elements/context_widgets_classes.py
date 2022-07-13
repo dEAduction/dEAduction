@@ -381,7 +381,8 @@ class TargetWidget(QWidget):
         self.target = target
 
         # ───────────────────── Widgets ──────────────────── #
-        caption_label = QLabel(_('Target') + goal_count)
+        text = _("Target") + " " + goal_count if goal_count else _("Target")
+        caption_label = QLabel(text)
         self.target_label = TargetLabel(target)
 
         self.setToolTip(_('To be proved'))

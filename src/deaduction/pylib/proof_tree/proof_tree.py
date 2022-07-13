@@ -678,6 +678,14 @@ class ProofTree:
         """
         return self.root_node.truncated_unsolved_leaves(till_goal_nb)
 
+    # def unsolved_goals(self):
+    #     return [gn.goal for gn in self.unsolved_goal_nodes()]
+
+    def pending_goal_nodes(self):
+        pgn = [gn for gn in self.unsolved_goal_nodes()
+               if gn is not self.current_goal_node]
+        return pgn
+
     def go_to_first_unsolved_node(self):
         unsolved_goal_nodes = self.unsolved_goal_nodes()
         if unsolved_goal_nodes:

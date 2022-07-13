@@ -386,6 +386,7 @@ class ExerciseCentralWidget(QWidget):
             widget.setEnabled(not yes)
 
     def update_goal(self, new_goal: Goal,
+                    pending_goals,
                     current_goal_number: int,
                     total_goals_counter: int):
         """
@@ -397,6 +398,8 @@ class ExerciseCentralWidget(QWidget):
         :param current_goal_number: n° of goal under study
         :param total_goals_counter: total number of goals so far
         """
+
+        # FIXME: obsolete params
         statements_scroll = self.statements_tree.verticalScrollBar().value()
 
         # Init context (objects and properties). Get them as two list of
@@ -411,8 +414,11 @@ class ExerciseCentralWidget(QWidget):
 
         new_objects_wgt = MathObjectWidget(new_objects)
         new_props_wgt   = MathObjectWidget(new_props)
-        goal_count = f'  {current_goal_number} / {total_goals_counter}'
-        new_target_wgt  = TargetWidget(new_target, goal_count)
+        # goal_count = f'  {current_goal_number} / {total_goals_counter}'
+        pgn = len(pending_goals)
+        goal_counts = ("(" + str(pgn) + " " + _("pending") + ")" if pgn > 0
+                       else "")
+        new_target_wgt  = TargetWidget(new_target, goal_counts)
 
         # Replace in the layouts
         if self.splitter:
