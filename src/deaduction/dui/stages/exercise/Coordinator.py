@@ -164,7 +164,7 @@ class Coordinator(QObject):
         proof_state = self.exercise.initial_proof_state
         if proof_state:
             goal = proof_state.goals[0]
-            self.emw.ecw.update_goal(goal, 1, 1)
+            self.emw.ecw.update_goal(goal, [], 1, 1)
 
         # Set exercise. In particular, this will initialize servint.lean_file.
         self.server_queue.add_task(self.servint.set_exercise,

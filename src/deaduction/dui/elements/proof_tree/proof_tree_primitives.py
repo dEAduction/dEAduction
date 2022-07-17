@@ -197,8 +197,57 @@ def mid_bottom(rect: QRect) -> QPoint:
     return middle(rect.bottomRight(), rect.bottomLeft())
 
 
+def max_width(wdg1, wdg2):
+    o_width = wdg1.rect().width()
+    e_width = wdg2.rect().width()
+    log.debug(f"Widths: {o_width}, {e_width}")
+    return max(o_width, e_width)
+
+
+def paint_arrowhead(end_line, painter: QPainter,
+                    direction="horizontal_right", arrow_height=5,
+                    color=cvars.get("display.color_for_operator_props")):
+
+    # Coordinates
+    vect_x = QPoint(arrow_height, 0)
+    vect_y = QPoint(0, arrow_height)
+    if direction == "horizontal_right":
+        # end = end - vect_x
+        # upper_vertex = end - 2 * vect_x - vect_y
+        # lower_vertex = end - 2 * vect_x + vect_y
+        upper_vertex = end_line - vect_y
+        lower_vertex = end_line + vect_y
+        end = end_line + vect_x
+    elif direction == "horizontal_left":
+        # end = end + vect_x
+        upper_vertex = end_line - vect_y
+        lower_vertex = end_line + vect_y
+        end = end_line - vect_x
+    elif direction == "vertical":
+        # end = end - vect_y
+        upper_vertex = end_line + vect_x
+        lower_vertex = end_line - vect_x
+        end = end_line + vect_y
+
+    # Pen
+    pen = QPen()
+    pen.setColor(QColor(color))
+    pen.setJoinStyle(Qt.MiterJoin)
+    pen.setCapStyle(Qt.FlatCap)
+    painter.setPen(pen)
+
+    # Draw arrow
+    brush = QBrush(color, Qt.SolidPattern)
+    painter.setBrush(brush)
+    pen.setStyle(Qt.SolidLine)
+    pen.setWidth(1)
+    painter.setPen(pen)
+    triangle = QPolygon([end, upper_vertex, lower_vertex, end])
+    painter.drawPolygon(triangle)
+
+
 def paint_arrow(origin, end, painter: QPainter,
-                arrow_height=4, style=Qt.SolidLine,
+                arrow_height=5, style=Qt.SolidLine,
                 color=None, pen_width=1,
                 direction="horizontal"):
     """
@@ -212,13 +261,13 @@ def paint_arrow(origin, end, painter: QPainter,
     vect_y = QPoint(0, arrow_height)
     if direction == "horizontal":
         end = end - vect_x
-        upper_vertex = end - 2 * vect_x - vect_y
-        lower_vertex = end - 2 * vect_x + vect_y
+        # upper_vertex = end - 2 * vect_x - vect_y
+        # lower_vertex = end - 2 * vect_x + vect_y
         end_line = end - 2*vect_x
     elif direction == "vertical":
         end = end - vect_y
-        upper_vertex = end - 2 * vect_y + vect_x
-        lower_vertex = end - 2 * vect_y - vect_x
+        # upper_vertex = end - 2 * vect_y + vect_x
+        # lower_vertex = end - 2 * vect_y - vect_x
         end_line = end - 2*vect_y
 
     # Pen
@@ -235,14 +284,42 @@ def paint_arrow(origin, end, painter: QPainter,
     painter.drawLine(origin, end_line)
 
     # Draw arrow
-    brush = QBrush(color, Qt.SolidPattern)
-    painter.setBrush(brush)
-    pen.setStyle(Qt.SolidLine)
-    pen.setWidth(1)
-    painter.setPen(pen)
-    triangle = QPolygon([end, upper_vertex, lower_vertex, end])
-    painter.drawPolygon(triangle)
+    if direction == "horizontal":
+        direction = "horizontal_right"
+    paint_arrowhead(end_line, painter, direction, arrow_height, color)
+    # brush = QBrush(color, Qt.SolidPattern)
+    # painter.setBrush(brush)
+    # pen.setStyle(Qt.SolidLine)
+    # pen.setWidth(1)
+    # painter.setPen(pen)
+    # triangle = QPolygon([end, upper_vertex, lower_vertex, end])
+    # painter.drawPolygon(triangle)
     painter.end()
+
+
+def points_for_substitution_arrow(origin_wdg: QWidget, end_wdg: QWidget,
+                                  middle_wdg: QWidget,
+                                  parent_wdg: QWidget,
+                                  inner_sep=10,
+                                  shift_start=False) -> [QPoint]:
+    """
+    Compute points for tracing a curved substitution arrow. The arrow goes from
+    the middle right of origin_wdg to the middle right of end_wdg, through
+    the middle left of middle_wdg,  within parent_wdg.
+    """
+    shift = QPoint(inner_sep, 0)
+    rel_origin = mid_right(origin_wdg.rect())
+    origin = origin_wdg.mapTo(parent_wdg, rel_origin) + shift
+    if shift_start:
+        origin += shift
+    rel_end = mid_right(end_wdg.rect())
+    end = end_wdg.mapTo(parent_wdg, rel_end) + shift
+    rel_mid = mid_left(middle_wdg.rect())
+    mid = middle_wdg.mapTo(parent_wdg, rel_mid) - shift
+    control1 = QPoint(mid.x(), origin.y())
+    control2 = QPoint(mid.x(), end.y())
+
+    return [origin, control1, mid, control2, end]
 
 
 def points_for_curved_arrow(origin_wdg: QWidget, end_wdg: QWidget,
@@ -262,10 +339,10 @@ def points_for_curved_arrow(origin_wdg: QWidget, end_wdg: QWidget,
     return [origin, control1, mid, control2, end]
 
 
-def paint_curved_arrow(points: [QPoint],
-                       painter: QPainter,
-                       style=Qt.DotLine,
-                       color=None, pen_width=1):
+def paint_curved_line(points: [QPoint],
+                      painter: QPainter,
+                      style=Qt.DotLine,
+                      color=None, pen_width=1):
     """
     Use painter to draw a (quadratic Bezier) curved arrow.
     """
@@ -277,10 +354,20 @@ def paint_curved_arrow(points: [QPoint],
     path.quadTo(points[1], points[2])
     path.quadTo(points[3], points[4])
     pen = QPen(QColor(color))
+    painter.setBrush(Qt.NoBrush)
     pen.setStyle(style)
     pen.setWidth(pen_width)
     painter.setPen(pen)
     painter.drawPath(path)
+
+
+def paint_substitution_arrow(points: [QPoint],
+                             painter: QPainter,
+                             style=Qt.DashLine,
+                             color=None, pen_width=1):
+    paint_curved_line(points, painter, style, color, pen_width)
+    end = points[-1]
+    paint_arrowhead(end, painter, direction="horizontal_left", color=color)
 
 
 def rectangle(item):
@@ -290,62 +377,35 @@ def rectangle(item):
         return item.contentsRect()
 
 
-class CurvedArrow:
+class CurvedLine:
     def __init__(self, origin_wdg: QWidget, end_wdg: QWidget, parent):
-        # super().__init__(parent=parent)
         color_var = cvars.get("display.color_for_variables")
         color_prop = cvars.get("display.color_for_props")
         self.origin_wdg = origin_wdg
         self.end_wdg = end_wdg
         self.parent_wdg = parent
         self.color = color_prop if self.origin_wdg.is_prop else color_var
-        # rel_origin = mid_bottom(origin_wdg.rect())
-        # self.origin = origin_wdg.mapTo(parent, rel_origin)
-        # rel_end = mid_top(end_wdg.rect())
-        # self.end = end_wdg.mapTo(parent, rel_end)
-        #
-        # # top_left = QPoint(min(self.origin.x(), self.end.x()),
-        # #                   self.origin.y())
-        # # bottom_right = QPoint(max(self.origin.x(), self.end.x()),
-        # #                       self.end.y())
-        # #
-        # # rect = QRect(top_left, bottom_right)
-        # # self.setGeometry(parent.geometry())
-        # self.mid = middle(self.origin, self.end)
-        # self.control1 = QPoint(self.origin.x(), self.mid.y())
-        # self.control2 = QPoint(self.end.x(), self.mid.y())
 
-        # rel_origin = mid_bottom(self.origin_wdg.rect())
-        # origin = self.origin_wdg.mapTo(self.parent_wdg, rel_origin)
-        # rel_end = mid_top(self.end_wdg.rect())
-        # end = self.end_wdg.mapTo(self.parent_wdg, rel_end)
-        # top_left = QPoint(min(origin.x(), end.x()), origin.y())
-        # bottom_right = QPoint(max(origin.x(), end.x()), end.y())
-        #
-        # rect = QRect(top_left, bottom_right)
-        # self.setGeometry(rect)
-        # mid = middle(origin, end)
-        # control1 = QPoint(origin.x(), mid.y())
-        # control2 = QPoint(end.x(), mid.y())
 
-        # self.points = [self.origin, self.control1, self.mid,
-        #                self.control2, self.end]
+class CurvedSubstitutionArrow:
+    """
+    A class for recording data for a target substitution arrow.
+    """
+    inner_sep = 20
 
-    # def paintEvent(self, event):
-    #     rel_origin = mid_bottom(self.origin_wdg.rect())
-    #     origin = self.origin_wdg.mapTo(self.parent_wdg, rel_origin)
-    #     rel_end = mid_top(self.end_wdg.rect())
-    #     end = self.end_wdg.mapTo(self.parent_wdg, rel_end)
-    #     mid = middle(origin, end)
-    #     control1 = QPoint(origin.x(), mid.y())
-    #     control2 = QPoint(end.x(), mid.y())
-    #
-    #     points = [origin, control1, mid, control2, end]
-    #     self.setGeometry(self.parent_wdg.geometry())
-    #
-    #     # points = [self.origin, self.control1, self.mid, self.control2, self.end]
-    #     painter = QPainter(self)
-    #     paint_curved_arrow(points, painter)
+    def __init__(self, origin_wdg: QWidget, end_wdg: QWidget,
+                 middle_wdg: QWidget, parent):
+        self.origin_wdg = origin_wdg
+        self.middle_wdg = middle_wdg
+        self.end_wdg = end_wdg
+        self.parent_wdg = parent
+
+    @property
+    def color(self):
+        if self.origin_wdg.isEnabled() and self.end_wdg.isEnabled():
+            return cvars.get("display.color_for_operator_props")
+        else:
+            return "lightgrey"
 
 
 class VerticalArrow(QWidget):
@@ -353,7 +413,7 @@ class VerticalArrow(QWidget):
         super(VerticalArrow, self).__init__()
         self.setMinimumHeight(minimum_height)
         self.setFixedWidth(arrow_width*3)
-        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
         self.pen_width = 1
         self.arrow_width = arrow_width + self.pen_width
         self.style = style
@@ -454,7 +514,7 @@ class RawLabelMathObject(QLabel):
 
     Param math_object may be a MathObject instance or a string or a Statement.
     """
-    # highlight_in_tree = Signal(ContextMathObject)
+    # highlight_in_tree = Signal(ContextMathObject) Fixme: Does not work ?!
     highlight_in_tree: callable = None
 
     def __init__(self, math_object=None,
@@ -469,7 +529,7 @@ class RawLabelMathObject(QLabel):
         self.math_object = math_object
         self.setTextFormat(Qt.RichText)
         self.bold = False
-
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         # self.setText(self.txt())
 
     def set_bold(self, yes=True):
@@ -505,9 +565,9 @@ class RawLabelMathObject(QLabel):
                            else self.math_object)
             txt = math_object.to_display(format_="html",
                                          use_color=self.isEnabled())
-        return txt
+            return txt
 
-    def update(self):
+    def update_text(self):
         self.setText(self.txt())
 
     def changeEvent(self, event) -> None:
@@ -529,7 +589,6 @@ class RawLabelMathObject(QLabel):
         to highlight all related RawLabelMO in the proof tree widget.
         """
         super().enterEvent(event)
-        # print("Coucou !")
         if isinstance(self.math_object, ContextMathObject):
             self.highlight()
             # self.highlight_in_tree.emit(self.math_object)
@@ -538,12 +597,36 @@ class RawLabelMathObject(QLabel):
 
     def leaveEvent(self, event):
         super().leaveEvent(event)
-        # print("Bye...")
         if isinstance(self.math_object, ContextMathObject):
             self.highlight(False)
             if self.highlight_in_tree:
                 self.highlight_in_tree(self.math_object, False)
 
+
+# class ProofTitleLabel(QWidget):
+#     """
+#     A QLabel to display a mgs like "Proof of ...".
+#     The colon is added on top of html_msg by super class RawLabelMathObject
+#     iff self.disclosed is True.
+#     """
+#
+#     # TODO: update doc
+#     def __init__(self, html_msg):
+#         # super().__init__(html_msg=html_msg)
+#         super().__init__()
+#         self.math_wdg = RawLabelMathObject(html_msg=html_msg)
+#         self.math_wdg.setTextFormat(Qt.RichText)
+#         layout = QHBoxLayout()
+#         layout.addWidget(self.math_wdg)
+#         layout.addStretch(10)
+#         self.setLayout(layout)
+#         self.disclosed = True
+#
+#     def set_bold(self, yes=True):
+#         self.math_wdg.set_bold(yes)
+#
+#     def update_text(self):
+#         self.math_wdg.update_text()
 
 class ProofTitleLabel(RawLabelMathObject):
     """
@@ -551,6 +634,8 @@ class ProofTitleLabel(RawLabelMathObject):
     The colon is added on top of html_msg by super class RawLabelMathObject
     iff self.disclosed is True.
     """
+
+    # TODO: update doc
     def __init__(self, html_msg):
         super().__init__(html_msg=html_msg)
         self.disclosed = True
@@ -619,14 +704,16 @@ class LayoutMathObjects(QVBoxLayout):
         return [lyt.itemAt(i+1) for i in range(self.nb_objects)]
 
     def math_wdg_at(self, i):
-        return self.lyt_math_objects[i].math_wdg
+        if 0 <= i <= self.nb_objects-1:
+            return self.lyt_math_objects[i].math_wdg
 
     @property
     def math_wdgs(self):
         return [self.math_wdg_at(i) for i in range(self.nb_objects)]
 
     def math_object_at(self, i):
-        return self.math_wdg_at(i).math_object
+        if 0 <= i <= self.nb_objects-1:
+            return self.math_wdg_at(i).math_object
 
     @property
     def math_objects(self):
@@ -646,16 +733,18 @@ class LayoutMathObjects(QVBoxLayout):
         Mind that index of math_object is 1 less than index in layout,
         because of QSpacerItem at position 0.
         """
-        item = self.layout().takeAt(i+1)
-        end_pos = self.layout().count()-1
-        self.layout().insertItem(end_pos, item)
+        end_pos = self.layout().count()-2
+        if i+1 != end_pos:
+            item = self.layout().takeAt(i+1)
+            self.layout().insertItem(end_pos, item)
 
     def put_at_beginning(self, j):
         """
         Put at the beginning (after stretch) the object currently at position i.
         """
-        item = self.layout().takeAt(j+1)
-        self.layout().insertItem(1, item)
+        if j+1 != 1:
+            item = self.layout().takeAt(j+1)
+            self.layout().insertItem(1, item)
 
 
 class OperatorLMO(RawLabelMathObject):
@@ -691,7 +780,7 @@ class LayoutOperator(QWidget):
         self.setLayout(layout)
 
 
-class TargetSubstitutionArrow(QWidget):
+class TargetSubstitutionLabel(RwItemLMO):
     """
     Display an arrow labelled by some Generic LMO, e.g. a rewriting rule as in
             |
@@ -699,31 +788,33 @@ class TargetSubstitutionArrow(QWidget):
             |
             V
     """
+
+    # TODO: update doc
     def __init__(self, rw_item):
         if isinstance(rw_item, tuple):  # FIXME: this is just for now...
             rw_item = rw_item[0] + " " + rw_item[1]
 
-        super().__init__()
-        layout = QHBoxLayout()
-        layout.addStretch(1)
-
-        # Arrow
-        arrow_layout = QVBoxLayout()
-        self.arrow_wdg = VerticalArrow()
-        arrow_layout.addStretch(1)
-        arrow_layout.addWidget(self.arrow_wdg)
-        arrow_layout.addStretch(1)
-        layout.addLayout(arrow_layout)
-
-        # Label
-        label_layout = QVBoxLayout()
-        self.rw_label = RwItemLMO(rw_item)
-        label_layout.addStretch(1)
-        label_layout.addWidget(self.rw_label)
-        label_layout.addStretch(1)
-        layout.addLayout(label_layout)
-
-        self.setLayout(layout)
+        super().__init__(rw_item)
+        # layout = QHBoxLayout()
+        # layout.addStretch(1)
+        #
+        # # Arrow
+        # arrow_layout = QVBoxLayout()
+        # self.arrow_wdg = VerticalArrow()
+        # arrow_layout.addStretch(1)
+        # arrow_layout.addWidget(self.arrow_wdg)
+        # arrow_layout.addStretch(1)
+        # layout.addLayout(arrow_layout)
+        #
+        # # Label
+        # label_layout = QVBoxLayout()
+        # self.rw_label = RwItemLMO(rw_item)
+        # label_layout.addStretch(1)
+        # label_layout.addWidget(self.rw_label)
+        # label_layout.addStretch(1)
+        # layout.addLayout(label_layout)
+        #
+        # self.setLayout(layout)
 
 
 class SubstitutionArrow(QWidget):
@@ -784,11 +875,19 @@ class ContextWidget(QWidget):
     If called with math_objects, will just display those math_objects on 1 line.
     Descendant class OperatorContextWidget displays a logical inference.
     Descendant class SubstitutionContextWidget displays some context rewriting.
+
+    Premises are stored in self.pure_premises. Displayed premises,
+    as provided by the property, may be permuted along the way ; so
+    self.pure_premises and self.pure_premises should coincide only up to
+    a permutation.
     """
 
-    def __init__(self, math_objects):
+    def __init__(self, math_objects,
+                 premises=None, operator=None, conclusions=None):
         super().__init__()
-        self.operator = None
+        self.pure_premises = premises
+        self.operator = operator
+        self.pure_conclusions = conclusions
         self.type_ = None
         self.layout = QHBoxLayout()
         self.layout.addStretch(1)
@@ -867,8 +966,9 @@ class ContextWidget(QWidget):
             for mo2 in other.math_objects:
                 if mo1 == mo2 or mo1.is_descendant_of(mo2):
                     match = (mo1, mo2)
-        if match:
-            return self.premises.index(mo1), other.math_objects.index(mo2)
+                    i1 = self.premises.index(mo1)
+                    i2 = other.math_objects.index(mo2)
+                    return i1, i2
 
     def match_premises_conclusions(self, other):
         """
@@ -882,8 +982,9 @@ class ContextWidget(QWidget):
             for mo2 in other.conclusions:
                 if mo1 == mo2 or mo1.is_descendant_of(mo2):
                     match = (mo1, mo2)
-        if match:
-            return self.premises.index(mo1), other.conclusions.index(mo2)
+                    i1 = self.premises.index(mo1)
+                    i2 = other.conclusions.index(mo2)
+                    return i1, i2
 
     def match_operator_math_objects(self, other):
         """
@@ -899,9 +1000,9 @@ class ContextWidget(QWidget):
             return
         for mo in other.math_objects:
             if operator == mo or operator.is_descendant_of(mo):
-                match = mo
-        if match:
-            return other.math_objects.index(match)
+                return other.math_objects.index(mo)
+        # if match:
+        #     return other.math_objects.index(match)
 
     def match_operator_conclusions(self, other):
         """
@@ -917,9 +1018,10 @@ class ContextWidget(QWidget):
             return
         for mo in other.conclusions:
             if operator == mo or operator.is_descendant_of(mo):
-                match = mo
-        if match:
-            return other.conclusions.index(match)
+                return other.conclusions.index(mo)
+
+        # if match:
+        #     return other.conclusions.index(match)
 
     def find_link(self, other):
         """
@@ -957,7 +1059,7 @@ class ContextWidget(QWidget):
                 i, j = match
                 # print("Link found premises:")
                 # print(match)
-                self.input_layout.put_at_beginning(i)
+                self.input_layout.put_at_beginning(i)  # FIXME!!!
                 other.output_layout.put_at_end(j)
                 return (other.output_layout.math_wdg_at_end,
                         self.input_layout.math_wdg_at_beginning)
@@ -978,9 +1080,9 @@ class OperatorContextWidget(ContextWidget):
     """
 
     def __init__(self, premises, operator, conclusions):
-        super().__init__([])
+        super().__init__([], premises, operator, conclusions)
         # self.premises: [MathObject] = premises
-        self.operator: Union[MathObject, Statement] = operator
+        # self.operator: Union[MathObject, Statement] = operator
         # self.conclusions: [MathObject] = conclusions
         self.type_ = "operator"
         self.input_layout = None
@@ -1028,10 +1130,9 @@ class SubstitutionContextWidget(ContextWidget):
         MathObjects/strings to be written above and below the arrow.
         """
 
-        # FIXME: arrow length should never be less than operator length.
-        super().__init__([])
+        super().__init__([], premises, rw_item, conclusions)
         # self.premises = premises
-        self.operator = rw_item
+        # self.operator = rw_item
         # self.conclusions = conclusions
         self.type_ = "substitution"
 
@@ -1055,17 +1156,82 @@ class SubstitutionContextWidget(ContextWidget):
         return self.arrow_wdg.rw_label
 
 
+class TargetAndRwLayout(QGridLayout):
+    """
+    A class to display a part of the proof tree between two "Proof of...".
+    """
+    min_space = 100
+
+    # FIXME: turn this into a gridlayout
+
+    def __init__(self):
+        super().__init__()
+        self.rw_wdg: Optional[QWidget] = None
+        self.first_column_width: Optional[callable()] = None
+        self._content_count = 0
+
+    def all_content_widgets(self):
+        return [self.itemAtPosition(i, 0).widget()
+                for i in range(self.content_count)]
+
+    def all_widgets(self):
+        wdgs = self.all_content_widgets()
+        if self.rw_wdg:
+            wdgs.append(self.rw_wdg)
+        return  wdgs
+
+    # @property
+    # def width(self):
+    #     if self._width is None:
+    #         self._width = self.content_lyt.contentsRect().width()
+    #         wdgs = self.all_content_widgets()
+    #         if wdgs:
+    #             self._width = max([wdg.width() for wdg in wdgs])
+    #         else:
+    #             self._width = 0
+    #     return self._width
+
+    @property
+    def content_count(self):
+        return self._content_count
+
+    def add_to_content(self, wdg):
+        """
+        Add wdg to content (column 0), in last position.
+        """
+        self.addWidget(wdg, self.content_count, 0)
+        self._content_count += 1
+
+    def set_rw_wdg(self, width: callable, rw_wdg):
+        """
+        Set rw_wdg in the third column.
+        """
+        self.rw_wdg = rw_wdg
+        self.first_column_width = width
+        row_nb = self.rowCount()
+        self.addWidget(rw_wdg, 0, 2, row_nb, 1)
+        self.setAlignment(rw_wdg, Qt.AlignVCenter)
+
+    def update_width(self):
+        """
+        Update width for nice display. This should be called once all sizes
+        have been set up (with a QTimer).
+        """
+        self.setColumnMinimumWidth(0, self.first_column_width())
+        self.setColumnMinimumWidth(1, self.min_space)
+
+
 class TargetWidget(QWidget):
     """
     A widget for displaying a new target, with a target_msg (generally "Proof of
     ...") and a layout for displaying the proof of the new target.
     A disclosure triangle allows showing / hiding the proof.
     The layout is a grid layout, with the following ingredients:
-    triangle     |  "Proof of target"
+    triangle     |  "Proof of target" (title_label)
     -----------------------------
     vertical bar | content_layout
                  |----------------
-                 | status_label
+                 | "under construction" (status_label)
 
     This grid may be extended when adding a child with target substitution (
     see below).
@@ -1084,17 +1250,15 @@ class TargetWidget(QWidget):
         self.target = target
         self.target_msg = target_msg
         self.parent_wgb = parent_wgb
-        self.content_layouts = []
-        self.curved_arrows = []
+        self.content_n_rw_lyts: [TargetAndRwLayout] = []
+        self.curved_arrows: [CurvedLine] = []
 
         # Title and status:
-        self.title_label = title_label
-        self.title_label.setTextFormat(Qt.RichText)
-        self.title_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.title_label: ProofTitleLabel = title_label
         self.status_lbls: [BlinkingLabel] = []
         self.add_status_lbl(status_label)
         self.substituted_title_lbls = []
-        self.substitution_arrows = []
+        self.target_substitution_arrows: [CurvedSubstitutionArrow] = []
 
         # Disclosure triangle and vertical line
         self.triangle = DisclosureTriangle(self.toggle)
@@ -1102,16 +1266,14 @@ class TargetWidget(QWidget):
         self.vert_bar = VertBar()
 
         # Layouts
-        self.content_layouts.append(QVBoxLayout())
+        self.content_n_rw_lyts.append(TargetAndRwLayout())
         self.main_layout = QGridLayout()  # 2x3, five items
         self.main_layout.addWidget(self.triangle, 0, 0)
         self.main_layout.addWidget(self.vert_bar, 1, 0, -1, 1)
         self.main_layout.addWidget(self.title_label, 0, 1)
-        self.main_layout.addWidget(QLabel(""), 0, 3)  # Just to add stretch
-        self.main_layout.addLayout(self.content_layout, 1, 1)
+        self.main_layout.addLayout(self.content_n_rw_lyt, 1, 1)
         self.main_layout.addWidget(self.current_status_label, 2, 1)
 
-        # layout.setSizeConstraint(QLayout.SetMinAndMaxSize)
         self.main_layout.setColumnStretch(3, 1)
         self.main_layout.setAlignment(self.triangle, Qt.AlignHCenter)
         self.main_layout.setAlignment(self.vert_bar, Qt.AlignHCenter)
@@ -1122,12 +1284,16 @@ class TargetWidget(QWidget):
             self.toggle()
 
     @property
+    def content_n_rw_lyt(self):
+        return self.content_n_rw_lyts[-1]
+
+    @property
     def content_layout(self) -> QVBoxLayout:
         """
         The children should be added in the content_layout of the last
         substituted target.
         """
-        return self.content_layouts[-1]
+        return self.content_n_rw_lyt.content_lyt
 
     @property
     def current_status_label(self) -> BlinkingLabel:
@@ -1136,13 +1302,12 @@ class TargetWidget(QWidget):
     def add_status_lbl(self, child_status_lbl):
         if self.status_lbls:
             self.current_status_label.activate(False)
-        # self.current_status_label.deactivate()
         child_status_lbl.activate()
         self.status_lbls.append(child_status_lbl)
 
     @property
     def children_layout(self):
-        return self.content_layout
+        return self.content_n_rw_lyt
 
     def set_as_current_target(self, yes=True, blinking=True) \
             -> Optional[QWidget]:
@@ -1158,26 +1323,20 @@ class TargetWidget(QWidget):
                       f"{self.current_status_label.text()}")
             self.title_label.set_bold(True)
             if blinking:
-                # self.set_status()
                 self.current_status_label.start_blinking()
-                # self.parent_wgb.make_visible(self.current_status_label)
                 return self.current_status_label
             else:
                 self.current_status_label.stop_blinking()
-                # This is not pertinent:
-                # self.parent_wgb.make_visible(self.title_label)
         else:
             self.current_status_label.stop_blinking()
-            # self.set_status()
             self.title_label.set_bold(False)
 
     @property
     def all_widgets(self):
-        widgets = (self.substituted_title_lbls + self.substitution_arrows +
-                   [self.current_status_label, self.vert_bar])
-        for layout in self.content_layouts:
-            more = [layout.itemAt(i).widget() for i in range(layout.count())]
-            widgets.extend(more)
+        widgets = (self.substituted_title_lbls
+                   + [self.current_status_label, self.vert_bar])
+        for lyt in self.content_n_rw_lyts:
+            widgets.extend(lyt.all_widgets())
         return widgets
 
     def toggle(self):
@@ -1187,10 +1346,8 @@ class TargetWidget(QWidget):
         only when content is displayed.
         """
 
-        # FIXME: colon, status_msg
-        # self.hidden = not self.hidden
         self.title_label.disclosed = not self.title_label.disclosed
-        self.title_label.update()
+        self.title_label.update_text()
         self.current_status_label.disclosed = self.title_label.disclosed
         self.current_status_label.update_text()
         for wdg in self.all_widgets:
@@ -1203,17 +1360,17 @@ class TargetWidget(QWidget):
         (as context2 of a WidgetGoalBlock inserted as first child of
         self.content_layout).
         """
+
         # TODO: try to link self.context2.
         match = None
-        nb = self.content_layout.count()
+        # log.debug(f"Already {nb} children")
+        nb = self.content_n_rw_lyt.content_count
         if nb < 2:
             return
         # Last two children:
-        child1 = self.content_layout.itemAt(nb-1).widget()  # WidgetGoalBlock
-        child2 = self.content_layout.itemAt(nb-2).widget()
-        # if not (hasattr(child1, "pure_context_widget")
-        #         and hasattr(child1, "pure_context_widget")):
-        #     return
+        child1 = self.content_n_rw_lyt.itemAtPosition(nb-1, 0).widget()  #
+        # WidgetGoalBlock
+        child2 = self.content_n_rw_lyt.itemAtPosition(nb-2, 0).widget()
         child1_widget = child1.pure_context_widget
         # NB: child2 may be a ContextWidget, in which case
         # child2.pure_context_widget artificially refers to child2.
@@ -1223,51 +1380,68 @@ class TargetWidget(QWidget):
         if not match:
             return
         source_wdg, target_wdg = match
-        arrow = CurvedArrow(source_wdg, target_wdg, self)
+        arrow = CurvedLine(source_wdg, target_wdg, self)
         self.curved_arrows.append(arrow)
 
     def add_child_wgb(self, child: QWidget):
         """
         Add a WidgetGoalBlock in self.content_layout. Handle the case of a
         substituted target: the title_lbl and status_lbl are "stolen" from
-        the WGB, which is not displayed. In this case, a new content_layout
-        is added, and we get thje following structure:
+        the WGB, which is not displayed. In this case, a new content_n_rw_lyt
+        is added, and we get the following structure:
 
-        vertical bar | content_layout_1 |
-                     |----------------  | substitution_arrow
-                     | child_title      |
-                     |----------------  |
-                     | content_layout_2 |
-                     |----------------  |
+        vertical bar | content_n_rw_lyt_1 |
+                     |----------------    |
+                     | child_title        |
+                     |----------------    |
+                     | content_n_rw_lyt_2 |
+                     |----------------    |
                      | status_label
 
         """
-        if not hasattr(child, "substitution_arrow"):
+        if not hasattr(child, "substitution_label"):
+            log.debug(f"Adding child {child.goal_nb}")
             child.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-            self.content_layout.addWidget(child)
-            self.content_layout.setAlignment(child, Qt.AlignLeft)
+            self.content_n_rw_lyt.add_to_content(child)
+            self.content_n_rw_lyt.setAlignment(child, Qt.AlignLeft)
             self.link_last_child()
         else:
+            log.debug(f"Adding target subs child {child.goal_nb}")
             # log.debug("Adding target substitution child")
             # Status label should not be displayed anymore:
             self.main_layout.removeWidget(self.current_status_label)
             self.current_status_label.hide()
             self.current_status_label.activate(yes=False)
 
-            nb_targets = len(self.content_layouts)
+            nb_targets = len(self.content_n_rw_lyts)
             child_title_lbl_pos = nb_targets*2
             child_title_lbl = child.proof_title_label
             child_status_lbl = child.status_label
             # Record new title and status labels:
             self.substituted_title_lbls.append(child_title_lbl)
             self.add_status_lbl(child_status_lbl)
-            # self.status_lbls.append(child_status_lbl)
 
-            # Display new title, content, and status ; modify vertical bar:
+            # Display new title and substitution arrow
             self.main_layout.addWidget(child_title_lbl,
                                        child_title_lbl_pos, 1)
-            self.content_layouts.append(QVBoxLayout())
-            self.main_layout.addLayout(self.content_layout,
+            stl = self.substituted_title_lbls
+            origin_wdg = stl[-2] if len(stl) > 1 else self.title_label
+            origin_math_wdg = origin_wdg
+            end_math_wdg = stl[-1]
+
+            def width():
+                return max_width(origin_math_wdg, end_math_wdg)
+            self.content_n_rw_lyt.set_rw_wdg(width, child.substitution_label)
+            middle_wdg = child.substitution_label
+            substitution_arrow = CurvedSubstitutionArrow(origin_math_wdg,
+                                                         end_math_wdg,
+                                                         middle_wdg,
+                                                         self)
+            self.target_substitution_arrows.append(substitution_arrow)
+
+            # Display content and status ; modify vertical bar:
+            self.content_n_rw_lyts.append(TargetAndRwLayout())
+            self.main_layout.addLayout(self.content_n_rw_lyt,
                                        child_title_lbl_pos+1, 1)
             self.main_layout.addWidget(child_status_lbl, child_title_lbl_pos+2,
                                        1)
@@ -1275,22 +1449,31 @@ class TargetWidget(QWidget):
             self.main_layout.addWidget(self.vert_bar, 1, 0,
                                        child_title_lbl_pos+2, 1)
 
-            # Display and record substitution arrow:
-            self.main_layout.addWidget(child.substitution_arrow,
-                                       child_title_lbl_pos-2, 2, 3, 1)
-            self.substitution_arrows.append(child.substitution_arrow)
-
     def paintEvent(self, event):
         """
-        Paint the curved arrows linking successive output / inputs.
+        Paint the curved arrows linking successive output / inputs,
+        and the target substitution arrows.
         """
-        # FIXME: this way of doing is not compatible with disabling arrow.
-        #  --> put the arrow in a widget, that can be disabled.
+
         painter = QPainter(self)
         for arrow in self.curved_arrows:
             if arrow.origin_wdg.isEnabled() and arrow.end_wdg.isEnabled():
                 points = points_for_curved_arrow(arrow.origin_wdg,
                                                  arrow.end_wdg,
                                                  arrow.parent_wdg)
-                paint_curved_arrow(points, painter, color=arrow.color)
+                paint_curved_line(points, painter, color=arrow.color)
+
+        init = True
+        for (content_rw_lyt, arrow) in zip(self.content_n_rw_lyts,
+                                           self.target_substitution_arrows):
+            points = points_for_substitution_arrow(arrow.origin_wdg,
+                                                   arrow.end_wdg,
+                                                   arrow.middle_wdg,
+                                                   arrow.parent_wdg,
+                                                   inner_sep=arrow.inner_sep,
+                                                   shift_start=not init)
+            QTimer.singleShot(0, content_rw_lyt.update_width)
+            init = False
+            paint_substitution_arrow(points, painter, color=arrow.color)
+        painter.end()
 

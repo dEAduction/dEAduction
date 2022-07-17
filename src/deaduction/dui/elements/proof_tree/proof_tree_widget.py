@@ -40,7 +40,7 @@ import deaduction.pylib.config.vars as cvars
 from deaduction.dui.elements.proof_tree.proof_tree_primitives import \
     BlinkingLabel, ProofTitleLabel, RawLabelMathObject, \
     ContextWidget, TargetWidget, OperatorContextWidget, SubstitutionContextWidget, \
-    TargetSubstitutionArrow, paint_layout
+    TargetSubstitutionLabel, paint_layout
 
 global _
 
@@ -214,7 +214,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
     """
     rw_level = 1  # show rw but not implicit rw  # FIXME: not implemented
     proof_tree_window = None  # Set up by ProofTreeWindow
-    garbage_collector = []
+    garbage_collector: [QWidget] = []
 
     def __init__(self, logical_parent, goal_node,
                  context1=None, target=None, context2=None, pure_context=None,
@@ -269,6 +269,14 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
 
     def __repr__(self):
         return self.context1, self.target, self.context2, self.pure_context
+
+    def delete_garbage(self):
+        log.debug(f"Deleting {len(self.garbage_collector)} widgets...")
+        for wdg in self.garbage_collector:
+            try:
+                wdg.deleteLater()
+            except RuntimeError:
+                log.warning("(Already deleted)")
 
     @property
     def children_layout(self):
@@ -394,7 +402,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
 
         if self.context2 and self.target_widget:
             self.context2_widget = ContextWidget(self.context2)
-            self.children_layout.addWidget(self.context2_widget)
+            self.children_layout.add_to_content(self.context2_widget)
 
     # ───────────────────── Add children methods ──────────────────── #
     @property
@@ -524,9 +532,9 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         else:
             pcw = self.pure_context_widget
             premises, operator, conclusions, type_ = self.pure_context
-            tests = [premises == pcw.premises,
+            tests = [premises == pcw.pure_premises,
                      operator == pcw.operator,
-                     conclusions == pcw.conclusions,
+                     conclusions == pcw.pure_conclusions,
                      type_ == pcw.type_]
             return all(tests)
 
@@ -541,7 +549,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
 
     def check_children(self):
         """
-        Check if children_widget displays descendants_to_be_displayed.
+        Check if children_widget coincides with descendants_to_be_displayed.
         """
         return self.children_widgets == self.descendants_displayed_by_self
 
@@ -744,17 +752,19 @@ class TargetSubstitutionWGB(WidgetGoalBlock):
     |
     |
     | <status msg>
-
+    Actually the attributes (substitution_label, proof_title_label,
+    status_label) will be displayed by the target_widget of an ancestor.
     """
+
     def __init__(self, logical_parent, goal_node, rw_item, target=None):
         if not target:
             target = goal_node.goal.target.math_type
         super().__init__(logical_parent, goal_node, target=target,
                          is_target_substitution=True)
-        self.substitution_arrow = TargetSubstitutionArrow(rw_item)
+        self.substitution_label = TargetSubstitutionLabel(rw_item)
 
     def set_enabled(self, yes=True):
-        self.substitution_arrow.setEnabled(yes)
+        self.substitution_label.setEnabled(yes)
         # if self.target_widget:
         #     self.target_widget.title_label.setEnabled(yes)
         #     self.target_widget.status_label.setEnabled(yes)
@@ -762,12 +772,6 @@ class TargetSubstitutionWGB(WidgetGoalBlock):
             self.proof_title_label.setEnabled(yes)
         if self.status_label:
             self.status_label.setEnabled(yes)
-
-# def changeEvent(self, event):
-    #     if event.type is QEvent.EnabledChange:
-    #         self.substitution_arrow.setEnabled(self.isEnabled())
-    #         if self.target_widget:
-    #             self.target_widget.title_label.setEnabled(self.isEnabled())
 
 
 class EmptyWGB(WidgetGoalBlock):
@@ -839,6 +843,7 @@ class ProofTreeWindow(QWidget):
     def update_display(self):
         if self.main_block:
             self.main_block.update_display_recursively()
+            # self.main_block.delete_garbage()
 
     def unset_current_target(self):
         self.main_block.unset_current_target_recursively()

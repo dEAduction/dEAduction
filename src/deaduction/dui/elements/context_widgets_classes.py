@@ -408,6 +408,8 @@ class TargetWidget(QWidget):
         central_layout = QVBoxLayout()
         central_layout.addWidget(caption_label)
         central_layout.addWidget(self.target_label)
+        central_layout.setAlignment(caption_label, Qt.AlignHCenter)
+        central_layout.setAlignment(self.target_label, Qt.AlignHCenter)
 
         main_layout = QHBoxLayout()
         main_layout.addStretch()
