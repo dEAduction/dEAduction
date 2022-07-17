@@ -684,6 +684,7 @@ class GoalSolvedWGB(WidgetGoalBlock):
         target = goal_node.goal.target.math_type
         super().__init__(logical_parent, goal_node, target=target)
         # self.set_invisible()
+        self.hide()
 
 
 class ByCasesWGB(WidgetGoalBlock):
