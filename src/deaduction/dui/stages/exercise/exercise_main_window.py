@@ -400,7 +400,10 @@ class ExerciseMainWindow(QMainWindow):
     @property
     def pending_goals(self):
         proof_tree = self.proof_tree_controller.proof_tree
-        pgs = [gn.goal for gn in proof_tree.pending_goal_nodes()]
+        if proof_tree.is_at_end():
+            pgs = [gn.goal for gn in proof_tree.pending_goal_nodes()]
+        else:
+            pgs = []
         return pgs
 
     @property

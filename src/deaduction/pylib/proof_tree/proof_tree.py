@@ -681,7 +681,14 @@ class ProofTree:
     # def unsolved_goals(self):
     #     return [gn.goal for gn in self.unsolved_goal_nodes()]
 
+    def unsolved_goals_count(self):
+        return len(self.unsolved_goal_nodes())
+
     def pending_goal_nodes(self):
+        """
+        NB: the result is a bit strange when proof tree is not at end.
+        """
+        # gn = self.current_goal_node.goal_nb
         pgn = [gn for gn in self.unsolved_goal_nodes()
                if gn is not self.current_goal_node]
         return pgn
