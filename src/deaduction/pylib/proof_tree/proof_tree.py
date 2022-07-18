@@ -59,6 +59,7 @@ class GoalNode:
         self._child_proof_step = child_proof_step
         self._is_solved = is_solved
         self.goal_has_changed = False
+        self._temporary_new_context = None
 
         self._msg = None
         self._html_msg = None
@@ -92,6 +93,23 @@ class GoalNode:
         goal_node._msg = goal.target.math_type.to_display(format_="utf8")
         goal_node._html_msg = _("No more goal!")
         return goal_node
+
+    @property
+    def new_context(self):
+        """
+        Return the goal.new_context, except if goal has not been provided yet by
+        Lean, in which case a temporary new_context may be stored in
+        self._temporary_new_context.
+        """
+        if self.goal.new_context:
+            return self.goal.new_context
+        elif self._temporary_new_context is not None:
+            return self._temporary_new_context
+        else:
+            return []
+
+    def set_temporary_new_context(self, new_context: [MathObject]):
+        self._temporary_new_context = new_context
 
     @property
     def next_goal_node(self):
@@ -378,6 +396,11 @@ class GoalNode:
         tests = self.target_has_changed and not self.brother.target_has_changed
         self._is_auxiliary_goal = tests
         self.brother._is_auxiliary_goal_brother = tests
+        # if tests:
+        #     """
+        #     Add temporary new_context for brother node.
+        #     """
+        #     self.brother.set_temporary_new_context([self.goal.target.math_type])
         return tests
 
     @property
@@ -706,6 +729,16 @@ class ProofTree:
     # def is_all_goals_solved(self):
     #     return not self.unsolved_goal_nodes()
 
+    def add_outcomes(self):
+        """
+        Artificially add outcomes in borther node (if exists), or even create a
+        virtual brother node to display "it suffices" proof step in proof tree.
+        """
+        if self.current_goal_node.is_auxiliary_goal:
+            brother = self.current_goal_node.brother
+            target = self.current_goal_node.goal.target.math_type
+            brother.set_temporary_new_context([target])
+
     def process_new_proof_step(self, new_proof_step: ProofStep):
         """
         Create new GoalNodes and add them into the tree according to the data.
@@ -768,15 +801,11 @@ class ProofTree:
             children = [next_goal_node, other_goal_node]
             new_proof_step.children_goal_nodes = children
             self.current_goal_node = next_goal_node
+            self.add_outcomes()
 
         # ─────── Compare with previous state and tag properties ─────── #
         previous_goal = self.current_goal_node.parent_node.goal
         Goal.compare(new_goal, previous_goal)
-        # FIXME: serious treatment of used props
-        # used_properties = new_proof_step.used_properties()
-        # new_goal.mark_used_properties(used_properties)
-
-        # DEBUG
         # print("ProofTree:")
         # print(str(self))
 

@@ -459,6 +459,8 @@ def apply_implies(proof_step, selected_object: [MathObject]) -> CodeForLean:
     Here selected_object contains a single property which is an implication
     P ⇒ Q; if the target is Q then it will be replaced by P.
     """
+
+    # TODO: modify proof_tree display
     selected_hypo = selected_object[0]
     selected_name = selected_hypo.info["name"]
     code = CodeForLean.from_string(f'apply_with {selected_name} '

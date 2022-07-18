@@ -1200,6 +1200,7 @@ class TargetAndRwLayout(QGridLayout):
         Add wdg to content (column 0), in last position.
         """
         self.addWidget(wdg, self.content_count, 0)
+        self.setAlignment(wdg, Qt.AlignLeft)
         self._content_count += 1
 
     def set_rw_wdg(self, width: callable, rw_wdg):
@@ -1390,24 +1391,24 @@ class TargetWidget(QWidget):
         the WGB, which is not displayed. In this case, a new content_n_rw_lyt
         is added, and we get the following structure:
 
-        vertical bar | content_n_rw_lyt_1 |
-                     |----------------    |
-                     | child_title        |
-                     |----------------    |
-                     | content_n_rw_lyt_2 |
-                     |----------------    |
-                     | status_label
+        vertical bar | content_n_rw_lyts[0] |
+                     |----------------      |
+                     | child_title          |
+                     |----------------      |
+                     | content_n_rw_lyts[1] |
+                     |----------------      |
+                     | status_label         |
 
         """
         if not hasattr(child, "substitution_label"):
             log.debug(f"Adding child {child.goal_nb}")
             child.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
             self.content_n_rw_lyt.add_to_content(child)
-            self.content_n_rw_lyt.setAlignment(child, Qt.AlignLeft)
+            # self.content_n_rw_lyt.setAlignment(child, Qt.AlignLeft)
             self.link_last_child()
         else:
-            log.debug(f"Adding target subs child {child.goal_nb}")
-            # log.debug("Adding target substitution child")
+            # log.debug(f"Adding target subs child {child.goal_nb}")
+
             # Status label should not be displayed anymore:
             self.main_layout.removeWidget(self.current_status_label)
             self.current_status_label.hide()
@@ -1417,6 +1418,7 @@ class TargetWidget(QWidget):
             child_title_lbl_pos = nb_targets*2
             child_title_lbl = child.proof_title_label
             child_status_lbl = child.status_label
+
             # Record new title and status labels:
             self.substituted_title_lbls.append(child_title_lbl)
             self.add_status_lbl(child_status_lbl)

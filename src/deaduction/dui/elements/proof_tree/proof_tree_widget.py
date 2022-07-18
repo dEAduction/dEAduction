@@ -214,18 +214,21 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
     """
     rw_level = 1  # show rw but not implicit rw  # FIXME: not implemented
     proof_tree_window = None  # Set up by ProofTreeWindow
-    garbage_collector: [QWidget] = []
+    garbage_collector: [QWidget] = []  # Not used
 
     def __init__(self, logical_parent, goal_node,
                  context1=None, target=None, context2=None, pure_context=None,
                  merge_down=False, merge_up=False, rw_level=0,
                  is_target_substitution=False):
         """
-        rw_level =  0 if self is not a rw operation,
-                    1 if self is a rw operation
-                    2 if self is an implicit rw operation
-        self will be displayed only if self.rw_level <= cls.rw_level.
         """
+
+        # The following is not implemented:
+        # rw_level =  0 if self is not a rw operation,
+        #             1 if self is a rw operation
+        #             2 if self is an implicit rw operation
+        # self will be displayed only if self.rw_level <= cls.rw_level.
+
         assert (pure_context is None or (context1 is None and target is None
                                          and context2 is None))
         super().__init__()

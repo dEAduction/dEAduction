@@ -118,14 +118,17 @@ class Goal:
         Note that instance witnesses are excluded
         (i.e. variables whose name starts with "_inst_" )
         """
+        if self.context is None:
+            return
         objects = [cmo for cmo in self.context if not cmo.math_type.is_prop()
                    and not cmo.is_instance()]
         return objects
 
     @property
     def context_props(self) -> [ContextMathObject]:
-        props = [cmo for cmo in self.context if cmo.math_type.is_prop()]
-        return props
+        if self.context is not None:
+            props = [cmo for cmo in self.context if cmo.math_type.is_prop()]
+            return props
 
     @property
     def new_context(self):
@@ -133,7 +136,8 @@ class Goal:
         Return objects and props of the context that are new, i.e. they have
         no parent.
         """
-        return [cmo for cmo in self.context if cmo.is_new]
+        if self.context is not None:
+            return [cmo for cmo in self.context if cmo.is_new]
 
     @property
     def modified_context(self):
@@ -141,7 +145,8 @@ class Goal:
         Return objects and props of the context that are new, i.e. they have
         no parent.
         """
-        return [cmo for cmo in self.context if cmo.is_modified]
+        if self.context is not None:
+            return [cmo for cmo in self.context if cmo.is_modified]
 
     def remove_future_info(self):
         for obj in self.context:

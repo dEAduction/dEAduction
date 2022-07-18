@@ -632,6 +632,8 @@ class CodeForLean:
 
         :param subgoal: str or MathObject
         """
+
+        # FIXME: obsolete?
         self.subgoal = subgoal
 
     def is_empty(self):

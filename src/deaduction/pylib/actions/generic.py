@@ -150,18 +150,20 @@ def action_theorem(proof_step,
         codes = codes.or_else(f'apply_with {th} {{md:=reducible}}',
                               success_msg=_('Target replaced by applying '
                                             'theorem'))
+        # TODO: modify proof_tree display
     else:
         command = f'have {h} := {th}' + ' '
         command_implicit = f'have {h} := @{th}' + ' '
         names = [item.info['name'] for item in selected_objects]
         arguments = ' '.join(names)
-        # up to 4 implicit arguments
         if target_selected:
             more_codes = [f'apply_with ({th} {arguments})  {{md:=reducible}}',
                           f'apply_with (@{th} {arguments})  {{md:=reducible}}']
             success_msg = (_("Target replaced by applying theorem to ")
                            + arguments)
+            # TODO: modify proof_tree display
         else:
+            # Up to 4 implicit arguments
             more_codes = [command + arguments,
                           command_implicit + arguments,
                           command + ' _ ' + arguments,
