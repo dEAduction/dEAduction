@@ -25,7 +25,7 @@ This file is part of dEAduction.
 """
 
 import logging
-from typing import Union, Optional
+from typing import Optional
 from PySide2.QtWidgets import (QApplication, QLayout, QVBoxLayout, QWidget,
                                QSizePolicy)
 from PySide2.QtWidgets import QScrollArea
@@ -39,13 +39,15 @@ import deaduction.pylib.config.vars as cvars
 
 from deaduction.dui.elements.proof_tree.proof_tree_primitives import \
     BlinkingLabel, ProofTitleLabel, RawLabelMathObject, \
-    ContextWidget, TargetWidget, OperatorContextWidget, SubstitutionContextWidget, \
-    TargetSubstitutionLabel, paint_layout
+    ContextWidget, TargetWidget, OperatorContextWidget,\
+    SubstitutionContextWidget, TargetSubstitutionLabel, paint_layout
 
 global _
 
 if __name__ != "__main__":
     from deaduction.pylib.mathobj import MathObject, ContextMathObject
+    from deaduction.pylib.proof_tree import GoalNode, RootGoalNode, \
+        VirtualBrotherAuxGoalNode
 else:
     def _(x):
         return x
@@ -54,6 +56,8 @@ else:
         pass
 
     class GoalNode:
+        pass
+    class RootGoalNode:
         pass
 
 
@@ -242,7 +246,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         self.parent_widget = None
         self._is_visible = None
         self.is_target_substitution = is_target_substitution
-        self._is_target_substituted = False
+        self._is_root_node_or_substituted = None
 
         # Main widgets containers:
         self.pure_context_widget: Optional[ContextWidget] = None
@@ -269,6 +273,9 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
 
         if self.logical_parent:  # Case of root
             self.logical_parent.add_logical_child(self)
+
+        self.outcomes = [PureContextWGB.from_outcome(virtual_node, self)
+                         for virtual_node in goal_node.outcomes]
 
     def __repr__(self):
         return self.context1, self.target, self.context2, self.pure_context
@@ -332,6 +339,9 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
                 msg = _("THE END")
             elif self.is_recursively_sorry():
                 msg = _("(admitted)")
+            # elif isinstance(self.goal_node, RootGoalNode):
+            elif self.is_root_node_or_substituted:
+                msg = _("QED!!")
             else:
                 msg = _("Goal!")  # + str(self.goal_nb)  # debug
         elif self.is_conditionally_solved():
@@ -476,6 +486,11 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
                 child.parent_widget = self
                 self.children_widgets.append(child)
                 self.target_widget.add_child_wgb(child)
+                if child.outcomes:
+                    for outcome in child.outcomes:
+                        outcome.set_layout_without_children()
+                        self.children_widgets.append(outcome)
+                        self.target_widget.add_child_wgb(outcome)
 
     # ───────────────────── Enabling methods ──────────────────── #
     def set_enabled(self, yes=True):
@@ -676,6 +691,22 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         self.highlight_math_widgets(math_object, yes)
         for wgb in self.logical_children:
             wgb.recursively_highlight(math_object, yes)
+        for wgb in self.outcomes:
+            wgb.highlight_math_widgets(math_object, yes)
+
+    @property
+    def is_root_node_or_substituted(self):
+        if self._is_root_node_or_substituted is None:
+            test = (isinstance(self.goal_node, RootGoalNode) or
+                    (isinstance(self, TargetSubstitutionWGB) and
+                     self.parent_widget and
+                     self.parent_widget.is_root_node_or_substituted))
+            self._is_root_node_or_substituted = test
+        return self._is_root_node_or_substituted
+
+    # @is_root_node_or_substituted.setter
+    # def is_root_node_or_substituted(self, yes=True):
+    #     self._is_root_node_or_substituted = yes
 
 
 class GoalSolvedWGB(WidgetGoalBlock):
@@ -684,10 +715,10 @@ class GoalSolvedWGB(WidgetGoalBlock):
     "goal solved". It should remain invisible.
     """
     def __init__(self, logical_parent, goal_node):
-        target = goal_node.goal.target.math_type
-        super().__init__(logical_parent, goal_node, target=target)
+        # target = goal_node.goal.target.math_type
+        super().__init__(logical_parent, goal_node, target=None)
         # self.set_invisible()
-        self.hide()
+        # self.hide()
 
 
 class ByCasesWGB(WidgetGoalBlock):
@@ -730,8 +761,25 @@ class PureContextWGB(WidgetGoalBlock):
                                            "operator"))
         else:
             super().__init__(logical_parent, goal_node,
-                             pure_context=(premises, None, conclusions,
+                             pure_context=(None, None, conclusions,
                                            "no operator"))
+
+    @classmethod
+    def from_outcome(cls, outcome: VirtualBrotherAuxGoalNode,
+                     parent_wdg: WidgetGoalBlock):
+        operator = outcome.outcome_operator
+        if operator:
+            premises = outcome.premises
+            conclusions = outcome.conclusions
+            wgb = cls(parent_wdg, outcome, premises, operator, conclusions)
+        else:
+            main_premise = outcome.main_premise
+            if main_premise:
+                conclusions = [main_premise]
+                wgb = cls(parent_wdg, outcome, None, None, conclusions)
+            else:
+                wgb = None
+        return wgb
 
 
 class SubstitutionWGB(WidgetGoalBlock):

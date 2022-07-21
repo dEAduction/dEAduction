@@ -60,6 +60,7 @@ class GoalNode:
         self._is_solved = is_solved
         self.goal_has_changed = False
         self._temporary_new_context = None
+        self.outcomes = []
 
         self._msg = None
         self._html_msg = None
@@ -71,9 +72,11 @@ class GoalNode:
         self._is_pure_context = None
         self._is_auxiliary_goal = None
         self._is_auxiliary_goal_brother = None
+        # self._is_root_goal_node_or_substituted = None
 
     @classmethod
     def root_node(cls, parent_proof_step, initial_goal):
+        # FIXME: obsolete
         root_node = cls(parent_proof_step, initial_goal)
         root_node._is_intro = False
         root_node._is_conjunction = False
@@ -289,18 +292,6 @@ class GoalNode:
         else:
             return self.parent.is_intro_implies()
 
-        # parent_node = self.parent_node
-        # if not parent_node:
-        #     return True  # Self is root_node.
-        # target = self.goal.target.math_type
-        # parent_target = self.parent_node.goal.target.math_type
-        # tests = [not parent_node.is_fork_node,
-        #          self.goal.new_context,
-        #          self.target_has_changed,
-        #          parent_target.is_implication(is_math_type=True, implicit=True),
-        #          parent_target.contains(target)]
-        # return all(tests)
-
     @property
     def is_target_substitution(self):
         """
@@ -410,6 +401,17 @@ class GoalNode:
         tests = self.brother and self.brother.is_auxiliary_goal
         return tests
 
+    @property
+    def is_suffices_to(self):
+        """
+        True if node is obtained by applying a theorem or property "P => Q" on
+        target Q, replacing it with target P.
+        For the moment, this is detected (and useful only) if
+        CodeForLean.outcome_operator is not None.
+        """
+        proof_step = self.parent
+        return proof_step and proof_step.outcome_operator
+
     def __msg(self, format_, use_color=True, bf=False):
         """
         Compute a msg to be displayed as the header of the proof below this
@@ -516,8 +518,10 @@ class GoalNode:
         # return self.child_proof_step and self.child_proof_step.no_more_goal
 
     def is_recursively_solved(self):
-        """self is recursively solved if it is explicitly solved, or it has
-        children and they are all solved."""
+        """
+        Self is recursively solved if it is explicitly solved, or it has
+        children and they are all solved.
+        """
 
         if self._is_solved or self.is_no_more_goals():
             return True
@@ -629,6 +633,75 @@ class GoalNode:
             self.goal.remove_future_info()
 
 
+class RootGoalNode(GoalNode):
+    """
+    This class should be used for the first node of a ProofTree. Its only
+    purpose is to distinguish the root node.
+    """
+    def __init__(self, parent_proof_step, initial_goal):
+        super().__init__(parent_proof_step, initial_goal)
+        self._is_intro = False
+        self._is_conjunction = False
+        self._is_double_implication = False
+        self._is_by_cases = False
+        # self._is_root_goal_node_or_substituted = True
+
+
+class VirtualBrotherAuxGoalNode(GoalNode):
+    """
+    This is a special type of node, that does not correspond to some Lean state.
+    In case user applies a theorem saying "P => Q" on a target Q, then Lean
+    replaces the target by P, and this will correspond to some GoalNode G.
+    Then an instance of the present class may be added in the ProofTree as a
+    brother node for G. This GoalNode may be used to make explicit  the
+    implicit logics after G is solved, displaying
+    P
+    P --> P => Q --> Q.
+
+    Note that P is the target of self.brother, Q is the target of
+    self.parent_node, and P => Q should have been stored in the CodeForLean,
+    and is accessed via self.outcome_operator.
+    """
+    def __init__(self, parent: ProofStep, type_: str):
+        super().__init__(parent, goal=None, is_solved=(type_ is "operator"))
+        self.type_ = type_  # 'premise' or 'operator'
+
+    @property
+    def outcome_operator(self):
+        if self.type_ is 'operator' and self.parent:
+            return self.parent.outcome_operator
+
+    @property
+    def main_premise(self):
+        """
+        Return 'P'.
+        """
+        brother = self.parent.children_goal_nodes[0]
+        return brother.goal.target
+
+    @property
+    def premises(self):
+        if self.type_ is not 'operator':
+            return
+
+        selection = self.parent.selection
+        if selection:
+            premises = [obj for obj in selection
+                        if obj != self.outcome_operator]
+        else:
+            premises = []
+        premises.append(self.main_premise)
+        return premises
+
+    @property
+    def conclusions(self):
+        """
+        Return 'Q'.
+        """
+        if self.type_ is 'operator':
+            return [self.parent_node.goal.target]
+
+
 class ProofTree:
     """
     This class stores the main goal node, and the current goal node. It also
@@ -731,13 +804,23 @@ class ProofTree:
 
     def add_outcomes(self):
         """
-        Artificially add outcomes in borther node (if exists), or even create a
+        Artificially add outcomes in brother node (if exists), or even create a
         virtual brother node to display "it suffices" proof step in proof tree.
         """
         if self.current_goal_node.is_auxiliary_goal:
             brother = self.current_goal_node.brother
             target = self.current_goal_node.goal.target.math_type
             brother.set_temporary_new_context([target])
+        elif self.current_goal_node.is_suffices_to:
+            proof_step = self.current_goal_node.parent
+            # goal = proof_step.proof_state.goals[0]
+            brothers = [VirtualBrotherAuxGoalNode(parent=proof_step,
+                                                  # goal=goal,
+                                                  type_='premise'),
+                        VirtualBrotherAuxGoalNode(parent=proof_step,
+                                                  # goal=goal,
+                                                  type_='operator')]
+            self.current_goal_node.outcomes = brothers
 
     def process_new_proof_step(self, new_proof_step: ProofStep):
         """
@@ -752,8 +835,8 @@ class ProofTree:
 
         # ─────── Very first step ─────── #
         if not self.root_node:
-            self.root_node = GoalNode.root_node(new_proof_step,
-                                                new_proof_state.goals[0])
+            self.root_node = RootGoalNode(new_proof_step,
+                                          new_proof_state.goals[0])
             new_proof_step.children_goal_nodes = [self.root_node]
             self.current_goal_node = self.root_node
             return
@@ -780,6 +863,7 @@ class ProofTree:
         if delta_goal == -1:  # current goal solved
             self.current_goal_node.set_solved()
             if unsolved_gn:
+                # FIXME: this won't work if current_node was not 1st unsolved.
                 self.go_to_first_unsolved_node()
             else:  # No more goals!
                 self.set_no_more_goals()
@@ -792,6 +876,7 @@ class ProofTree:
             children = [next_goal_node]
             new_proof_step.children_goal_nodes = children
             self.current_goal_node = next_goal_node
+            self.add_outcomes()
         else:  # Fork node: two sub-goals
             assert delta_goal == 1
             next_goal_node = GoalNode(parent=new_proof_step, goal=new_goal)

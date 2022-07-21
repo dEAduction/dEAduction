@@ -35,7 +35,7 @@ from deaduction.dui.elements.proof_tree.proof_tree_widget import \
 global _
 
 if __name__ != "__main__":
-    from deaduction.pylib.proof_tree import GoalNode
+    from deaduction.pylib.proof_tree import GoalNode, VirtualBrotherAuxGoalNode
 else:
     def _(x):
         return x

@@ -418,6 +418,11 @@ class ProofStep:
         code = self.effective_code if self.effective_code else self.lean_code
         return code.rw_item
 
+    @property
+    def outcome_operator(self):
+        code = self.effective_code if self.effective_code else self.lean_code
+        return code.outcome_operator
+
     def is_node(self):
         """
         True if self is a proof node (a new goal has appeared).
@@ -451,6 +456,9 @@ class ProofStep:
 
     def is_definition(self):
         return self.statement and self.statement.is_definition()
+
+    def is_theorem(self):
+        return self.statement and self.statement.is_theorem()
 
     def is_intro_implies(self):
         if not self.parent_goal_node:

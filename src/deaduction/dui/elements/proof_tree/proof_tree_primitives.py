@@ -530,7 +530,6 @@ class RawLabelMathObject(QLabel):
         self.setTextFormat(Qt.RichText)
         self.bold = False
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        # self.setText(self.txt())
 
     def set_bold(self, yes=True):
         self.bold = yes
@@ -559,7 +558,8 @@ class RawLabelMathObject(QLabel):
         if isinstance(self.math_object, str):
             return self.math_object
         elif isinstance(self.math_object, Statement):
-            return self.math_object.pretty_name
+            txt = self.math_object.type_ + " " + self.math_object.pretty_name
+            return txt
         elif isinstance(self.math_object, MathObject):
             math_object = (self.math_object.math_type if self.is_prop
                            else self.math_object)
@@ -603,39 +603,12 @@ class RawLabelMathObject(QLabel):
                 self.highlight_in_tree(self.math_object, False)
 
 
-# class ProofTitleLabel(QWidget):
-#     """
-#     A QLabel to display a mgs like "Proof of ...".
-#     The colon is added on top of html_msg by super class RawLabelMathObject
-#     iff self.disclosed is True.
-#     """
-#
-#     # TODO: update doc
-#     def __init__(self, html_msg):
-#         # super().__init__(html_msg=html_msg)
-#         super().__init__()
-#         self.math_wdg = RawLabelMathObject(html_msg=html_msg)
-#         self.math_wdg.setTextFormat(Qt.RichText)
-#         layout = QHBoxLayout()
-#         layout.addWidget(self.math_wdg)
-#         layout.addStretch(10)
-#         self.setLayout(layout)
-#         self.disclosed = True
-#
-#     def set_bold(self, yes=True):
-#         self.math_wdg.set_bold(yes)
-#
-#     def update_text(self):
-#         self.math_wdg.update_text()
-
 class ProofTitleLabel(RawLabelMathObject):
     """
     A QLabel to display a mgs like "Proof of ...".
     The colon is added on top of html_msg by super class RawLabelMathObject
     iff self.disclosed is True.
     """
-
-    # TODO: update doc
     def __init__(self, html_msg):
         super().__init__(html_msg=html_msg)
         self.disclosed = True
@@ -653,7 +626,6 @@ class GenericLMO(RawLabelMathObject):
         is_prop = "prop" if self.is_prop else "obj"
         self.setObjectName(is_new + "_" + is_prop)
         if isinstance(math_object, MathObject) and not self.is_prop:
-            # print("Setting tooltip")
             tooltip = math_object.math_type_to_display(format_="utf8")
             self.setToolTip(tooltip)
 
@@ -1162,13 +1134,12 @@ class TargetAndRwLayout(QGridLayout):
     """
     min_space = 100
 
-    # FIXME: turn this into a gridlayout
-
     def __init__(self):
         super().__init__()
         self.rw_wdg: Optional[QWidget] = None
         self.first_column_width: Optional[callable()] = None
         self._content_count = 0
+        self.width_updated = False
 
     def all_content_widgets(self):
         return [self.itemAtPosition(i, 0).widget()
@@ -1220,6 +1191,7 @@ class TargetAndRwLayout(QGridLayout):
         """
         self.setColumnMinimumWidth(0, self.first_column_width())
         self.setColumnMinimumWidth(1, self.min_space)
+        self.width_updated = True
 
 
 class TargetWidget(QWidget):
@@ -1457,6 +1429,7 @@ class TargetWidget(QWidget):
         and the target substitution arrows.
         """
 
+        # FIXME: this is called each time status_msg blinks, not optimal.
         painter = QPainter(self)
         for arrow in self.curved_arrows:
             if arrow.origin_wdg.isEnabled() and arrow.end_wdg.isEnabled():
@@ -1468,14 +1441,19 @@ class TargetWidget(QWidget):
         init = True
         for (content_rw_lyt, arrow) in zip(self.content_n_rw_lyts,
                                            self.target_substitution_arrows):
-            points = points_for_substitution_arrow(arrow.origin_wdg,
-                                                   arrow.end_wdg,
-                                                   arrow.middle_wdg,
-                                                   arrow.parent_wdg,
-                                                   inner_sep=arrow.inner_sep,
-                                                   shift_start=not init)
-            QTimer.singleShot(0, content_rw_lyt.update_width)
-            init = False
-            paint_substitution_arrow(points, painter, color=arrow.color)
+            if arrow.origin_wdg.isVisible() and arrow.end_wdg.isVisible():
+                # print("Painting")
+                points = points_for_substitution_arrow(arrow.origin_wdg,
+                                                       arrow.end_wdg,
+                                                       arrow.middle_wdg,
+                                                       arrow.parent_wdg,
+                                                       inner_sep=arrow.inner_sep,
+                                                       shift_start=not init)
+                if not content_rw_lyt.width_updated:
+                    QTimer.singleShot(0, content_rw_lyt.update_width)
+                init = False
+                paint_substitution_arrow(points, painter, color=arrow.color)
+            # else:
+                # print("Not painting")
         painter.end()
 
