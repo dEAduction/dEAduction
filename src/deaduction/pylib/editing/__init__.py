@@ -329,6 +329,12 @@ class VirtualFile:
         """
         self.target_idx = 0
 
+    def go_to_end(self):
+        """
+        Moves the history cursor at the end.
+        """
+        self.target_idx = len(self.history) - 1
+
     def goto(self, history_nb):
         """
         Move the history cursor at step_nb.

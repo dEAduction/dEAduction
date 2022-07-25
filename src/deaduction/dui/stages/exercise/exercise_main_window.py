@@ -173,6 +173,7 @@ class ExerciseMainWindow(QMainWindow):
         self.exercise_toolbar.redo_action.setEnabled(False)  # No history at beginning
         self.exercise_toolbar.undo_action.setEnabled(False)  # same
         self.exercise_toolbar.rewind.setEnabled(False)  # same
+        self.exercise_toolbar.go_to_end.setEnabled(False)  # same
         self.__init_menubar()
         self.setStatusBar(self.statusBar)
 
@@ -234,6 +235,7 @@ class ExerciseMainWindow(QMainWindow):
                              [self.exercise_toolbar.rewind,
                               self.exercise_toolbar.undo_action,
                               self.exercise_toolbar.redo_action,
+                              self.exercise_toolbar.go_to_end,
                               self.exercise_toolbar.toggle_proof_outline_action,
                               self.exercise_toolbar.toggle_proof_tree
                               ]),
@@ -434,13 +436,16 @@ class ExerciseMainWindow(QMainWindow):
             return button
         history_buttons = {'undo': self.exercise_toolbar.undo_action,
                            'redo': self.exercise_toolbar.redo_action,
-                           'rewind': self.exercise_toolbar.rewind}
+                           'rewind': self.exercise_toolbar.rewind,
+                           'go_to_end': self.exercise_toolbar.go_to_end}
         if string.find('undo') != -1:
             string = 'undo'
         elif string.find('redo') != -1:
             string = 'redo'
         elif string.find('rewind') != -1:
             string = 'rewind'
+        elif string.find('end') != -1:
+            string = 'go_to_end'
         if string in history_buttons:
             return history_buttons[string]
         log.warning(f"No button found from {string}")
@@ -545,6 +550,7 @@ class ExerciseMainWindow(QMainWindow):
         self.exercise_toolbar.undo_action.setEnabled(not at_beginning)
         self.exercise_toolbar.rewind.setEnabled(not at_beginning)
         self.exercise_toolbar.redo_action.setEnabled(not at_end)
+        self.exercise_toolbar.go_to_end.setEnabled(not at_end)
 
     @Slot()
     def empty_current_selection(self):
