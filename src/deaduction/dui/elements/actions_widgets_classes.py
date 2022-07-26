@@ -629,6 +629,8 @@ class StatementsTreeWidget(QTreeWidget):
         self._init_tree(statements, outline)
         self.is_exercise_list = is_exercise_list
         self.update_tooltips()
+        # Uncomment to enable drag:
+        # self.setDragEnabled(True)
 
         # Cosmetics
         self.setWindowTitle('StatementsTreeWidget')

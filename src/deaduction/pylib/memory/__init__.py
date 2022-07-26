@@ -119,8 +119,11 @@ class Journal:
         log.debug(f"Saving journal in {file_path}")
         txt = self.display()
         print(txt)
-        with open(file_path, mode='xt') as output:
-            output.write(txt)
+        try:
+            with open(file_path, mode='xt') as output:
+                output.write(txt)
+        except FileExistsError:
+            log.debug("(File already exists, abort saving)")
 
     def display(self):
         """

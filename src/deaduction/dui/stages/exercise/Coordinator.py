@@ -164,7 +164,7 @@ class Coordinator(QObject):
         proof_state = self.exercise.initial_proof_state
         if proof_state:
             goal = proof_state.goals[0]
-            self.emw.ecw.update_goal(goal, 1, 1)
+            self.emw.ecw.update_goal(goal, [], 1, 1)
 
         # Set exercise. In particular, this will initialize servint.lean_file.
         self.server_queue.add_task(self.servint.set_exercise,
@@ -457,6 +457,7 @@ class Coordinator(QObject):
                          self.toolbar.redo_action.triggered,
                          self.toolbar.undo_action.triggered,
                          self.toolbar.rewind.triggered,
+                         self.toolbar.go_to_end.triggered,
                          self.proof_outline_window.history_goto,
                          self.action_triggered,
                          self.statement_triggered,
@@ -489,17 +490,18 @@ class Coordinator(QObject):
                     if proof_step:
                         await self.emw.simulate(proof_step)
                     self.history_redo()
-                    # add_task(self.servint.history_redo)
 
                 elif emission.is_from(self.toolbar.undo_action.triggered):
                     self.proof_step.button_name = 'history_undo'
-                    # add_task(self.servint.history_undo)
                     self.history_undo()
 
                 elif emission.is_from(self.toolbar.rewind.triggered):
                     self.proof_step.button_name = 'history_rewind'
-                    # add_task(self.servint.history_rewind)
                     self.history_rewind()
+
+                elif emission.is_from(self.toolbar.go_to_end.triggered):
+                    self.proof_step.button_name = 'history_go_to_end'
+                    self.history_go_to_end()
 
                 elif emission.is_from(self.proof_outline_window.history_goto):
                     history_nb = emission.args[0]
@@ -558,6 +560,13 @@ class Coordinator(QObject):
         Go to beginning of history in the lean_file.
         """
         self.lean_file.rewind()
+        self.process_history_move()
+
+    def history_go_to_end(self):
+        """
+        Go to end of history in the lean_file.
+        """
+        self.lean_file.go_to_end()
         self.process_history_move()
 
     def history_goto(self, history_nb):

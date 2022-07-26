@@ -586,27 +586,18 @@ class ExerciseStatusBar(QStatusBar):
             tmp_msg = proof_step.success_msg
 
         if proof_step.is_error():
-            log.debug("StatusBar: " + tmp_msg)
+            # log.debug("StatusBar: " + tmp_msg)
             self.show_error_icon()
             self.set_message(tmp_msg)
         elif proof_step.success_msg and self.display_success_msgs:
-            log.debug("StatusBar: " + tmp_msg)
+            # log.debug("StatusBar: " + tmp_msg)
             self.show_success_icon()
             self.set_message(tmp_msg)
         else:
             self.hide_icon()
             tmp_msg = ""
 
-        # if proof_step.new_goals:
-        #     new_goal = proof_step.new_goals[-1]
-        #     if new_goal:
-        #         if tmp_msg:  # Add to pending msgs
-        #             self.pending_msgs.append(new_goal.msg)
-        #             self.timer.singleShot(3000, self.show_pending_msgs)
-        #         else:  # Show immediately
-        #             self.show_normal_msg(new_goal.msg)
-
-        # Show proof psg if any:
+        # Show proof msg if any:
         if tmp_msg:
             self.timer.singleShot(3000, self.show_pending_msgs)
         else:  # Show immediately
@@ -624,13 +615,16 @@ class ExerciseToolBar(QToolBar):
         icons_dir = fs.path_helper(icons_base_dir)
         self.rewind = QAction(
                 QIcon(str((icons_dir / 'goback-begining.png').resolve())),
-                _('Go back to beginning of proof'), self)
+                _('Jump to beginning of proof'), self)
         self.undo_action = QAction(
                 QIcon(str((icons_dir / 'undo_action.png').resolve())),
                 _('Undo action'), self)
         self.redo_action = QAction(
                 QIcon(str((icons_dir / 'redo_action.png').resolve())),
                 _('Redo action'), self)
+        self.go_to_end = QAction(
+                QIcon(str((icons_dir / 'go-end-96.png').resolve())),
+                _('Jump to end of proof'), self)
 
         self.toggle_proof_outline_action = QAction(
                 QIcon(str((icons_dir / 'proof_outline.png').resolve())),
@@ -647,6 +641,7 @@ class ExerciseToolBar(QToolBar):
         self.addAction(self.rewind)
         self.addAction(self.undo_action)
         self.addAction(self.redo_action)
+        self.addAction(self.go_to_end)
         self.addAction(self.toggle_proof_outline_action)
         self.addAction(self.toggle_proof_tree)
         self.addAction(self.toggle_lean_editor_action)
@@ -654,9 +649,10 @@ class ExerciseToolBar(QToolBar):
         self.redo_action.setShortcut(QKeySequence.Redo)
 
     def update(self):
-        self.rewind.setText(_('Go back to beginning of proof'))
+        self.rewind.setText(_('Jump to beginning of proof'))
         self.undo_action.setText(_('Undo action'))
         self.redo_action.setText(_('Redo action'))
+        self.go_to_end.setText(_('Jump to end of proof'))
         self.toggle_lean_editor_action.setText(_('Toggle L∃∀N'))
         self.toggle_proof_outline_action.setText(_('Toggle proof outline'))
 

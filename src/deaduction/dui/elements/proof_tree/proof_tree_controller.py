@@ -35,7 +35,7 @@ from deaduction.dui.elements.proof_tree.proof_tree_widget import \
 global _
 
 if __name__ != "__main__":
-    from deaduction.pylib.proof_tree import GoalNode
+    from deaduction.pylib.proof_tree import GoalNode, VirtualBrotherAuxGoalNode
 else:
     def _(x):
         return x
@@ -59,14 +59,9 @@ def widget_goal_block(parent_widget: Optional[WidgetGoalBlock],
     """
 
     # TODO:
-    #  - target_substitution (including proof by contraposition, push_neg)
     #  - apply
-    #  - Auxiliary sub-goal
-    #  - EmptyWidget when adding a statement content to context
-    #  - action_theorem
-    #  - ...
 
-    new_context = goal_node.goal.new_context
+    new_context = goal_node.new_context
     target = goal_node.goal.target.math_type
     log.debug(f"Goal nb {goal_node.goal_nb}")
 

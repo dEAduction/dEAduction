@@ -181,6 +181,8 @@ class MathObjectWidgetItem(QStandardItem):
         caption   = f'{lean_name} : {math_expr}'
         self.setText(caption)
         self.setIcon(_TagIcon(self.tag))
+        # Uncomment to enable drag:
+        # self.setDragEnabled(True)
 
     @property
     def math_object(self):
@@ -268,11 +270,16 @@ class MathObjectWidget(QListView):
         # list_view.setAlternatingRowColors(True)
         # list_view.setDragEnabled(True)
         # list_view.setDragDropMode(QAbstractItemView.DragDrop)
+        # Modify to enable drag and drop:
+        # self.setDragDropMode(QAbstractItemView.NoDragDrop)
 
         # No text edition (!), no selection, no drag-n-drop
-        self.setSelectionMode(QAbstractItemView.NoSelection)
+        # self.setSelectionMode(QAbstractItemView.NoSelection)
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.setDragDropMode(QAbstractItemView.NoDragDrop)
+        # Uncomment to enable drag and drop:
+        # self.setDragEnabled(True)
+        # self.setDragDropMode(QAbstractItemView.DragDrop)
 
         # After filling content?
         # model = QStandardItemModel(self)
@@ -408,6 +415,8 @@ class TargetWidget(QWidget):
         central_layout = QVBoxLayout()
         central_layout.addWidget(caption_label)
         central_layout.addWidget(self.target_label)
+        central_layout.setAlignment(caption_label, Qt.AlignHCenter)
+        central_layout.setAlignment(self.target_label, Qt.AlignHCenter)
 
         main_layout = QHBoxLayout()
         main_layout.addStretch()

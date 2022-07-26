@@ -75,7 +75,7 @@ def rw_using_statement(goal: Goal, selected_objects: [MathObject],
         codes = codes.or_else(f'simp_rw <- {defi} at {arguments}')
         codes.add_success_msg(context_msg)
 
-    codes.rw_item = (statement.type_, statement.pretty_name)
+    codes.rw_item = statement # (statement.type_, statement.pretty_name)
     return codes
 
 
@@ -147,21 +147,26 @@ def action_theorem(proof_step,
     h = get_new_hyp(proof_step)
     th = theorem.lean_name
     if len(selected_objects) == 0:
-        codes = codes.or_else(f'apply_with {th} {{md:=reducible}}',
-                              success_msg=_('Target replaced by applying '
-                                            'theorem'))
+        code = CodeForLean(f'apply_with {th} {{md:=reducible}}',
+                           success_msg=_('Target replaced by applying theorem'))
+        code.outcome_operator = theorem
+        codes = codes.or_else(code)
+
     else:
         command = f'have {h} := {th}' + ' '
         command_implicit = f'have {h} := @{th}' + ' '
         names = [item.info['name'] for item in selected_objects]
         arguments = ' '.join(names)
-        # up to 4 implicit arguments
         if target_selected:
             more_codes = [f'apply_with ({th} {arguments})  {{md:=reducible}}',
                           f'apply_with (@{th} {arguments})  {{md:=reducible}}']
             success_msg = (_("Target replaced by applying theorem to ")
                            + arguments)
+            more_codes = CodeForLean.or_else_from_list(more_codes)
+            more_codes.outcome_operator = theorem
+
         else:
+            # Up to 4 implicit arguments
             more_codes = [command + arguments,
                           command_implicit + arguments,
                           command + ' _ ' + arguments,
@@ -175,8 +180,8 @@ def action_theorem(proof_step,
                           ]
             success_msg = (_('Theorem') + ' ' + _('applied to') + ' '
                            + arguments)
+            more_codes = CodeForLean.or_else_from_list(more_codes)
 
-        more_codes = CodeForLean.or_else_from_list(more_codes)
         more_codes.add_success_msg(success_msg)
         more_codes.add_used_properties(selected_objects)
 

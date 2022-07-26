@@ -68,19 +68,20 @@ class SingleCode:
     Ex: SingleCode.string = and.intro {} {}
         SingleCode.used_properties = list of 2 MathObjects representing the
         properties.
-    The operator and rw_item attributes are used to build the
-    proof tree widget.
+    The operator, rw_item, outcome_operator attributes are used to build the
+    proof tree widget. They are either MathObject or Statements.
 
     :param rw_item: the property used for a substitution, e.g. "f(
     x)=y", or a definition or theorem.
 
     """
     def __init__(self, string: str, used_properties=None,
-                 operator=None, rw_item=None):
+                 operator=None, rw_item=None, outcome_operator=None):
         self.string = string
         self.used_properties = used_properties if used_properties else []
         self.operator = operator
         self.rw_item = rw_item
+        self.outcome_operator = outcome_operator
 
     def __repr__(self):
         attributes = []
@@ -316,6 +317,29 @@ class CodeForLean:
         elif self.instructions:
             instruction = self.instructions[0]
             instruction.rw_item = rw_item
+
+    @property
+    def outcome_operator(self):
+        """
+        Return the operator attribute of the first SingleCode found in self.
+        """
+        if not self.instructions:
+            return None
+        instruction = self.instructions[0]
+        return instruction.outcome_operator
+
+    @outcome_operator.setter
+    def outcome_operator(self, outcome_operator):
+        """
+        Set the rw_item attribute of the first SingleCode in self, or of all
+        the codes if self is or_else.
+        """
+        if self.is_or_else():
+            for instruction in self.instructions:
+                instruction.outcome_operator = outcome_operator
+        elif self.instructions:
+            instruction = self.instructions[0]
+            instruction.outcome_operator = outcome_operator
 
     def or_else(self, other, success_msg=""):
         """
@@ -632,6 +656,8 @@ class CodeForLean:
 
         :param subgoal: str or MathObject
         """
+
+        # FIXME: obsolete?
         self.subgoal = subgoal
 
     def is_empty(self):
