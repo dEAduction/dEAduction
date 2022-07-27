@@ -921,7 +921,7 @@ class Coordinator(QObject):
                                                             self.proof_step,
                                                             emw=self.emw)
 
-        # Create next proof_step
+        # Create next proof_step, and connect to ProofTree
         self.emw.displayed_proof_step = copy(self.proof_step)  # FIXME
         self.proof_step = ProofStep.next_(self.lean_file.current_proof_step,
                                           self.lean_file.target_idx)
@@ -1018,7 +1018,8 @@ class Coordinator(QObject):
                 # ugn = [gn.goal_nb for gn in self.proof_tree.unsolved_goal_nodes]
                 # log.debug(f"Ps_unsolved_gn_after: {ugn}")
 
-            # ─────── Check for new goals ─────── # FIXME: obsolete
+            # ─────── Check for new goals ─────── #
+            # FIXME: obsolete. This is still used for the outline window though.
             delta = self.lean_file.delta_goals_count
             self.proof_step.delta_goals_count = delta
             self.proof_step.update_goals()
@@ -1027,11 +1028,7 @@ class Coordinator(QObject):
 
         # ─────── Tag and sort new goal ─────── #
         if self.logically_previous_proof_step:
-            log.info("** Comparing new goal with previous one **")
-            # Fixme: not when undoing history ? Move to ProofTree
             new_goal: Goal = self.proof_step.goal
-            # previous_goal = self.logically_previous_proof_step.goal
-            # Goal.compare(new_goal, previous_goal)  # Set tags
             used_properties = self.proof_step.used_properties()
             new_goal.mark_used_properties(used_properties)
 

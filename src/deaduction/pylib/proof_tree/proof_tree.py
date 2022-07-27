@@ -43,15 +43,29 @@ class GoalNode:
     which itself has 1 or 2 children which are GoalNode instances.
 
     Methods include test to know if GoalNode was obtained as a result of a
-    proof by case, or proof of conjunction, and so on. These tests should not
-    be based on user actions, since this would forbid to use them in case of
-    direct Lean code.
+    proof by case, or proof of conjunction, and so on. Ideally These tests 
+    should not be based on user actions, since this would forbid to use them
+    in case of direct Lean code.
+    :param parent: the proof_step that resulted into self. None only for
+    root node.
+    :param goal: the Lean goal corresponding to self.
+    :param child_proof_step: the next proof_step, if any.
+    :param _is_solved: set to True when a goal is directly solved. In
+        particular, a solved node has no child.
+
+    :param goal_has_changed: flag to indicate that the goal has changed,
+    and display chould be updated with the new goal.
+    :param _temporary_new_context: set when deaduction guess the context of a
+    node whose goal has not been provided by Lean, typically the second child
+    of a fork proof_step.
+    :param outcomes: Outcomes that should be displayed after the node
+    display, typically when target Q is replaced by P by applying P=>Q
+    (see ProofTree.add_outcomes).
     """
-    goal_nb = 0
+    goal_nb = 0  # Counter
 
     def __init__(self, parent: Optional[ProofStep] = None, goal: Goal = None,
                  child_proof_step=None, is_solved=False):
-
         self.goal_nb = GoalNode.goal_nb
         GoalNode.goal_nb += 1
         self.parent = parent
@@ -72,17 +86,16 @@ class GoalNode:
         self._is_pure_context = None
         self._is_auxiliary_goal = None
         self._is_auxiliary_goal_brother = None
-        # self._is_root_goal_node_or_substituted = None
 
-    @classmethod
-    def root_node(cls, parent_proof_step, initial_goal):
-        # FIXME: obsolete
-        root_node = cls(parent_proof_step, initial_goal)
-        root_node._is_intro = False
-        root_node._is_conjunction = False
-        root_node._is_double_implication = False
-        root_node._is_by_cases = False
-        return root_node
+    # @classmethod
+    # def root_node(cls, parent_proof_step, initial_goal):
+    #     # FIXME: obsolete
+    #     root_node = cls(parent_proof_step, initial_goal)
+    #     root_node._is_intro = False
+    #     root_node._is_conjunction = False
+    #     root_node._is_double_implication = False
+    #     root_node._is_by_cases = False
+    #     return root_node
 
     @classmethod
     def no_more_goals(cls, proof_step):
@@ -115,7 +128,7 @@ class GoalNode:
         self._temporary_new_context = new_context
 
     @property
-    def next_goal_node(self):
+    def next_goal_node(self):  # Optional[GoalNode]
         """
         Return next goal node in the proof tree.
         """
@@ -123,7 +136,7 @@ class GoalNode:
             return self.child_proof_step.children_goal_nodes[0]
 
     @property
-    def children_goal_nodes(self):
+    def children_goal_nodes(self):  # -> [GoalNode]
         if self._is_solved:
             return []
         elif self.child_proof_step:
@@ -132,27 +145,37 @@ class GoalNode:
             return []
 
     @property
-    def parent_node(self):
+    def parent_node(self):  # -> Optional[GoalNode]
+        """
+        The parent GoalNode, if any. Technically, parent of the parent
+        ProofStep.
+        """
         if self.parent and hasattr(self.parent, "parent_goal_node"):
             return self.parent.parent_goal_node
         else:
             return None
 
     @property
-    def proof_step_nb(self):
+    def proof_step_nb(self) -> int:
         if self.parent:
             return self.parent.pf_nb
 
     @property
-    def is_fork_node(self):
+    def is_fork_node(self) -> bool:
+        """
+        True if self has more than one child.
+        """
         return len(self.children_goal_nodes) > 1
 
     @property
-    def is_child_fork_node(self):
+    def is_child_fork_node(self) -> bool:
+        """
+        True if self has one or more brother nodes.
+        """
         return self.parent_node and self.parent_node.is_fork_node
 
     @property
-    def last_child_fork_node(self):
+    def last_child_fork_node(self):  # -> Optional[GoalNode]
         """
         Recursively climb the tree until it finds the child of a fork node.
         """
@@ -165,19 +188,28 @@ class GoalNode:
             return None
 
     @property
-    def brother_number(self):
+    def brother_number(self) -> Optional[int]:
+        """
+        Number in the brotherhood.
+        """
         if self.parent_node:
             if self in self.parent_node.children_goal_nodes:
                 return self.parent_node.children_goal_nodes.index(self)
 
     @property
-    def brother(self):
+    def brother(self):  #Optional[GoalNode]
+        """
+        Brother GoalNode, if any.
+        """
         if (self.brother_number is not None
                 and len(self.parent_node.children_goal_nodes) == 2):
             return self.parent_node.children_goal_nodes[1-self.brother_number]
 
     @property
-    def target_has_changed(self):
+    def target_has_changed(self) -> bool:
+        """
+        True if self's target differs from parent_node's target.
+        """
         if self.parent_node:
             return (self.parent_node.goal.target.math_type !=
                     self.goal.target.math_type)
@@ -425,7 +457,8 @@ class GoalNode:
             e.g. "Proof of first property" vs "Proof of <first property>".
 
         :param format_ : "html" or "utf8"
-        :param use_color: enable or disable colors
+        :param use_color: enable or disable colors (used for variables in
+            case of html format)
         :param bf: use boldface fonts.
         """
 
@@ -515,12 +548,11 @@ class GoalNode:
 
     def is_no_more_goals(self):
         return self.goal.target.math_type == MathObject.NO_MORE_GOALS
-        # return self.child_proof_step and self.child_proof_step.no_more_goal
 
     def is_recursively_solved(self):
         """
         Self is recursively solved if it is explicitly solved, or it has
-        children and they are all solved.
+        children and they are all (recursively) solved.
         """
 
         if self._is_solved or self.is_no_more_goals():
@@ -532,13 +564,16 @@ class GoalNode:
             return False
 
     def is_sorry(self):
+        """
+        True if self is obtained by applying "proof by sorry" method.
+        """
         if self.child_proof_step:
             return self.child_proof_step.is_sorry()
 
     def is_recursively_sorry(self):
         """
-        Self is "admitted" if it solved, and has been obtained by a proof by
-        "sorry", or so is any of its children.
+        Self is recursively sorry all of its children are solved or sorry,
+        and at least one is sorry.
         """
         if self.is_sorry():
             return True
@@ -551,16 +586,11 @@ class GoalNode:
     def set_solved(self, yes=True):
         self._is_solved = yes
 
-    # def is_goal_solved(self):
-    #     """
-    #     True if self is a fake goal with target = "goal solved".
-    #     """
-    #     return self.goal.target.math_type == MathObject.CURRENT_GOAL_SOLVED
-
     @property
     def unsolved_leaves(self):
         """
-        Return the list of unsolved leaves of self.
+        Return the list of unsolved leaves of self. This is used to determine
+        the list of goals that remain to be solved.
         """
         if self.is_recursively_solved():
             return []
@@ -595,7 +625,8 @@ class GoalNode:
 
     def total_degree(self):
         """
-        Number of bifurcations from root node to self in ProofTree.
+        Number of bifurcations from root node to self in ProofTree. Used only
+        for debugging (__str__ method).
         """
         if not self.parent_node:
             return 0
@@ -614,10 +645,10 @@ class GoalNode:
             main_str += str(child) + separator
         return main_str
 
-    def prune(self, proof_step_nb):
+    def prune_from(self, proof_step_nb):
         """
         Remove all info posterior to proof_step_number in the subtree under
-        self.
+        self. Used when user starts a new tree after some undoing.
         """
         proof_step = self.child_proof_step
         if not proof_step:
@@ -625,7 +656,7 @@ class GoalNode:
         if proof_step.pf_nb <= proof_step_nb:
             # Keep this one, prune children
             for child in proof_step.children_goal_nodes:
-                child.prune(proof_step_nb)
+                child.prune_from(proof_step_nb)
         else:
             # Remove!
             self.set_solved(False)  # VERY important!
@@ -644,7 +675,6 @@ class RootGoalNode(GoalNode):
         self._is_conjunction = False
         self._is_double_implication = False
         self._is_by_cases = False
-        # self._is_root_goal_node_or_substituted = True
 
 
 class VirtualBrotherAuxGoalNode(GoalNode):
@@ -704,7 +734,7 @@ class VirtualBrotherAuxGoalNode(GoalNode):
 
 class ProofTree:
     """
-    This class stores the main goal node, and the current goal node. It also
+    This class stores the root goal node, and the current goal node. It also
     keeps track of the list of unsolved goals, with the same order as Lean's
     internal list. The term of this list should be exactly the GoalNodes that
     have no children and for which self.is_solved is False.
@@ -720,53 +750,51 @@ class ProofTree:
         - self.last_proof_step is the last ProofStep instance received by
         the ProofTree, responsible for the present state.
         """
-        self.root_node = GoalNode(parent=None, goal=initial_goal) \
+        self.root_node = RootGoalNode(parent_proof_step=None,
+                                      initial_goal=initial_goal) \
             if initial_goal else None
-        # self._unsolved_goal_nodes = [self.root_node] if self.root_node else []
-        self._current_goal_node = self.root_node
-        # self.last_proof_step: Optional[ProofStep] = None
+        self.current_goal_node = self.root_node
         self.previous_goal_node = None
 
-    @property
-    def current_goal_node(self):
-        return self._current_goal_node
+    # @property
+    # def current_goal_node(self):
+    #     return self._current_goal_node
+    #
+    # @current_goal_node.setter
+    # def current_goal_node(self, goal_node):
+    #     self._current_goal_node = goal_node
 
-    @current_goal_node.setter
-    def current_goal_node(self, goal_node):
-        self._current_goal_node = goal_node
-
-    def last_fork_node(self):
+    def last_child_fork_node(self) -> Optional[GoalNode]:
         """
-        Return the last ancestor of current_goal_node which is a fork node.
-        This is the pertinent goal_node for the proof msg to be displayed in
-        the status bar.
+        Return the last ancestor of current_goal_node which is the child of a
+        fork node. This is the pertinent goal_node for the proof msg to be
+        displayed in the status bar.
         """
         return self.current_goal_node.last_child_fork_node
 
     def current_proof_msg(self) -> Optional[str]:
-        if self.last_fork_node():
-            return self.last_fork_node().msg()
+        """
+        Return the msg of the last child fork node. This msg should be
+        displayed in the status bar.
+        """
+        if self.last_child_fork_node():
+            return self.last_child_fork_node().msg()
 
     def is_at_end(self):
         """
-        True if self is at the end of history.
+        True if self has no child_proof_step, e.g. if self is at end of history.
         """
         return self.current_goal_node.child_proof_step is None
 
     @property
-    def next_proof_step_nb(self):
+    def next_proof_step_nb(self) -> Optional[int]:
         proof_step = self.current_goal_node.child_proof_step
         if proof_step:
             return proof_step.pf_nb
         else:
             return None
 
-    # @property
-    # def last_proof_step_nb(self):
-    #     if self.last_proof_step:
-    #         return self.last_proof_step.pf_nb
-
-    def unsolved_goal_nodes(self, till_goal_nb=None):
+    def unsolved_goal_nodes(self, till_goal_nb=None) -> [GoalNode]:
         """
         Compute from the proof tree (truncated at "till_goal_nb") the list of
         unsolved goal_nodes. This is the ordered list of unsolved leaves of
@@ -774,33 +802,36 @@ class ProofTree:
         """
         return self.root_node.truncated_unsolved_leaves(till_goal_nb)
 
-    # def unsolved_goals(self):
-    #     return [gn.goal for gn in self.unsolved_goal_nodes()]
-
-    def unsolved_goals_count(self):
+    def unsolved_goals_count(self) -> int:
         return len(self.unsolved_goal_nodes())
 
-    def pending_goal_nodes(self):
+    def pending_goal_nodes(self) -> [GoalNode]:
         """
+        The list of unsolved oal nodes, except current_goal_node.
         NB: the result is a bit strange when proof tree is not at end.
         """
-        # gn = self.current_goal_node.goal_nb
         pgn = [gn for gn in self.unsolved_goal_nodes()
                if gn is not self.current_goal_node]
         return pgn
 
     def go_to_first_unsolved_node(self):
+        """
+        Set current_goal_node to the next unsolved goal node. This is called
+        when current_goal_node is solved.
+        """
+
+        # TODO: modify to allow permutation of unsolved nodes.
         unsolved_goal_nodes = self.unsolved_goal_nodes()
         if unsolved_goal_nodes:
             self.current_goal_node = unsolved_goal_nodes[0]
 
     def set_no_more_goals(self):
+        """
+        Artificially set current_goal_nodes to display "no more goals".
+        """
         proof_step = self.current_goal_node.child_proof_step
         no_more_goals = GoalNode.no_more_goals(proof_step)
         self.current_goal_node = no_more_goals
-
-    # def is_all_goals_solved(self):
-    #     return not self.unsolved_goal_nodes()
 
     def add_outcomes(self):
         """
@@ -824,9 +855,10 @@ class ProofTree:
 
     def process_new_proof_step(self, new_proof_step: ProofStep):
         """
-        Create new GoalNodes and add them into the tree according to the data.
-        First call creates the main_goal. The next proof_step should be created
-        after this is called, with current_goal_node as a parent.
+        Create new GoalNodes and add them into the tree according to the
+        provided new_proof_step. First call creates the root_node if there is
+        none. The next proof_step should be created after this is called,
+        with current_goal_node as a parent.
         """
 
         self.previous_goal_node = self.current_goal_node
@@ -848,8 +880,6 @@ class ProofTree:
 
         # ─────── Connect new_proof_step to ProofTree ─────── #
         self.current_goal_node.child_proof_step = new_proof_step
-        # if self.is_all_goals_solved():  # All goals solved!
-        #     return
 
         # ─────── Create new GoalNodes ─────── #
         new_goal = new_proof_state.goals[0]
@@ -867,26 +897,28 @@ class ProofTree:
                 self.go_to_first_unsolved_node()
             else:  # No more goals!
                 self.set_no_more_goals()
-            new_proof_step.children_goal_nodes = [self.current_goal_node]
+            children_gn = [self.current_goal_node]
             #  Refresh goal and set tag:
             self.current_goal_node.set_goal(new_goal)
             self.current_goal_node.goal_has_changed = True
-        elif delta_goal == 0:  # Generic case
-            next_goal_node = GoalNode(parent=new_proof_step, goal=new_goal)
-            children = [next_goal_node]
-            new_proof_step.children_goal_nodes = children
+        else:
+            next_goal_node = GoalNode(parent=new_proof_step,
+                                      goal=new_goal)
             self.current_goal_node = next_goal_node
+            if delta_goal == 0:  # Generic case
+                children_gn = [next_goal_node]
+            else:  # Fork node: two sub-goals
+                assert delta_goal == 1
+                # Provisionally create other goal node
+                other_goal = new_proof_state.goals[1]
+                other_goal.name_bound_vars()
+                other_goal_node = GoalNode(parent=new_proof_step,
+                                           goal=other_goal)
+                children_gn = [next_goal_node, other_goal_node]
+
             self.add_outcomes()
-        else:  # Fork node: two sub-goals
-            assert delta_goal == 1
-            next_goal_node = GoalNode(parent=new_proof_step, goal=new_goal)
-            other_goal = new_proof_state.goals[1]
-            # Provisionally create other goal node
-            other_goal_node = GoalNode(parent=new_proof_step, goal=other_goal)
-            children = [next_goal_node, other_goal_node]
-            new_proof_step.children_goal_nodes = children
-            self.current_goal_node = next_goal_node
-            self.add_outcomes()
+
+        new_proof_step.children_goal_nodes = children_gn
 
         # ─────── Compare with previous state and tag properties ─────── #
         previous_goal = self.current_goal_node.parent_node.goal
@@ -902,7 +934,7 @@ class ProofTree:
         Value proof_step_nb = 0 corresponds to initial goal (as this is the
         step number of self.root_node.parent).
         """
-        self.root_node.prune(proof_step_nb)
+        self.root_node.prune_from(proof_step_nb)
 
     def __str__(self):
         return str(self.root_node)

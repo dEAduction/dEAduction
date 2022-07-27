@@ -111,7 +111,7 @@ def set_logger():
                        'ServerQueue',
                        # 'lean',
                        'deaduction.dui',
-                       'deaduction.pylib',
+                       # 'deaduction.pylib',
                        'logic',
                        'magic',
                        'coursedata']

@@ -54,12 +54,11 @@ def widget_goal_block(parent_widget: Optional[WidgetGoalBlock],
                       goal_node: GoalNode) -> WidgetGoalBlock:
     """
     All WidgetGoalBlock to be inserted in the ProofTreeWidget should be
-    created by calling this method. A WGB corresponding to goal_node is
-    created, with parent_widget as its logical parent.
+    created by calling this function. A WGB corresponding to goal_node is
+    created, with parent_widget as its logical parent. This function is
+    crucial for the good appearance of the ProofTreeWindow ; the kind of WGB
+    created should reflect the logic of the corresponding ProofStep.
     """
-
-    # TODO:
-    #  - apply
 
     new_context = goal_node.new_context
     target = goal_node.goal.target.math_type
@@ -156,6 +155,9 @@ def update_from_node(wgb: WidgetGoalBlock, gn: GoalNode):
     Noe that this is NOT redundant with the update_display method of the
     proof_tree_window, which ensures that the WidgetProofTree is correctly
     displayed on screen, and should be called later on.
+
+    This function is a bit of an overkiller, since it probably re-creates many
+    WGB unnecessarily.
     """
     pairs = list(zip(wgb.logical_children, gn.children_goal_nodes))
     if (len(wgb.logical_children) > len(gn.children_goal_nodes)
@@ -186,6 +188,26 @@ def update_from_node(wgb: WidgetGoalBlock, gn: GoalNode):
 class ProofTreeController:
     """
     A class to create and update a ProofTreeWindow that reflects a ProofTree.
+    The model is given by the ProofTree, the view is provided by the
+    ProofTreeWindow, and the ProofTreeController makes sure that the view
+    reflects the model.
+
+    The main method is update(), which proceeds as follows:
+    (1) Call the update_from_node() function, which recursively build
+    WidgetGoalBlock (WGB) instances that reflect the structure of the
+    ProofTree: to each GoalNode instance corresponds a WidgetGoalBlock
+    instance. Each WidgetGoalBlock instance is created by this function,
+    when it detects a defect some part of the ProofTree which is not
+    displayed correctly. Note that this stage alone has no effect on what is
+    displayed; the display is updated only at stage (3).
+    (2) The WGB are recursively enabled/disabled to reflect history moves: if
+    history is not at end, then all WGB corresponding to GoalNode whose
+    goal_nb is > to the current goal_nb are disabled.
+    (3) The WGB are recursively displayed correctly, via the
+    WGB.update_display_recursively() method.
+    (4) The current target is set, after which the WGB corresponding to the
+    current GoalNode should indicate user that this is where the
+    building of the ProofTree will continue.
     """
     def __init__(self):
         self.proof_tree = None
@@ -259,6 +281,9 @@ class ProofTreeController:
 
     def wgb_from_goal_nb(self, goal_nb: int, from_wgb=None) -> \
             WidgetGoalBlock:
+        """
+        For debugging.
+        """
 
         if not from_wgb:
             from_wgb = self.proof_tree_window.main_block

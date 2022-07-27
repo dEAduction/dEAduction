@@ -48,7 +48,7 @@ if __name__ != "__main__":
     from deaduction.pylib.mathobj import MathObject, ContextMathObject
     from deaduction.pylib.proof_tree import GoalNode, RootGoalNode, \
         VirtualBrotherAuxGoalNode
-else:
+else:  # For debugging only
     def _(x):
         return x
 
@@ -57,6 +57,7 @@ else:
 
     class GoalNode:
         pass
+
     class RootGoalNode:
         pass
 
@@ -72,20 +73,29 @@ class AbstractGoalBlock:
     A generic class for dealing with the logical part of WidgetGoalBlock.
     An AbstractGoalBlock may have one target and two context lists,
     corresponding to new context element to be displayed before / after the
-    target.
-    - rw = None / "rw" / "implicit_rw".
+    target. This class handles the merging of several GoalNodes into a single
+    WidgetGoalBlock. More precisely, we want to avoid repeating the target
+    at each step: for instance when introducing several variables (and
+    maybe a hypothesis) in a row, the new target will be displayed only after
+    the last intro. This is obtained by properties merge_up / merge_down : when
+    self.merge_down is True,
+    self's widget will not be displayed, but instead its context1 will
+    be added to its (single) child's context1 (see property context1), and its
+    target will be displayed instead of parent's target.
+
+    :param rw:  None / "rw" / "implicit_rw", according to the level of rw that
+    should be displayed. This is not implemented yet (all rw are displayed).
     """
     merge = True  # Set to False to prevent any merging
-    # goal_nb = 0
 
     def __init__(self, logical_parent, goal_node,
                  context1: [MathObject] = None,
                  target: MathObject = None, context2=None,
                  pure_context: tuple = None,
-                 merge_up=False, merge_down=False, rw=None):
+                 merge_up=False, merge_down=False, rw=0):
 
         self._context1 = context1 if context1 else []
-        self._target = target
+        self.target = target
         self.context2 = context2 if context2 else []
         self.pure_context = pure_context if pure_context else ()
 
@@ -141,23 +151,14 @@ class AbstractGoalBlock:
     @property
     def context1(self):
         """
-        If merge_up is True, then
-        fusion self 's _context with parent's context. Note that this will call
-        recursively to all ancestors' _context, as far as they are IntroWGB.
+        If merge_up is True, then fusion self 's _context with parent's
+        context. Note that this will call recursively to all ancestors'
+        _context, as far as they are IntroWGB.
         """
         if self.merge_up:
             return self.logical_parent.context1 + self._context1
         else:
             return self._context1
-
-    @property
-    def target(self):
-        # if self.merge_down:
-        #     return self.logical_children[0].target
-        # elif self.merge_up:
-        #     return None
-        # else:
-        return self._target
 
     def set_invisible(self, yes=True):
         """
@@ -170,19 +171,22 @@ class AbstractGoalBlock:
         if self._is_visible is not None:
             return self._is_visible
 
-        if reference_level == -1:
+        if reference_level == -1:  # Unused
             reference_level = WidgetGoalBlock.rw_level
         return self.rw_level <= reference_level
-        # and not self.merge_up
 
     @property
     def target_msg(self) -> callable:
         if self.merge_down:
             return self.logical_children[0].target_msg  # No parentheses!
         else:
-            return self.goal_node.html_msg  # (callable)
+            return self.goal_node.html_msg
 
     def add_logical_child(self, child):
+        """
+        This should reflect the ProofTree (as opposed to parent.child in the
+        QWidget meaning).
+        """
         self.logical_children.append(child)
 
 
@@ -191,41 +195,58 @@ class AbstractGoalBlock:
 ######################
 class WidgetGoalBlock(QWidget, AbstractGoalBlock):
     """
-    A generic widget for displaying an AbstractGoalNode. It has four
+    A generic widget for displaying an AbstractGoalNode. It has several
     optional widgets:
-     - one widget for showing some context objects in a horizontal layout,
-     - another one for showing a target,
-     - and a third one for showing a second context list under the target.
+     - context1_widget for showing some context objects in a horizontal layout,
+     - target_widget for showing a target,
+     - context2_widget for showing a second context list under the target.
      - If all of these are None, then maybe the fourth one,
-     pure_context_widget, is not.
+     pure_context_widget, is not None. It is designed to display a step that
+     operates purely on the context (the target remains unchanged),
+     like a modus ponens.
 
     If self has a target_widget, then it has a children_layout inside to
-    welcome children (and descendants). If not, children are passed to
-    logical_parent.
+    welcome children (and descendants). If not, children are passed for
+    display to logical_parent.
 
     Self can be "merged up": in this case its information are displayed by
     one of its ascendant, and self's layout is never set. In particular,
-    self has no target_widget and no children_layout.
+    self has no target_widget and no children_layout. See AbstractGoalBlock.
 
     More generally, self should have a target_widget (and a children_layout) iff
     it is actually displayed.
 
     self.children_widget reflects the children WidgetGoalBlock that should
-    really be displayed in self's children_layout.
+    really be displayed in self's children_layout, see the method
+    descendant_displayed_by_self.
+
+    The attributes proof_title_label and status_label are QLabel that
+    respectively display the target ("Proof of ...") and the status of this
+    target (solved or to be completed). Both will be passed to the
+    TargetWidget; this is the main sub-widget, it handles the display of
+    target, context1, and (inductively)  all the children widgets.
 
     Note that instantiation does NOT set the layout: one has to call
-    self.update_display().
+    self.update_display(), that in turn calls set_layout_without_children()
+    and set_children(). In particular the above mentioned sub-widgets
+    are created only by the set_layout_without_children method.
+
+    Attribute pure_context is a tuple
+    (premises: [MathObject], operator: MathObject or Statement,
+    conclusions: [MathObject], type_: "operator", "substitution" or
+    "no_operator").
     """
     rw_level = 1  # show rw but not implicit rw  # FIXME: not implemented
     proof_tree_window = None  # Set up by ProofTreeWindow
     garbage_collector: [QWidget] = []  # Not used
 
     def __init__(self, logical_parent, goal_node,
-                 context1=None, target=None, context2=None, pure_context=None,
+                 context1: [MathObject] = None,
+                 target: MathObject = None,
+                 context2: [MathObject] = None,
+                 pure_context: tuple = None,
                  merge_down=False, merge_up=False, rw_level=0,
                  is_target_substitution=False):
-        """
-        """
 
         # The following is not implemented:
         # rw_level =  0 if self is not a rw operation,
@@ -281,6 +302,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         return self.context1, self.target, self.context2, self.pure_context
 
     def delete_garbage(self):
+        # Not used.
         log.debug(f"Deleting {len(self.garbage_collector)} widgets...")
         for wdg in self.garbage_collector:
             try:
@@ -301,16 +323,14 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
             return None
 
     def parent_wgb(self):
+        """
+        This returns the first ancestor, in the QWidget meaning, which is a
+        WGB.
+        """
         parent = self.parent()
         while parent and not isinstance(parent, WidgetGoalBlock):
             parent = parent.parent()
         return parent
-
-    # def set_target_substituted(self, yes=True):
-    #     self._is_target_substituted = yes
-    #
-    # def is_target_substituted(self):
-    #     return self._is_target_substituted
 
     def is_conditionally_solved(self):
         """
@@ -329,7 +349,9 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
     def status_msg(self) -> Optional[str]:
         """
         Compute the status msg for this part of the proof, to be displayed at
-        the end of the block.
+        the end of the block. This method is passed to the BlinkingLabel that
+        will display the status_msg as a callable, so that it will be adapted
+        as the proof goes on.
         """
 
         # if self.is_target_substituted():
@@ -354,6 +376,14 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
     def set_layout_without_children(self):
         """
         Populate main_layout from scratch, but does NOT take care of children.
+        The WGB should either be
+        - a pure context WGB, in which case the
+        attribute pure_context is provided, but no target (nor context1/2).
+        A pure context WGB can be of type operator, substitution,
+        or no operator.
+        - or a target WGB, in which case a target is provided and a
+        target_widget will be created, of type TargetWidget. context1 and
+        context2 may be provided.
         """
         # TODO: put the cleaning part in a clean_layout method,
         #  and the special cases (pure_context, substitution) in
@@ -391,7 +421,8 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
                                                                      conclusions
                                                                      )
             elif type_ == "no operator":
-                self.pure_context_widget = ContextWidget(conclusions)
+                self.pure_context_widget = ContextWidget(math_objects=
+                                                         conclusions)
 
             self.main_layout.insertWidget(0, self.pure_context_widget)
             return
@@ -456,27 +487,11 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
                 descendants.extend(child.descendants_not_displayed_by_self)
             return self.displayable_children + descendants
 
-    # def add_widget_child(self, child):
-    #     """
-    #     Add the child if self has a children_layout, else call parent.This
-    #     method is called when adding a logical child or by a child who
-    #     delegates the display of its children widgets.
-    #     """
-    #     # FIXME: obsolete
-    #
-    #     if not child.is_visible():
-    #         return
-    #
-    #     if self.children_layout:
-    #         child.parent_widget = self
-    #         self.children_widgets.append(child)
-    #         self.children_layout.addWidget(child)
-    #     else:
-    #         self.logical_parent.add_widget_child(child)
-
     def set_children_widgets(self):
         """
-        Display directly descendants_to_be_displayed.
+        Display directly descendants_to_be_displayed, if self has a
+        children_layout (which should be a layout in self.target_widget).
+        Descendants are passed to the target_widget method add_child_wgb().
         """
         self.children_widgets = []
         if self.children_layout:
@@ -543,6 +558,10 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         return all(tests)
 
     def check_pure_context(self):
+        """
+        Check if self.pure_context_widget displays the content of
+        self.pure_context.
+        """
         if not self.pure_context:
             return not self.pure_context_widget
         elif not self.pure_context_widget:
@@ -588,6 +607,13 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
                     ])
 
     def update_display(self):
+        """
+        Check if self correctly displays the information containde in its
+        attribute target, context1, context2, pure_context, and its children.
+        If not, the methods set_layout_without_children() and
+        set_children_widgets() are called. They will create from scratch the
+        necessary sub-widgets and insert children widgets.
+        """
         # log.debug(f"Updating WGB for nb {self.goal_nb}: {self.goal_node}...")
         if not self.is_up_to_date():
             log.debug(f"Updating WGB for goal_nb {self.goal_nb}")
@@ -634,6 +660,11 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
 
     def set_current_target_recursively(self, goal_nb, blinking=True) \
             -> Optional[QWidget]:
+        """
+        Make the status_msg of the current target blinks in boldface.
+        Also return the current Blinking status_label, that should be made
+        visible by scrolling.
+        """
         if self.goal_nb == goal_nb:
             wdg = self.set_as_current_target(yes=True, blinking=blinking)
             return wdg
@@ -646,24 +677,25 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
             if wdg:
                 return wdg
 
-    def make_visible(self, wdg: QWidget):
-        """
-        Recursively call to parent to make wgb visible in the scrollArea.
-        """
-        # FIXME: does not work??
-        parent = self.parent()
-        while not hasattr(parent, "ensureWidgetVisible"):
-            if not hasattr(parent, "parent"):
-                log.warning("Ensure visible failed!")
-                return
-            parent = parent.parent()
-
-        parent.ensureWidgetVisible(wdg, ymargin=100)
+    # def make_visible(self, wdg: QWidget):
+    #     """
+    #     Recursively call to parent to make wgb visible in the scrollArea.
+    #     """
+    #     # FIXME: does not work??
+    #     parent = self.parent()
+    #     while not hasattr(parent, "ensureWidgetVisible"):
+    #         if not hasattr(parent, "parent"):
+    #             log.warning("Ensure visible failed!")
+    #             return
+    #         parent = parent.parent()
+    #
+    #     parent.ensureWidgetVisible(wdg, ymargin=100)
 
     @property
     def math_widgets(self) -> [RawLabelMathObject]:
         """
         Return all math widgets displayed by self which are not targets.
+        This is used by the highlight_math_widgets() method.
         """
         wdgs = []
         for wdg in [self.pure_context_widget, self.context1_widget,
@@ -673,7 +705,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
 
         return wdgs
 
-    def highlight_math_widgets(self, math_object: ContextMathObject, yes):
+    def highlight_math_widgets(self, math_object, yes):
         """
         Highlight all RawLabelMathObjects which are related to math_object.
         """
@@ -696,6 +728,13 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
 
     @property
     def is_root_node_or_substituted(self):
+        """
+        True if self is either the WGB that reflects the root of the
+        ProofTree, or a WGB obtained from this root WGB by substituting the
+        target. In either case, the displayed target is the main target,
+        and solving it closes the proof. This is used by self.status_msg to
+        display the "QED!!" winning msg.
+        """
         if self._is_root_node_or_substituted is None:
             test = (isinstance(self.goal_node, RootGoalNode) or
                     (isinstance(self, TargetSubstitutionWGB) and
@@ -703,10 +742,6 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
                      self.parent_widget.is_root_node_or_substituted))
             self._is_root_node_or_substituted = test
         return self._is_root_node_or_substituted
-
-    # @is_root_node_or_substituted.setter
-    # def is_root_node_or_substituted(self, yes=True):
-    #     self._is_root_node_or_substituted = yes
 
 
 class GoalSolvedWGB(WidgetGoalBlock):
@@ -752,7 +787,12 @@ class IntroImpliesWGB(WidgetGoalBlock):
 
 
 class PureContextWGB(WidgetGoalBlock):
-
+    """
+    Display either just some properties appearing in the context with no
+    known origin(with no change in target), or a "modus ponens" involving an
+    "operator, i.e. a logical step involving only the context and looking like
+    P and (P => Q)  -----> Q.
+    """
     def __init__(self, logical_parent, goal_node,
                  premises, operator, conclusions):
         if operator or premises:
@@ -767,6 +807,12 @@ class PureContextWGB(WidgetGoalBlock):
     @classmethod
     def from_outcome(cls, outcome: VirtualBrotherAuxGoalNode,
                      parent_wdg: WidgetGoalBlock):
+        """
+        Display a PureContextWGB after an auxiliary goal is solved, e.g. when
+        applying "P => Q" to a target Q, target is replaced by P ; when this
+        new target  is solved, this PureContextWGB is displayed, showing how
+        the outcome Q is obtained.
+        """
         operator = outcome.outcome_operator
         if operator:
             premises = outcome.premises
@@ -783,7 +829,9 @@ class PureContextWGB(WidgetGoalBlock):
 
 
 class SubstitutionWGB(WidgetGoalBlock):
-
+    """
+    A WGB showing a substitution (rewriting) occurring in the context.
+    """
     def __init__(self, logical_parent, goal_node,
                  premises, rw_item, conclusions):
         super().__init__(logical_parent, goal_node,
@@ -840,7 +888,8 @@ class EmptyWGB(WidgetGoalBlock):
 ###############
 class ProofTreeWindow(QWidget):
     """
-    A widget for displaying the proof tree.
+    A widget for displaying the proof tree. This is also where all the styles of
+    the different sub-widgets are set up.
     """
 
     def __init__(self, context=None, target=None):
@@ -901,17 +950,20 @@ class ProofTreeWindow(QWidget):
         self.main_block.unset_current_target_recursively()
 
     def set_current_target(self, goal_nb, blinking=True) -> Optional[QWidget]:
+        """
+        Make the status_msg of the current target blinks in boldface.
+        Also return the current blinking status label that should be made
+        visible by calling the make_visible() method.
+        """
         wdg = self.main_block.set_current_target_recursively(goal_nb, blinking)
         return wdg
 
     @Slot()
     def toggle(self):
+        """
+        Toggle the window, i.e. make it visible / invisible.
+        """
         self.setVisible(not self.isVisible())
-
-    # def paintEvent(self, event):
-    #     """ For debugging. """
-    #     painter = QPainter(self)
-    #     paint_layout(painter, self.main_block)
 
     def make_visible(self, wdg):
         """

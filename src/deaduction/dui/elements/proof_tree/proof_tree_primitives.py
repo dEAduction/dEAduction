@@ -90,6 +90,10 @@ def paint_layout(painter, item, item_depth=0, max_depth=10):
 
 
 class BlinkingLabel(QLabel):
+    """
+    A QLabel that displays a msg that can be made to blink in boldface.
+    This is used to show the status of targets (solved / to be completed).
+    """
     def __init__(self, text: callable, goal_nb=-1):
         super(BlinkingLabel, self).__init__(text())
         self.goal_nb = goal_nb
@@ -158,25 +162,28 @@ class BlinkingLabel(QLabel):
             self.setStyleSheet("")
 
 
-def display_object(math_objects):
-    """
-    Recursively convert MathObjects inside math_objects to str in html format.
-    """
-    if math_objects is None:
-        return None
-    elif isinstance(math_objects, str):
-        return math_objects
-    elif isinstance(math_objects, list):
-        return list([display_object(mo) for mo in math_objects])
-    elif isinstance(math_objects, tuple):
-        return tuple(display_object(mo) for mo in math_objects)
-    else:
-        if math_objects.math_type.is_prop():
-            return math_objects.math_type.to_display(format_="html")
-        else:
-            return math_objects.to_display(format_="html")
+# def display_object(math_objects):
+#     """
+#     Recursively convert MathObjects inside math_objects to str in html format.
+#     """
+#     if math_objects is None:
+#         return None
+#     elif isinstance(math_objects, str):
+#         return math_objects
+#     elif isinstance(math_objects, list):
+#         return list([display_object(mo) for mo in math_objects])
+#     elif isinstance(math_objects, tuple):
+#         return tuple(display_object(mo) for mo in math_objects)
+#     else:
+#         if math_objects.math_type.is_prop():
+#             return math_objects.math_type.to_display(format_="html")
+#         else:
+#             return math_objects.to_display(format_="html")
 
 
+#######################################################################
+# ----------------- Some geometry helper functions ------------------ #
+#######################################################################
 def middle(p, q) -> QPoint:
     return (p+q)/2
 
@@ -198,15 +205,24 @@ def mid_bottom(rect: QRect) -> QPoint:
 
 
 def max_width(wdg1, wdg2):
+    """
+    Return the max of the widths of both widgets.
+    """
     o_width = wdg1.rect().width()
     e_width = wdg2.rect().width()
-    log.debug(f"Widths: {o_width}, {e_width}")
+    # log.debug(f"Widths: {o_width}, {e_width}")
     return max(o_width, e_width)
 
 
+#######################################################################
+# ----------------- Some painting helper functions ------------------ #
+#######################################################################
 def paint_arrowhead(end_line, painter: QPainter,
                     direction="horizontal_right", arrow_height=5,
                     color=cvars.get("display.color_for_operator_props")):
+    """
+    Paint the head of an arrow.
+    """
 
     # Coordinates
     vect_x = QPoint(arrow_height, 0)
@@ -305,7 +321,8 @@ def points_for_substitution_arrow(origin_wdg: QWidget, end_wdg: QWidget,
     """
     Compute points for tracing a curved substitution arrow. The arrow goes from
     the middle right of origin_wdg to the middle right of end_wdg, through
-    the middle left of middle_wdg,  within parent_wdg.
+    the middle left of middle_wdg,  within parent_wdg. This is used for
+    substitution in target.
     """
     shift = QPoint(inner_sep, 0)
     rel_origin = mid_right(origin_wdg.rect())
@@ -322,7 +339,7 @@ def points_for_substitution_arrow(origin_wdg: QWidget, end_wdg: QWidget,
     return [origin, control1, mid, control2, end]
 
 
-def points_for_curved_arrow(origin_wdg: QWidget, end_wdg: QWidget,
+def points_for_curved_line(origin_wdg: QWidget, end_wdg: QWidget,
                             parent_wdg: QWidget) -> [QPoint]:
     """
     Compute points for tracing a curved arrow from origin_wdg to end_wdg
@@ -344,7 +361,8 @@ def paint_curved_line(points: [QPoint],
                       style=Qt.DotLine,
                       color=None, pen_width=1):
     """
-    Use painter to draw a (quadratic Bezier) curved arrow.
+    Use painter to draw a (quadratic Bezier) curved line. This is used to
+    link identical MathObjects.
     """
     assert len(points) == 5
     if color is None:
@@ -370,7 +388,7 @@ def paint_substitution_arrow(points: [QPoint],
     paint_arrowhead(end, painter, direction="horizontal_left", color=color)
 
 
-def rectangle(item):
+def rectangle(item: Union[QWidget, QLayout]):
     if isinstance(item, QWidget):
         return item.rect()
     elif isinstance(item, QLayout):
@@ -378,6 +396,10 @@ def rectangle(item):
 
 
 class CurvedLine:
+    """
+    A class to store info to draw a curved line. This is used to link
+    identical MathObjects.
+    """
     def __init__(self, origin_wdg: QWidget, end_wdg: QWidget, parent):
         color_var = cvars.get("display.color_for_variables")
         color_prop = cvars.get("display.color_for_props")
@@ -408,32 +430,35 @@ class CurvedSubstitutionArrow:
             return "lightgrey"
 
 
-class VerticalArrow(QWidget):
-    def __init__(self, minimum_height=60, arrow_width=4, style=Qt.DashLine):
-        super(VerticalArrow, self).__init__()
-        self.setMinimumHeight(minimum_height)
-        self.setFixedWidth(arrow_width*3)
-        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
-        self.pen_width = 1
-        self.arrow_width = arrow_width + self.pen_width
-        self.style = style
-
-    def color(self):
-        if self.isEnabled():
-            return cvars.get("display.color_for_operator_props")
-        else:
-            return "lightgrey"
-
-    def paintEvent(self, e):
-        painter = QPainter(self)
-
-        rectangle = self.rect()
-        origin = mid_top(rectangle)
-        end = mid_bottom(rectangle)
-
-        paint_arrow(origin=origin, end=end, painter=painter,
-                    arrow_height=self.arrow_width, style=self.style,
-                    color=self.color(), direction="vertical")
+# class VerticalArrow(QWidget):
+#     """
+#     A class to paint a vertical arrow
+#     """
+#     def __init__(self, minimum_height=60, arrow_width=4, style=Qt.DashLine):
+#         super(VerticalArrow, self).__init__()
+#         self.setMinimumHeight(minimum_height)
+#         self.setFixedWidth(arrow_width*3)
+#         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
+#         self.pen_width = 1
+#         self.arrow_width = arrow_width + self.pen_width
+#         self.style = style
+#
+#     def color(self):
+#         if self.isEnabled():
+#             return cvars.get("display.color_for_operator_props")
+#         else:
+#             return "lightgrey"
+#
+#     def paintEvent(self, e):
+#         painter = QPainter(self)
+#
+#         rectangle = self.rect()
+#         origin = mid_top(rectangle)
+#         end = mid_bottom(rectangle)
+#
+#         paint_arrow(origin=origin, end=end, painter=painter,
+#                     arrow_height=self.arrow_width, style=self.style,
+#                     color=self.color(), direction="vertical")
 
 
 class HorizontalArrow(QWidget):
@@ -496,6 +521,9 @@ class DisclosureTriangle(QLabel):
 
 
 class VertBar(QFrame):
+    """
+    A vertical bar, used to indicate the proof of a specific target.
+    """
     def __init__(self):
         super().__init__()
         self.setFrameShape(QFrame.VLine)
@@ -511,13 +539,17 @@ class RawLabelMathObject(QLabel):
     the callable html_msg, which takes parameter use_color and bf.
     This allows to disable self by setting use_color=False, or to highlight
     it by setting bf=True.
+    This QLabel may be highlighted, it can change its text dynamically thanks
+    to its attribute html_msg which is a callable (and to the update_txt()
+    method), and it can tell the main window when mouse is over by calling
+    back the highlight_in_tree function.
 
     Param math_object may be a MathObject instance or a string or a Statement.
     """
     # highlight_in_tree = Signal(ContextMathObject) Fixme: Does not work ?!
     highlight_in_tree: callable = None
 
-    def __init__(self, math_object=None,
+    def __init__(self, math_object: Union[MathObject, Statement, str] = None,
                  html_msg: Optional[callable] = None):
         """
         Either math_object or html_msg is not None. If html_msg is not None
@@ -617,9 +649,10 @@ class ProofTitleLabel(RawLabelMathObject):
 class GenericLMO(RawLabelMathObject):
     """
     A class for displaying MathObject inside a frame. math_object can be a
-    MathObject instance or a string (e.g. a statement name).
+    MathObject instance or a string (e.g. a statement name). A tooltip
+    provides the type of the MathObject if pertinent.
     """
-    def __init__(self, math_object, new=True):
+    def __init__(self, math_object: Union[MathObject, str], new=True):
         super().__init__(math_object)
         # The following is used in the style sheet
         is_new = "new" if new else "old"
@@ -632,7 +665,8 @@ class GenericLMO(RawLabelMathObject):
 
 class LayoutMathObject(QHBoxLayout):
     """
-    Display a LabelMathObject inside a h-layout so that the box is not too big.
+    Display a single GenericLMO inside a h-layout so that the box is not too
+    big.
     """
 
     def __init__(self, math_object, align=None, new=True):
@@ -652,7 +686,8 @@ class LayoutMathObject(QHBoxLayout):
 
 class LayoutMathObjects(QVBoxLayout):
     """
-    Display a vertical pile of LayoutMathObjects.
+    Display a vertical pile of LayoutMathObjects. Order may be changed
+    dynamically, e.g. when links with next or previous widgets must be drawn.
     """
 
     def __init__(self, math_objects, align=None, new=True):
@@ -721,7 +756,8 @@ class LayoutMathObjects(QVBoxLayout):
 
 class OperatorLMO(RawLabelMathObject):
     """
-    Display a MathObject which is a property operating on other objects.
+    Display a MathObject which is a property operating on other objects. This
+    should be displayed with a special style (e.g. red fat frame).
     """
 
     def __init__(self, math_object):
@@ -754,39 +790,15 @@ class LayoutOperator(QWidget):
 
 class TargetSubstitutionLabel(RwItemLMO):
     """
-    Display an arrow labelled by some Generic LMO, e.g. a rewriting rule as in
-            |
-            |    f(x) = y
-            |
-            V
+    Just store a rw_item, to be displayed along with a curved target
+    substitution arrow.
     """
 
-    # TODO: update doc
     def __init__(self, rw_item):
         if isinstance(rw_item, tuple):  # FIXME: this is just for now...
             rw_item = rw_item[0] + " " + rw_item[1]
 
         super().__init__(rw_item)
-        # layout = QHBoxLayout()
-        # layout.addStretch(1)
-        #
-        # # Arrow
-        # arrow_layout = QVBoxLayout()
-        # self.arrow_wdg = VerticalArrow()
-        # arrow_layout.addStretch(1)
-        # arrow_layout.addWidget(self.arrow_wdg)
-        # arrow_layout.addStretch(1)
-        # layout.addLayout(arrow_layout)
-        #
-        # # Label
-        # label_layout = QVBoxLayout()
-        # self.rw_label = RwItemLMO(rw_item)
-        # label_layout.addStretch(1)
-        # label_layout.addWidget(self.rw_label)
-        # label_layout.addStretch(1)
-        # layout.addLayout(label_layout)
-        #
-        # self.setLayout(layout)
 
 
 class SubstitutionArrow(QWidget):
@@ -1083,11 +1095,6 @@ class OperatorContextWidget(ContextWidget):
     def operator_wdg(self):
         return self.operator_layout.math_wdg
 
-    # @property
-    # def math_wdgs(self):
-    #     return (self.input_layout.math_wdgs + [self.operator_wdg]
-    #             + self.output_layout.math_wdgs)
-
 
 class SubstitutionContextWidget(ContextWidget):
     """
@@ -1130,7 +1137,8 @@ class SubstitutionContextWidget(ContextWidget):
 
 class TargetAndRwLayout(QGridLayout):
     """
-    A class to display a part of the proof tree between two "Proof of...".
+    A class to display a part of the proof tree between two "Proof of..."
+    inside a TargetWidget.
     """
     min_space = 100
 
@@ -1150,17 +1158,6 @@ class TargetAndRwLayout(QGridLayout):
         if self.rw_wdg:
             wdgs.append(self.rw_wdg)
         return  wdgs
-
-    # @property
-    # def width(self):
-    #     if self._width is None:
-    #         self._width = self.content_lyt.contentsRect().width()
-    #         wdgs = self.all_content_widgets()
-    #         if wdgs:
-    #             self._width = max([wdg.width() for wdg in wdgs])
-    #         else:
-    #             self._width = 0
-    #     return self._width
 
     @property
     def content_count(self):
@@ -1221,7 +1218,7 @@ class TargetWidget(QWidget):
                  title_label: Optional[ProofTitleLabel] = None):
         super().__init__()
         self.target = target
-        self.target_msg = target_msg
+        # self.target_msg = target_msg
         self.parent_wgb = parent_wgb
         self.content_n_rw_lyts: [TargetAndRwLayout] = []
         self.curved_arrows: [CurvedLine] = []
@@ -1360,12 +1357,12 @@ class TargetWidget(QWidget):
         """
         Add a WidgetGoalBlock in self.content_layout. Handle the case of a
         substituted target: the title_lbl and status_lbl are "stolen" from
-        the WGB, which is not displayed. In this case, a new content_n_rw_lyt
-        is added, and we get the following structure:
+        the child WGB, which is not displayed. In this case, a new
+        content_n_rw_lyt is added, and we get the following structure:
 
         vertical bar | content_n_rw_lyts[0] |
                      |----------------      |
-                     | child_title          |
+                     | child_proof_title    |
                      |----------------      |
                      | content_n_rw_lyts[1] |
                      |----------------      |
@@ -1433,9 +1430,8 @@ class TargetWidget(QWidget):
         painter = QPainter(self)
         for arrow in self.curved_arrows:
             if arrow.origin_wdg.isEnabled() and arrow.end_wdg.isEnabled():
-                points = points_for_curved_arrow(arrow.origin_wdg,
-                                                 arrow.end_wdg,
-                                                 arrow.parent_wdg)
+                points = points_for_curved_line(arrow.origin_wdg, arrow.end_wdg,
+                                                arrow.parent_wdg)
                 paint_curved_line(points, painter, color=arrow.color)
 
         init = True
