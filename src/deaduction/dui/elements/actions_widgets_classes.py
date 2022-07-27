@@ -270,6 +270,7 @@ class ActionButtonsWidget(QWidget):
         """
         Update text and tooltips in all buttons.
         """
+        # Fixme: obsolete
         for button in self.buttons:
             button.update()
 

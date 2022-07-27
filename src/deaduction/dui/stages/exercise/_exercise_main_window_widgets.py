@@ -160,9 +160,7 @@ class ExerciseCentralWidget(QWidget):
 
         # ──────────────── Init Actions area ─────────────── #
         ActionButton.from_symbol = dict()
-        self.logic_btns = ActionButtonsWidget(exercise.available_logic)
-        self.proof_btns = ActionButtonsWidget(exercise.available_proof)
-        self.magic_btns = ActionButtonsWidget(exercise.available_magic)
+        self.action_btns_wdgs = []
 
         statements           = exercise.available_statements
         outline              = exercise.course.outline
@@ -224,23 +222,23 @@ class ExerciseCentralWidget(QWidget):
         exercise = self.exercise
 
         # ───────────── Action buttons ───────────── #
-
-        self.logic_btns = ActionButtonsWidget(exercise.available_logic)
-        self.proof_btns = ActionButtonsWidget(exercise.available_proof)
-        self.magic_btns = ActionButtonsWidget(exercise.available_magic)
-
-        # Search for ActionButton corresponding to action_apply
-        # (which will be called by double-click):
-        # apply_buttons = [button for button in self.proof_btns.buttons
-        #                  if button.action.run == action_apply]
-        # if apply_buttons:
-        #     self.action_apply_button = apply_buttons[0]
-
-        self.__action_btns_lyt.addWidget(self.logic_btns)
-        self.__action_btns_lyt.addWidget(self.proof_btns)
-        if exercise.available_magic:
-            self.__action_btns_lyt.addWidget(self.magic_btns)
-
+        short = cvars.get("display.short_buttons_line", True)
+        if short:
+            action_lines = [exercise.available_logic_1,
+                            exercise.available_logic_2,
+                            exercise.available_magic + exercise.available_proof]
+        else:
+            action_lines = [exercise.available_logic,
+                            exercise.available_proof,
+                            exercise.available_magic]
+        self.action_btns_wdgs = []
+        for line in action_lines:
+            if line:
+                btns_wdg = ActionButtonsWidget(line)
+                self.action_btns_wdgs.append(btns_wdg)
+                self.__action_btns_lyt.addSpacing(5)
+                self.__action_btns_lyt.addWidget(btns_wdg)
+                inner = True
         # ───────────── Statements ───────────── #
         statements = exercise.available_statements
         outline = exercise.course.outline
@@ -282,8 +280,11 @@ class ExerciseCentralWidget(QWidget):
         symbol_font.setPointSize(symbol_size)
         # self.logic_btns.setFont(symbol_font)
         # self.logic_btns.updateGeometry()
-        for button in self.logic_btns.buttons:
-            button.setFont(symbol_font)
+        # for button in self.logic_btns.buttons:
+        #     button.setFont(symbol_font)
+        for btn in self.actions_buttons:
+            if len(btn.text()) == 1:
+                btn.setFont(symbol_font)
 
         # Target styles #
         target_math_font = self.deaduction_fonts.math_font()
@@ -333,8 +334,10 @@ class ExerciseCentralWidget(QWidget):
                                      'context and target)'))
         self.__context_gb.setTitle(_('Context (objects and properties)'))
 
-        for buttons in (self.logic_btns, self.proof_btns, self.magic_btns):
-            buttons.update()
+        # for buttons in (self.logic_btns, self.proof_btns, self.magic_btns):
+        #     buttons.update()
+        for btn in self.actions_buttons:
+            btn.update()
 
     ##############
     # Properties #
@@ -349,10 +352,13 @@ class ExerciseCentralWidget(QWidget):
         A list of all logic buttons and proof
         buttons (instances of the class ActionButton).
         """
-
-        return self.logic_btns.buttons \
-                + self.proof_btns.buttons \
-                + self.magic_btns.buttons
+        btns = []
+        for line in self.action_btns_wdgs:
+            btns.extend(line.buttons)
+        return btns
+        # return self.logic_btns.buttons \
+        #         + self.proof_btns.buttons \
+        #         + self.magic_btns.buttons
 
     ###########
     # Methods #
@@ -378,10 +384,11 @@ class ExerciseCentralWidget(QWidget):
 
         to_freeze = [self.objects_wgt,
                      self.props_wgt,
-                     self.logic_btns,
-                     self.proof_btns,
-                     self.magic_btns,
+                     # self.logic_btns,
+                     # self.proof_btns,
+                     # self.magic_btns,
                      self.statements_tree]
+        to_freeze += self.action_btns_wdgs
         for widget in to_freeze:
             widget.setEnabled(not yes)
 

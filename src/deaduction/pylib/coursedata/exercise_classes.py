@@ -481,6 +481,20 @@ class Exercise(Theorem):
                 return statement
         return None
 
+    @property
+    def available_logic_1(self):
+        action_names = ["and", "or", "not", "implies", "iff"]
+        actions = [action for action in self.available_logic
+                   if action.name in action_names]
+        return actions
+
+    @property
+    def available_logic_2(self):
+        action_names = ["forall", "exists", "equal", "map"]
+        actions = [action for action in self.available_logic
+                   if action.name in action_names]
+        return actions
+
 
 #############
 # utilities #
