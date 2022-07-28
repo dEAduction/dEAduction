@@ -37,7 +37,8 @@ from typing import Optional
 
 from PySide2.QtCore import ( QObject,
                              Signal,
-                             Slot )
+                             Slot,
+                             QTimer)
 from PySide2.QtWidgets import (QInputDialog,
                                QMessageBox)
 
@@ -872,15 +873,43 @@ class Coordinator(QObject):
             # Resent the whole code
             self.__initialize_exercise()
 
-    @Slot()
     def set_fireworks(self):
         """
-        As of now,
-        - display a dialog when the target is successfully solved,
-        - replace the target by a message "No more goal".
+        Replace the target by a message "No more goal", and return the
+        resulting ProofState
         """
         # Display msg_box unless redoing /moving or test mode
         # TODO: add click to MessageBox in test_mode
+        # if not self.proof_step.is_redo() \
+        #         and not self.proof_step.is_goto()\
+        #         and not self.test_mode:
+        #     title = _('Target solved')
+        #     text = _('The proof is complete!')
+        #     msg_box = QMessageBox(parent=self.emw)
+        #     msg_box.setText(text)
+        #     msg_box.setWindowTitle(title)
+        #     button_ok = msg_box.addButton(_('Back to exercise'),
+        #                                   QMessageBox.YesRole)
+        #     button_change = msg_box.addButton(_('Change exercise'),
+        #                                       QMessageBox.YesRole)
+        #     button_change.clicked.connect(self.emw.change_exercise)
+        #     msg_box.exec_()
+
+        self.proof_step.no_more_goal = True
+        self.proof_step.success_msg = _("Proof complete")
+        self.proof_step.new_goals = []
+        # Artificially create a final proof_state by replacing target by a msg
+        # (We do not get the final proof_state from Lean).
+        proof_state = deepcopy(self.proof_step.proof_state)
+        target = proof_state.goals[0].target
+        target.math_type = MathObject.NO_MORE_GOALS
+
+        return proof_state
+
+    def display_fireworks_msg(self):
+        """
+        Display a QMessageBox informing that the proof is complete.
+        """
         if not self.proof_step.is_redo() \
                 and not self.proof_step.is_goto()\
                 and not self.test_mode:
@@ -895,17 +924,6 @@ class Coordinator(QObject):
                                               QMessageBox.YesRole)
             button_change.clicked.connect(self.emw.change_exercise)
             msg_box.exec_()
-
-        self.proof_step.no_more_goal = True
-        self.proof_step.success_msg = _("Proof complete")
-        self.proof_step.new_goals = []
-        # Artificially create a final proof_state by replacing target by a msg
-        # (We do not get the final proof_state from Lean).
-        proof_state = deepcopy(self.proof_step.proof_state)
-        target = proof_state.goals[0].target
-        target.math_type = MathObject.NO_MORE_GOALS
-
-        return proof_state
 
     def update_proof_step(self):
         """
@@ -1056,3 +1074,8 @@ class Coordinator(QObject):
             self.process_automatic_actions(proof_state.goals[0])
 
         self.emw.ui_updated.emit()  # For testing
+
+        if no_more_goals:
+            # Display QMessageBox but give deaduction time to properly update
+            # ui before.
+            QTimer.singleShot(0, self.display_fireworks_msg)
