@@ -70,5 +70,6 @@ PRETTY_NAMES = {
     'display.tooltips_font_size': _("Tooltips font size"),
     'display.dubious_characters': _('Replace missing characters') +
                               ': ℕ (N), ℤ (Z), ℚ (Q), ℝ (R), 𝒫 (P), ↦ (->)',
+    'display.short_buttons_line': _('Split logic buttons into two lines'),
     'None': _('None')
 }

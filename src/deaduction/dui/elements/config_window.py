@@ -84,7 +84,8 @@ CONFIGS["Display"] = [
     ("display.tooltips_font_size", None, True),
     ('display.use_symbols_for_logic_button', None, True),
     ('display.font_size_for_symbol_buttons', None, True),
-    ('display.dubious_characters', None, True)
+    ('display.dubious_characters', None, True),
+    ('display.short_buttons_line', None, True)
     # ('display.font_for_mathematics', "font", True)
     ]
 # ('display.mathematics_font', None, True),
