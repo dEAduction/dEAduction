@@ -312,6 +312,10 @@ class MathObjectWidget(QListView):
         # log.debug(f"Size hint for col 0: {self.sizeHintForColumn(0)}")
 
     def currentChanged(self, current, previous) -> None:
+        """
+        Prevent current index setting (which would be highlighted in light
+        blue, interfering with deaduction's own selection mechanism).
+        """
         self.setCurrentIndex(QModelIndex())
 
     def item_from_index(self, index_):

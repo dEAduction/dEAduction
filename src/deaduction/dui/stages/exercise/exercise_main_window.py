@@ -561,8 +561,6 @@ class ExerciseMainWindow(QMainWindow):
         for item in self.current_selection:
             item.mark_user_selected(False)
         self.current_selection = []
-        # if self.target_selected_by_default:  # FIXME: obsolete
-        #     self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
     @Slot(MathObjectWidgetItem)
     def process_context_click(self, item: Union[QModelIndex,
@@ -574,15 +572,12 @@ class ExerciseMainWindow(QMainWindow):
 
         :item: The math. object or property user just clicked on.
         """
-        # TODO: allow simultaneous selection of target and context objects
+
         if isinstance(item, QModelIndex):
             index = item
             item = self.ecw.objects_wgt.item_from_index(index)
             if not item:
                 item = self.ecw.props_wgt.item_from_index(index)
-        # Un-select target  # FIXME: obsolete
-        # self.ecw.target_wgt.mark_user_selected(False)
-        # self.target_selected = False
 
         if item not in self.current_selection:
             item.mark_user_selected(True)
@@ -590,10 +585,6 @@ class ExerciseMainWindow(QMainWindow):
         elif item is not self.double_clicked_item:
             item.mark_user_selected(False)
             self.current_selection.remove(item)
-
-        # if not self.current_selection and self.target_selected_by_default:
-        #     # Target is automatically selected if current_selection is empty
-        #     self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
     @Slot()
     def process_target_click(self, event):
@@ -603,9 +594,6 @@ class ExerciseMainWindow(QMainWindow):
 
         self.target_selected = not self.target_selected
         self.ecw.target_wgt.mark_user_selected(self.target_selected)
-
-        # # Un-select context items FIXME: obsolete
-        # self.empty_current_selection()
 
     def simulate_selection(self,
                            selection:
