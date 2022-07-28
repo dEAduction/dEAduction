@@ -39,7 +39,8 @@ import logging
 
 from PySide2.QtCore    import ( Signal,
                                 Slot,
-                                Qt)
+                                Qt,
+                                QModelIndex)
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
                                 QIcon,
@@ -274,7 +275,7 @@ class MathObjectWidget(QListView):
         # self.setDragDropMode(QAbstractItemView.NoDragDrop)
 
         # No text edition (!), no selection, no drag-n-drop
-        # self.setSelectionMode(QAbstractItemView.NoSelection)
+        self.setSelectionMode(QAbstractItemView.NoSelection)
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.setDragDropMode(QAbstractItemView.NoDragDrop)
         # Uncomment to enable drag and drop:
@@ -309,6 +310,9 @@ class MathObjectWidget(QListView):
         # self.horizontalScrollBar().setRange(0, self.width)
         # log.debug(f"Horizontal context width: {self.width}")
         # log.debug(f"Size hint for col 0: {self.sizeHintForColumn(0)}")
+
+    def currentChanged(self, current, previous) -> None:
+        self.setCurrentIndex(QModelIndex())
 
     def item_from_index(self, index_):
         item = self.model().itemFromIndex(index_)
