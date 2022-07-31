@@ -185,7 +185,7 @@ class Course:
 
         if course_filetype == '.lean':
             log.info(f"Parsing file {str(course_path.resolve())}")
-            file_content = course_path.read_text()
+            file_content = course_path.read_text(encoding='utf-8')
             course = Course.from_file_content(file_content)
         elif course_filetype == '.pkl':
             with course_path.open(mode='rb') as input_:
