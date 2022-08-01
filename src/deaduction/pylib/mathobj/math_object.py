@@ -1306,7 +1306,7 @@ class MathObject:
         # log.debug(f"(2) --> to text: {abstract_string}")
 
         abstract_string = self.to_abstract_string(text_depth)
-        log.debug(f"abstract string: {abstract_string}")
+        # log.debug(f"abstract string: {abstract_string}")
 
         # Adapt to format_ and concatenate to get a string
         display = abstract_string_to_string(abstract_string, format_,

@@ -249,6 +249,7 @@ class ProofStep:
             else [self.initial_proof_node]
 
         # Flags
+        self._has_solved_one_goal = None
         self.is_cqfd = False
         self.pf_nb = ProofStep.pf_nb
         ProofStep.pf_nb += 1
@@ -330,6 +331,14 @@ class ProofStep:
                 imminent_new_node = self.proof_nodes[-1]
                 if imminent_new_node is not ProofStep.initial_proof_node:
                     self.imminent_new_node = imminent_new_node
+
+    @property
+    def has_solved_one_goal(self):
+        return self._has_solved_one_goal
+
+    @has_solved_one_goal.setter
+    def has_solved_one_goal(self, yes: bool):
+        self._has_solved_one_goal = yes
 
     @property
     def children_goal_nodes(self):
