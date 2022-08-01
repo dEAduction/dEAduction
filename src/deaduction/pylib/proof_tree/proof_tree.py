@@ -111,14 +111,6 @@ class GoalNode:
         return goal_node
 
     @property
-    def is_immediately_solved(self):
-        """
-        True iff self is solved by its child_proof_step.
-        """
-        return (self.child_proof_step and
-                self.child_proof_step.has_solved_one_goal)
-
-    @property
     def new_context(self):
         """
         Return the goal.new_context, except if goal has not been provided yet by
@@ -557,10 +549,19 @@ class GoalNode:
     def is_no_more_goals(self):
         return self.goal.target.math_type == MathObject.NO_MORE_GOALS
 
+    @property
+    def is_immediately_solved(self):
+        """
+        True iff self is solved (NOT sorry) by its child_proof_step.
+        """
+        return (self.child_proof_step and
+                self.child_proof_step.has_solved_one_goal)
+
     def is_recursively_solved(self):
         """
         Self is recursively solved if it is explicitly solved, or it has
-        children and they are all (recursively) solved.
+        children and they are all (recursively) solved. Here we consider only
+        strictly solved goals, that is, not "solved by sorry".
         """
 
         if self.is_immediately_solved or self.is_no_more_goals():
@@ -571,7 +572,7 @@ class GoalNode:
         else:
             return False
 
-    def is_sorry(self):
+    def is_immediately_sorry(self):
         """
         True if self is obtained by applying "proof by sorry" method.
         """
@@ -583,16 +584,20 @@ class GoalNode:
         Self is recursively sorry all of its children are solved or sorry,
         and at least one is sorry.
         """
-        if self.is_sorry():
+        if self.is_immediately_sorry():
             return True
-        elif not self.is_recursively_solved():
-            return False
+        # elif not self.is_recursively_solved():
+        #     return False
         else:
-            return any([child.is_recursively_sorry()
-                        for child in self.children_goal_nodes])
+            sorry = [child.is_recursively_sorry() for child in
+                     self.children_goal_nodes]
+            solved = [child.is_recursively_solved() for child in
+                      self.children_goal_nodes]
+            solved_or_sorry = [sos[0] or sos[1] for sos in zip(solved, sorry)]
+            return any(sorry) and all(solved_or_sorry)
 
-    # def set_solved(self, yes=True):
-    #     self._is_solved = yes
+    def is_recursively_solved_or_sorry(self):
+        return self.is_recursively_solved() or self.is_recursively_sorry()
 
     @property
     def unsolved_leaves(self):
@@ -601,7 +606,8 @@ class GoalNode:
         the list of goals that remain to be solved. Here the goals solved by
         sorry are considered to be solved.
         """
-        if self.is_recursively_solved():  # FIXME: or is_sorry()
+
+        if self.is_recursively_solved_or_sorry():
             return []
         elif not self.children_goal_nodes:
             return [self]
@@ -611,22 +617,26 @@ class GoalNode:
                 unsolved_leaves.extend(child.unsolved_leaves)
             return unsolved_leaves
 
-    def truncated_unsolved_leaves(self, till_goal_nb=None) -> []:
+    def truncated_unsolved_leaves(self, till_proof_step_nb=None) -> []:
         """
-        Return the list of unsolved leaves of self (truncated at
-        "till_goal_nb"). Admitted is considered as solved.
+        Return the list of unsolved leaves of self (truncating all proof steps
+        after till_proof_step_nb). Admitted is considered as solved.
         """
-        if till_goal_nb is None:
+        if till_proof_step_nb is None:
             return self.unsolved_leaves
 
-        if self.is_immediately_solved or self.is_sorry():
-            return []
-        elif self.goal_nb >= till_goal_nb or not self.children_goal_nodes:
+        if (not self.child_proof_step or self.child_proof_step.pf_nb >
+                till_proof_step_nb):
+            # Unsolved leaf of the truncated ProofTree
             return [self]
+        elif self.is_immediately_solved or self.is_immediately_sorry():
+            # Leaf is solved NOT AFTER till_proof_step_nb
+            return []
 
+        # Add unsolved leaves of children
         unsolved_leaves = []
         for child in self.children_goal_nodes:
-            child_leaves = child.truncated_unsolved_leaves(till_goal_nb)
+            child_leaves = child.truncated_unsolved_leaves(till_proof_step_nb)
             unsolved_leaves.extend(child_leaves)
         return unsolved_leaves
 
@@ -659,7 +669,7 @@ class GoalNode:
     def prune_from(self, proof_step_nb):
         """
         Prune the ProofTree of all ProofSteps occurring after self.
-        All these ProofSteps should had nb >= to the given nb (so this
+        All these ProofSteps should have nb >= to the given nb (so this
         information is used only for debugging). Note that this includes the
         subtree under self, but also any other part of the tree that has been
         constructed after self, as these are linked by the special ProofSteps
@@ -776,6 +786,10 @@ class ProofTree:
     A ProofStep that solves a goal is directed towards the next GoalNode in
     history (the first unsolved goal node at that time); thus it is not a
     real edge of the ProofTree, but it allows to keep track of history.
+    More precisely, the chronological order of the ProofTree's GoalNode can
+    be recovered by following the ProofSteps's first child:
+    Root node -> child_proof_step -> children_goal_node[0] -> child_proof_step
+    ... and so on.
     """
 
     # TODO: add a permutation to reflect Lean's own list of unsolved goals.
@@ -831,23 +845,19 @@ class ProofTree:
         else:
             return None
 
-    def unsolved_goal_nodes(self, till_goal_nb=None) -> [GoalNode]:
+    def unsolved_goal_nodes(self, till_proof_step_nb=None) -> [GoalNode]:
         """
         Compute from the proof tree (truncated at "till_goal_nb") the list of
         unsolved goal_nodes. This is the ordered list of unsolved leaves of
         the tree.
         """
-        return self.root_node.truncated_unsolved_leaves(till_goal_nb)
+        return self.root_node.truncated_unsolved_leaves(till_proof_step_nb)
 
-    def unsolved_goals_count(self) -> int:
-        return len(self.unsolved_goal_nodes())
-
-    def pending_goal_nodes(self, till_goal_nb=None) -> [GoalNode]:
+    def pending_goal_nodes(self, till_proof_step_nb=None) -> [GoalNode]:
         """
         The list of unsolved oal nodes, except current_goal_node.
-        NB: the result is a bit strange when proof tree is not at end.
         """
-        pgn = [gn for gn in self.unsolved_goal_nodes(till_goal_nb=till_goal_nb)
+        pgn = [gn for gn in self.unsolved_goal_nodes(till_proof_step_nb)
                if gn is not self.current_goal_node]
         return pgn
 
@@ -902,6 +912,10 @@ class ProofTree:
          its children. Note that this happens even if the new_proof_step
          solves the current goal; this is crucial to be able to correctly
          prune the ProofTree when user start a new step after some undoing.
+
+         Note that the ProofSteps corresponding to history moves are NOT
+         processed, thue they do not appear in the ProofTree. They should
+         rather be sees as acting on the current_goal_node of the ProofTree.
         """
 
         self.previous_goal_node = self.current_goal_node
@@ -923,10 +937,10 @@ class ProofTree:
             # self.prune(self.current_goal_node.parent.pf_nb)
             self.current_goal_node.prune_from(child_proof_step.pf_nb)
 
-        # ─────── Connect new_proof_step to ProofTree ─────── #
-        self.current_goal_node.child_proof_step = new_proof_step
-
-        # ─────── Create new GoalNodes ─────── #
+        # ─────── Compute delta goal ─────── #
+        # NB; this must be done BEFORE connecting new_proof_step, since we
+        # want the nb of unsolved goals BEFORE new_proof_step (which might
+        # solved (maybe by sorry) the current_goal_node).
         new_goal = new_proof_state.goals[0]
         unsolved_gn = self.unsolved_goal_nodes()
         delta_goal = (len(new_proof_state.goals)
@@ -935,6 +949,10 @@ class ProofTree:
         log.debug([g.goal_nb for g in unsolved_gn])
         log.info(f"Delta goals: {delta_goal}")
 
+        # ─────── Connect new_proof_step to ProofTree ─────── #
+        self.current_goal_node.child_proof_step = new_proof_step
+
+        # ─────── Create new GoalNodes ─────── #
         if delta_goal == -1:  # current goal solved
             new_proof_step.has_solved_one_goal = True
             if unsolved_gn:

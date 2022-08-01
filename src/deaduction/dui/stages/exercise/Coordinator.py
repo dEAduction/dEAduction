@@ -581,7 +581,7 @@ class Coordinator(QObject):
         """
         This method is called after lean_file has been updated according to
         the history move.
-        - update self.proof_tree, including the unsolved goals pile.
+        - update self.proof_tree.current_goal_node.
         - Update interface, and prepare next proof_step.
         """
         historic_proof_step = self.lean_file.current_proof_step

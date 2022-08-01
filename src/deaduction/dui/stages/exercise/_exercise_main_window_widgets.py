@@ -406,7 +406,7 @@ class ExerciseCentralWidget(QWidget):
         :param total_goals_counter: total number of goals so far
         """
 
-        # FIXME: obsolete params
+        # FIXME: obsolete params, update docstring
         statements_scroll = self.statements_tree.verticalScrollBar().value()
 
         # Init context (objects and properties). Get them as two list of
