@@ -1212,6 +1212,7 @@ class TargetWidget(QWidget):
     This is used for disabling colors when widget is disabled.
     """
 
+    # TODO: if parent_wgb is root_node, hide disclosure triangle and bar.
     def __init__(self, parent_wgb, target: MathObject, target_msg: callable,
                  hidden=False,
                  status_label: Optional[BlinkingLabel] = None,
@@ -1253,6 +1254,9 @@ class TargetWidget(QWidget):
         if hidden:
             self.toggle()
 
+        if self.parent_wgb.is_root_node_or_substituted:
+            self.hide_triangle_and_bar()
+
     @property
     def content_n_rw_lyt(self):
         return self.content_n_rw_lyts[-1]
@@ -1278,6 +1282,10 @@ class TargetWidget(QWidget):
     @property
     def children_layout(self):
         return self.content_n_rw_lyt
+
+    def hide_triangle_and_bar(self):
+        self.vert_bar.hide()
+        self.triangle.hide()
 
     def set_as_current_target(self, yes=True, blinking=True) \
             -> Optional[QWidget]:
