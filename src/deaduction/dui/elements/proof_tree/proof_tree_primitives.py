@@ -1212,8 +1212,7 @@ class TargetWidget(QWidget):
     This is used for disabling colors when widget is disabled.
     """
 
-    # TODO: if parent_wgb is root_node, hide disclosure triangle and bar.
-    def __init__(self, parent_wgb, target: MathObject, target_msg: callable,
+    def __init__(self, parent_wgb, target: MathObject,
                  hidden=False,
                  status_label: Optional[BlinkingLabel] = None,
                  title_label: Optional[ProofTitleLabel] = None):
@@ -1254,6 +1253,7 @@ class TargetWidget(QWidget):
         if hidden:
             self.toggle()
 
+        # Hide first column (triangle and vert_bar) for the root_node
         if self.parent_wgb.is_root_node_or_substituted:
             self.hide_triangle_and_bar()
 

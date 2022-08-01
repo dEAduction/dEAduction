@@ -434,7 +434,6 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
                 log.debug(f"Creating TargetWidget for goal nb {self.goal_nb}.")
                 wdg = TargetWidget(parent_wgb=self,
                                    target=self.target,
-                                   target_msg=self.target_msg,
                                    status_label=self.status_label,
                                    title_label=self.proof_title_label)
                 self.target_widget = wdg
