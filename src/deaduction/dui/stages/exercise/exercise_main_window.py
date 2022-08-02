@@ -401,19 +401,31 @@ class ExerciseMainWindow(QMainWindow):
 
     @property
     def pending_goals(self):
-        proof_tree = self.proof_tree_controller.proof_tree
-        # gn = proof_tree.current_goal_node.goal_nb
-        # BEWARE, here we must use historic proof_step,
-        # NOT self.displayed_proof_step which is the latest proof_step,
-        # maybe a history move, and has the greatest proof_step_nb!
-        pf_nb = self.lean_file.current_proof_step.pf_nb
-        pgs = [gn.goal for gn in proof_tree.pending_goal_nodes(
-               till_proof_step_nb=pf_nb)]
-        # if proof_tree.is_at_end():
-        #     pgs = [gn.goal for gn in proof_tree.pending_goal_nodes()]
-        # else:
-        #     pgs = []
-        return pgs
+        """
+        Return the list of unsolved goals, excluding the current goal. If
+        some history moves occurred, then the part of the proof after the
+        displayed step is ignored.
+        """
+
+        # self.proof_tree_controller.proof_tree.set_truncate_mode(True)
+        pgn = self.proof_tree_controller.proof_tree.pending_goal_nodes()
+        # self.proof_tree_controller.proof_tree.set_truncate_mode(False)
+
+        return pgn
+
+        # proof_tree = self.proof_tree_controller.proof_tree
+        # # gn = proof_tree.current_goal_node.goal_nb
+        # # BEWARE, here we must use historic proof_step,
+        # # NOT self.displayed_proof_step which is the latest proof_step,
+        # # maybe a history move, and has the greatest proof_step_nb!
+        # pf_nb = self.lean_file.current_proof_step.pf_nb
+        # pgs = [gn.goal for gn in proof_tree.pending_goal_nodes(
+        #        till_proof_step_nb=pf_nb)]
+        # # if proof_tree.is_at_end():
+        # #     pgs = [gn.goal for gn in proof_tree.pending_goal_nodes()]
+        # # else:
+        # #     pgs = []
+        # return pgs
 
     @property
     def current_selection_as_mathobjects(self):

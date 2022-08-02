@@ -592,6 +592,7 @@ class Coordinator(QObject):
 
         # ─────── Update proof_tree ─────── #
         self.proof_tree.current_goal_node = children_goal_nodes[0]
+        self.proof_tree.last_proof_step = historic_proof_step
 
         # ─────── Update proof_step ─────── #
         # From here, self.proof_step is replaced by a new proof_step!

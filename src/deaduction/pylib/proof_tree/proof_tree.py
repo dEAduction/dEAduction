@@ -46,6 +46,10 @@ class GoalNode:
     proof by case, or proof of conjunction, and so on. Ideally These tests 
     should not be based on user actions, since this would forbid to use them
     in case of direct Lean code.
+
+    Note that goal_nb's follow the order of creation, and brothers are always
+    created immediately one after another.
+
     :param parent: the proof_step that resulted into self. None only for
     root node.
     :param goal: the Lean goal corresponding to self.
@@ -61,8 +65,13 @@ class GoalNode:
     :param outcomes: Outcomes that should be displayed after the node
     display, typically when target Q is replaced by P by applying P=>Q
     (see ProofTree.add_outcomes).
+    :param truncate_at_proof_step_nb: Class parameter, the attribute
+    child_proof_step will be set to None if the proof_step nb is > than this
+    nb. Thus the ProofTree will be truncated, this is used when usr is moving in
+     the history.
     """
     goal_nb = 0  # Counter
+    _truncate_at_proof_step_nb = None
 
     def __init__(self, parent: Optional[ProofStep] = None, goal: Goal = None,
                  child_proof_step=None, is_solved=False):
@@ -87,15 +96,24 @@ class GoalNode:
         self._is_auxiliary_goal = None
         self._is_auxiliary_goal_brother = None
 
-    # @classmethod
-    # def root_node(cls, parent_proof_step, initial_goal):
-    #     # FIXME: obsolete
-    #     root_node = cls(parent_proof_step, initial_goal)
-    #     root_node._is_intro = False
-    #     root_node._is_conjunction = False
-    #     root_node._is_double_implication = False
-    #     root_node._is_by_cases = False
-    #     return root_node
+    @classmethod
+    def set_truncation_nb(cls, proof_step_nb=None):
+        cls._truncate_at_proof_step_nb = proof_step_nb
+
+    @property
+    def child_proof_step(self):
+        if not self._child_proof_step:
+            return None
+
+        if (self._truncate_at_proof_step_nb is not None and
+                self._child_proof_step.pf_nb > self._truncate_at_proof_step_nb):
+            return None
+
+        return self._child_proof_step
+
+    @child_proof_step.setter
+    def child_proof_step(self, proof_step):
+        self._child_proof_step = proof_step
 
     @classmethod
     def no_more_goals(cls, proof_step):
@@ -538,14 +556,6 @@ class GoalNode:
     def set_goal(self, goal):
         self.goal = goal
 
-    @property
-    def child_proof_step(self):
-        return self._child_proof_step
-
-    @child_proof_step.setter
-    def child_proof_step(self, proof_step):
-        self._child_proof_step = proof_step
-
     def is_no_more_goals(self):
         return self.goal.target.math_type == MathObject.NO_MORE_GOALS
 
@@ -617,28 +627,28 @@ class GoalNode:
                 unsolved_leaves.extend(child.unsolved_leaves)
             return unsolved_leaves
 
-    def truncated_unsolved_leaves(self, till_proof_step_nb=None) -> []:
-        """
-        Return the list of unsolved leaves of self (truncating all proof steps
-        after till_proof_step_nb). Admitted is considered as solved.
-        """
-        if till_proof_step_nb is None:
-            return self.unsolved_leaves
-
-        if (not self.child_proof_step or self.child_proof_step.pf_nb >
-                till_proof_step_nb):
-            # Unsolved leaf of the truncated ProofTree
-            return [self]
-        elif self.is_immediately_solved or self.is_immediately_sorry():
-            # Leaf is solved NOT AFTER till_proof_step_nb
-            return []
-
-        # Add unsolved leaves of children
-        unsolved_leaves = []
-        for child in self.children_goal_nodes:
-            child_leaves = child.truncated_unsolved_leaves(till_proof_step_nb)
-            unsolved_leaves.extend(child_leaves)
-        return unsolved_leaves
+    # def truncated_unsolved_leaves(self, till_proof_step_nb=None) -> []:
+    #     """
+    #     Return the list of unsolved leaves of self (truncating all proof steps
+    #     after till_proof_step_nb). Admitted is considered as solved.
+    #     """
+    #     if till_proof_step_nb is None:
+    #         return self.unsolved_leaves
+    #
+    #     if (not self.child_proof_step or self.child_proof_step.pf_nb >
+    #             till_proof_step_nb):
+    #         # Unsolved leaf of the truncated ProofTree
+    #         return [self]
+    #     elif self.is_immediately_solved or self.is_immediately_sorry():
+    #         # Leaf is solved NOT AFTER till_proof_step_nb
+    #         return []
+    #
+    #     # Add unsolved leaves of children
+    #     unsolved_leaves = []
+    #     for child in self.children_goal_nodes:
+    #         child_leaves = child.truncated_unsolved_leaves(till_proof_step_nb)
+    #         unsolved_leaves.extend(child_leaves)
+    #     return unsolved_leaves
 
     def total_degree(self):
         """
@@ -806,14 +816,46 @@ class ProofTree:
             if initial_goal else None
         self.current_goal_node = self.root_node
         self.previous_goal_node = None
+        self._last_proof_step: Optional[ProofStep] = None
 
-    # @property
-    # def current_goal_node(self):
-    #     return self._current_goal_node
-    #
-    # @current_goal_node.setter
-    # def current_goal_node(self, goal_node):
-    #     self._current_goal_node = goal_node
+    @property
+    def last_proof_step(self):
+        """
+        Return the nb of the last proof step. Note that in case of a history
+        move this is not the current_goal_node.parent but the nb of the
+        ProofStep that was the aim of the move.
+        """
+        if self._last_proof_step is not None:
+            return self._last_proof_step
+        elif self.current_goal_node:
+            return self.current_goal_node.parent
+
+    @last_proof_step.setter
+    def last_proof_step(self, proof_step: ProofStep):
+        self._last_proof_step = proof_step
+
+    @property
+    def last_proof_step_nb(self):
+        """
+        Return the nb of the last proof step. Note that in case of a history
+        move this is not the current_goal_node.parent but the nb of the
+        ProofStep that was the aim of the move.
+        """
+        if self.last_proof_step:
+            return self.last_proof_step.pf_nb
+        else:
+            return None
+
+    def set_truncate_mode(self, yes=True):
+        """
+        Set the ProofTree into truncate mode: the part of the tree below
+        self.last_proof_step becomes invisible. This is useful to compute
+        unsolved goals, ... during history moves.
+        """
+        if yes:
+            GoalNode.set_truncation_nb(self.last_proof_step_nb)
+        else:
+            GoalNode.set_truncation_nb(None)
 
     def last_child_fork_node(self) -> Optional[GoalNode]:
         """
@@ -845,19 +887,43 @@ class ProofTree:
         else:
             return None
 
-    def unsolved_goal_nodes(self, till_proof_step_nb=None) -> [GoalNode]:
+    # def unsolved_goal_nodes(self, till_proof_step_nb=None) -> [GoalNode]:
+    #     """
+    #     Compute from the proof tree (truncated at "till_goal_nb") the list of
+    #     unsolved goal_nodes. This is the ordered list of unsolved leaves of
+    #     the tree.
+    #     """
+    #     if till_proof_step_nb is not None:
+    #         return self.root_node.truncated_unsolved_leaves(till_proof_step_nb)
+    #     else:
+    #         return self.root_node.unsolved_leaves
+
+    def unsolved_goal_nodes(self, truncated=True) -> [GoalNode]:
         """
         Compute from the proof tree (truncated at "till_goal_nb") the list of
         unsolved goal_nodes. This is the ordered list of unsolved leaves of
-        the tree.
+        the tree. In truncated mode, only the part of the ProofTree before
+        last_proof_step_nb is taken into account.
         """
-        return self.root_node.truncated_unsolved_leaves(till_proof_step_nb)
+        self.set_truncate_mode(truncated)
+        leaves = self.root_node.unsolved_leaves
+        self.set_truncate_mode(False)
+        return leaves
 
-    def pending_goal_nodes(self, till_proof_step_nb=None) -> [GoalNode]:
+    # def pending_goal_nodes(self, till_proof_step_nb=None) -> [GoalNode]:
+    #     """
+    #     The list of unsolved oal nodes, except current_goal_node.
+    #     """
+    #     pgn = [gn for gn in self.unsolved_goal_nodes(till_proof_step_nb)
+    #            if gn is not self.current_goal_node]
+    #     return pgn
+    #
+
+    def pending_goal_nodes(self, truncated=True) -> [GoalNode]:
         """
         The list of unsolved oal nodes, except current_goal_node.
         """
-        pgn = [gn for gn in self.unsolved_goal_nodes(till_proof_step_nb)
+        pgn = [gn for gn in self.unsolved_goal_nodes(truncated)
                if gn is not self.current_goal_node]
         return pgn
 
@@ -868,7 +934,7 @@ class ProofTree:
         """
 
         # TODO: modify to allow permutation of unsolved nodes.
-        unsolved_goal_nodes = self.unsolved_goal_nodes()
+        unsolved_goal_nodes = self.unsolved_goal_nodes(truncated=False)
         if unsolved_goal_nodes:
             self.current_goal_node = unsolved_goal_nodes[0]
 
@@ -931,11 +997,13 @@ class ProofTree:
             return
 
         # ─────── Case of new step after history move ─────── #
+        # self.set_truncate_mode(False)
         child_proof_step = self.current_goal_node.child_proof_step
         if child_proof_step:
             # Remove everything beyond parent_proof_step before proceeding
-            # self.prune(self.current_goal_node.parent.pf_nb)
             self.current_goal_node.prune_from(child_proof_step.pf_nb)
+
+        # self.set_truncate_mode(True)
 
         # ─────── Compute delta goal ─────── #
         # NB; this must be done BEFORE connecting new_proof_step, since we
@@ -982,6 +1050,7 @@ class ProofTree:
             self.add_outcomes()
 
         new_proof_step.children_goal_nodes = children_gn
+        self.last_proof_step = new_proof_step
 
         # ─────── Compare with previous state and tag properties ─────── #
         previous_goal = self.current_goal_node.parent_node.goal
@@ -989,15 +1058,15 @@ class ProofTree:
         # print("ProofTree:")
         # print(str(self))
 
-    def prune(self, proof_step_nb):
-        """
-        Remove from self all information posterior to the given proof_step.
-        This includes info on ContextMathObjects, so that self should be as
-        it was before.
-        Value proof_step_nb = 0 corresponds to initial goal (as this is the
-        step number of self.root_node.parent).
-        """
-        self.root_node.prune_from(proof_step_nb)
+    # def prune(self, proof_step_nb):
+    #     """
+    #     Remove from self all information posterior to the given proof_step.
+    #     This includes info on ContextMathObjects, so that self should be as
+    #     it was before.
+    #     Value proof_step_nb = 0 corresponds to initial goal (as this is the
+    #     step number of self.root_node.parent).
+    #     """
+    #     self.root_node.prune_from(proof_step_nb)
 
     def __str__(self):
         return str(self.root_node)

@@ -514,17 +514,33 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         """
         self.setEnabled(yes)
 
-    def enable_recursively(self, till_step_nb):
+    def enable_recursively(self, till_step_nb) -> bool:
         """
         Recursively disable self from the indicated goal_node nb.
         Note that tree must be updated to adapt merging.
+        Return True iff self is enabled and also all its descendant.
         """
         if self.step_nb > till_step_nb:
-            self.set_enabled(False)
+            enable = False
         else:
-            self.set_enabled(True)
-        for child in self.logical_children:
-            child.enable_recursively(till_step_nb)
+            enable = True
+
+        self.set_enabled(enable)
+
+        # for child in self.logical_children:
+        #     child.enable_recursively(till_step_nb)
+
+        # Enable descendants recursively, and get info
+        descendants_enabled = [child.enable_recursively(till_step_nb)
+                               for child in self.logical_children]
+
+        # Disable status_label if self is enabled but some descendant is not
+        # FIXME: does not work is target is substituted
+        if self.status_label:
+            label_disabled = enable and not all(descendants_enabled)
+            self.status_label.setEnabled(not label_disabled)
+
+        return enable and all(descendants_enabled)
 
     # ───────────────────── Update methods ──────────────────── #
     def check_context1(self):

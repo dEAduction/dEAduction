@@ -32,6 +32,8 @@ from deaduction.dui.elements.proof_tree.proof_tree_widget import \
      ContextWidget, PureContextWGB, EmptyWGB, GoalSolvedWGB,
      TargetSubstitutionWGB, IntroWGB, IntroImpliesWGB)
 
+from deaduction.pylib.proof_tree import ProofTree
+
 global _
 
 if __name__ != "__main__":
@@ -210,11 +212,12 @@ class ProofTreeController:
     building of the ProofTree will continue.
     """
     def __init__(self):
-        self.proof_tree = None
+        self.proof_tree: Optional[ProofTree] = None
         self.proof_tree_window = ProofTreeWindow()
 
-    def set_proof_tree(self, proof_tree):
+    def set_proof_tree(self, proof_tree: ProofTree):
         self.proof_tree = proof_tree
+        # proof_tree.set_truncate_mode(True)
 
     def enable(self, till_step_nb):
         """
@@ -244,10 +247,8 @@ class ProofTreeController:
             ptw.set_main_block(main_block)
 
         current_goal_node = self.proof_tree.current_goal_node
-        # (1) Adapt ProofTreeWindow to ProofTree:
-        # log.info("Updating proof tree widget from proof tree.")
-        update_from_node(ptw.main_block,
-                         self.proof_tree.root_node)
+        # (1) Adapt ProofTreeWindow to ProofTree.
+        update_from_node(ptw.main_block, self.proof_tree.root_node)
 
         # (2) Enable / disable to adapt to history move:
         # proof_tree.next_proof_step_nb is the first proof_step that will be
