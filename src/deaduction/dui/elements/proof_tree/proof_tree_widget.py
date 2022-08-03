@@ -99,10 +99,8 @@ class AbstractGoalBlock:
         self.context2 = context2 if context2 else []
         self.pure_context = pure_context if pure_context else ()
 
-        self.logical_parent = logical_parent  # Usually set by parent
+        self.logical_parent = logical_parent
         self.logical_children = []
-        # self.goal_nb = AbstractGoalBlock.goal_nb
-        # AbstractGoalBlock.goal_nb += 1
 
         self.wanna_merge_up = merge_up
         self.wanna_merge_down = merge_down

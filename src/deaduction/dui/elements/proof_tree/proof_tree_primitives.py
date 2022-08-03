@@ -1321,7 +1321,11 @@ class TargetWidget(QWidget):
             self.title_label.set_bold(False)
 
     @property
-    def all_widgets(self):
+    def all_widgets(self) -> list:
+        """
+        Return the list of all sub-widgets to be disclosed when the
+        disclosure triangle is activated.
+        """
         widgets = (self.substituted_title_lbls
                    + [self.current_status_label, self.vert_bar])
         for lyt in self.content_n_rw_lyts:
