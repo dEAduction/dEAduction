@@ -273,7 +273,6 @@ class ProofTreeController:
         if wdg:
             # print("Ensuring visible")
             ptw.make_visible(wdg)
-            # ptw.main_window.ensureWidgetVisible(wdg, ymargin=0)
 
         wgb = self.wgb_from_goal_nb(1)
         if wgb and wgb.target_widget:

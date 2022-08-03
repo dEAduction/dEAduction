@@ -119,14 +119,14 @@ class AbstractGoalBlock:
     def step_nb(self):
         return self.goal_node.proof_step_nb
 
-    def is_recursively_solved(self):
-        return self.goal_node.is_recursively_solved()
+    def is_recursively_solved(self, truncate=False):
+        return self.goal_node.is_recursively_solved(truncate)
 
     def is_no_more_goals(self):
         return self.goal_node.is_no_more_goals()
 
-    def is_recursively_sorry(self):
-        return self.goal_node.is_recursively_sorry()
+    def is_recursively_sorry(self, truncate=False):
+        return self.goal_node.is_recursively_sorry(truncate)
 
     @property
     def merge_up(self):
@@ -346,7 +346,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
                         child.is_recursively_solved()
                         for child in self.logical_children])
 
-    def status_msg(self) -> Optional[str]:
+    def status_msg(self, truncate=False) -> Optional[str]:
         """
         Compute the status msg for this part of the proof, to be displayed at
         the end of the block. This method is passed to the BlinkingLabel that
@@ -354,14 +354,11 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         as the proof goes on.
         """
 
-        # if self.is_target_substituted():
-        #     return None
-        if self.is_recursively_solved():
+        if self.is_recursively_solved(truncate):
             if self.is_no_more_goals():
                 msg = _("THE END")
-            elif self.is_recursively_sorry():
+            elif self.is_recursively_sorry(truncate):
                 msg = _("(admitted)")
-            # elif isinstance(self.goal_node, RootGoalNode):
             elif self.is_root_node_or_substituted:
                 msg = _("QED!!")
             else:
@@ -371,6 +368,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         else:
             msg = _("( ... under construction... )")
         # log.debug(f"Status msg for goal nb {self.parent_wgb.goal_nb} is {msg}")
+
         return msg
 
     def set_layout_without_children(self):
@@ -518,7 +516,8 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         """
         Recursively disable self from the indicated goal_node nb.
         Note that tree must be updated to adapt merging.
-        Return True iff self is enabled and also all its descendant.
+        Return True iff self is enabled and also all its descendant (this is
+        not used anymore).
         """
         if self.step_nb > till_step_nb:
             enable = False
@@ -527,18 +526,14 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
 
         self.set_enabled(enable)
 
-        # for child in self.logical_children:
-        #     child.enable_recursively(till_step_nb)
-
         # Enable descendants recursively, and get info
         descendants_enabled = [child.enable_recursively(till_step_nb)
                                for child in self.logical_children]
 
-        # Disable status_label if self is enabled but some descendant is not
-        # FIXME: does not work is target is substituted
+        # Disable status_label if some descendant is disabled
         if self.status_label:
-            label_disabled = enable and not all(descendants_enabled)
-            self.status_label.setEnabled(not label_disabled)
+            # self.status_label.setEnabled(all(descendants_enabled))
+            self.status_label.enable_or_disable()
 
         return enable and all(descendants_enabled)
 
@@ -657,8 +652,8 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         If self has a target_widget, then its target will be set as current.
         If not, then self is inside a children_layout, of some target_widget
         of some ascendant, and this target_widget should be set as current.
-        If some widget is made blinking then it will be returned, to be made
-        visible in the ScrollArea.
+        If some widget is returned (blinking label, or proof title in case of
+        history move), then it should be made visible in the ScrollArea.
         """
         if self.target_widget:
             wdg = self.target_widget.set_as_current_target(yes, blinking)
@@ -677,8 +672,7 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
             -> Optional[QWidget]:
         """
         Make the status_msg of the current target blinks in boldface.
-        Also return the current Blinking status_label, that should be made
-        visible by scrolling.
+        The returned widget, if any, should be made visible by scrolling.
         """
         if self.goal_nb == goal_nb:
             wdg = self.set_as_current_target(yes=True, blinking=blinking)
@@ -967,8 +961,10 @@ class ProofTreeWindow(QWidget):
     def set_current_target(self, goal_nb, blinking=True) -> Optional[QWidget]:
         """
         Make the status_msg of the current target blinks in boldface.
-        Also return the current blinking status label that should be made
-        visible by calling the make_visible() method.
+        Returns either the current blinking status label, or the current
+        proof title widget if no label is blinking (history move). The
+        returned widget should be made visible by calling the make_visible()
+        method.
         """
         wdg = self.main_block.set_current_target_recursively(goal_nb, blinking)
         return wdg
@@ -988,7 +984,7 @@ class ProofTreeWindow(QWidget):
         """
         def make_vis():
             # print("Pan!")
-            self.main_window.ensureWidgetVisible(wdg)
+            self.main_window.ensureWidgetVisible(wdg, ymargin=100)
         QTimer.singleShot(0, make_vis)
         # self.main_window.ensureWidgetVisible(wdg)
 

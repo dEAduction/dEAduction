@@ -161,6 +161,15 @@ class BlinkingLabel(QLabel):
         else:
             self.setStyleSheet("")
 
+    def enable_or_disable(self):
+        """
+        Disable self if text does not coincide with text in truncated mode.
+        This indicates that the status is not valid at the time of history.
+        """
+        if self.text(truncate=True) != self.text():
+            self.setEnabled(False)
+        else:
+            self.setEnabled(True)
 
 # def display_object(math_objects):
 #     """
@@ -1291,8 +1300,9 @@ class TargetWidget(QWidget):
             -> Optional[QWidget]:
         """
         Set self as current target, i.e. highlight target in boldface and make
-        status_msg blinks. Return current_status_label, that should be made
-        visible in the ScrollArea.
+        status_msg blinks. If blinking then return current_status_label,
+        else return proof_title. The returned widget should be made visible in
+        the ScrollArea.
         """
         if yes:
             log.debug(f"Setting goal nb {self.parent_wgb.goal_nb} as current "
@@ -1305,6 +1315,7 @@ class TargetWidget(QWidget):
                 return self.current_status_label
             else:
                 self.current_status_label.stop_blinking()
+                return self.title_label
         else:
             self.current_status_label.stop_blinking()
             self.title_label.set_bold(False)

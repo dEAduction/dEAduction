@@ -73,6 +73,10 @@ class GoalNode:
     goal_nb = 0  # Counter
     _truncate_at_proof_step_nb = None
 
+    # The following is set by ProofTree. We need this to compute
+    # is_recursively_solved, and so on, in truncate mode.
+    set_truncate_mode: Optional[callable] = None
+
     def __init__(self, parent: Optional[ProofStep] = None, goal: Goal = None,
                  child_proof_step=None, is_solved=False):
         self.goal_nb = GoalNode.goal_nb
@@ -567,20 +571,30 @@ class GoalNode:
         return (self.child_proof_step and
                 self.child_proof_step.has_solved_one_goal)
 
-    def is_recursively_solved(self):
+    def is_recursively_solved(self, truncate=False):
         """
         Self is recursively solved if it is explicitly solved, or it has
         children and they are all (recursively) solved. Here we consider only
         strictly solved goals, that is, not "solved by sorry".
+
+        :param truncate: if True, compute in truncate mode, i.e. tell if self is
+        recursively_solved at the time of history.
         """
+        if truncate:
+            self.set_truncate_mode(True)
 
         if self.is_immediately_solved or self.is_no_more_goals():
-            return True
+            irs = True
         elif self.children_goal_nodes:
-            return all([child.is_recursively_solved()
+            irs = all([child.is_recursively_solved()
                         for child in self.children_goal_nodes])
         else:
-            return False
+            irs = False
+
+        if truncate:
+            self.set_truncate_mode(False)
+
+        return irs
 
     def is_immediately_sorry(self):
         """
@@ -589,22 +603,32 @@ class GoalNode:
         if self.child_proof_step:
             return self.child_proof_step.is_sorry()
 
-    def is_recursively_sorry(self):
+    def is_recursively_sorry(self, truncate=False):
         """
         Self is recursively sorry all of its children are solved or sorry,
         and at least one is sorry.
+
+        :param truncate: if True, compute in truncate mode, i.e. tell if self is
+        recursively_solved at the time of history.
         """
+
+        if truncate:
+            self.set_truncate_mode(True)
+
         if self.is_immediately_sorry():
-            return True
-        # elif not self.is_recursively_solved():
-        #     return False
+            irs = True
         else:
             sorry = [child.is_recursively_sorry() for child in
                      self.children_goal_nodes]
             solved = [child.is_recursively_solved() for child in
                       self.children_goal_nodes]
             solved_or_sorry = [sos[0] or sos[1] for sos in zip(solved, sorry)]
-            return any(sorry) and all(solved_or_sorry)
+            irs = any(sorry) and all(solved_or_sorry)
+
+        if truncate:
+            self.set_truncate_mode(False)
+
+        return irs
 
     def is_recursively_solved_or_sorry(self):
         return self.is_recursively_solved() or self.is_recursively_sorry()
@@ -817,6 +841,8 @@ class ProofTree:
         self.current_goal_node = self.root_node
         self.previous_goal_node = None
         self._last_proof_step: Optional[ProofStep] = None
+
+        GoalNode.set_truncate_mode = self.set_truncate_mode
 
     @property
     def last_proof_step(self):
