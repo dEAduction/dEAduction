@@ -198,6 +198,7 @@ class ProofStep:
 
     # ──────────────── Input ─────────────── #
     selection      = None  # [MathObject]
+    target_selected= False
     user_input     = None  # [str]
     button_name    = None  # str, e.g. "exists" or "history_undo".
     statement      = None  # Statement
@@ -241,6 +242,7 @@ class ProofStep:
 
         self.proof_state = proof_state
         self.selection = []
+        self.target_selected=False
         self.user_input = []
         self.imminent_new_node = None
         self.history_nb = history_nb

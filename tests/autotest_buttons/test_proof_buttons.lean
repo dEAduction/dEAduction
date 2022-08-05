@@ -97,6 +97,10 @@ PrettyName
 -- COURSE DEFINITIONS --
 ------------------------
 lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, x ∈ A → x ∈ B :=
+/- dEAduction
+ImplicitUse
+    True
+-/
 begin
     exact iff.rfl
 end
@@ -150,18 +154,20 @@ begin
     exact set.subset.antisymm_iff.mpr
 end
 
-lemma exercise.inclusion_transitive
+lemma exercise.test_implicit_inclusion
 (A B C : set X) :
 (A ⊆ B ∧ B ⊆ C) → A ⊆ C
 :=
 /- dEAduction
 PrettyName
     Transitivité de l'inclusion
-AutoStep
-    →, @P1 ∧
+AutoTest
+    →, @P1 ∧, ∀, →,
+    @P3 @P1 →, @P4 @P2 →,
+    CQFD 
 -/
 begin
-    sorry
+    todo
 end
 
 example (x y:X) (H : x ≠ y) : y ≠ x :=  
@@ -194,7 +200,7 @@ AutoTest
     ∨ 1, CQFD
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.test_case_base_reasoning_2
@@ -209,7 +215,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_contrapose
@@ -221,7 +227,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_absurdum
@@ -233,7 +239,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_sorry
@@ -244,7 +250,7 @@ AutoTest
     proof_methods 3
 -/
 begin
-  sorry
+  todo
 end
 
 -----------------
@@ -261,7 +267,7 @@ AutoTest
     ∃ z
 -/
 begin
-  sorry
+  todo
 end
 
 -- Don't know how to test this one!!
@@ -275,7 +281,7 @@ AutoTest
     ∨ 1, CQFD, CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_introduce_new_function
@@ -288,7 +294,9 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
+end tests_proof_buttons
 end theorie_des_ensembles
 end course
+

@@ -350,7 +350,7 @@ end test_not
 -----------------
 namespace test_implicate
 
-lemma exercise.test_construct_implicate
+lemma exercise.test_construct_implies
 (P Q : Prop) (H1: Q) :
 P → Q :=
 /- dEAduction
@@ -362,19 +362,19 @@ begin
   todo
 end
 
-lemma exercise.test_apply_implicate
+lemma exercise.test_apply_implies
 (P Q : Prop) (H1: P) (H2: P → Q) :
 Q :=
 /- dEAduction
 AutoTest
-    H2 →,
+    target H2 →,
     CQFD
 -/
 begin
   todo
 end
 
-lemma exercise.test_apply_implicate_to_hyp
+lemma exercise.test_apply_implies_to_hyp
 (P Q : Prop) (H1: P) (H2: P → Q) :
 Q :=
 /- dEAduction
@@ -386,7 +386,7 @@ begin
   todo
 end
 
-lemma exercise.test_apply_implicate_to_hyp_2
+lemma exercise.test_apply_implies_to_hyp_2
 (X: Type) (P Q: X × X → Prop) (x y: X)
 (H1: P(x,y)) (H2: ∀ x y:X, P(x,y) → Q(x,y)) :
 Q(x,y) :=

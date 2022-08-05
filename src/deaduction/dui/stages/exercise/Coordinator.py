@@ -632,7 +632,7 @@ class Coordinator(QObject):
         call
         """
 
-        action     = action_btn.action
+        action = action_btn.action
         log.debug(f'------ Calling action {action.symbol} ------')
         # Send action and catch exception when user needs to:
         #   - choose A or B when having to prove (A OR B) ;
@@ -640,14 +640,15 @@ class Coordinator(QObject):
         #   - and so on.
         selection = self.current_selection_as_mathobjects
         self.proof_step.selection = selection
-        target_selected = self.emw.target_selected
+        self.proof_step.target_selected = self.emw.target_selected
 
         while True:
             try:
                 lean_code = action.run(self.proof_step,
                                        selection,
                                        self.emw.user_input,
-                                       target_selected=target_selected)
+                                       target_selected=self.proof_step.target_selected)
+                # TODO: suppress selection/target_selected parameters
 
             except MissingParametersError as e:
                 if e.input_type == InputType.Text:
@@ -691,7 +692,7 @@ class Coordinator(QObject):
 
         selection = self.current_selection_as_mathobjects
         self.proof_step.selection = selection
-        target_selected = self.emw.target_selected
+        self.proof_step.target_selected = self.emw.target_selected
 
         try:
             item.setSelected(False)
@@ -701,12 +702,12 @@ class Coordinator(QObject):
                 lean_code = generic.action_definition(self.proof_step,
                                                       selection,
                                                       statement,
-                                                      target_selected)
+                                                      self.proof_step.target_selected)
             elif isinstance(statement, Theorem):
                 lean_code = generic.action_theorem(self.proof_step,
                                                    selection,
                                                    statement,
-                                                   target_selected)
+                                                   self.proof_step.target_selected)
 
         except WrongUserInput as error:
             self.process_wrong_user_input(error)

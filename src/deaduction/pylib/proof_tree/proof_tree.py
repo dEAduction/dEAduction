@@ -309,6 +309,9 @@ class GoalNode:
         # Now self has a brother
         iff = parent_node.goal.target.math_type
         target = self.goal.target.math_type
+        if len(target.children) != 2:
+            return False
+        # Now target has two children
         brother_target = self.brother.goal.target.math_type
         tests = [iff.is_iff(is_math_type=True),
                  target.is_implication(is_math_type=True),

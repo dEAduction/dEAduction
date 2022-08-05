@@ -130,20 +130,23 @@ class UserAction:
     button_name = None  # str
     statement_name = None  # str
     user_input = None  # Union[int, str]
+    target_selected = None
 
     def __init__(self,
                  selection=None,
                  button_name=None,
                  statement_name=None,
-                 user_input=None):
+                 user_input=None,
+                 target_selected=False):
         if selection is None:
             selection = []
         if user_input is None:
             user_input = []
-        self.selection  = selection
-        self.button_name     = button_name
-        self.statement_name  = statement_name
+        self.selection = selection
+        self.button_name = button_name
+        self.statement_name = statement_name
         self.user_input = user_input
+        self.target_selected = target_selected
 
     @classmethod
     def simple_action(cls, symbol):
@@ -155,12 +158,14 @@ class UserAction:
         return cls(selection=proof_step.selection,
                    button_name=proof_step.button_name,
                    statement_name=proof_step.statement_lean_name,
-                   user_input=proof_step.user_input)
+                   user_input=proof_step.user_input,
+                   target_selected=proof_step.target_selected)
 
     def __repr__(self) -> str:
         msg = f"UserAction with {len(self.selection)} selected objects, " \
               f"button name = {self.button_name}, statement name = " \
-              f"{self.statement_name}, user input = {self.user_input}"
+              f"{self.statement_name}, user input = {self.user_input}," \
+              f"target selected = {self.target_selected}"
         return msg
 
 
@@ -216,10 +221,11 @@ class AutoStep(UserAction):
                  5: 'No proof state'}
 
     def __init__(self, selection, button_name, statement, user_input,
+                 target_selected,
                  raw_string, error_type, error_msg, success_msg):
 
         UserAction.__init__(self, selection, button_name,
-                            statement, user_input)
+                            statement, user_input, target_selected)
         # self.selection = selection
         # self.button_name = button_name
         # self.statement = statement
@@ -254,6 +260,7 @@ class AutoStep(UserAction):
         error_type = 0
         error_msg = ""
         success_msg = ""
+        target_selected = None
 
         # Split at spaces and remove unnecessary spaces
         items = [item.strip() for item in string.split(' ') if item]
@@ -289,16 +296,24 @@ class AutoStep(UserAction):
             elif item.startswith('s='):
                 success_msg = item[len('s='):].replace('_', ' ')
                 items[items.index(item)] = ''
+            elif item.startswith('target') or item.startswith(_('target')):
+                target_selected = True
 
         if not button and not statement:
             return None
 
         selection = items[:button_or_statement_rank]
+        try:
+            selection.remove('target')
+            selection.remove(_('target'))
+        except ValueError:
+            pass
+
         user_input = [item for item in items[button_or_statement_rank+1:]
                       if item]  # Remove if item = ''
 
-        return cls(selection, button, statement, user_input, string,
-                   error_type, error_msg, success_msg)
+        return cls(selection, button, statement, user_input, target_selected,
+                   string, error_type, error_msg, success_msg)
 
     @classmethod
     def from_proof_step(cls, proof_step: ProofStep, emw):
@@ -366,8 +381,10 @@ class AutoStep(UserAction):
         if success_msg:
             string += ' ' + success_msg
 
-        return cls(selection, button, statement, user_input, string,
-                   proof_step.error_type, proof_step.error_msg,
+        target_selected = proof_step.target_selected
+
+        return cls(selection, button, statement, user_input, target_selected,
+                   string, proof_step.error_type, proof_step.error_msg,
                    proof_step.success_msg)
 
 

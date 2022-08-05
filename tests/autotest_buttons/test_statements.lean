@@ -213,7 +213,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_theorem_target_1
@@ -222,11 +222,11 @@ A = A'
 :=
 /- dEAduction
 AutoTest
-    theorem.double_inclusion success=but_a_été_remplacé,
+    target theorem.double_inclusion success=but_a_été_remplacé,
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 
@@ -240,7 +240,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 -- Here we test that deaduction is not too powerfull, i.e. theorem.image_directe should NOT solve the goal
