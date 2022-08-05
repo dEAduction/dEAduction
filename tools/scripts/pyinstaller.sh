@@ -1,6 +1,7 @@
 #!/bin/bash
 ### Deaduction pyinstaller script
-echo "This is D∃∀DUCTION pyinstaller script"
+echo "This is D∃∀DUCTION pyinstaller builder script"
+echo "It should be launched from the tools/scripts directory"
 ### Launch me from where I am,
 ### dEAduction/tools/scripts
 
@@ -14,19 +15,20 @@ DEADUCTION_ON_WINDOWS=0
 OS="$(uname)"
 if [[ "$OS" == "Linux" ]]; then
   DEADUCTION_ON_LINUX=1
+  echo "OS = Linux"
   VERSION=$(cat /etc/issue)
   if [[ ${VERSION::6} == "Ubuntu" -o ${VERSION::6} == "Debian" ]]; then
     UBUNTU_DEBIAN=1
-    echo "(Ubuntu or Debian detected, the envconfig_user_ubuntu file will be
-     used)"
+    echo "(Ubuntu or Debian detected)"
   fi
 
 elif [[ "$OS" = "Darwin" ]]; then
+  echo "OS = Darwin (Mac)"
   DEADUCTION_ON_MAC=1
 else
   echo "OS:"
   echo $OS
-  abort "Deaduction works only on Linux and MacOs."
+  abort "builder works only on Linux and MacOs."
 fi
 
 # Machine hardware name
@@ -63,12 +65,15 @@ continue() {
 ############################################
 ### Create virtual env?? First time only ###
 ############################################
+# Back to deaduciton main dir
+cd ../..
 if [ -d pyinstaller-env ]; then
   echo "Virtual env found in pyinstaller_env"
   FIRST_TIME = 0
 else
-  echo "Creating virtual env found in pyinstaller_env"
-  python3 -m venv pyinstaller-env
+  echo "Creating virtual env found in pyinstaller_env?"
+  continue()
+  python3 -m venv pyinstaller_venv
   FIRST_TIME = 1
 ############################
 ### Activate virtual env ###
@@ -80,26 +85,31 @@ else
 # On Unix or MacOS, run:
 # source pyinstaller_env/bin/activate
 
-# cd /Users/leroux/Documents/PROGRAMMATION/LEAN/LEAN_TRAVAIL/dEAduction/src
-cd ../../src
 
+echo "Activating pyinstaller virtual env"
 if [ "$DEADUCTION_ON_LINUX" == 1 ]; then
+  chmod a+x pyinstaller_env/bin/activate
   source pyinstaller_venv/bin/activate
 elif [ "$DEADUCTION_ON_MAC" == 1 ]; then
+  chmod a+x pyinstaller_env/bin/activate
   source pyinstaller_venv/bin/activate
 else  # On Windows, run ???
+  chmod a+x pyinstaller_env/Scripts/activate
   pyinstaller_env\Scripts\activate.bat
 
 ### Only first time: install pyinstaller ###
 if [ $FIRST_TIME == 1 ]; then
   python3 -m pip install pyinstaller
-  python3 -m pip install -r ../requirements.txt
+  python3 -m pip install -r requirements.txt
 
 ### Environment variables ###
 export DEADUCTION_DEV_MODE=0
 export PYTHONPATH=/Users/leroux/Documents/PROGRAMMATION/LEAN/LEAN_TRAVAIL/dEAduction/src
 
 ### Main Pyinstaller instruction ###
+
+# cd /Users/leroux/Documents/PROGRAMMATION/LEAN/LEAN_TRAVAIL/dEAduction/src
+cd src
 
 # From Pyinstaller doc:
 # Note that when using venv, the path to the PyInstaller commands is:
@@ -112,7 +122,7 @@ export PYTHONPATH=/Users/leroux/Documents/PROGRAMMATION/LEAN/LEAN_TRAVAIL/dEAduc
 # Should be the same on Windows(?)
 # Remove "--windowed" to see logs.
 # Same should work on Linux, the "--windowed" option will be ignored.
-pyinstaller_venv/bin/pyinstaller deaduction/dui/__main__.py --onefile --windowed --clean --add-data deaduction/lean_src:deaduction/lean_src --add-data deaduction/share:deaduction/share
+pyinstaller deaduction/dui/__main__.py --onefile --windowed --clean --add-data deaduction/lean_src:deaduction/lean_src --add-data deaduction/share:deaduction/share
 
 # —-name d∃∀duction --console
 # --splash splashfile.png
