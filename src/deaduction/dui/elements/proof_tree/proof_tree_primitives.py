@@ -148,7 +148,7 @@ class BlinkingLabel(QLabel):
         self.setText(self.text())
 
     def set_msg(self):
-        if not self.text():
+        if not self.text() or not self._is_activated or not self.disclosed:
             self.hide()
         elif self._is_activated:
             self.update_text()
@@ -521,12 +521,15 @@ class DisclosureTriangle(QLabel):
         self.setText("▷" if hidden else "▽")
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
 
-    def mousePressEvent(self, ev) -> None:
+    def toggle(self):
         """
         Modify self's appearance and call the slot function.
         """
         self.setText("▷" if self.text() == "▽" else "▽")
         self.slot()
+
+    def mousePressEvent(self, ev) -> None:
+        self.toggle()
 
 
 class VertBar(QFrame):
@@ -650,9 +653,17 @@ class ProofTitleLabel(RawLabelMathObject):
     The colon is added on top of html_msg by super class RawLabelMathObject
     iff self.disclosed is True.
     """
-    def __init__(self, html_msg):
+    def __init__(self, html_msg, toggle: Optional[callable]=None):
         super().__init__(html_msg=html_msg)
         self.disclosed = True
+        self.toggle = toggle
+
+    def set_toggle(self, toggle: callable):
+        self.toggle = toggle
+
+    def mouseDoubleClickEvent(self, event):
+        if self.toggle:
+            self.toggle()
 
 
 class GenericLMO(RawLabelMathObject):
@@ -1226,6 +1237,8 @@ class TargetWidget(QWidget):
                  status_label: Optional[BlinkingLabel] = None,
                  title_label: Optional[ProofTitleLabel] = None):
         super().__init__()
+
+        self.disclosed = True
         self.target = target
         # self.target_msg = target_msg
         self.parent_wgb = parent_wgb
@@ -1241,6 +1254,7 @@ class TargetWidget(QWidget):
 
         # Disclosure triangle and vertical line
         self.triangle = DisclosureTriangle(self.toggle)
+        self.title_label.set_toggle(self.triangle.toggle)
         self.triangle.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.vert_bar = VertBar()
 
@@ -1332,19 +1346,22 @@ class TargetWidget(QWidget):
             widgets.extend(lyt.all_widgets())
         return widgets
 
+    def disclose_or_not(self):
+        self.title_label.disclosed = self.disclosed
+        self.title_label.update_text()
+        self.current_status_label.disclosed = self.disclosed
+        self.current_status_label.update_text()
+        for wdg in self.all_widgets:
+            wdg.show() if self.disclosed else wdg.hide()
+
     def toggle(self):
         """
         Toggle on / off the display of the all content. The proof title is
         untouched, except for the "colon" at the end which should be there
         only when content is displayed.
         """
-
-        self.title_label.disclosed = not self.title_label.disclosed
-        self.title_label.update_text()
-        self.current_status_label.disclosed = self.title_label.disclosed
-        self.current_status_label.update_text()
-        for wdg in self.all_widgets:
-            wdg.show() if self.title_label.disclosed else wdg.hide()
+        self.disclosed = not self.disclosed
+        self.disclose_or_not()
 
     def link_last_child(self):
         """

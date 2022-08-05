@@ -220,6 +220,7 @@ def update_from_node(wgb: WidgetGoalBlock, gn: GoalNode):
             child_gn = gn.children_goal_nodes[i]
             if child_gn.goal_has_changed or child_wgb.goal_node is not child_gn:
                 # Reset child_wgb
+                child_gn.goal_has_changed = False
                 child_wgb = widget_goal_block(wgb, child_gn)
             new_logical_children.append(child_wgb)
         # Beware that now wgb.logical_children is meaningless: replace it!!

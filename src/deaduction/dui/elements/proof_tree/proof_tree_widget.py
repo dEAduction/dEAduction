@@ -482,6 +482,22 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
                 descendants.extend(child.descendants_not_displayed_by_self)
             return self.displayable_children + descendants
 
+    def add_child_widget(self, child):
+        """
+        Add one new child to self.children_layout.
+        """
+        if self.children_layout:
+            log.debug(f"Putting wgb {child.goal_nb} in {self.goal_nb}'s "
+                      f"children layout")
+            child.parent_widget = self
+            self.children_widgets.append(child)
+            self.target_widget.add_child_wgb(child)
+            if child.outcomes:
+                for outcome in child.outcomes:
+                    outcome.set_layout_without_children()
+                    self.children_widgets.append(outcome)
+                    self.target_widget.add_child_wgb(outcome)
+
     def set_children_widgets(self):
         """
         Display directly descendants_to_be_displayed, if self has a
@@ -489,18 +505,19 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         Descendants are passed to the target_widget method add_child_wgb().
         """
         self.children_widgets = []
-        if self.children_layout:
-            for child in self.descendants_displayed_by_self:
-                log.debug(f"Putting wgb {child.goal_nb} in {self.goal_nb}'s "
-                          f"children layout")
-                child.parent_widget = self
-                self.children_widgets.append(child)
-                self.target_widget.add_child_wgb(child)
-                if child.outcomes:
-                    for outcome in child.outcomes:
-                        outcome.set_layout_without_children()
-                        self.children_widgets.append(outcome)
-                        self.target_widget.add_child_wgb(outcome)
+        # if self.children_layout:
+        for child in self.descendants_displayed_by_self:
+            self.add_child_widget(child)
+            # child.parent_widget = self
+            # self.children_widgets.append(child)
+            # self.target_widget.add_child_wgb(child)
+            # if child.outcomes:
+            #     for outcome in child.outcomes:
+            #         outcome.set_layout_without_children()
+            #         self.children_widgets.append(outcome)
+            #         self.target_widget.add_child_wgb(outcome)
+
+            # self.target_widget.disclose_or_not()
 
     # ───────────────────── Enabling methods ──────────────────── #
     def set_enabled(self, yes=True):
@@ -610,9 +627,36 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
         return all([self.check_pure_context(),
                     self.check_context1(),
                     self.check_target(),
-                    self.check_context2(),
-                    self.check_children()
+                    self.check_context2()
                     ])
+
+    def update_children(self):
+        """
+        Update children. Generic case should be that there is just one or two
+        new widgets to add.
+        """
+        old_wdgs = self.children_widgets
+        new_wdgs = self.descendants_displayed_by_self
+        if self.check_children():
+            return
+
+        elif len(old_wdgs) >= len(new_wdgs):
+            # Oddly enough, this case happens often, with nb = 2.
+            # log.warning(f"Odd children widgets nb {len(old_wdgs)} >= "
+            #             f"{len(new_wdgs)}, resetting all")
+            self.set_layout_without_children()
+            self.set_children_widgets()
+        else:  # Now len(old_wdgs) < len(new_wdgs)
+            # Check existing widgets
+            nb = len(old_wdgs)
+            if old_wdgs != new_wdgs[:nb]:
+                # log.warning(f"Odd {nb} children widgets, resetting all")
+                self.set_layout_without_children()
+                self.set_children_widgets()
+            else:
+                # log.debug("Adding child wdg, generic case")
+                for wdg in new_wdgs[nb:]:
+                    self.add_child_widget(wdg)
 
     def update_display(self):
         """
@@ -627,6 +671,9 @@ class WidgetGoalBlock(QWidget, AbstractGoalBlock):
             log.debug(f"Updating WGB for goal_nb {self.goal_nb}")
             self.set_layout_without_children()
             self.set_children_widgets()
+        else:
+            self.update_children()
+
         if self.target_widget:
             self.target_widget.update()
         #     self.target_widget.set_status()
