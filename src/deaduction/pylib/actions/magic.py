@@ -327,20 +327,19 @@ def code_from_tree(tree, selected_objects, proof_step, preamble=None) \
 
 
 @action()
-def action_assumption(proof_step,
-                      selected_objects: [MathObject],
-                      user_input,
-                      target_selected: bool = True) -> CodeForLean:
+def action_assumption(proof_step) -> CodeForLean:
     """
     New action assumption.
     The idea is to apply a series of transformation of the target, and then
     to apply raw_solve_target to each resulting target. Transformations
-    includes:
+    include:
     - splitting conjunctions and disjunctions
     - trying exfalso, trying to symmetrize the target
-
-
     """
+
+    selected_objects = proof_step.selection
+    # target_selected = proof_step.target_selected
+    # user_input = proof_step.user_input
 
     goal = proof_step.goal
     target = goal.target.math_type

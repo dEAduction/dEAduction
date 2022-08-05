@@ -95,16 +95,14 @@ def add_statement_to_context(proof_step, statement) -> CodeForLean:
     return code
 
 
-def action_definition(proof_step,
-                      selected_objects: [MathObject],
-                      definition,
-                      target_selected: bool = True
-                      ) -> CodeForLean:
+def action_definition(proof_step) -> CodeForLean:
     """
     Apply definition to rewrite selected object or target.
     If nothing is selected, add definition to the context.
     """
-
+    target_selected = proof_step.target_selected
+    definition = proof_step.statement
+    selected_objects = proof_step.selection
     # test_selection(selected_objects, target_selected)
     if not target_selected and not selected_objects:
         codes = add_statement_to_context(proof_step, definition)
@@ -117,11 +115,7 @@ def action_definition(proof_step,
     return codes
 
 
-def action_theorem(proof_step,
-                   selected_objects: [MathObject],
-                   theorem,
-                   target_selected: bool = True
-                   ):
+def action_theorem(proof_step) -> CodeForLean:
     """
     Apply theorem on selected objects.
     - If nothing is selected, add theorem to the context.
@@ -131,6 +125,9 @@ def action_theorem(proof_step,
     """
 
     # test_selection(selected_objects, target_selected)
+    target_selected = proof_step.target_selected
+    theorem = proof_step.statement
+    selected_objects = proof_step.selection
 
     goal = proof_step.goal
     codes = CodeForLean()

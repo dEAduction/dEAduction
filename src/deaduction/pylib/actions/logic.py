@@ -56,7 +56,6 @@ from deaduction.pylib.actions     import (action,
                                           WrongUserInput,
                                           test_selection,
                                           CodeForLean,
-                                          action_definition
                                           )
 
 from deaduction.pylib.mathobj     import (MathObject,
@@ -168,11 +167,7 @@ def construct_and_hyp(proof_step, selected_objects: [MathObject]) \
 
 
 @action()
-def action_and(proof_step,
-               selected_objects: [MathObject],
-               user_input: [str] = None,
-               target_selected: bool = True
-               ) -> CodeForLean:
+def action_and(proof_step) -> CodeForLean:
     """
     Translate into string of lean code corresponding to the action
 
@@ -184,8 +179,12 @@ If two hypothesis P, then Q, have been previously selected:
     add the new hypothesis P AND Q to the properties.
     """
 
+    selected_objects = proof_step.selection
+    target_selected = proof_step.target_selected
+    user_input = proof_step.user_input
+
     test_selection(selected_objects, target_selected)
-    goal = proof_step.goal
+    # goal = proof_step.goal
 
     if len(selected_objects) == 0:
         return construct_and(proof_step, user_input)
@@ -364,10 +363,7 @@ def construct_or_on_hyp(proof_step,
             
 
 @action()
-def action_or(proof_step,
-              selected_objects: [MathObject],
-              user_input=None,
-              target_selected: bool = True) -> CodeForLean:
+def action_or(proof_step) -> CodeForLean:
     """
     If the target is of the form P OR Q:
         transform the target in P (or Q) according to the user's choice.
@@ -376,6 +372,10 @@ def action_or(proof_step,
             one with P as a hypothesis,
             and another with Q as a hypothesis.
     """
+
+    selected_objects = proof_step.selection
+    target_selected = proof_step.target_selected
+    user_input = proof_step.user_input
 
     test_selection(selected_objects, target_selected)
     goal = proof_step.goal
@@ -402,10 +402,7 @@ def action_or(proof_step,
 # NOT #
 #######
 @action()
-def action_not(proof_step,
-               selected_objects: [MathObject],
-               user_input=None,
-               target_selected: bool = True) -> CodeForLean:
+def action_not(proof_step) -> CodeForLean:
     """
     Translate into string of lean code corresponding to the action
     
@@ -414,6 +411,10 @@ def action_not(proof_step,
     If a hypothesis has been previously selected:
         do the same to the hypothesis.
     """
+
+    selected_objects = proof_step.selection
+    target_selected = proof_step.target_selected
+    # user_input = proof_step.user_input
 
     test_selection(selected_objects, target_selected)
     goal = proof_step.goal
@@ -545,10 +546,7 @@ def apply_implies_to_hyp(proof_step,
 
 
 @action()
-def action_implies(proof_step,
-                   selected_objects: [MathObject],
-                   user_input = None,
-                   target_selected: bool = True) -> CodeForLean:
+def action_implies(proof_step) -> CodeForLean:
     """
     Three cases:
     (1) No property selected:
@@ -559,6 +557,10 @@ def action_implies(proof_step,
     (3) Exactly two selected property, on of which is an implication P ⇒ Q
     and the other is P: Add Q to the context
     """
+
+    selected_objects = proof_step.selection
+    target_selected = proof_step.target_selected
+    # user_input = proof_step.user_input
 
     test_selection(selected_objects, target_selected)
     goal = proof_step.goal
@@ -743,10 +745,7 @@ def rw_with_iff(rw_hyp: MathObject,
 
 
 @action()
-def action_iff(proof_step,
-               selected_objects: [MathObject],
-               user_input: [str] = None,
-               target_selected: bool = True) -> CodeForLean:
+def action_iff(proof_step) -> CodeForLean:
     """
     Three cases:
     (1) No selected property:
@@ -764,6 +763,10 @@ def action_iff(proof_step,
     # TODO: a good part could be merged with action_equal,
     #  in particular add testing of direction of substitution for a
     #  non-universal iff.
+
+    selected_objects = proof_step.selection
+    target_selected = proof_step.target_selected
+    user_input = proof_step.user_input
 
     if user_input is None:
         user_input = []
@@ -1009,10 +1012,7 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
 
 
 @action()
-def action_forall(proof_step,
-                  selected_objects: [MathObject],
-                  user_input: [str],
-                  target_selected: bool = True) -> CodeForLean:
+def action_forall(proof_step) -> CodeForLean:
     """
     (1) If no selection and target is of the form ∀ x, P(x):
         introduce x and transform the target into P(x)
@@ -1022,6 +1022,10 @@ def action_forall(proof_step,
         property, try to apply it to the other selected items
 
     """
+
+    selected_objects = proof_step.selection
+    target_selected = proof_step.target_selected
+    user_input = proof_step.user_input
 
     test_selection(selected_objects, target_selected)
     goal = proof_step.goal
@@ -1158,10 +1162,7 @@ def construct_exists_on_hyp(proof_step,
 
 
 @action()
-def action_exists(proof_step,
-                  selected_objects: [MathObject],
-                  user_input: [str] = None,
-                  target_selected: bool = True) -> CodeForLean:
+def action_exists(proof_step) -> CodeForLean:
     """
     Three cases:
     (1) If target is of form ∃ x, P(x):
@@ -1173,6 +1174,10 @@ def action_exists(proof_step,
     (3) If some 'x' and a property P(x) have been selected:
         get property '∃ x, P(x)'
     """
+
+    selected_objects = proof_step.selection
+    target_selected = proof_step.target_selected
+    user_input = proof_step.user_input
 
     test_selection(selected_objects, target_selected)
     goal = proof_step.goal
@@ -1348,10 +1353,7 @@ def apply_substitute(proof_step,
 
 
 @action()
-def action_equal(proof_step,
-                 selected_objects: [MathObject],
-                 user_input: [] = None,
-                 target_selected: bool = True) -> CodeForLean:
+def action_equal(proof_step) -> CodeForLean:
     """
     Try to use one of the selected properties for substitution in the goal
     (in case only one property has been selected) or in the second one.
@@ -1359,6 +1361,11 @@ def action_equal(proof_step,
     TODO: implement iff substitution with iff button rather than equal
         button
     """
+
+    selected_objects = proof_step.selection
+    # target_selected = proof_step.target_selected
+    user_input = proof_step.user_input
+
     if user_input is None:
         user_input = []
 
@@ -1474,10 +1481,7 @@ def apply_function(proof_step, map_, arguments: [MathObject]):
 
 
 @action()
-def action_map(proof_step,
-               selected_objects: [MathObject],
-               user_input: [str] = None,
-               target_selected: bool = True) -> CodeForLean:
+def action_map(proof_step) -> CodeForLean:
     """
     Apply a function, which must be one of the selected object,
     to an element or an equality.
@@ -1487,6 +1491,10 @@ def action_map(proof_step,
 
     (Previously action_apply).
     """
+
+    selected_objects = proof_step.selection
+    # target_selected = proof_step.target_selected
+    user_input = proof_step.user_input
 
     # We successively try all selected objects
     for i in  range(len(selected_objects)):

@@ -57,10 +57,11 @@ global _
 
 
 @action()
-def action_proof_methods(proof_step,
-                         selected_objects: [MathObject],
-                         user_input: [],
-                         target_selected: bool = True) -> CodeForLean:
+def action_proof_methods(proof_step) -> CodeForLean:
+
+    selected_objects = proof_step.selection
+    # target_selected = proof_step.target_selected
+    user_input = proof_step.user_input
 
     # 1st call, choose proof method
     if not user_input:
@@ -226,13 +227,14 @@ def introduce_fun(proof_step, selected_objects: [MathObject]) -> CodeForLean:
 
 
 @action()
-def action_new_object(proof_step,
-                      selected_objects: [MathObject],
-                      user_input: [str] = None,
-                      target_selected: bool = True) -> CodeForLean:
+def action_new_object(proof_step) -> CodeForLean:
     """
     Introduce new object / sub-goal / function
     """
+
+    selected_objects = proof_step.selection
+    # target_selected = proof_step.target_selected
+    user_input = proof_step.user_input
 
     goal = proof_step.goal
 

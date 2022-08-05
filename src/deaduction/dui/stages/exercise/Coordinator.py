@@ -644,11 +644,8 @@ class Coordinator(QObject):
 
         while True:
             try:
-                lean_code = action.run(self.proof_step,
-                                       selection,
-                                       self.emw.user_input,
-                                       target_selected=self.proof_step.target_selected)
-                # TODO: suppress selection/target_selected parameters
+                self.proof_step.user_input = self.emw.user_input
+                lean_code = action.run(self.proof_step)
 
             except MissingParametersError as e:
                 if e.input_type == InputType.Text:
@@ -699,16 +696,10 @@ class Coordinator(QObject):
             statement = item.statement
 
             if isinstance(statement, Definition):
-                lean_code = generic.action_definition(self.proof_step,
-                                                      selection,
-                                                      statement,
-                                                      self.proof_step.target_selected)
-            elif isinstance(statement, Theorem):
-                lean_code = generic.action_theorem(self.proof_step,
-                                                   selection,
-                                                   statement,
-                                                   self.proof_step.target_selected)
+                lean_code = generic.action_definition(self.proof_step)
 
+            elif isinstance(statement, Theorem):
+                lean_code = generic.action_theorem(self.proof_step)
         except WrongUserInput as error:
             self.process_wrong_user_input(error)
 
