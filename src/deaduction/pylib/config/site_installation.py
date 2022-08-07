@@ -43,6 +43,7 @@ __platform_os = platform.system().lower() # Evaluated at first module import,
 packages = dict()                         # this dict. contains Package object
                                           # that are found in config.
 
+
 def init():
     global packages
 
@@ -51,8 +52,9 @@ def init():
     plist    = { **cvars.get("package.all"),
                  **cvars.get(f"package.{__platform_os}") }
 
-    for name,conf in plist.items():
+    for name, conf in plist.items():
         packages[name] = package.from_config(conf)
+
 
 def check():
     """
@@ -65,7 +67,7 @@ def check():
     failed_checks=[]
 
     log.info(_("Check packages installation"))
-    for pkg_name,pkg in packages.items():
+    for pkg_name, pkg in packages.items():
         try:
             pkg.check()
         except PackageCheckError as exc:
@@ -73,9 +75,10 @@ def check():
                             .format(pkg_name,str(exc)) )
             if exc.dbg_info: log.debug(str(exc.dbg_info))
 
-            failed_checks.append( (pkg_name,pkg,exc,) )
+            failed_checks.append((pkg_name, pkg, exc,))
         
     return failed_checks
+
 
 def has_package(name):
     if not name in packages:

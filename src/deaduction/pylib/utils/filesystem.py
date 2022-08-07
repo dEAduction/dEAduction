@@ -80,6 +80,7 @@ def file_permissions_octal(fp: Path):
 
     return "{:03o}".format(fp.stat().st_mode & 0x1FF)
 
+
 ############################################
 # Checking utilities
 ############################################
@@ -90,7 +91,7 @@ def check_dir(path: Path, exc=False, create=False):
     """
     log.info(_("Checking path: {}").format(str(path)))
 
-    if (not path.exists()):
+    if not path.exists():
         if create:
             log.info(_("→ Creating directory {}").format(str(path)))
             path.mkdir()
@@ -193,60 +194,79 @@ class HashList:
 ############################################
 # Download utilities
 ############################################
-def download(url: str, fhandle: BufferedWriter, on_progress: Callable = None):
+class Downloader():
     """
-    Download a file to a specific target. Inspired from
-    Patrick Massot's code in leanproject.
-
-    :param url: HTTP(s) url to download file from (GET request)
-    :param path: File path on local filesystem
-    :param on_progress: callback(idx,count, progress)
-                        to monitor download progress.
-    :return: the sha1 checksum of the downloaded file
+    A class for handling download. Aborting is allowed by calling th abort()
+    method, which sets the self.wanna_abort attribute to True. This
+    attribute is tested periodically, and if True, a SystemExit exception is
+    raised.
     """
+    def __init__(self, url: str, fhandle: BufferedWriter, on_progress=None):
+        self.url = url
+        self.fhandle = fhandle
+        self.on_progress = on_progress
+        self.wanna_abort = False  # Flag, if True then will abort download
 
-    # TODO(florian): better error handling ?
-    # -> ConnectionError raised by requests.get
-    # -> HTTPError raised by raise_for_status
+    def abort(self):
+        self.wanna_abort = True
 
-    sha1 = hashlib.sha1()
+    def download(self):
+        """
+        Download a file to a specific target. Inspired from
+        Patrick Massot's code in leanproject.
 
-    response = requests.get(url, stream=True)
-    response.raise_for_status()  # Raise HTTPError if any
+        :param url: HTTP(s) url to download file from (GET request)
+        :param on_progress: PyQT Signal(url, downloaded, total, progress)
+                            to monitor download progress.
+        :return: the sha1 checksum of the downloaded file
+        """
 
-    tot_len = response.headers.get("content-length", 0)
+        sha1 = hashlib.sha1()
+        try:
+            response = requests.get(self.url, stream=True)
+        except requests.exceptions.ConnectionError:
+            raise ConnectionError
+        response.raise_for_status()  # Raise HTTPError if any
 
-    if not tot_len:
-        fhandle.write(response.content)
-        sha1.update(response.content)
-    else:
-        dl_size       = 0
-        tot_len       = int(tot_len)
-        progress      = 0
-        progress_prev = 0
+        tot_len = response.headers.get("content-length", 0)
 
-        for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
-            dl_size += len(chunk)
-            fhandle.write(chunk)
-            sha1.update(chunk)
+        if not tot_len:
+            self.fhandle.write(response.content)
+            sha1.update(response.content)
+        else:
+            dl_size       = 0
+            tot_len       = int(tot_len)
+            progress      = 0
+            progress_prev = 0
 
-            # Compute and display progress if /10
-            progress_prev = progress
-            progress      = (100 * (dl_size / tot_len))
-            if int(progress) % 10 == 0 and int(progress) != int(progress_prev):
-                log.info(_("Progress : {:03d}%").format(int(progress)))
+            for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
+                if self.wanna_abort:
+                    raise SystemExit
+                dl_size += len(chunk)
+                self.fhandle.write(chunk)
+                sha1.update(chunk)
 
-            # Trigger progress callback
-            if on_progress is not None:
-                on_progress(dl_size, tot_len, progress)
+                # Compute and display progress if /10
+                progress_prev = progress
+                progress      = (100 * (dl_size / tot_len))
+                if (int(progress) % 10 == 0
+                        and int(progress) != int(progress_prev)):
+                    log.info(_("Progress : {:03d}%").format(int(progress)))
 
-    return sha1.hexdigest()
+                # Trigger progress callback
+                if self.on_progress is not None:
+                    self.on_progress.emit(self.url, dl_size, tot_len, progress)
+
+        return sha1.hexdigest()
+
+    def download_to_file(self, dest: Path):
+        dest = Path(dest).resolve()
+
+        log.info(_("Download from {} to {}").format(self.url, str(dest)))
+
+        with open(str(dest), "wb") as fhandle:
+            self.fhandle = fhandle
+            return self.download()
 
 
-def download_to_file(url: str, dest: Path, on_progress: Callable = None):
-    dest = Path(dest).resolve()
 
-    log.info(_("Download from {} to {}").format(url, str(dest)))
-
-    with open(str(dest), "wb") as fhandle:
-        return download(url, fhandle, on_progress)

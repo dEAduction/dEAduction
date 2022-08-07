@@ -24,3 +24,5 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
+
+from .pickle_utils import load_object, save_object

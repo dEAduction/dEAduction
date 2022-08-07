@@ -3,7 +3,7 @@
 # __main__.py : Test deaduction #
 #################################
 
-Launch deaduction, and an auto_test on one or several exercises from a given
+Launch deaduction, and a test on one or several exercises from a given
 course. This module may be launched with the following arguments:
 * choice of a directory, with  one of the two equivalent syntaxes:
     -d <directory path>
@@ -58,19 +58,28 @@ from sys import argv
 from functools import partial
 from typing import Optional
 from pathlib import Path
-import pickle5 as pickle
+# from sys import version_info
+# if version_info[1] < 8:
+#     import pickle5 as pickle
+# else:
+#     import pickle
+
 import argparse
 
-from deaduction.pylib.coursedata                 import Course, Exercise
 from deaduction.pylib                            import logger
+
+from deaduction.pylib.utils import load_object
 
 import deaduction.pylib.config.dirs              as     cdirs
 import deaduction.pylib.config.environ           as     cenv
 import deaduction.pylib.config.site_installation as     inst
-import deaduction.pylib.config.vars              as     cvars
 
-from deaduction.dui.__main__ import Container
+import deaduction.pylib.config.i18n
 
+from deaduction.dui.__main__ import WindowManager
+from deaduction.dui.stages.test import QTestWindow
+
+from deaduction.pylib.coursedata import Course, Exercise
 from deaduction.pylib.autotest import ( select_course,
                                         select_exercise)
 
@@ -82,12 +91,22 @@ from deaduction.pylib.autotest import ( select_course,
 # Configuring log #
 ###################
 # Change your own settings in .deaduction-dev/config.toml
+# (non-exhaustive) list of logger domains:
+# ['lean', 'ServerInterface', 'ServerQueue', 'Course', 'deaduction.dui',
+#  'deaduction.pylib.coursedata', 'deaduction.pylib.mathobj', 'LeanServer']
+
 # log_domains = cvars.get("logs.domains", [""])
 # log_level = cvars.get("logs.display_level", "info")
-# logger.configure(domains=log_domains,
-#                  display_level=log_level)
 
+# log_domains = ['ServerInterface', 'ServerQueue', 'Course', 'deaduction.dui',
+#                'deaduction.pylib.coursedata', 'deaduction.pylib.mathobj',
+#                'deaduction.pylib.autotest',
+#                'LeanServer']
+
+log_domains = ['deaduction.pylib.autotest']
+logger.configure(domains=log_domains, display_level="debug")
 log = logging.getLogger(__name__)
+
 arg_parser = argparse.ArgumentParser("Start deaduction in test mode")
 arg_parser.add_argument('--directory', '-d', help="Path for directory")
 arg_parser.add_argument('--course', '-c', help="Course filename")
@@ -122,19 +141,19 @@ def exercise_from_pkl(exercise_like, dir_path):
     else:
         file_path = exercise_like
 
-    [exercise] = pickled_items(file_path)
-    # log.debug(f"Pickled object {type(exercise)}")
+    # [exercise] = load_object(file_path)
+    exercise = load_object(file_path)
     return exercise
 
 
-def pickled_items(filename):
-    """ Unpickle a file of pickled data. """
-    with filename.open(mode="rb") as input:
-        while True:
-            try:
-                yield pickle.load(input)
-            except EOFError:
-                break
+# def pickled_items(filename):
+#     """ Unpickle a file of pickled data. """
+#     with filename.open(mode="rb") as input:
+#         while True:
+#             try:
+#                 yield pickle.load(input)
+#             except EOFError:
+#                 break
 
 
 def coex_from_argv() -> (Optional[Path], Course, Exercise, bool):
@@ -173,13 +192,17 @@ def coex_from_argv() -> (Optional[Path], Course, Exercise, bool):
 
 def get_exercises_from_dir(dir_path: Path):
     test_course_files = [file for file in dir_path.iterdir()
-                         if (file.suffix == '.lean' or file.suffix == '.pkl')
-                         and file.name.startswith('test')
-                         and not file.name.startswith('test_exercise')]
+                         if file.suffix == '.lean'
+                         and file.name.startswith('test')]
+
+    test_course_files.sort(key = (lambda x: x.stat().st_mtime))
 
     test_exercise_files = [file for file in dir_path.iterdir()
                            if file.suffix == '.pkl'
                            and file.name.startswith('test_exercise')]
+
+    test_exercise_files.sort(key = (lambda x: x.stat().st_mtime),
+                             reverse=True)
 
     nb_files = len(test_course_files) + len(test_exercise_files)
     log.info(f"looking for deaduction test files in {dir_path.name}")
@@ -199,14 +222,21 @@ def get_exercises_from_dir(dir_path: Path):
               f"course")
         exercises.extend(exo_for_this_course)
 
+    exercises_pkl = []
     for exercise_file in test_exercise_files:
         exercise = exercise_from_pkl(exercise_file, None)
+        # Add time
+        exercise.time = exercise_file.stat().st_mtime
         if exercise.refined_auto_steps:
             log.debug(f"Adding {exercise.pretty_name}")
-            exercises.append(exercise)
+            exercises_pkl.append(exercise)
         else:
             log.warning(f"No auto_step found in {exercise.pretty_name}")
 
+    # Sort by reverse time order
+    # exercises_pkl.sort(key=lambda x: x.time, reverse=True)
+
+    exercises = exercises_pkl + exercises
     return exercises
 
 
@@ -251,64 +281,69 @@ def get_exercises_from_course(course: Optional[Course],
 # Auto-testing an exercise #
 ############################
 
-def find_selection(auto_step, emw):
+# def find_selection(auto_step, emw):
+#     """
+#     Convert the data in auto_step.selection into MathObjects instances.
+#     This is used by the async auto_step function.
+#     """
+#     # TODO: deprecated
+#
+#     auto_selection = []
+#     success = True
+#     # First trial
+#     # TODO: make emw properties
+#     #  and function find_selection(AutoStep, prop, obj)
+#     # properties = [item.mathobject
+#     #               for item in emw.ecw.props_wgt.items]
+#     # objects = [item.mathobject
+#     #            for item in emw.ecw.objects_wgt.items]
+#     # goal = emw.servint.proof_state.goals[0]
+#     for name in auto_step.selection:
+#         selection = None
+#         # Not clear to me why deaduction may not have
+#         # finished constructing goal, but this happens.
+#         # So we give it a few more seconds to complete the
+#         # construction.
+#         t = time.time() + 5
+#         while not selection and time.time() < t:
+#             if name.startswith('@O'):
+#                 try:
+#                     selection = emw.objects[int(name[2:]) - 1]
+#                 except IndexError:
+#                     pass
+#             elif name.startswith('@P'):
+#                 try:
+#                     selection = emw.properties[int(name[2:]) - 1]
+#                 except IndexError:
+#                     pass
+#             else:
+#                 if name.startswith('@'):  # (unwanted @)
+#                     name = name[1:]
+#                 selection = emw.current_goal.math_object_from_name(name)
+#             # if not selection:
+#             #     # Next trial
+#             #     properties = [item.mathobject for item in
+#             #                   emw.ecw.props_wgt.items]
+#             #     objects = [item.mathobject for item in
+#             #                emw.ecw.objects_wgt.items]
+#             #     goal = emw.servint.proof_state.goals[0]
+#
+#         if selection:
+#             auto_selection.append(selection)
+#         else:
+#             log.debug("Bad selection in auto_step")
+#             success = False
+#             break
+#
+#     return auto_selection, success
+
+
+COLOR = {True: 'green', False: 'red', None: 'orange', "Bad msgs": 'orange'}
+
+
+async def auto_test(wm: WindowManager):
     """
-    Convert the data in auto_step.selection into MathObjects instances.
-    This is used by the async auto_step function.
-    """
-    auto_selection = []
-    success = True
-    # First trial
-    # TODO: make emw properties
-    #  and function find_selection(AutoStep, prop, obj)
-    # properties = [item.mathobject
-    #               for item in emw.ecw.props_wgt.items]
-    # objects = [item.mathobject
-    #            for item in emw.ecw.objects_wgt.items]
-    # goal = emw.servint.proof_state.goals[0]
-    for name in auto_step.selection:
-        selection = None
-        # Not clear to me why deaduction may not have
-        # finished constructing goal, but this happens.
-        # So we give it a few more seconds to complete the
-        # construction.
-        t = time.time() + 5
-        while not selection and time.time() < t:
-            if name.startswith('@O'):
-                try:
-                    selection = emw.objects[int(name[2:]) - 1]
-                except IndexError:
-                    pass
-            elif name.startswith('@P'):
-                try:
-                    selection = emw.properties[int(name[2:]) - 1]
-                except IndexError:
-                    pass
-            else:
-                if name.startswith('@'):  # (unwanted @)
-                    name = name[1:]
-                selection = emw.current_goal.math_object_from_name(name)
-            # if not selection:
-            #     # Next trial
-            #     properties = [item.mathobject for item in
-            #                   emw.ecw.props_wgt.items]
-            #     objects = [item.mathobject for item in
-            #                emw.ecw.objects_wgt.items]
-            #     goal = emw.servint.proof_state.goals[0]
-
-        if selection:
-            auto_selection.append(selection)
-        else:
-            log.debug("Bad selection in auto_step")
-            success = False
-            break
-
-    return auto_selection, success
-
-
-async def auto_test(container: Container):
-    """
-    Test the Exercise's instance container.exercise by listening to
+    Test the Exercise's instance wm.exercise by listening to
     deaduction signals and simulating user pressing buttons according to
     the instructions found in exercise.auto_test. The function assumes that
     the ExerciseMainWindow has been launched.
@@ -317,30 +352,56 @@ async def auto_test(container: Container):
     processing to the next exercise to be tested.
     """
 
-    # Auto-steps loop
-    exercise = container.exercise
-    log.info(f"Testing exercise {exercise.pretty_name}")
+    exercise = wm.exercise
+    emw = wm.exercise_window
+    test_window = wm.test_window
     auto_steps = exercise.refined_auto_steps
-    log.debug('auto_steps:')
-    total_string = 'AutoTest\n'
-    for step in auto_steps:
-        total_string += '    ' + step.raw_string + ',\n'
-    log.debug(total_string)
+    # proof_complete =False
 
-    emw = container.exercise_window
-    signals = [emw.proof_step_updated, emw.ui_updated]
-    test_success = True
+    log.info(f"Testing exercise {exercise.pretty_name}")
+
+    test_window.display(f"Testing exercise {exercise.pretty_name}",
+                        color='blue')
+    total_string = '    Steps:'
+    for step in auto_steps:
+        total_string += ' ' + step.raw_string + ',\n'
+    test_window.display(total_string)
+
+    signals = [wm.coordinator.proof_step_updated,
+               emw.ui_updated,
+               test_window.process_next_step,
+               test_window.stop_exercise]
+               # wm.proof_complete]
+    test_success = None
     steps_counter = 0
     async with qtrio.enter_emissions_channel(signals=signals) as \
             emissions:
         reports = [f'Exercise {exercise.pretty_name}']
-        container.report.append(reports)
+        wm.report.append(reports)
         async for emission in emissions.channel:
-            # Check result #
-            if emission.is_from(emw.proof_step_updated) and steps_counter:
+
+            # if emission.is_from(wm.proof_complete):
+            #     proof_complete = True
+
+            if emission.is_from(test_window.stop_exercise):
+                test_window.display("Test interrupted", color='red')
+                break
+
+            if test_window.is_suspended:
+                # Ignore signals
+                continue
+            #######################################
+            # Check result of previous proof step #
+            #######################################
+            if emission.is_from(wm.coordinator.proof_step_updated) \
+                    and steps_counter:
                 step = auto_steps[steps_counter-1]
                 report, step_success = emw.displayed_proof_step.compare(step)
-                test_success = test_success and step_success
+                if step_success is False:
+                    test_success = False
+                elif test_success is not False and step_success is None:
+                    test_success = "Bad msgs"
+                # test_success = test_success and step_success
                 if not report:
                     report = f'Success with {step.raw_string}'
                 else:
@@ -348,69 +409,70 @@ async def auto_test(container: Container):
 
                 report = f"Step {steps_counter}: " + report
                 if not emw.displayed_proof_step.success_msg \
-                        and emw.displayed_proof_step.button \
-                        and not emw.displayed_proof_step.button.is_cqfd() \
+                        and emw.displayed_proof_step.button_name \
+                        and not emw.displayed_proof_step.is_cqfd \
                         and not emw.displayed_proof_step.is_error():
                     report += "(no success msg)"
                 reports.append(report)
-
-            # Apply next step #
+                if report.find("Success with") == -1:
+                    test_window.display(report, color='red')
+            ###########################
+            # Prepare next proof step #
+            ###########################
             elif emission.is_from(emw.ui_updated):
-                log.debug("ui_updated received")
+                test_window.display("(ui_updated received)", color='grey')
+
+                #####################
+                # Testing complete? #
+                #####################
+                if steps_counter == len(auto_steps):
+                    log.debug("Test complete")
+                    test_window.display("   Test complete", color='green')
+                    if test_success is None:
+                        # Test is successfull if no step failed
+                        test_success = True
+                    break
 
                 step = auto_steps[steps_counter]
                 steps_counter += 1
-                log.debug(f"auto_step found: {step}")
+                test_window.display(f"    Auto_step found:"
+                                    f" {step.raw_string}")
                 if not step:
-                    log.debug("Found 'None' step, giving up")
+                    test_window.display("    Found 'None' step, giving up")
                     emw.close()
                     break
 
-                auto_selection, success = find_selection(step, emw)
-                if not success:
-                    # Quit this exercise
-                    container.exercise_window.close()
-                selection_names = [item.display_name
-                                   for item in auto_selection]
-                log.debug(f"Selection: {selection_names}")
-                auto_user_input = [int(item) if item.isdecimal() else item
+                step.user_input = [int(item) if item.isdecimal() else item
                                    for item in step.user_input]
 
-                if step.button:  # Auto step is a button step
-                    if step.button.endswith('undo'):
-                        await emw.process_async_signal(
-                                                emw.servint.history_undo)
-                    elif step.button.endswith('redo'):
-                        await emw.process_async_signal(
-                                                emw.servint.history_redo)
-                    elif step.button.endswith('rewind'):
-                        await emw.process_async_signal(
-                                                    emw.servint.history_rewind)
-                    else:
-                        # e.g. Nouvel_Objet -> Nouvel Objet
-                        step.button = step.button.replace('_', ' ')
-                        action_btn = emw.ecw.action_button(step.button)
-                        log.debug(f"Button: {action_btn}")
-                        await emw.process_async_signal(partial(
-                                                    emw.__server_call_action,
-                                                    action_btn, auto_selection,
-                                                    auto_user_input))
-
-                elif step.statement:  # Auto step is a statement step
-                    statement_widget = emw.ecw.statements_tree.from_name(
-                        step.statement)
-                    log.debug(f"Statement: {statement_widget}")
-                    await emw.process_async_signal(partial(
-                                                emw.__server_call_statement,
-                                                statement_widget,
-                                                auto_selection))
+                if test_window.step_by_step or \
+                    test_window.exercise_by_exercise and steps_counter == 1:
+                    test_window.unfreeze()
                 else:
-                    log.warning("Auto-step loop: empty step")
+                    test_window.process_next_step.emit()
 
-                if steps_counter == len(auto_steps):
-                    break
-    log.debug(f"Auto_test successfull: {test_success}")
+
+            ################
+            # Process step #
+            ################
+            elif emission.is_from(test_window.process_next_step):
+                test_window.freeze()
+                # For first step:
+                await wm.coordinator.server_task_started.wait()
+
+                success, msg = await emw.simulate_user_action(step)
+                if not success:
+                    test_window.display("    Failing action:")
+                test_window.display(msg)
+
+    ##################
+    # End of testing #
+    ##################
+    color = COLOR[test_success]
+    test_window.display(f"    Success: {test_success}", color=color)
     reports.insert(0, test_success)
+
+    wm.test_complete.emit()
 
 
 #############
@@ -430,7 +492,7 @@ async def main():
     3) or a file path to an individual exercise in a pkl file.
 
     - In the first case, it will collect all exercises with autotest data in
-    all courses in the directory, as well ass all individual pkl
+    all courses in the directory, as well as all individual pkl
     test_exercises.
     - In the second case it will collect the individual exercise if
     specified, or all the exercises from this one, or all exercises in the
@@ -441,10 +503,6 @@ async def main():
     # ─────────────── Choose exercises ─────────────── #
     exercises = None
     dir_, course, exercise, all_from_this_one = coex_from_argv()
-    # dir: Path
-    # course : Course
-    # exercise: Exercise
-    # all_from_this_one: bool
     if dir_:
         exercises = get_exercises_from_dir(dir_)
     elif course:
@@ -460,69 +518,89 @@ async def main():
 
     # ─────────────── Testing exercises ─────────────── #
     async with trio.open_nursery() as nursery:
-        # Create container and enter test mode
-        container = Container(nursery)
-        container.exercises = exercises
+        # Create wm and enter test mode
+        wm = WindowManager(nursery)
+        await wm.check_lean_server()
+
+        wm.exercises = exercises
+
+        # Start console
+        test_window = QTestWindow()
 
         # Main loop: quit if window is closed by user or if there is no more
         # exercise.
-        signals = [container.test_complete,
-                   container.close_exercise_window]
+        signals = [wm.exercise_window_closed,
+                   test_window.stop_exercise,
+                   wm.test_complete]  #  wm.proof_complete,
         try:
             async with qtrio.enter_emissions_channel(signals=signals) as \
                     emissions:
                 log.info("Entering main test loop")
 
                 # Test first exercise
-                container.exercise = container.exercises[0]
-                container.exercises = container.exercises[1:]
-                await container.test_exercise()
-                container.nursery.start_soon(auto_test, container)
+                wm.exercise = wm.exercises[0]
+                wm.exercises = wm.exercises[1:]
+                wm.test_exercise(test_window)
+                wm.nursery.start_soon(auto_test, wm)
 
                 async for emission in emissions.channel:
-                    if emission.is_from(container.test_complete) \
-                            and container.exercises:  # Test next exercise
-                        log.debug("Test complete -> next exercise")
-                        log.debug(f"{len(container.exercises)} exercises "
-                                  f"remaining to test")
+                    # if emission.is_from(wm.proof_complete):
+                    #     test_window.display("Test complete -> next exercise",
+                    #                         color='blue')
+                    # if emission.is_from(test_window.process_next_exercise):
+                    #     test_window.display("Test interrupted -> next "
+                    #                         "exercise", color='blue')
+
+                    #if emission.is_from(test_window.process_next_exercise) \
+                    if emission.is_from(wm.test_complete):
+
+                        test_window.display(f"{len(wm.exercises)} "
+                                            f"exercises remaining to test")
+
+                        if test_window.exercise_by_exercise:
+                            # FIXME
+                            pass
+
                         # Close window
-                        container.exercise_window.window_closed.disconnect()
-                        container.exercise_window.close()
-                        if container.exercises:
+                        wm.exercise_window.window_closed.disconnect()
+                        wm.exercise_window.close()
+                        if wm.exercises:
                             # Test next exercise
-                            container.exercise = container.exercises[0]
-                            container.exercises = container.exercises[1:]
-                            await container.test_exercise()
-                            container.nursery.start_soon(auto_test, container)
+                            wm.exercise = wm.exercises[0]
+                            wm.exercises = wm.exercises[1:]
+                            # wm.coordinator.close_server_task()
+                            wm.test_exercise(test_window)
+                            wm.nursery.start_soon(auto_test, wm)
 
                         else:
-                            log.debug("No more exercises to test!")
+                            test_window.display("No more exercises to test!")
                             break
 
-                    elif emission.is_from(container.close_exercise_window):
+                    elif emission.is_from(wm.exercise_window_closed):
                         log.info("Exercise window closed")
                         break
 
         finally:
-            print("================================================")
+            test_window.display("============================================")
             global_success = False not in [exo_report[0] for
-                                           exo_report in container.report]
-            print(f"Global success : {global_success}")
-            for exo_report in container.report:
+                                           exo_report in wm.report]
+            test_window.display(f"Global success : {global_success}")
+            for exo_report in wm.report:
                 success = "success" if exo_report[0] else "FAILURE"
                 if len(exo_report) > 1:
-                    print(exo_report[1] + ": " + success)
+                    test_window.display(exo_report[1] + ": " + success)
                     for step_report in exo_report[2:]:
-                        print(step_report)
+                        test_window.display(step_report)
+
+            print(test_window.txt)
 
             # Finally closing d∃∀duction
-            if container.servint:
-                await container.servint.file_invalidated.wait()
-                container.servint.stop()  # Good job, buddy
+            if wm.servint:
+                await wm.servint.file_invalidated.wait()
+                wm.servint.stop()  # Good job, buddy
                 log.info("Lean server stopped!")
-            if container.nursery:
-                container.nursery.cancel_scope.cancel()
-
+            if wm.nursery:
+                wm.nursery.cancel_scope.cancel()
 
 if __name__ == '__main__':
     log.info("Starting autotest...")
@@ -530,6 +608,7 @@ if __name__ == '__main__':
     cenv.init()
     cdirs.init()
     inst.init()
+    language = deaduction.pylib.config.i18n.init_i18n()
 
     qtrio.run(main)
     log.debug("qtrio finished")

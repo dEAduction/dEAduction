@@ -29,3 +29,5 @@ from .buttons_dialog      import ButtonsDialog
 from .disclosure_triangle import DisclosureTriangle
 from .text_edit_logger    import TextEditLogger, TextEditLoggerHandler
 from .yes_no_dialog       import YesNoDialog
+from .font_config         import DeaductionFonts
+

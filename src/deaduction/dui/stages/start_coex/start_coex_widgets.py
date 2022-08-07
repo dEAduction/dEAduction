@@ -44,8 +44,10 @@ from typing  import  (Dict,
 from PySide2.QtCore    import (Qt,
                                Signal,
                                Slot,
-                               QEvent)
+                               QEvent,
+                               QSettings)
 from PySide2.QtGui     import (QFont,
+                               QFontMetrics,
                                QPixmap)
 from PySide2.QtWidgets import (QApplication,
                                QCheckBox,
@@ -62,24 +64,26 @@ from PySide2.QtWidgets import (QApplication,
                                QVBoxLayout,
                                QWidget)
 
-from deaduction.pylib.config.i18n   import  _
 import deaduction.pylib.config.vars  as     cvars
 import deaduction.pylib.config.dirs  as     cdirs
 from deaduction.dui.elements        import (MathObjectWidget,
+                                            TargetLabel,
                                             RecentCoursesLW,
                                             RecentCoursesLWI,
                                             StatementsTreeWidget,
                                             StatementsTreeWidgetItem)
 from deaduction.dui.primitives      import (DisclosureTriangle,
-                                            ButtonsDialog)
-from deaduction.dui.utils           import (read_pkl_course,
-                                            replace_widget_layout,
+                                            ButtonsDialog,
+                                            DeaductionFonts)
+from deaduction.dui.utils           import (replace_widget_layout,
                                             HorizontalLine)
 from deaduction.pylib.config.course import  add_to_recent_courses
 from deaduction.pylib.coursedata    import (Course,
                                             Exercise)
+from deaduction.pylib.server import ServerInterface
 
 log = logging.getLogger(__name__)
+global _
 
 
 class AbstractCoExChooser(QWidget):
@@ -176,7 +180,7 @@ class AbstractCoExChooser(QWidget):
         :param details: Other data for the course or exercise such as
             the course's year, teacher, school, etc.
         :param description: The course or exercise description.
-        :param exapand_details: Tell if the 'Details' disclosure tree is
+        :param expand_details: Tell if the 'Details' disclosure tree is
             expanded at __init__ (True) or not (False).
         """
 
@@ -196,19 +200,20 @@ class AbstractCoExChooser(QWidget):
                                        'color:      gray;')
             subtitle_lyt.addWidget(subtitle_wgt)
             layout.addLayout(subtitle_lyt)
-        if details:
-            details_wgt = DisclosureTriangle('Details', details)
-            details_wgt.expand(expand_details)
-
-            layout.addWidget(details_wgt)
         if description:
             description_wgt = QLabel(description)
             description_wgt.setWordWrap(True)
             layout.addWidget(description_wgt)
+        if details:
+            details_wgt = DisclosureTriangle(_('Details:'), details)
+            details_wgt.expand(expand_details)
+
+            layout.addWidget(details_wgt)
+
+        layout.addStretch()  # Fixme: useless??
+
         if main_widget:
             layout.addWidget(main_widget)
-
-        layout.addStretch()
 
         widget.setLayout(layout)
         replace_widget_layout(self.__main_layout, self.__preview_wgt, widget)
@@ -226,15 +231,19 @@ class CourseChooser(AbstractCoExChooser):
     course_chosen = Signal(Course)
     goto_exercise = Signal()
 
-    def __init__(self):
+    def __init__(self, servint):
         """
         See AbstractCoExChooser.__init__ docstring. Here, the browser
         layout is made of a browse-button to browse courses files
         and a QListWidget displayling recent courses.
         """
 
+        self.current_course = None  # Useful to save initial proof states
+
+        self.servint: ServerInterface = servint
+
         # Browse button
-        self.__browse_btn = QPushButton(_('Browse files for course'))
+        self.__browse_btn = QPushButton(_('Browse files...'))
         self.__browse_btn.setAutoDefault(False)
         self.__browse_btn.clicked.connect(self.__browse_courses)
 
@@ -242,19 +251,24 @@ class CourseChooser(AbstractCoExChooser):
         self.__recent_courses_wgt = RecentCoursesLW()
         browser_layout = QVBoxLayout()
         browser_layout.addWidget(self.__browse_btn)
+        label_title = QLabel(_("Recent files") + _(":"))
+        browser_layout.addWidget(label_title)
         browser_layout.addWidget(self.__recent_courses_wgt)
 
-        self.__recent_courses_wgt.itemClicked.connect(
-                self.__recent_course_clicked)
-        self.__recent_courses_wgt.itemDoubleClicked.connect(
-                self.__recent_course_clicked)
-        # Cannot connect signal directly to signal because
-        # itemDoubleClicked sends an argument but goto_exercise
-        # does not receive one. See snippets/connect_signal_to_signal.
+        # Signals
+        self.__recent_courses_wgt.currentItemChanged.connect(
+            self.current_item_changed)
         self.__recent_courses_wgt.itemDoubleClicked.connect(
                 lambda x: self.goto_exercise.emit())
 
         super().__init__(browser_layout)
+
+    def current_item_changed(self):
+        course_item = self.__recent_courses_wgt.currentItem()
+        course_path = course_item.course_path
+        course = Course.from_file(course_path)
+        self.__set_initial_proof_states(course)
+        self.set_preview(course)
 
     def add_browsed_course(self, course: Course):
         """
@@ -284,13 +298,21 @@ class CourseChooser(AbstractCoExChooser):
         the exercise chooser.
         """
 
+        if self.current_course:
+            # Save ips of the previous course if any,
+            # and reload ips_dict to benefit from
+            # potential new ips for the new chosen course
+            self.current_course.save_initial_proof_states()
+
+        self.current_course = course
+
         # Title, subtitle, etc
         title       = course.title
         subtitle    = course.subtitle
         description = course.description
 
         # Details
-        details = course.metadata
+        details = course.nice_metadata
         # Remove title, subtitle and description from details
         # TODO: Prevent user for using a 'Path' attribute (in the course
         # file) when writing a course.
@@ -304,26 +326,59 @@ class CourseChooser(AbstractCoExChooser):
 
         super().set_preview(main_widget=None, title=title, subtitle=subtitle,
                             details=details, description=description,
-                            expand_details=True)
+                            expand_details=False)
 
         self.course_chosen.emit(course)
+
+    def __set_initial_proof_states(self, course):
+        """
+        Ask Lean for initial proof states of all exercises.
+        Each time some initial proof state is set,
+        ServerInterface emit the signal initial_proof_state_set
+        which is connected to ExerciseChooser.__check_proof_state_for_preview
+        which update exercise preview if initial_proof_state for exercise
+        has just been set.
+        """
+        # Load stored initial proof states
+        # log.debug("Setting initial proof states")
+        course.load_initial_proof_states()
+
+        # Get missing ips
+        remaining_statements = [st for st in course.statements if not
+                                st.initial_proof_state]
+        exercises = [st for st in remaining_statements
+                     if isinstance(st, Exercise)]
+        non_exercises = [st for st in remaining_statements
+                         if not isinstance(st, Exercise)]
+        if exercises or non_exercises:
+            log.debug("Asking Lean for initial proof states...")
+            # Ask Lean for missing ips
+            self.servint.set_statements(course, exercises)
+            self.servint.set_statements(course, non_exercises)
+
+        elif self.servint.request_seq_num == -1:
+            # Ask a first request to the Lean server
+            # (that speeds up a lot when exercise starts)
+            log.debug(f"Launching Lean with {course.statements[0].pretty_name}")
+            self.servint.set_statements(course, [course.statements[0]])
 
     #########
     # Slots #
     #########
-
     @Slot()
     def __browse_courses(self):
         """
         This method is called when the 'Browse courses' button is
         clicked on. It opens a file dialog, the user chooses a
-        course-file, a Course object is instanciated and the method
+        course-file, a Course object is instantiated and the method
         set_preview is called.
         """
-
-        dialog = QFileDialog(directory=str(cdirs.courses))
+        directory = cvars.get('others.course_directory',
+                              str(cdirs.usr_lean_exercises_dir))
+        dialog = QFileDialog(directory=directory)
         dialog.setFileMode(QFileDialog.ExistingFile)
-        dialog.setNameFilter('*.lean *.pkl')
+        dialog.setNameFilter('*.lean')
+        # dialog.setNameFilter('*.lean *.pkl')
 
         # TODO: Stop using exec_, not recommended by documentation
         if dialog.exec_():
@@ -332,22 +387,8 @@ class CourseChooser(AbstractCoExChooser):
 
             title = course.title
             self.__recent_courses_wgt.add_browsed_course(course_path, title)
+            self.__set_initial_proof_states(course)
             self.set_preview(course)
-
-    @Slot(RecentCoursesLWI, bool)
-    def __recent_course_clicked(self, course_item: RecentCoursesLWI):
-        """
-        This method is called when the user clicks on an item in
-        self.__recent_courses_wgt. It sends the corresponding
-        RecentCoursesLWI and this method instanciates a Course object
-        from it and passes it to set_preview.
-
-        :course_item: The RecentCoursesLWI the user clicked on.
-        """
-
-        course_path = course_item.course_path
-        course = Course.from_file(course_path)
-        self.set_preview(course)
 
 
 class ExerciseChooser(AbstractCoExChooser):
@@ -356,23 +397,20 @@ class ExerciseChooser(AbstractCoExChooser):
     been chosen by usr (signal
     StartExerciseDialog.__course_chooser.course_chosen).
     - The browser area is made of the course's StatementsTreeWidget
-      displaying only the exercises (e.g. no theorems).
-    - The preview area is more complex and depends on the course's
-      filetype.
-      - If the course was loaded from a .lean file, the preview is only
+      displaying only the exercises (e.g. no theorems/def).
+    - The preview area is more complex and depends on the availability of the
+    exercise's initial proof state.
+      - If initial proof state is not available, the preview is only
         made of the exercise's title, subtitle and description.
-      - If the course was loaded from a .pkl file, exercise's title,
-        subtitle and description are available, as well as its goal
-        (target, math. objects and math. properties). This cannot be
-        done (yet) if the file course is .lean because for displaying
-        the goal, we would need to launch the lean server interface and
-        we obviously do not want to do that for each exercise. Pickle
-        files (see puthon modyle pickle) allow to store class instances
-        and thus we can store the course if it has been pre-processed.
-        Finally, this goal preview is either displayed as:
+        Note the initial proof states of all the exercises should have been
+        asked to the Lean server by the course chooser when the course has
+        been selected, and when the initial proof state will be received,
+        the corresponding signal will trigger the display.
+      - If the initial proof state is available, then this goal preview is
+      either displayed as:
         - two lists for the math objects and properties and a line edit
-          for the target;
-        - or a single list with all these informations (this is called
+          for the target (imitating the appearance of the prover dui) ;
+        - or a text with all these pieces of information (this is called
           the text mode and it is toggle with a checkbox).
     """
 
@@ -381,27 +419,49 @@ class ExerciseChooser(AbstractCoExChooser):
     # exercise button is enabled and set to default.
     exercise_previewed = Signal()
 
-    def __init__(self, course: Course):
+    def __init__(self, course: Course, servint: ServerInterface):
         """
         See AbstractCoExChooser.__init__ docstring. Here, the browser layout is
         only made of the course's StatementsTreeWidget displaying only the
-        exercises (e.g. no theorems). The course file type is used by
-        set_preview to determine if an exercise is to be previewed with its
-        goal or not (see self docstring).
+        exercises (e.g. no theorems).
 
         :param course: The course in which usr chooses an exercise.
         """
+        self.course = course
+        self.servint = servint
 
+        self.__exercise = None
         browser_layout = QVBoxLayout()
         exercises_tree = StatementsTreeWidget(course.exercises,
-                                              course.outline)
+                                              course.outline,
+                                              is_exercise_list=True)
         exercises_tree.resizeColumnToContents(0)
         browser_layout.addWidget(exercises_tree)
-        self.__exercises_tree = exercises_tree
 
-        exercises_tree.itemClicked.connect(self.__set_preview_from_click)
+        exercises_tree.currentItemChanged.connect(self.current_item_changed)
+
+        self.__exercises_tree = exercises_tree
+        self.__text_mode_checkbox = None
+        self.__main_widget_lyt    = None
+        self.__goal_widget        = None
+        self.__text_wgt           = None
+        self.__ui_wgt             = None
+
+        self.__scrollbar_current_item_pos = 0
+
+        # Load fonts for math widgets
+        self.deaduction_fonts = DeaductionFonts(self)
+        font_size = self.deaduction_fonts.chooser_math_font_size
+        self.math_font = self.deaduction_fonts.math_font()
+        self.math_font.setPointSize(font_size)
 
         super().__init__(browser_layout)
+
+    def current_item_changed(self):
+        item = self.__exercises_tree.currentItem()
+        if isinstance(item, StatementsTreeWidgetItem):
+            exercise = item.statement
+            self.set_preview(exercise)
 
     def exercises_tree_double_clicked_connect(self, slot):
         self.__exercises_tree.itemDoubleClicked.connect(slot)
@@ -410,10 +470,10 @@ class ExerciseChooser(AbstractCoExChooser):
         """
         Set exercise preview. See AbstractCoExChooser.set_preview
         docstring. The exercise's title, subtitle and description are
-        displayed; if a preview is available (i.e. when course's file
-        file-type is '.pkl', see self doctring), it is displayed. This
-        method manages these two possibilities with a big if / else
-        condition.
+        displayed; if a preview is available (i.e. exercise.initial_proof_state
+        is not None), it is displayed ; if not, Lean server is asked for the
+        missing information. This method manages these two possibilities
+        with a big if / else condition.
 
         :param exercise: The exercise to be previewed.
         """
@@ -423,73 +483,13 @@ class ExerciseChooser(AbstractCoExChooser):
         main_widget_lyt = QVBoxLayout()
         main_widget_lyt.setContentsMargins(0, 0, 0, 0)
 
-        with_preview = exercise.course.filetype == '.pkl'
-        if with_preview:
+        # with_preview = exercise.course.filetype == '.pkl'
+        # TODO: in case no initial ps, do the same thing except the text,
+        #  so that the window does not resize.
+        #  When Lean's answer comes, just call a fonction that changes the
+        #  text.
 
-            proofstate = exercise.initial_proof_state
-            goal       = proofstate.goals[0]  # Only one goal (?)
-            target     = goal.target
-            context    = goal.tag_and_split_propositions_objects()
-            objects    = context[0]
-            properties = context[1]
-
-            ###################
-            # Friendly widget #
-            ###################
-            # The widget with lists for math. objects and properties
-            # and a line edit for the target.
-
-            # ───────────── Objects and properties ───────────── #
-
-            propobj_lyt    = QHBoxLayout()
-            objects_wgt    = MathObjectWidget(objects)
-            properties_wgt = MathObjectWidget(properties)
-            objects_lyt    = QVBoxLayout()
-            properties_lyt = QVBoxLayout()
-
-            objects_wgt.adjustSize()
-            objects_wgt.setFont(QFont('Menlo'))
-            properties_wgt.adjustSize()
-            properties_wgt.setFont(QFont('Menlo'))
-
-            objects_lyt.addWidget(QLabel(_('Objects:')))
-            properties_lyt.addWidget(QLabel(_('Properties:')))
-            objects_lyt.addWidget(objects_wgt)
-            properties_lyt.addWidget(properties_wgt)
-            propobj_lyt.addLayout(objects_lyt)
-            propobj_lyt.addLayout(properties_lyt)
-
-            # ───────────────────── Target ───────────────────── #
-
-            target_wgt = QLineEdit()
-            target_wgt.setText(target.math_type.to_display(format_="utf8",
-                                                           is_math_type=True))
-            target_wgt.setFont(QFont('Menlo'))
-
-            # ────────────────────── Rest ────────────────────── #
-
-            self.__friendly_wgt = QWidget()
-            friendly_wgt_lyt    = QVBoxLayout()
-            friendly_wgt_lyt.addLayout(propobj_lyt)
-            friendly_wgt_lyt.addWidget(QLabel(_('Target:')))
-            friendly_wgt_lyt.addWidget(target_wgt)
-            self.__friendly_wgt.setLayout(friendly_wgt_lyt)
-
-            ###############
-            # Code widget #
-            ###############
-            # The goal is presented in a single list widget.
-
-            self.__code_wgt = QTextEdit()
-            self.__code_wgt.setReadOnly(True)
-            self.__code_wgt.setFont(QFont('Menlo'))
-            if exercise.initial_proof_state:
-                text = goal.goal_to_text()
-                self.__code_wgt.setText(text)
-
-            ########
-            # Rest #
-            ########
+        if exercise.initial_proof_state:
 
             # Checkbox
             self.__text_mode_checkbox = QCheckBox(_('Text mode'))
@@ -498,24 +498,27 @@ class ExerciseChooser(AbstractCoExChooser):
             cb_lyt.addStretch()
             cb_lyt.addWidget(self.__text_mode_checkbox)
 
-            # Ugly margins
-            for lyt in [main_widget_lyt, friendly_wgt_lyt]:
-                # Somehow this works…
-                lyt.setContentsMargins(0, 0, 0, 0)
+            main_widget_lyt.setContentsMargins(0, 0, 0, 0)
 
             # Toggle text mode if needed
-            text_mode  = cvars.get('display.text_mode_in_chooser_window',
-                                   False)
+            text_mode = cvars.get('display.text_mode_in_chooser_window', False)
             self.__text_mode_checkbox.setChecked(text_mode)
-            self.toggle_text_mode()
 
-            main_widget_lyt.addWidget(self.__friendly_wgt)
-            main_widget_lyt.addWidget(self.__code_wgt)
+            # Create goal widget, either in text mode or in deaduction mode,
+            # according to self.__text_mode_checkbox.
+            self.__goal_widget = self.create_widget()
+            main_widget_lyt.addWidget(self.__goal_widget)
+            main_widget_lyt.addStretch()  # -> check box at bottom
             main_widget_lyt.addLayout(cb_lyt)
+            self.__main_widget_lyt = main_widget_lyt
         else:
-
-            widget_lbl = QLabel(_('Goal preview only available when course '
-                                  'file extension is .pkl.'))
+            self.servint.initial_proof_state_set.connect(
+                                        self.__check_proof_state_for_preview)
+            # Try to get preview with high priority:
+            self.servint.set_statements(exercise.course,
+                                        [exercise],
+                                        on_top=True)
+            widget_lbl = QTextEdit(_('Preview not available (be patient...)'))
             widget_lbl.setStyleSheet('color: gray;')
 
             main_widget_lyt.addWidget(widget_lbl)
@@ -535,11 +538,104 @@ class ExerciseChooser(AbstractCoExChooser):
                             description=description, expand_details=False)
 
         self.exercise_previewed.emit()
+        # item = self.__exercises_tree.currentItem()
+        # self.__exercises_tree.scrollToItem(item)
+                               # hint=self.__exercises_tree.PositionAtCenter)
+
+    def create_widget(self):
+        """
+        This method creates the goal widget, which will be either a
+        __text_wgt, with exercise's content displayed as a text, or a __ui_wgt,
+        with content displayed as it will be in the prover UI.
+        The widget is actually created only at first call.
+        """
+        # Logical data
+        exercise = self.__exercise
+        proofstate = exercise.initial_proof_state
+        goal = proofstate.goals[0]  # Only one goal
+        goal.name_bound_vars(to_prove=False)
+
+        # BOF: keep standard size here.
+        # main_font_size = cvars.get('display.main_font_size')
+        # tooltips_font_size = cvars.get('display.tooltips_font_size',
+        #                                "14pt")
+        # style = f'QTextEdit {{font-size: {main_font_size};}}' \
+        #         f'QListView {{font-size: {main_font_size};}}' \
+        #         f'QToolTip {{font-size: {tooltips_font_size};}}'
+        # self.setStyleSheet(style)
+
+        # ────────────────────── Rest ────────────────────── #
+        if self.__text_mode_checkbox.isChecked():
+            ###############
+            # Text widget #
+            ###############
+            # The goal is presented in a single widget.
+            self.__text_wgt = QTextEdit()
+            # height = self.__text_wgt.sizeHint().height()
+            # print(f"Height: {height}")
+            # self.__text_wgt.setMaximumHeight(height)
+
+            self.__text_wgt.setReadOnly(True)
+            self.__text_wgt.setFont(self.math_font)
+            text = goal.goal_to_text(format_="html")
+            self.__text_wgt.setHtml(text)
+            widget = self.__text_wgt
+        else:
+            #############
+            # UI widget #
+            #############
+            # The widget with lists for math. objects and properties
+            # and a QLAbel for the target.
+            target = goal.target
+            objects = goal.context_objects
+            properties = goal.context_props
+
+            # ───────────── Objects and properties ───────────── #
+            propobj_lyt = QHBoxLayout()
+            objects_wgt = MathObjectWidget(objects)
+            properties_wgt = MathObjectWidget(properties)
+            objects_lyt = QVBoxLayout()
+            properties_lyt = QVBoxLayout()
+
+            # Math font
+            objects_wgt.adjustSize()
+            objects_wgt.setFont(self.math_font)
+            properties_wgt.adjustSize()
+            properties_wgt.setFont(self.math_font)
+
+            objects_lyt.addWidget(QLabel(_('Objects:')))
+            properties_lyt.addWidget(QLabel(_('Properties:')))
+            objects_lyt.addWidget(objects_wgt)
+            properties_lyt.addWidget(properties_wgt)
+            propobj_lyt.addLayout(objects_lyt)
+            propobj_lyt.addLayout(properties_lyt)
+
+            # ───────────────────── Target ───────────────────── #
+            # target_wgt = MathObjectWidget(target=target)
+            target_wgt = TargetLabel(target)
+            target_wgt.setFont(self.math_font)
+            # Set target_wgt height to 1 line: USELESS with QLabel
+            # font_metrics = QFontMetrics(math_font)
+            # text_size = font_metrics.size(0, target.math_type_to_display())
+            # text_height = text_size.height() * 2  # Need to tweak
+            # target_wgt.setMaximumHeight(text_height)
+
+            self.__ui_wgt = QWidget()
+
+            friendly_wgt_lyt = QVBoxLayout()
+            friendly_wgt_lyt.addLayout(propobj_lyt)
+            friendly_wgt_lyt.addWidget(QLabel(_('Target:')))
+            friendly_wgt_lyt.addWidget(target_wgt)
+            self.__ui_wgt.setLayout(friendly_wgt_lyt)
+            friendly_wgt_lyt.setContentsMargins(0, 0, 0, 0)
+
+            widget = self.__ui_wgt
+
+        return widget
 
     ##############
     # Properties #
     ##############
-
     @property
     def exercise(self) -> Optional[Exercise]:
         """
@@ -560,39 +656,22 @@ class ExerciseChooser(AbstractCoExChooser):
     # Slots #
     #########
 
-    @Slot(StatementsTreeWidgetItem)
-    def __set_preview_from_click(self, item: StatementsTreeWidgetItem):
-        """
-        When the user selects an exercise in the course's exercises
-        tree, the signal itemClicked is emitted and this slot is called.
-        One cannot directly call set_preview because at first we must be
-        sure that the clicked item was an exercise item and not a node
-        (e.g. a course section).
-
-        :param item: The clicked item (exercise item or nod item) in the
-            course's exercises tree.
-        """
-
-        if isinstance(item, StatementsTreeWidgetItem):
-            exercise = item.statement
-            self.set_preview(exercise)
-
     @Slot()
     def toggle_text_mode(self):
         """
         Toggle the text mode for the previewed goal (see self docstring).
         """
-
-        if self.__text_mode_checkbox.isChecked():
-            self.__friendly_wgt.hide()
-            self.__code_wgt.show()
-        else:
-            self.__friendly_wgt.show()
-            self.__code_wgt.hide()
-
         cvars.set('display.text_mode_in_chooser_window',
                   self.__text_mode_checkbox.isChecked())
-        # NB: cvars will ba saved only when (and if) exercise starts
+        self.set_preview(self.__exercise)
+        # NB: cvars will be saved only when (and if) exercise starts
+
+    @Slot()
+    def __check_proof_state_for_preview(self):
+        if self.__exercise and self.__exercise.initial_proof_state:
+            log.debug("Lean initial proof state received, updating preview")
+            self.set_preview(self.__exercise)
+        self.__exercises_tree.update_tooltips()
 
 
 class AbstractStartCoEx(QDialog):
@@ -638,7 +717,8 @@ class AbstractStartCoEx(QDialog):
     quit_deaduction = Signal()
 
     def __init__(self, title: Optional[str], widget: Optional[QWidget],
-                 exercise: Optional[Exercise]):
+                 exercise: Optional[Exercise],
+                 servint: ServerInterface = None):
         """
         Init self by setting up the layouts, the buttons and the tab
         widget (see self docstring). 
@@ -649,21 +729,31 @@ class AbstractStartCoEx(QDialog):
             StartCoExExerciseFinished).
         :param exercise: Optional Exercise to be preset / previewed
             (e.g. finished exercise in StartCoExExerciseFinished).
+        :param servint: ServerInterface to get exercises' initial proof states.
         """
 
         super().__init__()
 
+        settings = QSettings("deaduction")
+        geometry = settings.value("coex_chooser/Geometry")
+        # maximised = settings.value("coex_chooser/isMaximised")
+        if geometry:
+            self.restoreGeometry(geometry)
+            # if maximised:
+            #     self.showMaximized()
+
+        self.servint = servint
         if title:
             self.setWindowTitle(title)
         self.setMinimumWidth(450)
         self.setMinimumHeight(550)
 
-        self.__course_chooser   = CourseChooser()
+        self.course_chooser   = CourseChooser(servint)
         self.__exercise_chooser = QWidget()
 
         # Somehow the order of connections changes performances
-        self.__course_chooser.goto_exercise.connect(self.__goto_exercise)
-        self.__course_chooser.course_chosen.connect(self.__preview_exercises)
+        self.course_chooser.goto_exercise.connect(self.__goto_exercise)
+        self.course_chooser.course_chosen.connect(self.__preview_exercises)
 
         # ───────────────────── Buttons ──────────────────── #
 
@@ -681,8 +771,8 @@ class AbstractStartCoEx(QDialog):
         # ───────────────────── Layouts ──────────────────── #
 
         self.__tabwidget = QTabWidget()
-        self.__tabwidget.addTab(self.__course_chooser, _('Course'))
-        self.__tabwidget.addTab(self.__exercise_chooser, _('Exercise'))
+        self.__tabwidget.addTab(self.course_chooser, _('Files'))
+        self.__tabwidget.addTab(self.__exercise_chooser, _('Exercises'))
 
         buttons_lyt = QHBoxLayout()
         buttons_lyt.addStretch()
@@ -690,6 +780,11 @@ class AbstractStartCoEx(QDialog):
         buttons_lyt.addWidget(self.__start_ex_btn)
 
         main_layout = QVBoxLayout()
+        # # FIXME: put this in the right place
+        # explanation = _("First select a course, then choose "
+        #                                "an exercise.")
+        # explanation_widget= QLabel(explanation)
+        # main_layout.addWidget(explanation_widget)
         if widget:
             main_layout.addWidget(widget)
         main_layout.addWidget(self.__tabwidget)
@@ -703,6 +798,28 @@ class AbstractStartCoEx(QDialog):
         if exercise:
             self.__preset_exercise(exercise)
 
+    def closeEvent(self, event: QEvent):
+        """
+        Overload native Qt closeEvent method — which is called when self
+        is closed — to send the signal self.window_closed.
+
+        :param event: Some Qt mandatory thing.
+        """
+        if self.course_chooser.current_course:
+            # Save ips of the previous course if any
+            self.course_chooser.current_course.save_initial_proof_states()
+
+        # Save window geometry
+        settings = QSettings("deaduction")
+        settings.setValue("coex_chooser/isMaximised", self.isMaximized())
+        self.showNormal()
+        settings.setValue("coex_chooser/Geometry", self.saveGeometry())
+
+        self.window_closed.emit()
+        super().closeEvent(event)
+        # super().closeEvent(event)
+        # self.deleteLater()
+
     def __preset_exercise(self, exercise: Exercise):
         """
         Preset / preview the Exercise exercise as if usr had chose
@@ -712,13 +829,15 @@ class AbstractStartCoEx(QDialog):
         exercise and its course, usr's clicks are emulated by adding the
         Course as a browsed course in
         self.__course_chooser.__recent_courses_wgt and selecting the
-        exercise in self.__exercise_chooser.exercises_tree. The code
+        exercise in self.__exercise_chooser.__exercises_tree. The code
         for this is not very smart so if you want to enhance it, do it
         (see CONTRIBUTING.md file).
         """
+        # TODO: adapt goto_exercise to unfold tree so that the exercise is
+        #  visible.
 
-        self.__course_chooser.set_preview(exercise.course)
-        self.__course_chooser.add_browsed_course(exercise.course)
+        self.course_chooser.set_preview(exercise.course)
+        self.course_chooser.add_browsed_course(exercise.course)
         self.__exercise_chooser.set_preview(exercise)
         self.__goto_exercise()
 
@@ -774,13 +893,12 @@ class AbstractStartCoEx(QDialog):
         # Tab 0 is course, 1 is exercise
         self.__tabwidget.removeTab(1)
         self.__tabwidget.setTabEnabled(1, True)
-        self.__exercise_chooser = ExerciseChooser(course)
-        self.__tabwidget.addTab(self.__exercise_chooser, _('Exercise'))
+        self.__exercise_chooser = ExerciseChooser(course, self.servint)
+        self.__tabwidget.addTab(self.__exercise_chooser, _('Exercises'))
 
         self.__exercise_chooser.exercise_previewed.connect(
                 self.__enable_start_ex_btn)
         self.__exercise_chooser.exercises_tree_double_clicked_connect(
-            # self.__start_exercise)
             self.__process_double_click)
 
     @Slot()
@@ -799,7 +917,8 @@ class AbstractStartCoEx(QDialog):
 
         exercise = self.__exercise_chooser.exercise
 
-        # check if exercise must be negated (e.g. in an open question)
+        # check if exercise must be negated (e.g. is an open question)
+        # TODO: this should be moved elsewhere, e.g. in __main__
         if not check_negate_statement(exercise):
             return
 
@@ -820,7 +939,7 @@ class AbstractStartCoEx(QDialog):
         # Send exercise_chosen signal and close dialog
         self.exercise_chosen.emit(exercise)
         # log.debug("Exercise chosen, closing window")
-        self.accept()  # Fuck you and I'll see you tomorrow!
+        self.close()  # Fuck you and I'll see you tomorrow!
 
 
 class StartCoExStartup(AbstractStartCoEx):
@@ -831,7 +950,7 @@ class StartCoExStartup(AbstractStartCoEx):
     allows the user to:
     1. choose a course (from a file or from recent courses' list);
     2. browse / preview the exercises for the chosen course;
-    3. start the chosen exercise (launchs the ExerciseMainWindow).
+    3. start the chosen exercise (launch the ExerciseMainWindow).
 
     This class is to be instanciated in deaduction.dui.__main__.py. The
     dialog is opened with QDialog.open and qtrio waits for the signal
@@ -840,32 +959,25 @@ class StartCoExStartup(AbstractStartCoEx):
     window.
     """
 
-    def __init__(self, exercise: Exercise = None):
+    def __init__(self, exercise: Exercise = None, servint=None):
         """
         Init self.
         """
-
-        title = _('Choose course and exercise — d∃∀duction')
-        super().__init__(title=title, widget=None, exercise=exercise)
-
-    def closeEvent(self, event: QEvent):
-        """
-        Overload native Qt closeEvent method — which is called when self
-        is closed — to send the signal self.window_closed.
-
-        :param event: Some Qt mandatory thing.
-        """
-
-        super().closeEvent(event)
-        self.window_closed.emit()
+        log.debug("Starting chooser window")
+        title = _('Choose file and exercise — d∃∀duction')
+        super().__init__(title=title,
+                         widget=None,
+                         exercise=exercise,
+                         servint=servint)
 
 
 class StartCoExExerciseFinished(AbstractStartCoEx):
     """
-    The CoEx chooser after usr just finished an exercise. It displays a
-    congratulation message and a CoEx chooser with the finished exercise
+    The CoEx chooser after usr just finished an exercise. It displays
+    a CoEx chooser with the finished exercise
     being preset / previewed. See AbstractStartCoEx docstring.
     """
+    # FIXME: not used
 
     def __init__(self, finished_exercise: Exercise):
         """
@@ -910,6 +1022,7 @@ def check_negate_statement(exercise) -> bool:
     :param exercise: Exercise.
     :return: True if choice has been made, else False.
     """
+    # TODO: this should be moved elsewhere, e.g. in a separate module.
 
     ok = True  # default value
     open_question = exercise.info.setdefault('open_question', False)
@@ -936,7 +1049,7 @@ def check_negate_statement(exercise) -> bool:
                                              output)
         if ok2:
             exercise.negate_statement = (choice == 1)
-        else:  # cancel exercise if no choice
+        else:  # Cancel exercise if no choice
             ok = False
     return ok
 

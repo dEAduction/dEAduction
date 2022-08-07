@@ -35,18 +35,29 @@ from collections import                     OrderedDict
 from dataclasses import                     dataclass
 from pathlib import                         Path
 from typing import                          List, Dict
-import pickle5 as pickle
 import os
 import logging
+from sys import version_info
+# if version_info[1] < 8:
+#     import pickle5 as pickle
+# else:
+#     import pickle
 
+import deaduction.pylib.config.dirs as      cdirs
 import deaduction.pylib.logger as           logger
+from deaduction.pylib.utils import (        load_object, save_object)
+
+from deaduction.pylib.mathobj import MathObject
 from deaduction.pylib.coursedata import (   Exercise,
                                             Definition,
                                             Theorem,
                                             Statement)
+
 import deaduction.pylib.coursedata.parser_course as parser_course
+from .course_metadata_translations import metadata_nice_text
 
 log = logging.getLogger(__name__)
+global _
 
 
 @dataclass
@@ -61,7 +72,7 @@ class Course:
     - the course metadata (e.g. authors, institution, etc.)
     - the "outline" of the course, an ordered dict describing namespaces
     - a list of all statements, Python object containing all information
-    related to a Lean statement.
+    related to a Lean statement. This includes the exercises.
     """
     file_content:           str
     metadata:               Dict[str, str]
@@ -75,7 +86,6 @@ class Course:
     #   values = corresponding plain language namespace
     #   e. g. section_dict["set_theory.unions_and_intersections"] =
     #   "Unions and intersections"
-    # Statements is a list of all Statements, including exercises
 
     @property
     def title(self) -> str:
@@ -98,8 +108,8 @@ class Course:
         """
         if 'subtitle' in self.metadata:
             return self.metadata['subtitle']
-        else:
-            return "no subtitle"
+        # else:
+            # return _("no subtitle")
 
     @property
     def description(self) -> str:
@@ -110,7 +120,7 @@ class Course:
         if 'description' in self.metadata:
             return self.metadata['description']
         else:
-            return "no description"
+            return _("no description")
 
     def print_metadata(self):
         for field_name, field_content in self.metadata.items():
@@ -126,6 +136,42 @@ class Course:
                      if isinstance(item, Exercise)]
         return exercises
 
+    @property
+    def initial_proofs_complete(self):
+        return None not in [st.initial_proof_state for st in self.statements]
+
+    @property
+    def nice_metadata(self) -> dict:
+        """
+        Produce a "nice" metadata dict by replacing
+        - keys by their translation if they appear in metadata_nice_text,
+        - values by replacing '_' by space and words by their translations.
+        """
+        nice_dict = {}
+        for key in self.metadata:
+            alt_key = metadata_nice_text[key] if key in metadata_nice_text \
+                                              else key
+            value = self.metadata[key]
+            if value in metadata_nice_text:
+                alt_value = metadata_nice_text[value]
+            else:
+                words = value.strip().split(' ')
+                alt_words = []
+                except_ = False
+                for word in words:
+                    if word.startswith("-"):
+                        word = word[1:]
+                        except_ = True
+                    word = metadata_nice_text[word] if word in metadata_nice_text \
+                        else word
+                    alt_words.append(word)
+                if except_:
+                    alt_words.insert(1, _('except'))
+                alt_value = ' '.join(alt_words)
+            nice_dict[alt_key] = alt_value
+
+        return nice_dict
+
     @classmethod
     def from_file(cls, course_path: Path):
         """
@@ -139,11 +185,11 @@ class Course:
 
         if course_filetype == '.lean':
             log.info(f"Parsing file {str(course_path.resolve())}")
-            file_content = course_path.read_text()
+            file_content = course_path.read_text(encoding='utf-8')
             course = Course.from_file_content(file_content)
         elif course_filetype == '.pkl':
-            with course_path.open(mode='rb') as input:
-                course = pickle.load(input)
+            with course_path.open(mode='rb') as input_:
+                course = load_object(input_)
 
         course.filetype = course_filetype
         course_path = course_path.resolve()
@@ -253,8 +299,9 @@ class Course:
                 if event_name == "exercise":
                     # Add values from course_metadata only if NOT already in
                     # exercise metadata,
-                    # so that global option like OpenQuestion may be modified
-                    # locally in the exercise's metadata
+                    # so that global option like OpenQuestion or
+                    # AvailableDefinitions
+                    # may be modified locally in the exercise's metadata
                     for field_name in course_metadata:
                         metadata.setdefault(field_name,
                                             course_metadata[field_name])
@@ -322,6 +369,73 @@ class Course:
         statements = [st for st in self.statements if st.has_pretty_name(name)]
         if statements:
             return statements[0]
+
+    @property
+    def ips_path(self):
+        return  cdirs.all_courses_ipf_dir / \
+                self.relative_course_path.with_suffix('.pkl').name
+
+    @property
+    def course_hash(self):
+        # Fixme: hash does not work here?!
+        #  so we use the whole  file_content
+        return self.file_content
+
+    def load_initial_proof_states(self):
+        """
+        Search ips from a .pkl file in the self.ips_path directory,
+        and assign them as attributes of the corresponding statements.
+
+        To achieve this we Load a dictionary with
+            keys    = course_hash
+            values  = list of initial proof states of all course's
+            statements
+        This allows to check that the ips correspond to the actual Lean file
+        content, and in particular to distinguish between several Lean files
+        sharing the same name but distinct file content.
+        """
+        courses_ips_dic: dict = load_object(self.ips_path)
+        if courses_ips_dic:
+            ips_list = courses_ips_dic.get(self.course_hash)
+        else:
+            ips_list = None
+
+        # ips_list = self.load_initial_proof_states()
+        if ips_list:
+            log.debug(f"Set initial proof states for "
+                      f"{self.relative_course_path}")
+            # NB: self.statements and ips_list
+            #  should have same length
+            for st, ips in zip(self.statements, ips_list):
+                st.initial_proof_state = ips
+
+    def save_initial_proof_states(self):
+        """
+        Save course's statements' initial proof states to a .pkl file in
+        cdirs.all_courses_ipf_dir/<course_name>
+        """
+
+        courses_ips_dic: dict = load_object(self.ips_path)
+        if not courses_ips_dic:
+            # Create a new dict
+            courses_ips_dic = dict()
+        course_hash = self.course_hash
+        initial_proof_states = [st.initial_proof_state
+                                for st in self.statements]
+        to_be_saved = False  # Save only if there is something new
+        if course_hash not in courses_ips_dic:
+            to_be_saved = True
+        else:
+            old_ips_list = courses_ips_dic[course_hash]
+            for ips_old, ips_new in zip(old_ips_list, initial_proof_states):
+                if ips_new and not ips_old:
+                    to_be_saved = True
+                    break
+
+        if to_be_saved:
+            log.debug(f"Saving initial proof states in {self.ips_path}")
+            courses_ips_dic[course_hash] = initial_proof_states
+            save_object(courses_ips_dic, self.ips_path)
 
 
 def whole(namespace_list: List[str]):

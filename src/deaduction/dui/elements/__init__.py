@@ -30,16 +30,31 @@ from .actions_widgets_classes import (
     ActionButtonsWidget,
     StatementsTreeWidgetNode,
     StatementsTreeWidgetItem,
-    StatementsTreeWidget )
+    StatementsTreeWidget)
 
 from .context_widgets_classes import (
+    TargetLabel,
     MathObjectWidget,
     MathObjectWidgetItem,
-    TargetWidget )
+    TargetWidget)
+
+from .html_list_view import HTMLDelegate
 
 from .lean_editor import (
-    LeanEditor )
+    LeanEditor)
+
+from .menubar import (
+    MenuBar,
+    MenuBarAction,
+    MenuBarMenu)
 
 from .recent_courses_widgets import (
     RecentCoursesLW,
-    RecentCoursesLWI )
+    RecentCoursesLWI)
+
+from .config_window import ConfigMainWindow
+
+from .proof_outline_widget import ProofOutlineWindow
+
+from .proof_tree import ProofTreeController
+

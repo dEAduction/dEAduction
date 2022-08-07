@@ -223,7 +223,7 @@ class Lean_Server:
     async def send(self, req, timeout=10000):
         self._check_process()
         seq_num,ev  = await self.pending_reqs.store()
-        req.seq_num  = seq_num
+        req.request_seq_num  = seq_num
 
         jss         = req.to_json()
         self.log.debug(f"Tx : {jss}")

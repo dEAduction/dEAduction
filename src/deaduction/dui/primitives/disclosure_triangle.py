@@ -33,10 +33,11 @@ from PySide2.QtWidgets import ( QTreeWidget,
 
 from deaduction.dui.utils import set_selectable
 
+global _
 
 class DisclosureTriangle(QTreeWidget):
     """
-    An (very basic) implementation of a DisclosureTriangle, i.e. a
+    A (very basic) implementation of a DisclosureTriangle, i.e. a
     widget that looks like this:
 
     ____________________
@@ -47,8 +48,8 @@ class DisclosureTriangle(QTreeWidget):
     |      …           |
     --------------------
 
-    This triangle can be expanded or collapsed and is instanciated with
-    a title and a dictionnary of keys and values. Made with the help of
+    This triangle can be expanded or collapsed and is instantiated with
+    a title and a dictionary of keys and values. Made with the help of
     musicamente on Stackoverflow:  https://stackoverflow.com/questions/
     63862724/
     qtreeview-dynamic-height-according-to-content-disclosure-triangle.
@@ -70,17 +71,20 @@ class DisclosureTriangle(QTreeWidget):
         # ─────────────────── Add content ────────────────── #
 
         self.setColumnCount(2)
-        self.__parent_item = QTreeWidgetItem(self, [f'{title} : '])
-        self.__parent_item.set_selectable(False)
+        self.setColumnWidth(0, 250)
+        self.__parent_item = QTreeWidgetItem(self, [f'{title}'])
+        # self.__parent_item.set_selectable(False)
+        self.__parent_item.setFlags(Qt.ItemIsEnabled)
         self.addTopLevelItem(self.__parent_item)
 
         for key, val in data.items():
-            item = QTreeWidgetItem(self.__parent_item, [f'{key} : ', val])
+            item = QTreeWidgetItem(self.__parent_item, [_(key) + _(':') + " ",
+                                                        _(val)])
             self.__parent_item.addChild(item)
 
             # Cosmetics
-            item.set_selectable(False)
-            item.setTextAlignment(0, Qt.AlignRight)
+            # item.set_selectable(False)
+            # item.setTextAlignment(0, Qt.AlignRight)
 
         # ──────────────────── Cosmetics ─────────────────── #
 

@@ -34,7 +34,7 @@ from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 import logging
 
-from deaduction.pylib.mathobj import MathObject
+from deaduction.pylib.mathobj import MathObject, ContextMathObject
 
 log = logging.getLogger(__name__)
 
@@ -126,7 +126,7 @@ class LeanEntryVisitor(NodeVisitor):
         T[1] a dictionary containing pertinent information
     """
 
-    def visit_ENTRY(self, node, visited_children):
+    def visit_ENTRY(self, node, visited_children) -> ContextMathObject:
         """
         Create a global_var corresponding to the entry
         According to the rules, Entry has three children
@@ -137,8 +137,8 @@ class LeanEntryVisitor(NodeVisitor):
         (_, head), _, ([tail], _) = visited_children
         info = head
         info['math_type'] = tail
-        math_object = MathObject.from_info_and_children(info=info,
-                                                        children=[])
+        math_object = ContextMathObject.from_info_and_children(info=info,
+                                                               children=[])
         # log.debug(f"Creating global var MathObject {math_object}")
         return math_object
 

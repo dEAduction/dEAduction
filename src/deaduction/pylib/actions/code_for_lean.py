@@ -17,7 +17,8 @@ replace the original code by the effective simplified version via the
 
 
 Author(s)     : - Marguerite Bin <bin.marguerite@gmail.com>
-Maintainer(s) : - Marguerite Bin <bin.marguerite@gmail.com>
+                - Frédéric Le ROux <frederic.le-roux@imj-prg.fr>
+Maintainer(s) : - Frédéric Le ROux <frederic.le-roux@imj-prg.fr>
 Created       : July 2020 (creation)
 Repo          : https://github.com/dEAduction/dEAduction
 
@@ -41,13 +42,16 @@ This file is part of dEAduction.
 
 from dataclasses import dataclass
 from typing import Any, Union, List, Optional
+from logging import getLogger
+
+log = getLogger(__name__)
 
 
 class LeanCombinator(str):
     """
-    Class clarifying combinators for CodeForLean
+    Class clarifying combinators for CodeForLean.
     """
-    single_string =     ""
+    single_code =     ""
     and_then =          "and_then"
     or_else =           "or_else"
     try_ =              "try"
@@ -56,110 +60,298 @@ class LeanCombinator(str):
     iterate =           "iterate"
 
 
-@dataclass()
+class SingleCode:
+    """
+    A class for encapsulating a single Lean instruction, keeping the
+    information of which MathObject are used by the instruction.
+
+    Ex: SingleCode.string = and.intro {} {}
+        SingleCode.used_properties = list of 2 MathObjects representing the
+        properties.
+    The operator, rw_item, outcome_operator attributes are used to build the
+    proof tree widget. They are either MathObject or Statements.
+
+    :param rw_item: the property used for a substitution, e.g. "f(
+    x)=y", or a definition or theorem.
+
+    """
+    def __init__(self, string: str, used_properties=None,
+                 operator=None, rw_item=None, outcome_operator=None):
+        self.string = string
+        self.used_properties = used_properties if used_properties else []
+        self.operator = operator
+        self.rw_item = rw_item
+        self.outcome_operator = outcome_operator
+
+    def __repr__(self):
+        attributes = []
+        for key in self.__dict__:
+            value = str(self.__getattribute__(key))
+            if key == "string":
+                value = '"' + value + '"'
+            attributes.append(key + "=" + value)
+        string = "SingleCode(" + ", ".join(attributes) + ")"
+        return string
+
+    def to_code(self) -> str:
+        """
+        Return the code to be sent to Lean.
+        """
+        if self.string.find("{}") != -1:
+            names = [prop.display_name for prop in self.used_properties]
+            return self.string.format(*names)
+        else:
+            return self.string
+
+
 class CodeForLean:
     """
     A class for encoding a structured set of instructions for Lean,
-    i.e. tactics combined by combinators then or or_else.
+    i.e. tactics combined by combinators and_then / or_else.
     - Basic tactics are defined via the from_string method
     - Combined tactics are defined via the or_else and and_then methods
-    - raw code is retrieved via the to_string method
+    - code is retrieved via the to_code method
     - an error_msg can be added, to be displayed in case of Lean failure
     - a success_msg can be added, to be displayed in case of success
     (depending of the effective code in case of or_else combinator)
+
+        - if combinator = single_code, then instructions contains a unique
+        term, of type SingleCode
+        - else all terms in the instructions list are of type CodeForLean.
     """
-    instructions: [Any]   # [str or CodeForLean]
-    combinator:   str = LeanCombinator.single_string
+    instructions: [Any]   # type: [Union[CodeForLean, SingleCode]]
+    combinator:   str = LeanCombinator.single_code
     error_msg:    str = ""
     success_msg:  str = ""
     conjunction       = None  # type: (Union[MathObject, str])
     disjunction       = None  # type: (Union[MathObject, str])
-    subgoal           = None  # type: (Union[MathObject, str])
+    subgoal           = None  # type: Union[MathObject, str]
     # The following is used to store the number of an or_else instructions
     or_else_node_number:   Optional[int] = None
 
     # The following counts the total number of or_else instructions so far
     or_else_node_counter = 0
 
+    attributes = {"instructions", "combinator", "error_msg", "success_msg",
+                  "conjunction", "disjunction", "subgoal",
+                  "or_else_node_number"}
+
+    def __init__(self, *args, **kwargs):
+        """
+        __init__ may be called with args either
+            - a SingleCode instance,
+            - a single string,
+            - a string and a list of MathObjects
+            These data will be used to make a SingleCode instance.
+
+        kwargs may include any arguments corresponding to a class attribute,
+        as in the cls.attribute set.
+        """
+
+        # Instruction from args
+        if len(args) == 1:
+            instruction = args[0]
+            if not isinstance(instruction, SingleCode):
+                instruction = SingleCode(instruction)
+        if len(args) == 2:
+            instruction = SingleCode()
+        if args:
+            self.instructions = [instruction]
+        else:
+            self.instructions = []  # Empty code
+
+        # Args in kwargs
+        # print("kwargs:")
+        # print(kwargs)
+        for key in kwargs:
+            if key in self.attributes:
+                value = kwargs[key]
+                self.__setattr__(key, value)
+        if len(self.instructions) == 1 and isinstance(self.instructions[0],
+                                                      SingleCode):
+            self.combinator = LeanCombinator.single_code
+        if len(self.instructions) > 1 and self.is_single_code():
+            raise AttributeError("Bad Lean combinator: single string for "
+                                 "several instructions")
+
+    # The following entails crash when self.operator is a Statement:
+    # def __repr__(self):
+    #     attributes = []
+    #     for key in self.__dict__:
+    #         attribute = self.__getattribute__(key)
+    #         attribute = ('"' + attribute + '"' if isinstance(attribute, str)
+    #                      else str(attribute))
+    #         attributes.append(key + "=" + attribute)
+    #     string = "CodeForLean(" + ", ".join(attributes) + ")"
+    #     return string
+
     @classmethod
     def empty_code(cls, error_msg: str = ''):
         """
         Create an empty code, useful to initialize a sequence of codes
         """
-        return CodeForLean(instructions=[],
-                           error_msg=error_msg)
+        return cls(instructions=[],
+                   error_msg=error_msg)
 
     @classmethod
     def from_string(cls,
-                    instruction: str,
-                    error_msg: str = '',
+                    string: str,
+                    used_properties=None,  # type: MathObject
+                    operator=None,
+                    rw_prop_or_statement=None,
+                    error_msg: str = "",
                     success_msg: str = ""):
         """
-        Create a CodeForLean with a single instruction
+        Create a CodeForLean with a single instruction, with no used
+        properties.
         """
-        return CodeForLean(instructions=[instruction],
-                           error_msg=error_msg,
-                           success_msg=success_msg)
+        instruction = SingleCode(string, used_properties, operator=None,
+                                 rw_item=None)
+        return cls(instructions=[instruction],
+                   error_msg=error_msg,
+                   success_msg=success_msg)
+
+    @classmethod
+    def from_list(cls,
+                  instructions: [],
+                  combinator=LeanCombinator.and_then,
+                  error_msg: str = '',
+                  global_success_msg: str = ""):
+        """
+        Create a list of instructions chained by or_else or and_then
+        combinator.
+
+        :param instructions: list of CodeForLean, str, or tuple.
+        """
+        for i in range(len(instructions)):
+            if isinstance(instructions[i], str):
+                instructions[i] = CodeForLean(instructions[i])
+            elif isinstance(instructions[i], tuple):
+                instructions[i] = CodeForLean(*instructions[i])
+
+        # From now on instructions is a list of CodeForLean
+        if len(instructions) == 1:
+            instruction = instructions[0]
+            if isinstance(instruction, CodeForLean):
+                return instruction
+            elif isinstance(instruction, SingleCode):
+                return CodeForLean(instruction)
+        else:
+            return cls(instructions=instructions,
+                       combinator=combinator,
+                       error_msg=error_msg,
+                       success_msg=global_success_msg)
 
     @classmethod
     def or_else_from_list(cls,
-                          instructions: Union[str, List[Any]],
+                          instructions: [],  # type : [ Union[CodeForLean,
+                          #                str, tuple] ]
                           error_msg: str = '',
                           global_success_msg: str = ""):
         """
         Create an or_else CodeForLean from a (list of) strings or CodeForLean
+
+        :param instructions: list of CodeForLean, str, or tuple.
         """
-        if isinstance(instructions, str):
-            instructions = [instructions]
-        elif isinstance(instructions, CodeForLean):
-            instructions = [instructions]
-        for i in range(len(instructions)):
-            if isinstance(instructions[i], str):
-                instructions[i] = CodeForLean.from_string(instructions[i])
-        # From now on instructions is a list of CodeForLean
-        if len(instructions) == 1:
-            return instructions[0]
-        else:
-            return CodeForLean(instructions=instructions,
-                               combinator=LeanCombinator.or_else,
-                               error_msg=error_msg,
-                               success_msg=global_success_msg)
+        return cls.from_list(instructions=instructions,
+                             combinator=LeanCombinator.or_else,
+                             error_msg=error_msg,
+                             global_success_msg=global_success_msg)
 
     @classmethod
     def and_then_from_list(cls,
-                          instructions: Union[str, List[Any]],
-                          error_msg: str = '',
-                          global_success_msg: str = ""):
+                           instructions: [],
+                           error_msg: str = '',
+                           global_success_msg: str = ""):
         """
-        Create an or_else CodeForLean from a (list of) strings or CodeForLean
+        Create an or_else CodeForLean from a (list of) strings or CodeForLean.
+
+        :param instructions: list of CodeForLean, str, or tuple.
         """
-        if isinstance(instructions, str):
-            instructions = [instructions]
-        elif isinstance(instructions, CodeForLean):
-            instructions = [instructions]
-        for i in range(len(instructions)):
-            if isinstance(instructions[i], str):
-                instructions[i] = CodeForLean.from_string(instructions[i])
-        # From now on instructions is a list of CodeForLean
-        if len(instructions) == 1:
-            return instructions[0]
-        else:
-            return CodeForLean(instructions=instructions,
-                               combinator=LeanCombinator.and_then,
-                               error_msg=error_msg,
-                               success_msg=global_success_msg)
+        return cls.from_list(instructions=instructions,
+                             combinator=LeanCombinator.and_then,
+                             error_msg=error_msg,
+                             global_success_msg=global_success_msg)
+
+    @property
+    def operator(self):
+        """
+        Return the operator attribute of the first SingleCode found in self.
+        """
+        if not self.instructions:
+            return None
+        instruction = self.instructions[0]
+        return instruction.operator
+
+    @operator.setter
+    def operator(self, operator):
+        """
+        Set the operator attribute of the first SingleCode in self.
+        """
+        if self.is_or_else():
+            for instruction in self.instructions:
+                instruction.operator = operator
+        elif self.instructions:
+            instruction = self.instructions[0]
+            instruction.operator = operator
+
+    @property
+    def rw_item(self):
+        """
+        Return the operator attribute of the first SingleCode found in self.
+        """
+        if not self.instructions:
+            return None
+        instruction = self.instructions[0]
+        return instruction.rw_item
+
+    @rw_item.setter
+    def rw_item(self, rw_item):
+        """
+        Set the rw_item attribute of the first SingleCode in self, or of all
+        the codes if self is or_else.
+        """
+        if self.is_or_else():
+            for instruction in self.instructions:
+                instruction.rw_item = rw_item
+        elif self.instructions:
+            instruction = self.instructions[0]
+            instruction.rw_item = rw_item
+
+    @property
+    def outcome_operator(self):
+        """
+        Return the operator attribute of the first SingleCode found in self.
+        """
+        if not self.instructions:
+            return None
+        instruction = self.instructions[0]
+        return instruction.outcome_operator
+
+    @outcome_operator.setter
+    def outcome_operator(self, outcome_operator):
+        """
+        Set the rw_item attribute of the first SingleCode in self, or of all
+        the codes if self is or_else.
+        """
+        if self.is_or_else():
+            for instruction in self.instructions:
+                instruction.outcome_operator = outcome_operator
+        elif self.instructions:
+            instruction = self.instructions[0]
+            instruction.outcome_operator = outcome_operator
 
     def or_else(self, other, success_msg=""):
         """
         Combine 2 CodeForLean with an or_else combinator.
 
-        :param other:   str or CodeForLean
-        :return:        CodeForLean
+        :type other: Union[str, (str, [MathObjects], CodeForLean]
+        :return: CodeForLean
         """
         if other is None:
             return self
-        if isinstance(other, str):
-            other = CodeForLean.from_string(other)
+        if isinstance(other, str) or isinstance(other, tuple):
+            other = CodeForLean(other)
         if other.success_msg == "":
             other.success_msg = success_msg
         if other.error_msg:
@@ -179,14 +371,14 @@ class CodeForLean:
         """
         Combine 2 CodeForLean with an and_then combinator.
 
-        :param other:       str or CodeForLean
+        :param other:       str or tuple or SingleCode or CodeForLean
         :param success_msg: str
         :return:            CodeForLean
         """
         if not success_msg:
             success_msg = self.success_msg
-        if isinstance(other, str):
-            other = CodeForLean.from_string(other)
+        if isinstance(other, str) or isinstance(other, tuple):
+            other = CodeForLean(other)
         if self.is_empty():
             if not other.success_msg:
                 other.add_success_msg(success_msg)
@@ -232,40 +424,17 @@ class CodeForLean:
         # if isinstance(self, str):
         #     self_ = CodeForLean.from_string(self)
         skip = CodeForLean.from_string("skip")
-        return CodeForLean(combinator=LeanCombinator.or_else,
-                           instructions=[self, skip],
+        return CodeForLean(instructions=[self, skip],
+                           combinator=LeanCombinator.or_else,
                            success_msg=success_msg)
 
     def solve1(self, success_msg=""):
-        return CodeForLean(combinator=LeanCombinator.solve1,
-                           instructions=[self],
+        code = CodeForLean(instructions=[self],
+                           combinator=LeanCombinator.solve1,
                            success_msg=success_msg)
+        return code
 
-    # def and_finally(self, other):
-    #     """
-    #     Add other before each "or_else" combinator, so that whatever
-    #     sequence of instruction that succeeds ends with other
-    #     e.g. and_finally ("A or_else B", "C")
-    #         -> "(A, C) or_else (B,C)"
-    #
-    #     :param other:   another instance of CodeForLean
-    #     :return:        CodeForLean
-    #     """
-    #     # fixme: not used anywhere
-    #     if isinstance(other, str):
-    #         other = CodeForLean.from_string(other)
-    #     if self.is_empty():
-    #         return other
-    #     elif self.is_single_string() or self.is_and_then():
-    #         # replace self by self and then other
-    #         return self.and_then(other)
-    #     elif self.is_or_else():
-    #         instructions = [piece_of_code.and_finally(other)
-    #                         for piece_of_code in self.instructions]
-    #         return CodeForLean(combinator=LeanCombinator.or_else,
-    #                            instructions=instructions)
-
-    def to_raw_string(self, exclude_no_meta_vars=False) -> str:
+    def to_code(self, exclude_no_meta_vars=False) -> str:
         """
         Format CodeForLean into a string which can be sent to Lean
 
@@ -277,23 +446,24 @@ class CodeForLean:
         # TODO: handle error_msgs
         if self.is_empty():
             return ""
-        elif self.is_single_string():
-            instruction = self.instructions[0]
-            if exclude_no_meta_vars and instruction == 'no_meta_vars':
-                return ""
-            elif isinstance(instruction, CodeForLean):
-                return instruction.to_raw_string()
-            elif isinstance(instruction, str):
-                return instruction
+        elif exclude_no_meta_vars and self.is_no_meta_vars():
+            return ""
+        elif self.is_single_code():
+            code = self.instructions[0].to_code()
+            return code
+            # if exclude_no_meta_vars and code == 'no_meta_vars':
+            #     return ""
+            # else:
+            #     return code
         elif self.is_and_then():
             strings = []
             for instruction in self.instructions:
-                string = instruction.to_raw_string(exclude_no_meta_vars)
+                string = instruction.to_code(exclude_no_meta_vars)
                 if string:
                     strings.append(string)
             return ', '.join(strings)
         elif self.is_or_else():
-            strings = [child.to_raw_string(exclude_no_meta_vars)
+            strings = [child.to_code(exclude_no_meta_vars)
                        for child in self.instructions]
             strings = ['`[ ' + string + ']'
                        for string in strings if string != ""]
@@ -301,7 +471,7 @@ class CodeForLean:
         else:
             return self.combinator \
                 + " {" \
-                + self.instructions[0].to_raw_string(exclude_no_meta_vars) \
+                + self.instructions[0].to_code(exclude_no_meta_vars) \
                 + " }"
 
     def add_trace_effective_code(self):
@@ -317,7 +487,7 @@ class CodeForLean:
         msgs, the second is self with marked or_else node.
         """
 
-        if self.is_single_string():
+        if self.is_single_code():
             return self, self
         elif self.is_or_else():  # Call recursively on each instruction
             node_number = CodeForLean.or_else_node_counter
@@ -358,7 +528,7 @@ class CodeForLean:
                  (2) A boolean which tells if or_else node has been found
         """
 
-        if self.is_single_string():
+        if self.is_single_code():
             return self, False
         elif self.is_or_else() and self.or_else_node_number == node_number:
             new_code = self.instructions[alternative_number]
@@ -385,13 +555,14 @@ class CodeForLean:
         Add the "no_meta_vars" tactic after each piece of code that contains
         "apply"
         """
-        no_meta_vars_str = "no_meta_vars"
+
         if self.is_empty():
             return self
         elif not self.is_or_else():
             # replace self by self and_then no_meta_vars
             if self.could_have_meta_vars():
-                return self.and_then(no_meta_vars_str)
+                # return self.and_then(no_meta_vars_str)
+                return self.and_then(NO_META_VARS)
             else:
                 return self
         else:
@@ -402,7 +573,7 @@ class CodeForLean:
                                success_msg=self.success_msg,
                                error_msg=self.error_msg)
 
-    def to_decorated_string(self):
+    def to_decorated_code(self):
         """
         Turn a CodeForLean into a string that can be sent to Lean, including
         no_meta_vars and trace_effective_code when needed.
@@ -415,7 +586,7 @@ class CodeForLean:
         # ! no_meta_vars, and then trace_effective_code, in that order !
         code1 = self.add_no_meta_vars()
         code1, code2 = code1.add_trace_effective_code()
-        string = code2.to_raw_string()
+        string = code2.to_code()
         return code1, string
 
     def extract_success_msg(self, effective_code=""):
@@ -432,7 +603,7 @@ class CodeForLean:
         # (if provided)
         if self.is_or_else() and effective_code:
             for instruction in self.instructions:
-                if instruction.to_raw_string().startswith(effective_code):
+                if instruction.to_code().startswith(effective_code):
                     success_msg = instruction.success_msg
         #  Send global success_msg if no specific msg has been found
         if not success_msg:
@@ -481,18 +652,20 @@ class CodeForLean:
 
     def add_subgoal(self, subgoal):
         """
-        Indicate that self will split a target disjunction 'P or Q',
-        and store 'P and Q', 'P', 'Q'. If not provided, P and Q are computed
-        as the children of p_or_q.
+        Indicate that self will create a new subgoal.
+
         :param subgoal: str or MathObject
         """
+
+        # FIXME: obsolete?
         self.subgoal = subgoal
 
     def is_empty(self):
         return self.instructions == []
 
-    def is_single_string(self):
-        return self.combinator == LeanCombinator.single_string
+    def is_single_code(self):
+        return (self.combinator == LeanCombinator.single_code and not
+                self.is_empty())
 
     def is_and_then(self):
         return self.combinator == LeanCombinator.and_then
@@ -507,7 +680,7 @@ class CodeForLean:
 
         # True iff self is an or_else node
         # or one of self's instructions is an or_else node
-        if self.is_single_string():
+        if self.is_single_code():
             return False
         elif self.is_or_else():
             return True
@@ -517,13 +690,65 @@ class CodeForLean:
     def could_have_meta_vars(self) -> bool:
         if self.is_empty():
             return False
-        elif self.is_single_string():
-            string = self.instructions[0]
-            return string.find("apply") != -1 or string.find("have") != -1
+        elif self.is_single_code():
+            code_ = self.instructions[0].to_code()
+            return (code_.find("apply") != -1 or code_.find("have") != -1
+                    or code_.find("rw") != -1)
         else:
-            return True in [instruction.could_have_meta_vars() for
-                            instruction in self.instructions]
+            return any(instruction.could_have_meta_vars() for
+                       instruction in self.instructions)
 
+    def is_no_meta_vars(self):
+        return (self.is_single_code() and
+                self.to_code() == NO_META_VARS.to_code())
+
+    def add_used_properties(self, used_properties):
+        """
+        Add used properties to every single code instruction in self.
+
+        :param used_properties: MathObject or [MathObject]
+        """
+
+        if not isinstance(used_properties, list):
+            used_properties = [used_properties]
+
+        if self.is_single_code():
+            instruction = self.instructions[0]
+            assert isinstance(instruction, SingleCode)
+            instruction.used_properties.extend(used_properties)
+        else:
+            for instruction in self.instructions:
+                assert isinstance(instruction, CodeForLean)
+                instruction.add_used_properties(used_properties)
+
+    def used_properties(self):
+        """
+        Return used_properties appearing in self, provided they appear in
+        all or_else alternatives. (This is probably useless if there are
+        still some or_else alternative in self).
+
+        :return: [ContextMathObject]
+        """
+        up = []
+        if self.is_single_code():
+            instruction = self.instructions[0]
+            assert isinstance(instruction, SingleCode)
+            up = instruction.used_properties
+        elif not self.is_or_else():
+            for instruction in self.instructions:
+                up.extend(instruction.used_properties())
+        else:  # Return prop that are in all instructions
+            instructions = self.instructions
+            if len(instructions) >= 1:
+                up = instructions[0].used_properties()
+                for instruction in instructions[1:]:
+                    # Remove element in up that are not in instruction
+                    new_up = []
+                    for prop in up:
+                        if prop in instruction.used_properties():
+                            new_up.append(prop)
+                    up = new_up
+        return up
 
 # _VAR_NB = 0
 # _FUN_NB = 0
@@ -553,6 +778,9 @@ class CodeForLean:
 #     return "solve1 {" + string + "}"
 
 
+NO_META_VARS = CodeForLean("no_meta_vars")
+
+
 def get_effective_code_numbers(trace_effective_code: str) -> (int, int):
     """
     Convert a string traced by Lean into a tuple
@@ -567,45 +795,49 @@ def get_effective_code_numbers(trace_effective_code: str) -> (int, int):
 
 
 if __name__ == '__main__':
-    code = CodeForLean.from_string('assumption')
-    code = code.and_then(CodeForLean.from_string("toto").try_())
-    code.add_success_msg("CQFD!")
-    code2 = CodeForLean.or_else_from_list(['apply H', 'Great !'])
-    code = code.or_else(code2)
-    code = code.or_else('goodbye', success_msg="I am leaving!")
-    code.add_success_msg("Success!")
-    # code = code.add_trace_effective_code(42)
-    # code = code.add_no_meta_vars()
+    code_ = CodeForLean.from_string('assumption')
+    print(code_)
+    code_ = code_.and_then(CodeForLean.from_string("toto").try_())
+    print(code_)
+    code_.add_success_msg("CQFD!")
+    code_2 = CodeForLean.or_else_from_list(['apply H', 'Great !'])
+    code_ = code_.or_else(code_2)
+    code_ = code_.or_else('goodbye', success_msg="I am leaving!")
+    code_.add_success_msg("Success!")
+    # code_ = code_.add_trace_effective_code_(42)
+    # code_ = code_.add_no_meta_vars()
 
-    print(code.to_raw_string())
-    code, decorated_code_string = code.to_decorated_string()
+    code_, decorated_code_string = code_.to_decorated_code()
     print(decorated_code_string)
+    print(code_.to_code())
+    print("Exclude no_meta_vars:")
+    print(code_.to_code(True))
 
     for choice in [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (2, 0), (2, 1),
-                   (3,67)]:
-        code1, b = code.select_or_else(*choice)
+                   (3, 67)]:
+        code_1, b = code_.select_or_else(*choice)
         print(f"Choice {choice} found: {b}")
-        print(code1.to_raw_string())
+        print(code_1.to_code())
 
-    code1, b = code.select_or_else(0,1)
-    code2, b = code1.select_or_else(2,1)
-    print(code2.to_raw_string())
+    code_1, b = code_.select_or_else(0,1)
+    code_2, b = code_1.select_or_else(2,1)
+    print(code_2.to_code())
 
-    code1 = CodeForLean.from_string("norm_num at *").solve1()
-    code2 = CodeForLean.from_string("compute_n 10")
-    code3 = (CodeForLean.from_string("norm_num at *").try_()).and_then(code2)
-    possible_code = code1.or_else(code3)
+    code_1 = CodeForLean.from_string("norm_num at *").solve1()
+    code_2 = CodeForLean.from_string("compute_n 10")
+    code_3 = (CodeForLean.from_string("norm_num at *").try_()).and_then(code_2)
+    possible_code = code_1.or_else(code_3)
 
     print("----------------")
-    print(possible_code.to_raw_string())
-    code, deco = possible_code.to_decorated_string()
+    print(possible_code.to_code())
+    code_, deco = possible_code.to_decorated_code()
     # print(deco)
-    print(code)
-    code, found = code.select_or_else(3,0)
-    print(code.to_raw_string())
-    print(code.has_or_else())
-    code, found = code.select_or_else(4,0)
-    print(code.to_raw_string())
-    print(code.has_or_else())
+    print(code_)
+    code_, found = code_.select_or_else(3,0)
+    print(code_.to_code())
+    print(code_.has_or_else())
+    code_, found = code_.select_or_else(4,0)
+    print(code_.to_code())
+    print(code_.has_or_else())
 
 

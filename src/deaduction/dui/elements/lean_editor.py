@@ -37,7 +37,6 @@ from PySide2.QtWidgets import ( QHBoxLayout,
                                 QVBoxLayout,
                                 QWidget)
 
-from deaduction.pylib.config.i18n import _
 
 class LeanEditor(QWidget):
 
@@ -63,6 +62,9 @@ class LeanEditor(QWidget):
         btn_layout.addWidget(self.send_btn)
         main_layout.addLayout(btn_layout)
         self.setLayout(main_layout)
+
+        # TODO: enable code sent?
+        self.send_btn.setEnabled(False)
 
     ###########
     # Methods #

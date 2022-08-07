@@ -36,7 +36,7 @@ import deaduction.pylib.config.dirs as        cdirs
 import deaduction.pylib.config.vars as        cvars
 from deaduction.pylib.utils.filesystem import check_dir
 
-from deaduction.pylib.mathobj import    Proof, ProofStep
+from deaduction.pylib.mathobj import    ProofStep
 
 dmp = diff_match_patch()
 
@@ -56,6 +56,10 @@ class HistoryEntry:
     cursor_pos: int
 
     misc_info: Dict[str, any]
+
+    @property
+    def proof_step(self):
+        return self.misc_info.get("proof_step")
 
 
 class VirtualFile:
@@ -305,7 +309,7 @@ class VirtualFile:
     ################################
     def undo(self):
         """
-        Moves the history cursor one step backwards
+        Moves the history cursor one step backwards.
         """
         self.target_idx -= 1
         if self.target_idx < 0:
@@ -313,7 +317,7 @@ class VirtualFile:
 
     def redo(self):
         """
-        Moves the history cursor one step forward
+        Moves the history cursor one step forward.
         """
         self.target_idx += 1
         if self.target_idx >= len(self.history):
@@ -321,9 +325,21 @@ class VirtualFile:
 
     def rewind(self):
         """
-        Moves the history cursor at the beginning
+        Moves the history cursor at the beginning.
         """
         self.target_idx = 0
+
+    def go_to_end(self):
+        """
+        Moves the history cursor at the end.
+        """
+        self.target_idx = len(self.history) - 1
+
+    def goto(self, history_nb):
+        """
+        Move the history cursor at step_nb.
+        """
+        self.target_idx = history_nb
 
     def delete(self):
         """
@@ -503,13 +519,17 @@ class LeanFile(VirtualFile):
             return 1
 
     @property
+    def delta_goals_count(self):
+        return self.current_number_of_goals - self.previous_number_of_goals
+
     def proof(self):  # Proof
         """
-        Return the current proof history, an instance of the Proof class
+        Return the current proof outline, an instance of the Proof class.
         """
-
-        proof = Proof([(entry.misc_info["ProofState"], None) for entry in
-                       self.history[:self.target_idx + 1]])
+        # FIXME: useless?
+        proof_steps = list(map(lambda entry: entry.misc_info.get('proof_step'),
+                           self.history))
+        proof = Proof.from_proof_steps(proof_steps)
         return proof
 
     def save_exercise_for_autotest(self, emw):
@@ -517,13 +537,14 @@ class LeanFile(VirtualFile):
 
         :param emw: ExerciseMainWindow instance
         """
+        # FIXME: this has been transfered to a Coordinator method
         save = cvars.get('functionality.save_solved_exercises_for_autotest',
                          False)
         if not save:
             return
 
-        auto_steps = [entry.misc_info.get("proof_step").auto_step
-                      for entry in self.history]
+        proof_steps = [entry.proof_step for entry in self.history]
+        auto_steps = [ps.auto_step for ps in proof_steps if ps is not None]
         auto_steps = [step for step in auto_steps if step is not None]
 
         exercise = emw.exercise
@@ -542,4 +563,15 @@ class LeanFile(VirtualFile):
         with open(file_path, mode='wb') as output:
             dump(exercise, output, HIGHEST_PROTOCOL)
 
+    def add_seq_num(self, seq_num: int):
+        """
+        Add seq_num in a comment at the beginning of the preamble.
+        """
+        seq_num_str = f"-- Seq num {seq_num}\n"
+        if self.preamble:
+            old_seq_num_str, _, raw_preamble = self.preamble.partition("\n")
+        if old_seq_num_str.startswith('-- Seq num'):
+            self.preamble = seq_num_str + raw_preamble
+        else:
+            self.preamble = seq_num_str + self.preamble
 

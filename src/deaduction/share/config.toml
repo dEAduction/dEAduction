@@ -3,40 +3,76 @@ path        = "$DEADUCTION_SHARE/graphical_resources/icons"
 letter_type = "letters/trials"
 context     = "letters/blue"
 
+
 [display]
 display_success_messages = true
-text_mode_in_chooser_window = false
+text_mode_in_chooser_window = true
 target_display_on_top = false
 depth_of_unfold_statements = 1
 show_lean_name_for_statements = false
-target_font_size = "24pt"
-context_font_size = "12pt"
-tooltips_font_size = 10
-mathematics_font = "Defaults"
-
-logic_button_symbols = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃"
-use_logic_button_symbols = true
+chooser_math_font_size = "16pt"
+main_font_size = "16pt"
+target_font_size = "20pt"
+button_font_size_for_symbols = "default"  # Does not work
+tooltips_font_size = "12pt"
+mathematics_font = "Times New Roman"
+selection_color = "limegreen"
+symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃, =, ↦"
+font_size_for_symbol_buttons = "16pt"
+use_symbols_for_logic_button = true
+short_buttons_line = true
 
 display_detailed_errors_on_wui = true
 
-use_primes_for_variables_names = true
-use_seconds_for_variables_names = true
+allow_primes_for_names = true
+allow_seconds_for_names = true
+allow_indices_for_names = true
+
+color_for_applied_properties = "Grey"
+color_for_variables = "Blue"
+color_for_dummy_variables = ""  # 33cccc #00cc99
+color_for_selection = "LimeGreen"  #LimeGreen  #ffff99
+color_for_props = "Fuchsia"
+color_for_operator_props = "Red"
+color_for_highlighted_math_obj = "Yellow"
+
+# Any modification of the following must be echoed
+# in the replace_dubious_characters function in in math_display.utils
+dubious_characters = "ℕ, ℤ, ℚ, ℝ, 𝒫, ↦"
+
+[logic]
+do_not_name_dummy_vars_as_global_vars = true
+do_not_name_dummy_vars_as_dummy_vars = false
+force_indices_for_dummy_vars = false
+use_color_for_variables = true
+use_color_for_dummy_variables = true
+use_color_for_applied_properties = true
+
 
 [functionality]
 target_selected_by_default = false
 allow_proof_by_sorry = true
 expanded_apply_button = false
+allow_implicit_use_of_definitions = true
+automatic_intro_of_variables_and_hypotheses = false
+automatic_intro_of_exists = true
+save_solved_exercises_for_autotest = false
+
 
 [i18n]
 available_languages = ["en", "fr_FR"]
-select_language = "fr_FR"
+select_language = "no_language"
 
-[journal]
-save=false
 
 [logs]
+save_journal = false
 display_level = "info"
 domains = [""]
+log_to_file = true
+
+[others]
+usr_version_nb = "-1"  # Do not modify!
+version_nb = "0.31"
 
 #########################
 # All Plateform packages

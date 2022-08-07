@@ -170,7 +170,7 @@ class Lean_Server:
         # Check for specific messages types
         if isinstance(parsed_msg, commands.CommandResponse) or \
            isinstance(parsed_msg, commands.ErrorResponse):
-               seq_num = parsed_msg.seq_num
+               seq_num = parsed_msg.request_seq_num
                self.pending_reqs.set(seq_num, parsed_msg)
 
         elif isinstance(parsed_msg, commands.CurrentTasksResponse):
@@ -231,7 +231,7 @@ class Lean_Server:
     async def send(self, rq, timeout=10000) -> None:
         self._check_process()
         seq_num,ev  = await self.pending_reqs.store()
-        rq.seq_num  = seq_num
+        rq.request_seq_num  = seq_num
 
         jss         = rq.to_json()
         self.log.debug(f"Tx : {jss}")

@@ -40,17 +40,20 @@ This file is part of d∃∀duction.
 """
 
 import              logging
-from pathlib import Path
 from typing import  Dict
 from trio import sleep
 
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
                                 QIcon,
-                                QCursor)
+                                QCursor,
+                                QHelpEvent)
 from PySide2.QtCore    import ( Signal,
                                 Slot,
-                                Qt)
+                                Qt,
+                                QEvent,
+                                QObject,
+                                QTimerEvent)
 from PySide2.QtWidgets import ( QHBoxLayout,
                                 QPushButton,
                                 QWidget)
@@ -58,7 +61,9 @@ from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem,
                                 QToolTip)
 
-from deaduction.pylib.config.i18n import   _
+from deaduction.pylib.text        import ( button_symbol,
+                                           button_tool_tip)
+
 from deaduction.pylib.actions     import   Action
 from deaduction.pylib.coursedata  import ( Definition,
                                            Exercise,
@@ -70,6 +75,7 @@ import deaduction.pylib.config.vars as cvars
 import deaduction.pylib.utils.filesystem as fs
 
 log = logging.getLogger(__name__)
+global _
 
 #################################
 # Action button widgets classes #
@@ -109,6 +115,8 @@ class ActionButton(QPushButton):
     :attribute action_triggered (Signal(ActionButton)): A Signal with
         self as an argument, emitted when self is clicked on.
     """
+    from_name: dict = {}  # name -> ActionButton
+    # ! Must be updated to avoid pointing to deleted items !
 
     def __init__(self, action: Action):
         """
@@ -123,12 +131,40 @@ class ActionButton(QPushButton):
         super().__init__()
 
         self.action = action
-
-        self.setText(action.symbol)
-        self.setToolTip(action.caption)
+        self.update()  # set symbol and tool tip
         self.clicked.connect(self._emit_action)
         # Modify arrow appearance when over a button
         self.setCursor(QCursor(Qt.PointingHandCursor))
+        # Update dictionary:
+        # self.from_name[action.symbol] = self
+        self.from_name[action.name] = self
+
+    def update(self):
+        """
+        Set or update text and tooltips in button, using module pylib.text.
+        NB: translation is done here.
+        """
+        name = self.action.name
+        symbol = _(button_symbol(name))
+        self.setText(symbol)
+        # if len(symbol) > 1:
+        #     self.setStyleSheet('QPushButton { font-size: 12pt }')
+
+        tool_tip = button_tool_tip(name)
+        if isinstance(tool_tip, str):
+            tooltip = _(tool_tip)
+        elif isinstance(tool_tip, list):
+            pretty_list = []
+            for msg in tool_tip:
+                if msg.endswith(':'):
+                    msg = _("Button") + " " + _(msg[:-1]) + _(":")
+                else:
+                    msg = "• " + _(msg)
+                pretty_list.append(msg)
+            tooltip = '\n'.join(pretty_list)
+        else:
+            tooltip = ""
+        self.setToolTip(tooltip)
 
     @Slot()
     def _emit_action(self):
@@ -142,27 +178,45 @@ class ActionButton(QPushButton):
 
     @property
     def symbol(self):
+        """
+        Actual text displayed on self (may be changed by usr).
+        """
         return self.action.symbol
+
+    @property
+    def name(self):
+        """
+        (Immutable) name of the corresponding action.
+        One of  ['and', 'or', 'not', 'implies', 'iff', 'forall', 'exists',
+                 'equal', 'map']
+        """
+        return self.action.name
 
     def has_symbol(self, symbol) -> bool:
         """
         Test if symbol is the symbol of (the action associated to) self.
         """
-        return self.action.symbol == symbol \
-            or self.action.symbol == symbol.replace('_', ' ')
+        # TODO: obsolete (?)
+        return self.action.symbol.startswith(symbol) \
+            or self.action.symbol.startswith(symbol.replace('_', ' ')) \
+            or _(self.action.symbol).startswith(_(symbol)) \
+            or _(self.action.symbol).startswith(_(symbol.replace('_', ' ')))
 
-    async def simulate(self, duration=0.3):
+    async def simulate(self, duration=0.3, winkle_nb=2):
         """
         This method simulate user pushing self. It is asynchrone since we
         must wait a small duration before unchecking button, so that the
         checking is visible. This is called when redoing.
+        :param duration: total duration
         """
-
-        self.setCheckable(True)
-        self.setChecked(True)
-        await sleep(duration)
-        self.setChecked(False)
-        self.setCheckable(False)
+        duration = duration/(3*winkle_nb)
+        for n in range(winkle_nb):
+            self.setCheckable(True)
+            self.setChecked(True)
+            await sleep(2*duration)
+            self.setChecked(False)
+            self.setCheckable(False)
+            await sleep(duration)
 
 
 # We wish to have an ActionButton class attribute called
@@ -211,6 +265,14 @@ class ActionButtonsWidget(QWidget):
         main_layout.addStretch()
 
         self.setLayout(main_layout)
+
+    def update(self):
+        """
+        Update text and tooltips in all buttons.
+        """
+        # Fixme: obsolete
+        for button in self.buttons:
+            button.update()
 
 
 ##############################
@@ -261,6 +323,8 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
     :attribute statement Statement: The instance of the class (or child
         of) Statement associated to self.
     """
+    from_lean_name : dict = {}  # Statement.lean_name --> item
+    # ! Must be updated to avoid pointing to deleted items !
 
     def __init__(self, statement: Statement):
         """
@@ -277,6 +341,7 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         super().__init__(None, to_display)
 
         self.statement = statement
+        self.parent = None  # Will be the QTreeWidget when inserted
 
         # Print second col. in gray
         self.setForeground(1, QBrush(QColor('gray')))
@@ -295,26 +360,59 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
             path = icons_dir / 't.png'
         self.setIcon(0, QIcon(str(path.resolve())))
 
-        # Set tooltip
-        self.setToolTip(0, statement.caption)
+        self.from_lean_name[statement.lean_name] = self
+
+        # Set tooltips: tooltips are set when item is put in the QTReeWidget
+        # so that is_exercise property has a meaning
+        # self.set_tooltip()
+
+    @property
+    def is_exercise(self):
+        if self.parent:
+            return self.parent.is_exercise_list
+
+    def is_node(self):
+        return False
+
+    def set_tooltip(self):
+        """
+        Set the math content of the statement as tooltip.
+        """
+        self.setToolTip(0, self.statement.caption(
+            is_exercise=self.is_exercise))
         # These tooltips contain maths
-        # math_font_name = 'Default'  # FIXME!!
         math_font_name = cvars.get('display.mathematics_font', 'Default')
         QToolTip.setFont(math_font_name)
 
     def has_pretty_name(self, pretty_name: str) -> bool:
         return self.statement.pretty_name == pretty_name
 
-    async def simulate(self, duration=0.3):
+    async def simulate(self, duration=0.3, winkle_nb=2, expand=True):
         """
-        This method simulate user selecting statement. It is asynchrone
+        This method simulate user selecting statement. It is asynchronous
         since we must wait a small duration so that the checking is visible.
         This is called when redoing.
+        :param duration: total duration
         """
+        if expand:
+            self.setExpanded(expand)
+            self.treeWidget().scrollToItem(self)
+        duration = duration /(3*winkle_nb)
+        for n in range(winkle_nb):
+            self.setBackground(0, QBrush(QColor('blue')))
+            await sleep(2*duration)
+            self.setBackground(0, QBrush())
+            await sleep(duration)
 
-        self.setBackground(0, QBrush(QColor('blue')))
-        await sleep(duration)
-        self.setBackground(0, QBrush())
+    @classmethod
+    def from_statement(cls, statement):
+        return cls.from_lean_name.get(statement.lean_name)
+
+    @classmethod
+    def from_end_of_lean_name(cls, name):
+        for key in cls.from_lean_name:
+            if key.endswith(name):
+                return cls.from_lean_name[key]
 
 
 class StatementsTreeWidgetNode(QTreeWidgetItem):
@@ -339,8 +437,17 @@ class StatementsTreeWidgetNode(QTreeWidgetItem):
         super().__init__(None, [title])
 
         # Cosmetics
+        self.setFlags(Qt.ItemIsEnabled)
         self.setExpanded(True)
-        self.set_selectable(False)
+        # self.set_selectable(False)
+
+    # @property
+    # def is_exercise_list(self):
+    #     if self.parent():
+    #         return self.parent().is_exercise_list
+
+    def is_node(self):
+        return True
 
     def add_child(self, child: QTreeWidgetItem):
         """
@@ -433,6 +540,7 @@ class StatementsTreeWidget(QTreeWidget):
         # the branch is already created.
         if not branch:
             item            = StatementsTreeWidgetItem(statement)
+            self.items.append(item)
             root            = item.text(0)
             extg_tree[root] = (item, dict())
             parent.add_child(item)
@@ -498,7 +606,8 @@ class StatementsTreeWidget(QTreeWidget):
             self._init_tree_branch(self._tree, branch, expanded_flags,
                                    statement, self)
 
-    def __init__(self, statements: [Statement], outline: Dict[str, str]):
+    def __init__(self, statements: [Statement], outline: Dict[str, str],
+                 is_exercise_list=False):
         """
         Init self with a list of instances of the class Statement (or
         child of) and an outline (see self.__doc__). This method
@@ -514,9 +623,15 @@ class StatementsTreeWidget(QTreeWidget):
         """
 
         # TODO: get rid of self._init_tree ?
-
+        # IMPORTANT: re-initialize StatementsTreeWidgetItem dictionary
+        StatementsTreeWidgetItem.from_lean_name = {}
         super().__init__()
+        self.items: [QTreeWidgetItem] = [] # List of items
         self._init_tree(statements, outline)
+        self.is_exercise_list = is_exercise_list
+        self.update_tooltips()
+        # Uncomment to enable drag:
+        # self.setDragEnabled(True)
 
         # Cosmetics
         self.setWindowTitle('StatementsTreeWidget')
@@ -541,48 +656,88 @@ class StatementsTreeWidget(QTreeWidget):
 
         self.addTopLevelItem(item)
 
-    def goto_statement(self, statement: Statement):
+    def goto_statement(self, statement: Statement, expand=True):
         """
         Go to to the Statement statement (as if usr clicked on it).
 
         :param statement: Statement to go to.
+        :param expand: if True, expandreveal statement by expanding all
+        parents items.
         """
-
+        log.debug("goto exercise")
         # Thanks @mcosta from https://forum.qt.io/topic/54640/
         # how-to-traverse-all-the-items-of-qlistwidget-qtreewidget/3
+
         def traverse_node(item: StatementsTreeWidgetItem):
             # Do something with item
             if isinstance(item, StatementsTreeWidgetItem):
                 if item.statement == statement:
                     item.setSelected(True)
+                    return True
             for i in range(0, item.childCount()):
-                traverse_node(item.child(i))
-
+                if traverse_node(item.child(i)):
+                    item.setExpanded(expand)
+                    return True
         for i in range(self.topLevelItemCount()):
             item = self.topLevelItem(i)
-            traverse_node(item)
+            if traverse_node(item):
+                item.setExpanded(expand)
 
-    def from_name(self, lean_name: str) \
-            -> StatementsTreeWidgetItem:
+    @staticmethod
+    def item_from_lean_name(lean_name: str) -> StatementsTreeWidgetItem:
         """
         Return the StatementsTreeWidgetItem whose statement's pretty name is
         pretty_name.
         """
+        return StatementsTreeWidgetItem.from_name.get(lean_name)
 
-        items = []
+        # items = []
+        #
+        # def traverse_node(item: StatementsTreeWidgetItem):
+        #     if isinstance(item, StatementsTreeWidgetItem):
+        #         if item.statement.has_name(lean_name):
+        #             items.append(item)
+        #     for i in range(0, item.childCount()):
+        #         traverse_node(item.child(i))
+        #
+        # for i in range(self.topLevelItemCount()):
+        #     item = self.topLevelItem(i)
+        #     traverse_node(item)
+        # if items:
+        #     return items[0]
+        # else:
+        #     return None
 
-        def traverse_node(item: StatementsTreeWidgetItem):
-            if isinstance(item, StatementsTreeWidgetItem):
-                if item.statement.has_name(lean_name):
-                    items.append(item)
-            for i in range(0, item.childCount()):
-                traverse_node(item.child(i))
+    def item_from_statement(self, statement):
+        return self.item_from_lean_name(statement.lean_name)
 
-        for i in range(self.topLevelItemCount()):
-            item = self.topLevelItem(i)
-            traverse_node(item)
-        if items:
-            return items[0]
-        else:
-            return None
+    @Slot()
+    def update_tooltips(self):
+        for item in self.items:
+            item.parent = self
+            item.set_tooltip()
 
+    # def event(self, event: QEvent):
+    #     """
+    #     Re-implement event handler to show dynamic tooltips.
+    #     """
+    #     log.debug(f"Event {event.type} handled by QtreeWidget")
+    #     log.debug(event)
+    #     if event.type == QEvent.ToolTip:
+    #         log.debug("Showing tooltip")
+    #         pos = QHelpEvent.globalPos(event)
+    #         item = self.itemAt(pos)
+    #         text = item.statement.caption
+    #         QToolTip.showText(pos, text)
+    #         event.accept()
+    #         return True
+    #     else:
+    #         pass
+    #         # Propagate event
+    #         # QToolTip.hideText()
+    #         event.ignore()
+    #         if isinstance(event, QTimerEvent):
+    # The following does not work, which drives me crazy:
+    #             return QObject.timerEvent(event)
+    #         else:
+    #             return QTreeWidget.event(event)

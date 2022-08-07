@@ -48,6 +48,7 @@ __dict_user    = dict() # Loaded configuration from user config.
 
 log = logging.getLogger(__name__)
 
+
 #def load():
 #    global __dict_factory
 #    global __dict_user
@@ -58,10 +59,17 @@ log = logging.getLogger(__name__)
 #
 #    # Load configuration file
 if FACTORY_CONFIG_FILE_PATH.exists():
+    # print('path exists')
     __dict_factory.update(toml.load(str(FACTORY_CONFIG_FILE_PATH)))
+    # from pprint import pprint
+    # pprint(__dict_factory)
+else:
+    # breakpoint()
+    print('path DOES NOT exist')
 
 if USER_CONFIG_FILE_PATH.exists():
     __dict_user.update(toml.load(str(USER_CONFIG_FILE_PATH)))
+
 
 def save():
     global __dict_factory
@@ -71,11 +79,12 @@ def save():
     with open(str(USER_CONFIG_FILE_PATH), "w") as fhandle:
         toml.dump(__dict_user, fhandle)
 
+
 def get(k: str, default_value=None):
     """
     Return the wanted setting variable. dot get style,
     for example, calling the function with package.linux
-    returns → _dict["package"]["linux"]
+    returns __dict["package"]["linux"]
     """
     global __dict_factory
     global __dict_user
@@ -85,18 +94,16 @@ def get(k: str, default_value=None):
         return udict.dotget(__dict_user, k)
     except KeyError:
         try:
-            return udict.dotget(__dict_factory,k, default_value=default_value)
+            return udict.dotget(__dict_factory, k, default_value=default_value)
         except KeyError as exc:
-            raise KeyError(_("Could not get config value: {}").format(
-                str(exc)
-            ))
+            raise KeyError(_("Could not get config value: ") + str(exc))
 
-def set( k, v, if_not_exists=False ):
+
+def set(k, v, if_not_exists=False ):
     """
-    Sets an item in a directory with a hierarchical path. Creates sub directories
-    if needed
+    Sets an item in a directory with a hierarchical path.
+    Creates sub directories if needed.
 
-    :param r: The destination dict
     :param k: The hierarchical key, separated with dots
     :param v: The value to set
     :param if_not_exists: Set value only if key doesn't exist
@@ -106,6 +113,16 @@ def set( k, v, if_not_exists=False ):
     global __dict_user
 
     udict.dotset(__dict_user, k, v, if_not_exists)
+
+
+def copy():
+    global __dict_user
+    return __dict_user.copy()
+
+
+def restore(initial_cvars):
+    global __dict_user
+    __dict_user = initial_cvars
 
 
 if __name__ == "__main__":

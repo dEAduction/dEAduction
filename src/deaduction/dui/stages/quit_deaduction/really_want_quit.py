@@ -29,7 +29,7 @@ from typing                       import Optional
 
 from PySide2.QtWidgets            import QMessageBox
 
-from deaduction.pylib.config.i18n import _
+# from deaduction.pylib.config.i18n import _
 from deaduction.dui.primitives    import YesNoDialog
 
 

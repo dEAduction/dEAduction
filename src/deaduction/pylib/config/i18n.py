@@ -36,30 +36,28 @@ import deaduction.pylib.config.vars      as cvars
 import deaduction.pylib.config.dirs      as cdirs
 import deaduction.pylib.utils.filesystem as fs
 
-_ = None
-
 log = logging.getLogger(__name__)
 
-def init():
-    global _
 
+def init_i18n():
     log.info("Init i18n")
-
-    available_languages = cvars.get("i18n.available_languages", "en")
-    #available_languages = available_languages.split(", ")
-
     select_language     = cvars.get('i18n.select_language', "en")
-
-    log.info(f"available_languages = {available_languages}")
-    log.info(f"select_language     = {select_language}")
+    log.info(f"selected language     = {select_language}")
 
     language_dir_path   = fs.path_helper(cdirs.share / "locales")
-    language            = gettext.translation('deaduction',
-                             localedir=str(language_dir_path),
-                             languages=[select_language])
-    language.install()
+    gettext.install('deaduction',
+                    localedir=str(language_dir_path))
+    if select_language != "no_language":
+        # 'no_language' is gotten first time deaduction is launched
+        language = gettext.translation('deaduction',
+                                       localedir=str(language_dir_path),
+                                       languages=[select_language],
+                                       fallback=True)
+        language.install()
 
-    _ = language.gettext
+    return select_language
 
-# FIXME: better init managment
-init()
+
+# FIXME: better init management
+init_i18n()
+

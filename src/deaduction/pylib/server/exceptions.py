@@ -26,7 +26,7 @@ This file is part of d∃∀duction.
 """
 
 from pprint import                        pformat
-from deaduction.pylib.config.i18n import _
+# from deaduction.pylib.config.i18n import _
 
 
 class FailedRequestError(Exception):

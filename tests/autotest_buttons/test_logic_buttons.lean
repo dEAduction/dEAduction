@@ -3,7 +3,7 @@ import tactic
 
 -- dEAduction imports
 import structures2
-import notations_definitions
+import user_notations
 import utils
 
 -- General principles :
@@ -18,13 +18,13 @@ import utils
 -- logic names ['and', 'or', 'negate', 'implicate', 'iff', 'forall', 'exists']
 -- proofs names ['use_proof_methods', 'new_object', 'apply', 'assumption']
 -- magic names ['compute']
--- proof methods names ['cbr', 'contrapose', 'absurdum', 'sorry']
+-- proof methods names ['cbr', 'contrapose', 'absurdum', 'todo']
 
 
 
 /- dEAduction
 Title
-    Théorie des ensembles
+    Tests logic buttons
 Author
     Frédéric Le Roux
 Institution
@@ -122,7 +122,7 @@ end
 -- (A ≠ ∅) ↔ ∃ x : X, x ∈ A
 -- :=
 -- begin
---     sorry
+--     todo
 -- end
 
 -- set_option pp.all true
@@ -190,7 +190,7 @@ AutoTest
     ∧ 0, CQFD, CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_construct_and_right
@@ -201,7 +201,7 @@ AutoTest
     ∧ 1, CQFD, CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_apply_and
@@ -213,7 +213,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_construct_and_hyp
@@ -224,7 +224,7 @@ AutoTest
     @P1 @P2 ∧, CQFD
 -/
 begin
-  sorry,
+  todo,
 end
 end tests_and
 
@@ -241,7 +241,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_construct_or_left
@@ -252,7 +252,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 
@@ -268,7 +268,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_apply_or_right
@@ -282,7 +282,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_construct_or_on_hyp_left
@@ -294,7 +294,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_construct_or_on_hyp_right
@@ -306,7 +306,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 end test_or
@@ -326,7 +326,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_action_negate_target
@@ -340,7 +340,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 end test_not
@@ -350,7 +350,7 @@ end test_not
 -----------------
 namespace test_implicate
 
-lemma exercise.test_construct_implicate
+lemma exercise.test_construct_implies
 (P Q : Prop) (H1: Q) :
 P → Q :=
 /- dEAduction
@@ -359,22 +359,22 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
-lemma exercise.test_apply_implicate
+lemma exercise.test_apply_implies
 (P Q : Prop) (H1: P) (H2: P → Q) :
 Q :=
 /- dEAduction
 AutoTest
-    H2 →,
+    target H2 →,
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
-lemma exercise.test_apply_implicate_to_hyp
+lemma exercise.test_apply_implies_to_hyp
 (P Q : Prop) (H1: P) (H2: P → Q) :
 Q :=
 /- dEAduction
@@ -383,10 +383,10 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
-lemma exercise.test_apply_implicate_to_hyp_2
+lemma exercise.test_apply_implies_to_hyp_2
 (X: Type) (P Q: X × X → Prop) (x y: X)
 (H1: P(x,y)) (H2: ∀ x y:X, P(x,y) → Q(x,y)) :
 Q(x,y) :=
@@ -396,7 +396,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 end test_implicate
 
@@ -414,7 +414,7 @@ AutoTest
     ↔ 0, CQFD, CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_construct_iff_right
@@ -426,7 +426,19 @@ AutoTest
     ↔ 1, CQFD, CQFD
 -/
 begin
-  sorry
+  todo
+end
+
+lemma exercise.test_construct_iff_with_and
+(P Q : Prop) (H1: P → Q) (H2: Q → P):
+P ↔ Q
+:=
+/- dEAduction
+AutoTest
+    ∧ 0, CQFD, CQFD
+-/
+begin
+  todo
 end
 
 lemma exercise.test_destruct_iff
@@ -438,20 +450,21 @@ AutoTest
     ↔, CQFD
 -/
 begin
-  sorry,
+  todo,
 end
 
-lemma exercise.test_destruct_iff_on_hyp
-(P Q : Prop) (H1: P ↔ Q):
-(P → Q) ∧ (Q → P)
-:=
-/- dEAduction
-AutoTest
-    H1 ↔, CQFD
--/
-begin
-  sorry
-end
+-- lemma exercise.test_destruct_iff_on_hyp
+-- (P Q : Prop) (H1: P ↔ Q):
+-- (P → Q) ∧ (Q → P)
+-- :=
+-- /- dEAduction
+-- AutoTest
+--     H1 ↔, CQFD
+-- -/
+-- begin
+--   cases H1 with H1a H1b, split,
+--   assumption, assumption,
+-- end
 
 lemma exercise.test_construct_iff_on_hyp
 (P Q : Prop) (H1: P → Q) (H2: Q → P):
@@ -462,8 +475,37 @@ AutoTest
     H1 H2 ↔, CQFD
 -/
 begin
-  sorry
+  todo
 end
+
+
+lemma exercise.test_iff_as_implies_target
+(X: Type) (P Q : X → Prop)
+(H: ∀ x, (P x ↔ Q x))  (x:X) (H': P x) :
+Q x
+:=
+/- dEAduction
+AutoTest
+    H ↔, CQFD
+-/
+begin
+  todo
+end
+
+
+lemma exercise.test_iff_as_implies_hyp
+(X: Type) (P Q : X → Prop)
+(H: ∀ x, (P x ↔ Q x))  (x:X) (H': P x) :
+Q x
+:=
+/- dEAduction
+AutoTest
+    H H' ↔, CQFD
+-/
+begin
+  todo
+end
+
 
 end test_iff
 
@@ -483,7 +525,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_apply_forall_to_hyp
@@ -496,7 +538,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 end test_forall
 
@@ -516,7 +558,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_construct_exists_2
@@ -529,7 +571,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_apply_exists_and_construct_exists_on_hyp
@@ -546,34 +588,191 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end  
+end test_exists
 
+namespace test_equality
+----------------
+--- equality ---
+----------------
 
-
-/- The following exo does not work. Pb= 
-∃ x ∈ A, P(x)
-as a target is actually 
-∃ x:X, ∃ H:x ∈ A, P(x)
-whereas in deaduction's hypo it is
-∃ x:X, x ∈ A ∧ P(x).
-Deaduction display all this the same way but assumption fails!
--/
--- lemma exercise.test_apply_exists_2
--- (X: Type) (A: set X) (P Q: X → Prop)
--- (H1: ∃ x ∈ A, P(x))
--- (H2: ∀x∈A, P(x) → Q(x)) :
--- (∃ x ∈ A, Q(x))
---  :=
-/- deaduc
+lemma exercise.test_apply_equality1
+(A B: set X) (x y : X) (f: X → Y) (H: x = y) (H': x ∈ A) (H'': A =B):
+y ∈ B :=
+/- dEAduction
 AutoTest
-    H1 ∃,
-    @P1 H2 →,
-    @P3 @P4 ∧,
-    @O5 @P5 ∃,
+    H' H =,
+    H' H'' =,
     CQFD
 -/
-end test_exists
+begin
+  todo
+end
+
+lemma exercise.test_apply_equality_target1
+(x y : X) (f: X → Y) (H: x = y):
+f x= f y :=
+/- dEAduction
+AutoTest
+    H = 0
+-/
+begin
+  todo
+end
+
+lemma exercise.test_apply_equality_target2
+(x y : X) (f: X → Y) (H: x = y):
+f x= f y :=
+/- dEAduction
+AutoTest
+    H = 1
+-/
+begin
+  todo
+end
+
+lemma exercise.test_apply_equality_equality1
+(x y z: X) (f: X → Y) (H: x = y) (H': y = z):
+x = z :=
+/- dEAduction
+AutoTest
+    H' H = 0,
+    CQFD
+-/
+begin
+  todo
+end
+
+lemma exercise.test_apply_equality_equality2
+(x y z : X) (f: X → Y) (H: x = y) (H': y = z):
+x = z :=
+/- dEAduction
+AutoTest
+    H' H = 1,
+    CQFD
+-/
+begin
+  todo
+end
+
+lemma exercise.test_apply_equality_equality_and_direction1
+(x y z : X) (f: X → Y) (H: x = y) (H': x = y):
+x = z :=
+/- dEAduction
+AutoTest
+    H' H = 0 0,
+    proof_methods 3
+-/
+begin
+  todo
+end
+
+lemma exercise.test_apply_equality_equality_and_direction2
+(x y z : X) (f: X → Y) (H: x = y) (H': x = y):
+x = z :=
+/- dEAduction
+AutoTest
+    H' H = 0 1,
+    proof_methods 3
+-/
+begin
+  todo
+end
+lemma exercise.test_apply_equality_equality_and_direction3
+(x y z : X) (f: X → Y) (H: x = y) (H': x = y):
+x = z :=
+/- dEAduction
+AutoTest
+    H' H = 1 0,
+    proof_methods 3
+-/
+begin
+  todo
+end
+lemma exercise.test_apply_equality_equality_and_direction4
+(x y z : X) (f: X → Y) (H: x = y) (H': x = y):
+x = z :=
+/- dEAduction
+AutoTest
+    H' H = 1 1,
+    proof_methods 3
+-/
+begin
+  todo
+end
+
+end test_equality
+
+namespace test_map
+--------------
+--- map ---
+--------------
+
+lemma exercise.test_map_equality1
+(x y : X) (f: X → Y) (H: x = y):
+f(x) = f(y) :=
+/- dEAduction
+AutoTest
+    H f map,
+    CQFD
+-/
+begin
+  todo
+end
+
+lemma exercise.test_map_equality2
+(x y z w : X) (f: X → Y) (H: x = y) (H': x = z) (H'': z = w):
+f(x) = f(y) :=
+/- dEAduction
+AutoTest
+    H f H' H'' map,
+    CQFD
+-/
+begin
+  todo
+end
+
+lemma exercise.test_map_element_1
+(x x' : X) (f: X → Y) :
+∃ y:Y, y= f(x') :=
+/- dEAduction
+AutoTest
+    x' f map,
+    y exists
+-/
+begin
+  todo
+end
+
+lemma exercise.test_map_element_2
+(x x' : X) (f: X → Y) :
+∃ y:Y, y= f(x') :=
+/- dEAduction
+AutoTest
+    f map x',
+    y exists
+-/
+begin
+  todo
+end
+
+
+lemma exercise.test_apply_error_1
+(A B: set X) (x y : X) (f: X → Y) (H: x = y) (H': x ∈ A) (H'': A =B):
+y ∈ B :=
+/- dEAduction
+AutoTest
+    H' map WUI error=Sélectionner_une_application,
+    proof_methods 3
+-/
+begin
+  todo
+end
+
+
+
+end test_map
 end tests_logic_buttons
 end theorie_des_ensembles
 end course

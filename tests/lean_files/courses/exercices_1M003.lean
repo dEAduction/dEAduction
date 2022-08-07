@@ -7,6 +7,7 @@ import data.real.basic
 -- dEAduction imports
 import structures2
 import compute
+import utils
 
 -- import definitions
 -- import notations_definitions
@@ -295,7 +296,6 @@ PrettyName
     L'opposé d'une partie minorée est majorée, et réciproquement
 -/
 begin
-    hypo_analysis,
     sorry
 end
 

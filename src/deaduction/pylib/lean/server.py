@@ -37,6 +37,7 @@ import logging
 from subprocess    import PIPE
 from queue         import Queue
 from pathlib       import Path
+# from random import random
 
 from .             import request
 from .             import response
@@ -59,6 +60,7 @@ class LeanServer:
             self.max_nums: int   = max_nums
             self.pending_reqs    = [None] * max_nums
             self.results         = [None] * max_nums
+            self.seq_num         = 0
 
         def set( self, num, result ):
             """
@@ -186,6 +188,8 @@ class LeanServer:
         self.nursery                   = nursery
         self.env                       = env
 
+        self.seq_num = None
+
         self.process = None
         self.buffer = ""
 
@@ -200,7 +204,7 @@ class LeanServer:
 
         self.exited  = trio.Event()
 
-        self.tasks: List[response.Task] = []
+        self.tasks: [response.Task] = []
 
     ############################################
     # Protected utilities
@@ -224,11 +228,13 @@ class LeanServer:
         """
         data = json.loads(data_str)
         parsed_msg = response.from_dict(data)
-
+        # self.log.debug(data)
+        # self.log.debug(parsed_msg)
         # Check for specific messages types
         if isinstance(parsed_msg, response.CommandResponse) or \
-           isinstance(parsed_msg, response.ErrorResponse  ):
+           isinstance(parsed_msg, response.ErrorResponse):
             seq_num = parsed_msg.seq_num
+            self.seq_num = seq_num  # Store and add in subsequent msgs
             self.pending_reqs.set(seq_num, parsed_msg)
 
         elif isinstance(parsed_msg, response.CurrentTasksResponse):
@@ -239,9 +245,10 @@ class LeanServer:
             for msg in parsed_msg.msgs:
                 # self.log.info(f"{msg.severity} at {msg.file_name}
                 # :{msg.pos_line}:{msg.pos_col} : {msg.text}")
+                msg.seq_num = self.seq_num  # Last received seq_num
                 self.on_message_callback(msg)
         else:
-            self.log.warning(f"Ignored message : {msg}")
+            self.log.warning(f"Ignored message : {parsed_msg}")
 
     ############################################
     # Start / receiver tasks
@@ -253,19 +260,26 @@ class LeanServer:
         await self.running_monitor.open()
         await self.pending_reqs.open()
         
-        self.log.info(_("Preparing folder for launch"))
-        tmp_path = Path(tempfile.mkdtemp())
-        self.log.debug(_("Launch folder: {}").format(tmp_path))
+        # self.log.info(_("Preparing folder for launch"))
+        # tmp_path = Path(tempfile.mkdtemp())
+        # self.log.debug(_("Launch folder: {}").format(tmp_path))
+        #
+        # self.env.write_lean_path(tmp_path / "leanpkg.path")
 
-        self.env.write_lean_path(tmp_path / "leanpkg.path")
+        self.log.debug("Writing leanpkg.path")
+        lean_cwd = self.env.leanpkg_path_dir
 
+        self.env.write_lean_path()
+
+        # NB: Lean cwd can probably be anywhere, but the paths in the
+        # leanpkg.path MUST be relative to that path dir.
         self.process = await trio.open_process(
             [str(self.env.lean_bin), "--json", "--server"],
             stdin=PIPE,
             stdout=PIPE,
-            cwd=str(tmp_path)
+            cwd=str(lean_cwd)
         )
-        self.log.info("Started server")
+        self.log.info("Started Lean server")
 
         self.nursery.start_soon(self.receiver)
 
@@ -278,12 +292,29 @@ class LeanServer:
         Receiver task to process data coming from
         lean on its stdout.
         """
+        # FIXME: the UnicodeDecodeError exception below is not really handled
+        #  The patch below just intercept it, on the hope that the lost
+        #  information will be retrieved by another attempt if necessary
+        #  (see the ServerQueue class)
         self._check_process()
 
         async for data in self.process.stdout:
-            sstr         = data.decode("utf-8")
-            self.buffer += sstr
+            try:
+                sstr = data.decode("utf-8")
 
+                # # Simulate UnicodeDecodeError:
+                # trial = random()
+                # self.log.debug(f"Random = {trial}")
+                # if trial < 0.3:
+                #     raise UnicodeDecodeError("Essai d'unicodeerror", data,
+                #                              0, 0, "")
+            except UnicodeDecodeError as error:
+                self.log.error("!UnicodeDecodeError!")
+                self.log.debug(error.reason)
+            else:
+                self.buffer += sstr
+
+            # Cut in lines
             idx = self.buffer.find("\n")
             while idx >= 0:
                 line        = self.buffer[:idx]
@@ -293,7 +324,7 @@ class LeanServer:
                 try :
                     self._process_response(line)
                 except Exception:
-                    # TODO # Better error managment
+                    # TODO # Better error management
                     self.log.error(traceback.format_exc())
 
                 idx = self.buffer.find("\n")
@@ -328,4 +359,5 @@ class LeanServer:
                 return await self.pending_reqs.release(seq_num)
 
         except trio.Cancelled:
+            # FIXME: "trio.Cancelled has no public constructor"
             raise trio.Cancelled(f"Timeout while sending message {req}")

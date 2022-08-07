@@ -30,18 +30,16 @@ from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
 import logging
 
-from deaduction.pylib.config.i18n import _
-import deaduction.pylib.logger as logger
-from deaduction.pylib.actions.actiondef import Action
-import deaduction.pylib.actions.logic
-import deaduction.pylib.actions.proofs
+import deaduction.pylib.config.vars             as cvars
+from deaduction.pylib.actions.actiondef     import Action
 import deaduction.pylib.actions.magic
-from deaduction.pylib.coursedata.utils import (find_suffix,
-                                               substitute_macros,
-                                               extract_list)
+from deaduction.pylib.coursedata.utils     import (find_suffix,
+                                                   substitute_macros,
+                                                   extract_list)
 from deaduction.pylib.coursedata.auto_steps import AutoStep
 
 log = logging.getLogger(__name__)
+global _
 
 ##############################################
 # Lists of all instances of the Action class #
@@ -90,6 +88,9 @@ class Statement:
     info:                   Dict[str, Any]  = None
     # Any other (non-essential) information
 
+    # def __repr__(self):
+    #     return self.pretty_name if self.pretty_name else self.lean_name
+
     @classmethod
     def from_parser_data(cls, **data):
         """
@@ -106,8 +107,8 @@ class Statement:
         # extract_data = {attribute: data.setdefault(attribute, None)
         #                for attribute in attributes}
         # keep only the relevant data, i.e. the keys which corresponds to
-        # attribute of the class. The remaining information are put in the
-        # info dictionary attribute
+        # attribute of the class. The remaining information are put in
+        # the self.info dictionary
         for field_name in data:  # replace string by bool if needed
             if data[field_name] == 'True':
                 data[field_name] = True
@@ -122,7 +123,11 @@ class Statement:
     @classmethod
     def attributes(cls):
         """return the list of attributes of the class"""
-        return cls.__annotations__.keys()
+        # FIXME: deprecated in Python3.10, use inspect.get_annotations(cls)
+        attributes = Statement.__annotations__
+        if cls != Statement:
+            attributes.update(cls.__annotations__)
+        return attributes
 
     @property
     def lean_short_name(self):
@@ -149,6 +154,14 @@ class Statement:
         else:
             text = ""
         return text
+
+    @property
+    def target(self):
+        """
+        Return target of main goal, whose math_type is the target property.
+        """
+        if self.initial_proof_state:
+            return self.initial_proof_state.goals[0].target
 
     def pretty_hierarchy(self, outline):
         """
@@ -192,8 +205,7 @@ class Statement:
         ugly_hierarchy = self.lean_name.split('.')[:-2]
         return ugly_hierarchy
 
-    @property
-    def caption(self) -> str:
+    def caption(self, is_exercise=False) -> str:
         """
         Return a string that shows a simplified version of the statement
         (e.g. to be displayed as a tooltip).
@@ -202,15 +214,19 @@ class Statement:
             text = self.lean_core_statement
         else:
             goal = self.initial_proof_state.goals[0]
-            target = goal.target
-            text = target.math_type.to_display(is_math_type=True)
+            # target = goal.target
+            # text = target.math_type.to_display(is_math_type=True)
+            type_ = "exercise" if is_exercise else "non-exercise"
+            text = goal.to_tooltip(type_=type_)
+            if cvars.get("functionality.allow_implicit_use_of_definitions"):
+                if isinstance(self, Definition) and self.implicit_use:
+                    text = '(' + _("implicit use allowed") + ')' + '\n' + text
         return text
 
     @property
     def refined_auto_steps(self) -> [AutoStep]:
         """
-        Turn the raw string parsed from the lean file into a
-        :return:
+        Turn the raw string parsed from the lean file into a list of AutoStep.
         """
         if self.__refined_auto_steps:
             return self.__refined_auto_steps
@@ -258,10 +274,48 @@ class Statement:
         elif self.is_exercise():
             return _('exercise')
 
+    @property
+    def type_(self):
+        if self.is_definition():
+            return _('definition')
+        elif self.is_theorem():
+            return _('theorem')
+        elif self.is_exercise():
+            return _('exercise')
 
-@dataclass
+
 class Definition(Statement):
-    pass
+    # def __init__(self, **data):
+    #     super().__init__(self, **data)
+    #     self.implicit_use_activated = False
+
+    @property
+    def implicit_use(self):
+        if 'implicit_use' in self.info and self.info['implicit_use']:
+            return True
+        else:
+            return False
+
+    def extract_iff(self):
+        ipf = self.initial_proof_state
+        if not ipf:
+            return None
+        goal = ipf.goals[0]
+        target = goal.target
+        if not target.is_iff():
+            return None
+        else:
+            return target.math_type
+
+    def extract_left_term(self):
+        iff = self.extract_iff()
+        if iff:
+            return iff.children[0]
+
+    def extract_right_term(self):
+        iff = self.extract_iff()
+        if iff:
+            return iff.children[1]
 
 
 @dataclass
@@ -293,6 +347,12 @@ class Exercise(Theorem):
         exercises = [statement for statement in self.course.statements
                      if isinstance(statement, Exercise)]
         return exercises.index(self)
+
+    @property
+    def definitions_for_implicit_use(self):
+        definitions = [st for st in self.available_statements
+                       if isinstance(st, Definition) and st.implicit_use]
+        return definitions
 
     @classmethod
     def from_parser_data(cls, data: dict, statements: list):
@@ -420,6 +480,20 @@ class Exercise(Theorem):
             if isinstance(statement, Exercise):
                 return statement
         return None
+
+    @property
+    def available_logic_1(self):
+        action_names = ["and", "or", "not", "implies", "iff"]
+        actions = [action for action in self.available_logic
+                   if action.name in action_names]
+        return actions
+
+    @property
+    def available_logic_2(self):
+        action_names = ["forall", "exists", "equal", "map"]
+        actions = [action for action in self.available_logic
+                   if action.name in action_names]
+        return actions
 
 
 #############
@@ -610,10 +684,11 @@ def make_statement_callable(prefix: str, statements) -> callable:
 
 def polish_data(data):
     """
-    Make some formal smoothing.
+    Make some formal smoothing. BEware that capitalization modifies math
+    notations!
     """
     if 'description' in data:
-        data['description'] = data['description'].capitalize()
+        # data['description'] = data['description'].capitalize()
         if data['description'][-1].isalpha():
             data['description'] += '.'
 

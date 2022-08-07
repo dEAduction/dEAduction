@@ -28,55 +28,72 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from deaduction.pylib.config.i18n import _
+import deaduction.pylib.config.vars as cvars
+from deaduction.pylib.math_display.utils import replace_dubious_characters
+
 
 ########################################################################
 # Set tooltips and text button HERE to enable translation with gettext #
 ########################################################################
 # Logic and proof Buttons tooltips
+# Disable translation: translation will be done on the fly
+# _ = lambda message: message
+# TODO: modify tooltip as a list of lines,
+#  to help translation
+
+
+# We do not want translation at init but on the spot
+# But we want poedit to mark those str for translation
+def _(msg):
+    return msg
+
+
 __tooltips = {
-    'tooltip_and':
-    "• " + _("Split a property 'P AND Q' into the two properties 'P', 'Q'")
-    + "\n" + "• " + _("Conversely, assemble 'P' and 'Q' to get 'P AND Q'"),
-    'tooltip_or':
-    "• " + _("Prove 'P OR Q' by proving either 'P' or 'Q'") + "\n"
-    + "• " + _("Use property 'P OR Q' by splitting cases"),
-    'tooltip_not':
+    'and':
+        [_("Split a property 'P AND Q' into the two properties 'P', 'Q'"),
+        _("Conversely, assemble 'P' and 'Q' to get 'P AND Q'")],
+    'or':
+        [_("Prove 'P OR Q' by proving either 'P' or 'Q'"),
+        _("Use property 'P OR Q' by splitting cases")],
+    'not':
         _("""Try to simplify the property 'NOT P'"""),
-    'tooltip_implies':
-        "• " + _("""Prove 'P ⇒ Q' by assuming 'P', and proving 'Q'""") + "\n"
-    + "• " + _("""From 'P' and 'P ⇒ Q' get 'Q'"""),
-    'tooltip_iff':
-        "• "+_("Split 'P ⇔ Q' into two implications") + "\n"
-    + "• " + _("From 'P ⇒ Q' and 'Q ⇒ P' get 'P ⇔ Q'"),
-    'tooltip_forall':
-    "• " + _("""Prove '∀ x, P(x)' by introducing 'x'""") + "\n"
-    + "• " + _("""From some 'x' and '∀ x, P(x)' get 'P(x)'"""),
-    'tooltip_exists':
-    "• " + _("""Prove '∃ x, P(x)' by specifying some 'x'""") + "\n"
-    + "• " + _("""From '∃ x, P(x)' get an 'x' and 'P(x)'"""),
-    # + "\n"
-    # + "• " + _("""From some 'x' and 'P(x)' get '∃ x, P(x)'"""),
-    'tooltip_apply':
-    "• " + _("Apply an equality or an iff to substitute in another property")
-    + "\n" + "• " + _("""Apply a function to an element or an equality"""),
-    # + "\n" + "• " + _("""(... try it to find other uses)"""),
-    'tooltip_proof_methods':
-        _("""Choose some specific proof method:""") + "\n"
-    + "• " + _("Case-based reasoning") + "\n"
-    + "• " + _("Proof by contrapositive") + "\n"
-    + "• " + _("Proof by contradiction"),
-    'tooltip_new_object':
-    "• " + _("Create a new object (e.g. 'f(x)' from 'f' and 'x'") + "\n"
-    + "• " + _("Create a new subgoal (a lemma)") + "\n" + "• "
-    + _("Create a function from X to Y from property '∀ x ∈ X, ∃ y ∈ Y, P(x,"
-        "y)'"),
-    'tooltip_assumption':
+    'implies':
+        [_("""Prove 'P ⇒ Q' by assuming 'P', and proving 'Q'"""),
+        _("""From 'P' and 'P ⇒ Q' get 'Q'""")],
+    'iff':
+        [_("Split 'P ⇔ Q' into two implications"),
+        _("From 'P ⇒ Q' and 'Q ⇒ P' get 'P ⇔ Q'")],
+    'forall':
+        [_("""Prove '∀ x, P(x)' by introducing 'x'"""),
+        _("""From some 'x' and '∀ x, P(x)' get 'P(x)'""")],
+    'exists':
+        [_("""Prove '∃ x, P(x)' by specifying some 'x'"""),
+        _("""From '∃ x, P(x)' get an 'x' and 'P(x)'""")],
+    'equal':
+        _("""Use an equality to substitute one term with the other"""),
+    "map":
+        _("""Apply a function to an element or an equality"""),
+    'apply':
+        # [_("Apply an equality or an iff to substitute in another property"),
+        _("""Apply a function to an element or an equality"""),
+    'proof_methods':
+        _("""Choose some specific proof method"""),
+    # + "• " + _("Case-based reasoning") + "\n"
+    # + "• " + _("Proof by contrapositive") + "\n"
+    # + "• " + _("Proof by contradiction"),
+    'new_object':
+        [_("Create a new object (e.g. 'f(x)' from 'f' and 'x'"),
+        _("Create a new subgoal (a lemma)"),
+        _("Create a function from X to Y from property '∀ x ∈ X, ∃ y ∈ Y, P(x,"
+            "y)'")],
+    'assumption_old':
         _("Terminate the proof when the target is obvious from the context"),
-    'tooltip_compute':
+    'assumption':
+        _("Terminate the proof when the target is obvious from the context"),
+    'compute':
         _("Terminate the proof when target results from manipulating numbers")
 }
-# decentralized apply buttons
+# Decentralized apply buttons
 # this phrase will be preceded by "double click to "
 __tooltips_apply = {
     'tooltip_apply_function':
@@ -93,18 +110,67 @@ __tooltips_apply = {
     _("""split into two properties""")
 }
 
-# Text for buttons
-__buttons = {
-    'logic_button_texts': _("AND, OR, NOT, ⇒, ⇔, ∀, ∃"),
-    'proof_button_texts': _("Apply")
-                          + ", " + _("Proof Methods")
-                          + ", " + _("New Object"),
-    'magic_button_texts': _('Compute') + ', ' + _('Goal!')
+#########################
+# Define button symbols #
+#########################
+__buttons_symbols = {
+    'apply': _('Apply'),
+    'proof_methods': _("Proof methods..."),
+    'new_object': _('New object...'),
+    'assumption_old': 'Goal! (old)',
+    'assumption': _("Goal!"),
+    'compute': _('Compute'),
+    'CQFD': _('Goal!')+"+"
 }
-# Sad thoughts for "¯\_(ツ)_/¯", I loved you so much...
+logic_buttons = ['and', 'or', 'not', 'implies', 'iff', 'forall', 'exists',
+                 'equal', 'map']
+__logic_translation = [_('AND'), _('OR'), _('NOT'), _('IMPLIES'), _('IFF'),
+                       _('FORALL'), _('EXISTS'), _('EQUAL'), _('MAP')]
 
 
-def get(k):
-    return __tooltips.get(k, None)       \
-        or __tooltips_apply.get(k, None) \
-        or __buttons[k]
+def button_symbol(name):
+    """
+    Return symbol for the button corresponding to function action_<name>.
+    e.g. action_and, action_proof_method, and so on.
+    NB: translation is NOT done here, gettext translation function _ must be
+     applied to the output.
+    """
+    logic_button_symbols = cvars.get(
+        'display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP')
+    logic_button_symbols = logic_button_symbols.split(", ")
+    use_symbols = cvars.get('display.use_symbols_for_logic_button')
+    if not use_symbols:
+        logic_button_symbols[0] = "AND"
+        logic_button_symbols[1] = "OR"
+        logic_button_symbols[2] = "NOT"
+
+    for key, value in zip(logic_buttons, logic_button_symbols):
+        __buttons_symbols[key] = value
+    if name in __buttons_symbols:
+        symbol = __buttons_symbols[name]
+        symbol = replace_dubious_characters(symbol)
+        return symbol
+
+
+def button_tool_tip(name: str):
+    """
+    Return tool_tip for the button corresponding to function action_<name>.
+    e.g. action_and, action_proof_method, and so on.
+    NB: translation is NOT done here.
+    """
+    if name in logic_buttons:
+        # Add the name of the logic button to explicit the symbols
+        pretty_name = name.upper()+':'
+        tooltip = __tooltips[name]
+        if isinstance(tooltip, str):
+            tooltip = [tooltip]
+        if tooltip[0] != pretty_name:
+            tooltip.insert(0, pretty_name)
+        return tooltip
+    else:
+        return __tooltips[name]
+
+
+def apply_tool_tip(name):
+    return __tooltips_apply[name]
+

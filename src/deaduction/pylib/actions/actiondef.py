@@ -1,8 +1,15 @@
 """
-############################################################
-# actiondef.py : defines class Action                      #
-############################################################
+###########################################################
+# actiondef.py : define class Action                      #
+###########################################################
 
+Thanks to the action decorator, a dictionary of all action functions is
+build. Then a button is created for each function.
+
+To add a new action function:
+    - create the function in action/logic or magic or proofs
+    - add a tooltip in pylib/text/tooltips, and (for a logic button)
+    the name in the logic_buttons list, and a default symbol in config.toml
 
 Author(s)     : - Marguerite Bin <bin.marguerite@gmail.com>
 Maintainer(s) : - Marguerite Bin <bin.marguerite@gmail.com>
@@ -27,24 +34,42 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import deaduction.pylib.logger as logger
-import logging
 import inspect
-from dataclasses import dataclass
+from deaduction.pylib.text import button_symbol
 
 
-@dataclass
 class Action:
     """
-    Associates data, name to a specific action function.
-    run is the specific action function.
+    A class to store action functions.
+    self.run is the function.
     """
-    caption: str
-    symbol: str  # Will be the text of the corresponding button
     run: any
 
+    def __init__(self, func):
+        self.run       = func
 
-def action(caption: str, symbol: str):
+    @property
+    def symbol(self):
+        """
+        "Symbol" of the action, to be put on the button
+        (e.g. action_forall --> ∀)
+        This is the actual symbol that may be changed by user
+        (cf config.toml).
+        """
+        return button_symbol(self.name)
+
+    @property
+    def name(self):
+        """
+        e.g. function action_and --> name = "and"
+        """
+        func_name = self.run.__name__
+        # Remove the "action_" part
+        name = func_name[len("action_"):]
+        return name
+
+
+def action():
     """
     Decorator used to reference the function as an available action
     plus creating the Action object containing the metadata
@@ -57,12 +82,13 @@ def action(caption: str, symbol: str):
     mod = inspect.getmodule(frm[0])
 
     def wrap_action(func):
-        act = Action(caption, symbol, func)
+        act = Action(func)
 
         # Init the __actions__ object in the corresponding module if not
         # existing, then add the Action object.
         # Identifier is taken from the function name.
-        if "__actions__" not in mod.__dict__: mod.__actions__ = dict()
+        if "__actions__" not in mod.__dict__:
+            mod.__actions__ = dict()
         mod.__actions__[func.__name__] = act
 
         return func

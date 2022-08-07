@@ -2,19 +2,15 @@
 A dummy dEAduction main window interface, but with server !
 """
 
-import logging
-from PySide2.QtWidgets import QApplication, QMainWindow, QPushButton, \
-                              QHBoxLayout, QVBoxLayout, QGridLayout, \
-                              QLineEdit, QListWidget, QWidget, QGroupBox, \
-                              QLabel, QDesktopWidget, QListWidgetItem, \
+from PySide2.QtWidgets import QPushButton, \
+                              QHBoxLayout, QVBoxLayout, QWidget, QGroupBox, \
+    QListWidgetItem, \
                               QPlainTextEdit, QMessageBox
 
-from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem, QTreeView, QListWidget
-from PySide2.QtCore import Qt, Signal, Slot
-from PySide2.QtGui import QFont, QColor, QBrush, QIcon
-import sys
+from PySide2.QtWidgets import QListWidget
+from PySide2.QtCore import Signal, Slot
+from PySide2.QtGui import QFont
 
-from functools import partial
 from pathlib   import Path
 
 import trio
@@ -25,7 +21,7 @@ from deaduction.pylib                             import logger as logger
 from deaduction.pylib.server                      import (ServerInterface,
                                                           exceptions)
 from deaduction.pylib.coursedata.course           import Course
-from deaduction.pylib.mathobj.proof_state         import ProofState
+from deaduction.pylib.proof_state.proof_state import ProofState
 from deaduction.pylib.coursedata.exercise_classes import Exercise
 
 log = logging.getLogger(__name__)
@@ -81,7 +77,7 @@ class ExerciseWindow(QWidget):
 
     async def server_task(self):
         await self.server.start()
-        await self.server.exercise_set(self.exercise)
+        await self.server.set_exercise(self.exercise)
         async with qtrio.enter_emissions_channel(signals=[
             self.closed,
             self.send.clicked,

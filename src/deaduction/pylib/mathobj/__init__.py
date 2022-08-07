@@ -26,19 +26,16 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .MathObject import     (MathObject,
-                             NO_MATH_TYPE,
-                             NUMBER_SETS_LIST)
-from .proof_state import    (Goal,
-                             ProofState
-                             )
-from .proof_step import     (Proof,
-                             ProofStep,
-                             NewGoal)
+from deaduction.pylib.mathobj.math_object import MathObject
+from .context_math_object import                 ContextMathObject
+from .pattern_math_objects import                PatternMathObject
+from .proof_step import          (ProofStep,
+                                  NewGoal)
 
-from .give_name import     (get_new_hyp,
-                            give_global_name,
-                            give_local_name,
-                            )
+from .give_name import           (get_new_hyp,
+                                  give_global_name,
+                                  names_for_types)
 
-from .lean_analysis import lean_expr_with_type_grammar, LeanEntryVisitor
+from .lean_analysis import       (lean_expr_with_type_grammar,
+                                  LeanEntryVisitor)
+

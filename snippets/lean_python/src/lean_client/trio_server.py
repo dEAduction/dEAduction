@@ -44,14 +44,14 @@ class TrioLeanServer:
         if not self.process:
             raise ValueError('No Lean server')
         self.seq_num += 1
-        request.seq_num = self.seq_num
+        request.request_seq_num = self.seq_num
         self.response_events[self.seq_num] = trio.Event()
         if self.debug:
             print(f'Sending {request}')
         await self.process.stdin.send_all((request.to_json()+'\n').encode())
-        await self.response_events[request.seq_num].wait()
-        self.response_events.pop(request.seq_num)
-        return self.responses.pop(request.seq_num)
+        await self.response_events[request.request_seq_num].wait()
+        self.response_events.pop(request.request_seq_num)
+        return self.responses.pop(request.request_seq_num)
 
     async def receiver(self):
         """This task waits for Lean responses, updating the server state
@@ -70,8 +70,8 @@ class TrioLeanServer:
                 elif isinstance(resp, AllMessagesResponse):
                     self.messages = resp.msgs
                 if hasattr(resp, 'seq_num'):
-                    self.responses[resp.seq_num] = resp
-                    self.response_events[resp.seq_num].set()
+                    self.responses[resp.request_seq_num] = resp
+                    self.response_events[resp.request_seq_num].set()
 
     async def full_sync(self, filename, content=None) -> None:
         """Fully compile a Lean file before returning."""

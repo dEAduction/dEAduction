@@ -3,7 +3,8 @@ import tactic
 
 -- dEAduction imports
 import structures2
-import notations_definitions
+import user_notations
+import compute
 import utils
 
 -- General principles :
@@ -148,6 +149,30 @@ begin
     exact set.subset.antisymm_iff.mpr
 end
 
+lemma definition.intersection_deux_ensembles {A B : set X} {x : X} :
+x ∈ A ∩ B ↔ ( x ∈ A ∧ x ∈ B) :=
+/- dEAduction
+PrettyName
+    Intersection de deux ensembles
+ImplicitUse
+    True
+-/
+begin
+    exact iff.rfl
+end
+
+lemma definition.union_deux_ensembles  {A : set X} {B : set X} {x : X} :
+x ∈ A ∪ B ↔ ( x ∈ A ∨ x ∈ B) :=
+/- dEAduction
+PrettyName
+    Union de deux ensembles
+ImplicitUse
+    True
+-/
+begin
+    exact iff.rfl
+end
+
 lemma exercise.inclusion_transitive
 (A B C : set X) :
 (A ⊆ B ∧ B ⊆ C) → A ⊆ C
@@ -226,6 +251,18 @@ begin
   sorry
 end
 
+lemma exercise.test_assumption_cc2
+(x y z: X) (B: set Y) (f: X → Y) (H: x=y) (H': y=z) (H'': f(z) ∈ B):
+f(x) ∈ B
+:=
+/- dEAduction
+AutoTest
+    CQFD
+-/
+begin
+  sorry
+end
+
 lemma exercise.test_assumption_inequality
 (x y: ℝ) (H: x < y):
 y > x
@@ -238,7 +275,7 @@ begin
   sorry
 end
 
-lemma exercise.test_assumption_or
+lemma exercise.test_assumption_or_left
 (P Q: Prop) (H: P):
 P or Q
 :=
@@ -250,7 +287,7 @@ begin
   sorry
 end
 
-lemma exercise.test_assumption_or_2
+lemma exercise.test_assumption_or_right
 (P Q: Prop) (H: Q):
 P or Q
 :=
@@ -261,6 +298,44 @@ AutoTest
 begin
   sorry
 end
+
+lemma exercise.test_assumption_or_rec1
+(P Q R: Prop) (H: P):
+((P or Q) or R)
+:=
+/- dEAduction
+AutoTest
+    CQFD
+-/
+begin
+  sorry
+end
+
+lemma exercise.test_assumption_or_rec2
+(P Q R: Prop) (H: Q):
+((P or Q) or R)
+:=
+/- dEAduction
+AutoTest
+    CQFD
+-/
+begin
+  sorry
+end
+
+lemma exercise.test_assumption_or_rec3
+(P Q R: Prop) (H: R):
+((P or Q) or R)
+:=
+/- dEAduction
+AutoTest
+    CQFD
+-/
+begin
+  sorry
+end
+
+-- AND --
 
 lemma exercise.test_assumption_split_and
 (P Q R: Prop) (H: P ∧ Q) (H': R):
@@ -273,6 +348,58 @@ AutoTest
 begin
   sorry
 end
+
+lemma exercise.test_assumption_rec_split_and
+(P Q R: Prop) (H: P) (H': Q) (H'': R):
+(P ∧ Q) ∧ R
+:=
+/- dEAduction
+AutoTest
+    CQFD
+-/
+begin
+  sorry
+end
+
+lemma exercise.test_assumption_split_context
+(P Q R: Prop) (H: P ∧ R) (H': Q):
+(P ∧ Q) ∧ R
+:=
+/- dEAduction
+AutoTest
+    CQFD
+-/
+begin
+  sorry
+end
+
+lemma exercise.test_assumption_implicit_or
+(X: Type) (x : X) (A B C : set X)
+(H: x ∈ B ) :
+x ∈ A ∪ (B ∪ C)
+:=
+/- dEAduction
+AutoTest
+    CQFD
+-/
+begin
+  sorry
+end
+
+lemma exercise.test_assumption_implicit_and
+(X: Type) (x : X) (A B C : set X)
+(H: x ∈ A ∩ B ) (H': x ∈ C ):
+x ∈ A ∩ (B ∩ C)
+:=
+/- dEAduction
+AutoTest
+    CQFD
+-/
+begin
+  sorry
+end
+
+
 
 lemma exercise.test_assumption_norm_num
 :

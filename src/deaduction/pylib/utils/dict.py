@@ -25,10 +25,11 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
+
 def dotset( r, k, v, if_not_exists=False ):
     """
-    Sets an item in a directory with a hierarchical path. Creates sub directories
-    if needed
+    Sets an item in a directory with a hierarchical path.
+    Creates sub directories if needed.
 
     :param r: The destination dict
     :param k: The hierarchical key, separated with dots

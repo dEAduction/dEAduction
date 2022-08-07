@@ -1,12 +1,15 @@
 import data.real.basic
 import tactic
-import notations_definitions
+import real_definitions
+import utils
+
+
 
 namespace tactic.interactive
 open lean.parser tactic interactive
 open interactive (loc.ns)
 open interactive.types
-open tactic expr
+open expr
 
 
 -- useful lemmas:
@@ -44,14 +47,14 @@ meta def make_ineq : expr × expr × expr → expr × expr × expr → tactic un
     {
     H ← mk_fresh_name,
     «have» H none ``(lt_of_le_of_ne %%H1 %%H2),
-    tactic.trace "EFFECTIVE LEAN CODE: have H := lt_of_le_of_ne blabla"
+    tactic.trace("EFFECTIVE LEAN CODE: have H := lt_of_le_of_ne " ++ to_string H1 ++ " " ++ to_string H1)
     }
     <|>
     tactic.unify a b' >> tactic.unify a' b >> do
     {
     H ← mk_fresh_name,
     «have» H none ``(lt_of_le_of_ne %%H1 (ne.symm %%H2)),
-    tactic.trace "EFFECTIVE LEAN CODE: have H := lt_of_le_of_ne (ne.symm blabla)"
+    tactic.trace("EFFECTIVE LEAN CODE: have H := lt_of_le_of_ne " ++ to_string H1 ++ " (ne.symm " ++ to_string H2 ++ ")")
     }
     <|>
     skip
@@ -154,6 +157,10 @@ do
 {
     do {assumption, tactic.trace "EFFECTIVE LEAN CODE: assumption"}
     <|>
+    -- solve e.g. "n_0 ≤ n_0 ∨ n_0 ≤ n_1"
+    -- with norm_num, solves "n_0 ≤ max n_0 n_1"
+    do {tactic.tautology, tactic.trace "EFFECTIVE LEAN CODE: tautology"}
+    <|>
     do {nl_linarith, tactic.trace "EFFECTIVE LEAN CODE: nl_linarith"}
     <|>
     do {tactic.applyc ``mul_pos, tactic.trace "EFFECTIVE LEAN CODE: apply mul_pos"}
@@ -163,7 +170,7 @@ do
     <|>
  -- a≠0 → b≠0 → ab≠0
      do {tactic.applyc ``mul_ne_zero, tactic.trace "EFFECTIVE LEAN CODE: apply mul_ne_zero"}
---  div_pos devient inutile
+--  div_pos is now useless
 }
 
 meta def compute_n (n: nat): tactic unit :=

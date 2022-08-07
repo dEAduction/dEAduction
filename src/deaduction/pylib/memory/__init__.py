@@ -36,11 +36,16 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 import logging
-import pickle5 as pickle
+# from sys import version_info
+# if version_info[1] < 8:
+#     import pickle5 as pickle
+# else:
+#     import pickle
+
 import time
 
-from deaduction.pylib.config.i18n import _
-
+# from deaduction.pylib.config.i18n import _
+from deaduction.pylib.utils import            save_object
 import deaduction.pylib.config.vars as        cvars
 import deaduction.pylib.config.dirs as        cdirs
 from deaduction.pylib.utils.filesystem import check_dir
@@ -59,7 +64,7 @@ class Journal:
 
     memory:     [ProofStep]
 
-    __save_journal = cvars.get('journal.save')
+    __save_journal = cvars.get('logs.save_journal')
     __journal_file_name = cdirs.local / 'journal.pkl'
 
     def __init__(self, display_message=None):
@@ -81,7 +86,7 @@ class Journal:
         :param emw: ExerciseMainWindow instance
         """
 
-        save = cvars.get('journal.save', False)
+        save = cvars.get('logs.save_journal', False)
         if not save:
             return
 
@@ -106,15 +111,19 @@ class Journal:
         print(total_string)
 
         log.debug(f"Saving auto_steps in {file_path}")
-        with open(file_path, mode='xb') as output:
-            pickle.dump(exercise, output, pickle.HIGHEST_PROTOCOL)
+        save_object(exercise, file_path)
+        # with open(file_path, mode='wb') as output:
+        #     pickle.dump(exercise, output, pickle.HIGHEST_PROTOCOL)
 
         file_path = file_path.with_suffix('.txt')
         log.debug(f"Saving journal in {file_path}")
         txt = self.display()
         print(txt)
-        with open(file_path, mode='xt') as output:
-            output.write(txt)
+        try:
+            with open(file_path, mode='xt') as output:
+                output.write(txt)
+        except FileExistsError:
+            log.debug("(File already exists, abort saving)")
 
     def display(self):
         """

@@ -3,7 +3,7 @@ import tactic
 
 -- dEAduction imports
 import structures2
-import notations_definitions
+import user_notations
 import utils
 
 -- General principles :
@@ -97,6 +97,10 @@ PrettyName
 -- COURSE DEFINITIONS --
 ------------------------
 lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, x ∈ A → x ∈ B :=
+/- dEAduction
+ImplicitUse
+    True
+-/
 begin
     exact iff.rfl
 end
@@ -150,18 +154,20 @@ begin
     exact set.subset.antisymm_iff.mpr
 end
 
-lemma exercise.inclusion_transitive
+lemma exercise.test_implicit_inclusion
 (A B C : set X) :
 (A ⊆ B ∧ B ⊆ C) → A ⊆ C
 :=
 /- dEAduction
 PrettyName
     Transitivité de l'inclusion
-AutoStep
-    →, @P1 ∧
+AutoTest
+    →, @P1 ∧, ∀, →,
+    @P3 @P1 →, @P4 @P2 →,
+    CQFD 
 -/
 begin
-    sorry
+    todo
 end
 
 example (x y:X) (H : x ≠ y) : y ≠ x :=  
@@ -194,7 +200,7 @@ AutoTest
     ∨ 1, CQFD
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.test_case_base_reasoning_2
@@ -209,7 +215,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_contrapose
@@ -221,7 +227,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_absurdum
@@ -233,7 +239,7 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_sorry
@@ -244,7 +250,7 @@ AutoTest
     proof_methods 3
 -/
 begin
-  sorry
+  todo
 end
 
 -----------------
@@ -258,11 +264,10 @@ lemma exercise.test_introduce_new_object
 /- dEAduction
 AutoTest
     new_object 0 z x,
-    ∃ z,
-    CQFD
+    ∃ z
 -/
 begin
-  sorry
+  todo
 end
 
 -- Don't know how to test this one!!
@@ -273,11 +278,10 @@ lemma exercise.test_introduce_new_subgoal
 /- dEAduction
 AutoTest
     new_object 1 P∨Q,
-    ∨ 1, CQFD,
-    ∨ 0, CQFD
+    ∨ 1, CQFD, CQFD
 -/
 begin
-  sorry
+  todo
 end
 
 lemma exercise.test_introduce_new_function
@@ -290,68 +294,9 @@ AutoTest
     CQFD
 -/
 begin
-  sorry
-end
-
------------
--- Apply --
------------
-lemma exercise.test_apply_equality
-(x y : X) (f: X → Y) (H: x = y):
-f(x) = f(y) :=
-/- dEAduction
-AutoTest
-    H f apply,
-    CQFD
--/
-begin
-  sorry
-end
-
-
-lemma exercise.test_apply_equality2
-(A B: set X) (x y : X) (f: X → Y) (H: x = y) (H': x ∈ A) (H'': A =B):
-y ∈ B :=
-/- dEAduction
-AutoTest
-    H' H apply,
-    H' H'' apply,
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_apply_error_1
-(A B: set X) (x y : X) (f: X → Y) (H: x = y) (H': x ∈ A) (H'': A =B):
-y ∈ B :=
-/- dEAduction
-AutoTest
-    H' apply WUI error=appliquer_ceci,
-    proof_methods 3
--/
-begin
-  sorry
-end
-
-lemma exercise.test_apply_error_2
-(A B: set X) (x y : X) (f: X → Y) (H: x = y) (H': x ∈ A) (H'': A =B):
-y ∈ B :=
-/- dEAduction
-AutoTest
-    CQFD FRE error=pas_comment_conclure,
-    proof_methods 3
--/
-begin
-  sorry
+  todo
 end
 end tests_proof_buttons
-
-
-
-
-
-
-
 end theorie_des_ensembles
 end course
+
