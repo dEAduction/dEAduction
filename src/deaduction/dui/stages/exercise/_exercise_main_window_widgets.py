@@ -172,6 +172,7 @@ class ExerciseCentralWidget(QWidget):
         self.current_goal = None
         self.objects_wgt  = MathObjectWidget()
         self.props_wgt    = MathObjectWidget()
+        self.props_wgt.accept_drops()
         self.target_wgt   = TargetWidget()
         self.deaduction_fonts = DeaductionFonts(self)
         self.set_font()

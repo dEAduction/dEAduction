@@ -189,6 +189,7 @@ class MathObjectWidgetItem(QStandardItem):
         self.setIcon(_TagIcon(self.tag))
         # Uncomment to enable drag:
         # self.setDragEnabled(True)
+        self.setDropEnabled(False)
 
     @property
     def math_object(self):
@@ -230,6 +231,8 @@ class TargetWidgetItem(QStandardItem):
     Widget to display a target in the chooser, with the same format as the
     MathObjectWidgetItem.
     """
+
+    # FIXME: not used.
 
     def __init__(self, target):
 
@@ -282,11 +285,11 @@ class MathObjectWidget(QListView):
         # No text edition (!), no selection, no drag-n-drop
         self.setSelectionMode(QAbstractItemView.NoSelection)
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        # self.setDragDropMode(QAbstractItemView.NoDragDrop)
+
         # Uncomment to enable drag and drop:
-        # self.setDragDropMode(QAbstractItemView.DragDrop)
+        self.setDragDropMode(QAbstractItemView.NoDragDrop)
         # self.setDragEnabled(True)
-        self.setDragDropMode(QAbstractItemView.DropOnly)
+        # self.setDragDropMode(QAbstractItemView.DropOnly)
 
         # After filling content?
         # model = QStandardItemModel(self)
@@ -373,12 +376,33 @@ class MathObjectWidget(QListView):
         if idx in range(len(items)):
             return items[idx]
 
+    def accept_drops(self):
+        if (self.DragDropMode() is QAbstractItemView.DragDrop or
+                self.DragDropMode() is QAbstractItemView.DragOnly):
+            self.setDragDropMode(QAbstractItemView.DragDrop)
+        else:
+            self.setDragDropMode(QAbstractItemView.DropOnly)
+
+    def accept_drags(self):
+        if (self.DragDropMode() is QAbstractItemView.DragDrop or
+                self.DragDropMode() is QAbstractItemView.DropOnly):
+            self.setDragDropMode(QAbstractItemView.DragDrop)
+        else:
+            self.setDragDropMode(QAbstractItemView.DragOnly)
+            self.setDragEnabled(True)
+
     def dropEvent(self, event):
         statement_widget = event.source().currentItem()
         print(f"Dropped: {statement_widget.statement.lean_name}")
         self.statement_dropped.emit(statement_widget)
         # self.statement_dropped.emit()
         # self.statement_dropped()
+
+    # def dragEnterEvent(self, event):
+    #     pass
+
+    def dragMoveEvent(self, event):
+        pass
 
 
 MathObjectWidget.apply_math_object_triggered = Signal(MathObjectWidget)
