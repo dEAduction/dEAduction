@@ -61,6 +61,8 @@ from   deaduction.pylib.utils.filesystem import path_helper
 
 import deaduction.pylib.config.vars as cvars
 
+from deaduction.dui.elements import StatementsTreeWidgetItem
+
 log = logging.getLogger(__name__)
 global _
 
@@ -92,6 +94,9 @@ class TargetLabel(QLabel):
 
         self.setText(text)
         self.setTextFormat(Qt.RichText)
+
+    def replace_target(self, target):
+        self.setText(target.math_type_to_display())
 
     # Debugging
     # def mouseReleaseEvent(self, ev) -> None:
@@ -210,7 +215,7 @@ class MathObjectWidgetItem(QStandardItem):
 
         return self is other  # Brutal but that is what we need.
 
-    def mark_user_selected(self, yes: bool=True):
+    def mark_user_selected(self, yes: bool = True):
         """
         Change self's background to green if yes or to normal color
         (e.g. white in light mode) if not yes.
@@ -218,9 +223,6 @@ class MathObjectWidgetItem(QStandardItem):
         background_color = cvars.get("display.color_for_selection", "LimeGreen")
         self.setBackground(QBrush(QColor(background_color)) if yes
                            else QBrush())
-
-    # def has_math_object(self, math_object: MathObject) -> bool:
-    #     return self.math_object is MathObject
 
 
 class TargetWidgetItem(QStandardItem):
@@ -251,6 +253,9 @@ class MathObjectWidget(QListView):
         attribute makes accessing them painless.
     """
 
+    # Signals
+    statement_dropped = Signal(StatementsTreeWidgetItem)
+
     def __init__(self, context_math_objects=None, target=None):
         """
         Init self an ordered list of tuples (mathobject, tag), where
@@ -277,10 +282,11 @@ class MathObjectWidget(QListView):
         # No text edition (!), no selection, no drag-n-drop
         self.setSelectionMode(QAbstractItemView.NoSelection)
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.setDragDropMode(QAbstractItemView.NoDragDrop)
+        # self.setDragDropMode(QAbstractItemView.NoDragDrop)
         # Uncomment to enable drag and drop:
-        # self.setDragEnabled(True)
         # self.setDragDropMode(QAbstractItemView.DragDrop)
+        # self.setDragEnabled(True)
+        self.setDragDropMode(QAbstractItemView.DropOnly)
 
         # After filling content?
         # model = QStandardItemModel(self)
@@ -299,17 +305,35 @@ class MathObjectWidget(QListView):
         # self.setStyle(f'{{font - size: {main_font_size};}}')
 
         if context_math_objects:
-            for math_object in context_math_objects:
-                item = MathObjectWidgetItem(math_object)
-                self.model().appendRow(item)
-                self.items.append(item)
-        elif target:
-            item = TargetWidgetItem(target)
-            self.model().appendRow(item)
+            self.add_math_objects(context_math_objects)
+
+        # elif target:
+        #     self.add_target(target)
 
         # self.horizontalScrollBar().setRange(0, self.width)
         # log.debug(f"Horizontal context width: {self.width}")
         # log.debug(f"Size hint for col 0: {self.sizeHintForColumn(0)}")
+
+    # def add_target(self, target):
+    #     item = TargetWidgetItem(target)
+    #     self.model().appendRow(item)
+    #
+    # def set_target(self, target):
+    #     model = self.model()
+    #     model.removeRows(0, model.rowCount())
+    #     self.add_target(target)
+
+    def add_math_objects(self, math_objects):
+        for math_object in math_objects:
+            item = MathObjectWidgetItem(math_object)
+            self.model().appendRow(item)
+            self.items.append(item)
+
+    def set_math_objects(self, math_objects):
+        self.items = []
+        model = self.model()
+        model.removeRows(0, model.rowCount())
+        self.add_math_objects(math_objects)
 
     def currentChanged(self, current, previous) -> None:
         """
@@ -349,6 +373,13 @@ class MathObjectWidget(QListView):
         if idx in range(len(items)):
             return items[idx]
 
+    def dropEvent(self, event):
+        statement_widget = event.source().currentItem()
+        print(f"Dropped: {statement_widget.statement.lean_name}")
+        self.statement_dropped.emit(statement_widget)
+        # self.statement_dropped.emit()
+        # self.statement_dropped()
+
 
 MathObjectWidget.apply_math_object_triggered = Signal(MathObjectWidget)
 
@@ -378,7 +409,7 @@ class TargetWidget(QWidget):
     this class and not _TargetLabel as this one also manages layouts!
     """
 
-    def __init__(self, target=None, goal_count: str = ''):
+    def __init__(self, target=None, goal_count: int = 0):
         """"
         Init self with an target (an instance of the class ProofStatePO)
         and a tag. If those are None, display an empty tag and '…' in
@@ -396,13 +427,13 @@ class TargetWidget(QWidget):
         self.target = target
 
         # ───────────────────── Widgets ──────────────────── #
-        text = _("Target") + " " + goal_count if goal_count else _("Target")
-        caption_label = QLabel(text)
+        self.caption_label = QLabel()
+        self.set_pending_goals_counter(goal_count)
         self.target_label = TargetLabel(target)
 
         self.setToolTip(_('To be proved'))
         # TODO: put the pre-set size of group boxes titles
-        caption_label.setStyleSheet('font-size: 11pt;')
+        self.caption_label.setStyleSheet('font-size: 11pt;')
 
         # TODO: method setfontstyle
         # size = cvars.get('display.target_font_size')
@@ -421,9 +452,9 @@ class TargetWidget(QWidget):
         # ───────────────────── Layouts ──────────────────── #
 
         central_layout = QVBoxLayout()
-        central_layout.addWidget(caption_label)
+        central_layout.addWidget(self.caption_label)
         central_layout.addWidget(self.target_label)
-        central_layout.setAlignment(caption_label, Qt.AlignHCenter)
+        central_layout.setAlignment(self.caption_label, Qt.AlignHCenter)
         central_layout.setAlignment(self.target_label, Qt.AlignHCenter)
 
         main_layout = QHBoxLayout()
@@ -464,4 +495,11 @@ class TargetWidget(QWidget):
     @property
     def logic(self):
         return self.target
+
+    def replace_target(self, target):
+        self.target_label.replace_target(target)
+
+    def set_pending_goals_counter(self, pgn: int):
+        text = _("Target") + " " + str(pgn) if pgn else _("Target")
+        self.caption_label.setText(text)
 

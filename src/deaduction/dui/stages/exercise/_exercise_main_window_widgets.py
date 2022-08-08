@@ -393,70 +393,30 @@ class ExerciseCentralWidget(QWidget):
             widget.setEnabled(not yes)
 
     def update_goal(self, new_goal: Goal,
-                    pending_goals,
-                    current_goal_number: int,
-                    total_goals_counter: int):
+                    pending_goals):
         """
         Change goal widgets (self.objects_wgts, self.props_wgt and
         self.target_wgt) to new widgets, corresponding to new_goal.
 
-        :param new_goal: The goal to update self to.
-        studied
-        :param current_goal_number: n° of goal under study
-        :param total_goals_counter: total number of goals so far
+        @param new_goal: The goal to update self to.
+        @param pending_goals: The list of remaining goals. For the moment we
+        just display the nb of pending goals.
         """
 
-        # FIXME: obsolete params, update docstring
         statements_scroll = self.statements_tree.verticalScrollBar().value()
 
-        # Init context (objects and properties). Get them as two list of
-        # (MathObject, str), the str being the tag of the prop. or obj.
-        # new_context    = new_goal.tag_and_split_propositions_objects()
         new_target     = new_goal.target
-        # new_target_tag = '='  # new_target.future_tags[1]
-        # new_objects    = new_context[0]
-        # new_props      = new_context[1]
         new_objects = new_goal.context_objects
         new_props = new_goal.context_props
+        self.objects_wgt.set_math_objects(new_objects)
+        self.props_wgt.set_math_objects(new_props)
 
-        new_objects_wgt = MathObjectWidget(new_objects)
-        new_props_wgt   = MathObjectWidget(new_props)
-        # goal_count = f'  {current_goal_number} / {total_goals_counter}'
         pgn = len(pending_goals)
-        goal_counts = ("(" + str(pgn) + " " + _("pending") + ")" if pgn > 0
-                       else "")
-        new_target_wgt  = TargetWidget(new_target, goal_counts)
+        self.target_wgt.replace_target(new_target)
+        self.target_wgt.set_pending_goals_counter(pgn)
 
-        # Replace in the layouts
-        if self.splitter:
-            new_splitter = QSplitter(Qt.Vertical)
-            new_splitter.addWidget(new_objects_wgt)
-            new_splitter.addWidget(new_props_wgt)
-            new_splitter.setChildrenCollapsible(False)
-            replace_widget_layout(self.__context_lyt,
-                                  self.__context_splitter, new_splitter)
-            self.__context_splitter = new_splitter
-            # Unfortunately, the following does not always work
-            # log.debug("Splitter widgets:")
-            # log.debug(self.__context_splitter.count())
-            # self.__context_splitter.replaceWidget(0, new_objects_wgt)
-            # self.__context_splitter.replaceWidget(1, new_props_wgt)
-        else:
-            replace_widget_layout(self.__context_lyt,
-                                  self.objects_wgt, new_objects_wgt)
-            replace_widget_layout(self.__context_lyt,
-                                  self.props_wgt, new_props_wgt)
-
-        replace_widget_layout(self.__main_lyt,
-                              self.target_wgt, new_target_wgt, True)
-
-        # Set the attributes to the new values
-        # self.__context_splitter = new_context_wgt
-        self.objects_wgt  = new_objects_wgt
-        self.props_wgt    = new_props_wgt
-        self.target_wgt   = new_target_wgt
         self.current_goal = new_goal
-        self.set_font()
+        # self.set_font()
 
         self.statements_tree.verticalScrollBar().setValue(statements_scroll)
 

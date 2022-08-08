@@ -121,14 +121,17 @@ class ExerciseMainWindow(QMainWindow):
         lean_file and may be retrieved using the logically_previous_proof_step
          property.
     """
+
     # Signals for WindowManager and testing:
     window_closed                = Signal()
     change_exercise              = Signal()
     ui_updated                   = Signal()
+
     # User action signals:
     action_triggered             = Signal(ActionButton)
     apply_math_object_triggered  = Signal(MathObjectWidget)
     statement_triggered          = Signal(StatementsTreeWidgetItem)
+    statement_dropped            = Signal(StatementsTreeWidgetItem)
 
     def __init__(self, exercise: Exercise):
         """
@@ -209,6 +212,11 @@ class ExerciseMainWindow(QMainWindow):
         self.ecw.statements_tree.itemClicked.connect(
                                             self.statement_triggered_filter)
 
+        # Context area
+        self.ecw.props_wgt.statement_dropped.connect(self.statement_dropped)
+        self.ecw.objects_wgt.clicked.connect(self.process_context_click)
+        self.ecw.props_wgt.clicked.connect(self.process_context_click)
+
         # UI
         self.exercise_toolbar.toggle_lean_editor_action.triggered.connect(
                 self.lean_editor.toggle)
@@ -220,6 +228,13 @@ class ExerciseMainWindow(QMainWindow):
                                                     self.change_exercise)
         self.global_toolbar.settings_action.triggered.connect(
                                                     self.open_config_window)
+
+        # NB: there seems to be a bug in Qt,
+        #  self.ecw.target_wgt.mousePressEvent is not called when
+        #  self.ecw.target_wgt.target_label format is set to richText (!)
+        #  so we call the event of the target_label instead.
+        self.ecw.target_wgt.target_label.mousePressEvent = \
+            self.process_target_click
 
     def __init_menubar(self):
         """
@@ -315,11 +330,7 @@ class ExerciseMainWindow(QMainWindow):
             self.setCentralWidget(self.ecw)
             self.__connect_signals()
             if not self.freezed:  # If freezed then maybe goal has not been set
-                self.ecw.update_goal(
-                                 self.current_goal,
-                                 self.pending_goals,
-                                 self.displayed_proof_step.current_goal_number,
-                                 self.displayed_proof_step.total_goals_counter)
+                self.ecw.update_goal(self.current_goal, self.pending_goals)
             self.exercise_toolbar.update()
             self.__init_menubar()
             # Reconnect Context area signals and slots
@@ -821,21 +832,18 @@ class ExerciseMainWindow(QMainWindow):
         # Update UI and attributes. Target stay selected if it was.
         # statements_scroll = self.ecw.statements_tree.verticalScrollBar(
         #                                                            ).value()
-        self.ecw.update_goal(new_goal,
-                             self.pending_goals,
-                             self.displayed_proof_step.current_goal_number,
-                             self.displayed_proof_step.total_goals_counter)
+        self.ecw.update_goal(new_goal, self.pending_goals)
         self.ecw.target_wgt.mark_user_selected(self.target_selected)
         self.current_goal = new_goal
 
         # Reconnect Context area signals and slots
-        self.ecw.objects_wgt.clicked.connect(self.process_context_click)
-        self.ecw.props_wgt.clicked.connect(self.process_context_click)
+        # self.ecw.objects_wgt.clicked.connect(self.process_context_click)
+        # self.ecw.props_wgt.clicked.connect(self.process_context_click)
 
         # NB: there seems to be a bug in Qt,
         #  self.ecw.target_wgt.mousePressEvent is not called when
         #  self.ecw.target_wgt.target_label format is set to richText (!)
         #  so we call the event of the target_label instead.
-        self.ecw.target_wgt.target_label.mousePressEvent = \
-            self.process_target_click
+        # self.ecw.target_wgt.target_label.mousePressEvent = \
+        #     self.process_target_click
 

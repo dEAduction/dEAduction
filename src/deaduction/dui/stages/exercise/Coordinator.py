@@ -165,7 +165,7 @@ class Coordinator(QObject):
         proof_state = self.exercise.initial_proof_state
         if proof_state:
             goal = proof_state.goals[0]
-            self.emw.ecw.update_goal(goal, [], 1, 1)
+            self.emw.ecw.update_goal(goal, [])
 
         # Set exercise. In particular, this will initialize servint.lean_file.
         self.server_queue.add_task(self.servint.set_exercise,
@@ -407,6 +407,10 @@ class Coordinator(QObject):
         return self.emw.statement_triggered
 
     @property
+    def statement_dropped(self):
+        return self.emw.statement_dropped
+
+    @property
     def apply_math_object_triggered(self):
         return self.emw.apply_math_object_triggered
 
@@ -451,7 +455,6 @@ class Coordinator(QObject):
         """
 
         log.info("Starting server task")
-        add_task = self.server_queue.add_task
 
         async with qtrio.enter_emissions_channel(
                 signals=[self.lean_editor.editor_send_lean,
@@ -462,6 +465,7 @@ class Coordinator(QObject):
                          self.proof_outline_window.history_goto,
                          self.action_triggered,
                          self.statement_triggered,
+                         self.statement_dropped,
                          self.apply_math_object_triggered,
                          self.close_server_task]) as emissions:
 
@@ -529,6 +533,18 @@ class Coordinator(QObject):
                     if hasattr(emission.args[0], 'statement'):
                         item = emission.args[0]
                         self.proof_step.statement = item.statement
+                    self.__server_call_statement(item)
+
+                elif emission.is_from(self.statement_dropped):
+                    item = emission.args[0]
+                    print(f"Statement dropped: {item.statement.lean_name}")
+                    self.proof_step.statement = item.statement
+
+                    # Empty selection
+                    self.emw.empty_current_selection()
+                    self.emw.target_selected = False
+                    self.ecw.target_wgt.mark_user_selected(self.target_selected)
+
                     self.__server_call_statement(item)
 
                 elif emission.is_from(self.apply_math_object_triggered):
