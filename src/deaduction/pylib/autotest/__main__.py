@@ -366,6 +366,8 @@ async def auto_test(wm: WindowManager):
     for step in auto_steps:
         total_string += ' ' + step.raw_string + ',\n'
     test_window.display(total_string)
+    if test_window.raise_to_front_btn.isChecked():
+        test_window.raise_()
 
     signals = [wm.coordinator.proof_step_updated,
                emw.ui_updated,
@@ -460,7 +462,9 @@ async def auto_test(wm: WindowManager):
                 # For first step:
                 await wm.coordinator.server_task_started.wait()
 
-                success, msg = await emw.simulate_user_action(step)
+                duration = test_window.slider.value()/10
+                success, msg = await emw.simulate_user_action(step,
+                                                              duration=duration)
                 if not success:
                     test_window.display("    Failing action:")
                 test_window.display(msg)
