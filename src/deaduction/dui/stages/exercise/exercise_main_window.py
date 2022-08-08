@@ -698,7 +698,7 @@ class ExerciseMainWindow(QMainWindow):
             if statement_widget:
                 if execute_action:  # Execute the action!
                     self.statement_triggered.emit(statement_widget)
-                await statement_widget.simulate(duration=0.4)
+                await statement_widget.simulate(duration=duration)
                 return True, msg
             else:
                 return False, f"No statement match {statement_name}"

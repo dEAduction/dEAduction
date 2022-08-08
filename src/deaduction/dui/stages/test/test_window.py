@@ -40,7 +40,8 @@ from PySide2.QtWidgets import ( QComboBox,
                                 QPushButton,
                                 QCheckBox,
                                 QVBoxLayout,
-                                QHBoxLayout)
+                                QHBoxLayout,
+                                QSlider)
 
 global _
 
@@ -68,6 +69,8 @@ class QTestWindow(QWidget):
         self.console.setLineWrapMode(QTextEdit.NoWrap)
 
         # Buttons
+        self.raise_to_front_btn = QCheckBox('Raise to front')
+        self.raise_to_front_btn.setChecked(True)
         self.suspend_btn = QCheckBox('Suspend')
         self.mode_btn = QComboBox()
         self.mode_btn.addItems(['Step by step',
@@ -77,17 +80,24 @@ class QTestWindow(QWidget):
         self.stop_exercise_btn = QPushButton("Stop this test")
         self.scroll_to_end_btn = QCheckBox(_("Scroll to end"))
 
+        self.slider = QSlider(orientation=Qt.Orientation.Horizontal)
+        self.slider.setRange(0, 20)
+        self.slider.setValue(20)
+
+
         # Btns signals
         self.suspend_btn.stateChanged.connect(self.change_suspension)
         self.mode_btn.currentIndexChanged.connect(self.change_mode)
         self.next_step_button.clicked.connect(self.process_next_step)
         self.stop_exercise_btn.clicked.connect(self.stop_exercise)
+        # self.slider.valueChanged.connect(self.change_slider_value)
 
         # Btns layout
         btn_status_layout = QVBoxLayout()
         btn_status_layout.addWidget(self.scroll_to_end_btn)
         btn_status_layout.addWidget(self.suspend_btn)
         btn_status_layout.addWidget(self.mode_btn)
+        btn_status_layout.addWidget(self.raise_to_front_btn)
 
         btn_process_layout = QVBoxLayout()
         btn_process_layout.addWidget(self.stop_exercise_btn)
@@ -95,6 +105,8 @@ class QTestWindow(QWidget):
 
         btn_layout = QHBoxLayout()
         btn_layout.addLayout(btn_status_layout)
+        btn_layout.addStretch()
+        btn_layout.addWidget(self.slider)
         btn_layout.addStretch()
         btn_layout.addLayout(btn_process_layout)
 
@@ -178,6 +190,8 @@ class QTestWindow(QWidget):
         # self.console.append(txt)
         if self.scroll_to_end_btn.isChecked():
             self.console.ensureCursorVisible()
+
+    # def change_slider_value(self):
 
     def freeze(self):
         if self.step_by_step:
