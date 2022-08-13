@@ -129,9 +129,10 @@ class ExerciseMainWindow(QMainWindow):
 
     # User action signals:
     action_triggered             = Signal(ActionButton)
-    apply_math_object_triggered  = Signal(MathObjectWidget)
+    # apply_math_object_triggered  = Signal(MathObjectWidget)
     statement_triggered          = Signal(StatementsTreeWidgetItem)
     statement_dropped            = Signal(StatementsTreeWidgetItem)
+    math_object_dropped          = Signal(MathObjectWidgetItem)
 
     def __init__(self, exercise: Exercise):
         """
@@ -154,7 +155,7 @@ class ExerciseMainWindow(QMainWindow):
         self.current_selection    = []
         self._target_selected     = False
         self.user_input           = []
-        self.double_clicked_item  = None
+        # self.double_clicked_item  = None
         self.freezed              = False
 
         # ─────────────────────── Elements ─────────────────────── #
@@ -214,6 +215,7 @@ class ExerciseMainWindow(QMainWindow):
 
         # Context area
         self.ecw.props_wgt.statement_dropped.connect(self.statement_dropped)
+        self.ecw.props_wgt.math_object_dropped.connect(self.math_object_dropped)
         self.ecw.objects_wgt.clicked.connect(self.process_context_click)
         self.ecw.props_wgt.clicked.connect(self.process_context_click)
 
@@ -339,11 +341,11 @@ class ExerciseMainWindow(QMainWindow):
 
             self.ecw.target_wgt.target_label.mousePressEvent = \
                 self.process_target_click
-            if hasattr(self.ecw, "action_apply_button"):
-                self.ecw.objects_wgt.apply_math_object_triggered.connect(
-                    self.apply_math_object_triggered)
-                self.ecw.props_wgt.apply_math_object_triggered.connect(
-                    self.apply_math_object_triggered)
+            # if hasattr(self.ecw, "action_apply_button"):
+            #     self.ecw.objects_wgt.apply_math_object_triggered.connect(
+            #         self.apply_math_object_triggered)
+            #     self.ecw.props_wgt.apply_math_object_triggered.connect(
+            #         self.apply_math_object_triggered)
 
         self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
@@ -610,11 +612,16 @@ class ExerciseMainWindow(QMainWindow):
                 item = self.ecw.props_wgt.item_from_index(index)
 
         if item not in self.current_selection:
-            item.mark_user_selected(True)
+            # item.mark_user_selected(True)
             self.current_selection.append(item)
-        elif item is not self.double_clicked_item:
-            item.mark_user_selected(False)
+        else:
+            # elif item is not self.double_clicked_item:
+            # item.mark_user_selected(False)
             self.current_selection.remove(item)
+
+        # Clear selection (we do not use the QListView selection mechanism):
+        # self.ecw.props_wgt.clearSelection()
+        # self.ecw.objects_wgt.clearSelection()
 
     @Slot()
     def process_target_click(self, event=None):

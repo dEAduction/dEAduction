@@ -48,6 +48,7 @@ import deaduction.pylib.config.vars as          cvars
 from deaduction.pylib.utils.filesystem import   check_dir
 from deaduction.dui.primitives import           ButtonsDialog
 from deaduction.dui.stages.exercise import      ExerciseMainWindow
+from deaduction.dui.elements import             ActionButton
 from deaduction.pylib.server import             ServerInterface
 from deaduction.pylib.utils import save_object
 
@@ -59,6 +60,7 @@ from deaduction.pylib.coursedata import        (Exercise,
 
 from deaduction.pylib.mathobj import           (MathObject,
                                                 PatternMathObject,
+                                                ContextMathObject,
                                                 ProofStep)
 from deaduction.pylib.proof_state import       (Goal,
                                                 ProofState)
@@ -411,12 +413,16 @@ class Coordinator(QObject):
         return self.emw.statement_dropped
 
     @property
-    def apply_math_object_triggered(self):
-        return self.emw.apply_math_object_triggered
+    def math_object_dropped(self):
+        return self.emw.math_object_dropped
 
-    @property
-    def double_clicked_item(self):
-        return self.emw.double_clicked_item
+    # @property
+    # def apply_math_object_triggered(self):
+    #     return self.emw.apply_math_object_triggered
+
+    # @property
+    # def double_clicked_item(self):
+    #     return self.emw.double_clicked_item
 
     @property
     def current_selection(self):
@@ -466,7 +472,8 @@ class Coordinator(QObject):
                          self.action_triggered,
                          self.statement_triggered,
                          self.statement_dropped,
-                         self.apply_math_object_triggered,
+                         self.math_object_dropped,
+                         # self.apply_math_object_triggered,
                          self.close_server_task]) as emissions:
 
             self.server_task_started.set()
@@ -537,7 +544,7 @@ class Coordinator(QObject):
 
                 elif emission.is_from(self.statement_dropped):
                     item = emission.args[0]
-                    print(f"Statement dropped: {item.statement.lean_name}")
+                    # print(f"Statement dropped: {item.statement.lean_name}")
                     self.proof_step.statement = item.statement
 
                     # Empty selection
@@ -547,13 +554,54 @@ class Coordinator(QObject):
 
                     self.__server_call_statement(item)
 
-                elif emission.is_from(self.apply_math_object_triggered):
-                    # Fixme: causes freeze - no more double click
-                    self.emw.double_clicked_item = emission.args[0]
-                    # Emulate click on 'apply' button:
-                    self.emw.freeze(False)
-                    if self.ecw.action_apply_button:
-                        self.ecw.action_apply_button.animateClick(msec=500)
+                elif emission.is_from(self.math_object_dropped):
+                    """
+                    Determine an Action Button from selection and receiver.
+                    """
+
+                    print("Math object dropped!")
+                    math_item = emission.args[0]
+                    if not math_item:
+                        # FIXME: not caught here!
+                        raise WrongUserInput(_("Drop your selection on some "
+                                               "property!"))
+
+                    if math_item not in self.current_selection:
+                        self.current_selection.append(math_item)
+                    math_item.mark_user_selected(True)
+
+                    assert len(self.current_selection_as_mathobjects) > 1
+                    operator: ContextMathObject = math_item.math_object
+                    premise = self.current_selection_as_mathobjects[0]
+                    for math_obj in self.current_selection_as_mathobjects:
+                        if math_obj.is_prop():
+                            premise = math_obj
+                            break
+                    name = operator.action_from_premise_and_operator(premise)
+                    if not name:
+                        # FIXME: not caught here!
+                        raise WrongUserInput(_("I don't know what to do!"))
+
+                    # TODO: simulate ActionButton: make a UserAction from
+                    #  name and current_selection, celar selection, and call
+                    #  emw.simulate_user_action
+                    # self.nursery.start_soon(self.emw.simulate_user_action,
+                    #                         user_action)
+
+                    log.debug(f"Selection len: {len(self.current_selection)}")
+                    log.debug(f"Premise, operator, action: {premise} "
+                              f"{operator} {name}")
+
+                    action_btn = ActionButton.from_name[name]
+                    self.__server_call_action(action_btn)
+
+                # elif emission.is_from(self.apply_math_object_triggered):
+                #     # Fixme: causes freeze - no more double click
+                #     self.emw.double_clicked_item = emission.args[0]
+                #     # Emulate click on 'apply' button:
+                #     self.emw.freeze(False)
+                #     if self.ecw.action_apply_button:
+                #         self.ecw.action_apply_button.animateClick(msec=500)
 
     ###################
     # History actions #

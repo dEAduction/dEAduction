@@ -51,7 +51,8 @@ from PySide2.QtWidgets import ( QAction,
                                 QVBoxLayout,
                                 QWidget,
                                 QSplitter,
-                                QSizePolicy)
+                                QSizePolicy,
+                                QAbstractItemView)
 
 from deaduction.dui.utils               import   replace_widget_layout
 from deaduction.dui.elements            import ( ActionButton,
@@ -172,7 +173,15 @@ class ExerciseCentralWidget(QWidget):
         self.current_goal = None
         self.objects_wgt  = MathObjectWidget()
         self.props_wgt    = MathObjectWidget()
-        self.props_wgt.accept_drops()
+
+        # Drag&Drop: TODO: links from settings
+        # self.props_wgt.accept_drops()
+        # self.props_wgt.accept_drags()
+        # self.objects_wgt.accept_drags()
+
+        # self.props_wgt.setDragDropMode(QAbstractItemView.DragDrop)
+        # self.objects_wgt.setDragDropMode(QAbstractItemView.DragOnly)
+
         self.target_wgt   = TargetWidget()
         self.deaduction_fonts = DeaductionFonts(self)
         self.set_font()

@@ -691,23 +691,6 @@ class StatementsTreeWidget(QTreeWidget):
         """
         return StatementsTreeWidgetItem.from_name.get(lean_name)
 
-        # items = []
-        #
-        # def traverse_node(item: StatementsTreeWidgetItem):
-        #     if isinstance(item, StatementsTreeWidgetItem):
-        #         if item.statement.has_name(lean_name):
-        #             items.append(item)
-        #     for i in range(0, item.childCount()):
-        #         traverse_node(item.child(i))
-        #
-        # for i in range(self.topLevelItemCount()):
-        #     item = self.topLevelItem(i)
-        #     traverse_node(item)
-        # if items:
-        #     return items[0]
-        # else:
-        #     return None
-
     def item_from_statement(self, statement):
         return self.item_from_lean_name(statement.lean_name)
 

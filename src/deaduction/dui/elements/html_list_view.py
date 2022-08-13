@@ -27,7 +27,7 @@ This file is part of d∃∀duction.
 
 from PySide2.QtCore import (QSize, Slot)
 from PySide2.QtGui import (QTextDocument, QAbstractTextDocumentLayout,
-                           QStandardItemModel, QStandardItem)
+                           QStandardItemModel, QStandardItem, QColor)
 from PySide2.QtWidgets import (QApplication, QListView,
                                QStyledItemDelegate, QStyleOptionViewItem,
                                QStyle)
@@ -42,8 +42,6 @@ class HTMLDelegate(QStyledItemDelegate):
             style = options.widget.style()
         else:
             style = QApplication.style()
-        # style = QApplication.style() if options.widget is None else \
-        #     options.widget.style()
 
         doc = QTextDocument()
         font = options.font
@@ -59,12 +57,11 @@ class HTMLDelegate(QStyledItemDelegate):
 
         ctx = QAbstractTextDocumentLayout.PaintContext()
 
-        textRect = style.subElementRect(QStyle.SE_ItemViewItemText,
-                                        options)
+        textRect = style.subElementRect(QStyle.SE_ItemViewItemText, options)
         painter.save()
         painter.translate(textRect.topLeft())
         painter.setClipRect(textRect.translated(-textRect.topLeft()))
-        # color = QtGui.QColor("blue")
+        # color = QColor("limegreen")
         # painter.fillRect(option.rect, color)
 
         doc.documentLayout().draw(painter, ctx)

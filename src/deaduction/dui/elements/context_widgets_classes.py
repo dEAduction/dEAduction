@@ -61,7 +61,8 @@ from   deaduction.pylib.utils.filesystem import path_helper
 
 import deaduction.pylib.config.vars as cvars
 
-from deaduction.dui.elements import StatementsTreeWidgetItem
+from deaduction.dui.elements import ( StatementsTreeWidget,
+                                      StatementsTreeWidgetItem)
 
 log = logging.getLogger(__name__)
 global _
@@ -176,7 +177,7 @@ class MathObjectWidgetItem(QStandardItem):
 
         self.context_math_object = context_math_object
         if context_math_object.is_new:
-            self.tag        = '+'
+            self.tag = '+'
         elif context_math_object.is_modified:
             self.tag = '≠'
         else:
@@ -188,8 +189,7 @@ class MathObjectWidgetItem(QStandardItem):
         self.setText(caption)
         self.setIcon(_TagIcon(self.tag))
         # Uncomment to enable drag:
-        # self.setDragEnabled(True)
-        self.setDropEnabled(False)
+        self.setDragEnabled(True)
 
     @property
     def math_object(self):
@@ -226,20 +226,20 @@ class MathObjectWidgetItem(QStandardItem):
                            else QBrush())
 
 
-class TargetWidgetItem(QStandardItem):
-    """
-    Widget to display a target in the chooser, with the same format as the
-    MathObjectWidgetItem.
-    """
-
-    # FIXME: not used.
-
-    def __init__(self, target):
-
-        super().__init__()
-        self.target = target
-        caption = target.math_type_to_display()
-        self.setText(caption)
+# class TargetWidgetItem(QStandardItem):
+#     """
+#     Widget to display a target in the chooser, with the same format as the
+#     MathObjectWidgetItem.
+#     """
+#
+#     # FIXME: not used.
+#
+#     def __init__(self, target):
+#
+#         super().__init__()
+#         self.target = target
+#         caption = target.math_type_to_display()
+#         self.setText(caption)
 
 
 class MathObjectWidget(QListView):
@@ -258,6 +258,7 @@ class MathObjectWidget(QListView):
 
     # Signals
     statement_dropped = Signal(StatementsTreeWidgetItem)
+    math_object_dropped = Signal(MathObjectWidgetItem)
 
     def __init__(self, context_math_objects=None, target=None):
         """
@@ -273,22 +274,19 @@ class MathObjectWidget(QListView):
         super().__init__()
 
         # Possible settings:
-        # self.setSelectionMode(QAbstractItemView.MultiSelection)
+        self.setSelectionMode(QAbstractItemView.MultiSelection)
         # list_view.setMovement(QListView.Free)
         # list_view.setRowHidden(1, True)
         # list_view.setAlternatingRowColors(True)
-        # list_view.setDragEnabled(True)
-        # list_view.setDragDropMode(QAbstractItemView.DragDrop)
-        # Modify to enable drag and drop:
-        # self.setDragDropMode(QAbstractItemView.NoDragDrop)
 
-        # No text edition (!), no selection, no drag-n-drop
-        self.setSelectionMode(QAbstractItemView.NoSelection)
+        # No text edition (!), no selection
+        # self.setSelectionMode(QAbstractItemView.NoSelection)
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
-        # Uncomment to enable drag and drop:
-        self.setDragDropMode(QAbstractItemView.NoDragDrop)
-        # self.setDragEnabled(True)
+        # By default, disable drag and drop. This may be changed at creation.
+        self.setDragEnabled(True)
+        self.setDragDropMode(QAbstractItemView.DragDrop)
+
         # self.setDragDropMode(QAbstractItemView.DropOnly)
 
         # After filling content?
@@ -331,6 +329,8 @@ class MathObjectWidget(QListView):
             item = MathObjectWidgetItem(math_object)
             self.model().appendRow(item)
             self.items.append(item)
+            # item.setDragEnabled(True)
+            # item.setDropEnabled(True)
 
     def set_math_objects(self, math_objects):
         self.items = []
@@ -349,15 +349,18 @@ class MathObjectWidget(QListView):
         item = self.model().itemFromIndex(index_)
         return item
 
-    @Slot(MathObjectWidgetItem)
-    def _emit_apply_math_object(self, item):
-        """
-        Emit the signal self.apply_math_object_triggered with self as an
-        argument. This slot is connected to ActionButton.clicked signal in
-        self.__init__.
-        """
-        item.setSelected(False)
-        self.apply_math_object_triggered.emit(item)
+    # @Slot(MathObjectWidgetItem)
+    # def _emit_apply_math_object(self, item):
+    #     """
+    #     Emit the signal self.apply_math_object_triggered with self as an
+    #     argument. This slot is connected to ActionButton.clicked signal in
+    #     self.__init__.
+    #     """
+    #     item.setSelected(False)
+    #     self.apply_math_object_triggered.emit(item)
+
+    def current_item(self):
+        return self.item_from_index(self.currentIndex())
 
     def item_from_logic(self, math_object) -> MathObjectWidgetItem:
         """
@@ -376,49 +379,65 @@ class MathObjectWidget(QListView):
         if idx in range(len(items)):
             return items[idx]
 
-    def accept_drops(self):
-        if (self.DragDropMode() is QAbstractItemView.DragDrop or
-                self.DragDropMode() is QAbstractItemView.DragOnly):
-            self.setDragDropMode(QAbstractItemView.DragDrop)
-        else:
-            self.setDragDropMode(QAbstractItemView.DropOnly)
+    # def accept_drops(self):
+    #     if (self.DragDropMode() is QAbstractItemView.DragDrop or
+    #             self.DragDropMode() is QAbstractItemView.DragOnly):
+    #         self.setDragDropMode(QAbstractItemView.DragDrop)
+    #     else:
+    #         self.setDragDropMode(QAbstractItemView.DropOnly)
+    #
+    # def accept_drags(self):
+    #     if (self.DragDropMode() is QAbstractItemView.DragDrop or
+    #             self.DragDropMode() is QAbstractItemView.DropOnly):
+    #         self.setDragDropMode(QAbstractItemView.DragDrop)
+    #     else:
+    #         self.setDragDropMode(QAbstractItemView.DragOnly)
+    #         self.setDragEnabled(True)
 
-    def accept_drags(self):
-        if (self.DragDropMode() is QAbstractItemView.DragDrop or
-                self.DragDropMode() is QAbstractItemView.DropOnly):
-            self.setDragDropMode(QAbstractItemView.DragDrop)
-        else:
-            self.setDragDropMode(QAbstractItemView.DragOnly)
-            self.setDragEnabled(True)
+    def dragEnterEvent(self, event):
+        """
+        Mark enterEvent by changing background color.
+        """
+        super().dragEnterEvent(event)
+        source = event.source()
+        if isinstance(source, StatementsTreeWidget):
+            self.setStyleSheet('background-color: yellow;')
+            self.setDropIndicatorShown(False)  # Do not show "where to drop"
+
+    def dragLeaveEvent(self, event):
+        super().dragLeaveEvent(event)
+        # No source for dragLeaveEvent
+        # source = event.source()
+        # if isinstance(source, StatementsTreeWidget):
+        self.setStyleSheet('background-color: white;')
+        self.setDropIndicatorShown(True)
+
+    # def dragMoveEvent(self, event):
+    #     super().dragMoveEvent(event)
 
     def dropEvent(self, event):
-        statement_widget = event.source().currentItem()
-        print(f"Dropped: {statement_widget.statement.lean_name}")
-        self.statement_dropped.emit(statement_widget)
-        # self.statement_dropped.emit()
-        # self.statement_dropped()
+        """
+        Call action corresponding to dropEvent:
+        - drop of a statementWidget --> add statement to context.
+        """
+        source = event.source()
+        if isinstance(source, StatementsTreeWidget):
+            dragged_widget = source.currentItem()
+            self.statement_dropped.emit(dragged_widget)
+            self.setStyleSheet('background-color: white;')
+        elif isinstance(source, MathObjectWidget):
+            # dragged_widget = source.currentIndex()
+            print("Math Obj dropped")
+            # print(dragged_widget.math_object.to_display())
+            # FIXME: how to get receiver???
+            # self.math_object_dropped.emit(???)
 
-    # def dragEnterEvent(self, event):
+    # def dropMimeData(self, *args):
     #     pass
 
-    def dragMoveEvent(self, event):
-        pass
+# Obsolete:
+# MathObjectWidget.apply_math_object_triggered = Signal(MathObjectWidget)
 
-
-MathObjectWidget.apply_math_object_triggered = Signal(MathObjectWidget)
-
-
-# @property
-# def width(self):
-#     width = 0
-#     for item in self.items:
-#         if item.width > width:
-#             width = item.width
-#     return width
-#
-# def resizeEvent(self, event):
-#     self.horizontalScrollBar().setRange(0, self.width)
-#     # self.horizontalScrollBar().setValue(200)
 
 ##########################
 # Target widgets classes #
