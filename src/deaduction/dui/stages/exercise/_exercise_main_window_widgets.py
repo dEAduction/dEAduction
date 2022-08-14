@@ -655,6 +655,10 @@ class ExerciseToolBar(QToolBar):
         self.undo_action.setShortcut(QKeySequence.Undo)
         self.redo_action.setShortcut(QKeySequence.Redo)
 
+        self.toggle_proof_outline_action.setCheckable(True)
+        self.toggle_proof_tree.setCheckable(True)
+        self.toggle_lean_editor_action.setCheckable(True)
+
     def update(self):
         self.rewind.setText(_('Jump to beginning of proof'))
         self.undo_action.setText(_('Undo action'))
@@ -681,6 +685,9 @@ class GlobalToolbar(QToolBar):
         self.addAction(self.settings_action)
         self.addAction(self.change_exercise_action)
         self.setLayoutDirection(Qt.RightToLeft)
+
+        # self.change_exercise_action.setCheckable(True)
+        # self.settings_action.setCheckable(True)
 
     def update(self):
         self.change_exercise_action.setText(_('Change exercise'))

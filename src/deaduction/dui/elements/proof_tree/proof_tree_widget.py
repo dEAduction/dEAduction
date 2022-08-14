@@ -946,6 +946,8 @@ class ProofTreeWindow(QWidget):
     the different sub-widgets are set up.
     """
 
+    action = None  # To be set to the QAction of exercise_toolbar
+
     def __init__(self, context=None, target=None):
         """
         Context and target are the elements of the initial goal, if any.
@@ -992,7 +994,9 @@ class ProofTreeWindow(QWidget):
         settings.setValue("proof_tree/geometry", self.saveGeometry())
         settings.setValue("isVisible", self.isVisible())
         event.accept()
+
         self.hide()
+        self.action.setChecked(False)
         # TODO: save tree state
 
     def update_display(self):

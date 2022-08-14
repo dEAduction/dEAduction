@@ -290,6 +290,7 @@ class ProofOutlineWindow(QWidget):
     A widget for representing proof outline.
     """
     history_goto = Signal(int)  # Move to proof step,
+    action = None  # To be set to the QAction of exercise_toolbar
     #  nb is lean_file.target_idx
 
     def __init__(self):
@@ -334,6 +335,7 @@ class ProofOutlineWindow(QWidget):
         settings.setValue("proof_outline/geometry", self.saveGeometry())
         self.tree.save_state()
         event.accept()
+        self.action.setChecked(False)
         self.hide()
 
     #########
