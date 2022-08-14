@@ -134,3 +134,52 @@ class ContextMathObject(MathObject):
     #     abstract_string = MathObject.to_abstract_string(self, text_depth)
     #     if self.has_been_used_in_the_proof:
     #         abstract_string = [r"\used_property"] + abstract_string
+
+    def help_target_msg(self, format_="html") -> (str, str):
+        """
+        A help msg for a ContextMathObject as a target.
+
+        Help msgs should depend on the main symbol of self, using implicit
+        definition if they are allowed by the current settings.
+        """
+
+        gen_msg = ""
+        pract_msg = ""
+        hint = ""
+        to_prove = _("In order to prove")
+        if self.is_for_all():
+            type_ = self.children[0].to_display(format_="html")
+            var = self.children[1].to_display(format_="html")
+            prop = self.children[2].to_display(format_="html")
+            gen_msg = to_prove + " " + _("this universal property") + ", " +\
+                _("take any element {} of {}").format(var, type_) + " " +\
+                _("and prove that {}").format(prop) + "."
+
+        return gen_msg, pract_msg, hint
+
+    def help_context_msg(self, format_="html") -> (str, str, str):
+        to_use = _("In order to use")
+        gen_msg = ""
+        pract_msg = ""
+        hint = ""
+        children = self.math_type.children
+        if self.is_for_all():
+            # TODO: in case of an implicit forall (and
+            #  implicite_use_of_def is set), add a preambule saying
+            #  "after unfolding the def, this is a universal prop".
+            type_ = children[0].to_display(format_="html")
+            var = children[1].to_display(format_="html")
+            # prop = children[2].to_display(format_="html")
+            gen_msg = _("You can apply") + " " + _("this universal property") +\
+                " " + _("to any element {} of {}").format(var, type_) + "."
+            pract_msg = _("If there is an element of {} in the context, "
+                          "you may select it together with this property "
+                          "before pressing the ∀ button.").format(type_)
+            hint = to_use + "this universal property, " + \
+                   _("you need some element of {}.").format(type_) + \
+                + _("Is there any in the context? If not, can you create some?")
+
+        return gen_msg, pract_msg, hint
+
+
+

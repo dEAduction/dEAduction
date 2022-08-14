@@ -53,7 +53,8 @@ from deaduction.dui.elements            import (ActionButton,
                                                 MenuBarAction,
                                                 ConfigMainWindow,
                                                 ProofOutlineWindow,
-                                                ProofTreeController)
+                                                ProofTreeController,
+                                                HelpWindow)
 from ._exercise_main_window_widgets     import (ExerciseCentralWidget,
                                                 ExerciseStatusBar,
                                                 ExerciseToolBar,
@@ -170,6 +171,13 @@ class ExerciseMainWindow(QMainWindow):
         self.setCentralWidget(self.ecw)
         self.addToolBar(self.exercise_toolbar)
         self.addToolBar(self.global_toolbar)
+        self.proof_tree_controller.proof_tree_window.action = \
+            self.exercise_toolbar.toggle_proof_tree
+        self.proof_outline_window.action = \
+            self.exercise_toolbar.toggle_proof_outline_action
+        self.lean_editor.action = \
+            self.exercise_toolbar.toggle_lean_editor_action
+
         self.exercise_toolbar.redo_action.setEnabled(False)  # No history at beginning
         self.exercise_toolbar.undo_action.setEnabled(False)  # same
         self.exercise_toolbar.rewind.setEnabled(False)  # same
@@ -188,7 +196,7 @@ class ExerciseMainWindow(QMainWindow):
             # self.showMaximized()
         proof_tree_is_visible = settings.value("emw/ShowProofTree")
         if proof_tree_is_visible:
-            self.proof_tree_window.setVisible(True)
+            self.exercise_toolbar.toggle_proof_tree.toggle()
         self.close_coordinator = None  # Method set up by Coordinator
 
         self.__connect_signals()
@@ -614,6 +622,22 @@ class ExerciseMainWindow(QMainWindow):
         self.target_selected = not self.target_selected
         self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
+    @Slot(MathObjectWidgetItem)
+    def process_context_double_click(self, index):
+        # print("Context double click")
+        props_wgt = self.ecw.props_wgt
+        math_object = props_wgt.item_from_index(index).math_object
+        if not math_object:
+            obj_wgt = self.ecw.objects_wgt
+            math_object = obj_wgt.item_from_index(index).math_object
+        if math_object:
+            msg_box = HelpWindow(math_object, target=False)
+            msg_box.exec_()
+
+    @Slot()
+    def process_target_double_click(self, event=None):
+        print("Target double click")
+
     def simulate_selection(self,
                            selection:
                            [Union[MathObject, MathObjectWidgetItem]],
@@ -831,6 +855,13 @@ class ExerciseMainWindow(QMainWindow):
         # Reconnect Context area signals and slots
         self.ecw.objects_wgt.clicked.connect(self.process_context_click)
         self.ecw.props_wgt.clicked.connect(self.process_context_click)
+        self.ecw.objects_wgt.doubleClicked.connect(
+            self.process_context_double_click)
+        self.ecw.props_wgt.doubleClicked.connect(
+            self.process_context_double_click)
+
+        self.ecw.target_wgt.double_clicked.connect(
+            self.process_target_double_click)
 
         # NB: there seems to be a bug in Qt,
         #  self.ecw.target_wgt.mousePressEvent is not called when

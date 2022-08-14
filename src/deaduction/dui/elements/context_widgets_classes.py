@@ -322,15 +322,15 @@ class MathObjectWidget(QListView):
         item = self.model().itemFromIndex(index_)
         return item
 
-    @Slot(MathObjectWidgetItem)
-    def _emit_apply_math_object(self, item):
-        """
-        Emit the signal self.apply_math_object_triggered with self as an
-        argument. This slot is connected to ActionButton.clicked signal in
-        self.__init__.
-        """
-        item.setSelected(False)
-        self.apply_math_object_triggered.emit(item)
+    # @Slot(MathObjectWidgetItem)
+    # def _emit_apply_math_object(self, item):
+    #     """
+    #     Emit the signal self.apply_math_object_triggered with self as an
+    #     argument. This slot is connected to ActionButton.clicked signal in
+    #     self.__init__.
+    #     """
+    #     item.setSelected(False)
+    #     self.apply_math_object_triggered.emit(item)
 
     def item_from_logic(self, math_object) -> MathObjectWidgetItem:
         """
@@ -377,6 +377,8 @@ class TargetWidget(QWidget):
     tag as attributes. To display a target in ExerciseCentralWidget, use
     this class and not _TargetLabel as this one also manages layouts!
     """
+
+    double_clicked = Signal()
 
     def __init__(self, target=None, goal_count: str = ''):
         """"
@@ -465,3 +467,5 @@ class TargetWidget(QWidget):
     def logic(self):
         return self.target
 
+    def mouseDoubleClickEvent(self, event):
+        self.double_clicked.emit()
