@@ -64,12 +64,15 @@ class HelpWindow(QWidget):
 
         # Fonts
         fonts = DeaductionFonts(self)
+        text_font = self.help_wdg.font()
         main_size = fonts.main_font_size
+        text_font.setPointSize(main_size)
+        self.help_wdg.setFont(text_font)
+
         target_size = fonts.target_font_size
-        style = f'QTextEdit {{font-size: {20}}}' \
-                f'QLabel {{font-size: {30}}}'
-        self.setStyleSheet(style)
-        # self.math_label.font().setPointSize(30)
+        label_font = self.math_label.font()
+        label_font.setPointSize(target_size)
+        self.math_label.setFont(label_font)
 
         # Layout
         self.lyt = QVBoxLayout()
