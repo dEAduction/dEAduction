@@ -76,14 +76,12 @@ class TargetLabel(QLabel):
     parameter, and display it in richText format (html).
     """
 
+    clicked = Signal()
+    double_clicked = Signal()
+
     def __init__(self, target):
         super().__init__()
-        # Display
-        #   ∀ x ∈ X, ∃ ε, …
-        # and not
-        #   H : ∀ x ∈ X, ∃ ε, …
-        # where H might be the lean name of the target. That's what
-        # the .math_type is for.
+        self._double_clicked = False
         if target:
             # log.debug("updating target")
             text = target.math_type_to_display()
@@ -96,6 +94,21 @@ class TargetLabel(QLabel):
     # Debugging
     # def mouseReleaseEvent(self, ev) -> None:
     #     print("Clac!!")
+
+    def mouseReleaseEvent(self, event):
+        """
+        Emit the clicked signal only if this is not a double click.
+        """
+        if not self._double_clicked:
+            # print("target label clicked")
+            self.clicked.emit()
+        else:
+            self._double_clicked = False
+
+    def mouseDoubleClickEvent(self, event):
+        # print("target label double clicked")
+        self._double_clicked = True
+        self.double_clicked.emit()
 
 
 # A usefull class.
@@ -378,16 +391,15 @@ class TargetWidget(QWidget):
     this class and not _TargetLabel as this one also manages layouts!
     """
 
-    double_clicked = Signal()
+    # double_clicked = Signal()
 
     def __init__(self, target=None, goal_count: str = ''):
         """"
-        Init self with an target (an instance of the class ProofStatePO)
+        Init self with a target (an instance of the class ProofStatePO)
         and a tag. If those are None, display an empty tag and '…' in
         place of the target. A caption is added on top of the target.
 
         :param target: The target to be displayed.
-        :param tag: The tag associated to target.
         :param goal_count: a string indicating the goal_count state,
         e.g. "  2 / 3" means the goal number 2 out of 3 is currently being
         studied
@@ -467,5 +479,5 @@ class TargetWidget(QWidget):
     def logic(self):
         return self.target
 
-    def mouseDoubleClickEvent(self, event):
-        self.double_clicked.emit()
+    # def mouseDoubleClickEvent(self, event):
+    #     self.double_clicked.emit()

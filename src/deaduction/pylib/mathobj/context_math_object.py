@@ -27,11 +27,9 @@ This file is part of d∃∀duction.
 
 from typing import Any
 import logging
-from copy import copy
 
-# from deaduction.pylib.math_display import TO_BE_EXPANDED
+import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.mathobj.math_object   import MathObject
-from deaduction.pylib.mathobj.give_name import name_single_bound_var
 
 log = logging.getLogger(__name__)
 global _
@@ -137,49 +135,71 @@ class ContextMathObject(MathObject):
 
     def help_target_msg(self, format_="html") -> (str, str):
         """
-        A help msg for a ContextMathObject as a target.
-
+        Return three help msgs about self:
+        - a general msg that describes self,
+        - a msgs that explains how to use self in deaduction,
+        - a (maybe empty) hint msg.
         Help msgs should depend on the main symbol of self, using implicit
         definition if they are allowed by the current settings.
         """
 
-        gen_msg = ""
-        pract_msg = ""
-        hint = ""
-        to_prove = _("In order to prove")
-        if self.is_for_all():
-            type_ = self.children[0].to_display(format_="html")
-            var = self.children[1].to_display(format_="html")
-            prop = self.children[2].to_display(format_="html")
-            gen_msg = to_prove + " " + _("this universal property") + ", " +\
-                _("take any element {} of {}").format(var, type_) + " " +\
-                _("and prove that {}").format(prop) + "."
+        implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
+        implicit = False  # Fixme
 
-        return gen_msg, pract_msg, hint
+        raw_msgs = None
+        params = tuple()
+        children = self.math_type.children
+        if self.is_for_all(implicit=implicit):
+            params = (children[0].to_display(format_="html"))
+            raw_msgs = prove_forall
+
+        if raw_msgs:
+            msgs = (_(msg).format(params) if msg else "" for msg in raw_msgs)
+            return msgs
+        else:
+            return "", "", ""
 
     def help_context_msg(self, format_="html") -> (str, str, str):
-        to_use = _("In order to use")
-        gen_msg = ""
-        pract_msg = ""
-        hint = ""
-        children = self.math_type.children
-        if self.is_for_all():
-            # TODO: in case of an implicit forall (and
-            #  implicite_use_of_def is set), add a preambule saying
-            #  "after unfolding the def, this is a universal prop".
-            type_ = children[0].to_display(format_="html")
-            var = children[1].to_display(format_="html")
-            # prop = children[2].to_display(format_="html")
-            gen_msg = _("You can apply") + " " + _("this universal property") +\
-                " " + _("to any element {} of {}").format(var, type_) + "."
-            pract_msg = _("If there is an element of {} in the context, "
-                          "you may select it together with this property "
-                          "before pressing the ∀ button.").format(type_)
-            hint = to_use + "this universal property, " + \
-                   _("you need some element of {}.").format(type_) + \
-                + _("Is there any in the context? If not, can you create some?")
+        """
+        Return three help msgs about self:
+        - a general msg that describes self,
+        - a msgs that explains how to use self in deaduction,
+        - a (maybe empty) hint msg.
+        Help msgs should depend on the main symbol of self, using implicit
+        definition if they are allowed by the current settings.
+        """
 
-        return gen_msg, pract_msg, hint
+        implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
+        implicit = False  # Fixme
+
+        raw_msgs = None
+        params = tuple()
+        children = self.math_type.children
+        if self.is_for_all(implicit=implicit):
+            params = (children[0].to_display(format_="html"))
+            raw_msgs = use_forall
+
+        if raw_msgs:
+            msgs = (_(msg).format(params) for msg in raw_msgs)
+            return msgs
+        else:
+            return "", "", ""
+
+
+use_forall = (_("This is a universal property, which tells something about "
+                "every element of {}."),
+              _("To use this property, press the ∀ button after selecting "
+                "an element of {}."),
+              _("To use this property, you need some element of {}. Is there "
+                "any in the context? If not, can you create some?"))
+
+
+prove_forall = (_("This is a universal property, which tells something about "
+                  "every element of {}."),
+                _("To start a proof of this property, press the ∀ button."),
+                "")
+
+
 
 
 

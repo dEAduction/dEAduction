@@ -26,30 +26,128 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PySide2.QtWidgets import QMessageBox
-from PySide2.QtCore import Qt
+from PySide2.QtWidgets import QDialog, QRadioButton, QVBoxLayout, QHBoxLayout,\
+    QTextEdit, QLabel, QDialogButtonBox, QWidget
+from PySide2.QtCore import Qt, Slot, QSettings
+
+from typing import Optional
+
+from deaduction.dui.primitives import DeaductionFonts
 
 from deaduction.pylib.mathobj import ContextMathObject
 
+global _
 
-class HelpWindow(QMessageBox):
+
+class HelpWindow(QWidget):
     """
     A class for a window displaying a help msg, with maybe a small set of
     possible user actions.
     """
 
-    def __init__(self, math_object:ContextMathObject, target=False):
+    def __init__(self, math_object: Optional[ContextMathObject] = None,
+                 target=False):
         super().__init__()
-        if target:
-            main_txt, detailed_txt, hint = math_object.help_target_msg()
-        else:
-            main_txt, detailed_txt, hint = math_object.help_context_msg()
 
-        self.setTextFormat(Qt.RichText)
-        self.setText(math_object.math_type.to_display(format_="html"))
-        self.setInformativeText(main_txt)
-        if detailed_txt:
-            self.setDetailedText(detailed_txt)
+        self.setWindowTitle(_("Help"))
 
+        self.main_txt, self.detailed_txt, self.hint = None, None, None
+        self.target = target
 
+        # Display math_object
+        self.math_label = QLabel()
+        self.math_label.setTextFormat(Qt.RichText)
 
+        # Display help msgs
+        self.help_wdg = QTextEdit()
+        self.help_wdg.setReadOnly(True)
+
+        # Fonts
+        fonts = DeaductionFonts(self)
+        main_size = fonts.main_font_size
+        target_size = fonts.target_font_size
+        style = f'QTextEdit {{font-size: {20}}}' \
+                f'QLabel {{font-size: {30}}}'
+        self.setStyleSheet(style)
+        # self.math_label.font().setPointSize(30)
+
+        # Layout
+        self.lyt = QVBoxLayout()
+        self.lyt.addWidget(self.math_label)
+        self.lyt.addWidget(self.help_wdg)
+        self.lyt.setAlignment(self.math_label, Qt.AlignHCenter)
+
+        # Buttons
+        self.description_btn = QRadioButton(_("Description"))
+        self.hint_btn = QRadioButton(_("Hint"))
+        self.description_btn.clicked.connect(self.toggle_description)
+        self.hint_btn.clicked.connect(self.toggle_hint)
+        self.description_btn.setChecked(True)
+
+        self.radio_btns = QVBoxLayout()
+        self.radio_btns.addWidget(self.description_btn)
+        self.radio_btns.addWidget(self.hint_btn)
+
+        self.btns = QHBoxLayout()
+        self.btns.addLayout(self.radio_btns)
+
+        self.lyt.addLayout(self.btns)
+
+        self.setLayout(self.lyt)
+
+        if math_object:
+            self.set_math_object(math_object, target=target)
+
+    def set_geometry(self, geometry):
+        settings = QSettings("deaduction")
+        if settings.value("help/geometry"):
+            self.restoreGeometry(settings.value("help/geometry"))
+        elif geometry:
+            self.setGeometry(geometry)
+
+    def closeEvent(self, event):
+        # Save window geometry
+        settings = QSettings("deaduction")
+        settings.setValue("help/geometry", self.saveGeometry())
+        event.accept()
+        self.hide()
+
+    def set_text(self):
+        text = ""
+        if self.description_btn.isChecked():
+            if self.main_txt:
+                text = self.main_txt + """
+
+                                        """ + self.detailed_txt
+            else:
+                text = "<em> " + _("No help available.") + "</em>"
+
+        elif self.hint_btn.isChecked():
+            if self.hint:
+                text = "<em> <b>" + _("Hint: ") + "</b>" + self.hint + "</em>"
+            else:
+                text = "<em> " + _("No hint available.") + "</em>"
+
+        self.help_wdg.setHtml(text)
+
+    def set_msgs(self, msgs: (str, str, str)):
+        self.main_txt, self.detailed_txt, self.hint = msgs
+        self.set_text()
+
+    def set_math_object(self, math_object: ContextMathObject, target=False):
+
+        msgs = (math_object.help_target_msg() if target else
+                math_object.help_context_msg())
+
+        self.math_label.setText(math_object.math_type_to_display())
+        self.set_msgs(msgs)
+
+    @Slot()
+    def toggle_hint(self):
+        self.hint_btn.setChecked(True)
+        self.set_text()
+
+    @Slot()
+    def toggle_description(self):
+        self.description_btn.setChecked(True)
+        self.set_text()

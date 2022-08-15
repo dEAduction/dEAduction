@@ -33,7 +33,9 @@ from PySide2.QtCore    import (Signal,
                                Slot,
                                QEvent,
                                QSettings,
-                               QModelIndex)
+                               QModelIndex,
+                               QTimer)
+
 from PySide2.QtWidgets import (QMainWindow,
                                QMessageBox,
                                QAction)
@@ -42,6 +44,8 @@ import deaduction.pylib.config.vars      as     cvars
 from deaduction.pylib.coursedata        import  Exercise, UserAction
 from deaduction.pylib.mathobj           import (MathObject,
                                                 ProofStep)
+
+from deaduction.dui.utils import global_geometry
 
 from deaduction.dui.elements            import (ActionButton,
                                                 LeanEditor,
@@ -165,6 +169,7 @@ class ExerciseMainWindow(QMainWindow):
         self.proof_tree_controller= ProofTreeController()
         self.statusBar            = ExerciseStatusBar(self)
         self.config_window        = None
+        self.help_window = None
 
         # ─────────────────────── UI ─────────────────────── #
 
@@ -200,6 +205,7 @@ class ExerciseMainWindow(QMainWindow):
         self.close_coordinator = None  # Method set up by Coordinator
 
         self.__connect_signals()
+        QTimer.singleShot(1000, self.__init_help_window)
         self.freeze()  # Wait for data before allowing user actions.
 
     #######################
@@ -208,7 +214,8 @@ class ExerciseMainWindow(QMainWindow):
 
     def __connect_signals(self):
         """
-        Connect all signals. Called at init.
+        Connect all signals. Called at init. SOme signals are connected in
+        update_goal.
         """
         log.debug("EMW: connect signals")
         # Actions area
@@ -228,6 +235,12 @@ class ExerciseMainWindow(QMainWindow):
                                                     self.change_exercise)
         self.global_toolbar.settings_action.triggered.connect(
                                                     self.open_config_window)
+
+    def __init_help_window(self):
+        gl_geo = global_geometry(self.ecw,
+                                 self.ecw.statements_tree.geometry())
+        self.help_window = HelpWindow()
+        self.help_window.set_geometry(gl_geo)
 
     def __init_menubar(self):
         """
@@ -614,29 +627,41 @@ class ExerciseMainWindow(QMainWindow):
             self.current_selection.remove(item)
 
     @Slot()
-    def process_target_click(self, event=None):
+    def process_target_click(self, event=None, on=None):
         """
         Select or un-select target. Current context selection is emptied.
         """
 
-        self.target_selected = not self.target_selected
+        self.target_selected = not self.target_selected if on is None else on
         self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
     @Slot(MathObjectWidgetItem)
     def process_context_double_click(self, index):
         # print("Context double click")
+        self.empty_current_selection()
+        self.process_target_click(on=False)
+        self.process_context_click(index)
+
         props_wgt = self.ecw.props_wgt
-        math_object = props_wgt.item_from_index(index).math_object
-        if not math_object:
+        math_item = props_wgt.item_from_index(index)
+        if not math_item:
             obj_wgt = self.ecw.objects_wgt
-            math_object = obj_wgt.item_from_index(index).math_object
-        if math_object:
-            msg_box = HelpWindow(math_object, target=False)
-            msg_box.exec_()
+            math_item = obj_wgt.item_from_index(index)
+        if math_item:
+            self.help_window.set_math_object(math_item.math_object)
+            self.help_window.show()
+            self.help_window.raise_()
 
     @Slot()
     def process_target_double_click(self, event=None):
-        print("Target double click")
+        # print("Process target double click")
+        self.empty_current_selection()
+
+        self.process_target_click(on=True)
+        target = self.ecw.target_wgt.target
+        self.help_window.set_math_object(target, target=True)
+        self.help_window.show()
+        self.help_window.raise_()
 
     def simulate_selection(self,
                            selection:
@@ -860,13 +885,18 @@ class ExerciseMainWindow(QMainWindow):
         self.ecw.props_wgt.doubleClicked.connect(
             self.process_context_double_click)
 
-        self.ecw.target_wgt.double_clicked.connect(
-            self.process_target_double_click)
+        # Target
+        target_lbl = self.ecw.target_wgt.target_label
+        target_lbl.clicked.connect(self.process_target_click)
+        target_lbl.double_clicked.connect(self.process_target_double_click)
+
+        # self.ecw.target_wgt.double_clicked.connect(
+        #     self.process_target_double_click)
 
         # NB: there seems to be a bug in Qt,
         #  self.ecw.target_wgt.mousePressEvent is not called when
         #  self.ecw.target_wgt.target_label format is set to richText (!)
         #  so we call the event of the target_label instead.
-        self.ecw.target_wgt.target_label.mousePressEvent = \
-            self.process_target_click
+        # self.ecw.target_wgt.target_label.mousePressEvent = \
+        #     self.process_target_click
 
