@@ -41,7 +41,8 @@ from PySide2.QtCore import    ( Slot,
 
 from PySide2.QtGui import     ( QIcon,
                                 QPixmap,
-                                QKeySequence)
+                                QKeySequence,
+                                QColor)
 from PySide2.QtWidgets import ( QAction,
                                 QGroupBox,
                                 QHBoxLayout,
@@ -173,6 +174,7 @@ class ExerciseCentralWidget(QWidget):
         self.current_goal = None
         self.objects_wgt  = MathObjectWidget()
         self.props_wgt    = MathObjectWidget()
+        self.objects_wgt.setDragDropMode(QAbstractItemView.DragOnly)
 
         # Drag&Drop: TODO: links from settings
         # self.props_wgt.accept_drops()
@@ -303,12 +305,24 @@ class ExerciseCentralWidget(QWidget):
         target_math_font.setPointSize(target_size)
         target_lbl = self.target_wgt.target_label
         target_lbl.setFont(target_math_font)
-        # Setting selected / unselected style:
-        self.target_wgt.unselected_style = f'font-size: {target_size};'
+        # # Setting selected / unselected style:
+        # self.target_wgt.unselected_style = f'font-size: {target_size};'
+        # background_color = cvars.get("display.color_for_selection", "limegreen")
+        # # background_color = "DarkBlue"
+        # self.target_wgt.selected_style = self.target_wgt.unselected_style \
+        #     + f'background-color: {background_color};'
+        # self.target_wgt.setStyleSheet(self.target_wgt.unselected_style)
+
+        # List styles: Modify color for selected objects
         background_color = cvars.get("display.color_for_selection", "limegreen")
-        self.target_wgt.selected_style = self.target_wgt.unselected_style \
-            + f'background-color: {background_color};'
-        self.target_wgt.setStyleSheet(self.target_wgt.unselected_style)
+        color = QColor(background_color)
+        for wdg in [self.props_wgt, self.objects_wgt,
+                    self.target_wgt.target_label]:
+            # FIXME: this does not work HERE for self.statements_tree
+            palette = wdg.palette()
+            palette.setBrush(palette.Normal, palette.Highlight, color)
+            palette.setBrush(palette.Inactive, palette.Highlight, color)
+            wdg.setPalette(palette)
 
     def organise_main_layout(self):
         """

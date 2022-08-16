@@ -34,6 +34,8 @@ from PySide2.QtCore    import (Signal,
                                QEvent,
                                QSettings,
                                QModelIndex)
+from PySide2.QtGui import QColor
+
 from PySide2.QtWidgets import (QMainWindow,
                                QMessageBox,
                                QAction)

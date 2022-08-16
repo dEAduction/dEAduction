@@ -130,6 +130,14 @@ class ActionButton(QPushButton):
 
         super().__init__()
 
+        # # Modify color for selected objects
+        palette = self.palette()
+        background_color = cvars.get("display.color_for_selection", "limegreen")
+        highlight_color = QColor(background_color)
+        palette.setBrush(palette.Normal, palette.Button, highlight_color)
+        palette.setBrush(palette.Inactive, palette.Button, highlight_color)
+        self.setPalette(palette)
+
         self.action = action
         self.update()  # set symbol and tool tip
         self.clicked.connect(self._emit_action)
@@ -166,6 +174,10 @@ class ActionButton(QPushButton):
             tooltip = ""
         self.setToolTip(tooltip)
 
+    # def changeEvent(self, e) -> None:
+    #     super().changeEvent(e)
+    #     print(self.backgroundRole())
+
     @Slot()
     def _emit_action(self):
         """
@@ -173,7 +185,6 @@ class ActionButton(QPushButton):
         This slot is connected to ActionButton.clicked signal in
         self.__init__.
         """
-
         self.action_triggered.emit(self)
 
     @property
@@ -250,6 +261,13 @@ class ActionButtonsWidget(QWidget):
         """
 
         super().__init__()
+
+        # Modify pressed button color
+        palette = self.palette()
+        highlight_color = QColor("limegreen")
+        palette.setBrush(palette.Active, palette.Button, highlight_color)
+        self.setPalette(palette)
+
 
         # TODO: make self.buttons a property?
         self.buttons = []
@@ -642,6 +660,14 @@ class StatementsTreeWidget(QTreeWidget):
         else:
             self.resizeColumnToContents(0)
             self.setHeaderLabels([_('Statements')])
+
+        # Modify color for selected objects
+        palette = self.palette()
+        background_color = cvars.get("display.color_for_selection", "limegreen")
+        highlight_color = QColor(background_color)
+        palette.setBrush(palette.Normal, palette.Highlight, highlight_color)
+        palette.setBrush(palette.Inactive, palette.Highlight, highlight_color)
+        self.setPalette(palette)
 
     def add_child(self, item):
         """

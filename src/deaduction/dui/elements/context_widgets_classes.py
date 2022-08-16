@@ -46,7 +46,8 @@ from PySide2.QtGui     import ( QBrush,
                                 QIcon,
                                 QFont,
                                 QStandardItem,
-                                QStandardItemModel)
+                                QStandardItemModel,
+                                QPalette)
 from PySide2.QtWidgets import ( QHBoxLayout,
                                 QVBoxLayout,
                                 QLabel,
@@ -279,15 +280,13 @@ class MathObjectWidget(QListView):
         # list_view.setRowHidden(1, True)
         # list_view.setAlternatingRowColors(True)
 
-        # No text edition (!), no selection
+        # No text edition (!)
         # self.setSelectionMode(QAbstractItemView.NoSelection)
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         # By default, disable drag and drop. This may be changed at creation.
         self.setDragEnabled(True)
         self.setDragDropMode(QAbstractItemView.DragDrop)
-
-        # self.setDragDropMode(QAbstractItemView.DropOnly)
 
         # After filling content?
         # model = QStandardItemModel(self)
@@ -394,13 +393,23 @@ class MathObjectWidget(QListView):
     #         self.setDragDropMode(QAbstractItemView.DragOnly)
     #         self.setDragEnabled(True)
 
+    def item_from_event(self, event):
+        pos = event.pos()
+        index = self.indexAt(pos)
+        item = self.item_from_index(index)
+        return item
+
+    def drop_enabled(self):
+        return (self.dragDropMode() == QAbstractItemView.DragDrop or
+                self.dragDropMode() == QAbstractItemView.DropOnly)
+
     def dragEnterEvent(self, event):
         """
         Mark enterEvent by changing background color.
         """
         super().dragEnterEvent(event)
         source = event.source()
-        if isinstance(source, StatementsTreeWidget):
+        if isinstance(source, StatementsTreeWidget) and self.drop_enabled():
             self.setStyleSheet('background-color: yellow;')
             self.setDropIndicatorShown(False)  # Do not show "where to drop"
 
@@ -411,9 +420,6 @@ class MathObjectWidget(QListView):
         # if isinstance(source, StatementsTreeWidget):
         self.setStyleSheet('background-color: white;')
         self.setDropIndicatorShown(True)
-
-    # def dragMoveEvent(self, event):
-    #     super().dragMoveEvent(event)
 
     def dropEvent(self, event):
         """
@@ -427,13 +433,10 @@ class MathObjectWidget(QListView):
             self.setStyleSheet('background-color: white;')
         elif isinstance(source, MathObjectWidget):
             # dragged_widget = source.currentIndex()
-            print("Math Obj dropped")
-            # print(dragged_widget.math_object.to_display())
-            # FIXME: how to get receiver???
-            # self.math_object_dropped.emit(???)
+            # print("Math Obj dropped")
+            self.math_object_dropped.emit(self.item_from_event(event))
+            event.accept()
 
-    # def dropMimeData(self, *args):
-    #     pass
 
 # Obsolete:
 # MathObjectWidget.apply_math_object_triggered = Signal(MathObjectWidget)
@@ -473,10 +476,11 @@ class TargetWidget(QWidget):
         self.caption_label = QLabel()
         self.set_pending_goals_counter(goal_count)
         self.target_label = TargetLabel(target)
+        self.target_label.setAutoFillBackground(True)  # For highlighting
 
         self.setToolTip(_('To be proved'))
         # TODO: put the pre-set size of group boxes titles
-        self.caption_label.setStyleSheet('font-size: 11pt;')
+        # caption_label.setStyleSheet('font-size: 11pt;')
 
         # TODO: method setfontstyle
         # size = cvars.get('display.target_font_size')
@@ -525,9 +529,12 @@ class TargetWidget(QWidget):
         """
         if hasattr(self, 'target_label'):
             if yes:
-                self.target_label.setStyleSheet(self.selected_style)
+                # self.target_label.setStyleSheet(self.selected_style)
+                self.target_label.setBackgroundRole(QPalette.Highlight)
+                self.target_label.setForegroundRole(QPalette.WindowText)
             else:
-                self.target_label.setStyleSheet(self.unselected_style)
+                self.target_label.setBackgroundRole(QPalette.Window)
+                # self.target_label.setStyleSheet(self.unselected_style)
         else:
             log.warning("Attempt to use deleted attribute target_label")
 
