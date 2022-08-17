@@ -1113,7 +1113,8 @@ class OperatorContextWidget(ContextWidget):
 
     @property
     def operator_wdg(self):
-        return self.operator_layout.math_wdg
+        if self.operator_layout:
+            return self.operator_layout.math_wdg
 
 
 class SubstitutionContextWidget(ContextWidget):
