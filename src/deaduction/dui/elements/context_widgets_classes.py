@@ -37,10 +37,13 @@ This file is part of d∃∀duction.
 """
 import logging
 
+from typing import Optional
+
 from PySide2.QtCore    import ( Signal,
                                 Slot,
                                 Qt,
-                                QModelIndex)
+                                QModelIndex,
+                                QItemSelectionModel)
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
                                 QIcon,
@@ -166,6 +169,8 @@ class MathObjectWidgetItem(QStandardItem):
         _TagIcon) of mathobject.
     """
 
+    from_math_object = dict()  # Set in _exercise_main_window_widgets
+
     def __init__(self, context_math_object):
         """
         Init self with an instance of the class ContextMathObject.
@@ -176,6 +181,8 @@ class MathObjectWidgetItem(QStandardItem):
 
         super().__init__()
 
+        # The following will be set when inserted:
+        self.math_object_wdg: Optional[MathObjectWidget] = None
         self.context_math_object = context_math_object
         if context_math_object.is_new:
             self.tag = '+'
@@ -217,15 +224,18 @@ class MathObjectWidgetItem(QStandardItem):
 
         return self is other  # Brutal but that is what we need.
 
+    def select(self):
+        self.math_object_wdg.select_item(self)
+
     def mark_user_selected(self, yes: bool = True):
         """
         Change self's background to green if yes or to normal color
         (e.g. white in light mode) if not yes.
         """
+        # Fixme: obsolete
         background_color = cvars.get("display.color_for_selection", "LimeGreen")
         self.setBackground(QBrush(QColor(background_color)) if yes
                            else QBrush())
-
 
 # class TargetWidgetItem(QStandardItem):
 #     """
@@ -323,11 +333,19 @@ class MathObjectWidget(QListView):
     #     model.removeRows(0, model.rowCount())
     #     self.add_target(target)
 
+    def select_index(self, index):
+        # self.selectionModel().select(index, QItemSelectionModel.SelectCurrent)
+        self.selectionModel().select(index, QItemSelectionModel.Select)
+
+    def select_item(self, item: MathObjectWidgetItem):
+        self.select_index(item.index())
+
     def add_math_objects(self, math_objects):
         for math_object in math_objects:
             item = MathObjectWidgetItem(math_object)
             self.model().appendRow(item)
             self.items.append(item)
+            item.math_object_wdg = self
             # item.setDragEnabled(True)
             # item.setDropEnabled(True)
 
@@ -347,6 +365,9 @@ class MathObjectWidget(QListView):
     def item_from_index(self, index_):
         item = self.model().itemFromIndex(index_)
         return item
+
+    def selected_items(self):
+        return [self.item_from_index(index) for index in self.selectedIndexes()]
 
     # @Slot(MathObjectWidgetItem)
     # def _emit_apply_math_object(self, item):
@@ -393,11 +414,11 @@ class MathObjectWidget(QListView):
     #         self.setDragDropMode(QAbstractItemView.DragOnly)
     #         self.setDragEnabled(True)
 
+    def index_from_event(self, event):
+        return self.indexAt(event.pos())
+
     def item_from_event(self, event):
-        pos = event.pos()
-        index = self.indexAt(pos)
-        item = self.item_from_index(index)
-        return item
+        return self.item_from_index(self.index_from_event(event))
 
     def drop_enabled(self):
         return (self.dragDropMode() == QAbstractItemView.DragDrop or
@@ -432,9 +453,19 @@ class MathObjectWidget(QListView):
             self.statement_dropped.emit(dragged_widget)
             self.setStyleSheet('background-color: white;')
         elif isinstance(source, MathObjectWidget):
-            # dragged_widget = source.currentIndex()
-            # print("Math Obj dropped")
-            self.math_object_dropped.emit(self.item_from_event(event))
+
+            # Add dragged index to selection (seems that it is not always in)
+            dragged_index = source.currentIndex()
+            # print(f"Source : {source}, dragged index: {dragged_index}")
+            # print(f"Source selected items: {len(source.selected_items())}")
+            source.select_index(dragged_index)
+            # print(f"Source selected items: {len(source.selected_items())}")
+            # Add receiver to selection
+            index = self.index_from_event(event)
+            self.select_index(index)
+
+            # Emit signal
+            self.math_object_dropped.emit(self.item_from_index(index))
             event.accept()
 
 

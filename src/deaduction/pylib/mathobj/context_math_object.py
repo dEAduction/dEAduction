@@ -27,11 +27,9 @@ This file is part of d∃∀duction.
 
 from typing import Any
 import logging
-from copy import copy
 
-# from deaduction.pylib.math_display import TO_BE_EXPANDED
+import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.mathobj.math_object   import MathObject
-from deaduction.pylib.mathobj.give_name import name_single_bound_var
 
 log = logging.getLogger(__name__)
 global _
@@ -136,17 +134,19 @@ class ContextMathObject(MathObject):
         used e.g. to determine which action could be triggered by a drag&drop
         operation.
         """
-        premise = self
-        operator = other
+        operator = self
+        premise = other
         action = None
 
-        if premise.is_prop():
-            if operator.can_be_used_for_implication:
+        implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
+
+        if premise.math_type.is_prop():
+            if operator.can_be_used_for_implication(implicit=implicit):
                 action = "implies"
             elif operator.can_be_used_for_substitution():
                 action = "equal"
         else:
-            if operator.is_for_all():
+            if operator.is_for_all(implicit=implicit):
                 action = "forall"
 
         return action

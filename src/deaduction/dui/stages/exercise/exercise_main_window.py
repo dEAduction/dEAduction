@@ -154,7 +154,7 @@ class ExerciseMainWindow(QMainWindow):
         self.automatic_action     = False
 
         # From inside
-        self.current_selection    = []
+        # self.current_selection    = []
         self._target_selected     = False
         self.user_input           = []
         # self.double_clicked_item  = None
@@ -218,8 +218,8 @@ class ExerciseMainWindow(QMainWindow):
         # Context area
         self.ecw.props_wgt.statement_dropped.connect(self.statement_dropped)
         self.ecw.props_wgt.math_object_dropped.connect(self.math_object_dropped)
-        self.ecw.objects_wgt.clicked.connect(self.process_context_click)
-        self.ecw.props_wgt.clicked.connect(self.process_context_click)
+        # self.ecw.objects_wgt.clicked.connect(self.process_context_click)
+        # self.ecw.props_wgt.clicked.connect(self.process_context_click)
 
         # UI
         self.exercise_toolbar.toggle_lean_editor_action.triggered.connect(
@@ -324,7 +324,8 @@ class ExerciseMainWindow(QMainWindow):
         log.debug("New settings: ")
         log.debug(modified_settings)
         if modified_settings:
-            self.current_selection = []
+            # self.current_selection = []
+            self.empty_current_selection()
             # TODO: only for relevant changes in preferences
             # TODO: try more subtle updating...
             ##############################
@@ -441,6 +442,12 @@ class ExerciseMainWindow(QMainWindow):
         # # else:
         # #     pgs = []
         # return pgs
+
+    @property
+    def current_selection(self):
+        sel_objs = self.ecw.objects_wgt.selected_items()
+        sel_props = self.ecw.props_wgt.selected_items()
+        return sel_objs + sel_props
 
     @property
     def current_selection_as_mathobjects(self):
@@ -592,34 +599,36 @@ class ExerciseMainWindow(QMainWindow):
         Clear current (user) selection of math. objects and properties.
         """
 
-        for item in self.current_selection:
-            item.mark_user_selected(False)
-        self.current_selection = []
+        # for item in self.current_selection:
+        #     item.mark_user_selected(False)
+        # self.current_selection = []
+        self.ecw.props_wgt.clearSelection()
+        self.ecw.objects_wgt.clearSelection()
 
-    @Slot(MathObjectWidgetItem)
-    def process_context_click(self, item: Union[QModelIndex,
-                                                MathObjectWidgetItem]):
-        """
-        Add or remove item (item represents a math. object or property)
-        from the current selection, depending on whether it was already
-        selected or note.
-
-        :item: The math. object or property user just clicked on.
-        """
-
-        if isinstance(item, QModelIndex):
-            index = item
-            item = self.ecw.objects_wgt.item_from_index(index)
-            if not item:
-                item = self.ecw.props_wgt.item_from_index(index)
-
-        if item not in self.current_selection:
-            # item.mark_user_selected(True)
-            self.current_selection.append(item)
-        else:
-            # elif item is not self.double_clicked_item:
-            # item.mark_user_selected(False)
-            self.current_selection.remove(item)
+    # @Slot(MathObjectWidgetItem)
+    # def process_context_click(self, item: Union[QModelIndex,
+    #                                             MathObjectWidgetItem]):
+    #     """
+    #     Add or remove item (item represents a math. object or property)
+    #     from the current selection, depending on whether it was already
+    #     selected or note.
+    #
+    #     :item: The math. object or property user just clicked on.
+    #     """
+    #
+    #     if isinstance(item, QModelIndex):
+    #         index = item
+    #         item = self.ecw.objects_wgt.item_from_index(index)
+    #         if not item:
+    #             item = self.ecw.props_wgt.item_from_index(index)
+    #
+    #     if item not in self.current_selection:
+    #         # item.mark_user_selected(True)
+    #         self.current_selection.append(item)
+    #     else:
+    #         # elif item is not self.double_clicked_item:
+    #         # item.mark_user_selected(False)
+    #         self.current_selection.remove(item)
 
         # Clear selection (we do not use the QListView selection mechanism):
         # self.ecw.props_wgt.clearSelection()
@@ -644,15 +653,31 @@ class ExerciseMainWindow(QMainWindow):
         Note that items in selection are first transformed into
         MathObjectWidgetItem if they are MathObject.
         """
+
+        # FIXME!!!
         self.empty_current_selection()
         for item in selection:
+            # Determine math_object and MathWidgetItem
             if isinstance(item, MathObject):
-                item = MathObjectWidgetItem.from_math_object(item)
+                math_object = item
+                item: MathObjectWidgetItem = \
+                    MathObjectWidgetItem.from_math_object(item)
+
+            item.select()
+            #     # item = self.context_item_from_math_object(item)
+            # else:
+            #     math_object = item.math_object
+            #
+            # # Select item in the pertinent MathObjectWidget
+            # math_wdg = self.ecw.props_wgt if math_object.math_type.is_prop() \
+            #     else self.ecw.objects_wgt
+            # math_wdg.select_item(item)
+
             #     if item.math_type.is_prop():
             #         item = self.ecw.props_wgt.item_from_logic(item)
             #     else:
             #         item = self.ecw.objects_wgt.item_from_logic(item)
-            self.process_context_click(item)
+            # self.process_context_click(item)
 
         # # Select target if no selection:
         # if not selection:
@@ -836,7 +861,8 @@ class ExerciseMainWindow(QMainWindow):
         # been deleted, and anyway this is cosmetics since  widgets are
         # destroyed and re-created by "self.ecw.update_goal" just below
         self.target_selected = False
-        self.current_selection = []
+        # self.current_selection = []
+        self.empty_current_selection()
 
         # Update UI and attributes. Target stay selected if it was.
         # statements_scroll = self.ecw.statements_tree.verticalScrollBar(

@@ -70,7 +70,8 @@ from deaduction.pylib.actions           import (generic,
                                                 InputType,
                                                 CodeForLean,
                                                 MissingParametersError,
-                                                WrongUserInput)
+                                                WrongUserInput,
+                                                drag_n_drop)
 
 from deaduction.pylib.memory            import Journal
 
@@ -556,44 +557,38 @@ class Coordinator(QObject):
 
                 elif emission.is_from(self.math_object_dropped):
                     """
-                    Determine an Action Button from selection and receiver.
+                    Determine an Action Button from selection and receiver 
+                    and call __server_call_action.
                     """
 
-                    print("Math object dropped!")
-                    math_item = emission.args[0]
-                    if not math_item:
-                        # FIXME: not caught here!
-                        raise WrongUserInput(_("Drop your selection on some "
-                                               "property!"))
+                    log.debug("Math object dropped!")
+                    s = [item.math_object.to_display(format_="utf8")
+                         for item in self.emw.current_selection]
+                    log.debug(f"Selection: {s}")
+                    operator = emission.args[0]  # Optional[MathWidgetItem]
+                    # selection = [item.math_object for item in
+                    #              self.emw.current_selection]
+                    selection = self.current_selection_as_mathobjects
+                    # Operator is None if dropping did not occur on a property.
+                    # Then WrongUI exception will be raised by drag_n_drop().
+                    if operator:
+                        operator = operator.math_object
+                        selection.remove(operator)
+                    try:
+                        name = drag_n_drop(operator, selection)
+                    except WrongUserInput as error:
+                        self.proof_step.user_input = self.emw.user_input
+                        self.process_wrong_user_input(error)
 
-                    if math_item not in self.current_selection:
-                        self.current_selection.append(math_item)
-                    math_item.mark_user_selected(True)
+                    else:
+                        # TODO: simulate ActionButton: make a UserAction from
+                        #  name and current_selection, celar selection, and call
+                        #  emw.simulate_user_action
+                        # self.nursery.start_soon(self.emw.simulate_user_action,
+                        #                         user_action)
 
-                    assert len(self.current_selection_as_mathobjects) > 1
-                    operator: ContextMathObject = math_item.math_object
-                    premise = self.current_selection_as_mathobjects[0]
-                    for math_obj in self.current_selection_as_mathobjects:
-                        if math_obj.is_prop():
-                            premise = math_obj
-                            break
-                    name = operator.action_from_premise_and_operator(premise)
-                    if not name:
-                        # FIXME: not caught here!
-                        raise WrongUserInput(_("I don't know what to do!"))
-
-                    # TODO: simulate ActionButton: make a UserAction from
-                    #  name and current_selection, celar selection, and call
-                    #  emw.simulate_user_action
-                    # self.nursery.start_soon(self.emw.simulate_user_action,
-                    #                         user_action)
-
-                    log.debug(f"Selection len: {len(self.current_selection)}")
-                    log.debug(f"Premise, operator, action: {premise} "
-                              f"{operator} {name}")
-
-                    action_btn = ActionButton.from_name[name]
-                    self.__server_call_action(action_btn)
+                        action_btn = ActionButton.from_name[name]
+                        self.__server_call_action(action_btn)
 
                 # elif emission.is_from(self.apply_math_object_triggered):
                 #     # Fixme: causes freeze - no more double click
