@@ -304,6 +304,7 @@ class MathObjectWidget(QListView):
         self.setItemDelegate(HTMLDelegate())  # parent=self?
 
         self.items = []
+        self._potential_drop_receiver = None
 
         # set fonts for maths display FIXME: put this in delegate
         # math_font_name = cvars.get('display.mathematics_font', 'Default')
@@ -333,9 +334,10 @@ class MathObjectWidget(QListView):
     #     model.removeRows(0, model.rowCount())
     #     self.add_target(target)
 
-    def select_index(self, index):
+    def select_index(self, index, yes=True):
         # self.selectionModel().select(index, QItemSelectionModel.SelectCurrent)
-        self.selectionModel().select(index, QItemSelectionModel.Select)
+        self.selectionModel().select(index, QItemSelectionModel.Select if yes
+        else QItemSelectionModel.Deselect)
 
     def select_item(self, item: MathObjectWidgetItem):
         self.select_index(item.index())
@@ -424,6 +426,20 @@ class MathObjectWidget(QListView):
         return (self.dragDropMode() == QAbstractItemView.DragDrop or
                 self.dragDropMode() == QAbstractItemView.DropOnly)
 
+    @property
+    def potential_drop_receiver(self):
+        return self._potential_drop_receiver
+
+    @potential_drop_receiver.setter
+    def potential_drop_receiver(self, receiver: QModelIndex):
+        if (self.potential_drop_receiver and
+                receiver != self.potential_drop_receiver):
+            self.select_index(self._potential_drop_receiver, False)
+            self._potential_drop_receiver = None
+        if receiver and receiver not in self.selectedIndexes():
+            self._potential_drop_receiver = receiver
+            self.select_index(receiver)
+
     def dragEnterEvent(self, event):
         """
         Mark enterEvent by changing background color.
@@ -431,7 +447,8 @@ class MathObjectWidget(QListView):
         super().dragEnterEvent(event)
         source = event.source()
         if isinstance(source, StatementsTreeWidget) and self.drop_enabled():
-            self.setStyleSheet('background-color: yellow;')
+            color = cvars.get("display.color_for_selection", "LimeGreen")
+            self.setStyleSheet(f'background-color: {color};')
             self.setDropIndicatorShown(False)  # Do not show "where to drop"
 
     def dragLeaveEvent(self, event):
@@ -441,6 +458,23 @@ class MathObjectWidget(QListView):
         # if isinstance(source, StatementsTreeWidget):
         self.setStyleSheet('background-color: white;')
         self.setDropIndicatorShown(True)
+        self.potential_drop_receiver = None  # Unselect automatically
+
+    def dragMoveEvent(self, event) -> None:
+        """
+        When a MathWidgetItem is dragged over a potential receiver, select it
+        temporarily.
+        """
+
+        super().dragMoveEvent(event)
+        index = self.index_from_event(event)
+        if index != self.potential_drop_receiver:
+            self.potential_drop_receiver = None  # Unselect automatically
+
+        # if index:
+        item: MathObjectWidgetItem = self.item_from_index(index)
+        if item and item.isDropEnabled():
+            self.potential_drop_receiver = index
 
     def dropEvent(self, event):
         """
@@ -456,17 +490,26 @@ class MathObjectWidget(QListView):
 
             # Add dragged index to selection (seems that it is not always in)
             dragged_index = source.currentIndex()
+            index = self.index_from_event(event)
+            if dragged_index == index:  # Absurd auto-drop, abort
+                source.select_index(dragged_index, False)
+                self.select_index(index, False)
+                return
+
             # print(f"Source : {source}, dragged index: {dragged_index}")
             # print(f"Source selected items: {len(source.selected_items())}")
-            source.select_index(dragged_index)
+            if dragged_index not in source.selectedIndexes():
+                source.select_index(dragged_index)
             # print(f"Source selected items: {len(source.selected_items())}")
             # Add receiver to selection
-            index = self.index_from_event(event)
-            self.select_index(index)
+            if index not in self.selectedIndexes():
+                self.select_index(index)
 
             # Emit signal
             self.math_object_dropped.emit(self.item_from_index(index))
-            event.accept()
+
+        event.accept()
+        self.setDropIndicatorShown(False)
 
 
 # Obsolete:

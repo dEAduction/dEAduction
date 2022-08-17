@@ -853,9 +853,6 @@ class ExerciseMainWindow(QMainWindow):
         self.manage_msgs(self.displayed_proof_step)
         self.user_input = []
 
-        if not new_goal or new_goal is self.current_goal:  # No update needed
-            return
-
         # Reset current context selection
         # Here we do not use empty_current_selection since Widgets may have
         # been deleted, and anyway this is cosmetics since  widgets are
@@ -863,6 +860,9 @@ class ExerciseMainWindow(QMainWindow):
         self.target_selected = False
         # self.current_selection = []
         self.empty_current_selection()
+
+        if not new_goal or new_goal is self.current_goal:  # No update needed
+            return
 
         # Update UI and attributes. Target stay selected if it was.
         # statements_scroll = self.ecw.statements_tree.verticalScrollBar(

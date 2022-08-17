@@ -60,16 +60,17 @@ def drag_n_drop(operator: ContextMathObject,
     # The main premise determines the action. It is the last selected
     # property if any, else the last selected object.
     # FIXME: beware that selection maybe not ordered by time of selection?
+    if not selection:
+        raise WrongUserInput(_("I don't know what to do!"))
+
     premise = selection[-1]
     for math_obj in selection:
         if math_obj.is_prop():
             premise = math_obj
     log.debug(f"Premise: {premise}")
-    if premise:
-        name = operator.action_from_premise_and_operator(premise)
-        log.debug(f"Name: {name}")
-    else:
-        raise WrongUserInput(_("Missing premises?!"))
+    name = operator.action_from_premise_and_operator(premise)
+    log.debug(f"Name: {name}")
+
     if not name:
         raise WrongUserInput(_("I don't know what to do!"))
 

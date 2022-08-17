@@ -1113,7 +1113,7 @@ class OperatorContextWidget(ContextWidget):
 
     @property
     def operator_wdg(self):
-        if self.output_layout:
+        if self.operator_layout:
             return self.operator_layout.math_wdg
 
 

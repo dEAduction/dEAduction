@@ -143,8 +143,10 @@ class ContextMathObject(MathObject):
         if premise.math_type.is_prop():
             if operator.can_be_used_for_implication(implicit=implicit):
                 action = "implies"
-            elif operator.can_be_used_for_substitution():
-                action = "equal"
+            else:
+                yes, subs = operator.can_be_used_for_substitution()
+                if yes:
+                    action = "equal"
         else:
             if operator.is_for_all(implicit=implicit):
                 action = "forall"
