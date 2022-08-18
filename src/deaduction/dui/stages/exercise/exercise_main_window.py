@@ -218,6 +218,8 @@ class ExerciseMainWindow(QMainWindow):
         # Context area
         self.ecw.props_wgt.statement_dropped.connect(self.statement_dropped)
         self.ecw.props_wgt.math_object_dropped.connect(self.math_object_dropped)
+        self.ecw.statements_tree.math_object_dropped.connect(
+            self.statement_triggered)
         # self.ecw.objects_wgt.clicked.connect(self.process_context_click)
         # self.ecw.props_wgt.clicked.connect(self.process_context_click)
 
@@ -378,6 +380,7 @@ class ExerciseMainWindow(QMainWindow):
     @target_selected.setter
     def target_selected(self, target_selected):
         self._target_selected = target_selected
+        self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
     def pretty_current_selection(self) -> str:
         """
@@ -641,7 +644,7 @@ class ExerciseMainWindow(QMainWindow):
         """
 
         self.target_selected = not self.target_selected
-        self.ecw.target_wgt.mark_user_selected(self.target_selected)
+        # self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
     def simulate_selection(self,
                            selection:
@@ -868,7 +871,7 @@ class ExerciseMainWindow(QMainWindow):
         # statements_scroll = self.ecw.statements_tree.verticalScrollBar(
         #                                                            ).value()
         self.ecw.update_goal(new_goal, self.pending_goals)
-        self.ecw.target_wgt.mark_user_selected(self.target_selected)
+        # self.ecw.target_wgt.mark_user_selected(self.target_selected)
         self.current_goal = new_goal
 
         # Reconnect Context area signals and slots

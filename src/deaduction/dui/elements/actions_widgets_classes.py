@@ -412,12 +412,13 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         This is called when redoing.
         :param duration: total duration
         """
+        color = cvars.get("display.color_for_selection", "LimeGreen")
         if expand:
             self.setExpanded(expand)
             self.treeWidget().scrollToItem(self)
         duration = duration /(3*winkle_nb)
         for n in range(winkle_nb):
-            self.setBackground(0, QBrush(QColor('blue')))
+            self.setBackground(0, QBrush(QColor(color)))
             await sleep(2*duration)
             self.setBackground(0, QBrush())
             await sleep(duration)
@@ -519,6 +520,8 @@ class StatementsTreeWidget(QTreeWidget):
     not in the outline, they are already coded in the instances of the
     class Statement themselves with the attribute pretty_name.
     """
+
+    math_object_dropped = Signal(StatementsTreeWidgetItem)
 
     # TODO: Put this in self.__init__
     # Config
@@ -650,6 +653,8 @@ class StatementsTreeWidget(QTreeWidget):
         self.update_tooltips()
         # Uncomment to enable drag:
         self.setDragEnabled(True)
+        # Uncomment to unable drops:
+        # self.setAcceptDrops(True)
 
         # Cosmetics
         self.setWindowTitle('StatementsTreeWidget')
@@ -720,11 +725,37 @@ class StatementsTreeWidget(QTreeWidget):
     def item_from_statement(self, statement):
         return self.item_from_lean_name(statement.lean_name)
 
+    def index_from_event(self, event):
+        return self.indexAt(event.pos())
+
     @Slot()
     def update_tooltips(self):
         for item in self.items:
             item.parent = self
             item.set_tooltip()
+
+    def dropEvent(self, event):
+        """
+        Process MathWidgetItem dropped on statements.
+        """
+        # Not activated.
+        source = event.source()
+        if isinstance(source, StatementsTreeWidget):
+            return
+        else:
+            dragged_index = source.currentIndex()
+            index = self.index_from_event(event)
+            # print(f"Source : {source}, dragged index: {dragged_index}")
+            # print(f"Source selected items: {len(source.selected_items())}")
+            if dragged_index not in source.selectedIndexes():
+                source.select_index(dragged_index)
+            # Emit signal
+            self.math_object_dropped.emit(self.itemFromIndex(index))
+
+        event.accept()
+        self.setDropIndicatorShown(False)
+
+        event.accept()
 
     # def event(self, event: QEvent):
     #     """

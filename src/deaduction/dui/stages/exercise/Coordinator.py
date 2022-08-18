@@ -584,13 +584,9 @@ class Coordinator(QObject):
                         self.process_wrong_user_input(error)
 
                     else:
-                        # TODO: simulate ActionButton: make a UserAction from
-                        #  name and current_selection, celar selection, and call
-                        #  emw.simulate_user_action
-                        # self.nursery.start_soon(self.emw.simulate_user_action,
-                        #                         user_action)
-
+                        self.proof_step.button_name = button.name
                         action_btn = ActionButton.from_name[name]
+                        await action_btn.simulate(duration=0.5)
                         self.__server_call_action(action_btn)
 
                 # elif emission.is_from(self.apply_math_object_triggered):
