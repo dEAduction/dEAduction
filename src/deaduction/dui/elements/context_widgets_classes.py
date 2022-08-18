@@ -294,9 +294,10 @@ class MathObjectWidget(QListView):
         # self.setSelectionMode(QAbstractItemView.NoSelection)
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
-        # By default, disable drag and drop. This may be changed at creation.
-        self.setDragEnabled(True)
-        self.setDragDropMode(QAbstractItemView.DragDrop)
+        # By default, disable drag and drop. This may be changed at creation
+        # (see _exercise_main_window_widgets).
+        self.setDragEnabled(False)
+        self.setDragDropMode(QAbstractItemView.NoDragDrop)
 
         # After filling content?
         # model = QStandardItemModel(self)

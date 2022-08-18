@@ -234,11 +234,6 @@ class ExerciseMainWindow(QMainWindow):
                                                     self.change_exercise)
         self.global_toolbar.settings_action.triggered.connect(
                                                     self.open_config_window)
-
-        # NB: there seems to be a bug in Qt,
-        #  self.ecw.target_wgt.mousePressEvent is not called when
-        #  self.ecw.target_wgt.target_label format is set to richText (!)
-        #  so we call the event of the target_label instead.
         self.ecw.target_wgt.target_label.mousePressEvent = \
             self.process_target_click
 
@@ -340,9 +335,6 @@ class ExerciseMainWindow(QMainWindow):
                 self.ecw.update_goal(self.current_goal, self.pending_goals)
             self.exercise_toolbar.update()
             self.__init_menubar()
-            # Reconnect Context area signals and slots
-            self.ecw.objects_wgt.clicked.connect(self.process_context_click)
-            self.ecw.props_wgt.clicked.connect(self.process_context_click)
 
             self.ecw.target_wgt.target_label.mousePressEvent = \
                 self.process_target_click
@@ -641,10 +633,11 @@ class ExerciseMainWindow(QMainWindow):
     def process_target_click(self, event=None):
         """
         Select or un-select target. Current context selection is emptied.
+        Note that self.target_selected's setter automatically call
+        mark_user_selected().
         """
 
         self.target_selected = not self.target_selected
-        # self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
     def simulate_selection(self,
                            selection:
@@ -873,10 +866,6 @@ class ExerciseMainWindow(QMainWindow):
         self.ecw.update_goal(new_goal, self.pending_goals)
         # self.ecw.target_wgt.mark_user_selected(self.target_selected)
         self.current_goal = new_goal
-
-        # Reconnect Context area signals and slots
-        # self.ecw.objects_wgt.clicked.connect(self.process_context_click)
-        # self.ecw.props_wgt.clicked.connect(self.process_context_click)
 
         # NB: there seems to be a bug in Qt,
         #  self.ecw.target_wgt.mousePressEvent is not called when

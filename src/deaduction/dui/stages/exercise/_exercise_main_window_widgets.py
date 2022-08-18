@@ -167,24 +167,48 @@ class ExerciseCentralWidget(QWidget):
         statements           = exercise.available_statements
         outline              = exercise.course.outline
         self.statements_tree = StatementsTreeWidget(statements, outline)
+        StatementsTreeWidgetItem.from_name = dict()
+
+        # Drags statements:
+        if cvars.get('functionality.drag_statements_to_context', True):
+            self.statements_tree.setDragEnabled(True)
+            self.statements_tree.setDragDropMode(QAbstractItemView.DragOnly)
+        else:
+            self.statements_tree.setDragEnabled(False)
+        # Drops in statements:
+        if cvars.get('functionality.drag_context_to_statements', True):
+            self.statements_tree.setAcceptDrops(True)
+            self.statements_tree.setDragDropMode(QAbstractItemView.DropOnly)
+        else:
+            self.statements_tree.setAcceptDrops(False)
+        if cvars.get('functionality.drag_context_to_statements', True) \
+                and cvars.get('functionality.drag_statements_to_context', True):
+            self.statements_tree.setDragDropMode(QAbstractItemView.DragDrop)
 
         # ─────── Init goal (Context area and target) ────── #
         MathObjectWidgetItem.from_math_object = dict()
-        StatementsTreeWidgetItem.from_name = dict()
+        self.target_wgt   = TargetWidget()
         self.current_goal = None
         self.objects_wgt  = MathObjectWidget()
         self.props_wgt    = MathObjectWidget()
-        self.objects_wgt.setDragDropMode(QAbstractItemView.DragOnly)
 
-        # Drag&Drop: TODO: links from settings
-        # self.props_wgt.accept_drops()
-        # self.props_wgt.accept_drags()
-        # self.objects_wgt.accept_drags()
+        # Set context drag and drop
+        if cvars.get('functionality.drag_context_to_statements', True) \
+                or cvars.get('functionality.drag_and_drop_in_context', True):
+            self.props_wgt.setDragEnabled(True)
 
-        # self.props_wgt.setDragDropMode(QAbstractItemView.DragDrop)
-        # self.objects_wgt.setDragDropMode(QAbstractItemView.DragOnly)
+        if cvars.get('functionality.drag_and_drop_in_context', True):
+            self.props_wgt.setDragDropMode(QAbstractItemView.DragDrop)
+            self.objects_wgt.setDragDropMode(QAbstractItemView.DragOnly)
+            self.objects_wgt.setDragEnabled(True)
+        elif cvars.get('functionality.drag_context_to_statements', True) \
+                and cvars.get('functionality.drag_statements_to_context', True):
+            self.props_wgt.setDragDropMode(QAbstractItemView.DragDrop)
+        elif cvars.get('functionality.drag_context_to_statements', True):
+            self.props_wgt.setDragDropMode(QAbstractItemView.DragOnly)
+        elif cvars.get('functionality.drag_statements_to_context', True):
+            self.props_wgt.setDragDropMode(QAbstractItemView.DropOnly)
 
-        self.target_wgt   = TargetWidget()
         self.deaduction_fonts = DeaductionFonts(self)
         self.set_font()
 

@@ -56,7 +56,8 @@ from PySide2.QtCore    import ( Signal,
                                 QTimerEvent)
 from PySide2.QtWidgets import ( QHBoxLayout,
                                 QPushButton,
-                                QWidget)
+                                QWidget,
+                                QAbstractItemView)
 from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem,
                                 QToolTip)
@@ -651,10 +652,25 @@ class StatementsTreeWidget(QTreeWidget):
         self._init_tree(statements, outline)
         self.is_exercise_list = is_exercise_list
         self.update_tooltips()
-        # Uncomment to enable drag:
-        self.setDragEnabled(True)
-        # Uncomment to unable drops:
-        # self.setAcceptDrops(True)
+        # By default, drag and drop disabled. See _exercise_main_window_widgets.
+        self.setDragEnabled(False)
+        self.setAcceptDrops(False)
+        self.setDragDropMode(QAbstractItemView.NoDragDrop)
+
+        if cvars.get('functionality.drag_statements_to_context', True):
+            self.setDragEnabled(True)
+            self.setDragDropMode(QAbstractItemView.DragOnly)
+        else:
+            self.setDragEnabled(False)
+        # Drops in statements:
+        if cvars.get('functionality.drag_context_to_statements', True):
+            self.setAcceptDrops(True)
+            self.setDragDropMode(QAbstractItemView.DropOnly)
+        else:
+            self.setAcceptDrops(False)
+        if cvars.get('functionality.drag_context_to_statements', True) \
+                and cvars.get('functionality.drag_statements_to_context', True):
+            self.setDragDropMode(QAbstractItemView.DragDrop)
 
         # Cosmetics
         self.setWindowTitle('StatementsTreeWidget')
@@ -745,12 +761,15 @@ class StatementsTreeWidget(QTreeWidget):
         else:
             dragged_index = source.currentIndex()
             index = self.index_from_event(event)
+            item = self.itemFromIndex(index)
+            if not item:  # Not dropped on a specific statement
+                return
             # print(f"Source : {source}, dragged index: {dragged_index}")
             # print(f"Source selected items: {len(source.selected_items())}")
             if dragged_index not in source.selectedIndexes():
                 source.select_index(dragged_index)
             # Emit signal
-            self.math_object_dropped.emit(self.itemFromIndex(index))
+            self.math_object_dropped.emit(item)
 
         event.accept()
         self.setDropIndicatorShown(False)

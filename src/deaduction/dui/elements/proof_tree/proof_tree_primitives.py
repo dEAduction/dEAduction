@@ -623,7 +623,8 @@ class RawLabelMathObject(QLabel):
         event.accept()
 
     def highlight(self, yes=True):
-        color = cvars.get("display.color_for_highlighted_math_obj", "green")
+        color = cvars.get(
+            "display.color_for_highlight_in_proof_tree", "green")
         self.setStyleSheet(f'background-color: {color};' if yes
                            else 'background-color:;')
 
