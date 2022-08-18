@@ -28,6 +28,7 @@ This file is part of d∃∀duction.
 
 from PySide2.QtWidgets import QDialog, QRadioButton, QVBoxLayout, QHBoxLayout,\
     QTextEdit, QLabel, QDialogButtonBox, QWidget
+
 from PySide2.QtCore import Qt, Slot, QSettings
 
 from typing import Optional
@@ -50,7 +51,7 @@ class HelpWindow(QWidget):
         super().__init__()
 
         self.setWindowTitle(_("Help"))
-
+        self.setWindowFlags(self.windowFlags() | Qt.Dialog)
         self.main_txt, self.detailed_txt, self.hint = None, None, None
         self.target = target
 

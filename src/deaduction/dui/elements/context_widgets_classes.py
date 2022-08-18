@@ -83,13 +83,12 @@ class TargetLabel(QLabel):
     parameter, and display it in richText format (html).
     """
 
-    # clicked = Signal()
-    # double_clicked = Signal()
+    clicked = Signal()
+    double_clicked = Signal()
 
     def __init__(self, target):
         super().__init__()
-        # self._double_clicked = False
-
+        self._double_clicked = False
         if target:
             # log.debug("updating target")
             text = target.math_type_to_display()
@@ -106,21 +105,21 @@ class TargetLabel(QLabel):
     # def mouseReleaseEvent(self, ev) -> None:
     #     print("Clac!!")
 
-    # def mouseReleaseEvent(self, event):
-    #     """
-    #     Emit the clicked signal only if this is not a double click.
-    #     """
-    #     if not self._double_clicked:
-    #         # print("target label clicked")
-    #         self.clicked.emit()
-    #     else:
-    #         self._double_clicked = False
-    #
-    # def mouseDoubleClickEvent(self, event):
-    #     # print("target label double clicked")
-    #     self._double_clicked = True
-    #     self.double_clicked.emit()
-    #
+    def mouseReleaseEvent(self, event):
+        """
+        Emit the clicked signal only if this is not a double click.
+        """
+        if not self._double_clicked:
+            # print("target label clicked")
+            self.clicked.emit()
+        else:
+            self._double_clicked = False
+
+    def mouseDoubleClickEvent(self, event):
+        # print("target label double clicked")
+        self._double_clicked = True
+        self.double_clicked.emit()
+
 
 # A usefull class.
 class _TagIcon(QIcon):
@@ -621,6 +620,7 @@ class TargetWidget(QWidget):
 
     def replace_target(self, target):
         self.target_label.replace_target(target)
+        self.target = target
 
     def set_pending_goals_counter(self, pgn: int):
         text = _("Target") + " " + str(pgn) if pgn else _("Target")

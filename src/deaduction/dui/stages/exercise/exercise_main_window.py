@@ -250,8 +250,18 @@ class ExerciseMainWindow(QMainWindow):
                                                     self.change_exercise)
         self.global_toolbar.settings_action.triggered.connect(
                                                     self.open_config_window)
-        self.ecw.target_wgt.target_label.mousePressEvent = \
-            self.process_target_click
+        # self.ecw.target_wgt.target_label.mousePressEvent = \
+        #     self.process_target_click
+
+        # Double clicks (help)
+        self.ecw.objects_wgt.doubleClicked.connect(
+                                            self.process_context_double_click)
+        self.ecw.props_wgt.doubleClicked.connect(
+                                            self.process_context_double_click)
+
+        target_lbl = self.ecw.target_wgt.target_label
+        target_lbl.clicked.connect(self.process_target_click)
+        target_lbl.double_clicked.connect(self.process_target_double_click)
 
     def __init_help_window(self):
         gl_geo = global_geometry(self.ecw,
@@ -662,24 +672,29 @@ class ExerciseMainWindow(QMainWindow):
         mark_user_selected().
         """
 
-        self.target_selected = not self.target_selected
+        self.target_selected = not self.target_selected if on is None else on
 
     @Slot(MathObjectWidgetItem)
     def process_context_double_click(self, index):
-        # print("Context double click")
+        """
+        Call the help window on double-clicked context item.
+        """
+        # Unselect everything
         self.empty_current_selection()
         self.process_target_click(on=False)
-        self.process_context_click(index)
 
+        # Find item from index
         props_wgt = self.ecw.props_wgt
         math_item = props_wgt.item_from_index(index)
         if not math_item:
             obj_wgt = self.ecw.objects_wgt
             math_item = obj_wgt.item_from_index(index)
         if math_item:
+            # Select item
+            math_item.select()
             self.help_window.set_math_object(math_item.math_object)
             self.help_window.show()
-            self.help_window.raise_()
+            # self.help_window.raise_()
 
     @Slot()
     def process_target_double_click(self, event=None):
@@ -690,7 +705,7 @@ class ExerciseMainWindow(QMainWindow):
         target = self.ecw.target_wgt.target
         self.help_window.set_math_object(target, target=True)
         self.help_window.show()
-        self.help_window.raise_()
+        # self.help_window.raise_()
 
     def simulate_selection(self,
                            selection:
