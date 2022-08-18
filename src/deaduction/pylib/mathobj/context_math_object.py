@@ -128,10 +128,30 @@ class ContextMathObject(MathObject):
     def identifier(self):
         return self.info.get("id")
 
-    # def math_type_to_display(self, format_="html", text_depth=0) -> str:
-    #     abstract_string = MathObject.to_abstract_string(self, text_depth)
-    #     if self.has_been_used_in_the_proof:
-    #         abstract_string = [r"\used_property"] + abstract_string
+    def action_from_premise_and_operator(self, other: MathObject):
+        """
+        Return possible actions for premise = self and operator = other. This is
+        used e.g. to determine which action could be triggered by a drag&drop
+        operation.
+        """
+        operator = self
+        premise = other
+        action = None
+
+        implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
+
+        if premise.math_type.is_prop():
+            if operator.can_be_used_for_implication(implicit=implicit):
+                action = "implies"
+            else:
+                yes, subs = operator.can_be_used_for_substitution()
+                if yes:
+                    action = "equal"
+        else:
+            if operator.is_for_all(implicit=implicit):
+                action = "forall"
+
+        return action
 
     def help_target_msg(self, format_="html") -> (str, str):
         """

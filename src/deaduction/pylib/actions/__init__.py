@@ -58,5 +58,7 @@ from .logic import (action_not,
                     apply_substitute)
 
 from .proofs import action_proof_methods
-from.magic import   action_assumption
+from .magic import action_assumption
+from .special_actions import drag_n_drop
+
 

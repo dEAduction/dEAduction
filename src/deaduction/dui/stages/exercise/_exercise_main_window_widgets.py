@@ -41,7 +41,8 @@ from PySide2.QtCore import    ( Slot,
 
 from PySide2.QtGui import     ( QIcon,
                                 QPixmap,
-                                QKeySequence)
+                                QKeySequence,
+                                QColor)
 from PySide2.QtWidgets import ( QAction,
                                 QGroupBox,
                                 QHBoxLayout,
@@ -51,7 +52,8 @@ from PySide2.QtWidgets import ( QAction,
                                 QVBoxLayout,
                                 QWidget,
                                 QSplitter,
-                                QSizePolicy)
+                                QSizePolicy,
+                                QAbstractItemView)
 
 from deaduction.dui.utils               import   replace_widget_layout
 from deaduction.dui.elements            import ( ActionButton,
@@ -165,14 +167,48 @@ class ExerciseCentralWidget(QWidget):
         statements           = exercise.available_statements
         outline              = exercise.course.outline
         self.statements_tree = StatementsTreeWidget(statements, outline)
+        StatementsTreeWidgetItem.from_name = dict()
+
+        # Drags statements:
+        if cvars.get('functionality.drag_statements_to_context', True):
+            self.statements_tree.setDragEnabled(True)
+            self.statements_tree.setDragDropMode(QAbstractItemView.DragOnly)
+        else:
+            self.statements_tree.setDragEnabled(False)
+        # Drops in statements:
+        if cvars.get('functionality.drag_context_to_statements', True):
+            self.statements_tree.setAcceptDrops(True)
+            self.statements_tree.setDragDropMode(QAbstractItemView.DropOnly)
+        else:
+            self.statements_tree.setAcceptDrops(False)
+        if cvars.get('functionality.drag_context_to_statements', True) \
+                and cvars.get('functionality.drag_statements_to_context', True):
+            self.statements_tree.setDragDropMode(QAbstractItemView.DragDrop)
 
         # ─────── Init goal (Context area and target) ────── #
         MathObjectWidgetItem.from_math_object = dict()
-        StatementsTreeWidgetItem.from_name = dict()
+        self.target_wgt   = TargetWidget()
         self.current_goal = None
         self.objects_wgt  = MathObjectWidget()
         self.props_wgt    = MathObjectWidget()
-        self.target_wgt   = TargetWidget()
+
+        # Set context drag and drop
+        if cvars.get('functionality.drag_context_to_statements', True) \
+                or cvars.get('functionality.drag_and_drop_in_context', True):
+            self.props_wgt.setDragEnabled(True)
+
+        if cvars.get('functionality.drag_and_drop_in_context', True):
+            self.props_wgt.setDragDropMode(QAbstractItemView.DragDrop)
+            self.objects_wgt.setDragDropMode(QAbstractItemView.DragOnly)
+            self.objects_wgt.setDragEnabled(True)
+        elif cvars.get('functionality.drag_context_to_statements', True) \
+                and cvars.get('functionality.drag_statements_to_context', True):
+            self.props_wgt.setDragDropMode(QAbstractItemView.DragDrop)
+        elif cvars.get('functionality.drag_context_to_statements', True):
+            self.props_wgt.setDragDropMode(QAbstractItemView.DragOnly)
+        elif cvars.get('functionality.drag_statements_to_context', True):
+            self.props_wgt.setDragDropMode(QAbstractItemView.DropOnly)
+
         self.deaduction_fonts = DeaductionFonts(self)
         self.set_font()
 
@@ -293,12 +329,24 @@ class ExerciseCentralWidget(QWidget):
         target_math_font.setPointSize(target_size)
         target_lbl = self.target_wgt.target_label
         target_lbl.setFont(target_math_font)
-        # Setting selected / unselected style:
-        self.target_wgt.unselected_style = f'font-size: {target_size};'
+        # # Setting selected / unselected style:
+        # self.target_wgt.unselected_style = f'font-size: {target_size};'
+        # background_color = cvars.get("display.color_for_selection", "limegreen")
+        # # background_color = "DarkBlue"
+        # self.target_wgt.selected_style = self.target_wgt.unselected_style \
+        #     + f'background-color: {background_color};'
+        # self.target_wgt.setStyleSheet(self.target_wgt.unselected_style)
+
+        # List styles: Modify color for selected objects
         background_color = cvars.get("display.color_for_selection", "limegreen")
-        self.target_wgt.selected_style = self.target_wgt.unselected_style \
-            + f'background-color: {background_color};'
-        self.target_wgt.setStyleSheet(self.target_wgt.unselected_style)
+        color = QColor(background_color)
+        for wdg in [self.props_wgt, self.objects_wgt,
+                    self.target_wgt.target_label]:
+            # FIXME: this does not work HERE for self.statements_tree
+            palette = wdg.palette()
+            palette.setBrush(palette.Normal, palette.Highlight, color)
+            palette.setBrush(palette.Inactive, palette.Highlight, color)
+            wdg.setPalette(palette)
 
     def organise_main_layout(self):
         """
@@ -393,70 +441,30 @@ class ExerciseCentralWidget(QWidget):
             widget.setEnabled(not yes)
 
     def update_goal(self, new_goal: Goal,
-                    pending_goals,
-                    current_goal_number: int,
-                    total_goals_counter: int):
+                    pending_goals):
         """
         Change goal widgets (self.objects_wgts, self.props_wgt and
         self.target_wgt) to new widgets, corresponding to new_goal.
 
-        :param new_goal: The goal to update self to.
-        studied
-        :param current_goal_number: n° of goal under study
-        :param total_goals_counter: total number of goals so far
+        @param new_goal: The goal to update self to.
+        @param pending_goals: The list of remaining goals. For the moment we
+        just display the nb of pending goals.
         """
 
-        # FIXME: obsolete params, update docstring
         statements_scroll = self.statements_tree.verticalScrollBar().value()
 
-        # Init context (objects and properties). Get them as two list of
-        # (MathObject, str), the str being the tag of the prop. or obj.
-        # new_context    = new_goal.tag_and_split_propositions_objects()
         new_target     = new_goal.target
-        # new_target_tag = '='  # new_target.future_tags[1]
-        # new_objects    = new_context[0]
-        # new_props      = new_context[1]
         new_objects = new_goal.context_objects
         new_props = new_goal.context_props
+        self.objects_wgt.set_math_objects(new_objects)
+        self.props_wgt.set_math_objects(new_props)
 
-        new_objects_wgt = MathObjectWidget(new_objects)
-        new_props_wgt   = MathObjectWidget(new_props)
-        # goal_count = f'  {current_goal_number} / {total_goals_counter}'
         pgn = len(pending_goals)
-        goal_counts = ("(" + str(pgn) + " " + _("pending") + ")" if pgn > 0
-                       else "")
-        new_target_wgt  = TargetWidget(new_target, goal_counts)
+        self.target_wgt.replace_target(new_target)
+        self.target_wgt.set_pending_goals_counter(pgn)
 
-        # Replace in the layouts
-        if self.splitter:
-            new_splitter = QSplitter(Qt.Vertical)
-            new_splitter.addWidget(new_objects_wgt)
-            new_splitter.addWidget(new_props_wgt)
-            new_splitter.setChildrenCollapsible(False)
-            replace_widget_layout(self.__context_lyt,
-                                  self.__context_splitter, new_splitter)
-            self.__context_splitter = new_splitter
-            # Unfortunately, the following does not always work
-            # log.debug("Splitter widgets:")
-            # log.debug(self.__context_splitter.count())
-            # self.__context_splitter.replaceWidget(0, new_objects_wgt)
-            # self.__context_splitter.replaceWidget(1, new_props_wgt)
-        else:
-            replace_widget_layout(self.__context_lyt,
-                                  self.objects_wgt, new_objects_wgt)
-            replace_widget_layout(self.__context_lyt,
-                                  self.props_wgt, new_props_wgt)
-
-        replace_widget_layout(self.__main_lyt,
-                              self.target_wgt, new_target_wgt, True)
-
-        # Set the attributes to the new values
-        # self.__context_splitter = new_context_wgt
-        self.objects_wgt  = new_objects_wgt
-        self.props_wgt    = new_props_wgt
-        self.target_wgt   = new_target_wgt
         self.current_goal = new_goal
-        self.set_font()
+        # self.set_font()
 
         self.statements_tree.verticalScrollBar().setValue(statements_scroll)
 

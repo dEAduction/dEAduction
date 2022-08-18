@@ -36,6 +36,8 @@ from PySide2.QtCore    import (Signal,
                                QModelIndex,
                                QTimer)
 
+from PySide2.QtGui import QColor
+
 from PySide2.QtWidgets import (QMainWindow,
                                QMessageBox,
                                QAction)
@@ -126,14 +128,18 @@ class ExerciseMainWindow(QMainWindow):
         lean_file and may be retrieved using the logically_previous_proof_step
          property.
     """
+
     # Signals for WindowManager and testing:
     window_closed                = Signal()
     change_exercise              = Signal()
     ui_updated                   = Signal()
+
     # User action signals:
     action_triggered             = Signal(ActionButton)
-    apply_math_object_triggered  = Signal(MathObjectWidget)
+    # apply_math_object_triggered  = Signal(MathObjectWidget)
     statement_triggered          = Signal(StatementsTreeWidgetItem)
+    statement_dropped            = Signal(StatementsTreeWidgetItem)
+    math_object_dropped          = Signal(MathObjectWidgetItem)
 
     def __init__(self, exercise: Exercise):
         """
@@ -153,10 +159,10 @@ class ExerciseMainWindow(QMainWindow):
         self.automatic_action     = False
 
         # From inside
-        self.current_selection    = []
+        # self.current_selection    = []
         self._target_selected     = False
         self.user_input           = []
-        self.double_clicked_item  = None
+        # self.double_clicked_item  = None
         self.freezed              = False
 
         # ─────────────────────── Elements ─────────────────────── #
@@ -205,6 +211,7 @@ class ExerciseMainWindow(QMainWindow):
         self.close_coordinator = None  # Method set up by Coordinator
 
         self.__connect_signals()
+        # 1s to allow correct geometry(?)
         QTimer.singleShot(1000, self.__init_help_window)
         self.freeze()  # Wait for data before allowing user actions.
 
@@ -224,6 +231,14 @@ class ExerciseMainWindow(QMainWindow):
         self.ecw.statements_tree.itemClicked.connect(
                                             self.statement_triggered_filter)
 
+        # Context area
+        self.ecw.props_wgt.statement_dropped.connect(self.statement_dropped)
+        self.ecw.props_wgt.math_object_dropped.connect(self.math_object_dropped)
+        self.ecw.statements_tree.math_object_dropped.connect(
+            self.statement_triggered)
+        # self.ecw.objects_wgt.clicked.connect(self.process_context_click)
+        # self.ecw.props_wgt.clicked.connect(self.process_context_click)
+
         # UI
         self.exercise_toolbar.toggle_lean_editor_action.triggered.connect(
                 self.lean_editor.toggle)
@@ -235,6 +250,8 @@ class ExerciseMainWindow(QMainWindow):
                                                     self.change_exercise)
         self.global_toolbar.settings_action.triggered.connect(
                                                     self.open_config_window)
+        self.ecw.target_wgt.target_label.mousePressEvent = \
+            self.process_target_click
 
     def __init_help_window(self):
         gl_geo = global_geometry(self.ecw,
@@ -326,7 +343,8 @@ class ExerciseMainWindow(QMainWindow):
         log.debug("New settings: ")
         log.debug(modified_settings)
         if modified_settings:
-            self.current_selection = []
+            # self.current_selection = []
+            self.empty_current_selection()
             # TODO: only for relevant changes in preferences
             # TODO: try more subtle updating...
             ##############################
@@ -336,24 +354,17 @@ class ExerciseMainWindow(QMainWindow):
             self.setCentralWidget(self.ecw)
             self.__connect_signals()
             if not self.freezed:  # If freezed then maybe goal has not been set
-                self.ecw.update_goal(
-                                 self.current_goal,
-                                 self.pending_goals,
-                                 self.displayed_proof_step.current_goal_number,
-                                 self.displayed_proof_step.total_goals_counter)
+                self.ecw.update_goal(self.current_goal, self.pending_goals)
             self.exercise_toolbar.update()
             self.__init_menubar()
-            # Reconnect Context area signals and slots
-            self.ecw.objects_wgt.clicked.connect(self.process_context_click)
-            self.ecw.props_wgt.clicked.connect(self.process_context_click)
 
             self.ecw.target_wgt.target_label.mousePressEvent = \
                 self.process_target_click
-            if hasattr(self.ecw, "action_apply_button"):
-                self.ecw.objects_wgt.apply_math_object_triggered.connect(
-                    self.apply_math_object_triggered)
-                self.ecw.props_wgt.apply_math_object_triggered.connect(
-                    self.apply_math_object_triggered)
+            # if hasattr(self.ecw, "action_apply_button"):
+            #     self.ecw.objects_wgt.apply_math_object_triggered.connect(
+            #         self.apply_math_object_triggered)
+            #     self.ecw.props_wgt.apply_math_object_triggered.connect(
+            #         self.apply_math_object_triggered)
 
         self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
@@ -383,6 +394,7 @@ class ExerciseMainWindow(QMainWindow):
     @target_selected.setter
     def target_selected(self, target_selected):
         self._target_selected = target_selected
+        self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
     def pretty_current_selection(self) -> str:
         """
@@ -447,6 +459,15 @@ class ExerciseMainWindow(QMainWindow):
         # # else:
         # #     pgs = []
         # return pgs
+
+    @property
+    def current_selection(self):
+        """
+        Note that the selection is not ordered by click time.
+        """
+        sel_objs = self.ecw.objects_wgt.selected_items()
+        sel_props = self.ecw.props_wgt.selected_items()
+        return sel_objs + sel_props
 
     @property
     def current_selection_as_mathobjects(self):
@@ -598,42 +619,50 @@ class ExerciseMainWindow(QMainWindow):
         Clear current (user) selection of math. objects and properties.
         """
 
-        for item in self.current_selection:
-            item.mark_user_selected(False)
-        self.current_selection = []
+        # for item in self.current_selection:
+        #     item.mark_user_selected(False)
+        # self.current_selection = []
+        self.ecw.props_wgt.clearSelection()
+        self.ecw.objects_wgt.clearSelection()
 
-    @Slot(MathObjectWidgetItem)
-    def process_context_click(self, item: Union[QModelIndex,
-                                                MathObjectWidgetItem]):
-        """
-        Add or remove item (item represents a math. object or property)
-        from the current selection, depending on whether it was already
-        selected or note.
+    # @Slot(MathObjectWidgetItem)
+    # def process_context_click(self, item: Union[QModelIndex,
+    #                                             MathObjectWidgetItem]):
+    #     """
+    #     Add or remove item (item represents a math. object or property)
+    #     from the current selection, depending on whether it was already
+    #     selected or note.
+    #
+    #     :item: The math. object or property user just clicked on.
+    #     """
+    #
+    #     if isinstance(item, QModelIndex):
+    #         index = item
+    #         item = self.ecw.objects_wgt.item_from_index(index)
+    #         if not item:
+    #             item = self.ecw.props_wgt.item_from_index(index)
+    #
+    #     if item not in self.current_selection:
+    #         # item.mark_user_selected(True)
+    #         self.current_selection.append(item)
+    #     else:
+    #         # elif item is not self.double_clicked_item:
+    #         # item.mark_user_selected(False)
+    #         self.current_selection.remove(item)
 
-        :item: The math. object or property user just clicked on.
-        """
-
-        if isinstance(item, QModelIndex):
-            index = item
-            item = self.ecw.objects_wgt.item_from_index(index)
-            if not item:
-                item = self.ecw.props_wgt.item_from_index(index)
-
-        if item not in self.current_selection:
-            item.mark_user_selected(True)
-            self.current_selection.append(item)
-        elif item is not self.double_clicked_item:
-            item.mark_user_selected(False)
-            self.current_selection.remove(item)
+        # Clear selection (we do not use the QListView selection mechanism):
+        # self.ecw.props_wgt.clearSelection()
+        # self.ecw.objects_wgt.clearSelection()
 
     @Slot()
     def process_target_click(self, event=None, on=None):
         """
         Select or un-select target. Current context selection is emptied.
+        Note that self.target_selected's setter automatically call
+        mark_user_selected().
         """
 
-        self.target_selected = not self.target_selected if on is None else on
-        self.ecw.target_wgt.mark_user_selected(self.target_selected)
+        self.target_selected = not self.target_selected
 
     @Slot(MathObjectWidgetItem)
     def process_context_double_click(self, index):
@@ -673,19 +702,16 @@ class ExerciseMainWindow(QMainWindow):
         Note that items in selection are first transformed into
         MathObjectWidgetItem if they are MathObject.
         """
+
         self.empty_current_selection()
         for item in selection:
+            # Determine math_object and MathWidgetItem
             if isinstance(item, MathObject):
-                item = MathObjectWidgetItem.from_math_object(item)
-            #     if item.math_type.is_prop():
-            #         item = self.ecw.props_wgt.item_from_logic(item)
-            #     else:
-            #         item = self.ecw.objects_wgt.item_from_logic(item)
-            self.process_context_click(item)
+                math_object = item
+                item: MathObjectWidgetItem = \
+                    MathObjectWidgetItem.from_math_object(item)
 
-        # # Select target if no selection:
-        # if not selection:
-        #     self.process_target_click(None)
+            item.select()
 
         if target_selected:
             self.process_target_click()
@@ -771,21 +797,6 @@ class ExerciseMainWindow(QMainWindow):
         # print(user_action)
         success, msg = await self.simulate_user_action(user_action, duration,
                                                        execute_action=False)
-        # log.debug("  -->" + str(success) + msg)
-        # self.simulate_selection(proof_step.selection)
-        # # Check button or statement
-        # if proof_step.button_name:
-        #     button = ActionButton.from_name.get(proof_step.button_name)
-        #     if button:
-        #         self.ecw.freeze(False)
-        #         await button.simulate(duration=duration)
-        #         self.ecw.freeze(self.freezed)
-        # elif proof_step.statement_name:
-        #     name = proof_step.statement_name
-        #     item = StatementsTreeWidgetItem.from_name.get(name)
-        #     if name:
-        #         await item.simulate(duration=duration)
-
     ##################
     ##################
     # Update methods #
@@ -857,41 +868,23 @@ class ExerciseMainWindow(QMainWindow):
         self.manage_msgs(self.displayed_proof_step)
         self.user_input = []
 
-        if not new_goal or new_goal is self.current_goal:  # No update needed
-            return
-
         # Reset current context selection
         # Here we do not use empty_current_selection since Widgets may have
         # been deleted, and anyway this is cosmetics since  widgets are
         # destroyed and re-created by "self.ecw.update_goal" just below
         self.target_selected = False
-        self.current_selection = []
+        # self.current_selection = []
+        self.empty_current_selection()
+
+        if not new_goal or new_goal is self.current_goal:  # No update needed
+            return
 
         # Update UI and attributes. Target stay selected if it was.
         # statements_scroll = self.ecw.statements_tree.verticalScrollBar(
         #                                                            ).value()
-        self.ecw.update_goal(new_goal,
-                             self.pending_goals,
-                             self.displayed_proof_step.current_goal_number,
-                             self.displayed_proof_step.total_goals_counter)
-        self.ecw.target_wgt.mark_user_selected(self.target_selected)
+        self.ecw.update_goal(new_goal, self.pending_goals)
+        # self.ecw.target_wgt.mark_user_selected(self.target_selected)
         self.current_goal = new_goal
-
-        # Reconnect Context area signals and slots
-        self.ecw.objects_wgt.clicked.connect(self.process_context_click)
-        self.ecw.props_wgt.clicked.connect(self.process_context_click)
-        self.ecw.objects_wgt.doubleClicked.connect(
-            self.process_context_double_click)
-        self.ecw.props_wgt.doubleClicked.connect(
-            self.process_context_double_click)
-
-        # Target
-        target_lbl = self.ecw.target_wgt.target_label
-        target_lbl.clicked.connect(self.process_target_click)
-        target_lbl.double_clicked.connect(self.process_target_double_click)
-
-        # self.ecw.target_wgt.double_clicked.connect(
-        #     self.process_target_double_click)
 
         # NB: there seems to be a bug in Qt,
         #  self.ecw.target_wgt.mousePressEvent is not called when

@@ -48,6 +48,7 @@ import deaduction.pylib.config.vars as          cvars
 from deaduction.pylib.utils.filesystem import   check_dir
 from deaduction.dui.primitives import           ButtonsDialog
 from deaduction.dui.stages.exercise import      ExerciseMainWindow
+from deaduction.dui.elements import             ActionButton
 from deaduction.pylib.server import             ServerInterface
 from deaduction.pylib.utils import save_object
 
@@ -59,6 +60,7 @@ from deaduction.pylib.coursedata import        (Exercise,
 
 from deaduction.pylib.mathobj import           (MathObject,
                                                 PatternMathObject,
+                                                ContextMathObject,
                                                 ProofStep)
 from deaduction.pylib.proof_state import       (Goal,
                                                 ProofState)
@@ -68,7 +70,8 @@ from deaduction.pylib.actions           import (generic,
                                                 InputType,
                                                 CodeForLean,
                                                 MissingParametersError,
-                                                WrongUserInput)
+                                                WrongUserInput,
+                                                drag_n_drop)
 
 from deaduction.pylib.memory            import Journal
 
@@ -165,7 +168,7 @@ class Coordinator(QObject):
         proof_state = self.exercise.initial_proof_state
         if proof_state:
             goal = proof_state.goals[0]
-            self.emw.ecw.update_goal(goal, [], 1, 1)
+            self.emw.ecw.update_goal(goal, [])
 
         # Set exercise. In particular, this will initialize servint.lean_file.
         self.server_queue.add_task(self.servint.set_exercise,
@@ -407,12 +410,20 @@ class Coordinator(QObject):
         return self.emw.statement_triggered
 
     @property
-    def apply_math_object_triggered(self):
-        return self.emw.apply_math_object_triggered
+    def statement_dropped(self):
+        return self.emw.statement_dropped
 
     @property
-    def double_clicked_item(self):
-        return self.emw.double_clicked_item
+    def math_object_dropped(self):
+        return self.emw.math_object_dropped
+
+    # @property
+    # def apply_math_object_triggered(self):
+    #     return self.emw.apply_math_object_triggered
+
+    # @property
+    # def double_clicked_item(self):
+    #     return self.emw.double_clicked_item
 
     @property
     def current_selection(self):
@@ -451,7 +462,6 @@ class Coordinator(QObject):
         """
 
         log.info("Starting server task")
-        add_task = self.server_queue.add_task
 
         async with qtrio.enter_emissions_channel(
                 signals=[self.lean_editor.editor_send_lean,
@@ -462,7 +472,9 @@ class Coordinator(QObject):
                          self.proof_outline_window.history_goto,
                          self.action_triggered,
                          self.statement_triggered,
-                         self.apply_math_object_triggered,
+                         self.statement_dropped,
+                         self.math_object_dropped,
+                         # self.apply_math_object_triggered,
                          self.close_server_task]) as emissions:
 
             self.server_task_started.set()
@@ -526,18 +538,56 @@ class Coordinator(QObject):
 
                 elif emission.is_from(self.statement_triggered):
                     # emission.args[0] is StatementTreeWidgetItem
-                    if hasattr(emission.args[0], 'statement'):
-                        item = emission.args[0]
-                        self.proof_step.statement = item.statement
+                    # if hasattr(emission.args[0], 'statement'):
+                    item = emission.args[0]
+                    self.proof_step.statement = item.statement
+                    # Set target selected if no selection
+                    if not self.current_selection and not self.target_selected:
+                        self.emw.process_target_click()
                     self.__server_call_statement(item)
 
-                elif emission.is_from(self.apply_math_object_triggered):
-                    # Fixme: causes freeze - no more double click
-                    self.emw.double_clicked_item = emission.args[0]
-                    # Emulate click on 'apply' button:
-                    self.emw.freeze(False)
-                    if self.ecw.action_apply_button:
-                        self.ecw.action_apply_button.animateClick(msec=500)
+                elif emission.is_from(self.statement_dropped):
+                    item = emission.args[0]
+                    # print(f"Statement dropped: {item.statement.lean_name}")
+                    self.proof_step.statement = item.statement
+
+                    # Empty selection
+                    self.emw.empty_current_selection()
+                    self.emw.target_selected = False
+                    self.ecw.target_wgt.mark_user_selected(self.target_selected)
+
+                    self.__server_call_statement(item)
+
+                elif emission.is_from(self.math_object_dropped):
+                    """
+                    Determine an Action Button from selection and receiver 
+                    and call __server_call_action.
+                    """
+
+                    log.debug("Math object dropped!")
+                    s = [item.math_object.to_display(format_="utf8")
+                         for item in self.emw.current_selection]
+                    log.debug(f"Selection: {s}")
+                    operator = emission.args[0]  # Optional[MathWidgetItem]
+                    # selection = [item.math_object for item in
+                    #              self.emw.current_selection]
+                    selection = self.current_selection_as_mathobjects
+                    # Operator is None if dropping did not occur on a property.
+                    # Then WrongUI exception will be raised by drag_n_drop().
+                    if operator:
+                        operator = operator.math_object
+                        selection.remove(operator)
+                    try:
+                        name = drag_n_drop(operator, selection)
+                    except WrongUserInput as error:
+                        self.proof_step.user_input = self.emw.user_input
+                        self.process_wrong_user_input(error)
+
+                    else:
+                        self.proof_step.button_name = name
+                        action_btn = ActionButton.from_name[name]
+                        await action_btn.simulate(duration=0.5)
+                        self.__server_call_action(action_btn)
 
     ###################
     # History actions #
