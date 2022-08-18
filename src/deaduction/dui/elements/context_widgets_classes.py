@@ -358,13 +358,6 @@ class MathObjectWidget(QListView):
         model.removeRows(0, model.rowCount())
         self.add_math_objects(math_objects)
 
-    def currentChanged(self, current, previous) -> None:
-        """
-        Prevent current index setting (which would be highlighted in light
-        blue, interfering with deaduction's own selection mechanism).
-        """
-        self.setCurrentIndex(QModelIndex())
-
     def item_from_index(self, index_):
         item = self.model().itemFromIndex(index_)
         return item
@@ -512,6 +505,12 @@ class MathObjectWidget(QListView):
         event.accept()
         self.setDropIndicatorShown(False)
 
+    def currentChanged(self, current, previous) -> None:
+        """
+        Prevent current index setting (which would be highlighted in light
+        blue, interfering with deaduction's own selection mechanism).
+        """
+        self.setCurrentIndex(QModelIndex())
 
 # Obsolete:
 # MathObjectWidget.apply_math_object_triggered = Signal(MathObjectWidget)

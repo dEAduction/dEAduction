@@ -51,9 +51,8 @@ from PySide2.QtGui     import ( QBrush,
 from PySide2.QtCore    import ( Signal,
                                 Slot,
                                 Qt,
-                                QEvent,
-                                QObject,
-                                QTimerEvent)
+                                QModelIndex,
+                                QTimer)
 from PySide2.QtWidgets import ( QHBoxLayout,
                                 QPushButton,
                                 QWidget,
@@ -757,6 +756,8 @@ class StatementsTreeWidget(QTreeWidget):
         # Not activated.
         source = event.source()
         if isinstance(source, StatementsTreeWidget):
+            event.accept()
+            # self.clearSelection()
             return
         else:
             dragged_index = source.currentIndex()
@@ -771,10 +772,40 @@ class StatementsTreeWidget(QTreeWidget):
             # Emit signal
             self.math_object_dropped.emit(item)
 
-        event.accept()
         self.setDropIndicatorShown(False)
-
         event.accept()
+
+    # def restore_drop_state(self):
+    #     self.setAcceptDrops(self._accept_drops)
+    #
+    # def dragEnterEvent(self, event) -> None:
+    #     source = event.source()
+    #     if isinstance(source, StatementsTreeWidget):
+    #         self._accept_drops = self.acceptDrops()
+    #         self.setAcceptDrops(False)
+    #         QTimer.singleShot(100, self.restore_drop_state)
+
+    def dragLeaveEvent(self, event) -> None:
+        print("dragLeave statement")
+
+    def mouseMoveEvent(self, event) -> None:
+        """
+        Clear selection to avoid meaningless selected items.
+        """
+        super().mouseMoveEvent(event)
+        if not self.state() == QAbstractItemView.DraggingState:
+            QTimer.singleShot(1, self.clearSelection)
+
+    # def clear_current_index(self):
+    #     self.setCurrentIndex(QModelIndex())
+    #
+    # def currentChanged(self, current, previous) -> None:
+    #     """
+    #     Prevent current index setting (which has no meaning and would be
+    #     highlighted in light blue).
+    #     """
+    #     if not self.state() == QAbstractItemView.DraggingState:
+    #         QTimer.singleShot(1, self.clear_current_index)
 
     # def event(self, event: QEvent):
     #     """
