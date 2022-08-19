@@ -42,6 +42,7 @@ from typing import Optional
 from PySide2.QtCore    import ( Signal,
                                 Slot,
                                 Qt,
+                                QMimeData,
                                 QModelIndex,
                                 QItemSelectionModel)
 from PySide2.QtGui     import ( QBrush,
@@ -50,9 +51,12 @@ from PySide2.QtGui     import ( QBrush,
                                 QFont,
                                 QStandardItem,
                                 QStandardItemModel,
+                                QPixmap,
+                                QDrag,
                                 QPalette)
 from PySide2.QtWidgets import ( QHBoxLayout,
                                 QVBoxLayout,
+                                QSizePolicy,
                                 QLabel,
                                 QWidget,
                                 QListView,
@@ -68,44 +72,14 @@ import deaduction.pylib.config.vars as cvars
 from deaduction.dui.elements import ( StatementsTreeWidget,
                                       StatementsTreeWidgetItem)
 
+# from deaduction.dui.elements.proof_tree import LayoutMathObjects
+
 log = logging.getLogger(__name__)
 global _
 
 ################################
 # MathObject widgets classes #
 ################################
-
-
-class TargetLabel(QLabel):
-    """
-    A class to display the target. Can be used in ExerciseMainWindow via
-    TargetWidget, and in the exercise chooser. Take the target as a
-    parameter, and display it in richText format (html).
-    """
-
-    def __init__(self, target):
-        super().__init__()
-        # Display
-        #   ∀ x ∈ X, ∃ ε, …
-        # and not
-        #   H : ∀ x ∈ X, ∃ ε, …
-        # where H might be the lean name of the target. That's what
-        # the .math_type is for.
-        if target:
-            # log.debug("updating target")
-            text = target.math_type_to_display()
-        else:
-            text = '…'
-
-        self.setText(text)
-        self.setTextFormat(Qt.RichText)
-
-    def replace_target(self, target):
-        self.setText(target.math_type_to_display())
-
-    # Debugging
-    # def mouseReleaseEvent(self, ev) -> None:
-    #     print("Clac!!")
 
 
 # A usefull class.
@@ -253,6 +227,59 @@ class MathObjectWidgetItem(QStandardItem):
 #         self.setText(caption)
 
 
+class DraggedItems(QWidget):
+    """
+    Display a stack of MathObjects in QLabels, to be used as dragged
+    MathObjectWidgetItems.
+    """
+
+    def __init__(self, items: [MathObjectWidgetItem]):
+        super().__init__()
+
+        self.items = items
+        math_objects = [item.math_object for item in items]
+        # lyt = LayoutMathObjects(math_objects, new=False)
+        lyt = QVBoxLayout()
+        for mo in math_objects:
+            is_prop = mo.math_type.is_prop()
+            label = QLabel()
+            label.setObjectName("prop" if is_prop else "obj")
+            text = mo.math_type_to_display(format_='html') if is_prop \
+                else mo.to_display(format_='html')
+            label.setText(text)
+            label.setTextFormat(Qt.RichText)
+            label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+            lyt.addWidget(label)
+
+        self.setLayout(lyt)
+
+        # The following is copied from proof_tree_widget.py:
+        color_var = cvars.get("display.color_for_variables")
+        color_prop = cvars.get("display.color_for_props")
+        old_border_width = "2px"  # 1px
+        old_border_style = "dashed"
+
+        style_sheet = ("QWidget {background-color: transparent;}"
+                       "QLabel#obj:enabled {padding: 5px;"
+                       f"border-width: {old_border_width};"
+                       f"border-color: {color_var};"
+                       f"border-style: {old_border_style};"
+                       "font-size: 20pt;"  # Added
+                       "background-color: transparent;"  # Adde
+                       "border-radius: 15px;}"
+                       "QLabel#prop:enabled {padding: 5px;"
+                       f"border-width: {old_border_width};"
+                       f"border-color: {color_prop};"
+                       f"border-style: {old_border_style};"
+                       "font-size: 20pt;"
+                       "background-color: transparent;"
+                       "border-radius: 15px;}")
+        self.setStyleSheet(style_sheet)
+
+    def pixmap(self):
+        return self.grab()
+
+
 class MathObjectWidget(QListView):
     """
     A container class to display an ordered list of tagged (see
@@ -283,6 +310,13 @@ class MathObjectWidget(QListView):
         """
 
         super().__init__()
+        self._saved_style_sheet = None
+        self._current_item = None  # Last clicked item
+
+        # The following are set by ExerciseCentralWidget:
+        self.is_props_wdg = False   
+        self.context_selection: callable = None
+        self.clear_context_selection: callable = None
 
         # Possible settings:
         self.setSelectionMode(QAbstractItemView.MultiSelection)
@@ -434,23 +468,61 @@ class MathObjectWidget(QListView):
             self._potential_drop_receiver = receiver
             self.select_index(receiver)
 
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        self._current_item = self.item_from_event(event)
+        print(f"current item : "
+              f"{self._current_item.math_object.to_display(format_='utf8')}")
+
+    def startDrag(self, supported_actions) -> None:
+        drag = QDrag(self)
+        # log.info("Try to star drag...")
+        items = self.context_selection()
+        if not self._current_item or self._current_item not in items:
+            # log.debug("Drag aborted")
+            return
+
+        # Drag all selected items or just last one?
+        several_items = cvars.get('functionality.drag_several_items', False)
+        if several_items:
+            if self._current_item not in items:
+                items.append(self._current_item)
+        else:
+            # log.debug("Selecting item")
+            item = self._current_item
+            # items = self.selected_items()
+            self.clear_context_selection()
+            # items[-1].select()
+            # items = items[-1:]
+            item.select()
+            items = [item]
+
+        mime_data = QMimeData(items)
+        drag.setMimeData(mime_data)
+
+        pixmap = DraggedItems(self.selected_items()).pixmap()
+        drag.setPixmap(pixmap)
+        drag.exec_(Qt.IgnoreAction)
+
     def dragEnterEvent(self, event):
         """
-        Mark enterEvent by changing background color.
+        Mark enterEvent of StatementTreeWidgetItem by changing background color.
         """
-        super().dragEnterEvent(event)
+
+        event.acceptProposedAction()
         source = event.source()
         if isinstance(source, StatementsTreeWidget) and self.drop_enabled():
+            self._saved_style_sheet = self.styleSheet()
             color = cvars.get("display.color_for_selection", "LimeGreen")
             self.setStyleSheet(f'background-color: {color};')
             self.setDropIndicatorShown(False)  # Do not show "where to drop"
 
     def dragLeaveEvent(self, event):
-        super().dragLeaveEvent(event)
-        # No source for dragLeaveEvent
-        # source = event.source()
-        # if isinstance(source, StatementsTreeWidget):
-        self.setStyleSheet('background-color: white;')
+        """
+        Restore normal styleSheet (background color).
+        """
+        self.setStyleSheet(self._saved_style_sheet)
+        self._saved_style_sheet = None
         self.setDropIndicatorShown(True)
         self.potential_drop_receiver = None  # Unselect automatically
 
@@ -460,7 +532,6 @@ class MathObjectWidget(QListView):
         temporarily.
         """
 
-        super().dragMoveEvent(event)
         index = self.index_from_event(event)
         if index != self.potential_drop_receiver:
             self.potential_drop_receiver = None  # Unselect automatically
@@ -469,6 +540,8 @@ class MathObjectWidget(QListView):
         item: MathObjectWidgetItem = self.item_from_index(index)
         if item and item.isDropEnabled():
             self.potential_drop_receiver = index
+
+        event.accept()
 
     def dropEvent(self, event):
         """
@@ -521,6 +594,39 @@ class MathObjectWidget(QListView):
 ##########################
 
 # Classes to display and store the target in the main exercise window.
+
+
+class TargetLabel(QLabel):
+    """
+    A class to display the target. Can be used in ExerciseMainWindow via
+    TargetWidget, and in the exercise chooser. Take the target as a
+    parameter, and display it in richText format (html).
+    """
+
+    def __init__(self, target):
+        super().__init__()
+        # Display
+        #   ∀ x ∈ X, ∃ ε, …
+        # and not
+        #   H : ∀ x ∈ X, ∃ ε, …
+        # where H might be the lean name of the target. That's what
+        # the .math_type is for.
+        if target:
+            # log.debug("updating target")
+            text = target.math_type_to_display()
+        else:
+            text = '…'
+
+        self.setText(text)
+        self.setTextFormat(Qt.RichText)
+
+    def replace_target(self, target):
+        self.setText(target.math_type_to_display())
+
+    # Debugging
+    # def mouseReleaseEvent(self, ev) -> None:
+    #     print("Clac!!")
+
 
 class TargetWidget(QWidget):
     """

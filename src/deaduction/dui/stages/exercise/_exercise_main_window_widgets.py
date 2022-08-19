@@ -191,6 +191,10 @@ class ExerciseCentralWidget(QWidget):
         self.current_goal = None
         self.objects_wgt  = MathObjectWidget()
         self.props_wgt    = MathObjectWidget()
+        self.props_wgt.is_props_wdg = True
+        for wdg in (self.objects_wgt, self.props_wgt):
+            wdg.context_selection = self.context_selection
+            wdg.clear_context_selection = self.clear_context_selection
 
         # Set context drag and drop
         if cvars.get('functionality.drag_context_to_statements', True) \
@@ -467,6 +471,14 @@ class ExerciseCentralWidget(QWidget):
         # self.set_font()
 
         self.statements_tree.verticalScrollBar().setValue(statements_scroll)
+
+    def context_selection(self):
+        return self.objects_wgt.selected_items() \
+               + self.props_wgt.selected_items()
+
+    def clear_context_selection(self):
+        self.objects_wgt.clearSelection()
+        self.props_wgt.clearSelection()
 
 
 class ExerciseStatusBar(QStatusBar):

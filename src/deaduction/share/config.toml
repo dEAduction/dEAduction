@@ -59,7 +59,8 @@ automatic_intro_of_exists = true
 save_solved_exercises_for_autotest = false
 drag_statements_to_context = true
 drag_and_drop_in_context = true
-drag_context_to_statements = false
+drag_context_to_statements = true
+drag_several_items = false
 
 [i18n]
 available_languages = ["en", "fr_FR"]
