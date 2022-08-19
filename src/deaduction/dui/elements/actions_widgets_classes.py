@@ -46,12 +46,12 @@ from trio import sleep
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
                                 QIcon,
-                                QCursor,
+                                QCursor, QDrag, QPixmap,
                                 QHelpEvent)
 from PySide2.QtCore    import ( Signal,
                                 Slot,
                                 Qt,
-                                QModelIndex,
+                                QModelIndex, QMimeData,
                                 QTimer)
 from PySide2.QtWidgets import ( QHBoxLayout,
                                 QPushButton,
@@ -647,6 +647,8 @@ class StatementsTreeWidget(QTreeWidget):
         # IMPORTANT: re-initialize StatementsTreeWidgetItem dictionary
         StatementsTreeWidgetItem.from_lean_name = {}
         super().__init__()
+        self._potential_drop_receiver = None
+
         self.items: [QTreeWidgetItem] = [] # List of items
         self._init_tree(statements, outline)
         self.is_exercise_list = is_exercise_list
@@ -743,11 +745,61 @@ class StatementsTreeWidget(QTreeWidget):
     def index_from_event(self, event):
         return self.indexAt(event.pos())
 
+    def item_from_index(self, index_):
+        item = self.itemFromIndex(index_)
+        return item
+
+    def select_index(self, index, yes=True):
+        self.setItemSelected(self.item_from_index(index), yes)
+
     @Slot()
     def update_tooltips(self):
         for item in self.items:
             item.parent = self
             item.set_tooltip()
+
+    @property
+    def potential_drop_receiver(self):
+        return self._potential_drop_receiver
+
+    @potential_drop_receiver.setter
+    def potential_drop_receiver(self, receiver: QModelIndex):
+        if (self.potential_drop_receiver and
+                receiver != self.potential_drop_receiver):
+            self.select_index(self._potential_drop_receiver, False)
+            self._potential_drop_receiver = None
+        if receiver and receiver not in self.selectedIndexes():
+            self._potential_drop_receiver = receiver
+            self.select_index(receiver)
+
+    def dragEnterEvent(self, event):
+        """
+        Accept drag iff it comes from props_wdg.
+        """
+        source = event.source()
+        if hasattr(source, 'is_props_wdg') and source.is_props_wdg:
+            event.acceptProposedAction()
+
+    def dragMoveEvent(self, event) -> None:
+        """
+        When a MathWidgetItem is dragged over a potential receiver, select it
+        temporarily.
+        """
+
+        index = self.index_from_event(event)
+        if index != self.potential_drop_receiver:
+            self.potential_drop_receiver = None  # Unselect automatically
+
+        # if index:
+        item: StatementsTreeWidgetItem = self.item_from_index(index)
+        if item: # and item.isDropEnabled():
+            self.potential_drop_receiver = index
+
+        event.accept()
+
+    def dragLeaveEvent(self, event) -> None:
+        pass
+        # print("dragLeave statement")
 
     def dropEvent(self, event):
         """
@@ -774,19 +826,6 @@ class StatementsTreeWidget(QTreeWidget):
 
         self.setDropIndicatorShown(False)
         event.accept()
-
-    # def restore_drop_state(self):
-    #     self.setAcceptDrops(self._accept_drops)
-    #
-    # def dragEnterEvent(self, event) -> None:
-    #     source = event.source()
-    #     if isinstance(source, StatementsTreeWidget):
-    #         self._accept_drops = self.acceptDrops()
-    #         self.setAcceptDrops(False)
-    #         QTimer.singleShot(100, self.restore_drop_state)
-
-    def dragLeaveEvent(self, event) -> None:
-        print("dragLeave statement")
 
     def mouseMoveEvent(self, event) -> None:
         """
