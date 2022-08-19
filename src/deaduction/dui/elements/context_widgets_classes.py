@@ -455,8 +455,8 @@ class MathObjectWidget(QListView):
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
         self._current_item = self.item_from_event(event)
-        print(f"current item : "
-              f"{self._current_item.math_object.to_display(format_='utf8')}")
+        # print(f"current item : "
+        #       f"{self._current_item.math_object.to_display(format_='utf8')}")
 
     def startDrag(self, supported_actions) -> None:
         drag = QDrag(self)
