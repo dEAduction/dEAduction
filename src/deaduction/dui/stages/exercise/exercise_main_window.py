@@ -234,6 +234,8 @@ class ExerciseMainWindow(QMainWindow):
         # Context area
         self.ecw.props_wgt.statement_dropped.connect(self.statement_dropped)
         self.ecw.props_wgt.math_object_dropped.connect(self.math_object_dropped)
+        self.ecw.objects_wgt.math_object_dropped.connect(
+            self.math_object_dropped)
         self.ecw.statements_tree.math_object_dropped.connect(
             self.statement_triggered)
         # self.ecw.objects_wgt.clicked.connect(self.process_context_click)

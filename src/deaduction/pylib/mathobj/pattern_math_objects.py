@@ -1,5 +1,5 @@
 """
-# implicit_definitions.py : <#ShortDescription> #
+implicit_definitions.py : provide the PatternMathObject class.
     
     <#optionalLongDescription>
 
@@ -38,9 +38,9 @@ log = logging.getLogger(__name__)
 
 class PatternMathObject(MathObject):
     """
-    A class for MathObject that may contains metavariables. Metavariables
+    A class for MathObject that may contain metavariables. Metavariables
     are represented by PatternMathObject whose node is 'METAVAR".
-    e.g. The PatternMathObject representing the definition of injectivity
+    e.g. the PatternMathObject representing the definition of injectivity
     looks like:
         metavar_28 is injective ⇔ ( ∀x ∈ metavar_26, ∀x' ∈ metavar_26,
                                   (metavar_28(x) = metavar_28(x') ⇒ x = x') )
@@ -52,7 +52,7 @@ class PatternMathObject(MathObject):
          math_object = 'g∘f is injective'
     then
         left.match(math_object)
-    will be True. Note the the math_types should also match.
+    will be True. Note that the math_types should also match.
 
     After a successful matching test, the matching values of the metavars are
     stored in the metavar_objects class attribute as a list of MathObject
@@ -353,7 +353,7 @@ class PatternMathObject(MathObject):
                 # log.debug(f"  Pattern: {pattern.to_display(format_='utf8')}")
                 MathObject.implicit_definitions.append(definition)
                 MathObject.definition_patterns.append(pattern)
-                definition.implicit_use_activated = True
+                definition.implicit_use_activated = True  # Obsolete
 
 
 PatternMathObject.NO_MATH_TYPE = PatternMathObject(node="not provided",

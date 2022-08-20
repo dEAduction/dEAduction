@@ -61,6 +61,7 @@ from deaduction.pylib.coursedata import        (Exercise,
 from deaduction.pylib.mathobj import           (MathObject,
                                                 PatternMathObject,
                                                 ContextMathObject,
+                                                DragNDrop,
                                                 ProofStep)
 from deaduction.pylib.proof_state import       (Goal,
                                                 ProofState)
@@ -577,6 +578,9 @@ class Coordinator(QObject):
                     if operator:
                         operator = operator.math_object
                         selection.remove(operator)
+
+                    self.proof_step.drag_n_drop = DragNDrop(selection[0],
+                                                            operator)
                     try:
                         name = drag_n_drop(operator, selection)
                     except WrongUserInput as error:

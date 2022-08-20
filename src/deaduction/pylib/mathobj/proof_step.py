@@ -204,6 +204,7 @@ class ProofStep:
     statement      = None  # Statement
     lean_code      = None  # CodeForLean
     is_automatic   = False
+    drag_n_drop    = None  # DragNDrop
 
     # ──────────────── Output ─────────────── #
     effective_code            = None  # CodeForLean that proved effective
