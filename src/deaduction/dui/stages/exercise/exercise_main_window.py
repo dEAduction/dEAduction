@@ -139,7 +139,8 @@ class ExerciseMainWindow(QMainWindow):
     # apply_math_object_triggered  = Signal(MathObjectWidget)
     statement_triggered          = Signal(StatementsTreeWidgetItem)
     statement_dropped            = Signal(StatementsTreeWidgetItem)
-    math_object_dropped          = Signal(MathObjectWidgetItem)
+    math_object_dropped          = Signal(MathObjectWidgetItem,
+                                          MathObjectWidgetItem)
 
     def __init__(self, exercise: Exercise):
         """

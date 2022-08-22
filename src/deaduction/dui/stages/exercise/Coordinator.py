@@ -548,41 +548,37 @@ class Coordinator(QObject):
                     self.__server_call_statement(item)
 
                 elif emission.is_from(self.statement_dropped):
+                    # Statement dropped into context
                     item = emission.args[0]
                     # print(f"Statement dropped: {item.statement.lean_name}")
                     self.proof_step.statement = item.statement
 
-                    # Empty selection
+                    # Empty selection and call statement
                     self.emw.empty_current_selection()
                     self.emw.target_selected = False
-                    self.ecw.target_wgt.mark_user_selected(self.target_selected)
-
                     self.__server_call_statement(item)
 
                 elif emission.is_from(self.math_object_dropped):
-                    """
-                    Determine an Action Button from selection and receiver 
-                    and call __server_call_action.
-                    """
+                    # Determine an Action Button from selection and receiver
+                    # and call __server_call_action
 
                     log.debug("Math object dropped!")
                     s = [item.math_object.to_display(format_="utf8")
                          for item in self.emw.current_selection]
                     log.debug(f"Selection: {s}")
-                    operator = emission.args[0]  # Optional[MathWidgetItem]
-                    # selection = [item.math_object for item in
-                    #              self.emw.current_selection]
-                    selection = self.current_selection_as_mathobjects
+                    premise_item = emission.args[0]  # MathWidgetItem
+                    op_item = emission.args[1]  # Optional[MathWidgetItem]
                     # Operator is None if dropping did not occur on a property.
                     # Then WrongUI exception will be raised by drag_n_drop().
-                    if operator:
-                        operator = operator.math_object
-                        selection.remove(operator)
 
-                    self.proof_step.drag_n_drop = DragNDrop(selection[0],
-                                                            operator)
+                    # selection = self.current_selection_as_mathobjects
+                    operator = op_item.math_object if op_item else None
+                    premise = premise_item.math_object if premise_item else None
+                    #     selection.remove(operator)
+
+                    self.proof_step.drag_n_drop = DragNDrop(premise, operator)
                     try:
-                        name = drag_n_drop(operator, selection)
+                        name = drag_n_drop(premise, operator)
                     except WrongUserInput as error:
                         self.proof_step.user_input = self.emw.user_input
                         self.process_wrong_user_input(error)

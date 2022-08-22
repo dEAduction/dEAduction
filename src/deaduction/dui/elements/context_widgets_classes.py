@@ -228,7 +228,8 @@ class MathObjectWidgetItem(QStandardItem):
 class DraggedItems(QWidget):
     """
     Display a stack of MathObjects in QLabels, to be used as dragged
-    MathObjectWidgetItems.
+    MathObjectWidgetItems. Note that currently only one item at a time may be
+    dragged.
     """
 
     def __init__(self, items: [MathObjectWidgetItem]):
@@ -294,7 +295,7 @@ class MathObjectWidget(QListView):
 
     # Signals
     statement_dropped = Signal(StatementsTreeWidgetItem)
-    math_object_dropped = Signal(MathObjectWidgetItem)
+    math_object_dropped = Signal(MathObjectWidgetItem, MathObjectWidgetItem)
 
     def __init__(self, context_math_objects=None, target=None):
         """
@@ -309,7 +310,9 @@ class MathObjectWidget(QListView):
 
         super().__init__()
         self._saved_style_sheet = None
-        self._current_item = None  # Last clicked item
+        self._current_index = None  # Last clicked item
+        # Current dragged item, if any. Must be reset to None when dropped.
+        self.dragged_index = None
 
         # The following are set by ExerciseCentralWidget:
         self.is_props_wdg = False
@@ -351,26 +354,14 @@ class MathObjectWidget(QListView):
         if context_math_objects:
             self.add_math_objects(context_math_objects)
 
-        # elif target:
-        #     self.add_target(target)
-
-        # self.horizontalScrollBar().setRange(0, self.width)
-        # log.debug(f"Horizontal context width: {self.width}")
-        # log.debug(f"Size hint for col 0: {self.sizeHintForColumn(0)}")
-
-    # def add_target(self, target):
-    #     item = TargetWidgetItem(target)
-    #     self.model().appendRow(item)
-    #
-    # def set_target(self, target):
-    #     model = self.model()
-    #     model.removeRows(0, model.rowCount())
-    #     self.add_target(target)
+    @property
+    def accept_dropped_statements(self):
+        return self.is_props_wdg
 
     def select_index(self, index, yes=True):
         # self.selectionModel().select(index, QItemSelectionModel.SelectCurrent)
         self.selectionModel().select(index, QItemSelectionModel.Select if yes
-        else QItemSelectionModel.Deselect)
+                                     else QItemSelectionModel.Deselect)
 
     def select_item(self, item: MathObjectWidgetItem):
         self.select_index(item.index())
@@ -407,8 +398,8 @@ class MathObjectWidget(QListView):
     #     item.setSelected(False)
     #     self.apply_math_object_triggered.emit(item)
 
-    def current_item(self):
-        return self.item_from_index(self.currentIndex())
+    # def current_item(self):
+    #     return self.item_from_index(self.currentIndex())
 
     def item_from_logic(self, math_object) -> MathObjectWidgetItem:
         """
@@ -426,7 +417,6 @@ class MathObjectWidget(QListView):
         items = self.items
         if idx in range(len(items)):
             return items[idx]
-
 
     def index_from_event(self, event):
         return self.indexAt(event.pos())
@@ -454,36 +444,32 @@ class MathObjectWidget(QListView):
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
-        self._current_item = self.item_from_event(event)
-        # print(f"current item : "
-        #       f"{self._current_item.math_object.to_display(format_='utf8')}")
+        self._current_index = self.index_from_event(event)
 
     def startDrag(self, supported_actions) -> None:
         drag = QDrag(self)
-        # log.info("Try to star drag...")
-        items = self.context_selection()
-        if not self._current_item or self._current_item not in items:
+
+        if not self._current_index:
             # log.debug("Drag aborted")
             return
 
-        # Drag all selected items or just last one?
-        several_items = cvars.get('functionality.drag_several_items', False)
-        if several_items:
-            if self._current_item not in items:
-                items.append(self._current_item)
-        else:
-            # log.debug("Selecting item")
-            item = self._current_item
-            # items = self.selected_items()
-            self.clear_context_selection()
-            # items[-1].select()
-            # items = items[-1:]
-            item.select()
-            items = [item]
+        # # Drag all selected items or just last one? OBSOLETE
+        # several_items = cvars.get('functionality.drag_several_items', False)
+        # if several_items:
+        #     if self._current_item not in items:
+        #         items.append(self._current_item)
+        # else:
+        # log.debug("Selecting item")
 
-        mime_data = QMimeData(items)
+        # Set selection to dragged item
+        self.dragged_index = self._current_index
+        item = self.item_from_index(self.dragged_index)
+        self.set_selection([item])
+
+        mime_data = QMimeData([item])
         drag.setMimeData(mime_data)
 
+        # Set image of dragged item
         pixmap = DraggedItems(self.selected_items()).pixmap()
         drag.setPixmap(pixmap)
         drag.exec_(Qt.IgnoreAction)
@@ -493,13 +479,18 @@ class MathObjectWidget(QListView):
         Mark enterEvent of StatementTreeWidgetItem by changing background color.
         """
 
-        event.acceptProposedAction()
         source = event.source()
-        if isinstance(source, StatementsTreeWidget) and self.drop_enabled():
-            self._saved_style_sheet = self.styleSheet()
-            color = cvars.get("display.color_for_selection", "LimeGreen")
-            self.setStyleSheet(f'background-color: {color};')
-            self.setDropIndicatorShown(False)  # Do not show "where to drop"
+        if isinstance(source, StatementsTreeWidget):
+            if self.drop_enabled() and self.accept_dropped_statements:
+                self._saved_style_sheet = self.styleSheet()
+                color = cvars.get("display.color_for_selection", "LimeGreen")
+                self.setStyleSheet(f'background-color: {color};')
+                self.setDropIndicatorShown(False)  # Do not show "where to drop"
+                event.acceptProposedAction()
+            else:
+                event.ignore()  # No dropped statement
+        else:
+            event.acceptProposedAction()
 
     def dragLeaveEvent(self, event):
         """
@@ -527,10 +518,20 @@ class MathObjectWidget(QListView):
 
         event.accept()
 
+    def set_selection(self, items):
+        """
+        Set selection to items, clearing previous selection.
+        """
+        if self.clear_context_selection:
+            self.clear_context_selection()
+        for item in items:
+            item.select()
+
     def dropEvent(self, event):
         """
-        Call action corresponding to dropEvent:
-        - drop of a statementWidget --> add statement to context.
+        Emit signal corresponding to dropEvent:
+        - drop of a statementTreeItem   -> statement_dropped
+        - drop a MathWidgetItem         -> math_object_dropped.
         """
         source = event.source()
         if isinstance(source, StatementsTreeWidget):
@@ -539,25 +540,30 @@ class MathObjectWidget(QListView):
             self.setStyleSheet('background-color: white;')
         elif isinstance(source, MathObjectWidget):
 
-            # Add dragged index to selection (seems that it is not always in)
-            dragged_index = source.currentIndex()
+            dragged_index = source.dragged_index
+            source.dragged_index = None
             index = self.index_from_event(event)
             if dragged_index == index:  # Absurd auto-drop, abort
                 source.select_index(dragged_index, False)
                 self.select_index(index, False)
                 return
 
-            # print(f"Source : {source}, dragged index: {dragged_index}")
-            # print(f"Source selected items: {len(source.selected_items())}")
-            if dragged_index not in source.selectedIndexes():
-                source.select_index(dragged_index)
-            # print(f"Source selected items: {len(source.selected_items())}")
-            # Add receiver to selection
-            if index not in self.selectedIndexes():
-                self.select_index(index)
+            print(f"Source : {source}, dragged index: {dragged_index}")
+            # # print(f"Source selected items: {len(source.selected_items())}")
+            # if dragged_index not in source.selectedIndexes():
+            #     source.select_index(dragged_index)
+            # # print(f"Source selected items: {len(source.selected_items())}")
+            # # Add receiver to selection
+            # if index not in self.selectedIndexes():
+            #     self.select_index(index)
 
             # Emit signal
-            self.math_object_dropped.emit(self.item_from_index(index))
+            premise = source.item_from_index(dragged_index)
+            operator = self.item_from_index(index)
+            print(premise, operator)
+            if premise and operator:
+                self.set_selection([premise, operator])
+            self.math_object_dropped.emit(premise, operator)
 
         event.accept()
         self.setDropIndicatorShown(False)
