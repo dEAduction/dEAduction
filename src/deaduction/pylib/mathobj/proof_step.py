@@ -243,7 +243,7 @@ class ProofStep:
 
         self.proof_state = proof_state
         self.selection = []
-        self.target_selected=False
+        self.target_selected = False
         self.user_input = []
         self.imminent_new_node = None
         self.history_nb = history_nb

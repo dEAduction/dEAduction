@@ -65,7 +65,8 @@ from deaduction.pylib.mathobj import           (MathObject,
                                                 ProofStep)
 from deaduction.pylib.proof_state import       (Goal,
                                                 ProofState)
-from deaduction.pylib.proof_tree import ProofTree
+from deaduction.pylib.proof_tree import        (ProofTree,
+                                                LeanResponse)
 
 from deaduction.pylib.actions           import (generic,
                                                 InputType,
@@ -125,6 +126,8 @@ class Coordinator(QObject):
         self.proof_tree: Optional[ProofTree]          = None
         self.previous_proof_step: Optional[ProofStep] = None
         self.journal                                  = Journal()
+        # self.current_user_action: Optional[UserAction] = None
+        self.lean_code_sent: Optional[CodeForLean]          = None
 
         # Flags
         self.exercise_solved                = False
@@ -724,6 +727,7 @@ class Coordinator(QObject):
                 self.proof_step.user_input = self.emw.user_input
 
                 # Update lean_file and call Lean server
+                self.lean_code_sent = lean_code
                 self.server_queue.add_task(self.servint.code_insert,
                                            action.symbol,
                                            lean_code,
@@ -758,6 +762,7 @@ class Coordinator(QObject):
             self.proof_step.lean_code = lean_code
 
             # Update lean_file and call Lean server
+            self.lean_code_sent = lean_code
             self.server_queue.add_task(self.servint.code_insert,
                                        statement.pretty_name,
                                        lean_code,
@@ -989,20 +994,22 @@ class Coordinator(QObject):
         self.proof_step.parent_goal_node = self.proof_tree.current_goal_node
         self.proof_step_updated.emit()  # Received in auto_test
 
-        # TODO: replace goal counts by proof_tree API
-        # unsolved_goal_nodes = self.proof_tree.unsolved_goal_nodes()
-        # total_gn = len(unsolved_goal_nodes)
-        # index = unsolved_goal_nodes.index(self.proof_tree.current_goal_node) + 1
-        # print(f"Buts: {index}/{total_gn}")
-        # print(total_gn == self.proof_step.total_goals_counter)
+    def test_response_coherence(self, lean_response: LeanResponse):
+        # fixme
+        return True
+        # return self.lean_code_sent is lean_response.lean_code
+
+    def invalidate_events(self):
+        # self.current_user_action = None
+        self.lean_code_sent = None
 
     @Slot()
-    def process_lean_response(self,
-                              exercise,
-                              no_more_goals: bool,
-                              analysis: tuple,
-                              errors: list,
-                              error_type=0):
+    def process_lean_response(self, lean_response: LeanResponse):
+                              # exercise,
+                              # no_more_goals: bool,
+                              # analysis: tuple,
+                              # errors: list,
+                              # error_type=0):
         """
         This method processes Lean response after a request, and is a slot
         of a signal emitted by self.servint when all info have been received.
@@ -1014,32 +1021,33 @@ class Coordinator(QObject):
         Every action of the user (ie click on an ActionButton, a statement
         item, or a history move) which do not rise a WrongUserInput
         exception is passed to Lean, and then goes through this method.
-
-        :param exercise: should be equal to self.exercise.
-        :param no_more_goals: True if no_more_goal: proof is complete!
-        :param analysis: (hypo_analysis, targets_analysis),
-                         = info to construct new proof_state
-        :param errors: list of errors, if non-empty then request has failed.
-        :param error_type: int
-            0 = no error, 1 = WUI (unused here),
-            2 = FRE, 3 = Timeout, 4 = UnicodeError
         """
+
+        # (1) Test Response corresponds to request
+        if not self.test_response_coherence(lean_response):
+            log.warning("Unexpected Lean response, ignoring")
+            self.abort_process()
+            return
+
+        no_more_goals = lean_response.no_more_goals
+        error_type = lean_response.error_type
+        proof_state = lean_response.new_proof_state
+
         log.info("** Processing Lean's response **")
         history_nb = self.lean_file.target_idx
         log.info(f"History nb: {history_nb}")
-        self.emw.automatic_action = False
-        proof_state = None
+        self.emw.automatic_action = False  # FIXME: move
 
         # ─────── Errors ─────── #
         if error_type != 0:
             log.info("  -> error!")
-            self.process_error(error_type, errors)
+            self.process_error(error_type, lean_response.error_list)
             self.abort_process()
             return
 
-        if exercise != self.exercise:  # Should never happen
-            log.warning("    not from current exercise, ignoring")
-            return
+        # if exercise != self.exercise:  # Should never happen
+        #     log.warning("    not from current exercise, ignoring")
+        #     return
 
         # ─────── First step ─────── #
         if not self.server_task_started.is_set():
@@ -1052,18 +1060,19 @@ class Coordinator(QObject):
             proof_state = self.set_fireworks()
 
         else:  # Generic step
-            hypo_analysis, targets_analysis = analysis
-            if hypo_analysis and targets_analysis:
-                log.info("** Creating new proof state **")
-                proof_state = ProofState.from_lean_data(hypo_analysis,
-                                                        targets_analysis,
-                                                        to_prove=True)
+            # hypo_analysis, targets_analysis = analysis
+            # if hypo_analysis and targets_analysis:
+            #     log.info("** Creating new proof state **")
+            #     proof_state = ProofState.from_lean_data(hypo_analysis,
+            #                                             targets_analysis,
+            #                                             to_prove=True)
             if proof_state:
                 self.lean_file.state_info_attach(ProofState=proof_state)
             else:
                 # No proof state!? Maybe empty analysis?
                 self.process_error(error_type=5, errors=[])
-                log.debug(f"Analysis: {hypo_analysis} /// {targets_analysis}")
+                log.debug(f"Analysis: {lean_response.analysis[0]} ///"
+                          f" {lean_response.analysis[1]}")
                 self.abort_process()
                 return
 
@@ -1118,7 +1127,9 @@ class Coordinator(QObject):
 
         self.emw.ui_updated.emit()  # For testing
 
+        self.invalidate_events()
+
         if no_more_goals:
-            # Display QMessageBox but give deaduction time to properly update
-            # ui before.
-            QTimer.singleShot(0, self.display_fireworks_msg)
+                # Display QMessageBox but give deaduction time to properly update
+                # ui before.
+                QTimer.singleShot(0, self.display_fireworks_msg)
