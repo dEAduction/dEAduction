@@ -1257,7 +1257,8 @@ def apply_substitute(proof_step,
                      selected_objects: [MathObject],
                      user_input: [int],
                      equality: MathObject,
-                     equality_nb=-1) -> CodeForLean:
+                     equality_nb=-1,
+                     direction_nb=0) -> CodeForLean:
     """
     Try to use the selected property indicated by equality_nb to rewrite the
     goal or the other selected property:
@@ -1281,8 +1282,8 @@ def apply_substitute(proof_step,
     choices = [(left_display, f'Replace by {right_display}'),
                (right_display, f'Replace by {left_display}')]
 
-    if len(selected_objects) == 1:
-        if len(user_input) > 0:
+    if len(selected_objects) == 1:  # Substitution on target
+        if len(user_input) > 0:  # Choice of direction has been made
             if user_input[0] == 0:  # Direct substitution
                 more_code = code_for_substitution(heq,
                                                   left_display, right_display)
@@ -1291,10 +1292,10 @@ def apply_substitute(proof_step,
                                                   right_display, left_display,
                                                   reverse=True)
             codes = codes.or_else(more_code)
-        else:
+        else:  # Choice of substitution direction has not been made
             if goal.target.math_type.contains(left) and \
                     goal.target.math_type.contains(right):
-
+                # Choice needed
                 raise MissingParametersError(
                     InputType.Choice,
                     choices,
@@ -1308,16 +1309,16 @@ def apply_substitute(proof_step,
                                                    reverse=True)
                 codes = more_code1.or_else(more_code2)
 
-    if len(selected_objects) == 2:
+    if len(selected_objects) == 2:  # Substitution on context
         prop_nb = 0 if equality_nb != 0 else 1
-        prop = selected_objects[prop_nb]
-        if len(user_input) > 1:
-            if user_input[1] == 0:
+        prop = selected_objects[prop_nb]  # Substitute in prop
+        if len(user_input) > direction_nb:  # Choice of direction has been made
+            if user_input[direction_nb] == 0:  # Direct substitution
                 more_code = code_for_substitution(heq,
                                                   left_display, right_display,
                                                   on_hyp=prop)
                 codes = codes.or_else(more_code)
-            elif user_input[1] == 1:
+            elif user_input[direction_nb] == 1:  # Reverse substitution
                 more_code = code_for_substitution(heq,
                                                   right_display, left_display,
                                                   on_hyp=prop,
@@ -1325,14 +1326,14 @@ def apply_substitute(proof_step,
                 codes = codes.or_else(more_code)
         else:
             if prop.math_type.contains(left) and \
-                    prop.math_type.contains(right):
+                    prop.math_type.contains(right):  # Both directions work
                 raise MissingParametersError(
                     InputType.Choice,
                     choices,
                     title=_("Precision of substitution"),
                     output=_("Choose which expression you want to replace"))
 
-            else:  # We have not found possible rw, but maybe Lean will
+            else:
                 more_code1 = code_for_substitution(heq,
                                                    left_display, right_display,
                                                    on_hyp=prop)
@@ -1370,8 +1371,14 @@ def action_equal(proof_step) -> CodeForLean:
         user_input = []
 
     equality_nb = -1  # Default nb of property to be used for substitution
+    direction_nb = 0  # Default user_input index for direction (no choice of eq)
 
-    if not selected_objects:
+    if proof_step.drag_n_drop:
+        # Replace selected_objects so that operator is at end
+        d_n_d = proof_step.drag_n_drop
+        selected_objects = [d_n_d.premise, d_n_d.operator]
+        equality = d_n_d.operator.math_type
+    elif not selected_objects:
         raise WrongUserInput(error=_("No property selected"))
     # Now len(l) > 0
     elif len(selected_objects) > 2:
@@ -1386,24 +1393,26 @@ def action_equal(proof_step) -> CodeForLean:
             # Two equalities: which one to use?
             if not user_input:
                 choose_substitution(equality0, equality1)
-            elif user_input[0] == 0:
-                equality = equality0
-                equality_nb = 0
             else:
-                equality = equality1
+                direction_nb = 1
+                if user_input[0] == 0:
+                    equality = equality0
+                    equality_nb = 0
+                else:
+                    equality = equality1
         elif test0:
             equality = equality0
             selected_objects.reverse()
-            if not user_input:
-                user_input.append(0)  # Make place for a potential second input
-            else:
-                user_input[0] = 0
+            # if not user_input:
+            #     user_input.append(0)  # Make place for a potential second input
+            # else:
+            #     user_input[0] = 0
         elif test1:
             equality = equality1
-            if not user_input:
-                user_input.append(1)
-            else:
-                user_input[0] = 1
+            # if not user_input:
+            #     user_input.append(1)
+            # else:
+            #     user_input[0] = 1
         else:  # No equality found
             error = _("This cannot be used for substitution")
             raise WrongUserInput(error)
@@ -1416,7 +1425,7 @@ def action_equal(proof_step) -> CodeForLean:
             raise WrongUserInput(error)
 
     codes = apply_substitute(proof_step, selected_objects, user_input,
-                             equality, equality_nb)
+                             equality, equality_nb, direction_nb)
     return codes
 
 

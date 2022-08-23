@@ -774,10 +774,10 @@ class StatementsTreeWidget(QTreeWidget):
 
     def dragEnterEvent(self, event):
         """
-        Accept drag iff it comes from props_wdg.
+        Accept drag except if it comes from self.
         """
         source = event.source()
-        if hasattr(source, 'is_props_wdg') and source.is_props_wdg:
+        if not isinstance(source, StatementsTreeWidget):
             event.acceptProposedAction()
 
     def dragMoveEvent(self, event) -> None:
@@ -798,7 +798,7 @@ class StatementsTreeWidget(QTreeWidget):
         event.accept()
 
     def dragLeaveEvent(self, event) -> None:
-        pass
+        self.potential_drop_receiver = None  # Unselect automatically
         # print("dragLeave statement")
 
     def dropEvent(self, event):
@@ -807,7 +807,7 @@ class StatementsTreeWidget(QTreeWidget):
         """
         # Not activated.
         source = event.source()
-        if isinstance(source, StatementsTreeWidget):
+        if isinstance(source, StatementsTreeWidget):  # Should not happen
             event.accept()
             # self.clearSelection()
             return

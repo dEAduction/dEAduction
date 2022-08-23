@@ -29,6 +29,7 @@ This file is part of dEAduction.
 from deaduction.pylib.mathobj.math_object import MathObject
 from .context_math_object import                 ContextMathObject
 from .pattern_math_objects import                PatternMathObject
+from .drag_n_drop import          DragNDrop
 from .proof_step import          (ProofStep,
                                   NewGoal)
 

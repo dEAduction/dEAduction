@@ -42,32 +42,31 @@ log = logging.getLogger("logic")
 global _
 
 
-def drag_n_drop(operator: ContextMathObject,
-                selection: [ContextMathObject]) -> str:
+def drag_n_drop(premise: ContextMathObject, operator: ContextMathObject) -> str:
     """
     Compute an action to be triggered from a drag and drop operation.
-    @param operator: the property on which the selection has been dropped.
-    @param selection: dragged objs and props, it does not contain the operator.
+    @param premise: the dragged property or object.
+    @param operator: the receiver property or object.
     @return: nams of the action to be triggered.
     """
     if not operator:  #
-        raise WrongUserInput(_("Drop your selection on some "
-                               "property!"))
-
-    log.debug(f"Selection len: {len(selection)}")
-    log.debug(f"Operator: {operator.math_type_to_display(format_='utf8')}")
+        raise WrongUserInput(_("Drop on some object or property!"))
+    elif not premise:  # This should not happen...
+        raise WrongUserInput(_("Drag and drop failed, please try again."))
+    # log.debug(f"Selection len: {len(selection)}")
+    # log.debug(f"Operator: {operator.math_type_to_display(format_='utf8')}")
 
     # The main premise determines the action. It is the last selected
     # property if any, else the last selected object.
-    # FIXME: beware that selection maybe not ordered by time of selection?
-    if not selection:
-        raise WrongUserInput(_("I don't know what to do!"))
-
-    premise = selection[-1]
-    for math_obj in selection:
-        if math_obj.is_prop():
-            premise = math_obj
-    log.debug(f"Premise: {premise}")
+    # # FIXME: beware that selection maybe not ordered by time of selection?
+    # if not selection:
+    #     raise WrongUserInput(_("I don't know what to do!"))
+    #
+    # premise = selection[-1]
+    # for math_obj in selection:
+    #     if math_obj.is_prop():
+    #         premise = math_obj
+    # log.debug(f"Premise: {premise}")
     name = operator.action_from_premise_and_operator(premise)
     log.debug(f"Name: {name}")
 

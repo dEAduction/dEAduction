@@ -139,6 +139,8 @@ class ContextMathObject(MathObject):
         action = None
 
         implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
+        if operator.is_function():
+            action = "map"
 
         if premise.math_type.is_prop():
             if operator.can_be_used_for_implication(implicit=implicit):

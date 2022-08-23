@@ -139,7 +139,8 @@ class ExerciseMainWindow(QMainWindow):
     # apply_math_object_triggered  = Signal(MathObjectWidget)
     statement_triggered          = Signal(StatementsTreeWidgetItem)
     statement_dropped            = Signal(StatementsTreeWidgetItem)
-    math_object_dropped          = Signal(MathObjectWidgetItem)
+    math_object_dropped          = Signal(MathObjectWidgetItem,
+                                          MathObjectWidgetItem)
 
     def __init__(self, exercise: Exercise):
         """
@@ -234,6 +235,8 @@ class ExerciseMainWindow(QMainWindow):
         # Context area
         self.ecw.props_wgt.statement_dropped.connect(self.statement_dropped)
         self.ecw.props_wgt.math_object_dropped.connect(self.math_object_dropped)
+        self.ecw.objects_wgt.math_object_dropped.connect(
+            self.math_object_dropped)
         self.ecw.statements_tree.math_object_dropped.connect(
             self.statement_triggered)
         # self.ecw.objects_wgt.clicked.connect(self.process_context_click)
