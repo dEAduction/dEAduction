@@ -176,7 +176,9 @@ class ExerciseMainWindow(QMainWindow):
         self.proof_tree_controller= ProofTreeController()
         self.statusBar            = ExerciseStatusBar(self)
         self.config_window        = None
-        self.help_window = None
+        self.help_window = HelpWindow()
+        self.close_help_window_timer = QTimer()
+        self.close_help_window_timer.setSingleShot(True)
 
         # ─────────────────────── UI ─────────────────────── #
 
@@ -189,6 +191,8 @@ class ExerciseMainWindow(QMainWindow):
             self.exercise_toolbar.toggle_proof_outline_action
         self.lean_editor.action = \
             self.exercise_toolbar.toggle_lean_editor_action
+        self.help_window.action = \
+            self.exercise_toolbar.toggle_help_action
 
         self.exercise_toolbar.redo_action.setEnabled(False)  # No history at beginning
         self.exercise_toolbar.undo_action.setEnabled(False)  # same
@@ -212,8 +216,8 @@ class ExerciseMainWindow(QMainWindow):
         self.close_coordinator = None  # Method set up by Coordinator
 
         self.__connect_signals()
-        # 1s to allow correct geometry(?)
-        QTimer.singleShot(1000, self.__init_help_window)
+        # 1s to allow correct geometry(?) Does not work
+        # QTimer.singleShot(1000, self.__init_help_window)
         self.freeze()  # Wait for data before allowing user actions.
 
     #######################
@@ -249,6 +253,8 @@ class ExerciseMainWindow(QMainWindow):
                 self.proof_outline_window.toggle)
         self.exercise_toolbar.toggle_proof_tree.triggered.connect(
                 self.proof_tree_window.toggle)
+        self.exercise_toolbar.toggle_help_action.triggered.connect(
+            self.help_window.toggle)
         self.global_toolbar.change_exercise_action.triggered.connect(
                                                     self.change_exercise)
         self.global_toolbar.settings_action.triggered.connect(
@@ -265,12 +271,17 @@ class ExerciseMainWindow(QMainWindow):
         target_lbl = self.ecw.target_wgt.target_label
         target_lbl.clicked.connect(self.process_target_click)
         target_lbl.double_clicked.connect(self.process_target_double_click)
+        self.close_help_window_timer.timeout.connect(self.help_window.hide)
 
-    def __init_help_window(self):
-        gl_geo = global_geometry(self.ecw,
-                                 self.ecw.statements_tree.geometry())
-        self.help_window = HelpWindow()
-        self.help_window.set_geometry(gl_geo)
+        # All context clicks, including target_lbl --> self.contest_clicked
+        self.ecw.objects_wgt.clicked.connect(self.context_clicked)
+        self.ecw.props_wgt.clicked.connect(self.context_clicked)
+        target_lbl.clicked.connect(self.context_clicked)
+
+    # def __init_help_window(self):
+    #     gl_geo = global_geometry(self.ecw,
+    #                              self.ecw.statements_tree.geometry())
+    #     # self.help_window.set_geometry(gl_geo)
 
     def __init_menubar(self):
         """
@@ -290,6 +301,7 @@ class ExerciseMainWindow(QMainWindow):
                               self.exercise_toolbar.toggle_proof_outline_action,
                               self.exercise_toolbar.toggle_proof_tree
                               ]),
+                         self.exercise_toolbar.toggle_help_action,
                          self.exercise_toolbar.toggle_lean_editor_action,
                          self.global_toolbar.change_exercise_action])
 
@@ -297,6 +309,17 @@ class ExerciseMainWindow(QMainWindow):
         outline = [menu_deaduction, menu_exercise]
         menu_bar = MenuBar(self, outline)
         self.setMenuBar(menu_bar)
+
+    @Slot()
+    def context_clicked(self):
+        """
+        Almost any click should close the help window.
+        """
+        # super().mousePressEvent(event)
+        if self.help_window.isVisible():
+            self.close_help_window_timer.start(200)
+            # self.close_help_window_timer =
+            # QTimer.singleShot(500, lambda x: self.help_window.toggle(yes=False))
 
     def closeEvent(self, event: QEvent):
         """
@@ -311,6 +334,7 @@ class ExerciseMainWindow(QMainWindow):
         self.lean_editor.close()
         self.proof_outline_window.close()
         self.proof_tree_window.close()
+        self.help_window.close()
 
         # Save window geometry
         # FIXME: does not work
@@ -328,7 +352,7 @@ class ExerciseMainWindow(QMainWindow):
             self.close_coordinator()
 
         self.window_closed.emit()
-        # event.accept()  # THIS create crash after the second closing!!
+        # event.accept()  # THIS creates crash after the second closing!!
         super().closeEvent(event)
         self.deleteLater()
 
@@ -682,33 +706,35 @@ class ExerciseMainWindow(QMainWindow):
         """
         Call the help window on double-clicked context item.
         """
-        # Unselect everything
+
+        # Stop closing process, and unselect everything
+        self.close_help_window_timer.stop()
         self.empty_current_selection()
         self.process_target_click(on=False)
 
         # Find item from index
         props_wgt = self.ecw.props_wgt
-        math_item = props_wgt.item_from_index(index)
+        math_item: MathObjectWidgetItem = props_wgt.item_from_index(index)
         if not math_item:
             obj_wgt = self.ecw.objects_wgt
             math_item = obj_wgt.item_from_index(index)
+
         if math_item:
-            # Select item
-            math_item.select()
-            self.help_window.set_math_object(math_item.math_object)
-            self.help_window.show()
-            # self.help_window.raise_()
+            self.help_window.set_math_object(math_item)
+            self.help_window.toggle(True)
 
     @Slot()
     def process_target_double_click(self, event=None):
-        # print("Process target double click")
-        self.empty_current_selection()
 
-        self.process_target_click(on=True)
-        target = self.ecw.target_wgt.target
-        self.help_window.set_math_object(target, target=True)
-        self.help_window.show()
-        # self.help_window.raise_()
+        # Stop closing process, and unselect everything
+        self.close_help_window_timer.stop()
+        self.empty_current_selection()
+        self.process_target_click(on=False)
+
+        # target = self.ecw.target_wgt.target
+        item = self.ecw.target_wgt.target_label
+        self.help_window.set_math_object(item, target=True)
+        self.help_window.toggle(True)
 
     def simulate_selection(self,
                            selection:
@@ -880,8 +906,10 @@ class ExerciseMainWindow(QMainWindow):
         :param new_goal: The new Goal to update / set the interface to.
         (or None if it has not been received yet).
         """
-        # TODO: tags will be incorporated in ContextMathObjects
+
         log.info("Updating UI")
+        if self.help_window.isVisible():
+            self.help_window.toggle(yes=False)
         self.proof_tree_controller.update()
         self.manage_msgs(self.displayed_proof_step)
         self.user_input = []

@@ -196,8 +196,17 @@ class MathObjectWidgetItem(QStandardItem):
 
         return self is other  # Brutal but that is what we need.
 
-    def select(self):
-        self.math_object_wdg.select_item(self)
+    def highlight(self, yes=True):
+        color = cvars.get("display.color_for_highlight_in_proof_tree",
+                          "yellow")
+        self.setBackground(QBrush(QColor(color)) if yes else QBrush())
+        # self.math_object_wdg.select_item(self, yes)
+        # palette = self.math_object_wdg.palette()
+        # color = palette.color(palette.Normal, palette.Midlight)
+        # self.setBackground(color)
+
+    def select(self, yes=True):
+        self.math_object_wdg.select_item(self, yes)
 
     # def mark_user_selected(self, yes: bool = True):
     #     """
@@ -299,13 +308,7 @@ class MathObjectWidget(QListView):
 
     def __init__(self, context_math_objects=None, target=None):
         """
-        Init self an ordered list of tuples (mathobject, tag), where
-        mathobject is an instance of the class MathObject (not
-        MathObjectWidgetItem!) and tag is mathobject's tag a str,
-        (see _TagIcon.__doc__).
-
-        :param tagged_mathobjects: The list of tagged instances of the
-            class MathObject.
+        Init self with an ordered list of ContextMathObject.
         """
 
         super().__init__()
@@ -363,8 +366,8 @@ class MathObjectWidget(QListView):
         self.selectionModel().select(index, QItemSelectionModel.Select if yes
                                      else QItemSelectionModel.Deselect)
 
-    def select_item(self, item: MathObjectWidgetItem):
-        self.select_index(item.index())
+    def select_item(self, item: MathObjectWidgetItem, yes=True):
+        self.select_index(item.index(), yes)
 
     def add_math_objects(self, math_objects):
         for math_object in math_objects:
@@ -598,17 +601,17 @@ class TargetLabel(QLabel):
     def __init__(self, target):
         super().__init__()
         self._double_clicked = False
+        self.math_object = target
+        self.setTextFormat(Qt.RichText)
+        self.set_target(target)
+
+    def set_target(self, target):
         if target:
-            # log.debug("updating target")
+            self.math_object = target
             text = target.math_type_to_display()
         else:
             text = '…'
-
         self.setText(text)
-        self.setTextFormat(Qt.RichText)
-
-    def replace_target(self, target):
-        self.setText(target.math_type_to_display())
 
     # Debugging
     # def mouseReleaseEvent(self, ev) -> None:
@@ -628,6 +631,23 @@ class TargetLabel(QLabel):
         # print("target label double clicked")
         self._double_clicked = True
         self.double_clicked.emit()
+
+    # The following method mimic MathObjectWidgetItem methods:
+    def select(self, yes=True):
+        if yes:
+            self.setBackgroundRole(QPalette.Highlight)
+            self.setForegroundRole(QPalette.WindowText)
+        else:
+            self.setBackgroundRole(QPalette.Window)
+            # self.target_label.setStyleSheet(self.unselected_style)
+
+    def highlight(self, yes=True):
+        # self.select(not yes)
+        color = cvars.get("display.color_for_highlight_in_proof_tree",
+                          "yellow")
+        # self.setBackground(QBrush(QColor(color)) if yes else QBrush())
+
+        self.setStyleSheet(f"background-color: {color};" if yes else "")
 
 
 class TargetWidget(QWidget):
@@ -651,8 +671,6 @@ class TargetWidget(QWidget):
 
         super().__init__()
 
-        self.target = target
-
         # ───────────────────── Widgets ──────────────────── #
         self.caption_label = QLabel()
         self.set_pending_goals_counter(goal_count)
@@ -675,8 +693,8 @@ class TargetWidget(QWidget):
         # math_font_name = cvars.get('display.mathematics_font', 'Default')
         # self.target_label.setFont(QFont(math_font_name))
 
-        self.selected_style = ""  # Set in _exercise_main_window_widgets
-        self.unselected_style = ""
+        # self.selected_style = ""  # Set in _exercise_main_window_widgets
+        # self.unselected_style = ""
         # ───────────────────── Layouts ──────────────────── #
 
         central_layout = QVBoxLayout()
@@ -709,15 +727,20 @@ class TargetWidget(QWidget):
         :param yes: See paragraph above.
         """
         if hasattr(self, 'target_label'):
-            if yes:
-                # self.target_label.setStyleSheet(self.selected_style)
-                self.target_label.setBackgroundRole(QPalette.Highlight)
-                self.target_label.setForegroundRole(QPalette.WindowText)
-            else:
-                self.target_label.setBackgroundRole(QPalette.Window)
-                # self.target_label.setStyleSheet(self.unselected_style)
+            self.target_label.select(yes)
+            # if yes:
+            #     # self.target_label.setStyleSheet(self.selected_style)
+            #     self.target_label.setBackgroundRole(QPalette.Highlight)
+            #     self.target_label.setForegroundRole(QPalette.WindowText)
+            # else:
+            #     self.target_label.setBackgroundRole(QPalette.Window)
+            #     # self.target_label.setStyleSheet(self.unselected_style)
         else:
             log.warning("Attempt to use deleted attribute target_label")
+
+    @property
+    def target(self):
+        return self.target_label.math_object
 
     @property
     def math_object(self):
@@ -728,8 +751,8 @@ class TargetWidget(QWidget):
         return self.target
 
     def replace_target(self, target):
-        self.target_label.replace_target(target)
-        self.target = target
+        self.target_label.set_target(target)
+        # self.target = target
 
     def set_pending_goals_counter(self, pgn: int):
         text = _("Target") + " " + str(pgn) if pgn else _("Target")

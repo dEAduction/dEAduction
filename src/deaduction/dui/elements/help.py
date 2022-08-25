@@ -26,16 +26,20 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from PySide2.QtCore import Qt, Slot, QSettings
+
 from PySide2.QtWidgets import QDialog, QRadioButton, QVBoxLayout, QHBoxLayout,\
     QTextEdit, QLabel, QDialogButtonBox, QWidget
 
-from PySide2.QtCore import Qt, Slot, QSettings
+from PySide2.QtGui import QIcon
 
-from typing import Optional
+from typing import Union, Optional
 
+import deaduction.pylib.config.vars as cvars
 from deaduction.dui.primitives import DeaductionFonts
 
 from deaduction.pylib.mathobj import ContextMathObject
+from deaduction.dui.elements import MathObjectWidgetItem
 
 global _
 
@@ -46,14 +50,18 @@ class HelpWindow(QWidget):
     possible user actions.
     """
 
-    def __init__(self, math_object: Optional[ContextMathObject] = None,
-                 target=False):
+    action = None  # Set by exercise_main_window
+
+    def __init__(self):
         super().__init__()
 
         self.setWindowTitle(_("Help"))
+        # Window stay on top of parent:
         self.setWindowFlags(self.windowFlags() | Qt.Dialog)
         self.main_txt, self.detailed_txt, self.hint = None, None, None
-        self.target = target
+        self.target = False
+        self.math_wdg_item: Optional[MathObjectWidgetItem] = None
+        self.math_object: Optional[ContextMathObject] = None
 
         # Display math_object
         self.math_label = QLabel()
@@ -98,25 +106,46 @@ class HelpWindow(QWidget):
         self.lyt.addLayout(self.btns)
 
         self.setLayout(self.lyt)
+        self.empty_content()
 
-        if math_object:
-            self.set_math_object(math_object, target=target)
+        # if math_object:
+        #     self.set_math_object(math_object, target=target)
 
-    def set_geometry(self, geometry):
+    def set_geometry(self, geometry=None):
         settings = QSettings("deaduction")
         if settings.value("help/geometry"):
+            # pass
             self.restoreGeometry(settings.value("help/geometry"))
         elif geometry:
             self.setGeometry(geometry)
 
     def closeEvent(self, event):
         # Save window geometry
+        self.unset_item()
         settings = QSettings("deaduction")
         settings.setValue("help/geometry", self.saveGeometry())
+        self.toggle(yes=False)
+        # if self.action:
+        #     self.action.setChecked(False)
         event.accept()
-        self.hide()
 
-    def set_text(self):
+    @property
+    def icon(self):
+        if self.action:
+            return self.action.icon()
+        else:
+            return None
+
+    def empty_content(self):
+        """
+        Empty all content by displaying a general msg.
+        """
+        self.math_label.setText("<em>" + _("No object selected") + "</em>")
+        self.math_label.setStyleSheet("")
+        self.help_wdg.setHtml("<em>" + _("Double click on context or target "
+                                         "to get some help.") + "</em>")
+
+    def display_text(self):
         text = ""
         if self.description_btn.isChecked():
             if self.main_txt:
@@ -136,22 +165,87 @@ class HelpWindow(QWidget):
 
     def set_msgs(self, msgs: (str, str, str)):
         self.main_txt, self.detailed_txt, self.hint = msgs
-        self.set_text()
+        self.display_text()
 
-    def set_math_object(self, math_object: ContextMathObject, target=False):
+    def display_math_object(self):
+        if self.math_object.math_type.is_prop():  # target and context props
+            math_text = self.math_object.math_type_to_display()
+        else:  # context objects
+            lean_name = self.math_object.to_display()
+            math_expr = self.math_object.math_type_to_display()
+            math_text = f'{lean_name} : {math_expr}'
 
-        msgs = (math_object.help_target_msg() if target else
-                math_object.help_context_msg())
+        self.math_label.setText(math_text)
+        color = cvars.get("display.color_for_highlight_in_proof_tree",
+                          "yellow")
+        self.math_label.setStyleSheet(f"background-color: {color};")
 
-        self.math_label.setText(math_object.math_type_to_display())
-        self.set_msgs(msgs)
+    def unset_item(self):
+        if self.math_wdg_item:
+            try:  # Maybe context has changed and object no longer exists
+                self.math_wdg_item.highlight(yes=False)
+                # self.math_wdg_item.select()
+                # self.math_wdg_item.setIcon(QIcon())
+            except RuntimeError:
+                pass
+            self.math_wdg_item = None
+        self.math_object = None
+        self.empty_content()
+
+    def set_math_object(self,
+                        item: Union[MathObjectWidgetItem, ContextMathObject],
+                        target=False):
+        """
+        Display a help msg on a new ContextMathObject. Unselect previous item
+        if any.
+        """
+
+        self.unset_item()
+        if hasattr(item, 'select') and hasattr(item, 'highlight'):
+            item.select(yes=False)
+            item.highlight()
+            # if self.icon:
+            #     item.setIcon(self.icon)
+            self.math_wdg_item = item
+            self.math_object = item.math_object
+        elif isinstance(item, ContextMathObject):
+            self.math_object = item
+
+        if self.math_object:
+            msgs = (self.math_object.help_target_msg() if target else
+                    self.math_object.help_context_msg())
+
+            self.display_math_object()
+            self.set_msgs(msgs)
+
+    @Slot()
+    def toggle(self, yes=None):
+        """
+        Toggle window, and unset item if hidden.
+        """
+        if yes is None:  # Change state to opposite
+            yes = not self.isVisible()
+        if yes:
+            self.set_geometry()
+            self.setVisible(True)
+        else:
+            self.unset_item()
+            settings = QSettings("deaduction")
+            settings.setValue("help/geometry", self.saveGeometry())
+            self.setVisible(False)
+
+        self.action.setChecked(self.isVisible())
+
+    @Slot()
+    def hide(self):
+        self.toggle(yes=False)
 
     @Slot()
     def toggle_hint(self):
         self.hint_btn.setChecked(True)
-        self.set_text()
+        self.display_text()
 
     @Slot()
     def toggle_description(self):
         self.description_btn.setChecked(True)
-        self.set_text()
+        self.display_text()

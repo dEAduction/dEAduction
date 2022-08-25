@@ -665,19 +665,26 @@ class ExerciseToolBar(QToolBar):
                 QIcon(str((icons_dir / 'lean_editor.png').resolve())),
                 _('Toggle L∃∀N'), self)
 
+        self.toggle_help_action = QAction(
+                QIcon(str((icons_dir / 'help-48.png').resolve())),
+                _('Toggle help window'), self)
+
         self.addAction(self.rewind)
         self.addAction(self.undo_action)
         self.addAction(self.redo_action)
         self.addAction(self.go_to_end)
+        self.addSeparator()
         self.addAction(self.toggle_proof_outline_action)
         self.addAction(self.toggle_proof_tree)
         self.addAction(self.toggle_lean_editor_action)
+        self.addAction(self.toggle_help_action)
         self.undo_action.setShortcut(QKeySequence.Undo)
         self.redo_action.setShortcut(QKeySequence.Redo)
 
         self.toggle_proof_outline_action.setCheckable(True)
         self.toggle_proof_tree.setCheckable(True)
         self.toggle_lean_editor_action.setCheckable(True)
+        self.toggle_help_action.setCheckable(True)
 
     def update(self):
         self.rewind.setText(_('Jump to beginning of proof'))
@@ -686,6 +693,7 @@ class ExerciseToolBar(QToolBar):
         self.go_to_end.setText(_('Jump to end of proof'))
         self.toggle_lean_editor_action.setText(_('Toggle L∃∀N'))
         self.toggle_proof_outline_action.setText(_('Toggle proof outline'))
+        self.toggle_help_action.setText(_('Toggle help window'))
 
 
 class GlobalToolbar(QToolBar):

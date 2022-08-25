@@ -29,6 +29,8 @@ from typing import Any
 import logging
 
 import deaduction.pylib.config.vars as cvars
+
+from deaduction.pylib.text                  import use, prove
 from deaduction.pylib.mathobj.math_object   import MathObject
 
 log = logging.getLogger(__name__)
@@ -166,14 +168,24 @@ class ContextMathObject(MathObject):
         """
 
         implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
-        implicit = False  # Fixme
+        obj = self.math_type
+        if implicit:
+            defs = self.math_type.unfold_implicit_definition()
+            if defs:
+                obj = defs[0]
 
         raw_msgs = None
         params = tuple()
-        children = self.math_type.children
-        if self.is_for_all(implicit=implicit):
+        children = obj.children
+        main_symbol = obj.main_symbol()
+
+        if main_symbol:
+            raw_msgs = prove[main_symbol]
             params = (children[0].to_display(format_="html"))
-            raw_msgs = prove_forall
+
+        # TODO: cas particuliers:
+        #  - implication universelle
+        #  - quantification bornée : ça rentre dans implication universelle ?
 
         if raw_msgs:
             msgs = (_(msg).format(params) if msg else "" for msg in raw_msgs)
@@ -199,108 +211,11 @@ class ContextMathObject(MathObject):
         children = self.math_type.children
         if self.is_for_all(implicit=implicit):
             params = (children[0].to_display(format_="html"))
-            raw_msgs = use_forall
+            raw_msgs = use["forall"]
 
         if raw_msgs:
             msgs = (_(msg).format(params) for msg in raw_msgs)
             return msgs
         else:
             return "", "", ""
-
-
-use_forall = (_("This is a universal property, which tells something about "
-                "every element of {}."),
-              _("To use this property, press the ∀ button after selecting "
-                "an element of {}."),
-              _("To use this property, you need some element of {}. Is there "
-                "any in the context? If not, can you create some?"))
-
-
-prove_forall = (_("This is a universal property, which tells something about "
-                  "every element of {}."),
-                _("To start a proof of this property, press the ∀ button."),
-                "")
-
-use_exists = (_("This is an existential property, which asserts the "
-                "existence of an element of {} satisfying a precise "
-                "property."),
-              _("To use this property, just press the ∃ button."),
-              "")
-
-prove_exists = (_("This is an existential property, which asserts the "
-                  "existence of an element of {} satisfying a precise "
-                  "property."),
-                _("To prove this property, press the ∃ button after selecting"
-                  "the element of {} that satisfies the wanted property."),
-                _("Is there some element of {} in the context? If this is "
-                  "so, does it suits your needs? If not, can you create "
-                  "some?"))
-
-use_or = (_("This property is a disjunction."),
-          _("Press the ∨ (OR) button to engage in a proof by cases; you will "
-            "successively examine the case when {} holds and the case when {}"
-            "holds."),
-          _("Would it help you to know which one of the two properties hold?"
-            "If so, then you could consider engaging in a proof by cases."))
-
-
-prove_or = (use_or[0],
-            _("Press the ∨ (OR) button to simplify the goal by deciding which "
-              "one of the two properties you will prove. You may forget about"
-              "the other one!"),
-            _("Do you have enough information in the context to prove one of "
-              "these two properties? \\If this is so, then choose this "
-              "property with the ∨ (OR) button. \\If not, you should first "
-              "get more information (maybe by engaging in a proof by cases)."))
-
-#  ¬
-use_and = (_("∧"),
-           _(""),
-           _(""))
-
-
-prove_and = (_(""),
-             _(""),
-             _(""))
-
-
-use = (_(""),
-       _(""),
-       _(""))
-
-
-use = (_(""),
-       _(""),
-       _(""))
-
-
-use = (_(""),
-       _(""),
-       _(""))
-
-
-use = (_(""),
-       _(""),
-       _(""))
-
-
-use = (_(""),
-       _(""),
-       _(""))
-
-
-use = (_(""),
-       _(""),
-       _(""))
-
-
-use = (_(""),
-       _(""),
-       _(""))
-
-
-use = (_(""),
-       _(""),
-       _(""))
-
 

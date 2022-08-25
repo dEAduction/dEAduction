@@ -335,8 +335,9 @@ class ProofOutlineWindow(QWidget):
         settings.setValue("proof_outline/geometry", self.saveGeometry())
         self.tree.save_state()
         event.accept()
-        self.action.setChecked(False)
         self.hide()
+        if self.action:
+            self.action.setChecked(False)
 
     #########
     # Slots #

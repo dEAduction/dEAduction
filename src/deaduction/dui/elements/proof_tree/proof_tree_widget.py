@@ -996,7 +996,8 @@ class ProofTreeWindow(QWidget):
         event.accept()
 
         self.hide()
-        self.action.setChecked(False)
+        if self.action:
+            self.action.setChecked(False)
         # TODO: save tree state
 
     def update_display(self):

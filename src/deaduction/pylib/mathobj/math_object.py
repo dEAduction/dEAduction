@@ -1068,6 +1068,44 @@ class MathObject:
         else:
             return False
 
+    def bounded_quantification(self, is_math_type=False):
+        """
+        Test if self is a universal implication of the form
+                    ∀ x, P(x) => Q(x).
+        If this is so, return P(x).
+        """
+
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+
+
+    def main_symbol(self, is_math_type=True) -> Optional[str]:
+        """
+        Return the main symbol of self, e.g. if self is a universal property
+        then return "forall".
+        """
+
+        if self.is_and(is_math_type=is_math_type):
+            return "and"
+        elif self.is_or(is_math_type=is_math_type):
+            return "or"
+        elif self.is_not(is_math_type=is_math_type):
+            return "not"
+        elif self.is_implication(is_math_type=is_math_type):
+            return "implies"
+        elif self.is_iff(is_math_type=is_math_type):
+            return "iff"
+        elif self.is_for_all(is_math_type=is_math_type):
+            return "forall"
+        elif self.is_exists(is_math_type=is_math_type):
+            return "exists"
+        elif self.is_equality(is_math_type=is_math_type):
+            return "equal"
+        else:
+            return None
+
     ########################
     # Implicit definitions #
     ########################

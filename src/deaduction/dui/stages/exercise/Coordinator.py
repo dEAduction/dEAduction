@@ -655,7 +655,7 @@ class Coordinator(QObject):
         # ─────── Update UI ─────── #
         log.info("** Updating UI **")
         self.unfreeze()
-        if self.proof_step.is_error():
+        if self.proof_step.is_error():  # Should not happen?!
             self.emw.update_goal(None)
         else:
             self.emw.update_goal(proof_state.goals[0])
