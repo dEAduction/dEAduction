@@ -31,7 +31,7 @@ from typing import Union
 
 import deaduction.pylib.config.vars as cvars
 
-from deaduction.pylib.mathobj import ProofStep
+# from deaduction.pylib.mathobj import ProofStep
 import deaduction.pylib.actions.logic
 import deaduction.pylib.actions.magic
 import logging
@@ -154,7 +154,7 @@ class UserAction:
         return user_action
 
     @classmethod
-    def from_proof_step(cls, proof_step: ProofStep):
+    def from_proof_step(cls, proof_step):
         return cls(selection=proof_step.selection,
                    button_name=proof_step.button_name,
                    statement_name=proof_step.statement_lean_name,
@@ -316,7 +316,7 @@ class AutoStep(UserAction):
                    string, error_type, error_msg, success_msg)
 
     @classmethod
-    def from_proof_step(cls, proof_step: ProofStep, emw):
+    def from_proof_step(cls, proof_step, emw):
         """
         Convert proof_step to the corresponding AutoStep, e.g. for use as
         with auto_test.

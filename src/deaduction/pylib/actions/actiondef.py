@@ -10,6 +10,7 @@ To add a new action function:
     - create the function in action/logic or magic or proofs
     - add a tooltip in pylib/text/tooltips, and (for a logic button)
     the name in the logic_buttons list, and a default symbol in config.toml
+    - adapt auto_steps module
 
 Author(s)     : - Marguerite Bin <bin.marguerite@gmail.com>
 Maintainer(s) : - Marguerite Bin <bin.marguerite@gmail.com>
@@ -73,7 +74,9 @@ def action():
     """
     Decorator used to reference the function as an available action
     plus creating the Action object containing the metadata
-    and storing it in the dict mod.__actions__ as a value.
+    and storing it in the dict mod.__actions__ as a value, with name as a key.
+    e.g. deaduction.pylib.actions.logic.__actions__
+    contains the actions of the file logic.py.
     """
     # Get caller module object.
     # Allows to have access / create to the dict __actions__ of the

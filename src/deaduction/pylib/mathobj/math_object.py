@@ -56,15 +56,13 @@ if __name__ == "__main__":
 
 import deaduction.pylib.config.vars            as cvars
 from deaduction.pylib.math_display import (HAVE_BOUND_VARS, INEQUALITIES,
-                                           latex_from_node, latex_to_utf8,
-                                           latex_to_lean,
-                                           recursive_display,
+                                           latex_from_node, recursive_display,
                                            raw_latex_shape_from_couple_of_nodes,
                                            raw_latex_shape_from_specific_nodes,
                                            shallow_latex_to_text,
                                            abstract_string_to_string)
 
-from deaduction.pylib.mathobj.give_name import name_single_bound_var
+from deaduction.pylib.give_name.give_name import name_single_bound_var
 
 # from deaduction.pylib.math_display.utils import *
 
@@ -160,6 +158,7 @@ class MathObject:
     # Lists from definitions for implicit use
     #   This is set up at course loading, via the PatternMathObject
     #   set_definitions_for_implicit_use() method.
+    definitions = []
     implicit_definitions          = []
     definition_patterns           = []
     # The following class attributes are modified each time an implicit
@@ -1169,6 +1168,8 @@ class MathObject:
         they are (shallow) copies of the original vars. Their math_type
         should not be touched, however.
         """
+
+        # Not used (?)
         math_type = self
         vars = []
         if self.is_for_all(is_math_type=True, implicit=False):

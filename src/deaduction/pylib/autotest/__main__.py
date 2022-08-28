@@ -80,8 +80,10 @@ from deaduction.dui.__main__ import WindowManager
 from deaduction.dui.stages.test import QTestWindow
 
 from deaduction.pylib.coursedata import Course, Exercise
-from deaduction.pylib.autotest import ( select_course,
-                                        select_exercise)
+# from deaduction.pylib.autotest import ( select_course,
+#                                         select_exercise)
+
+from .choose_coex_for_test import select_course, select_exercise
 
 # (non-exhaustive) list of logger domains:
 # ['lean', 'ServerInterface', 'Course', 'deaduction.dui',

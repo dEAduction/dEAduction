@@ -59,8 +59,6 @@ from deaduction.pylib.coursedata import        (Exercise,
                                                 AutoStep)
 
 from deaduction.pylib.mathobj import           (MathObject,
-                                                PatternMathObject,
-                                                ContextMathObject,
                                                 DragNDrop,
                                                 ProofStep)
 from deaduction.pylib.proof_state import       (Goal,
@@ -74,6 +72,10 @@ from deaduction.pylib.actions           import (generic,
                                                 MissingParametersError,
                                                 WrongUserInput,
                                                 drag_n_drop)
+# Import AFTER coursedata and mathobj, beware circular imports!
+from deaduction.pylib.pattern_math_obj import  (PatternMathObject,
+                                                DefinitionMathObject)
+
 
 from deaduction.pylib.memory            import Journal
 
@@ -188,6 +190,7 @@ class Coordinator(QObject):
         # Initialize the following lists to erase lists from previous exercise
         MathObject.implicit_definitions = []
         MathObject.definition_patterns = []
+        self.set_math_object_definitions()
         self.set_definitions_for_implicit_use()
 
     def set_initial_proof_states(self):
@@ -219,6 +222,10 @@ class Coordinator(QObject):
                       if not st.initial_proof_state]
         if not statements:
             self.servint.initial_proof_state_set.disconnect()
+
+    def set_math_object_definitions(self):
+        definitions = self.exercise.definitions
+        DefinitionMathObject.set_definitions(definitions)
 
     @Slot()
     def set_definitions_for_implicit_use(self):

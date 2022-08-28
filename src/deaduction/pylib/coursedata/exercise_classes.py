@@ -79,7 +79,7 @@ class Statement:
     # the parent course
 
     initial_proof_state:    Any             = None
-    # this is used when pre-processing
+    # this is filled when pre-processing
 
     auto_steps: str                         = ''
     auto_test: str                          = ''
@@ -349,9 +349,14 @@ class Exercise(Theorem):
         return exercises.index(self)
 
     @property
-    def definitions_for_implicit_use(self):
+    def definitions(self):
         definitions = [st for st in self.available_statements
-                       if isinstance(st, Definition) and st.implicit_use]
+                       if isinstance(st, Definition)]
+        return definitions
+
+    @property
+    def definitions_for_implicit_use(self):
+        definitions = [defi for defi in self.definitions if defi.implicit_use]
         return definitions
 
     @classmethod

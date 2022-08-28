@@ -53,7 +53,8 @@ from PySide2.QtWidgets import ( QAction,
                                 QWidget,
                                 QSplitter,
                                 QSizePolicy,
-                                QAbstractItemView)
+                                QAbstractItemView,
+                                QPushButton)
 
 from deaduction.dui.utils               import   replace_widget_layout
 from deaduction.dui.elements            import ( ActionButton,
@@ -518,9 +519,15 @@ class ExerciseStatusBar(QStatusBar):
         # Message
         self.messageWidget = QLabel("", self)
 
+        # Help button
+        self.help_button = QPushButton(_("Help"))
+
         # Insert icon and message
         self.insertWidget(0, self.iconWidget)
         self.insertWidget(1, self.messageWidget)
+
+        self.addWidget(self.help_button)
+        self.help_button.hide()
         self.show_success_icon()  # Trick: the status bar adapts its height
         self.hide_icon()
 

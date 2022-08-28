@@ -27,7 +27,7 @@ This file is part of d∃∀duction.
 """
 
 import                logging
-from typing import    Union
+from typing import    Union, Optional, Any
 
 from PySide2.QtCore    import (Signal,
                                Slot,
@@ -254,7 +254,7 @@ class ExerciseMainWindow(QMainWindow):
         self.exercise_toolbar.toggle_proof_tree.triggered.connect(
                 self.proof_tree_window.toggle)
         self.exercise_toolbar.toggle_help_action.triggered.connect(
-            self.help_window.toggle)
+            self.show_help_on_item)
         self.global_toolbar.change_exercise_action.triggered.connect(
                                                     self.change_exercise)
         self.global_toolbar.settings_action.triggered.connect(
@@ -701,6 +701,29 @@ class ExerciseMainWindow(QMainWindow):
 
         self.target_selected = not self.target_selected if on is None else on
 
+    @Slot()
+    def show_help_on_item(self, item=None, target=False):
+        """
+        Show help on item if any, or on selected context object or target if
+        there is a single selected object
+        """
+
+        toggle = False
+        if not item:  # From icon, not from double-clic
+            toggle = True
+            if len(self.current_selection) == 1 and not self.target_selected:
+                item = self.current_selection[0]
+            elif len(self.current_selection) == 0 and self.target_selected:
+                item = self.ecw.target_wgt.target
+
+        if item:
+            self.help_window.set_math_object(item, target=target)
+
+        if toggle:
+            self.help_window.toggle()
+        else:
+            self.help_window.toggle(True)
+
     @Slot(MathObjectWidgetItem)
     def process_context_double_click(self, index):
         """
@@ -720,8 +743,9 @@ class ExerciseMainWindow(QMainWindow):
             math_item = obj_wgt.item_from_index(index)
 
         if math_item:
-            self.help_window.set_math_object(math_item)
-            self.help_window.toggle(True)
+            self.show_help_on_item(item=math_item)
+            # self.help_window.set_math_object(math_item)
+            # self.help_window.toggle(True)
 
     @Slot()
     def process_target_double_click(self, event=None):
@@ -732,9 +756,10 @@ class ExerciseMainWindow(QMainWindow):
         self.process_target_click(on=False)
 
         # target = self.ecw.target_wgt.target
-        item = self.ecw.target_wgt.target_label
-        self.help_window.set_math_object(item, target=True)
-        self.help_window.toggle(True)
+        math_item = self.ecw.target_wgt.target_label
+        self.show_help_on_item(item=math_item, target=True)
+        # self.help_window.set_math_object(item, target=True)
+        # self.help_window.toggle(True)
 
     def simulate_selection(self,
                            selection:

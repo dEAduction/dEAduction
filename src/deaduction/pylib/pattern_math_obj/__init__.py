@@ -1,9 +1,9 @@
 """
-# __init__.py #
+# __init__.py  #
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
-Created       : 07 2020 (creation)
+Created       : 08 2022 (creation)
 Repo          : https://github.com/dEAduction/dEAduction
 
 Copyright (c) 2020 the dEAduction team
@@ -24,13 +24,5 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .drag_n_drop import          DragNDrop
-
-from deaduction.pylib.mathobj.math_object import MathObject
-from .context_math_object import                 ContextMathObject
-from .proof_step import          (ProofStep,
-                                  NewGoal)
-
-from .lean_analysis import       (lean_expr_with_type_grammar,
-                                  LeanEntryVisitor)
-
+from .pattern_math_objects import PatternMathObject
+from .definition_math_object import DefinitionMathObject

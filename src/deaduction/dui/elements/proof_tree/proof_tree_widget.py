@@ -954,7 +954,7 @@ class ProofTreeWindow(QWidget):
         """
         super().__init__()
         log.info("Creating new ProofTreeWindow")
-        self.setWindowTitle("Proof Tree")
+        self.setWindowTitle(_("Global proof view"))
         self.current_wgb = None
         settings = QSettings("deaduction")
         if settings.value("proof_tree/geometry"):

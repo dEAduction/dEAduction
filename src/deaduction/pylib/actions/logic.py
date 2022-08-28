@@ -58,8 +58,9 @@ from deaduction.pylib.actions     import (action,
                                           CodeForLean,
                                           )
 
-from deaduction.pylib.mathobj     import (MathObject,
-                                          give_global_name,
+from deaduction.pylib.mathobj     import  MathObject
+
+from deaduction.pylib.give_name import   (give_global_name,
                                           names_for_types,
                                           get_new_hyp)
 
@@ -1484,7 +1485,9 @@ def apply_function(proof_step, map_, arguments: [MathObject]):
                                                         map_,
                                                         x))
         arguments = arguments[1:]
-    msg = _("The map {} cannot be applied to these objects").format(f)
+    msg = (_("The map {} cannot be applied to this object").format(f)
+           if len(arguments) == 1 else
+           _("The map {} cannot be applied to these objects").format(f))
     codes.add_error_msg(msg)
     return codes
 

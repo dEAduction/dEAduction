@@ -157,6 +157,16 @@ class ContextMathObject(MathObject):
 
         return action
 
+    def check_unroll_definitions(self):
+        """
+        Check if some definition may be applied on self, and if so, return
+        the definition.
+        """
+        definitions = MathObject.definitions
+        for defi in definitions:
+            if defi.match(self.math_type):
+                return defi
+
     def help_target_msg(self, format_="html") -> (str, str):
         """
         Return three help msgs about self:
@@ -182,6 +192,13 @@ class ContextMathObject(MathObject):
         if main_symbol:
             raw_msgs = prove[main_symbol]
             params = (children[0].to_display(format_="html"))
+        else:
+            defi = self.check_unroll_definitions()
+            if defi:
+                raw_msgs = (_('This match the definition "{}"'),
+                            _("You may unroll the definition by clicking on "
+                              "it in the Statement area."),)
+                params = defi.pretty_name
 
         # TODO: cas particuliers:
         #  - implication universelle
@@ -204,17 +221,30 @@ class ContextMathObject(MathObject):
         """
 
         implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
-        implicit = False  # Fixme
+        obj = self.math_type
+        if implicit:
+            defs = self.math_type.unfold_implicit_definition()
+            if defs:
+                obj = defs[0]
 
         raw_msgs = None
-        params = tuple()
-        children = self.math_type.children
-        if self.is_for_all(implicit=implicit):
+        params = None
+        children = obj.children
+        main_symbol = obj.main_symbol()
+
+        if main_symbol:
+            raw_msgs = use[main_symbol]
             params = (children[0].to_display(format_="html"))
-            raw_msgs = use["forall"]
+        else:
+            defi = self.check_unroll_definitions()
+            if defi:
+                raw_msgs = (_('This match the definition "{}"'),
+                            _("You may unroll the definition by clicking on "
+                              "it in the Statement area."),)
+                params = defi.pretty_name
 
         if raw_msgs:
-            msgs = (_(msg).format(params) for msg in raw_msgs)
+            msgs = (_(msg).format(params) if msg else msg for msg in raw_msgs)
             return msgs
         else:
             return "", "", ""

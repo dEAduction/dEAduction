@@ -108,6 +108,7 @@ class HelpWindow(QWidget):
         self.setLayout(self.lyt)
         self.empty_content()
 
+        self.set_geometry()
         # if math_object:
         #     self.set_math_object(math_object, target=target)
 

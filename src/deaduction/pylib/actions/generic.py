@@ -28,16 +28,14 @@ This file is part of dEAduction.
 """
 
 from deaduction.pylib.actions import CodeForLean
-from deaduction.pylib.mathobj import (MathObject,
-                                      get_new_hyp)
+from deaduction.pylib.give_name.give_name import get_new_hyp
 
 from deaduction.pylib.proof_state import Goal
 
 global _
 
 
-def rw_using_statement(goal: Goal, selected_objects: [MathObject],
-                       statement) -> CodeForLean:
+def rw_using_statement(goal: Goal, selected_objects, statement) -> CodeForLean:
     """
     Return codes trying to use statement for rewriting. This should be
     reserved to iff or equalities. This function is called by

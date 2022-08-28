@@ -52,7 +52,11 @@ prove["forall"] = (_("This is a universal property, which tells something "
                      "about every element of {}."),
                    _("To start a proof of this property, press the ∀ "
                      "button."),
-                   "")
+                   _("Pressing the ∀ button will introduce an element of {} "
+                     "in the context. It is generally a "
+                     " good idea to simplify the target as "
+                     "much as possible by introducing all variables and "
+                     "hypotheses in the context."))
 
 use_exists = (_("This is an existential property, which asserts the "
                 "existence of an element of {} satisfying a precise "
@@ -89,7 +93,7 @@ prove_or = (use_or[0],
 #  ¬
 use_and = (_("This property is a conjunction."),
            _("Press the ∧ (AND) button to separate both properties."),
-           _(""))
+           "")
 
 
 prove_and = (use_and[0],
@@ -100,43 +104,46 @@ prove_and = (use_and[0],
                "choose which property you prove."))
 
 
-use = (_(""),
-       _(""),
-       _(""))
+use_function = (_("This is a function from {} to {}."),
+                _("You may apply this function to some element of {}, "
+                  "or to an equality between two elements of {}. For this, "
+                  "press the ↦ (MAP) button after selecting an element or an "
+                  "equality."),
+                "")
 
-
-use = (_(""),
-       _(""),
-       _(""))
-
-
-use = (_(""),
-       _(""),
-       _(""))
-
-
-use = (_(""),
-       _(""),
-       _(""))
-
-
-use = (_(""),
-       _(""),
-       _(""))
-
-
-use = (_(""),
-       _(""),
-       _(""))
-
-
-use = (_(""),
-       _(""),
-       _(""))
-
-
-use = (_(""),
-       _(""),
-       _(""))
+#
+# use = (_(""),
+#        _(""),
+#        _(""))
+#
+#
+# use = (_(""),
+#        _(""),
+#        _(""))
+#
+#
+# use = (_(""),
+#        _(""),
+#        _(""))
+#
+#
+# use = (_(""),
+#        _(""),
+#        _(""))
+#
+#
+# use = (_(""),
+#        _(""),
+#        _(""))
+#
+#
+# use = (_(""),
+#        _(""),
+#        _(""))
+#
+#
+# use = (_(""),
+#        _(""),
+#        _(""))
 
 

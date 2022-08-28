@@ -32,8 +32,7 @@ This file is part of dEAduction.
 
 from dataclasses import dataclass
 import logging
-from typing import List, Tuple, Any, Optional
-from copy import copy
+from typing import List, Tuple
 
 import deaduction.pylib.logger as logger
 import deaduction.pylib.config.vars as cvars
@@ -43,7 +42,7 @@ from deaduction.pylib.mathobj.context_math_object import ContextMathObject
 from deaduction.pylib.mathobj.lean_analysis import (lean_expr_with_type_grammar,
                                                     LeanEntryVisitor)
 # from deaduction.pylib.math_display import plurals, numbers
-from deaduction.pylib.mathobj.give_name import name_bound_vars, inj_list
+from deaduction.pylib.give_name.give_name import name_bound_vars, inj_list
 log = logging.getLogger(__name__)
 
 global _

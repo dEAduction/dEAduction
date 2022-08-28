@@ -30,6 +30,8 @@ import logging
 if __name__ == "__main__":
     import deaduction.pylib.config.i18n
 
+from typing import Optional, Union
+
 from deaduction.pylib.math_display        import HAVE_BOUND_VARS
 from deaduction.pylib.mathobj.math_object import MathObject
 
@@ -69,37 +71,37 @@ class PatternMathObject(MathObject):
     loc_csts_for_metavars   = []  # and corresponding local constants
     __tmp_metavars_csts         = None
     __tmp_loc_csts_for_metavars = None
-    metavars        = None
-    metavar_objects = None  # Objects matching metavars (see self.match)
+    __metavars        = None  # Temporary list of mvars
+    __metavar_objects = None  # Objects matching metavars (see self.match)
 
     def __init__(self, node, info, children, bound_vars, math_type):
+        """
+        Init self as a MathObject, plus metavars list.
+        """
+        self.metavars = []
         super().__init__(node=node,
                          info=info,
                          children=children,
                          bound_vars=bound_vars,
                          math_type=math_type)
 
-    @property
-    def nb(self):
-        if self.node == 'METAVAR':
-            return self.info['nb']
-        else:
-            return None
-
     @classmethod
     def new_metavar(cls, math_type):
-        cls.metavar_nb += 1
-        return cls(node='METAVAR',
-                   info={'nb': cls.metavar_nb},
-                   children=[],
-                   bound_vars=[],
-                   math_type=math_type)
+        return MetaVar(math_type)
+        # cls.metavar_nb += 1
+        # return cls(node='METAVAR',
+        #            info={'nb': cls.metavar_nb},
+        #            children=[],
+        #            bound_vars=[],
+        #            math_type=math_type)
 
     @classmethod
     def from_math_object(cls, math_object: MathObject):
         cls.__tmp_loc_csts_for_metavars = []
         cls.__tmp_metavars_csts         = []
-        return cls.__from_math_object(math_object)
+        pattern = cls.__from_math_object(math_object)
+        pattern.metavars = cls.__tmp_metavars_csts
+        return pattern
 
     @classmethod
     def __from_math_object(cls, math_object: MathObject):
@@ -184,13 +186,13 @@ class PatternMathObject(MathObject):
         (note that math_types of metavars should also match).
         """
 
-        PatternMathObject.metavars = []
-        PatternMathObject.metavar_objects = []
+        PatternMathObject.__metavars = []
+        PatternMathObject.__metavar_objects = []
         match = self.recursive_match(math_object)
         # log.debug(f"Matching...")
-        list_ = [(PatternMathObject.metavars[idx].to_display(),
-                  PatternMathObject.metavar_objects[idx].to_display())
-                 for idx in range(len(PatternMathObject.metavars))]
+        list_ = [(PatternMathObject.__metavars[idx].to_display(),
+                  PatternMathObject.__metavar_objects[idx].to_display())
+                 for idx in range(len(PatternMathObject.__metavars))]
         # log.debug(f"    Metavars, objects: {list_}")
         return match
 
@@ -202,8 +204,8 @@ class PatternMathObject(MathObject):
         index in the metavar_objects list.
         """
 
-        metavars = PatternMathObject.metavars
-        metavar_objects = PatternMathObject.metavar_objects
+        metavars = PatternMathObject.__metavars
+        metavar_objects = PatternMathObject.__metavar_objects
         match = True    # Self and math_object are presumed to match
         marked = False  # Will be True if bound variables should be unmarked
 
@@ -304,11 +306,11 @@ class PatternMathObject(MathObject):
         return match
 
     def math_object_from_metavar(self):
-        if self not in PatternMathObject.metavars:
+        if self not in PatternMathObject.__metavars:
             return MathObject.NO_MATH_TYPE
         else:
-            index = PatternMathObject.metavars.index(self)
-            math_object = PatternMathObject.metavar_objects[index]
+            index = PatternMathObject.__metavars.index(self)
+            math_object = PatternMathObject.__metavar_objects[index]
             return math_object
 
     def apply_matching(self):
@@ -361,6 +363,40 @@ PatternMathObject.NO_MATH_TYPE = PatternMathObject(node="not provided",
                                                    children=[],
                                                    bound_vars=[],
                                                    math_type=None)
+
+
+class MetaVar(PatternMathObject):
+    """
+    A class to store metavars that occur in PatternMathObject. The main use
+    is that MVAR can be affected to a MathObject. This modifies their display.
+    """
+    # TODO
+    matched_math_object: Optional[MathObject] = None
+
+    metavar_nb: int = 0  # Class attribute (counter)
+
+    def __init__(self, math_type):
+        """
+        To init a metavar we just need its math_type.
+        """
+        MetaVar.metavar_nb += 1
+        super().__init__(node='METAVAR',
+                         info={'nb': MetaVar.metavar_nb},
+                         children=[],
+                         bound_vars=[],
+                         math_type=math_type)
+
+    @property
+    def nb(self):
+        return self.info['nb']
+
+    # def to_display(self, format_="html", text_depth=0,
+    #                use_color=True, bf=False) -> str:
+    #     # TODO
+    #     return super().to_display(self, format_, text_depth, use_color, bf)
+
+    def clear_matching(self):
+        self.matched_math_object = None
 
 
 #########
