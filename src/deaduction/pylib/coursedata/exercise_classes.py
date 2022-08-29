@@ -286,8 +286,10 @@ class Statement:
 
 class Definition(Statement):
     # def __init__(self, **data):
+    #     implicit_use = data.pop('implicit_use') if 'implicit_use' in data \
+    #                    else False
     #     super().__init__(self, **data)
-    #     self.implicit_use_activated = False
+    #     self.implicit_use_activated = implicit_use
 
     @property
     def implicit_use(self):

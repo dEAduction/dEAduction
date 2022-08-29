@@ -25,7 +25,7 @@ This file is part of d∃∀duction.
 """
 
 
-from typing import Any
+from typing import Any, Tuple, Dict
 import logging
 
 import deaduction.pylib.config.vars as cvars
@@ -157,17 +157,83 @@ class ContextMathObject(MathObject):
 
         return action
 
-    def check_unroll_definitions(self):
+    def check_unroll_definitions(self) -> []:
         """
-        Check if some definition may be applied on self, and if so, return
-        the definition.
+        Return the definitions that match self.
         """
         definitions = MathObject.definitions
-        for defi in definitions:
-            if defi.match(self.math_type):
-                return defi
+        math_type = self.math_type
+        matching_defs = [defi for defi in definitions if defi.match(math_type)]
+        return matching_defs
 
-    def help_target_msg(self, format_="html") -> (str, str):
+    def help_definition(self, target=False) -> (str, str, str):
+
+        msgs_dic = prove if target else use
+        msgs = ("", "", "")
+        defs = self.check_unroll_definitions()
+        if len(defs) == 1:
+            msgs = (msg.format(def_name=f'"{defs[0].pretty_name}"')
+                    for msg in msgs_dic["definition"])
+        elif len(defs) > 1:
+            def_names = '", "'.join(defi.pretty_name for defi in defs)
+            def_names = '"' + def_names + '"'
+            msgs = (msg.format(def_names=def_names)
+                    for msg in msgs_dic["definitions"])
+        return msgs
+
+    def format_msgs(self, raw_msgs: Tuple[str], format_="html"):
+        """
+        Format msgs with parameters from self's children, and translate them.
+        For now, works only with html format.
+        """
+        params: Dict[str, ContextMathObject] = dict()
+        # display_params: Dict[str, str] = dict()
+        children = self.math_type.children
+        if children:
+            ch0 = children[0]
+            params['type_'] = ch0.to_display(format_=format_)
+            params['ch0'] = ch0.to_display(format_=format_)
+            params['ch0_type'] = ch0.math_type.to_display(format_=format_)
+            if len(children) > 1:
+                params['ch1'] = children[1].to_display(format_=format_)
+
+        # for key in params:
+        #     display_params[key] = params[key].to_display(format_="html")
+        msgs = (_(msg).format(**params) if msg else "" for msg in
+                raw_msgs)
+
+        # Hack
+        # msgs = list([str(msg) for msg in msgs])
+        return msgs
+
+    def help_msgs(self, target=False):
+        """
+        Return help msgs for self as a target if target=True, and as a
+        context object otherwise.
+        """
+        msgs_dic = prove if target else use
+        implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
+        obj = self.math_type
+        if implicit:
+            defs = self.math_type.unfold_implicit_definition()
+            if defs:
+                obj = defs[0]
+
+        raw_msgs = None
+        main_symbol = obj.main_symbol()
+
+        if main_symbol:
+            raw_msgs = msgs_dic.get(main_symbol)
+
+        if raw_msgs:
+            msgs = self.format_msgs(raw_msgs)
+
+        else:
+            msgs = self.help_definition(target=target)
+
+        return msgs
+
+    def help_target_msg(self, format_="html") -> (str, str, str):
         """
         Return three help msgs about self:
         - a general msg that describes self,
@@ -177,38 +243,41 @@ class ContextMathObject(MathObject):
         definition if they are allowed by the current settings.
         """
 
-        implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
-        obj = self.math_type
-        if implicit:
-            defs = self.math_type.unfold_implicit_definition()
-            if defs:
-                obj = defs[0]
-
-        raw_msgs = None
-        params = tuple()
-        children = obj.children
-        main_symbol = obj.main_symbol()
-
-        if main_symbol:
-            raw_msgs = prove[main_symbol]
-            params = (children[0].to_display(format_="html"))
-        else:
-            defi = self.check_unroll_definitions()
-            if defi:
-                raw_msgs = (_('This match the definition "{}"'),
-                            _("You may unroll the definition by clicking on "
-                              "it in the Statement area."),)
-                params = defi.pretty_name
-
-        # TODO: cas particuliers:
-        #  - implication universelle
-        #  - quantification bornée : ça rentre dans implication universelle ?
-
-        if raw_msgs:
-            msgs = (_(msg).format(params) if msg else "" for msg in raw_msgs)
-            return msgs
-        else:
-            return "", "", ""
+        return self.help_msgs(target=True)
+        # implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
+        # obj = self.math_type
+        # if implicit:
+        #     defs = self.math_type.unfold_implicit_definition()
+        #     if defs:
+        #         obj = defs[0]
+        #
+        # raw_msgs = None
+        # # msgs = ("", "", "")
+        # main_symbol = obj.main_symbol()
+        #
+        # if main_symbol:
+        #     raw_msgs = prove.get(main_symbol)
+        #
+        # if raw_msgs:
+        #     msgs = self.format_msgs(raw_msgs)
+        #
+        # else:
+        #     msgs = self.help_definition(target=True)
+        #     # defs = self.check_unroll_definitions()
+        #     # if len(defs) == 1:
+        #     #     msgs = (msg.format(def_name=f'"{defs[0].pretty_name}"')
+        #     #             for msg in prove["definition"])
+        #     # elif len(defs) > 1:
+        #     #     def_names = '", "'.join(defi.pretty_name for defi in defs)
+        #     #     def_names = '"' + def_names + '"'
+        #     #     msgs = (msg.format(def_names=def_names)
+        #     #             for msg in prove["definitions"])
+        #
+        # # TODO: cas particuliers:
+        # #  - implication universelle
+        # #  - quantification bornée : ça rentre dans implication universelle ?
+        #
+        # return msgs
 
     def help_context_msg(self, format_="html") -> (str, str, str):
         """
@@ -220,32 +289,34 @@ class ContextMathObject(MathObject):
         definition if they are allowed by the current settings.
         """
 
-        implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
-        obj = self.math_type
-        if implicit:
-            defs = self.math_type.unfold_implicit_definition()
-            if defs:
-                obj = defs[0]
-
-        raw_msgs = None
-        params = None
-        children = obj.children
-        main_symbol = obj.main_symbol()
-
-        if main_symbol:
-            raw_msgs = use[main_symbol]
-            params = (children[0].to_display(format_="html"))
-        else:
-            defi = self.check_unroll_definitions()
-            if defi:
-                raw_msgs = (_('This match the definition "{}"'),
-                            _("You may unroll the definition by clicking on "
-                              "it in the Statement area."),)
-                params = defi.pretty_name
-
-        if raw_msgs:
-            msgs = (_(msg).format(params) if msg else msg for msg in raw_msgs)
-            return msgs
-        else:
-            return "", "", ""
+        return self.help_msgs(target=False)
+        # implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
+        # obj = self.math_type
+        # if implicit:
+        #     defs = self.math_type.unfold_implicit_definition()
+        #     if defs:
+        #         obj = defs[0]
+        #
+        # raw_msgs = None
+        # main_symbol = obj.main_symbol()
+        #
+        # if main_symbol:
+        #     raw_msgs = prove.get(main_symbol)
+        #
+        # if raw_msgs:
+        #     msgs = self.format_msgs(raw_msgs, format_=format_)
+        #
+        # else:
+        #     msgs = self.help_definition(target=False)
+        #
+        #     # defs = self.check_unroll_definitions()
+        #     # if len(defs) == 1:
+        #     #     msgs = (msg.format(def_name=defs[0].pretty_name)
+        #     #                 for msg in use["definition"])
+        #     # elif len(defs) > 1:
+        #     #     def_names = ', '.join(defi.pretty_name for defi in defs)
+        #     #     msgs = (msg.format(def_names=def_names)
+        #     #                 for msg in use["definitions"])
+        #
+        # return msgs
 

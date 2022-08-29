@@ -1079,7 +1079,6 @@ class MathObject:
         else:
             math_type = self.math_type
 
-
     def main_symbol(self, is_math_type=True) -> Optional[str]:
         """
         Return the main symbol of self, e.g. if self is a universal property
@@ -1102,6 +1101,8 @@ class MathObject:
             return "exists"
         elif self.is_equality(is_math_type=is_math_type):
             return "equal"
+        elif self.is_function(is_math_type=is_math_type):
+            return "function"
         else:
             return None
 

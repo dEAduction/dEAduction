@@ -60,8 +60,10 @@ class DefinitionMathObject(MathObject, Definition):
         Init self from a definition.
         """
         self.definition = definition
-        definition_args = definition.__dict__
-        Definition.__init__(self, **definition_args)
+        self.__dict__.update(self.definition.__dict__)
+
+        # definition_args = definition.__dict__
+        # Definition.__init__(self, **definition_args)
         self.check_proof_state()
 
     @property

@@ -145,20 +145,36 @@ class HelpWindow(QWidget):
         self.math_label.setStyleSheet("")
         self.help_wdg.setHtml("<em>" + _("Double click on context or target "
                                          "to get some help.") + "</em>")
+        self.radio_btns.setEnabled(False)
 
     def display_text(self):
+        """
+        Display text recorded in self.main_txt, self.detailed_txt, self.hint.
+        Enable buttons accordingly.
+        """
+
+        # Always display description first.
+        if self.hint:
+            self.hint_btn.setEnabled(True)
+        else:
+            self.hint_btn.setEnabled(False)
+        if self.main_txt or self.detailed_txt:
+            self.description_btn.setEnabled(True)
+        else:
+            self.description_btn.setEnabled(False)
+
         text = ""
         if self.description_btn.isChecked():
             if self.main_txt:
-                text = self.main_txt + """
-
-                                        """ + self.detailed_txt
+                text = "<p>" + self.main_txt + "</p>" + \
+                       "<p>" + self.detailed_txt + "</p>"
             else:
                 text = "<em> " + _("No help available.") + "</em>"
 
         elif self.hint_btn.isChecked():
             if self.hint:
-                text = "<em> <b>" + _("Hint: ") + "</b>" + self.hint + "</em>"
+                text = "<em> <b>" + _("Hint:") + "</b>" + "<p>" + self.hint \
+                       + "</p> </em>"
             else:
                 text = "<em> " + _("No hint available.") + "</em>"
 
@@ -200,6 +216,9 @@ class HelpWindow(QWidget):
         Display a help msg on a new ContextMathObject. Unselect previous item
         if any.
         """
+
+        # Open on description, not hint.
+        self.description_btn.setChecked(True)
 
         self.unset_item()
         if hasattr(item, 'select') and hasattr(item, 'highlight'):
