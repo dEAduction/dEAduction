@@ -287,6 +287,7 @@ class CodeForLean:
     def operator(self, operator):
         """
         Set the operator attribute of the first SingleCode in self.
+        @param operator: MathObject.
         """
         if self.is_or_else():
             for instruction in self.instructions:

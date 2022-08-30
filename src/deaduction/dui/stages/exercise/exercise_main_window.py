@@ -381,7 +381,7 @@ class ExerciseMainWindow(QMainWindow):
         log.debug(modified_settings)
         if modified_settings:
             # self.current_selection = []
-            self.empty_current_selection()
+            # self.empty_current_selection()
             # TODO: only for relevant changes in preferences
             # TODO: try more subtle updating...
             ##############################
@@ -395,15 +395,15 @@ class ExerciseMainWindow(QMainWindow):
             self.exercise_toolbar.update()
             self.__init_menubar()
 
-            self.ecw.target_wgt.target_label.mousePressEvent = \
-                self.process_target_click
+            # self.ecw.target_wgt.target_label.mousePressEvent = \
+            #     self.process_target_click
             # if hasattr(self.ecw, "action_apply_button"):
             #     self.ecw.objects_wgt.apply_math_object_triggered.connect(
             #         self.apply_math_object_triggered)
             #     self.ecw.props_wgt.apply_math_object_triggered.connect(
             #         self.apply_math_object_triggered)
 
-        self.ecw.target_wgt.mark_user_selected(self.target_selected)
+        # self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
     ######################
     ######################

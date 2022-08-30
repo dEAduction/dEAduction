@@ -25,12 +25,13 @@ This file is part of d∃∀duction.
 """
 
 
-from typing import Any, Tuple, Dict
+from typing import Any, Tuple, Dict, Optional
 import logging
 
 import deaduction.pylib.config.vars as cvars
 
-from deaduction.pylib.text                  import use, prove
+# from deaduction.pylib.text                  import use, prove
+import deaduction.pylib.text.help_msgs as help_msgs
 from deaduction.pylib.mathobj.math_object   import MathObject
 
 log = logging.getLogger(__name__)
@@ -168,7 +169,7 @@ class ContextMathObject(MathObject):
 
     def help_definition(self, target=False) -> (str, str, str):
 
-        msgs_dic = prove if target else use
+        msgs_dic = help_msgs.prove if target else help_msgs.use
         msgs = ("", "", "")
         defs = self.check_unroll_definitions()
         if len(defs) == 1:
@@ -181,14 +182,20 @@ class ContextMathObject(MathObject):
                     for msg in msgs_dic["definitions"])
         return msgs
 
-    def format_msgs(self, raw_msgs: Tuple[str], format_="html"):
+    def format_msgs(self, raw_msgs: Tuple[str],
+                    obj: Optional[MathObject]=None, format_="html"):
         """
         Format msgs with parameters from self's children, and translate them.
         For now, works only with html format.
+        obj is the implicit self, if an implicit definition should be applied.
         """
+
         params: Dict[str, ContextMathObject] = dict()
-        # display_params: Dict[str, str] = dict()
-        children = self.math_type.children
+
+        if not obj:
+            obj = self.math_type
+        children = obj.children
+
         if children:
             ch0 = children[0]
             params['type_'] = ch0.to_display(format_=format_)
@@ -197,13 +204,16 @@ class ContextMathObject(MathObject):
             if len(children) > 1:
                 params['ch1'] = children[1].to_display(format_=format_)
 
-        # for key in params:
-        #     display_params[key] = params[key].to_display(format_="html")
-        msgs = (_(msg).format(**params) if msg else "" for msg in
+        # Bounded quantification
+        prop = obj.bounded_quantification(is_math_type = True)
+        if prop and prop.node == "PROP_BELONGS":
+            params['type_'] = prop.children[1]
+
+        format_dict = {**params, **help_msgs.phrase, **help_msgs.prop_types}
+
+        msgs = (_(msg).format(**format_dict) if msg else "" for msg in
                 raw_msgs)
 
-        # Hack
-        # msgs = list([str(msg) for msg in msgs])
         return msgs
 
     def help_msgs(self, target=False):
@@ -211,7 +221,7 @@ class ContextMathObject(MathObject):
         Return help msgs for self as a target if target=True, and as a
         context object otherwise.
         """
-        msgs_dic = prove if target else use
+        msgs_dic = help_msgs.prove if target else help_msgs.use
         implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
         obj = self.math_type
         if implicit:
@@ -226,9 +236,13 @@ class ContextMathObject(MathObject):
             raw_msgs = msgs_dic.get(main_symbol)
 
         if raw_msgs:
-            msgs = self.format_msgs(raw_msgs)
+            msgs = self.format_msgs(raw_msgs, obj=obj if implicit else None)
+            # FIXME:  when implicit, wrong children !!!!
 
-        else:
+            if implicit:
+                msg_def = self.help_definition(target=target)[0]
+                msgs = (msg_def + "<br>" + msgs[0], msgs[1], msgs[2])
+        else:  # Try to unfold definitions
             msgs = self.help_definition(target=target)
 
         return msgs

@@ -79,7 +79,7 @@ lemma definition.egalite_deux_ensembles {A A' : set X} :
 PrettyName
     Egalité de deux ensembles
 ImplicitUse
-    True
+    False
 -/
 begin
      exact set.ext_iff
@@ -240,10 +240,5 @@ begin
     todo
 end
 end exercices
-
-
-namespace exercices_rab
-
-end exercices_
 
 end course

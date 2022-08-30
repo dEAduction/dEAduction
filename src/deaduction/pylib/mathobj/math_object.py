@@ -1079,6 +1079,14 @@ class MathObject:
         else:
             math_type = self.math_type
 
+        if math_type.is_for_all(is_math_type=True):
+            if math_type.children[2].is_implication(is_math_type=True):
+                return math_type.children[2].children[0]
+
+        # TODO: case of exists?
+
+        return False
+
     def main_symbol(self, is_math_type=True) -> Optional[str]:
         """
         Return the main symbol of self, e.g. if self is a universal property

@@ -151,7 +151,7 @@ PrettyName
     Double inclusion
 -/
 begin
-    exact set.subset.antisymm_iff.mpr
+    exact set.subset.antisymm_iff.mpr  
 end
 
 lemma exercise.test_implicit_inclusion

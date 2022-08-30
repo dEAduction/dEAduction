@@ -39,7 +39,20 @@ def _(msg):
 use = dict()
 prove = dict()
 
-# Param children[0]
+prop_types = {"forall": _("universal property"),
+              "exists": _("existential property"),
+              "implies": _("implication"),
+              "and": _("conjunction"),
+              "or": _("disjunction"),
+              "not": _("negation"),
+              "iff": _("logical equivalence"),
+              "equal": _("equality"),
+              "function": "function"}
+
+phrase = {"to_use": _("To use this property"),
+          "to_start_proof": _("To start a proof of this property"),
+          }
+
 use["forall"] = (_("This is a universal property, which tells something about "
                  "every element of {type_}."),
                  _("To use this property, press the ∀ button after selecting "
@@ -51,14 +64,11 @@ use["forall"] = (_("This is a universal property, which tells something about "
 prove["forall"] = (use["forall"][0],
                    _("To start a proof of this property, press the ∀ "
                      "button."),
-                   _("Pressing the ∀ button will introduce an element of {"
-                     "type_} in the context, and simplify the target.<br>"
-                     " It is generally a good idea to simplify the target as "
+                   # _("Pressing the ∀ button will introduce an element of {"
+                   #   "type_} in the context, and simplify the target.<br>"
+                   _(" It is generally a good idea to simplify the target as "
                      "much as possible by introducing all variables and "
                      "hypotheses in the context."))
-
-# TODO: improve:
-#  bounded quantification
 
 use["implies"] = (_("This is an implication, which asserts that some property "
                     "P: {ch0}, the <em> premise </em>, implies some other "
@@ -70,12 +80,14 @@ use["implies"] = (_("This is an implication, which asserts that some property "
 
 prove["implies"] = (use["implies"][0],
                     _("To start a proof of this property, press the ⇒ button."),
-                    _("Pressing the ⇒ button will introduce the premise in "
-                      "the context, and the target will become the "
-                      "conclusion.<br>"
-                      "It is generally a good idea to simplify the target as "
-                      "much as possible by introducing all variables and "
-                      "hypotheses in the context."))
+                    _('It is generally a good idea to simplify the target as '
+                      'much as possible by introducing all variables and '
+                      'hypotheses in the context.') + " " +
+                    _('Note that an implication may also be proved by '
+                      'contraposition (see the "Proof methods" button).'))
+# "Pressing the ⇒ button will introduce the premise in "
+#                       "the context, and the target will become the "
+#                       "conclusion.<br>"
 
 use["exists"] = (_("This is an existential property, which asserts the "
                    "existence of an element of {type_} satisfying a precise "
@@ -127,20 +139,30 @@ prove["and"] = (use["and"][0],
 use["not"] = (_("This property is a negation."),
               _("Press the ¬ (NOT) button to try to simplify the property."),
               "")
-# TODO Improve:
-#  double negation; proof by contradiction?
 
 prove["not"] = use["not"]
 
 use[_("iff")] = (_("This property is a logical equivalence."),
-                 "",
+                 'You can use the ⇔ ("IF AND ONLY IF") button <ul>'
+                 '<li>to split it into two implications,</li>'
+                 '<li>or to substitute {ch0} for {ch1}, or vice-versa, '
+                 'in the target or in some other property of the context.</li>'
+                 '</ul>',
                  "")
 
 prove[_("iff")] = (_("This property is a logical equivalence."),
-                   _('Press the ⇔ ("IF AND ONLY IFF") button, to split the '
+                   _('Press the ⇔ ("IF AND ONLY IF") button, to split the '
                      'proof into the proofs of the direct and reverse '
                      'implications. You may also use the ∧ (AND) button.'),
                    "")
+
+use['equal'] = (_("This is an equality between two elements of {"
+                  "ch0_type}."),
+                _('You may use this equality to substitute {ch0} for '
+                  '{ch1}, or vice-versa, in the target or in some other '
+                  'property of the context. To do this, press the "=" (EQUAL) '
+                  'button after selecting the other property.'),
+                "")
 
 use["function"] = (_("This is a function from {ch0} to {ch1}."),
                    _("You may apply this function to some element of {ch0}, "
@@ -148,14 +170,6 @@ use["function"] = (_("This is a function from {ch0} to {ch1}."),
                      "this, press the ↦ (MAP) button after selecting an element"
                      " or an equality."),
                    "")
-
-use['equal'] = (_("This is an equality between two elements of {"
-                  "ch0_type}."),
-                _('You may use this equality to substitute {ch0} for '
-                  '{ch1}, or vice-versa, in the target or some other '
-                  'property of the context. To do this, press the "=" (EQUAL) '
-                  'button after selecting the other property.'),
-                "")
 
 use["definition"] = (_('This matches the definition {def_name}.'),
                      _("You may unroll a definition by clicking on it in "
@@ -171,12 +185,19 @@ use["definitions"] = (_('This matches definitions {def_names}.'),
 
 prove["definitions"] = use["definitions"]
 
+use["unroll_implicit_def"] = _("To see this property explicitly as a {"
+                               "prop_type}, you may unfold definition {"
+                               "def_name} by clicking on it in the Statement "
+                               "area.")
+
 # TODO:
-#  iff,
-#  equality,
-#  Defs implicites qui sont des forall : suggérer aussi d'aller voir la déf
-#  formule atomique à montrer (appartenance, inégalité, etc)
-#  elements (comment les utiliser ?)
+#  - bounded quantification
+#  - Defs implicites qui sont des forall : suggérer aussi d'aller voir la déf
+#  - formule atomique à montrer (appartenance, inégalité, négation d'un truc
+#    élémentaire, etc)
+#  - elements (comment les utiliser ?)
+#  - This can also be used for substitution with the = / <=> button
+#    (or for implication with the => button).
 #  Et surtout, erreurs --> bouton aide
 
 #

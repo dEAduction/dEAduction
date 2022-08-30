@@ -734,6 +734,8 @@ def rw_with_iff(rw_hyp: MathObject,
     Try to use rw_hyp, assumed to be a (universal) iff,
     to rewrite either on_hyp if any, or target.
     """
+
+    # FIXME: rw target should appear on ProofTree when on_hyp is None.
     code1 = code_for_substitution(rw_hyp, old_term=None, new_term=None,
                                   on_hyp=on_hyp)
     code2 = code_for_substitution(rw_hyp, old_term=None, new_term=None,
@@ -755,8 +757,8 @@ def action_iff(proof_step) -> CodeForLean:
         If target is of the form (P → Q) ∧ (Q → P):
             replace by P ↔ Q
     (2) 1 selected property
-        - if a universal iff, try to rw target,
-        - if an iff, and rw failed, split it
+        - if an iff, and target not selected, split it
+        - elif a universal iff, try to rw target,
     (3) 2 properties:
         - if one is a universal iff, try to rw the other,
         - if none is an iff but both are implications, try to obtain P ⇔ Q.
@@ -790,15 +792,16 @@ def action_iff(proof_step) -> CodeForLean:
                 raise WrongUserInput(error=error_msg)
 
     if len(selected_objects) == 1:
-        [(test, eq)] = test_subst
-        if test:  # 1st selected object can be used for substitution
-            code = rw_with_iff(selected_objects[0])
-        elif not selected_objects[0].is_iff():
-            error = _("Selected property is not an iff property 'P ⇔ Q'")
-            raise WrongUserInput(error)
-        if selected_objects[0].is_iff():
+        if selected_objects[0].is_iff() and not target_selected:
             more_code = destruct_iff_on_hyp(proof_step, selected_objects)
             code = code.or_else(more_code)
+        else:
+            [(test, eq)] = test_subst
+            if test:  # 1st selected object can be used for substitution
+                code = rw_with_iff(selected_objects[0])
+            elif not selected_objects[0].is_iff():
+                error = _("Selected property is not an iff property 'P ⇔ Q'")
+                raise WrongUserInput(error)
         return code
 
     if len(selected_objects) == 2:
@@ -1452,6 +1455,7 @@ def apply_map_to_element(proof_step,
     msg = _("New objet {} added to the context").format(y)
     code = CodeForLean.from_string(f"set {y} := {f} {x} with {new_h}",
                                    success_msg=msg)
+    code.operator = map_
     return code
 
 
@@ -1489,6 +1493,7 @@ def apply_function(proof_step, map_, arguments: [MathObject]):
            if len(arguments) == 1 else
            _("The map {} cannot be applied to these objects").format(f))
     codes.add_error_msg(msg)
+    codes.operator = map_
     return codes
 
 
