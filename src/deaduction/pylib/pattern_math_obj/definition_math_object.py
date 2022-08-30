@@ -75,7 +75,7 @@ class DefinitionMathObject(MathObject, Definition):
         then self.target.math_type is
             A subset B iff ( for all x in X, x in A implies x in B ).
         """
-        if self.initial_proof_state:
+        if self.definition.initial_proof_state:
             return self.definition.initial_proof_state.goals[0].target
 
     def check_proof_state(self) -> bool:

@@ -3,6 +3,9 @@
 # help_msgs.py : set msgs for help on context objects #
 #######################################################
 
+Note that msgs are not translated here, to handle the case when usr changes
+language. They must be translated when used.
+
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Created       : 08 2022 (creation)
@@ -50,7 +53,7 @@ prop_types = {"forall": _("universal property"),
               "function": "function"}
 
 phrase = {"to_use": _("To use this property"),
-          "to_start_proof": _("To start a proof of this property"),
+          "to_start_proof": _("To start a proof of this property")
           }
 
 use["forall"] = (_("This is a universal property, which tells something about "
@@ -163,6 +166,8 @@ use['equal'] = (_("This is an equality between two elements of {"
                   'property of the context. To do this, press the "=" (EQUAL) '
                   'button after selecting the other property.'),
                 "")
+
+prove['equal'] = (use['equal'][0], "", "")
 
 use["function"] = (_("This is a function from {ch0} to {ch1}."),
                    _("You may apply this function to some element of {ch0}, "
