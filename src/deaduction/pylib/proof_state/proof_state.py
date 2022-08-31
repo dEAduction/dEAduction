@@ -756,17 +756,21 @@ def introduce_several_object(objects: [MathObject], format_) -> str:
         number = len(objects)
         if len(objects) <= len(numbers):
             number = numbers[number]  # text version of the number
-        type_ = objects[0].math_type_to_display(format_=format_, text_depth=10)
-
-        words = type_.split(" ")
+        utf8_type = objects[0].math_type_to_display(format_='utf8',
+                                                    text_depth=10)
+        type_ = objects[0].math_type_to_display(format_=format_,
+                                                text_depth=10)
+        words = utf8_type.split(" ")
         plural_type = None
-        # Try to replace first words by plural:
+        # Try to replace first words by plural. We use utf8_type to avoid
+        #  html formatting to interfere:
         for counter in range(len(words)):
             first_words = " ".join(words[:counter+1])
             if first_words in plurals:
                 plural_first_words = plurals[first_words]
-                new_words = [plural_first_words] + words[counter+1:]
-                plural_type = " ".join(new_words)
+                plural_type = type_.replace(first_words, plural_first_words)
+                # new_words = [plural_first_words] + words[counter+1:]
+                # plural_type = " ".join(new_words)
                 break
 
         if plural_type:
