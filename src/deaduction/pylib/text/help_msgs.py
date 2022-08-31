@@ -39,6 +39,18 @@ def _(msg):
     return msg
 
 
+def single_to_every(an_object: str) -> str:
+    """
+    Replace "an object", e.g. "an element", by "every object", e.g. "every
+    element".
+    """
+    from deaduction.pylib.math_display.display_data import every
+    for key, value in every.items():
+        if an_object.find(key) != -1:
+            every_object = an_object.replace(key, value)
+            return every_object
+
+
 use = dict()
 prove = dict()
 
@@ -57,10 +69,10 @@ phrase = {"to_use": _("To use this property"),
           }
 
 use["forall"] = (_("This is a universal property, which tells something about "
-                 "every element of {type_}."),
+                 "{every_element_of_type_}."),
                  _("To use this property, press the ∀ button after selecting "
-                   "an element of {type_}."),
-                 _("To use this property, you need some element of {type_}. Is "
+                   "{an_element_of_type_}."),
+                 _("To use this property, you need {an_element_of_type_}. Is "
                    "there any in the context? If not, can you create some?"))
 
 
@@ -74,8 +86,9 @@ prove["forall"] = (use["forall"][0],
                      "hypotheses in the context."))
 
 use["implies"] = (_("This is an implication, which asserts that some property "
-                    "P: {ch0}, the <em> premise </em>, implies some other "
-                    "property Q: {ch1}, the <em> conclusion </em>."),
+                    "<br> P: {ch0},<br>the <em> premise </em>, implies some "
+                    "other property<br> Q: {ch1},<br> the <em> conclusion "
+                    "</em>."),
                   _("To use this property, press the ⇒ button after selecting "
                     "another property which match the premise."),
                   _("To use this property, you need property {ch0}. Do you "
@@ -93,20 +106,20 @@ prove["implies"] = (use["implies"][0],
 #                       "conclusion.<br>"
 
 use["exists"] = (_("This is an existential property, which asserts the "
-                   "existence of an element of {type_} satisfying a precise "
+                   "existence of {an_element_of_type_} satisfying a precise "
                    "property."),
                  _("To use this property, just press the ∃ button."),
                  "")
 
 prove["exists"] = (_("This is an existential property, which asserts the "
-                     "existence of an element of {type_} satisfying a precise "
+                     "existence of {an_element_of_type_} satisfying a precise "
                      "property."),
-                _("To start a proof of this property, press the ∃ button after "
-                  "selecting"
-                  "the element of {type_} that satisfies the wanted property."),
-                _("Is there some element of {type_} in the context? If this is "
-                  "so, does it suits your needs? If not, how can you create "
-                  "some?"))
+                   _("To start a proof of this property, press the ∃ button "
+                     "after selecting {an_element_of_type_} that satisfies "
+                     "the wanted property."),
+                   _("Is there {an_element_of_type_} in the context? If this "
+                     "is so, does it suits your needs? If not, how can you "
+                     "create some?"))
 
 use["or"] = (_("This property is a disjunction."),
              _("Press the ∨ (OR) button to engage in a proof by cases; you "

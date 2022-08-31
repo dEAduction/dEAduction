@@ -284,8 +284,21 @@ plurals = {
     _('an element'): _("elements"),
     _('a function'): _("functions"),
     _('a sequence'): _("sequences"),
+    _('a rational number'): _("rational numbers"),
     _('a real number'): _("real numbers")
 }
+
+# For substitution in types, and translation
+every = {
+    _('a proposition'): _("every proposition"),
+    _('a set'): _("every set"),
+    _('a subset'): _("every subset"),
+    _('an element'): _("every element"),
+    _('a function'): _("every function"),
+    _('a sequence'): _("every sequence"),
+    _('a real number'): _("every real number")
+}
+
 
 numbers = {
     1: _("one"),

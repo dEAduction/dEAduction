@@ -189,7 +189,14 @@ class ContextMathObject(MathObject):
             params['ch0'] = ch0.to_display(format_=format_)
             params['ch0_type'] = ch0.math_type.to_display(format_=format_)
             if len(children) > 1:
-                params['ch1'] = children[1].to_display(format_=format_)
+                ch1 = children[1]
+                params['ch1'] = ch1.to_display(format_=format_)
+                # type_ = math_object.math_type_to_display(format_=format_,
+                #                                          text_depth=10)
+                params['an_element_of_type_'] = \
+                    ch1.math_type_to_display(format_=format_, text_depth=10)
+                params['every_element_of_type_'] = \
+                    help_msgs.single_to_every(params['an_element_of_type_'])
 
         # Bounded quantification
         prop = obj.bounded_quantification(is_math_type = True)

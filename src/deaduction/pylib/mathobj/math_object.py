@@ -1381,9 +1381,18 @@ class MathObject:
         # Special math_types for which display is not the same #
         ########################################################
         math_type = self.math_type
-        if hasattr(math_type, 'math_type') \
+        if math_type.node == "SET":
+            shape = [_("a subset of") + " ", 0]
+            # Idem
+        elif math_type.node == "SEQUENCE":
+            shape = [_("a sequence in") + " ", 1]
+        elif math_type.node == "SET_FAMILY":
+            shape = [_("a family of subsets of") + " ", 1]
+        elif hasattr(math_type, 'math_type') \
                 and hasattr(math_type.math_type, 'node') \
-                and math_type.math_type.node == "TYPE":
+                and math_type.math_type.node == "TYPE"\
+                and math_type.node != 'TYPE' \
+                and math_type.info.get('name'):
             name = math_type.info["name"]
             shape = [_("an element of") + " ", name]
             # The "an" is to be removed for short display
@@ -1395,13 +1404,6 @@ class MathObject:
             shape = [_('a rational number')]
         elif math_type.is_R():
             shape = [_('a real number')]
-        elif math_type.node == "SET":
-            shape = [_("a subset of") + " ", 0]
-            # Idem
-        elif math_type.node == "SEQUENCE":
-            shape = [_("a sequence in") + " ", 1]
-        elif math_type.node == "SET_FAMILY":
-            shape = [_("a family of subsets of") + " ", 1]
         else:  # Generic case: usual shape from math_object
             shape = math_type.raw_latex_shape(text_depth=text_depth)
 
