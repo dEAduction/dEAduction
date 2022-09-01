@@ -86,8 +86,8 @@ prove["forall"] = (use["forall"][0],
                      "hypotheses in the context."))
 
 use["implies"] = (_("This is an implication, which asserts that some property "
-                    "<br> P: {ch0},<br>the <em> premise </em>, implies some "
-                    "other property<br> Q: {ch1},<br> the <em> conclusion "
+                    "P:<br>{ch0},<br>the <em> premise </em>, implies some "
+                    "other property Q:<br>{ch1},<br> the <em> conclusion "
                     "</em>."),
                   _("To use this property, press the ⇒ button after selecting "
                     "another property which match the premise."),

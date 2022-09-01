@@ -228,33 +228,51 @@ class ContextMathObject(MathObject):
                 else msgs_dic["definitions"])
         return msgs, definitions
 
-    def help_implicit_def(self, obj, target=False) -> (str, str, str):
-
+    def help_implicit_def(self, obj, target=False) -> (Optional[Tuple[str, str,
+                                                                      str]],
+                                                       Optional[bool]):
+        """
+        Compute help msgs for the implicit definition obj.
+        The bool output indicates if implicit def should be used or not when
+        formatting with types, and so on.
+        """
         msgs_dic = help_msgs.prove if target else help_msgs.use
         main_symbol = obj.main_symbol()
-
         implicit_def = MathObject.last_used_implicit_definition
         # Msg associated to main symbol:
         main_symbol_msgs = msgs_dic.get(main_symbol) if main_symbol else None
+
+        # If self also has a msg associated to it (without unfolding implicit
+        # def), then we will show this one.
+        alt_main_symbol = self.math_type.main_symbol()
+        alt_main_symbol_msgs = (msgs_dic.get(alt_main_symbol) if
+                                alt_main_symbol else None)
 
         # Msg associated to unfolding definitions:
         def_msgs, definitions = self.help_definition(target=target)
 
         if not (def_msgs and main_symbol_msgs):
-            return
+            return None, None
 
         # Msgs = "After unfolding def, this property is blabla"
         def_msg = tuple(def_msgs)[0]
-        after_unfolding = _("After unfolding the definition {def_name}")
-        after_unfolding = self.format_msg(after_unfolding,
-                                          definitions=[implicit_def])
-        msg_0 = (def_msg
-                 + "<br> <br>"
-                 + after_unfolding + ", "
-                 + main_symbol_msgs[0].lower())
+        if not alt_main_symbol_msgs:
+            implicit = True
+            after_unfolding = _("After unfolding the definition {def_name}")
+            after_unfolding = self.format_msg(after_unfolding,
+                                              definitions=[implicit_def])
+            msg_0 = (def_msg
+                     + "<br> <br>"
+                     + after_unfolding + ", "
+                     + main_symbol_msgs[0].lower())
+        else:
+            implicit = False
+            main_symbol_msgs = alt_main_symbol_msgs
+            msg_0 = def_msg + "<br> <br>" + main_symbol_msgs[0]
+
         msgs = msg_0, main_symbol_msgs[1], main_symbol_msgs[2]
 
-        return msgs
+        return msgs, implicit
 
     def help_msgs(self, target=False) -> (str, str, str):
         """
@@ -266,16 +284,17 @@ class ContextMathObject(MathObject):
         # Apply implicit definitions?
         implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
         obj = self.math_type
-        if implicit:
-            implicit_defs = self.math_type.unfold_implicit_definition()
-            if implicit_defs:
-                obj = implicit_defs[0]
+        implicit_defs = (self.math_type.unfold_implicit_definition()
+                         if implicit else None)
+        if implicit_defs:
+            obj = implicit_defs[0]
 
         main_symbol = obj.main_symbol()
 
         # Msgs from implicit def and main symbol:
-        implicit_msgs = (self.help_implicit_def(obj, target=target)
-                         if (implicit_defs and main_symbol) else None)
+        implicit_msgs, implicit = (self.help_implicit_def(obj, target=target)
+                                   if (implicit_defs and main_symbol)
+                                   else (None, None))
 
         # Msg associated to main symbol:
         main_symbol_msgs = msgs_dic.get(main_symbol) if main_symbol else None
