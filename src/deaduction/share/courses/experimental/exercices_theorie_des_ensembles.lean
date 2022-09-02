@@ -341,7 +341,7 @@ Description
     Le complémentaire d'une réunion quelconque égale l'intersection des complémentaires
 -/
 begin
-    -- hypo_analysis,
+    todo
 end
 
 

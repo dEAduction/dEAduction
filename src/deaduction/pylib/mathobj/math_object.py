@@ -227,6 +227,9 @@ class MathObject:
     def math_type(self, math_type: Any):
         self._math_type = math_type
 
+    def is_no_math_type(self):
+        return self is self.NO_MATH_TYPE
+
     @property
     def bound_vars(self):
         """Store bound_vars to avoid repeated computation."""
