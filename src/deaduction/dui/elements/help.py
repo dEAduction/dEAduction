@@ -108,6 +108,7 @@ class HelpTitleWdg(QWidget):
         self.total_nb = total_nb
         self.back_btn.setVisible(total_nb > 1)
         self.forward_btn.setVisible(total_nb > 1)
+        self.hint_btn.setChecked(False)
         self.hint_btn.hide()
         if total_nb == 0:
             self.label.hide()
@@ -219,7 +220,7 @@ class HelpWindow(QDialog):
         self.math_label.setStyleSheet("")
         self.help_wdg.setHtml("<em>" + _("Double click on context or target "
                                          "to get some help.") + "</em>")
-        self.title_widget.set_msgs_total_nb(0)
+        self.title_widget.set_no_msg()
 
     def display_help_msg(self):
         txt_nb = self.title_widget.nb

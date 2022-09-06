@@ -211,88 +211,57 @@ class ContextMathObject(MathObject):
                                         for defi in definitions)
                 params['def_names'] = '"' + def_names + '"'
 
-        # Merge and translate dict
-        format_dic = {**help_msgs.phrase, **help_msgs.prop_types}
+        # Mention drag and drop (or not)
+        format_dic = {**help_msgs.phrase}  # Copy to not alter original dic
+        drag_to_context = cvars.get('functionality.drag_and_drop_in_context')
+        drag_to_def = cvars.get('functionality.drag_context_to_statements')
+        if not drag_to_context:
+            no_drag = {"or_drag_element_to_property": "",
+                       "or_drag_to_function": "",
+                       "or_drag_to_equality": "",
+                       "or_drag_premise": ""}
+            format_dic.update(no_drag)
+        if not drag_to_def:
+            no_drag = {"or_drag_to_def": ""}
+            format_dic.update(no_drag)
+
         # Translate values
-        translated_format_dic = {key: _(val)
-                                 for key, val in format_dic.items()}
-        # # Replace def_name in dict values...
-        # formatted_format_dic = {key: val.format(**params)
-        #                         for key, val in translated_format_dic.items()}
+        translated_format_dic = {key: help_msgs.conc_n_trans(val) if val
+                                 else val for key, val in format_dic.items()}
 
-        translated_format_dic.update(params)
+        # Merge dic
+        translated_format_dic.update(**params, **help_msgs.prop_types)
 
-        translated_msg = _(raw_msg) if raw_msg else ""
-        msg1 = translated_msg.format(**translated_format_dic)
+        # Translate msgs, then substitute with translated_format_dic
+        # translated_msg = _(raw_msg) if raw_msg else ""
+        msg1 = raw_msg.format(**translated_format_dic)
         return msg1
 
     def help_definition(self, target=False) -> ((str, str, str), Any):
-
-        msgs_dic = help_msgs.prove if target else help_msgs.use
+        def get_help_msgs(key):
+            return help_msgs.get_helm_msgs(key, target)
+        # msgs_dic = help_msgs.prove if target else help_msgs.use
         # msgs = ("", "", "")
         definitions = self.check_unroll_definitions()
+        # msgs = ([] if not definitions
+        #         else msgs_dic["definition"] if len(definitions) == 1
+        #         else msgs_dic["definitions"])
         msgs = ([] if not definitions
-                else msgs_dic["definition"] if len(definitions) == 1
-                else msgs_dic["definitions"])
-        definition_msgs = (self.format_msg(msg, definitions=definitions)
-                           for msg in msgs)
+                else get_help_msgs("definition" if len(definitions) == 1
+                                   else "definitions"))
+        definition_msgs = [self.format_msg(msg, definitions=definitions)
+                           for msg in msgs]
 
         return definition_msgs
-
-    # def help_implicit_def(self, obj, target=False) -> (Optional[Tuple[str, str,
-    #                                                                   str]],
-    #                                                    Optional[bool]):
-    #     """
-    #     Compute help msgs for the implicit definition obj.
-    #     The bool output indicates if implicit def should be used or not when
-    #     formatting with types, and so on.
-    #     """
-    #     msgs_dic = help_msgs.prove if target else help_msgs.use
-    #     main_symbol = obj.main_symbol()
-    #     implicit_def = MathObject.last_used_implicit_definition
-    #     # Msg associated to main symbol:
-    #     main_symbol_msgs = msgs_dic.get(main_symbol) if main_symbol else None
-    #
-    #     # # If self also has a msg associated to it (without unfolding implicit
-    #     # # def), then we will show this one.
-    #     # alt_main_symbol = self.math_type.main_symbol()
-    #     # alt_main_symbol_msgs = (msgs_dic.get(alt_main_symbol) if
-    #     #                         alt_main_symbol else None)
-    #
-    #     # Msg associated to unfolding definitions:
-    #     def_msgs, definitions = self.help_definition(target=target)
-    #
-    #     if not (def_msgs and main_symbol_msgs):
-    #         return None, None
-    #
-    #     # Msgs = "After unfolding def, this property is blabla"
-    #     def_msg = tuple(def_msgs)[0] + " " + tuple(def_msgs)[1]
-    #     # if not alt_main_symbol_msgs:
-    #     implicit = True
-    #     after_unfolding = _("After unfolding the definition {def_name}")
-    #     after_unfolding = self.format_msg(after_unfolding,
-    #                                       definitions=[implicit_def])
-    #     msg_0 = (def_msg
-    #              + "<br> <br>"
-    #              + after_unfolding + ", "
-    #              + main_symbol_msgs[0].lower())
-    #     msg_1 = main_symbol_msgs[1]
-    #     # else:
-    #     #     implicit = False
-    #     #     main_symbol_msgs = alt_main_symbol_msgs
-    #     #     # msg_0 = def_msg + "<br> <br>" + main_symbol_msgs[0]
-    #     #     msg_0 = main_symbol_msgs[0] + "<br> <br>" + main_symbol_msgs[1]
-    #     #     msg_1 = def_msg
-    #
-    #     msgs = msg_0, msg_1, main_symbol_msgs[2]
-    #
-    #     return msgs, implicit
 
     def after_unfolding_implicit_def_msgs(self, target=False):
         """
         If an implicit definition applies, compute a msg that involving the
         main symbol of self after unfolding the implicit definition.
         """
+        def get_help_msgs(key):
+            return help_msgs.get_helm_msgs(key, target)
+
         implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
         obj = self.math_type
         implicit_defs = (self.math_type.unfold_implicit_definition()
@@ -303,10 +272,11 @@ class ContextMathObject(MathObject):
         obj = implicit_defs[0]
         definition = MathObject.last_used_implicit_definition
         main_symbol = obj.main_symbol()
-        msgs_dic = help_msgs.prove if target else help_msgs.use
-        msgs = msgs_dic.get(main_symbol) if main_symbol else []
+        # msgs_dic = help_msgs.prove if target else help_msgs.use
+        msgs = get_help_msgs(main_symbol)
         main_symbol_msgs = []
 
+        # fake = _("Applying definition {def_name} will turn this into")
         become = _("Applying definition {def_name} will turn this into")
         for msg in msgs:
             msg = msg.replace("{this_is}", become)
@@ -321,11 +291,13 @@ class ContextMathObject(MathObject):
         Return help msgs for self as a target if target=True, and as a
         context object otherwise.
         """
-        msgs_dic = help_msgs.prove if target else help_msgs.use
+        # msgs_dic = help_msgs.prove if target else help_msgs.use
+        def get_help_msgs(key):
+            return help_msgs.get_helm_msgs(key, target)
 
         # (1) Main symbol?
         main_symbol = self.math_type.main_symbol()
-        msgs = msgs_dic.get(main_symbol) if main_symbol else []
+        msgs = get_help_msgs(main_symbol)
         main_symbol_msgs = (self.format_msg(msg) for msg in msgs)
 
         # (2) Matching definitions?
