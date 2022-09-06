@@ -26,16 +26,18 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PySide2.QtCore import Qt, Slot, QSettings
+from PySide2.QtCore import Qt, Slot, QSettings, QSize
 
 from PySide2.QtWidgets import QDialog, QRadioButton, QVBoxLayout, QHBoxLayout,\
-    QTextEdit, QLabel, QDialogButtonBox, QWidget
+    QTextEdit, QLabel, QDialogButtonBox, QWidget, QPushButton, QFrame, \
+    QToolBar, QMainWindow, QAction, QToolButton
 
 from PySide2.QtGui import QIcon
 
 from typing import Union, Optional
 
 import deaduction.pylib.config.vars as cvars
+import deaduction.pylib.utils.filesystem as fs
 from deaduction.dui.primitives import DeaductionFonts
 
 from deaduction.pylib.mathobj import ContextMathObject
@@ -44,7 +46,87 @@ from deaduction.dui.elements import MathObjectWidgetItem
 global _
 
 
-class HelpWindow(QWidget):
+class HelpTitleWdg(QWidget):
+    def __init__(self, nb_help_msgs=1):
+        super().__init__()
+        icons_base_dir = cvars.get("icons.path")
+        icons_dir = fs.path_helper(icons_base_dir)
+        self.icon_size = 35
+        lyt = QHBoxLayout()
+
+        self.label = QLabel(_("Help"))
+
+        # ----------- Buttons ------------
+        # back_icon = QIcon(str((icons_dir / 'icons8-back-48.png').resolve()))
+        # forw_icon = QIcon(str((icons_dir / 'icons8-forward-48.png').resolve()))
+        self.back_btn = QToolButton()
+        self.forward_btn = QToolButton()
+        self.back_btn.setArrowType(Qt.LeftArrow)
+        self.forward_btn.setArrowType(Qt.RightArrow)
+        self.back_btn.setToolTip(_("Previous help message"))
+        self.forward_btn.setToolTip(_("Next help message"))
+        # self.back_btn.setFixedSize(self.icon_size, self.icon_size)
+        # self.forward_btn.setFixedSize(self.icon_size, self.icon_size)
+        # self.back_btn.setIconSize(QSize(self.icon_size, self.icon_size))
+        # self.back_btn.setIcon(back_icon)
+        # self.forward_btn.setIcon(forw_icon)
+
+        hint_icon = QIcon(str((icons_dir / 'icons8-hint-48.png').resolve()))
+        self.hint_btn = QToolButton()
+        self.hint_btn.setIcon(hint_icon)
+        self.hint_btn.setIconSize(QSize(self.icon_size, self.icon_size))
+        self.hint_btn.setFixedSize(self.icon_size, self.icon_size)
+        self.hint_btn.setCheckable(True)
+        self.hint_btn.setAutoRaise(True)
+        self.hint_btn.setToolTip(_("Show hint!"))
+        self.fake_hint_btn = QToolButton()
+        self.fake_hint_btn.setFixedSize(self.icon_size, self.icon_size)
+        self.fake_hint_btn.setHidden(True)
+        size_policy = self.hint_btn.sizePolicy()
+        size_policy.setRetainSizeWhenHidden(True)
+        self.hint_btn.setSizePolicy(size_policy)
+        self.fake_hint_btn.setSizePolicy(size_policy)
+        self.total_nb = nb_help_msgs
+        self.nb = 1
+
+        # ------------ Layout ------------
+        lyt.addWidget(self.fake_hint_btn)
+        lyt.addStretch()
+        lyt.addWidget(self.back_btn)
+        lyt.addWidget(self.label)
+        lyt.addWidget(self.forward_btn)
+        lyt.addStretch()
+        lyt.addWidget(self.hint_btn)
+        self.setLayout(lyt)
+
+    def set_text(self):
+        text = _("Help") if self.total_nb <= 1 \
+               else _("Help n°{}").format(self.nb)
+        self.label.setText(text)
+
+    def set_msgs_total_nb(self, total_nb: int):
+        self.total_nb = total_nb
+        self.back_btn.setVisible(total_nb > 1)
+        self.forward_btn.setVisible(total_nb > 1)
+        self.hint_btn.hide()
+        if total_nb == 0:
+            self.label.hide()
+        else:
+            self.label.show()
+        self.set_text()
+
+    def set_no_msg(self):
+        self.set_msgs_total_nb(0)
+
+    def set_msg_nb(self, nb, hint=False):
+        self.nb = nb
+        self.set_text()
+        self.back_btn.setEnabled(self.nb != 1)
+        self.forward_btn.setEnabled(self.nb != self.total_nb)
+        self.hint_btn.setVisible(hint)
+
+
+class HelpWindow(QDialog):
     """
     A class for a window displaying a help msg, with maybe a small set of
     possible user actions.
@@ -58,7 +140,10 @@ class HelpWindow(QWidget):
         self.setWindowTitle(_("Help"))
         # Window stay on top of parent:
         self.setWindowFlags(self.windowFlags() | Qt.Dialog)
-        self.main_txt, self.detailed_txt, self.hint = None, None, None
+        # self.main_txt, self.detailed_txt, self.hint = None, None, None
+        self.msgs_list = []
+        self.main_texts = []
+        self.hints = []
         self.target = False
         self.math_wdg_item: Optional[MathObjectWidgetItem] = None
         self.math_object: Optional[ContextMathObject] = None
@@ -66,6 +151,12 @@ class HelpWindow(QWidget):
         # Display math_object
         self.math_label = QLabel()
         self.math_label.setTextFormat(Qt.RichText)
+
+        # Display titles
+        self.title_widget = HelpTitleWdg()
+        self.title_widget.back_btn.clicked.connect(self.previous_help_msgs)
+        self.title_widget.forward_btn.clicked.connect(self.next_help_msgs)
+        self.title_widget.hint_btn.clicked.connect(self.toggle_hint)
 
         # Display help msgs
         self.help_wdg = QTextEdit()
@@ -77,6 +168,7 @@ class HelpWindow(QWidget):
         main_size = fonts.main_font_size
         text_font.setPointSize(main_size)
         self.help_wdg.setFont(text_font)
+        self.title_widget.setFont(text_font)
 
         target_size = fonts.target_font_size
         label_font = self.math_label.font()
@@ -87,35 +179,19 @@ class HelpWindow(QWidget):
         self.lyt = QVBoxLayout()
         self.lyt.addWidget(self.math_label)
         self.lyt.addWidget(self.help_wdg)
+        self.lyt.addWidget(self.title_widget)
         self.lyt.setAlignment(self.math_label, Qt.AlignHCenter)
-
-        # Buttons
-        self.description_btn = QRadioButton(_("Description"))
-        self.hint_btn = QRadioButton(_("Hint"))
-        self.description_btn.clicked.connect(self.toggle_description)
-        self.hint_btn.clicked.connect(self.toggle_hint)
-        self.description_btn.setChecked(True)
-
-        self.radio_btns = QVBoxLayout()
-        self.radio_btns.addWidget(self.description_btn)
-        self.radio_btns.addWidget(self.hint_btn)
-
-        self.btns = QHBoxLayout()
-        self.btns.addLayout(self.radio_btns)
-
-        self.lyt.addLayout(self.btns)
-
         self.setLayout(self.lyt)
-        self.empty_content()
 
+        # Shortcuts
+
+        # initialize
+        self.empty_content()
         self.set_geometry()
-        # if math_object:
-        #     self.set_math_object(math_object, target=target)
 
     def set_geometry(self, geometry=None):
         settings = QSettings("deaduction")
         if settings.value("help/geometry"):
-            # pass
             self.restoreGeometry(settings.value("help/geometry"))
         elif geometry:
             self.setGeometry(geometry)
@@ -126,8 +202,6 @@ class HelpWindow(QWidget):
         settings = QSettings("deaduction")
         settings.setValue("help/geometry", self.saveGeometry())
         self.toggle(yes=False)
-        # if self.action:
-        #     self.action.setChecked(False)
         event.accept()
 
     @property
@@ -145,46 +219,45 @@ class HelpWindow(QWidget):
         self.math_label.setStyleSheet("")
         self.help_wdg.setHtml("<em>" + _("Double click on context or target "
                                          "to get some help.") + "</em>")
-        self.radio_btns.setEnabled(False)
+        self.title_widget.set_msgs_total_nb(0)
 
-    def display_text(self):
-        """
-        Display text recorded in self.main_txt, self.detailed_txt, self.hint.
-        Enable buttons accordingly.
-        """
-
-        # Always display description first.
-        if self.hint:
-            self.hint_btn.setEnabled(True)
+    def display_help_msg(self):
+        txt_nb = self.title_widget.nb
+        if self.main_texts:
+            text = self.main_texts[txt_nb-1]
         else:
-            self.hint_btn.setEnabled(False)
-        if self.main_txt or self.detailed_txt:
-            self.description_btn.setEnabled(True)
-        else:
-            self.description_btn.setEnabled(False)
-
-        text = ""
-        if self.description_btn.isChecked():
-            if self.main_txt:
-                text = "<p>" + self.main_txt + "</p>" + \
-                       "<p>" + self.detailed_txt + "</p>"
-            else:
-                text = "<em> " + _("No help available.") + "</em>"
-
-        elif self.hint_btn.isChecked():
-            if self.hint:
-                text = "<em> <b>" + _("Hint:") + "</b>" + "<p>" + self.hint \
-                       + "</p> </em>"
-            else:
-                text = "<em> " + _("No hint available.") + "</em>"
-
+            text = "<em> " + _("No help available.") + "</em>"
         self.help_wdg.setHtml(text)
 
-    def set_msgs(self, msgs: (str, str, str)):
-        self.main_txt, self.detailed_txt, self.hint = msgs
-        self.display_text()
+    def display_hint(self):
+        txt_nb = self.title_widget.nb
+        hint = self.hints[txt_nb-1]
+        title = "<em><b>" + _("Hint:") + "</b></em>"
+        text = "<p>" + hint + "</p> </em>"
+        self.help_wdg.setHtml(title + text)
+
+    def set_msgs(self, msgs_list: [[str, str, str]], from_icon=False):
+        """
+        Fill-in attributes msgs_list, main_texts, hints.
+        Also set the total number of help msgs in self.title_widget, and set
+        it to the first help msg. Call self.display_help_msg().
+        """
+        self.msgs_list = msgs_list
+        self.title_widget.set_msgs_total_nb(len(msgs_list))
+
+        self.main_texts = ["<p>" + msgs[0] + "</p>" + "<p>" + msgs[1] + "</p>"
+                           for msgs in self.msgs_list]
+        self.hints = [msgs[2] for msgs in self.msgs_list]
+        hint = bool(self.hints[0]) if self.hints else False
+        self.title_widget.set_msg_nb(1, hint=hint)
+
+        self.display_help_msg()
 
     def display_math_object(self):
+        """
+        Display the math_object on which help should be provided, according
+        to self.math_object.
+        """
         if self.math_object.math_type.is_prop():  # target and context props
             math_text = self.math_object.math_type_to_display()
         else:  # context objects
@@ -198,11 +271,13 @@ class HelpWindow(QWidget):
         self.math_label.setStyleSheet(f"background-color: {color};")
 
     def unset_item(self):
+        """
+        Clear self from math_object, and un_highlight the math_object in the
+        context area if possible.
+        """
         if self.math_wdg_item:
             try:  # Maybe context has changed and object no longer exists
                 self.math_wdg_item.highlight(yes=False)
-                # self.math_wdg_item.select()
-                # self.math_wdg_item.setIcon(QIcon())
             except RuntimeError:
                 pass
             self.math_wdg_item = None
@@ -211,19 +286,19 @@ class HelpWindow(QWidget):
 
     def set_math_object(self,
                         item: Union[MathObjectWidgetItem, ContextMathObject],
-                        target=False):
+                        on_target=False,
+                        from_icon=False):
         """
-        Display a help msg on a new ContextMathObject. Unselect previous item
-        if any.
+        This should be called each time help is requested on a new
+        ContextMathObject.
+        This method set the math_object, set msgs. A help msg will be displayed.
+        (Also unselect previous item if any.)
         """
-
-        # Open on description, not hint.
-        self.description_btn.setChecked(True)
 
         self.unset_item()
         if hasattr(item, 'select') and hasattr(item, 'highlight'):
             item.select(yes=False)
-            item.highlight()
+            item.highlight(duration=2000)
             # if self.icon:
             #     item.setIcon(self.icon)
             self.math_wdg_item = item
@@ -232,17 +307,18 @@ class HelpWindow(QWidget):
             self.math_object = item
 
         if self.math_object:
-            msgs = (self.math_object.help_target_msg() if target else
+            msgs = (self.math_object.help_target_msg() if on_target else
                     self.math_object.help_context_msg())
 
             self.display_math_object()
-            self.set_msgs(msgs)
+            self.set_msgs(msgs, from_icon=False)
 
     @Slot()
     def toggle(self, yes=None):
         """
         Toggle window, and unset item if hidden.
         """
+
         if yes is None:  # Change state to opposite
             yes = not self.isVisible()
         if yes:
@@ -261,11 +337,25 @@ class HelpWindow(QWidget):
         self.toggle(yes=False)
 
     @Slot()
-    def toggle_hint(self):
-        self.hint_btn.setChecked(True)
-        self.display_text()
+    def toggle_hint(self, yes=None):
+        if yes is None:
+            checked = self.title_widget.hint_btn.isChecked()
+        else:
+            self.title_widget.hint_btn.setChecked(yes)
+            checked = yes
+        if checked:
+            self.display_hint()
+        else:
+            self.display_help_msg()
 
     @Slot()
-    def toggle_description(self):
-        self.description_btn.setChecked(True)
-        self.display_text()
+    def next_help_msgs(self):
+        nb = self.title_widget.nb + 1
+        self.title_widget.set_msg_nb(nb, hint=bool(self.hints[nb-1]))
+        self.toggle_hint(yes=False)
+
+    @Slot()
+    def previous_help_msgs(self):
+        nb = self.title_widget.nb - 1
+        self.title_widget.set_msg_nb(nb, hint=bool(self.hints[nb-1]))
+        self.toggle_hint(yes=False)

@@ -702,27 +702,35 @@ class ExerciseMainWindow(QMainWindow):
         self.target_selected = not self.target_selected if on is None else on
 
     @Slot()
-    def show_help_on_item(self, item=None, target=False):
+    def show_help_on_item(self, item=None, on_target=False):
         """
         Show help on item if any, or on selected context object or target if
         there is a single selected object
         """
 
         toggle = False
-        if not item:  # From icon, not from double-clic
-            toggle = True
-            if len(self.current_selection) == 1 and not self.target_selected:
-                item = self.current_selection[0]
-            elif len(self.current_selection) == 0 and self.target_selected:
-                item = self.ecw.target_wgt.target
-
+        if not item:
+            if self.help_window.isVisible():  # Click from icon, close window
+                self.help_window.toggle(False)
+                return
+            else:
+                self.help_window.toggle(True)
+                return
+            # From icon, not from double-clic
+            # Desactivated for clarity??
+            # if len(self.current_selection) == 1 and not self.target_selected:
+            #     item = self.current_selection[0]
+            #     on_target = False
+            # elif len(self.current_selection) == 0 and self.target_selected:
+            #     item = self.ecw.target_wgt.target
+            #     on_target = True
         if item:
-            self.help_window.set_math_object(item, target=target)
+            self.help_window.set_math_object(item, on_target=on_target)
 
-        if toggle:
-            self.help_window.toggle()
-        else:
-            self.help_window.toggle(True)
+        # if toggle:
+        #     self.help_window.toggle()
+        # else:
+        self.help_window.toggle(True)
 
     @Slot(MathObjectWidgetItem)
     def process_context_double_click(self, index):
@@ -757,7 +765,7 @@ class ExerciseMainWindow(QMainWindow):
 
         # target = self.ecw.target_wgt.target
         math_item = self.ecw.target_wgt.target_label
-        self.show_help_on_item(item=math_item, target=True)
+        self.show_help_on_item(item=math_item, on_target=True)
         # self.help_window.set_math_object(item, target=True)
         # self.help_window.toggle(True)
 

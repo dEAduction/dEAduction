@@ -209,7 +209,8 @@ class PatternMathObject(MathObject):
         match = True    # Self and math_object are presumed to match
         marked = False  # Will be True if bound variables should be unmarked
 
-        log.debug(f"Matching {self} and {math_object}...")
+        # if math_object:
+        #     log.debug(f"Matching {self} and {math_object}...")
 
         node = self.node
         # Case of NO_MATH_TYPE (avoid infinite recursion!)
@@ -306,7 +307,7 @@ class PatternMathObject(MathObject):
         if marked:
             self.unmark_bound_vars(bound_var_1, bound_var_2)
 
-        log.debug(f"... {match}")
+        # log.debug(f"... {match}")
         return match
 
     def math_object_from_metavar(self):

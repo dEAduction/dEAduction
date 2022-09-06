@@ -64,11 +64,16 @@ prop_types = {"forall": _("universal property"),
               "equal": _("equality"),
               "function": "function"}
 
-phrase = {"to_use": _("To use this property"),
+phrase = {"this_is": _("This is"),
+          "this_property_is": _("This property is"),
+          "this_will_become": _("Applying definition {def_name} will turn "
+                                "this into"),
+          "to_use": _("To use this property"),
           "to_start_proof": _("To start a proof of this property")
           }
 
-use["forall"] = (_("This is a universal property, which tells something about "
+use["forall"] = (_("{this_is} a universal property, which tells something "
+                   "about "
                  "{every_element_of_type_}."),
                  _("To use this property, press the ∀ button after selecting "
                    "{an_element_of_type_}."),
@@ -85,7 +90,7 @@ prove["forall"] = (use["forall"][0],
                      "much as possible by introducing all variables and "
                      "hypotheses in the context."))
 
-use["implies"] = (_("This is an implication, which asserts that some property "
+use["implies"] = (_("{this_is} an implication, which asserts that some property "
                     "P:<br>{ch0},<br>the <em> premise </em>, implies some "
                     "other property Q:<br>{ch1},<br> the <em> conclusion "
                     "</em>."),
@@ -105,23 +110,22 @@ prove["implies"] = (use["implies"][0],
 #                       "the context, and the target will become the "
 #                       "conclusion.<br>"
 
-use["exists"] = (_("This is an existential property, which asserts the "
+use["exists"] = (_("{this_is} an existential property, which asserts the "
                    "existence of {an_element_of_type_} satisfying a precise "
                    "property."),
                  _("To use this property, just press the ∃ button."),
                  "")
 
-prove["exists"] = (_("This is an existential property, which asserts the "
-                     "existence of {an_element_of_type_} satisfying a precise "
-                     "property."),
+prove["exists"] = (use["exists"][0],
                    _("To start a proof of this property, press the ∃ button "
-                     "after selecting {an_element_of_type_} that satisfies "
-                     "the wanted property."),
+                     "after selecting {an_element_of_type_}.") + " "
+                   + _("Then you will have to prove that it satisfies the "
+                       "wanted property."),
                    _("Is there {an_element_of_type_} in the context? If this "
                      "is so, does it suits your needs? If not, how can you "
                      "create some?"))
 
-use["or"] = (_("This property is a disjunction."),
+use["or"] = (_("{this_property_is} a disjunction."),
              _("Press the ∨ (OR) button to engage in a proof by cases; you "
                "will successively examine the case when {ch0} holds and the "
                "case when {ch1} holds."),
@@ -134,13 +138,12 @@ prove["or"] = (use["or"][0],
                  "which one of the two properties you will prove. You may "
                  "forget about the other one!"),
                _("Do you have enough information in the context to prove one "
-                 "of these two properties? <br> --> If this is so, then choose "
-                 "this "
-                 "property with the ∨ (OR) button. <br> --> If not, you should "
-                 "first get more information "
-                 "(maybe by engaging in a proof by cases)."))
+                 "of these two properties? <ul><li>If this is so, "
+                 "then choose this property with the ∨ (OR) button. </li>"
+                 "<li>If not, you should first get more information.</li></ul>"
+                 ))
 
-use["and"] = (_("This property is a conjunction."),
+use["and"] = (_("{this_property_is} a conjunction."),
               _("Press the ∧ (AND) button to separate both properties."),
               "")
 
@@ -152,13 +155,13 @@ prove["and"] = (use["and"][0],
                   "properties, as opposed to disjunction for which you may "
                   "choose which property you prove."))
 
-use["not"] = (_("This property is a negation."),
+use["not"] = (_("{this_property_is} a negation."),
               _("Press the ¬ (NOT) button to try to simplify the property."),
               "")
 
 prove["not"] = use["not"]
 
-use[_("iff")] = (_("This property is a logical equivalence."),
+use[_("iff")] = (_("{this_property_is} a logical equivalence."),
                  'You can use the ⇔ ("IF AND ONLY IF") button <ul>'
                  '<li>to split it into two implications,</li>'
                  '<li>or to substitute {ch0} for {ch1}, or vice-versa, '
@@ -166,13 +169,13 @@ use[_("iff")] = (_("This property is a logical equivalence."),
                  '</ul>',
                  "")
 
-prove[_("iff")] = (_("This property is a logical equivalence."),
+prove[_("iff")] = (use["iff"][0],
                    _('Press the ⇔ ("IF AND ONLY IF") button, to split the '
                      'proof into the proofs of the direct and reverse '
                      'implications. You may also use the ∧ (AND) button.'),
                    "")
 
-use['equal'] = (_("This is an equality between two elements of {"
+use['equal'] = (_("{this_is} an equality between two elements of {"
                   "ch0_type}."),
                 _('You may use this equality to substitute {ch0} for '
                   '{ch1}, or vice-versa, in the target or in some other '
@@ -182,7 +185,7 @@ use['equal'] = (_("This is an equality between two elements of {"
 
 prove['equal'] = (use['equal'][0], "", "")
 
-use["function"] = (_("This is a function from {ch0} to {ch1}."),
+use["function"] = (_("{this_is} a function from {ch0} to {ch1}."),
                    _("You may apply this function to some element of {ch0}, "
                      "or to an equality between two elements of {ch0}. For "
                      "this, press the ↦ (MAP) button after selecting an element"
@@ -190,23 +193,23 @@ use["function"] = (_("This is a function from {ch0} to {ch1}."),
                    "")
 
 use["definition"] = (_('This matches the definition {def_name}.'),
-                     _("You may unroll a definition by clicking on it in "
-                       "the Statements area."),
+                     _("To apply the definition, "
+                       "click on it in the Statements area."),
                      "")
 
 prove["definition"] = use["definition"]
 
 use["definitions"] = (_('This matches definitions {def_names}.'),
-                      _("You may unroll a definition by clicking on it in "
-                        "the Statements area."),
+                      _("To apply the definition, "
+                        "click on it in the Statements area."),
                       "")
 
 prove["definitions"] = use["definitions"]
 
-use["unroll_implicit_def"] = _("To see this property explicitly as a {"
-                               "prop_type}, you may unfold definition {"
-                               "def_name} by clicking on it in the Statement "
-                               "area.")
+# use["unfold_implicit_def"] = _("To see this property explicitly as a {"
+#                                "prop_type}, you may apply definition {"
+#                                "def_name} by clicking on it in the Statements "
+#                                "area.")
 
 # TODO:
 #  - bounded quantification

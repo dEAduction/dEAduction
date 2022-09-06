@@ -44,7 +44,8 @@ from PySide2.QtCore    import ( Signal,
                                 Qt,
                                 QMimeData,
                                 QModelIndex,
-                                QItemSelectionModel)
+                                QItemSelectionModel,
+                                QTimer)
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
                                 QIcon,
@@ -196,14 +197,21 @@ class MathObjectWidgetItem(QStandardItem):
 
         return self is other  # Brutal but that is what we need.
 
-    def highlight(self, yes=True):
+    def highlight(self, yes=True, duration=None):
         color = cvars.get("display.color_for_highlight_in_proof_tree",
                           "yellow")
         self.setBackground(QBrush(QColor(color)) if yes else QBrush())
+        if duration:
+            def unlit():
+                self.highlight(yes=False)
+            QTimer.singleShot(duration, unlit)
         # self.math_object_wdg.select_item(self, yes)
         # palette = self.math_object_wdg.palette()
         # color = palette.color(palette.Normal, palette.Midlight)
         # self.setBackground(color)
+
+    # def un_highlight(self):
+    #     self.highlight(yes=False)
 
     def select(self, yes=True):
         self.math_object_wdg.select_item(self, yes)
@@ -641,13 +649,20 @@ class TargetLabel(QLabel):
             self.setBackgroundRole(QPalette.Window)
             # self.target_label.setStyleSheet(self.unselected_style)
 
-    def highlight(self, yes=True):
+    def highlight(self, yes=True, duration=None):
         # self.select(not yes)
         color = cvars.get("display.color_for_highlight_in_proof_tree",
                           "yellow")
         # self.setBackground(QBrush(QColor(color)) if yes else QBrush())
 
         self.setStyleSheet(f"background-color: {color};" if yes else "")
+        if duration:
+            def unlit():
+                self.highlight(yes=False)
+            QTimer.singleShot(duration, unlit)
+
+    # def un_highlight(self):
+    #     self.highlight(yes=False)
 
 
 class TargetWidget(QWidget):
