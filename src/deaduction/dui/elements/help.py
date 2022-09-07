@@ -227,7 +227,7 @@ class HelpWindow(QDialog):
         if self.main_texts:
             text = self.main_texts[txt_nb-1]
         else:
-            text = "<em> " + _("No help available.") + "</em>"
+            text = "<em> " + _("No help available on this object.") + "</em>"
         self.help_wdg.setHtml(text)
 
     def display_hint(self):

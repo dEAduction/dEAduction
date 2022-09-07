@@ -1070,6 +1070,26 @@ class MathObject:
         else:
             return False
 
+    def is_belongs_or_included(self, is_math_type=False):
+        """
+        Test if self matches
+        - "x belongs to A": then return A;
+        - "A subset B": then return P(B)
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+
+        if math_type.node == "PROP_BELONGS":
+            return math_type.children[1]
+        elif math_type.node == "PROP_INCLUDED":
+            sup_set = math_type.children[1]
+            type_ = MathObject(node="SET", children=[sup_set])
+            return type_
+        else:
+            return False
+
     def bounded_quantification(self, is_math_type=False):
         """
         Test if self is a universal implication of the form
@@ -1084,9 +1104,26 @@ class MathObject:
 
         if math_type.is_for_all(is_math_type=True):
             if math_type.children[2].is_implication(is_math_type=True):
-                return math_type.children[2].children[0]
+                premise = math_type.children[2].children[0]
+                return premise
 
-        # TODO: case of exists?
+        return False
+
+    def bounded_quant_real_type(self, is_math_type=False):
+        """
+        If self is a universal property with bounded quantification, try to
+        return the real type of the bounded variable.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+
+        premise = math_type.bounded_quantification(is_math_type=True)
+        if premise:
+            type_ = premise.is_belongs_or_included(is_math_type=True)
+            if type_:
+                return type_
 
         return False
 
@@ -1383,7 +1420,8 @@ class MathObject:
         ########################################################
         # Special math_types for which display is not the same #
         ########################################################
-        math_type = self.math_type
+        # math_type = self.math_type
+        math_type = self
         if math_type.node == "SET":
             shape = [_("a subset of") + " ", 0]
             # Idem
@@ -1393,10 +1431,12 @@ class MathObject:
             shape = [_("a family of subsets of") + " ", 1]
         elif hasattr(math_type, 'math_type') \
                 and hasattr(math_type.math_type, 'node') \
-                and math_type.math_type.node == "TYPE"\
-                and math_type.node != 'TYPE' \
-                and math_type.info.get('name'):
-            name = math_type.info["name"]
+                and math_type.math_type.node in ("TYPE", "SET")\
+                and math_type.node != 'TYPE'\
+                and math_type.node != 'FUNCTION':
+                # and math_type.info.get('name'):
+            # name = math_type.info["name"]
+            name = math_type.to_display(text_depth=text_depth)
             shape = [_("an element of") + " ", name]
             # The "an" is to be removed for short display
         elif math_type.is_N():
@@ -1415,13 +1455,12 @@ class MathObject:
 
     def math_type_to_abstract_string(self, text_depth=0):
         """
-        cf to_abstract_string.
+        cf to_abstract_string, but applied to self as a math_type.
         :param text_depth:
         :return:
         """
-
         shape = self.raw_latex_shape_of_math_type(text_depth=text_depth)
-        abstract_string = recursive_display(self.math_type,
+        abstract_string = recursive_display(self,
                                             raw_display=shape,
                                             text_depth=text_depth)
         # log.debug(f"(1) --> abstract string: {abstract_string}")
@@ -1431,13 +1470,20 @@ class MathObject:
 
         return abstract_string
 
-    def math_type_to_display(self, format_="html", text_depth=0) -> str:
+    def math_type_to_display(self, format_="html", text_depth=0,
+                             is_math_type=False) -> str:
         """
-        cf MathObject.to_display. Lean format_ is not pertinent here.
+        cf MathObject.to_display, but applied to self as a math_type (if
+        is_math_type) or to self.math_type (if not is_math_type).
+        Lean format_ is not pertinent here.
         """
         # log.debug(f"Displaying math_type: {self.display_name}...")
 
-        abstract_string = self.math_type_to_abstract_string(text_depth)
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        abstract_string = math_type.math_type_to_abstract_string(text_depth)
         # Adapt to format_ and concatenate to get a string
         display = abstract_string_to_string(abstract_string, format_)
 

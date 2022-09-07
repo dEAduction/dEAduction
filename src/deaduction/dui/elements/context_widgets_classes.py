@@ -166,7 +166,9 @@ class MathObjectWidgetItem(QStandardItem):
 
         lean_name = context_math_object.to_display()
         math_expr = context_math_object.math_type_to_display()
-        caption   = f'{lean_name} : {math_expr}'
+        test_expr = context_math_object.math_type_to_display(format_='utf8')
+        separator = '' if test_expr.startswith(':') else ': '
+        caption   = f'{lean_name} {separator}{math_expr}'
         self.setText(caption)
         self.setIcon(_TagIcon(self.tag))
         # Uncomment to enable drag:

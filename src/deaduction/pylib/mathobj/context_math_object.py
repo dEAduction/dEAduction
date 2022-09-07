@@ -117,7 +117,10 @@ class ContextMathObject(MathObject):
         """
         Replace the raw_latex_shape_of_math_type method for MathObject.
         """
-        shape = super().raw_latex_shape_of_math_type(text_depth)
+
+        # Call to MathObject.raw_latex_shape_of_math_type() on self
+        math_type = super(ContextMathObject, self)
+        shape = math_type.raw_latex_shape_of_math_type(text_depth)
         if (hasattr(self, 'has_been_used_in_proof')
                 and self.has_been_used_in_proof):
             shape = [r'\used_property'] + shape
@@ -199,9 +202,14 @@ class ContextMathObject(MathObject):
                     help_msgs.single_to_every(params['an_element_of_type_'])
 
         # Bounded quantification
-        prop = obj.bounded_quantification(is_math_type = True)
-        if prop and prop.node == "PROP_BELONGS":
-            params['type_'] = prop.children[1]
+        real_type = obj.bounded_quant_real_type(is_math_type=True)
+        if real_type:
+            params['type_'] = real_type
+            params['an_element_of_type_'] = \
+                real_type.math_type_to_display(format_=format_, text_depth=10,
+                                               is_math_type=True)
+            params['every_element_of_type_'] = \
+                help_msgs.single_to_every(params['an_element_of_type_'])
 
         # Definitions names
         if definitions:
@@ -263,13 +271,12 @@ class ContextMathObject(MathObject):
             return help_msgs.get_helm_msgs(key, target)
 
         implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
-        obj = self.math_type
-        implicit_defs = (self.math_type.unfold_implicit_definition()
+        implicit_objs = (self.math_type.unfold_implicit_definition()
                          if implicit else None)
-        if not implicit_defs:
+        if not implicit_objs:
             return
 
-        obj = implicit_defs[0]
+        obj = implicit_objs[0]
         definition = MathObject.last_used_implicit_definition
         main_symbol = obj.main_symbol()
         # msgs_dic = help_msgs.prove if target else help_msgs.use
