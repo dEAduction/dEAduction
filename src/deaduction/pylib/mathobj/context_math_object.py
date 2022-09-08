@@ -181,7 +181,7 @@ class ContextMathObject(MathObject):
         """
 
         params: Dict[str, str] = dict()
-
+        from deaduction.pylib.math_display import plural_types, plurals
         if not obj:
             obj = self.math_type
         children = obj.children
@@ -190,7 +190,13 @@ class ContextMathObject(MathObject):
             ch0 = children[0]
             params['type_'] = ch0.to_display(format_=format_)
             params['ch0'] = ch0.to_display(format_=format_)
-            params['ch0_type'] = ch0.math_type.to_display(format_=format_)
+            # params['ch0_type'] = ch0.math_type.to_display(format_=format_)
+            ch0_type = ch0.math_type_to_display(format_=format_,
+                                                text_depth=10)
+            utf8 = ch0.math_type.to_display(format_='utf8', text_depth=10)
+            plural_type = plural_types(ch0_type, utf8)
+            params['elements_of_ch0_type'] = (plural_type if plural_type else
+                                              _('elements of') + ' ' + ch0_type)
             if len(children) > 1:
                 ch1 = children[1]
                 params['ch1'] = ch1.to_display(format_=format_)

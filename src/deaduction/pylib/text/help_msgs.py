@@ -198,8 +198,7 @@ prove[_("iff")] = (use["iff"][0],
                      'implications. You may also use the ∧ (AND) button.'),
                    "")
 
-use['equal'] = (_("{this_is} an equality between two elements of {"
-                  "ch0_type}."),
+use['equal'] = (_("{this_is} an equality between two {elements_of_ch0_type}."),
                 (_('You may use this equality to substitute {ch0} for '
                    '{ch1}, or vice-versa, in the target or in some other '
                    'property of the context.'),
