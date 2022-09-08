@@ -725,11 +725,10 @@ class ExerciseMainWindow(QMainWindow):
             #     item = self.ecw.target_wgt.target
             #     on_target = True
         if item:
-            self.help_window.set_math_object(item, on_target=on_target)
+            obj = self.displayed_proof_step.context_obj_solving
+            self.help_window.set_math_object(item, on_target=on_target,
+                                             context_solving=obj)
 
-        # if toggle:
-        #     self.help_window.toggle()
-        # else:
         self.help_window.toggle(True)
 
     @Slot(MathObjectWidgetItem)
@@ -743,7 +742,7 @@ class ExerciseMainWindow(QMainWindow):
         self.empty_current_selection()
         self.process_target_click(on=False)
 
-        # Find item from index
+        # Find item from index, in props_wgt or objects_wgt
         props_wgt = self.ecw.props_wgt
         math_item: MathObjectWidgetItem = props_wgt.item_from_index(index)
         if not math_item:

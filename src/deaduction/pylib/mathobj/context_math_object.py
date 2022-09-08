@@ -173,19 +173,27 @@ class ContextMathObject(MathObject):
     def format_msg(self, raw_msg: str,
                    obj: Optional[MathObject] = None,
                    definitions=None,
+                   solving_obj=None,
                    format_="html") -> str:
         """
         Format msgs with parameters from self's children, and translate them.
         For now, works only with html format.
+
         obj is the implicit self, if an implicit definition should be applied.
+        definitions is the list of definitions that can be applied.
+
+        The dictionary params is used to display appropriate text versions of
+        math objects.
         """
 
         params: Dict[str, str] = dict()
+        params['solving_obj'] = solving_obj
         from deaduction.pylib.math_display import plural_types, plurals
         if not obj:
             obj = self.math_type
         children = obj.children
 
+        # Compute text for some pertinent math objects
         if children:
             ch0 = children[0]
             params['type_'] = ch0.to_display(format_=format_)
@@ -207,7 +215,7 @@ class ContextMathObject(MathObject):
                 params['every_element_of_type_'] = \
                     help_msgs.single_to_every(params['an_element_of_type_'])
 
-        # Bounded quantification
+        # Bounded quantification?
         real_type = obj.bounded_quant_real_type(is_math_type=True)
         if real_type:
             params['type_'] = real_type
@@ -299,6 +307,11 @@ class ContextMathObject(MathObject):
 
         return main_symbol_msgs
 
+    def solving_msgs(self, solving_obj, on_target=False):
+        msgs = help_msgs.get_helm_msgs('goal!', on_target)
+        return list(self.format_msg(msg, solving_obj=solving_obj) for msg in
+                    msgs)
+
     def help_msgs(self, target=False) -> [Optional[str]]:
         """
         Return help msgs for self as a target if target=True, and as a
@@ -329,25 +342,37 @@ class ContextMathObject(MathObject):
 
         return final_msgs_list
 
-    def help_target_msg(self, format_="html") -> (str, str, str):
+    def help_target_msg(self, context_solving=None,
+                        format_="html") -> (str, str, str):
         """
-        Return three help msgs about self:
+        Return a list of triples of msgs. Each triple contains three help msgs
+        about self:
         - a general msg that describes self,
-        - a msgs that explains how to use self in deaduction,
-        - a (maybe empty) hint msg.
+        - a msgs that explains what to do with self in deaduction,
+        - a hint msg.
         Help msgs should depend on the main symbol of self, using implicit
         definition if they are allowed by the current settings.
         """
-        return self.help_msgs(target=True)
+        msgs = self.help_msgs(target=True)
+        if context_solving:
+            solving_msgs = self.solving_msgs(context_solving[0], on_target=True)
+            msgs.insert(0, solving_msgs)
+        return msgs
 
-    def help_context_msg(self, format_="html") -> (str, str, str):
+    def help_context_msg(self, context_solving=None,
+                         format_="html") -> (str, str, str):
         """
-        Return three help msgs about self:
+        Return a list of triples of msgs. Each triple contains three help msgs
+        about self:
         - a general msg that describes self,
-        - a msgs that explains how to use self in deaduction,
-        - a (maybe empty) hint msg.
+        - a msgs that explains what to do with self in deaduction,
+        - a hint msg.
         Help msgs should depend on the main symbol of self, using implicit
         definition if they are allowed by the current settings.
         """
-        return self.help_msgs(target=False)
-
+        msgs = self.help_msgs(target=False)
+        if context_solving and context_solving[0] == self:
+            solving_msgs = self.solving_msgs(context_solving[0],
+                                             on_target=False)
+            msgs.insert(0, solving_msgs)
+        return msgs

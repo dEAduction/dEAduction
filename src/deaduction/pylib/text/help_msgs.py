@@ -90,7 +90,8 @@ phrase = {"this_is": _("This is"),
           "or_drag_to_function": (', ', _("or drag the element or the equality "
                                           "and drop it onto the function")),
           "or_drag_to_def": (', ', _("or drag the property and drop it onto "
-                                     "the definition"))
+                                     "the definition")),
+          "deaduction": "D∃∀duction"
           }
 
 use["forall"] = (_("{this_is} a universal property, which tells something "
@@ -227,6 +228,17 @@ use["definitions"] = (_('This matches definitions {def_names}.'),
                       "")
 
 prove["definitions"] = use["definitions"]
+
+use["goal!"] = (_("This property seems to solve the current goal."),
+                (_('Use the "Goal!" button when you think the target is '
+                   'obvious from the context.'),
+                 _('Maybe {deaduction} will still need a little help...')),
+                "")
+
+prove["goal!"] = (_("This target seems to be obvious from context "
+                    "property {solving_obj}."),
+                  use['goal!'][1],
+                  "")
 
 
 def conc_n_trans(msgs) -> str:

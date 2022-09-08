@@ -335,6 +335,10 @@ class ProofStep:
                 if imminent_new_node is not ProofStep.initial_proof_node:
                     self.imminent_new_node = imminent_new_node
 
+    ##############
+    # Properties #
+    ##############
+
     @property
     def has_solved_one_goal(self):
         return self._has_solved_one_goal
@@ -359,8 +363,6 @@ class ProofStep:
     def parent_goal_node(self, goal_node):
         self._parent_goal_node = goal_node
 
-    ##############
-    # Properties #
     @property
     def button_symbol(self):
         return button_symbol(self.button_name)
@@ -434,6 +436,11 @@ class ProofStep:
     def outcome_operator(self):
         code = self.effective_code if self.effective_code else self.lean_code
         return code.outcome_operator
+
+    @property
+    def context_obj_solving(self):
+        from deaduction.pylib.actions import context_obj_solving_target
+        return context_obj_solving_target(self)
 
     def is_node(self):  
         """

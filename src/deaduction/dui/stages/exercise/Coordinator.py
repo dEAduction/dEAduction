@@ -71,7 +71,9 @@ from deaduction.pylib.actions           import (generic,
                                                 CodeForLean,
                                                 MissingParametersError,
                                                 WrongUserInput,
-                                                drag_n_drop)
+                                                drag_n_drop,
+                                                context_obj_solving_target)
+
 # Import AFTER coursedata and mathobj, beware circular imports!
 from deaduction.pylib.pattern_math_obj import  (PatternMathObject,
                                                 DefinitionMathObject)
@@ -1000,6 +1002,10 @@ class Coordinator(QObject):
         self.proof_step = ProofStep.next_(self.lean_file.current_proof_step,
                                           self.lean_file.target_idx)
         self.proof_step.parent_goal_node = self.proof_tree.current_goal_node
+
+        # # Target in context?
+        # solving_objs = context_obj_solving_target(self.proof_step)
+        # self.proof_step.solving_objs = solving_objs
         self.proof_step_updated.emit()  # Received in auto_test
 
     def test_response_coherence(self, lean_response: LeanResponse):

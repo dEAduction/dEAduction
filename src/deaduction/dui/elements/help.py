@@ -288,7 +288,7 @@ class HelpWindow(QDialog):
     def set_math_object(self,
                         item: Union[MathObjectWidgetItem, ContextMathObject],
                         on_target=False,
-                        from_icon=False):
+                        context_solving=None):
         """
         This should be called each time help is requested on a new
         ContextMathObject.
@@ -308,8 +308,9 @@ class HelpWindow(QDialog):
             self.math_object = item
 
         if self.math_object:
-            msgs = (self.math_object.help_target_msg() if on_target else
-                    self.math_object.help_context_msg())
+            msgs = (self.math_object.help_target_msg(context_solving)
+                    if on_target else
+                    self.math_object.help_context_msg(context_solving))
 
             self.display_math_object()
             self.set_msgs(msgs, from_icon=False)

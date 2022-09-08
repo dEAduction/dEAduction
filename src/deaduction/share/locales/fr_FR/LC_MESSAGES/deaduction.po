@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-09-08 10:44+0200\n"
-"PO-Revision-Date: 2022-09-08 10:45+0200\n"
+"POT-Creation-Date: 2022-09-08 16:31+0200\n"
+"PO-Revision-Date: 2022-09-08 16:34+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -327,43 +327,43 @@ msgstr "Oui"
 msgid "No"
 msgstr "Non"
 
-#: dui/stages/exercise/Coordinator.py:785
+#: dui/stages/exercise/Coordinator.py:787
 msgid "Code from editor"
 msgstr "Code depuis l’éditeur"
 
-#: dui/stages/exercise/Coordinator.py:892 pylib/server/exceptions.py:39
+#: dui/stages/exercise/Coordinator.py:894 pylib/server/exceptions.py:39
 msgid "Error"
 msgstr "Erreur"
 
-#: dui/stages/exercise/Coordinator.py:908
+#: dui/stages/exercise/Coordinator.py:910
 msgid "I've got a headache, try again..."
 msgstr "Je n’y arrive pas, mais vous pouvez ré-essayer !"
 
-#: dui/stages/exercise/Coordinator.py:911
+#: dui/stages/exercise/Coordinator.py:913
 msgid "Unicode error, try again..."
 msgstr "Erreur de mémoire, ré-essayez !"
 
-#: dui/stages/exercise/Coordinator.py:914
+#: dui/stages/exercise/Coordinator.py:916
 msgid "Error, no proof state, try again..."
 msgstr "Erreur, je n’ai pas réussi à calculer l’état de preuve, ré-essayez !"
 
-#: dui/stages/exercise/Coordinator.py:955 pylib/proof_tree/lean_response.py:70
+#: dui/stages/exercise/Coordinator.py:957 pylib/proof_tree/lean_response.py:70
 msgid "Proof complete"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/Coordinator.py:972
+#: dui/stages/exercise/Coordinator.py:974
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/stages/exercise/Coordinator.py:973
+#: dui/stages/exercise/Coordinator.py:975
 msgid "The proof is complete!"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/Coordinator.py:977
+#: dui/stages/exercise/Coordinator.py:979
 msgid "Back to exercise"
 msgstr "Retour à l’exercice"
 
-#: dui/stages/exercise/Coordinator.py:979
+#: dui/stages/exercise/Coordinator.py:981
 #: dui/stages/exercise/_exercise_main_window_widgets.py:718
 #: dui/stages/exercise/_exercise_main_window_widgets.py:728
 msgid "Change exercise"
@@ -449,12 +449,12 @@ msgstr "Exercice"
 msgid "Exercise history"
 msgstr "Historique de l’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:900
-#: pylib/math_display/display_math.py:915 pylib/mathobj/proof_step.py:625
+#: dui/stages/exercise/exercise_main_window.py:899
+#: pylib/math_display/display_math.py:915 pylib/mathobj/proof_step.py:632
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:903
+#: dui/stages/exercise/exercise_main_window.py:902
 msgid "goals solved!"
 msgstr "buts atteints !"
 
@@ -975,7 +975,7 @@ msgstr "Application"
 msgid "Select an application and an element or an equality"
 msgstr "Sélectionner une application, et un élément ou une égalité"
 
-#: pylib/actions/magic.py:381
+#: pylib/actions/magic.py:471
 msgid "I don't know how to conclude"
 msgstr "Je ne sais pas comment conclure"
 
@@ -1724,11 +1724,11 @@ msgstr "une famille"
 msgid "family"
 msgstr "famille"
 
-#: pylib/mathobj/context_math_object.py:199
+#: pylib/mathobj/context_math_object.py:205
 msgid "elements of"
 msgstr "éléments de"
 
-#: pylib/mathobj/context_math_object.py:293 pylib/text/help_msgs.py:80
+#: pylib/mathobj/context_math_object.py:299 pylib/text/help_msgs.py:80
 #, python-brace-format
 msgid "Applying definition {def_name} will turn this into"
 msgstr "En appliquant la définition {def_name},  ceci deviendra"
@@ -1789,24 +1789,24 @@ msgstr "Preuve du but intermédiaire : {}"
 msgid "Proof of new subgoal"
 msgstr "Preuve du but intermédiaire"
 
-#: pylib/mathobj/proof_step.py:398 pylib/proof_state/proof_state.py:585
+#: pylib/mathobj/proof_step.py:400 pylib/proof_state/proof_state.py:585
 #: pylib/proof_state/proof_state.py:621
 msgid ": "
 msgstr " : "
 
-#: pylib/mathobj/proof_step.py:592
+#: pylib/mathobj/proof_step.py:599
 msgid "ERROR:"
 msgstr "ERREUR :"
 
-#: pylib/mathobj/proof_step.py:596
+#: pylib/mathobj/proof_step.py:603
 msgid "Success:"
 msgstr "Succès :"
 
-#: pylib/mathobj/proof_step.py:629
+#: pylib/mathobj/proof_step.py:636
 msgid "(Current goal admitted)"
 msgstr "(But en cours admis)"
 
-#: pylib/mathobj/proof_step.py:633
+#: pylib/mathobj/proof_step.py:640
 msgid "Beginning of Proof"
 msgstr "Début de la preuve"
 
@@ -2381,6 +2381,30 @@ msgstr ""
 #, python-brace-format
 msgid "This matches definitions {def_names}."
 msgstr "On peut appliquer les définitions  {def_names}."
+
+#: pylib/text/help_msgs.py:231
+msgid "This property seems to solve the current goal."
+msgstr "Cette propriété semble impliquer le but en cours."
+
+#: pylib/text/help_msgs.py:232
+msgid ""
+"Use the \"Goal!\" button when you think the target is obvious from the "
+"context."
+msgstr ""
+"Utilisez le bouton \"But!\" quand vous pensez que le but se déduit "
+"manifestement du contexte."
+
+#: pylib/text/help_msgs.py:234
+#, python-brace-format
+msgid "Maybe {deaduction} will still need a little help..."
+msgstr "{deaduction}  vous demandera peut-être de l'aider encore un peu..."
+
+#: pylib/text/help_msgs.py:237
+#, python-brace-format
+msgid "This target seems to be obvious from context property {solving_obj}."
+msgstr ""
+"Ce but semble se déduire facilement de la propriété {solving_obj} du "
+"contexte."
 
 #: pylib/text/tooltips.py:53
 msgid "Split a property 'P AND Q' into the two properties 'P', 'Q'"
