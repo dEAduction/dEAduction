@@ -81,6 +81,9 @@ phrase = {"this_is": _("This is"),
                                 "this into"),
           "to_use": _("To use this property"),
           "to_start_proof": _("To start a proof of this property"),
+          "to_use_directly": _("To use this property directly"),
+          "to_start_proof_directly": _("To start a proof of this property "
+                                       "directly"),
           "or_drag_element_to_property": (', ', _("or drag the element and "
                                                   "drop it onto the property")),
           "or_drag_premise": (', ', _("or drag the premise and drop it onto "
@@ -239,6 +242,20 @@ prove["goal!"] = (_("This target seems to be obvious from context "
                     "property {solving_obj}."),
                   use['goal!'][1],
                   "")
+become = _("Applying definition {def_name} will turn this into")
+implicit_dic = {"{this_is}": become,
+                "{this_property_is}": become,
+                "to_use": "to_use_directly",
+                "to_start_proof": "to_start_proof_directly"}
+
+
+def make_implicit(msg: str) -> str:
+    """
+    Rephrase msg to become meaningful in an implicit def context.        
+    """
+    for key, value in implicit_dic.items():
+        msg = msg.replace(key, translate(value))
+    return msg
 
 
 def conc_n_trans(msgs) -> str:

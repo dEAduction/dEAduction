@@ -174,6 +174,7 @@ class ContextMathObject(MathObject):
                    obj: Optional[MathObject] = None,
                    definitions=None,
                    solving_obj=None,
+                   on_target=False,
                    format_="html") -> str:
         """
         Format msgs with parameters from self's children, and translate them.
@@ -201,7 +202,7 @@ class ContextMathObject(MathObject):
             # params['ch0_type'] = ch0.math_type.to_display(format_=format_)
             ch0_type = ch0.math_type_to_display(format_=format_,
                                                 text_depth=10)
-            utf8 = ch0.math_type.to_display(format_='utf8', text_depth=10)
+            utf8 = ch0.math_type_to_display(format_='utf8', text_depth=10)
             plural_type = plural_types(ch0_type, utf8)
             params['elements_of_ch0_type'] = (plural_type if plural_type else
                                               _('elements of') + ' ' + ch0_type)
@@ -237,15 +238,23 @@ class ContextMathObject(MathObject):
         format_dic = {**help_msgs.phrase}  # Copy to not alter original dic
         drag_to_context = cvars.get('functionality.drag_and_drop_in_context')
         drag_to_def = cvars.get('functionality.drag_context_to_statements')
+        no_drag = dict()
         if not drag_to_context:
             no_drag = {"or_drag_element_to_property": "",
                        "or_drag_to_function": "",
                        "or_drag_to_equality": "",
                        "or_drag_premise": ""}
-            format_dic.update(no_drag)
+
         if not drag_to_def:
             no_drag = {"or_drag_to_def": ""}
-            format_dic.update(no_drag)
+
+        if on_target:  # TODO: make target draggable...
+            no_drag = {"or_drag_to_def": "",
+                       "or_drag_element_to_property": "",
+                       "or_drag_to_function": "",
+                       "or_drag_to_equality": "",
+                       "or_drag_premise": ""}
+        format_dic.update(no_drag)
 
         # Translate values
         translated_format_dic = {key: help_msgs.conc_n_trans(val) if val
@@ -271,7 +280,8 @@ class ContextMathObject(MathObject):
         msgs = ([] if not definitions
                 else get_help_msgs("definition" if len(definitions) == 1
                                    else "definitions"))
-        definition_msgs = [self.format_msg(msg, definitions=definitions)
+        definition_msgs = [self.format_msg(msg, definitions=definitions,
+                                           on_target=target)
                            for msg in msgs]
 
         return definition_msgs
@@ -298,39 +308,41 @@ class ContextMathObject(MathObject):
         main_symbol_msgs = []
 
         # fake = _("Applying definition {def_name} will turn this into")
-        become = _("Applying definition {def_name} will turn this into")
+        # become = _("Applying definition {def_name} will turn this into")
         for msg in msgs:
-            msg = msg.replace("{this_is}", become)
-            msg = msg.replace("{this_property_is}", become)
-            msg = self.format_msg(msg, obj=obj, definitions=[definition])
+            msg = help_msgs.make_implicit(msg)
+            msg = self.format_msg(msg, obj=obj, definitions=[definition],
+                                  on_target=target)
             main_symbol_msgs.append(msg)
 
         return main_symbol_msgs
 
     def solving_msgs(self, solving_obj, on_target=False):
         msgs = help_msgs.get_helm_msgs('goal!', on_target)
-        return list(self.format_msg(msg, solving_obj=solving_obj) for msg in
+        return list(self.format_msg(msg, solving_obj=solving_obj,
+                                    on_target=on_target) for msg in
                     msgs)
 
-    def help_msgs(self, target=False) -> [Optional[str]]:
+    def help_msgs(self, on_target=False) -> [Optional[str]]:
         """
         Return help msgs for self as a target if target=True, and as a
         context object otherwise.
         """
         # msgs_dic = help_msgs.prove if target else help_msgs.use
         def get_help_msgs(key):
-            return help_msgs.get_helm_msgs(key, target)
+            return help_msgs.get_helm_msgs(key, on_target)
 
         # (1) Main symbol?
         main_symbol = self.math_type.main_symbol()
         msgs = get_help_msgs(main_symbol)
-        main_symbol_msgs = (self.format_msg(msg) for msg in msgs)
+        main_symbol_msgs = (self.format_msg(msg, on_target=on_target)
+                            for msg in msgs)
 
         # (2) Matching definitions?
-        def_msgs = self.help_definition(target=target)
+        def_msgs = self.help_definition(target=on_target)
 
         # (3) Apply implicit definitions?
-        implicit_msgs = self.after_unfolding_implicit_def_msgs(target=target)
+        implicit_msgs = self.after_unfolding_implicit_def_msgs(target=on_target)
 
         msgs_list = [main_symbol_msgs, def_msgs, implicit_msgs]
         final_msgs_list = []
@@ -353,7 +365,7 @@ class ContextMathObject(MathObject):
         Help msgs should depend on the main symbol of self, using implicit
         definition if they are allowed by the current settings.
         """
-        msgs = self.help_msgs(target=True)
+        msgs = self.help_msgs(on_target=True)
         if context_solving:
             solving_msgs = self.solving_msgs(context_solving[0], on_target=True)
             msgs.insert(0, solving_msgs)
@@ -370,7 +382,7 @@ class ContextMathObject(MathObject):
         Help msgs should depend on the main symbol of self, using implicit
         definition if they are allowed by the current settings.
         """
-        msgs = self.help_msgs(target=False)
+        msgs = self.help_msgs(on_target=False)
         if context_solving and context_solving[0] == self:
             solving_msgs = self.solving_msgs(context_solving[0],
                                              on_target=False)
