@@ -774,6 +774,18 @@ class MathObject:
             math_type = self.math_type
         return math_type.node == "FUNCTION"
 
+    def is_atomic_belong(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is a function.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        test = all([math_type.node == "PROP_BELONGS",
+                   math_type.children[1].node == "LOCAL_CONSTANT"])
+        return test
+
     @allow_implicit_use
     def is_and(self, is_math_type=False) -> bool:
         """
@@ -1151,6 +1163,8 @@ class MathObject:
             return "equal"
         elif self.is_function(is_math_type=is_math_type):
             return "function"
+        elif self.is_atomic_belong(is_math_type=is_math_type):
+            return "belong"
         else:
             return None
 

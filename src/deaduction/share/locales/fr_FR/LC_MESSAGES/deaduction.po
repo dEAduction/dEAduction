@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-09-08 17:05+0200\n"
-"PO-Revision-Date: 2022-09-08 17:05+0200\n"
+"POT-Creation-Date: 2022-09-08 22:12+0200\n"
+"PO-Revision-Date: 2022-09-08 22:19+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -1424,7 +1424,7 @@ msgstr "une suite"
 msgid "sequences"
 msgstr "suites"
 
-#: pylib/math_display/display_data.py:287 pylib/mathobj/math_object.py:1447
+#: pylib/math_display/display_data.py:287 pylib/mathobj/math_object.py:1459
 msgid "a rational number"
 msgstr "un nombre rationnel"
 
@@ -1433,7 +1433,7 @@ msgid "rational numbers"
 msgstr "nombres rationnels"
 
 #: pylib/math_display/display_data.py:288
-#: pylib/math_display/display_data.py:321 pylib/mathobj/math_object.py:1449
+#: pylib/math_display/display_data.py:321 pylib/mathobj/math_object.py:1461
 msgid "a real number"
 msgstr "un nombre réel"
 
@@ -1537,7 +1537,7 @@ msgstr "le complémentaire de "
 msgid "the empty set"
 msgstr "l’ensemble vide"
 
-#: pylib/math_display/display_data.py:399 pylib/mathobj/math_object.py:1431
+#: pylib/math_display/display_data.py:399 pylib/mathobj/math_object.py:1443
 msgid "a family of subsets of"
 msgstr "une famille de parties de"
 
@@ -1728,23 +1728,23 @@ msgstr "famille"
 msgid "elements of"
 msgstr "éléments de"
 
-#: pylib/mathobj/math_object.py:1426
+#: pylib/mathobj/math_object.py:1438
 msgid "a subset of"
 msgstr "une partie de"
 
-#: pylib/mathobj/math_object.py:1429
+#: pylib/mathobj/math_object.py:1441
 msgid "a sequence in"
 msgstr "une suite dans"
 
-#: pylib/mathobj/math_object.py:1440
+#: pylib/mathobj/math_object.py:1452
 msgid "an element of"
 msgstr "un élément de"
 
-#: pylib/mathobj/math_object.py:1443
+#: pylib/mathobj/math_object.py:1455
 msgid "a non-negative integer"
 msgstr "un entier positif ou nul"
 
-#: pylib/mathobj/math_object.py:1445
+#: pylib/mathobj/math_object.py:1457
 msgid "an integer"
 msgstr "un entier"
 
@@ -2050,7 +2050,7 @@ msgstr "Ceci est"
 msgid "This property is"
 msgstr "Cette propriété est"
 
-#: pylib/text/help_msgs.py:80 pylib/text/help_msgs.py:245
+#: pylib/text/help_msgs.py:80 pylib/text/help_msgs.py:251
 #, python-brace-format
 msgid "Applying definition {def_name} will turn this into"
 msgstr "En appliquant la définition {def_name},  ceci deviendra"
@@ -2374,10 +2374,23 @@ msgstr ""
 
 #: pylib/text/help_msgs.py:222
 #, python-brace-format
-msgid "This matches the definition {def_name}."
-msgstr "On peut appliquer la définition {def_name}."
+msgid "{this_is} a belonging property."
+msgstr "{this_is} une propriété d'appartenance."
 
 #: pylib/text/help_msgs.py:223
+msgid ""
+"There is no obvious way to further simplify this target. Maybe you should "
+"now work on the context, trying to get this property."
+msgstr ""
+"Il n'y a pas de façon évidente de simplifier ce but. Vous pouvez maintenant "
+"essayer de déduire ce but à partir des propriétés du contexte."
+
+#: pylib/text/help_msgs.py:228
+#, python-brace-format
+msgid "This matches the definition {def_name}."
+msgstr "Vous pouvez appliquer la définition {def_name}."
+
+#: pylib/text/help_msgs.py:229
 #, python-brace-format
 msgid ""
 "To apply a definition, click on it in the Statements area{or_drag_to_def}."
@@ -2385,16 +2398,16 @@ msgstr ""
 "Pour appliquer une définition, cliquez dessus dans la zone des "
 "énoncés{or_drag_to_def}."
 
-#: pylib/text/help_msgs.py:229
+#: pylib/text/help_msgs.py:235
 #, python-brace-format
 msgid "This matches definitions {def_names}."
 msgstr "On peut appliquer les définitions  {def_names}."
 
-#: pylib/text/help_msgs.py:235
+#: pylib/text/help_msgs.py:241
 msgid "This property seems to solve the current goal."
 msgstr "Cette propriété semble impliquer le but en cours."
 
-#: pylib/text/help_msgs.py:236
+#: pylib/text/help_msgs.py:242
 msgid ""
 "Use the \"Goal!\" button when you think the target is obvious from the "
 "context."
@@ -2402,12 +2415,12 @@ msgstr ""
 "Utilisez le bouton \"But!\" quand vous pensez que le but se déduit "
 "manifestement du contexte."
 
-#: pylib/text/help_msgs.py:238
+#: pylib/text/help_msgs.py:244
 #, python-brace-format
 msgid "Maybe {deaduction} will still need a little help..."
 msgstr "{deaduction}  vous demandera peut-être de l'aider encore un peu..."
 
-#: pylib/text/help_msgs.py:241
+#: pylib/text/help_msgs.py:247
 #, python-brace-format
 msgid "This target seems to be obvious from context property {solving_obj}."
 msgstr ""

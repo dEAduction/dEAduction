@@ -219,6 +219,12 @@ use["function"] = (_("{this_is} a function from {ch0} to {ch1}."),
                       "an element or an equality{or_drag_to_function}.")),
                    "")
 
+prove['belong'] = (_("{this_is} a belonging property."),
+                   _("There is no obvious way to further simplify this "
+                     "target. Maybe you should now work on the context, "
+                     "trying to get this property."),
+                   "")
+
 use["definition"] = (_('This matches the definition {def_name}.'),
                      _("To apply a definition, "
                        "click on it in the Statements area{or_drag_to_def}."),
