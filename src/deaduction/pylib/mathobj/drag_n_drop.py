@@ -1,7 +1,9 @@
 """
+# drag_n_drop.py : A class to record drag_n_drop operation #
+
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
-Created       : 04 2022 (creation)
+Created       : 08 2021 (creation)
 Repo          : https://github.com/dEAduction/dEAduction
 
 Copyright (c) 2020 the d∃∀duction team
@@ -22,6 +24,13 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .proof_tree import (ProofTree, GoalNode, RootGoalNode,
-                         VirtualBrotherAuxGoalNode)
-from .lean_response import LeanResponse
+
+class DragNDrop:
+    """
+    A class to record drag and drop operation.
+    """
+
+    def __init__(self, premise, operator):
+        self.premise = premise
+        self.operator = operator
+

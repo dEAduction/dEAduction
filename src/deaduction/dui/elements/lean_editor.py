@@ -45,6 +45,7 @@ class LeanEditor(QWidget):
     # TODO: add syntaxic coloration
 
     editor_send_lean = Signal()
+    action = None  # To be set to the QAction of exercise_toolbar
 
     def __init__(self):
         super().__init__()
@@ -72,6 +73,7 @@ class LeanEditor(QWidget):
 
     def closeEvent(self, event):
         event.accept()
+        self.action.setChecked(False)
         self.hide()
 
     def code_get(self):

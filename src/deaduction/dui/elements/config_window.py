@@ -85,7 +85,8 @@ CONFIGS["Display"] = [
     ('display.use_symbols_for_logic_button', None, True),
     ('display.font_size_for_symbol_buttons', None, True),
     ('display.dubious_characters', None, True),
-    ('display.short_buttons_line', None, True)
+    ('display.short_buttons_line', None, True),
+    ('display.color_for_selection', None, True)
     # ('display.font_for_mathematics', "font", True)
     ]
 # ('display.mathematics_font', None, True),
@@ -104,7 +105,10 @@ CONFIGS['Functionalities'] = [
     # ('functionality.expanded_apply_button', None, False),
     ('functionality.automatic_intro_of_variables_and_hypotheses', None, True),
     ('functionality.automatic_intro_of_exists', None, True),
-    ('functionality.allow_implicit_use_of_definitions', None, True)]
+    ('functionality.allow_implicit_use_of_definitions', None, True),
+    ('functionality.drag_statements_to_context', None, True),
+    ('functionality.drag_and_drop_in_context', None, True),
+    ('functionality.drag_context_to_statements', None, True)]
 
 CONFIGS["Language"] = [("i18n.select_language", ["en", "fr_FR"], True)]
 

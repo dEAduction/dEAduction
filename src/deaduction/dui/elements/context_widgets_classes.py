@@ -37,18 +37,27 @@ This file is part of d∃∀duction.
 """
 import logging
 
+from typing import Optional
+
 from PySide2.QtCore    import ( Signal,
                                 Slot,
                                 Qt,
-                                QModelIndex)
+                                QMimeData,
+                                QModelIndex,
+                                QItemSelectionModel,
+                                QTimer)
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
                                 QIcon,
                                 QFont,
                                 QStandardItem,
-                                QStandardItemModel)
+                                QStandardItemModel,
+                                QPixmap,
+                                QDrag,
+                                QPalette)
 from PySide2.QtWidgets import ( QHBoxLayout,
                                 QVBoxLayout,
+                                QSizePolicy,
                                 QLabel,
                                 QWidget,
                                 QListView,
@@ -61,41 +70,15 @@ from   deaduction.pylib.utils.filesystem import path_helper
 
 import deaduction.pylib.config.vars as cvars
 
+from deaduction.dui.elements import ( StatementsTreeWidget,
+                                      StatementsTreeWidgetItem)
+
 log = logging.getLogger(__name__)
 global _
 
 ################################
 # MathObject widgets classes #
 ################################
-
-
-class TargetLabel(QLabel):
-    """
-    A class to display the target. Can be used in ExerciseMainWindow via
-    TargetWidget, and in the exercise chooser. Take the target as a
-    parameter, and display it in richText format (html).
-    """
-
-    def __init__(self, target):
-        super().__init__()
-        # Display
-        #   ∀ x ∈ X, ∃ ε, …
-        # and not
-        #   H : ∀ x ∈ X, ∃ ε, …
-        # where H might be the lean name of the target. That's what
-        # the .math_type is for.
-        if target:
-            # log.debug("updating target")
-            text = target.math_type_to_display()
-        else:
-            text = '…'
-
-        self.setText(text)
-        self.setTextFormat(Qt.RichText)
-
-    # Debugging
-    # def mouseReleaseEvent(self, ev) -> None:
-    #     print("Clac!!")
 
 
 # A usefull class.
@@ -159,6 +142,8 @@ class MathObjectWidgetItem(QStandardItem):
         _TagIcon) of mathobject.
     """
 
+    from_math_object = dict()  # Set in _exercise_main_window_widgets
+
     def __init__(self, context_math_object):
         """
         Init self with an instance of the class ContextMathObject.
@@ -169,21 +154,27 @@ class MathObjectWidgetItem(QStandardItem):
 
         super().__init__()
 
+        # The following will be set when inserted:
+        self.math_object_wdg: Optional[MathObjectWidget] = None
         self.context_math_object = context_math_object
         if context_math_object.is_new:
-            self.tag        = '+'
+            self.tag = '+'
         elif context_math_object.is_modified:
             self.tag = '≠'
         else:
             self.tag = '='
 
-        lean_name = context_math_object.to_display()
-        math_expr = context_math_object.math_type_to_display()
-        caption   = f'{lean_name} : {math_expr}'
+        # lean_name = context_math_object.to_display()
+        # math_expr = context_math_object.math_type_to_display()
+        # test_expr = context_math_object.math_type_to_display(format_='utf8')
+        # separator = '' if test_expr.startswith(':') else ': '
+        # caption   = f'{lean_name} {separator}{math_expr}'
+
+        caption = context_math_object.display_with_type(format_='html')
         self.setText(caption)
         self.setIcon(_TagIcon(self.tag))
         # Uncomment to enable drag:
-        # self.setDragEnabled(True)
+        self.setDragEnabled(True)
 
     @property
     def math_object(self):
@@ -210,31 +201,103 @@ class MathObjectWidgetItem(QStandardItem):
 
         return self is other  # Brutal but that is what we need.
 
-    def mark_user_selected(self, yes: bool=True):
-        """
-        Change self's background to green if yes or to normal color
-        (e.g. white in light mode) if not yes.
-        """
-        background_color = cvars.get("display.color_for_selection", "LimeGreen")
-        self.setBackground(QBrush(QColor(background_color)) if yes
-                           else QBrush())
+    def highlight(self, yes=True, duration=None):
+        color = cvars.get("display.color_for_highlight_in_proof_tree",
+                          "yellow")
+        self.setBackground(QBrush(QColor(color)) if yes else QBrush())
+        if duration:
+            def unlit():
+                self.highlight(yes=False)
+            QTimer.singleShot(duration, unlit)
+        # self.math_object_wdg.select_item(self, yes)
+        # palette = self.math_object_wdg.palette()
+        # color = palette.color(palette.Normal, palette.Midlight)
+        # self.setBackground(color)
 
-    # def has_math_object(self, math_object: MathObject) -> bool:
-    #     return self.math_object is MathObject
+    # def un_highlight(self):
+    #     self.highlight(yes=False)
+
+    def select(self, yes=True):
+        self.math_object_wdg.select_item(self, yes)
+
+    # def mark_user_selected(self, yes: bool = True):
+    #     """
+    #     Change self's background to green if yes or to normal color
+    #     (e.g. white in light mode) if not yes.
+    #     """
+    #     # Fixme: obsolete
+    #     background_color = cvars.get("display.color_for_selection", "LimeGreen")
+    #     self.setBackground(QBrush(QColor(background_color)) if yes
+    #                        else QBrush())
+
+# class TargetWidgetItem(QStandardItem):
+#     """
+#     Widget to display a target in the chooser, with the same format as the
+#     MathObjectWidgetItem.
+#     """
+#
+#     # FIXME: not used.
+#
+#     def __init__(self, target):
+#
+#         super().__init__()
+#         self.target = target
+#         caption = target.math_type_to_display()
+#         self.setText(caption)
 
 
-class TargetWidgetItem(QStandardItem):
+class DraggedItems(QWidget):
     """
-    Widget to display a target in the chooser, with the same format as the
-    MathObjectWidgetItem.
+    Display a stack of MathObjects in QLabels, to be used as dragged
+    MathObjectWidgetItems. Note that currently only one item at a time may be
+    dragged.
     """
 
-    def __init__(self, target):
-
+    def __init__(self, items: [MathObjectWidgetItem]):
         super().__init__()
-        self.target = target
-        caption = target.math_type_to_display()
-        self.setText(caption)
+
+        self.items = items
+        math_objects = [item.math_object for item in items]
+        # lyt = LayoutMathObjects(math_objects, new=False)
+        lyt = QVBoxLayout()
+        for mo in math_objects:
+            is_prop = mo.math_type.is_prop()
+            label = QLabel()
+            label.setObjectName("prop" if is_prop else "obj")
+            text = mo.math_type_to_display(format_='html') if is_prop \
+                else mo.to_display(format_='html')
+            label.setText(text)
+            label.setTextFormat(Qt.RichText)
+            label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+            lyt.addWidget(label)
+
+        self.setLayout(lyt)
+
+        # The following is copied from proof_tree_widget.py:
+        color_var = cvars.get("display.color_for_variables")
+        color_prop = cvars.get("display.color_for_props")
+        old_border_width = "2px"  # 1px
+        old_border_style = "dashed"
+
+        style_sheet = ("QWidget {background-color: transparent;}"
+                       "QLabel#obj:enabled {padding: 5px;"
+                       f"border-width: {old_border_width};"
+                       f"border-color: {color_var};"
+                       f"border-style: {old_border_style};"
+                       "font-size: 20pt;"  # Added
+                       "background-color: transparent;"  # Adde
+                       "border-radius: 15px;}"
+                       "QLabel#prop:enabled {padding: 5px;"
+                       f"border-width: {old_border_width};"
+                       f"border-color: {color_prop};"
+                       f"border-style: {old_border_style};"
+                       "font-size: 20pt;"
+                       "background-color: transparent;"
+                       "border-radius: 15px;}")
+        self.setStyleSheet(style_sheet)
+
+    def pixmap(self):
+        return self.grab()
 
 
 class MathObjectWidget(QListView):
@@ -251,36 +314,40 @@ class MathObjectWidget(QListView):
         attribute makes accessing them painless.
     """
 
+    # Signals
+    statement_dropped = Signal(StatementsTreeWidgetItem)
+    math_object_dropped = Signal(MathObjectWidgetItem, MathObjectWidgetItem)
+
     def __init__(self, context_math_objects=None, target=None):
         """
-        Init self an ordered list of tuples (mathobject, tag), where
-        mathobject is an instance of the class MathObject (not
-        MathObjectWidgetItem!) and tag is mathobject's tag a str,
-        (see _TagIcon.__doc__).
-
-        :param tagged_mathobjects: The list of tagged instances of the
-            class MathObject.
+        Init self with an ordered list of ContextMathObject.
         """
 
         super().__init__()
+        self._saved_style_sheet = None
+        self._current_index = None  # Last clicked item
+        # Current dragged item, if any. Must be reset to None when dropped.
+        self.dragged_index = None
+
+        # The following are set by ExerciseCentralWidget:
+        self.is_props_wdg = False
+        self.context_selection: callable = None
+        self.clear_context_selection: callable = None
 
         # Possible settings:
-        # self.setSelectionMode(QAbstractItemView.MultiSelection)
+        self.setSelectionMode(QAbstractItemView.MultiSelection)
         # list_view.setMovement(QListView.Free)
         # list_view.setRowHidden(1, True)
         # list_view.setAlternatingRowColors(True)
-        # list_view.setDragEnabled(True)
-        # list_view.setDragDropMode(QAbstractItemView.DragDrop)
-        # Modify to enable drag and drop:
-        # self.setDragDropMode(QAbstractItemView.NoDragDrop)
 
-        # No text edition (!), no selection, no drag-n-drop
-        self.setSelectionMode(QAbstractItemView.NoSelection)
+        # No text edition (!)
+        # self.setSelectionMode(QAbstractItemView.NoSelection)
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+        # By default, disable drag and drop. This may be changed at creation
+        # (see _exercise_main_window_widgets).
+        self.setDragEnabled(False)
         self.setDragDropMode(QAbstractItemView.NoDragDrop)
-        # Uncomment to enable drag and drop:
-        # self.setDragEnabled(True)
-        # self.setDragDropMode(QAbstractItemView.DragDrop)
 
         # After filling content?
         # model = QStandardItemModel(self)
@@ -288,6 +355,7 @@ class MathObjectWidget(QListView):
         self.setItemDelegate(HTMLDelegate())  # parent=self?
 
         self.items = []
+        self._potential_drop_receiver = None
 
         # set fonts for maths display FIXME: put this in delegate
         # math_font_name = cvars.get('display.mathematics_font', 'Default')
@@ -299,38 +367,54 @@ class MathObjectWidget(QListView):
         # self.setStyle(f'{{font - size: {main_font_size};}}')
 
         if context_math_objects:
-            for math_object in context_math_objects:
-                item = MathObjectWidgetItem(math_object)
-                self.model().appendRow(item)
-                self.items.append(item)
-        elif target:
-            item = TargetWidgetItem(target)
+            self.add_math_objects(context_math_objects)
+
+    @property
+    def accept_dropped_statements(self):
+        return self.is_props_wdg
+
+    def select_index(self, index, yes=True):
+        # self.selectionModel().select(index, QItemSelectionModel.SelectCurrent)
+        self.selectionModel().select(index, QItemSelectionModel.Select if yes
+                                     else QItemSelectionModel.Deselect)
+
+    def select_item(self, item: MathObjectWidgetItem, yes=True):
+        self.select_index(item.index(), yes)
+
+    def add_math_objects(self, math_objects):
+        for math_object in math_objects:
+            item = MathObjectWidgetItem(math_object)
             self.model().appendRow(item)
+            self.items.append(item)
+            item.math_object_wdg = self
+            # item.setDragEnabled(True)
+            # item.setDropEnabled(True)
 
-        # self.horizontalScrollBar().setRange(0, self.width)
-        # log.debug(f"Horizontal context width: {self.width}")
-        # log.debug(f"Size hint for col 0: {self.sizeHintForColumn(0)}")
-
-    def currentChanged(self, current, previous) -> None:
-        """
-        Prevent current index setting (which would be highlighted in light
-        blue, interfering with deaduction's own selection mechanism).
-        """
-        self.setCurrentIndex(QModelIndex())
+    def set_math_objects(self, math_objects):
+        self.items = []
+        model = self.model()
+        model.removeRows(0, model.rowCount())
+        self.add_math_objects(math_objects)
 
     def item_from_index(self, index_):
         item = self.model().itemFromIndex(index_)
         return item
 
-    @Slot(MathObjectWidgetItem)
-    def _emit_apply_math_object(self, item):
-        """
-        Emit the signal self.apply_math_object_triggered with self as an
-        argument. This slot is connected to ActionButton.clicked signal in
-        self.__init__.
-        """
-        item.setSelected(False)
-        self.apply_math_object_triggered.emit(item)
+    def selected_items(self):
+        return [self.item_from_index(index) for index in self.selectedIndexes()]
+
+    # @Slot(MathObjectWidgetItem)
+    # def _emit_apply_math_object(self, item):
+    #     """
+    #     Emit the signal self.apply_math_object_triggered with self as an
+    #     argument. This slot is connected to ActionButton.clicked signal in
+    #     self.__init__.
+    #     """
+    #     item.setSelected(False)
+    #     self.apply_math_object_triggered.emit(item)
+
+    # def current_item(self):
+    #     return self.item_from_index(self.currentIndex())
 
     def item_from_logic(self, math_object) -> MathObjectWidgetItem:
         """
@@ -349,27 +433,241 @@ class MathObjectWidget(QListView):
         if idx in range(len(items)):
             return items[idx]
 
+    def index_from_event(self, event):
+        return self.indexAt(event.pos())
 
-MathObjectWidget.apply_math_object_triggered = Signal(MathObjectWidget)
+    def item_from_event(self, event):
+        return self.item_from_index(self.index_from_event(event))
 
+    def drop_enabled(self):
+        return (self.dragDropMode() == QAbstractItemView.DragDrop or
+                self.dragDropMode() == QAbstractItemView.DropOnly)
 
-# @property
-# def width(self):
-#     width = 0
-#     for item in self.items:
-#         if item.width > width:
-#             width = item.width
-#     return width
-#
-# def resizeEvent(self, event):
-#     self.horizontalScrollBar().setRange(0, self.width)
-#     # self.horizontalScrollBar().setValue(200)
+    @property
+    def potential_drop_receiver(self):
+        return self._potential_drop_receiver
+
+    @potential_drop_receiver.setter
+    def potential_drop_receiver(self, receiver: QModelIndex):
+        if (self.potential_drop_receiver and
+                receiver != self.potential_drop_receiver):
+            self.select_index(self._potential_drop_receiver, False)
+            self._potential_drop_receiver = None
+        if receiver and receiver not in self.selectedIndexes():
+            self._potential_drop_receiver = receiver
+            self.select_index(receiver)
+
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        self._current_index = self.index_from_event(event)
+
+    def startDrag(self, supported_actions) -> None:
+        drag = QDrag(self)
+
+        if not self._current_index:
+            # log.debug("Drag aborted")
+            return
+
+        # # Drag all selected items or just last one? OBSOLETE
+        # several_items = cvars.get('functionality.drag_several_items', False)
+        # if several_items:
+        #     if self._current_item not in items:
+        #         items.append(self._current_item)
+        # else:
+        # log.debug("Selecting item")
+
+        # Set selection to dragged item
+        self.dragged_index = self._current_index
+        item = self.item_from_index(self.dragged_index)
+        self.set_selection([item])
+
+        mime_data = QMimeData([item])
+        drag.setMimeData(mime_data)
+
+        # Set image of dragged item
+        pixmap = DraggedItems(self.selected_items()).pixmap()
+        drag.setPixmap(pixmap)
+        drag.exec_(Qt.IgnoreAction)
+
+    def dragEnterEvent(self, event):
+        """
+        Mark enterEvent of StatementTreeWidgetItem by changing background color.
+        """
+
+        source = event.source()
+        if isinstance(source, StatementsTreeWidget):
+            if self.drop_enabled() and self.accept_dropped_statements:
+                self._saved_style_sheet = self.styleSheet()
+                color = cvars.get("display.color_for_selection", "LimeGreen")
+                self.setStyleSheet(f'background-color: {color};')
+                self.setDropIndicatorShown(False)  # Do not show "where to drop"
+                event.acceptProposedAction()
+            else:
+                event.ignore()  # No dropped statement
+        else:
+            event.acceptProposedAction()
+
+    def dragLeaveEvent(self, event):
+        """
+        Restore normal styleSheet (background color).
+        """
+        self.setStyleSheet(self._saved_style_sheet)
+        self._saved_style_sheet = None
+        self.setDropIndicatorShown(True)
+        self.potential_drop_receiver = None  # Unselect automatically
+
+    def dragMoveEvent(self, event) -> None:
+        """
+        When a MathWidgetItem is dragged over a potential receiver, select it
+        temporarily.
+        """
+
+        index = self.index_from_event(event)
+        if index != self.potential_drop_receiver:
+            self.potential_drop_receiver = None  # Unselect automatically
+
+        # if index:
+        item: MathObjectWidgetItem = self.item_from_index(index)
+        if item and item.isDropEnabled():
+            self.potential_drop_receiver = index
+
+        event.accept()
+
+    def set_selection(self, items):
+        """
+        Set selection to items, clearing previous selection.
+        """
+        if self.clear_context_selection:
+            self.clear_context_selection()
+        for item in items:
+            item.select()
+
+    def dropEvent(self, event):
+        """
+        Emit signal corresponding to dropEvent:
+        - drop of a statementTreeItem   -> statement_dropped
+        - drop a MathWidgetItem         -> math_object_dropped.
+        """
+        source = event.source()
+        if isinstance(source, StatementsTreeWidget):
+            dragged_widget = source.currentItem()
+            self.statement_dropped.emit(dragged_widget)
+            self.setStyleSheet('background-color: white;')
+        elif isinstance(source, MathObjectWidget):
+
+            dragged_index = source.dragged_index
+            source.dragged_index = None
+            index = self.index_from_event(event)
+            if dragged_index == index:  # Absurd auto-drop, abort
+                source.select_index(dragged_index, False)
+                self.select_index(index, False)
+                return
+
+            print(f"Source : {source}, dragged index: {dragged_index}")
+            # # print(f"Source selected items: {len(source.selected_items())}")
+            # if dragged_index not in source.selectedIndexes():
+            #     source.select_index(dragged_index)
+            # # print(f"Source selected items: {len(source.selected_items())}")
+            # # Add receiver to selection
+            # if index not in self.selectedIndexes():
+            #     self.select_index(index)
+
+            # Emit signal
+            premise = source.item_from_index(dragged_index)
+            operator = self.item_from_index(index)
+            print(premise, operator)
+            if premise and operator:
+                self.set_selection([premise, operator])
+            self.math_object_dropped.emit(premise, operator)
+
+        event.accept()
+        self.setDropIndicatorShown(False)
+
+    def currentChanged(self, current, previous) -> None:
+        """
+        Prevent current index setting (which would be highlighted in light
+        blue, interfering with deaduction's own selection mechanism).
+        """
+        self.setCurrentIndex(QModelIndex())
+
+# Obsolete:
+# MathObjectWidget.apply_math_object_triggered = Signal(MathObjectWidget)
+
 
 ##########################
 # Target widgets classes #
 ##########################
 
 # Classes to display and store the target in the main exercise window.
+
+class TargetLabel(QLabel):
+    """
+    A class to display the target. Can be used in ExerciseMainWindow via
+    TargetWidget, and in the exercise chooser. Take the target as a
+    parameter, and display it in richText format (html).
+    """
+
+    clicked = Signal()
+    double_clicked = Signal()
+
+    def __init__(self, target):
+        super().__init__()
+        self._double_clicked = False
+        self.math_object = target
+        self.setTextFormat(Qt.RichText)
+        self.set_target(target)
+
+    def set_target(self, target):
+        if target:
+            self.math_object = target
+            text = target.math_type_to_display()
+        else:
+            text = '…'
+        self.setText(text)
+
+    # Debugging
+    # def mouseReleaseEvent(self, ev) -> None:
+    #     print("Clac!!")
+
+    def mouseReleaseEvent(self, event):
+        """
+        Emit the clicked signal only if this is not a double click.
+        """
+        if not self._double_clicked:
+            # print("target label clicked")
+            self.clicked.emit()
+        else:
+            self._double_clicked = False
+
+    def mouseDoubleClickEvent(self, event):
+        # print("target label double clicked")
+        self._double_clicked = True
+        self.double_clicked.emit()
+
+    # The following method mimic MathObjectWidgetItem methods:
+    def select(self, yes=True):
+        if yes:
+            self.setBackgroundRole(QPalette.Highlight)
+            self.setForegroundRole(QPalette.WindowText)
+        else:
+            self.setBackgroundRole(QPalette.Window)
+            # self.target_label.setStyleSheet(self.unselected_style)
+
+    def highlight(self, yes=True, duration=None):
+        # self.select(not yes)
+        color = cvars.get("display.color_for_highlight_in_proof_tree",
+                          "yellow")
+        # self.setBackground(QBrush(QColor(color)) if yes else QBrush())
+
+        self.setStyleSheet(f"background-color: {color};" if yes else "")
+        if duration:
+            def unlit():
+                self.highlight(yes=False)
+            QTimer.singleShot(duration, unlit)
+
+    # def un_highlight(self):
+    #     self.highlight(yes=False)
+
 
 class TargetWidget(QWidget):
     """
@@ -378,14 +676,13 @@ class TargetWidget(QWidget):
     this class and not _TargetLabel as this one also manages layouts!
     """
 
-    def __init__(self, target=None, goal_count: str = ''):
+    def __init__(self, target=None, goal_count: int = 0):
         """"
-        Init self with an target (an instance of the class ProofStatePO)
+        Init self with a target (an instance of the class ProofStatePO)
         and a tag. If those are None, display an empty tag and '…' in
         place of the target. A caption is added on top of the target.
 
         :param target: The target to be displayed.
-        :param tag: The tag associated to target.
         :param goal_count: a string indicating the goal_count state,
         e.g. "  2 / 3" means the goal number 2 out of 3 is currently being
         studied
@@ -393,16 +690,15 @@ class TargetWidget(QWidget):
 
         super().__init__()
 
-        self.target = target
-
         # ───────────────────── Widgets ──────────────────── #
-        text = _("Target") + " " + goal_count if goal_count else _("Target")
-        caption_label = QLabel(text)
+        self.caption_label = QLabel()
+        self.set_pending_goals_counter(goal_count)
         self.target_label = TargetLabel(target)
+        self.target_label.setAutoFillBackground(True)  # For highlighting
 
         self.setToolTip(_('To be proved'))
         # TODO: put the pre-set size of group boxes titles
-        caption_label.setStyleSheet('font-size: 11pt;')
+        # caption_label.setStyleSheet('font-size: 11pt;')
 
         # TODO: method setfontstyle
         # size = cvars.get('display.target_font_size')
@@ -416,14 +712,14 @@ class TargetWidget(QWidget):
         # math_font_name = cvars.get('display.mathematics_font', 'Default')
         # self.target_label.setFont(QFont(math_font_name))
 
-        self.selected_style = ""  # Set in _exercise_main_window_widgets
-        self.unselected_style = ""
+        # self.selected_style = ""  # Set in _exercise_main_window_widgets
+        # self.unselected_style = ""
         # ───────────────────── Layouts ──────────────────── #
 
         central_layout = QVBoxLayout()
-        central_layout.addWidget(caption_label)
+        central_layout.addWidget(self.caption_label)
         central_layout.addWidget(self.target_label)
-        central_layout.setAlignment(caption_label, Qt.AlignHCenter)
+        central_layout.setAlignment(self.caption_label, Qt.AlignHCenter)
         central_layout.setAlignment(self.target_label, Qt.AlignHCenter)
 
         main_layout = QHBoxLayout()
@@ -450,12 +746,20 @@ class TargetWidget(QWidget):
         :param yes: See paragraph above.
         """
         if hasattr(self, 'target_label'):
-            if yes:
-                self.target_label.setStyleSheet(self.selected_style)
-            else:
-                self.target_label.setStyleSheet(self.unselected_style)
+            self.target_label.select(yes)
+            # if yes:
+            #     # self.target_label.setStyleSheet(self.selected_style)
+            #     self.target_label.setBackgroundRole(QPalette.Highlight)
+            #     self.target_label.setForegroundRole(QPalette.WindowText)
+            # else:
+            #     self.target_label.setBackgroundRole(QPalette.Window)
+            #     # self.target_label.setStyleSheet(self.unselected_style)
         else:
             log.warning("Attempt to use deleted attribute target_label")
+
+    @property
+    def target(self):
+        return self.target_label.math_object
 
     @property
     def math_object(self):
@@ -464,4 +768,12 @@ class TargetWidget(QWidget):
     @property
     def logic(self):
         return self.target
+
+    def replace_target(self, target):
+        self.target_label.set_target(target)
+        # self.target = target
+
+    def set_pending_goals_counter(self, pgn: int):
+        text = _("Target") + " " + str(pgn) if pgn else _("Target")
+        self.caption_label.setText(text)
 

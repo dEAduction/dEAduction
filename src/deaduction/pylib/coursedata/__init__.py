@@ -1,7 +1,5 @@
 """
-# __init__.py : #ShortDescription #
-    
-    (#optionalLongDescription)
+# __init__.py  #
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -26,7 +24,7 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .exercise_classes import Definition, Exercise, Statement, Theorem
+from .exercise_classes import Statement, Definition, Theorem, Exercise
 from .course import           Course
 from .auto_steps import       UserAction, AutoStep
 from .course_metadata_translations import metadata_nice_text

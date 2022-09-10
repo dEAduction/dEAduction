@@ -83,6 +83,8 @@ from deaduction.pylib.coursedata import Course, Exercise
 from deaduction.pylib.autotest import ( select_course,
                                         select_exercise)
 
+# from .choose_coex_for_test import select_course, select_exercise
+
 # (non-exhaustive) list of logger domains:
 # ['lean', 'ServerInterface', 'Course', 'deaduction.dui',
 #  'deaduction.pylib.coursedata', 'deaduction.pylib.mathobj', 'LeanServer']

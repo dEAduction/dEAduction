@@ -94,6 +94,9 @@ class BlinkingLabel(QLabel):
     A QLabel that displays a msg that can be made to blink in boldface.
     This is used to show the status of targets (solved / to be completed).
     """
+
+    blinking_nb = 5  # Cursor blinks 5 times
+
     def __init__(self, text: callable, goal_nb=-1):
         super(BlinkingLabel, self).__init__(text())
         self.goal_nb = goal_nb
@@ -105,6 +108,7 @@ class BlinkingLabel(QLabel):
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self._is_activated = None
         self.disclosed = True
+        self._blinking_counter = None
 
     def start_blinking(self):
         """
@@ -118,6 +122,7 @@ class BlinkingLabel(QLabel):
         self.flag = True
         self.set_bold(True)
         self.timer.start()
+        self._blinking_counter = self.blinking_nb
         # log.debug(f"Starting blinking gn {self.goal_nb}, text = {self.text}")
 
     def stop_blinking(self):
@@ -134,8 +139,11 @@ class BlinkingLabel(QLabel):
             self.hide()
         elif self.disclosed:
             self.show()
+            self._blinking_counter -= 1
+            if self._blinking_counter == 0:
+                self.stop_blinking()
+
         self.flag = not self.flag
-        # log.debug(f"Blinking gn {self.goal_nb}, text = {self.text}")
 
     def activate(self, yes=True):
         """
@@ -623,7 +631,8 @@ class RawLabelMathObject(QLabel):
         event.accept()
 
     def highlight(self, yes=True):
-        color = cvars.get("display.color_for_highlighted_math_obj", "green")
+        color = cvars.get(
+            "display.color_for_highlight_in_proof_tree", "green")
         self.setStyleSheet(f'background-color: {color};' if yes
                            else 'background-color:;')
 

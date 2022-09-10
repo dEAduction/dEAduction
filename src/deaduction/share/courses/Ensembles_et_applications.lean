@@ -114,10 +114,14 @@ begin
     exact eq_empty_iff_forall_not_mem,
 end
 
-lemma theorem.ensemble_non_vide
+lemma definition.ensemble_non_vide
 (A: set X) :
 (A ≠ ∅) ↔ ∃ x : X, x ∈ A
 :=
+/- dEAduction
+ImplicitUse
+  True
+-/
 begin
     todo
 end

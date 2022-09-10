@@ -187,7 +187,7 @@ class Lean_Server:
                     self.log.info(f"New state is : {self.state}")
 
                 else:
-                self.log.info(f"{msg.severity} at {msg.file_name}:{msg.pos_line}:{msg.pos_col} : {msg.text}")
+                    self.log.info(f"{msg.severity} at {msg.file_name}:{msg.pos_line}:{msg.pos_col} : {msg.text}")
         else: raise ValueError("Unknown message type : {type(parsed_msg)}")
 
     ###########################################

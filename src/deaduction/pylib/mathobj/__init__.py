@@ -1,7 +1,5 @@
 """
-# __init__.py : #ShortDescription #
-    
-    (#optionalLongDescription)
+# __init__.py #
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -26,15 +24,12 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from .drag_n_drop import          DragNDrop
+
 from deaduction.pylib.mathobj.math_object import MathObject
 from .context_math_object import                 ContextMathObject
-from .pattern_math_objects import                PatternMathObject
 from .proof_step import          (ProofStep,
                                   NewGoal)
-
-from .give_name import           (get_new_hyp,
-                                  give_global_name,
-                                  names_for_types)
 
 from .lean_analysis import       (lean_expr_with_type_grammar,
                                   LeanEntryVisitor)

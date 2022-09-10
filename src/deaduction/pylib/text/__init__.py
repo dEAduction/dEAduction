@@ -26,3 +26,5 @@ This file is part of d∃∀duction.
 """
 from .tooltips import (button_symbol,
                        button_tool_tip)
+
+from .help_msgs import use, prove

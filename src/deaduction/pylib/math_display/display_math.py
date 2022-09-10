@@ -461,7 +461,7 @@ def raw_latex_shape_from_application(math_object, negate=False):
             else:
                 name = '*set_family*'
             display = [name, ['_', 1]]
-        log.debug(f"Displaying app: {display}")
+        # log.debug(f"Displaying app: {display}")
 
     # (3) Case of constants, e.g. APP(injective, f)
     elif first_child.node == "CONSTANT":

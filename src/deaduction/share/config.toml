@@ -34,7 +34,7 @@ color_for_dummy_variables = ""  # 33cccc #00cc99
 color_for_selection = "LimeGreen"  #LimeGreen  #ffff99
 color_for_props = "Fuchsia"
 color_for_operator_props = "Red"
-color_for_highlighted_math_obj = "Yellow"
+color_for_highlight_in_proof_tree = "Yellow"
 
 # Any modification of the following must be echoed
 # in the replace_dubious_characters function in in math_display.utils
@@ -53,11 +53,14 @@ use_color_for_applied_properties = true
 target_selected_by_default = false
 allow_proof_by_sorry = true
 expanded_apply_button = false
-allow_implicit_use_of_definitions = true
+allow_implicit_use_of_definitions = false
 automatic_intro_of_variables_and_hypotheses = false
 automatic_intro_of_exists = true
 save_solved_exercises_for_autotest = false
-
+drag_statements_to_context = false
+drag_and_drop_in_context = false
+drag_context_to_statements = false
+drag_several_items = false
 
 [i18n]
 available_languages = ["en", "fr_FR"]

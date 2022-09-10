@@ -32,8 +32,7 @@ This file is part of dEAduction.
 
 from dataclasses import dataclass
 import logging
-from typing import List, Tuple, Any, Optional
-from copy import copy
+from typing import List, Tuple
 
 import deaduction.pylib.logger as logger
 import deaduction.pylib.config.vars as cvars
@@ -43,7 +42,7 @@ from deaduction.pylib.mathobj.context_math_object import ContextMathObject
 from deaduction.pylib.mathobj.lean_analysis import (lean_expr_with_type_grammar,
                                                     LeanEntryVisitor)
 # from deaduction.pylib.math_display import plurals, numbers
-from deaduction.pylib.mathobj.give_name import name_bound_vars, inj_list
+from deaduction.pylib.give_name.give_name import name_bound_vars, inj_list
 log = logging.getLogger(__name__)
 
 global _
@@ -740,7 +739,7 @@ def introduce_several_object(objects: [MathObject], format_) -> str:
 
     # Fixme: changing i18n does not update the following dic,
     #  even if module is reloaded (see config_window)
-    from deaduction.pylib.math_display import plurals, numbers
+    from deaduction.pylib.math_display import plural_types, numbers, plurals
     new_sentence = ""
     if not objects:
         return new_sentence
@@ -757,18 +756,23 @@ def introduce_several_object(objects: [MathObject], format_) -> str:
         number = len(objects)
         if len(objects) <= len(numbers):
             number = numbers[number]  # text version of the number
-        type_ = objects[0].math_type_to_display(format_=format_, text_depth=10)
-
-        words = type_.split(" ")
-        plural_type = None
-        # Try to replace first words by plural:
-        for counter in range(len(words)):
-            first_words = " ".join(words[:counter+1])
-            if first_words in plurals:
-                plural_first_words = plurals[first_words]
-                new_words = [plural_first_words] + words[counter+1:]
-                plural_type = " ".join(new_words)
-                break
+        utf8_type = objects[0].math_type_to_display(format_='utf8',
+                                                    text_depth=10)
+        type_ = objects[0].math_type_to_display(format_=format_,
+                                                text_depth=10)
+        plural_type = plural_types(type_, utf8_type)
+        # words = utf8_type.split(" ")
+        # plural_type = None
+        # # Try to replace first words by plural. We use utf8_type to avoid
+        # #  html formatting to interfere:
+        # for counter in range(len(words)):
+        #     first_words = " ".join(words[:counter+1])
+        #     if first_words in plurals:
+        #         plural_first_words = plurals[first_words]
+        #         plural_type = type_.replace(first_words, plural_first_words)
+        #         # new_words = [plural_first_words] + words[counter+1:]
+        #         # plural_type = " ".join(new_words)
+        #         break
 
         if plural_type:
             shape = plurals[_("Let {} be {}")]

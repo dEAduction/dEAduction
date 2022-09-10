@@ -284,8 +284,43 @@ plurals = {
     _('an element'): _("elements"),
     _('a function'): _("functions"),
     _('a sequence'): _("sequences"),
+    _('a rational number'): _("rational numbers"),
     _('a real number'): _("real numbers")
 }
+
+
+def plural_types(type_, utf8_type=None):
+    """
+    Return type_ where the first word utf8_type of the plurals dict have been
+    replaced by its plural.
+    """
+
+    plural_type = None
+    if not utf8_type:
+        utf8_type = type_
+    # Keep only non empty words:
+    words = [word for word in utf8_type.split(" ") if word]
+    for counter in range(len(words)):
+        first_words = " ".join(words[:counter + 1])
+        if first_words in plurals:
+            plural_first_words = plurals[first_words]
+            plural_type = type_.replace(first_words, plural_first_words)
+            # new_words = [plural_first_words] + words[counter+1:]
+            # plural_type = " ".join(new_words)
+            break
+    return plural_type
+
+# For substitution in types, and translation
+every = {
+    _('a proposition'): _("every proposition"),
+    _('a set'): _("every set"),
+    _('a subset'): _("every subset"),
+    _('an element'): _("every element"),
+    _('a function'): _("every function"),
+    _('a sequence'): _("every sequence"),
+    _('a real number'): _("every real number")
+}
+
 
 numbers = {
     1: _("one"),

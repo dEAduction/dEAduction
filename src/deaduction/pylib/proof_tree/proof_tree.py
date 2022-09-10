@@ -363,6 +363,9 @@ class GoalNode:
         elif proof_step.button_name == "equal" \
                 and len(proof_step.selection) == 1:
             rw_item = proof_step.rw_item
+        elif proof_step.is_iff() and len(proof_step.selection) == 1 and \
+                proof_step.target_selected:
+            rw_item = proof_step.rw_item
         elif proof_step.is_push_neg() and proof_step.is_on_target():
             rw_item = _("Pushing negation")
         elif proof_step.is_by_contraposition():

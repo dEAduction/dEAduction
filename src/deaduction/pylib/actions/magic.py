@@ -39,6 +39,98 @@ from deaduction.pylib.mathobj import  MathObject
 log = logging.getLogger("magic")
 global _
 
+########################################
+# Helper: target obviously in context? #
+########################################
+
+
+def find_target_in_props(target: MathObject, props: [(MathObject, MathObject)]):
+    """
+    Direct search for a prop that matches target.
+    each element of props is a couple (original_prop, sub_prop)
+    where sub_prop is a property implied by original_prop (either by applying
+    implicit def, or one term of a conjunction, ...).
+    Return a couple that matches, or None.
+    """
+    for original_prop, sub_prop in props:
+        if sub_prop == target:
+            return original_prop, sub_prop
+
+
+def rec_find_target_in_props(target: MathObject,
+                             props: [MathObject, MathObject],
+                             depth=3):
+    """
+    Recursively search props for a prop that matches target, taking into
+    account implicit defs and conjunctions/ disjunctions.
+
+    depth enables to limit recursive search, to mimick the (in)efficiency of the
+    Goal! button (and of our brains...).
+    """
+
+    # TODO: add target conjunctions (solved by Goal!)
+
+    if not props:
+        return
+
+    # Direct search
+    direct = find_target_in_props(target, props)
+    if direct:
+        return direct
+
+    if depth == 0:
+        return
+
+    # Conjunctions search
+    for original_prop, prop in props:
+        if prop.is_and(is_math_type=True):
+            and_props = [(original_prop, pr) for pr in prop.children]
+            conj = rec_find_target_in_props(target, and_props,
+                                            depth=0)
+            if conj:
+                return conj
+
+    # Implicit defs search
+    for original_prop, prop in props:
+        implicit_props = [(original_prop, pr)
+                          for pr in prop.unfold_implicit_definition()]
+        implicit = rec_find_target_in_props(target, implicit_props,
+                                            depth=min(1, depth-1))
+        if implicit:
+            return implicit
+
+    # Target disjunction search
+    if target.is_or(is_math_type=True):
+        for sub_target in target.children:
+            disj = rec_find_target_in_props(sub_target, props,
+                                            depth=0)
+            if disj:
+                return disj
+
+    # Target implicit defs search
+    implicit_targets = target.unfold_implicit_definition()
+    for sub_target in implicit_targets:
+        # Here rec_find_... would be too powerful...
+        implicit = rec_find_target_in_props(sub_target, props,
+                                            depth=min(1, depth-1))
+        if implicit:
+            return implicit
+
+
+def context_obj_solving_target(proof_step):
+    """
+    Search context for an object that matches the target.
+    If search is successful return a couple (main_prop, sub_prop)
+    where main_prop is a ContextMathObject which implies sub_prop,
+    and sub_prop matches target (or one of target children if target is a
+    disjunction).
+    """
+    goal = proof_step.goal
+    target = goal.target.math_type
+    props = [(prop, prop.math_type) for prop in goal.context
+             if prop.math_type.is_prop()]
+    return rec_find_target_in_props(target, props)
+
 
 #############
 # Raw codes #

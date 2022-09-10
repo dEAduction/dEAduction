@@ -25,13 +25,14 @@ This file is part of d∃∀duction.
 """
 
 
-from typing import Any
+from typing import Any, Tuple, Dict, Optional
 import logging
-from copy import copy
 
-# from deaduction.pylib.math_display import TO_BE_EXPANDED
+import deaduction.pylib.config.vars as cvars
+
+# from deaduction.pylib.text                  import use, prove
+import deaduction.pylib.text.help_msgs as help_msgs
 from deaduction.pylib.mathobj.math_object   import MathObject
-from deaduction.pylib.mathobj.give_name import name_single_bound_var
 
 log = logging.getLogger(__name__)
 global _
@@ -116,7 +117,10 @@ class ContextMathObject(MathObject):
         """
         Replace the raw_latex_shape_of_math_type method for MathObject.
         """
-        shape = super().raw_latex_shape_of_math_type(text_depth)
+
+        # Call to MathObject.raw_latex_shape_of_math_type() on self
+        math_type = super(ContextMathObject, self)
+        shape = math_type.raw_latex_shape_of_math_type(text_depth)
         if (hasattr(self, 'has_been_used_in_proof')
                 and self.has_been_used_in_proof):
             shape = [r'\used_property'] + shape
@@ -126,11 +130,269 @@ class ContextMathObject(MathObject):
             shape[0] = r"\context_function_from"
         return shape
 
+    def display_with_type(self, format_='html'):
+        lean_name = self.to_display(format_=format_)
+        math_expr = self.math_type_to_display(format_=format_)
+        test_expr = self.math_type_to_display(format_='utf8')
+        separator = '' if test_expr.startswith(':') else ': '
+        caption   = f'{lean_name} {separator}{math_expr}'
+        return caption
+
     @property
     def identifier(self):
         return self.info.get("id")
 
-    # def math_type_to_display(self, format_="html", text_depth=0) -> str:
-    #     abstract_string = MathObject.to_abstract_string(self, text_depth)
-    #     if self.has_been_used_in_the_proof:
-    #         abstract_string = [r"\used_property"] + abstract_string
+    def action_from_premise_and_operator(self, other: MathObject):
+        """
+        Return possible actions for premise = self and operator = other. This is
+        used e.g. to determine which action could be triggered by a drag&drop
+        operation.
+        """
+        operator = self
+        premise = other
+        action = None
+
+        implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
+        if operator.is_function():
+            action = "map"
+
+        if premise.math_type.is_prop():
+            if operator.can_be_used_for_implication(implicit=implicit):
+                action = "implies"
+            else:
+                yes, subs = operator.can_be_used_for_substitution()
+                if yes:
+                    action = "equal"
+        else:
+            if operator.is_for_all(implicit=implicit):
+                action = "forall"
+
+        return action
+
+    def check_unroll_definitions(self) -> []:
+        """
+        Return the definitions that match self.
+        """
+        definitions = MathObject.definitions
+        math_type = self.math_type
+        matching_defs = [defi for defi in definitions if defi.match(math_type)]
+        return matching_defs
+
+    def format_msg(self, raw_msg: str,
+                   obj: Optional[MathObject] = None,
+                   definitions=None,
+                   solving_obj=None,
+                   on_target=False,
+                   format_="html") -> str:
+        """
+        Format msgs with parameters from self's children, and translate them.
+        For now, works only with html format.
+
+        obj is the implicit self, if an implicit definition should be applied.
+        definitions is the list of definitions that can be applied.
+
+        The dictionary params is used to display appropriate text versions of
+        math objects.
+        """
+
+        params: Dict[str, str] = dict()
+        params['solving_obj'] = solving_obj
+        from deaduction.pylib.math_display import plural_types, plurals
+        if not obj:
+            obj = self.math_type
+        children = obj.children
+
+        # Compute text for some pertinent math objects
+        if children:
+            ch0 = children[0]
+            params['type_'] = ch0.to_display(format_=format_)
+            params['ch0'] = ch0.to_display(format_=format_)
+            # params['ch0_type'] = ch0.math_type.to_display(format_=format_)
+            ch0_type = ch0.math_type_to_display(format_=format_,
+                                                text_depth=10)
+            utf8 = ch0.math_type_to_display(format_='utf8', text_depth=10)
+            plural_type = plural_types(ch0_type, utf8)
+            params['elements_of_ch0_type'] = (plural_type if plural_type else
+                                              _('elements of') + ' ' + ch0_type)
+            if len(children) > 1:
+                ch1 = children[1]
+                params['ch1'] = ch1.to_display(format_=format_)
+                # type_ = math_object.math_type_to_display(format_=format_,
+                #                                          text_depth=10)
+                params['an_element_of_type_'] = \
+                    ch1.math_type_to_display(format_=format_, text_depth=10)
+                params['every_element_of_type_'] = \
+                    help_msgs.single_to_every(params['an_element_of_type_'])
+
+        # Bounded quantification?
+        real_type = obj.bounded_quant_real_type(is_math_type=True)
+        if real_type:
+            params['type_'] = real_type
+            params['an_element_of_type_'] = \
+                real_type.math_type_to_display(format_=format_, text_depth=10,
+                                               is_math_type=True)
+            params['every_element_of_type_'] = \
+                help_msgs.single_to_every(params['an_element_of_type_'])
+
+        # Definitions names
+        if definitions:
+            params['def_name'] = f'"{definitions[0].pretty_name}"'
+            if len(definitions) > 1:
+                def_names = '", "'.join(defi.pretty_name
+                                        for defi in definitions)
+                params['def_names'] = '"' + def_names + '"'
+
+        # Mention drag and drop (or not)
+        format_dic = {**help_msgs.phrase}  # Copy to not alter original dic
+        drag_to_context = cvars.get('functionality.drag_and_drop_in_context')
+        drag_to_def = cvars.get('functionality.drag_context_to_statements')
+        no_drag = dict()
+        if not drag_to_context:
+            no_drag = {"or_drag_element_to_property": "",
+                       "or_drag_to_function": "",
+                       "or_drag_to_equality": "",
+                       "or_drag_premise": ""}
+
+        if not drag_to_def:
+            no_drag = {"or_drag_to_def": ""}
+
+        if on_target:  # TODO: make target draggable...
+            no_drag = {"or_drag_to_def": "",
+                       "or_drag_element_to_property": "",
+                       "or_drag_to_function": "",
+                       "or_drag_to_equality": "",
+                       "or_drag_premise": ""}
+        format_dic.update(no_drag)
+
+        # Translate values
+        translated_format_dic = {key: help_msgs.conc_n_trans(val) if val
+                                 else val for key, val in format_dic.items()}
+
+        # Merge dic
+        translated_format_dic.update(**params, **help_msgs.prop_types)
+
+        # Translate msgs, then substitute with translated_format_dic
+        # translated_msg = _(raw_msg) if raw_msg else ""
+        msg1 = raw_msg.format(**translated_format_dic)
+        return msg1
+
+    def help_definition(self, target=False) -> ((str, str, str), Any):
+        def get_help_msgs(key):
+            return help_msgs.get_helm_msgs(key, target)
+        # msgs_dic = help_msgs.prove if target else help_msgs.use
+        # msgs = ("", "", "")
+        definitions = self.check_unroll_definitions()
+        # msgs = ([] if not definitions
+        #         else msgs_dic["definition"] if len(definitions) == 1
+        #         else msgs_dic["definitions"])
+        msgs = ([] if not definitions
+                else get_help_msgs("definition" if len(definitions) == 1
+                                   else "definitions"))
+        definition_msgs = [self.format_msg(msg, definitions=definitions,
+                                           on_target=target)
+                           for msg in msgs]
+
+        return definition_msgs
+
+    def after_unfolding_implicit_def_msgs(self, target=False):
+        """
+        If an implicit definition applies, compute a msg that involving the
+        main symbol of self after unfolding the implicit definition.
+        """
+        def get_help_msgs(key):
+            return help_msgs.get_helm_msgs(key, target)
+
+        implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
+        implicit_objs = (self.math_type.unfold_implicit_definition()
+                         if implicit else None)
+        if not implicit_objs:
+            return
+
+        obj = implicit_objs[0]
+        definition = MathObject.last_used_implicit_definition
+        main_symbol = obj.main_symbol()
+        # msgs_dic = help_msgs.prove if target else help_msgs.use
+        msgs = get_help_msgs(main_symbol)
+        main_symbol_msgs = []
+
+        # fake = _("Applying definition {def_name} will turn this into")
+        # become = _("Applying definition {def_name} will turn this into")
+        for msg in msgs:
+            msg = help_msgs.make_implicit(msg)
+            msg = self.format_msg(msg, obj=obj, definitions=[definition],
+                                  on_target=target)
+            main_symbol_msgs.append(msg)
+
+        return main_symbol_msgs
+
+    def solving_msgs(self, solving_obj, on_target=False):
+        msgs = help_msgs.get_helm_msgs('goal!', on_target)
+        return list(self.format_msg(msg, solving_obj=solving_obj,
+                                    on_target=on_target) for msg in
+                    msgs)
+
+    def help_msgs(self, on_target=False) -> [Optional[str]]:
+        """
+        Return help msgs for self as a target if target=True, and as a
+        context object otherwise.
+        """
+        # msgs_dic = help_msgs.prove if target else help_msgs.use
+        def get_help_msgs(key):
+            return help_msgs.get_helm_msgs(key, on_target)
+
+        # (1) Main symbol?
+        main_symbol = self.math_type.main_symbol()
+        msgs = get_help_msgs(main_symbol)
+        main_symbol_msgs = (self.format_msg(msg, on_target=on_target)
+                            for msg in msgs)
+
+        # (2) Matching definitions?
+        def_msgs = self.help_definition(target=on_target)
+
+        # (3) Apply implicit definitions?
+        implicit_msgs = self.after_unfolding_implicit_def_msgs(target=on_target)
+
+        msgs_list = [main_symbol_msgs, def_msgs, implicit_msgs]
+        final_msgs_list = []
+        for msgs in msgs_list:
+            if msgs:
+                msgs = list(msgs)
+                if msgs:
+                    final_msgs_list.append(msgs)
+
+        return final_msgs_list
+
+    def help_target_msg(self, context_solving=None,
+                        format_="html") -> (str, str, str):
+        """
+        Return a list of triples of msgs. Each triple contains three help msgs
+        about self:
+        - a general msg that describes self,
+        - a msgs that explains what to do with self in deaduction,
+        - a hint msg.
+        Help msgs should depend on the main symbol of self, using implicit
+        definition if they are allowed by the current settings.
+        """
+        msgs = self.help_msgs(on_target=True)
+        if context_solving:
+            solving_msgs = self.solving_msgs(context_solving[0], on_target=True)
+            msgs.insert(0, solving_msgs)
+        return msgs
+
+    def help_context_msg(self, context_solving=None,
+                         format_="html") -> (str, str, str):
+        """
+        Return a list of triples of msgs. Each triple contains three help msgs
+        about self:
+        - a general msg that describes self,
+        - a msgs that explains what to do with self in deaduction,
+        - a hint msg.
+        Help msgs should depend on the main symbol of self, using implicit
+        definition if they are allowed by the current settings.
+        """
+        msgs = self.help_msgs(on_target=False)
+        if context_solving and context_solving[0] == self:
+            solving_msgs = self.solving_msgs(context_solving[0],
+                                             on_target=False)
+            msgs.insert(0, solving_msgs)
+        return msgs

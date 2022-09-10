@@ -58,3 +58,4 @@ from .proof_outline_widget import ProofOutlineWindow
 
 from .proof_tree import ProofTreeController
 
+from .help import HelpWindow
