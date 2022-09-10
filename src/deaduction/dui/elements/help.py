@@ -32,7 +32,7 @@ from PySide2.QtWidgets import QDialog, QRadioButton, QVBoxLayout, QHBoxLayout,\
     QTextEdit, QLabel, QDialogButtonBox, QWidget, QPushButton, QFrame, \
     QToolBar, QMainWindow, QAction, QToolButton
 
-from PySide2.QtGui import QIcon
+from PySide2.QtGui import QIcon  # QKeyEvent, QKeySequence
 
 from typing import Union, Optional
 
@@ -79,29 +79,31 @@ class HelpTitleWdg(QWidget):
         self.hint_btn.setCheckable(True)
         self.hint_btn.setAutoRaise(True)
         self.hint_btn.setToolTip(_("Show hint!"))
-        self.fake_hint_btn = QToolButton()
-        self.fake_hint_btn.setFixedSize(self.icon_size, self.icon_size)
-        self.fake_hint_btn.setHidden(True)
+        # self.fake_hint_btn = QToolButton()
+        # self.fake_hint_btn.setFixedSize(self.icon_size, self.icon_size)
+        # self.fake_hint_btn.setHidden(True)
+
+        self.OK_btn = QDialogButtonBox()
+        self.OK_btn.addButton(QDialogButtonBox.Ok)
         size_policy = self.hint_btn.sizePolicy()
         size_policy.setRetainSizeWhenHidden(True)
         self.hint_btn.setSizePolicy(size_policy)
-        self.fake_hint_btn.setSizePolicy(size_policy)
+        # self.fake_hint_btn.setSizePolicy(size_policy)
         self.total_nb = nb_help_msgs
         self.nb = 1
 
         # ------------ Layout ------------
-        lyt.addWidget(self.fake_hint_btn)
-        lyt.addStretch()
+        lyt.addWidget(self.hint_btn)
         lyt.addWidget(self.back_btn)
         lyt.addWidget(self.label)
         lyt.addWidget(self.forward_btn)
         lyt.addStretch()
-        lyt.addWidget(self.hint_btn)
+        lyt.addWidget(self.OK_btn)
+        # lyt.addWidget(self.hint_btn)
         self.setLayout(lyt)
 
     def set_text(self):
-        text = _("Help") if self.total_nb <= 1 \
-               else _("Help n°{}").format(self.nb)
+        text = _("Help n°{}").format(self.nb) if self.total_nb > 1 else ""
         self.label.setText(text)
 
     def set_msgs_total_nb(self, total_nb: int):
@@ -109,7 +111,8 @@ class HelpTitleWdg(QWidget):
         self.back_btn.setVisible(total_nb > 1)
         self.forward_btn.setVisible(total_nb > 1)
         self.hint_btn.setChecked(False)
-        self.hint_btn.hide()
+        # self.hint_btn.hide()
+        self.hint_btn.setEnabled(False)
         if total_nb == 0:
             self.label.hide()
         else:
@@ -124,7 +127,8 @@ class HelpTitleWdg(QWidget):
         self.set_text()
         self.back_btn.setEnabled(self.nb != 1)
         self.forward_btn.setEnabled(self.nb != self.total_nb)
-        self.hint_btn.setVisible(hint)
+        # self.hint_btn.setVisible(hint)
+        self.hint_btn.setEnabled(hint)
 
 
 class HelpWindow(QDialog):
@@ -158,6 +162,7 @@ class HelpWindow(QDialog):
         self.title_widget.back_btn.clicked.connect(self.previous_help_msgs)
         self.title_widget.forward_btn.clicked.connect(self.next_help_msgs)
         self.title_widget.hint_btn.clicked.connect(self.toggle_hint)
+        self.title_widget.OK_btn.clicked.connect(self.accept)
 
         # Display help msgs
         self.help_wdg = QTextEdit()
@@ -197,13 +202,30 @@ class HelpWindow(QDialog):
         elif geometry:
             self.setGeometry(geometry)
 
+    # def keyPressEvent(self, arg__1) -> None:
+    #     if arg__1.matches(QKeySequence.Cancel):
+    #         self.closeEvent(arg__1)
+
+    def accept(self) -> None:
+        """
+        Called by pressing OK.
+        """
+        self.closeEvent(None)
+
+    def reject(self) -> None:
+        """
+        Called by pressing the ESC key.
+        """
+        self.closeEvent(None)
+
     def closeEvent(self, event):
         # Save window geometry
         self.unset_item()
         settings = QSettings("deaduction")
         settings.setValue("help/geometry", self.saveGeometry())
         self.toggle(yes=False)
-        event.accept()
+        if event:
+            event.accept()
 
     @property
     def icon(self):
@@ -261,10 +283,8 @@ class HelpWindow(QDialog):
         """
         if self.math_object.math_type.is_prop():  # target and context props
             math_text = self.math_object.math_type_to_display()
-        else:  # context objects
-            lean_name = self.math_object.to_display()
-            math_expr = self.math_object.math_type_to_display()
-            math_text = f'{lean_name} : {math_expr}'
+        else:  # context objects, display e.g. "x : element of X".
+            math_text = self.math_object.display_with_type(format_='html')
 
         self.math_label.setText(math_text)
         color = cvars.get("display.color_for_highlight_in_proof_tree",

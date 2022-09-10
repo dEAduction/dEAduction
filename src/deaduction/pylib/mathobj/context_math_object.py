@@ -130,6 +130,14 @@ class ContextMathObject(MathObject):
             shape[0] = r"\context_function_from"
         return shape
 
+    def display_with_type(self, format_='html'):
+        lean_name = self.to_display(format_=format_)
+        math_expr = self.math_type_to_display(format_=format_)
+        test_expr = self.math_type_to_display(format_='utf8')
+        separator = '' if test_expr.startswith(':') else ': '
+        caption   = f'{lean_name} {separator}{math_expr}'
+        return caption
+
     @property
     def identifier(self):
         return self.info.get("id")

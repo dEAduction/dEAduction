@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-09-08 22:12+0200\n"
-"PO-Revision-Date: 2022-09-08 22:19+0200\n"
+"POT-Creation-Date: 2022-09-10 11:35+0200\n"
+"PO-Revision-Date: 2022-09-10 11:38+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -218,11 +218,11 @@ msgstr "Boutons logiques sur deux lignes"
 msgid "None"
 msgstr "Aucun(e)"
 
-#: dui/elements/context_widgets_classes.py:697
+#: dui/elements/context_widgets_classes.py:699
 msgid "To be proved"
 msgstr "A démontrer"
 
-#: dui/elements/context_widgets_classes.py:775
+#: dui/elements/context_widgets_classes.py:777
 msgid "Target"
 msgstr "But"
 
@@ -1424,7 +1424,7 @@ msgstr "une suite"
 msgid "sequences"
 msgstr "suites"
 
-#: pylib/math_display/display_data.py:287 pylib/mathobj/math_object.py:1459
+#: pylib/math_display/display_data.py:287 pylib/mathobj/math_object.py:1461
 msgid "a rational number"
 msgstr "un nombre rationnel"
 
@@ -1433,7 +1433,7 @@ msgid "rational numbers"
 msgstr "nombres rationnels"
 
 #: pylib/math_display/display_data.py:288
-#: pylib/math_display/display_data.py:321 pylib/mathobj/math_object.py:1461
+#: pylib/math_display/display_data.py:321 pylib/mathobj/math_object.py:1463
 msgid "a real number"
 msgstr "un nombre réel"
 
@@ -1537,7 +1537,7 @@ msgstr "le complémentaire de "
 msgid "the empty set"
 msgstr "l’ensemble vide"
 
-#: pylib/math_display/display_data.py:399 pylib/mathobj/math_object.py:1443
+#: pylib/math_display/display_data.py:399 pylib/mathobj/math_object.py:1445
 msgid "a family of subsets of"
 msgstr "une famille de parties de"
 
@@ -1724,27 +1724,27 @@ msgstr "une famille"
 msgid "family"
 msgstr "famille"
 
-#: pylib/mathobj/context_math_object.py:208
+#: pylib/mathobj/context_math_object.py:216
 msgid "elements of"
 msgstr "éléments de"
 
-#: pylib/mathobj/math_object.py:1438
+#: pylib/mathobj/math_object.py:1440
 msgid "a subset of"
 msgstr "une partie de"
 
-#: pylib/mathobj/math_object.py:1441
+#: pylib/mathobj/math_object.py:1443
 msgid "a sequence in"
 msgstr "une suite dans"
 
-#: pylib/mathobj/math_object.py:1452
+#: pylib/mathobj/math_object.py:1454
 msgid "an element of"
 msgstr "un élément de"
 
-#: pylib/mathobj/math_object.py:1455
+#: pylib/mathobj/math_object.py:1457
 msgid "a non-negative integer"
 msgstr "un entier positif ou nul"
 
-#: pylib/mathobj/math_object.py:1457
+#: pylib/mathobj/math_object.py:1459
 msgid "an integer"
 msgstr "un entier"
 
@@ -2352,7 +2352,7 @@ msgstr ""
 #: pylib/text/help_msgs.py:215
 #, python-brace-format
 msgid "{this_is} a function from {ch0} to {ch1}."
-msgstr "{this_is} une function de {ch0} dans {ch1}."
+msgstr "{this_is} une fonction de {ch0} dans {ch1}."
 
 #: pylib/text/help_msgs.py:216
 #, python-brace-format

@@ -782,8 +782,8 @@ class MathObject:
             math_type = self
         else:
             math_type = self.math_type
-        test = all([math_type.node == "PROP_BELONGS",
-                   math_type.children[1].node == "LOCAL_CONSTANT"])
+        test = (math_type.node == "PROP_BELONGS" and
+                math_type.children[1].node == "LOCAL_CONSTANT")
         return test
 
     @allow_implicit_use

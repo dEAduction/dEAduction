@@ -164,11 +164,13 @@ class MathObjectWidgetItem(QStandardItem):
         else:
             self.tag = '='
 
-        lean_name = context_math_object.to_display()
-        math_expr = context_math_object.math_type_to_display()
-        test_expr = context_math_object.math_type_to_display(format_='utf8')
-        separator = '' if test_expr.startswith(':') else ': '
-        caption   = f'{lean_name} {separator}{math_expr}'
+        # lean_name = context_math_object.to_display()
+        # math_expr = context_math_object.math_type_to_display()
+        # test_expr = context_math_object.math_type_to_display(format_='utf8')
+        # separator = '' if test_expr.startswith(':') else ': '
+        # caption   = f'{lean_name} {separator}{math_expr}'
+
+        caption = context_math_object.display_with_type(format_='html')
         self.setText(caption)
         self.setIcon(_TagIcon(self.tag))
         # Uncomment to enable drag:
