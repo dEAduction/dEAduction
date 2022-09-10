@@ -301,6 +301,7 @@ class ProofOutlineWindow(QWidget):
 
         self.tree = ProofOutlineTreeWidget()
 
+        self.setWindowTitle(_("List of proof steps"))
         # Buttons
         self.expand_btn = QCheckBox(_("Expand all"))
         self.details_btn = QCheckBox(_("Show details"))

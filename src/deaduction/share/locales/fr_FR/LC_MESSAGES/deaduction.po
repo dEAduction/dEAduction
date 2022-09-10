@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-09-10 11:35+0200\n"
-"PO-Revision-Date: 2022-09-10 11:38+0200\n"
+"POT-Creation-Date: 2022-09-10 15:27+0200\n"
+"PO-Revision-Date: 2022-09-10 15:27+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -226,7 +226,7 @@ msgstr "A démontrer"
 msgid "Target"
 msgstr "But"
 
-#: dui/elements/help.py:57 dui/elements/help.py:103 dui/elements/help.py:141
+#: dui/elements/help.py:57 dui/elements/help.py:145
 #: dui/stages/exercise/_exercise_main_window_widgets.py:523
 msgid "Help"
 msgstr "Aide"
@@ -243,25 +243,25 @@ msgstr "Message suivant"
 msgid "Show hint!"
 msgstr "Voir la suggestion !"
 
-#: dui/elements/help.py:104
+#: dui/elements/help.py:106
 msgid "Help n°{}"
 msgstr "Aide n°{} "
 
-#: dui/elements/help.py:219
+#: dui/elements/help.py:241
 msgid "No object selected"
 msgstr "Pas d'objet sélectionné"
 
-#: dui/elements/help.py:221
+#: dui/elements/help.py:243
 msgid "Double click on context or target to get some help."
 msgstr ""
 "Double-cliquer sur le but ou sur un élément du contexte pour obtenir de "
 "l'aide."
 
-#: dui/elements/help.py:230
+#: dui/elements/help.py:252
 msgid "No help available on this object."
 msgstr "Aucune aide disponible sur cet objet."
 
-#: dui/elements/help.py:236
+#: dui/elements/help.py:258
 msgid "Hint:"
 msgstr "Suggestion :"
 
@@ -281,15 +281,19 @@ msgstr "Action"
 msgid "Objects involved"
 msgstr "Objets utilisés"
 
-#: dui/elements/proof_outline_widget.py:305
+#: dui/elements/proof_outline_widget.py:304
+msgid "List of proof steps"
+msgstr "Liste des étapes de la preuve"
+
+#: dui/elements/proof_outline_widget.py:306
 msgid "Expand all"
 msgstr "Tout déplier"
 
-#: dui/elements/proof_outline_widget.py:306
+#: dui/elements/proof_outline_widget.py:307
 msgid "Show details"
 msgstr "Détails"
 
-#: dui/elements/proof_outline_widget.py:308
+#: dui/elements/proof_outline_widget.py:309
 msgid "Move to selected step"
 msgstr "Aller"
 
@@ -449,12 +453,12 @@ msgstr "Exercice"
 msgid "Exercise history"
 msgstr "Historique de l’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:899
+#: dui/stages/exercise/exercise_main_window.py:900
 #: pylib/math_display/display_math.py:915 pylib/mathobj/proof_step.py:632
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:902
+#: dui/stages/exercise/exercise_main_window.py:903
 msgid "goals solved!"
 msgstr "buts atteints !"
 

@@ -310,16 +310,16 @@ class ExerciseMainWindow(QMainWindow):
         menu_bar = MenuBar(self, outline)
         self.setMenuBar(menu_bar)
 
+    def close_help_window(self):
+        if self.help_window.isVisible():
+            self.close_help_window_timer.start(200)
+
     @Slot()
     def context_clicked(self):
         """
         Almost any click should close the help window.
         """
-        # super().mousePressEvent(event)
-        if self.help_window.isVisible():
-            self.close_help_window_timer.start(200)
-            # self.close_help_window_timer =
-            # QTimer.singleShot(500, lambda x: self.help_window.toggle(yes=False))
+        self.close_help_window()
 
     def closeEvent(self, event: QEvent):
         """
@@ -371,6 +371,7 @@ class ExerciseMainWindow(QMainWindow):
             self.config_window = ConfigMainWindow(parent=self)
             self.config_window.applied.connect(self.apply_new_settings)
         self.config_window.show()
+        self.close_help_window()
 
     @Slot()
     def apply_new_settings(self, modified_settings):
