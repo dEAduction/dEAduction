@@ -929,9 +929,9 @@ def raw_latex_shape_from_specific_nodes(math_object, negate=False):
         display = display_lambda(math_object)
     elif node == "SET_UNIVERSE":
         display = [math_object.math_type_child_name()]
-    elif node == "SET_COMPLEMENT":
-        universe = math_object.math_type_child_name()
-        display = [universe, r" \backslash ", 0]
+    # elif node == "SET_COMPLEMENT":
+    #     universe = math_object.math_type_child_name()
+    #     display = [universe, r" \backslash ", 0]
 
     if negate and node != "APPLICATION":
         display = [r'\not', display]

@@ -82,6 +82,7 @@ latex_from_node = {
     "SET_INTER+": (r"\bigcap", 0),  # !! big ⋂
     "SET_UNION+": (r"\bigcup", 0),
     "SET_DIFF": (0, r" \backslash ", 1),
+    "SET_COMPLEMENT": (0, r" \backslash ", 1),
     "SET_DIFF_SYM": (0, r" \Delta ", 1),
     "SET_EMPTY": (r"\emptyset",),
     "SET_EXTENSION1": (r'\{', 0, r'\}'),
@@ -394,7 +395,7 @@ text_from_all_nodes = {
     "SET_UNION": (_("the union of") + " ", 0, " " + _("and") + " ", 1),
     "SET_INTER+": (_("the intersection of the sets") + " ", 0),
     "SET_UNION+": (_("the union of the sets") + " ", 0),
-    "SET_COMPLEMENT": (_("the complement of ") + " ", 0),
+    "SET_COMPLEMENT": (_("the complement of ") + " ", 1),
     "SET_EMPTY": (_("the empty set"),),
     "SET_FAMILY": (_("a family of subsets of") + " ", 1),
     "SET_IMAGE": (_("the image under") + " ", 0, " " + _("of") + " ", 1),
