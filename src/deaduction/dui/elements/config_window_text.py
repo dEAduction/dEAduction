@@ -49,7 +49,14 @@ PRETTY_NAMES = {
     'logs.display_level': _('Level of logs'),
     'display.use_symbols_for_logic_button': _("Use symbol for logic buttons"),
     'display.font_size_for_symbol_buttons': _("Font size for symbol buttons"),
+    'display.linux_font_size_for_symbol_buttons': _("Font size for symbol "
+                                                    "buttons"),
+    'display.darwin_font_size_for_symbol_buttons': _("Font size for symbol "
+                                                     "buttons"),
+    'display.windows_font_size_for_symbol_buttons': _("Font size for symbol "
+                                                     "buttons"),
     'display.display_success_messages': _("Display success messages"),
+    'display.color_for_selection': _("Color for selection"),
     'logic.use_color_for_variables': _("Use color for variables"),
     'logic.use_color_for_dummy_variables': _("Use color for dummy variables"),
     'logic.use_color_for_applied_properties': _("Use color for applied "
@@ -71,5 +78,8 @@ PRETTY_NAMES = {
     'display.dubious_characters': _('Replace missing characters') +
                               ': ℕ (N), ℤ (Z), ℚ (Q), ℝ (R), 𝒫 (P), ↦ (->)',
     'display.short_buttons_line': _('Split logic buttons into two lines'),
+    'functionality.drag_statements_to_context': _("Drag statements to context"),
+    'functionality.drag_and_drop_in_context': _("Drag and drop in context"),
+    'functionality.drag_context_to_statements': _("Drag context to statements"),
     'None': _('None')
 }

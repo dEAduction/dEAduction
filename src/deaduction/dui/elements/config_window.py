@@ -83,12 +83,19 @@ CONFIGS["Display"] = [
     ("display.main_font_size", None, True),
     ("display.tooltips_font_size", None, True),
     ('display.use_symbols_for_logic_button', None, True),
-    ('display.font_size_for_symbol_buttons', None, True),
+    # ('display.font_size_for_symbol_buttons', None, True),
     ('display.dubious_characters', None, True),
     ('display.short_buttons_line', None, True),
     ('display.color_for_selection', None, True)
     # ('display.font_for_mathematics', "font", True)
     ]
+
+# Font size specific to os:
+os_name = cvars.get('others.os', "linux")
+if os_name:
+    os_name += '_'
+font_size_key = 'display.' + os_name + 'font_size_for_symbol_buttons'
+CONFIGS["Display"].append((font_size_key, None, True))
 # ('display.mathematics_font', None, True),
 # ('display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP',
 #  None, False)
@@ -378,9 +385,10 @@ class ConfigWindow(QDialog):
                 widget = None
 
             # print("Adding wdgt", widget)
-            widget.setEnabled(enabled)
-            layout.addRow(title, widget)
-            self.widgets[setting] = widget
+            if widget:
+                widget.setEnabled(enabled)
+                layout.addRow(title, widget)
+                self.widgets[setting] = widget
 
         self.setLayout(layout)
 
