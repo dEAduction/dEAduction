@@ -524,6 +524,14 @@ class WindowManager(QObject):
                                                 self.chooser_window_closed)
             self.chooser_window.quit_deaduction.connect(self.quit_deaduction)
 
+            if self.coordinator:
+                self.coordinator.frozen.connect(
+                    self.chooser_window.emw_not_ready)
+                self.coordinator.unfrozen.connect(
+                    self.chooser_window.emw_ready)
+                if self.coordinator.is_frozen:
+                    self.chooser_window.emw_not_ready()
+
             # Show window
             self.chooser_window.show()
         else:

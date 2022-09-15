@@ -768,6 +768,8 @@ class AbstractStartCoEx(QDialog):
         self.__quit_btn.clicked.connect(self.quit_deaduction)
         self.__start_ex_btn.clicked.connect(self.__start_exercise)
 
+        self.disable_start_btn = None
+
         # ───────────────────── Layouts ──────────────────── #
 
         self.__tabwidget = QTabWidget()
@@ -844,6 +846,25 @@ class AbstractStartCoEx(QDialog):
     #########
     # Slots #
     #########
+    @Slot()
+    def emw_not_ready(self):
+        """
+        Called when emw is frozen, waiting for a new proof state. Start
+        button is disabled to avoid collision of exercises.
+        """
+
+        self.disable_start_btn = True
+        self.__start_ex_btn.setEnabled(False)
+        self.__start_ex_btn.setDefault(False)
+
+    @Slot()
+    def emw_ready(self):
+        """
+        Called when emw is unfrozen. Start button is disabled if an exercise
+        is set.
+        """
+        self.disable_start_btn = False
+        self.__enable_start_ex_btn()
 
     @Slot()
     def __enable_start_ex_btn(self):
@@ -861,9 +882,10 @@ class AbstractStartCoEx(QDialog):
         __preview_exercises once self.__exercise_chooser has been set to
         an ExerciseChooser object.
         """
-
-        self.__start_ex_btn.setEnabled(True)
-        self.__start_ex_btn.setDefault(True)
+        if self.__exercise_chooser and self.__exercise_chooser.exercise and \
+                not self.disable_start_btn:
+            self.__start_ex_btn.setEnabled(True)
+            self.__start_ex_btn.setDefault(True)
 
     @Slot()
     def __goto_exercise(self):

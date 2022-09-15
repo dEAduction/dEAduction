@@ -114,6 +114,8 @@ class Coordinator(QObject):
 
     proof_step_updated = Signal()  # Listened by test_launcher (for testing)
     close_server_task  = Signal()  # Send by self.closeEvent
+    frozen             = Signal()
+    unfrozen           = Signal()
 
     def __init__(self, exercise, servint):
         super().__init__()
@@ -140,6 +142,7 @@ class Coordinator(QObject):
         self.server_task_closed             = trio.Event()
 
         # Initialization
+        self.is_frozen = False
         self.__connect_signals()
         self.__initialize_exercise()
         # log.debug(f"Selected style: {self.emw.ecw.target_wgt.selected_style}")
@@ -505,7 +508,7 @@ class Coordinator(QObject):
                     break
 
                 self.statusBar.erase()
-                self.emw.freeze(True)  # DO NOT forget to unfreeze at the end.
+                self.freeze()  # DO NOT forget to unfreeze at the end.
 
                 ########################
                 # History move actions #
@@ -853,8 +856,13 @@ class Coordinator(QObject):
             # log.debug(f"Automatic action: {action}")
             self.proof_step.is_automatic = True
             # Async call to emw.simulate_user_action:
-            self.emw.freeze(True)
+            self.freeze()
             self.nursery.start_soon(self.emw.simulate_user_action, user_action)
+
+    def freeze(self):
+        self.is_frozen = True
+        self.emw.freeze(True)
+        self.frozen.emit()
 
     def unfreeze(self):
         """
@@ -873,6 +881,8 @@ class Coordinator(QObject):
         at_end = self.servint.lean_file.history_at_end
 
         self.emw.history_button_unfreeze(at_beginning, at_end)
+        self.is_frozen = False
+        self.unfrozen.emit()
 
     @Slot(CodeForLean)
     def process_effective_code(self, effective_lean_code: CodeForLean):
