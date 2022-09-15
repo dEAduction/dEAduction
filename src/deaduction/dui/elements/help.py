@@ -26,7 +26,7 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PySide2.QtCore import Qt, Slot, QSettings, QSize
+from PySide2.QtCore import Qt, Slot, QSettings, QSize, QTimer
 
 from PySide2.QtWidgets import QDialog, QRadioButton, QVBoxLayout, QHBoxLayout,\
     QTextEdit, QLabel, QDialogButtonBox, QWidget, QPushButton, QFrame, \
@@ -94,6 +94,7 @@ class HelpTitleWdg(QWidget):
 
         # ------------ Layout ------------
         lyt.addWidget(self.hint_btn)
+        lyt.addSpacing(20)
         lyt.addWidget(self.back_btn)
         lyt.addWidget(self.label)
         lyt.addWidget(self.forward_btn)
@@ -152,6 +153,8 @@ class HelpWindow(QDialog):
         self.target = False
         self.math_wdg_item: Optional[MathObjectWidgetItem] = None
         self.math_object: Optional[ContextMathObject] = None
+
+        self._hiding_forbidden = False
 
         # Display math_object
         self.math_label = QLabel()
@@ -335,10 +338,20 @@ class HelpWindow(QDialog):
             self.display_math_object()
             self.set_msgs(msgs, from_icon=False)
 
+    def _allow_hiding(self):
+        self._hiding_forbidden = False
+
+    def _forbid_hiding(self):
+        self._hiding_forbidden = True
+        QTimer.singleShot(500, self._allow_hiding)
+
     @Slot()
     def toggle(self, yes=None):
         """
-        Toggle window, and unset item if hidden.
+        Toggle window, and unset item if hidden. After a toggle, toggle is
+        forbidden for 400ms. This prevents window from closing right after
+        being opened because the second click is registered as an independent
+        first click on some OS (e.g. Darwin).
         """
 
         if yes is None:  # Change state to opposite
@@ -346,7 +359,9 @@ class HelpWindow(QDialog):
         if yes:
             self.set_geometry()
             self.setVisible(True)
-        else:
+            self._forbid_hiding()
+
+        elif not self._hiding_forbidden:
             self.unset_item()
             settings = QSettings("deaduction")
             settings.setValue("help/geometry", self.saveGeometry())
