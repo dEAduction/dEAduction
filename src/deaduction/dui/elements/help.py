@@ -359,6 +359,7 @@ class HelpWindow(QDialog):
         if yes:
             self.set_geometry()
             self.setVisible(True)
+            self.raise_()
             self._forbid_hiding()
 
         elif not self._hiding_forbidden:

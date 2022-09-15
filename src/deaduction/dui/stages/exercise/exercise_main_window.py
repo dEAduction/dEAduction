@@ -714,18 +714,7 @@ class ExerciseMainWindow(QMainWindow):
             if self.help_window.isVisible():  # Click from icon, close window
                 self.help_window.toggle(False)
                 return
-            else:
-                self.help_window.toggle(True)
-                return
-            # From icon, not from double-clic
-            # Desactivated for clarity??
-            # if len(self.current_selection) == 1 and not self.target_selected:
-            #     item = self.current_selection[0]
-            #     on_target = False
-            # elif len(self.current_selection) == 0 and self.target_selected:
-            #     item = self.ecw.target_wgt.target
-            #     on_target = True
-        if item:
+        else:
             obj = self.displayed_proof_step.context_obj_solving
             self.help_window.set_math_object(item, on_target=on_target,
                                              context_solving=obj)
