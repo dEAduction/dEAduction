@@ -487,7 +487,7 @@ class MathObjectWidget(QListView):
         # Set image of dragged item
         pixmap = DraggedItems(self.selected_items()).pixmap()
         drag.setPixmap(pixmap)
-        drag.exec_(Qt.IgnoreAction)
+        drag.exec_()
 
     def dragEnterEvent(self, event):
         """
