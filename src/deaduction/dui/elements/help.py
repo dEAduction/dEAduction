@@ -359,7 +359,8 @@ class HelpWindow(QDialog):
         if yes:
             self.set_geometry()
             self.setVisible(True)
-            self.raise_()
+            self.raise_()   # Put in front, needed on Mac
+            self.activateWindow()  # Give focus
             self._forbid_hiding()
 
         elif not self._hiding_forbidden:
