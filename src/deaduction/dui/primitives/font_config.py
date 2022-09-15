@@ -58,24 +58,15 @@ class DeaductionFonts:
         self.main_font_size = int(font_size[:-2])
         font_size = cvars.get("display.target_font_size", "20pt")
         self.target_font_size = int(font_size[:-2])
-        symbol_size = cvars.get('display.font_size_for_symbol_buttons', "14pt")
-        self.symbol_button_font_size = int(symbol_size[:-2])
+        os_name = cvars.get('others.os')
+        if os_name:
+            os_name += '_'
+        symbol_font_size = 'display.' + os_name + 'font_size_for_symbol_buttons'
+        symbol_size = cvars.get(symbol_font_size)  # "14pt"
+        self.symbol_button_font_size = int(symbol_size[:-2]) if symbol_size \
+            else None
         self.tooltips_font_size = cvars.get('display.tooltips_font_size',
                                             "14pt")
-
-        # in_font = QFontMetrics(self.math_font()).inFont
-        #
-        # characters = cvars.get("display.dubious_characters").split(", ")
-        # self.character_translation = {}
-        #
-        # for default, new in zip(self.dubious_characters, characters):
-        #     # FIXME: inFont DOES NOT WORK!!!
-        #     # if in_font(default):
-        #     #     self.character_translation[default] = default
-        #     # else:
-        #     #     self.character_translation[default] = \
-        #     #         self.dubious_characters_dic[default]
-        #     self.character_translation[default] = new
 
     def math_font(self):
         math_font = cvars.get("display.mathematics_font", None)
@@ -87,8 +78,4 @@ class DeaductionFonts:
     def background_color(self):
         return cvars.get("display.selection_color", "limegreen")
 
-
-# class MissingCharacters:
-#     @classmethod
-#     def dic(cls):
 

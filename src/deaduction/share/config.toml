@@ -13,12 +13,13 @@ show_lean_name_for_statements = false
 chooser_math_font_size = "16pt"
 main_font_size = "16pt"
 target_font_size = "20pt"
-button_font_size_for_symbols = "default"  # Does not work
 tooltips_font_size = "12pt"
 mathematics_font = "Times New Roman"
 selection_color = "limegreen"
 symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃, =, ↦"
-font_size_for_symbol_buttons = "16pt"
+linux_font_size_for_symbol_buttons = "16pt"
+darwin_font_size_for_symbol_buttons = ""
+window_font_size_for_symbol_buttons = ""
 use_symbols_for_logic_button = true
 short_buttons_line = true
 
@@ -76,6 +77,7 @@ log_to_file = true
 [others]
 usr_version_nb = "-1"  # Do not modify!
 version_nb = "0.31"
+os = ""  # Let this to "" except for debugging
 
 #########################
 # All Plateform packages

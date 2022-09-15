@@ -295,7 +295,7 @@ class ExerciseCentralWidget(QWidget):
     def set_font(self):
         """
         Set the font size for some sub-widgets.
-        Button font sizes are set in the widgets'methods.
+        Button font sizes are set in the widgets methods.
         Target font size is set in TargetWidget.
         ActionButtonsWidget max-height is set so that they keep their nice
         appearance on Mac, whatever the font size.
@@ -318,14 +318,12 @@ class ExerciseCentralWidget(QWidget):
         self.props_wgt.setFont(main_math_font)
         self.objects_wgt.setFont(main_math_font)
         symbol_font = self.deaduction_fonts.math_font()
-        symbol_font.setPointSize(symbol_size)
-        # self.logic_btns.setFont(symbol_font)
-        # self.logic_btns.updateGeometry()
-        # for button in self.logic_btns.buttons:
-        #     button.setFont(symbol_font)
-        for btn in self.actions_buttons:
-            if len(btn.text()) == 1:
-                btn.setFont(symbol_font)
+        if symbol_size:
+            symbol_font.setPointSize(symbol_size)
+        if cvars.get('others.os') == "linux":
+            for btn in self.actions_buttons:
+                if len(btn.text()) == 1:
+                    btn.setFont(symbol_font)
 
         # Target styles #
         target_math_font = self.deaduction_fonts.math_font()

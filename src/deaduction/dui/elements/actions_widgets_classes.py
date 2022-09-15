@@ -130,13 +130,15 @@ class ActionButton(QPushButton):
 
         super().__init__()
 
-        # # Modify color for selected objects
-        palette = self.palette()
-        background_color = cvars.get("display.color_for_selection", "limegreen")
-        highlight_color = QColor(background_color)
-        palette.setBrush(palette.Normal, palette.Button, highlight_color)
-        palette.setBrush(palette.Inactive, palette.Button, highlight_color)
-        self.setPalette(palette)
+        # Modify button default color
+        if cvars.get('others.os') != "darwin":
+            palette = self.palette()
+            background_color = cvars.get("display.color_for_selection",
+                                         "limegreen")
+            highlight_color = QColor(background_color)
+            palette.setBrush(palette.Normal, palette.Button, highlight_color)
+            palette.setBrush(palette.Inactive, palette.Button, highlight_color)
+            self.setPalette(palette)
 
         self.action = action
         self.update()  # set symbol and tool tip
@@ -155,8 +157,6 @@ class ActionButton(QPushButton):
         name = self.action.name
         symbol = _(button_symbol(name))
         self.setText(symbol)
-        # if len(symbol) > 1:
-        #     self.setStyleSheet('QPushButton { font-size: 12pt }')
 
         tool_tip = button_tool_tip(name)
         if isinstance(tool_tip, str):
@@ -173,10 +173,6 @@ class ActionButton(QPushButton):
         else:
             tooltip = ""
         self.setToolTip(tooltip)
-
-    # def changeEvent(self, e) -> None:
-    #     super().changeEvent(e)
-    #     print(self.backgroundRole())
 
     @Slot()
     def _emit_action(self):
@@ -262,12 +258,12 @@ class ActionButtonsWidget(QWidget):
 
         super().__init__()
 
-        # Modify pressed button color
-        palette = self.palette()
-        highlight_color = QColor("limegreen")
-        palette.setBrush(palette.Active, palette.Button, highlight_color)
-        self.setPalette(palette)
-
+        # # Modify pressed button color on Linux (and Windows)
+        # if cvars.get('others.os') != "darwin":
+        #     palette = self.palette()
+        #     highlight_color = QColor("limegreen")
+        #     palette.setBrush(palette.Active, palette.Button, highlight_color)
+        #     self.setPalette(palette)
 
         # TODO: make self.buttons a property?
         self.buttons = []

@@ -32,7 +32,8 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
-
+import sys
+from sys import platform
 from gettext import gettext as _
 import logging
 from . import dirs
@@ -124,6 +125,15 @@ def restore(initial_cvars):
     global __dict_user
     __dict_user = initial_cvars
 
+
+# Add os name; so this can be overridden in config.toml
+if not get('others.os'):
+    os_name = ("linux" if platform.startswith("linux")
+               else "darwin" if platform.startswith("darwin")
+               else "windows" if (platform.startswith("cygwin") or
+                                  platform.startswith("win32"))
+               else "")
+    set('others.os', os_name)
 
 if __name__ == "__main__":
     from pprint import pprint
