@@ -653,12 +653,12 @@ def construct_iff(proof_step, user_input: [str]) -> CodeForLean:
     impl1 = MathObject(info={},
                        node="PROP_IMPLIES",
                        children = [left, right],
-                       bound_vars=target.bound_vars,
+                       # bound_vars=target.bound_vars,
                        math_type=MathObject.PROP)
     impl2 = MathObject(info={},
                        node="PROP_IMPLIES",
                        children = [right, left],
-                       bound_vars=target.bound_vars,
+                       # bound_vars=target.bound_vars,
                        math_type=MathObject.PROP)
     code.add_conjunction(target, impl1, impl2)
     return code
@@ -1060,7 +1060,7 @@ def action_forall(proof_step) -> CodeForLean:
             potential_var = MathObject(node="LOCAL_CONSTANT",
                                        info={'name': item},
                                        children=[],
-                                       bound_vars=[],
+                                       # bound_vars=[],
                                        math_type=None)
             selected_objects.insert(0, potential_var)
             # Now len(l) == 2

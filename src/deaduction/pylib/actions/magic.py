@@ -253,7 +253,7 @@ def symmetrize(target) -> (Optional[CodeForLean], Optional[MathObject]):
         new_target = MathObject(node=target.node,
                                 info=target.info,
                                 children=new_children,
-                                bound_vars=target.bound_vars,
+                                # bound_vars=target.bound_vars,
                                 math_type=target.math_type)
 
     return code, new_target

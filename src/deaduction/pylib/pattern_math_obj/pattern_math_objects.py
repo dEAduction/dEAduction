@@ -33,7 +33,7 @@ if __name__ == "__main__":
 from typing import Optional, Union
 
 from deaduction.pylib.math_display        import HAVE_BOUND_VARS
-from deaduction.pylib.mathobj.math_object import MathObject
+from deaduction.pylib.mathobj.math_object import MathObject, BoundVar
 
 log = logging.getLogger(__name__)
 
@@ -74,7 +74,8 @@ class PatternMathObject(MathObject):
     __metavars        = None  # Temporary list of mvars
     __metavar_objects = None  # Objects matching metavars (see self.match)
 
-    def __init__(self, node, info, children, bound_vars, math_type):
+    def __init__(self, node, info, children,  # bound_vars,
+                 math_type):
         """
         Init self as a MathObject, plus metavars list.
         """
@@ -82,7 +83,7 @@ class PatternMathObject(MathObject):
         super().__init__(node=node,
                          info=info,
                          children=children,
-                         bound_vars=bound_vars,
+                         # bound_vars=bound_vars,
                          math_type=math_type)
 
     @classmethod
@@ -128,7 +129,7 @@ class PatternMathObject(MathObject):
             return metavar
 
         elif math_object.node == 'LOCAL_CONSTANT' and \
-                not math_object.is_bound_var():
+                not math_object.is_bound_var:
             # Turn math_type into a PatternMathObject,
             # then create a new metavar.
             if math_object.math_type is MathObject.NO_MATH_TYPE:
@@ -162,7 +163,7 @@ class PatternMathObject(MathObject):
             pattern_math_object = cls(node=node,
                                       info=info,
                                       children=children,
-                                      bound_vars=math_object.bound_vars,
+                                      # bound_vars=math_object.bound_vars,
                                       math_type=math_type)
             # log.debug(f"   ->pmo: {pmo.to_display()}")
             return pattern_math_object
@@ -251,41 +252,48 @@ class PatternMathObject(MathObject):
             # everywhere
             bound_var_1 = self.children[1]
             bound_var_2 = math_object.children[1]
-            self.mark_bound_vars(bound_var_1, bound_var_2)
+            assert isinstance(bound_var_1, BoundVar)
+            assert isinstance(bound_var_2, BoundVar)
+            bound_var_1.mark_as_identical_with(bound_var_2)
+            # self.mark_bound_vars(bound_var_1, bound_var_2)
+            bound_var_1.mark_as_identical_with(bound_var_2)
             marked = True
 
         # Names
         if 'name' in self.info.keys():
-            # For bound variables, do not use names, use numbers
-            if self.is_bound_var():
-                if not math_object.is_bound_var():
-                    match = False
-                # Here both are bound variables
-                elif 'bound_var_number' not in self.info:
-                    if 'bound_var_number' in math_object.info:
-                        # Already appeared in math_object but not in self
-                        match = False
-                    else:
-                        # Here both variable are unmarked. This means
-                        # we are comparing two subexpressions with respect
-                        # to which the variables are not local:
-                        # names have a meaning
-                        match = (self.info['name'] == math_object.info['name'])
-                # From now on self.info['bound_var_number'] exists
-                elif 'bound_var_number' not in math_object.info:
-                    match = False
-                # From now on both variables have a number
-                elif (self.info['bound_var_number'] !=
-                      math_object.info['bound_var_number']):
-                    match = False
-            else:  # Self is not bound var
-                if math_object.is_bound_var():
-                    match = False
-                elif self.info['name'] != math_object.info['name']:
-                    # None is a bound var
-                    match = False
-                    # log.debug(f"distinct names "
-                    #        f"{self.info['name'], math_object.info['name']}")
+            # If self's type is BoundVar, specific BoudnVar.__eq__() is used
+
+            # # For bound variables, do not use names, use numbers
+            # if self.is_bound_var():
+            #     if not math_object.is_bound_var():
+            #         match = False
+            #     # Here both are bound variables
+            #     elif 'bound_var_number' not in self.info:
+            #         if 'bound_var_number' in math_object.info:
+            #             # Already appeared in math_object but not in self
+            #             match = False
+            #         else:
+            #             # Here both variable are unmarked. This means
+            #             # we are comparing two subexpressions with respect
+            #             # to which the variables are not local:
+            #             # names have a meaning
+            #             match = (self.info['name'] == math_object.info['name'])
+            #     # From now on self.info['bound_var_number'] exists
+            #     elif 'bound_var_number' not in math_object.info:
+            #         match = False
+            #     # From now on both variables have a number
+            #     elif (self.info['bound_var_number'] !=
+            #           math_object.info['bound_var_number']):
+            #         match = False
+
+            # Thus here self is not a BoundVar instance
+            if math_object.is_bound_var:
+                match = False
+            elif self.info['name'] != math_object.info['name']:
+                # None is a bound var
+                match = False
+                # log.debug(f"distinct names "
+                #        f"{self.info['name'], math_object.info['name']}")
 
         # Recursively test for math_types
         #  (added: also when names)
@@ -305,7 +313,9 @@ class PatternMathObject(MathObject):
 
         # Unmark bound_vars, in prevision of future tests
         if marked:
-            self.unmark_bound_vars(bound_var_1, bound_var_2)
+            # self.unmark_bound_vars(bound_var_1, bound_var_2)
+            bound_var_1.unmark()
+            bound_var_2.unmark()
 
         # log.debug(f"... {match}")
         return match
@@ -340,7 +350,7 @@ class PatternMathObject(MathObject):
         math_object = MathObject(node=self.node,
                                  info=self.info,
                                  children=found_children,
-                                 bound_vars=self.bound_vars,
+                                 # bound_vars=self.bound_vars,
                                  math_type=found_math_type)
         return math_object
 
@@ -366,7 +376,6 @@ class PatternMathObject(MathObject):
 PatternMathObject.NO_MATH_TYPE = PatternMathObject(node="not provided",
                                                    info={},
                                                    children=[],
-                                                   bound_vars=[],
                                                    math_type=None)
 
 
@@ -388,7 +397,6 @@ class MetaVar(PatternMathObject):
         super().__init__(node='METAVAR',
                          info={'nb': MetaVar.metavar_nb},
                          children=[],
-                         bound_vars=[],
                          math_type=math_type)
 
     @property

@@ -103,7 +103,7 @@ class Goal:
             else:
                 # Applying the parser
                 tree = lean_expr_with_type_grammar.parse(math_obj_string)
-                math_object:ContextMathObject = LeanEntryVisitor().visit(tree)
+                math_object: ContextMathObject = LeanEntryVisitor().visit(tree)
                 context.append(math_object)
 
         tree = lean_expr_with_type_grammar.parse(target_analysis)

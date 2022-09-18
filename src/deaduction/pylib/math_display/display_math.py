@@ -528,7 +528,7 @@ def display_constant(math_object) -> list:
         display = [radical, ['_', subscript]]
 
     # Variables and dummy variables (for coloration)
-    if math_object.is_bound_var():
+    if math_object.is_bound_var:
         display = [r'\dummy_variable', display]
     elif math_object.is_variable(is_math_type=True):
         display = [r'\variable', display]
