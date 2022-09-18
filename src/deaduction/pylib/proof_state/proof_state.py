@@ -599,7 +599,7 @@ class Goal:
         # Name bound vars if needed
         self.name_bound_vars(to_prove=(type_ == 'exercise'))
 
-        context = self.context
+        context: [ContextMathObject] = self.context
         target = self.target
 
         # Context
