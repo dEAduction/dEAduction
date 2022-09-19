@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-09-15 16:38+0200\n"
-"PO-Revision-Date: 2022-09-15 16:41+0200\n"
+"POT-Creation-Date: 2022-09-19 11:20+0200\n"
+"PO-Revision-Date: 2022-09-19 11:21+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -348,43 +348,43 @@ msgstr "Oui"
 msgid "No"
 msgstr "Non"
 
-#: dui/stages/exercise/Coordinator.py:787
+#: dui/stages/exercise/Coordinator.py:790
 msgid "Code from editor"
 msgstr "Code depuis l’éditeur"
 
-#: dui/stages/exercise/Coordinator.py:894 pylib/server/exceptions.py:39
+#: dui/stages/exercise/Coordinator.py:904 pylib/server/exceptions.py:39
 msgid "Error"
 msgstr "Erreur"
 
-#: dui/stages/exercise/Coordinator.py:910
+#: dui/stages/exercise/Coordinator.py:920
 msgid "I've got a headache, try again..."
 msgstr "Je n’y arrive pas, mais vous pouvez ré-essayer !"
 
-#: dui/stages/exercise/Coordinator.py:913
+#: dui/stages/exercise/Coordinator.py:923
 msgid "Unicode error, try again..."
 msgstr "Erreur de mémoire, ré-essayez !"
 
-#: dui/stages/exercise/Coordinator.py:916
+#: dui/stages/exercise/Coordinator.py:926
 msgid "Error, no proof state, try again..."
 msgstr "Erreur, je n’ai pas réussi à calculer l’état de preuve, ré-essayez !"
 
-#: dui/stages/exercise/Coordinator.py:957 pylib/proof_tree/lean_response.py:70
+#: dui/stages/exercise/Coordinator.py:967 pylib/proof_tree/lean_response.py:70
 msgid "Proof complete"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/Coordinator.py:974
+#: dui/stages/exercise/Coordinator.py:984
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/stages/exercise/Coordinator.py:975
+#: dui/stages/exercise/Coordinator.py:985
 msgid "The proof is complete!"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/Coordinator.py:979
+#: dui/stages/exercise/Coordinator.py:989
 msgid "Back to exercise"
 msgstr "Retour à l’exercice"
 
-#: dui/stages/exercise/Coordinator.py:981
+#: dui/stages/exercise/Coordinator.py:991
 #: dui/stages/exercise/_exercise_main_window_widgets.py:716
 #: dui/stages/exercise/_exercise_main_window_widgets.py:726
 msgid "Change exercise"
@@ -556,36 +556,36 @@ msgstr "But :"
 msgid "Start exercise"
 msgstr "Commencer la preuve"
 
-#: dui/stages/start_coex/start_coex_widgets.py:774
+#: dui/stages/start_coex/start_coex_widgets.py:776
 msgid "Files"
 msgstr "Fichiers"
 
-#: dui/stages/start_coex/start_coex_widgets.py:775
-#: dui/stages/start_coex/start_coex_widgets.py:897
+#: dui/stages/start_coex/start_coex_widgets.py:777
+#: dui/stages/start_coex/start_coex_widgets.py:919
 msgid "Exercises"
 msgstr "Exercices"
 
-#: dui/stages/start_coex/start_coex_widgets.py:967
+#: dui/stages/start_coex/start_coex_widgets.py:989
 msgid "Choose file and exercise — d∃∀duction"
 msgstr "Choisir le fichier et l’exercice — d∃∀duction"
 
-#: dui/stages/start_coex/start_coex_widgets.py:997
+#: dui/stages/start_coex/start_coex_widgets.py:1019
 msgid "Congratulations, exercise finished!"
 msgstr "Bravo, l’exercice est résolu !"
 
-#: dui/stages/start_coex/start_coex_widgets.py:999
+#: dui/stages/start_coex/start_coex_widgets.py:1021
 msgid "Exercise finished — d∃∀duction"
 msgstr "Exercice terminé — d∃∀duction"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1038
+#: dui/stages/start_coex/start_coex_widgets.py:1060
 msgid "Do you want to prove this statement or its negation?"
 msgstr "Voulez-vous démontrer cet énoncé ou bien sa négation ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1045
+#: dui/stages/start_coex/start_coex_widgets.py:1067
 msgid "Prove statement"
 msgstr "Démontrer l’énoncé"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1046
+#: dui/stages/start_coex/start_coex_widgets.py:1068
 msgid "Prove negation"
 msgstr "Démontrer la négation"
 
@@ -1445,7 +1445,7 @@ msgstr "une suite"
 msgid "sequences"
 msgstr "suites"
 
-#: pylib/math_display/display_data.py:288 pylib/mathobj/math_object.py:1461
+#: pylib/math_display/display_data.py:288 pylib/mathobj/math_object.py:1543
 msgid "a rational number"
 msgstr "un nombre rationnel"
 
@@ -1454,7 +1454,7 @@ msgid "rational numbers"
 msgstr "nombres rationnels"
 
 #: pylib/math_display/display_data.py:289
-#: pylib/math_display/display_data.py:322 pylib/mathobj/math_object.py:1463
+#: pylib/math_display/display_data.py:322 pylib/mathobj/math_object.py:1545
 msgid "a real number"
 msgstr "un nombre réel"
 
@@ -1558,7 +1558,7 @@ msgstr "le complémentaire de "
 msgid "the empty set"
 msgstr "l’ensemble vide"
 
-#: pylib/math_display/display_data.py:400 pylib/mathobj/math_object.py:1445
+#: pylib/math_display/display_data.py:400 pylib/mathobj/math_object.py:1526
 msgid "a family of subsets of"
 msgstr "une famille de parties de"
 
@@ -1745,27 +1745,27 @@ msgstr "une famille"
 msgid "family"
 msgstr "famille"
 
-#: pylib/mathobj/context_math_object.py:216
+#: pylib/mathobj/context_math_object.py:209
 msgid "elements of"
 msgstr "éléments de"
 
-#: pylib/mathobj/math_object.py:1440
+#: pylib/mathobj/math_object.py:1521
 msgid "a subset of"
 msgstr "une partie de"
 
-#: pylib/mathobj/math_object.py:1443
+#: pylib/mathobj/math_object.py:1524
 msgid "a sequence in"
 msgstr "une suite dans"
 
-#: pylib/mathobj/math_object.py:1454
+#: pylib/mathobj/math_object.py:1536
 msgid "an element of"
 msgstr "un élément de"
 
-#: pylib/mathobj/math_object.py:1457
+#: pylib/mathobj/math_object.py:1539
 msgid "a non-negative integer"
 msgstr "un entier positif ou nul"
 
-#: pylib/mathobj/math_object.py:1459
+#: pylib/mathobj/math_object.py:1541
 msgid "an integer"
 msgstr "un entier"
 
@@ -2071,7 +2071,7 @@ msgstr "Ceci est"
 msgid "This property is"
 msgstr "Cette propriété est"
 
-#: pylib/text/help_msgs.py:80 pylib/text/help_msgs.py:251
+#: pylib/text/help_msgs.py:80 pylib/text/help_msgs.py:259
 #, python-brace-format
 msgid "Applying definition {def_name} will turn this into"
 msgstr "En appliquant la définition {def_name},  ceci deviendra"
@@ -2425,8 +2425,8 @@ msgid "This matches definitions {def_names}."
 msgstr "On peut appliquer les définitions  {def_names}."
 
 #: pylib/text/help_msgs.py:241
-msgid "This property seems to solve the current goal."
-msgstr "Cette propriété semble impliquer le but en cours."
+msgid "This property obviously entails the current goal."
+msgstr "Cette propriété implique manifestement le but en cours."
 
 #: pylib/text/help_msgs.py:242
 msgid ""
@@ -2443,10 +2443,9 @@ msgstr "{deaduction}  vous demandera peut-être de l'aider encore un peu..."
 
 #: pylib/text/help_msgs.py:247
 #, python-brace-format
-msgid "This target seems to be obvious from context property {solving_obj}."
+msgid "This target follows obviously from context property {solving_obj}."
 msgstr ""
-"Ce but semble se déduire facilement de la propriété {solving_obj} du "
-"contexte."
+"Ce but se déduit manifestement de la propriété {solving_obj} du contexte."
 
 #: pylib/text/tooltips.py:53
 msgid "Split a property 'P AND Q' into the two properties 'P', 'Q'"

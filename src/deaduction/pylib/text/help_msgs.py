@@ -188,6 +188,12 @@ use["not"] = (_("{this_property_is} a negation."),
 
 prove["not"] = use["not"]
 
+use["not_non_pushable"] = (use["not"][0],
+                           _("I do not know how to simplify this negation "
+                             "directly."),
+                           "")
+prove["not_non_pushable"] = use["not_non_pushable"]
+
 use[_("iff")] = (_("{this_property_is} a logical equivalence."),
                  (_('You can use the ⇔ ("IF AND ONLY IF") button <ul>'),
                   _('<li>to split it into two implications,</li>'),

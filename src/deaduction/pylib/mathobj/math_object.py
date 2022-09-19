@@ -1018,7 +1018,25 @@ class MathObject:
         else:
             math_type = self.math_type
 
-        return math_type.node in ("PROP_NOT", "PROP_NOT_BELONGS")
+        return math_type.node in ("PROP_NOT", "PROP_NOT_BELONGS",
+                                  "PROP_EQUAL_NOT")
+
+    def body_of_negation(self):
+        """
+        Assuming self is "not P", return P. Handle special cases of not
+        belong, not equal.
+        """
+        body = None
+        if self.node == "PROP_NOT":
+            body = self.children[0]
+        elif self.node in ("PROP_NOT_BELONGS", "PROP_EQUAL_NOT"):
+            not_not_node = self.node.replace("_NOT", "")
+            body = MathObject(node=not_not_node,
+                              info=self.info,
+                              children=self.children,
+                              math_type=self.math_type)
+
+        return body
 
     def is_false(self, is_math_type=False) -> bool:
         """
@@ -1669,6 +1687,9 @@ class BoundVar(MathObject):
         and other were marked together. Unclear what to do when both are
         unmarked (equal -1); return None.
         """
+
+        if not isinstance(other, BoundVar):
+            return False
 
         if self.bound_var_nb != -1 or other.bound_var_nb != -1:
             return self.bound_var_nb == other.bound_var_nb

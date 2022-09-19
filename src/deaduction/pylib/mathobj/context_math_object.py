@@ -275,13 +275,22 @@ class ContextMathObject(MathObject):
         if not math_obj:
             math_obj = self.math_type
         definitions = math_obj.check_unroll_definitions(is_math_type=True)
-        msgs = ([] if not definitions
-                else get_help_msgs("definition" if len(definitions) == 1
-                                   else "definitions"))
-        definition_msgs = [self.format_msg(msg, obj=math_obj,
-                                           definitions=definitions,
-                                           on_target=target)
-                           for msg in msgs]
+
+        definition_msgs = []
+        if definitions:
+            msgs = ([] if not definitions
+                    else get_help_msgs("definition" if len(definitions) == 1
+                                       else "definitions"))
+            definition_msgs = [self.format_msg(msg, obj=math_obj,
+                                               definitions=definitions,
+                                               on_target=target)
+                               for msg in msgs]
+
+        elif math_obj.is_not(is_math_type=True):
+            prop = math_obj.body_of_negation()
+            if prop:
+                definition_msgs = self.help_definition(target=target,
+                                                       math_obj=prop)
 
         return definition_msgs
 
@@ -328,15 +337,15 @@ class ContextMathObject(MathObject):
             return help_msgs.get_helm_msgs(key, on_target)
 
         main_symbol = self.math_type.main_symbol()
+
+        if main_symbol == "not":
+            prop = self.math_type.body_of_negation()
+            if prop and not prop.is_simplified_by_push_neg(is_math_type=True):
+                main_symbol = "not_non_pushable"
+
         msgs = get_help_msgs(main_symbol)
         main_symbol_msgs = (self.format_msg(msg, on_target=on_target)
                             for msg in msgs)
-
-        if self.is_not():
-            prop = self.math_type.children[0]
-            if not prop.is_simplified_by_push_neg(is_math_type=True):
-                main_symbol_msgs = self.help_definition(target=on_target,
-                                                        math_obj=prop)
 
         return main_symbol_msgs
 
