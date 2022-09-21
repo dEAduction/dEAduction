@@ -811,7 +811,7 @@ class StatementsTreeWidget(QTreeWidget):
             dragged_index = source.currentIndex()
             index = self.index_from_event(event)
             item = self.itemFromIndex(index)
-            if not item:  # Not dropped on a specific statement
+            if not item or item.is_node():  # Not dropped on a statement
                 return
             # print(f"Source : {source}, dragged index: {dragged_index}")
             # print(f"Source selected items: {len(source.selected_items())}")
