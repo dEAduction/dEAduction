@@ -1441,7 +1441,8 @@ class MathObject:
                 and math_type.node != 'FUNCTION':
                 # and math_type.info.get('name'):
             # name = math_type.info["name"]
-            name = math_type.to_display(text_depth=text_depth)
+            # FIXME: bad format for html
+            name = math_type.to_display(text_depth=text_depth, format_='utf8')
             shape = [_("an element of") + " ", name]
             # The "an" is to be removed for short display
         elif math_type.is_N():
