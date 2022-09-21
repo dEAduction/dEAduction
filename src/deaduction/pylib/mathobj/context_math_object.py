@@ -66,7 +66,7 @@ class ContextMathObject(MathObject):
         self.is_new_ = False  # FIXME: obsolete
         self.is_modified_ = False  # FIXME: obsolete
         self.has_been_used_in_proof = False  # TODO: implement
-        self.is_hidden = False # TODO
+        self.is_hidden = False  # TODO
         # log.debug(f"Creating ContextMathPObject {self.to_display()},")
                   # f"dummy vars = "
                   # f"{[var.to_display() for var in self.bound_vars]}")
@@ -169,15 +169,6 @@ class ContextMathObject(MathObject):
 
         return action
 
-    def check_unroll_definitions(self) -> []:
-        """
-        Return the definitions that match self.
-        """
-        definitions = MathObject.definitions
-        math_type = self.math_type
-        matching_defs = [defi for defi in definitions if defi.match(math_type)]
-        return matching_defs
-
     def format_msg(self, raw_msg: str,
                    obj: Optional[MathObject] = None,
                    definitions=None,
@@ -276,21 +267,28 @@ class ContextMathObject(MathObject):
         msg1 = raw_msg.format(**translated_format_dic)
         return msg1
 
-    def help_definition(self, target=False) -> ((str, str, str), Any):
+    def help_definition(self, target=False, math_obj=None) -> (str, str, str):
         def get_help_msgs(key):
             return help_msgs.get_helm_msgs(key, target)
-        # msgs_dic = help_msgs.prove if target else help_msgs.use
-        # msgs = ("", "", "")
-        definitions = self.check_unroll_definitions()
-        # msgs = ([] if not definitions
-        #         else msgs_dic["definition"] if len(definitions) == 1
-        #         else msgs_dic["definitions"])
-        msgs = ([] if not definitions
-                else get_help_msgs("definition" if len(definitions) == 1
-                                   else "definitions"))
-        definition_msgs = [self.format_msg(msg, definitions=definitions,
-                                           on_target=target)
-                           for msg in msgs]
+        if not math_obj:
+            math_obj = self.math_type
+        definitions = math_obj.check_unroll_definitions(is_math_type=True)
+
+        definition_msgs = []
+        if definitions:
+            msgs = ([] if not definitions
+                    else get_help_msgs("definition" if len(definitions) == 1
+                                       else "definitions"))
+            definition_msgs = [self.format_msg(msg, obj=math_obj,
+                                               definitions=definitions,
+                                               on_target=target)
+                               for msg in msgs]
+
+        elif math_obj.is_not(is_math_type=True):
+            prop = math_obj.body_of_negation()
+            if prop:
+                definition_msgs = self.help_definition(target=target,
+                                                       math_obj=prop)
 
         return definition_msgs
 
@@ -328,23 +326,38 @@ class ContextMathObject(MathObject):
     def solving_msgs(self, solving_obj, on_target=False):
         msgs = help_msgs.get_helm_msgs('goal!', on_target)
         return list(self.format_msg(msg, solving_obj=solving_obj,
-                                    on_target=on_target) for msg in
-                    msgs)
+                                    on_target=on_target) for msg in msgs)
+
+    def help_main_symbol(self, on_target=False):
+
+        # msgs_dic = help_msgs.prove if target else help_msgs.use
+        def get_help_msgs(key):
+            return help_msgs.get_helm_msgs(key, on_target)
+
+        main_symbol = self.math_type.main_symbol()
+
+        if main_symbol == "not":
+            prop = self.math_type.body_of_negation()
+            if prop and not prop.is_simplified_by_push_neg(is_math_type=True):
+                main_symbol = "not_non_pushable"
+
+        msgs = get_help_msgs(main_symbol)
+        main_symbol_msgs = (self.format_msg(msg, on_target=on_target)
+                            for msg in msgs)
+
+        return main_symbol_msgs
 
     def help_msgs(self, on_target=False) -> [Optional[str]]:
         """
         Return help msgs for self as a target if target=True, and as a
         context object otherwise.
         """
-        # msgs_dic = help_msgs.prove if target else help_msgs.use
-        def get_help_msgs(key):
-            return help_msgs.get_helm_msgs(key, on_target)
+        # # msgs_dic = help_msgs.prove if target else help_msgs.use
+        # def get_help_msgs(key):
+        #     return help_msgs.get_helm_msgs(key, on_target)
 
         # (1) Main symbol?
-        main_symbol = self.math_type.main_symbol()
-        msgs = get_help_msgs(main_symbol)
-        main_symbol_msgs = (self.format_msg(msg, on_target=on_target)
-                            for msg in msgs)
+        main_symbol_msgs = self.help_main_symbol(on_target)
 
         # (2) Matching definitions?
         def_msgs = self.help_definition(target=on_target)

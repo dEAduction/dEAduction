@@ -843,6 +843,16 @@ class MathObject:
     #     else:
     #         return self.last_rw_object
 
+    def is_simplified_by_push_neg(self, is_math_type=False):
+        tests = [self.is_not(is_math_type=is_math_type),
+                 self.is_for_all(is_math_type=is_math_type),
+                 self.is_exists(is_math_type=is_math_type),
+                 self.is_and(is_math_type=is_math_type),
+                 self.is_or(is_math_type=is_math_type),
+                 self.is_implication(is_math_type=is_math_type),
+                 self.is_inequality(is_math_type=is_math_type)]
+        return any(tests)
+
     def implicit(self, test: callable):
         """
         Call the implicit version of test.
@@ -960,7 +970,25 @@ class MathObject:
         else:
             math_type = self.math_type
 
-        return math_type.node in ("PROP_NOT", "PROP_NOT_BELONGS")
+        return math_type.node in ("PROP_NOT", "PROP_NOT_BELONGS",
+                                  "PROP_EQUAL_NOT")
+
+    def body_of_negation(self):
+        """
+        Assuming self is "not P", return P. Handle special cases of not
+        belong, not equal.
+        """
+        body = None
+        if self.node == "PROP_NOT":
+            body = self.children[0]
+        elif self.node in ("PROP_NOT_BELONGS", "PROP_EQUAL_NOT"):
+            not_not_node = self.node.replace("_NOT", "")
+            body = MathObject(node=not_not_node,
+                              info=self.info,
+                              children=self.children,
+                              math_type=self.math_type)
+
+        return body
 
     def is_false(self, is_math_type=False) -> bool:
         """
@@ -1210,6 +1238,19 @@ class MathObject:
                                     children=rw_children,
                                     math_type=math_object.math_type)
         return rw_math_object
+
+    def check_unroll_definitions(self, is_math_type=False) -> []:
+        """
+        Return the definitions that match self.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+
+        definitions = MathObject.definitions
+        matching_defs = [defi for defi in definitions if defi.match(math_type)]
+        return matching_defs
 
     def glob_vars_when_proving(self):
         """

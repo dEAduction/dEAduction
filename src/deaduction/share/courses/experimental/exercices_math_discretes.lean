@@ -182,14 +182,14 @@ begin
     refl,
 end
 
-lemma definition.singleton : ∀ {X : Type} {x y : X}, x ∈ ({y} : set X) ↔ x = y
+lemma definition.singleton {X : Type} {x y : X}: x ∈ ({y} : set X) ↔ x = y
 :=
 /- dEAduction
 PrettyName
     Singleton
 -/
 begin
-    intros X x y, exact mem_singleton_iff,
+    exact mem_singleton_iff,
 end
 
 lemma definition.double_inclusion (A A' : set X) :
@@ -347,7 +347,7 @@ PrettyName
 -- COURSE DEFINITIONS --
 ------------------------
 
-lemma definition.complement {A : set X} {x : X} : x ∈ set.compl A ↔ x ∉ A :=
+lemma definition.complement {A : set X} {x : X} : x ∈ set.compl A ↔ not (x ∈ A) :=
 /- dEAduction
 PrettyName
     Complementaire

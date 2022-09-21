@@ -38,7 +38,7 @@ AvailableExercises
   -injective_si_compo_injective_I -surjective_si_compo_surjective_II
   -image_directe_et_intersection_VI
 AvailableDefinitions
-  UNTIL_NOW -singleton -paire
+  UNTIL_NOW -singleton -paire -identite -egalite_fonctions
 AvailableTheorems
   UNTIL_NOW -image_singleton -image_paire
 -/
@@ -98,7 +98,7 @@ lemma definition.double_inclusion (A A' : set X) :
 A = A' ↔ (A ⊆ A' ∧ A' ⊆ A) :=
 /- dEAduction
 PrettyName
-    Egalité de deux ensembles : double inclusion
+    Double inclusion
 ImplicitUse
   True
 -/
@@ -185,6 +185,28 @@ namespace applications
 variables  {A A': set X}
 variables {f: X → Y} {B B': set Y}
 
+lemma definition.egalite_fonctions (f' : X → Y) :
+f = f' ↔ ∀ x, f x = f' x :=
+/- dEAduction
+PrettyName
+    Egalité de deux fonctions
+-/
+begin
+    exact function.funext_iff,
+end
+
+
+lemma definition.identite (f₀: X → X) :
+f₀ = Identite ↔ ∀ x, f₀ x = x :=
+/- dEAduction
+PrettyName
+    Application identité
+-/
+begin
+    apply definition.egalite_fonctions,
+end
+
+
 lemma definition.image_directe (y : Y) :
 y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y
 :=
@@ -263,8 +285,7 @@ PrettyName
   Image d'une paire
 -/
 begin
-  targets_analysis,
-    todo
+  todo
 end
 
 end applications
@@ -791,6 +812,10 @@ injective g
 /- dEAduction
 PrettyName
     Injectivité et surjectivité
+AvailableDefinitions
+  UNTIL_NOW
+AvailableTheorems
+  UNTIL_NOW
 -/
 begin
     todo
@@ -803,6 +828,10 @@ lemma exercise.injectivite_categorielle
 /- dEAduction
 PrettyName
     Injectivité catégorielle
+AvailableDefinitions
+  UNTIL_NOW
+AvailableTheorems
+  UNTIL_NOW
 -/
 begin
     todo
@@ -815,6 +844,10 @@ lemma exercise.surjectivite_categorielle
 /- dEAduction
 PrettyName
     Surjectivité catégorielle
+AvailableDefinitions
+  UNTIL_NOW
+AvailableTheorems
+  UNTIL_NOW
 -/
 begin
     todo
@@ -825,6 +858,10 @@ lemma exercise.surjective_ssi_inverse_droite : (surjective f) ↔
 /- dEAduction
 PrettyName
     (*) Surjectivité et inverse à droite
+AvailableDefinitions
+  UNTIL_NOW
+AvailableTheorems
+  UNTIL_NOW
 -/
 begin
     todo
@@ -836,6 +873,10 @@ lemma exercise.image_directe_et_inclusion_III :
 /- dEAduction
 PrettyName
   Image directe et inclusion (iii)
+AvailableDefinitions
+  UNTIL_NOW
+AvailableTheorems
+  UNTIL_NOW
 -/
 begin
   todo
@@ -849,10 +890,11 @@ PrettyName
   Image réciproque et inclusion (iii)
 -/
 begin
-  intros surj_f A B incl y y_dans_A,
-  have ex_x := surj_f y, cases ex_x with x eq,
-  have but: (x dans (set.preimage f A)),
-  todo, todo, assumption,
+  -- intros surj_f A B incl y y_dans_A,
+  -- have ex_x := surj_f y, cases ex_x with x eq,
+  -- have but: (x dans (set.preimage f A)),
+  -- todo, todo,
+  todo
 end
 
 end injectivite_surjectivite_autres

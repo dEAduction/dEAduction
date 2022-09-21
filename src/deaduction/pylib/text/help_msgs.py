@@ -188,6 +188,12 @@ use["not"] = (_("{this_property_is} a negation."),
 
 prove["not"] = use["not"]
 
+use["not_non_pushable"] = (use["not"][0],
+                           _("I do not know how to simplify this negation "
+                             "directly."),
+                           "")
+prove["not_non_pushable"] = use["not_non_pushable"]
+
 use[_("iff")] = (_("{this_property_is} a logical equivalence."),
                  (_('You can use the ⇔ ("IF AND ONLY IF") button <ul>'),
                   _('<li>to split it into two implications,</li>'),
@@ -238,16 +244,24 @@ use["definitions"] = (_('This matches definitions {def_names}.'),
 
 prove["definitions"] = use["definitions"]
 
-use["goal!"] = (_("This property seems to solve the current goal."),
+use["goal!"] = (_("This property obviously entails the current goal."),
                 (_('Use the "Goal!" button when you think the target is '
                    'obvious from the context.'),
                  _('Maybe {deaduction} will still need a little help...')),
                 "")
 
-prove["goal!"] = (_("This target seems to be obvious from context "
+prove["goal!"] = (_("This target follows obviously from context "
                     "property {solving_obj}."),
                   use['goal!'][1],
                   "")
+# use["obvious_goal!"] = (_("This property is exactly the current goal."),
+#                         use['goal!'][1], use['goal!'][2])
+#
+#
+# prove["obvious_goal!"] = (_("This target is identical to context "
+#                           "property {solving_obj}."),
+#                           prove['goal!'][1], prove['goal!'][2])
+
 become = _("Applying definition {def_name} will turn this into")
 implicit_dic = {"{this_is}": become,
                 "{this_property_is}": become,
