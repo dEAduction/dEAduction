@@ -53,8 +53,8 @@ class ContextMathObject(MathObject):
     is_hidden: bool  # True if self should not be dispplayed in ui
     has_been_used_in_the_proof: bool
 
-    def __init__(self, node, info, children, bound_vars, math_type):
-        super().__init__(node, info, children, bound_vars, math_type)
+    def __init__(self, node, info, children, math_type):
+        super().__init__(node, info, children, math_type)
 
         ContextMathObject.list_.append(self)
 
