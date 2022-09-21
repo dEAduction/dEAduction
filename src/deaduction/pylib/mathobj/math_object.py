@@ -189,14 +189,6 @@ class MathObject:
 
         self.children = children
 
-    def set_unnamed_bound_var(self, bound_var_type):
-        new_info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
-                    'lean_name': self.info['name'],
-                    'bound_var_nb': -1}
-        self.info.update(new_info)
-        self.math_type = bound_var_type
-        self.is_bound_var = True
-
     def __repr__(self):
         return self.to_display(format_="utf8")
 
@@ -251,6 +243,9 @@ class MathObject:
     def is_no_math_type(self):
         return self is self.NO_MATH_TYPE
 
+    ##############
+    # Bound vars #
+    ##############
     @property
     def bound_vars(self):
         """Recursively determine the list of all bound vars in self ."""
@@ -264,9 +259,9 @@ class MathObject:
 
         return bound_vars
 
-    # @bound_vars.setter
-    # def bound_vars(self, bound_vars: []):
-    #     self._bound_vars = bound_vars
+    def is_unnamed(self):
+        return self.display_name == "NO NAME" \
+               or self.display_name == '*no_name*'
 
     def unnamed_bound_vars(self):
         """
@@ -276,6 +271,14 @@ class MathObject:
 
     def bound_var_nb(self):
         return self.info.get('bound_var_nb')
+
+    def set_unnamed_bound_var(self, bound_var_type):
+        new_info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
+                    'lean_name': self.info.get('name', ''),
+                    'bound_var_nb': -1}
+        self.info.update(new_info)
+        self.math_type = bound_var_type
+        self.is_bound_var = True
 
     #################
     # Class methods #
@@ -324,10 +327,8 @@ class MathObject:
         """
         Create an instance of MathObject from the Lean data collected by
         the parser.
-        :param info: dictionary with mandatory key  'node_name',
-                                    optional keys   'math_type',
-                                                    'name'
-                                                    'identifier'
+        :param info: dictionary with optional keys 'name', 'identifier',
+        'lean_name', 'bound_var_nb'
         :param children: list of MathObject instances
         :return: a MathObject
         """
@@ -338,10 +339,6 @@ class MathObject:
         else:
             math_type = None  # NB math_type is a @property, cf above
 
-        # bound_vars = []
-        # for child in children:
-        #     bound_vars.extend(child.bound_vars)
-
         #####################################################
         # Treatment of global variables: avoiding duplicate #
         #####################################################
@@ -350,41 +347,13 @@ class MathObject:
             identifier = info['identifier']
             if identifier in MathObject.Variables:
                 # Return already existing MathObject
-                # log.debug(f"already exists in dict "
-                #          f"{[(key, MathObject.Variables[key]) for key in
-                #          MathObject.Variables]}")
                 math_object = MathObject.Variables[identifier]
-            else:
-                # Create new object
+            else:  # Create new object
                 math_object = cls(node=node,
                                   info=info,
                                   math_type=math_type,
                                   children=children)
                 MathObject.Variables[identifier] = math_object
-
-        ##############################
-        # Treatment of other objects #
-        ##############################
-        # elif node in HAVE_BOUND_VARS:
-        #     #################################################################
-        #     # Quantifiers & lambdas: provisionally "unname" bound variables #
-        #     #################################################################
-        #     # NB: info["name"] is given by structures.lean,
-        #     # but may be inadequate (e.g. two distinct variables sharing the
-        #     # same name)
-        #     # This lean name is saved in info['lean_name'],
-        #     # and info['name'] = "NO NAME" until proper naming
-        #     bound_var_type, bound_var, local_context = children
-        #     new_info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
-        #                 'lean_name': bound_var.info['name'],
-        #                 'is_bound_var': True}
-        #     bound_var.info.update(new_info)
-        #     bound_var.math_type = bound_var_type
-        #     # bound_vars.insert(0, bound_var)
-        #     math_object = cls(node=node,
-        #                       info=info,
-        #                       math_type=math_type,
-        #                       children=children)
 
         else:
             ##############################
@@ -439,10 +408,6 @@ class MathObject:
         if display_child:
             display += ', children: **' + display_child + '**'
         return display
-
-    # def has_expanded_version(self):
-    #     return hasattr(self, "expanded_version") and \
-    #             self.expanded_version
 
     def math_type_child_name(self) -> str:
         """display name of first child of math_type"""
@@ -519,6 +484,22 @@ class MathObject:
 # Tests for equality and related methods #
 ##########################################
 
+    def mark_identical_bound_vars(self, other):
+        """
+        Mark two bound variables with a common number, so that we can follow
+        them along two quantified expressions and check if these expressions
+        are identical
+        """
+        MathObject.bound_var_counter += 1
+        self.info['bound_var_nb'] = MathObject.bound_var_counter
+        other.info['bound_var_nb'] = MathObject.bound_var_counter
+
+    def unmark_bound_var(self):
+        """
+        Unmark the two bound vars.
+        """
+        self.info['bound_var_nb'] = -1
+
     def __eq__(self, other) -> bool:
         """
         Test if the two MathObjects code for the same mathematical objects,
@@ -549,36 +530,25 @@ class MathObject:
         if other is None or not isinstance(other, MathObject):
             return False
 
-        # Test node, bound var, name, math_type:
+        #########################################
+        # Test node, bound var, name, math_type #
+        #########################################
         if (self.node, self.bound_var_nb(), self.name, self.math_type) != \
                 (other.node, other.bound_var_nb(), other.name, other.math_type):
             return False
 
-        # # Node
-        # elif self.node != other.node:
-        #     # log.debug(f"distinct nodes {self.node, other.node}")
-        #     return False
-        #
-        # # Bound vars
-        # elif self.bound_var_nb() != other.bound_var_nb():
-        #     # self or other is a bound var, and not the same as the other one
-        #     return False
-        #
-        # # Names
-        # elif self.name != other.name:
-        #     return False
-        # # Recursively test for math_types
-        # elif self.math_type != other.math_type:
-        #     # log.debug(f"distinct types {self.math_type}")
-        #     # log.debug(f"other type     {other.math_type}")
-        #     return False
-
-        # Recursively test for children
+        #################################
+        # Recursively test for children #
+        #################################
         elif len(self.children) != len(other.children):
             return False
         else:  # It remains to recursively test for children
             equal = True
             bound_var_1 = None
+
+            ##############
+            # Bound vars #
+            ##############
             # Mark bound vars in quantified expressions to distinguish them
             if self.node in HAVE_BOUND_VARS:
                 # Here self and other are assumed to be a quantified proposition
@@ -606,36 +576,12 @@ class MathObject:
         Compute the number of copies of other contained in self.
         """
         if MathObject.__eq__(self, other):
-            counter = 1
+            return 1
         else:
             # counter = 0
             # for math_object in self.children:
             #     counter += math_object.contains(other)
             return sum([child.contains(other) for child in self.children])
-
-    # def find_in(self, selection):
-    #     """
-    #     Try to find self in a list of math_objects.
-    #     """
-    #     if self in selection:
-    #         index = selection.index(self)
-    #         return index
-
-    def mark_identical_bound_vars(self, other):
-        """
-        Mark two bound variables with a common number, so that we can follow
-        them along two quantified expressions and check if these expressions
-        are identical
-        """
-        MathObject.bound_var_counter += 1
-        self.info['bound_var_nb'] = MathObject.bound_var_counter
-        other.info['bound_var_nb'] = MathObject.bound_var_counter
-
-    def unmark_bound_var(self):
-        """
-        Unmark the two bound vars.
-        """
-        self.info['bound_var_nb'] = -1
 
     def direction_for_substitution_in(self, other) -> str:
         """
@@ -834,15 +780,6 @@ class MathObject:
             math_type = self.math_type
         return math_type.node == "QUANT_∀"
 
-    # def implicit_for_all(self):
-    #     test = self.is_for_all(implicit=True)
-    #     if not test:
-    #         return None
-    #     if self.is_for_all():
-    #         return self
-    #     else:
-    #         return self.last_rw_object
-
     def is_simplified_by_push_neg(self, is_math_type=False):
         tests = [self.is_not(is_math_type=is_math_type),
                  self.is_for_all(is_math_type=is_math_type),
@@ -1002,19 +939,6 @@ class MathObject:
             return True
         else:
             return False
-
-    # def is_bound_var(self) -> bool:
-    #     """
-    #     Test if self is a bound variable by searching in the info dict
-    #     """
-    #     if 'is_bound_var' in self.info and self.info['is_bound_var']:
-    #         return True
-    #     else:
-    #         return False
-
-    def is_unnamed(self):
-        return self.display_name == "NO NAME" \
-               or self.display_name == '*no_name*'
 
     def is_application(self):
         return self.node == "APPLICATION"
@@ -1264,7 +1188,7 @@ class MathObject:
         should not be touched, however.
         """
 
-        # Not used (?)
+        # Fixme: not used (?)
         math_type = self
         vars = []
         if self.is_for_all(is_math_type=True, implicit=False):
@@ -1345,9 +1269,9 @@ class MathObject:
         return [math_obj.info["name"] for
                 math_obj in self.extract_local_vars()]
 
-    ########################
-    # Display math objects #
-    ########################
+    ###################
+    # Display methods #
+    ###################
     def raw_latex_shape(self, negate=False, text_depth=0):
         """
         e.g. if self is a MathObject whose node is 'PROP_EQUAL', this method
@@ -1375,18 +1299,6 @@ class MathObject:
 
         # log.debug(f"    --> Raw shape: {shape}")
         return shape
-
-    # def expanded_latex_shape(self, text_depth=0):
-    #     """
-    #     Recursively fill the children of raw_display.
-    #     e.g. if self is a MathObject coding for "f(x)=y", this method
-    #     will return something like [[["f"], [\\parentheses, "x"]], " = ", "y"].
-    #     If x is a dummy var then it will be replaced by [\\dummy_var, x].
-    #     """
-    #     # log.debug(f"Expanded latex shape for {self.display_debug}")
-    #     display = recursive_display(self, text_depth)
-    #     # log.debug(f"     Els--> {display}")
-    #     return display
 
     def to_abstract_string(self, text_depth=0) -> Union[list, str]:
         """
@@ -1430,36 +1342,11 @@ class MathObject:
         #   then you probably have to do the same changes in
         #   ContextMathObject.math_type_to_display.
 
-        # log.debug(f"Displaying: {self.display_name}...")
-        # (1) Latex shape, includes treatment of "in"
-        # needs_paren is called --> '\parentheses'
-        # abstract_string = self.expanded_latex_shape(text_depth=text_depth)
-        # log.debug(f" --> abstract string: {abstract_string}")
-        # (2) Replace some symbol by plain text:
-        # abstract_string = shallow_latex_to_text(abstract_string, text_depth)
-        # log.debug(f"(2) --> to text: {abstract_string}")
-
         abstract_string = self.to_abstract_string(text_depth)
-        # log.debug(f"abstract string: {abstract_string}")
 
         # Adapt to format_ and concatenate to get a string
         display = abstract_string_to_string(abstract_string, format_,
                                             use_color=use_color, bf=bf)
-
-        # (3) Replace latex macro by utf8:
-        # if format_ == 'lean':
-        #     display = latex_to_lean(display)
-        # if format_ in ('lean', 'utf8', 'html'):
-        #     display = latex_to_utf8(display)
-        # # (4) Final display: format for html and concatenate.
-        # if format_ == 'html':
-        #     display = html_display(display)
-        # elif format_ == 'utf8':
-        #     display = utf8_display(display)
-        # elif format_ == 'lean':
-        #     display = utf8_display(display)  # FIXME: should be adapted to Lean
-        # log.debug(f"    --> To html: {display}")
-
         return display
 
     def raw_latex_shape_of_math_type(self, text_depth=0):
@@ -1534,17 +1421,22 @@ class MathObject:
         # Adapt to format_ and concatenate to get a string
         display = abstract_string_to_string(abstract_string, format_)
 
-        # # Replace latex macro by utf8:
-        # if format_ in ('utf8', 'html'):
-        #     display = latex_to_utf8(display)
-        # # Assemble abstract string
-        # if format_ == 'html':
-        #     display = html_display(display)
-        # elif format_ == 'utf8':
-        #     display = utf8_display(display)
-        # # log.debug(f"{self.old_to_display()} -> {display}")
-
         return display
+
+    @classmethod
+    def new_bound_var(cls, math_type):
+        """
+        Return a new bound var of given math_type.
+        """
+
+        info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
+                'lean_name': "NONE",
+                'is_bound_var': True}
+        bound_var = cls(node="LOCAL_CONSTANT",
+                        info=info,
+                        children=[],
+                        math_type=math_type)
+        return bound_var
 
     def __lambda_var_n_body(self):
         """
@@ -1574,28 +1466,12 @@ class MathObject:
         name_single_bound_var(bound_var)
         return bound_var, body
 
-
-    @classmethod
-    def new_bound_var(cls, math_type):
-        """
-        Return a new bound var of given math_type.
-        """
-
-        info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
-                'lean_name': "NONE",
-                'is_bound_var': True}
-        bound_var = cls(node="LOCAL_CONSTANT",
-                        info=info,
-                        children=[],
-                        math_type=math_type)
-        return bound_var
-
-    @classmethod
-    def PROP_AS_MATHOBJECT(cls):
-        return MathObject(node="PROP",
-                          info={},
-                          children=[],
-                          math_type=None)
+    # @classmethod
+    # def PROP_AS_MATHOBJECT(cls):
+    #     return MathObject(node="PROP",
+    #                       info={},
+    #                       children=[],
+    #                       math_type=None)
 
 
 MathObject.NO_MATH_TYPE = MathObject(node="not provided",
