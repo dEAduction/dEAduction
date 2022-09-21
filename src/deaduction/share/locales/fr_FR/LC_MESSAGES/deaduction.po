@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-09-19 11:20+0200\n"
-"PO-Revision-Date: 2022-09-19 11:21+0200\n"
+"POT-Creation-Date: 2022-09-21 18:58+0200\n"
+"PO-Revision-Date: 2022-09-21 18:59+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -712,8 +712,8 @@ msgid "Selected items are not properties"
 msgstr "Les objets sélectionnés ne sont pas des propriétés"
 
 #: pylib/actions/logic.py:204 pylib/actions/logic.py:398
-#: pylib/actions/logic.py:599 pylib/actions/logic.py:833
-#: pylib/actions/logic.py:1213
+#: pylib/actions/logic.py:599 pylib/actions/logic.py:831
+#: pylib/actions/logic.py:1210
 msgid "Does not apply to more than two properties"
 msgstr "Ne s’applique pas à plus de deux propriétés"
 
@@ -766,7 +766,7 @@ msgid "On which side do you want"
 msgstr "De quel côté voulez-vous"
 
 #: pylib/actions/logic.py:361 pylib/actions/logic.py:454
-#: pylib/actions/logic.py:521 pylib/actions/logic.py:1011
+#: pylib/actions/logic.py:521 pylib/actions/logic.py:1009
 msgid "Property {} added to the context"
 msgstr "Propriété {} ajoutée au contexte"
 
@@ -818,8 +818,8 @@ msgstr "Les propriétés sélectionnées ne sont pas des implications ‘P ⇒ Q
 msgid "Use for substitution in {}"
 msgstr "Utiliser pour substituer dans {}"
 
-#: pylib/actions/logic.py:620 pylib/actions/logic.py:1306
-#: pylib/actions/logic.py:1337
+#: pylib/actions/logic.py:620 pylib/actions/logic.py:1303
+#: pylib/actions/logic.py:1334
 msgid "Precision of substitution"
 msgstr "Préciser le sens de substitution"
 
@@ -839,164 +839,164 @@ msgstr "Erreur non documentée"
 msgid "Iff split in two implications"
 msgstr "Equivalence séparée en deux implications"
 
-#: pylib/actions/logic.py:683
+#: pylib/actions/logic.py:681
 msgid "Target replaced by iff property"
 msgstr "But remplacé par une équivalence"
 
-#: pylib/actions/logic.py:684 pylib/actions/logic.py:724
+#: pylib/actions/logic.py:682 pylib/actions/logic.py:722
 msgid "The first implication is not the converse of the second one"
 msgstr "Les deux implications ne sont pas réciproques l’une de l’autre"
 
-#: pylib/actions/logic.py:689
+#: pylib/actions/logic.py:687
 msgid "I do not know what to do"
 msgstr "Je n’ai pas compris ce que vous voulez faire :-("
 
-#: pylib/actions/logic.py:705
+#: pylib/actions/logic.py:703
 msgid "Property {} split into {} and {}"
 msgstr "Propriété {} séparée en {} et {}"
 
-#: pylib/actions/logic.py:722
+#: pylib/actions/logic.py:720
 msgid "Logical equivalence {} added to the context"
 msgstr "Equivalence {} ajoutée au contexte"
 
-#: pylib/actions/logic.py:791
+#: pylib/actions/logic.py:789
 msgid "Target is not an iff property 'P ⇔ Q'"
 msgstr "Le but n’est pas un « si et seulement si » ‘P ⇔ Q’"
 
-#: pylib/actions/logic.py:803
+#: pylib/actions/logic.py:801
 msgid "Selected property is not an iff property 'P ⇔ Q'"
 msgstr "La propriété sélectionnée n’est pas un « si et seulement si » ‘P ⇔ Q’"
 
-#: pylib/actions/logic.py:828
+#: pylib/actions/logic.py:826
 msgid "Selected items should both be implications"
 msgstr "Les objets sélectionnés ne sont pas deux implications"
 
-#: pylib/actions/logic.py:881
+#: pylib/actions/logic.py:879
 msgid "Object {} added to the context"
 msgstr "Objet {} ajouté au contexte"
 
-#: pylib/actions/logic.py:1039
+#: pylib/actions/logic.py:1037
 msgid "Target is not a universal property '∀x, P(x)'"
 msgstr "Le but n’est pas une propriété universelle ‘∀x, P(x)’"
 
-#: pylib/actions/logic.py:1046
+#: pylib/actions/logic.py:1044
 msgid "Selected property is not a universal property '∀x, P(x)'"
 msgstr ""
 "La propriété sélectionnée n’est pas une propriété universelle ‘∀x, P(x)’"
 
-#: pylib/actions/logic.py:1051
+#: pylib/actions/logic.py:1049
 msgid "Apply a universal property"
 msgstr "Appliquer une propriété universelle"
 
-#: pylib/actions/logic.py:1053
+#: pylib/actions/logic.py:1051
 msgid "Enter element on which you want to apply:"
 msgstr "Entrer l’objet à utiliser :"
 
-#: pylib/actions/logic.py:1078
+#: pylib/actions/logic.py:1075
 msgid "No universal property among selected"
 msgstr "Pas de propriété universelle dans la sélection"
 
-#: pylib/actions/logic.py:1092
+#: pylib/actions/logic.py:1089
 msgid "Enter element you want to use:"
 msgstr "Quel objet voulez-vous utiliser ?"
 
-#: pylib/actions/logic.py:1094
+#: pylib/actions/logic.py:1091
 msgid "Exist"
 msgstr "Existence"
 
-#: pylib/actions/logic.py:1099
+#: pylib/actions/logic.py:1096
 msgid "Now prove {} suits our needs"
 msgstr "Il reste à démontrer que {} convient"
 
-#: pylib/actions/logic.py:1132
+#: pylib/actions/logic.py:1129
 msgid "New object {} with property {}"
 msgstr "Nouvel objet {} vérifiant la propriété {}"
 
-#: pylib/actions/logic.py:1157
+#: pylib/actions/logic.py:1154
 msgid "I cannot build an existential property with this"
 msgstr "Ceci ne me permet pas de construire une propriété existentielle"
 
-#: pylib/actions/logic.py:1160
+#: pylib/actions/logic.py:1157
 msgid "Get new existential property {}"
 msgstr "Nouvelle propriété existentielle {}"
 
-#: pylib/actions/logic.py:1191 pylib/actions/logic.py:1206
+#: pylib/actions/logic.py:1188 pylib/actions/logic.py:1203
 msgid "Target is not existential property '∃x, P(x)'"
 msgstr "Le but n’est pas une propriété existentielle ‘∃x, P(x)’"
 
-#: pylib/actions/logic.py:1200
+#: pylib/actions/logic.py:1197
 msgid "Selection is not existential property '∃x, P(x)'"
 msgstr "L’objet sélectionné n’est pas une propriété existentielle ’∃x, P(x)’"
 
-#: pylib/actions/logic.py:1230
+#: pylib/actions/logic.py:1227
 msgid "the target"
 msgstr "le but"
 
-#: pylib/actions/logic.py:1232
+#: pylib/actions/logic.py:1229
 msgid "{} replaced by {}"
 msgstr "{} remplacé par {}"
 
-#: pylib/actions/logic.py:1234
+#: pylib/actions/logic.py:1231
 msgid "Substitution using {}"
 msgstr "Substitution à l’aide de {}"
 
-#: pylib/actions/logic.py:1235
+#: pylib/actions/logic.py:1232
 msgid "in {}"
 msgstr "dans {}"
 
-#: pylib/actions/logic.py:1236
+#: pylib/actions/logic.py:1233
 msgid "Unable to substitute {} by {}"
 msgstr "Impossible de remplacer {} par {}"
 
-#: pylib/actions/logic.py:1237
+#: pylib/actions/logic.py:1234
 msgid "Unable to use {} to substitute in {}"
 msgstr "Impossible d’utiliser {} pour substituer dans {}"
 
-#: pylib/actions/logic.py:1307 pylib/actions/logic.py:1338
+#: pylib/actions/logic.py:1304 pylib/actions/logic.py:1335
 msgid "Choose which expression you want to replace"
 msgstr "Choisissez quelle expression remplacer"
 
-#: pylib/actions/logic.py:1386
+#: pylib/actions/logic.py:1383
 msgid "No property selected"
 msgstr "Pas de propriété sélectionnée"
 
-#: pylib/actions/logic.py:1389
+#: pylib/actions/logic.py:1386
 msgid "Too many selected objects"
 msgstr "Appliquer cette propriété à un objet sélectionné"
 
-#: pylib/actions/logic.py:1421 pylib/actions/logic.py:1428
+#: pylib/actions/logic.py:1418 pylib/actions/logic.py:1425
 msgid "This cannot be used for substitution"
 msgstr "Cette propriété ne peut pas être utilisé pour la substitution"
 
-#: pylib/actions/logic.py:1455
+#: pylib/actions/logic.py:1452
 msgid "New objet {} added to the context"
 msgstr "Nouvel objet {} ajouté au contexte"
 
-#: pylib/actions/logic.py:1482
+#: pylib/actions/logic.py:1479
 msgid "Map {} applied to {}"
 msgstr "La fonction {} a été appliquée à {}"
 
-#: pylib/actions/logic.py:1492
+#: pylib/actions/logic.py:1489
 msgid "The map {} cannot be applied to this object"
 msgstr "L’application {} ne peut pas être appliquée à cet objet"
 
-#: pylib/actions/logic.py:1494
+#: pylib/actions/logic.py:1491
 msgid "The map {} cannot be applied to these objects"
 msgstr "L’application {} ne peut pas être appliquée à ces objets"
 
-#: pylib/actions/logic.py:1524
+#: pylib/actions/logic.py:1521
 msgid "Enter element on which you want to apply the map {}:"
 msgstr "Entrer l’objet sur lequel vous voulez appliquer {} :"
 
-#: pylib/actions/logic.py:1527
+#: pylib/actions/logic.py:1524
 msgid "Map"
 msgstr "Application"
 
-#: pylib/actions/logic.py:1543
+#: pylib/actions/logic.py:1540
 msgid "Select an application and an element or an equality"
 msgstr "Sélectionner une application, et un élément ou une égalité"
 
-#: pylib/actions/magic.py:473
+#: pylib/actions/magic.py:472
 msgid "I don't know how to conclude"
 msgstr "Je ne sais pas comment conclure"
 
@@ -1076,60 +1076,60 @@ msgstr ""
 msgid "Function {} and property {} added to the context"
 msgstr "La fonction {} et la propriété {} sont ajoutées au contexte"
 
-#: pylib/actions/proofs.py:245
+#: pylib/actions/proofs.py:244
 msgid "Object"
 msgstr "Objet"
 
-#: pylib/actions/proofs.py:245 pylib/actions/proofs.py:271
+#: pylib/actions/proofs.py:244 pylib/actions/proofs.py:270
 msgid "Introduce a new object"
 msgstr "Introduire un nouvel objet"
 
-#: pylib/actions/proofs.py:246
+#: pylib/actions/proofs.py:245
 msgid "Goal"
 msgstr "But"
 
-#: pylib/actions/proofs.py:246
+#: pylib/actions/proofs.py:245
 msgid "Introduce a new intermediate sub-goal"
 msgstr "Introduire un but intermédiaire"
 
-#: pylib/actions/proofs.py:248
+#: pylib/actions/proofs.py:247
 msgid "Function"
 msgstr "Fonction"
 
-#: pylib/actions/proofs.py:248
+#: pylib/actions/proofs.py:247
 msgid "Introduce a new function"
 msgstr "Introduire une nouvelle fonction"
 
-#: pylib/actions/proofs.py:250
+#: pylib/actions/proofs.py:249
 #: pylib/coursedata/course_metadata_translations.py:35
 msgid "New object"
 msgstr "Nouvel Objet"
 
-#: pylib/actions/proofs.py:251
+#: pylib/actions/proofs.py:250
 msgid "Choose what to introduce:"
 msgstr "Choisissez :"
 
-#: pylib/actions/proofs.py:257
+#: pylib/actions/proofs.py:256
 msgid "Name your object:"
 msgstr "Choisir une notation pour l’objet :"
 
-#: pylib/actions/proofs.py:264
+#: pylib/actions/proofs.py:263
 msgid "This name already exists, please give a new name:"
 msgstr "Ce nom existe déjà, choisissez un nouveau nom:"
 
-#: pylib/actions/proofs.py:281
+#: pylib/actions/proofs.py:280
 msgid "New object {} added to the context"
 msgstr "Nouvel objet {} ajouté au contexte"
 
-#: pylib/actions/proofs.py:286
+#: pylib/actions/proofs.py:285
 msgid "You might try the ∀ button..."
 msgstr "Vous pouvez essayer le boutton ‘∀’…"
 
-#: pylib/actions/proofs.py:293
+#: pylib/actions/proofs.py:292
 msgid "Introduce a new subgoal"
 msgstr "Introduire un but intermédiaire"
 
-#: pylib/actions/proofs.py:299
+#: pylib/actions/proofs.py:298
 msgid "New target will be added to the context after being proved"
 msgstr "Le nouveau but sera ajouté au contexte quand il aura été démontré"
 
@@ -1445,7 +1445,7 @@ msgstr "une suite"
 msgid "sequences"
 msgstr "suites"
 
-#: pylib/math_display/display_data.py:288 pylib/mathobj/math_object.py:1543
+#: pylib/math_display/display_data.py:288 pylib/mathobj/math_object.py:1494
 msgid "a rational number"
 msgstr "un nombre rationnel"
 
@@ -1454,7 +1454,7 @@ msgid "rational numbers"
 msgstr "nombres rationnels"
 
 #: pylib/math_display/display_data.py:289
-#: pylib/math_display/display_data.py:322 pylib/mathobj/math_object.py:1545
+#: pylib/math_display/display_data.py:322 pylib/mathobj/math_object.py:1496
 msgid "a real number"
 msgstr "un nombre réel"
 
@@ -1558,7 +1558,7 @@ msgstr "le complémentaire de "
 msgid "the empty set"
 msgstr "l’ensemble vide"
 
-#: pylib/math_display/display_data.py:400 pylib/mathobj/math_object.py:1526
+#: pylib/math_display/display_data.py:400 pylib/mathobj/math_object.py:1477
 msgid "a family of subsets of"
 msgstr "une famille de parties de"
 
@@ -1745,27 +1745,27 @@ msgstr "une famille"
 msgid "family"
 msgstr "famille"
 
-#: pylib/mathobj/context_math_object.py:209
+#: pylib/mathobj/context_math_object.py:207
 msgid "elements of"
 msgstr "éléments de"
 
-#: pylib/mathobj/math_object.py:1521
+#: pylib/mathobj/math_object.py:1472
 msgid "a subset of"
 msgstr "une partie de"
 
-#: pylib/mathobj/math_object.py:1524
+#: pylib/mathobj/math_object.py:1475
 msgid "a sequence in"
 msgstr "une suite dans"
 
-#: pylib/mathobj/math_object.py:1536
+#: pylib/mathobj/math_object.py:1487
 msgid "an element of"
 msgstr "un élément de"
 
-#: pylib/mathobj/math_object.py:1539
+#: pylib/mathobj/math_object.py:1490
 msgid "a non-negative integer"
 msgstr "un entier positif ou nul"
 
-#: pylib/mathobj/math_object.py:1541
+#: pylib/mathobj/math_object.py:1492
 msgid "an integer"
 msgstr "un entier"
 
@@ -2071,7 +2071,7 @@ msgstr "Ceci est"
 msgid "This property is"
 msgstr "Cette propriété est"
 
-#: pylib/text/help_msgs.py:80 pylib/text/help_msgs.py:259
+#: pylib/text/help_msgs.py:80 pylib/text/help_msgs.py:265
 #, python-brace-format
 msgid "Applying definition {def_name} will turn this into"
 msgstr "En appliquant la définition {def_name},  ceci deviendra"
@@ -2312,24 +2312,28 @@ msgstr "{this_property_is} une négation."
 msgid "Press the ¬ (NOT) button to try to simplify the property."
 msgstr "Cliquez sur le bouton ¬ (NON) pour essayer de simplifier la propriété."
 
-#: pylib/text/help_msgs.py:191 pylib/text/help_msgs.py:199
+#: pylib/text/help_msgs.py:192
+msgid "I do not know how to simplify this negation directly."
+msgstr "Je ne sais pas simplifier cette négation sous cette forme."
+
+#: pylib/text/help_msgs.py:197 pylib/text/help_msgs.py:205
 msgid "iff"
 msgstr "ssi"
 
-#: pylib/text/help_msgs.py:191
+#: pylib/text/help_msgs.py:197
 #, python-brace-format
 msgid "{this_property_is} a logical equivalence."
 msgstr "{this_property_is} une équivalence logique."
 
-#: pylib/text/help_msgs.py:192
+#: pylib/text/help_msgs.py:198
 msgid "You can use the ⇔ (\"IF AND ONLY IF\") button <ul>"
 msgstr "Vous pouvez utiliser le bouton ⇔ (\"SI ET SEULEMENT SI\")<ul>"
 
-#: pylib/text/help_msgs.py:193
+#: pylib/text/help_msgs.py:199
 msgid "<li>to split it into two implications,</li>"
 msgstr "<li>pour la décomposer en deux implications,</li>"
 
-#: pylib/text/help_msgs.py:194
+#: pylib/text/help_msgs.py:200
 #, python-brace-format
 msgid ""
 "<li>or to substitute {ch0} for {ch1}, or vice-versa, in the target or in "
@@ -2338,7 +2342,7 @@ msgstr ""
 "<li>ou pour remplacer {ch0} par {ch1}, ou vice-versa, dans le but ou dans "
 "une autre propriété du contexte.</li></ul>"
 
-#: pylib/text/help_msgs.py:200
+#: pylib/text/help_msgs.py:206
 msgid ""
 "Press the ⇔ (\"IF AND ONLY IF\") button, to split the proof into the proofs "
 "of the direct and reverse implications. You may also use the ∧ (AND) button."
@@ -2347,12 +2351,12 @@ msgstr ""
 "l'implication directe et l'implication réciproque. Vous pouvez aussi "
 "utiliser le bouton ∧ (ET)."
 
-#: pylib/text/help_msgs.py:205
+#: pylib/text/help_msgs.py:211
 #, python-brace-format
 msgid "{this_is} an equality between two {elements_of_ch0_type}."
 msgstr "{this_is} une égalité entre deux {elements_of_ch0_type}."
 
-#: pylib/text/help_msgs.py:206
+#: pylib/text/help_msgs.py:212
 #, python-brace-format
 msgid ""
 "You may use this equality to substitute {ch0} for {ch1}, or vice-versa, in "
@@ -2361,7 +2365,7 @@ msgstr ""
 "Vous pouvez utiliser cette égalité pour remplacer {ch0} par {ch1}, ou vice-"
 "versa,dans le but ou dans une autre propriété du contexte."
 
-#: pylib/text/help_msgs.py:209
+#: pylib/text/help_msgs.py:215
 #, python-brace-format
 msgid ""
 "To do this, press the \"=\" ( EQUAL) button after selecting the other "
@@ -2370,12 +2374,12 @@ msgstr ""
 "Pour ça, cliquez sur le bouton \"=\" (ÉGAL) après avoir sélectionné l'autre "
 "propriété{or_drag_to_equality}."
 
-#: pylib/text/help_msgs.py:215
+#: pylib/text/help_msgs.py:221
 #, python-brace-format
 msgid "{this_is} a function from {ch0} to {ch1}."
 msgstr "{this_is} une fonction de {ch0} dans {ch1}."
 
-#: pylib/text/help_msgs.py:216
+#: pylib/text/help_msgs.py:222
 #, python-brace-format
 msgid ""
 "You may apply this function to some element of {ch0}, or to an equality "
@@ -2384,7 +2388,7 @@ msgstr ""
 "Vous pouvez appliquer cette fonction à un élément de {ch0}, ou à une égalité "
 "entre deux éléments de {ch0}."
 
-#: pylib/text/help_msgs.py:218
+#: pylib/text/help_msgs.py:224
 #, python-brace-format
 msgid ""
 "For this, press the ↦ (MAP) button after selecting an element or an "
@@ -2393,12 +2397,12 @@ msgstr ""
 "Pour ça, cliquez sur le bouton ↦ (FONCTION) après avoir sélectionné un "
 "élément ou une égalité{or_drag_to_function}."
 
-#: pylib/text/help_msgs.py:222
+#: pylib/text/help_msgs.py:228
 #, python-brace-format
 msgid "{this_is} a belonging property."
 msgstr "{this_is} une propriété d'appartenance."
 
-#: pylib/text/help_msgs.py:223
+#: pylib/text/help_msgs.py:229
 msgid ""
 "There is no obvious way to further simplify this target. Maybe you should "
 "now work on the context, trying to get this property."
@@ -2406,12 +2410,12 @@ msgstr ""
 "Il n'y a pas de façon évidente de simplifier ce but. Vous pouvez maintenant "
 "essayer de déduire ce but à partir des propriétés du contexte."
 
-#: pylib/text/help_msgs.py:228
+#: pylib/text/help_msgs.py:234
 #, python-brace-format
 msgid "This matches the definition {def_name}."
 msgstr "Vous pouvez appliquer la définition {def_name}."
 
-#: pylib/text/help_msgs.py:229
+#: pylib/text/help_msgs.py:235
 #, python-brace-format
 msgid ""
 "To apply a definition, click on it in the Statements area{or_drag_to_def}."
@@ -2419,16 +2423,16 @@ msgstr ""
 "Pour appliquer une définition, cliquez dessus dans la zone des "
 "énoncés{or_drag_to_def}."
 
-#: pylib/text/help_msgs.py:235
+#: pylib/text/help_msgs.py:241
 #, python-brace-format
 msgid "This matches definitions {def_names}."
 msgstr "On peut appliquer les définitions  {def_names}."
 
-#: pylib/text/help_msgs.py:241
+#: pylib/text/help_msgs.py:247
 msgid "This property obviously entails the current goal."
 msgstr "Cette propriété implique manifestement le but en cours."
 
-#: pylib/text/help_msgs.py:242
+#: pylib/text/help_msgs.py:248
 msgid ""
 "Use the \"Goal!\" button when you think the target is obvious from the "
 "context."
@@ -2436,12 +2440,12 @@ msgstr ""
 "Utilisez le bouton \"But!\" quand vous pensez que le but se déduit "
 "manifestement du contexte."
 
-#: pylib/text/help_msgs.py:244
+#: pylib/text/help_msgs.py:250
 #, python-brace-format
 msgid "Maybe {deaduction} will still need a little help..."
 msgstr "{deaduction}  vous demandera peut-être de l'aider encore un peu..."
 
-#: pylib/text/help_msgs.py:247
+#: pylib/text/help_msgs.py:253
 #, python-brace-format
 msgid "This target follows obviously from context property {solving_obj}."
 msgstr ""
