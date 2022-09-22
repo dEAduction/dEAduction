@@ -340,6 +340,8 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
     from_lean_name : dict = {}  # Statement.lean_name --> item
     # ! Must be updated to avoid pointing to deleted items !
 
+    is_node = False
+
     def __init__(self, statement: Statement):
         """
         Init self with an instance of the class (or child of) Statement.
@@ -384,9 +386,6 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
     def is_exercise(self):
         if self.parent:
             return self.parent.is_exercise_list
-
-    def is_node(self):
-        return False
 
     def set_tooltip(self):
         """
@@ -439,6 +438,8 @@ class StatementsTreeWidgetNode(QTreeWidgetItem):
     with title 'Finite groups'.
     """
 
+    is_node = True
+
     def __init__(self, title: str):
         """
         Init self with a title.
@@ -454,15 +455,6 @@ class StatementsTreeWidgetNode(QTreeWidgetItem):
         # Cosmetics
         self.setFlags(Qt.ItemIsEnabled)
         self.setExpanded(True)
-        # self.set_selectable(False)
-
-    # @property
-    # def is_exercise_list(self):
-    #     if self.parent():
-    #         return self.parent().is_exercise_list
-
-    def is_node(self):
-        return True
 
     def add_child(self, child: QTreeWidgetItem):
         """
@@ -644,6 +636,9 @@ class StatementsTreeWidget(QTreeWidget):
         StatementsTreeWidgetItem.from_lean_name = {}
         super().__init__()
         self._potential_drop_receiver = None
+        self._current_dragging_node = None
+        self.expand_node_timer = QTimer()
+        self.expand_node_timer.timeout.connect(self.expand_current_node)
 
         self.items: [QTreeWidgetItem] = [] # List of items
         self._init_tree(statements, outline)
@@ -768,6 +763,11 @@ class StatementsTreeWidget(QTreeWidget):
             self._potential_drop_receiver = receiver
             self.select_index(receiver)
 
+    def expand_current_node(self):
+        if self._current_dragging_node:
+            self._current_dragging_node.setExpanded(True)
+            self._current_dragging_node = None
+
     def dragEnterEvent(self, event):
         """
         Accept drag except if it comes from self.
@@ -782,18 +782,24 @@ class StatementsTreeWidget(QTreeWidget):
         temporarily.
         """
 
+        self.expand_node_timer.stop()
         index = self.index_from_event(event)
         if index != self.potential_drop_receiver:
             self.potential_drop_receiver = None  # Unselect automatically
 
         # if index:
-        item: StatementsTreeWidgetItem = self.item_from_index(index)
-        if item: # and item.isDropEnabled():
+        item = self.item_from_index(index)
+        if item:  # and item.isDropEnabled():
             self.potential_drop_receiver = index
+
+        if item and item.is_node:
+            self._current_dragging_node = item
+            self.expand_node_timer.start(500)
 
         event.accept()
 
     def dragLeaveEvent(self, event) -> None:
+        self.expand_node_timer.stop()
         self.potential_drop_receiver = None  # Unselect automatically
         # print("dragLeave statement")
 
@@ -811,7 +817,7 @@ class StatementsTreeWidget(QTreeWidget):
             dragged_index = source.currentIndex()
             index = self.index_from_event(event)
             item = self.itemFromIndex(index)
-            if not item or item.is_node():  # Not dropped on a statement
+            if not item or item.is_node:  # Not dropped on a statement
                 return
             # print(f"Source : {source}, dragged index: {dragged_index}")
             # print(f"Source selected items: {len(source.selected_items())}")
