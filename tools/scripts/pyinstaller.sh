@@ -17,7 +17,7 @@ if [[ "$OS" == "Linux" ]]; then
   DEADUCTION_ON_LINUX=1
   echo "OS = Linux"
   VERSION=$(cat /etc/issue)
-  if [[ ${VERSION::6} == "Ubuntu" -o ${VERSION::6} == "Debian" ]]; then
+  if [[ ${VERSION::6} == "Ubuntu" || ${VERSION::6} == "Debian" ]]; then
     UBUNTU_DEBIAN=1
     echo "(Ubuntu or Debian detected)"
   fi
@@ -69,12 +69,13 @@ continue() {
 cd ../..
 if [ -d pyinstaller-env ]; then
   echo "Virtual env found in pyinstaller_env"
-  FIRST_TIME = 0
+  FIRST_TIME=0
 else
-  echo "Creating virtual env found in pyinstaller_env?"
-  continue()
+  echo "No Pyinstaller virtual env found."
+  continue ">>>>> Creating virtual env installer_env? (y/n)"
   python3 -m venv pyinstaller_venv
-  FIRST_TIME = 1
+  FIRST_TIME=1
+fi
 ############################
 ### Activate virtual env ###
 ############################
@@ -96,11 +97,13 @@ elif [ "$DEADUCTION_ON_MAC" == 1 ]; then
 else  # On Windows, run ???
   chmod a+x pyinstaller_env/Scripts/activate
   pyinstaller_env\Scripts\activate.bat
+fi
 
 ### Only first time: install pyinstaller ###
 if [ $FIRST_TIME == 1 ]; then
   python3 -m pip install pyinstaller
   python3 -m pip install -r requirements.txt
+fi
 
 ### Environment variables ###
 export DEADUCTION_DEV_MODE=0
@@ -142,7 +145,7 @@ if [ $DEADUCTION_ON_MAC == 1 ]; then
     --app-drop-link 600 185 \
   "D∃∀DUCTION-installer.dmg" \
   "term_app/"
-
+fi
 #  --icon-size 100 \
 #  --icon "Application.app" 200 190 \
 #  --hide-extension "Application.app" \

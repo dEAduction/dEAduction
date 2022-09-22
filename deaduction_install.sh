@@ -7,6 +7,14 @@ set -u
 # execute with:
 # /bin/bash -c "$(curl -L https://raw.githubusercontent.com/dEAduction/dEAduction/master/deaduction_install.sh)"
 
+# String formatters
+tty_mkbold() { tty_escape "1;$1"; }
+tty_underline="$(tty_escape "4;39")"
+tty_blue="$(tty_mkbold 34)"
+tty_red="$(tty_mkbold 31)"
+tty_bold="$(tty_mkbold 39)"
+tty_reset="$(tty_escape 0)"
+
 #############
 # Utilities #
 #############
@@ -121,7 +129,7 @@ OS="$(uname)"
 if [[ "$OS" == "Linux" ]]; then
   DEADUCTION_ON_LINUX=1
   VERSION=$(cat /etc/issue)
-  if [[ ${VERSION::6} == "Ubuntu" -o ${VERSION::6} == "Debian" ]]; then
+  if [[ ${VERSION::6} == "Ubuntu" || ${VERSION::6} == "Debian" ]]; then
     UBUNTU_DEBIAN=1
     echo "(Ubuntu or Debian detected, the envconfig_user_ubuntu file will be
      used)"
