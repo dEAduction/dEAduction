@@ -542,9 +542,10 @@ class MathObject:
         #################################
         elif len(self.children) != len(other.children):
             return False
-        else:  # It remains to recursively test for children
+        else:
             equal = True
             bound_var_1 = None
+            bound_var_2 = None
 
             ##############
             # Bound vars #
@@ -564,7 +565,7 @@ class MathObject:
                 if child0 != child1:
                     equal = False
 
-            # Unmark bound_vars, in prevision of future tests
+            # Unmark bound_vars
             if bound_var_1:
                 bound_var_1.unmark_bound_var()
                 bound_var_2.unmark_bound_var()

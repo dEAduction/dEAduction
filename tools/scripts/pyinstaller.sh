@@ -67,7 +67,7 @@ continue() {
 ############################################
 # Back to deaduciton main dir
 cd ../..
-if [ -d pyinstaller-env ]; then
+if [ -d pyinstaller_venv ]; then
   echo "Virtual env found in pyinstaller_env"
   FIRST_TIME = 0
 else

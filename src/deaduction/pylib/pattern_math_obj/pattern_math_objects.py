@@ -205,8 +205,6 @@ class PatternMathObject(MathObject):
         # TODO: simplify like MathObject.__eq__
         metavars = PatternMathObject.__metavars
         metavar_objects = PatternMathObject.__metavar_objects
-        match = True    # Self and math_object are presumed to match
-        marked = False  # Will be True if bound variables should be unmarked
 
         # if math_object:
         #     log.debug(f"Matching {self} and {math_object}...")
@@ -235,81 +233,58 @@ class PatternMathObject(MathObject):
                     metavar_objects.append(math_object)
                 # match = True
             return match
-        # Node
-        elif node != math_object.node:
-            # log.debug(f"distinct nodes {self.node, math_object.node}")
+
+        ##############################
+        # Test node, bound var, name #
+        ##############################
+        elif (self.node, self.bound_var_nb(), self.name) != \
+                (math_object.node, math_object.bound_var_nb(),
+                 math_object.name):
             return False
 
-        # Mark bound vars in quantified expressions to distinguish them
-        elif node in HAVE_BOUND_VARS:
-            # Here self and math_object are assumed to be a quantified
-            # proposition and children[1] is the bound variable.
-            # We mark the bound variables in self and math_object with same
-            # number so that we know that, say, 'x' in self and 'y' in
-            # math_object are linked and should represent the same variable
-            # everywhere
-            bound_var_1 = self.children[1]
-            bound_var_2 = math_object.children[1]
-            assert isinstance(bound_var_1, MathObject)
-            bound_var_1.mark_identical_bound_vars(bound_var_2)
-            marked = True
-
-        # Names
-        if 'name' in self.info.keys():
-            # For bound variables, do not use names, use numbers
-            if self.is_bound_var:
-                if not math_object.is_bound_var:
-                    match = False
-                # Here both are bound variables
-                elif 'bound_var_counter' not in self.info:
-                    if 'bound_var_counter' in math_object.info:
-                        # Already appeared in math_object but not in self
-                        match = False
-                    else:
-                        # Here both variable are unmarked. This means
-                        # we are comparing two subexpressions with respect
-                        # to which the variables are not local:
-                        # names have a meaning
-                        match = (self.info['name'] == math_object.info['name'])
-                # From now on self.info['bound_var_counter'] exists
-                elif 'bound_var_counter' not in math_object.info:
-                    match = False
-                # From now on both variables have a number
-                elif (self.info['bound_var_counter'] !=
-                      math_object.info['bound_var_counter']):
-                    match = False
-            else:  # Self is not bound var
-                if math_object.is_bound_var:
-                    match = False
-                elif self.info['name'] != math_object.info['name']:
-                    # None is a bound var
-                    match = False
-                    # log.debug(f"distinct names "
-                    #        f"{self.info['name'], math_object.info['name']}")
-
-        # Recursively test for math_types
-        #  (added: also when names)
-        if not self.math_type.recursive_match(math_object.math_type):
+        ##################################
+        # Recursively test for math_type #
+        ##################################
+        elif not self.math_type.recursive_match(math_object.math_type):
             # log.debug(f"distinct types {self.math_type}")
             # log.debug(f"math_object type     "
             #           f"{math_object.math_type.to_display()}")
-            match = False
+            return False
 
-        # Recursively test matching for children
+        #################################
+        # Recursively test for children #
+        #################################
         elif len(self.children) != len(math_object.children):
-            match = False
+            return False
         else:
+            match = True
+            bound_var_1 = None
+            bound_var_2 = None
+            ##############
+            # Bound vars #
+            ##############
+            # Mark bound vars in quantified expressions to distinguish them
+            if self.node in HAVE_BOUND_VARS:
+                # Here self and other are assumed to be a quantified proposition
+                # and children[1] is the bound variable.
+                # We mark the bound variables in self and other with same number
+                # so that we know that, say, 'x' in self and 'y' in other are
+                # linked and should represent the same variable everywhere
+                bound_var_1 = self.children[1]
+                bound_var_2 = math_object.children[1]
+                bound_var_1.mark_identical_bound_vars(bound_var_2)
+
             for child0, child1 in zip(self.children, math_object.children):
                 if not child0.recursive_match(child1):
                     match = False
 
-        # Unmark bound_vars, in prevision of future tests
-        if marked:
-            bound_var_1.unmark_bound_var()
-            bound_var_2.unmark_bound_var()
+            # Unmark bound_vars
+            if bound_var_1:
+                bound_var_1.unmark_bound_var()
+                bound_var_2.unmark_bound_var()
 
-        # log.debug(f"... {match}")
-        return match
+            # log.debug(f"... {match}")
+            return match
 
     def math_object_from_metavar(self):
         if self not in PatternMathObject.__metavars:
