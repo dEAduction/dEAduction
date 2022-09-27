@@ -19,7 +19,7 @@ selection_color = "limegreen"
 symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃, =, ↦"
 linux_font_size_for_symbol_buttons = "16pt"
 darwin_font_size_for_symbol_buttons = ""
-window_font_size_for_symbol_buttons = ""
+windows_font_size_for_symbol_buttons = ""
 use_symbols_for_logic_button = true
 short_buttons_line = true
 
