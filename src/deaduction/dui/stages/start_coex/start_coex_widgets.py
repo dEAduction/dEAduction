@@ -452,8 +452,8 @@ class ExerciseChooser(AbstractCoExChooser):
         # Load fonts for math widgets
         self.deaduction_fonts = DeaductionFonts(self)
         font_size = self.deaduction_fonts.chooser_math_font_size
-        self.math_font = self.deaduction_fonts.math_font()
-        self.math_font.setPointSize(font_size)
+        self.math_fonts = self.deaduction_fonts.math_fonts
+        self.math_fonts.setPointSize(font_size)
 
         super().__init__(browser_layout)
 
@@ -576,7 +576,7 @@ class ExerciseChooser(AbstractCoExChooser):
             # self.__text_wgt.setMaximumHeight(height)
 
             self.__text_wgt.setReadOnly(True)
-            self.__text_wgt.setFont(self.math_font)
+            self.__text_wgt.setFont(self.math_fonts)
             text = goal.goal_to_text(format_="html")
             self.__text_wgt.setHtml(text)
             widget = self.__text_wgt
@@ -599,9 +599,9 @@ class ExerciseChooser(AbstractCoExChooser):
 
             # Math font
             objects_wgt.adjustSize()
-            objects_wgt.setFont(self.math_font)
+            objects_wgt.setFont(self.math_fonts)
             properties_wgt.adjustSize()
-            properties_wgt.setFont(self.math_font)
+            properties_wgt.setFont(self.math_fonts)
 
             objects_lyt.addWidget(QLabel(_('Objects:')))
             properties_lyt.addWidget(QLabel(_('Properties:')))
@@ -613,7 +613,7 @@ class ExerciseChooser(AbstractCoExChooser):
             # ───────────────────── Target ───────────────────── #
             # target_wgt = MathObjectWidget(target=target)
             target_wgt = TargetLabel(target)
-            target_wgt.setFont(self.math_font)
+            target_wgt.setFont(self.math_fonts)
             # Set target_wgt height to 1 line: USELESS with QLabel
             # font_metrics = QFontMetrics(math_font)
             # text_size = font_metrics.size(0, target.math_type_to_display())

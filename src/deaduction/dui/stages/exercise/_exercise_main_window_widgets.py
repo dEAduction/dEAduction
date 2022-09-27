@@ -313,11 +313,11 @@ class ExerciseCentralWidget(QWidget):
         self.setStyleSheet(style)
 
         # Set math fonts #
-        main_math_font = self.deaduction_fonts.math_font()
+        main_math_font = self.deaduction_fonts.math_fonts
         main_math_font.setPointSize(main_size)
         self.props_wgt.setFont(main_math_font)
         self.objects_wgt.setFont(main_math_font)
-        symbol_font = self.deaduction_fonts.math_font()
+        symbol_font = self.deaduction_fonts.math_fonts
         if symbol_size:
             symbol_font.setPointSize(symbol_size)
         if cvars.get('others.os') == "linux":
@@ -326,7 +326,7 @@ class ExerciseCentralWidget(QWidget):
                     btn.setFont(symbol_font)
 
         # Target styles #
-        target_math_font = self.deaduction_fonts.math_font()
+        target_math_font = self.deaduction_fonts.math_fonts
         target_size = self.deaduction_fonts.target_font_size
         # The following has no effect, see styleSheet below:
         target_math_font.setPointSize(target_size)

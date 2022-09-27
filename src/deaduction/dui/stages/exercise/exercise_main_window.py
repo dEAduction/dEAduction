@@ -193,13 +193,16 @@ class ExerciseMainWindow(QMainWindow):
             self.exercise_toolbar.toggle_lean_editor_action
         self.help_window.action = \
             self.exercise_toolbar.toggle_help_action
+        if self.proof_tree_window.isVisible():
+            self.exercise_toolbar.toggle_proof_tree.setChecked(True)
 
-        self.exercise_toolbar.redo_action.setEnabled(False)  # No history at beginning
+        self.exercise_toolbar.redo_action.setEnabled(False)  # No history at beg
         self.exercise_toolbar.undo_action.setEnabled(False)  # same
         self.exercise_toolbar.rewind.setEnabled(False)  # same
         self.exercise_toolbar.go_to_end.setEnabled(False)  # same
         self.__init_menubar()
         self.setStatusBar(self.statusBar)
+        self.__connect_signals()
 
         # Restore geometry
         settings = QSettings("deaduction")
@@ -210,12 +213,15 @@ class ExerciseMainWindow(QMainWindow):
             self.restoreGeometry(geometry)
             # if maximised:  # FIXME: Does not work on Linux?!
             # self.showMaximized()
-        proof_tree_is_visible = settings.value("emw/ShowProofTree")
-        if proof_tree_is_visible:
-            self.exercise_toolbar.toggle_proof_tree.toggle()
+        # proof_tree_is_visible = settings.value("emw/ShowProofTree")
+        # if proof_tree_is_visible:
+        #     print("Proof tree was shown")
+        #     QTimer.singleShot(500,
+        #                       self.exercise_toolbar.toggle_proof_tree.toggle)
+            # self.exercise_toolbar.toggle_proof_tree.toggle()
+            # self.exercise_toolbar.toggle_proof_tree.setChecked(True)
         self.close_coordinator = None  # Method set up by Coordinator
 
-        self.__connect_signals()
         # 1s to allow correct geometry(?) Does not work
         # QTimer.singleShot(1000, self.__init_help_window)
         self.freeze()  # Wait for data before allowing user actions.
@@ -223,7 +229,6 @@ class ExerciseMainWindow(QMainWindow):
     #######################
     # Init /close methods #
     #######################
-
     def __connect_signals(self):
         """
         Connect all signals. Called at init. SOme signals are connected in
