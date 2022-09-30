@@ -41,6 +41,7 @@ from typing import Optional
 
 from PySide2.QtCore    import ( Signal,
                                 Slot,
+                                Slot,
                                 Qt,
                                 QMimeData,
                                 QModelIndex,
@@ -324,6 +325,7 @@ class MathObjectWidget(QListView):
         """
 
         super().__init__()
+        # self.setProperty("math_widget", True)
         self._saved_style_sheet = None
         self._current_index = None  # Last clicked item
         # Current dragged item, if any. Must be reset to None when dropped.
@@ -612,6 +614,7 @@ class TargetLabel(QLabel):
 
     def __init__(self, target):
         super().__init__()
+        # self.setObjectName("math_widget")
         self._double_clicked = False
         self.math_object = target
         self.setTextFormat(Qt.RichText)

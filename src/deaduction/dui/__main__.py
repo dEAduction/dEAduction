@@ -45,7 +45,7 @@ from PySide2.QtCore import ( QObject,
                              Signal,
                              Slot  )
 
-from PySide2.QtWidgets import QMessageBox
+from PySide2.QtWidgets import QMessageBox, QApplication
 
 import qtrio
 
@@ -485,9 +485,10 @@ class WindowManager(QObject):
         self.auto_test:       bool               = False
         self.report:          [[str]]            = []
 
-        deaduction_fonts = DeaductionFonts(self)
-        deaduction_fonts.set_general_fonts()
-        deaduction_fonts.set_math_fonts()
+        # Set fonts
+        app = QApplication.instance()
+        dead_fonts = DeaductionFonts(parent=app)
+        dead_fonts.set_fonts()
 
     @property
     def exercise_window(self):

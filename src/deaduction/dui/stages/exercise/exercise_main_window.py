@@ -49,6 +49,8 @@ from deaduction.pylib.mathobj           import (MathObject,
 
 from deaduction.dui.utils import global_geometry
 
+from deaduction.dui.primitives          import DeaductionFonts
+
 from deaduction.dui.elements            import (ActionButton,
                                                 LeanEditor,
                                                 StatementsTreeWidgetItem,
@@ -393,6 +395,9 @@ class ExerciseMainWindow(QMainWindow):
             ##############################
             # Redefine ecw from scratch! #
             ##############################
+            deaduction_fonts = DeaductionFonts(self)
+            deaduction_fonts.set_fonts()
+
             self.ecw = ExerciseCentralWidget(self.exercise)
             self.setCentralWidget(self.ecw)
             self.__connect_signals()
@@ -400,6 +405,7 @@ class ExerciseMainWindow(QMainWindow):
                 self.ecw.update_goal(self.current_goal, self.pending_goals)
             self.exercise_toolbar.update()
             self.__init_menubar()
+
 
             # self.ecw.target_wgt.target_label.mousePressEvent = \
             #     self.process_target_click
