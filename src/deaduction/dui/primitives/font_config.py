@@ -107,14 +107,23 @@ class DeaductionFonts:
     def __init__(self, parent: QApplication):
         self.parent = parent
 
+        ##################
+        # Fonts families #
+        ##################
+
         # Get system fonts
         if not DeaductionFonts.system_font:
             DeaductionFonts.system_font = QApplication.font()
+
+        os = cvars.get("others.os", "linux")
+        self.math_fonts_file_name = "DejaVuMathTeXGyre.ttf" if os == "windows" \
+            else "latinmodern-math.otf"
         self.fonts_file_name = "DejaVuSans.ttf"
-        self.math_fonts_file_name = "latinmodern-math.otf"
+
         self.fonts_name = ""
         self.math_fonts_name = ""
 
+        # FIXME: obsolete
         font_size = cvars.get("display.chooser_math_font_size", "16pt")
         self.chooser_math_font_size = int(font_size[:-2])
         font_size = cvars.get("display.main_font_size", "16pt")
@@ -130,17 +139,6 @@ class DeaductionFonts:
             else None
         self.tooltips_font_size = cvars.get('display.tooltips_font_size',
                                             "14pt")
-
-    # @property
-    # def general_fonts(self):
-    #     # general_font_size = 11
-    #     if self.fonts_name:
-    #         return QFont(self.fonts_name)
-
-    # @property
-    # def math_fonts(self):
-    #     if self.math_fonts_name:
-    #         return QFont(self.math_fonts_name)
 
     @property
     def style_sheet_size(self):
@@ -208,6 +206,7 @@ class DeaductionFonts:
 
             # Debug
             # math_font_file = "/usr/share/fonts/truetype/malayalam/Karumbi-Regular.ttf"
+            # math_font_file = "/usr/share/fonts/truetype/dejavu/DejaVuMathTeXGyre.ttf"
             font_id = QFontDatabase.addApplicationFont(str(math_font_file))
             if font_id < 0:
                 log.warning(f"Error loading maths font {self.math_fonts_file_name}")

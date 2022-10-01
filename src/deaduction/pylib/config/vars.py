@@ -127,6 +127,7 @@ def restore(initial_cvars):
 
 
 # Add os name; so this can be overridden in config.toml
+# Otherwise, vars.get("others.os") --> "linux", "darwin" or "windows"
 if not get('others.os'):
     os_name = ("linux" if platform.startswith("linux")
                else "darwin" if platform.startswith("darwin")
