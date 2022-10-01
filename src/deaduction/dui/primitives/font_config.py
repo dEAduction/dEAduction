@@ -116,8 +116,10 @@ class DeaductionFonts:
             DeaductionFonts.system_font = QApplication.font()
 
         os = cvars.get("others.os", "linux")
-        self.math_fonts_file_name = "DejaVuMathTeXGyre.ttf" if os == "windows" \
-            else "latinmodern-math.otf"
+        self.math_fonts_file_name = \
+            cvars.get("display.math_font_file_for_windows",
+                      "DejaVuMathTeXGyre.ttf") if os == "windows" \
+            else cvars.get("display.math_font_file", "latinmodern-math.otf")
         self.fonts_file_name = "DejaVuSans.ttf"
 
         self.fonts_name = ""
