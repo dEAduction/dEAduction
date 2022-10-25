@@ -66,16 +66,15 @@ from PySide2.QtWidgets import (QApplication,
 
 import deaduction.pylib.config.vars  as     cvars
 import deaduction.pylib.config.dirs  as     cdirs
-from deaduction.dui.elements        import (MathTextWidget,
-                                            MathObjectWidget,
+from deaduction.dui.primitives      import (DisclosureTriangle,
+                                            ButtonsDialog,
+                                            MathTextWidget)
+from deaduction.dui.elements        import (MathObjectWidget,
                                             TargetLabel,
                                             RecentCoursesLW,
                                             RecentCoursesLWI,
                                             StatementsTreeWidget,
                                             StatementsTreeWidgetItem)
-from deaduction.dui.primitives      import (DisclosureTriangle,
-                                            ButtonsDialog,
-                                            DeaductionFonts)
 from deaduction.dui.utils           import (replace_widget_layout,
                                             HorizontalLine)
 from deaduction.pylib.config.course import  add_to_recent_courses

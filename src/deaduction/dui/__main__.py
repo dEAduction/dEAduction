@@ -59,7 +59,7 @@ import deaduction.pylib.config.vars              as     cvars
 # i18n has to be executed BEFORE translation function "_" is used.
 import deaduction.pylib.config.i18n
 
-from deaduction.dui.primitives.font_config       import DeaductionFonts
+from deaduction.dui.primitives                   import deaduction_fonts
 from deaduction.dui.stages.select_language       import select_language
 from deaduction.dui.stages.exercise              import Coordinator
 from deaduction.dui.stages.start_coex            import StartCoExStartup
@@ -487,8 +487,8 @@ class WindowManager(QObject):
 
         # Set fonts
         app = QApplication.instance()
-        dead_fonts = DeaductionFonts(parent=app)
-        dead_fonts.set_fonts()
+        deaduction_fonts.set_parent(app)
+        deaduction_fonts.set_fonts()
 
     @property
     def exercise_window(self):

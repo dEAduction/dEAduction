@@ -64,7 +64,7 @@ from deaduction.dui.elements            import ( ActionButton,
                                                  MathObjectWidget,
                                                  MathObjectWidgetItem,
                                                  TargetWidget)
-from deaduction.dui.primitives          import DeaductionFonts
+from deaduction.dui.primitives          import deaduction_fonts
 
 from deaduction.pylib.coursedata        import   Exercise
 from deaduction.pylib.proof_state       import   Goal
@@ -214,7 +214,7 @@ class ExerciseCentralWidget(QWidget):
         elif cvars.get('functionality.drag_statements_to_context', True):
             self.props_wgt.setDragDropMode(QAbstractItemView.DropOnly)
 
-        self.deaduction_fonts = DeaductionFonts(self)
+        self.deaduction_fonts = deaduction_fonts
         self.set_font()
 
         # ───────────── Put widgets in layouts ───────────── #

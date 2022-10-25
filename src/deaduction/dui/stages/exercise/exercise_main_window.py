@@ -49,7 +49,7 @@ from deaduction.pylib.mathobj           import (MathObject,
 
 from deaduction.dui.utils import global_geometry
 
-from deaduction.dui.primitives          import DeaductionFonts
+from deaduction.dui.primitives          import deaduction_fonts
 
 from deaduction.dui.elements            import (ActionButton,
                                                 LeanEditor,
@@ -395,7 +395,6 @@ class ExerciseMainWindow(QMainWindow):
             ##############################
             # Redefine ecw from scratch! #
             ##############################
-            deaduction_fonts = DeaductionFonts(self)
             deaduction_fonts.set_fonts()
 
             self.ecw = ExerciseCentralWidget(self.exercise)

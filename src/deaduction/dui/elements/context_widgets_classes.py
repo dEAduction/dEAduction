@@ -71,6 +71,7 @@ from   deaduction.pylib.utils.filesystem import path_helper
 
 import deaduction.pylib.config.vars as cvars
 
+from deaduction.dui.primitives import MathLabel, MathItem
 from deaduction.dui.elements import ( StatementsTreeWidget,
                                       StatementsTreeWidgetItem)
 
@@ -124,7 +125,7 @@ class _TagIcon(QIcon):
 # 'Properties' widgets use those same two classes.
 
 
-class MathObjectWidgetItem(QStandardItem):
+class MathObjectWidgetItem(MathItem):
     """
     Widget in charge of containing an instance of the class MathObject
     as an attribute and displaying it in a list (MathObjectWidget)
@@ -602,7 +603,7 @@ class MathObjectWidget(QListView):
 
 # Classes to display and store the target in the main exercise window.
 
-class TargetLabel(QLabel):
+class TargetLabel(MathLabel):
     """
     A class to display the target. Can be used in ExerciseMainWindow via
     TargetWidget, and in the exercise chooser. Take the target as a

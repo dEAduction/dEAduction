@@ -32,6 +32,7 @@ from PySide2.QtWidgets import (QFrame, QLayout,
 from PySide2.QtCore import Qt, QRect, QPoint, QTimer, Signal
 from PySide2.QtGui import QColor, QPainter, QPolygon, QPen, QBrush, QPainterPath
 
+from deaduction.dui.primitives import MathLabel
 import deaduction.pylib.config.vars as cvars
 
 global _
@@ -553,7 +554,7 @@ class VertBar(QFrame):
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.MinimumExpanding)
 
 
-class RawLabelMathObject(QLabel):
+class RawLabelMathObject(MathLabel):
     """
     Mother class for displaying a MathObject or a msg which is computed by
     the callable html_msg, which takes parameter use_color and bf.

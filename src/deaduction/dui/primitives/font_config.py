@@ -104,7 +104,7 @@ class DeaductionFonts:
     # dubious_characters = ['ℕ', 'ℤ', 'ℚ', 'ℝ', "𝒫", "↦"]
     system_font = None
 
-    def __init__(self, parent: QApplication):
+    def __init__(self, parent: QApplication = None):
         self.parent = parent
 
         ##################
@@ -142,6 +142,9 @@ class DeaductionFonts:
         self.tooltips_font_size = cvars.get('display.tooltips_font_size',
                                             "14pt")
 
+    def set_parent(self, parent):
+        self.parent = parent
+
     @property
     def style_sheet_size(self):
         """
@@ -167,15 +170,15 @@ class DeaductionFonts:
 
     @property
     def style_sheet_font(self):
-        math_fonts = self.math_fonts_name
-        math_widgets = ["MathTextWidget", "MathObjectWidget", "TargetLabel"]
-        math_widgets = ", ".join(math_widgets)
+        # math_fonts = self.math_fonts_name
+        # math_widgets = ["MathTextWidget", "MathObjectWidget", "TargetLabel"]
+        # math_widgets = ", ".join(math_widgets)
         s = f"QWidget {{font-family : {self.fonts_name}; }} "
                 # if self.fonts_name else ""
-        if math_fonts:
-            t = (f"QWidget [math_widget='true'] {{font-family : {math_fonts};}}"
-                 f"{math_widgets} {{ font-family : {math_fonts}; }}")
-            s += t
+        # if math_fonts:
+        #     t = (f"QWidget [math_widget='true'] {{font-family : {math_fonts};}}"
+        #          f"{math_widgets} {{ font-family : {math_fonts}; }}")
+        #     s += t
         return s
 
     @property
@@ -218,6 +221,9 @@ class DeaductionFonts:
                 self.math_fonts_name = families[0]
 
     def set_fonts(self):
+        if not self.parent:
+            log.warning("DeaductionFont: attempt to set fonts with no parent")
+            return
         self.set_general_fonts()
         print(f"Système fonts: {DeaductionFonts.system_font}")
         print(self.fonts_name)
@@ -228,5 +234,8 @@ class DeaductionFonts:
 
     def background_color(self):
         return cvars.get("display.selection_color", "limegreen")
+
+
+deaduction_fonts = DeaductionFonts()
 
 

@@ -38,7 +38,7 @@ from typing import Union, Optional
 
 import deaduction.pylib.config.vars as cvars
 import deaduction.pylib.utils.filesystem as fs
-from deaduction.dui.primitives import DeaductionFonts
+from deaduction.dui.primitives import deaduction_fonts
 
 from deaduction.pylib.mathobj import ContextMathObject
 from deaduction.dui.elements import MathObjectWidgetItem
@@ -172,14 +172,13 @@ class HelpWindow(QDialog):
         self.help_wdg.setReadOnly(True)
 
         # Fonts
-        fonts = DeaductionFonts(self)
         text_font = self.help_wdg.font()
-        main_size = fonts.main_font_size
+        main_size = deaduction_fonts.main_font_size
         text_font.setPointSize(main_size)
         self.help_wdg.setFont(text_font)
         self.title_widget.setFont(text_font)
 
-        target_size = fonts.target_font_size
+        target_size = deaduction_fonts.target_font_size
         label_font = self.math_label.font()
         label_font.setPointSize(target_size)
         self.math_label.setFont(label_font)

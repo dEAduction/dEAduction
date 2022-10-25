@@ -98,23 +98,23 @@ def sub_sup_to_html(string: str) -> str:
     return string
 
 
-def color_dummy_variables():
-    return (cvars.get('display.color_for_dummy_variables', None)
-            if cvars.get('logic.use_color_for_dummy_variables', True)
-            else None)
-
-
-def color_variables():
-    return (cvars.get('display.color_for_variables', None)
-            if cvars.get('logic.use_color_for_variables', True)
-            else None)
-
-
-def color_props():
-    return (cvars.get('display.color_for_applied_properties', None)
-            if cvars.get('logic.use_color_for_applied_properties', True)
-            else None)
-
+# def color_dummy_variables():
+#     return (cvars.get('display.color_for_dummy_variables', None)
+#             if cvars.get('logic.use_color_for_dummy_variables', True)
+#             else None)
+#
+#
+# def color_variables():
+#     return (cvars.get('display.color_for_variables', None)
+#             if cvars.get('logic.use_color_for_variables', True)
+#             else None)
+#
+#
+# def color_props():
+#     return (cvars.get('display.color_for_applied_properties', None)
+#             if cvars.get('logic.use_color_for_applied_properties', True)
+#             else None)
+#
 
 def font_wrapper(s: str, bf=True):
     if not bf:
@@ -131,16 +131,16 @@ def html_class_wrapper(s: str, class_name: str):
     return html_pre + s + html_post
 
 
-def html_style_classes(color=True):
-    if color:
-        style = "<style>" \
-                f".variable  {{ color: {color_variables()} }}" \
-                f".dummy_variable  {{ color: {color_dummy_variables()} }}" \
-                f".used_prop  {{ color: {color_props()} }}" \
-                "</style>"
-    else:
-        style = ""
-    return style
+# def html_style_classes(color=True):
+#     if color:
+#         style = "<style>" \
+#                 f".variable  {{ color: {color_variables()} }}" \
+#                 f".dummy_variable  {{ color: {color_dummy_variables()} }}" \
+#                 f".used_prop  {{ color: {color_props()} }}" \
+#                 "</style>"
+#     else:
+#         style = ""
+#     return style
 
 
 def html_display_single_string(string: str) -> str:
@@ -228,7 +228,10 @@ def html_display(abstract_string: Union[str, list], depth=0,
     string = cut_spaces(string)
     string = replace_dubious_characters(string)
     string = font_wrapper(string, bf)  # Maybe use boldface fonts
-    style = html_style_classes(use_color)
-    return style + string
+    # style = html_style_classes(use_color)
+    # return style + string
+    string = html_class_wrapper(string, class_name='math')
+    return string
+
 
 
