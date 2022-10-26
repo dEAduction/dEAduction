@@ -296,7 +296,7 @@ latex_to_text = {
     r'\type_subset': _("a subset of") + " ",
     r'\type_sequence': _("a sequence in") + " ",
     r'\type_family_subset': _("a family of subsets of") + " ",
-    r'\type_element': _("an element of"),
+    r'\type_element': _("an element of") + " ",
     r'\type_N': _('a non-negative integer'),
     r'\type_Z': _('an integer'),
     r'\type_Q': _('a rational number'),
