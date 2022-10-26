@@ -226,7 +226,8 @@ class DeaductionFonts:
             return
         self.set_general_fonts()
         print(f"Système fonts: {DeaductionFonts.system_font}")
-        print(self.fonts_name)
+        print(f"Text fonts: {self.fonts_name}")
+        print(f"Math fonts: {self.math_fonts_name}")
         self.set_math_fonts()
         self.parent.setStyleSheet(self.style_sheet)
         print("Style sheet:")

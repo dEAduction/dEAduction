@@ -55,29 +55,40 @@ class AbstractMathHtmlText:
     Essentially compute the style in html format for the richtext content.
     """
 
-    def __init__(self, use_color, font_size):
+    def __init__(self, use_color=True, font_size=None, text_mode=False):
         self.use_color = use_color
         self.font_size = font_size  # FIXME: not used
+        self.text_mode = text_mode
 
-    @staticmethod
-    def math_font_style():
+    def set_use_color(self, yes=True):
+        self.use_color = yes
+
+    def set_font_size(self, size):
+        self.font_size = size
+
+    def set_text_mode(self, yes=True):
+        self.text_mode = yes
+
+    def math_font_style(self):
         fonts_name = deaduction_fonts.math_fonts_name
-        if fonts_name:
+        print(f"Math font name: {fonts_name}")
+        if not fonts_name:
+            return ""
+
+        if not self.text_mode:
+            style = f"* {{ font-family: {fonts_name} }}"
+        else:
             style = f".math, .variable, .dummy_variable, .used_prop" \
                     f"{{ font-family: {fonts_name} }}"
-        else:
-            style = ""
 
         return style
 
-    @staticmethod
-    def text_font_style():
+    def text_font_style(self):
         fonts_name = deaduction_fonts.fonts_name
-        if fonts_name:
-            style = f"*, .text {{ font-family: {fonts_name} }}"
-        else:
-            style = ""
+        if not self.text_mode or not fonts_name:
+            return ""
 
+        style = f"*, .text {{ font-family: {fonts_name} }}"
         return style
 
     def color_styles(self):
@@ -91,66 +102,51 @@ class AbstractMathHtmlText:
         return style
 
     @property
-    def style(self):
+    def html_style(self):
         style = ("<style> " + self.text_font_style()
                  + self.math_font_style() + self.color_styles()
                  + "</style>")
         return style
 
 
-class MathLabel(QLabel):
+class MathLabel(QLabel, AbstractMathHtmlText):
     """
     A QLabel subclass to display math in html, incorporating styling.
     """
 
-    def __init__(self, use_color=True, font_size=None):
-        self.abstract_html_text = AbstractMathHtmlText(use_color=use_color,
-                                                       font_size=font_size)
+    def __init__(self):
         super().__init__()
-
-    @property
-    def style(self):
-        return self.abstract_html_text.style
+        self.set_use_color()
+        self.set_text_mode(False)
 
     def setText(self, text: str):
-        super().setText(self.style + text)
+        super().setText(self.html_style + text)
 
 
-class MathItem(QStandardItem):
+class MathItem(QStandardItem, AbstractMathHtmlText):
     """
     A QStandardItem subclass to display math in html, incorporating styling.
     """
-    def __init__(self, use_color=True, font_size=None):
-        self.abstract_html_text = AbstractMathHtmlText(use_color=use_color,
-                                                       font_size=font_size)
+    def __init__(self):
         super().__init__()
-
-    @property
-    def style(self):
-        return self.abstract_html_text.style
+        self.set_use_color()
+        self.set_text_mode(False)
 
     def setText(self, text: str):
-        super().setText(self.style + text)
+        super().setText(self.html_style + text)
 
 
-class MathTextWidget(QTextEdit):
+class MathTextWidget(QTextEdit, AbstractMathHtmlText):
     """
-    A QStandardItem subclass to display math in html, incorporating styling.
+    A QTextEdit subclass to display math in html, incorporating styling.
     """
-    def __init__(self, use_color=True, font_size=None):
-        self.abstract_html_text = AbstractMathHtmlText(use_color=use_color,
-                                                       font_size=font_size)
+    def __init__(self):
         super().__init__()
-
-    @property
-    def style(self):
-        return self.abstract_html_text.style
-
-    # def setText(self, text: str):
-    #     super().setText(self.style + text)
+        self.set_use_color()
+        self.set_text_mode(False)
 
     def setHtml(self, text: str):
-        super().setHtml(self.style + text)
+        super().setHtml(self.html_style + text)
 
 
 
