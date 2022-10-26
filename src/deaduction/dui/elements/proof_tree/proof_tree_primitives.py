@@ -663,7 +663,7 @@ class ProofTitleLabel(RawLabelMathObject):
     The colon is added on top of html_msg by super class RawLabelMathObject
     iff self.disclosed is True.
     """
-    def __init__(self, html_msg, toggle: Optional[callable]=None):
+    def __init__(self, html_msg: callable, toggle: Optional[callable] = None):
         super().__init__(html_msg=html_msg)
         self.disclosed = True
         self.toggle = toggle

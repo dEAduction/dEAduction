@@ -1,5 +1,5 @@
 """
-math_label_item.py : provide the MathLabel class that takes care of html stylesheet.
+base_math_widgets_styling.py : provide the MathLabel class that takes care of html stylesheet.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -63,7 +63,8 @@ class AbstractMathHtmlText:
     def math_font_style():
         fonts_name = deaduction_fonts.math_fonts_name
         if fonts_name:
-            style = f".math  {{ font-family: {fonts_name} }}"
+            style = f".math, .variable, .dummy_variable, .used_prop" \
+                    f"{{ font-family: {fonts_name} }}"
         else:
             style = ""
 
@@ -73,7 +74,7 @@ class AbstractMathHtmlText:
     def text_font_style():
         fonts_name = deaduction_fonts.fonts_name
         if fonts_name:
-            style = f"* {{ font-family: {fonts_name} }}"
+            style = f"*, .text {{ font-family: {fonts_name} }}"
         else:
             style = ""
 

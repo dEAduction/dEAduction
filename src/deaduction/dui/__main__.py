@@ -108,14 +108,15 @@ def set_logger():
         # log_domains = ["deaduction", "__main__",  # 'lean',
         #                'ServerInterface', 'ServerQueue']
         log_domains = ["__main__",
-                       'ServerInterface',
-                       'ServerQueue',
+                       # 'ServerInterface',
+                       # 'ServerQueue',
                        # 'lean',
                        'deaduction.dui',
                        # 'deaduction.pylib',
                        'logic',
                        'magic',
-                       'coursedata']
+                       'coursedata',
+                       'math_object']
         log_domains = [""]
 
     logger.configure(domains=log_domains,

@@ -63,8 +63,8 @@ class ContextMathObject(MathObject):
         self.child_context_math_object = None
 
         # Tags
-        self.is_new_ = False  # FIXME: obsolete
-        self.is_modified_ = False  # FIXME: obsolete
+        # self.is_new_ = False  # FIXME: obsolete
+        # self.is_modified_ = False  # FIXME: obsolete
         self.has_been_used_in_proof = False  # TODO: implement
         self.is_hidden = False  # TODO
         # log.debug(f"Creating ContextMathPObject {self.to_display()},")
@@ -105,7 +105,7 @@ class ContextMathObject(MathObject):
 
     def raw_latex_shape(self, negate=False, text_depth=0):
         """
-        Replace the raw_latex_shape method for MathObject.
+        Override the raw_latex_shape method for MathObject.
         """
         shape = super().raw_latex_shape(negate, text_depth)
         if (hasattr(self, 'has_been_used_in_proof')
@@ -115,11 +115,11 @@ class ContextMathObject(MathObject):
 
     def raw_latex_shape_of_math_type(self, text_depth=0):
         """
-        Replace the raw_latex_shape_of_math_type method for MathObject.
+        Override the raw_latex_shape_of_math_type method for MathObject.
         """
 
         # Call to MathObject.raw_latex_shape_of_math_type() on self
-        math_type = super(ContextMathObject, self)
+        math_type: MathObject = super(ContextMathObject, self)
         shape = math_type.raw_latex_shape_of_math_type(text_depth)
         if (hasattr(self, 'has_been_used_in_proof')
                 and self.has_been_used_in_proof):

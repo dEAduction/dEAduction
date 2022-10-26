@@ -1277,26 +1277,26 @@ class MathObject:
         """
         e.g. if self is a MathObject whose node is 'PROP_EQUAL', this method
         will return [0, " = ", 1].
-        Includes treatment of "in".
         """
-        # Case of special shape from self and its first child:
-        # log.debug(f"Raw latex shape : {self.display_debug}")
+        # (1) Case of special shape from self and its first child:
+        # NB: here the structure do depend on text_depth
         shape = raw_latex_shape_from_couple_of_nodes(self, text_depth)
-
         if shape:
             # NEGATION:
             if negate:
                 shape = [" " + r'\not' + " ", r'\parentheses', shape]
             # log.debug(f"Shape from couples: {shape}")
-        else:
-            if self.node in latex_from_node:  # Generic case
-                shape = list(latex_from_node[self.node])
+            
+        # (2) Generic case, in latex_from_node
+        elif self.node in latex_from_node: 
+            shape = list(latex_from_node[self.node])
 
-                # NEGATION:
-                if negate:
-                    shape = [" " + r'\not' + " ", r'\parentheses', shape]
-            else:  # Node not found in dictionaries: try specific methods
-                shape = raw_latex_shape_from_specific_nodes(self, negate)
+            # NEGATION:
+            if negate:
+                shape = [" " + r'\not' + " ", r'\parentheses', shape]
+        # (3) Node not found in dictionaries: try specific methods
+        else:
+            shape = raw_latex_shape_from_specific_nodes(self, negate)
 
         # log.debug(f"    --> Raw shape: {shape}")
         return shape
@@ -1305,16 +1305,20 @@ class MathObject:
         """
         Return an abstract string representing self, as a tree of string.
 
-        (1) First compute an "expanded latex shape", a tree of strings with
+        (1) First compute the shape, e.g. [0, " = ", 1].
+        (2) Then compute an "expanded latex shape", a tree of strings with
         latex macro.
-        (2) if text_depth >0, replace some symbols by plain text. In any case,
-        take care of '\\in' according to the context.
+        (3) if text_depth >0, replace some symbols by plain text.
         """
 
-        # First level of the tree:
-        abstract_string = recursive_display(self, text_depth)
+        # (1) Compute shape
+        shape = self.raw_latex_shape(negate=False, text_depth=text_depth)
+        
+        # (2) Compute tree of strings
+        abstract_string = recursive_display(self, text_depth=text_depth, 
+                                            shape=shape)
 
-        # Replace some symbols by plain text:
+        # (3) Replace some symbols by plain text:
         abstract_string = shallow_latex_to_text(abstract_string, text_depth)
 
         return abstract_string
@@ -1326,9 +1330,7 @@ class MathObject:
         abstract_string (i.e. a tree version) taking text_depth into account,
         then concatenate according to format_.
 
-        Note that
-        - nice display of "in" is treated in raw_latex_shape
-        - nice display of negations is obtained in raw_latex_node
+        Note that nice display of negations is obtained in raw_latex_node
         and recursive_display.
 
         :param format_:     one of 'utf8', 'html', 'latex'
@@ -1343,11 +1345,14 @@ class MathObject:
         #   then you probably have to do the same changes in
         #   ContextMathObject.math_type_to_display.
 
+        # (1) Tree of strings
         abstract_string = self.to_abstract_string(text_depth)
+        log.debug(f"Abstract string: {abstract_string}")
 
-        # Adapt to format_ and concatenate to get a string
+        # (2) Adapt to format_ and concatenate to get a string
         display = abstract_string_to_string(abstract_string, format_,
-                                            use_color=use_color, bf=bf)
+                                            use_color=use_color, bf=bf,
+                                            no_text=(text_depth <= 0))
         return display
 
     def raw_latex_shape_of_math_type(self, text_depth=0):
@@ -1357,12 +1362,11 @@ class MathObject:
         # math_type = self.math_type
         math_type = self
         if math_type.node == "SET":
-            shape = [_("a subset of") + " ", 0]
-            # Idem
+            shape = [r'\type_subset', 0]
         elif math_type.node == "SEQUENCE":
-            shape = [_("a sequence in") + " ", 1]
+            shape = [r'\type_sequence', 1]
         elif math_type.node == "SET_FAMILY":
-            shape = [_("a family of subsets of") + " ", 1]
+            shape = [r'\type_family_subset', 1]
         elif hasattr(math_type, 'math_type') \
                 and hasattr(math_type.math_type, 'node') \
                 and math_type.math_type.node in ("TYPE", "SET")\
@@ -1370,18 +1374,18 @@ class MathObject:
                 and math_type.node != 'FUNCTION':
                 # and math_type.info.get('name'):
             # name = math_type.info["name"]
-            # FIXME: bad format for html
+            # FIXME: bad format for html, would need format_
             name = math_type.to_display(text_depth=text_depth, format_='utf8')
-            shape = [_("an element of") + " ", name]
+            shape = [r'\type_element', name]
             # The "an" is to be removed for short display
         elif math_type.is_N():
-            shape = [_('a non-negative integer')]
+            shape = [r'\type_N']
         elif math_type.is_Z():
-            shape = [_('an integer')]
+            shape = [r'\type_Z']
         elif math_type.is_Q():
-            shape = [_('a rational number')]
+            shape = [r'\type_Q']
         elif math_type.is_R():
-            shape = [_('a real number')]
+            shape = [r'\type_R']
         else:  # Generic case: usual shape from math_object
             shape = math_type.raw_latex_shape(text_depth=text_depth)
 
@@ -1396,9 +1400,9 @@ class MathObject:
         """
         shape = self.raw_latex_shape_of_math_type(text_depth=text_depth)
         abstract_string = recursive_display(self,
-                                            raw_display=shape,
+                                            shape=shape,
                                             text_depth=text_depth)
-        # log.debug(f"(1) --> abstract string: {abstract_string}")
+        log.debug(f"Abstract string of type: {abstract_string}")
 
         # Replace some symbol by plain text:
         abstract_string = shallow_latex_to_text(abstract_string, text_depth)
@@ -1412,7 +1416,7 @@ class MathObject:
         is_math_type) or to self.math_type (if not is_math_type).
         Lean format_ is not pertinent here.
         """
-        # log.debug(f"Displaying math_type: {self.display_name}...")
+        log.debug(f"Displaying math_type: {self.display_name}...")
 
         if is_math_type:
             math_type = self
@@ -1420,7 +1424,8 @@ class MathObject:
             math_type = self.math_type
         abstract_string = math_type.math_type_to_abstract_string(text_depth)
         # Adapt to format_ and concatenate to get a string
-        display = abstract_string_to_string(abstract_string, format_)
+        display = abstract_string_to_string(abstract_string, format_,
+                                            no_text=(text_depth <= 0))
 
         return display
 

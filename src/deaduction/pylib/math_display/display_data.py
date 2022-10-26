@@ -60,8 +60,8 @@ global _
 # '\no_text' indicates that text mode should not be used in the current display
 #   (e.g. within an equality)
 latex_from_node = {
-    "PROP_AND": (0, " " + _("and") + " ", 1),
-    "PROP_OR": (0, " " + _("or") + " ", 1),
+    "PROP_AND": (0, r"\and", 1),
+    "PROP_OR": (0, r"\or", 1),
     "PROP_FALSE": (r"\false", ),  # Macro to be defined by LateX
     "PROP_IFF": (0, r" \Leftrightarrow ", 1),
     # NB: negation has a special treatment in recursive_display!
@@ -70,7 +70,7 @@ latex_from_node = {
     "PROP_IMPLIES": (r'\if', 0, r" \Rightarrow ", 1),
     # "∃ (H : P), Q" is treated as "P and Q",
     # and also handled by the 'AND' button
-    "PROP_∃":  (0, " " + _("and") + " ", 1),
+    "PROP_∃":  (0, r"\and", 1),
     ###############
     # SET THEORY: #
     ###############
@@ -149,7 +149,7 @@ latex_from_quant_node = {
 
 # Negative value = from end of children list
 latex_from_constant_name = {
-    "STANDARD_CONSTANT": (-1, r'\text_is', 0),
+    "STANDARD_CONSTANT": (-1, [r'\text', r'\text_is', 0]),
     # "STANDARD_CONSTANT_NOT": (-1, " " + _("is not") + " ", 0),  deprecated
     # NB: STANDARD_CONSTANT prevents supplementary arguments,
     # Do not use with a CONSTANT c s.t. APP(c, x) is a FUNCTION,
@@ -196,6 +196,8 @@ latex_from_constant_name = {
 ###################
 # Convert Latex command into utf8 symbols
 latex_to_utf8_dic = {
+    # r'\and': " " + _("and") + " ",
+    # r'\or': " " + _("or") + " ",
     r"\equal": "=",
     r'\backslash': '\\',
     r'\Delta': '∆',
@@ -241,8 +243,22 @@ latex_to_utf8_dic = {
     r'\text_is': " ",  # " " + _("is") + " " ? Anyway 'is' will be removed?
     r'\text_is_not': " " + _('not') + " ",  # Idem
     r'\no_text': "",
+    # r'\text': "",
     r'\symbol_parentheses': r'\parentheses',  # True parentheses for symbols
-    r'\real': "ℝ"
+    r'\real': "ℝ",
+    #########
+    # TYPES #
+    #########
+    # Used for display in math mode (not text mode)
+    r'\type_subset': _("subset of") + " ",
+    r'\type_sequence': _("sequence in") + " ",
+    r'\type_family_subset': _("family of subsets of") + " ",
+    r'\type_element': _("element of") + " ",
+    r'\type_N': _('non-negative integer'),
+    r'\type_Z': _('integer'),
+    r'\type_Q': _('rational number'),
+    r'\type_R': _('real number')
+
 }
 
 
@@ -252,6 +268,8 @@ latex_to_utf8_dic = {
 #####################
 #####################
 latex_to_text = {
+    r'\and': " " + _("and") + " ",
+    r'\or': " " + _("or") + " ",
     r'\Leftrightarrow': " " + _("if and only if") + " ",
     r'\not': _("the negation of") + _(":") + " ",
     r'\if': _("if") + " ",
@@ -274,8 +292,15 @@ latex_to_text = {
     r'\in_quant': " " + _("in") + " ",
     r'\text_is': " " + _('is') + " ",
     r'\text_is_not': " " + _('is not') + " ",
-    r'\symbol_parentheses': ""  # Parentheses but for symbols only
-    # r'\subset': " " + _("is included in") + " " Does not help
+    r'\symbol_parentheses': "",  # Parentheses but for symbols only
+    r'\type_subset': _("a subset of") + " ",
+    r'\type_sequence': _("a sequence in") + " ",
+    r'\type_family_subset': _("a family of subsets of") + " ",
+    r'\type_element': _("an element of"),
+    r'\type_N': _('a non-negative integer'),
+    r'\type_Z': _('an integer'),
+    r'\type_Q': _('a rational number'),
+    r'\type_R': _('a real number')
 }
 plurals = {
     _('Let {} be {}'): _("Let {} be {} {}"),  # Translate plural!!
@@ -378,6 +403,7 @@ text_from_node = {
     # "FUNCTION": (_("a function from") + " ", 0, " " + _("to") + " ", 1),
 }
 
+# FIXME: Not used?
 text_from_all_nodes = {
     "PROP_AND": (0, " " + _("and") + " ", 1),
     "PROP_OR": (0, " " + _("or") + " ", 1),
@@ -468,7 +494,7 @@ couples_of_nodes_to_text = {
     ("QUANT_∀", "TYPE"): (_("for every set {}, {}"),
                           (1, 2)),
     ("QUANT_∀", "FUNCTION"): (_("for every function {} from {} to {}, {}"),
-                          (1, (0, 0), (0, 1), 2)),
+                           (1, (0, 0), (0, 1), 2)),
     ("QUANT_∀", "SEQUENCE"): (_("for every sequence {} in {}, {}"),
                               (1, (0, 1), 2)),
     ("QUANT_∃", "SET"): (_("there exists a subset {} of {} such that {}"),
@@ -485,7 +511,7 @@ couples_of_nodes_to_text = {
                               (1, (0, 1), 2)),
     ("QUANT_∃!", "SET"): (_("there exists a unique subset {} of {} such that "
                             "{}"),
-                         (1, (0, 0), 2)),
+                          (1, (0, 0), 2)),
     ("QUANT_∃!", "PROP"): (_("there exists a unique proposition {} such that "
                              "{}"), (1, 2)),
     ("QUANT_∃!", "TYPE"): (_("there exists a unique set {} such that {}"),
@@ -629,25 +655,46 @@ def needs_paren(parent, child, child_number, text_depth=0) -> bool:
     return True
 
 
+# def latex_to_utf8(string: Union[str, list]):
+#     """
+#     Convert a string or a list of string from latex to utf8.
+#     """
+#     if isinstance(string, list) or isinstance(string, tuple):
+#         return [latex_to_utf8(item) for item in string]
+#     elif isinstance(string, str):
+#         striped_string = string.strip()  # Remove spaces
+#         if striped_string in latex_to_utf8_dic:
+#             utf8_string = latex_to_utf8_dic[striped_string]
+#             if isinstance(utf8_string, str):
+#                 utf8_string = string.replace(striped_string, utf8_string)
+#             else:
+#                 utf8_string = list(utf8_string)
+#             return utf8_string
+#         else:
+#             return string
+#     else:
+#         return string
+
 def latex_to_utf8(string: Union[str, list]):
     """
     Convert a string or a list of string from latex to utf8.
     """
+    utf8_string = None
     if isinstance(string, list) or isinstance(string, tuple):
         return [latex_to_utf8(item) for item in string]
     elif isinstance(string, str):
         striped_string = string.strip()  # Remove spaces
         if striped_string in latex_to_utf8_dic:
             utf8_string = latex_to_utf8_dic[striped_string]
+        elif striped_string in latex_to_text:  # Useful for and, \typeElement...
+            utf8_string = latex_to_text[striped_string]
+        if utf8_string is not None:
             if isinstance(utf8_string, str):
                 utf8_string = string.replace(striped_string, utf8_string)
             else:
                 utf8_string = list(utf8_string)
-            return utf8_string
-        else:
-            return string
-    else:
-        return string
+
+    return utf8_string if utf8_string is not None else string
 
 
 def latex_to_lean(string: Union[str, list]):
@@ -665,7 +712,7 @@ def latex_to_lean(string: Union[str, list]):
         if striped_string in latex_to_lean_dic:
             lean_string = latex_to_lean_dic[striped_string]
             if isinstance(lean_string, str):
-                utf8_string = string.replace(striped_string, lean_string)
+                lean_string = string.replace(striped_string, lean_string)
             return lean_string
         elif striped_string in latex_to_utf8_dic:
             utf8_string = latex_to_utf8_dic[striped_string]
@@ -701,3 +748,6 @@ _("""
     And also f(x) ; x+1/2 ; 2*n, max m n, abs x...
 """) + "\n \n" + \
 _("In case of error, try with more parentheses.")
+
+
+

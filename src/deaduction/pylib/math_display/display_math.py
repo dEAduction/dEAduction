@@ -515,9 +515,6 @@ def display_constant(math_object) -> list:
     Display for nodes 'CONSTANT' and 'LOCAL_CONSTANT'
     NB: expressions APP(constant, ...) are treated directly in
     display_application.
-
-    :param math_object:
-    :return:            'display' list
     """
     name = math_object.display_name
     display = [name]  # generic case
@@ -827,6 +824,7 @@ def display_lambda(math_object, format_="latex") -> list:
 
 def string_to_latex(string: str):
     """Put the "\text" command around pure text for Latex format"""
+    # Not used
     if string.isalpha():
         string = r"\text{" + string + r"}"
     return string
@@ -852,7 +850,15 @@ def display_error(message: str) -> str:
 
 
 def insert_children_in_string(string: str, children: tuple) -> []:
+    """
+    Take a string and a tuple of children, e.g.
+    string = _("for every subset {} of {}, {}", children = (1, (0, 0), 2)),
+    and insert children at every {} place in string.
+    The remaining of the string is cup into words which are tagged with the
+    '\text' tag.
+    """
     string_list = string.split("{}")
+    string_list = [[r'\text', word] for word in string_list]
     assert len(string_list) == len(children) + 1
     shape = [string_list[0]]
     for string, child in zip(string_list[1:], children):
@@ -867,7 +873,7 @@ def raw_latex_shape_from_couple_of_nodes(math_object, text_depth=0) -> []:
     Return a shape from the dictionaries couples_of_nodes_to_text
     or couples_of_nodes_to_utf8 (according to text_depth)
     if it finds some key that matches math_object and math_object's first child
-    nodes. Otherwise return None.
+    nodes. Otherwise, return None.
     """
     from deaduction.pylib.math_display import (dic_of_first_nodes_text,
                                                couples_of_nodes_to_text)
@@ -938,35 +944,35 @@ def raw_latex_shape_from_specific_nodes(math_object, negate=False):
     return display
 
 
-def recursive_display(math_object, text_depth=0, raw_display=None,
+def recursive_display(math_object, text_depth=0, shape=None,
                       negate=False):
     """
-    Compute raw display of self, e.g. [0, "\text_is_not", 1],
-    then recursively replace integeres by the raw_latex_shape of
+    Consider shape of self, e.g. [0, "\text_is_not", 1],
+    then recursively replace integers by the raw_latex_shape of
     corresponding children.
 
     Take care of parentheses:
         \\parentheses -> to be displayed between parentheses
+    Take care of negation.
     """
 
     # (1) Compute raw display, e.g. [0, "\text_is_not", 1]
+    if not shape:
+        shape = math_object.raw_latex_shape(negate, text_depth)
 
-    if not raw_display:
-        raw_display = math_object.raw_latex_shape(negate, text_depth)
-
-    if raw_display == [r'\not', 0]:
+    if shape == [r'\not', 0]:
         negate = True
-        raw_display = [0]  # -> [0]
+        shape = [0]  # -> [0]
     else:
         negate = False  # negation does not propagate to children
 
-    if raw_display[0] == r'\no_text':
+    if shape[0] == r'\no_text':
         text_depth = 0
 
     # (2) Recursively replace integers by display of children,
     #  e.g. ["f", "\text_is_not", "injective"]
     display = []
-    for item in raw_display:
+    for item in shape:
         # Case of a string
         display_item = item
 
@@ -980,7 +986,7 @@ def recursive_display(math_object, text_depth=0, raw_display=None,
                 display_item = [r'\parentheses', display_item]
 
         elif isinstance(item, list):
-            display_item = recursive_display(math_object, raw_display=item,
+            display_item = recursive_display(math_object, shape=item,
                                              negate=negate,
                                              text_depth=text_depth)
 
@@ -1063,6 +1069,8 @@ def shallow_latex_to_text(abstract_string: Union[list, str], text_depth=0) \
     elif isinstance(abstract_string, str):
         if text_depth > 0:  # Try to convert to text
             string, success = latex_to_text_func(abstract_string)
+            if success:  # Add a tag to indicate this is text (not math).
+                string = [r'\text', string]
         else:  # Try to shorten
             string = shorten(abstract_string)
         return string
