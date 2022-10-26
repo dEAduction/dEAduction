@@ -102,7 +102,7 @@ class DeaductionFonts:
     #                       "↦": "→"
     #                       }
     # dubious_characters = ['ℕ', 'ℤ', 'ℚ', 'ℝ', "𝒫", "↦"]
-    system_font = None
+    system_fonts = None
 
     def __init__(self, parent: QApplication = None):
         self.parent = parent
@@ -111,15 +111,6 @@ class DeaductionFonts:
         # Fonts families #
         ##################
 
-        # Get system fonts
-        if not DeaductionFonts.system_font:
-            DeaductionFonts.system_font = QApplication.font()
-
-        os = cvars.get("others.os", "linux")
-        self.math_fonts_file_name = \
-            cvars.get("display.math_font_file_for_windows",
-                      "DejaVuMathTeXGyre.ttf") if os == "windows" \
-            else cvars.get("display.math_font_file", "latinmodern-math.otf")
         self.fonts_file_name = "DejaVuSans.ttf"
 
         self.fonts_name = ""
@@ -146,6 +137,36 @@ class DeaductionFonts:
         self.parent = parent
 
     @property
+    def math_fonts_files(self):
+        files = [file for file in cdirs.fonts.iterdir()
+                 if file.suffix in ('.ttf', '.otf')]
+        return files
+
+    @property
+    def math_fonts_file_names(self):
+        return [file.name for file in self.math_fonts_files]
+
+    @property
+    def math_fonts_file_name(self):
+        """
+        Return the name of the file that should be used for maths fonts,
+        or None if system fonts should be used.
+        """
+        os = cvars.get("others.os", "linux")
+        file = cvars.get("display.math_font_file_for_windows",
+                         "DejaVuMathTeXGyre.ttf") if os == "windows" \
+            else cvars.get("display.math_font_file", "latinmodern-math.otf")
+        return file
+
+    # def math_font_file_nb(self):
+    #     return self.math_fonts_file_names.index(self.math_fonts_file_name)
+
+    @property
+    def system_fonts_name(self):
+        if self.system_fonts:
+            return self.system_fonts.family()
+
+    @property
     def style_sheet_size(self):
         """
         Return style_sheet string for font sizes.
@@ -168,55 +189,53 @@ class DeaductionFonts:
         # s = f"TargetLabel  {{ font-family : karumbi; }}"
         return s
 
-    @property
-    def style_sheet_font(self):
-        # math_fonts = self.math_fonts_name
-        # math_widgets = ["MathTextWidget", "MathObjectWidget", "TargetLabel"]
-        # math_widgets = ", ".join(math_widgets)
-        s = f"QWidget {{font-family : {self.fonts_name}; }} "
-                # if self.fonts_name else ""
-        # if math_fonts:
-        #     t = (f"QWidget [math_widget='true'] {{font-family : {math_fonts};}}"
-        #          f"{math_widgets} {{ font-family : {math_fonts}; }}")
-        #     s += t
-        return s
+    # @property
+    # def style_sheet_font(self):
+    #     # math_fonts = self.math_fonts_name
+    #     # math_widgets = ["MathTextWidget", "MathObjectWidget", "TargetLabel"]
+    #     # math_widgets = ", ".join(math_widgets)
+    #     s = f"QWidget {{font-family : {self.fonts_name}; }} "
+    #             # if self.fonts_name else ""
+    #     # if math_fonts:
+    #     #     t = (f"QWidget [math_widget='true'] {{font-family : {math_fonts};}}"
+    #     #          f"{math_widgets} {{ font-family : {math_fonts}; }}")
+    #     #     s += t
+    #     return s
 
     @property
     def style_sheet(self):
-        return self.style_sheet_font + "\n" + self.style_sheet_size
+        return self.style_sheet_size
+        # return self.style_sheet_font + "\n" + self.style_sheet_size
 
-    def set_general_fonts(self):
-        """
-        Set fonts for application menus (and everything which is not maths).
-        """
-        if cvars.get('display.use_system_fonts'):
-            self.fonts_name = self.system_font.family()
-        else:
-            general_font_file = (cdirs.fonts / self.fonts_file_name).resolve()
-            # Debug
-            # general_font_file = "/usr/share/fonts/opentype/malayalam/Chilanka-Regular.otf"
-            font_id = QFontDatabase.addApplicationFont(str(general_font_file))
-            if font_id < 0:
-                log.warning(f"Error loading font {self.fonts_file_name}")
-            else:
-                log.info(f"Fonts loaded: {self.fonts_file_name}")
-                families = QFontDatabase.applicationFontFamilies(font_id)
-                self.fonts_name = families[0]
+    # def set_general_fonts(self):
+    #     """
+    #     Set fonts for application menus (and everything which is not maths).
+    #     """
+    #     if cvars.get('display.use_system_fonts'):
+    #         self.fonts_name = self.system_fonts.family()
+    #     else:
+    #         general_font_file = (cdirs.fonts / self.fonts_file_name).resolve()
+    #         # Debug
+    #         # general_font_file = "/usr/share/fonts/opentype/malayalam/Chilanka-Regular.otf"
+    #         font_id = QFontDatabase.addApplicationFont(str(general_font_file))
+    #         if font_id < 0:
+    #             log.warning(f"Error loading font {self.fonts_file_name}")
+    #         else:
+    #             log.info(f"Fonts loaded: {self.fonts_file_name}")
+    #             families = QFontDatabase.applicationFontFamilies(font_id)
+    #             self.fonts_name = families[0]
 
     def set_math_fonts(self):
-        if cvars.get('display.use_system_fonts_for_maths'):
-            self.math_fonts_name = self.system_font.family()
+        if not self.math_fonts_file_name:
+            self.math_fonts_name = self.system_fonts.family()
         else:
-            math_font_file = (cdirs.fonts / self.math_fonts_file_name).resolve()
+            file = (cdirs.fonts / self.math_fonts_file_name).resolve()
 
-            # Debug
-            # math_font_file = "/usr/share/fonts/truetype/malayalam/Karumbi-Regular.ttf"
-            # math_font_file = "/usr/share/fonts/truetype/dejavu/DejaVuMathTeXGyre.ttf"
-            font_id = QFontDatabase.addApplicationFont(str(math_font_file))
+            font_id = QFontDatabase.addApplicationFont(str(file))
             if font_id < 0:
-                log.warning(f"Error loading maths font {self.math_fonts_file_name}")
+                log.warning(f"Error loading maths font {str(file)}")
             else:
-                log.info(f"Fonts loaded: {self.math_fonts_file_name}")
+                log.info(f"Fonts loaded: {str(file)}")
                 families = QFontDatabase.applicationFontFamilies(font_id)
                 self.math_fonts_name = families[0]
 
@@ -224,16 +243,21 @@ class DeaductionFonts:
         if not self.parent:
             log.warning("DeaductionFont: attempt to set fonts with no parent")
             return
-        self.set_general_fonts()
-        print(f"Système fonts: {DeaductionFonts.system_font}")
-        print(f"Text fonts: {self.fonts_name}")
+        # Get system fonts
+        if not DeaductionFonts.system_fonts:
+            DeaductionFonts.system_fonts = QApplication.font()
+
+        # self.set_general_fonts()
+        print(f"Système fonts: {DeaductionFonts.system_fonts}")
+        # print(f"Text fonts: {self.fonts_name}")
         print(f"Math fonts: {self.math_fonts_name}")
         self.set_math_fonts()
         self.parent.setStyleSheet(self.style_sheet)
         print("Style sheet:")
         print(self.style_sheet)
 
-    def background_color(self):
+    @staticmethod
+    def background_color():
         return cvars.get("display.selection_color", "limegreen")
 
 

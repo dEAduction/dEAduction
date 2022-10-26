@@ -57,6 +57,7 @@ PRETTY_NAMES = {
                                                      "buttons"),
     'display.display_success_messages': _("Display success messages"),
     'display.color_for_selection': _("Color for selection"),
+    'display.math_font_file': _("Maths fonts"),
     'logic.use_color_for_variables': _("Use color for variables"),
     'logic.use_color_for_dummy_variables': _("Use color for dummy variables"),
     'logic.use_color_for_applied_properties': _("Use color for applied "

@@ -60,12 +60,15 @@ from PySide2.QtWidgets import ( QApplication,
 from deaduction.pylib.config.i18n import init_i18n
 import deaduction.pylib.config.vars      as      cvars
 from deaduction.pylib                            import logger
-
+from deaduction.dui.primitives.font_config import deaduction_fonts
 
 from .config_window_text import PRETTY_NAMES
 
 log = logging.getLogger(__name__)
 global _
+
+
+
 
 ######################
 # Settings to be set #
@@ -86,9 +89,10 @@ CONFIGS["Display"] = [
     # ('display.font_size_for_symbol_buttons', None, True),
     ('display.dubious_characters', None, True),
     ('display.short_buttons_line', None, True),
-    ('display.color_for_selection', None, True),
-    ('display.use_system_fonts', None, True),
-    ('display.use_system_fonts_for_maths', None, True)
+    ('display.color_for_selection', None, True)
+    # ('display.use_system_fonts', None, True),
+    # ('display.use_system_fonts_for_maths', None, True),
+    # ('display.maths_fonts', ["system", "Latin Modern"], True)
     # ('display.font_for_mathematics', "font", True)
     ]
 
@@ -98,9 +102,6 @@ if os_name:
     os_name += '_'
 font_size_key = 'display.' + os_name + 'font_size_for_symbol_buttons'
 CONFIGS["Display"].append((font_size_key, None, True))
-# ('display.mathematics_font', None, True),
-# ('display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP',
-#  None, False)
 
 CONFIGS["Logic"] = [
     ("display.display_success_messages", None, True),
@@ -155,6 +156,7 @@ class ConfigMainWindow(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
+        self.set_math_fonts_list()
         self.setModal(True)
         self.__windows = []  # List of sub-windows, one for each tab
 
@@ -192,6 +194,13 @@ class ConfigMainWindow(QDialog):
         button_box.rejected.connect(self.cancel)
         button_box.clicked.connect(self.clicked)
         button_box.accepted.connect(self.accept)
+
+    @staticmethod
+    def set_math_fonts_list():
+        system = "System fonts" + " (" + deaduction_fonts.system_fonts_name + ")"
+        fonts_name = [system] + deaduction_fonts.math_fonts_file_names
+        # FIXME: Windows case
+        CONFIGS["Display"].append(("display.math_font_file", fonts_name, True))
 
     def clicked(self, btn):
         """
