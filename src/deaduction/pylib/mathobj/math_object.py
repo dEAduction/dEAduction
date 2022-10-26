@@ -1410,7 +1410,8 @@ class MathObject:
         return abstract_string
 
     def math_type_to_display(self, format_="html", text_depth=0,
-                             is_math_type=False) -> str:
+                             is_math_type=False,
+                             used_in_proof=False) -> str:
         """
         cf MathObject.to_display, but applied to self as a math_type (if
         is_math_type) or to self.math_type (if not is_math_type).
@@ -1423,6 +1424,8 @@ class MathObject:
         else:
             math_type = self.math_type
         abstract_string = math_type.math_type_to_abstract_string(text_depth)
+        if used_in_proof:
+            abstract_string = [r'\used_property'] + abstract_string
         # Adapt to format_ and concatenate to get a string
         display = abstract_string_to_string(abstract_string, format_,
                                             no_text=(text_depth <= 0))

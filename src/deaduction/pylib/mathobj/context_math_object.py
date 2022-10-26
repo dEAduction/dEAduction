@@ -113,26 +113,29 @@ class ContextMathObject(MathObject):
             shape = [r'\used_property'] + shape
         return shape
 
-    def raw_latex_shape_of_math_type(self, text_depth=0):
-        """
-        Override the raw_latex_shape_of_math_type method for MathObject.
-        """
-
-        # Call to MathObject.raw_latex_shape_of_math_type() on self
-        math_type: MathObject = super(ContextMathObject, self)
-        shape = math_type.raw_latex_shape_of_math_type(text_depth)
-        if (hasattr(self, 'has_been_used_in_proof')
-                and self.has_been_used_in_proof):
-            shape = [r'\used_property'] + shape
-        if self.is_function():
-            # Should be "a function from" in text mode,
-            # and nothing in symbol mode.
-            shape[0] = r"\context_function_from"
-        return shape
+    # def raw_latex_shape_of_math_type(self, text_depth=0):
+    #     """
+    #     Override the raw_latex_shape_of_math_type method for MathObject.
+    #     """
+    #
+    #     # Call to MathObject.raw_latex_shape_of_math_type() on self
+    #     math_type: MathObject = super(ContextMathObject, self)
+    #     shape = math_type.raw_latex_shape_of_math_type(text_depth)
+    #     if (hasattr(self, 'has_been_used_in_proof')
+    #             and self.has_been_used_in_proof):
+    #         shape = [r'\used_property'] + shape
+    #     if self.is_function():
+    #         # Should be "a function from" in text mode,
+    #         # and nothing in symbol mode.
+    #         shape[0] = r"\context_function_from"
+    #     return shape
 
     def display_with_type(self, format_='html'):
+        used_in_proof = ((hasattr(self, 'has_been_used_in_proof')
+                         and self.has_been_used_in_proof))
         lean_name = self.to_display(format_=format_)
-        math_expr = self.math_type_to_display(format_=format_)
+        math_expr = self.math_type_to_display(format_=format_,
+                                              used_in_proof=used_in_proof)
         test_expr = self.math_type_to_display(format_='utf8')
         separator = '' if test_expr.startswith(':') else ': '
         caption   = f'{lean_name} {separator}{math_expr}'
