@@ -429,9 +429,11 @@ class ConfigWindow(QDialog):
                                        for setting in setting_list]
                 widget.setting_list = setting_list
                 widget.addItems(pretty_setting_list)
-                if setting_value:
+                if setting_value and setting_value in setting_list:
                     initial_index = setting_list.index(setting_value)
-                    widget.setCurrentIndex(initial_index)
+                else:
+                    initial_index = 0
+                widget.setCurrentIndex(initial_index)
 
             # ───────── Case of bool: check box ─────────
             elif isinstance(setting_value, bool):
@@ -478,6 +480,10 @@ class ConfigWindow(QDialog):
 
         info = ""
         to_be_canceled: [str] = []
+        # System fonts for maths
+        if 'display.math_font_file' in self.modified_settings:
+            index = self.modified_settings['display.math_font_file']
+
         # Dubious characters
         if 'display.dubious_characters' in self.modified_settings:
             default: str = self.initial_settings['display.dubious_characters']

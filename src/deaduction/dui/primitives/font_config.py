@@ -226,7 +226,8 @@ class DeaductionFonts:
     #             self.fonts_name = families[0]
 
     def set_math_fonts(self):
-        if not self.math_fonts_file_name:
+        if not self.math_fonts_file_name or \
+                self.math_fonts_file_name.startswith('System fonts'):
             self.math_fonts_name = self.system_fonts.family()
         else:
             file = (cdirs.fonts / self.math_fonts_file_name).resolve()
@@ -234,6 +235,7 @@ class DeaductionFonts:
             font_id = QFontDatabase.addApplicationFont(str(file))
             if font_id < 0:
                 log.warning(f"Error loading maths font {str(file)}")
+                self.math_fonts_name = self.system_fonts.family()
             else:
                 log.info(f"Fonts loaded: {str(file)}")
                 families = QFontDatabase.applicationFontFamilies(font_id)

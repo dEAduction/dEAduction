@@ -395,7 +395,9 @@ class ExerciseMainWindow(QMainWindow):
             ##############################
             # Redefine ecw from scratch! #
             ##############################
-            deaduction_fonts.set_fonts()
+            if 'display.math_font_file' or \
+                    'display.math_font_file_for_windows' in modified_settings:
+                deaduction_fonts.set_fonts()
 
             self.ecw = ExerciseCentralWidget(self.exercise)
             self.setCentralWidget(self.ecw)
