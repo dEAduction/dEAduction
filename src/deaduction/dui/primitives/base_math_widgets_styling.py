@@ -69,7 +69,9 @@ class AbstractMathHtmlText:
     def set_use_color(self, yes=True):
         self.use_color = yes
 
-    def set_font_size(self, size):
+    def set_font_size(self, size) -> int:
+        if isinstance(size, str):
+            size = int(size.replace('pt', ''))
         self.font_size = size
 
     def set_text_mode(self, yes=True):
@@ -83,6 +85,7 @@ class AbstractMathHtmlText:
 
         if not self.text_mode:
             style = f"* {{ font-family: {fonts_name} }}"
+            # ; font-size: 200%;
         else:
             style = f".math, .variable, .dummy_variable, .used_prop" \
                     f"{{ font-family: {fonts_name} }}"
@@ -114,19 +117,31 @@ class AbstractMathHtmlText:
                  + "</style>")
         return style
 
+    @property
+    def preamble(self):
+        div = (f'<div style="font-size: {self.font_size}pt;"> '
+               if self.font_size else '<div> ')
+        return div
+
+    @property
+    def postamble(self):
+        return "</dvi>"
+
 
 class MathLabel(QLabel, AbstractMathHtmlText):
     """
     A QLabel subclass to display math in html, incorporating styling.
+    Note that we have to repeat the AbstractMathHtmlText attribute here...
     """
 
     def __init__(self):
         super().__init__()
         self.set_use_color()
         self.set_text_mode(False)
+        self.set_font_size(None)
 
     def setText(self, text: str):
-        super().setText(self.html_style + '<div>' + text + '</div>')
+        super().setText(self.html_style + self.preamble + text + self.postamble)
 
 
 class MathItem(QStandardItem, AbstractMathHtmlText):
@@ -137,6 +152,7 @@ class MathItem(QStandardItem, AbstractMathHtmlText):
         super().__init__()
         self.set_use_color()
         self.set_text_mode(False)
+        self.set_font_size(None)
 
     def setText(self, text: str):
         super().setText(self.html_style + '<div>' + text + '</div>')
@@ -150,6 +166,7 @@ class MathTextWidget(QTextEdit, AbstractMathHtmlText):
         super().__init__()
         self.set_use_color()
         self.set_text_mode(False)
+        self.set_font_size(None)
 
     def setHtml(self, text: str):
         # print(self.html_style + text)

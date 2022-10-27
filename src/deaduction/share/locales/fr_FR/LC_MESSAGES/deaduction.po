@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-10-26 10:53+0200\n"
-"PO-Revision-Date: 2022-10-26 10:57+0200\n"
+"POT-Creation-Date: 2022-10-27 15:28+0200\n"
+"PO-Revision-Date: 2022-10-27 15:30+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "Generated-By: pygettext.py 1.5\n"
-"X-Generator: Poedit 3.2\n"
+"X-Generator: Poedit 3.2.1\n"
 "X-Poedit-Basepath: ../../../..\n"
 "X-Poedit-SearchPath-0: .\n"
 
@@ -36,12 +36,8 @@ msgid "Download interrupted by user."
 msgstr "Téléchargement interrompu par l’utilisateur."
 
 #: dui/__main__.py:242
-msgid ""
-"Missing packages have been installed, but user decided to quit without "
-"launching d∃∀duction."
-msgstr ""
-"Les dépendances manquantes ont été installées, mais l’utilisateur a décidé "
-"de quitter sans lancer d∃∀duction."
+msgid "Missing packages have been installed, but user decided to quit without launching d∃∀duction."
+msgstr "Les dépendances manquantes ont été installées, mais l’utilisateur a décidé de quitter sans lancer d∃∀duction."
 
 #: dui/__main__.py:250
 msgid "Quitting d∃∀duction"
@@ -52,8 +48,8 @@ msgid "Button"
 msgstr "Bouton"
 
 #: dui/elements/actions_widgets_classes.py:168
-#: dui/elements/config_window.py:357
-#: dui/elements/proof_tree/proof_tree_primitives.py:608
+#: dui/elements/config_window.py:367
+#: dui/elements/proof_tree/proof_tree_primitives.py:609
 #: dui/primitives/disclosure_triangle.py:82
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:131
 #: dui/stages/start_coex/start_coex_widgets.py:254
@@ -70,40 +66,38 @@ msgstr "Enoncés"
 msgid "L∃∀N name"
 msgstr "Nom L∃∀N"
 
-#: dui/elements/config_window.py:161
+#: dui/elements/config_window.py:165
 #: dui/stages/exercise/exercise_main_window.py:299
 msgid "Preferences"
 msgstr "Préférences"
 
-#: dui/elements/config_window.py:172
+#: dui/elements/config_window.py:176
 msgid "Save preferences for next session"
 msgstr "Sauvegarder les préférences"
 
-#: dui/elements/config_window.py:185
+#: dui/elements/config_window.py:189
 msgid "Ok"
 msgstr "Ok"
 
-#: dui/elements/config_window.py:186
+#: dui/elements/config_window.py:190
 msgid "Cancel"
 msgstr "Annuler"
 
-#: dui/elements/config_window.py:187 pylib/text/tooltips.py:117
+#: dui/elements/config_window.py:191 pylib/text/tooltips.py:117
 msgid "Apply"
 msgstr "Appliquer"
 
-#: dui/elements/config_window.py:306
+#: dui/elements/config_window.py:316
 msgid "Wrong settings!"
 msgstr "Valeurs incorrectes !"
 
-#: dui/elements/config_window.py:361
+#: dui/elements/config_window.py:371
 msgid "Browse directories"
 msgstr "Choisir un dossier"
 
-#: dui/elements/config_window.py:478
+#: dui/elements/config_window.py:494
 msgid "Missing characters: Enter exactly {} strings separated by commas"
-msgstr ""
-"Caractères manquants : entrer exactement {} groupes de caractères séparés "
-"par des virgules"
+msgstr "Caractères manquants : entrer exactement {} groupes de caractères séparés par des virgules"
 
 #: dui/elements/config_window_text.py:37
 msgid "Display"
@@ -134,103 +128,110 @@ msgid "Target display on top"
 msgstr "Objectif en haut de la fenêtre"
 
 #: dui/elements/config_window_text.py:47
-msgid "target font size"
-msgstr "taille de la police pour le but"
+msgid "Target font size"
+msgstr "Taille de la police pour le but"
 
 #: dui/elements/config_window_text.py:48
+msgid "Font size for global proof view"
+msgstr "Taille de la police pour l'aperçu de preuve"
+
+#: dui/elements/config_window_text.py:49
 msgid "Set directory for choosing courses"
 msgstr "Dossier pour le choix de cours"
 
-#: dui/elements/config_window_text.py:49
+#: dui/elements/config_window_text.py:50
 msgid "Level of logs"
 msgstr "Niveau de logs"
 
-#: dui/elements/config_window_text.py:50
+#: dui/elements/config_window_text.py:51
 msgid "Use symbol for logic buttons"
 msgstr "Symboles pour les boutons logiques"
 
-#: dui/elements/config_window_text.py:51 dui/elements/config_window_text.py:52
-#: dui/elements/config_window_text.py:54 dui/elements/config_window_text.py:56
+#: dui/elements/config_window_text.py:52
 msgid "Font size for symbol buttons"
 msgstr "Taille des symboles pour les boutons logiques"
 
-#: dui/elements/config_window_text.py:58
+#: dui/elements/config_window_text.py:59
 msgid "Display success messages"
 msgstr "Afficher les messages de succès"
 
-#: dui/elements/config_window_text.py:59
+#: dui/elements/config_window_text.py:60
 msgid "Color for selection"
 msgstr "Couleur des éléments sélectionnés"
 
-#: dui/elements/config_window_text.py:60
+#: dui/elements/config_window_text.py:61
+msgid "Maths fonts"
+msgstr "Police pour les maths"
+
+#: dui/elements/config_window_text.py:62
 msgid "Use color for variables"
 msgstr "Variables en couleur"
 
-#: dui/elements/config_window_text.py:61
+#: dui/elements/config_window_text.py:63
 msgid "Use color for dummy variables"
 msgstr "Variables muettes en couleur"
 
-#: dui/elements/config_window_text.py:62
+#: dui/elements/config_window_text.py:64
 msgid "Use color for applied properties"
 msgstr "Griser les propriétés déjà utilisées"
 
-#: dui/elements/config_window_text.py:64
+#: dui/elements/config_window_text.py:66
 msgid "Target selected by default"
 msgstr "But sélectionné par défaut"
 
-#: dui/elements/config_window_text.py:66
+#: dui/elements/config_window_text.py:68
 msgid "Allow proof by sorry"
 msgstr "Admettre le but en cours est autorisé"
 
-#: dui/elements/config_window_text.py:68
+#: dui/elements/config_window_text.py:70
 msgid "Allow implicit use of definitions"
 msgstr "Autoriser les définitions implicites"
 
-#: dui/elements/config_window_text.py:70
+#: dui/elements/config_window_text.py:72
 msgid "Automatic intro of variables and hypotheses"
 msgstr "Introduction automatique des variables et des hypothèses"
 
-#: dui/elements/config_window_text.py:72
+#: dui/elements/config_window_text.py:74
 msgid "Automatic intro of existence properties"
 msgstr "Introduction automatique des propriétés d’existence"
 
-#: dui/elements/config_window_text.py:74
+#: dui/elements/config_window_text.py:76
 msgid "Save exercises for autotest"
 msgstr "Sauvegarder pour auto-tests"
 
-#: dui/elements/config_window_text.py:75
+#: dui/elements/config_window_text.py:77
 msgid "Save journal"
 msgstr "Sauvegarder le journal"
 
-#: dui/elements/config_window_text.py:76
+#: dui/elements/config_window_text.py:78
 msgid "Main font size"
 msgstr "Taille de la police principale"
 
-#: dui/elements/config_window_text.py:77
+#: dui/elements/config_window_text.py:79
 msgid "Tooltips font size"
 msgstr "Taille de la police pour les info-bulles"
 
-#: dui/elements/config_window_text.py:78
+#: dui/elements/config_window_text.py:80
 msgid "Replace missing characters"
 msgstr "Remplacer les caractères manquants"
 
-#: dui/elements/config_window_text.py:80
+#: dui/elements/config_window_text.py:82
 msgid "Split logic buttons into two lines"
 msgstr "Boutons logiques sur deux lignes"
 
-#: dui/elements/config_window_text.py:81
+#: dui/elements/config_window_text.py:83
 msgid "Drag statements to context"
 msgstr "Glisser les énoncés dans le contexte"
 
-#: dui/elements/config_window_text.py:82
+#: dui/elements/config_window_text.py:84
 msgid "Drag and drop in context"
 msgstr "Glisser-déposer dans le contexte"
 
-#: dui/elements/config_window_text.py:83
+#: dui/elements/config_window_text.py:85
 msgid "Drag context to statements"
 msgstr "Glisser du contexte vers les énoncés"
 
-#: dui/elements/config_window_text.py:84
+#: dui/elements/config_window_text.py:86
 #: pylib/coursedata/course_metadata_translations.py:38
 msgid "None"
 msgstr "Aucun(e)"
@@ -243,42 +244,40 @@ msgstr "A démontrer"
 msgid "Target"
 msgstr "But"
 
-#: dui/elements/help.py:57 dui/elements/help.py:146
-#: dui/stages/exercise/_exercise_main_window_widgets.py:521
+#: dui/elements/help.py:58 dui/elements/help.py:147
+#: dui/stages/exercise/_exercise_main_window_widgets.py:530
 msgid "Help"
 msgstr "Aide"
 
-#: dui/elements/help.py:66
+#: dui/elements/help.py:67
 msgid "Previous help message"
 msgstr "Message précédent"
 
-#: dui/elements/help.py:67
+#: dui/elements/help.py:68
 msgid "Next help message"
 msgstr "Message suivant"
 
-#: dui/elements/help.py:81
+#: dui/elements/help.py:82
 msgid "Show hint!"
 msgstr "Voir la suggestion !"
 
-#: dui/elements/help.py:107
+#: dui/elements/help.py:108
 msgid "Help n°{}"
 msgstr "Aide n°{} "
 
-#: dui/elements/help.py:243
+#: dui/elements/help.py:244
 msgid "No object selected"
 msgstr "Pas d'objet sélectionné"
 
-#: dui/elements/help.py:245
+#: dui/elements/help.py:246
 msgid "Double click on context or target to get some help."
-msgstr ""
-"Double-cliquer sur le but ou sur un élément du contexte pour obtenir de "
-"l'aide."
+msgstr "Double-cliquer sur le but ou sur un élément du contexte pour obtenir de l'aide."
 
-#: dui/elements/help.py:254
+#: dui/elements/help.py:255
 msgid "No help available on this object."
 msgstr "Aucune aide disponible sur cet objet."
 
-#: dui/elements/help.py:260
+#: dui/elements/help.py:261
 msgid "Hint:"
 msgstr "Suggestion :"
 
@@ -385,8 +384,8 @@ msgid "Back to exercise"
 msgstr "Retour à l’exercice"
 
 #: dui/stages/exercise/Coordinator.py:991
-#: dui/stages/exercise/_exercise_main_window_widgets.py:716
-#: dui/stages/exercise/_exercise_main_window_widgets.py:726
+#: dui/stages/exercise/_exercise_main_window_widgets.py:725
+#: dui/stages/exercise/_exercise_main_window_widgets.py:735
 msgid "Change exercise"
 msgstr "Changer d’exercice"
 
@@ -395,69 +394,69 @@ msgid "Actions (logical rules and statements)"
 msgstr "Actions (règles logiques et énoncés)"
 
 #: dui/stages/exercise/_exercise_main_window_widgets.py:160
-#: dui/stages/exercise/_exercise_main_window_widgets.py:260
-#: dui/stages/exercise/_exercise_main_window_widgets.py:386
+#: dui/stages/exercise/_exercise_main_window_widgets.py:262
+#: dui/stages/exercise/_exercise_main_window_widgets.py:395
 msgid "Context (objects and properties)"
 msgstr "Contexte (objets et propriétés)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:384
+#: dui/stages/exercise/_exercise_main_window_widgets.py:393
 msgid "Actions and statements (transform context and target)"
 msgstr "Actions et énoncés (transforment le contexte et le but)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:545
+#: dui/stages/exercise/_exercise_main_window_widgets.py:554
 msgid "    Thinking"
 msgstr "    Je réfléchis"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:550
+#: dui/stages/exercise/_exercise_main_window_widgets.py:559
 msgid "    Initializing"
 msgstr "    Initialisation"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:645
-#: dui/stages/exercise/_exercise_main_window_widgets.py:706
+#: dui/stages/exercise/_exercise_main_window_widgets.py:654
+#: dui/stages/exercise/_exercise_main_window_widgets.py:715
 msgid "Toolbar"
 msgstr "Barre d’outils"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:650
-#: dui/stages/exercise/_exercise_main_window_widgets.py:695
+#: dui/stages/exercise/_exercise_main_window_widgets.py:659
+#: dui/stages/exercise/_exercise_main_window_widgets.py:704
 msgid "Jump to beginning of proof"
 msgstr "Retour au début de la preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:653
-#: dui/stages/exercise/_exercise_main_window_widgets.py:696
+#: dui/stages/exercise/_exercise_main_window_widgets.py:662
+#: dui/stages/exercise/_exercise_main_window_widgets.py:705
 msgid "Undo action"
 msgstr "Annuler l’action"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:656
-#: dui/stages/exercise/_exercise_main_window_widgets.py:697
+#: dui/stages/exercise/_exercise_main_window_widgets.py:665
+#: dui/stages/exercise/_exercise_main_window_widgets.py:706
 msgid "Redo action"
 msgstr "Refaire l’action"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:659
-#: dui/stages/exercise/_exercise_main_window_widgets.py:698
+#: dui/stages/exercise/_exercise_main_window_widgets.py:668
+#: dui/stages/exercise/_exercise_main_window_widgets.py:707
 msgid "Jump to end of proof"
 msgstr "Retour au début de la preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:663
-#: dui/stages/exercise/_exercise_main_window_widgets.py:700
+#: dui/stages/exercise/_exercise_main_window_widgets.py:672
+#: dui/stages/exercise/_exercise_main_window_widgets.py:709
 msgid "Toggle proof outline"
 msgstr "Fil de preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:667
+#: dui/stages/exercise/_exercise_main_window_widgets.py:676
 msgid "Toggle proof tree"
 msgstr "Arbre de preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:671
-#: dui/stages/exercise/_exercise_main_window_widgets.py:699
+#: dui/stages/exercise/_exercise_main_window_widgets.py:680
+#: dui/stages/exercise/_exercise_main_window_widgets.py:708
 msgid "Toggle L∃∀N"
 msgstr "Console L∃∀N"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:675
-#: dui/stages/exercise/_exercise_main_window_widgets.py:701
+#: dui/stages/exercise/_exercise_main_window_widgets.py:684
+#: dui/stages/exercise/_exercise_main_window_widgets.py:710
 msgid "Toggle help window"
 msgstr "Fenêtre d'aide"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:711
-#: dui/stages/exercise/_exercise_main_window_widgets.py:727
+#: dui/stages/exercise/_exercise_main_window_widgets.py:720
+#: dui/stages/exercise/_exercise_main_window_widgets.py:736
 msgid "Settings"
 msgstr "Paramètres"
 
@@ -470,12 +469,12 @@ msgstr "Exercice"
 msgid "Exercise history"
 msgstr "Historique de l’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:899
+#: dui/stages/exercise/exercise_main_window.py:901
 #: pylib/math_display/display_math.py:921 pylib/mathobj/proof_step.py:632
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:902
+#: dui/stages/exercise/exercise_main_window.py:904
 msgid "goals solved!"
 msgstr "buts atteints !"
 
@@ -484,11 +483,9 @@ msgid "Missing dependencies"
 msgstr "Dépendances manquants"
 
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:87
-msgid ""
-"Some necessary dependencies are missing. Do you want to install them?\n"
+msgid "Some necessary dependencies are missing. Do you want to install them?\n"
 "(If not, d∃∀duction will stop.)"
-msgstr ""
-"Il manque des dépendances indispensables. Voulez-vous les installer ? \n"
+msgstr "Il manque des dépendances indispensables. Voulez-vous les installer ? \n"
 "(Dans le cas contraire, d∃∀duction s’arrêtera.)"
 
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:122
@@ -713,7 +710,7 @@ msgstr "Les objets sélectionnés ne sont pas des propriétés"
 
 #: pylib/actions/logic.py:204 pylib/actions/logic.py:398
 #: pylib/actions/logic.py:599 pylib/actions/logic.py:831
-#: pylib/actions/logic.py:1210
+#: pylib/actions/logic.py:1212
 msgid "Does not apply to more than two properties"
 msgstr "Ne s’applique pas à plus de deux propriétés"
 
@@ -766,7 +763,7 @@ msgid "On which side do you want"
 msgstr "De quel côté voulez-vous"
 
 #: pylib/actions/logic.py:361 pylib/actions/logic.py:454
-#: pylib/actions/logic.py:521 pylib/actions/logic.py:1009
+#: pylib/actions/logic.py:521 pylib/actions/logic.py:1011
 msgid "Property {} added to the context"
 msgstr "Propriété {} ajoutée au contexte"
 
@@ -818,8 +815,8 @@ msgstr "Les propriétés sélectionnées ne sont pas des implications ‘P ⇒ Q
 msgid "Use for substitution in {}"
 msgstr "Utiliser pour substituer dans {}"
 
-#: pylib/actions/logic.py:620 pylib/actions/logic.py:1303
-#: pylib/actions/logic.py:1334
+#: pylib/actions/logic.py:620 pylib/actions/logic.py:1305
+#: pylib/actions/logic.py:1336
 msgid "Precision of substitution"
 msgstr "Préciser le sens de substitution"
 
@@ -871,128 +868,127 @@ msgstr "La propriété sélectionnée n’est pas un « si et seulement si » 
 msgid "Selected items should both be implications"
 msgstr "Les objets sélectionnés ne sont pas deux implications"
 
-#: pylib/actions/logic.py:879
+#: pylib/actions/logic.py:881
 msgid "Object {} added to the context"
 msgstr "Objet {} ajouté au contexte"
 
-#: pylib/actions/logic.py:1037
+#: pylib/actions/logic.py:1039
 msgid "Target is not a universal property '∀x, P(x)'"
 msgstr "Le but n’est pas une propriété universelle ‘∀x, P(x)’"
 
-#: pylib/actions/logic.py:1044
+#: pylib/actions/logic.py:1046
 msgid "Selected property is not a universal property '∀x, P(x)'"
-msgstr ""
-"La propriété sélectionnée n’est pas une propriété universelle ‘∀x, P(x)’"
+msgstr "La propriété sélectionnée n’est pas une propriété universelle ‘∀x, P(x)’"
 
-#: pylib/actions/logic.py:1049
+#: pylib/actions/logic.py:1051
 msgid "Apply a universal property"
 msgstr "Appliquer une propriété universelle"
 
-#: pylib/actions/logic.py:1051
+#: pylib/actions/logic.py:1053
 msgid "Enter element on which you want to apply:"
 msgstr "Entrer l’objet à utiliser :"
 
-#: pylib/actions/logic.py:1075
+#: pylib/actions/logic.py:1077
 msgid "No universal property among selected"
 msgstr "Pas de propriété universelle dans la sélection"
 
-#: pylib/actions/logic.py:1089
+#: pylib/actions/logic.py:1091
 msgid "Enter element you want to use:"
 msgstr "Quel objet voulez-vous utiliser ?"
 
-#: pylib/actions/logic.py:1091
+#: pylib/actions/logic.py:1093
 msgid "Exist"
 msgstr "Existence"
 
-#: pylib/actions/logic.py:1096
+#: pylib/actions/logic.py:1098
 msgid "Now prove {} suits our needs"
 msgstr "Il reste à démontrer que {} convient"
 
-#: pylib/actions/logic.py:1129
+#: pylib/actions/logic.py:1131
 msgid "New object {} with property {}"
 msgstr "Nouvel objet {} vérifiant la propriété {}"
 
-#: pylib/actions/logic.py:1154
+#: pylib/actions/logic.py:1156
 msgid "I cannot build an existential property with this"
 msgstr "Ceci ne me permet pas de construire une propriété existentielle"
 
-#: pylib/actions/logic.py:1157
+#: pylib/actions/logic.py:1159
 msgid "Get new existential property {}"
 msgstr "Nouvelle propriété existentielle {}"
 
-#: pylib/actions/logic.py:1188 pylib/actions/logic.py:1203
+#: pylib/actions/logic.py:1190 pylib/actions/logic.py:1205
 msgid "Target is not existential property '∃x, P(x)'"
 msgstr "Le but n’est pas une propriété existentielle ‘∃x, P(x)’"
 
-#: pylib/actions/logic.py:1197
+#: pylib/actions/logic.py:1199
 msgid "Selection is not existential property '∃x, P(x)'"
 msgstr "L’objet sélectionné n’est pas une propriété existentielle ’∃x, P(x)’"
 
-#: pylib/actions/logic.py:1227
+#: pylib/actions/logic.py:1229
 msgid "the target"
 msgstr "le but"
 
-#: pylib/actions/logic.py:1229
+#: pylib/actions/logic.py:1231
 msgid "{} replaced by {}"
 msgstr "{} remplacé par {}"
 
-#: pylib/actions/logic.py:1231
+#: pylib/actions/logic.py:1233
 msgid "Substitution using {}"
 msgstr "Substitution à l’aide de {}"
 
-#: pylib/actions/logic.py:1232
+#: pylib/actions/logic.py:1234
 msgid "in {}"
 msgstr "dans {}"
 
-#: pylib/actions/logic.py:1233
+#: pylib/actions/logic.py:1235
 msgid "Unable to substitute {} by {}"
 msgstr "Impossible de remplacer {} par {}"
 
-#: pylib/actions/logic.py:1234
+#: pylib/actions/logic.py:1236
 msgid "Unable to use {} to substitute in {}"
 msgstr "Impossible d’utiliser {} pour substituer dans {}"
 
-#: pylib/actions/logic.py:1304 pylib/actions/logic.py:1335
+#: pylib/actions/logic.py:1306 pylib/actions/logic.py:1337
 msgid "Choose which expression you want to replace"
 msgstr "Choisissez quelle expression remplacer"
 
-#: pylib/actions/logic.py:1383
+#: pylib/actions/logic.py:1385
 msgid "No property selected"
 msgstr "Pas de propriété sélectionnée"
 
-#: pylib/actions/logic.py:1386
+#: pylib/actions/logic.py:1388
 msgid "Too many selected objects"
 msgstr "Appliquer cette propriété à un objet sélectionné"
 
-#: pylib/actions/logic.py:1418 pylib/actions/logic.py:1425
+#: pylib/actions/logic.py:1420 pylib/actions/logic.py:1427
 msgid "This cannot be used for substitution"
 msgstr "Cette propriété ne peut pas être utilisé pour la substitution"
 
-#: pylib/actions/logic.py:1452
+#: pylib/actions/logic.py:1454
 msgid "New objet {} added to the context"
 msgstr "Nouvel objet {} ajouté au contexte"
 
-#: pylib/actions/logic.py:1479
+#: pylib/actions/logic.py:1481
 msgid "Map {} applied to {}"
 msgstr "La fonction {} a été appliquée à {}"
 
-#: pylib/actions/logic.py:1489
+#: pylib/actions/logic.py:1491
 msgid "The map {} cannot be applied to this object"
 msgstr "L’application {} ne peut pas être appliquée à cet objet"
 
-#: pylib/actions/logic.py:1491
+#: pylib/actions/logic.py:1493
 msgid "The map {} cannot be applied to these objects"
 msgstr "L’application {} ne peut pas être appliquée à ces objets"
 
-#: pylib/actions/logic.py:1521
+#: pylib/actions/logic.py:1523
 msgid "Enter element on which you want to apply the map {}:"
 msgstr "Entrer l’objet sur lequel vous voulez appliquer {} :"
 
-#: pylib/actions/logic.py:1524
+#: pylib/actions/logic.py:1526
 msgid "Map"
 msgstr "Application"
 
-#: pylib/actions/logic.py:1540
+#: pylib/actions/logic.py:1542
 msgid "Select an application and an element or an equality"
 msgstr "Sélectionner une application, et un élément ou une égalité"
 
@@ -1042,9 +1038,7 @@ msgstr "Le but est remplacé par sa contraposée"
 
 #: pylib/actions/proofs.py:148
 msgid "Proof by contraposition only applies when target is an implication"
-msgstr ""
-"La preuve par contraposée n’est pas possible, le but n’est pas une "
-"implication"
+msgstr "La preuve par contraposée n’est pas possible, le but n’est pas une implication"
 
 #: pylib/actions/proofs.py:156
 msgid "Proof by contraposition with hypothesis {}"
@@ -1068,9 +1062,7 @@ msgstr "La preuve par l’absurde ne s’applique qu’au but"
 
 #: pylib/actions/proofs.py:197
 msgid "Select a property \"∀ x, ∃ y, P(x,y)\" to get a function"
-msgstr ""
-"Sélectionner une propriété du type « ∀ x, ∃ y, P(x,y) » pour obtenir une "
-"fonction"
+msgstr "Sélectionner une propriété du type « ∀ x, ∃ y, P(x,y) » pour obtenir une fonction"
 
 #: pylib/actions/proofs.py:198
 msgid "Function {} and property {} added to the context"
@@ -1161,7 +1153,7 @@ msgstr "Paquet {} non trouvé dans la configuration"
 msgid "Saving configuration file"
 msgstr "Sauvegarde du fichier de configuration"
 
-#: pylib/config/vars.py:100
+#: pylib/config/vars.py:105
 msgid "Could not get config value: "
 msgstr "Impossible d’obtenir la valeur du fichier de configuration :"
 
@@ -1725,14 +1717,12 @@ msgid "Examples of syntax:"
 msgstr "Exemples de syntaxe :"
 
 #: pylib/math_display/display_data.py:729
-msgid ""
-"\n"
+msgid "\n"
 "    x ∈ A ∩ B          --> x belongs (A cap B)\n"
 "    A ⊂ B               --> A subset B\n"
 "    A = ∅               --> A = emptyset\n"
 "    ∀x ∈ A ∩ A', x ∈ A   --> forall x belongs (A cap A'), x belongs A "
-msgstr ""
-"\n"
+msgstr "\n"
 "    x ∈ A ∩ B          —> x dans (A inter B)\n"
 "    A ⊂ B               —> A inclus B\n"
 "    A = ∅               —> A = vide\n"
@@ -1740,9 +1730,7 @@ msgstr ""
 
 #: pylib/math_display/display_data.py:735
 msgid "You can use the keywords and, or, not, implies, iff, forall, exists."
-msgstr ""
-"Vous pouvez utiliser les mots-clés et, ou, non, implique, ssi, forall, "
-"exists."
+msgstr "Vous pouvez utiliser les mots-clés et, ou, non, implique, ssi, forall, exists."
 
 #: pylib/math_display/display_data.py:736
 #: pylib/math_display/display_data.py:750
@@ -1750,8 +1738,7 @@ msgid "In case of error, try with more parentheses."
 msgstr "En cas d’erreur, essayez avec plus de parenthèses."
 
 #: pylib/math_display/display_data.py:739
-msgid ""
-"\n"
+msgid "\n"
 "    A ∩ B           --> A cap B\n"
 "    A ∪ B           --> A cup B\n"
 "    X \\ A          --> complement A\n"
@@ -1761,8 +1748,7 @@ msgid ""
 "    {x}             --> sing x\n"
 "    {x, x'}         --> pair x x'\n"
 "    And also f(x) ; x+1/2 ; 2*n, max m n, abs x...\n"
-msgstr ""
-"\n"
+msgstr "\n"
 "    A ∩ B           —> A inter B\n"
 "    A ∪ B           —> A union B\n"
 "    X \\ A          —> complement A\n"
@@ -1801,7 +1787,7 @@ msgstr "une famille"
 msgid "family"
 msgstr "famille"
 
-#: pylib/mathobj/context_math_object.py:207
+#: pylib/mathobj/context_math_object.py:210
 msgid "elements of"
 msgstr "éléments de"
 
@@ -2150,30 +2136,18 @@ msgstr "ou glissez la propriété jusqu'à la définition"
 
 #: pylib/text/help_msgs.py:100
 #, python-brace-format
-msgid ""
-"{this_is} a universal property, which tells something about "
-"{every_element_of_type_}."
-msgstr ""
-"{this_is} une propriété universelle, qui dit quelque chose sur "
-"{every_element_of_type_}."
+msgid "{this_is} a universal property, which tells something about {every_element_of_type_}."
+msgstr "{this_is} une propriété universelle, qui dit quelque chose sur {every_element_of_type_}."
 
 #: pylib/text/help_msgs.py:102
 #, python-brace-format
-msgid ""
-"{to_use}, press the ∀ button after selecting {an_element_of_type_}"
-"{or_drag_element_to_property}."
-msgstr ""
-"{to_use}, cliquez sur le bouton ∀ après avoir sélectionné "
-"{an_element_of_type_}{or_drag_element_to_property}."
+msgid "{to_use}, press the ∀ button after selecting {an_element_of_type_}{or_drag_element_to_property}."
+msgstr "{to_use}, cliquez sur le bouton ∀ après avoir sélectionné {an_element_of_type_}{or_drag_element_to_property}."
 
 #: pylib/text/help_msgs.py:104
 #, python-brace-format
-msgid ""
-"{to_use}, you need {an_element_of_type_}. Is there any in the context? If "
-"not, can you create some?"
-msgstr ""
-"{to_use}, il vous faut  {an_element_of_type_}. Y en a-t-il un dans le "
-"contexte ? Sinon, comment en obtenir un ?"
+msgid "{to_use}, you need {an_element_of_type_}. Is there any in the context? If not, can you create some?"
+msgstr "{to_use}, il vous faut  {an_element_of_type_}. Y en a-t-il un dans le contexte ? Sinon, comment en obtenir un ?"
 
 #: pylib/text/help_msgs.py:109
 #, python-brace-format
@@ -2181,39 +2155,23 @@ msgid "{to_start_proof}, press the ∀ button."
 msgstr "{to_start_proof}, cliquez sur le bouton ∀."
 
 #: pylib/text/help_msgs.py:113
-msgid ""
-"It is generally a good idea to simplify the target as much as possible by "
-"introducing all variables and hypotheses in the context."
-msgstr ""
-"En général, c'est une bonne idée de simplifier le but jusqu'à ce qu'il soit "
-"le plus simple possible, en introduisant les variables et les hypothèses "
-"dans le contexte."
+msgid "It is generally a good idea to simplify the target as much as possible by introducing all variables and hypotheses in the context."
+msgstr "En général, c'est une bonne idée de simplifier le but jusqu'à ce qu'il soit le plus simple possible, en introduisant les variables et les hypothèses dans le contexte."
 
 #: pylib/text/help_msgs.py:117
 #, python-brace-format
-msgid ""
-"{this_is} an implication, which asserts that some property P:<CENTER>{ch0},</"
-"CENTER>the <em>premise</em>, implies some other property Q:<CENTER>{ch1},"
-"<CENTER> the <em>conclusion</em>."
-msgstr ""
-"{this_is} une implication, qui dit qu'une propriété P :<CENTER>{ch0},</"
-"CENTER>la <em>prémisse</em>, implique une autre propriété Q :<CENTER>{ch1},</"
-"CENTER> la <em>conclusion</em>."
+msgid "{this_is} an implication, which asserts that some property P:<CENTER>{ch0},</CENTER>the <em>premise</em>, implies some other property Q:<CENTER>{ch1},<CENTER> the <em>conclusion</em>."
+msgstr "{this_is} une implication, qui dit qu'une propriété P :<CENTER>{ch0},</CENTER>la <em>prémisse</em>, implique une autre propriété Q :<CENTER>{ch1},</CENTER> la <em>conclusion</em>."
 
 #: pylib/text/help_msgs.py:122
 #, python-brace-format
-msgid ""
-"{to_use}, press the ⇒ button after selecting another property which match "
-"the premise{or_drag_premise}."
-msgstr ""
-"{to_use}, cliquez sur le bouton ⇒ après avoir sélectionné une autre "
-"propriété qui corresponde à la prémisse{or_drag_premise}."
+msgid "{to_use}, press the ⇒ button after selecting another property which match the premise{or_drag_premise}."
+msgstr "{to_use}, cliquez sur le bouton ⇒ après avoir sélectionné une autre propriété qui corresponde à la prémisse{or_drag_premise}."
 
 #: pylib/text/help_msgs.py:125
 #, python-brace-format
 msgid "{to_use}, you need property {ch0}. Does it appear in the context?"
-msgstr ""
-"{to_use}, il vous faut la propriété {ch0}. Apparait-elle dans le contexte ?"
+msgstr "{to_use}, il vous faut la propriété {ch0}. Apparait-elle dans le contexte ?"
 
 #: pylib/text/help_msgs.py:129
 #, python-brace-format
@@ -2221,21 +2179,13 @@ msgid "{to_start_proof}, press the ⇒ button."
 msgstr "{to_start_proof}, cliquez sur le bouton ⇒."
 
 #: pylib/text/help_msgs.py:131
-msgid ""
-"Note that an implication may also be proved by contraposition (see the "
-"\"Proof methods\" button)."
-msgstr ""
-"On peut aussi démontrer une implication en utilisant la contraposée (voir le "
-"bouton \"Méthodes de preuves\")."
+msgid "Note that an implication may also be proved by contraposition (see the \"Proof methods\" button)."
+msgstr "On peut aussi démontrer une implication en utilisant la contraposée (voir le bouton \"Méthodes de preuves\")."
 
 #: pylib/text/help_msgs.py:137
 #, python-brace-format
-msgid ""
-"{this_is} an existential property, which asserts the existence of "
-"{an_element_of_type_} satisfying a precise property."
-msgstr ""
-"{this_is} une propriété existentielle, qui affirme l'existence "
-"d'{an_element_of_type_} vérifiant une propriété précise."
+msgid "{this_is} an existential property, which asserts the existence of {an_element_of_type_} satisfying a precise property."
+msgstr "{this_is} une propriété existentielle, qui affirme l'existence d'{an_element_of_type_} vérifiant une propriété précise."
 
 #: pylib/text/help_msgs.py:140
 #, python-brace-format
@@ -2244,26 +2194,17 @@ msgstr "{to_use}, cliquez simplement sur le bouton ∃."
 
 #: pylib/text/help_msgs.py:144
 #, python-brace-format
-msgid ""
-"{to_start_proof}, press the ∃ button after selecting {an_element_of_type_}."
-msgstr ""
-"{to_start_proof}, cliquez sur le bouton ∃ après avoir sélectionné "
-"{an_element_of_type_}."
+msgid "{to_start_proof}, press the ∃ button after selecting {an_element_of_type_}."
+msgstr "{to_start_proof}, cliquez sur le bouton ∃ après avoir sélectionné {an_element_of_type_}."
 
 #: pylib/text/help_msgs.py:146
-msgid ""
-"Then you will have to prove that this element satisfies the wanted property."
-msgstr ""
-"Ensuite, il restera à démontrer que cet élément vérifie la propriété voulue."
+msgid "Then you will have to prove that this element satisfies the wanted property."
+msgstr "Ensuite, il restera à démontrer que cet élément vérifie la propriété voulue."
 
 #: pylib/text/help_msgs.py:148
 #, python-brace-format
-msgid ""
-"Is there {an_element_of_type_} in the context? If this is so, does it suits "
-"your needs? If not, how can you create some?"
-msgstr ""
-"Y a-t-il {an_element_of_type_} dans le contexte ? Si oui, est-ce qu'il "
-"convient ? Sinon, pouvez-vous en obtenir un ?"
+msgid "Is there {an_element_of_type_} in the context? If this is so, does it suits your needs? If not, how can you create some?"
+msgstr "Y a-t-il {an_element_of_type_} dans le contexte ? Si oui, est-ce qu'il convient ? Sinon, pouvez-vous en obtenir un ?"
 
 #: pylib/text/help_msgs.py:152
 #, python-brace-format
@@ -2272,43 +2213,28 @@ msgstr "{this_property_is} une disjonction."
 
 #: pylib/text/help_msgs.py:153
 #, python-brace-format
-msgid ""
-"Press the ∨ (OR) button to engage in a proof by cases; you will successively "
-"examine the case when {ch0} holds and the case when {ch1} holds."
-msgstr ""
-"Cliquez sur le bouton ∨ (OU) pour débuter une preuve par cas ; vous "
-"examinerez alors successivement le cas où {ch0}, puis le cas où {ch1}."
+msgid "Press the ∨ (OR) button to engage in a proof by cases; you will successively examine the case when {ch0} holds and the case when {ch1} holds."
+msgstr "Cliquez sur le bouton ∨ (OU) pour débuter une preuve par cas ; vous examinerez alors successivement le cas où {ch0}, puis le cas où {ch1}."
 
 #: pylib/text/help_msgs.py:156
 msgid "Would it help you to know which one of the two properties hold?"
-msgstr ""
-"Est-ce que ça vous aiderait de savoir laquelle des deux propriétés est "
-"vérifiée ?"
+msgstr "Est-ce que ça vous aiderait de savoir laquelle des deux propriétés est vérifiée ?"
 
 #: pylib/text/help_msgs.py:158
 msgid "If so, then you could consider engaging in a proof by cases."
 msgstr "Si oui, alors vous pourriez envisager une preuve par cas."
 
 #: pylib/text/help_msgs.py:163
-msgid ""
-"Press the ∨ (OR) button to simplify the goal by deciding which one of the "
-"two properties you will prove. You may forget about the other one!"
-msgstr ""
-"Cliquez sur le bouton ∨ (OU) pour simplifier le but en décidant laquelle des "
-"deux propriétés vous aller montrer. Vous pouvez oublier l'autre propriété !"
+msgid "Press the ∨ (OR) button to simplify the goal by deciding which one of the two properties you will prove. You may forget about the other one!"
+msgstr "Cliquez sur le bouton ∨ (OU) pour simplifier le but en décidant laquelle des deux propriétés vous aller montrer. Vous pouvez oublier l'autre propriété !"
 
 #: pylib/text/help_msgs.py:166
-msgid ""
-"Do you have enough information in the context to prove one of these two "
-"properties?"
-msgstr ""
-"Avez-vous assez d'information dans le contexte pour démontrer l'une de ces "
-"deux propriétés ?"
+msgid "Do you have enough information in the context to prove one of these two properties?"
+msgstr "Avez-vous assez d'information dans le contexte pour démontrer l'une de ces deux propriétés ?"
 
 #: pylib/text/help_msgs.py:168
 msgid "If this is so, then choose this property with the ∨ (OR) button."
-msgstr ""
-"Si oui, alors vous pouvez choisir cette propriété avec le bouton ∨ (OR)."
+msgstr "Si oui, alors vous pouvez choisir cette propriété avec le bouton ∨ (OR)."
 
 #: pylib/text/help_msgs.py:170
 msgid "If not, you should first get more information."
@@ -2324,20 +2250,12 @@ msgid "Press the ∧ (AND) button to separate both properties."
 msgstr "Cliquez sur le bouton ∧ (ET) pour séparer les deux propriétés."
 
 #: pylib/text/help_msgs.py:179
-msgid ""
-"Press the ∧ (AND) button to prove separately and successively each property."
-msgstr ""
-"Cliquez sur le bouton ∧ (ET) pour démontrer séparément et successivement "
-"chacune des deux propriétés."
+msgid "Press the ∧ (AND) button to prove separately and successively each property."
+msgstr "Cliquez sur le bouton ∧ (ET) pour démontrer séparément et successivement chacune des deux propriétés."
 
 #: pylib/text/help_msgs.py:181
-msgid ""
-"Note that you will have to prove <em> both </em> properties, as opposed to "
-"disjunction for which you may choose which property you prove."
-msgstr ""
-"Notez bien que vous devrez démontrer <em>les deux</em> propriétés, "
-"contrairement aux disjonctions pour lesquelles vous pouvez <em>choisir</em> "
-"la propriété à démontrer."
+msgid "Note that you will have to prove <em> both </em> properties, as opposed to disjunction for which you may choose which property you prove."
+msgstr "Notez bien que vous devrez démontrer <em>les deux</em> propriétés, contrairement aux disjonctions pour lesquelles vous pouvez <em>choisir</em> la propriété à démontrer."
 
 #: pylib/text/help_msgs.py:185
 #, python-brace-format
@@ -2371,21 +2289,12 @@ msgstr "<li>pour la décomposer en deux implications,</li>"
 
 #: pylib/text/help_msgs.py:200
 #, python-brace-format
-msgid ""
-"<li>or to substitute {ch0} for {ch1}, or vice-versa, in the target or in "
-"some other property of the context.</li></ul>"
-msgstr ""
-"<li>ou pour remplacer {ch0} par {ch1}, ou vice-versa, dans le but ou dans "
-"une autre propriété du contexte.</li></ul>"
+msgid "<li>or to substitute {ch0} for {ch1}, or vice-versa, in the target or in some other property of the context.</li></ul>"
+msgstr "<li>ou pour remplacer {ch0} par {ch1}, ou vice-versa, dans le but ou dans une autre propriété du contexte.</li></ul>"
 
 #: pylib/text/help_msgs.py:206
-msgid ""
-"Press the ⇔ (\"IF AND ONLY IF\") button, to split the proof into the proofs "
-"of the direct and reverse implications. You may also use the ∧ (AND) button."
-msgstr ""
-"Cliquez sur le bouton ⇔ (\"SI ET SEULEMENT SI\"), pour démontrer séparément "
-"l'implication directe et l'implication réciproque. Vous pouvez aussi "
-"utiliser le bouton ∧ (ET)."
+msgid "Press the ⇔ (\"IF AND ONLY IF\") button, to split the proof into the proofs of the direct and reverse implications. You may also use the ∧ (AND) button."
+msgstr "Cliquez sur le bouton ⇔ (\"SI ET SEULEMENT SI\"), pour démontrer séparément l'implication directe et l'implication réciproque. Vous pouvez aussi utiliser le bouton ∧ (ET)."
 
 #: pylib/text/help_msgs.py:211
 #, python-brace-format
@@ -2394,21 +2303,13 @@ msgstr "{this_is} une égalité entre deux {elements_of_ch0_type}."
 
 #: pylib/text/help_msgs.py:212
 #, python-brace-format
-msgid ""
-"You may use this equality to substitute {ch0} for {ch1}, or vice-versa, in "
-"the target or in some other property of the context."
-msgstr ""
-"Vous pouvez utiliser cette égalité pour remplacer {ch0} par {ch1}, ou vice-"
-"versa,dans le but ou dans une autre propriété du contexte."
+msgid "You may use this equality to substitute {ch0} for {ch1}, or vice-versa, in the target or in some other property of the context."
+msgstr "Vous pouvez utiliser cette égalité pour remplacer {ch0} par {ch1}, ou vice-versa,dans le but ou dans une autre propriété du contexte."
 
 #: pylib/text/help_msgs.py:215
 #, python-brace-format
-msgid ""
-"To do this, press the \"=\" ( EQUAL) button after selecting the other "
-"property{or_drag_to_equality}."
-msgstr ""
-"Pour ça, cliquez sur le bouton \"=\" (ÉGAL) après avoir sélectionné l'autre "
-"propriété{or_drag_to_equality}."
+msgid "To do this, press the \"=\" ( EQUAL) button after selecting the other property{or_drag_to_equality}."
+msgstr "Pour ça, cliquez sur le bouton \"=\" (ÉGAL) après avoir sélectionné l'autre propriété{or_drag_to_equality}."
 
 #: pylib/text/help_msgs.py:221
 #, python-brace-format
@@ -2417,21 +2318,13 @@ msgstr "{this_is} une fonction de {ch0} dans {ch1}."
 
 #: pylib/text/help_msgs.py:222
 #, python-brace-format
-msgid ""
-"You may apply this function to some element of {ch0}, or to an equality "
-"between two elements of {ch0}."
-msgstr ""
-"Vous pouvez appliquer cette fonction à un élément de {ch0}, ou à une égalité "
-"entre deux éléments de {ch0}."
+msgid "You may apply this function to some element of {ch0}, or to an equality between two elements of {ch0}."
+msgstr "Vous pouvez appliquer cette fonction à un élément de {ch0}, ou à une égalité entre deux éléments de {ch0}."
 
 #: pylib/text/help_msgs.py:224
 #, python-brace-format
-msgid ""
-"For this, press the ↦ (MAP) button after selecting an element or an "
-"equality{or_drag_to_function}."
-msgstr ""
-"Pour ça, cliquez sur le bouton ↦ (FONCTION) après avoir sélectionné un "
-"élément ou une égalité{or_drag_to_function}."
+msgid "For this, press the ↦ (MAP) button after selecting an element or an equality{or_drag_to_function}."
+msgstr "Pour ça, cliquez sur le bouton ↦ (FONCTION) après avoir sélectionné un élément ou une égalité{or_drag_to_function}."
 
 #: pylib/text/help_msgs.py:228
 #, python-brace-format
@@ -2439,12 +2332,8 @@ msgid "{this_is} a belonging property."
 msgstr "{this_is} une propriété d'appartenance."
 
 #: pylib/text/help_msgs.py:229
-msgid ""
-"There is no obvious way to further simplify this target. Maybe you should "
-"now work on the context, trying to get this property."
-msgstr ""
-"Il n'y a pas de façon évidente de simplifier ce but. Vous pouvez maintenant "
-"essayer de déduire ce but à partir des propriétés du contexte."
+msgid "There is no obvious way to further simplify this target. Maybe you should now work on the context, trying to get this property."
+msgstr "Il n'y a pas de façon évidente de simplifier ce but. Vous pouvez maintenant essayer de déduire ce but à partir des propriétés du contexte."
 
 #: pylib/text/help_msgs.py:234
 #, python-brace-format
@@ -2453,11 +2342,8 @@ msgstr "Vous pouvez appliquer la définition {def_name}."
 
 #: pylib/text/help_msgs.py:235
 #, python-brace-format
-msgid ""
-"To apply a definition, click on it in the Statements area{or_drag_to_def}."
-msgstr ""
-"Pour appliquer une définition, cliquez dessus dans la zone des "
-"énoncés{or_drag_to_def}."
+msgid "To apply a definition, click on it in the Statements area{or_drag_to_def}."
+msgstr "Pour appliquer une définition, cliquez dessus dans la zone des énoncés{or_drag_to_def}."
 
 #: pylib/text/help_msgs.py:241
 #, python-brace-format
@@ -2469,12 +2355,8 @@ msgid "This property obviously entails the current goal."
 msgstr "Cette propriété implique manifestement le but en cours."
 
 #: pylib/text/help_msgs.py:248
-msgid ""
-"Use the \"Goal!\" button when you think the target is obvious from the "
-"context."
-msgstr ""
-"Utilisez le bouton \"But!\" quand vous pensez que le but se déduit "
-"manifestement du contexte."
+msgid "Use the \"Goal!\" button when you think the target is obvious from the context."
+msgstr "Utilisez le bouton \"But!\" quand vous pensez que le but se déduit manifestement du contexte."
 
 #: pylib/text/help_msgs.py:250
 #, python-brace-format
@@ -2484,8 +2366,7 @@ msgstr "{deaduction}  vous demandera peut-être de l'aider encore un peu..."
 #: pylib/text/help_msgs.py:253
 #, python-brace-format
 msgid "This target follows obviously from context property {solving_obj}."
-msgstr ""
-"Ce but se déduit manifestement de la propriété {solving_obj} du contexte."
+msgstr "Ce but se déduit manifestement de la propriété {solving_obj} du contexte."
 
 #: pylib/text/tooltips.py:53
 msgid "Split a property 'P AND Q' into the two properties 'P', 'Q'"
@@ -2541,9 +2422,7 @@ msgstr "De ‘∃ x, P(x)’ obtient un ‘x’ et la propriété ‘P(x)’"
 
 #: pylib/text/tooltips.py:73
 msgid "Use an equality to substitute one term with the other"
-msgstr ""
-"Appliquer une égalité ou un « si et seulement si » pour substituer dans une "
-"propriété sélectionnée"
+msgstr "Appliquer une égalité ou un « si et seulement si » pour substituer dans une propriété sélectionnée"
 
 #: pylib/text/tooltips.py:75 pylib/text/tooltips.py:78
 msgid "Apply a function to an element or an equality"
@@ -2563,9 +2442,7 @@ msgstr "Créer un nouveau but (un lemme intermédiaire)"
 
 #: pylib/text/tooltips.py:87
 msgid "Create a function from X to Y from property '∀ x ∈ X, ∃ y ∈ Y, P(x,y)'"
-msgstr ""
-"A partir d’une propriété ‘∀ x ∈ X, ∃ y ∈ Y, P(x,y)’, obtenir une fonction de "
-"X dans Y"
+msgstr "A partir d’une propriété ‘∀ x ∈ X, ∃ y ∈ Y, P(x,y)’, obtenir une fonction de X dans Y"
 
 #: pylib/text/tooltips.py:90 pylib/text/tooltips.py:92
 msgid "Terminate the proof when the target is obvious from the context"
@@ -2573,9 +2450,7 @@ msgstr "Conclut la preuve lorsque le but est évident à partir du contexte"
 
 #: pylib/text/tooltips.py:94
 msgid "Terminate the proof when target results from manipulating numbers"
-msgstr ""
-"Conclut la preuve lorsque le but s’obtient en manipulant des égalités ou "
-"inégalités de nombres"
+msgstr "Conclut la preuve lorsque le but s’obtient en manipulant des égalités ou inégalités de nombres"
 
 #: pylib/text/tooltips.py:100
 msgid "apply this function to a selected object or equality"
@@ -2583,9 +2458,7 @@ msgstr "appliquer cette fonction à un élément ou à une égalité sélectionn
 
 #: pylib/text/tooltips.py:102
 msgid "apply this implication to a selected property, or to modify the goal"
-msgstr ""
-"appliquer cette implication à une propriété sélectionnée, ou pour "
-"transformer le but"
+msgstr "appliquer cette implication à une propriété sélectionnée, ou pour transformer le but"
 
 #: pylib/text/tooltips.py:104
 msgid "use to substitute in a selected property"
@@ -2739,6 +2612,7 @@ msgstr "Téléchargé depuis {} vers {}"
 
 #, fuzzy
 #~| msgid "assuming {}"
+
 #~ msgid "assumption"
 #~ msgstr "en supposant {}"
 
@@ -2787,41 +2661,49 @@ msgstr "Téléchargé depuis {} vers {}"
 
 #, fuzzy
 #~| msgid "there exists a unique"
+
 #~ msgid "There exists a subset {} of {}"
 #~ msgstr "il existe un unique"
 
 #, fuzzy
 #~| msgid "a proposition"
+
 #~ msgid "There exists a proposition {}"
 #~ msgstr "une proposition"
 
 #, fuzzy
 #~| msgid "there exists a unique"
+
 #~ msgid "There exists a set {}"
 #~ msgstr "il existe un unique"
 
 #, fuzzy
 #~| msgid "there exists a unique"
+
 #~ msgid "There exists a sequence {} in {}"
 #~ msgstr "il existe un unique"
 
 #, fuzzy
 #~| msgid "there exists a unique"
+
 #~ msgid "There exists a unique subset {} of {}"
 #~ msgstr "il existe un unique"
 
 #, fuzzy
 #~| msgid "there exists a unique"
+
 #~ msgid "There exists a unique proposition {}"
 #~ msgstr "il existe un unique"
 
 #, fuzzy
 #~| msgid "there exists a unique"
+
 #~ msgid "There exists a unique set {}"
 #~ msgstr "il existe un unique"
 
 #, fuzzy
 #~| msgid "there exists a unique"
+
 #~ msgid "There exists a unique sequence {} in {}"
 #~ msgstr "il existe un unique"
 
@@ -2899,6 +2781,7 @@ msgstr "Téléchargé depuis {} vers {}"
 
 #, fuzzy
 #~| msgid "AND, OR, NOT, ⇒, ⇔, ∀, ∃"
+
 #~ msgid "AND, OR, NOT, ⇒, ⇔, ∀, ∃, ="
 #~ msgstr "ET, OU, NON, ⇒, ⇔, ∀, ∃"
 
@@ -2931,6 +2814,7 @@ msgstr "Téléchargé depuis {} vers {}"
 
 #, fuzzy
 #~| msgid "select item on which "
+
 #~ msgid "select item on which"
 #~ msgstr "Sélectionner un objet, une hypothèse ou le but"
 
@@ -3017,6 +2901,7 @@ msgstr "Téléchargé depuis {} vers {}"
 
 #, fuzzy
 #~| msgid "Choose what to introduce:"
+
 #~ msgid "Choose what you want to replace"
 #~ msgstr "Choisissez :"
 
@@ -3025,6 +2910,7 @@ msgstr "Téléchargé depuis {} vers {}"
 
 #, fuzzy
 #~| msgid "Right"
+
 #~ msgid "right"
 #~ msgstr "Droite"
 
@@ -3033,6 +2919,7 @@ msgstr "Téléchargé depuis {} vers {}"
 
 #, fuzzy
 #~| msgid "PROOF METHODS, CREATE FUNCTION, NEW OBJECT, QED"
+
 #~ msgid "APPLY, PROOF METHODS, NEW OBJECT, QED"
 #~ msgstr "METHODES DE PREUVES, CREER UNE FONCTION, NOUVEL OBJET, CQFD"
 

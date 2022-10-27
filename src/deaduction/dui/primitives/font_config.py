@@ -166,7 +166,7 @@ class DeaductionFonts:
         """
         Return style_sheet string for font sizes.
         """
-        # TODO: symbol buttons, ProofTree
+        # TODO: ProofTree
         math_widgets = ["MathObjectWidget", "TargetLabel"]
         math_widgets = ", ".join(math_widgets)
 
