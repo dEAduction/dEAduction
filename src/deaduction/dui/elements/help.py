@@ -41,6 +41,7 @@ import deaduction.pylib.utils.filesystem as fs
 from deaduction.dui.primitives import deaduction_fonts
 
 from deaduction.pylib.mathobj import ContextMathObject
+from deaduction.dui.primitives import MathLabel
 from deaduction.dui.elements import MathObjectWidgetItem
 
 global _
@@ -157,7 +158,7 @@ class HelpWindow(QDialog):
         self._hiding_forbidden = False
 
         # Display math_object
-        self.math_label = QLabel()
+        self.math_label = MathLabel()
         self.math_label.setTextFormat(Qt.RichText)
 
         # Display titles

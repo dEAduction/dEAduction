@@ -116,7 +116,7 @@ class DeaductionFonts:
         self.fonts_name = ""
         self.math_fonts_name = ""
 
-        # FIXME: obsolete
+        # FIXME: obsolete?
         font_size = cvars.get("display.chooser_math_font_size", "16pt")
         self.chooser_math_font_size = int(font_size[:-2])
         font_size = cvars.get("display.main_font_size", "16pt")
