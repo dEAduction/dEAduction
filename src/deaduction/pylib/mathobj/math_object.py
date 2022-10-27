@@ -394,7 +394,6 @@ class MathObject:
         """
         This is both Lean name and the name used to display in deaduction.
         """
-
         return self.name if self.name else '*no_name*'
 
     @property  # For debugging

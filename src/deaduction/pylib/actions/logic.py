@@ -855,13 +855,15 @@ def construct_forall(proof_step) -> CodeForLean:
     math_type: MathObject = math_object.children[0]
     variable = math_object.children[1]
     body = math_object.children[2]
-    if not implicit or math_type.is_R():  # FIXME: experimental
-        hint = variable.display_name  # not optimal
-        hints = [hint]
-        strong_hint = hint
-    else:
-        hints = []
-        strong_hint = None
+    hints = []
+    strong_hint = None
+    if not implicit:  # or math_type.is_R():  # FIXME: experimental
+        # hint = (variable.info.get('lean_name') if variable.is_unnamed() else
+        #         variable.display_name)
+        hint = variable.display_name
+        if hint:  # and len(hint) == 1:
+            hints = [hint]
+            strong_hint = hint
     if math_type.node == "PRODUCT":
         # [math_type_1, math_type_2] = math_type.children
         [x, y] = names_for_types(math_type.children, proof_step)
