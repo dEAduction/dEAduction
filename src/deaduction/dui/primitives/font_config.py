@@ -220,6 +220,13 @@ class DeaductionFonts:
     #             families = QFontDatabase.applicationFontFamilies(font_id)
     #             self.fonts_name = families[0]
 
+    def math_fonts(self, size=None) -> QFont:
+        if self.math_fonts_name:
+            if size:
+                return QFont(self.math_fonts_name, size)
+            else:
+                return QFont(self.math_fonts_name)
+
     def set_math_fonts(self):
         if not self.math_fonts_file_name or \
                 self.math_fonts_file_name.startswith('System fonts'):
@@ -247,8 +254,8 @@ class DeaductionFonts:
         # self.set_general_fonts()
         print(f"Système fonts: {DeaductionFonts.system_fonts}")
         # print(f"Text fonts: {self.fonts_name}")
-        print(f"Math fonts: {self.math_fonts_name}")
         self.set_math_fonts()
+        print(f"Math fonts: {self.math_fonts_name}")
         self.parent.setStyleSheet(self.style_sheet)
         print("Style sheet:")
         print(self.style_sheet)

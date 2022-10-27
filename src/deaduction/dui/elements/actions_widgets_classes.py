@@ -131,7 +131,7 @@ class ActionButton(QPushButton):
         super().__init__()
 
         # Modify button default color
-        if cvars.get('others.os') != "darwin":
+        if cvars.get('others.os') == "linux":
             palette = self.palette()
             background_color = cvars.get("display.color_for_selection",
                                          "limegreen")
@@ -189,6 +189,14 @@ class ActionButton(QPushButton):
         Actual text displayed on self (may be changed by usr).
         """
         return self.action.symbol
+
+    def is_symbol(self):
+        """
+        Should be true iff self is a mth symbol, e.g. '⇒' or '='.
+        The test is only that length = 1...
+        The other option could be to provide a list.
+        """
+        return len(self.symbol) == 1
 
     @property
     def name(self):
@@ -258,14 +266,6 @@ class ActionButtonsWidget(QWidget):
 
         super().__init__()
 
-        # # Modify pressed button color on Linux (and Windows)
-        # if cvars.get('others.os') != "darwin":
-        #     palette = self.palette()
-        #     highlight_color = QColor("limegreen")
-        #     palette.setBrush(palette.Active, palette.Button, highlight_color)
-        #     self.setPalette(palette)
-
-        # TODO: make self.buttons a property?
         self.buttons = []
 
         main_layout = QHBoxLayout()

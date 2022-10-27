@@ -42,7 +42,7 @@ from PySide2.QtCore import    ( Slot,
 from PySide2.QtGui import     ( QIcon,
                                 QPixmap,
                                 QKeySequence,
-                                QColor)
+                                QColor, QFont)
 from PySide2.QtWidgets import ( QAction,
                                 QGroupBox,
                                 QHBoxLayout,
@@ -214,8 +214,6 @@ class ExerciseCentralWidget(QWidget):
         elif cvars.get('functionality.drag_statements_to_context', True):
             self.props_wgt.setDragDropMode(QAbstractItemView.DropOnly)
 
-        self.deaduction_fonts = deaduction_fonts
-        self.set_font()
 
         # ───────────── Put widgets in layouts ───────────── #
 
@@ -246,6 +244,10 @@ class ExerciseCentralWidget(QWidget):
 
         self.organise_main_layout()  # Decide which one is on top
         self.setLayout(self.__main_lyt)
+
+        # Fonts
+        self.deaduction_fonts = deaduction_fonts
+        self.set_font()
 
     def init_context_layout(self):
         if self.splitter:
@@ -308,8 +310,8 @@ class ExerciseCentralWidget(QWidget):
         style = f'QTreeWidget {{font-size: {main_size}}}' \
                 f'QListView {{font-size: {main_size}}}' \
                 f'QToolTip {{font-size: {tooltip_size};}}' \
-                f'ActionButton {{max-height: 30px; ' \
-                f'font-size: {symbol_size} }}'
+                # f'ActionButton {{max-height: 30px; ' \
+                # f'font-size: {symbol_size} }}'
         self.setStyleSheet(style)
 
         # # Set math fonts #
@@ -350,6 +352,13 @@ class ExerciseCentralWidget(QWidget):
             palette.setBrush(palette.Normal, palette.Highlight, color)
             palette.setBrush(palette.Inactive, palette.Highlight, color)
             wdg.setPalette(palette)
+
+        # Modify font for symbol buttons
+        for btns_wdg in self.action_btns_wdgs:
+            for btn in btns_wdg.buttons:
+                if btn.is_symbol():
+                    btn.setFont(deaduction_fonts.math_fonts(size=symbol_size))
+                # btn.setFont(QFont('Arial', 15))
 
     def organise_main_layout(self):
         """

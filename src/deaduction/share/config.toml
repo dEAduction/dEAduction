@@ -48,7 +48,7 @@ dubious_characters = "ℕ, ℤ, ℚ, ℝ, 𝒫, ↦"
 math_font_file = ""
 
 [linux.display]
-font_size_for_symbol_buttons = "26pt"  # 16pt
+font_size_for_symbol_buttons = "16pt"  # 16pt
 
 [logic]
 do_not_name_dummy_vars_as_global_vars = true
