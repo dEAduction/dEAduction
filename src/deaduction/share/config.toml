@@ -17,12 +17,8 @@ tooltips_font_size = "12pt"
 proof_tree_font_size = "14pt"
 selection_color = "limegreen"
 symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃, =, ↦"
-#font_size_for_symbol_buttons_for_linux = "16pt"
 font_size_for_symbol_buttons = ""
 math_font_file = "latinmodern-math.otf"  # "" or "System fonts" for system fonts
-#math_font_file_for_windows = ""
-#math_font_file_for_linux = "DejaVuMathTeXGyre.ttf"
-# use_system_fonts = true
 use_symbols_for_logic_button = true
 short_buttons_line = true
 
@@ -46,6 +42,7 @@ dubious_characters = "ℕ, ℤ, ℚ, ℝ, 𝒫, ↦"
 
 [windows.display]
 math_font_file = ""
+font_size_for_symbol_buttons = "16pt"  # 16pt
 
 [linux.display]
 font_size_for_symbol_buttons = "16pt"  # 16pt
