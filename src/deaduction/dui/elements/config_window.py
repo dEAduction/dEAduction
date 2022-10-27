@@ -80,21 +80,21 @@ CONFIGS = dict()
 # (1) string = ref in cvars,
 # (2) list of predefined values (or None),
 # (3) bool: False if freeze (not implemented yet)
-CONFIGS["Display"] = [
-    ("display.target_display_on_top", None, True),
-    ("display.target_font_size", None, True),
-    ("display.main_font_size", None, True),
-    ("display.tooltips_font_size", None, True),
-    ('display.use_symbols_for_logic_button', None, True),
-    ('display.font_size_for_symbol_buttons', None, True),
-    ('display.dubious_characters', None, True),
-    ('display.short_buttons_line', None, True),
-    ('display.color_for_selection', None, True)
+CONFIGS["Display"] = {
+    "display.target_display_on_top": (None, True),
+    "display.target_font_size": (None, True),
+    "display.main_font_size": (None, True),
+    "display.tooltips_font_size": (None, True),
+    'display.use_symbols_for_logic_button': (None, True),
+    'display.font_size_for_symbol_buttons': (None, True),
+    'display.dubious_characters': (None, True),
+    'display.short_buttons_line': (None, True),
+    'display.color_for_selection': (None, True)
     # ('display.use_system_fonts', None, True),
     # ('display.use_system_fonts_for_maths', None, True),
     # ('display.maths_fonts', ["system", "Latin Modern"], True)
     # ('display.font_for_mathematics', "font", True)
-    ]
+}
 
 # # Font size specific to os:
 # os_name = cvars.get('others.os', "linux")
@@ -103,30 +103,30 @@ CONFIGS["Display"] = [
 # font_size_key = 'display.' + os_name + 'font_size_for_symbol_buttons'
 # CONFIGS["Display"].append((font_size_key, None, True))
 
-CONFIGS["Logic"] = [
-    ("display.display_success_messages", None, True),
-    ("logic.use_color_for_variables", None, True),
-    ("logic.use_color_for_dummy_variables", None, True),
-    ("logic.use_color_for_applied_properties", None, True)]
+CONFIGS["Logic"] = {
+    "display.display_success_messages": (None, True),
+    "logic.use_color_for_variables": (None, True),
+    "logic.use_color_for_dummy_variables": (None, True),
+    "logic.use_color_for_applied_properties": (None, True)}
 
-CONFIGS['Functionalities'] = [
-    ('functionality.target_selected_by_default', None, True),
-    ('functionality.allow_proof_by_sorry', None, True),  # tested
-    # ('functionality.expanded_apply_button', None, False),
-    ('functionality.automatic_intro_of_variables_and_hypotheses', None, True),
-    ('functionality.automatic_intro_of_exists', None, True),
-    ('functionality.allow_implicit_use_of_definitions', None, True),
-    ('functionality.drag_statements_to_context', None, True),
-    ('functionality.drag_and_drop_in_context', None, True),
-    ('functionality.drag_context_to_statements', None, True)]
+CONFIGS['Functionalities'] = {
+    'functionality.target_selected_by_default': (None, True),
+    'functionality.allow_proof_by_sorry': (None, True),  # tested
+    # ('functionality.expanded_apply_button': (None, False),
+    'functionality.automatic_intro_of_variables_and_hypotheses': (None, True),
+    'functionality.automatic_intro_of_exists': (None, True),
+    'functionality.allow_implicit_use_of_definitions': (None, True),
+    'functionality.drag_statements_to_context': (None, True),
+    'functionality.drag_and_drop_in_context': (None, True),
+    'functionality.drag_context_to_statements': (None, True)}
 
-CONFIGS["Language"] = [("i18n.select_language", ["en", "fr_FR"], True)]
+CONFIGS["Language"] = {"i18n.select_language": (["en", "fr_FR"], True)}
 
-CONFIGS["Advanced"] = [
-    ('others.course_directory', 'dir', True),
-    ('logs.save_journal', None, True),  # checked, untested
-    ('logs.display_level', ['debug', 'info', 'warning'], True),
-    ('functionality.save_solved_exercises_for_autotest', None, True)]
+CONFIGS["Advanced"] = {
+    'others.course_directory': ('dir', True),
+    'logs.save_journal': (None, True),  # checked, untested
+    'logs.display_level': (['debug', 'info', 'warning'], True),
+    'functionality.save_solved_exercises_for_autotest': (None, True)}
 
 SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          "display.target_font_size",
@@ -198,10 +198,9 @@ class ConfigMainWindow(QDialog):
 
     @staticmethod
     def set_math_fonts_list():
-        system = "System fonts" + " (" + deaduction_fonts.system_fonts_name + ")"
-        fonts_name = [system] + deaduction_fonts.math_fonts_file_names
-        # FIXME: Windows case
-        CONFIGS["Display"].append(("display.math_font_file", fonts_name, True))
+        syst = "System fonts" + " (" + deaduction_fonts.system_fonts_name + ")"
+        fonts_name = [syst] + deaduction_fonts.math_fonts_file_names
+        CONFIGS["Display"]["display.math_font_file"] = (fonts_name, True)
 
     def clicked(self, btn):
         """
@@ -355,7 +354,7 @@ class ConfigWindow(QDialog):
     def create_widgets(self):
         layout = QFormLayout()
 
-        for setting, setting_list, enabled in self.settings:
+        for setting, (setting_list, enabled) in self.settings.items():
             setting_initial_value = cvars.get(setting, default_value="none")
             if setting_initial_value == "none":
                 setting_initial_value = None  # Avoid KeyError
@@ -411,7 +410,7 @@ class ConfigWindow(QDialog):
         Set widgets' values for display according to modified_settings
         (or to initial_settings for unmodified settings)
         """
-        for setting, setting_list, enabled in self.settings:
+        for setting, (setting_list, enabled) in self.settings.items():
             if setting in self.modified_settings:
                 setting_value = self.modified_settings[setting]
             else:
