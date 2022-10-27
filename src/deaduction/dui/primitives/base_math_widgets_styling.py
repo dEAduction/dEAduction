@@ -71,7 +71,7 @@ class AbstractMathHtmlText:
 
     def math_font_style(self):
         fonts_name = deaduction_fonts.math_fonts_name
-        print(f"Math font name: {fonts_name}")
+        # print(f"Math font name: {fonts_name}")
         if not fonts_name:
             return ""
 
@@ -146,7 +146,8 @@ class MathTextWidget(QTextEdit, AbstractMathHtmlText):
         self.set_text_mode(False)
 
     def setHtml(self, text: str):
-        super().setHtml(self.html_style + text)
+        # print(self.html_style + text)
+        super().setHtml(self.html_style + '<div>' + text + '</div>')
 
 
 

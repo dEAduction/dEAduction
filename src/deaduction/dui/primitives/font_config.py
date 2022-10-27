@@ -123,11 +123,8 @@ class DeaductionFonts:
         self.main_font_size = int(font_size[:-2])
         font_size = cvars.get("display.target_font_size", "20pt")
         self.target_font_size = int(font_size[:-2])
-        os_name = cvars.get('others.os')
-        if os_name:
-            os_name += '_'
-        symbol_font_size = 'display.' + os_name + 'font_size_for_symbol_buttons'
-        symbol_size = cvars.get(symbol_font_size)  # "14pt"
+        # "14pt":
+        symbol_size = cvars.get('display.font_size_for_symbol_buttons')
         self.symbol_button_font_size = int(symbol_size[:-2]) if symbol_size \
             else None
         self.tooltips_font_size = cvars.get('display.tooltips_font_size',
@@ -152,14 +149,12 @@ class DeaductionFonts:
         Return the name of the file that should be used for maths fonts,
         or None if system fonts should be used.
         """
-        os = cvars.get("others.os", "linux")
-        file = cvars.get("display.math_font_file_for_windows",
-                         "DejaVuMathTeXGyre.ttf") if os == "windows" \
-            else cvars.get("display.math_font_file", "latinmodern-math.otf")
-        return file
-
-    # def math_font_file_nb(self):
-    #     return self.math_fonts_file_names.index(self.math_fonts_file_name)
+        # os = cvars.get("others.os", "linux")
+        # file = cvars.get("display.math_font_file_for_windows",
+        #                  "DejaVuMathTeXGyre.ttf") if os == "windows" \
+        #     else cvars.get("display.math_font_file", "latinmodern-math.otf")
+        # return file
+        return cvars.get("display.math_font_file")
 
     @property
     def system_fonts_name(self):

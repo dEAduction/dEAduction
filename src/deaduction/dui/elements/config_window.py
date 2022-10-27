@@ -81,12 +81,12 @@ CONFIGS = dict()
 # (2) list of predefined values (or None),
 # (3) bool: False if freeze (not implemented yet)
 CONFIGS["Display"] = [
-    ("display.target_display_on_top", None, True),  # bool
+    ("display.target_display_on_top", None, True),
     ("display.target_font_size", None, True),
     ("display.main_font_size", None, True),
     ("display.tooltips_font_size", None, True),
     ('display.use_symbols_for_logic_button', None, True),
-    # ('display.font_size_for_symbol_buttons', None, True),
+    ('display.font_size_for_symbol_buttons', None, True),
     ('display.dubious_characters', None, True),
     ('display.short_buttons_line', None, True),
     ('display.color_for_selection', None, True)
@@ -96,12 +96,12 @@ CONFIGS["Display"] = [
     # ('display.font_for_mathematics', "font", True)
     ]
 
-# Font size specific to os:
-os_name = cvars.get('others.os', "linux")
-if os_name:
-    os_name += '_'
-font_size_key = 'display.' + os_name + 'font_size_for_symbol_buttons'
-CONFIGS["Display"].append((font_size_key, None, True))
+# # Font size specific to os:
+# os_name = cvars.get('others.os', "linux")
+# if os_name:
+#     os_name += '_'
+# font_size_key = 'display.' + os_name + 'font_size_for_symbol_buttons'
+# CONFIGS["Display"].append((font_size_key, None, True))
 
 CONFIGS["Logic"] = [
     ("display.display_success_messages", None, True),
@@ -132,8 +132,9 @@ SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          "display.target_font_size",
                          "display.main_font_size",
                          "display.tooltips_font_size",
-                         'display.use_system_fonts_for_maths',
-                         'display.use_system_fonts',
+                         # 'display.use_system_fonts_for_maths',
+                         # 'display.use_system_fonts',
+                         'display.math_font_file',
                          "logic.use_color_for_variables",
                          "logic.use_color_for_dummy_variables",
                          "EXISTS_EQUAL_MAP",

@@ -49,12 +49,12 @@ PRETTY_NAMES = {
     'logs.display_level': _('Level of logs'),
     'display.use_symbols_for_logic_button': _("Use symbol for logic buttons"),
     'display.font_size_for_symbol_buttons': _("Font size for symbol buttons"),
-    'display.linux_font_size_for_symbol_buttons': _("Font size for symbol "
-                                                    "buttons"),
-    'display.darwin_font_size_for_symbol_buttons': _("Font size for symbol "
-                                                     "buttons"),
-    'display.windows_font_size_for_symbol_buttons': _("Font size for symbol "
-                                                     "buttons"),
+    # 'display.linux_font_size_for_symbol_buttons': _("Font size for symbol "
+    #                                                 "buttons"),
+    # 'display.darwin_font_size_for_symbol_buttons': _("Font size for symbol "
+    #                                                  "buttons"),
+    # 'display.windows_font_size_for_symbol_buttons': _("Font size for symbol "
+    #                                                  "buttons"),
     'display.display_success_messages': _("Display success messages"),
     'display.color_for_selection': _("Color for selection"),
     'display.math_font_file': _("Maths fonts"),
