@@ -1,5 +1,6 @@
 """
-base_math_widgets_styling.py : provide the MathLabel class that takes care of html stylesheet.
+base_math_widgets_styling.py : provide the MathLabel, MathItem and
+MathTextWidget classes that takes care of html stylesheet.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -53,6 +54,11 @@ class AbstractMathHtmlText:
     """
     A class to display math text in html, or msgs related to maths.
     Essentially compute the style in html format for the richtext content.
+    Also provides the following methods:
+    - set_use_color: enable/disable use of colors, default = True.
+    - set_text_mode: if text_mode is True then systems font will be used
+    except for maths elements. Default is False.
+    (- set_font_size. This is unused.)
     """
 
     def __init__(self, use_color=True, font_size=None, text_mode=False):
@@ -120,7 +126,7 @@ class MathLabel(QLabel, AbstractMathHtmlText):
         self.set_text_mode(False)
 
     def setText(self, text: str):
-        super().setText(self.html_style + text)
+        super().setText(self.html_style + '<div>' + text + '</div>')
 
 
 class MathItem(QStandardItem, AbstractMathHtmlText):
@@ -133,7 +139,7 @@ class MathItem(QStandardItem, AbstractMathHtmlText):
         self.set_text_mode(False)
 
     def setText(self, text: str):
-        super().setText(self.html_style + text)
+        super().setText(self.html_style + '<div>' + text + '</div>')
 
 
 class MathTextWidget(QTextEdit, AbstractMathHtmlText):
