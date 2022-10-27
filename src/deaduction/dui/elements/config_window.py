@@ -377,7 +377,20 @@ class ConfigWindow(QDialog):
             elif setting_list:
                 widget = QComboBox()
                 widget.setting = setting
+                if setting_list and setting_list != 'dir':
+                    pretty_setting_list = [_(PRETTY_NAMES[setting])
+                                           if setting in PRETTY_NAMES
+                                           else setting
+                                           for setting in setting_list]
+                    widget.setting_list = setting_list
+                    widget.addItems(pretty_setting_list)
+                    if setting_initial_value and setting_initial_value in \
+                            setting_list:
+                        initial_index = setting_list.index(
+                            setting_initial_value)
+                        widget.setCurrentIndex(initial_index)
                 widget.currentIndexChanged.connect(self.combo_box_changed)
+                # widget.has_been_initialised = False
 
             # ───────── Case of bool: check box ─────────
             elif isinstance(setting_initial_value, bool):
@@ -425,17 +438,17 @@ class ConfigWindow(QDialog):
 
             # ───────── Case of choice into a list: combo box ─────────
             if setting_list and setting_list != 'dir':
-                pretty_setting_list = [_(PRETTY_NAMES[setting])
-                                       if setting in PRETTY_NAMES
-                                       else setting
-                                       for setting in setting_list]
-                widget.setting_list = setting_list
-                widget.addItems(pretty_setting_list)
+                #     pretty_setting_list = [_(PRETTY_NAMES[setting])
+                #                            if setting in PRETTY_NAMES
+                #                            else setting
+                #                            for setting in setting_list]
+                #     widget.setting_list = setting_list
+                #     widget.addItems(pretty_setting_list)
                 if setting_value and setting_value in setting_list:
-                    initial_index = setting_list.index(setting_value)
+                    index = setting_list.index(setting_value)
                 else:
-                    initial_index = 0
-                widget.setCurrentIndex(initial_index)
+                    index = 0
+                widget.setCurrentIndex(index)
 
             # ───────── Case of bool: check box ─────────
             elif isinstance(setting_value, bool):
@@ -452,8 +465,11 @@ class ConfigWindow(QDialog):
     @Slot()
     def combo_box_changed(self):
         combo_box = self.sender()
-        self.modified_settings[combo_box.setting] = combo_box.setting_list[
-                                                    combo_box.currentIndex()]
+        if not combo_box.has_been_initialised:  # First time does not count!
+            combo_box.has_been_initialised = True
+        else:
+            self.modified_settings[combo_box.setting] = combo_box.setting_list[
+                combo_box.currentIndex()]
 
     @Slot()
     def browse_dir(self):

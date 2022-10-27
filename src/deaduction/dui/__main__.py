@@ -103,7 +103,7 @@ def set_logger():
     log_level = cvars.get("logs.display_level", 'info')
     log_to_file = cvars.get("logs.log_to_file", True)
 
-    if os.getenv("DEADUCTION_DEV_MODE", False):  # Set log domains in dev mode
+    if os.getenv("DEADUCTION_DEV_MODE", True):  # Set log domains in dev mode
         log_level = 'debug'
         # log_domains = ["deaduction", "__main__",  # 'lean',
         #                'ServerInterface', 'ServerQueue']
@@ -116,7 +116,8 @@ def set_logger():
                        'logic',
                        'magic',
                        'coursedata',
-                       'math_object']
+                       # 'math_object'
+                       ]
         log_domains = [""]
 
     logger.configure(domains=log_domains,

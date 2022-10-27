@@ -205,6 +205,7 @@ class ExerciseMainWindow(QMainWindow):
         self.__init_menubar()
         self.setStatusBar(self.statusBar)
         self.__connect_signals()
+        self.__connect_toolbar_signals()
 
         # Restore geometry
         settings = QSettings("deaduction")
@@ -231,65 +232,6 @@ class ExerciseMainWindow(QMainWindow):
     #######################
     # Init /close methods #
     #######################
-    def __connect_signals(self):
-        """
-        Connect all signals. Called at init. SOme signals are connected in
-        update_goal.
-        """
-        log.debug("EMW: connect signals")
-        # Actions area
-        for action_button in self.ecw.actions_buttons:
-            action_button.action_triggered.connect(self.action_triggered)
-        self.ecw.statements_tree.itemClicked.connect(
-                                            self.statement_triggered_filter)
-
-        # Context area
-        self.ecw.props_wgt.statement_dropped.connect(self.statement_dropped)
-        self.ecw.props_wgt.math_object_dropped.connect(self.math_object_dropped)
-        self.ecw.objects_wgt.math_object_dropped.connect(
-            self.math_object_dropped)
-        self.ecw.statements_tree.math_object_dropped.connect(
-            self.statement_triggered)
-        # self.ecw.objects_wgt.clicked.connect(self.process_context_click)
-        # self.ecw.props_wgt.clicked.connect(self.process_context_click)
-
-        # UI
-        self.exercise_toolbar.toggle_lean_editor_action.triggered.connect(
-                self.lean_editor.toggle)
-        self.exercise_toolbar.toggle_proof_outline_action.triggered.connect(
-                self.proof_outline_window.toggle)
-        self.exercise_toolbar.toggle_proof_tree.triggered.connect(
-                self.proof_tree_window.toggle)
-        self.exercise_toolbar.toggle_help_action.triggered.connect(
-            self.show_help_on_item)
-        self.global_toolbar.change_exercise_action.triggered.connect(
-                                                    self.change_exercise)
-        self.global_toolbar.settings_action.triggered.connect(
-                                                    self.open_config_window)
-        # self.ecw.target_wgt.target_label.mousePressEvent = \
-        #     self.process_target_click
-
-        # Double clicks (help)
-        self.ecw.objects_wgt.doubleClicked.connect(
-                                            self.process_context_double_click)
-        self.ecw.props_wgt.doubleClicked.connect(
-                                            self.process_context_double_click)
-
-        target_lbl = self.ecw.target_wgt.target_label
-        target_lbl.clicked.connect(self.process_target_click)
-        target_lbl.double_clicked.connect(self.process_target_double_click)
-        self.close_help_window_timer.timeout.connect(self.help_window.hide)
-
-        # All context clicks, including target_lbl --> self.contest_clicked
-        self.ecw.objects_wgt.clicked.connect(self.context_clicked)
-        self.ecw.props_wgt.clicked.connect(self.context_clicked)
-        target_lbl.clicked.connect(self.context_clicked)
-
-    # def __init_help_window(self):
-    #     gl_geo = global_geometry(self.ecw,
-    #                              self.ecw.statements_tree.geometry())
-    #     # self.help_window.set_geometry(gl_geo)
-
     def __init_menubar(self):
         """
         Create ExerciseMainWindow's menubar. Relevant classes are MenuBar,
@@ -316,6 +258,79 @@ class ExerciseMainWindow(QMainWindow):
         outline = [menu_deaduction, menu_exercise]
         menu_bar = MenuBar(self, outline)
         self.setMenuBar(menu_bar)
+
+    def __connect_signals(self):
+        """
+        Connect all signals. Called at init. SOme signals are connected in
+        update_goal.
+        """
+        log.debug("EMW: connect signals")
+        # Actions area
+        for action_button in self.ecw.actions_buttons:
+            action_button.action_triggered.connect(self.action_triggered)
+        self.ecw.statements_tree.itemClicked.connect(
+                                            self.statement_triggered_filter)
+
+        # Context area
+        self.ecw.props_wgt.statement_dropped.connect(self.statement_dropped)
+        self.ecw.props_wgt.math_object_dropped.connect(self.math_object_dropped)
+        self.ecw.objects_wgt.math_object_dropped.connect(
+            self.math_object_dropped)
+        self.ecw.statements_tree.math_object_dropped.connect(
+            self.statement_triggered)
+        # self.ecw.objects_wgt.clicked.connect(self.process_context_click)
+        # self.ecw.props_wgt.clicked.connect(self.process_context_click)
+
+        # # UI
+        # self.exercise_toolbar.toggle_lean_editor_action.triggered.connect(
+        #         self.lean_editor.toggle)
+        # self.exercise_toolbar.toggle_proof_outline_action.triggered.connect(
+        #         self.proof_outline_window.toggle)
+        # self.exercise_toolbar.toggle_proof_tree.triggered.connect(
+        #         self.proof_tree_window.toggle)
+        # self.exercise_toolbar.toggle_help_action.triggered.connect(
+        #     self.show_help_on_item)
+        # self.global_toolbar.change_exercise_action.triggered.connect(
+        #                                             self.change_exercise)
+        # self.global_toolbar.settings_action.triggered.connect(
+        #                                             self.open_config_window)
+        # self.ecw.target_wgt.target_label.mousePressEvent = \
+        #     self.process_target_click
+
+        # Double clicks (help)
+        self.ecw.objects_wgt.doubleClicked.connect(
+                                            self.process_context_double_click)
+        self.ecw.props_wgt.doubleClicked.connect(
+                                            self.process_context_double_click)
+
+        target_lbl = self.ecw.target_wgt.target_label
+        target_lbl.clicked.connect(self.process_target_click)
+        target_lbl.double_clicked.connect(self.process_target_double_click)
+        self.close_help_window_timer.timeout.connect(self.help_window.hide)
+
+        # All context clicks, including target_lbl --> self.contest_clicked
+        self.ecw.objects_wgt.clicked.connect(self.context_clicked)
+        self.ecw.props_wgt.clicked.connect(self.context_clicked)
+        target_lbl.clicked.connect(self.context_clicked)
+
+    # def __init_help_window(self):
+    #     gl_geo = global_geometry(self.ecw,
+    #                              self.ecw.statements_tree.geometry())
+    #     # self.help_window.set_geometry(gl_geo)
+
+    def __connect_toolbar_signals(self):
+        self.exercise_toolbar.toggle_lean_editor_action.triggered.connect(
+                self.lean_editor.toggle)
+        self.exercise_toolbar.toggle_proof_outline_action.triggered.connect(
+                self.proof_outline_window.toggle)
+        self.exercise_toolbar.toggle_proof_tree.triggered.connect(
+                self.proof_tree_window.toggle)
+        self.exercise_toolbar.toggle_help_action.triggered.connect(
+            self.show_help_on_item)
+        self.global_toolbar.change_exercise_action.triggered.connect(
+                                                    self.change_exercise)
+        self.global_toolbar.settings_action.triggered.connect(
+                                                    self.open_config_window)
 
     def close_help_window(self):
         if self.help_window.isVisible():
