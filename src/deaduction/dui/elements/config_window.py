@@ -133,13 +133,11 @@ SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          "display.target_font_size",
                          "display.main_font_size",
                          "display.tooltips_font_size",
-                         # 'display.use_system_fonts_for_maths',
-                         # 'display.use_system_fonts',
                          'display.math_font_file',
                          'display.proof_tree_font_size',
                          "logic.use_color_for_variables",
                          "logic.use_color_for_dummy_variables",
-                         "EXISTS_EQUAL_MAP",
+                         "symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP",
                          'display.use_symbols_for_logic_button',
                          'display.font_size_for_symbol_buttons',
                          'logic.use_color_for_applied_properties',
@@ -465,11 +463,8 @@ class ConfigWindow(QDialog):
     @Slot()
     def combo_box_changed(self):
         combo_box = self.sender()
-        if not combo_box.has_been_initialised:  # First time does not count!
-            combo_box.has_been_initialised = True
-        else:
-            self.modified_settings[combo_box.setting] = combo_box.setting_list[
-                combo_box.currentIndex()]
+        self.modified_settings[combo_box.setting] = combo_box.setting_list[
+            combo_box.currentIndex()]
 
     @Slot()
     def browse_dir(self):

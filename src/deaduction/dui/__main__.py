@@ -118,7 +118,7 @@ def set_logger():
                        'coursedata',
                        # 'math_object'
                        ]
-        log_domains = [""]
+        # log_domains = [""]
 
     logger.configure(domains=log_domains,
                      display_level=log_level,

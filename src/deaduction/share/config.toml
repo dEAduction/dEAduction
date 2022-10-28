@@ -42,10 +42,10 @@ dubious_characters = "ℕ, ℤ, ℚ, ℝ, 𝒫, ↦"
 
 [windows.display]
 math_font_file = ""
-font_size_for_symbol_buttons = "16pt"  # 16pt
+font_size_for_symbol_buttons = "14pt"  # 16pt
 
 [linux.display]
-font_size_for_symbol_buttons = "16pt"  # 16pt
+font_size_for_symbol_buttons = "12pt"  # 16pt
 
 [logic]
 do_not_name_dummy_vars_as_global_vars = true
