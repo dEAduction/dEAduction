@@ -84,6 +84,7 @@ CONFIGS["Display"] = {
     "display.target_display_on_top": (None, True),
     "display.target_font_size": (None, True),
     "display.main_font_size": (None, True),
+    "display.statements_font_size": (None, True),
     # "display.proof_tree_font_size": (None, True),  # FIXME: hard to modify
     "display.tooltips_font_size": (None, True),
     'display.use_symbols_for_logic_button': (None, True),
@@ -132,6 +133,7 @@ CONFIGS["Advanced"] = {
 SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          "display.target_font_size",
                          "display.main_font_size",
+                         "display.statements_font_size",
                          "display.tooltips_font_size",
                          'display.math_font_file',
                          'display.proof_tree_font_size',

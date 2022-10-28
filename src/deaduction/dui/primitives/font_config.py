@@ -82,6 +82,11 @@ class DeaductionFonts:
         return int(font_size[:-2])
 
     @property
+    def statements_font_size(self):
+        font_size = cvars.get("display.statements_font_size", "14pt")
+        return int(font_size[:-2])
+
+    @property
     def target_font_size(self):
         font_size = cvars.get("display.target_font_size", "20pt")
         return int(font_size[:-2])
@@ -131,22 +136,37 @@ class DeaductionFonts:
         """
         Return style_sheet string for font sizes.
         """
-        # TODO: ProofTree
-        math_widgets = ["MathObjectWidget", "TargetLabel"]
-        math_widgets = ", ".join(math_widgets)
+        #
 
-        s = (f"TargetWidget TargetLabel "
-             f"{{ font-size : {self.target_font_size}pt; }}"
-             f"MathTextWidget "
+        s = (
+             #########################
+             # ExerciseChooser sizes #
+             #########################
+             f"ExerciseChooser MathTextWidget "
              f"{{ font-size : {self.chooser_math_font_size}pt; }}"
              f"ExerciseChooser TargetLabel "
              f"{{ font-size : {self.chooser_math_font_size}pt; }}"
              f"ExerciseChooser MathObjectWidget "
              f"{{ font-size : {self.chooser_math_font_size}pt; }}"
-             f"{math_widgets} "
+             # f"MathObjectWidget, TargetLabel "
+             # f"{{ font-size : {self.main_font_size}pt; }}"
+             
+             #######################
+             # CentralWidget sizes #
+             #######################
+             # Context widgets:
+             f"ExerciseCentralWidget MathObjectWidget"
              f"{{ font-size : {self.main_font_size}pt; }}"
+             # Target:
+             f"ExerciseCentralWidget TargetLabel"
+             f"{{ font-size : {self.target_font_size}pt; }}"
+             # Statements:
+             f"ExerciseCentralWidget StatementsTreeWidget"
+             f"{{ font-size : {self.statements_font_size}pt; }}"
+             # Tooltips:
+             f"ExerciseCentralWidget QToolTip"
+             f"{{ font-size : {self.tooltips_font_size}pt; }}"
              )
-        # s = f"TargetLabel  {{ font-family : karumbi; }}"
         return s
 
     # @property

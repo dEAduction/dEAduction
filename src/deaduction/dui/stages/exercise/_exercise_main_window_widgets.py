@@ -296,6 +296,7 @@ class ExerciseCentralWidget(QWidget):
 ##############################
     def set_font(self):
         """
+        OBSOLETE doc:
         Set the font size for some sub-widgets.
         Button font sizes are set in the widgets methods.
         Target font size is set in TargetWidget.
@@ -303,44 +304,17 @@ class ExerciseCentralWidget(QWidget):
         appearance on Mac, whatever the font size.
         """
 
-        # Sizes #
-        main_size = self.deaduction_fonts.main_font_size
-        tooltip_size = self.deaduction_fonts.tooltips_font_size
-        symbol_size = self.deaduction_fonts.symbol_button_font_size
-        style = f'QTreeWidget {{font-size: {main_size}}}' \
-                f'QListView {{font-size: {main_size}}}' \
-                f'QToolTip {{font-size: {tooltip_size};}}' \
-                # f'ActionButton {{max-height: 30px; ' \
-                # f'font-size: {symbol_size} }}'
-        self.setStyleSheet(style)
-
-        # # Set math fonts #
-        # main_math_font = self.deaduction_fonts.math_fonts
-        # main_math_font.setPointSize(main_size)
-        # self.props_wgt.setFont(main_math_font)
-        # self.objects_wgt.setFont(main_math_font)
-        # symbol_font = self.deaduction_fonts.math_fonts
-        # if symbol_size:
-        #     symbol_font.setPointSize(symbol_size)
-        # if cvars.get('others.os') == "linux":
-        #     for btn in self.actions_buttons:
-        #         if len(btn.text()) == 1:
-        #             btn.setFont(symbol_font)
-        #
-        # # Target styles #
-        # target_math_font = self.deaduction_fonts.math_fonts
-        # target_size = self.deaduction_fonts.target_font_size
-        # # The following has no effect, see styleSheet below:
-        # target_math_font.setPointSize(target_size)
-        # target_lbl = self.target_wgt.target_label
-        # target_lbl.setFont(target_math_font)
-        # # # Setting selected / unselected style:
-        # # self.target_wgt.unselected_style = f'font-size: {target_size};'
-        # # background_color = cvars.get("display.color_for_selection", "limegreen")
-        # # # background_color = "DarkBlue"
-        # # self.target_wgt.selected_style = self.target_wgt.unselected_style \
-        # #     + f'background-color: {background_color};'
-        # # self.target_wgt.setStyleSheet(self.target_wgt.unselected_style)
+        # OBSOLETE: this is done in font_config
+        # # Sizes #
+        # main_size = self.deaduction_fonts.main_font_size
+        # tooltip_size = self.deaduction_fonts.tooltips_font_size
+        # symbol_size = self.deaduction_fonts.symbol_button_font_size
+        # style = f'QTreeWidget {{font-size: {main_size}}}' \
+        #         f'QListView {{font-size: {main_size}}}' \
+        #         f'QToolTip {{font-size: {tooltip_size};}}' \
+        #         # f'ActionButton {{max-height: 30px; ' \
+        #         # f'font-size: {symbol_size} }}'
+        # self.setStyleSheet(style)
 
         # List styles: Modify color for selected objects
         background_color = cvars.get("display.color_for_selection", "limegreen")
@@ -354,11 +328,11 @@ class ExerciseCentralWidget(QWidget):
             wdg.setPalette(palette)
 
         # Modify font for symbol buttons
+        symbol_size = self.deaduction_fonts.symbol_button_font_size
         for btns_wdg in self.action_btns_wdgs:
             for btn in btns_wdg.buttons:
                 if btn.is_symbol():
                     btn.setFont(deaduction_fonts.math_fonts(size=symbol_size))
-                # btn.setFont(QFont('Arial', 15))
 
     def organise_main_layout(self):
         """

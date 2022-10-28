@@ -3,18 +3,21 @@ path        = "$DEADUCTION_SHARE/graphical_resources/icons"
 letter_type = "letters/trials"
 context     = "letters/blue"
 
-
 [display]
 display_success_messages = true
 text_mode_in_chooser_window = true
 target_display_on_top = false
 depth_of_unfold_statements = 1
 show_lean_name_for_statements = false
+
+# Fonts sizes:
 chooser_math_font_size = "16pt"
 main_font_size = "16pt"
 target_font_size = "20pt"
+statements_font_size = "13pt"
 tooltips_font_size = "12pt"
 proof_tree_font_size = "14pt"
+
 selection_color = "limegreen"
 symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃, =, ↦"
 font_size_for_symbol_buttons = ""

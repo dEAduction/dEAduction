@@ -44,6 +44,9 @@ PRETTY_NAMES = {
     'fr_FR': "Français",
     'no_language': "English",
     'display.target_display_on_top': _('Target display on top'),
+    'display.main_font_size': _("Main font size"),
+    'display.statements_font_size': _("Font size for statements"),
+    'display.tooltips_font_size': _("Tooltips font size"),
     'display.target_font_size': _("Target font size"),
     'display.proof_tree_font_size': _('Font size for global proof view'),
     'others.course_directory': _('Set directory for choosing courses'),
@@ -75,8 +78,6 @@ PRETTY_NAMES = {
     'functionality.save_solved_exercises_for_autotest':
         _("Save exercises for autotest"),
     'logs.save_journal': _("Save journal"),
-    'display.main_font_size': _("Main font size"),
-    'display.tooltips_font_size': _("Tooltips font size"),
     'display.dubious_characters': _('Replace missing characters') +
                               ': ℕ (N), ℤ (Z), ℚ (Q), ℝ (R), 𝒫 (P), ↦ (->)',
     'display.short_buttons_line': _('Split logic buttons into two lines'),
