@@ -17,11 +17,12 @@ target_font_size = "20pt"
 statements_font_size = "13pt"
 tooltips_font_size = "12pt"
 proof_tree_font_size = "14pt"
+font_size_for_symbol_buttons = "12pt"
+
+math_font_file = "latinmodern-math.otf"  # "" or "System fonts" for system fonts
 
 selection_color = "limegreen"
 symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃, =, ↦"
-font_size_for_symbol_buttons = ""
-math_font_file = "latinmodern-math.otf"  # "" or "System fonts" for system fonts
 use_symbols_for_logic_button = true
 short_buttons_line = true
 
@@ -45,10 +46,6 @@ dubious_characters = "ℕ, ℤ, ℚ, ℝ, 𝒫, ↦"
 
 [windows.display]
 math_font_file = ""
-font_size_for_symbol_buttons = "14pt"  # 16pt
-
-[linux.display]
-font_size_for_symbol_buttons = "12pt"  # 16pt
 
 [logic]
 do_not_name_dummy_vars_as_global_vars = true
