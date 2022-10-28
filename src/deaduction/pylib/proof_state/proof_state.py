@@ -537,16 +537,17 @@ class Goal:
             text += text_cr
 
         target_text = target.math_type_to_display(text_depth=text_depth)
+        target_utf8 = target.math_type_to_display(text_depth=text_depth,
+                                                  format_='utf8')
         if to_prove and not open_problem:
             prove_that = _("Prove that") + " "
             # "Prove that the negation" --> "Prove the negation"
-            if target_text.startswith(_('the negation')):
+            if target_utf8.startswith(_('the negation')):
                 prove_that = _("Prove") + " "
             elif cvars.get('i18n.select_language') == 'fr_FR':
                 # "Démontrer que il" --> "Démontrer qu'il"
-                if (target_text.startswith("un")
-                        or target_text.startswith("il")):
-                    prove_that = prove_that[:-2] + "'"
+                if target_utf8[0] in ('a', 'e', 'i', 'o', 'u'):
+                    prove_that = "Démontrer qu'"
             target_text = prove_that + target_text
         elif text:
             target_text = _("Then") + " " + target_text
