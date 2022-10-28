@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-10-27 15:28+0200\n"
-"PO-Revision-Date: 2022-10-27 15:30+0200\n"
+"POT-Creation-Date: 2022-10-28 10:49+0200\n"
+"PO-Revision-Date: 2022-10-28 10:49+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -19,27 +19,27 @@ msgstr ""
 "X-Poedit-Basepath: ../../../..\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: dui/__main__.py:165
+#: dui/__main__.py:166
 msgid "No connection! Maybe your wifi is off?"
 msgstr "Pas de connexion ! Le wifi est peut-être désactivé ?"
 
-#: dui/__main__.py:169
+#: dui/__main__.py:170
 msgid "Wrong url!"
 msgstr "Mauvaise url !"
 
-#: dui/__main__.py:171
+#: dui/__main__.py:172
 msgid "Download interrupted!"
 msgstr "Téléchargement interrompu !"
 
-#: dui/__main__.py:174
+#: dui/__main__.py:175
 msgid "Download interrupted by user."
 msgstr "Téléchargement interrompu par l’utilisateur."
 
-#: dui/__main__.py:242
+#: dui/__main__.py:243
 msgid "Missing packages have been installed, but user decided to quit without launching d∃∀duction."
 msgstr "Les dépendances manquantes ont été installées, mais l’utilisateur a décidé de quitter sans lancer d∃∀duction."
 
-#: dui/__main__.py:250
+#: dui/__main__.py:251
 msgid "Quitting d∃∀duction"
 msgstr "Quitter d∃∀duction"
 
@@ -48,7 +48,7 @@ msgid "Button"
 msgstr "Bouton"
 
 #: dui/elements/actions_widgets_classes.py:168
-#: dui/elements/config_window.py:367
+#: dui/elements/config_window.py:368
 #: dui/elements/proof_tree/proof_tree_primitives.py:609
 #: dui/primitives/disclosure_triangle.py:82
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:131
@@ -66,36 +66,36 @@ msgstr "Enoncés"
 msgid "L∃∀N name"
 msgstr "Nom L∃∀N"
 
-#: dui/elements/config_window.py:165
-#: dui/stages/exercise/exercise_main_window.py:299
+#: dui/elements/config_window.py:166
+#: dui/stages/exercise/exercise_main_window.py:241
 msgid "Preferences"
 msgstr "Préférences"
 
-#: dui/elements/config_window.py:176
+#: dui/elements/config_window.py:177
 msgid "Save preferences for next session"
 msgstr "Sauvegarder les préférences"
 
-#: dui/elements/config_window.py:189
+#: dui/elements/config_window.py:190
 msgid "Ok"
 msgstr "Ok"
 
-#: dui/elements/config_window.py:190
+#: dui/elements/config_window.py:191
 msgid "Cancel"
 msgstr "Annuler"
 
-#: dui/elements/config_window.py:191 pylib/text/tooltips.py:117
+#: dui/elements/config_window.py:192 pylib/text/tooltips.py:117
 msgid "Apply"
 msgstr "Appliquer"
 
-#: dui/elements/config_window.py:316
+#: dui/elements/config_window.py:317
 msgid "Wrong settings!"
 msgstr "Valeurs incorrectes !"
 
-#: dui/elements/config_window.py:371
+#: dui/elements/config_window.py:372
 msgid "Browse directories"
 msgstr "Choisir un dossier"
 
-#: dui/elements/config_window.py:494
+#: dui/elements/config_window.py:508
 msgid "Missing characters: Enter exactly {} strings separated by commas"
 msgstr "Caractères manquants : entrer exactement {} groupes de caractères séparés par des virgules"
 
@@ -128,110 +128,114 @@ msgid "Target display on top"
 msgstr "Objectif en haut de la fenêtre"
 
 #: dui/elements/config_window_text.py:47
-msgid "Target font size"
-msgstr "Taille de la police pour le but"
-
-#: dui/elements/config_window_text.py:48
-msgid "Font size for global proof view"
-msgstr "Taille de la police pour l'aperçu de preuve"
-
-#: dui/elements/config_window_text.py:49
-msgid "Set directory for choosing courses"
-msgstr "Dossier pour le choix de cours"
-
-#: dui/elements/config_window_text.py:50
-msgid "Level of logs"
-msgstr "Niveau de logs"
-
-#: dui/elements/config_window_text.py:51
-msgid "Use symbol for logic buttons"
-msgstr "Symboles pour les boutons logiques"
-
-#: dui/elements/config_window_text.py:52
-msgid "Font size for symbol buttons"
-msgstr "Taille des symboles pour les boutons logiques"
-
-#: dui/elements/config_window_text.py:59
-msgid "Display success messages"
-msgstr "Afficher les messages de succès"
-
-#: dui/elements/config_window_text.py:60
-msgid "Color for selection"
-msgstr "Couleur des éléments sélectionnés"
-
-#: dui/elements/config_window_text.py:61
-msgid "Maths fonts"
-msgstr "Police pour les maths"
-
-#: dui/elements/config_window_text.py:62
-msgid "Use color for variables"
-msgstr "Variables en couleur"
-
-#: dui/elements/config_window_text.py:63
-msgid "Use color for dummy variables"
-msgstr "Variables muettes en couleur"
-
-#: dui/elements/config_window_text.py:64
-msgid "Use color for applied properties"
-msgstr "Griser les propriétés déjà utilisées"
-
-#: dui/elements/config_window_text.py:66
-msgid "Target selected by default"
-msgstr "But sélectionné par défaut"
-
-#: dui/elements/config_window_text.py:68
-msgid "Allow proof by sorry"
-msgstr "Admettre le but en cours est autorisé"
-
-#: dui/elements/config_window_text.py:70
-msgid "Allow implicit use of definitions"
-msgstr "Autoriser les définitions implicites"
-
-#: dui/elements/config_window_text.py:72
-msgid "Automatic intro of variables and hypotheses"
-msgstr "Introduction automatique des variables et des hypothèses"
-
-#: dui/elements/config_window_text.py:74
-msgid "Automatic intro of existence properties"
-msgstr "Introduction automatique des propriétés d’existence"
-
-#: dui/elements/config_window_text.py:76
-msgid "Save exercises for autotest"
-msgstr "Sauvegarder pour auto-tests"
-
-#: dui/elements/config_window_text.py:77
-msgid "Save journal"
-msgstr "Sauvegarder le journal"
-
-#: dui/elements/config_window_text.py:78
 msgid "Main font size"
 msgstr "Taille de la police principale"
 
-#: dui/elements/config_window_text.py:79
+#: dui/elements/config_window_text.py:48
+msgid "Font size for statements"
+msgstr "Taille de la police pour les énoncés"
+
+#: dui/elements/config_window_text.py:49
 msgid "Tooltips font size"
 msgstr "Taille de la police pour les info-bulles"
 
+#: dui/elements/config_window_text.py:50
+msgid "Target font size"
+msgstr "Taille de la police pour le but"
+
+#: dui/elements/config_window_text.py:51
+msgid "Font size for global proof view"
+msgstr "Taille de la police pour l'aperçu de preuve"
+
+#: dui/elements/config_window_text.py:52
+msgid "Set directory for choosing courses"
+msgstr "Dossier pour le choix de cours"
+
+#: dui/elements/config_window_text.py:53
+msgid "Level of logs"
+msgstr "Niveau de logs"
+
+#: dui/elements/config_window_text.py:54
+msgid "Use symbol for logic buttons"
+msgstr "Symboles pour les boutons logiques"
+
+#: dui/elements/config_window_text.py:55
+msgid "Font size for symbol buttons"
+msgstr "Taille des symboles pour les boutons logiques"
+
+#: dui/elements/config_window_text.py:62
+msgid "Display success messages"
+msgstr "Afficher les messages de succès"
+
+#: dui/elements/config_window_text.py:63
+msgid "Color for selection"
+msgstr "Couleur des éléments sélectionnés"
+
+#: dui/elements/config_window_text.py:64
+msgid "Maths fonts"
+msgstr "Police pour les maths"
+
+#: dui/elements/config_window_text.py:65
+msgid "Use color for variables"
+msgstr "Variables en couleur"
+
+#: dui/elements/config_window_text.py:66
+msgid "Use color for dummy variables"
+msgstr "Variables muettes en couleur"
+
+#: dui/elements/config_window_text.py:67
+msgid "Use color for applied properties"
+msgstr "Griser les propriétés déjà utilisées"
+
+#: dui/elements/config_window_text.py:69
+msgid "Target selected by default"
+msgstr "But sélectionné par défaut"
+
+#: dui/elements/config_window_text.py:71
+msgid "Allow proof by sorry"
+msgstr "Admettre le but en cours est autorisé"
+
+#: dui/elements/config_window_text.py:73
+msgid "Allow implicit use of definitions"
+msgstr "Autoriser les définitions implicites"
+
+#: dui/elements/config_window_text.py:75
+msgid "Automatic intro of variables and hypotheses"
+msgstr "Introduction automatique des variables et des hypothèses"
+
+#: dui/elements/config_window_text.py:77
+msgid "Automatic intro of existence properties"
+msgstr "Introduction automatique des propriétés d’existence"
+
+#: dui/elements/config_window_text.py:79
+msgid "Save exercises for autotest"
+msgstr "Sauvegarder pour auto-tests"
+
 #: dui/elements/config_window_text.py:80
+msgid "Save journal"
+msgstr "Sauvegarder le journal"
+
+#: dui/elements/config_window_text.py:81
 msgid "Replace missing characters"
 msgstr "Remplacer les caractères manquants"
 
-#: dui/elements/config_window_text.py:82
+#: dui/elements/config_window_text.py:83
 msgid "Split logic buttons into two lines"
 msgstr "Boutons logiques sur deux lignes"
 
-#: dui/elements/config_window_text.py:83
+#: dui/elements/config_window_text.py:84
 msgid "Drag statements to context"
 msgstr "Glisser les énoncés dans le contexte"
 
-#: dui/elements/config_window_text.py:84
+#: dui/elements/config_window_text.py:85
 msgid "Drag and drop in context"
 msgstr "Glisser-déposer dans le contexte"
 
-#: dui/elements/config_window_text.py:85
+#: dui/elements/config_window_text.py:86
 msgid "Drag context to statements"
 msgstr "Glisser du contexte vers les énoncés"
 
-#: dui/elements/config_window_text.py:86
+#: dui/elements/config_window_text.py:87
 #: pylib/coursedata/course_metadata_translations.py:38
 msgid "None"
 msgstr "Aucun(e)"
@@ -245,7 +249,7 @@ msgid "Target"
 msgstr "But"
 
 #: dui/elements/help.py:58 dui/elements/help.py:147
-#: dui/stages/exercise/_exercise_main_window_widgets.py:530
+#: dui/stages/exercise/_exercise_main_window_widgets.py:504
 msgid "Help"
 msgstr "Aide"
 
@@ -384,8 +388,8 @@ msgid "Back to exercise"
 msgstr "Retour à l’exercice"
 
 #: dui/stages/exercise/Coordinator.py:991
-#: dui/stages/exercise/_exercise_main_window_widgets.py:725
-#: dui/stages/exercise/_exercise_main_window_widgets.py:735
+#: dui/stages/exercise/_exercise_main_window_widgets.py:699
+#: dui/stages/exercise/_exercise_main_window_widgets.py:709
 msgid "Change exercise"
 msgstr "Changer d’exercice"
 
@@ -395,86 +399,86 @@ msgstr "Actions (règles logiques et énoncés)"
 
 #: dui/stages/exercise/_exercise_main_window_widgets.py:160
 #: dui/stages/exercise/_exercise_main_window_widgets.py:262
-#: dui/stages/exercise/_exercise_main_window_widgets.py:395
+#: dui/stages/exercise/_exercise_main_window_widgets.py:369
 msgid "Context (objects and properties)"
 msgstr "Contexte (objets et propriétés)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:393
+#: dui/stages/exercise/_exercise_main_window_widgets.py:367
 msgid "Actions and statements (transform context and target)"
 msgstr "Actions et énoncés (transforment le contexte et le but)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:554
+#: dui/stages/exercise/_exercise_main_window_widgets.py:528
 msgid "    Thinking"
 msgstr "    Je réfléchis"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:559
+#: dui/stages/exercise/_exercise_main_window_widgets.py:533
 msgid "    Initializing"
 msgstr "    Initialisation"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:654
-#: dui/stages/exercise/_exercise_main_window_widgets.py:715
+#: dui/stages/exercise/_exercise_main_window_widgets.py:628
+#: dui/stages/exercise/_exercise_main_window_widgets.py:689
 msgid "Toolbar"
 msgstr "Barre d’outils"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:659
-#: dui/stages/exercise/_exercise_main_window_widgets.py:704
+#: dui/stages/exercise/_exercise_main_window_widgets.py:633
+#: dui/stages/exercise/_exercise_main_window_widgets.py:678
 msgid "Jump to beginning of proof"
 msgstr "Retour au début de la preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:662
-#: dui/stages/exercise/_exercise_main_window_widgets.py:705
+#: dui/stages/exercise/_exercise_main_window_widgets.py:636
+#: dui/stages/exercise/_exercise_main_window_widgets.py:679
 msgid "Undo action"
 msgstr "Annuler l’action"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:665
-#: dui/stages/exercise/_exercise_main_window_widgets.py:706
+#: dui/stages/exercise/_exercise_main_window_widgets.py:639
+#: dui/stages/exercise/_exercise_main_window_widgets.py:680
 msgid "Redo action"
 msgstr "Refaire l’action"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:668
-#: dui/stages/exercise/_exercise_main_window_widgets.py:707
+#: dui/stages/exercise/_exercise_main_window_widgets.py:642
+#: dui/stages/exercise/_exercise_main_window_widgets.py:681
 msgid "Jump to end of proof"
 msgstr "Retour au début de la preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:672
-#: dui/stages/exercise/_exercise_main_window_widgets.py:709
+#: dui/stages/exercise/_exercise_main_window_widgets.py:646
+#: dui/stages/exercise/_exercise_main_window_widgets.py:683
 msgid "Toggle proof outline"
 msgstr "Fil de preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:676
+#: dui/stages/exercise/_exercise_main_window_widgets.py:650
 msgid "Toggle proof tree"
 msgstr "Arbre de preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:680
-#: dui/stages/exercise/_exercise_main_window_widgets.py:708
+#: dui/stages/exercise/_exercise_main_window_widgets.py:654
+#: dui/stages/exercise/_exercise_main_window_widgets.py:682
 msgid "Toggle L∃∀N"
 msgstr "Console L∃∀N"
 
+#: dui/stages/exercise/_exercise_main_window_widgets.py:658
 #: dui/stages/exercise/_exercise_main_window_widgets.py:684
-#: dui/stages/exercise/_exercise_main_window_widgets.py:710
 msgid "Toggle help window"
 msgstr "Fenêtre d'aide"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:720
-#: dui/stages/exercise/_exercise_main_window_widgets.py:736
+#: dui/stages/exercise/_exercise_main_window_widgets.py:694
+#: dui/stages/exercise/_exercise_main_window_widgets.py:710
 msgid "Settings"
 msgstr "Paramètres"
 
-#: dui/stages/exercise/exercise_main_window.py:302
+#: dui/stages/exercise/exercise_main_window.py:244
 #: pylib/pre_processing/__main__.py:210 pylib/pre_processing/__main__.py:232
 msgid "Exercise"
 msgstr "Exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:303
+#: dui/stages/exercise/exercise_main_window.py:245
 msgid "Exercise history"
 msgstr "Historique de l’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:901
+#: dui/stages/exercise/exercise_main_window.py:915
 #: pylib/math_display/display_math.py:921 pylib/mathobj/proof_step.py:632
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:904
+#: dui/stages/exercise/exercise_main_window.py:918
 msgid "goals solved!"
 msgstr "buts atteints !"
 

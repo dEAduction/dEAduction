@@ -28,8 +28,8 @@ import logging
 from typing import Union, Optional
 from PySide2.QtWidgets import (QFrame, QLayout,
                                QHBoxLayout, QVBoxLayout, QGridLayout,
-                               QWidget, QLabel, QSizePolicy)
-from PySide2.QtCore import Qt, QRect, QPoint, QTimer, Signal
+                               QWidget, QLabel, QSizePolicy, QToolButton)
+from PySide2.QtCore import Qt, QRect, QPoint, QTimer, Slot
 from PySide2.QtGui import QColor, QPainter, QPolygon, QPen, QBrush, QPainterPath
 
 from deaduction.dui.primitives import MathLabel
@@ -519,26 +519,50 @@ class HorizontalArrow(QWidget):
         self.setFixedWidth(width)
 
 
-class DisclosureTriangle(QLabel):
+# class DisclosureTriangle(QLabel):
+#     """
+#     A dynamic QLabel that changes appearance and call a function when clicked.
+#     """
+#
+#     def __init__(self, slot: callable, hidden=False):
+#         super().__init__()
+#         self.slot = slot
+#         self.setText("▷" if hidden else "▽")
+#         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+#
+#     def toggle(self):
+#         """
+#         Modify self's appearance and call the slot function.
+#         """
+#         self.setText("▷" if self.text() == "▽" else "▽")
+#         self.slot()
+#
+#     def mousePressEvent(self, ev) -> None:
+#         self.toggle()
+
+
+class DisclosureTriangle(QToolButton):
     """
-    A dynamic QLabel that changes appearance and call a function when clicked.
+    A QToolButton that changes appearance and call a function when clicked.
     """
 
     def __init__(self, slot: callable, hidden=False):
         super().__init__()
         self.slot = slot
-        self.setText("▷" if hidden else "▽")
+        # self.setText("▷" if hidden else "▽")
+        self.hidden = hidden
+        self.setArrowType(Qt.RightArrow if hidden else Qt.DownArrow)
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.clicked.connect(self.toggle)
 
+    @Slot()
     def toggle(self):
         """
         Modify self's appearance and call the slot function.
         """
-        self.setText("▷" if self.text() == "▽" else "▽")
+        self.hidden = not self.hidden
+        self.setArrowType(Qt.RightArrow if self.hidden else Qt.DownArrow)
         self.slot()
-
-    def mousePressEvent(self, ev) -> None:
-        self.toggle()
 
 
 class VertBar(QFrame):
