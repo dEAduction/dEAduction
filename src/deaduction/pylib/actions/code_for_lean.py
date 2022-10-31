@@ -763,6 +763,9 @@ class CodeForLean:
     def and_try_norm_num(self, location=None):
         """
         Add try {norm_num [at <location>]} after self.
+        Beware that this is often too powerful, and normal form sometimes
+        differs from expected, e.g. not (P and Q) is normalized into (P =>
+        not Q).
         """
         try_norm_num = CodeForLean.norm_num(location=location).try_()
         code = self.and_then(try_norm_num)
