@@ -182,7 +182,10 @@ class ServerQueue(list):
                     self.actual_timeout = 2 * self.actual_timeout
                     if nb == self.NB_TRIALS:  # Task definitively  cancelled!
                         # Emit lean_response signal with timeout error
-                        self.timeout_signal.emit(None, False, ("", ""), [], 3)
+                        lean_response = LeanResponse(
+                            lean_code=CodeForLean.empty_code(),
+                            error_type=3)
+                        self.timeout_signal.emit(lean_response)
                     else:  # Task will be tried again
                         if cancel_fct:
                             cancel_fct()
@@ -194,7 +197,10 @@ class ServerQueue(list):
                 self.actual_timeout = 2 * self.actual_timeout
                 if nb == self.NB_TRIALS:  # Task definitively  cancelled!
                     # Emit lean_response signal with timeout error
-                    self.timeout_signal.emit(None, False, ("", ""), [], 3)
+                    lean_response = LeanResponse(
+                        lean_code=CodeForLean.empty_code(),
+                        error_type=3)
+                    self.timeout_signal.emit(lean_response)
                 else:  # Task will be tried again
                     if cancel_fct:
                         cancel_fct()
