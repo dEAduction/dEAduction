@@ -44,6 +44,7 @@ def rw_using_statement(goal: Goal, selected_objects, statement) -> CodeForLean:
     """
     codes = CodeForLean.empty_code()
     defi = statement.lean_name
+    arguments = ''
     # statement_type = statement.type.capitalize()
     if statement.is_definition():
         target_msg = _('Definition applied to target')
@@ -74,6 +75,11 @@ def rw_using_statement(goal: Goal, selected_objects, statement) -> CodeForLean:
         codes.add_success_msg(context_msg)
 
     codes.rw_item = statement # (statement.type_, statement.pretty_name)
+
+    # Add try_norm_num; this removes lambda that can occur e.g. when applying
+    # def of injectivity backwards
+    codes = codes.and_try_simp_only(location=arguments)
+
     return codes
 
 

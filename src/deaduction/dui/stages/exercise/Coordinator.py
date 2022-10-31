@@ -892,7 +892,8 @@ class Coordinator(QObject):
 
         This is called by a signal in servint.
         """
-        log.debug(f"Replacing code by effective code {effective_lean_code}")
+        code = effective_lean_code.to_code()
+        log.debug(f"Replacing code by effective code {code}")
         self.proof_step.effective_code = effective_lean_code
         self.servint.history_replace(effective_lean_code)
 

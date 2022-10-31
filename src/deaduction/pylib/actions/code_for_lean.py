@@ -154,7 +154,7 @@ class CodeForLean:
             if not isinstance(instruction, SingleCode):
                 instruction = SingleCode(instruction)
         if len(args) == 2:
-            instruction = SingleCode()
+            instruction = SingleCode(args[0], used_properties=args[1])
         if args:
             self.instructions = [instruction]
         else:
@@ -196,7 +196,7 @@ class CodeForLean:
     @classmethod
     def from_string(cls,
                     string: str,
-                    used_properties=None,  # type: MathObject
+                    used_properties=None,  # type: [MathObject]
                     operator=None,
                     rw_prop_or_statement=None,
                     error_msg: str = "",
@@ -750,6 +750,47 @@ class CodeForLean:
                             new_up.append(prop)
                     up = new_up
         return up
+
+    @classmethod
+    def no_meta_vars(cls):
+        return cls("no_meta_vars")
+
+    @classmethod
+    def norm_num(cls, location=None):
+        instr = f"norm_num at {location}" if location else "norm_num"
+        return cls(instr)
+
+    def and_try_norm_num(self, location=None):
+        """
+        Add try {norm_num [at <location>]} after self.
+        """
+        try_norm_num = CodeForLean.norm_num(location=location).try_()
+        code = self.and_then(try_norm_num)
+        return code
+
+    @classmethod
+    def simp_only(cls, lemmas=None, location=None):
+        """
+        Instruction "simp only [lemmas] at <location>".
+        lemmas may be a list of strings or a single string.
+        """
+        location = f"at {location}" if location else ""
+        if not lemmas:
+            lemmas = ''
+        if isinstance(lemmas, list):
+            lemmas = ' '.join(lemmas)
+
+        instr = f"simp only [{lemmas}] {location}"
+        return cls(instr)
+
+    def and_try_simp_only(self, lemmas=None, location=None):
+        """
+        Add try {norm_num [at <location>]} after self.
+        """
+        simp = CodeForLean.simp_only(lemmas=lemmas, location=location)
+        code = self.and_then(simp.try_())
+        return code
+
 
 # _VAR_NB = 0
 # _FUN_NB = 0

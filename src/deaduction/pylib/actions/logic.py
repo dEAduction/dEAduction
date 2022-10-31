@@ -420,11 +420,17 @@ def action_not(proof_step) -> CodeForLean:
     test_selection(selected_objects, target_selected)
     goal = proof_step.goal
 
+    # (1) Push neg on target
     if len(selected_objects) == 0:
         if not goal.target.is_not():
             raise WrongUserInput(error=_("Target is not a negation 'NOT P'"))
         code = CodeForLean.from_string('push_neg')
         code.add_success_msg(_("Negation pushed on target"))
+        # Add try_norm_num. This changes A≠B into ¬ (A=B)
+        # which makes it possible, e.g., to unfold 'double inclusion'
+        code = code.and_try_simp_only(lemmas='ne.def')
+
+    # (2) Push neg on one hypo
     elif len(selected_objects) == 1:
         if not selected_objects[0].is_not():
             error = _("Selected property is not a negation 'NOT P'")
@@ -433,6 +439,9 @@ def action_not(proof_step) -> CodeForLean:
         code = CodeForLean.from_string(f'push_neg at {selected_hypo}')
         code.add_success_msg(_("Negation pushed on property {}").format(
             selected_hypo))
+        code = code.and_try_simp_only(lemmas='ne.def',
+                                      location=selected_hypo)
+
     else:
         raise WrongUserInput(error=_('Only one property at a time'))
     return code
