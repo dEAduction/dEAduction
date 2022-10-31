@@ -291,6 +291,42 @@ class ExerciseCentralWidget(QWidget):
         self.__actions_lyt.addLayout(self.__action_btns_lyt)
         self.__actions_lyt.addWidget(self.statements_tree)
 
+    def set_drag_and_drop_config(self):
+        # (1) Drags statements:
+        if cvars.get('functionality.drag_statements_to_context', True):
+            self.statements_tree.setDragEnabled(True)
+            self.statements_tree.setDragDropMode(QAbstractItemView.DragOnly)
+        else:
+            self.statements_tree.setDragEnabled(False)
+        # Drops in statements:
+        if cvars.get('functionality.drag_context_to_statements', True):
+            self.statements_tree.setAcceptDrops(True)
+            self.statements_tree.setDragDropMode(QAbstractItemView.DropOnly)
+        else:
+            self.statements_tree.setAcceptDrops(False)
+        if cvars.get('functionality.drag_context_to_statements', True) \
+                and cvars.get('functionality.drag_statements_to_context', True):
+            self.statements_tree.setDragDropMode(QAbstractItemView.DragDrop)
+
+        # (2) Set context drag and drop:
+        if cvars.get('functionality.drag_context_to_statements', True) \
+                or cvars.get('functionality.drag_and_drop_in_context', True):
+            self.props_wgt.setDragEnabled(True)
+
+        if cvars.get('functionality.drag_and_drop_in_context', True):
+            self.props_wgt.setDragDropMode(QAbstractItemView.DragDrop)
+            self.objects_wgt.setDragDropMode(QAbstractItemView.DragDrop)
+            self.objects_wgt.setDragEnabled(True)
+        elif cvars.get('functionality.drag_context_to_statements', True) \
+                and cvars.get('functionality.drag_statements_to_context', True):
+            self.props_wgt.setDragDropMode(QAbstractItemView.DragDrop)
+        elif cvars.get('functionality.drag_context_to_statements', True):
+            self.props_wgt.setDragDropMode(QAbstractItemView.DragOnly)
+        elif cvars.get('functionality.drag_statements_to_context', True):
+            self.props_wgt.setDragDropMode(QAbstractItemView.DropOnly)
+
+
+
 ##############################
 # Methods called by __init__ #
 ##############################

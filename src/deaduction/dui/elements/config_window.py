@@ -145,7 +145,10 @@ SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          'logic.use_color_for_applied_properties',
                          'functionality.allow_proof_by_sorry',
                          'functionality.allow_implicit_use_of_definitions',
-                         "i18n.select_language"
+                         "i18n.select_language",
+                         'functionality.drag_statements_to_context',
+                         'functionality.drag_and_drop_in_context',
+                         'functionality.drag_context_to_statements'
                          ]
 
 

@@ -62,6 +62,20 @@ PrettyName
     Ensembles et applications
 -/
 
+namespace logique
+
+lemma definition.iff {P Q : Prop} : (P ↔ Q) ↔ ((P → Q) and (Q → P)) :=
+/- dEAduction
+PrettyName
+    Equivalence logique
+-/
+begin
+  tautology,
+end
+
+
+end logique
+
 namespace definitions
 /- dEAduction
 PrettyName
