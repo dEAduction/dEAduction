@@ -170,22 +170,6 @@ class ExerciseCentralWidget(QWidget):
         self.statements_tree = StatementsTreeWidget(statements, outline)
         StatementsTreeWidgetItem.from_name = dict()
 
-        # Drags statements:
-        if cvars.get('functionality.drag_statements_to_context', True):
-            self.statements_tree.setDragEnabled(True)
-            self.statements_tree.setDragDropMode(QAbstractItemView.DragOnly)
-        else:
-            self.statements_tree.setDragEnabled(False)
-        # Drops in statements:
-        if cvars.get('functionality.drag_context_to_statements', True):
-            self.statements_tree.setAcceptDrops(True)
-            self.statements_tree.setDragDropMode(QAbstractItemView.DropOnly)
-        else:
-            self.statements_tree.setAcceptDrops(False)
-        if cvars.get('functionality.drag_context_to_statements', True) \
-                and cvars.get('functionality.drag_statements_to_context', True):
-            self.statements_tree.setDragDropMode(QAbstractItemView.DragDrop)
-
         # ─────── Init goal (Context area and target) ────── #
         MathObjectWidgetItem.from_math_object = dict()
         self.target_wgt   = TargetWidget()
@@ -196,24 +180,6 @@ class ExerciseCentralWidget(QWidget):
         for wdg in (self.objects_wgt, self.props_wgt):
             wdg.context_selection = self.context_selection
             wdg.clear_context_selection = self.clear_context_selection
-
-        # Set context drag and drop
-        if cvars.get('functionality.drag_context_to_statements', True) \
-                or cvars.get('functionality.drag_and_drop_in_context', True):
-            self.props_wgt.setDragEnabled(True)
-
-        if cvars.get('functionality.drag_and_drop_in_context', True):
-            self.props_wgt.setDragDropMode(QAbstractItemView.DragDrop)
-            self.objects_wgt.setDragDropMode(QAbstractItemView.DragDrop)
-            self.objects_wgt.setDragEnabled(True)
-        elif cvars.get('functionality.drag_context_to_statements', True) \
-                and cvars.get('functionality.drag_statements_to_context', True):
-            self.props_wgt.setDragDropMode(QAbstractItemView.DragDrop)
-        elif cvars.get('functionality.drag_context_to_statements', True):
-            self.props_wgt.setDragDropMode(QAbstractItemView.DragOnly)
-        elif cvars.get('functionality.drag_statements_to_context', True):
-            self.props_wgt.setDragDropMode(QAbstractItemView.DropOnly)
-
 
         # ───────────── Put widgets in layouts ───────────── #
 
@@ -248,6 +214,9 @@ class ExerciseCentralWidget(QWidget):
         # Fonts
         self.deaduction_fonts = deaduction_fonts
         self.set_font()
+
+        # Drag and drop
+        self.set_drag_and_drop_config()
 
     def init_context_layout(self):
         if self.splitter:
