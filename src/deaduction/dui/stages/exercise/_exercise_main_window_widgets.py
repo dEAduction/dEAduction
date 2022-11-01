@@ -284,7 +284,7 @@ class ExerciseCentralWidget(QWidget):
 
         if cvars.get('functionality.drag_and_drop_in_context', True):
             self.props_wgt.setDragDropMode(QAbstractItemView.DragDrop)
-            self.objects_wgt.setDragDropMode(QAbstractItemView.DragDrop)
+            self.objects_wgt.setDragDropMode(QAbstractItemView.DragOnly)
             self.objects_wgt.setDragEnabled(True)
         elif cvars.get('functionality.drag_context_to_statements', True) \
                 and cvars.get('functionality.drag_statements_to_context', True):

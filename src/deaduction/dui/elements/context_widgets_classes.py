@@ -465,6 +465,12 @@ class MathObjectWidget(QListView):
         self._current_index = self.index_from_event(event)
 
     def startDrag(self, supported_actions) -> None:
+        """
+        This method is called when usr start dragging some
+        MathObjectWidget. It builds a DraggedItems instance, which is a
+        graphic version of the MathObject (e.g. a variable with a dotted blue
+        frame) which will stands for the dragged object.
+        """
         drag = QDrag(self)
 
         if not self._current_index:
@@ -495,6 +501,8 @@ class MathObjectWidget(QListView):
     def dragEnterEvent(self, event):
         """
         Mark enterEvent of StatementTreeWidgetItem by changing background color.
+        Should also handle the cursor shape, indicating if dropping will be
+        accepted or not. (DOES NOT WORK).
         """
 
         source = event.source()
@@ -507,8 +515,12 @@ class MathObjectWidget(QListView):
                 event.acceptProposedAction()
             else:
                 event.ignore()  # No dropped statement
-        else:
-            event.acceptProposedAction()
+        elif isinstance(source, MathObjectWidget):
+            if not cvars.get('functionality.drag_and_drop_in_context') or not\
+                    self. drop_enabled():
+                event.ignore()
+            else:
+                event.acceptProposedAction()
 
     def dragLeaveEvent(self, event):
         """
@@ -525,13 +537,17 @@ class MathObjectWidget(QListView):
         temporarily.
         """
 
+        if not self.drop_enabled():
+            return
+
         index = self.index_from_event(event)
         if index != self.potential_drop_receiver:
             self.potential_drop_receiver = None  # Unselect automatically
 
         # if index:
         item: MathObjectWidgetItem = self.item_from_index(index)
-        if item and item.isDropEnabled():
+        if item and item.isDropEnabled() \
+                and cvars.get('functionality.drag_and_drop_in_context'):
             self.potential_drop_receiver = index
 
         event.accept()
