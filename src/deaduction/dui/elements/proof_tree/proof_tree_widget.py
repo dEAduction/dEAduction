@@ -1054,7 +1054,8 @@ class ProofTreeWindow(QWidget):
         Highlight all instances of math_widgets  in the ProofTreeWidget which
         are related to math_object.
         """
-        self.main_block.recursively_highlight(math_object, yes)
+        if self.main_block:
+            self.main_block.recursively_highlight(math_object, yes)
 
     def highlight_from_math_wdg(self, math_object, yes):
         self.highlight(math_object, yes)
