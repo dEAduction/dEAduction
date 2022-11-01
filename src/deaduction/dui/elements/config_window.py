@@ -131,24 +131,29 @@ CONFIGS["Advanced"] = {
     'functionality.save_solved_exercises_for_autotest': (None, True)}
 
 SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
+                         # Fonts
                          "display.target_font_size",
                          "display.main_font_size",
                          "display.statements_font_size",
                          "display.tooltips_font_size",
                          'display.math_font_file',
                          'display.proof_tree_font_size',
+                         # DnD
+                         'functionality.drag_statements_to_context',
+                         'functionality.drag_and_drop_in_context',
+                         'functionality.drag_context_to_statements',
                          "logic.use_color_for_variables",
                          "logic.use_color_for_dummy_variables",
+                         # Action buttons
                          "symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP",
                          'display.use_symbols_for_logic_button',
                          'display.font_size_for_symbol_buttons',
-                         'logic.use_color_for_applied_properties',
-                         'functionality.allow_proof_by_sorry',
                          'functionality.allow_implicit_use_of_definitions',
-                         "i18n.select_language",
-                         'functionality.drag_statements_to_context',
-                         'functionality.drag_and_drop_in_context',
-                         'functionality.drag_context_to_statements'
+                         # FIXME: this is handled by resetting a whole new ecw
+                         #  cf ecw.apply_new_settings()
+                         # 'logic.use_color_for_applied_properties',
+                         # 'functionality.allow_proof_by_sorry',
+                         "i18n.select_language"
                          ]
 
 

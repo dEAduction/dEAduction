@@ -285,6 +285,7 @@ class ExerciseCentralWidget(QWidget):
         if cvars.get('functionality.drag_and_drop_in_context', True):
             self.props_wgt.setDragDropMode(QAbstractItemView.DragDrop)
             self.objects_wgt.setDragDropMode(QAbstractItemView.DragOnly)
+            self.objects_wgt.setDragDropMode(QAbstractItemView.DragOnly)
             self.objects_wgt.setDragEnabled(True)
         elif cvars.get('functionality.drag_context_to_statements', True) \
                 and cvars.get('functionality.drag_statements_to_context', True):
@@ -294,11 +295,10 @@ class ExerciseCentralWidget(QWidget):
         elif cvars.get('functionality.drag_statements_to_context', True):
             self.props_wgt.setDragDropMode(QAbstractItemView.DropOnly)
 
-
-
 ##############################
 # Methods called by __init__ #
 ##############################
+
     def set_font(self):
         """
         OBSOLETE doc:
@@ -336,6 +336,7 @@ class ExerciseCentralWidget(QWidget):
         symbol_size = self.deaduction_fonts.symbol_button_font_size
         for btns_wdg in self.action_btns_wdgs:
             for btn in btns_wdg.buttons:
+                btn.update()
                 if btn.is_symbol():
                     btn.setFont(deaduction_fonts.math_fonts(size=symbol_size))
 

@@ -402,7 +402,42 @@ class ExerciseMainWindow(QMainWindow):
         """
         log.debug("New settings: ")
         log.debug(modified_settings)
+        updated = True
+        while modified_settings:
+            setting = modified_settings.pop()
+            # (1) DnD
+            if setting in ('functionality.drag_statements_to_context',
+                           'functionality.drag_and_drop_in_context',
+                           'functionality.drag_context_to_statements'):
+                self.ecw.set_drag_and_drop_config()
+                log.info("New DnD settings")
+            # (2) Fonts
+            elif setting in ("display.target_font_size",
+                             "display.main_font_size",
+                             "display.statements_font_size",
+                             "display.tooltips_font_size",
+                             'display.math_font_file',
+                             'display.proof_tree_font_size'):
+                log.info("New fonts settings")
+                deaduction_fonts.set_fonts()
+            elif setting == "display.target_display_on_top":
+                self.ecw.organise_main_layout()
+            elif setting in (
+                    "symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP",
+                    'display.use_symbols_for_logic_button',
+                    'display.font_size_for_symbol_buttons'):
+                self.ecw.set_font()
+            elif setting == 'functionality.allow_implicit_use_of_definitions':
+                self.ecw.statements_tree.update_tooltips()
+            else:  # Setting has not been handled
+                updated = False
+                break
+        # Case of unhandled settings:
+        if not updated:  # Last popped setting has not been handled
+            modified_settings.append(setting)
+
         if modified_settings:
+            log.info("New ecw...")
             # self.current_selection = []
             # self.empty_current_selection()
             # TODO: only for relevant changes in preferences
@@ -411,7 +446,7 @@ class ExerciseMainWindow(QMainWindow):
             # Redefine ecw from scratch! #
             ##############################
             # if 'display.math_font_file' in modified_settings:
-            deaduction_fonts.set_fonts()
+            # deaduction_fonts.set_fonts()
 
             self.ecw = ExerciseCentralWidget(self.exercise)
             self.setCentralWidget(self.ecw)
