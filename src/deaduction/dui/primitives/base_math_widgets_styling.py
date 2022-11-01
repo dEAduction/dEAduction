@@ -59,6 +59,13 @@ class AbstractMathHtmlText:
     - set_text_mode: if text_mode is True then systems font will be used
     except for maths elements. Default is False.
     (- set_font_size. This is unused.)
+
+    IMPORTANT NOTE. One may wonder why we do not use the styleSheet
+    attribute to select the font family and size. The thing is, there seem to
+    be a bug that prevents the font to be selected by setStyleSheet for
+    QLabel (in rich text mode only). Thus, we add the font attribute inside a
+    <style> element to be inserted directly before the html code by the
+    setHtml or setText method.
     """
 
     def __init__(self, use_color=True, font_size=None, text_mode=False):
