@@ -13,6 +13,7 @@
 ## Contributors
 - Jean Christophe Deligny (work on the installation script)
 - Camille Lichère (lots of testing, and teaching !)
+- Justin Carel (thanks for push_neg_once!)
 
 ## License
 This project is licensed under the terms of the GNU General Public License v3.0.
