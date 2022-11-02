@@ -9,6 +9,7 @@ import tactic
 import structures2      -- hypo_analysis, targets_analysis
 import utils            -- no_meta_vars
 import user_notations   -- notations that can be used in deaduction UI for a new object
+import push_neg_once    -- pushing negation just one step
 
 -- dEAduction definitions
 import set_definitions
@@ -70,9 +71,8 @@ PrettyName
     Equivalence logique
 -/
 begin
-  tautology,
+  exact iff_def,
 end
-
 
 end logique
 
@@ -81,8 +81,8 @@ namespace definitions
 PrettyName
     Définitions
 -/
-
 namespace generalites
+
 /- dEAduction
 PrettyName
     Généralités
@@ -918,5 +918,3 @@ end exercices
 end ensembles_et_applications
 
 end course
-
-

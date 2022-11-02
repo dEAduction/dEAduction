@@ -780,16 +780,6 @@ class MathObject:
             math_type = self.math_type
         return math_type.node == "QUANT_∀"
 
-    def is_simplified_by_push_neg(self, is_math_type=False):
-        tests = [self.is_not(is_math_type=is_math_type),
-                 self.is_for_all(is_math_type=is_math_type),
-                 self.is_exists(is_math_type=is_math_type),
-                 self.is_and(is_math_type=is_math_type),
-                 self.is_or(is_math_type=is_math_type),
-                 self.is_implication(is_math_type=is_math_type),
-                 self.is_inequality(is_math_type=is_math_type)]
-        return any(tests)
-
     def implicit(self, test: callable):
         """
         Call the implicit version of test.
@@ -926,6 +916,51 @@ class MathObject:
                               math_type=self.math_type)
 
         return body
+
+    def is_simplifiable_body_of_neg(self, is_math_type=False):
+        """
+        Return True if not (self) may be directly simplified.
+        """
+        tests = [self.is_not(is_math_type=is_math_type),
+                 self.is_for_all(is_math_type=is_math_type),
+                 self.is_exists(is_math_type=is_math_type),
+                 self.is_and(is_math_type=is_math_type),
+                 self.is_or(is_math_type=is_math_type),
+                 self.is_implication(is_math_type=is_math_type),
+                 self.is_inequality(is_math_type=is_math_type)]
+        return any(tests)
+
+    def first_pushable_body_of_neg(self, is_math_type=False):
+        """
+        If self contains some negation that can be pushed,
+        e.g. not (P => Q), return its body, e.g. (P => Q).
+
+        Note that the method does explore the tree under unpushable
+        negation,
+        i.e. in
+            not( P <=> not (Q => R) )
+        the part not (Q => R) will be detected. Note that push_neg_once
+        will work in that case.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+
+        # (1) Self is a negation
+        if math_type.is_not(is_math_type=True):
+            body = math_type.body_of_negation()
+            if body.is_simplifiable_body_of_neg(is_math_type=True):
+                return body
+            else:  # This part allow to explore tree under unpushable negation:
+                pass
+                # return None
+
+        # Explore children
+        for child in math_type.children:
+            body = child.first_pushable_body_of_neg(is_math_type=True)
+            if body:
+                return body
 
     def is_false(self, is_math_type=False) -> bool:
         """

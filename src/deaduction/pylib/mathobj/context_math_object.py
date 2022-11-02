@@ -341,7 +341,7 @@ class ContextMathObject(MathObject):
 
         if main_symbol == "not":
             prop = self.math_type.body_of_negation()
-            if prop and not prop.is_simplified_by_push_neg(is_math_type=True):
+            if prop and not prop.is_simplifiable_body_of_neg(is_math_type=True):
                 main_symbol = "not_non_pushable"
 
         msgs = get_help_msgs(main_symbol)
