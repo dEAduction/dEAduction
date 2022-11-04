@@ -26,3 +26,5 @@ This file is part of d∃∀duction.
 """
 
 from .pickle_utils import load_object, save_object
+from .nice_display_tree import nice_display_tree, tree_list, TreeNode
+

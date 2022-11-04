@@ -73,6 +73,8 @@ from deaduction.pylib.autotest import                   select_exercise
 
 global _
 
+# For debug
+from deaduction.pylib.math_display.pattern_data import *
 
 log = logging.getLogger(__name__)
 

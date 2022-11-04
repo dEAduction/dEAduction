@@ -33,14 +33,12 @@ This file is part of d∃∀duction.
 """
 from typing import Union
 
-# from deaduction.pylib.config.i18n import _
-
 # !! Latex commands should be alone in their strings,
 # except for spaces around them, so that up to strip(), they appear in
 # latex_to_utf8_dic
 
 global _
-# _ = lambda x: x  # FIXME: just for debugging:
+# _ = lambda x: x  # Just for debugging:
 
 
 # NB Some latex macro have a special treatment elsewhere, e.g.
@@ -59,6 +57,7 @@ global _
 # (children of children). Otherwise use lists within main tuple.
 # '\no_text' indicates that text mode should not be used in the current display
 #   (e.g. within an equality)
+
 latex_from_node = {
     "PROP_AND": (0, r"\and", 1),
     "PROP_OR": (0, r"\or", 1),

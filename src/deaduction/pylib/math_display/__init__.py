@@ -47,4 +47,3 @@ from .html_display import html_display
 from .utf8_display import utf8_display
 from .display import abstract_string_to_string
 # from .utils import structured_display_to_string
-

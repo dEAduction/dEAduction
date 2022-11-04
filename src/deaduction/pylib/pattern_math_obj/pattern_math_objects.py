@@ -32,6 +32,7 @@ if __name__ == "__main__":
 
 from typing import Optional, Union
 
+from deaduction.pylib.utils import tree_list
 from deaduction.pylib.math_display        import HAVE_BOUND_VARS
 from deaduction.pylib.mathobj.math_object import MathObject
 
@@ -95,6 +96,67 @@ class PatternMathObject(MathObject):
         #            math_type=math_type)
 
     @classmethod
+    def from_string(cls, string, metavars=None):
+        """
+        Create a PMO from a structured string, such as
+        "APP(?0: SEQUENCE(?1, ?2), ?3)".
+        This is used in conjunction with display_data.
+        Node names may be metanames, like '*INEQUALITY' that stands for any
+        inequality node.
+        """
+
+        if not metavars:
+            metavars = {}
+
+        [tree] = tree_list(string)
+
+        # For debug
+        tree.display()
+
+        pmo = PatternMathObject.from_tree(tree, metavars=metavars)
+        pmo.metavars = metavars.values()
+        return pmo
+
+    @classmethod
+    def from_tree(cls, tree, metavars=None):
+        """
+        Recursive method to create a PMO from a tree instance,
+        with attributes label and children. A dict of the metavars used in
+        self is furnished to which new metavars are appended. Keys are
+        metavar nbs.
+        """
+
+        # TODO: add joker, e.g. *INEQUALITY
+        if not metavars:
+            metavars = {}
+
+        math_type = PatternMathObject.NO_MATH_TYPE
+        children_pmo = [cls.from_tree(child, metavars=metavars)
+                        for child in tree.children]
+        node = tree.label
+
+        if ':' in node:
+            try:
+                [node, type_node] = node.split(':')
+                node, type_node = node.strip(), type_node.strip()
+            except ValueError:
+                raise "nodes may contain at most one ':'"
+            math_type = cls.from_string(type_node)
+
+        # Case of a metavar, e.g.?7
+        if node.startswith('?'):
+            metavar_nb = int(node[1:])
+            pmo = metavars.get(metavar_nb)
+            if not pmo:  # Create new metavar and store it in metavars
+                pmo = PatternMathObject.new_metavar(math_type)
+                metavars[metavar_nb] = pmo
+        else:
+            pmo = cls(node=node, children=children_pmo, math_type=math_type,
+                      info={})
+
+        return pmo
+
+    @classmethod
     def from_math_object(cls, math_object: MathObject):
         cls.__tmp_loc_csts_for_metavars = []
         cls.__tmp_metavars_csts         = []
@@ -112,10 +174,6 @@ class PatternMathObject(MathObject):
         This is obviously a recursive method. The lists loc_csts, metavars
         allow to keep track of the correspondence between the local
         constants that have been previously replaced and the metavars.
-
-        :param loc_csts: list of local constants
-        :param metavars: corresponding list of metavars
-        :return:         new PatternMathObject
         """
         # log.debug(f"Patterning mo {math_object.to_display()}")
         metavars = cls.__tmp_metavars_csts

@@ -562,6 +562,8 @@ def display_quantifier(math_object) -> list:
     Here we assume that math_object.node is in the latex_from_quant_node dic.
     """
 
+    # TODO: replace by pattern nodes
+
     node = math_object.node
     children = math_object.children
     display = list(latex_from_quant_node[node])
@@ -875,6 +877,9 @@ def raw_latex_shape_from_couple_of_nodes(math_object, text_depth=0) -> []:
     if it finds some key that matches math_object and math_object's first child
     nodes. Otherwise, return None.
     """
+
+    # TODO: replace bu pattern nodes
+
     from deaduction.pylib.math_display import (dic_of_first_nodes_text,
                                                couples_of_nodes_to_text)
     shape = None
@@ -912,6 +917,8 @@ def raw_latex_shape_from_specific_nodes(math_object, negate=False):
 
     :return:            A "raw shape", e.g. [0, "=", 1].
     """
+
+    # TODO: replace everything by standard nodes??
 
     node = math_object.node
     display = [display_error(_("unknown object"))]
@@ -975,6 +982,10 @@ def recursive_display(math_object, text_depth=0, shape=None,
     for item in shape:
         # Case of a string
         display_item = item
+
+        # if isinstance(display_item, str) and display_item.startswith("info['"):
+        #     field = display_item[len("info['"):-2]
+        #     display_item = str(math_object.info.get(field, ""))
 
         # Integers code for children, or tuples for grandchildren
         if isinstance(item, int) or isinstance(item, tuple):
