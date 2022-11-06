@@ -118,6 +118,8 @@ def set_logger():
                        'logic',
                        'magic',
                        'coursedata',
+                       'deaduction.pylib',
+                       'patterns'
                        # 'math_object'
                        ]
         # log_domains = [""]

@@ -42,16 +42,22 @@ from PySide2.QtCore import ( QObject,
 from PySide2.QtWidgets import (QInputDialog,
                                QMessageBox)
 
-
+# Configs, utils
 import deaduction.pylib.config.dirs as          cdirs
 import deaduction.pylib.config.vars as          cvars
 from deaduction.pylib.utils.filesystem import   check_dir
+
+# DUI
 from deaduction.dui.primitives import           ButtonsDialog
 from deaduction.dui.stages.exercise import      ExerciseMainWindow
 from deaduction.dui.elements import             ActionButton
+
+# Server
 from deaduction.pylib.server import             ServerInterface
+
 from deaduction.pylib.utils import save_object
 
+# Maths
 from deaduction.pylib.coursedata import        (Exercise,
                                                 Definition,
                                                 Theorem,
@@ -78,6 +84,8 @@ from deaduction.pylib.actions           import (generic,
 from deaduction.pylib.pattern_math_obj import  (PatternMathObject,
                                                 DefinitionMathObject)
 
+# Just for import
+from deaduction.pylib.math_display.new_display import to_display
 
 from deaduction.pylib.memory            import Journal
 

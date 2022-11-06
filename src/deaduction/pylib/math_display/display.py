@@ -39,8 +39,8 @@ def abstract_string_to_string(abstract_string: Union[list, str], format_,
     display = ""
     if format_ == 'lean':
         abstract_string = latex_to_lean(abstract_string)
-    # Replace latex macro by utf8:
-    if format_ in ('lean', 'utf8', 'html'):
+
+    if format_ in ('lean', 'utf8', 'html'):  # Replace latex macro by utf8:
         abstract_string = latex_to_utf8(abstract_string)
     else:
         raise ValueError("Wrong format_ type, must be one of 'lean', 'utf8', "

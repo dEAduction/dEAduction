@@ -457,7 +457,7 @@ class Goal:
     def goal_to_text(self,
                      format_="utf8",
                      to_prove=True,
-                     text_depth=20,
+                     text=True,
                      open_problem=False,
                      by_type=True) -> str:
         """
@@ -495,7 +495,7 @@ class Goal:
             if math_type.is_prop():  # Display hypotheses
                 object_is_prop = True
                 prop = math_object.math_type_to_display(format_=format_,
-                                                        text_depth=text_depth)
+                                                        text=text)
                 assume_that = _("Assume that") + " "
                 if prop.startswith(_('the negation')):
                     assume_that = _("Assume") + " "
@@ -536,8 +536,8 @@ class Goal:
         if text:
             text += text_cr
 
-        target_text = target.math_type_to_display(text_depth=text_depth)
-        target_utf8 = target.math_type_to_display(text_depth=text_depth,
+        target_text = target.math_type_to_display(text=text)
+        target_utf8 = target.math_type_to_display(text=text,
                                                   format_='utf8')
         if to_prove and not open_problem:
             prove_that = _("Prove that") + " "
@@ -546,7 +546,7 @@ class Goal:
                 prove_that = _("Prove") + " "
             elif cvars.get('i18n.select_language') == 'fr_FR':
                 # "Démontrer que il" --> "Démontrer qu'il"
-                if target_utf8[0] in ('a', 'e', 'i', 'o', 'u'):
+                if target_utf8 and target_utf8[0] in ('a', 'e', 'i', 'o', 'u'):
                     prove_that = "Démontrer qu'"
             target_text = prove_that + target_text
         elif text:
@@ -749,7 +749,7 @@ def introduce_several_object(objects: [MathObject], format_) -> str:
         math_object = objects[0]
         names = math_object.to_display(format_)
         type_ = math_object.math_type_to_display(format_=format_,
-                                                 text_depth=10)
+                                                 text=True)
         new_sentence = _("Let {} be {}").format(names, type_) + "."
 
     else:  # More than one object
@@ -758,22 +758,10 @@ def introduce_several_object(objects: [MathObject], format_) -> str:
         if len(objects) <= len(numbers):
             number = numbers[number]  # text version of the number
         utf8_type = objects[0].math_type_to_display(format_='utf8',
-                                                    text_depth=10)
+                                                    text=True)
         type_ = objects[0].math_type_to_display(format_=format_,
-                                                text_depth=10)
+                                                text=True)
         plural_type = plural_types(type_, utf8_type)
-        # words = utf8_type.split(" ")
-        # plural_type = None
-        # # Try to replace first words by plural. We use utf8_type to avoid
-        # #  html formatting to interfere:
-        # for counter in range(len(words)):
-        #     first_words = " ".join(words[:counter+1])
-        #     if first_words in plurals:
-        #         plural_first_words = plurals[first_words]
-        #         plural_type = type_.replace(first_words, plural_first_words)
-        #         # new_words = [plural_first_words] + words[counter+1:]
-        #         # plural_type = " ".join(new_words)
-        #         break
 
         if plural_type:
             shape = plurals[_("Let {} be {}")]

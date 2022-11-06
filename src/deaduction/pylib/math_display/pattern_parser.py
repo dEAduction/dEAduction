@@ -44,7 +44,7 @@ structure = """
     expr = node children
     node = node_name info_type?
     info_type = type_sep expr
-    node_name = ~"[a-z A-Z 0-9 ?_∀∃+<>≥≤!.' -]"+
+    node_name = ~"[a-z A-Z 0-9 ?_∀∃+<>≥≤!.'/= -]"+
     children = (open_paren expr more_expr closed_paren)?
     more_expr = (comma expr)*
     """
@@ -59,13 +59,17 @@ rules = structure + separators
 pattern_grammar = Grammar(rules)
 
 
+node_dict = {'APP': "APPLICATION",
+             'CST?': "CONSTANT/name=?"}
+
+
 @dataclass
 class Tree:
     """
-    A class to store tree, with attributes label and children.
+    A class to store tree, with attributes node and children.
     """
     node: str
-    children: []
+    children: []  # [Tree]
     type_: Any  # Tree
 
     def display(self, depth=0):
@@ -84,7 +88,7 @@ class Tree:
 class PatternEntryVisitor(NodeVisitor):
     """
     A class to visit nodes of the parsing tree. See the rules to understand
-    the data in each node. Return a tree.
+    the data in each node. Return a tree (instance of the Tree class).
     """
 
     def visit_expr(self, _, visited_children) -> Tree:
@@ -95,6 +99,9 @@ class PatternEntryVisitor(NodeVisitor):
         """
 
         [(node_name, node_type), children] = visited_children
+
+        # Infos
+
         return Tree(node=node_name, children=children, type_=node_type)
 
     def visit_node(self, _, visited_children) -> (str, Optional[Tree]):
@@ -129,6 +136,8 @@ class PatternEntryVisitor(NodeVisitor):
 
     def visit_node_name(self, node, _) -> str:
         node_name = (node.text).strip()
+        if node_name in node_dict.keys():
+            node_name = node_dict[node_name]
         return node_name
 
     def visit_info_type(self, _, visited_children) -> Tree:

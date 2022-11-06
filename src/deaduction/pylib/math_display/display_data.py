@@ -48,6 +48,14 @@ global _
 # and so on
 
 
+def name(mo):
+    return mo.info.get('name', "NO NAME")
+
+
+def value(mo):
+    return mo.info.get('value')
+
+
 ######################
 ######################
 # LATEX dictionaries #
@@ -90,8 +98,8 @@ latex_from_node = {
     "SET_FAMILY": (0,  r" \to ", r'{\mathcal P}', r'\parentheses', 1),
     # "SET_IMAGE": (0, "(", 1, ")"),
     # "SET_INVERSE": (0, [r'^', '-1'], '(', 1, ')'),  # LEAVE the list as is!
-    "SET_IMAGE": (0, r'\set_image', 1),
-    "SET_INVERSE": (0, r'\set_inverse', 1),
+    "SET_IMAGE": (0, r'\set_image', r'\parentheses', 1),
+    "SET_INVERSE": (0, r'\set_inverse', r'\parentheses', 1),
     "SET_PRODUCT": (0, r'\times', 1),
     "COUPLE": (r'\parentheses', 0, ',', 1),
     "SET_INTENSION": (r"\no_text", r'\{', 1, r' \in ', 0, ' | ', 2, r'\}'),
@@ -135,7 +143,11 @@ latex_from_node = {
         (r"(", 2, ')', ['_', 1, r"\in_symbol", 0]),
     # NB: children[2] is the whole body, "u_n"
     "LAMBDA_EXPANDED_SET_FAMILY":
-        (r"\{", 2, ', ', 1, r"\in_symbol", 0, r"\}")
+        (r"\{", 2, ', ', 1, r"\in_symbol", 0, r"\}"),
+    "CONSTANT": (name,),
+    "NUMBER": (value,),
+    "LOCAL_CONSTANT": (name,),  # Probably useless
+    "APPLICATION": (0, r'\parentheses', 1)
     }
 
 # \in_quant --> "belonging to", or "in" in text mode (but NOT "belongs to")
@@ -403,46 +415,46 @@ text_from_node = {
 }
 
 # FIXME: Not used?
-text_from_all_nodes = {
-    "PROP_AND": (0, " " + _("and") + " ", 1),
-    "PROP_OR": (0, " " + _("or") + " ", 1),
-    "PROP_FALSE": (_("Contradiction"), ),
-    "PROP_IFF": (0, " " + _("if and only if") + " ", 1),
-    "PROP_NOT": (_("the negation of") + " ", 0),
-    "PROP_IMPLIES": (_("if") + " ", 0, " " + _("then") + " ", 1),
-    ###############
-    # SET THEORY: #
-    ###############
-    "PROP_INCLUDED": (0, " " + _("is included in") + " ", 1),
-    "PROP_BELONGS": (0, " ∈ ", 1),  # This special case is processed in
-                                    # the function display_belongs_to
-    "SET_INTER": (_("the intersection of") + " ", 0, " " + _("and") + " ", 1),
-    "SET_UNION": (_("the union of") + " ", 0, " " + _("and") + " ", 1),
-    "SET_INTER+": (_("the intersection of the sets") + " ", 0),
-    "SET_UNION+": (_("the union of the sets") + " ", 0),
-    "SET_COMPLEMENT": (_("the complement of ") + " ", 1),
-    "SET_EMPTY": (_("the empty set"),),
-    "SET_FAMILY": (_("a family of subsets of") + " ", 1),
-    "SET_IMAGE": (_("the image under") + " ", 0, " " + _("of") + " ", 1),
-    "SET_INVERSE": (_("the inverse image under") + " ", 0, " " + _("of") + " ",
-                    1),
-    ############
-    # NUMBERS: #
-    ############
-    "PROP_EQUAL": (0, " " + _("equals") + " ", 1),
-    "PROP_EQUAL_NOT": (0, " " + _("is different from") + " ", 1),
-    "PROP_<": (0, " " + _("is less than") + " ", 1),
-    "PROP_>": (0, " " + _("is greater than") + " ", 1),
-    "PROP_≤": (0, " " + _("is less than or equal to") + " ", 1),
-    "PROP_≥": (0, " " + _("is greater than or equal to") + " ", 1),
-    ##################
-    # GENERAL TYPES: #
-    ##################
-    "SET": ("P(", 0, ")"),
-    "PROP": (_("a proposition"),),
-    "TYPE": (_("a set"),),
-    "FUNCTION": (_("a function from") + " ", 0, " " + _("to") + " ", 1),
-}
+# text_from_all_nodes = {
+#     "PROP_AND": (0, " " + _("and") + " ", 1),
+#     "PROP_OR": (0, " " + _("or") + " ", 1),
+#     "PROP_FALSE": (_("Contradiction"), ),
+#     "PROP_IFF": (0, " " + _("if and only if") + " ", 1),
+#     "PROP_NOT": (_("the negation of") + " ", 0),
+#     "PROP_IMPLIES": (_("if") + " ", 0, " " + _("then") + " ", 1),
+#     ###############
+#     # SET THEORY: #
+#     ###############
+#     "PROP_INCLUDED": (0, " " + _("is included in") + " ", 1),
+#     "PROP_BELONGS": (0, " ∈ ", 1),  # This special case is processed in
+#                                     # the function display_belongs_to
+#     "SET_INTER": (_("the intersection of") + " ", 0, " " + _("and") + " ", 1),
+#     "SET_UNION": (_("the union of") + " ", 0, " " + _("and") + " ", 1),
+#     "SET_INTER+": (_("the intersection of the sets") + " ", 0),
+#     "SET_UNION+": (_("the union of the sets") + " ", 0),
+#     "SET_COMPLEMENT": (_("the complement of ") + " ", 1),
+#     "SET_EMPTY": (_("the empty set"),),
+#     "SET_FAMILY": (_("a family of subsets of") + " ", 1),
+#     "SET_IMAGE": (_("the image under") + " ", 0, " " + _("of") + " ", 1),
+#     "SET_INVERSE": (_("the inverse image under") + " ", 0, " " + _("of") + " ",
+#                     1),
+#     ############
+#     # NUMBERS: #
+#     ############
+#     "PROP_EQUAL": (0, " " + _("equals") + " ", 1),
+#     "PROP_EQUAL_NOT": (0, " " + _("is different from") + " ", 1),
+#     "PROP_<": (0, " " + _("is less than") + " ", 1),
+#     "PROP_>": (0, " " + _("is greater than") + " ", 1),
+#     "PROP_≤": (0, " " + _("is less than or equal to") + " ", 1),
+#     "PROP_≥": (0, " " + _("is greater than or equal to") + " ", 1),
+#     ##################
+#     # GENERAL TYPES: #
+#     ##################
+#     "SET": ("P(", 0, ")"),
+#     "PROP": (_("a proposition"),),
+#     "TYPE": (_("a set"),),
+#     "FUNCTION": (_("a function from") + " ", 0, " " + _("to") + " ", 1),
+# }
 
 text_from_quant_node = {
     "QUANT_∀": (_("for every") + " ", 1, " " + _("in") + " ", 0,
@@ -575,14 +587,14 @@ for (first_node, second_node) in couples_of_nodes_to_latex:
 # Helper functions #
 ####################
 ####################
-# Nodes of math objects that need instantiation of bound variables
-HAVE_BOUND_VARS = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_INTENSION",
-                   "LAMBDA", "EXTENDED_SEQUENCE", "EXTENDED_SET_FAMILY")
-
-# TO_BE_EXPANDED = ("SEQUENCE", "SET_FAMILY", "LAMBDA")
-
-INEQUALITIES = ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥", "PROP_EQUAL_NOT")
-
+# # Nodes of math objects that need instantiation of bound variables
+# HAVE_BOUND_VARS = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_INTENSION",
+#                    "LAMBDA", "EXTENDED_SEQUENCE", "EXTENDED_SET_FAMILY")
+#
+# # TO_BE_EXPANDED = ("SEQUENCE", "SET_FAMILY", "LAMBDA")
+#
+# INEQUALITIES = ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥", "PROP_EQUAL_NOT")
+#
 NATURE_LEAVES_LIST = ("PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                       "FUNCTION", "SEQUENCE", "SET_FAMILY",
                       "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY",
@@ -612,9 +624,9 @@ def needs_paren(parent, child, child_number, text_depth=0) -> bool:
         c_node = child.children[0].node
     if p_node == 'COE':  # Should be treated at the previous level, see above
         return False
-    if (p_node in ("SET_IMAGE", "SET_INVERSE")
-            and child_number == 1):  # f(A), f^{-1}(A)
-        return True
+    # if (p_node in ("SET_IMAGE", "SET_INVERSE")
+    #         and child_number == 1):  # f(A), f^{-1}(A)
+    #     return True
     elif c_node in NATURE_LEAVES_LIST:
         return False
     elif p_node == 'PROP_NOT':

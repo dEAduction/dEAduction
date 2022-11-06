@@ -26,3 +26,4 @@ This file is part of dEAduction.
 
 from .pattern_math_objects import PatternMathObject
 from .definition_math_object import DefinitionMathObject
+

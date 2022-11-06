@@ -33,7 +33,6 @@ if __name__ == "__main__":
 from typing import Optional, Union
 
 from deaduction.pylib.utils import tree_list
-from deaduction.pylib.math_display        import HAVE_BOUND_VARS
 from deaduction.pylib.mathobj.math_object import MathObject
 
 log = logging.getLogger(__name__)
@@ -75,7 +74,8 @@ class PatternMathObject(MathObject):
     __metavars        = None  # Temporary list of mvars
     __metavar_objects = None  # Objects matching metavars (see self.match)
 
-    def __init__(self, node, info, children, math_type):
+    def __init__(self, node, info, children,
+                 math_type=None):
         """
         Init self as a MathObject, plus metavars list.
         """
@@ -88,12 +88,6 @@ class PatternMathObject(MathObject):
     @classmethod
     def new_metavar(cls, math_type):
         return MetaVar(math_type)
-        # cls.metavar_nb += 1
-        # return cls(node='METAVAR',
-        #            info={'nb': cls.metavar_nb},
-        #            children=[],
-        #            bound_vars=[],
-        #            math_type=math_type)
 
     @classmethod
     def from_string(cls, string, metavars=None):
@@ -118,38 +112,48 @@ class PatternMathObject(MathObject):
         return pmo
 
     @classmethod
-    def from_tree(cls, tree, metavars=None):
+    def from_tree(cls, tree, metavars):
         """
-        Recursive method to create a PMO from a tree instance,
-        with attributes label and children. A dict of the metavars used in
+        Recursive method to create a PMO from a Tree instance,
+        with attributes node, children and type_. A dict of the metavars used in
         self is furnished to which new metavars are appended. Keys are
         metavar nbs.
         """
 
-        # TODO: add joker, e.g. *INEQUALITY
-        if not metavars:
-            metavars = {}
+        # (1) Math_type
+        math_type = (cls.from_tree(tree.type_, metavars=metavars) if tree.type_
+                     else PatternMathObject.NO_MATH_TYPE)
 
-        math_type = PatternMathObject.NO_MATH_TYPE
+        # (2) Children
         children_pmo = [cls.from_tree(child, metavars=metavars)
                         for child in tree.children]
-        node = tree.label
 
-        if ':' in node:
-            try:
-                [node, type_node] = node.split(':')
-                node, type_node = node.strip(), type_node.strip()
-            except ValueError:
-                raise "nodes may contain at most one ':'"
-            math_type = cls.from_string(type_node)
+        # (3) Node
+        node = tree.node
 
-        # Case of a metavar, e.g.?7
-        if node.startswith('?'):
+        # -----> (3a) Children joker
+        if node == "...":  # Joker for any number of children
+            pmo = POMPOMPOM
+
+        # -----> (3b) Case of a metavar, e.g. ?7
+        elif node.startswith('?'):
             metavar_nb = int(node[1:])
-            pmo = metavars.get(metavar_nb)
+            assert metavar_nb >= 0
+            metavars.extend([None] * (metavar_nb + 1 - len(metavars)))
+            pmo = metavars[metavar_nb]
             if not pmo:  # Create new metavar and store it in metavars
                 pmo = PatternMathObject.new_metavar(math_type)
                 metavars[metavar_nb] = pmo
+
+        # -----> (3c) Info
+        elif "/" in node:
+            node, info = node.split('/')
+            key, value = info.split('=')
+            info = {key: value}
+            pmo = cls(node=node, children=children_pmo, math_type=math_type,
+                      info=info)
+
+        # -----> (3d) Generic case
         else:
             pmo = cls(node=node, children=children_pmo, math_type=math_type,
                       info={})
@@ -229,8 +233,16 @@ class PatternMathObject(MathObject):
         """
         return self is other
 
+    @property
+    def name(self):
+        """
+        If self has no name, then return "?", meaning that self should match
+        any name. Override MathObject.name.
+        """
+        return self.info.get('name', '?')
+
     def is_metavar(self):
-        return self.node == "METAVAR"
+        return isinstance(self, MetaVar)
 
     def match(self, math_object: MathObject) -> bool:
         """
@@ -240,15 +252,17 @@ class PatternMathObject(MathObject):
         same index in the list PatternMathObject.metavar_objects.
         e.g. 'g∘f is injective' matches 'metavar_28 is injective'
         (note that math_types of metavars should also match).
+        The math_object matched with some mvar is stored in the attribute
+        mvar.matched_math_object.
         """
 
         PatternMathObject.__metavars = []
         PatternMathObject.__metavar_objects = []
         match = self.recursive_match(math_object)
         # log.debug(f"Matching...")
-        list_ = [(PatternMathObject.__metavars[idx].to_display(),
-                  PatternMathObject.__metavar_objects[idx].to_display())
-                 for idx in range(len(PatternMathObject.__metavars))]
+        # list_ = [(PatternMathObject.__metavars[idx].to_display(),
+        #           PatternMathObject.__metavar_objects[idx].to_display())
+        #          for idx in range(len(PatternMathObject.__metavars))]
         # log.debug(f"    Metavars, objects: {list_}")
         return match
 
@@ -263,6 +277,7 @@ class PatternMathObject(MathObject):
         # TODO: simplify like MathObject.__eq__
         metavars = PatternMathObject.__metavars
         metavar_objects = PatternMathObject.__metavar_objects
+        children = self.children
 
         # if math_object:
         #     log.debug(f"Matching {self} and {math_object}...")
@@ -274,12 +289,12 @@ class PatternMathObject(MathObject):
             return True
 
         # METAVAR
-        elif node == 'METAVAR':
+        elif self.is_metavar():
             # If self has already been identified, math_object matches self
             #   iff it is equal to the corresponding item in metavar_objects
             # If not, then self matches with math_object providing their
             #   math_types match. In this case, identify metavar.
-            if self in metavars:
+            if self in metavars:  # Fixme: use only self.matched_math_object?
                 corresponding_object = self.math_object_from_metavar()
                 match = (math_object == corresponding_object)
             else:
@@ -289,15 +304,19 @@ class PatternMathObject(MathObject):
                 if match:
                     metavars.append(self)
                     metavar_objects.append(math_object)
+                    self.matched_math_object = math_object
                 # match = True
             return match
 
-        ##############################
-        # Test node, bound var, name #
-        ##############################
-        elif (self.node, self.bound_var_nb(), self.name) != \
-                (math_object.node, math_object.bound_var_nb(),
-                 math_object.name):
+        #####################################
+        # Test node, bound var, name, value #
+        #####################################
+        elif any(self_item != '?' and self_item != math_object_item
+                 for self_item, math_object_item in
+                 [(self.node, math_object.node),
+                  (self.bound_var_nb(), math_object.bound_var_nb()),
+                  (self.name, math_object.name),
+                  (self.value, math_object.value)]):
             return False
 
         ##################################
@@ -312,37 +331,58 @@ class PatternMathObject(MathObject):
         #################################
         # Recursively test for children #
         #################################
-        elif len(self.children) != len(math_object.children):
-            return False
-        else:
-            match = True
-            bound_var_1 = None
-            bound_var_2 = None
-            ##############
-            # Bound vars #
-            ##############
-            # Mark bound vars in quantified expressions to distinguish them
-            if self.node in HAVE_BOUND_VARS:
-                # Here self and other are assumed to be a quantified proposition
-                # and children[1] is the bound variable.
-                # We mark the bound variables in self and other with same number
-                # so that we know that, say, 'x' in self and 'y' in other are
-                # linked and should represent the same variable everywhere
-                bound_var_1 = self.children[1]
-                bound_var_2 = math_object.children[1]
-                bound_var_1.mark_identical_bound_vars(bound_var_2)
+        elif len(children) < len(math_object.children) + 2:
+            nb_c = len(children)
+            nb_c_mo = len(math_object.children)
+            # Case of undetermined nb of children: insert new mvars
+            if POMPOMPOM in children:
+                more_children = [PatternMathObject.new_metavar(
+                    PatternMathObject.NO_MATH_TYPE)
+                    for i in range(nb_c_mo + 1 - nb_c)]
+                index = children.index(POMPOMPOM)
+                children = children.copy()  # DO NOT modify self.children!!
+                children = (children[:index]
+                            + more_children
+                            + children[index+1:])
+                # self.children.pop(index)
+                # for i in range(nb_c_mo + 1 - nb_c):
+                #     mvar = PatternMathObject.new_metavar(
+                #         PatternMathObject.NO_MATH_TYPE)
+                #     self.children.insert(index + i, mvar)
+            elif nb_c != nb_c_mo:
+                return False
 
-            for child0, child1 in zip(self.children, math_object.children):
-                if not child0.recursive_match(child1):
-                    match = False
+        match = True
+        bound_var_1 = None
+        bound_var_2 = None
+        ##############
+        # Bound vars #
+        ##############
+        # Mark bound vars in quantified expressions to distinguish them
+        if self.node in self.HAVE_BOUND_VARS:
+            # Here self and other are assumed to be a quantified proposition
+            # and children[1] is the bound variable.
+            # We mark the bound variables in self and other with same number
+            # so that we know that, say, 'x' in self and 'y' in other are
+            # linked and should represent the same variable everywhere
+            bound_var_1 = children[1]
+            bound_var_2 = math_object.children[1]
+            bound_var_1.mark_identical_bound_vars(bound_var_2)
 
-            # Unmark bound_vars
-            if bound_var_1:
-                bound_var_1.unmark_bound_var()
-                bound_var_2.unmark_bound_var()
+        ############
+        # Children #
+        ############
+        for child0, child1 in zip(children, math_object.children):
+            if not child0.recursive_match(child1):
+                match = False
 
-            # log.debug(f"... {match}")
-            return match
+        # Unmark bound_vars
+        if bound_var_1:
+            bound_var_1.unmark_bound_var()
+            bound_var_2.unmark_bound_var()
+
+        # log.debug(f"... {match}")
+        return match
 
     def math_object_from_metavar(self):
         if self not in PatternMathObject.__metavars:
@@ -433,6 +473,14 @@ class MetaVar(PatternMathObject):
 
     def clear_matching(self):
         self.matched_math_object = None
+
+    def math_object_from_metavar(self):
+        return (self.matched_math_object if self.matched_math_object
+                else MathObject.NO_MATH_TYPE)
+
+
+POMPOMPOM = PatternMathObject(node="...", info={}, children=[])
+
 
 
 #########

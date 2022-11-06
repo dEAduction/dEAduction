@@ -29,56 +29,74 @@ This file is part of d∃∀duction.
 # TODO: turn APP(APP(...)) into APP(...) in MathObject.__init__() ???
 
 
-from typing import Union
-
-from logging import getLogger
-
-# from deaduction.pylib.mathobj import MathObject
-from deaduction.pylib.pattern_math_obj import PatternMathObject
+import logging
 
 from deaduction.pylib.math_display.pattern_parser import tree_from_str
+from deaduction.pylib.pattern_math_obj import PatternMathObject
 
-log = getLogger(__name__)
+log = logging.getLogger(__name__)
 
 global _
 # _ = lambda x: x  # Just for debugging:
 
 
-def name(mo):
-    return mo.info.get('name', "NO NAME")
-
-
-def value(mo):
-    return mo.info.get('value')
-
-
-def math_object_itself(mo):
-    return mo
-
-
+# BEWARE: do not use negative number in pattern strings!
+# info may be provided within nodes, e.g. "CONSTANT/name=toto".
+# Use "?" as a joker, e.g. "CONSTANT/name=?".
+# In the shape values, tuples point for children (generalized or not),
+# other int point to metavars.
 latex_from_pattern_string = {
-    "CONSTANT": (name, ),
-    "NUMBER": (value, ),
-    "LOCAL_CONSTANT": (math_object_itself, ),  # Delay display!
-    # ∀A⊆X, ... :
-    "FORALL(SET(?0), ?1, ?2)": (r'\forall', 1, r'\subset', 0, 2),
+    # "LOCAL_CONSTANT": (name, ),
+    # "CONSTANT": (name, ),
+    # "NUMBER": (value, ),
+    ##########
+    # QUANTS #
+    ##########
+    # NB: QUANT nodes must have 3 children, with children[1] the bound var.
+    # Thus "QUANT_∀(SET(...), ...) does not work.
+    "QUANT_∀(SET(...), ?0, ?1)": (r"\forall", 0, r" \subset ", (0, 0), ", ", 1),
+    "QUANT_∀(FUNCTION(...), ?0, ?1)": (r"\forall", 0, r" \function_from",
+                                       (0, 0), r'\to', (0, 1), ", ", 1),
+    "QUANT_∀(PROP, ?0, ?1)": (r"\forall", 0, r'\proposition', ", ", 1),
+    "QUANT_∀(TYPE(...), ?0, ?1)": (r"\forall", 0, r" \set", ", ", 1),
+    # ("QUANT_∀", "SEQUENCE"): (r"\forall", 1, r" \function_from", (0, 0),
+    #                           r'\to', (0, 1), ", ", 2),
+    # ("APPLICATION", "LOCAL_CONSTANT_EXPANDED_SEQUENCE"):
+    #     ((0, 2, 0), ['_', 1]),
+    # ("APPLICATION", "LOCAL_CONSTANT_EXPANDED_SET_FAMILY"):
+    #     ((0, 2, 0), ['_', 1]),
+    # ("APPLICATION", "LAMBDA_EXPANDED_SEQUENCE"):
+    #     ((0, 2, 0), ['_', 1]),
+    # ("APPLICATION", "LAMBDA_EXPANDED_SET_FAMILY"):
+    #     ((0, 2, 0), ['_', 1]),
 
     #######
     # APP #
     #######
-    "APP('composition', ...)": (-2, r'\circ', -1),
-    # "APP(CONSTANT(name='composition'), ..., ?-2, ?-1)"
-    # f is not injective:
-    "NOT(APP(...)": (-2, r'\text_is_not', -1),
+    "APP(CONSTANT/name=composition, ...)": ((-2,), r'\circ', (-1,)),
+    # Generic app for constants and their negation
+    # CST? = CONSTANT with any name
+    "APP(CST?, ...)": ((-1,), [r'\text_is', (0,)]),
+    "NOT(APP(CST?,...))": ((-2,), r'\text_is_not', (-1,)),
     # f(x):
     "APP(?0: FUNCTION(?1, ?2), ?3)": (0, r"\parentheses", 1),
     # u_n:
     # Here ?0 will be an expanded sequence, thus child 0 is the body "u_n",
     # we want the child 0 of this ("u").
     "APP(?0: SEQUENCE(?1, ?2), ?3)": ((0, 0), ["_", 3])
+
+    ######
+    # in #
+    ######
 }
 
-latex_from_patterns = {}
+# TODO: handle jokers, e.g. *INEQUALITY
+# TODO: handle CONSTANT, e.g. 'composition'
+
+###########################
+# This is the useful dict #
+###########################
+pattern_latex_pairs = []
 
 
 def string_to_pattern():
@@ -87,15 +105,16 @@ def string_to_pattern():
     latex_from_pattern_string into PatternMathObject.
     """
     log.info("Pattern from strings:")
-    for key, value in latex_from_pattern_string.items():
+    for key, latex_shape in latex_from_pattern_string.items():
         tree = tree_from_str(key)
-        pattern = PatternMathObject.from_tree(tree)  # Fixme
-        latex_from_patterns[key] = pattern
-        log.debug(key)
+        metavars = []
+        pattern = PatternMathObject.from_tree(tree, metavars)
+        pattern_latex_pairs.append((pattern, latex_shape, metavars))
+        print(key)
+        print(tree.display())
+        # print(pattern)
         # log.debug(f"-->{pattern.to_display(format_='utf8')}")
 
 
 string_to_pattern()
-
-
 

@@ -55,12 +55,12 @@ if __name__ == "__main__":
     pass
 
 import deaduction.pylib.config.vars            as cvars
-from deaduction.pylib.math_display import (HAVE_BOUND_VARS, INEQUALITIES,
-                                           latex_from_node, recursive_display,
-                                           raw_latex_shape_from_couple_of_nodes,
-                                           raw_latex_shape_from_specific_nodes,
-                                           shallow_latex_to_text,
-                                           abstract_string_to_string)
+# from deaduction.pylib.math_display import (
+#                                            latex_from_node, recursive_display,
+#                                            raw_latex_shape_from_couple_of_nodes,
+#                                            raw_latex_shape_from_specific_nodes,
+#                                            shallow_latex_to_text,
+#                                            abstract_string_to_string)
 
 from deaduction.pylib.give_name.give_name import name_single_bound_var
 
@@ -167,6 +167,12 @@ class MathObject:
     last_rw_object                = None
     is_bound_var                  = False  # Default value
 
+    # Nodes of math objects that need instantiation of bound variables
+    HAVE_BOUND_VARS = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_INTENSION",
+                       "LAMBDA", "EXTENDED_SEQUENCE", "EXTENDED_SET_FAMILY")
+
+    INEQUALITIES = ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥", "PROP_EQUAL_NOT")
+
     def __init__(self, node, info, children, math_type=None):
         """
         Create a MathObject.
@@ -175,7 +181,7 @@ class MathObject:
         self.info = info
         self.math_type = math_type
 
-        if node in HAVE_BOUND_VARS:
+        if node in self.HAVE_BOUND_VARS:
             #################################################################
             # Quantifiers & lambdas: provisionally "unname" bound variables #
             #################################################################
@@ -186,6 +192,12 @@ class MathObject:
             # and info['name'] = "NO NAME" until proper naming
             bound_var_type, bound_var, local_context = children
             bound_var.set_unnamed_bound_var(bound_var_type)
+
+        ##################################################################
+        # APP: uncurryfying APP(APP(1, 2, ...), n) --> APP(1, 2, ..., n) #
+        ##################################################################
+        if node == 'APPLICATION' and children[0].node == 'APPLICATION':
+            children = children[0].children + [children[1]]
 
         self.children = children
 
@@ -253,7 +265,7 @@ class MathObject:
         bound_vars = []
         for child in self.children:
             bound_vars.extend(child.bound_vars)
-        if self.node in HAVE_BOUND_VARS:
+        if self.node in self.HAVE_BOUND_VARS:
             bound_var_type, bound_var, local_context = self.children
             bound_vars.insert(0, bound_var)
 
@@ -388,6 +400,10 @@ class MathObject:
     @property
     def name(self):
         return self.info.get('name')
+
+    @property
+    def value(self):
+        return self.info.get('value')
 
     @property
     def display_name(self) -> str:
@@ -532,8 +548,10 @@ class MathObject:
         #########################################
         # Test node, bound var, name, math_type #
         #########################################
-        if (self.node, self.bound_var_nb(), self.name, self.math_type) != \
-                (other.node, other.bound_var_nb(), other.name, other.math_type):
+        if (self.node, self.bound_var_nb(), self.name, self.value,
+            self.math_type) != \
+                (other.node, other.bound_var_nb(), other.name, other.value,
+                 other.math_type):
             return False
 
         #################################
@@ -550,7 +568,7 @@ class MathObject:
             # Bound vars #
             ##############
             # Mark bound vars in quantified expressions to distinguish them
-            if self.node in HAVE_BOUND_VARS:
+            if self.node in self.HAVE_BOUND_VARS:
                 # Here self and other are assumed to be a quantified proposition
                 # and children[1] is the bound variable.
                 # We mark the bound variables in self and other with same number
@@ -836,7 +854,7 @@ class MathObject:
             math_type = self
         else:
             math_type = self.math_type
-        return math_type.node in INEQUALITIES
+        return math_type.node in self.INEQUALITIES
 
     def is_instance(self) -> bool:
         """
@@ -1304,167 +1322,176 @@ class MathObject:
         return [math_obj.info["name"] for
                 math_obj in self.extract_local_vars()]
 
-    ###################
-    # Display methods #
-    ###################
-    def raw_latex_shape(self, negate=False, text_depth=0):
-        """
-        e.g. if self is a MathObject whose node is 'PROP_EQUAL', this method
-        will return [0, " = ", 1].
-        """
-        # (1) Case of special shape from self and its first child:
-        # NB: here the structure do depend on text_depth
-        shape = raw_latex_shape_from_couple_of_nodes(self, text_depth)
-        if shape:
-            # NEGATION:
-            if negate:
-                shape = [" " + r'\not' + " ", r'\parentheses', shape]
-            # log.debug(f"Shape from couples: {shape}")
-            
-        # (2) Generic case, in latex_from_node
-        elif self.node in latex_from_node: 
-            shape = list(latex_from_node[self.node])
-
-            # NEGATION:
-            if negate:
-                shape = [" " + r'\not' + " ", r'\parentheses', shape]
-        # (3) Node not found in dictionaries: try specific methods
-        else:
-            shape = raw_latex_shape_from_specific_nodes(self, negate)
-
-        # log.debug(f"    --> Raw shape: {shape}")
-        return shape
-
-    def to_abstract_string(self, text_depth=0) -> Union[list, str]:
-        """
-        Return an abstract string representing self, as a tree of string.
-
-        (1) First compute the shape, e.g. [0, " = ", 1].
-        (2) Then compute an "expanded latex shape", a tree of strings with
-        latex macro.
-        (3) if text_depth >0, replace some symbols by plain text.
-        """
-
-        # (1) Compute shape
-        shape = self.raw_latex_shape(negate=False, text_depth=text_depth)
-        
-        # (2) Compute tree of strings
-        abstract_string = recursive_display(self, text_depth=text_depth, 
-                                            shape=shape)
-
-        # (3) Replace some symbols by plain text:
-        abstract_string = shallow_latex_to_text(abstract_string, text_depth)
-
-        return abstract_string
-
-    def to_display(self, format_="html", text_depth=0,
+    ################################################
+    # Display methods: implemented in math_display #
+    ################################################
+    def to_display(self, format_="html", text=False,
                    use_color=True, bf=False) -> str:
-        """
-        Return a displayable string version of self. First compute an
-        abstract_string (i.e. a tree version) taking text_depth into account,
-        then concatenate according to format_.
+        return ""
 
-        Note that nice display of negations is obtained in raw_latex_node
-        and recursive_display.
-
-        :param format_:     one of 'utf8', 'html', 'latex'
-        :param text_depth:  if >0, will try to replace symbols by plain text
-        for the upper branches of the MathObject tree
-        :param use_color: use colors in html format
-        :param bf: use boldface fonts in html format.
-        """
-        # TODO: the case when text_depth is >0 but not "infinity" has not
-        #  been tested.
-        # WARNING: if you make some changes here,
-        #   then you probably have to do the same changes in
-        #   ContextMathObject.math_type_to_display.
-
-        # (1) Tree of strings
-        abstract_string = self.to_abstract_string(text_depth)
-        log.debug(f"Abstract string: {abstract_string}")
-
-        # (2) Adapt to format_ and concatenate to get a string
-        display = abstract_string_to_string(abstract_string, format_,
-                                            use_color=use_color, bf=bf,
-                                            no_text=(text_depth <= 0))
-        return display
-
-    def raw_latex_shape_of_math_type(self, text_depth=0):
-        ########################################################
-        # Special math_types for which display is not the same #
-        ########################################################
-        # math_type = self.math_type
-        math_type = self
-        if math_type.node == "SET":
-            shape = [r'\type_subset', 0]
-        elif math_type.node == "SEQUENCE":
-            shape = [r'\type_sequence', 1]
-        elif math_type.node == "SET_FAMILY":
-            shape = [r'\type_family_subset', 1]
-        elif hasattr(math_type, 'math_type') \
-                and hasattr(math_type.math_type, 'node') \
-                and math_type.math_type.node in ("TYPE", "SET")\
-                and math_type.node != 'TYPE'\
-                and math_type.node != 'FUNCTION':
-                # and math_type.info.get('name'):
-            # name = math_type.info["name"]
-            # FIXME: bad format for html, would need format_
-            name = math_type.to_display(text_depth=text_depth, format_='utf8')
-            shape = [r'\type_element', name]
-            # The "an" is to be removed for short display
-        elif math_type.is_N():
-            shape = [r'\type_N']
-        elif math_type.is_Z():
-            shape = [r'\type_Z']
-        elif math_type.is_Q():
-            shape = [r'\type_Q']
-        elif math_type.is_R():
-            shape = [r'\type_R']
-        else:  # Generic case: usual shape from math_object
-            shape = math_type.raw_latex_shape(text_depth=text_depth)
-
-        # log.debug(f"Raw shape of math type: {shape}")
-        return shape
-
-    def math_type_to_abstract_string(self, text_depth=0):
-        """
-        cf to_abstract_string, but applied to self as a math_type.
-        :param text_depth:
-        :return:
-        """
-        shape = self.raw_latex_shape_of_math_type(text_depth=text_depth)
-        abstract_string = recursive_display(self,
-                                            shape=shape,
-                                            text_depth=text_depth)
-        log.debug(f"Abstract string of type: {abstract_string}")
-
-        # Replace some symbol by plain text:
-        abstract_string = shallow_latex_to_text(abstract_string, text_depth)
-
-        return abstract_string
-
-    def math_type_to_display(self, format_="html", text_depth=0,
+    def math_type_to_display(self, format_="html", text=False,
                              is_math_type=False,
                              used_in_proof=False) -> str:
-        """
-        cf MathObject.to_display, but applied to self as a math_type (if
-        is_math_type) or to self.math_type (if not is_math_type).
-        Lean format_ is not pertinent here.
-        """
-        log.debug(f"Displaying math_type: {self.display_name}...")
+        return ""
 
-        if is_math_type:
-            math_type = self
-        else:
-            math_type = self.math_type
-        abstract_string = math_type.math_type_to_abstract_string(text_depth)
-        if used_in_proof:
-            abstract_string = [r'\used_property'] + abstract_string
-        # Adapt to format_ and concatenate to get a string
-        display = abstract_string_to_string(abstract_string, format_,
-                                            no_text=(text_depth <= 0))
-
-        return display
+    # def raw_latex_shape(self, negate=False, text_depth=0):
+    #     """
+    #     e.g. if self is a MathObject whose node is 'PROP_EQUAL', this method
+    #     will return [0, " = ", 1].
+    #     """
+    #     # (1) Case of special shape from self and its first child:
+    #     # NB: here the structure do depend on text_depth
+    #     shape = raw_latex_shape_from_couple_of_nodes(self, text_depth)
+    #     if shape:
+    #         # NEGATION:
+    #         if negate:
+    #             shape = [" " + r'\not' + " ", r'\parentheses', shape]
+    #         # log.debug(f"Shape from couples: {shape}")
+    #
+    #     # (2) Generic case, in latex_from_node
+    #     elif self.node in latex_from_node:
+    #         shape = list(latex_from_node[self.node])
+    #
+    #         # NEGATION:
+    #         if negate:
+    #             shape = [" " + r'\not' + " ", r'\parentheses', shape]
+    #     # (3) Node not found in dictionaries: try specific methods
+    #     else:
+    #         shape = raw_latex_shape_from_specific_nodes(self, negate)
+    #
+    #     # log.debug(f"    --> Raw shape: {shape}")
+    #     return shape
+    #
+    # def to_abstract_string(self, text_depth=0) -> Union[list, str]:
+    #     """
+    #     Return an abstract string representing self, as a tree of string.
+    #
+    #     (1) First compute the shape, e.g. [0, " = ", 1].
+    #     (2) Then compute an "expanded latex shape", a tree of strings with
+    #     latex macro.
+    #     (3) if text_depth >0, replace some symbols by plain text.
+    #     """
+    #
+    #     # (1) Compute shape
+    #     shape = self.raw_latex_shape(negate=False, text_depth=text_depth)
+    #
+    #     # (2) Compute tree of strings
+    #     abstract_string = recursive_display(self, text_depth=text_depth,
+    #                                         shape=shape)
+    #
+    #     # (3) Replace some symbols by plain text:
+    #     abstract_string = shallow_latex_to_text(abstract_string, text_depth)
+    #
+    #     return abstract_string
+    #
+    # def to_display(self, format_="html", text_depth=0,
+    #                use_color=True, bf=False) -> str:
+    #     """
+    #     Return a displayable string version of self. First compute an
+    #     abstract_string (i.e. a tree version) taking text_depth into account,
+    #     then concatenate according to format_.
+    #
+    #     Note that nice display of negations is obtained in raw_latex_node
+    #     and recursive_display.
+    #
+    #     :param format_:     one of 'utf8', 'html', 'latex'
+    #     :param text_depth:  if >0, will try to replace symbols by plain text
+    #     for the upper branches of the MathObject tree
+    #     :param use_color: use colors in html format
+    #     :param bf: use boldface fonts in html format.
+    #     """
+    #     # TODO: the case when text_depth is >0 but not "infinity" has not
+    #     #  been tested.
+    #     # WARNING: if you make some changes here,
+    #     #   then you probably have to do the same changes in
+    #     #   ContextMathObject.math_type_to_display.
+    #
+    #     # (1) Tree of strings
+    #     abstract_string = self.to_abstract_string(text_depth)
+    #     log.debug(f"Abstract string: {abstract_string}")
+    #
+    #     # (2) Adapt to format_ and concatenate to get a string
+    #     display = abstract_string_to_string(abstract_string, format_,
+    #                                         use_color=use_color, bf=bf,
+    #                                         no_text=(text_depth <= 0))
+    #     return display
+    #
+    # def raw_latex_shape_of_math_type(self, text_depth=0):
+    #     ########################################################
+    #     # Special math_types for which display is not the same #
+    #     ########################################################
+    #     # math_type = self.math_type
+    #     math_type = self
+    #     if math_type.node == "SET":
+    #         shape = [r'\type_subset', 0]
+    #     elif math_type.node == "SEQUENCE":
+    #         shape = [r'\type_sequence', 1]
+    #     elif math_type.node == "SET_FAMILY":
+    #         shape = [r'\type_family_subset', 1]
+    #     elif hasattr(math_type, 'math_type') \
+    #             and hasattr(math_type.math_type, 'node') \
+    #             and math_type.math_type.node in ("TYPE", "SET")\
+    #             and math_type.node != 'TYPE'\
+    #             and math_type.node != 'FUNCTION':
+    #             # and math_type.info.get('name'):
+    #         # name = math_type.info["name"]
+    #         # FIXME: bad format for html, would need format_
+    #         name = math_type.to_display(text_depth=text_depth, format_='utf8')
+    #         shape = [r'\type_element', name]
+    #         # The "an" is to be removed for short display
+    #     elif math_type.is_N():
+    #         shape = [r'\type_N']
+    #     elif math_type.is_Z():
+    #         shape = [r'\type_Z']
+    #     elif math_type.is_Q():
+    #         shape = [r'\type_Q']
+    #     elif math_type.is_R():
+    #         shape = [r'\type_R']
+    #     else:  # Generic case: usual shape from math_object
+    #         shape = math_type.raw_latex_shape(text_depth=text_depth)
+    #
+    #     # log.debug(f"Raw shape of math type: {shape}")
+    #     return shape
+    #
+    # def math_type_to_abstract_string(self, text_depth=0):
+    #     """
+    #     cf to_abstract_string, but applied to self as a math_type.
+    #     :param text_depth:
+    #     :return:
+    #     """
+    #     shape = self.raw_latex_shape_of_math_type(text_depth=text_depth)
+    #     abstract_string = recursive_display(self,
+    #                                         shape=shape,
+    #                                         text_depth=text_depth)
+    #     log.debug(f"Abstract string of type: {abstract_string}")
+    #
+    #     # Replace some symbol by plain text:
+    #     abstract_string = shallow_latex_to_text(abstract_string, text_depth)
+    #
+    #     return abstract_string
+    #
+    # def math_type_to_display(self, format_="html", text_depth=0,
+    #                          is_math_type=False,
+    #                          used_in_proof=False) -> str:
+    #     """
+    #     cf MathObject.to_display, but applied to self as a math_type (if
+    #     is_math_type) or to self.math_type (if not is_math_type).
+    #     Lean format_ is not pertinent here.
+    #     """
+    #     log.debug(f"Displaying math_type: {self.display_name}...")
+    #
+    #     if is_math_type:
+    #         math_type = self
+    #     else:
+    #         math_type = self.math_type
+    #     abstract_string = math_type.math_type_to_abstract_string(text_depth)
+    #     if used_in_proof:
+    #         abstract_string = [r'\used_property'] + abstract_string
+    #     # Adapt to format_ and concatenate to get a string
+    #     display = abstract_string_to_string(abstract_string, format_,
+    #                                         no_text=(text_depth <= 0))
+    #
+    #     return display
 
     @classmethod
     def new_bound_var(cls, math_type):
