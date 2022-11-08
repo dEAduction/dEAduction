@@ -457,7 +457,7 @@ class Goal:
     def goal_to_text(self,
                      format_="utf8",
                      to_prove=True,
-                     text=True,
+                     text_mode=True,
                      open_problem=False,
                      by_type=True) -> str:
         """
@@ -495,7 +495,7 @@ class Goal:
             if math_type.is_prop():  # Display hypotheses
                 object_is_prop = True
                 prop = math_object.math_type_to_display(format_=format_,
-                                                        text=text)
+                                                        text=text_mode)
                 assume_that = _("Assume that") + " "
                 if prop.startswith(_('the negation')):
                     assume_that = _("Assume") + " "
@@ -536,8 +536,8 @@ class Goal:
         if text:
             text += text_cr
 
-        target_text = target.math_type_to_display(text=text)
-        target_utf8 = target.math_type_to_display(text=text,
+        target_text = target.math_type_to_display(text=text_mode)
+        target_utf8 = target.math_type_to_display(text=text_mode,
                                                   format_='utf8')
         if to_prove and not open_problem:
             prove_that = _("Prove that") + " "

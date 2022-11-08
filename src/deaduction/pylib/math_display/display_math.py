@@ -744,6 +744,10 @@ def latex_to_text_func(string: str) -> (str, bool):
     of deaduction.
     """
     from .display_data import latex_to_text
+    # for macro in latex_to_text:
+    #     if macro in string:
+    #         text_string = string.replace(macro, latex_to_text[macro])
+    #         return text_string, True
     striped_string = string.strip()  # Remove spaces
     if striped_string in latex_to_text:
         text_stripped = latex_to_text[striped_string]

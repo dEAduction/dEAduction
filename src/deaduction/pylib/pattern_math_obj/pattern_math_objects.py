@@ -137,7 +137,9 @@ class PatternMathObject(MathObject):
 
         # -----> (3b) Case of a metavar, e.g. ?7
         elif node.startswith('?'):
-            metavar_nb = int(node[1:])
+            nb_str = node[1:]
+            # If no nb then take first available
+            metavar_nb = int(nb_str) if nb_str else len(metavars)
             assert metavar_nb >= 0
             metavars.extend([None] * (metavar_nb + 1 - len(metavars)))
             pmo = metavars[metavar_nb]

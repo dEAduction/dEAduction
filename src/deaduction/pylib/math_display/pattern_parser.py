@@ -44,7 +44,7 @@ structure = """
     expr = node children
     node = node_name info_type?
     info_type = type_sep expr
-    node_name = ~"[a-z A-Z 0-9 ?_∀∃+<>≥≤!.'/= -]"+
+    node_name = ~"[a-z A-Z 0-9 ?_∀∃+<>≥≤!.'/= - ℕℤℚℝ]"+
     children = (open_paren expr more_expr closed_paren)?
     more_expr = (comma expr)*
     """
@@ -60,7 +60,8 @@ pattern_grammar = Grammar(rules)
 
 
 node_dict = {'APP': "APPLICATION",
-             'CST?': "CONSTANT/name=?"}
+             'CST?': "CONSTANT/name=?",
+             "NOT": "PROP_NOT"}
 
 
 @dataclass

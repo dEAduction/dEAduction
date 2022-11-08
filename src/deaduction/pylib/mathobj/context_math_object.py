@@ -203,8 +203,8 @@ class ContextMathObject(MathObject):
             params['ch0'] = ch0.to_display(format_=format_)
             # params['ch0_type'] = ch0.math_type.to_display(format_=format_)
             ch0_type = ch0.math_type_to_display(format_=format_,
-                                                text_depth=10)
-            utf8 = ch0.math_type_to_display(format_='utf8', text_depth=10)
+                                                text=True)
+            utf8 = ch0.math_type_to_display(format_='utf8', text=True)
             plural_type = plural_types(ch0_type, utf8)
             params['elements_of_ch0_type'] = (plural_type if plural_type else
                                               _('elements of') + ' ' + ch0_type)
@@ -214,7 +214,7 @@ class ContextMathObject(MathObject):
                 # type_ = math_object.math_type_to_display(format_=format_,
                 #                                          text_depth=10)
                 params['an_element_of_type_'] = \
-                    ch1.math_type_to_display(format_=format_, text_depth=10)
+                    ch1.math_type_to_display(format_=format_, text=True)
                 params['every_element_of_type_'] = \
                     help_msgs.single_to_every(params['an_element_of_type_'])
 
@@ -223,7 +223,7 @@ class ContextMathObject(MathObject):
         if real_type:
             params['type_'] = real_type
             params['an_element_of_type_'] = \
-                real_type.math_type_to_display(format_=format_, text_depth=10,
+                real_type.math_type_to_display(format_=format_, text=True,
                                                is_math_type=True)
             params['every_element_of_type_'] = \
                 help_msgs.single_to_every(params['an_element_of_type_'])

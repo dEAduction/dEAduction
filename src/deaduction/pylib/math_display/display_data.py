@@ -151,6 +151,9 @@ latex_from_node = {
     }
 
 # \in_quant --> "belonging to", or "in" in text mode (but NOT "belongs to")
+#############################################################
+# The latex_from_node dict will be updated by the following #
+#############################################################
 latex_from_quant_node = {
     "QUANT_∀": (r"\forall", 1, r" \in_quant ", 0, ", ", 2),
     "QUANT_∃": (r"\exists", 1, r" \in_quant ", 0, r'\such_that', 2),
@@ -289,9 +292,27 @@ latex_to_text = {
     r'\proposition': _("a proposition"),
     r'\set': _("a set"),
     r'\such_that': " " + _("such that") + " ",
+
     r'\forall': _("for every") + " ",
+    r"\forall {} \subset {}, {}": _("for every subset {} of {}, {}"),
+    r"\forall {}  \function_from {} \to {}, {}":
+        _("for every function {} from {} to {}, {}"),
+    r"\forall {} \proposition, {}": _("for every proposition {}, {}"),
+    # r"\forall {} \set{} {}": _("for every set {}{} {}"),
+
     r'\exists': _("there exists") + " ",
+    r"\exists {} \subset {}, {}": _("there exists a subset {} of {} such that {}"),
+    r"\exists {}  \function_from {} \to ""{}, {}": _("there exists a function {"
+                                                   "} from {} to {} such that {}"),
+    r"\exists {} \proposition, {}": _("there exists a proposition {} such that {}"),
+    r"\exists {} \set, {}": _("there exists a set {} such that {}"),
+
     r"\exists_unique": _("there exists a unique") + " ",
+    r"\exists_unique {} \subset {}, {}": _("there exists a unique subset {} of {} such that {}"),
+    r"\exists_unique {}  \function_from {} \to {}, {}": _("there exists a unique function {} from {} to {} such that {}"),
+    r"\exists_unique {} \proposition, {}": _("there exists a unique proposition {} such that {}"),
+    r"\exists_unique {} \set, {}": _("there exists a unique set {} such that {}"),
+
     r'\context_function_from': " " + _("a function from") + " ",
     r'\function_from': " " + _("a function from") + " ",
     r'\sequence_from': " " + _("a sequence from") + " ",  # FIXME...
@@ -372,7 +393,7 @@ numbers = {
     10: _("ten")
 }
 
-text_from_node = {
+# text_from_node = {
     # # "PROP_AND": (0, " " + _("and") + " ", 1),
     # # "PROP_OR": (0, " " + _("or") + " ", 1),
     # # "PROP_FALSE": (_("Contradiction"), ),
@@ -412,7 +433,7 @@ text_from_node = {
     # "PROP": (_("a proposition"),),
     # "TYPE": (_("a set"),),
     # "FUNCTION": (_("a function from") + " ", 0, " " + _("to") + " ", 1),
-}
+# }
 
 # FIXME: Not used?
 # text_from_all_nodes = {
@@ -456,15 +477,15 @@ text_from_node = {
 #     "FUNCTION": (_("a function from") + " ", 0, " " + _("to") + " ", 1),
 # }
 
-text_from_quant_node = {
-    "QUANT_∀": (_("for every") + " ", 1, " " + _("in") + " ", 0,
-                ", ", 2),
-    "QUANT_∃": (_("there exists") + " ", 1, " " + _("in") + " ", 0,
-                " " + _("such that") + " ", 2),
-    "QUANT_∃!": (_("there exists a unique") + " ", 1, " " + _("in") + " ", 0,
-                 " " + _("such that") + " ", 2),
-    "PROP_∃": ("*PROP_∃*",)
-}
+# text_from_quant_node = {
+#     "QUANT_∀": (_("for every") + " ", 1, " " + _("in") + " ", 0,
+#                 ", ", 2),
+#     "QUANT_∃": (_("there exists") + " ", 1, " " + _("in") + " ", 0,
+#                 " " + _("such that") + " ", 2),
+#     "QUANT_∃!": (_("there exists a unique") + " ", 1, " " + _("in") + " ", 0,
+#                  " " + _("such that") + " ", 2),
+#     "PROP_∃": ("*PROP_∃*",)
+# }
 
 
 ###################
@@ -498,48 +519,48 @@ latex_to_lean_dic = {
 ####################
 # In the following dic, the second node is assumed to be the first child node.
 couples_of_nodes_to_text = {
-    ("QUANT_∀", "SET"): (_("for every subset {} of {}, {}"),
-                         (1, (0, 0), 2)),
-    ("QUANT_∀", "PROP"): (_("for every proposition {}, {}"),
-                          (1, 2)),
-    ("QUANT_∀", "TYPE"): (_("for every set {}, {}"),
-                          (1, 2)),
-    ("QUANT_∀", "FUNCTION"): (_("for every function {} from {} to {}, {}"),
-                           (1, (0, 0), (0, 1), 2)),
-    ("QUANT_∀", "SEQUENCE"): (_("for every sequence {} in {}, {}"),
-                              (1, (0, 1), 2)),
-    ("QUANT_∃", "SET"): (_("there exists a subset {} of {} such that {}"),
-                         (1, (0, 0), 2)),
-    ("QUANT_∃", "PROP"): (_("there exists a proposition {} such that {}"),
-                          (1, 2)),
-    ("QUANT_∃", "TYPE"): (_("there exists a set {} such that {}"),
-                          (1, 2)),
-    ("QUANT_∃", "FUNCTION"): (_("there exists a function {} from {} to {} "
-                                "such that {}"),
-                              (1, (0, 0), (0, 1), 2)),
-    ("QUANT_∃", "SEQUENCE"): (_("there exists a sequence {} in {} such that "
-                                "{}"),
-                              (1, (0, 1), 2)),
-    ("QUANT_∃!", "SET"): (_("there exists a unique subset {} of {} such that "
-                            "{}"),
-                          (1, (0, 0), 2)),
-    ("QUANT_∃!", "PROP"): (_("there exists a unique proposition {} such that "
-                             "{}"), (1, 2)),
-    ("QUANT_∃!", "TYPE"): (_("there exists a unique set {} such that {}"),
-                           (1, 2)),
-    ("QUANT_∃!", "FUNCTION"): (_("there exists a unique function {} from {} "
-                                 "to {} such that {}"),
-                               (1, (0, 0), (0, 1), 2)),
-    ("QUANT_∃!", "SEQUENCE"): (_("there exists a unique sequence {} in {} "
-                                 "such that {}"), (1, (0, 1), 2))
+#     ("QUANT_∀", "SET"): (_("for every subset {} of {}, {}"),
+#                          (1, (0, 0), 2)),
+#     ("QUANT_∀", "PROP"): (_("for every proposition {}, {}"),
+#                           (1, 2)),
+#     ("QUANT_∀", "TYPE"): (_("for every set {}, {}"),
+#                           (1, 2)),
+#     ("QUANT_∀", "FUNCTION"): (_("for every function {} from {} to {}, {}"),
+#                            (1, (0, 0), (0, 1), 2)),
+#     ("QUANT_∀", "SEQUENCE"): (_("for every sequence {} in {}, {}"),
+#                               (1, (0, 1), 2)),
+#     ("QUANT_∃", "SET"): (_("there exists a subset {} of {} such that {}"),
+#                          (1, (0, 0), 2)),
+#     ("QUANT_∃", "PROP"): (_("there exists a proposition {} such that {}"),
+#                           (1, 2)),
+#     ("QUANT_∃", "TYPE"): (_("there exists a set {} such that {}"),
+#                           (1, 2)),
+#     ("QUANT_∃", "FUNCTION"): (_("there exists a function {} from {} to {} "
+#                                 "such that {}"),
+#                               (1, (0, 0), (0, 1), 2)),
+#     ("QUANT_∃", "SEQUENCE"): (_("there exists a sequence {} in {} such that "
+#                                 "{}"),
+#                               (1, (0, 1), 2)),
+#     ("QUANT_∃!", "SET"): (_("there exists a unique subset {} of {} such that "
+#                             "{}"),
+#                           (1, (0, 0), 2)),
+#     ("QUANT_∃!", "PROP"): (_("there exists a unique proposition {} such that "
+#                              "{}"), (1, 2)),
+#     ("QUANT_∃!", "TYPE"): (_("there exists a unique set {} such that {}"),
+#                            (1, 2)),
+#     ("QUANT_∃!", "FUNCTION"): (_("there exists a unique function {} from {} "
+#                                  "to {} such that {}"),
+#                                (1, (0, 0), (0, 1), 2)),
+#     ("QUANT_∃!", "SEQUENCE"): (_("there exists a unique sequence {} in {} "
+#                                  "such that {}"), (1, (0, 1), 2))
 }
 
 couples_of_nodes_to_latex = {
-    ("QUANT_∀", "SET"): (r"\forall", 1, r" \subset ", (0, 0), ", ", 2),
-    ("QUANT_∀", "PROP"): (r"\forall", 1, r'\proposition', ", ", 2),
-    ("QUANT_∀", "TYPE"): (r"\forall", 1, r" \set", ", ", 2),
-    ("QUANT_∀", "FUNCTION"): (r"\forall", 1, r" \function_from", (0, 0),
-                              r'\to', (0, 1), ", ", 2),
+    # ("QUANT_∀", "SET"): (r"\forall", 1, r" \subset ", (0, 0), ", ", 2),
+    # ("QUANT_∀", "PROP"): (r"\forall", 1, r'\proposition', ", ", 2),
+    # ("QUANT_∀", "TYPE"): (r"\forall", 1, r" \set", ", ", 2),
+    # ("QUANT_∀", "FUNCTION"): (r"\forall", 1, r" \function_from", (0, 0),
+    #                           r'\to', (0, 1), ", ", 2),
     ("QUANT_∀", "SEQUENCE"): (r"\forall", 1, r" \function_from", (0, 0),
                               r'\to', (0, 1), ", ", 2),
     ("APPLICATION", "LOCAL_CONSTANT_EXPANDED_SEQUENCE"):
@@ -560,19 +581,19 @@ couples_of_nodes_to_latex = {
 # ("QUANT_∃", "SEQUENCE"): (r"\exists", 1, r'\in', (0, 1)),
 
 
-first_nodes_of_couples = {node for (node, _) in couples_of_nodes_to_text}
-
-# Extend couples_of_nodes_to_latex with other quantifiers
-supplementary_couples = {}
-for quant_node, type_node in couples_of_nodes_to_latex:
-    for new_quant_node, quant_macro in [("QUANT_∃", r'\exists'),
-                                        ("QUANT_∃!", r'\exists_unique')]:
-        new_key = new_quant_node, type_node
-        old_value = couples_of_nodes_to_latex[(quant_node, type_node)]
-        new_value = (quant_macro,) + old_value[1:]
-        supplementary_couples[new_key] = new_value
-couples_of_nodes_to_latex.update(supplementary_couples)
-
+# first_nodes_of_couples = {node for (node, _) in couples_of_nodes_to_text}
+#
+# # Extend couples_of_nodes_to_latex with other quantifiers
+# supplementary_couples = {}
+# for quant_node, type_node in couples_of_nodes_to_latex:
+#     for new_quant_node, quant_macro in [("QUANT_∃", r'\exists'),
+#                                         ("QUANT_∃!", r'\exists_unique')]:
+#         new_key = new_quant_node, type_node
+#         old_value = couples_of_nodes_to_latex[(quant_node, type_node)]
+#         new_value = (quant_macro,) + old_value[1:]
+#         supplementary_couples[new_key] = new_value
+# couples_of_nodes_to_latex.update(supplementary_couples)
+#
 # Dic of first nodes: e.g. dic_of_first_nodes["QUANT_∀"] = ["SET", "PROP",...]}
 dic_of_first_nodes_text = {node: [] for node, _ in couples_of_nodes_to_text}
 for (first_node, second_node) in couples_of_nodes_to_text:
@@ -601,7 +622,7 @@ NATURE_LEAVES_LIST = ("PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                       "CONSTANT", "LOCAL_CONSTANT", "NONE")
 
 
-def needs_paren(parent, child, child_number, text_depth=0) -> bool:
+def needs_paren(parent, child, child_number) -> bool:
     """
     Decides if parentheses are needed around the child
     e.g. if math_obj.node = PROP.IFF then
@@ -624,9 +645,9 @@ def needs_paren(parent, child, child_number, text_depth=0) -> bool:
         c_node = child.children[0].node
     if p_node == 'COE':  # Should be treated at the previous level, see above
         return False
-    # if (p_node in ("SET_IMAGE", "SET_INVERSE")
-    #         and child_number == 1):  # f(A), f^{-1}(A)
-    #     return True
+    if (p_node in ("SET_IMAGE", "SET_INVERSE")
+            and child_number == 1):  # f(A), f^{-1}(A)
+        return True
     elif c_node in NATURE_LEAVES_LIST:
         return False
     elif p_node == 'PROP_NOT':
@@ -643,7 +664,7 @@ def needs_paren(parent, child, child_number, text_depth=0) -> bool:
         # e.g. (f∘g)^{-1} (x)
         return True
     # Fixme: Does not work?:
-    elif p_node == "APPLICATION" and child_number == 1 and child.children:
+    elif p_node == "APPLICATION" and child_number == -1 and child.children:
         return True
     elif c_node == "APPLICATION":
         return False

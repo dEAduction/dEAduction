@@ -1326,13 +1326,13 @@ class MathObject:
     # Display methods: implemented in math_display #
     ################################################
     def to_display(self, format_="html", text=False,
-                   use_color=True, bf=False) -> str:
-        return ""
+                   use_color=True, bf=False, is_type=False) -> str:
+        return self
 
     def math_type_to_display(self, format_="html", text=False,
                              is_math_type=False,
                              used_in_proof=False) -> str:
-        return ""
+        return self
 
     # def raw_latex_shape(self, negate=False, text_depth=0):
     #     """

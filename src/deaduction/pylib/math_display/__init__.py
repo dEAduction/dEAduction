@@ -32,8 +32,8 @@ from .display_data import (latex_from_node,
                            plurals,
                            plural_types,
                            numbers,
-                           dic_of_first_nodes_text,
-                           couples_of_nodes_to_text,
+                           # dic_of_first_nodes_text,
+                           # couples_of_nodes_to_text,
                            new_objects,
                            new_properties
                            )
