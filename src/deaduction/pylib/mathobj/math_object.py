@@ -142,7 +142,6 @@ class MathObject:
     node              : str   # e.g. "LOCAL_CONSTANT", "FUNCTION", "QUANT_∀"
     info              : dict  # e.g. "name", "id", "pp_type"
     children          : list  # List of MathObjects
-    bound_vars        : Optional[list]  # All bound vars (including children)
 
     Variables = {}  # Containing every element having an identifier,
     # i.e. global and bound variables. This is used to avoid duplicate.
@@ -173,13 +172,16 @@ class MathObject:
 
     INEQUALITIES = ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥", "PROP_EQUAL_NOT")
 
-    def __init__(self, node, info, children, math_type=None):
+    def __init__(self, node, info, children, math_type=None,
+                 is_bound_var=False):
         """
         Create a MathObject.
         """
         self.node = node
         self.info = info
         self.math_type = math_type
+        if is_bound_var:
+            self.is_bound_var = is_bound_var
 
         if node in self.HAVE_BOUND_VARS:
             #################################################################
@@ -190,7 +192,11 @@ class MathObject:
             # same name)
             # This lean name is saved in info['lean_name'],
             # and info['name'] = "NO NAME" until proper naming
+            # This is where the local constant is marked as bound var.
+
+            # Every object here should have children matching this:
             bound_var_type, bound_var, local_context = children
+            bound_var.is_bound_var = True
             bound_var.set_unnamed_bound_var(bound_var_type)
 
         ##################################################################
@@ -205,13 +211,16 @@ class MathObject:
         return self.to_display(format_="utf8")
 
     def add_bound_var(self, bound_var_type=None):
+        """
+        We add a new dummy var to self.children, and name it.
+        """
         new_bound_var = MathObject.new_bound_var(bound_var_type)
         name_single_bound_var(new_bound_var)
         self.children.append(new_bound_var)
 
     def process_sequences_and_likes(self):
         """
-        FIXME: obsolete doc
+        FIXME: obsolete doc, we just add a dummy var to help display.
         This method is called at each MathObject instantiation from lean
         info and children. Local constant representing set families or
         sequences ar modified to obtain the very special display, e.g.
@@ -267,27 +276,38 @@ class MathObject:
     def is_no_math_type(self):
         return self is self.NO_MATH_TYPE
 
-    ##############
-    # Bound vars #
-    ##############
+    ######################
+    # Bound vars methods #
+    ######################
     @property
-    def bound_vars(self):
-        """Recursively determine the list of all bound vars in self ."""
-
-        if self.is_bound_var:
+    def bound_vars(self, include_sequences=False):
+        """Recursively determine the list of all bound vars in self. May
+        include bound vars used to display sequences and likes.
+        """
+    
+        if self.node == "LOCAL_CONSTANT" and not include_sequences:
+            # Do not return bound vars in sequences/set families/...
+            return []
+        elif self.is_bound_var:
             return [self]
         else:
             return sum([child.bound_vars for child in self.children], [])
 
-        # bound_vars = []
-        # for child in self.children:
-        #     bound_vars.extend(child.bound_vars)
-
-        # if self.node in self.HAVE_BOUND_VARS:
-        #     bound_var_type, bound_var, local_context = self.children
-        #     bound_vars.insert(0, bound_var)
-
-        # return bound_vars
+    def remove_names_of_bound_vars(self, include_sequences=False):
+        """
+        Un-name dummy variables of propositions in self.
+        This excludes bound vars used to display lambdas, sequences and set
+        families.
+        @param include_sequences: 
+        """
+        
+        if self.node == "LOCAL_CONSTANT" and not include_sequences:
+            return
+        elif self.is_bound_var:
+            self.set_unnamed_bound_var()
+        else:
+            for child in self.children:
+                child.remove_names_of_bound_vars(include_sequences)
 
     def set_unnamed_bound_var(self, bound_var_type=None):
         new_info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
@@ -296,7 +316,7 @@ class MathObject:
         self.info.update(new_info)
         if bound_var_type:
             self.math_type = bound_var_type
-        self.is_bound_var = True
+        # self.is_bound_var = True
 
     @classmethod
     def new_bound_var(cls, math_type):
@@ -306,7 +326,8 @@ class MathObject:
         bound_var = cls(node="LOCAL_CONSTANT",
                         info={},
                         children=[],
-                        math_type=math_type)
+                        math_type=math_type,
+                        is_bound_var=True)
         bound_var.set_unnamed_bound_var()
         return bound_var
 
@@ -322,6 +343,41 @@ class MathObject:
 
     def bound_var_nb(self):
         return self.info.get('bound_var_nb')
+
+    def longest_bound_vars_chain(self,
+                                 include_sequences=False,
+                                 math_type=None):
+        """
+        Return one of the longest unbound vars chains of self. A chain of
+        bound vars is a list of bound vars which cannot pairwise share the same
+        name. Each chain corresponds to a leaf of the tree, and contains all
+        the bound vars whose corresponding brother-body appears in the path
+        from the root to the leaf.
+        """
+        
+        if self.node == "LOCAL_CONSTANT" and not include_sequences:
+            # Do not return bound vars in sequences/set families/...
+            return []
+
+        # Add self's child bound var if any
+        # (this is pertinent only if self in HAVE_BOUND_VARS)
+        # This should contain at most one element
+        child_bound_vars = [child for child in self.children
+                            if child.is_bound_var]
+        if math_type:  # Filters by math_type
+            child_bound_vars = [child for child in child_bound_vars
+                                if child.math_type == math_type]
+        assert len(child_bound_vars) <= 1
+
+        # Find the longest chain among children
+        longest = []
+        for child in self.children:
+            maybe_longer = child.longest_bound_vars_chain(include_sequences,
+                                                          math_type)
+            if len(maybe_longer) > len(longest):
+                longest = maybe_longer
+                
+        return child_bound_vars + longest
 
     #################
     # Class methods #
