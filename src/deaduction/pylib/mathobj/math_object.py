@@ -169,7 +169,7 @@ class MathObject:
 
     # Nodes of math objects that need instantiation of bound variables
     HAVE_BOUND_VARS = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_INTENSION",
-                       "LAMBDA", "EXTENDED_SEQUENCE", "EXTENDED_SET_FAMILY")
+                       "LAMBDA")  # "EXTENDED_SEQUENCE", "EXTENDED_SET_FAMILY")
 
     INEQUALITIES = ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥", "PROP_EQUAL_NOT")
 
@@ -204,8 +204,14 @@ class MathObject:
     def __repr__(self):
         return self.to_display(format_="utf8")
 
+    def add_bound_var(self, bound_var_type=None):
+        new_bound_var = MathObject.new_bound_var(bound_var_type)
+        name_single_bound_var(new_bound_var)
+        self.children.append(new_bound_var)
+
     def process_sequences_and_likes(self):
         """
+        FIXME: obsolete doc
         This method is called at each MathObject instantiation from lean
         info and children. Local constant representing set families or
         sequences ar modified to obtain the very special display, e.g.
@@ -217,13 +223,19 @@ class MathObject:
         (NOT EXPANDED) self, and body is something like
         APPLICATION(non expanded duplicate, var).
         """
-        if (self.is_sequence() or self.is_set_family())\
-                and self.node.find("_EXPANDED_") == -1:
-            log.debug(f"processing sequence {self.display_debug}")
-            bound_var, body = self.__lambda_var_n_body()
-            bound_var_type = self.math_type.children[0]
-            self.children = [bound_var_type, bound_var, body]
-            self.node += "_EXPANDED_" + self.math_type.node
+        # if (self.is_sequence() or self.is_set_family())\
+        #         and self.node.find("_EXPANDED_") == -1:
+        #     log.debug(f"processing sequence {self.display_debug}")
+        #     bound_var, body = self.__lambda_var_n_body()
+        #     bound_var_type = self.math_type.children[0]
+        #     self.children = [bound_var_type, bound_var, body]
+        #     self.node += "_EXPANDED_" + self.math_type.node
+        if self.is_sequence() or self.is_set_family():
+            if self.is_lambda(is_math_type=True):
+                pass
+            elif not self.children:
+                bound_var_type = self.math_type.children[0]
+                self.add_bound_var(bound_var_type)
 
     def duplicate(self):
         """
@@ -261,15 +273,42 @@ class MathObject:
     @property
     def bound_vars(self):
         """Recursively determine the list of all bound vars in self ."""
-        # if not hasattr(self, "_bound_vars") or not self._bound_vars:
-        bound_vars = []
-        for child in self.children:
-            bound_vars.extend(child.bound_vars)
-        if self.node in self.HAVE_BOUND_VARS:
-            bound_var_type, bound_var, local_context = self.children
-            bound_vars.insert(0, bound_var)
 
-        return bound_vars
+        if self.is_bound_var:
+            return [self]
+        else:
+            return sum([child.bound_vars for child in self.children], [])
+
+        # bound_vars = []
+        # for child in self.children:
+        #     bound_vars.extend(child.bound_vars)
+
+        # if self.node in self.HAVE_BOUND_VARS:
+        #     bound_var_type, bound_var, local_context = self.children
+        #     bound_vars.insert(0, bound_var)
+
+        # return bound_vars
+
+    def set_unnamed_bound_var(self, bound_var_type=None):
+        new_info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
+                    'lean_name': self.info.get('name', ''),
+                    'bound_var_nb': -1}
+        self.info.update(new_info)
+        if bound_var_type:
+            self.math_type = bound_var_type
+        self.is_bound_var = True
+
+    @classmethod
+    def new_bound_var(cls, math_type):
+        """
+        Return a new bound var of given math_type.
+        """
+        bound_var = cls(node="LOCAL_CONSTANT",
+                        info={},
+                        children=[],
+                        math_type=math_type)
+        bound_var.set_unnamed_bound_var()
+        return bound_var
 
     def is_unnamed(self):
         return self.display_name == "NO NAME" \
@@ -283,14 +322,6 @@ class MathObject:
 
     def bound_var_nb(self):
         return self.info.get('bound_var_nb')
-
-    def set_unnamed_bound_var(self, bound_var_type):
-        new_info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
-                    'lean_name': self.info.get('name', ''),
-                    'bound_var_nb': -1}
-        self.info.update(new_info)
-        self.math_type = bound_var_type
-        self.is_bound_var = True
 
     #################
     # Class methods #
@@ -408,7 +439,7 @@ class MathObject:
     @property
     def display_name(self) -> str:
         """
-        This is both Lean name and the name used to display in deaduction.
+        This is the name used to display in deaduction.
         """
         return self.name if self.name else '*no_name*'
 
@@ -1492,21 +1523,6 @@ class MathObject:
     #                                         no_text=(text_depth <= 0))
     #
     #     return display
-
-    @classmethod
-    def new_bound_var(cls, math_type):
-        """
-        Return a new bound var of given math_type.
-        """
-
-        info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
-                'lean_name': "NONE",
-                'is_bound_var': True}
-        bound_var = cls(node="LOCAL_CONSTANT",
-                        info=info,
-                        children=[],
-                        math_type=math_type)
-        return bound_var
 
     def __lambda_var_n_body(self):
         """

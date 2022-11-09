@@ -119,16 +119,12 @@ latex_from_pattern_string = {
     # u_n:
     # Here ?0 will be an expanded sequence, thus child 0 is the body "u_n",
     # we want the child 0 of this ("u").
-    "APP(?0: SEQUENCE(?1, ?2), ?3)": ((0, 0), ["_", 1]),
-    # For a "local constant expanded set family" (LCESF) applied to a given
-    # index, the tree is:
-    # APP(LCESF(index_set (I), dummy index (i), body = APP(E, i)), given index)
-    # Thus (0,2,0 refers to E, and (1,) refers to the given index.
-    "APP(LOCAL_CONSTANT_EXPANDED_SET_FAMILY(...), ?0)":
-        ((0, 2, 0), ["_", (1,)]),
-    # We still need the following to display the body of LCESF:
-    "APP(?0:SET_FAMILY, ?1)": (0, ["_", (1, )])
-
+    # "APP(?0: SEQUENCE(?1, ?2), ?3)": ((0, 0), ["_", 1]),
+    "APP(LOCAL_CONSTANT:SET_FAMILY(?0, ?1)(?2), ?3)": ('(0.name)', '_', 2),
+    "LOCAL_CONSTANT:SET_FAMILY(?0, ?2)(?1)":
+        (r"\{", name, '_', 1, ', ', 1, r"\in_symbol", 0, r"\}"),
+    # "LAMBDA:SET_FAMILY(?0, ?2)(?1)":
+    #     (r"\{", name, '_', 2, ', ', 2, r"\in_symbol", 0, r"\}")
     ######
     # in #
     ######
@@ -219,8 +215,8 @@ def string_to_pattern():
             metavars = []
             pattern = PatternMathObject.from_tree(tree, metavars)
             list_.append((pattern, latex_shape, metavars))
-            # print(key)
-            # print(tree.display())
+            print(key)
+            print(tree.display())
 
 
 string_to_pattern()

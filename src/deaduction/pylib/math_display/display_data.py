@@ -134,16 +134,17 @@ latex_from_node = {
     "TYPE": (r'\set',),
     "FUNCTION": (r'\function_from', 0, r'\to', 1),  # (0, r" \to ", 1),
     "SEQUENCE": (r'\sequence_from', 0, r'\to', 1),  # (0, r" \to ", 1),
-    "LOCAL_CONSTANT_EXPANDED_SEQUENCE":
-        (r"(", 2, ')', ['_', 1, r"\in_symbol", 0]),
-    # NB: children[2] is the whole body, "u_n"
-    "LOCAL_CONSTANT_EXPANDED_SET_FAMILY":
-        (r"\{", 2, ', ', 1, r"\in_symbol", 0, r"\}"),
-    "LAMBDA_EXPANDED_SEQUENCE":
-        (r"(", 2, ')', ['_', 1, r"\in_symbol", 0]),
-    # NB: children[2] is the whole body, "u_n"
-    "LAMBDA_EXPANDED_SET_FAMILY":
-        (r"\{", 2, ', ', 1, r"\in_symbol", 0, r"\}"),
+    # FIXME:
+    # "LOCAL_CONSTANT_EXPANDED_SEQUENCE":
+    #     (r"(", 2, ')', ['_', 1, r"\in_symbol", 0]),
+    # # NB: children[2] is the whole body, "u_n"
+    # "LOCAL_CONSTANT_EXPANDED_SET_FAMILY":
+    #     (r"\{", 2, ', ', 1, r"\in_symbol", 0, r"\}"),
+    # "LAMBDA_EXPANDED_SEQUENCE":
+    #     (r"(", 2, ')', ['_', 1, r"\in_symbol", 0]),
+    # # NB: children[2] is the whole body, "u_n"
+    # "LAMBDA_EXPANDED_SET_FAMILY":
+    #     (r"\{", 2, ', ', 1, r"\in_symbol", 0, r"\}"),
     "CONSTANT": (name,),
     "NUMBER": (value,),
     "LOCAL_CONSTANT": (name,),  # Probably useless
@@ -561,16 +562,16 @@ couples_of_nodes_to_latex = {
     # ("QUANT_∀", "TYPE"): (r"\forall", 1, r" \set", ", ", 2),
     # ("QUANT_∀", "FUNCTION"): (r"\forall", 1, r" \function_from", (0, 0),
     #                           r'\to', (0, 1), ", ", 2),
-    ("QUANT_∀", "SEQUENCE"): (r"\forall", 1, r" \function_from", (0, 0),
-                              r'\to', (0, 1), ", ", 2),
-    ("APPLICATION", "LOCAL_CONSTANT_EXPANDED_SEQUENCE"):
-        ((0, 2, 0), ['_', 1]),
-    ("APPLICATION", "LOCAL_CONSTANT_EXPANDED_SET_FAMILY"):
-        ((0, 2, 0), ['_', 1]),
-        ("APPLICATION", "LAMBDA_EXPANDED_SEQUENCE"):
-        ((0, 2, 0), ['_', 1]),
-    ("APPLICATION", "LAMBDA_EXPANDED_SET_FAMILY"):
-        ((0, 2, 0), ['_', 1])
+    # ("QUANT_∀", "SEQUENCE"): (r"\forall", 1, r" \function_from", (0, 0),
+    #                           r'\to', (0, 1), ", ", 2),
+    # ("APPLICATION", "LOCAL_CONSTANT_EXPANDED_SEQUENCE"):
+    #     ((0, 2, 0), ['_', 1]),
+    # ("APPLICATION", "LOCAL_CONSTANT_EXPANDED_SET_FAMILY"):
+    #     ((0, 2, 0), ['_', 1]),
+    #     ("APPLICATION", "LAMBDA_EXPANDED_SEQUENCE"):
+    #     ((0, 2, 0), ['_', 1]),
+    # ("APPLICATION", "LAMBDA_EXPANDED_SET_FAMILY"):
+    #     ((0, 2, 0), ['_', 1])
 }
 # Other quantifiers are treated automatically below
 # ("QUANT_∃", "SET"): (r"\exists", 1, r" \subset ", (0, 0), ", ", 2),

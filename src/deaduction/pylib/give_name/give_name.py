@@ -672,7 +672,7 @@ def name_bound_vars(math_type,
 
 def name_single_bound_var(bound_var):
     """
-    Give name to som isolated bound var, e.g. useful for sequences where
+    Give name to some isolated bound var, e.g. useful for sequences where
     variable "n" is used independently of the context.
 
     :param bound_var: MathObject

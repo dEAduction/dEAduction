@@ -367,13 +367,21 @@ class Goal:
         initial_proof_state of a statement.
         """
         # (0) Some unnamed vars?
-        there_are_unnamed_vars = False
-        if self.target.math_type.has_unnamed_bound_vars:
-            there_are_unnamed_vars = True
-        else:
-            for context_math_prop in self.context_props:
-                if context_math_prop.math_type.has_unnamed_bound_vars:
-                    there_are_unnamed_vars = True
+        # there_are_unnamed_vars = False
+        # if self.target.math_type.has_unnamed_bound_vars:
+        #     there_are_unnamed_vars = True
+        # else:
+        #     for context_math_prop in self.context_props:
+        #         if context_math_prop.math_type.has_unnamed_bound_vars:
+        #             there_are_unnamed_vars = True
+        # if not there_are_unnamed_vars:
+        #     return
+        objects = [self.target.math_type] \
+            + [prop.math_type for prop in self.context_props] \
+            + self.context_objects
+        objects_with_unnamed_vars = [math_object.has_unnamed_bound_vars
+                                     for math_object in objects]
+        there_are_unnamed_vars = any(objects_with_unnamed_vars)
         if not there_are_unnamed_vars:
             return
 

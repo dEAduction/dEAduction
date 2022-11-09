@@ -75,13 +75,18 @@ class Tree:
 
     def display(self, depth=0):
         MUL = 1
-        preamble = "   " + "|  " * depth * MUL
+        sep = "|  "
+        preamble = "   " + sep * depth * MUL
 
         depth_str = str(depth)
         preamble_root = depth_str + preamble[len(depth_str):]
+        # display = preamble_root + self.node \
+        #     + (": " + self.type_.node if self.type_ else "")
         display = preamble_root + self.node \
-            + (": " + self.type_.node if self.type_ else "")
+            + (": " if self.type_ else "")
         print(display)
+        if self.type_:
+            self.type_.display(depth=len(display)//len(sep))
         for child in self.children:
             child.display(depth + 1)
 

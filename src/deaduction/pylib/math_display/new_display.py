@@ -76,6 +76,7 @@ def latex_shape(self: MathObject, is_type=False, text=False) -> []:
         for pattern, pre_shape, metavars in dic:
             if pattern.match(self):
                 log.debug(f"Matched pattern--> shape {pre_shape}")
+                log.debug(f"Node: {self.node}")
                 # Now metavars are matched
                 if pre_shape[0] == "global":
                     pre_shape = global_pre_shape_to_pre_shape(pre_shape[1:],
