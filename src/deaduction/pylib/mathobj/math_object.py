@@ -196,16 +196,18 @@ class MathObject:
 
             # Every object here should have children matching this:
             bound_var_type, bound_var, local_context = children
-            bound_var.is_bound_var = True
-            bound_var.set_unnamed_bound_var(bound_var_type)
+            bound_var = BoundVar(bound_var.node,
+                                 bound_var.info,
+                                 bound_var.children,
+                                 bound_var.math_type)
+            children[1] = bound_var
+        self.children = children
 
         ##################################################################
         # APP: uncurryfying APP(APP(1, 2, ...), n) --> APP(1, 2, ..., n) #
         ##################################################################
         if node == 'APPLICATION' and children[0].node == 'APPLICATION':
             children = children[0].children + [children[1]]
-
-        self.children = children
 
     def __repr__(self):
         return self.to_display(format_="utf8")
@@ -283,7 +285,7 @@ class MathObject:
         """Recursively determine the list of all bound vars in self. May
         include bound vars used to display sequences and likes.
         """
-    
+
         if self.is_bound_var:
             return [self]
         elif self.node == "LOCAL_CONSTANT" and not include_sequences:
@@ -291,44 +293,6 @@ class MathObject:
             return []
         else:
             return sum([child.bound_vars() for child in self.children], [])
-
-    def remove_names_of_bound_vars(self, include_sequences=False):
-        """
-        Un-name dummy variables of propositions in self.
-        This excludes bound vars used to display lambdas, sequences and set
-        families.
-        @param include_sequences: 
-        """
-        
-        if self.node == "LOCAL_CONSTANT" and not include_sequences:
-            return
-        elif self.is_bound_var:
-            self.set_unnamed_bound_var()
-        else:
-            for child in self.children:
-                child.remove_names_of_bound_vars(include_sequences)
-
-    def set_unnamed_bound_var(self, bound_var_type=None):
-        new_info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
-                    'lean_name': self.info.get('name', ''),
-                    'bound_var_nb': -1}
-        self.info.update(new_info)
-        if bound_var_type:
-            self.math_type = bound_var_type
-        # self.is_bound_var = True
-
-    @classmethod
-    def new_bound_var(cls, math_type):
-        """
-        Return a new bound var of given math_type.
-        """
-        bound_var = cls(node="LOCAL_CONSTANT",
-                        info={},
-                        children=[],
-                        math_type=math_type,
-                        is_bound_var=True)
-        bound_var.set_unnamed_bound_var()
-        return bound_var
 
     def is_unnamed(self):
         return self.display_name == "NO NAME" \
@@ -340,45 +304,21 @@ class MathObject:
         """
         return [var for var in self.bound_vars() if var.is_unnamed()]
 
-    def bound_var_nb(self):
-        return self.info.get('bound_var_nb')
+    def remove_names_of_bound_vars(self, include_sequences=False):
+        """
+        Un-name dummy variables of propositions in self.
+        This excludes bound vars used to display lambdas, sequences and set
+        families.
+        @param include_sequences:
+        """
 
-    def longest_bound_vars_chain(self,
-                                 include_sequences=False,
-                                 math_type=None):
-        """
-        Return one of the longest unbound vars chains of self. A chain of
-        bound vars is a list of bound vars which cannot pairwise share the same
-        name. Each chain corresponds to a leaf of the tree, and contains all
-        the bound vars whose corresponding brother-body appears in the path
-        from the root to the leaf.
-        """
-        
         if self.node == "LOCAL_CONSTANT" and not include_sequences:
-            # Do not return bound vars in sequences/set families/...
-            return []
-
-        # Add self's child bound var if any
-        if self in self.HAVE_BOUND_VARS:
-            bound_var = self.children[1]
-            if math_type and bound_var.math_type != math_type:
-                bound_var = None
+            return
+        elif self.is_bound_var:
+            self.set_unnamed_bound_var()
         else:
-            bound_var = None
-
-        # Find the longest chain among children
-        longest = []
-        for child in self.children:
-            maybe_longer = child.longest_bound_vars_chain(include_sequences,
-                                                          math_type)
-            # Remove duplicate
-            if bound_var:
-                maybe_longer = [var for var in maybe_longer
-                                if var is not bound_var]
-            if len(maybe_longer) > len(longest):
-                longest = maybe_longer
-                
-        return [bound_var] + longest if bound_var else longest
+            for child in self.children:
+                child.remove_names_of_bound_vars(include_sequences)
 
     #################
     # Class methods #
@@ -587,22 +527,6 @@ class MathObject:
 # Tests for equality and related methods #
 ##########################################
 
-    def mark_identical_bound_vars(self, other):
-        """
-        Mark two bound variables with a common number, so that we can follow
-        them along two quantified expressions and check if these expressions
-        are identical
-        """
-        MathObject.bound_var_counter += 1
-        self.info['bound_var_nb'] = MathObject.bound_var_counter
-        other.info['bound_var_nb'] = MathObject.bound_var_counter
-
-    def unmark_bound_var(self):
-        """
-        Unmark the two bound vars.
-        """
-        self.info['bound_var_nb'] = -1
-
     def __eq__(self, other) -> bool:
         """
         Test if the two MathObjects code for the same mathematical objects,
@@ -636,11 +560,14 @@ class MathObject:
         #########################################
         # Test node, bound var, name, math_type #
         #########################################
-        if (self.node, self.bound_var_nb(), self.name, self.value,
-            self.math_type) != \
-                (other.node, other.bound_var_nb(), other.name, other.value,
-                 other.math_type):
+        if (self.node, self.is_bound_var, self.name, self.math_type,
+            self.value) != \
+                (other.node, other.is_bound_var, other.name, other.math_type,
+                 other.value):
             return False
+        if self.is_bound_var:
+            if self.bound_var_nb() != other.bound_var_nb():
+                return False
 
         #################################
         # Recursively test for children #
@@ -1701,4 +1628,51 @@ MathObject.PROP = MathObject(node="PROP",
                              info={},
                              children=[],
                              math_type=None)
+
+
+class BoundVar(MathObject):
+    def __init__(self, node, info, children, math_type=None):
+        MathObject.__init__(self, node, info, children, math_type)
+        self.is_bound_var = True
+        self.set_unnamed_bound_var()
+
+    def bound_var_nb(self):
+        return self.info.get('bound_var_nb')
+
+    def set_unnamed_bound_var(self):
+        new_info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
+                    'lean_name': self.info.get('name', ''),
+                    'bound_var_nb': -1}
+        self.info.update(new_info)
+
+    def is_unnamed(self):
+        return self.display_name == "NO NAME" \
+               or self.display_name == '*no_name*'
+
+    def mark_identical_bound_vars(self, other):
+        """
+        Mark two bound variables with a common number, so that we can follow
+        them along two quantified expressions and check if these expressions
+        are identical
+        """
+        MathObject.bound_var_counter += 1
+        self.info['bound_var_nb'] = MathObject.bound_var_counter
+        other.info['bound_var_nb'] = MathObject.bound_var_counter
+
+    def unmark_bound_var(self):
+        """
+        Unmark the two bound vars.
+        """
+        self.info['bound_var_nb'] = -1
+
+    # Methods for PatternMathObject #
+    def recursive_match(self, other):
+        return (other.is_bound_var
+                and self.bound_var_nb() == other.bound_var_nb())
+
+    def apply_matching(self):
+        """
+        Juste return a copy of self.
+        """
+        return copy(self)
 

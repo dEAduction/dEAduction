@@ -316,7 +316,7 @@ class PatternMathObject(MathObject):
         elif any(self_item != '?' and self_item != math_object_item
                  for self_item, math_object_item in
                  [(self.node, math_object.node),
-                  (self.bound_var_nb(), math_object.bound_var_nb()),
+                  (self.is_bound_var, math_object.is_bound_var),
                   (self.name, math_object.name),
                   (self.value, math_object.value)]):
             return False
