@@ -163,6 +163,9 @@ class Goal:
             if math_objects:
                 return math_objects[0]
 
+##################
+# Compare method #
+##################
     def compare(self, old_goal):
         """
         Compare the new goal to the old one, and tag the target and the
@@ -239,6 +242,77 @@ class Goal:
 
         # Finally, modify order and set tags
         self.context = clean_permuted_new_context
+
+#####################################
+# Bound vars naming methods methods #
+#####################################
+    def free_variables(self, math_type=None):
+        if math_type:
+            return [var for var in self.context_objects
+                    if var.math_type == math_type]
+        else:
+            return self.context_objects
+
+    def bound_variables(self, math_type=None):
+        # TODO
+        return []
+
+    def variables(self, math_type=None) -> [MathObject]:
+        """
+        Provide the list of all variables (free and bound) of a given
+        math_type.
+        """
+        return []
+
+    def all_math_types(self):
+        t = [var.math_type for var in self.variables()]
+        return inj_list(t)
+
+    def hint_for_type(self, math_type) -> str:
+        """
+        Return the hint for a given type.
+        """
+        pass
+
+    def names_for_type(self, math_type):
+        """
+        Name all bound vars of a given type.
+        """
+
+        # TODO: handle case of number (refine by hints).
+
+        hint = self.hint_for_type(math_type)
+        length = math_type.count_dependant_bound_vars()
+        friend_names = inj_list([var.display_name
+                                 for var in self.variables()
+                                 if var.math_type == math_type
+                                and not var.is_unnamed])
+        other_types_bound_var_names = inj_list(
+                                      [var.display_name
+                                       for var in self.bound_variables()
+                                       if var.math_type != math_type
+                                       and not var.is_unnamed]
+                                                )
+
+        excluded_hints = inj_list([self.hint_for_type(t)
+                                   for t in self.all_math_types()
+                                   if t != math_type])
+        # TODO: exclure aussi les potential math_types!!!
+
+        context_names = [var.display_name for var in self.free_variables()]
+
+        excluded_names = (context_names + excluded_hints
+                          + other_types_bound_var_names)
+        names = potential_names(hint, length, friend_names, excluded_names)
+
+        return names
+
+    def name_vars_of_type(self, math_type, names: [str]):
+        """
+        Actually name all bound vars of given type using names.
+        """
+        # TODO
+        pass
 
     def __name_real_bound_vars(self, math_type, unnamed_vars, forb_vars):
         """
@@ -325,12 +399,13 @@ class Goal:
         #  forbidden vars are pertinent only for the first element of the
         #  chain that will be named.
 
-        if prop in MathObject.HAVE_BOUND_VARS:
+        if prop.node in MathObject.HAVE_BOUND_VARS:
             bound_var = prop.children[1]
             if bound_var.is_unnamed():
                 math_type = prop.children[0]
                 # The following will include prop's bound var,
                 # so we will name at least one bound var.
+                # FIXME: return only unnamed bv
                 chain = prop.longest_bound_vars_chain(include_sequences=False,
                                                       math_type=math_type)
                 # NB: no variable in the chain has been named yet (CHECK?)
@@ -338,11 +413,11 @@ class Goal:
                 named_descendants = [var for var in prop.bound_vars(
                                      include_sequences=False)
                                      if not var.is_unnamed()]
-                forbidden_vars = (named_ancestors + named_descendants
-                                  + self.context_objects)
+                forbidden_vars = inj_list(named_ancestors + named_descendants
+                                          + self.context_objects)
                 data = ([math_type], chain, forbidden_vars)
                 self.__name_bound_vars_in_data(*data)
-                named_ancestors = named_ancestors + chain.pop(0)
+                named_ancestors.append(chain.pop(0))
 
         for child in prop.children:
             # Do not forget to add chain to forbidden vars
@@ -361,14 +436,15 @@ class Goal:
         glob_vars = self.context_objects
 
         # log.debug(f"Naming vars in {prop.to_display()}:")
-        if prop.math_type.bound_vars:
+        math_type = prop.math_type
+        if math_type.bound_vars():
             # log.debug(f"""-->Dummy vars types: {[var.math_type.to_display()
             #                       for var in prop.math_type.bound_vars]}""")
 
             # Un-name everything!
-            prop.math_type.remove_names_of_bound_vars(include_sequences=False)
+            math_type.remove_names_of_bound_vars(include_sequences=False)
 
-            self.__recursive_name_bound_vars(prop, named_ancestors=[])
+            self.__recursive_name_bound_vars(math_type, named_ancestors=[])
             return
 
             # OLD VERSION:
@@ -430,8 +506,8 @@ class Goal:
             + [prop.math_type for prop in self.context_props]
         # We choose NOT to include bound vars in objects (e.g. sequences)
             # + self.context_objects
-        objects_with_unnamed_vars = [math_object.has_unnamed_bound_vars
-                                     for math_object in objects]
+        objects_with_unnamed_vars = [math_object for math_object in objects
+                                     if math_object.has_unnamed_bound_vars]
         there_are_unnamed_vars = any(objects_with_unnamed_vars)
         if not there_are_unnamed_vars:
             return
@@ -460,10 +536,10 @@ class Goal:
             # Collect all math_types, with no repetition
             math_types = inj_list([var.math_type
                                    for prop in self.context_props
-                                   for var in prop.math_type.bound_vars])
+                                   for var in prop.math_type.bound_vars()])
             # All dummy vars (no repetition):
             dummy_vars = [var for prop in self.context_props
-                          for var in prop.math_type.bound_vars]
+                          for var in prop.math_type.bound_vars()]
             data = (math_types, dummy_vars, self.context_objects, future_vars)
             self.__name_bound_vars_in_data(*data)
         else:  # Types and dummy vars prop by prop

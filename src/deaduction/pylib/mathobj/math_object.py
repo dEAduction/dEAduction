@@ -183,7 +183,7 @@ class MathObject:
         if is_bound_var:
             self.is_bound_var = is_bound_var
 
-        if node in self.HAVE_BOUND_VARS:
+        if node in self.HAVE_BOUND_VARS and len(children) == 3:
             #################################################################
             # Quantifiers & lambdas: provisionally "unname" bound variables #
             #################################################################
@@ -279,19 +279,18 @@ class MathObject:
     ######################
     # Bound vars methods #
     ######################
-    @property
     def bound_vars(self, include_sequences=False):
         """Recursively determine the list of all bound vars in self. May
         include bound vars used to display sequences and likes.
         """
     
-        if self.node == "LOCAL_CONSTANT" and not include_sequences:
+        if self.is_bound_var:
+            return [self]
+        elif self.node == "LOCAL_CONSTANT" and not include_sequences:
             # Do not return bound vars in sequences/set families/...
             return []
-        elif self.is_bound_var:
-            return [self]
         else:
-            return sum([child.bound_vars for child in self.children], [])
+            return sum([child.bound_vars() for child in self.children], [])
 
     def remove_names_of_bound_vars(self, include_sequences=False):
         """
@@ -339,7 +338,7 @@ class MathObject:
         """
         Only unnamed bound vars, tested by is_unnamed method.
         """
-        return [var for var in self.bound_vars if var.is_unnamed()]
+        return [var for var in self.bound_vars() if var.is_unnamed()]
 
     def bound_var_nb(self):
         return self.info.get('bound_var_nb')
@@ -360,24 +359,26 @@ class MathObject:
             return []
 
         # Add self's child bound var if any
-        # (this is pertinent only if self in HAVE_BOUND_VARS)
-        # This should contain at most one element
-        child_bound_vars = [child for child in self.children
-                            if child.is_bound_var]
-        if math_type:  # Filters by math_type
-            child_bound_vars = [child for child in child_bound_vars
-                                if child.math_type == math_type]
-        assert len(child_bound_vars) <= 1
+        if self in self.HAVE_BOUND_VARS:
+            bound_var = self.children[1]
+            if math_type and bound_var.math_type != math_type:
+                bound_var = None
+        else:
+            bound_var = None
 
         # Find the longest chain among children
         longest = []
         for child in self.children:
             maybe_longer = child.longest_bound_vars_chain(include_sequences,
                                                           math_type)
+            # Remove duplicate
+            if bound_var:
+                maybe_longer = [var for var in maybe_longer
+                                if var is not bound_var]
             if len(maybe_longer) > len(longest):
                 longest = maybe_longer
                 
-        return child_bound_vars + longest
+        return [bound_var] + longest if bound_var else longest
 
     #################
     # Class methods #
@@ -479,7 +480,7 @@ class MathObject:
         """
         Return True if self has some dummy vars whose name is "NO NAME".
         """
-        for var in self.bound_vars:
+        for var in self.bound_vars():
             if var.is_unnamed():
                 return True
         return False
@@ -739,7 +740,7 @@ class MathObject:
 
     def is_type(self, is_math_type=False) -> bool:
         """
-        Test if (math_type of) self is a "universe"
+        Test if (math_type of) self is a "universe".
         """
         if is_math_type:
             math_type = self
@@ -949,9 +950,9 @@ class MathObject:
         that is, self represents a proof that some type is an instance of
         some class (information that should not be displayed in deaduction)
         """
-        lean_name = self.info.get("lean_name")
-        if lean_name:
-            if lean_name.startswith("_inst_"):
+        name = self.info.get("name")
+        if name:
+            if name.startswith("_inst_"):
                 return True
         return False
 
@@ -981,6 +982,9 @@ class MathObject:
     def is_R(self):
         return (self.display_name == 'ℝ'
                 or self.display_name == 'RealSubGroup')
+
+    def is_number(self):
+        return Any([self.is_N(), self.is_Z(), self.is_Q(), self.is_R()])
 
     def is_iff(self, is_math_type=False) -> bool:
         """
@@ -1414,11 +1418,17 @@ class MathObject:
     ################################################
     def to_display(self, format_="html", text=False,
                    use_color=True, bf=False, is_type=False) -> str:
+        """
+        This method is actually defined in math_display/new_display.
+        """
         return self
 
     def math_type_to_display(self, format_="html", text=False,
                              is_math_type=False,
                              used_in_proof=False) -> str:
+        """
+        This method is actually defined in math_display/new_display.
+        """
         return self
 
     # def raw_latex_shape(self, negate=False, text_depth=0):
@@ -1608,12 +1618,68 @@ class MathObject:
         name_single_bound_var(bound_var)
         return bound_var, body
 
-    # @classmethod
-    # def PROP_AS_MATHOBJECT(cls):
-    #     return MathObject(node="PROP",
-    #                       info={},
-    #                       children=[],
-    #                       math_type=None)
+    ##################
+    # Naming methods #
+    ##################
+
+    def next_bound_vars(self, math_type=None):
+        """
+        Return the list of all bound vars which are next to self in the tree.
+        """
+        # TODO!!!!
+
+    def potential_types(self):
+        if self.is_bound_var:
+            return [self.math_type]
+        elif self.node in ['SET', 'TYPE']:
+            return [self]
+        else:
+            return sum([child.potential_types() for child in self.children], [])
+
+    def name_hint_from_type(self) -> Optional[str]:
+        """
+        Return a hint for naming a variable whose type is self.
+        """
+        hint = None
+        # Subsets will be named with uppercase letters
+        if self.node in ['SET', 'TYPE', 'PROP']:
+            if self.display_name.isalpha() and self.display_name[0].isupper():
+                hint = self.display_name[0].lower()
+
+        if self.is_sequence():
+            # Type of the sequence terms
+            seq_type = self.children[1]
+            if not seq_type.is_number():
+                hint = seq_type.name_hint_from_type()
+
+        # Standard hints
+        if not hint:
+            hint = 'A' if self.node.startswith('SET') \
+                else 'X' if self.is_type(is_math_type=True) \
+                else 'P' if self.is_prop(is_math_type=True) \
+                else 'f' if self.is_function(is_math_type=True) \
+                else 'u' if self.is_sequence(is_math_type=True) \
+                else 'n' if self.is_nat(is_math_type=True) \
+                else None  # else 'x'  # Or None?
+
+        return hint
+
+    def name_hint(self) -> Optional[str]:
+        """
+        Return a hint for naming self, which is assumed to be a dummy var.
+        """
+
+        hint = None
+        use_lean_name = (self.math_type.is_number(), self.is_function())
+        if any(use_lean_name):
+            lean_name = self.info.get('lean_name')
+            if lean_name:
+                hint = lean_name
+
+        # if not hint:
+        #     hint = self.math_type.name_hint_from_type()
+
+        return hint
 
 
 MathObject.NO_MATH_TYPE = MathObject(node="not provided",

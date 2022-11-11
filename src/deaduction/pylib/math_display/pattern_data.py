@@ -120,11 +120,11 @@ latex_from_pattern_string = {
     # Here ?0 will be an expanded sequence, thus child 0 is the body "u_n",
     # we want the child 0 of this ("u").
     # "APP(?0: SEQUENCE(?1, ?2), ?3)": ((0, 0), ["_", 1]),
-    "APP(LOCAL_CONSTANT:SET_FAMILY(?0, ?1)(?2), ?3)": ('(0.name)', '_', 2),
+    "APP(LOCAL_CONSTANT:SET_FAMILY(?0, ?1)(?2), ?3)": ('(0.name)', ['_', (1,)]),
     "LOCAL_CONSTANT:SET_FAMILY(?0, ?2)(?1)":
-        (r"\{", name, '_', 1, ', ', 1, r"\in_symbol", 0, r"\}"),
-    # "LAMBDA:SET_FAMILY(?0, ?2)(?1)":
-    #     (r"\{", name, '_', 2, ', ', 2, r"\in_symbol", 0, r"\}")
+        (r"\{", name, ['_', (0,)], ', ', (0,), r"\in_symbol", 0, r"\}"),
+    "LAMBDA:SET_FAMILY(?0, ?2)(...)":
+        (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}")
     ######
     # in #
     ######

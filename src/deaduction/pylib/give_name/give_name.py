@@ -335,10 +335,7 @@ def hints_from_type(math_type, hints=None):
             hints.remove(hint)
 
     # Subsets will be named with uppercase letters
-    if math_type.node in ['SET', 'TYPE', 'PROP']:
-        upper_case_name = True
-    else:
-        upper_case_name = False
+    upper_case_name = (math_type.node in ['SET', 'TYPE', 'PROP'])
 
     if upper_case_name:
         hints = [hint[0].upper() for hint in hints]
