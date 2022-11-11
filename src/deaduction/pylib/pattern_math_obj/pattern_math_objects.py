@@ -237,10 +237,16 @@ class PatternMathObject(MathObject):
         ##############################
         # Test node, bound var, name #
         ##############################
-        elif (self.node, self.bound_var_nb(), self.name) != \
-                (math_object.node, math_object.bound_var_nb(),
+        elif (self.node, self.is_bound_var, self.name) != \
+                (math_object.node, math_object.is_bound_var,
                  math_object.name):
             return False
+
+        # if self.is_bound_var:
+        #     if self.bound_var_nb() != math_object.bound_var_nb():
+        #         return False
+        #     else:
+        #         return True
 
         ##################################
         # Recursively test for math_type #
