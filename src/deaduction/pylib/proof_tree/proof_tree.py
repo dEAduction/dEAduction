@@ -1074,7 +1074,7 @@ class ProofTree:
                 assert delta_goal == 1
                 # Provisionally create other goal node
                 other_goal = new_proof_state.goals[1]
-                other_goal.name_bound_vars()
+                # other_goal.name_bound_vars()
                 other_goal_node = GoalNode(parent=new_proof_step,
                                            goal=other_goal)
                 children_gn = [next_goal_node, other_goal_node]
@@ -1087,6 +1087,7 @@ class ProofTree:
         # ─────── Compare with previous state and tag properties ─────── #
         previous_goal = self.current_goal_node.parent_node.goal
         Goal.compare(new_goal, previous_goal)
+        Goal.transfer_name_hints_from(new_goal, previous_goal)
         # print("ProofTree:")
         # print(str(self))
 

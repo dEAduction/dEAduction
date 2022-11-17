@@ -59,7 +59,8 @@ class LeanResponse:
         if analysis:
             hypo_analysis, targets_analysis = analysis
             proof_state = ProofState.from_lean_data(hypo_analysis,
-                                                    targets_analysis)
+                                                    targets_analysis,
+                                                    to_prove=True)
             self.new_proof_state = proof_state
         self.error_type = error_type
         self.error_list = error_list if error_list else []

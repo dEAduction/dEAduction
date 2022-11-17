@@ -553,7 +553,7 @@ class ExerciseChooser(AbstractCoExChooser):
         exercise = self.__exercise
         proofstate = exercise.initial_proof_state
         goal = proofstate.goals[0]  # Only one goal
-        goal.name_bound_vars(to_prove=False)
+        # goal.name_bound_vars(to_prove=False)
 
         # BOF: keep standard size here.
         # main_font_size = cvars.get('display.main_font_size')

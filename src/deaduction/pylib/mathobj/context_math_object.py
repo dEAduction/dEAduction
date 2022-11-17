@@ -67,9 +67,9 @@ class ContextMathObject(MathObject):
         # self.is_modified_ = False  # FIXME: obsolete
         self.has_been_used_in_proof = False  # TODO: implement
         self.is_hidden = False  # TODO
-        # log.debug(f"Creating ContextMathPObject {self.to_display()},")
-                  # f"dummy vars = "
-                  # f"{[var.to_display() for var in self.bound_vars]}")
+
+        # Set local_context for bound vars
+        self.set_local_context()
 
     @property
     def is_new(self):
@@ -145,6 +145,24 @@ class ContextMathObject(MathObject):
     def identifier(self):
         return self.info.get("id")
 
+    def is_potential_type(self):
+        """
+        True if self may be the type of some MathObject.        
+        """
+        # FIXME: be more subtle
+        if self.is_type(is_math_type=True):
+            return True
+        
+        elif cvars.get('display.use_set_name_as_hint_for_naming_elements') \
+                and self.node == 'SET':
+            return True
+
+        else:
+            return False
+
+    #####################
+    # Help msgs methods #
+    #####################
     def action_from_premise_and_operator(self, other: MathObject):
         """
         Return possible actions for premise = self and operator = other. This is

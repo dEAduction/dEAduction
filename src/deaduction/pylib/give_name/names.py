@@ -36,11 +36,13 @@ import deaduction.pylib.config.vars as cvars
 log = logging.getLogger(__name__)
 
 # "αβγδεζηθικλμνξοπρςστυφχψω" + "ΓΔΘΛΞΠΣΦΨΩ"
+alphabet = 'abcdefghijklmnopqrstuvwxyz'
+greek_alphabet = "αβγδεζηθικλμνξοπρςστυφχψω"
 lower_lists = ['abcde', 'fgh', 'ijkl', 'mn', 'nk', 'npq', 'pqr', 'rst', 'uvw',
                'xyzwt']
 greek_list = ['αβγ', 'δεη', 'φψ', 'λμν', 'πρ', 'θα', 'στ', 'ΓΛΔ']
 upper_lists = [s.upper() for s in lower_lists]
-lower_upper = [a + a.upper() for a in 'abcdefghijklmnopqrstuvwxyz']
+lower_upper = [a + a.upper() for a in alphabet]
 
 # TODO: handle cases of hint with index or prime.
 
@@ -93,8 +95,8 @@ def prime_name_list(start_name: str, start: int, index: Optional[int],
         return [start_name + "'"*i + suffix for i in range(start, end+1)]
 
 
-def pure_letter_lists(letter: str, prime: int, index: Optional[int],
-                      min_length) -> [Tuple[str]]:
+def pure_letter_lists(letter: str, prime=0, index: Optional[int] = None,
+                      min_length=2) -> [Tuple[str]]:
     """
     Return lists of letters that belongs to a common string in name_lists or
     lower_upper. The priority is lower_lists first, direct order first,

@@ -153,6 +153,7 @@ class MathObject:
     # So that MathObject.number_sets[-1] always return the largest set of
     # numbers involved in the current exercise
     bound_var_counter = 0  # A counter to distinguish bound variables
+    is_bound_var = False
 
     # Lists from definitions for implicit use
     #   This is set up at course loading, via the PatternMathObject
@@ -164,7 +165,6 @@ class MathObject:
     # definition is used with success:
     last_used_implicit_definition = None
     last_rw_object                = None
-    is_bound_var                  = False  # Default value
 
     # Nodes of math objects that need instantiation of bound variables
     HAVE_BOUND_VARS = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_INTENSION",
@@ -180,8 +180,8 @@ class MathObject:
         self.node = node
         self.info = info
         self.math_type = math_type
-        if is_bound_var:
-            self.is_bound_var = is_bound_var
+        self.children = children
+        self.is_bound_var = is_bound_var
 
         if node in self.HAVE_BOUND_VARS and len(children) == 3:
             #################################################################
@@ -195,13 +195,8 @@ class MathObject:
             # This is where the local constant is marked as bound var.
 
             # Every object here should have children matching this:
-            bound_var_type, bound_var, local_context = children
-            bound_var = BoundVar(bound_var.node,
-                                 bound_var.info,
-                                 bound_var.children,
-                                 bound_var.math_type)
-            children[1] = bound_var
-        self.children = children
+            new_bound_var = BoundVar.from_has_bound_var_parent(self)
+            self.children[1] = new_bound_var
 
         ##################################################################
         # APP: uncurryfying APP(APP(1, 2, ...), n) --> APP(1, 2, ..., n) #
@@ -216,8 +211,9 @@ class MathObject:
         """
         We add a new dummy var to self.children, and name it.
         """
-        new_bound_var = MathObject.new_bound_var(bound_var_type)
-        name_single_bound_var(new_bound_var)
+        new_bound_var = MathObject.new_bound_var(bound_var_type,
+                                                 parent=self)
+        name_single_bound_var(new_bound_var)  # FIXME
         self.children.append(new_bound_var)
 
     def process_sequences_and_likes(self):
@@ -281,18 +277,37 @@ class MathObject:
     ######################
     # Bound vars methods #
     ######################
-    def bound_vars(self, include_sequences=False):
+    @classmethod
+    def new_bound_var(cls, math_type, parent):
+        """
+        Return a new bound var of given math_type.
+        """
+
+        info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
+                'lean_name': "NONE",
+                'is_bound_var': True}
+        bound_var = BoundVar(node="LOCAL_CONSTANT",
+                             info=info,
+                             children=[],
+                             math_type=math_type,
+                             parent=parent)
+        return bound_var
+
+    def bound_vars(self, include_sequences=False, math_type=None):
         """Recursively determine the list of all bound vars in self. May
         include bound vars used to display sequences and likes.
         """
 
         if self.is_bound_var:
-            return [self]
+            if math_type and self.math_type == math_type:
+                return [self]
         elif self.node == "LOCAL_CONSTANT" and not include_sequences:
-            # Do not return bound vars in sequences/set families/...
+            # FIXME
+            #  Do not return bound vars in sequences/set families/...
             return []
         else:
-            return sum([child.bound_vars() for child in self.children], [])
+            return sum([child.bound_vars(math_type=math_type)
+                        for child in self.children], [])
 
     def is_unnamed(self):
         return self.display_name == "NO NAME" \
@@ -320,7 +335,32 @@ class MathObject:
             for child in self.children:
                 child.remove_names_of_bound_vars(include_sequences)
 
-    #################
+    def has_bound_var(self):
+        return self.node in self.HAVE_BOUND_VARS
+
+    def body(self):
+        if self.has_bound_var():
+            return self.children[2]
+
+    def bound_var(self):
+        if self.has_bound_var():
+            return self.children[1]
+
+    def next_bound_vars(self, math_type=None):
+        """
+        Return the list of all bound vars which are next to self in the tree.
+        This is overridden in BoundVar.
+        """
+        if self.has_bound_var():
+            if (not math_type) or self.bound_var().math_type == math_type:
+                return [self.bound_var()]
+            else:
+                return None
+        else:
+            return sum([child.next_bound_vars(math_type=math_type)
+                        for child in self.children], [])
+
+            #################
     # Class methods #
     #################
     @classmethod
@@ -375,7 +415,7 @@ class MathObject:
 
         node = info.pop("node_name")
         if 'math_type' in info.keys():
-            math_type = info.pop('math_type')
+            math_type = info.get('math_type')
         else:
             math_type = None  # NB math_type is a @property, cf above
 
@@ -481,6 +521,7 @@ class MathObject:
              APP(x0, x1, ..., xn)
         and x0, ... , xn are the (n+1) implicit children.
         """
+        # FIXME: obsolete
         if not self.is_application():
             return None
 
@@ -1528,14 +1569,14 @@ class MathObject:
         if self.is_lambda(is_math_type=True):
             body = self.children[2]
             bound_var = self.children[1]
-            name_single_bound_var(bound_var)
+            name_single_bound_var(bound_var)  # FIXME
         else:
             # NB: math_type is "SET FAMILY ( X, set Y)"
             #   or "SEQUENCE( N, Y)
             # Change type to avoid infinite recursion:
             raw_version = self.duplicate()
             bound_var_type = self.math_type.children[0]
-            bound_var = MathObject.new_bound_var(bound_var_type)
+            bound_var = BoundVar.from_has_bound_var_parent(self)
             math_type = self.math_type.children[1]
             body = MathObject(node="APPLICATION",
                               info={},
@@ -1549,32 +1590,34 @@ class MathObject:
     # Naming methods #
     ##################
 
-    def next_bound_vars(self, math_type=None):
-        """
-        Return the list of all bound vars which are next to self in the tree.
-        """
-        # TODO!!!!
-
-    def potential_types(self):
-        if self.is_bound_var:
-            return [self.math_type]
-        elif self.node in ['SET', 'TYPE']:
-            return [self]
-        else:
-            return sum([child.potential_types() for child in self.children], [])
+    # def potential_types(self):
+    #     """
+    #
+    #     """
+    #     # TODO: add SETS if set names are used as hints (a for elements of A).
+    #     # cvars.get('display.use_set_name_as_hint_for_naming_elements')
+    #     # if self.is_bound_var:
+    #     #     return [self.math_type]
+    #     # if self.node in ['SET', 'TYPE']:
+    #     if self.node == 'TYPE':  # self
+    #         return [self]
+    #     else:
+    #         return sum([child.potential_types() for child in self.children], [])
 
     def name_hint_from_type(self) -> Optional[str]:
         """
         Return a hint for naming a variable whose type is self.
         """
         hint = None
-        # Subsets will be named with uppercase letters
-        if self.node in ['SET', 'TYPE', 'PROP']:
+        # TODO: add 'SET' if display.use_set_name_as_hint_for_naming_elements
+        # (1) If self is a set, try to name its terms (elements) according to
+        # its name, e.g. X -> x.
+        if self.is_type():
             if self.display_name.isalpha() and self.display_name[0].isupper():
                 hint = self.display_name[0].lower()
 
+        # (2) Names of sequences
         if self.is_sequence():
-            # Type of the sequence terms
             seq_type = self.children[1]
             if not seq_type.is_number():
                 hint = seq_type.name_hint_from_type()
@@ -1608,6 +1651,28 @@ class MathObject:
 
         return hint
 
+    def set_local_context(self, local_context=None):
+        """
+        The local context of a given bound var is the list of all bound vars
+        that are "alive" at the place where the given bound var is introduced by
+        its bounding quantifier. This method propagates the bound vars along
+        the MathObject tree, and set the local_context attribute of bound vars.
+        """
+        if not local_context:
+            local_context = []
+
+        # Set local context for bound vars, and add them to local context.
+        for child in self.children:
+            if child.is_bound_var:
+                # Make a copy, otherwise all local ctxt will be identical!!
+                child.local_context = copy(local_context)
+                local_context.append(child)
+
+        # Propagate (enriched) local context to other children
+        for child in self.children:
+            if not self.is_bound_var:
+                child.set_local_context(local_context)
+
 
 MathObject.NO_MATH_TYPE = MathObject(node="not provided",
                                      info={},
@@ -1631,23 +1696,57 @@ MathObject.PROP = MathObject(node="PROP",
 
 
 class BoundVar(MathObject):
-    def __init__(self, node, info, children, math_type=None):
-        MathObject.__init__(self, node, info, children, math_type)
-        self.is_bound_var = True
-        self.set_unnamed_bound_var()
+    is_bound_var = True
 
-    def bound_var_nb(self):
-        return self.info.get('bound_var_nb')
+    def __init__(self, node, info, children, math_type, parent):
+        MathObject.__init__(self, node, info, children, math_type)
+        self.parent = parent
+        self._is_unnamed = True
+        self.set_unnamed_bound_var()
+        self._local_context = []
+
+    @property
+    def name(self):
+        # Fixme: make it an attribute
+        return self.info['name']
+
+    @property
+    def local_context(self):
+        return self._local_context
+
+    @local_context.setter
+    def local_context(self, local_context):
+        self._local_context = local_context
+
+    @classmethod
+    def from_has_bound_var_parent(cls, parent):
+        bound_var = parent.children[1]
+        return BoundVar(bound_var.node, bound_var.info, bound_var.children,
+                        bound_var.math_type, parent=parent)
+
+    def is_unnamed(self):
+        # FIXME: turn to:
+        # return self._is_unnamed
+        return self.display_name == "NO NAME" \
+               or self.display_name == '*no_name*'
+
+    def name_bound_var(self, name: str):
+        """
+        FIXME: this should be the only way to name a bound var.
+        """
+        self.info['name'] = name
+        self._is_unnamed = False
 
     def set_unnamed_bound_var(self):
+        # FIXME: suppress:
         new_info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
                     'lean_name': self.info.get('name', ''),
                     'bound_var_nb': -1}
         self.info.update(new_info)
+        self._is_unnamed = True
 
-    def is_unnamed(self):
-        return self.display_name == "NO NAME" \
-               or self.display_name == '*no_name*'
+    def bound_var_nb(self):
+        return self.info.get('bound_var_nb')
 
     def mark_identical_bound_vars(self, other):
         """
@@ -1665,7 +1764,14 @@ class BoundVar(MathObject):
         """
         self.info['bound_var_nb'] = -1
 
+    def next_bound_vars(self, math_type=None):
+        # FIXME: useless?
+        if self.parent.body:
+            return self.parent.body.next_bound_vars(math_type)
+
+    #################################
     # Methods for PatternMathObject #
+    #################################
     def recursive_match(self, other):
         return (other.is_bound_var
                 and self.bound_var_nb() == other.bound_var_nb())

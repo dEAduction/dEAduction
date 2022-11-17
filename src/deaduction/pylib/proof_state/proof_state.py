@@ -33,16 +33,20 @@ This file is part of dEAduction.
 from dataclasses import dataclass
 import logging
 from typing import List, Tuple
+from copy import copy
 
 import deaduction.pylib.logger as logger
 import deaduction.pylib.config.vars as cvars
 
-from deaduction.pylib.mathobj.math_object import MathObject
+from deaduction.pylib.mathobj.math_object import MathObject, BoundVar
 from deaduction.pylib.mathobj.context_math_object import ContextMathObject
 from deaduction.pylib.mathobj.lean_analysis import (lean_expr_with_type_grammar,
                                                     LeanEntryVisitor)
 # from deaduction.pylib.math_display import plurals, numbers
 from deaduction.pylib.give_name.give_name import name_bound_vars, inj_list
+from deaduction.pylib.give_name.names import potential_names
+from deaduction.pylib.give_name.name_hint import NameHint
+
 log = logging.getLogger(__name__)
 
 global _
@@ -51,7 +55,6 @@ global _
 ##################
 # The Goal class #
 ##################
-@dataclass
 class Goal:
     """
     A goal is made of a context and a target, and reflects Lean's goal.
@@ -73,11 +76,16 @@ class Goal:
     - splitting goals into objects and properties,
     - printing goals.
     """
-    context:        [ContextMathObject]
-    target:         ContextMathObject
+
+    def __init__(self, context: [ContextMathObject], target: ContextMathObject):
+        self.context = context
+        self.target = target
+        self.name_hints = []
+        # self.smart_name_bound_vars()
 
     @classmethod
-    def from_lean_data(cls, hypo_analysis: str, target_analysis: str):
+    def from_lean_data(cls, hypo_analysis: str, target_analysis: str,
+                       to_prove=False):
         """
         Construct a goal Python object from Lean's data, i.e. the two
         strings resulting from the tactics hypo_analysis and targets_analysis.
@@ -85,6 +93,7 @@ class Goal:
         :param hypo_analysis:   string from the lean tactic hypo_analysis
         :param target_analysis: first string from the lean tactic
                                 targets_analysis (only the main target)
+        :param to_prove: True if this is the main goal of an exercise.
 
         :return: a goal
         """
@@ -108,7 +117,14 @@ class Goal:
 
         tree = lean_expr_with_type_grammar.parse(target_analysis)
         target = LeanEntryVisitor().visit(tree)
-        return cls(context, target)
+        new_goal = cls(context, target)
+        ###################################################################
+        # Name bound var, except for current exercise because we wait for #
+        # name_hints transferred from previous goal
+        ###################################################################
+        if not to_prove:
+            new_goal.smart_name_bound_vars()
+        return new_goal
 
     @property
     def context_objects(self) -> [ContextMathObject]:
@@ -243,10 +259,13 @@ class Goal:
         # Finally, modify order and set tags
         self.context = clean_permuted_new_context
 
-#####################################
-# Bound vars naming methods methods #
-#####################################
+#############################
+# Bound vars naming methods #
+#############################
     def free_variables(self, math_type=None):
+        """
+        Return all free variable, i.e. elements of the context.
+        """
         if math_type:
             return [var for var in self.context_objects
                     if var.math_type == math_type]
@@ -254,65 +273,163 @@ class Goal:
             return self.context_objects
 
     def bound_variables(self, math_type=None):
-        # TODO
-        return []
+        """
+        Return all bound variables of context and target of a given type.
+        """
+        c_vars = sum([mo.math_type.bound_vars(math_type=math_type)
+                      for mo in self.context_props], [])
+        t_vars = self.target.math_type.bound_vars(math_type=math_type)
+        return c_vars + t_vars
 
     def variables(self, math_type=None) -> [MathObject]:
         """
         Provide the list of all variables (free and bound) of a given
         math_type.
         """
-        return []
+        return self.free_variables(math_type) + self.bound_variables(math_type)
+
+    def context_var_names(self):
+        return [cmo.display_name for cmo in self.context_objects]
+
+    def potential_math_types(self):
+        """
+        Return the elements of context that can serve as types.
+        For the moment, just sets (universes).
+        FIXME: Could include subsets, and sets/subsets among bound vars.
+        """
+        return [mo for mo in self.variables() if mo.is_type()]
 
     def all_math_types(self):
+        """
+        All math_types of all variables in context and target.
+        """
         t = [var.math_type for var in self.variables()]
         return inj_list(t)
+
+    def transfer_name_hints_from(self, old_goal):
+        new_goal = self
+        new_goal.name_hints = copy(old_goal.name_hints)
+
+    def clear_hints(self):
+        """
+        Remove the hints that do not correspond anymore to any pertinent
+        math_type of the context.
+        """
+
+        # (1) Collect all pertinent math types
+        types = ([mo.math_type for mo in self.context_objects]
+                 + [bv.math_type for bv in self.bound_variables()]
+                 + self.potential_math_types())
+
+        # (2) Remove hints for non-existing types
+        for hint in self.name_hints:
+            if hint.math_type not in types:
+                self.name_hints.remove(hint)
+
+    def update_context_hints(self):
+        for mo in self.context_objects:
+            NameHint.from_math_type(mo.math_type, self.name_hints)
+
+    def update_potential_hints(self):
+        for t in self.potential_math_types():
+            NameHint.from_math_type(t, self.name_hints)
+
+    def update_bound_var_hints(self):
+        for bv in self.bound_variables():
+            NameHint.from_math_type(bv.math_type, self.name_hints)
+
+    def update_name_hints(self):
+        """
+        Ensure that each math_type of appearing in self has an associated
+        NameHint.
+        """
+        if self.name_hints:
+            self.clear_hints()
+        self.update_context_hints()
+        self.update_bound_var_hints()
+        self.update_potential_hints()
+
+        # DEBUG:
+        print("Name hints:")
+        for name_hint in self.name_hints:
+            print(f"Name hint for {name_hint.math_type}: {name_hint.letter}")
 
     def hint_for_type(self, math_type) -> str:
         """
         Return the hint for a given type.
         """
-        pass
+        return NameHint.from_math_type(math_type)
 
-    def names_for_type(self, math_type):
+    # def names_for_type(self, math_type):
+    #     """
+    #     Return a list of names suitable for all bound vars of a given type.
+    #     """
+    #
+    #     # TODO: handle case of numbers (refine by hints).
+    #
+    #     hint = self.hint_for_type(math_type)
+    #     length = math_type.count_dependant_bound_vars()
+    #     friend_names = inj_list([var.display_name
+    #                              for var in self.variables()
+    #                              if var.math_type == math_type
+    #                             and not var.is_unnamed])
+    #     other_types_bound_var_names = inj_list(
+    #                                   [var.display_name
+    #                                    for var in self.bound_variables()
+    #                                    if var.math_type != math_type
+    #                                    and not var.is_unnamed]
+    #                                             )
+    #
+    #     excluded_hints = inj_list([self.hint_for_type(t)
+    #                                for t in self.all_math_types()
+    #                                if t != math_type])
+    #     # TODO: exclure aussi les hint des potential math_types!!!
+    #
+    #     context_names = [var.display_name for var in self.free_variables()]
+    #
+    #     excluded_names = (context_names + excluded_hints
+    #                       + other_types_bound_var_names)
+    #     names = potential_names(hint, length, friend_names, excluded_names)
+    #
+    #     return names
+
+    def name_one_bound_var(self, var:BoundVar):
         """
-        Name all bound vars of a given type.
+        Name the given bound var according to its type and the
+        name scheme found in self.name_hints.
         """
+        name_hint = NameHint.from_math_type(math_type=var.math_type,
+                                            existing_hints=self.name_hints)
+        local_names = [var.name for var in var.local_context]
+        global_names = self.context_var_names()
+        given_names = global_names + local_names
+        new_name = name_hint.name_scheme.first_available_name(given_names)
+        # FIXME: if new_name is None...
+        var.name_bound_var(new_name)
 
-        # TODO: handle case of number (refine by hints).
+    def _recursive_name_all_bound_vars(self, p: MathObject):
+        if isinstance(p, BoundVar):
+            self.name_one_bound_var(p)
+        else:
+            for child in p.children:
+                self._recursive_name_all_bound_vars(child)
 
-        hint = self.hint_for_type(math_type)
-        length = math_type.count_dependant_bound_vars()
-        friend_names = inj_list([var.display_name
-                                 for var in self.variables()
-                                 if var.math_type == math_type
-                                and not var.is_unnamed])
-        other_types_bound_var_names = inj_list(
-                                      [var.display_name
-                                       for var in self.bound_variables()
-                                       if var.math_type != math_type
-                                       and not var.is_unnamed]
-                                                )
-
-        excluded_hints = inj_list([self.hint_for_type(t)
-                                   for t in self.all_math_types()
-                                   if t != math_type])
-        # TODO: exclure aussi les potential math_types!!!
-
-        context_names = [var.display_name for var in self.free_variables()]
-
-        excluded_names = (context_names + excluded_hints
-                          + other_types_bound_var_names)
-        names = potential_names(hint, length, friend_names, excluded_names)
-
-        return names
-
-    def name_vars_of_type(self, math_type, names: [str]):
+    def smart_name_bound_vars(self):
         """
-        Actually name all bound vars of given type using names.
+        This method should be called each time a new goal is instantiated,
+        but after name_hints have been set.
+        It provides names for all bound vars in self's context and target.
         """
-        # TODO
-        pass
+        self.update_name_hints()
+        self._recursive_name_all_bound_vars(self.target.math_type)
+        for p in self.context_props:
+            self._recursive_name_all_bound_vars(p.math_type)
+        for p in self.context_objects:
+            self._recursive_name_all_bound_vars(p.math_type)
+
+###############
+# OLD METHODS #
+###############
 
     def __name_real_bound_vars(self, math_type, unnamed_vars, forb_vars):
         """
@@ -444,23 +561,19 @@ class Goal:
             # Un-name everything!
             math_type.remove_names_of_bound_vars(include_sequences=False)
 
-            self.__recursive_name_bound_vars(math_type, named_ancestors=[])
-            return
+            # Collect math_types of bound_vars with no rep
+            math_types = inj_list([var.math_type for var in
+                                   prop.math_type.bound_vars()])
+            # log.debug(f"-->Math_types : "
+            #           f"{[mt.to_display() for mt in math_types]}")
+            forb_vars = glob_vars if not_glob \
+                else prop.math_type.extract_local_vars()
 
-            # OLD VERSION:
-            # # Collect math_types of bound_vars with no rep
-            # math_types = inj_list([var.math_type for var in
-            #                        prop.math_type.bound_vars])
-            # # log.debug(f"-->Math_types : "
-            # #           f"{[mt.to_display() for mt in math_types]}")
-            # forb_vars = glob_vars if not_glob \
-            #     else prop.math_type.extract_local_vars()
-            #
-            # data = (math_types,
-            #         inj_list(prop.math_type.bound_vars),
-            #         forb_vars,
-            #         future_vars)
-            # self.__name_bound_vars_in_data(*data)
+            data = (math_types,
+                    inj_list(prop.math_type.bound_vars()),
+                    forb_vars,
+                    future_vars)
+            self.__name_bound_vars_in_data(*data)
 
     def name_bound_vars(self, to_prove=True):
         """
@@ -565,9 +678,6 @@ class Goal:
     #                  if not math_object.is_prop()]
     #     return variables
 
-    def smart_name_bound_vars(self):
-        pass
-
     def extract_vars_names(self) -> List[str]:
         """
         Provides the list of names of all variables in the context,
@@ -619,7 +729,7 @@ class Goal:
         text_cr = "<br>" if format_ == "html" else "\n"
 
         # Name bound vars if needed!
-        self.name_bound_vars(to_prove=to_prove)  # FIXME: deprecated ?
+        # self.name_bound_vars(to_prove=to_prove)  # FIXME: deprecated ?
 
         context = self.context
         target = self.target
@@ -705,7 +815,7 @@ class Goal:
         """
 
         # Name bound vars if needed
-        self.name_bound_vars(to_prove=to_prove)
+        # self.name_bound_vars(to_prove=to_prove)
 
         context = self.context
         target = self.target
@@ -736,7 +846,7 @@ class Goal:
         """
 
         # Name bound vars if needed
-        self.name_bound_vars(to_prove=(type_ == 'exercise'))
+        # self.name_bound_vars(to_prove=(type_ == 'exercise'))
 
         context: [ContextMathObject] = self.context
         target = self.target
@@ -791,7 +901,7 @@ class ProofState:
 
     @classmethod
     def from_lean_data(cls, hypo_analysis: str, targets_analysis: str,
-                       to_prove=True):
+                       to_prove=False):
         """
         :param hypo_analysis:    string from the lean tactic hypo_analysis
         :param targets_analysis: string from the lean tactic targets_analysis
@@ -808,13 +918,15 @@ class ProofState:
         main_goal = None
         if targets:
             # Create main goal:
-            main_goal = Goal.from_lean_data(hypo_analysis, targets[0])
+            main_goal = Goal.from_lean_data(hypo_analysis, targets[0],
+                                            to_prove=to_prove)
         else:
             log.warning(f"No target, targets_analysis={targets_analysis}")
         goals = [main_goal]
         for other_string_goal in targets[1:]:
             other_goal = Goal.from_lean_data(hypo_analysis="",
-                                             target_analysis=other_string_goal)
+                                             target_analysis=other_string_goal,
+                                             to_prove=False)
             goals.append(other_goal)
 
         return cls(goals, (hypo_analysis, targets_analysis))
