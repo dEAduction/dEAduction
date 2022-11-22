@@ -28,22 +28,13 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 import logging
-from enum import IntEnum
-from dataclasses import dataclass
-from typing import List, Any
 
 import deaduction.pylib.config.vars as cvars
-from deaduction.pylib.give_name.names import (alphabet,
+from deaduction.pylib.give_name.names import (Case,
+                                              alphabet,
                                               greek_alphabet,
                                               pure_letter_lists,
                                               potential_names)
-
-
-class Case(IntEnum):
-    LOWER_ONLY = 1
-    LOWER_MOSTLY = 2
-    UPPER_MOSTLY = 3
-    UPPER_ONLY = 4
 
 
 # Letters lists,
@@ -69,6 +60,7 @@ def letter_hints_from_type(math_type) -> tuple:
     # (1) Names of elements
     # If self is a set, try to name its terms (elements) according to
     # its name, e.g. X -> x.
+    case = Case.LOWER_MOSTLY  # Default
     if math_type.is_type():
         case = Case.LOWER_ONLY
         if math_type.display_name.isalpha() and math_type.display_name[0].isupper():
@@ -81,8 +73,11 @@ def letter_hints_from_type(math_type) -> tuple:
             letters = (letter_hints_from_type(seq_type), )
 
     # (3) Standard hints
-    more_letters, case = letter_hints_from_type_node.get(
-                                math_type.node, (tuple(), Case.LOWER_MOSTLY))
+    more_letters, new_case = letter_hints_from_type_node.get(math_type.node,
+                                                             (tuple(), None))
+
+    if new_case:
+        case = new_case
 
     if math_type.is_nat(is_math_type=True):
         more_letters = ('npqk', )
@@ -213,11 +208,11 @@ class NameHint:
         namely a list of given length, disjoint from two  lists of already
         given names. If not, compute a new NameScheme.
         """
-        # TODO: check case
+        # FIXME: check case
         given_names = excluded_names.union(friend_names)
         if not self.check_names(length, given_names):
             self.names = potential_names(self.letter, length, friend_names,
-                                         excluded_names)
+                                         excluded_names, case=self.case)
 
     def provide_name(self, given_names):
         """

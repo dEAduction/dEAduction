@@ -28,6 +28,7 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from enum import IntEnum
 from typing import Tuple, Optional
 import logging
 
@@ -40,11 +41,17 @@ alphabet = 'abcdefghijklmnopqrstuvwxyz'
 greek_alphabet = "αβγδεζηθικλμνξοπρςστυφχψω"
 lower_lists = ['abcde', 'fgh', 'ijkl', 'mn', 'nk', 'npq', 'pqr', 'rst', 'uvw',
                'xyzwt']
-greek_list = ['αβγ', 'δεη', 'φψ', 'λμν', 'πρ', 'θα', 'στ', 'ΓΛΔ', 'ΦΨ']
+greek_list = ['αβγ', 'δεη', 'φψ', 'λμν', 'πρ', 'θα', 'στ']
+greek_upper_list = ['ΓΛΔ', 'ΦΨ']
 upper_lists = [s.upper() for s in lower_lists]
 lower_upper = [a + a.upper() for a in alphabet]
 
-# TODO: handle cases of hint with index or prime.
+
+class Case(IntEnum):
+    LOWER_ONLY = 1
+    LOWER_MOSTLY = 2
+    UPPER_MOSTLY = 3
+    UPPER_ONLY = 4
 
 
 def analyse_hint(hint: str) -> (str, int, Optional[int]):
@@ -98,7 +105,7 @@ def prime_name_list(start_name: str, start: int, index: Optional[int],
 
 
 def pure_letter_lists(letter: str, prime=0, index: Optional[int] = None,
-                      min_length=2) -> [[str]]:
+                      min_length=2, case=None) -> [[str]]:
     """
     Return lists of letters that contains letter.
     The priority is lower_lists first, direct order first,
@@ -111,7 +118,15 @@ def pure_letter_lists(letter: str, prime=0, index: Optional[int] = None,
 
     direct_trials = []
     reverse_trials = []
-    for s in lower_lists + upper_lists + greek_list + lower_upper:
+
+    lists = (lower_lists + greek_list if case == case.LOWER_ONLY
+             else upper_lists + greek_upper_list if case == Case.UPPER_ONLY
+             else upper_lists + greek_upper_list + lower_lists + greek_list
+             + lower_upper if case == Case.UPPER_MOSTLY
+             else lower_lists + upper_lists + greek_list + greek_upper_list
+             + lower_upper)
+
+    for s in lists:
         if letter in s:
             ind = s.find(letter)
             direct_trials.append(s[ind:])
@@ -126,7 +141,8 @@ def pure_letter_lists(letter: str, prime=0, index: Optional[int] = None,
 
 
 def name_lists_from_name(hint: str,
-                         min_length: int, max_length: int) -> [str]:
+                         min_length: int, max_length: int,
+                         case=None) -> [str]:
     """
     Provide lists of proposed names of given length, ordered according to
     their proximity with hint.
@@ -138,7 +154,7 @@ def name_lists_from_name(hint: str,
                                   length=max_length)
     prime_names = prime_name_list(hint, prime, index, min_length)
 
-    letter_names = pure_letter_lists(hint, prime, index, min_length)
+    letter_names = pure_letter_lists(hint, prime, index, min_length, case)
 
     # We prefer pure letters rather than primes or indices:
     if prime:
@@ -153,7 +169,8 @@ def name_lists_from_name(hint: str,
     return names
 
 
-def potential_names(hint, length, friend_names: set, excluded_names: set):
+def potential_names(hint, length, friend_names: set, excluded_names: set,
+                    case=None):
     """
     Provides one list of potential names, of given length, for a given hint.
     The list friend_names contains the names already given to some
@@ -178,7 +195,8 @@ def potential_names(hint, length, friend_names: set, excluded_names: set):
     # (1) Get all lists compatible with data
     print("Potential names:")
     lists = name_lists_from_name(hint, min_length=length,
-                                 max_length=length + len(excluded_names) + 10)
+                                 max_length=length + len(excluded_names) + 10,
+                                 case=case)
     winner = None
     given_names = excluded_names.union(friend_names)
     # (2) Keep only sufficiently long lists:
