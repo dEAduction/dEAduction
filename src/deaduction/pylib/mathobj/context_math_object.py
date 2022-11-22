@@ -69,7 +69,7 @@ class ContextMathObject(MathObject):
         self.is_hidden = False  # TODO
 
         # Set local_context for bound vars
-        self.set_local_context()
+        self.math_type.set_local_context()
 
     @property
     def is_new(self):

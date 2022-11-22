@@ -172,8 +172,7 @@ class MathObject:
 
     INEQUALITIES = ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥", "PROP_EQUAL_NOT")
 
-    def __init__(self, node, info, children, math_type=None,
-                 is_bound_var=False):
+    def __init__(self, node, info, children, math_type=None):
         """
         Create a MathObject.
         """
@@ -181,7 +180,6 @@ class MathObject:
         self.info = info
         self.math_type = math_type
         self.children = children
-        self.is_bound_var = is_bound_var
 
         if node in self.HAVE_BOUND_VARS and len(children) == 3:
             #################################################################
@@ -202,7 +200,7 @@ class MathObject:
         # APP: uncurryfying APP(APP(1, 2, ...), n) --> APP(1, 2, ..., n) #
         ##################################################################
         if node == 'APPLICATION' and children[0].node == 'APPLICATION':
-            children = children[0].children + [children[1]]
+            self.children = self.children[0].children + [self.children[1]]
 
     def __repr__(self):
         return self.to_display(format_="utf8")
@@ -284,8 +282,7 @@ class MathObject:
         """
 
         info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
-                'lean_name': "NONE",
-                'is_bound_var': True}
+                'lean_name': "NONE"}
         bound_var = BoundVar(node="LOCAL_CONSTANT",
                              info=info,
                              children=[],
@@ -293,13 +290,15 @@ class MathObject:
                              parent=parent)
         return bound_var
 
-    def bound_vars(self, include_sequences=False, math_type=None):
+    def bound_vars(self, include_sequences=False, math_type=None) -> []:
         """Recursively determine the list of all bound vars in self. May
         include bound vars used to display sequences and likes.
         """
 
         if self.is_bound_var:
-            if math_type and self.math_type == math_type:
+            if math_type and self.math_type != math_type:
+                return []
+            else:
                 return [self]
         elif self.node == "LOCAL_CONSTANT" and not include_sequences:
             # FIXME
@@ -1696,7 +1695,7 @@ MathObject.PROP = MathObject(node="PROP",
 
 
 class BoundVar(MathObject):
-    is_bound_var = True
+    is_bound_var = True  # Override MathObject attribute
 
     def __init__(self, node, info, children, math_type, parent):
         MathObject.__init__(self, node, info, children, math_type)
@@ -1704,6 +1703,8 @@ class BoundVar(MathObject):
         self._is_unnamed = True
         self.set_unnamed_bound_var()
         self._local_context = []
+        if node != 'METAVAR':
+            pass
 
     @property
     def name(self):
@@ -1721,8 +1722,9 @@ class BoundVar(MathObject):
     @classmethod
     def from_has_bound_var_parent(cls, parent):
         bound_var = parent.children[1]
+        math_type = parent.children[0]
         return BoundVar(bound_var.node, bound_var.info, bound_var.children,
-                        bound_var.math_type, parent=parent)
+                        math_type, parent=parent)
 
     def is_unnamed(self):
         # FIXME: turn to:

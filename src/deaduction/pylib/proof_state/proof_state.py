@@ -118,10 +118,10 @@ class Goal:
         tree = lean_expr_with_type_grammar.parse(target_analysis)
         target = LeanEntryVisitor().visit(tree)
         new_goal = cls(context, target)
-        ###################################################################
-        # Name bound var, except for current exercise because we wait for #
-        # name_hints transferred from previous goal
-        ###################################################################
+        ####################################################################
+        # Name bound vars, except for current exercise because we wait for #
+        # name_hints transferred from previous goal                        #
+        ####################################################################
         if not to_prove:
             new_goal.smart_name_bound_vars()
         return new_goal
@@ -288,8 +288,20 @@ class Goal:
         """
         return self.free_variables(math_type) + self.bound_variables(math_type)
 
-    def context_var_names(self):
-        return [cmo.display_name for cmo in self.context_objects]
+    def free_var_types(self):
+        return inj_list([var.math_type for var in self.free_variables()])
+
+    def bound_var_types(self):
+        return inj_list([var.math_type for var in self.bound_variables()])
+
+    def variable_types(self):
+        return inj_list([var.math_type for var in self.variables()])
+
+    def free_var_names(self, math_type=None):
+        """
+        Return all context var names of given math_type.
+        """
+        return [cmo.display_name for cmo in self.free_variables(math_type)]
 
     def potential_math_types(self):
         """
@@ -297,15 +309,11 @@ class Goal:
         For the moment, just sets (universes).
         FIXME: Could include subsets, and sets/subsets among bound vars.
         """
-        return [mo for mo in self.variables() if mo.is_type()]
+        return inj_list([mo for mo in self.variables() if mo.is_type()])
 
-    def all_math_types(self):
-        """
-        All math_types of all variables in context and target.
-        """
-        t = [var.math_type for var in self.variables()]
-        return inj_list(t)
-
+###################
+# Build NameHints #
+###################
     def transfer_name_hints_from(self, old_goal):
         new_goal = self
         new_goal.name_hints = copy(old_goal.name_hints)
@@ -317,9 +325,7 @@ class Goal:
         """
 
         # (1) Collect all pertinent math types
-        types = ([mo.math_type for mo in self.context_objects]
-                 + [bv.math_type for bv in self.bound_variables()]
-                 + self.potential_math_types())
+        types = self.variable_types() + self.potential_math_types()
 
         # (2) Remove hints for non-existing types
         for hint in self.name_hints:
@@ -327,16 +333,21 @@ class Goal:
                 self.name_hints.remove(hint)
 
     def update_context_hints(self):
-        for mo in self.context_objects:
-            NameHint.from_math_type(mo.math_type, self.name_hints)
-
-    def update_potential_hints(self):
-        for t in self.potential_math_types():
-            NameHint.from_math_type(t, self.name_hints)
+        for math_type in self.free_var_types():
+            friendly_names = self.free_var_names(math_type)
+            NameHint.from_math_type(math_type,
+                                    self.name_hints,
+                                    friendly_names=friendly_names)
 
     def update_bound_var_hints(self):
-        for bv in self.bound_variables():
-            NameHint.from_math_type(bv.math_type, self.name_hints)
+        for math_type in self.bound_var_types():
+            NameHint.from_math_type(math_type, self.name_hints)
+
+    def update_potential_hints(self):
+        # TODO: add set X for every universe X?
+        # TODO: take into account implicit defs in target
+        for math_type in self.potential_math_types():
+            NameHint.from_math_type(math_type, self.name_hints)
 
     def update_name_hints(self):
         """
@@ -354,56 +365,87 @@ class Goal:
         for name_hint in self.name_hints:
             print(f"Name hint for {name_hint.math_type}: {name_hint.letter}")
 
-    def hint_for_type(self, math_type) -> str:
+########################
+# Build Naming Schemes #
+########################
+    def _recursive_length_for_bound_vars(self, math_obj: MathObject,
+                                         math_type: MathObject):
         """
-        Return the hint for a given type.
+        Compute the maximal length of a chain of bound vars of the given
+        types. On other words, this is the maximal nb of distinct bound vars
+        of this type that live in the same local context.
+        The principle of the computation is that if self has bound var then
+        this bound var occurs in the local context of all self's children.
         """
-        return NameHint.from_math_type(math_type)
 
-    # def names_for_type(self, math_type):
-    #     """
-    #     Return a list of names suitable for all bound vars of a given type.
-    #     """
-    #
-    #     # TODO: handle case of numbers (refine by hints).
-    #
-    #     hint = self.hint_for_type(math_type)
-    #     length = math_type.count_dependant_bound_vars()
-    #     friend_names = inj_list([var.display_name
-    #                              for var in self.variables()
-    #                              if var.math_type == math_type
-    #                             and not var.is_unnamed])
-    #     other_types_bound_var_names = inj_list(
-    #                                   [var.display_name
-    #                                    for var in self.bound_variables()
-    #                                    if var.math_type != math_type
-    #                                    and not var.is_unnamed]
-    #                                             )
-    #
-    #     excluded_hints = inj_list([self.hint_for_type(t)
-    #                                for t in self.all_math_types()
-    #                                if t != math_type])
-    #     # TODO: exclure aussi les hint des potential math_types!!!
-    #
-    #     context_names = [var.display_name for var in self.free_variables()]
-    #
-    #     excluded_names = (context_names + excluded_hints
-    #                       + other_types_bound_var_names)
-    #     names = potential_names(hint, length, friend_names, excluded_names)
-    #
-    #     return names
+        if math_obj.has_bound_var():
+            var_length = int(math_obj.bound_var().math_type == math_type)
+            body_length = self._recursive_length_for_bound_vars(math_obj.body(),
+                                                                math_type)
+            return var_length + body_length
 
-    def name_one_bound_var(self, var:BoundVar):
+        elif math_obj.is_bound_var and math_obj.math_type == math_type:
+            # NB: A bound var may have a bound var child, e.g. for a sequence
+            # but not of the same math_type
+            return 1
+
+        elif not math_obj.children:
+            return 0
+
+        assert math_obj.children  # Non-empty children
+        child_length = [self._recursive_length_for_bound_vars(child, math_type)
+                        for child in math_obj.children]
+        return max(child_length)
+
+    def total_length_for_math_type(self, math_type):
+        """
+        Compute the nb of distinct vars of given math_type that may occur
+        simultaneously in a local + global context.
+        """
+        context_length = len(self.free_variables(math_type))
+
+        props = ([prop.math_type for prop in self.context_props]
+                 + [self.target.math_type])
+        local_context_length = [self._recursive_length_for_bound_vars(
+                                math_obj=prop, math_type=math_type)
+                                for prop in props] + [0]
+
+        return context_length + max(local_context_length)
+
+    def update_name_schemes(self):
+        """
+        Compute schemes for naming all bound vars appearing in self,
+        one scheme associated to each math type, via its NameHint.
+        """
+
+        # FIXME: finish this method
+        all_names = set(self.free_var_names())
+        for hint in self.name_hints:
+            math_type = hint.math_type
+            length = self.total_length_for_math_type(math_type)
+            # if length == 0:
+            #     continue
+            friend_names = set(self.free_var_names(math_type=math_type))
+            excluded_names = all_names.difference(friend_names)
+            # Ensure that hint's naming scheme is compatible with data:
+            # FIXME:
+            hint.update_name_scheme(length, friend_names, excluded_names)
+
+###################
+# Name bound vars #
+###################
+    def name_one_bound_var(self, var: BoundVar):
         """
         Name the given bound var according to its type and the
         name scheme found in self.name_hints.
         """
+        # FIXME: review code
         name_hint = NameHint.from_math_type(math_type=var.math_type,
                                             existing_hints=self.name_hints)
-        local_names = [var.name for var in var.local_context]
-        global_names = self.context_var_names()
+        local_names = [other_var.name for other_var in var.local_context]
+        global_names = self.free_var_names()
         given_names = global_names + local_names
-        new_name = name_hint.name_scheme.first_available_name(given_names)
+        new_name = name_hint.provide_name(given_names)
         # FIXME: if new_name is None...
         var.name_bound_var(new_name)
 
@@ -420,7 +462,11 @@ class Goal:
         but after name_hints have been set.
         It provides names for all bound vars in self's context and target.
         """
+
+        # TODO: bound vars names for numbers
+        # TODO bound new contextvars in logic.py
         self.update_name_hints()
+        self.update_name_schemes()
         self._recursive_name_all_bound_vars(self.target.math_type)
         for p in self.context_props:
             self._recursive_name_all_bound_vars(p.math_type)
@@ -430,7 +476,6 @@ class Goal:
 ###############
 # OLD METHODS #
 ###############
-
     def __name_real_bound_vars(self, math_type, unnamed_vars, forb_vars):
         """
         Name dummy variables of type 'ℝ', by using Lean's name if possible.
@@ -516,7 +561,7 @@ class Goal:
         #  forbidden vars are pertinent only for the first element of the
         #  chain that will be named.
 
-        if prop.node in MathObject.HAVE_BOUND_VARS:
+        if prop.has_bound_var():
             bound_var = prop.children[1]
             if bound_var.is_unnamed():
                 math_type = prop.children[0]

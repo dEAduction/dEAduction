@@ -40,7 +40,7 @@ alphabet = 'abcdefghijklmnopqrstuvwxyz'
 greek_alphabet = "αβγδεζηθικλμνξοπρςστυφχψω"
 lower_lists = ['abcde', 'fgh', 'ijkl', 'mn', 'nk', 'npq', 'pqr', 'rst', 'uvw',
                'xyzwt']
-greek_list = ['αβγ', 'δεη', 'φψ', 'λμν', 'πρ', 'θα', 'στ', 'ΓΛΔ']
+greek_list = ['αβγ', 'δεη', 'φψ', 'λμν', 'πρ', 'θα', 'στ', 'ΓΛΔ', 'ΦΨ']
 upper_lists = [s.upper() for s in lower_lists]
 lower_upper = [a + a.upper() for a in alphabet]
 
@@ -51,6 +51,7 @@ def analyse_hint(hint: str) -> (str, int, Optional[int]):
     """
     n''_0 --> ('n', 2, 0)
     n' --> ('n', 1, None)
+    Ens_1 --> 'Ens', 1, None)
     """
     index = None
     if '_' in hint:
@@ -64,14 +65,15 @@ def analyse_hint(hint: str) -> (str, int, Optional[int]):
     return hint, prime, index
 
 
-def index_name_list(root: str, start: int, max_length: int) -> [str]:
+def index_name_list(root: str, start: int, length: int) -> [str]:
     """
+    Return a list of indexed names of given length.
     e.g.
     (n, 1, 3) --> n_1, n_2, n_3.
     (n', 0, 2) --> n'_0, n'_1, n'_2
     """
     return [root + '_' + str(i)
-            for i in range(start, start+max_length)]
+            for i in range(start, start + length)]
 
 
 def prime_name_list(start_name: str, start: int, index: Optional[int],
@@ -83,10 +85,10 @@ def prime_name_list(start_name: str, start: int, index: Optional[int],
     n, 1, None, 3 --> []
     """
 
-    use_prime = cvars.get('display.allow_primes_for_names')
+    use_prime = cvars.get('display.allow_primes_for_names', True)
     if not use_prime:
         return []
-    use_second = cvars.get('display.allow_seconds_for_names')
+    use_second = cvars.get('display.allow_seconds_for_names', True)
     end = 2 if use_second else 1
     if end - start + 1 < min_length:
         return []
@@ -96,15 +98,15 @@ def prime_name_list(start_name: str, start: int, index: Optional[int],
 
 
 def pure_letter_lists(letter: str, prime=0, index: Optional[int] = None,
-                      min_length=2) -> [Tuple[str]]:
+                      min_length=2) -> [[str]]:
     """
-    Return lists of letters that belongs to a common string in name_lists or
-    lower_upper. The priority is lower_lists first, direct order first,
+    Return lists of letters that contains letter.
+    The priority is lower_lists first, direct order first,
     then reverse order.
     e.g.
-    (t, 3) --> (t, s, r), (t, w, z)
-    (k, 2) --> (k, l), (k, j), (k, n), (k, K).
-    (x', 2) --> (x', y') ...
+    (t, 3) --> (t, s, r), (t, w, z, y, x)
+    (k, 2) --> (k, l), (k, j, i), (k, n), (k, K).
+    (x', 2) --> (x', y', z', w', t'), (x', X') ...
     """
 
     direct_trials = []
@@ -133,59 +135,91 @@ def name_lists_from_name(hint: str,
     root = hint + "'"*prime
     index_names = index_name_list(root,
                                   start=0 if index is None else index,
-                                  max_length=max_length)
+                                  length=max_length)
     prime_names = prime_name_list(hint, prime, index, min_length)
 
     letter_names = pure_letter_lists(hint, prime, index, min_length)
 
-    # We prefer prime rather than indices, and use both only if necessary:
+    # We prefer pure letters rather than primes or indices:
     if prime:
         names = [prime_names] + letter_names + [index_names]
     elif index:
         names = [index_names] + letter_names + [prime_names]
-    else:
+    elif cvars.get('display.use_primes_over_indices'):
         names = letter_names + [prime_names, index_names]
+    else:
+        names = letter_names + [index_names, prime_names]
 
     return names
 
 
-def potential_names(hint, length, friend_names, excluded_names):
+def potential_names(hint, length, friend_names: set, excluded_names: set):
     """
     Provides one list of potential names, of given length, for a given hint.
     The list friend_names contains the names already given to some
     variables for the same hint; the list must be as close as possible to
-    given_names but must not contain any names from it, nor from
+    friend_names but must not contain any names from it, nor from
     other_given_names. e.g.
-    ('x', 2, ['x_0']) --> x_1, x_2
-    ('x', 2,  ('x', 'y') -> z, w
+    ('x', 2, ['x_0']) --> x_0, x_1, x_2
+    ('x', 2,  ['x', 'y']) -> x, y, z, w
 
     The algorithm is to ask the previous methods for sufficiently long lists
     compatible with hint, and keep the one that contains the greatest nb of
     elements of given_names_for_hint, as far as it contains enough new names.
 
-    NB: other_given_names is assumed to be disjoint from friend_names.
+    NB: excluded_names is assumed to be disjoint from friend_names.
+    length is the nb of needed additional (new) names.
+    NB2: the index list should always be of sufficient length, i.e.
+    length equal to length + len(friend_name) + 10.
     """
 
+    # TODO: check case
+
+    # (1) Get all lists compatible with data
+    print("Potential names:")
     lists = name_lists_from_name(hint, min_length=length,
-                                 max_length=length + len(excluded_names))
-    score = -1
+                                 max_length=length + len(excluded_names) + 10)
     winner = None
-    for names in lists:
-        names = [name for name in names if name not in excluded_names]
-        print(names)
-        if len(names) >= length:
-            # Compute nb of friend_names in names
-            new_score = [friend in names for friend in friend_names].count(True)
-            print("score:" + str(new_score))
-            if len(names) >= length + new_score \
-                    and new_score > score:
-                winner = names
-                score = new_score
+    given_names = excluded_names.union(friend_names)
+    # (2) Keep only sufficiently long lists:
+    long_lists = [names for names in lists
+                  if len(set(names).difference(given_names)) >= length]
+
+    # (3) Extract lists minimizing # of elements in excluded_names
+    score = 2000
+    min_lists = []
+    for names in long_lists:
+        common_nb = len(excluded_names.intersection(set(names)))
+        if common_nb < score:  # New minimum, clear all previous names
+            min_lists = [names]
+            score = common_nb  # New score!
+        elif common_nb == score:  # New minimizer, add to list
+            min_lists.append(names)
+
+    # (4) Find a list maximizing # of elements in friend_names
+    score = -1
+    for names in min_lists:
+        common_nb = len(friend_names.intersection(set(names)))
+        if common_nb > score:
+            winner = names
+            score = common_nb
+
+    # for names in lists:
+    #     names = [name for name in names if name not in given_names]
+    #     print(names)
+    #     if len(names) >= length:  # The list contains enough names
+    #         # Compute nb of friend_names in names
+    #         new_score = [friend in names for friend in friend_names].count(True)
+    #         print("score:" + str(new_score))
+    #         if len(names) >= length + new_score \
+    #                 and new_score > score:
+    #             winner = names
+    #             score = new_score
 
     print("Winner:")
     print(winner)
-    winner = [name for name in winner if name not in friend_names]
-    return winner[:length]
+    winner = [name for name in winner if name not in given_names]
+    return winner
 
 
 if __name__ == "__main__":

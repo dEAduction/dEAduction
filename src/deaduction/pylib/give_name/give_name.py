@@ -265,7 +265,7 @@ def give_name(math_type,
         # If hint = "x" and this is already the name of a variable with the
         # same math_type as the variable we want to name,
         # then try to use "x'"
-        elif cvars.get("display.allow_primes_for_names"):
+        elif cvars.get("display.allow_primes_for_names", True):
             # here potential_name are assumed to be the name of some variable
             name = potential_name
             index_ = forbidden_names.index(name)

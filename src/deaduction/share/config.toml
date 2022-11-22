@@ -30,7 +30,7 @@ display_detailed_errors_on_wui = true
 
 allow_primes_for_names = true
 allow_seconds_for_names = true
-allow_indices_for_names = true
+use_primes_over_indices = true
 exclude_free_vars_for_sequence_indices = true
 use_set_name_as_hint_for_naming_elements = true
 
@@ -84,7 +84,7 @@ log_to_file = true
 
 [others]
 usr_version_nb = "-1"  # Do not modify!
-version_nb = "0.351"
+version_nb = "0.3512"
 os = ""  # Let this to "" except for debugging
 
 #########################

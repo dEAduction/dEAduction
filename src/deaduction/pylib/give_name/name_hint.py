@@ -28,43 +28,138 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 import logging
+from enum import IntEnum
 from dataclasses import dataclass
 from typing import List, Any
 
+import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.give_name.names import (alphabet,
                                               greek_alphabet,
-                                              pure_letter_lists,)
+                                              pure_letter_lists,
+                                              potential_names)
+
+
+class Case(IntEnum):
+    LOWER_ONLY = 1
+    LOWER_MOSTLY = 2
+    UPPER_MOSTLY = 3
+    UPPER_ONLY = 4
+
+
+# Letters lists,
+letter_hints_from_type_node = {
+    'TYPE': (('XYZW', 'EFG'), Case.UPPER_ONLY),
+    'SET': (('ABCDEFG', ), Case.UPPER_ONLY),
+    'SET_FAMILY': (('ABCDEFG', ), Case.UPPER_ONLY),
+    'PROP': (('PQRST', ), Case.UPPER_ONLY),
+    'FUNCTION': (('fgh', 'φψ', 'FGH', 'ΦΨ'), Case.LOWER_MOSTLY),
+    'SEQUENCE': (('uvw', ), Case.LOWER_MOSTLY)
+}
+
+
+def letter_hints_from_type(math_type) -> tuple:
+    """
+    Return lists of preferred letters for naming a math object of given math
+    type.
+    e.g. 'TYPE' --> (('XYZW', 'EFG'), Case.UPPER_ONLY)
+    """
+    letters = tuple()
+    # TODO: add 'SET' if display.use_set_name_as_hint_for_naming_elements
+
+    # (1) Names of elements
+    # If self is a set, try to name its terms (elements) according to
+    # its name, e.g. X -> x.
+    if math_type.is_type():
+        case = Case.LOWER_ONLY
+        if math_type.display_name.isalpha() and math_type.display_name[0].isupper():
+            letters = (math_type.display_name[0].lower(), )
+
+    # (2) Names of sequences
+    elif math_type.is_sequence():
+        seq_type = math_type.children[1]
+        if not seq_type.is_number():
+            letters = (letter_hints_from_type(seq_type), )
+
+    # (3) Standard hints
+    more_letters, case = letter_hints_from_type_node.get(
+                                math_type.node, (tuple(), Case.LOWER_MOSTLY))
+
+    if math_type.is_nat(is_math_type=True):
+        more_letters = ('npqk', )
+        case = Case.LOWER_MOSTLY
+    elif math_type.is_R():
+        more_letters = ('xyztw', 'δεη')
+        case = Case.LOWER_MOSTLY
+
+    letters += more_letters
+
+    return letters, case
 
 
 class NameHint:
-    # instances = []  # type: List[NameHint]
+    """
+    A class to provide names for all vars of a given type.
+    """
+    letter: str = 'x'  # Default letter
+    case: Case = Case.LOWER_MOSTLY
+    use_index = cvars.get('display.use_indices', True)
+    prime_over_index = cvars.get('display.use_primes_over_indices', True)
 
-    def __init__(self, letter, math_type):
+    def __init__(self, letter, math_type, case, names=None):
         self.letter = letter
         self.math_type = math_type
-        self.name_scheme = NameScheme.from_name_hint(self)
-        # NameHint.instances.append(self)
+        self.case = case
+        # self.name_scheme = NameScheme.from_name_hint(self)
+        #  and self.provide_name(given_names)
+        self.names = names if names else []
 
-    def __str(self):
+        if math_type.is_sequence(is_math_type=True):
+            self.use_index = False
+
+    def __str__(self):
         return self.letter
 
     @classmethod
-    def from_math_type(cls, math_type, existing_hints):
+    def from_math_type(cls, math_type, existing_hints, friendly_names=None):
         """
         Return the hint corresponding to math_type. If none, create a new
-        hint and append it to existing_hints.
+        hint and append it to existing_hints. The main task is to find a
+        suitable letter for naming hint. The letter must be distinct of all
+        letters of existing_hints.
         """
+
+        if not friendly_names:
+            friendly_names = []
+
         # (1) Search for math_type among existing hints
         for hint in existing_hints:
             if hint.math_type == math_type:
                 return hint
 
         # (2) No existing hint: create one
-        letter = math_type.name_hint_from_type()
-        letters = [hint.letter for hint in existing_hints]
-        if letter in letters:  # Search an acceptable letter
+        # (a) Try (first letter of) friendly names
+        letters = [friendly_name[0] for friendly_name in friendly_names
+                   if friendly_name[0].isalpha()]
+
+        # (b) Ask letter_hints_from_type
+        more_letters_tuple, case = letter_hints_from_type(math_type)
+        # Merge letters lists:
+        for more_letters in more_letters_tuple:
+            letters.extend(more_letters)
+
+        # (c) Exclude other hints
+        excluded_letters = [hint.letter for hint in existing_hints]
+        success = False
+        for letter in letters:
+            if letter not in excluded_letters:
+                success = True
+                break
+
+        if not success:
+            letter = letters[0] if letters else ""
             letter = cls.new_letter_from_bad(letter, existing_hints)
-        new_hint =  cls(letter, math_type)
+
+        new_hint = cls(letter, math_type, case)
         existing_hints.append(new_hint)
         return new_hint
 
@@ -76,6 +171,7 @@ class NameHint:
         available letter in the NameScheme associated to the conflicting
         NameHint. If no letter is available, choose any(?).
         """
+        # TODO: check case
 
         # (1) Find conflicting hint
         conflicting_hint = None
@@ -86,13 +182,15 @@ class NameHint:
 
         # (2) Find first available letter
         available_letter = ""
-        letters = [hint.letter for hint in existing_hints]
-        good_names = conflicting_hint.name_scheme.names()
+        unavailable_letters = [hint.letter for hint in existing_hints]
+        good_names = conflicting_hint.names if conflicting_hint else None
+        if not good_names:
+            good_names = sum(pure_letter_lists(letter), []) if letter else []
         # e.g. [['f', 'g', 'h'],['f', 'F']]
         bad_names = list(alphabet + greek_alphabet)
-        for names in sum(good_names, []) + bad_names:
+        for names in good_names + bad_names:
             for letter in names:
-                if letter not in letters:
+                if letter not in unavailable_letters:
                     available_letter = letter
                     break
             if available_letter:
@@ -102,31 +200,55 @@ class NameHint:
 
         return available_letter
 
-    # @classmethod
-    # def clear(cls, types=None):
-    #     if not types:
-    #         types = []
-    #     for self.math_type in cls.instances:
-    #         if self not in types:
-    #             cls.instances.remove(self)
+    def check_names(self, needed_length, given_names: set):
+        """
+        Check self has enough names for data.
+        """
+        available_length = len(set(self.names).difference(given_names))
+        return available_length >= needed_length
 
+    def update_name_scheme(self, length, friend_names, excluded_names):
+        """
+        Check if self.name_scheme is able to provide enough fresh names,
+        namely a list of given length, disjoint from two  lists of already
+        given names. If not, compute a new NameScheme.
+        """
+        # TODO: check case
+        given_names = excluded_names.union(friend_names)
+        if not self.check_names(length, given_names):
+            self.names = potential_names(self.letter, length, friend_names,
+                                         excluded_names)
 
-@dataclass()
-class NameScheme:
-    base_hint: NameHint
-    mode = 'letter'
-
-    @classmethod
-    def from_name_hint(cls, name_hint: NameHint):
-        return cls(base_hint=name_hint)
-
-    def names(self):
-        letter = self.base_hint.letter
-        return pure_letter_lists(letter)
-
-    def first_available_name(self, given_names):
-        for name in self.names():
+    def provide_name(self, given_names):
+        """
+        Return first name in self.names which is not in given_names.
+        """
+        for name in self.names:
             if name not in given_names:
                 return name
+        # Emergency name
+        bad_names = list(alphabet + greek_alphabet)
+        for name in bad_names:
+            if name not in given_names:
+                return name
+
+
+# @dataclass()
+# class NameScheme:
+#     base_hint: NameHint
+#     mode = 'letter'
+# 
+#     @classmethod
+#     def from_name_hint(cls, name_hint: NameHint):
+#         return cls(base_hint=name_hint)
+# 
+#     def names(self):
+#         letter = self.base_hint.letter
+#         return pure_letter_lists(letter)
+# 
+#     def first_available_name(self, given_names):
+#         for name in self.names():
+#             if name not in given_names:
+#                 return name
 
 
