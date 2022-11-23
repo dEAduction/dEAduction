@@ -221,7 +221,7 @@ class NameHint:
         for name in self.names:
             if name not in given_names:
                 return name
-        # Emergency name
+        # Emergency name: this should never happen!
         bad_names = list(alphabet + greek_alphabet)
         for name in bad_names:
             if name not in given_names:

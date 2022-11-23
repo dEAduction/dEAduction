@@ -45,12 +45,14 @@ and the body of a with the free variable replaced by a -/
 meta def instanciate (e : expr) : tactic (expr × expr) :=
 match e with
 | (pi pp_name binder type body) := do
+    let pp_name := mk_str_name pp_name "BoundVar", -- trial
 --    pp_name ← get_unused_name pp_name,      -- does not do the job
     -- trace ("Instantiation name: " ++ to_string pp_name),
     a ← mk_local' pp_name binder type,
     let inst_body := instantiate_var body a,
     return (a , inst_body)
 | (lam pp_name binder type body) := do
+    let pp_name := mk_str_name pp_name "BoundVar", -- trial
 --    pp_name ← get_unused_name pp_name,
     -- trace ("Instantiation name: " ++ to_string pp_name),
     a ← mk_local' pp_name binder type,
@@ -428,3 +430,8 @@ end tactic.interactive
 -- begin
 --     hypo_analysis,
 -- end
+
+example (X: Type) (P: X → Prop): ∀ x: X, P x :=
+begin
+    targets_analysis,
+end

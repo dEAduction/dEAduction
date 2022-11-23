@@ -2,6 +2,7 @@
 import logging
 
 from deaduction.pylib.mathobj import MathObject, ContextMathObject
+from deaduction.pylib.pattern_math_obj import PatternMathObject
 from deaduction.pylib.math_display.display_data import (latex_from_node,
                                                         latex_from_quant_node,
                                                         needs_paren)
@@ -65,16 +66,20 @@ def latex_shape(self: MathObject, is_type=False, text=False) -> []:
 
     # Dictionaries to be used (order matters!):
     dicts = []
-    if is_type:
-        dicts.append(pattern_latex_for_type)
-    if text:
-        dicts.append(pattern_text)
-    dicts.append(pattern_latex)
+    if not isinstance(self, PatternMathObject):
+        if is_type:
+            dicts.append(pattern_latex_for_type)
+        if text:
+            dicts.append(pattern_text)
+        dicts.append(pattern_latex)
 
     # (1) Difficult cases: patterns
     for dic in dicts:
         for pattern, pre_shape, metavars in dic:
             if pattern.match(self):
+                # DEBUG
+                if r'\circ' in pre_shape:
+                    print('compo')
                 log.debug(f"Matched pattern--> shape {pre_shape}")
                 log.debug(f"Node: {self.node}")
                 # Now metavars are matched

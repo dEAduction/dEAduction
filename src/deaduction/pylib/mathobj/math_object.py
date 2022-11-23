@@ -182,19 +182,12 @@ class MathObject:
         self.children = children
 
         if node in self.HAVE_BOUND_VARS and len(children) == 3:
-            #################################################################
-            # Quantifiers & lambdas: provisionally "unname" bound variables #
-            #################################################################
-            # NB: info["name"] is given by structures.lean,
-            # but may be inadequate (e.g. two distinct variables sharing the
-            # same name)
-            # This lean name is saved in info['lean_name'],
-            # and info['name'] = "NO NAME" until proper naming
-            # This is where the local constant is marked as bound var.
-
             # Every object here should have children matching this:
-            new_bound_var = BoundVar.from_has_bound_var_parent(self)
-            self.children[1] = new_bound_var
+            # new_bound_var = BoundVar.from_has_bound_var_parent(self)
+            math_type = self.children[0]
+            bound_var = self.children[1]
+            bound_var.parent = self
+            bound_var.math_type = math_type
 
         ##################################################################
         # APP: uncurryfying APP(APP(1, 2, ...), n) --> APP(1, 2, ..., n) #
@@ -428,10 +421,21 @@ class MathObject:
                 # Return already existing MathObject
                 math_object = MathObject.Variables[identifier]
             else:  # Create new object
-                math_object = cls(node=node,
-                                  info=info,
-                                  math_type=math_type,
-                                  children=children)
+                # Case of a BoundVar
+                name = info.get('name')
+                if name and name.endswith('.BoundVar'):
+                    # Remove suffix and create a BoundVar
+                    info['name'] = info['name'][:-len('.BoundVar')]
+                    math_object = BoundVar(node=node,
+                                           info=info,
+                                           math_type=math_type,
+                                           children=children,
+                                           parent=None)
+                else:
+                    math_object = cls(node=node,
+                                      info=info,
+                                      math_type=math_type,
+                                      children=children)
                 MathObject.Variables[identifier] = math_object
 
         else:

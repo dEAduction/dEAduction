@@ -69,7 +69,9 @@ quant_pattern = {
     # !! Macro must be alone in their string (up to spaces) after splitting
     # We use child nbs and not metavars to indicate P(x), since this is used
     # for good parenthesing
-    "QUANT_∀(SET(...), ?0, ?1)":      (r"\forall", 0, r" \subset ", (0, 0), ", ", (2, )),
+    # "QUANT_∀(SET(...), ?0, ?1)":      (r"\forall", (1, ), r" \subset ", (0, 0), ", ", (2, )),
+    # FIXME: does not work, metavars.matched_math_object is None after matching!!!
+    "QUANT_∀(SET(...), ?0, ?1)": (r"\forall", 0, r" \subset ", (0, 0), ", ", (2,)),
     "QUANT_∀(FUNCTION(...), ?0, ?1)": (r"\forall", 0, r" \function_from", (0, 0), r'\to', (0, 1), ", ", (2, )),
     "QUANT_∀(PROP, ?0, ?1)":          (r"\forall", 0, r'\proposition', ", ", (2, )),
     "QUANT_∀(TYPE(...), ?0, ?1)":     (r"\forall", 0, r" \set", ", ", (2, )),
@@ -136,7 +138,7 @@ latex_from_pattern_string.update(quant_pattern)
 # If parentheses are needed then we must switch to children (instead of
 # metavars), e.g. (2,) for indicating P(x).
 text_from_pattern_string = {
-    "QUANT_∀(SET(...), ?0, ?1)":      (_("for every subset") + " ", 0,
+    "QUANT_∀(SET(...), ?0, ?1)":      (_("for every subset") + " ", (1, ),
                                        _(" of "), (0, 0), ", ", 1),
     "QUANT_∀(FUNCTION(...), ?0, ?1)": (_("for every function") + " ", 0,
                                        _(" from "), (0, 0), _(" to "), (0,
@@ -217,6 +219,8 @@ def string_to_pattern():
             list_.append((pattern, latex_shape, metavars))
             print(key)
             print(tree.display())
+            if pattern.node == 'QUANT_∀':
+                print("Pattern QUANT_∀")
 
 
 string_to_pattern()

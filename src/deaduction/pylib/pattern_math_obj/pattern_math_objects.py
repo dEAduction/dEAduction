@@ -197,7 +197,7 @@ class PatternMathObject(MathObject):
             if math_object.math_type is MathObject.NO_MATH_TYPE:
                 math_type = PatternMathObject.NO_MATH_TYPE
             else:
-                math_type   = cls.__from_math_object(math_object.math_type)
+                math_type = cls.__from_math_object(math_object.math_type)
             new_metavar = cls.new_metavar(math_type)
             metavars.append(new_metavar)
             cls.metavars_csts.append(new_metavar)
@@ -291,7 +291,7 @@ class PatternMathObject(MathObject):
             return True
 
         # METAVAR
-        elif self.is_metavar():
+        elif isinstance(self, MetaVar):
             # If self has already been identified, math_object matches self
             #   iff it is equal to the corresponding item in metavar_objects
             # If not, then self matches with math_object providing their
@@ -368,8 +368,9 @@ class PatternMathObject(MathObject):
             # so that we know that, say, 'x' in self and 'y' in other are
             # linked and should represent the same variable everywhere
             bound_var_1 = children[1]
-            bound_var_2 = math_object.children[1]
-            bound_var_1.mark_identical_bound_vars(bound_var_2)
+            if not isinstance(bound_var_1, MetaVar):
+                bound_var_2 = math_object.children[1]
+                bound_var_1.mark_identical_bound_vars(bound_var_2)
 
         ############
         # Children #
@@ -379,7 +380,7 @@ class PatternMathObject(MathObject):
                 match = False
 
         # Unmark bound_vars
-        if bound_var_1:
+        if bound_var_1 and not isinstance(bound_var_1, MetaVar):
             bound_var_1.unmark_bound_var()
             bound_var_2.unmark_bound_var()
 
