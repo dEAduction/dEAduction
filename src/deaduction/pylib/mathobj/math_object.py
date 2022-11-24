@@ -166,10 +166,6 @@ class MathObject:
     last_used_implicit_definition = None
     last_rw_object                = None
 
-    # Nodes of math objects that need instantiation of bound variables
-    HAVE_BOUND_VARS = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_INTENSION",
-                       "LAMBDA")  # "EXTENDED_SEQUENCE", "EXTENDED_SET_FAMILY")
-
     INEQUALITIES = ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥", "PROP_EQUAL_NOT")
 
     def __init__(self, node, info, children, math_type=None):
@@ -181,7 +177,8 @@ class MathObject:
         self.math_type = math_type
         self.children = children
 
-        if node in self.HAVE_BOUND_VARS and len(children) == 3:
+        # if node in self.HAVE_BOUND_VARS and len(children) == 3:
+        if self.has_bound_var():  # set math_type and parent
             # Every object here should have children matching this:
             # new_bound_var = BoundVar.from_has_bound_var_parent(self)
             math_type = self.children[0]
@@ -198,14 +195,14 @@ class MathObject:
     def __repr__(self):
         return self.to_display(format_="utf8")
 
-    def add_bound_var(self, bound_var_type=None):
-        """
-        We add a new dummy var to self.children, and name it.
-        """
-        new_bound_var = MathObject.new_bound_var(bound_var_type,
-                                                 parent=self)
-        name_single_bound_var(new_bound_var)  # FIXME
-        self.children.append(new_bound_var)
+    # def add_bound_var(self, bound_var_type=None):
+    #     """
+    #     We add a new dummy var to self.children, and name it.
+    #     """
+    #     new_bound_var = MathObject.new_bound_var(bound_var_type,
+    #                                              parent=self)
+    #     name_single_bound_var(new_bound_var)  # FIXME
+    #     self.children.append(new_bound_var)
 
     def process_sequences_and_likes(self):
         """
@@ -228,12 +225,15 @@ class MathObject:
         #     bound_var_type = self.math_type.children[0]
         #     self.children = [bound_var_type, bound_var, body]
         #     self.node += "_EXPANDED_" + self.math_type.node
-        if self.is_sequence() or self.is_set_family():
-            if self.is_lambda(is_math_type=True):
-                pass
-            elif not self.children:
+        if self.is_variable(is_math_type=True) \
+                and (self.is_sequence() or self.is_set_family()):
+            # if self.is_lambda(is_math_type=True):
+            #     pass
+            if not self.children:
                 bound_var_type = self.math_type.children[0]
-                self.add_bound_var(bound_var_type)
+                bound_var = MathObject.new_bound_var(bound_var_type,
+                                                     parent=self)
+                self.children = [bound_var_type, bound_var, None]
 
     def duplicate(self):
         """
@@ -283,23 +283,40 @@ class MathObject:
                              parent=parent)
         return bound_var
 
-    def bound_vars(self, include_sequences=False, math_type=None) -> []:
-        """Recursively determine the list of all bound vars in self. May
-        include bound vars used to display sequences and likes.
+    def bound_vars(self, include_sequences=True, math_type=None) -> []:
+        """
+        Recursively determine the list of all bound vars in self. May
+        include bound vars used to display sequences and likes. Each bound
+        var will appear only once, and is detected from has_bound_car() method.
         """
 
-        if self.is_bound_var:
-            if math_type and self.math_type != math_type:
-                return []
-            else:
-                return [self]
-        elif self.node == "LOCAL_CONSTANT" and not include_sequences:
-            # FIXME
-            #  Do not return bound vars in sequences/set families/...
-            return []
-        else:
-            return sum([child.bound_vars(math_type=math_type)
-                        for child in self.children], [])
+        # (1) Self's has direct bound var?
+        self_vars = []
+        if self.has_bound_var():
+            if include_sequences or \
+                    not (self.is_sequence(is_math_type=True)
+                         or self.is_set_family(is_math_type=True)):
+                if (not math_type) or self.bound_var_type() == math_type:
+                    self_vars = [self.bound_var()]
+
+        # (2) children's vars:
+        child_vars = sum([child.bound_vars(math_type=math_type)
+                          for child in self.children], [])
+
+        return self_vars + child_vars
+
+        # if self.is_bound_var:
+        #     if math_type and self.math_type != math_type:
+        #         return []
+        #     else:
+        #         return [self]
+        # elif self.node == "LOCAL_CONSTANT" and not include_sequences:
+        #     # FIXME
+        #     #  Do not return bound vars in sequences/set families/...
+        #     return []
+        # else:
+        #     return sum([child.bound_vars(math_type=math_type)
+        #                 for child in self.children], [])
 
     def is_unnamed(self):
         return self.display_name == "NO NAME" \
@@ -328,29 +345,51 @@ class MathObject:
                 child.remove_names_of_bound_vars(include_sequences)
 
     def has_bound_var(self):
-        return self.node in self.HAVE_BOUND_VARS
+        """
+        This crucial method check if self has bound vars. Every math_object
+        having bound var should have exactly 3 children, and the bound var is
+        self.children[1]. This includes
+        - quantified expression,
+        - set intension, e.g. {x in X, f(x) in A}
+        - lambda expression, e.g. x -> f(x),
+        - sequences, e.g. (u_n)_{n in N}
+        - set families, e.g. {E_i, i in I}.
+        """
+        nodes = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_INTENSION", "LAMBDA")
 
-    def body(self):
+        if self.node in nodes:
+            return len(self.children) == 3 and self.children[1].is_bound_var
+        elif self.is_variable(is_math_type=True) and \
+                (self.is_sequence() or self.is_set_family()):
+            return len(self.children) == 3 and self.children[1].is_bound_var
+
+        return False
+
+    def bound_var_type(self):
         if self.has_bound_var():
-            return self.children[2]
+            return self.children[0]
 
     def bound_var(self):
         if self.has_bound_var():
             return self.children[1]
 
-    def next_bound_vars(self, math_type=None):
-        """
-        Return the list of all bound vars which are next to self in the tree.
-        This is overridden in BoundVar.
-        """
+    def body(self):
         if self.has_bound_var():
-            if (not math_type) or self.bound_var().math_type == math_type:
-                return [self.bound_var()]
-            else:
-                return None
-        else:
-            return sum([child.next_bound_vars(math_type=math_type)
-                        for child in self.children], [])
+            return self.children[2]
+
+    # def next_bound_vars(self, math_type=None):
+    #     """
+    #     Return the list of all bound vars which are next to self in the tree.
+    #     This is overridden in BoundVar.
+    #     """
+    #     if self.has_bound_var():
+    #         if (not math_type) or self.bound_var().math_type == math_type:
+    #             return [self.bound_var()]
+    #         else:
+    #             return None
+    #     else:
+    #         return sum([child.next_bound_vars(math_type=math_type)
+    #                     for child in self.children], [])
 
             #################
     # Class methods #
@@ -601,13 +640,17 @@ class MathObject:
         if other is None or not isinstance(other, MathObject):
             return False
 
-        #########################################
-        # Test node, bound var, name, math_type #
-        #########################################
-        if (self.node, self.is_bound_var, self.name, self.math_type,
-            self.value) != \
-                (other.node, other.is_bound_var, other.name, other.math_type,
-                 other.value):
+        # Test math_types only if they are both defined:
+        if self.is_no_math_type() or other.is_no_math_type():
+            return True
+
+        ################################################
+        # Test node, bound var, name, value, math_type #
+        ################################################
+        if (self.node, self.is_bound_var, self.name, self.value) != \
+                (other.node, other.is_bound_var, other.name, other.value):
+            return False
+        if self.math_type != other.math_type:
             return False
         if self.is_bound_var:
             if self.bound_var_nb() != other.bound_var_nb():
@@ -627,7 +670,8 @@ class MathObject:
             # Bound vars #
             ##############
             # Mark bound vars in quantified expressions to distinguish them
-            if self.node in self.HAVE_BOUND_VARS:
+            # if self.node in self.HAVE_BOUND_VARS:
+            if self.has_bound_var():
                 # Here self and other are assumed to be a quantified proposition
                 # and children[1] is the bound variable.
                 # We mark the bound variables in self and other with same number
@@ -731,8 +775,8 @@ class MathObject:
         else:
             math_type = self.math_type
 
-        math_type_of_math_type = math_type.math_type
         if math_type.node == "LOCAL_CONSTANT":
+            math_type_of_math_type = math_type.math_type
             if not (math_type_of_math_type.is_prop(is_math_type=False) or
                     math_type_of_math_type.is_type(is_math_type=True) or
                     math_type_of_math_type == MathObject.NO_MATH_TYPE):
@@ -741,7 +785,7 @@ class MathObject:
 
     def is_sequence(self, is_math_type=False) -> bool:
         """
-        Test if (math_type of) self is a "universe"
+        Test if (math_type of) self is "SEQUENCE".
         """
         if is_math_type:
             math_type = self
@@ -751,7 +795,7 @@ class MathObject:
 
     def is_set_family(self, is_math_type=False) -> bool:
         """
-        Test if (math_type of) self is a "universe"
+        Test if (math_type of) self is "SET_FAMILY".
         """
         if is_math_type:
             math_type = self
@@ -761,7 +805,7 @@ class MathObject:
 
     def is_lambda(self, is_math_type=False) -> bool:
         """
-        Test if (math_type of) self is a "universe"
+        Test if (math_type of) self is "LAMBDA".
         """
         if is_math_type:
             math_type = self
@@ -1770,10 +1814,10 @@ class BoundVar(MathObject):
         """
         self.info['bound_var_nb'] = -1
 
-    def next_bound_vars(self, math_type=None):
-        # FIXME: useless?
-        if self.parent.body:
-            return self.parent.body.next_bound_vars(math_type)
+    # def next_bound_vars(self, math_type=None):
+    #     # FIXME: useless?
+    #     if self.parent.body:
+    #         return self.parent.body.next_bound_vars(math_type)
 
     #################################
     # Methods for PatternMathObject #

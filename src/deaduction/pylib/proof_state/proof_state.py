@@ -275,6 +275,7 @@ class Goal:
     def bound_variables(self, math_type=None):
         """
         Return all bound variables of context and target of a given type.
+        Each variable should appear exactly once.
         """
         c_vars = sum([mo.math_type.bound_vars(math_type=math_type)
                       for mo in self.context_props], [])
@@ -349,7 +350,7 @@ class Goal:
         for math_type in self.potential_math_types():
             NameHint.from_math_type(math_type, self.name_hints)
 
-    def update_name_hints(self):
+    def     update_name_hints(self):
         """
         Ensure that each math_type of appearing in self has an associated
         NameHint.
@@ -368,34 +369,33 @@ class Goal:
 ########################
 # Build Naming Schemes #
 ########################
-    def _recursive_length_for_bound_vars(self, math_obj: MathObject,
-                                         math_type: MathObject):
+    def _recursive_bound_vars_length(self, math_obj: MathObject,
+                                     include_sequences=True, 
+                                     math_type: MathObject = None):
         """
         Compute the maximal length of a chain of bound vars of the given
         types. On other words, this is the maximal nb of distinct bound vars
         of this type that live in the same local context.
         The principle of the computation is that if self has bound var then
         this bound var occurs in the local context of all self's children.
+        This algo follows MathObject.bound_vars().
         """
-
+        
+        # (1) Self's has direct bound var?
+        local_length = 0
         if math_obj.has_bound_var():
-            var_length = int(math_obj.bound_var().math_type == math_type)
-            body_length = self._recursive_length_for_bound_vars(math_obj.body(),
-                                                                math_type)
-            return var_length + body_length
+            if include_sequences or \
+                    not (math_obj.is_sequence(is_math_type=True)
+                         or math_obj.is_set_family(is_math_type=True)):
+                if (not math_type) or math_obj.bound_var_type() == math_type:
+                    local_length = 1
 
-        elif math_obj.is_bound_var and math_obj.math_type == math_type:
-            # NB: A bound var may have a bound var child, e.g. for a sequence
-            # but not of the same math_type
-            return 1
-
-        elif not math_obj.children:
-            return 0
-
-        assert math_obj.children  # Non-empty children
-        child_length = [self._recursive_length_for_bound_vars(child, math_type)
+        # (2) Children's vars:
+        child_length = [self._recursive_bound_vars_length(child,
+                                                          include_sequences,
+                                                          math_type)
                         for child in math_obj.children]
-        return max(child_length)
+        return local_length + max(child_length + [0])
 
     def total_length_for_math_type(self, math_type):
         """
@@ -406,11 +406,13 @@ class Goal:
 
         props = ([prop.math_type for prop in self.context_props]
                  + [self.target.math_type])
-        local_context_length = [self._recursive_length_for_bound_vars(
-                                math_obj=prop, math_type=math_type)
-                                for prop in props] + [0]
+        local_context_length = [self._recursive_bound_vars_length(
+                                math_obj=prop,
+                                include_sequences=True,
+                                math_type=math_type)
+                                for prop in props]
 
-        return context_length + max(local_context_length)
+        return context_length + max(local_context_length + [0])
 
     def update_name_schemes(self):
         """
@@ -434,27 +436,48 @@ class Goal:
 ###################
 # Name bound vars #
 ###################
+    def name_isolated_bound_var(self, var: BoundVar):
+        """
+        Name the given bound var according to its type, without paying 
+        attention to other vars. Could be used to name a sequence's index.
+        """
+        name_hint = NameHint.from_math_type(math_type=var.math_type,
+                                            existing_hints=self.name_hints)
+        new_name = name_hint.provide_name(given_names=[])
+        var.name_bound_var(new_name)
+    
     def name_one_bound_var(self, var: BoundVar):
         """
         Name the given bound var according to its type and the
         name scheme found in self.name_hints.
         """
-        # FIXME: review code
         name_hint = NameHint.from_math_type(math_type=var.math_type,
                                             existing_hints=self.name_hints)
         local_names = [other_var.name for other_var in var.local_context]
         global_names = self.free_var_names()
         given_names = global_names + local_names
         new_name = name_hint.provide_name(given_names)
-        # FIXME: if new_name is None...
         var.name_bound_var(new_name)
 
-    def _recursive_name_all_bound_vars(self, p: MathObject):
-        if isinstance(p, BoundVar):
-            self.name_one_bound_var(p)
-        else:
-            for child in p.children:
-                self._recursive_name_all_bound_vars(child)
+    def _recursive_name_all_bound_vars(self, p: MathObject, 
+                                       include_sequences=True):
+        """
+        Recursively name all bound vars in self. Each bound var should be 
+        named only once (!).
+        """
+
+        # (1) Name self's direct bound var, if any
+        if p.has_bound_var():
+            if (not include_sequences) \
+                    and (p.is_sequence(is_math_type=True)
+                         or p.is_set_family(is_math_type=True)):
+                self.name_isolated_bound_var(p.bound_var())
+            else:
+                self.name_one_bound_var(p.bound_var())
+
+        # (2) Name children's vars:
+        for child in p.children:
+            self._recursive_name_all_bound_vars(child, include_sequences)
 
     def smart_name_bound_vars(self):
         """

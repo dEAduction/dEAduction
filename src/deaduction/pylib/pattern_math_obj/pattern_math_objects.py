@@ -33,7 +33,7 @@ if __name__ == "__main__":
 from typing import Optional, Union
 
 from deaduction.pylib.utils import tree_list
-from deaduction.pylib.mathobj.math_object import MathObject
+from deaduction.pylib.mathobj.math_object import MathObject, BoundVar
 
 log = logging.getLogger(__name__)
 
@@ -361,14 +361,15 @@ class PatternMathObject(MathObject):
         # Bound vars #
         ##############
         # Mark bound vars in quantified expressions to distinguish them
-        if self.node in self.HAVE_BOUND_VARS:
+        # if self.node in self.HAVE_BOUND_VARS:
+        if self.has_bound_var():
             # Here self and other are assumed to be a quantified proposition
             # and children[1] is the bound variable.
             # We mark the bound variables in self and other with same number
             # so that we know that, say, 'x' in self and 'y' in other are
             # linked and should represent the same variable everywhere
             bound_var_1 = children[1]
-            if not isinstance(bound_var_1, MetaVar):
+            if isinstance(bound_var_1, BoundVar):
                 bound_var_2 = math_object.children[1]
                 bound_var_1.mark_identical_bound_vars(bound_var_2)
 
