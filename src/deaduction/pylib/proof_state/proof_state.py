@@ -446,11 +446,13 @@ class Goal:
 ##################
 # Name variables #
 ##################
-    def provide_good_name(self, math_type, local_names=None, isolated=False):
+    def provide_good_name(self, math_type, local_names=None, isolated=False,
+                          preferred_letter=''):
         """
         Try its best to get a good name of given math_type, taken into
         account given names.
         """
+        # TODO: take into account preferred letter (for naming numbers)
 
         # Names to be excluded:
         if not local_names:
@@ -469,34 +471,28 @@ class Goal:
             self.update_name_schemes(supp_math_type=math_type, supp_nb=1)
             new_name, success = name_hint.provide_name(given_names=[])
 
-        return new_name, success
+            if not success:
+                log.warning(f"Bad name {new_name} given to var of type "
+                            f"{math_type}")
 
-    def name_isolated_bound_var(self, var: BoundVar):
-        """
-        Name the given bound var according to its type, without paying 
-        attention to other vars. Could be used to name a sequence's index.
-        """
+        return new_name
 
-        name, success = self.provide_good_name(var.math_type, isolated=True)
-
-        if not success:
-            log.warning(f"Bad name {name} given to var of type {var.math_type}")
-
-        var.name_bound_var(name)
-
-    def name_one_bound_var(self, var: BoundVar):
+    def name_one_bound_var(self, var: BoundVar, isolated=False):
         """
         Name the given bound var according to its type and the
         name scheme found in self.name_hints.
+        isolated bool may be used to name sequences's indices without bothering
+        about conflicting with global vars names.
         """
 
-        local_names = [other_var.name for other_var in var.local_context]
+        if not isolated:
+            local_names = [other_var.name for other_var in var.local_context]
+        else:
+            local_names = []
 
-        name, success = self.provide_good_name(var.math_type,
-                                               local_names=local_names)
-
-        if not success:
-            log.warning(f"Bad name {name} given to var of type {var.math_type}")
+        name = self.provide_good_name(var.math_type,
+                                      local_names=local_names,
+                                      isolated=isolated)
 
         var.name_bound_var(name)
 
@@ -512,9 +508,11 @@ class Goal:
             if (not include_sequences) \
                     and (p.is_sequence(is_math_type=True)
                          or p.is_set_family(is_math_type=True)):
-                self.name_isolated_bound_var(p.bound_var())
+                isolated = True
             else:
-                self.name_one_bound_var(p.bound_var())
+                isolated = False
+
+            self.name_one_bound_var(p.bound_var(), isolated=isolated)
 
         # (2) Name children's vars:
         for child in p.children:

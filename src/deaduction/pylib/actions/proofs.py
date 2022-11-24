@@ -211,15 +211,17 @@ def introduce_fun(proof_step, selected_objects: [MathObject]) -> CodeForLean:
                                        math_type=MathObject.NO_MATH_TYPE)
 
                 hf = get_new_hyp(proof_step)
-                f = give_global_name(math_type=math_type,
-                                     proof_step=proof_step)
+                name = proof_step.goal.provide_good_name(math_type)
+
+                # f = give_global_name(math_type=math_type,
+                #                      proof_step=proof_step)
                 code = CodeForLean.from_string(f'cases '
                                                f'classical.axiom_of_choice '
-                                               f'{h} with {f} {hf}, '
+                                               f'{h} with {name} {hf}, '
                                                f'dsimp at {hf}, '
-                                               f'dsimp at {f}')
+                                               f'dsimp at {name}')
                 code.add_error_msg(error)
-                success = success.format(f, hf)
+                success = success.format(name, hf)
                 code.add_success_msg(success)
                 return code
     raise WrongUserInput(error)

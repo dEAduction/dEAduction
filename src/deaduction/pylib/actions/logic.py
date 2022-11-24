@@ -875,18 +875,21 @@ def construct_forall(proof_step) -> CodeForLean:
             strong_hint = hint
     if math_type.node == "PRODUCT":
         # [math_type_1, math_type_2] = math_type.children
-        [x, y] = names_for_types(math_type.children, proof_step)
+        # [x, y] = names_for_types(math_type.children, proof_step)
         # x = give_global_name(proof_step=proof_step, math_type=math_type_1)
         # y = give_global_name(proof_step=proof_step, math_type=math_type_2)
-        possible_codes = possible_codes.and_then(f'rintro ⟨ {x}, {y} ⟩')
-        name = f"({x},{y})"
+        name_0 = proof_step.goal.provide_good_name(math_type.children[0])
+        name_1 = proof_step.goal.provide_good_name(math_type.children[1])
+        code = f'rintro ⟨ {name_0}, {name_1} ⟩'
+        possible_codes = possible_codes.and_then(code)
+        name = f"({name_0},{name_1})"
     else:
-        x = give_global_name(proof_step=proof_step,
-                             math_type=math_type,
-                             hints=hints,
-                             strong_hint=strong_hint)
-        possible_codes = possible_codes.and_then(f'intro {x}')
-        name = f"{x}"
+        name = proof_step.goal.provide_good_name(math_type)
+        # x = give_global_name(proof_step=proof_step,
+        #                      math_type=math_type,
+        #                      hints=hints,
+        #                      strong_hint=strong_hint)
+        possible_codes = possible_codes.and_then(f'intro {name}')
     possible_codes.add_success_msg(_("Object {} added to the context").
                                    format(name))
 
@@ -1122,23 +1125,26 @@ def apply_exists(proof_step, selected_object: [MathObject]) -> CodeForLean:
         selected_hypo       = MathObject.last_rw_object
 
     hint = selected_hypo.children[1].display_name
-    x = give_global_name(proof_step=proof_step,
-                         math_type=selected_hypo.children[0],
-                         hints=[hint],
-                         strong_hint=hint)
+    math_type = selected_hypo.children[0]
+    name = proof_step.goal.provide_good_name(math_type)
+
+    # x = give_global_name(proof_step=proof_step,
+    #                      math_type=selected_hypo.children[0],
+    #                      hints=[hint],
+    #                      strong_hint=hint)
     new_hypo_name = get_new_hyp(proof_step)
 
     if selected_hypo.children[2].node == "PROP_∃":
         code = f'rcases {hypo_name} with ' \
-                f'⟨ {x}, ⟨ {new_hypo_name}, {hypo_name} ⟩ ⟩'
+                f'⟨ {name}, ⟨ {new_hypo_name}, {hypo_name} ⟩ ⟩'
     else:
-        code = f'cases {hypo_name} with {x} {new_hypo_name}'
+        code = f'cases {hypo_name} with {name} {new_hypo_name}'
     code = CodeForLean.from_string(code)
     if selected_hypo.node == 'QUANT_∃!':
         # We have to add the "simp" tactic to avoid appearance of lambda expr
         code = code.and_then(f'simp at {new_hypo_name}')
     code.add_success_msg(_("New object {} with property {}").
-                         format(x, new_hypo_name))
+                         format(name, new_hypo_name))
     code.operator = selected_object[0]
     return code
 
@@ -1456,12 +1462,15 @@ def apply_map_to_element(proof_step,
     # elif isinstance(element, str):
     image_set = map_.math_type.children[1]
     # TODO: choose a better name by a careful examination of context
-    y = give_global_name(proof_step=proof_step,
-                         math_type=image_set,
-                         hints=[image_set.info["name"]])
+    name = proof_step.goal.provide_good_name(image_set)
+
+    # y = give_global_name(proof_step=proof_step,
+    #                      math_type=image_set,
+    #                      hints=[image_set.info["name"]])
+
     new_h = get_new_hyp(proof_step)
-    msg = _("New objet {} added to the context").format(y)
-    code = CodeForLean.from_string(f"set {y} := {f} {x} with {new_h}",
+    msg = _("New objet {} added to the context").format(name)
+    code = CodeForLean.from_string(f"set {name} := {f} {x} with {new_h}",
                                    success_msg=msg)
     code.operator = map_
     return code

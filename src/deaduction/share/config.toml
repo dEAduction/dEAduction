@@ -84,7 +84,7 @@ log_to_file = true
 
 [others]
 usr_version_nb = "-1"  # Do not modify!
-version_nb = "0.3525"
+version_nb = "0.3527"
 os = ""  # Let this to "" except for debugging
 
 #########################

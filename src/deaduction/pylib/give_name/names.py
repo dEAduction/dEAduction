@@ -188,6 +188,9 @@ def potential_names(hint, length, friend_names: set, excluded_names: set,
     length is the nb of needed additional (new) names.
     NB2: the index list should always be of sufficient length, i.e.
     length equal to length + len(friend_name) + 10.
+    NB3: the returned list may include forbidden names. This is useful since
+    context may vary, these forbidden names may disappear from the
+    context, and then we will be happy to use them for a new variable.
     """
 
     # TODO: check case
@@ -236,7 +239,7 @@ def potential_names(hint, length, friend_names: set, excluded_names: set,
 
     print("Winner:")
     print(winner)
-    winner = [name for name in winner if name not in given_names]
+    # winner = [name for name in winner if name not in excluded_names]
     return winner
 
 
