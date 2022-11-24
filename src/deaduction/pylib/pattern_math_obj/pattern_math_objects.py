@@ -31,6 +31,7 @@ if __name__ == "__main__":
     import deaduction.pylib.config.i18n
 
 from typing import Optional, Union
+from copy import copy
 
 from deaduction.pylib.utils import tree_list
 from deaduction.pylib.mathobj.math_object import MathObject, BoundVar
@@ -190,22 +191,24 @@ class PatternMathObject(MathObject):
             # log.debug(f"   Mo is metavar n°{metavar.info['nb']}")
             return metavar
 
-        elif math_object.node == 'LOCAL_CONSTANT' and \
-                not math_object.is_bound_var:
-            # Turn math_type into a PatternMathObject,
-            # then create a new metavar.
-            if math_object.math_type is MathObject.NO_MATH_TYPE:
-                math_type = PatternMathObject.NO_MATH_TYPE
+        elif math_object.node == 'LOCAL_CONSTANT':
+            if math_object.is_bound_var:
+                return copy(math_object)
             else:
-                math_type = cls.__from_math_object(math_object.math_type)
-            new_metavar = cls.new_metavar(math_type)
-            metavars.append(new_metavar)
-            cls.metavars_csts.append(new_metavar)
-            loc_csts.append(math_object)
-            cls.loc_csts_for_metavars.append(math_object)
-            # metavar_list[math_object] = new_metavar
-            # log.debug(f"   Creating metavar n°{new_metavar.info['nb']}")
-            return new_metavar
+                # Turn math_type into a PatternMathObject,
+                # then create a new metavar.
+                if math_object.math_type is MathObject.NO_MATH_TYPE:
+                    math_type = PatternMathObject.NO_MATH_TYPE
+                else:
+                    math_type = cls.__from_math_object(math_object.math_type)
+                new_metavar = cls.new_metavar(math_type)
+                metavars.append(new_metavar)
+                cls.metavars_csts.append(new_metavar)
+                loc_csts.append(math_object)
+                cls.loc_csts_for_metavars.append(math_object)
+                # metavar_list[math_object] = new_metavar
+                # log.debug(f"   Creating metavar n°{new_metavar.info['nb']}")
+                return new_metavar
 
         else:
             node = math_object.node

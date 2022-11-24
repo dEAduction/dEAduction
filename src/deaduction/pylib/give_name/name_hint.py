@@ -100,13 +100,12 @@ class NameHint:
     use_index = cvars.get('display.use_indices', True)
     prime_over_index = cvars.get('display.use_primes_over_indices', True)
 
-    def __init__(self, letter, math_type, case, names=None):
-        self.letter = letter
+    def __init__(self, math_type, preferred_letter, letter, case):
         self.math_type = math_type
+        self.preferred_letter = preferred_letter
+        self.letter = letter
         self.case = case
-        # self.name_scheme = NameScheme.from_name_hint(self)
-        #  and self.provide_name(given_names)
-        self.names = names if names else []
+        self.names = []
 
         if math_type.is_sequence(is_math_type=True):
             self.use_index = False
@@ -115,34 +114,51 @@ class NameHint:
         return self.letter
 
     @classmethod
-    def from_math_type(cls, math_type, existing_hints, friendly_names=None):
+    def from_math_type(cls, math_type, preferred_letter='',
+                       existing_hints=None, friendly_names=None):
         """
-        Return the hint corresponding to math_type. If none, create a new
-        hint and append it to existing_hints. The main task is to find a
-        suitable letter for naming hint. The letter must be distinct of all
-        letters of existing_hints.
+        Return the hint corresponding to math_type and preferred_letter. The
+        math_type must coincide, and preferred_letter must be in self.names.
+        (Alternatively, we could impose the stronger condition that the
+        preferred_letters coincide).
+
+        If no hint fit,
+        create a new hint and append it to existing_hints. The main task is
+        to find a suitable letter for naming hint. The letter must be
+        distinct of all letters of existing_hints.
         """
 
         if not friendly_names:
             friendly_names = []
+        if existing_hints is None:
+            existing_hints = []
 
         # (1) Search for math_type among existing hints
         for hint in existing_hints:
             if hint.math_type == math_type:
-                return hint
+                if not preferred_letter or preferred_letter in hint.names:
+                    return hint
 
         # (2) No existing hint: create one
-        # (a) Try (first letter of) friendly names
-        letters = [friendly_name[0] for friendly_name in friendly_names
-                   if friendly_name[0].isalpha()]
+        # (a) Try strong_hint
+        letters = []
+        if preferred_letter:
+            usable_letters = alphabet + greek_alphabet
+            usable_letters += usable_letters.upper()
+            if preferred_letter in usable_letters:
+                letters = [preferred_letter]
 
-        # (b) Ask letter_hints_from_type
+        # (b) Try (first letter of) friendly names
+        letters.extend([friendly_name[0] for friendly_name in friendly_names
+                        if friendly_name[0].isalpha()])
+
+        # (c) Ask letter_hints_from_type
         more_letters_tuple, case = letter_hints_from_type(math_type)
         # Merge letters lists:
         for more_letters in more_letters_tuple:
             letters.extend(more_letters)
 
-        # (c) Exclude other hints
+        # (d) Exclude other hints
         excluded_letters = [hint.letter for hint in existing_hints]
         success = False
         for letter in letters:
@@ -154,7 +170,7 @@ class NameHint:
             letter = letters[0] if letters else ""
             letter = cls.new_letter_from_bad(letter, existing_hints)
 
-        new_hint = cls(letter, math_type, case)
+        new_hint = cls(math_type, preferred_letter, letter, case)
         existing_hints.append(new_hint)
         return new_hint
 

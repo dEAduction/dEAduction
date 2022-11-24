@@ -861,18 +861,18 @@ def construct_forall(proof_step) -> CodeForLean:
         math_object         = MathObject.last_rw_object
         possible_codes = rw_with_defi(implicit_definition)
 
-    math_type: MathObject = math_object.children[0]
-    variable = math_object.children[1]
-    body = math_object.children[2]
-    hints = []
-    strong_hint = None
-    if not implicit:  # or math_type.is_R():  # FIXME: experimental
-        # hint = (variable.info.get('lean_name') if variable.is_unnamed() else
-        #         variable.display_name)
-        hint = variable.display_name
-        if hint:  # and len(hint) == 1:
-            hints = [hint]
-            strong_hint = hint
+    math_type: MathObject = math_object.bound_var_type()
+    bound_var = math_object.bound_var()
+    body = math_object.body()
+    # hints = []
+    # strong_hint = None
+    # if not implicit:  # or math_type.is_R():  # FIXME: experimental
+    #     # hint = (variable.info.get('lean_name') if variable.is_unnamed() else
+    #     #         variable.display_name)
+    #     hint = bound_var.display_name
+    #     if hint:  # and len(hint) == 1:
+    #         hints = [hint]
+    #         strong_hint = hint
     if math_type.node == "PRODUCT":
         # [math_type_1, math_type_2] = math_type.children
         # [x, y] = names_for_types(math_type.children, proof_step)
@@ -884,7 +884,8 @@ def construct_forall(proof_step) -> CodeForLean:
         possible_codes = possible_codes.and_then(code)
         name = f"({name_0},{name_1})"
     else:
-        name = proof_step.goal.provide_good_name(math_type)
+        name = proof_step.goal.provide_good_name(math_type,
+                                                 bound_var.preferred_letter())
         # x = give_global_name(proof_step=proof_step,
         #                      math_type=math_type,
         #                      hints=hints,
@@ -900,6 +901,7 @@ def construct_forall(proof_step) -> CodeForLean:
         # then introduce the inequality on top of x
         premise = body.children[0]  # children (2,0)
         if premise.is_inequality(is_math_type=True):
+            # FIXME: rather use automatic actions
             h = get_new_hyp(proof_step)
             # Add and_then intro h
             possible_codes = possible_codes.and_then(f'intro {h}')
@@ -1125,8 +1127,10 @@ def apply_exists(proof_step, selected_object: [MathObject]) -> CodeForLean:
         selected_hypo       = MathObject.last_rw_object
 
     hint = selected_hypo.children[1].display_name
-    math_type = selected_hypo.children[0]
-    name = proof_step.goal.provide_good_name(math_type)
+    math_type = selected_hypo.bound_var_type()
+    bound_var = selected_hypo.bound_var()
+    name = proof_step.goal.provide_good_name(math_type,
+                                             bound_var.preferred_letter())
 
     # x = give_global_name(proof_step=proof_step,
     #                      math_type=selected_hypo.children[0],

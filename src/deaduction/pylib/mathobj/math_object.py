@@ -999,7 +999,7 @@ class MathObject:
                 or self.display_name == 'RealSubGroup')
 
     def is_number(self):
-        return Any([self.is_N(), self.is_Z(), self.is_Q(), self.is_R()])
+        return any([self.is_N(), self.is_Z(), self.is_Q(), self.is_R()])
 
     def is_iff(self, is_math_type=False) -> bool:
         """
@@ -1651,52 +1651,35 @@ class MathObject:
     #     else:
     #         return sum([child.potential_types() for child in self.children], [])
 
-    def name_hint_from_type(self) -> Optional[str]:
-        """
-        Return a hint for naming a variable whose type is self.
-        """
-        hint = None
-        # TODO: add 'SET' if display.use_set_name_as_hint_for_naming_elements
-        # (1) If self is a set, try to name its terms (elements) according to
-        # its name, e.g. X -> x.
-        if self.is_type():
-            if self.display_name.isalpha() and self.display_name[0].isupper():
-                hint = self.display_name[0].lower()
-
-        # (2) Names of sequences
-        if self.is_sequence():
-            seq_type = self.children[1]
-            if not seq_type.is_number():
-                hint = seq_type.name_hint_from_type()
-
-        # Standard hints
-        if not hint:
-            hint = 'A' if self.node.startswith('SET') \
-                else 'X' if self.is_type(is_math_type=True) \
-                else 'P' if self.is_prop(is_math_type=True) \
-                else 'f' if self.is_function(is_math_type=True) \
-                else 'u' if self.is_sequence(is_math_type=True) \
-                else 'n' if self.is_nat(is_math_type=True) \
-                else None  # else 'x'  # Or None?
-
-        return hint
-
-    def name_hint(self) -> Optional[str]:
-        """
-        Return a hint for naming self, which is assumed to be a dummy var.
-        """
-
-        hint = None
-        use_lean_name = (self.math_type.is_number(), self.is_function())
-        if any(use_lean_name):
-            lean_name = self.info.get('lean_name')
-            if lean_name:
-                hint = lean_name
-
-        # if not hint:
-        #     hint = self.math_type.name_hint_from_type()
-
-        return hint
+    # def name_hint_from_type(self) -> Optional[str]:
+    #     """
+    #     Return a hint for naming a variable whose type is self.
+    #     """
+    #     hint = None
+    #     # TODO: add 'SET' if display.use_set_name_as_hint_for_naming_elements
+    #     # (1) If self is a set, try to name its terms (elements) according to
+    #     # its name, e.g. X -> x.
+    #     if self.is_type():
+    #         if self.display_name.isalpha() and self.display_name[0].isupper():
+    #             hint = self.display_name[0].lower()
+    #
+    #     # (2) Names of sequences
+    #     if self.is_sequence():
+    #         seq_type = self.children[1]
+    #         if not seq_type.is_number():
+    #             hint = seq_type.name_hint_from_type()
+    #
+    #     # Standard hints
+    #     if not hint:
+    #         hint = 'A' if self.node.startswith('SET') \
+    #             else 'X' if self.is_type(is_math_type=True) \
+    #             else 'P' if self.is_prop(is_math_type=True) \
+    #             else 'f' if self.is_function(is_math_type=True) \
+    #             else 'u' if self.is_sequence(is_math_type=True) \
+    #             else 'n' if self.is_nat(is_math_type=True) \
+    #             else None  # else 'x'  # Or None?
+    #
+    #     return hint
 
     def set_local_context(self, local_context=None):
         """
@@ -1773,6 +1756,25 @@ class BoundVar(MathObject):
         math_type = parent.children[0]
         return BoundVar(bound_var.node, bound_var.info, bound_var.children,
                         math_type, parent=parent)
+
+################
+# Name methods #
+################
+    def preferred_letter(self) -> str:
+        """
+        Return a preferred letter for naming self.
+        """
+
+        letter = ''
+        lean_name = self.info.get('lean_name')
+        # use_lean_name = (self.math_type.is_number(), self.is_function())
+        if lean_name:
+            if lean_name.endswith('__'):  # Code to force name
+                letter = lean_name[:-2]
+            elif self.math_type.is_number():
+                letter = lean_name
+
+        return letter
 
     def is_unnamed(self):
         # FIXME: turn to:

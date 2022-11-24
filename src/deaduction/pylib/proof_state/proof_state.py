@@ -334,37 +334,63 @@ class Goal:
                 self.name_hints.remove(hint)
 
     def update_context_hints(self):
-        for math_type in self.free_var_types():
-            friendly_names = self.free_var_names(math_type)
-            NameHint.from_math_type(math_type,
-                                    self.name_hints,
-                                    friendly_names=friendly_names)
+        # for math_type in self.free_var_types():
+        #     friendly_names = self.free_var_names(math_type)
+        #     NameHint.from_math_type(math_type, self.name_hints,
+        #                             friendly_names=friendly_names)
+        for var in self.free_variables():
+            math_type = var.math_type
+            if math_type.is_number():
+                preferred_letter = var.display_name
+                friendly_names = []
+            else:
+                preferred_letter = ''
+                friendly_names = self.free_var_names(math_type)
+            # Add new name hint if none match:
+            NameHint.from_math_type(math_type, preferred_letter,
+                                    self.name_hints, friendly_names)
 
     def update_bound_var_hints(self):
-        for math_type in self.bound_var_types():
-            NameHint.from_math_type(math_type, self.name_hints)
+        # for math_type in self.bound_var_types():
+        #     NameHint.from_math_type(math_type, self.name_hints)
+        for var in self.bound_variables():
+            math_type = var.math_type
+            if math_type.is_number():
+                preferred_letter = var.display_name
+            else:
+                preferred_letter = ''
+            # Add new name hint if none match:
+            NameHint.from_math_type(math_type, preferred_letter,
+                                    self.name_hints)
 
     def update_potential_hints(self):
+        """
+        Add hints for some math_type even if no MathObject of that type
+        already exists, just in case. This 'book' the corresponding
+        hints.letter, which will not be used by other hints.
+        """
         # TODO: add set X for every universe X?
         # TODO: take into account implicit defs in target
         for math_type in self.potential_math_types():
-            NameHint.from_math_type(math_type, self.name_hints)
+            NameHint.from_math_type(math_type, existing_hints=self.name_hints)
 
-    def     update_name_hints(self):
+    def __update_all_name_hints(self):
         """
         Ensure that each math_type of appearing in self has an associated
         NameHint.
         """
-        if self.name_hints:
-            self.clear_hints()
+        self.clear_hints()
         self.update_context_hints()
         self.update_bound_var_hints()
         self.update_potential_hints()
 
-        # DEBUG:
+    def print_hints(self):
+        """For debugging."""
         print("Name hints:")
         for name_hint in self.name_hints:
             print(f"Name hint for {name_hint.math_type}: {name_hint.letter}")
+            if name_hint.names:
+                print(f"   names: {name_hint.names}")
 
 ########################
 # Build Naming Schemes #
@@ -397,12 +423,12 @@ class Goal:
                         for child in math_obj.children]
         return local_length + max(child_length + [0])
 
-    def total_length_for_math_type(self, math_type):
+    def max_local_length(self, math_type):
         """
         Compute the nb of distinct vars of given math_type that may occur
-        simultaneously in a local + global context.
+        simultaneously in a local context.
         """
-        context_length = len(self.free_variables(math_type))
+        # context_length = len(self.free_variables(math_type))
 
         props = ([prop.math_type for prop in self.context_props]
                  + [self.target.math_type])
@@ -412,7 +438,7 @@ class Goal:
                                 math_type=math_type)
                                 for prop in props]
 
-        return context_length + max(local_context_length + [0])
+        return max(local_context_length + [0])
 
     def update_name_schemes(self, supp_math_type=None,
                             supp_nb=0):
@@ -429,7 +455,7 @@ class Goal:
         hint_letters = {hint.letter for hint in self.name_hints}
         for hint in self.name_hints:
             math_type = hint.math_type
-            length = self.total_length_for_math_type(math_type)
+            length = self.max_local_length(math_type)
             if math_type == supp_math_type:
                 length += supp_nb
             if length == 0:
@@ -446,11 +472,11 @@ class Goal:
 ##################
 # Name variables #
 ##################
-    def provide_good_name(self, math_type, local_names=None, isolated=False,
-                          preferred_letter=''):
+    def provide_good_name(self, math_type, preferred_letter='',
+                          local_names=None, isolated=False):
         """
-        Try its best to get a good name of given math_type, taken into
-        account given names.
+        Try its best to get a good name of given math_type with
+        preferred_letter, taken into account given names.
         """
         # TODO: take into account preferred letter (for naming numbers)
 
@@ -460,7 +486,7 @@ class Goal:
         global_names = self.free_var_names() if not isolated else []
         given_names = local_names + global_names
 
-        name_hint = NameHint.from_math_type(math_type=math_type,
+        name_hint = NameHint.from_math_type(math_type, preferred_letter,
                                             existing_hints=self.name_hints)
 
         new_name, success = name_hint.provide_name(given_names=given_names)
@@ -490,7 +516,7 @@ class Goal:
         else:
             local_names = []
 
-        name = self.provide_good_name(var.math_type,
+        name = self.provide_good_name(var.math_type, var.preferred_letter(),
                                       local_names=local_names,
                                       isolated=isolated)
 
@@ -527,14 +553,18 @@ class Goal:
 
         # TODO: bound vars names for numbers
         # TODO bound new contextvars in logic.py
-        self.update_name_hints()
+        self.__update_all_name_hints()
         self.update_name_schemes()
+        print(f'Context: {self.context}')
+        print(f'Target: {self.target.math_type}')
+        self.print_hints()
         self._recursive_name_all_bound_vars(self.target.math_type)
         for p in self.context_props:
             self._recursive_name_all_bound_vars(p.math_type)
         for p in self.context_objects:
             self._recursive_name_all_bound_vars(p.math_type)
 
+###############
 ###############
 # OLD METHODS #
 ###############

@@ -167,7 +167,7 @@ def to_display(self: MathObject, format_="html", text=False,
     abstract_string = expanded_latex_shape(math_object=self, shape=shape,
                                            text=text)
 
-    log.debug(f"Abstract string: {abstract_string}")
+    # log.debug(f"Abstract string: {abstract_string}")
     # (3) Replace some symbols by plain text, or shorten some text:
     text_depth = 100 if text else 0
     abstract_string = shallow_latex_to_text(abstract_string, text_depth)

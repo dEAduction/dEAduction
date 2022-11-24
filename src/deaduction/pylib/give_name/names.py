@@ -41,8 +41,8 @@ alphabet = 'abcdefghijklmnopqrstuvwxyz'
 greek_alphabet = "αβγδεζηθικλμνξοπρςστυφχψω"
 lower_lists = ['abcde', 'fgh', 'ijkl', 'mn', 'nk', 'npq', 'pqr', 'rst', 'uvw',
                'xyzwt']
-greek_list = ['αβγ', 'δεη', 'φψ', 'λμν', 'πρ', 'θα', 'στ']
-greek_upper_list = ['ΓΛΔ', 'ΦΨ']
+greek_list = ['αβγ', 'ε', 'δ', 'η', 'φψ', 'λμν', 'πρ', 'θα', 'στ']
+greek_upper_list = ['ΓΛΔ', 'ΦΨ', 'Ξ', 'Σ', 'Ω']
 upper_lists = [s.upper() for s in lower_lists]
 lower_upper = [a + a.upper() for a in alphabet]
 
@@ -119,7 +119,7 @@ def pure_letter_lists(letter: str, prime=0, index: Optional[int] = None,
     direct_trials = []
     reverse_trials = []
 
-    lists = (lower_lists + greek_list if case == case.LOWER_ONLY
+    lists = (lower_lists + greek_list if case == Case.LOWER_ONLY
              else upper_lists + greek_upper_list if case == Case.UPPER_ONLY
              else upper_lists + greek_upper_list + lower_lists + greek_list
              + lower_upper if case == Case.UPPER_MOSTLY
@@ -196,7 +196,7 @@ def potential_names(hint, length, friend_names: set, excluded_names: set,
     # TODO: check case
 
     # (1) Get all lists compatible with data
-    print("Potential names:")
+    # print("Potential names:")
     lists = name_lists_from_name(hint, min_length=length,
                                  max_length=length + len(excluded_names) + 10,
                                  case=case)
@@ -237,8 +237,8 @@ def potential_names(hint, length, friend_names: set, excluded_names: set,
     #             winner = names
     #             score = new_score
 
-    print("Winner:")
-    print(winner)
+    # print("Winner:")
+    # print(winner)
     # winner = [name for name in winner if name not in excluded_names]
     return winner
 

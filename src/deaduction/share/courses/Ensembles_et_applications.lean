@@ -835,9 +835,10 @@ begin
     todo
 end
 
+-- NB: naming a bound var with '__' suffix forces use of its name
 lemma exercise.injectivite_categorielle
 (f: Y → Z):
-(injective f) → (∀X: Type, ∀ g h : X → Y, (composition f g) = (composition f h) → g = h)
+(injective f) → (∀X__: Type, ∀ g h : X__ → Y, (composition f g) = (composition f h) → g = h)
 :=
 /- dEAduction
 PrettyName
