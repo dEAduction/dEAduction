@@ -214,18 +214,20 @@ class NameHint:
             self.names = potential_names(self.letter, length, friend_names,
                                          excluded_names, case=self.case)
 
-    def provide_name(self, given_names):
+    def provide_name(self, given_names) -> (str, bool):
         """
         Return first name in self.names which is not in given_names.
+        Boolean indicate success (good naming).
         """
         for name in self.names:
             if name not in given_names:
-                return name
-        # Emergency name: this should never happen!
+                return name, True
+        # Emergency name: we have no more good names for you...
+
         bad_names = list(alphabet + greek_alphabet)
         for name in bad_names:
             if name not in given_names:
-                return name
+                return name, False
 
 
 # @dataclass()

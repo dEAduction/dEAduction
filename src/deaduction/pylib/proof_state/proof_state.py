@@ -414,50 +414,91 @@ class Goal:
 
         return context_length + max(local_context_length + [0])
 
-    def update_name_schemes(self):
+    def update_name_schemes(self, supp_math_type=None,
+                            supp_nb=0):
         """
-        Compute schemes for naming all bound vars appearing in self,
+        Compute lists of names for naming all bound vars appearing in self,
         one scheme associated to each math type, via its NameHint.
+        Supplementary vars can be asked for, in case we need to name new var
+        for the next context (e.g. "intro x").
+        At least one name is provided for each type, even if no var is
+        required at present time.
         """
 
-        # FIXME: finish this method
         all_names = set(self.free_var_names())
+        hint_letters = {hint.letter for hint in self.name_hints}
         for hint in self.name_hints:
             math_type = hint.math_type
             length = self.total_length_for_math_type(math_type)
-            # if length == 0:
-            #     continue
+            if math_type == supp_math_type:
+                length += supp_nb
+            if length == 0:
+                length = 1
             friend_names = set(self.free_var_names(math_type=math_type))
-            excluded_names = all_names.difference(friend_names)
+            # Experimental: exclude other hint letters
+            bad_letters = hint_letters.difference({hint.letter})
+            bad_names = all_names.union(bad_letters)
+            excluded_names = bad_names.difference(friend_names)
+
             # Ensure that hint's naming scheme is compatible with data:
-            # FIXME:
             hint.update_name_scheme(length, friend_names, excluded_names)
 
-###################
-# Name bound vars #
-###################
+##################
+# Name variables #
+##################
+    def provide_good_name(self, math_type, local_names=None, isolated=False):
+        """
+        Try its best to get a good name of given math_type, taken into
+        account given names.
+        """
+
+        # Names to be excluded:
+        if not local_names:
+            local_names = []
+        global_names = self.free_var_names() if not isolated else []
+        given_names = local_names + global_names
+
+        name_hint = NameHint.from_math_type(math_type=math_type,
+                                            existing_hints=self.name_hints)
+
+        new_name, success = name_hint.provide_name(given_names=given_names)
+
+        if not success:
+            # Update all name schemes with requiring one more name for this
+            # type:
+            self.update_name_schemes(supp_math_type=math_type, supp_nb=1)
+            new_name, success = name_hint.provide_name(given_names=[])
+
+        return new_name, success
+
     def name_isolated_bound_var(self, var: BoundVar):
         """
         Name the given bound var according to its type, without paying 
         attention to other vars. Could be used to name a sequence's index.
         """
-        name_hint = NameHint.from_math_type(math_type=var.math_type,
-                                            existing_hints=self.name_hints)
-        new_name = name_hint.provide_name(given_names=[])
-        var.name_bound_var(new_name)
-    
+
+        name, success = self.provide_good_name(var.math_type, isolated=True)
+
+        if not success:
+            log.warning(f"Bad name {name} given to var of type {var.math_type}")
+
+        var.name_bound_var(name)
+
     def name_one_bound_var(self, var: BoundVar):
         """
         Name the given bound var according to its type and the
         name scheme found in self.name_hints.
         """
-        name_hint = NameHint.from_math_type(math_type=var.math_type,
-                                            existing_hints=self.name_hints)
+
         local_names = [other_var.name for other_var in var.local_context]
-        global_names = self.free_var_names()
-        given_names = global_names + local_names
-        new_name = name_hint.provide_name(given_names)
-        var.name_bound_var(new_name)
+
+        name, success = self.provide_good_name(var.math_type,
+                                               local_names=local_names)
+
+        if not success:
+            log.warning(f"Bad name {name} given to var of type {var.math_type}")
+
+        var.name_bound_var(name)
 
     def _recursive_name_all_bound_vars(self, p: MathObject, 
                                        include_sequences=True):
