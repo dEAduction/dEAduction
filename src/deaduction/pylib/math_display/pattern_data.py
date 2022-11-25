@@ -12,6 +12,11 @@ The strings are converted to Tree instances by the pattern_parser module.
 Then the Tree instances are converted to PatternMO by the PMO.from_tree
 class method.
 
+IMPORTANT: our dictionaries are ORDERED. For instance, a sequence u is
+displayed as (u_n)_{n in N} ; but a term of the sequence, say u applied to
+integer n, is displayed as u_n, so we want to catch this BEFORE catching u
+and deciding to display (u_n)_{n in N}_n.
+
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Created       : 11 2022 (creation)
@@ -37,13 +42,10 @@ This file is part of d∃∀duction.
 
 # TODO: integrate
 #  - couple_of_node_to_latex / to_text
-#  - latex_from_constant_name (and translate to english)
 
 import logging
 
 from deaduction.pylib.math_display.display_data import name, value
-from deaduction.pylib.math_display.pattern_parser import tree_from_str
-from deaduction.pylib.pattern_math_obj import PatternMathObject
 
 log = logging.getLogger(__name__)
 
@@ -54,13 +56,16 @@ global _
 # BEWARE: do not use negative number in pattern strings!
 # info may be provided within nodes, e.g. "CONSTANT/name=toto".
 # Use "?" as a joker, e.g. "CONSTANT/name=?".
-# In the shape values, tuples point for children (generalized or not),
-# other int point to metavars.
+# In the shape values,
+#       tuples point for children (generalized or not),
+#       integers point to metavars.
 # "global" in first position in shape means that variables will be  inserted at
 # "{}". This is used for text conversion and translation.
 
 ###############
+###############
 # QUANTIFIERS #
+###############
 ###############
 
 quant_pattern = {
@@ -68,9 +73,8 @@ quant_pattern = {
     # Thus "QUANT_∀(SET(...), ...) does not work.
     # !! Macro must be alone in their string (up to spaces) after splitting
     # We use child nbs and not metavars to indicate P(x), since this is used
-    # for good parenthesing
+    # for good parenthesing.
     # "QUANT_∀(SET(...), ?0, ?1)":      (r"\forall", (1, ), r" \subset ", (0, 0), ", ", (2, )),
-    # FIXME: does not work, metavars.matched_math_object is None after matching!!!
     "QUANT_∀(SET(...), ?0, ?1)": (r"\forall", 0, r" \subset ", (0, 0), ", ", (2,)),
     "QUANT_∀(FUNCTION(...), ?0, ?1)": (r"\forall", 0, r" \function_from", (0, 0), r'\to', (0, 1), ", ", (2, )),
     "QUANT_∀(PROP, ?0, ?1)":          (r"\forall", 0, r'\proposition', ", ", (2, )),
@@ -80,59 +84,39 @@ quant_pattern = {
     #                           r'\to', (0, 1), ", ", 2),
 }
 
-# Exists pattern #
-additional_quant_pattern = {}
-forall_node = "QUANT_∀"
-forall_macro = r"\forall"
-for pattern, shape in quant_pattern.items():
-    for new_node, quant_macro in [("QUANT_∃", r'\exists'),
-                                  ("QUANT_∃!", r'\exists_unique')]:
-        new_key = pattern.replace(forall_node, new_node)
-        new_value = ((shape[0].replace(forall_macro, quant_macro), )
-                     + shape[1:])
-        additional_quant_pattern[new_key] = new_value
-quant_pattern.update(additional_quant_pattern)
+
+def exists_patterns_from_forall():
+    """
+    This method creates "exists" pattern that mimic the patterns for "for all".
+    """
+    additional_quant_pattern = {}
+    forall_node = "QUANT_∀"
+    forall_macro = r"\forall"
+    for pattern, shape in quant_pattern.items():
+        for new_node, quant_macro in [("QUANT_∃", r'\exists'),
+                                      ("QUANT_∃!", r'\exists_unique')]:
+            new_key = pattern.replace(forall_node, new_node)
+            new_value = ((shape[0].replace(forall_macro, quant_macro), )
+                         + shape[1:])
+            additional_quant_pattern[new_key] = new_value
+    quant_pattern.update(additional_quant_pattern)
 
 
 latex_from_pattern_string = {
-    # TODO: refactor seq and set families
-    # ("APPLICATION", "LOCAL_CONSTANT_EXPANDED_SEQUENCE"):
-    #     ((0, 2, 0), ['_', 1]),
-    # ("APPLICATION", "LOCAL_CONSTANT_EXPANDED_SET_FAMILY"):
-    #     ((0, 2, 0), ['_', 1]),
-    # ("APPLICATION", "LAMBDA_EXPANDED_SEQUENCE"):
-    #     ((0, 2, 0), ['_', 1]),
-    # ("APPLICATION", "LAMBDA_EXPANDED_SET_FAMILY"):
-    #     ((0, 2, 0), ['_', 1]),
-
-    ###############
-    # APPLICATION #
-    ###############
-    "APP(CONSTANT/name=composition, ...)": ((-2,), r'\circ', (-1,)),
-    "APP(CONSTANT/name=Identite, ...)":  ("Id",),
-    "APP(CONSTANT/name=symmetric_difference, ...)": ((-2, ), r'\Delta', (-1, )),
-
-    # Generic app for constants and their negation
-    # CST? = CONSTANT with any name
-    "NOT(APP(CST?,...))": ((0, -1), r'\text_is_not', (0, 0)),
-    "APP(CST?, ...)": ((-1,), [r'\text_is', (0,)]),
-    # f(x):
-    "APP(?0: FUNCTION(?1, ?2), ?3)": ((0, ), r"\parentheses", (1, )),
-    # u_n:
-    # Here ?0 will be an expanded sequence, thus child 0 is the body "u_n",
-    # we want the child 0 of this ("u").
-    # "APP(?0: SEQUENCE(?1, ?2), ?3)": ((0, 0), ["_", 1]),
-    "APP(LOCAL_CONSTANT:SET_FAMILY(?0, ?1)(?2), ?3)": ('(0.name)', ['_', (1,)]),
     "LOCAL_CONSTANT:SET_FAMILY(?0, ?2)(?1)":
         (r"\{", name, ['_', (0,)], ', ', (0,), r"\in_symbol", 0, r"\}"),
     "LAMBDA:SET_FAMILY(?0, ?2)(...)":
-        (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}")
-    ######
-    # in #
-    ######
+        (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}"),
 }
 
-latex_from_pattern_string.update(quant_pattern)
+
+#########################################
+#########################################
+# Special text versions for quantifiers #
+#########################################
+#########################################
+# Quantifiers need special text versions since the order of words does not
+# follow the order of symbols
 
 # NB: no parentheses will be put around property P(x)
 # If parentheses are needed then we must switch to children (instead of
@@ -175,53 +159,29 @@ text_from_pattern_string = {
          0, (0, 0), (0, 1), 1)
 }
 
+########################################################
+########################################################
+# Patterns to display math_types of ContextMathObjects #
+########################################################
+########################################################
 # TODO: handle jokers, e.g. *INEQUALITY
 
 latex_from_pattern_string_for_type = {
+    # We need this here, otherwise match "?: TYPE":
+    "NO_MORE_GOAL": (_("All goals reached!"),),
     "SET(?0)": (r'\type_subset', 0),
     "SET_FAMILY(...)": (r'\type_family_subset', (1, )),
     "SEQUENCE(...)": (r'\type_sequence', (1, )),
     # TYPE... TODO (r'\type_element', name)
     "TYPE": (r'\set',),
     "FUNCTION(...)": (r'\function_from', (0, ), r'\to', (1, )),
+    # This is maybe too strong: any guy with undefined math_type will match!! :
     "?:TYPE": (r'\type_element', name),  # NB: TYPE is treated above
     "?:SET": (r'\type_element', name),
     "CONSTANT/name=ℕ": (r'\type_N', ),  # TODO: test!!
     "CONSTANT/name=ℤ": (r'\type_Z',),
     "CONSTANT/name=ℚ": (r'\type_Q',),
     "CONSTANT/name=ℝ": (r'\type_R',),
-    "CONSTANT/name=RealSubGroup": (r'\type_R',)
+    "CONSTANT/name=RealSubGroup": (r'\type_R',),
 }
-
-#############################
-# This are the useful lists #
-#############################
-pattern_latex = []
-pattern_text = []
-pattern_latex_for_type = []
-
-dic_list_pairs = [(latex_from_pattern_string, pattern_latex),
-                  (latex_from_pattern_string_for_type, pattern_latex_for_type),
-                  (text_from_pattern_string, pattern_text)]
-
-
-def string_to_pattern():
-    """
-    Fill-in the patterns_from_string dict by turning the keys of
-    latex_from_pattern_string into PatternMathObject.
-    """
-    log.info("Pattern from strings:")
-    for dict_, list_ in dic_list_pairs:
-        for key, latex_shape in dict_.items():
-            tree = tree_from_str(key)
-            metavars = []
-            pattern = PatternMathObject.from_tree(tree, metavars)
-            list_.append((pattern, latex_shape, metavars))
-            print(key)
-            print(tree.display())
-            if pattern.node == 'QUANT_∀':
-                print("Pattern QUANT_∀")
-
-
-string_to_pattern()
 

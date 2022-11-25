@@ -162,46 +162,46 @@ latex_from_quant_node = {
     "QUANT_∃!": (r"\exists_unique", 1, r" \in_quant ", 0, r'\such_that', 2)
 }
 
-# Negative value = from end of children list
-latex_from_constant_name = {
-    "STANDARD_CONSTANT": (-1, [r'\text', r'\text_is', 0]),
-    # "STANDARD_CONSTANT_NOT": (-1, " " + _("is not") + " ", 0),  deprecated
-    # NB: STANDARD_CONSTANT prevents supplementary arguments,
-    # Do not use with a CONSTANT c s.t. APP(c, x) is a FUNCTION,
-    # or anything that can be applied (i.e. in APP(APP(c,x),...) )
-    "symmetric_difference": (-2, r'\Delta', -1),
-    "composition": (4, r'\circ', 5),  # APP(compo, X, Y, Z, g, f)
-    "prod": (1, r'\times', 2),
-    "Identite": ("Id",),
-    "ne": (2, r" \neq ", 3),  # Lean name for ≠
-    "interval": (r"\[", -2, ",", -1, r"\]"),
-    # FIXME: translate to english in Lean files
-    "majorant": (-1, r'\text_is', " majorant de ", -2),
-    "minorant": (-1, r'\text_is', " minorant de ", -2),
-    "borne_sup": ("Sup ", -2, " = ", -1),
-    "borne_inf": ("Inf ", -2, " = ", -1),
-    "est_majore": (-1, r'\text_is', " majoré"),
-    "est_minore": (-1, r'\text_is', " minoré"),
-    "est_borne": (-1, r'\text_is', " borné"),
-    "limit": ("lim ", -2, " = ", -1),
-    "limit_plus_infinity": ("lim ", -1, " = +∞"),
-    "abs": ('|', -1, '|'),
-    "max": ("Max", r'\parentheses', -2, ",", -1),
-    "inv": ([r'\parentheses', -1], [r'^', '-1']),
-    "product": (-2, ".", -1),
-    "identite": ("Id",),
-    "image": (-1, " = ", -3, "(", -2, ")"),
-    "relation_equivalence": (-1, " " + _("is an equivalence relation")),
-    "classe_equivalence": (r"\[", -1, r"\]", ["_", 1]),
-    "disjoint": (-2, " " + _("and") + " ", -1, " " + _("are disjoint")),
-    "powerset": (r'\set_of_subsets', [r"\parentheses", -1]),
-    "partition": (-1, " " + _("is a partition of") + " ", -2),
-    "application": (-1, " " + _("is an application") + " "),
-    "application_bijective":  (-1, " " + _("is a bijective application") + " "),
-    "bounded_sequence": (-1,  r'\text_is', " " + _("bounded")),
-    "RealSubGroup": (r"\real", ),
-    "even":  (-1,  r'\text_is', " " + _("even"))
-}
+# # Negative value = from end of children list
+# latex_from_constant_name = {
+#     "STANDARD_CONSTANT": (-1, [r'\text', r'\text_is', 0]),
+#     # "STANDARD_CONSTANT_NOT": (-1, " " + _("is not") + " ", 0),  deprecated
+#     # NB: STANDARD_CONSTANT prevents supplementary arguments,
+#     # Do not use with a CONSTANT c s.t. APP(c, x) is a FUNCTION,
+#     # or anything that can be applied (i.e. in APP(APP(c,x),...) )
+#     "symmetric_difference": (-2, r'\Delta', -1),
+#     "composition": (4, r'\circ', 5),  # APP(compo, X, Y, Z, g, f)
+#     "prod": (1, r'\times', 2),
+#     "Identite": ("Id",),
+#     "ne": (2, r" \neq ", 3),  # Lean name for ≠
+#     "interval": (r"\[", -2, ",", -1, r"\]"),
+#     # FIXME: translate to english in Lean files
+#     "majorant": (-1, r'\text_is', " majorant de ", -2),
+#     "minorant": (-1, r'\text_is', " minorant de ", -2),
+#     "borne_sup": ("Sup ", -2, " = ", -1),
+#     "borne_inf": ("Inf ", -2, " = ", -1),
+#     "est_majore": (-1, r'\text_is', " majoré"),
+#     "est_minore": (-1, r'\text_is', " minoré"),
+#     "est_borne": (-1, r'\text_is', " borné"),
+#     "limit": ("lim ", -2, " = ", -1),
+#     "limit_plus_infinity": ("lim ", -1, " = +∞"),
+#     "abs": ('|', -1, '|'),
+#     "max": ("Max", r'\parentheses', -2, ",", -1),
+#     "inv": ([r'\parentheses', -1], [r'^', '-1']),
+#     "product": (-2, ".", -1),
+#     "identite": ("Id",),
+#     "image": (-1, " = ", -3, "(", -2, ")"),
+#     "relation_equivalence": (-1, " " + _("is an equivalence relation")),
+#     "classe_equivalence": (r"\[", -1, r"\]", ["_", 1]),
+#     "disjoint": (-2, " " + _("and") + " ", -1, " " + _("are disjoint")),
+#     "powerset": (r'\set_of_subsets', [r"\parentheses", -1]),
+#     "partition": (-1, " " + _("is a partition of") + " ", -2),
+#     "application": (-1, " " + _("is an application") + " "),
+#     "application_bijective":  (-1, " " + _("is a bijective application") + " "),
+#     "bounded_sequence": (-1,  r'\text_is', " " + _("bounded")),
+#     "RealSubGroup": (r"\real", ),
+#     "even":  (-1,  r'\text_is', " " + _("even"))
+# }
 
 
 ###################

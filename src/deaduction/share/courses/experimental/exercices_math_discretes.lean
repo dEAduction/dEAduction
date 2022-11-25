@@ -71,7 +71,7 @@ def relation_equivalence {X : Type} (R : set (X × X)) := reflexive R ∧ transi
 
 def relation_ordre {X : Type} (R : set (X × X)) := reflexive R ∧ transitive R ∧ antisymetrique R
 
-def classe_equivalence {X : Type} (R : set (X × X)) (h1 : relation_equivalence R) (e : X) : set X
+def classe_equivalence {X : Type} (R : set (X × X)) (H1 : relation_equivalence R) (e : X) : set X
 | e' :=  (e, e')  ∈ R
 
 
@@ -580,8 +580,8 @@ begin
     refl,
 end
 
-lemma definition.classe_equivalence {x y : X} {R : set (X × X)} {h1 : relation_equivalence R}:
-y ∈ classe_equivalence R h1 x ↔ (x, y) ∈ R :=
+lemma definition.classe_equivalence {x y : X} {R : set (X × X)} {H1 : relation_equivalence R}:
+y ∈ classe_equivalence R H1 x ↔ (x, y) ∈ R :=
 /- dEAduction
 PrettyName
     Classe d'équivalence
@@ -889,8 +889,8 @@ PrettyName
     Exercice 8
 -/
 
-lemma exercise.question1 (A : Type) (R : set (A × A)) (h1 : relation_equivalence R) :
-∀a, a ∈ classe_equivalence R h1 a :=
+lemma exercise.question1 (A : Type) (R : set (A × A)) (H1 : relation_equivalence R) :
+∀a, a ∈ classe_equivalence R H1 a :=
 /- dEAduction
 PrettyName
     Question 1
@@ -899,8 +899,8 @@ begin
     todo,
 end
 
-lemma exercise.question2 (A : Type) (R : set (A × A)) (h1 : relation_equivalence R) (a b : A) :
-classe_equivalence R h1 a = classe_equivalence R h1 b ↔ (a,b) ∈ R :=
+lemma exercise.question2 (A : Type) (R : set (A × A)) (H1 : relation_equivalence R) (a b : A) :
+classe_equivalence R H1 a = classe_equivalence R H1 b ↔ (a,b) ∈ R :=
 /- dEAduction
 PrettyName
     Question 2
@@ -909,8 +909,8 @@ begin
     todo,
 end
 
-lemma exercise.question3 (A : Type) (R : set (A × A)) (h1 : relation_equivalence R) (a b : A) :
-classe_equivalence R h1 a ≠ classe_equivalence R h1 b → classe_equivalence R h1 a ∩ classe_equivalence R h1 b = ∅ :=
+lemma exercise.question3 (A : Type) (R : set (A × A)) (H1 : relation_equivalence R) (a b : A) :
+classe_equivalence R H1 a ≠ classe_equivalence R H1 b → classe_equivalence R H1 a ∩ classe_equivalence R H1 b = ∅ :=
 /- dEAduction
 PrettyName
     Question 3
@@ -919,8 +919,8 @@ begin
     todo,
 end
 
-lemma exercise.question5 (A : Type) (R : set (A × A)) (h1 : relation_equivalence R) :
-partition {A₁ | ∃x, A₁ = classe_equivalence R h1 x} :=
+lemma exercise.question5 (A : Type) (R : set (A × A)) (H1 : relation_equivalence R) :
+partition {A₁ | ∃x, A₁ = classe_equivalence R H1 x} :=
 /- dEAduction
 PrettyName
     Question 5
@@ -976,7 +976,7 @@ begin
     todo,
 end
 
--- lemma exercise.question41 (E F : Type) (f : set (E × F)) (h1 : application f) 
+-- lemma exercise.question41 (E F : Type) (f : set (E × F)) (H1 : application f) 
 -- (Rf : set (E × E)) (h2 : ∀x y, (x,y) ∈ Rf ↔ (∃z, image f x z ∧ image f y z)) (h3 : relation_equivalence Rf)
 -- (h4 : ¬relation.injective Rf) (h5 : ¬relation.surjective Rf)
 -- (S : set (E × (set E))) (h6 : ∀x y, relation.image S x y ↔ y = classe_equivalence Rf h3 x) :
@@ -989,7 +989,7 @@ end
 --     todo,
 -- end
 
--- lemma exercise.question42 (E F : Type) (f : set (E × F)) (h1 : application f) 
+-- lemma exercise.question42 (E F : Type) (f : set (E × F)) (H1 : application f) 
 -- (Rf : set (E × E)) (h2 : ∀x y, (x,y) ∈ Rf ↔ (∃z, image f x z ∧ image f y z)) (h3 : relation_equivalence Rf)
 -- (h4 : ¬relation.injective Rf) (h5 : ¬relation.surjective Rf)
 -- (S : set (E × (set E))) (h6 : ∀x y, relation.image S x y ↔ y = classe_equivalence Rf h3 x) :
@@ -1002,7 +1002,7 @@ end
 --     todo,
 -- end
 
--- lemma exercise.question5 (E F : Type) (f : set (E × F)) (h1 : application f) 
+-- lemma exercise.question5 (E F : Type) (f : set (E × F)) (H1 : application f) 
 -- (Rf : set (E × E)) (h2 : ∀x y, (x,y) ∈ Rf ↔ (∃z, image f x z ∧ image f y z)) (h3 : relation_equivalence Rf)
 -- (h4 : ¬relation.injective Rf) (h5 : ¬relation.surjective Rf)
 -- (f' : set ((set E) × F)) (h6 : ∀X y, (X, y) ∈ f' ↔ ∃x ∈ X, relation.image f x y) :
@@ -1015,7 +1015,7 @@ end
 --     todo,
 -- end
 
--- lemma exercise.question61 (E F : Type) (f : set (E × F)) (h1 : application f) 
+-- lemma exercise.question61 (E F : Type) (f : set (E × F)) (H1 : application f) 
 -- (Rf : set (E × E)) (h2 : ∀x y, (x,y) ∈ Rf ↔ (∃z, image f x z ∧ image f y z)) (h3 : relation_equivalence Rf)
 -- (h4 : ¬relation.injective Rf) (h5 : ¬relation.surjective Rf)
 -- (f' : set ((set E) × F)) (h6 : ∀X y, (X, y) ∈ f' ↔ ∃x ∈ X, relation.image f x y) :
@@ -1028,7 +1028,7 @@ end
 --     todo,
 -- end
 
--- lemma exercise.question62 (E F : Type) (f : set (E × F)) (h1 : application f) 
+-- lemma exercise.question62 (E F : Type) (f : set (E × F)) (H1 : application f) 
 -- (Rf : set (E × E)) (h2 : ∀x y, (x,y) ∈ Rf ↔ (∃z, image f x z ∧ image f y z)) (h3 : relation_equivalence Rf)
 -- (h4 : ¬relation.injective Rf) (h5 : ¬relation.surjective Rf)
 -- (f' : set ((set E) × F)) (h6 : ∀X y, (X, y) ∈ f' ↔ ∃x ∈ X, relation.image f x y) :

@@ -56,8 +56,7 @@ import logging
 from typing import Any, Union
 
 from deaduction.pylib.math_display.display_data \
-                                        import (latex_from_constant_name,
-                                                latex_from_quant_node,
+                                        import (latex_from_quant_node,
                                                 needs_paren,
                                                 couples_of_nodes_to_latex,
                                                 dic_of_first_nodes_latex)

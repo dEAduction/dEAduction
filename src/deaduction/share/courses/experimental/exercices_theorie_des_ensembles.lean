@@ -418,7 +418,7 @@ lemma exercise.produit_avec_intersection
 set.prod A (B ∩ C) = (set.prod A B) ∩ (set.prod A C)
 :=
 begin
-    todo
+    todo,
 end
 
 

@@ -6,7 +6,7 @@ from deaduction.pylib.pattern_math_obj import PatternMathObject
 from deaduction.pylib.math_display.display_data import (latex_from_node,
                                                         latex_from_quant_node,
                                                         needs_paren)
-from deaduction.pylib.math_display.pattern_data import (pattern_latex,
+from deaduction.pylib.math_display.pattern_init import (pattern_latex,
                                                         pattern_text,
                                                         pattern_latex_for_type)
 from deaduction.pylib.math_display.display import abstract_string_to_string
@@ -21,7 +21,7 @@ latex_from_node.update(latex_from_quant_node)
 def global_pre_shape_to_pre_shape(pre_shape, text=False):
     """
     Turn a global pre_shape, e.g.
-        ("global", r"\forall {} \subset {}, ", 0, (0, 0), 1),
+        ("global", r"\forall {} \subset {}, {}", 0, (0, 0), 1),
     into a "normal" pre_shape, e.g.
         (r"\forall", 0, r" \subset ", (0, 0), ", ", 1),
     (or, in text mode,
