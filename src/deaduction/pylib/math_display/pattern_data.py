@@ -169,19 +169,20 @@ text_from_pattern_string = {
 latex_from_pattern_string_for_type = {
     # We need this here, otherwise match "?: TYPE":
     "NO_MORE_GOAL": (_("All goals reached!"),),
+    "PROP": (r'\proposition',),
     "SET(?0)": (r'\type_subset', 0),
     "SET_FAMILY(...)": (r'\type_family_subset', (1, )),
     "SEQUENCE(...)": (r'\type_sequence', (1, )),
     # TYPE... TODO (r'\type_element', name)
     "TYPE": (r'\set',),
     "FUNCTION(...)": (r'\function_from', (0, ), r'\to', (1, )),
-    # This is maybe too strong: any guy with undefined math_type will match!! :
-    "?:TYPE": (r'\type_element', name),  # NB: TYPE is treated above
-    "?:SET": (r'\type_element', name),
     "CONSTANT/name=ℕ": (r'\type_N', ),  # TODO: test!!
     "CONSTANT/name=ℤ": (r'\type_Z',),
     "CONSTANT/name=ℚ": (r'\type_Q',),
     "CONSTANT/name=ℝ": (r'\type_R',),
     "CONSTANT/name=RealSubGroup": (r'\type_R',),
+    # This is maybe too strong: any guy with undefined math_type will match!! :
+    "?:TYPE": (r'\type_element', name),  # NB: TYPE is treated above
+    "?:SET": (r'\type_element', name),
 }
 
