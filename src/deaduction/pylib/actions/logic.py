@@ -878,8 +878,10 @@ def construct_forall(proof_step) -> CodeForLean:
         # [x, y] = names_for_types(math_type.children, proof_step)
         # x = give_global_name(proof_step=proof_step, math_type=math_type_1)
         # y = give_global_name(proof_step=proof_step, math_type=math_type_2)
+        # Find two DISTINCT good names!
         name_0 = proof_step.goal.provide_good_name(math_type.children[0])
-        name_1 = proof_step.goal.provide_good_name(math_type.children[1])
+        name_1 = proof_step.goal.provide_good_name(math_type.children[1],
+                                                   local_names=[name_0])
         code = f'rintro ⟨ {name_0}, {name_1} ⟩'
         possible_codes = possible_codes.and_then(code)
         name = f"({name_0},{name_1})"
