@@ -355,12 +355,8 @@ class Goal:
         #     NameHint.from_math_type(math_type, self.name_hints)
         for var in self.bound_variables():
             math_type = var.math_type
-            if math_type.is_number():
-                preferred_letter = var.display_name
-            else:
-                preferred_letter = ''
             # Add new name hint if none match:
-            NameHint.from_math_type(math_type, preferred_letter,
+            NameHint.from_math_type(math_type, var.preferred_letter(),
                                     self.name_hints)
 
     def update_potential_hints(self):

@@ -652,9 +652,10 @@ class MathObject:
             return False
         if self.math_type != other.math_type:
             return False
-        if self.is_bound_var:
-            if self.bound_var_nb() != other.bound_var_nb():
-                return False
+        # BoundVar has an __eq__() method
+        # if self.is_bound_var:
+        #     if self.bound_var_nb() != other.bound_var_nb():
+        #         return False
 
         #################################
         # Recursively test for children #
@@ -1729,6 +1730,12 @@ class BoundVar(MathObject):
     is_bound_var = True  # Override MathObject attribute
 
     def __init__(self, node, info, children, math_type, parent):
+        """
+        The local context is the list of BoundVar instances that are
+        meaningful where self is introduced. In particular, self's name
+        should be different from all these (and from all the names of the
+        (global) context variables).
+        """
         MathObject.__init__(self, node, info, children, math_type)
         self.parent = parent
         self._is_unnamed = True
@@ -1736,6 +1743,11 @@ class BoundVar(MathObject):
         self._local_context = []
         if node != 'METAVAR':
             pass
+
+    def __eq__(self, other):
+        return (isinstance(other, BoundVar)
+                and self.bound_var_nb() == other.bound_var_nb())
+        # return self.bound_var_nb() == other.bound_var_nb()
 
     @property
     def name(self):
@@ -1774,7 +1786,8 @@ class BoundVar(MathObject):
             elif self.math_type.is_number():
                 letter = lean_name
 
-        return letter
+        if letter.isalpha():
+            return letter
 
     def is_unnamed(self):
         # FIXME: turn to:

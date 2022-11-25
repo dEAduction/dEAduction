@@ -63,7 +63,10 @@ def analyse_hint(hint: str) -> (str, int, Optional[int]):
     index = None
     if '_' in hint:
         hint, index = hint.split('_')
-        index = int(index)
+        try:
+            index = int(index)
+        except ValueError:
+            pass
 
     prime = hint.count("'")
     if prime:

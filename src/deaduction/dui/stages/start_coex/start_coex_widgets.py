@@ -1062,7 +1062,7 @@ def check_negate_statement(exercise) -> bool:
         title = _("Do you want to prove this statement or its negation?")
         if exercise.initial_proof_state:
             goal = exercise.initial_proof_state.goals[0]
-            output = goal.goal_to_text(text_depth=0, to_prove=False)
+            output = goal.goal_to_text(text_mode=False, to_prove=False)
         else:
             output = exercise.lean_variables + "   " \
                      + exercise.lean_core_statement

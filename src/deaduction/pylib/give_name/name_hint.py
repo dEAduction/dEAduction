@@ -79,7 +79,7 @@ def letter_hints_from_type(math_type) -> tuple:
     if new_case:
         case = new_case
 
-    if math_type.is_nat(is_math_type=True):
+    if math_type.is_N() or math_type.is_Z():
         more_letters = ('npqk', )
         case = Case.LOWER_MOSTLY
     elif math_type.is_R():
@@ -128,6 +128,11 @@ class NameHint:
         distinct of all letters of existing_hints.
         """
 
+        usable_letters = alphabet + greek_alphabet
+        usable_letters += usable_letters.upper()
+        if preferred_letter and preferred_letter not in usable_letters:
+            preferred_letter = ''
+
         if not friendly_names:
             friendly_names = []
         if existing_hints is None:
@@ -143,14 +148,11 @@ class NameHint:
         # (a) Try strong_hint
         letters = []
         if preferred_letter:
-            usable_letters = alphabet + greek_alphabet
-            usable_letters += usable_letters.upper()
-            if preferred_letter in usable_letters:
-                letters = [preferred_letter]
+            letters = [preferred_letter]
 
         # (b) Try (first letter of) friendly names
         letters.extend([friendly_name[0] for friendly_name in friendly_names
-                        if friendly_name[0].isalpha()])
+                        if friendly_name[0] in usable_letters])
 
         # (c) Ask letter_hints_from_type
         more_letters_tuple, case = letter_hints_from_type(math_type)
