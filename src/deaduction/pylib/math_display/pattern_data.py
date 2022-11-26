@@ -17,6 +17,28 @@ displayed as (u_n)_{n in N} ; but a term of the sequence, say u applied to
 integer n, is displayed as u_n, so we want to catch this BEFORE catching u
 and deciding to display (u_n)_{n in N}_n.
 
+----------------------
+SYNTAX FOR KEYS. Let us analyze the following example:
+
+    "LOCAL_CONSTANT:SET_FAMILY(?3, ?4)(...)"
+
+- We first indicate the node: 'LOCAL_CONSTANT'.
+- Then we give its type: ':SET_FAMILY(?3, ?4)'. Here ?3 and ?4 are
+metavariables that can take any value; so the type must have two children
+that can be used for displaying.
+- Then (...) indicates that we do not care about children of the local constant:
+any children, whatever their number, will match.
+
+With the node we can also indicate some elements of the 'info' dict, e.g. in
+    "CONSTANT/name=ℕ".
+
+SYNTAX FOR VALUES. e.g.
+
+    (r"\{", name, ['_', (1,)], ', ', (1,), r"\in_symbol", 3, r"\}"),
+Integers refers to metavariables, tuples to children and descendants.
+We use '_' or '^' to indicate subscripts or superscrits.
+
+---------------------
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Created       : 11 2022 (creation)
@@ -70,15 +92,15 @@ global _
 
 quant_pattern = {
     # NB: QUANT nodes must have 3 children, with children[1] the bound var.
-    # Thus "QUANT_∀(SET(...), ...) does not work.
     # !! Macro must be alone in their string (up to spaces) after splitting
     # We use child nbs and not metavars to indicate P(x), since this is used
     # for good parenthesing.
-    # "QUANT_∀(SET(...), ?0, ?1)":      (r"\forall", (1, ), r" \subset ", (0, 0), ", ", (2, )),
-    "QUANT_∀(SET(...), ?0, ?1)": (r"\forall", 0, r" \subset ", (0, 0), ", ", (2,)),
-    "QUANT_∀(FUNCTION(...), ?0, ?1)": (r"\forall", 0, r" \function_from", (0, 0), r'\to', (0, 1), ", ", (2, )),
-    "QUANT_∀(PROP, ?0, ?1)":          (r"\forall", 0, r'\proposition', ", ", (2, )),
-    "QUANT_∀(TYPE(...), ?0, ?1)":     (r"\forall", 0, r" \set", ", ", (2, )),
+    "QUANT_∀(SET(...), ?0, ?1)":
+        (r"\forall", 0, r" \subset ", (0, 0), ", ", (2,)),
+    "QUANT_∀(FUNCTION(...), ?0, ?1)":
+        (r"\forall", 0, r" \function_from", (0, 0), r'\to', (0, 1), ", ", (2, )),
+    "QUANT_∀(PROP, ?0, ?1)": (r"\forall", 0, r'\proposition', ", ", (2, )),
+    "QUANT_∀(TYPE(...), ?0, ?1)": (r"\forall", 0, r" \set", ", ", (2, )),
     # FIXME: this is odd!!! :
     # ("QUANT_∀", "SEQUENCE"): (r"\forall", 1, r" \function_from", (0, 0),
     #                           r'\to', (0, 1), ", ", 2),
@@ -103,10 +125,14 @@ def exists_patterns_from_forall():
 
 
 latex_from_pattern_string = {
-    "LOCAL_CONSTANT:SET_FAMILY(?0, ?2)(?1)":
-        (r"\{", name, ['_', (0,)], ', ', (0,), r"\in_symbol", 0, r"\}"),
+    "LOCAL_CONSTANT:SET_FAMILY(?3, ?4)(...)":
+        (r"\{", name, ['_', (1,)], ', ', (1,), r"\in_symbol", 3, r"\}"),
     "LAMBDA:SET_FAMILY(?0, ?2)(...)":
-        (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}"),
+        # (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}"),
+        (r"\{", 'self.body', ', ', 'self.bound_var', r"\in_symbol",
+         'self.bound_var_type', r"\}"),
+    "LOCAL_CONSTANT:SEQUENCE(?3, ?4)(...)":
+        ('(', name, ['_', (1,)], ')', [(1,), r"\in_symbol", 3])
 }
 
 
@@ -122,41 +148,46 @@ latex_from_pattern_string = {
 # If parentheses are needed then we must switch to children (instead of
 # metavars), e.g. (2,) for indicating P(x).
 text_from_pattern_string = {
-    "QUANT_∀(SET(...), ?0, ?1)":      (_("for every subset") + " ", (1, ),
-                                       _(" of "), (0, 0), ", ", 1),
-    "QUANT_∀(FUNCTION(...), ?0, ?1)": (_("for every function") + " ", 0,
-                                       _(" from "), (0, 0), _(" to "), (0,
-                                                                        1), ", ", 1),
-    "QUANT_∀(PROP, ?0, ?1)":          (_("for every proposition") + " ", 0, ", ", 1),
-    "QUANT_∀(TYPE(...), ?0, ?1)":     (_("for every set") + " ", 0, ", ", 1),
+    "QUANT_∀(SET(...), ?0, ?1)":
+        (_("for every subset") + " ", (1, ), _(" of "), (0, 0), ", ", 1),
+    "QUANT_∀(FUNCTION(...), ?0, ?1)":
+        (_("for every function") + " ", 0,
+         _(" from "), (0, 0), _(" to "), (0, 1), ", ", 1),
+    "QUANT_∀(PROP, ?0, ?1)": (_("for every proposition") + " ", 0, ", ", 1),
+    "QUANT_∀(TYPE(...), ?0, ?1)": (_("for every set") + " ", 0, ", ", 1),
     "QUANT_∀(SEQUENCE(...), ?0, ?1)":
         ("global", _("for every sequence {} of elements of {}, {}"),
-         0, (0, 0), (0, 1), 1),
-    "QUANT_∃(SET(...), ?0, ?1)":      (_("there exists a subset") + " ", 0,
-                                       " of ", (0, 0), _(" such that "), 1),
+         0, (0, 1), 1),
+    "QUANT_∃(SET(...), ?0, ?1)":
+        ("global", _("there exists a subset {} of {} such that {}"),
+         0, (0, 0), 1),
     "QUANT_∃(FUNCTION(...), ?0, ?1)":
         ("global", _("there exists a function {} from {} to {} such that {}"),
          0, (0, 0), (0, 1), 1),
     "QUANT_∃(PROP, ?0, ?1)":
         ("global", _("there exists a proposition {} such that {}"), 0, 1),
-    "QUANT_∃(TYPE(...), ?0, ?1)":     (_("there exists a set") + " ", 0,
-                                       _(" such that "), 1),
+    "QUANT_∃(TYPE(...), ?0, ?1)":
+        (_("there exists a set") + " ", 0, _(" such that "), 1),
     "QUANT_∃(SEQUENCE(...), ?0, ?1)":
         ("global", _("there exists a sequence {} of elements of {} such that {}"),
-         0, (0, 0), (0, 1), 1),
-    "QUANT_∃!(SET(...), ?0, ?1)": (_("there exists a unique subset") + " ",
-                                   0, _(" of "), (0, 0), _(" such that "), 1),
+         0, (0, 1), 1),
+    "QUANT_∃!(SET(...), ?0, ?1)":
+        ("global",
+         _("there exists a unique subset {} of {} such that {}"),
+         0, (0, 0), 1),
     "QUANT_∃!(FUNCTION(...), ?0, ?1)":
-        ("global", _("there exists a unique function {} from {} to {} such that {}"),
+        ("global",
+         _("there exists a unique function {} from {} to {} such that {}"),
          0, (0, 0), (0, 1), 1),
     "QUANT_∃!(PROP, ?0, ?1)":
-        ("global", _("there exists a unique  proposition {} such that {}"), 0, 1),
-    "QUANT_∃!(TYPE(...), ?0, ?1)": (_("there exists a unique set") + " ", 0,
-                                    _(" such that "), 1),
+        ("global", _("there exists a unique  proposition {} such that {}"),
+         0, 1),
+    "QUANT_∃!(TYPE(...), ?0, ?1)":
+        (_("there exists a unique set") + " ", 0, _(" such that "), 1),
     "QUANT_∃!(SEQUENCE(...), ?0, ?1)":
         ("global",
          _("there exists a unique sequence {} of elements of {} such that {}"),
-         0, (0, 0), (0, 1), 1)
+         0, (0, 1), 1)
 }
 
 ########################################################

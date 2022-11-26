@@ -37,28 +37,25 @@ global _
 # NB: the
 
 latex_from_app_pattern = {
-    # For functions, two patterns
+    # For functions, two patterns: (f circ g)(x) and (f circ g).
     "APP(CONSTANT/name=composition, ?1, ?2, ?3, ?4: FUNCTION(?2, ?3), "
     "?5: FUNCTION(?1, ?2), ?6: ?7)": (4, r'\circ', 5, r"\parentheses", 6),
     "APP(CONSTANT/name=composition, ?1, ?2, ?3, ?4: FUNCTION(?2, ?3), "
     "?5: FUNCTION(?1, ?2))": (4, r'\circ', 5),
     # TODO: test Id, Id(x)
-    # "APP(CONSTANT/name=Identite, ?1)": ("Id",),
     "APP(CONSTANT/name=Identite, ?1, ?2: ?1)": ("Id", r"\parentheses", 2),
-    "APP(CONSTANT/name=symmetric_difference, ...)": ((-2,), r'\Delta', (-1,)),
-
     # Generic app for constants and their negation
     # CST? = CONSTANT with any name
     "NOT(APP(CST?,...))": ((0, -1), r'\text_is_not', (0, 0)),
-    # "APP(CST?, ...)": ((-1,), [r'\text_is', (0,)]),
 
     # TODO: sequences and set families
     # u_n:
-    # Here ?0 will be an expanded sequence, thus child 0 is the body "u_n",
-    # we want the child 0 of this ("u").
-    # "APP(?0: SEQUENCE(?1, ?2), ?3)": ((0, 0), ["_", 1]),
-    "APP(LOCAL_CONSTANT: SET_FAMILY(?0, ?1)(?0, ?2, ?3), ?4: ?0)":
-    ('(0.name)', ['_', 4])
+    "APP(LOCAL_CONSTANT: SEQUENCE(?2, ?3), ?1: ?2)":
+        ('(0, ).name', ["_", (1, )]),
+    # APP(E, i) --> E_i
+    #   Here E is the name of the local constant, which is self.children[0]
+    "APP(LOCAL_CONSTANT: SET_FAMILY(?2, ?3)(...), ?1: ?2)":
+        ('(0,).name', ['_', (1, )])
 }
 
 # TODO: english translation

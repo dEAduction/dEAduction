@@ -56,6 +56,9 @@ def value(mo):
     return mo.info.get('value')
 
 
+def local_constant_shape(mo):
+    return mo.local_constant_shape
+
 ######################
 ######################
 # LATEX dictionaries #
@@ -91,6 +94,7 @@ latex_from_node = {
     "SET_DIFF": (0, r" \backslash ", 1),
     "SET_COMPLEMENT": (0, r" \backslash ", 1),
     "SET_DIFF_SYM": (0, r" \Delta ", 1),
+    "SET_UNIVERSE": (0, ),
     "SET_EMPTY": (r"\emptyset",),
     "SET_EXTENSION1": (r'\{', 0, r'\}'),
     "SET_EXTENSION2": (r'\{', 0, ', ', 1, r'\}'),
@@ -147,7 +151,7 @@ latex_from_node = {
     #     (r"\{", 2, ', ', 1, r"\in_symbol", 0, r"\}"),
     "CONSTANT": (name,),
     "NUMBER": (value,),
-    "LOCAL_CONSTANT": (name,),  # Probably useless
+    "LOCAL_CONSTANT": ('self.local_constant_shape',),
     "APPLICATION": (0, r'\parentheses', 1)
     }
 

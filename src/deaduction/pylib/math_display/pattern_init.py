@@ -3,14 +3,18 @@
 # pattern_init.py : create usable lists of patterns from data #
 ###############################################################
 
-This modules produces dictionaries for pattern matching, that are used by the
+This modules produces lists for pattern matching, that are used by the
 new_display module:
-    latex_from_pattern_string,
-    latex_from_pattern_string_for_type
-The keys are strings, and the values are PatternMathObjects.
-The strings are converted to Tree instances by the pattern_parser module.
-Then the Tree instances are converted to PatternMO by the PMO.from_tree
-class method.
+    pattern_latex : patterns for displaying objects with symbols
+    pattern_text : idem, with text
+    pattern_latex_for_type : idem, for types of context objects.
+
+The patterns are produced by the PMO.from_tree class method, based on the
+dictionaries in
+    pattern_data.py
+    app_pattern_data.py
+
+This also makes use of the tree_from_str() function of pattern_parser.py.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
