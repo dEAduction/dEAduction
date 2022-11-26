@@ -567,7 +567,7 @@ class GoalNode:
         self.goal = goal
 
     def is_no_more_goals(self):
-        return self.goal.target.math_type == MathObject.NO_MORE_GOALS
+        return self.goal.target.math_type is MathObject.NO_MORE_GOALS
 
     @property
     def is_immediately_solved(self):

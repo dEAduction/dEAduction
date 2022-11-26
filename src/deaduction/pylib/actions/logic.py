@@ -861,9 +861,9 @@ def construct_forall(proof_step) -> CodeForLean:
         math_object         = MathObject.last_rw_object
         possible_codes = rw_with_defi(implicit_definition)
 
-    math_type: MathObject = math_object.bound_var_type()
-    bound_var = math_object.bound_var()
-    body = math_object.body()
+    math_type: MathObject = math_object.bound_var_type
+    bound_var = math_object.bound_var
+    body = math_object.body
     # hints = []
     # strong_hint = None
     # if not implicit:  # or math_type.is_R():  # FIXME: experimental
@@ -1129,8 +1129,8 @@ def apply_exists(proof_step, selected_object: [MathObject]) -> CodeForLean:
         selected_hypo       = MathObject.last_rw_object
 
     hint = selected_hypo.children[1].display_name
-    math_type = selected_hypo.bound_var_type()
-    bound_var = selected_hypo.bound_var()
+    math_type = selected_hypo.bound_var_type
+    bound_var = selected_hypo.bound_var
     name = proof_step.goal.provide_good_name(math_type,
                                              bound_var.preferred_letter())
 

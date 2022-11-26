@@ -409,7 +409,7 @@ class Goal:
             if include_sequences or \
                     not (math_obj.is_sequence(is_math_type=True)
                          or math_obj.is_set_family(is_math_type=True)):
-                if (not math_type) or math_obj.bound_var_type() == math_type:
+                if (not math_type) or math_obj.bound_var_type == math_type:
                     local_length = 1
 
         # (2) Children's vars:
@@ -534,7 +534,7 @@ class Goal:
             else:
                 isolated = False
 
-            self.name_one_bound_var(p.bound_var(), isolated=isolated)
+            self.name_one_bound_var(p.bound_var, isolated=isolated)
 
         # (2) Name children's vars:
         for child in p.children:

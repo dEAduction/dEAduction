@@ -89,10 +89,10 @@ def sub_sup_to_html(string: str) -> str:
     string = string.replace('_', r'\sub')
     string = string.replace('^', r'\super')
     if string.find(r'\sub') != -1:
-        before, _, after  = string.partition(r'\sub')
+        before, _, after = string.partition(r'\sub')
         string = before + subscript(after)
     if string.find(r'\super') != -1:
-        before, _, after  = string.partition(r'\super')
+        before, _, after = string.partition(r'\super')
         string = before + superscript(after)
 
     return string

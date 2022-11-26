@@ -233,7 +233,8 @@ class MathObject:
                 bound_var_type = self.math_type.children[0]
                 bound_var = MathObject.new_bound_var(bound_var_type,
                                                      parent=self)
-                self.children = [bound_var_type, bound_var, None]
+                self.children = [bound_var_type, bound_var,
+                                 MathObject.NO_MATH_TYPE]
 
     def duplicate(self):
         """
@@ -296,8 +297,8 @@ class MathObject:
             if include_sequences or \
                     not (self.is_sequence(is_math_type=True)
                          or self.is_set_family(is_math_type=True)):
-                if (not math_type) or self.bound_var_type() == math_type:
-                    self_vars = [self.bound_var()]
+                if (not math_type) or self.bound_var_type == math_type:
+                    self_vars = [self.bound_var]
 
         # (2) children's vars:
         child_vars = sum([child.bound_vars(math_type=math_type)
@@ -365,33 +366,22 @@ class MathObject:
 
         return False
 
+    @property
     def bound_var_type(self):
         if self.has_bound_var():
             return self.children[0]
 
+    @property
     def bound_var(self):
         if self.has_bound_var():
             return self.children[1]
 
+    @property
     def body(self):
         if self.has_bound_var():
             return self.children[2]
 
-    # def next_bound_vars(self, math_type=None):
-    #     """
-    #     Return the list of all bound vars which are next to self in the tree.
-    #     This is overridden in BoundVar.
-    #     """
-    #     if self.has_bound_var():
-    #         if (not math_type) or self.bound_var().math_type == math_type:
-    #             return [self.bound_var()]
-    #         else:
-    #             return None
-    #     else:
-    #         return sum([child.next_bound_vars(math_type=math_type)
-    #                     for child in self.children], [])
-
-            #################
+    #################
     # Class methods #
     #################
     @classmethod
@@ -521,6 +511,17 @@ class MathObject:
         This is the name used to display in deaduction.
         """
         return self.name if self.name else '*no_name*'
+
+    @property
+    def local_constant_shape(self) -> []:
+        if self.is_bound_var:
+            return [r'\dummy_variable', self.display_name]
+
+        elif self.is_variable(is_math_type=True):
+            return [r'\variable', self.display_name]
+
+        else:
+            return [self.display_name]
 
     @property  # For debugging
     def display_debug(self) -> str:
@@ -780,7 +781,7 @@ class MathObject:
             math_type_of_math_type = math_type.math_type
             if not (math_type_of_math_type.is_prop(is_math_type=False) or
                     math_type_of_math_type.is_type(is_math_type=True) or
-                    math_type_of_math_type == MathObject.NO_MATH_TYPE):
+                    math_type_of_math_type.is_no_math_type()):
                 return True
         return False
 
