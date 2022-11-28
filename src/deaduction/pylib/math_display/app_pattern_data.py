@@ -50,11 +50,11 @@ latex_from_app_pattern = {
 
     # TODO: sequences and set families
     # u_n:
-    "APP(LOCAL_CONSTANT: SEQUENCE(?2, ?3), ?1: ?2)":
+    "APP(LOCAL_CONSTANT: !SEQUENCE(?2, ?3), ?1: ?2)":
         ('(0, ).name', ["_", (1, )]),
     # APP(E, i) --> E_i
     #   Here E is the name of the local constant, which is self.children[0]
-    "APP(LOCAL_CONSTANT: SET_FAMILY(?2, ?3)(...), ?1: ?2)":
+    "APP(LOCAL_CONSTANT: !SET_FAMILY(?2, ?3)(...), ?1: ?2)":
         ('(0,).name', ['_', (1, )])
 }
 
@@ -105,7 +105,7 @@ latex_from_constant_name = {
 generic_app_dict = {
     # f(x):
     "APP(CST?, ...)": ((-1,), [r'\text_is', (0,)]),
-    "APP(?0: FUNCTION(?1, ?2), ?3: ?1)": ((0,), r"\parentheses", (1,)),
+    "APP(?0: !FUNCTION(?1, ?2), ?3: ?1)": ((0,), r"\parentheses", (1,)),
 }
 
 

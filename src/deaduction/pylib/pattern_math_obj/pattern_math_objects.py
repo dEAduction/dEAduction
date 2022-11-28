@@ -76,7 +76,8 @@ class PatternMathObject(MathObject):
     __metavar_objects = None  # Objects matching metavars (see self.match)
 
     def __init__(self, node, info, children,
-                 math_type=None):
+                 math_type=None,
+                 imperative_matching=False):
         """
         Init self as a MathObject, plus metavars list.
         """
@@ -85,6 +86,7 @@ class PatternMathObject(MathObject):
                          info=info,
                          children=children,
                          math_type=math_type)
+        self.imperative_matching = imperative_matching
 
     @classmethod
     def new_metavar(cls, math_type):
@@ -131,6 +133,12 @@ class PatternMathObject(MathObject):
 
         # (3) Node
         node = tree.node
+        if node.startswith('!'):
+            # Imperative type node
+            imperative = True
+            node = node[1:]
+        else:
+            imperative = False
 
         # -----> (3a) Children joker
         if node == "...":  # Joker for any number of children
@@ -154,12 +162,12 @@ class PatternMathObject(MathObject):
             key, value = info.split('=')
             info = {key: value}
             pmo = cls(node=node, children=children_pmo, math_type=math_type,
-                      info=info)
+                      info=info, imperative_matching=imperative)
 
         # -----> (3d) Generic case
         else:
             pmo = cls(node=node, children=children_pmo, math_type=math_type,
-                      info={})
+                      info={}, imperative_matching=imperative)
 
         return pmo
 
@@ -284,14 +292,17 @@ class PatternMathObject(MathObject):
         metavar_objects = PatternMathObject.__metavar_objects
         children = self.children
 
+        node = self.node
+
         # if math_object:
         #     log.debug(f"Matching {self} and {math_object}...")
 
-        node = self.node
         # Case of NO_MATH_TYPE (avoid infinite recursion!)
         # Maybe this is too liberal??
-        if self.is_no_math_type() or math_object.is_no_math_type():
+        if self.is_no_math_type():
             return True
+        elif math_object.is_no_math_type():
+            return False if self.imperative_matching else True
 
         # METAVAR
         elif isinstance(self, MetaVar):
@@ -318,7 +329,7 @@ class PatternMathObject(MathObject):
         #####################################
         elif any(self_item != '?' and self_item != math_object_item
                  for self_item, math_object_item in
-                 [(self.node, math_object.node),
+                 [(node, math_object.node),
                   (self.is_bound_var, math_object.is_bound_var),
                   (self.name, math_object.name),
                   (self.value, math_object.value)]):

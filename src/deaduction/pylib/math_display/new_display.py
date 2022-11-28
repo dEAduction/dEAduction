@@ -99,9 +99,6 @@ def substitute_metavars(shape, metavars, self):
     if isinstance(shape, int):
         item = shape
         return metavars[item].matched_math_object
-    # elif isinstance(shape, tuple):
-    #     return tuple(substitute_metavars(item, metavars, self) for item in
-    #                  shape)
     elif isinstance(shape, list):
         return list(substitute_metavars(item, metavars, self) for item in shape)
     else:  # e.g. str, MathObject
@@ -256,6 +253,9 @@ def math_type_to_display(self, format_="html",
     return math_type.to_display(format_, text=text, is_type=True)
 
 
+#############################
+# Add methods to MathObject #
+#############################
 MathObject.to_display = to_display
 
 MathObject.math_type_to_display = math_type_to_display

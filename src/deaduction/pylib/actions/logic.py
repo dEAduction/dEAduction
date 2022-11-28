@@ -1607,7 +1607,7 @@ def add_type_indication(item: Union[str, MathObject],
                 number_type = MathObject.number_sets[-1]
             item = f"({item}:{number_type})"  # e.g. (0:ℝ)
         return item
-    else:
+    elif isinstance(item, MathObject):
         if not math_type:
             number_type = MathObject.number_sets[-1]
         if hasattr(item, 'info'):
@@ -1616,4 +1616,5 @@ def add_type_indication(item: Union[str, MathObject],
             if (':' not in name
                     and hasattr(item, 'info')):
                 item.info['name'] = f"({name}:{number_type})"
+        item.math_type = math_type
         return item
