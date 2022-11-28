@@ -113,6 +113,8 @@ quant_pattern = {
     (r"\forall", (1,), r" \sequence_in", (0, 1), ", ", (2, )),
     # "QUANT_∀(?0, ?1, PROP_IMPLIES(...))":
     # (r"\forall", (2, 0), ", ", (2, 1)),
+    "QUANT_∀(?0, ?1, PROP_IMPLIES(PROP_BELONGS(?1, ?2), ?3))":
+        (r"\forall", (2, 0), ", ", (2, 1)),
     "QUANT_∀(?0, ?1, PROP_IMPLIES(*INEQUALITY(?1, ?2), ?3))":
         (r"\forall", (2, 0), ", ", (2, 1))
 }
