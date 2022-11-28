@@ -51,26 +51,13 @@ from typing import          List, Any, Optional, Union
 from copy import copy
 import logging
 
-if __name__ == "__main__":
-    pass
-
-import deaduction.pylib.config.vars            as cvars
-# from deaduction.pylib.math_display import (
-#                                            latex_from_node, recursive_display,
-#                                            raw_latex_shape_from_couple_of_nodes,
-#                                            raw_latex_shape_from_specific_nodes,
-#                                            shallow_latex_to_text,
-#                                            abstract_string_to_string)
-
-from deaduction.pylib.give_name.give_name import name_single_bound_var
-
-# from deaduction.pylib.math_display.utils import *
+import deaduction.pylib.config.vars as cvars
 
 log = logging.getLogger(__name__)
 global _
 
-# NUMBER_SETS_LIST = ['ℕ', 'ℤ', 'ℚ', 'ℝ']
 
+# NUMBER_SETS_LIST = ['ℕ', 'ℤ', 'ℚ', 'ℝ']
 CONSTANT_IMPLICIT_ARGS = ("real.decidable_linear_order",)
 
 
@@ -1611,33 +1598,33 @@ class MathObject:
     #
     #     return display
 
-    def __lambda_var_n_body(self):
-        """
-        Given a MathObject that codes for
-            a sequence u = (u_n)_{n in N}
-            or a set family E = {E_i, i in I}
-        (but maybe a lambda expression), returns the body, that corresponds to
-        "u_n" or "E_i".
-        """
-        if self.is_lambda(is_math_type=True):
-            body = self.children[2]
-            bound_var = self.children[1]
-            name_single_bound_var(bound_var)  # FIXME
-        else:
-            # NB: math_type is "SET FAMILY ( X, set Y)"
-            #   or "SEQUENCE( N, Y)
-            # Change type to avoid infinite recursion:
-            raw_version = self.duplicate()
-            bound_var_type = self.math_type.children[0]
-            bound_var = BoundVar.from_has_bound_var_parent(self)
-            math_type = self.math_type.children[1]
-            body = MathObject(node="APPLICATION",
-                              info={},
-                              children=[raw_version, bound_var],
-                              math_type=math_type)
-
-        name_single_bound_var(bound_var)
-        return bound_var, body
+    # def __lambda_var_n_body(self):
+    #     """
+    #     Given a MathObject that codes for
+    #         a sequence u = (u_n)_{n in N}
+    #         or a set family E = {E_i, i in I}
+    #     (but maybe a lambda expression), returns the body, that corresponds to
+    #     "u_n" or "E_i".
+    #     """
+    #     if self.is_lambda(is_math_type=True):
+    #         body = self.children[2]
+    #         bound_var = self.children[1]
+    #         name_single_bound_var(bound_var)  # FIXME
+    #     else:
+    #         # NB: math_type is "SET FAMILY ( X, set Y)"
+    #         #   or "SEQUENCE( N, Y)
+    #         # Change type to avoid infinite recursion:
+    #         raw_version = self.duplicate()
+    #         bound_var_type = self.math_type.children[0]
+    #         bound_var = BoundVar.from_has_bound_var_parent(self)
+    #         math_type = self.math_type.children[1]
+    #         body = MathObject(node="APPLICATION",
+    #                           info={},
+    #                           children=[raw_version, bound_var],
+    #                           math_type=math_type)
+    #
+    #     name_single_bound_var(bound_var)
+    #     return bound_var, body
 
     ##################
     # Naming methods #
@@ -1807,7 +1794,12 @@ class BoundVar(MathObject):
 ################
     def preferred_letter(self) -> str:
         """
-        Return a preferred letter for naming self.
+        Return a preferred letter for naming self. We want to use such a
+        letter when self is a number, because numbers are designed by
+        distinct letters according to their mathematical meaning.
+        This letter is based on the lean name, from the lean source file.
+        We allow exceptional cases: if the lean name ends with '__' then it
+        will also be used, whatever self's math_type is.
         """
 
         letter = ''

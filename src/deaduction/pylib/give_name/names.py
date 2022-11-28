@@ -36,7 +36,7 @@ import deaduction.pylib.config.vars as cvars
 
 log = logging.getLogger(__name__)
 
-# "αβγδεζηθικλμνξοπρςστυφχψω" + "ΓΔΘΛΞΠΣΦΨΩ"
+# All Greek letters: "αβγδεζηθικλμνξοπρςστυφχψω" + "ΓΔΘΛΞΠΣΦΨΩ"
 alphabet = 'abcdefghijklmnopqrstuvwxyz'
 greek_alphabet = "αβγδεζηθικλμνξοπρςστυφχψω"
 lower_lists = ['abcde', 'fgh', 'ijkl', 'mn', 'nk', 'npq', 'pqr', 'rst', 'uvw',
@@ -53,9 +53,23 @@ class Case(IntEnum):
     UPPER_MOSTLY = 3
     UPPER_ONLY = 4
 
+    def modify(self, s: str, strongly=True):
+        """
+        Turn the string s into lower or upper, so that it is compatible with
+        self.
+        """
+        if not strongly:
+            s_mod = (s if self in (2, 3)
+                     else s.lower() if self == 1 else s.upper())
+        else:
+            s_mod = s.lower() if self in (1, 2) else s.upper()
+
+        return s_mod
+
 
 def analyse_hint(hint: str) -> (str, int, Optional[int]):
     """
+    Analyse the hint structure in terms of number of primes and index.
     n''_0 --> ('n', 2, 0)
     n' --> ('n', 1, None)
     Ens_1 --> 'Ens', 1, None)
@@ -151,7 +165,12 @@ def name_lists_from_name(hint: str,
     their proximity with hint.
     """
     hint, prime, index = analyse_hint(hint)
+
+    if case:  # Turn hint into a string compatible with case preference
+        hint = case.modify(hint, strongly=False)
     root = hint + "'"*prime
+
+    # Get names list:
     index_names = index_name_list(root,
                                   start=0 if index is None else index,
                                   length=max_length)
@@ -196,15 +215,13 @@ def potential_names(hint, length, friend_names: set, excluded_names: set,
     context, and then we will be happy to use them for a new variable.
     """
 
-    # TODO: check case
-
     # (1) Get all lists compatible with data
-    # print("Potential names:")
     lists = name_lists_from_name(hint, min_length=length,
                                  max_length=length + len(excluded_names) + 10,
                                  case=case)
     winner = None
     given_names = excluded_names.union(friend_names)
+
     # (2) Keep only sufficiently long lists:
     long_lists = [names for names in lists
                   if len(set(names).difference(given_names)) >= length]
@@ -228,21 +245,6 @@ def potential_names(hint, length, friend_names: set, excluded_names: set,
             winner = names
             score = common_nb
 
-    # for names in lists:
-    #     names = [name for name in names if name not in given_names]
-    #     print(names)
-    #     if len(names) >= length:  # The list contains enough names
-    #         # Compute nb of friend_names in names
-    #         new_score = [friend in names for friend in friend_names].count(True)
-    #         print("score:" + str(new_score))
-    #         if len(names) >= length + new_score \
-    #                 and new_score > score:
-    #             winner = names
-    #             score = new_score
-
-    # print("Winner:")
-    # print(winner)
-    # winner = [name for name in winner if name not in excluded_names]
     return winner
 
 

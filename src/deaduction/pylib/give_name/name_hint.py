@@ -37,7 +37,7 @@ from deaduction.pylib.give_name.names import (Case,
                                               potential_names)
 
 
-# Letters lists,
+# Typical letters used for some math types
 letter_hints_from_type_node = {
     'TYPE': (('XYZW', 'EFG'), Case.UPPER_ONLY),
     'SET': (('ABCDEFG', ), Case.UPPER_ONLY),
@@ -51,7 +51,7 @@ letter_hints_from_type_node = {
 def letter_hints_from_type(math_type) -> tuple:
     """
     Return lists of preferred letters for naming a math object of given math
-    type.
+    type, and a (compatible) case preference.
     e.g. 'TYPE' --> (('XYZW', 'EFG'), Case.UPPER_ONLY)
     """
     letters = tuple()
@@ -91,10 +91,73 @@ def letter_hints_from_type(math_type) -> tuple:
     return letters, case
 
 
+def new_letter_from_bad(letter: str, existing_hints, case: Case) -> str:
+    """
+    Return a new letter for a NameHint, from a given letter which assumed to be
+    equal to som other existing NameHint.
+    The algorithm is to take as name hint the first
+    available letter in the names list associated to the conflicting
+    NameHint. If no letter is available, we use the pure_letter_lists()
+    function, that provides some letters list containing the given letter.
+    In case this fails, which should be very rare, we choose the first
+    available letter in the alphabet(!).
+
+    The letter will be compatible with case, except maybe if it comes from
+    previously given names in the context which were not compatible.
+    """
+
+    # (1) Find conflicting hint
+    conflicting_hint = None
+    for hint in existing_hints:
+        if letter == hint.letter:
+            conflicting_hint = hint
+            break
+
+    # (2) Find first available letter
+    available_letter = ""
+    unavailable_letters = [hint.letter for hint in existing_hints]
+    good_names = conflicting_hint.names if conflicting_hint else None
+    if not good_names:
+        good_names = sum(pure_letter_lists(letter, case=case), [])\
+                     if letter else []
+    # e.g. [['f', 'g', 'h'],['f', 'F']]
+    bad_names = list(alphabet + greek_alphabet)
+    for names in good_names + bad_names:
+        for letter in names:
+            letter = case.modify(letter, strongly=True)
+            if letter not in unavailable_letters:
+                available_letter = letter
+                break
+        if available_letter:
+            break
+    if not available_letter:
+        logging.warning("NO MORE LETTER AVAILABLE for naming!!")
+
+    return available_letter
+
+
 class NameHint:
     """
     A class to provide names for all vars of a given type.
+    There are two kinds of NameHint:
+    - the generic NameHint is associated to a given math_type, and will be
+    used naming all vars (bound vars of global vars introduced by "intro")
+    of this type.
+    - some NameHint are associated to a couple
+        (math_type, preferred letter).
+    This is used in particular for numbers, because real numbers that should
+    be named 'epsilon' cannot be named 'x', and vice versa.
+    Such a NameHint will be used to name all bound var sharing its math_type
+    and preferred letter, as provided by BoundVar.preferred_letter() method.
+    Actually, this last condition has been replaced by a less rigid one,
+    i.e. the preferred letter should be in the NameHint's names list.
+
+    The case enum tells if self accept lower/upper letters, and what if both
+    are accepted, which one is preferred. The letter attribute must be
+    compatible with this, and the names list takes it into account.
     """
+    # TODO: test if case compatibility works
+
     letter: str = 'x'  # Default letter
     case: Case = Case.LOWER_MOSTLY
     use_index = cvars.get('display.use_indices', True)
@@ -126,6 +189,11 @@ class NameHint:
         create a new hint and append it to existing_hints. The main task is
         to find a suitable letter for naming hint. The letter must be
         distinct of all letters of existing_hints.
+        We try, in order,
+            - the preferred letter,
+            - friendly names (e.g. names already given to this math_type)
+            - letters provided by the letter_hints_from_type() function.
+            - letters provided by the new_letter_from_bad() function.
         """
 
         usable_letters = alphabet + greek_alphabet
@@ -168,51 +236,18 @@ class NameHint:
                 success = True
                 break
 
+        # (e) Find new letters from letters list
         if not success:
             letter = letters[0] if letters else ""
-            letter = cls.new_letter_from_bad(letter, existing_hints)
+            letter = new_letter_from_bad(letter, existing_hints, case)
 
         new_hint = cls(math_type, preferred_letter, letter, case)
         existing_hints.append(new_hint)
         return new_hint
 
-    @classmethod
-    def new_letter_from_bad(cls, letter: str, existing_hints) -> str:
-        """
-        Construct a new NameHint from given letter, assumed to be equal to an
-        existing NameHint. The algorithm is to take as name hint the first
-        available letter in the NameScheme associated to the conflicting
-        NameHint. If no letter is available, choose any(?).
-        """
-        # TODO: check case
-
-        # (1) Find conflicting hint
-        conflicting_hint = None
-        for hint in existing_hints:
-            if letter == hint.letter:
-                conflicting_hint = hint
-                break
-
-        # (2) Find first available letter
-        available_letter = ""
-        unavailable_letters = [hint.letter for hint in existing_hints]
-        good_names = conflicting_hint.names if conflicting_hint else None
-        if not good_names:
-            good_names = sum(pure_letter_lists(letter), []) if letter else []
-        # e.g. [['f', 'g', 'h'],['f', 'F']]
-        bad_names = list(alphabet + greek_alphabet)
-        for names in good_names + bad_names:
-            for letter in names:
-                if letter not in unavailable_letters:
-                    available_letter = letter
-                    break
-            if available_letter:
-                break
-        if not available_letter:
-            logging.warning("NO MORE LETTER AVAILABLE for naming!!")
-
-        return available_letter
-
+###############################
+# Methods for providing names #
+###############################
     def check_names(self, needed_length, given_names: set):
         """
         Check self has enough names for data.
@@ -220,13 +255,13 @@ class NameHint:
         available_length = len(set(self.names).difference(given_names))
         return available_length >= needed_length
 
-    def update_name_scheme(self, length, friend_names, excluded_names):
+    def update_names_list(self, length, friend_names, excluded_names):
         """
         Check if self.name_scheme is able to provide enough fresh names,
         namely a list of given length, disjoint from two  lists of already
-        given names. If not, compute a new NameScheme.
+        given names. If not, compute a new names list.
         """
-        # FIXME: check case
+
         given_names = excluded_names.union(friend_names)
         if not self.check_names(length, given_names):
             self.names = potential_names(self.letter, length, friend_names,
@@ -240,30 +275,10 @@ class NameHint:
         for name in self.names:
             if name not in given_names:
                 return name, True
-        # Emergency name: we have no more good names for you...
 
+        # Emergency name: we have no more good names for you...
         bad_names = list(alphabet + greek_alphabet)
         for name in bad_names:
             if name not in given_names:
                 return name, False
-
-
-# @dataclass()
-# class NameScheme:
-#     base_hint: NameHint
-#     mode = 'letter'
-# 
-#     @classmethod
-#     def from_name_hint(cls, name_hint: NameHint):
-#         return cls(base_hint=name_hint)
-# 
-#     def names(self):
-#         letter = self.base_hint.letter
-#         return pure_letter_lists(letter)
-# 
-#     def first_available_name(self, given_names):
-#         for name in self.names():
-#             if name not in given_names:
-#                 return name
-
 

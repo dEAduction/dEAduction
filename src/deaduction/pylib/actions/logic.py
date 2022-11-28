@@ -60,9 +60,7 @@ from deaduction.pylib.actions     import (action,
 
 from deaduction.pylib.mathobj     import  MathObject
 
-from deaduction.pylib.give_name import   (give_global_name,
-                                          names_for_types,
-                                          get_new_hyp)
+from deaduction.pylib.give_name import    get_new_hyp
 
 log = logging.getLogger("logic")
 global _

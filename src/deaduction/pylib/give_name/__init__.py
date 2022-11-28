@@ -24,6 +24,4 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .give_name import (get_new_hyp,
-                        give_global_name,
-                        names_for_types)
+from .get_new_hyp import get_new_hyp

@@ -28,7 +28,7 @@ This file is part of dEAduction.
 """
 
 from deaduction.pylib.actions import CodeForLean
-from deaduction.pylib.give_name.give_name import get_new_hyp
+from deaduction.pylib.give_name.get_new_hyp import get_new_hyp
 
 from deaduction.pylib.proof_state import Goal
 

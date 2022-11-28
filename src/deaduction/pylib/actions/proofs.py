@@ -40,8 +40,7 @@ from deaduction.pylib.actions import (InputType,
                                       apply_or)
 
 from deaduction.pylib.mathobj import  MathObject
-from deaduction.pylib.give_name import (get_new_hyp,
-                                        give_global_name)
+from deaduction.pylib.give_name import get_new_hyp
 
 from deaduction.pylib.math_display import new_objects, new_properties
 
