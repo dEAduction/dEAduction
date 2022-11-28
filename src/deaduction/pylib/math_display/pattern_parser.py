@@ -44,15 +44,16 @@ structure = """
     expr = node children
     node = node_name info_type?
     info_type = type_sep expr
-    node_name = ~"[a-z A-Z 0-9 ?_∀∃+<>≥≤!.'/= - ℕℤℚℝ]"+
+    node_name = ~"[a-z A-Z 0-9 *?_∀∃+<>≥≤!.'/= - ℕℤℚℝ]"+
     children = (open_paren expr more_expr closed_paren)?
     more_expr = (comma expr)*
     """
 separators = """
-    open_paren = "("
-    closed_paren = ")"
-    type_sep = ":"
-    comma = ","
+    open_paren = "(" spaces
+    closed_paren = spaces ")"
+    type_sep = ":" spaces
+    comma = "," spaces
+    spaces = (" ")*
 """
 
 rules = structure + separators

@@ -125,6 +125,10 @@ def latex_shape(self: MathObject, is_type=False, text=False) -> []:
 
     shape = None
 
+    if self.node == "QUANT_∀":
+        # print("app")
+        pass
+
     # (0) Dictionaries to be used (order matters!):
     dicts = []
     if not isinstance(self, PatternMathObject):
@@ -137,8 +141,11 @@ def latex_shape(self: MathObject, is_type=False, text=False) -> []:
     # (1) Search for patterns
     for dic in dicts:
         for pattern, pre_shape, metavars in dic:
+            if self.node == "QUANT_∀" and pre_shape[0] == r'\forall':
+                print("toto")
             if pattern.match(self):
                 # Now metavars are matched
+                log.debug(f"Matching pattern --> {pre_shape}")
                 shape = tuple(substitute_metavars(item, metavars, self)
                               for item in pre_shape)
                 # shape = [metavars[item].matched_math_object  # int for metavars

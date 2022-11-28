@@ -93,6 +93,8 @@ global _
 # QUANTIFIERS #
 ###############
 ###############
+metanodes = {'*INEQUALITY': ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥",
+                             "PROP_EQUAL_NOT")}
 
 quant_pattern = {
     # NB: QUANT nodes must have 3 children, with children[1] the bound var.
@@ -100,14 +102,19 @@ quant_pattern = {
     # We use child nbs and not metavars to indicate P(x), since this is used
     # for good parenthesing.
     "QUANT_∀(SET(...), ?0, ?1)":
-        (r"\forall", 0, r" \subset ", (0, 0), ", ", (2,)),
+    (r"\forall", (1,), r" \subset ", (0, 0), ", ", (2,)),
     "QUANT_∀(FUNCTION(...), ?0, ?1)":
-        (r"\forall", 0, r" \function_from", (0, 0), r'\to', (0, 1), ", ", (2, )),
-    "QUANT_∀(PROP, ?0, ?1)": (r"\forall", 0, r'\proposition', ", ", (2, )),
-    "QUANT_∀(TYPE(...), ?0, ?1)": (r"\forall", 0, r" \set", ", ", (2, )),
-    # FIXME: this is odd!!! :
-    # ("QUANT_∀", "SEQUENCE"): (r"\forall", 1, r" \function_from", (0, 0),
-    #                           r'\to', (0, 1), ", ", 2),
+    (r"\forall", (1,), r" \function_from", (0, 0), r'\to', (0, 1), ", ", (2, )),
+    "QUANT_∀(PROP, ?0, ?1)":
+    (r"\forall", (1,), r'\proposition', ", ", (2, )),
+    "QUANT_∀(TYPE(...), ?0, ?1)":
+    (r"\forall", (1,), r" \set", ", ", (2, )),
+    "QUANT_∀(SEQUENCE(...), ?0, ?1)":
+    (r"\forall", (1,), r" \sequence_in", (0, 1), ", ", (2, )),
+    # "QUANT_∀(?0, ?1, PROP_IMPLIES(...))":
+    # (r"\forall", (2, 0), ", ", (2, 1)),
+    "QUANT_∀(?0, ?1, PROP_IMPLIES(*INEQUALITY(?1, ?2), ?3))":
+        (r"\forall", (2, 0), ", ", (2, 1))
 }
 
 
@@ -130,15 +137,17 @@ def exists_patterns_from_forall():
 
 # The '!' means type must match (NO_MATH_TYPE not allowed)
 latex_from_pattern_string = {
-    "LOCAL_CONSTANT:!SET_FAMILY(?3, ?4)(...)":
+    "LOCAL_CONSTANT: !SET_FAMILY(?3, ?4)(...)":
         (r"\{", name, ['_', (1,)], ', ', (1,), r"\in_symbol", 3, r"\}"),
-    "LAMBDA:!SET_FAMILY(?0, ?2)(...)":
+    "LAMBDA: !SET_FAMILY(?0, ?2)(...)":
         # (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}"),
         # (r"\{", 'self.body', ', ', 'self.bound_var', r"\in_symbol",
         #  'self.bound_var_type', r"\}"),
         (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}"),
-    "LOCAL_CONSTANT:!SEQUENCE(?3, ?4)(...)":
-        ('(', name, ['_', (1,)], ')', [(1,), r"\in_symbol", 3])
+    "LOCAL_CONSTANT: !SEQUENCE(?3, ?4)(...)":
+        ('(', name, ['_', (1,)], ')', ['_', (1,), r"\in_symbol", 3]),
+    "LAMBDA: !SEQUENCE(?3, ?4)(...)":
+        ('(', (2, ), ')', ['_', (1, ), r"\in_symbol", (0, )])
 }
 
 
@@ -207,7 +216,7 @@ latex_from_pattern_string_for_type = {
     # We need this here, otherwise match "?: TYPE":
     "NO_MORE_GOAL": (_("All goals reached!"),),
     "PROP": (r'\proposition',),
-    "SET(?0)": (r'\type_subset', 0),
+    "SET(?0)": (r'\type_subset', (0,)),
     "SET_FAMILY(...)": (r'\type_family_subset', (1, )),
     "SEQUENCE(...)": (r'\type_sequence', (1, )),
     # TYPE... TODO (r'\type_element', name)

@@ -35,6 +35,7 @@ from copy import copy
 
 from deaduction.pylib.utils import tree_list
 from deaduction.pylib.mathobj.math_object import MathObject, BoundVar
+from deaduction.pylib.math_display import metanodes
 
 log = logging.getLogger(__name__)
 
@@ -287,7 +288,6 @@ class PatternMathObject(MathObject):
         index in the metavar_objects list.
         """
 
-        # TODO: simplify like MathObject.__eq__
         metavars = PatternMathObject.__metavars
         metavar_objects = PatternMathObject.__metavar_objects
         children = self.children
@@ -297,6 +297,7 @@ class PatternMathObject(MathObject):
         # if math_object:
         #     log.debug(f"Matching {self} and {math_object}...")
 
+        # -----------------------------------------------
         # Case of NO_MATH_TYPE (avoid infinite recursion!)
         # Maybe this is too liberal??
         if self.is_no_math_type():
@@ -304,7 +305,7 @@ class PatternMathObject(MathObject):
         elif math_object.is_no_math_type():
             return False if self.imperative_matching else True
 
-        # METAVAR
+        # --------------------- METAVARS --------------------------
         elif isinstance(self, MetaVar):
             # If self has already been identified, math_object matches self
             #   iff it is equal to the corresponding item in metavar_objects
@@ -324,13 +325,21 @@ class PatternMathObject(MathObject):
                 # match = True
             return match
 
-        #####################################
-        # Test node, bound var, name, value #
-        #####################################
+        #############
+        # Test node #
+        #############
+        elif node != math_object.node:
+            if node not in metanodes:
+                return False
+            elif math_object.node not in metanodes[node]:
+                # Groups of nodes, e.g. '*INEQUALITIES"
+                return False
+        ###############################
+        # Test bound var, name, value #
+        ###############################
         elif any(self_item != '?' and self_item != math_object_item
                  for self_item, math_object_item in
-                 [(node, math_object.node),
-                  (self.is_bound_var, math_object.is_bound_var),
+                 [(self.is_bound_var, math_object.is_bound_var),
                   (self.name, math_object.name),
                   (self.value, math_object.value)]):
             return False
@@ -480,6 +489,12 @@ class MetaVar(PatternMathObject):
                          children=[],
                          math_type=math_type)
 
+    def __eq__(self, other):
+        """
+        Redefine __eq__, otherwise all METAVARS are equals!?
+        """
+        return self is other
+
     @property
     def nb(self):
         return self.info['nb']
@@ -495,6 +510,13 @@ class MetaVar(PatternMathObject):
     def math_object_from_metavar(self):
         return (self.matched_math_object if self.matched_math_object
                 else MathObject.NO_MATH_TYPE)
+
+    def to_display(self: MathObject, format_="html", text=False,
+                   use_color=True, bf=False, is_type=False):
+        display = MathObject.to_display(self, format_="html", text=False,
+                                        use_color=True, bf=False, is_type=False)
+
+        return "?=" + display
 
 
 POMPOMPOM = PatternMathObject(node="...", info={}, children=[])

@@ -80,7 +80,7 @@ def analyse_hint(hint: str) -> (str, int, Optional[int]):
         try:
             index = int(index)
         except ValueError:
-            pass
+            index = None
 
     prime = hint.count("'")
     if prime:

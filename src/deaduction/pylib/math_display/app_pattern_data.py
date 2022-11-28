@@ -50,7 +50,7 @@ latex_from_app_pattern = {
 
     # TODO: sequences and set families
     # u_n:
-    "APP(LOCAL_CONSTANT: !SEQUENCE(?2, ?3), ?1: ?2)":
+    "APP(LOCAL_CONSTANT: !SEQUENCE(?2, ?3)(...), ?1: ?2)":
         ('(0, ).name', ["_", (1, )]),
     # APP(E, i) --> E_i
     #   Here E is the name of the local constant, which is self.children[0]
@@ -80,6 +80,9 @@ latex_from_constant_name = {
     "est_borne": (-1, r'\text_is', " borné"),
     "limit": ("lim ", -2, " = ", -1),
     "limit_plus_infinity": ("lim ", -1, " = +∞"),
+    "limit_fun": ("lim", ['_', (-2,)], (-3,), " = ", (-1,)),
+    "continuous": (-1, r'\text_is', _("continuous")),
+    "continuous_at": (-2, r'\text_is', _("continuous at") + " ", -1),
     "abs": ('|', -1, '|'),
     "max": ("Max", r'\parentheses', -2, ",", -1),
     "inv": ([r'\parentheses', (-1, )], [r'^', '-1']),

@@ -178,7 +178,7 @@ class MathObject:
         if node == 'APPLICATION' and children[0].node == 'APPLICATION':
             self.children = self.children[0].children + [self.children[1]]
 
-    def __str__(self):
+    def __repr__(self):
         return self.to_display(format_="utf8")
 
     @classmethod
@@ -1759,7 +1759,7 @@ class BoundVar(MathObject):
         if parent is None:
             parent = MathObject.NO_MATH_TYPE
         info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
-                'lean_name': "NONE"}
+                'lean_name': ''}
         bound_var = BoundVar(node="LOCAL_CONSTANT",
                              info=info,
                              children=[],
@@ -1793,13 +1793,14 @@ class BoundVar(MathObject):
         will also be used, whatever self's math_type is.
         """
 
-        letter = ''
-        lean_name = self.info.get('lean_name')
-        if lean_name:
-            if lean_name.endswith('__'):  # Code to force name
-                letter = lean_name[:-2]
-            elif self.math_type.is_number():
-                letter = lean_name
+        lean_name = self.info.get('lean_name', '')
+        if lean_name in ("NO NAME", '*no_name*'):
+            lean_name = ''
+        letter = (lean_name[:-2] if lean_name.endswith('__')
+                  else lean_name if (lean_name and self.math_type.is_number())
+                  else 'n' if self.math_type.is_N()
+                  else 'x' if self.math_type.is_R()
+                  else '')
 
         if letter.isalpha():
             return letter
@@ -1819,8 +1820,11 @@ class BoundVar(MathObject):
 
     def set_unnamed_bound_var(self):
         # FIXME: suppress:
+        lean_name = self.info.get('name', '')
+        if lean_name in ("NO NAME", '*no_name*'):
+            lean_name = ''
         new_info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
-                    'lean_name': self.info.get('name', ''),
+                    'lean_name': lean_name,
                     'bound_var_nb': -1}
         self.info.update(new_info)
         self._is_unnamed = True

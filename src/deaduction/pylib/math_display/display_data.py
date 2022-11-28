@@ -136,7 +136,7 @@ latex_from_node = {
     "PROP": (r'\proposition',),
     "TYPE": (r'\set',),
     "FUNCTION": (r'\function_from', 0, r'\to', 1),  # (0, r" \to ", 1),
-    "SEQUENCE": (r'\sequence_from', 0, r'\to', 1),  # (0, r" \to ", 1),
+    "SEQUENCE": (r'\sequence_in', 1),  # (0, r" \to ", 1),
     "CONSTANT": (name,),
     "NUMBER": (value,),
     "LOCAL_CONSTANT": ('self.local_constant_shape',),
@@ -265,9 +265,10 @@ latex_to_text = {
     r"\exists_unique {} \proposition, {}": _("there exists a unique proposition {} such that {}"),
     r"\exists_unique {} \set, {}": _("there exists a unique set {} such that {}"),
 
+    # TODO: add sentences with sequence
     r'\context_function_from': " " + _("a function from") + " ",
     r'\function_from': " " + _("a function from") + " ",
-    r'\sequence_from': " " + _("a sequence from") + " ",  # FIXME...
+    r'\sequence_in': " " + _("a sequence in") + " ",  # FIXME...
     r'\to': " " + _("in") + " ",  # FIXME: OK in French but not in english!
     # r'\in': " " + _("belongs to") + " ",
     r'\in_prop': " " + _("is") + " ",
@@ -377,14 +378,6 @@ latex_to_lean_dic = {
 # Helper functions #
 ####################
 ####################
-# # Nodes of math objects that need instantiation of bound variables
-# HAVE_BOUND_VARS = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_INTENSION",
-#                    "LAMBDA", "EXTENDED_SEQUENCE", "EXTENDED_SET_FAMILY")
-#
-# # TO_BE_EXPANDED = ("SEQUENCE", "SET_FAMILY", "LAMBDA")
-#
-# INEQUALITIES = ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥", "PROP_EQUAL_NOT")
-#
 NATURE_LEAVES_LIST = ("PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                       "FUNCTION", "SEQUENCE", "SET_FAMILY",
                       "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY",
