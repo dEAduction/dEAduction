@@ -131,34 +131,21 @@ latex_from_node = {
     ##################
     # GENERAL TYPES: #
     ##################
-    # (r'{\mathcal P}', "(", 0, ")"),
-    # "SET": (r'\set_of_subsets', [r"\parentheses", 0]),
     "SET": (r'\set_of_subsets', [r'\symbol_parentheses', 0]),
     "PROP": (r'\proposition',),
     "TYPE": (r'\set',),
     "FUNCTION": (r'\function_from', 0, r'\to', 1),  # (0, r" \to ", 1),
     "SEQUENCE": (r'\sequence_from', 0, r'\to', 1),  # (0, r" \to ", 1),
-    # FIXME:
-    # "LOCAL_CONSTANT_EXPANDED_SEQUENCE":
-    #     (r"(", 2, ')', ['_', 1, r"\in_symbol", 0]),
-    # # NB: children[2] is the whole body, "u_n"
-    # "LOCAL_CONSTANT_EXPANDED_SET_FAMILY":
-    #     (r"\{", 2, ', ', 1, r"\in_symbol", 0, r"\}"),
-    # "LAMBDA_EXPANDED_SEQUENCE":
-    #     (r"(", 2, ')', ['_', 1, r"\in_symbol", 0]),
-    # # NB: children[2] is the whole body, "u_n"
-    # "LAMBDA_EXPANDED_SET_FAMILY":
-    #     (r"\{", 2, ', ', 1, r"\in_symbol", 0, r"\}"),
     "CONSTANT": (name,),
     "NUMBER": (value,),
     "LOCAL_CONSTANT": ('self.local_constant_shape',),
     "APPLICATION": (0, r'\parentheses', 1)
     }
 
-# \in_quant --> "belonging to", or "in" in text mode (but NOT "belongs to")
 #############################################################
 # The latex_from_node dict will be updated by the following #
 #############################################################
+# \in_quant --> "belonging to", or "in" in text mode (but NOT "belongs to")
 latex_from_quant_node = {
     "QUANT_∀": (r"\forall", 1, r" \in_quant ", 0, ", ", 2),
     "QUANT_∃": (r"\exists", 1, r" \in_quant ", 0, r'\such_that', 2),
