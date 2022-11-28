@@ -180,7 +180,6 @@ class MathObject:
         # if node in self.HAVE_BOUND_VARS and len(children) == 3:
         if self.has_bound_var():  # set math_type and parent
             # Every object here should have children matching this:
-            # new_bound_var = BoundVar.from_has_bound_var_parent(self)
             math_type = self.children[0]
             bound_var = self.children[1]
             bound_var.parent = self
@@ -195,46 +194,62 @@ class MathObject:
     def __repr__(self):
         return self.to_display(format_="utf8")
 
-    # def add_bound_var(self, bound_var_type=None):
-    #     """
-    #     We add a new dummy var to self.children, and name it.
-    #     """
-    #     new_bound_var = MathObject.new_bound_var(bound_var_type,
-    #                                              parent=self)
-    #     name_single_bound_var(new_bound_var)  # FIXME
-    #     self.children.append(new_bound_var)
+    @classmethod
+    def application(cls, function, var):
+        """
+        Construct a MathObject obtained by applying function to var.
+        """
+        return cls(node="APPLICATION",
+                   info={},
+                   children=[function, var],
+                   math_type=function.math_type.children[1])
+
+    @classmethod
+    def lambda_(cls, var, body, math_type):
+        """
+        Construct a MathObject corresponding to lambda var: body.
+        NB: math_type is the type of the lambda, not the var type.
+        It can be a function, sequence, set family, ...
+        """
+        lam = cls(node="LAMBDA",
+                  info={},
+                  children=[var.math_type, var, body],
+                  math_type=math_type)
+        var.parent = lam
+        return lam
 
     def process_sequences_and_likes(self):
         """
-        FIXME: obsolete doc, we just add a dummy var to help display.
-        This method is called at each MathObject instantiation from lean
-        info and children. Local constant representing set families or
-        sequences ar modified to obtain the very special display, e.g.
-        {E_i, i in I}       instead of E
-        (u_n)_{n in N}      instead of u
-        For this the MathObject is modified, in particular children are
-        added including the bound var, its type, and the body. Note that
-        __lambda_var_n_body that creates a duplicate version of the ORIGINAL
-        (NOT EXPANDED) self, and body is something like
-        APPLICATION(non expanded duplicate, var).
+        This method does two thing:
+        - if self is a local_constant which represent a set family or a
+        sequence, it adds a child BoundVar, which will be used to display self
+        (as the var n in (u_n)_{n in N} ), but ONLY in the context.
+        - if self has such a local constant as a child, this local constant
+        is replaced by a lambda. This adds a new bound var which will be used
+        for display, and correctly named according to local context.
+        This is done only if self is not applying this local constant to an
+        index, i.e. self is not a lambda or an application.
         """
-        # if (self.is_sequence() or self.is_set_family())\
-        #         and self.node.find("_EXPANDED_") == -1:
-        #     log.debug(f"processing sequence {self.display_debug}")
-        #     bound_var, body = self.__lambda_var_n_body()
-        #     bound_var_type = self.math_type.children[0]
-        #     self.children = [bound_var_type, bound_var, body]
-        #     self.node += "_EXPANDED_" + self.math_type.node
         if self.is_variable(is_math_type=True) \
                 and (self.is_sequence() or self.is_set_family()):
-            # if self.is_lambda(is_math_type=True):
-            #     pass
             if not self.children:
                 bound_var_type = self.math_type.children[0]
-                bound_var = MathObject.new_bound_var(bound_var_type,
-                                                     parent=self)
+                bound_var = BoundVar.from_math_type(bound_var_type,
+                                                    parent=self)
                 self.children = [bound_var_type, bound_var,
                                  MathObject.NO_MATH_TYPE]
+        if self.node not in ('APPLICATION', 'LAMBDA'):
+            for index in range(len(self.children)):
+                child = self.children[index]
+                if child.is_variable(is_math_type=True) \
+                        and (child.is_sequence() or child.is_set_family()):
+                    # child.math_type is SEQ(index, target)
+                    var_type = child.math_type.children[0]
+                    var = BoundVar.from_math_type(var_type)
+                    body = MathObject.application(child, var)
+                    lam = MathObject.lambda_(var, body, child.math_type)
+                    # Replace child by lambda with the same math_type
+                    self.children[index] = lam
 
     def duplicate(self):
         """
@@ -269,21 +284,6 @@ class MathObject:
     ######################
     # Bound vars methods #
     ######################
-    @classmethod
-    def new_bound_var(cls, math_type, parent):
-        """
-        Return a new bound var of given math_type.
-        """
-
-        info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
-                'lean_name': "NONE"}
-        bound_var = BoundVar(node="LOCAL_CONSTANT",
-                             info=info,
-                             children=[],
-                             math_type=math_type,
-                             parent=parent)
-        return bound_var
-
     def bound_vars(self, include_sequences=True, math_type=None) -> []:
         """
         Recursively determine the list of all bound vars in self. May
@@ -353,16 +353,20 @@ class MathObject:
         - quantified expression,
         - set intension, e.g. {x in X, f(x) in A}
         - lambda expression, e.g. x -> f(x),
+
+        We exclude
         - sequences, e.g. (u_n)_{n in N}
         - set families, e.g. {E_i, i in I}.
+        for which the bound var is used only to display a context object
+        (in propositions they are replaced by lambda expressions).
         """
         nodes = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_INTENSION", "LAMBDA")
 
         if self.node in nodes:
             return len(self.children) == 3 and self.children[1].is_bound_var
-        elif self.is_variable(is_math_type=True) and \
-                (self.is_sequence() or self.is_set_family()):
-            return len(self.children) == 3 and self.children[1].is_bound_var
+        # elif self.is_variable(is_math_type=True) and \
+        #         (self.is_sequence() or self.is_set_family()):
+        #     return len(self.children) == 3 and self.children[1].is_bound_var
 
         return False
 
@@ -1690,20 +1694,31 @@ class MathObject:
         its bounding quantifier. This method propagates the bound vars along
         the MathObject tree, and set the local_context attribute of bound vars.
         """
-        if not local_context:
+
+        # This bool tells us if we want to name all bound_vars differently,
+        #  in which case all bound vars occuring befor a given one must be
+        #  put in its local context.
+        local_is_local = not cvars.get(
+            'logic.do_not_name_dummy_vars_as_dummy_vars_in_one_prop', False)
+        if local_context is None:
             local_context = []
 
         # Set local context for bound vars, and add them to local context.
         for child in self.children:
             if child.is_bound_var:
-                # Make a copy, otherwise all local ctxt will be identical!!
+                # Copy so that child's loca ctxt will not be affected
+                #  by future changes
                 child.local_context = copy(local_context)
                 local_context.append(child)
 
         # Propagate (enriched) local context to other children
         for child in self.children:
             if not self.is_bound_var:
-                child.set_local_context(local_context)
+                # If local_is_local, loc ctxts of children are independent
+                new_local_context = (copy(local_context) if local_is_local
+                                     else local_context)
+
+                child.set_local_context(new_local_context)
 
 
 MathObject.NO_MATH_TYPE = MathObject(node="not provided",
@@ -1750,6 +1765,30 @@ class BoundVar(MathObject):
                 and self.bound_var_nb() == other.bound_var_nb())
         # return self.bound_var_nb() == other.bound_var_nb()
 
+    @classmethod
+    def from_has_bound_var_parent(cls, parent):
+        bound_var = parent.children[1]
+        math_type = parent.children[0]
+        return cls(bound_var.node, bound_var.info, bound_var.children,
+                   math_type, parent=parent)
+
+    @classmethod
+    def from_math_type(cls, math_type, parent=None):
+        """
+        Return a new bound var of given math_type.
+        """
+
+        if parent is None:
+            parent = MathObject.NO_MATH_TYPE
+        info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
+                'lean_name': "NONE"}
+        bound_var = BoundVar(node="LOCAL_CONSTANT",
+                             info=info,
+                             children=[],
+                             math_type=math_type,
+                             parent=parent)
+        return bound_var
+
     @property
     def name(self):
         # Fixme: make it an attribute
@@ -1762,13 +1801,6 @@ class BoundVar(MathObject):
     @local_context.setter
     def local_context(self, local_context):
         self._local_context = local_context
-
-    @classmethod
-    def from_has_bound_var_parent(cls, parent):
-        bound_var = parent.children[1]
-        math_type = parent.children[0]
-        return BoundVar(bound_var.node, bound_var.info, bound_var.children,
-                        math_type, parent=parent)
 
 ################
 # Name methods #

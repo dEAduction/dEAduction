@@ -68,9 +68,6 @@ class ContextMathObject(MathObject):
         self.has_been_used_in_proof = False  # TODO: implement
         self.is_hidden = False  # TODO
 
-        # Set local_context for bound vars
-        self.math_type.set_local_context()
-
     @property
     def is_new(self):
         return self.parent_context_math_object is None

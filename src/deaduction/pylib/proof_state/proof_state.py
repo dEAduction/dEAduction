@@ -518,8 +518,23 @@ class Goal:
 
         var.name_bound_var(name)
 
-    def _recursive_name_all_bound_vars(self, p: MathObject, 
-                                       include_sequences=True):
+    def __name_context_object_bound_var(self, math_object, isolated=False):
+        """
+        Provide a name for bound vars of context objects like sequences and
+        set families, used only to display these objects. Here local context
+        is useless.
+        """
+
+        for child in math_object.children:
+            if child.is_bound_var:
+                name = self.provide_good_name(child.math_type,
+                                              child.preferred_letter(),
+                                              local_names=[],
+                                              isolated=isolated)
+                child.name_bound_var(name)
+
+    def __recursive_name_all_bound_vars(self, p: MathObject,
+                                        include_sequences=True):
         """
         Recursively name all bound vars in self. Each bound var should be 
         named only once (!).
@@ -538,27 +553,38 @@ class Goal:
 
         # (2) Name children's vars:
         for child in p.children:
-            self._recursive_name_all_bound_vars(child, include_sequences)
+            self.__recursive_name_all_bound_vars(child, include_sequences)
 
     def smart_name_bound_vars(self):
         """
         This method should be called each time a new goal is instantiated,
         but after name_hints have been set.
         It provides names for all bound vars in self's context and target.
+
+        The local context for prop is also set here, it is crucial so that
+        names are given appropriately.
         """
 
-        # TODO: bound vars names for numbers
-        # TODO bound new contextvars in logic.py
+        # (1) Update name lists for each math_type
         self.__update_all_name_hints()
         self.update_name_schemes()
-        print(f'Context: {self.context}')
-        print(f'Target: {self.target.math_type}')
-        self.print_hints()
-        self._recursive_name_all_bound_vars(self.target.math_type)
+
+        # print(f'Context: {self.context}')
+        # print(f'Target: {self.target.math_type}')
+        # self.print_hints()
+
+        # (2) Name bound vars in target
+        self.target.math_type.set_local_context()
+        self.__recursive_name_all_bound_vars(self.target.math_type)
+                
+        # (3) Name bound vars in context props:
         for p in self.context_props:
-            self._recursive_name_all_bound_vars(p.math_type)
-        for p in self.context_objects:
-            self._recursive_name_all_bound_vars(p.math_type)
+            p.math_type.set_local_context()
+            self.__recursive_name_all_bound_vars(p.math_type)
+
+        # (4) Name bound vars in context objects (e.g. sequences):
+        for math_object in self.context_objects:
+            self.__name_context_object_bound_var(math_object)
 
 ###############
 ###############

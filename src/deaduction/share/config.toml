@@ -52,6 +52,7 @@ math_font_file = ""
 [logic]
 do_not_name_dummy_vars_as_global_vars = true
 do_not_name_dummy_vars_as_dummy_vars = false
+do_not_name_dummy_vars_as_dummy_vars_in_one_prop = false
 force_indices_for_dummy_vars = false
 use_color_for_variables = true
 use_color_for_dummy_variables = false

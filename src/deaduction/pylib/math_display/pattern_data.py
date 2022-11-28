@@ -37,6 +37,10 @@ SYNTAX FOR VALUES. e.g.
     (r"\{", name, ['_', (1,)], ', ', (1,), r"\in_symbol", 3, r"\}"),
 Integers refers to metavariables, tuples to children and descendants.
 We use '_' or '^' to indicate subscripts or superscrits.
+We can use attributes like name, value, math_type, local_constant_display,
+body, bound_var, and so on.
+        e.g.    '(0, 0).name', '0.math_type'
+or any callable which will be applied to self, e.g. name and value.
 
 ---------------------
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -129,8 +133,9 @@ latex_from_pattern_string = {
         (r"\{", name, ['_', (1,)], ', ', (1,), r"\in_symbol", 3, r"\}"),
     "LAMBDA:SET_FAMILY(?0, ?2)(...)":
         # (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}"),
-        (r"\{", 'self.body', ', ', 'self.bound_var', r"\in_symbol",
-         'self.bound_var_type', r"\}"),
+        # (r"\{", 'self.body', ', ', 'self.bound_var', r"\in_symbol",
+        #  'self.bound_var_type', r"\}"),
+        (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}"),
     "LOCAL_CONSTANT:SEQUENCE(?3, ?4)(...)":
         ('(', name, ['_', (1,)], ')', [(1,), r"\in_symbol", 3])
 }
