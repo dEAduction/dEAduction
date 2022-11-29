@@ -1453,7 +1453,8 @@ def action_equal(proof_step) -> CodeForLean:
 
 def apply_map_to_element(proof_step,
                          map_: MathObject,
-                         x: str):
+                         x: str,
+                         other_names=None):
     """
     Return Lean code to apply map_ to element.
     Element may be a MathObject (selected by user)
@@ -1466,8 +1467,9 @@ def apply_map_to_element(proof_step,
     # elif isinstance(element, str):
     image_set = map_.math_type.children[1]
     # TODO: choose a better name by a careful examination of context
-    name = proof_step.goal.provide_good_name(image_set)
-
+    name = proof_step.goal.provide_good_name(image_set,
+                                             local_names=other_names)
+    other_names.extend(name)
     # y = give_global_name(proof_step=proof_step,
     #                      math_type=image_set,
     #                      hints=[image_set.info["name"]])
@@ -1493,12 +1495,14 @@ def apply_function(proof_step, map_, arguments: [MathObject]):
     codes = CodeForLean.empty_code()
     f = map_.info["name"]
 
+    other_names = []
     while arguments:
 
         if arguments[0].math_type.is_prop():
             # Function applied to a property, presumed to be an equality
             h = arguments[0].info["name"]
             new_h = get_new_hyp(proof_step)
+            other_names.extend(new_h)
             codes = codes.and_then(f'have {new_h} := congr_arg {f} {h}')
             codes.add_success_msg(_("Map {} applied to {}").format(f, h))
             codes.add_used_properties(arguments[0])
@@ -1508,7 +1512,8 @@ def apply_function(proof_step, map_, arguments: [MathObject]):
             x = arguments[0].info["name"]
             codes = codes.and_then(apply_map_to_element(proof_step,
                                                         map_,
-                                                        x))
+                                                        x,
+                                                        other_names))
         arguments = arguments[1:]
     msg = (_("The map {} cannot be applied to this object").format(f)
            if len(arguments) == 1 else
@@ -1535,7 +1540,7 @@ def action_map(proof_step) -> CodeForLean:
     user_input = proof_step.user_input
 
     # We successively try all selected objects
-    for i in  range(len(selected_objects)):
+    for i in range(len(selected_objects)):
         math_object = selected_objects[i]
         if math_object.is_function():
             if len(selected_objects) == 1:
