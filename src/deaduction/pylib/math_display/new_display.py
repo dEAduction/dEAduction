@@ -141,16 +141,13 @@ def latex_shape(self: MathObject, is_type=False, text=False) -> []:
     # (1) Search for patterns
     for dic in dicts:
         for pattern, pre_shape, metavars in dic:
-            if self.node == "QUANT_∀" and pre_shape[0] == r'\forall':
-                print("toto")
+            # if self.node == "QUANT_∀" and pre_shape[0] == r'\forall':
+            #     print("(debug))")
             if pattern.match(self):
                 # Now metavars are matched
                 log.debug(f"Matching pattern --> {pre_shape}")
                 shape = tuple(substitute_metavars(item, metavars, self)
                               for item in pre_shape)
-                # shape = [metavars[item].matched_math_object  # int for metavars
-                #          if isinstance(item, int)
-                #          else item for item in pre_shape]
                 break
         if shape:
             break
@@ -228,12 +225,18 @@ def expanded_latex_shape(math_object=None, shape=None, text=False):
 
 
 def to_display(self: MathObject, format_="html", text=False,
-               use_color=True, bf=False, is_type=False) -> str:
+               use_color=True, bf=False, is_type=False,
+               used_in_proof=False) -> str:
     """
+    Method to display MathObject on screen.
+    Note that it cannot be put in MathObject module, due to import problem
+    (namely: we need PatternMathObject to get the right shape to display).
     """
 
     # (1) Compute expanded shape
     shape = latex_shape(self, is_type=is_type, text=text)
+    if used_in_proof:
+        shape = [r'\used_property'] + shape
     abstract_string = expanded_latex_shape(math_object=self, shape=shape,
                                            text=text)
 
@@ -256,8 +259,8 @@ def math_type_to_display(self, format_="html",
                          used_in_proof=False) -> str:
 
     math_type = self if is_math_type else self.math_type
-
-    return math_type.to_display(format_, text=text, is_type=True)
+    return math_type.to_display(format_, text=text, is_type=True,
+                                used_in_proof=used_in_proof)
 
 
 #############################
