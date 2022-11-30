@@ -567,6 +567,12 @@ class Goal:
         for child in p.children:
             self.__recursive_name_all_bound_vars(child, include_sequences)
 
+    def debug(self):
+        # print(f'Context: {self.context}')
+        # print(f'Target: {self.target.math_type}')
+        # self.print_hints()
+        pass
+
     def smart_name_bound_vars(self):
         """
         This method should be called each time a new goal is instantiated,
@@ -581,9 +587,7 @@ class Goal:
         self.__update_all_name_hints()
         self.update_name_schemes()
 
-        # print(f'Context: {self.context}')
-        # print(f'Target: {self.target.math_type}')
-        # self.print_hints()
+        self.debug()
 
         # (2) Name bound vars in target
         self.target.math_type.set_local_context()
