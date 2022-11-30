@@ -270,8 +270,8 @@ class NameHint:
         given_names = excluded_names.union(friend_names)
         if not self.check_names(length, given_names):
             self.names = potential_names(self.letter, length, friend_names,
-                                         excluded_names, case=self.case)
-            pass
+                                         excluded_names, case=self.case,
+                                         preferred_letter=self.preferred_letter)
 
     def provide_name(self, given_names) -> (str, bool):
         """

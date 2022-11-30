@@ -201,7 +201,8 @@ def pure_letter_lists(letter: str, prime=0, index: Optional[int] = None,
 
 def name_lists_from_name(hint: str,
                          min_length: int, max_length: int,
-                         case=None) -> [str]:
+                         case=None,
+                         preferred_letter='') -> [str]:
     """
     Provide lists of proposed names of given length, ordered according to
     their proximity with hint.
@@ -212,18 +213,27 @@ def name_lists_from_name(hint: str,
         hint = case.modify(hint, strongly=False)
     root = hint + "'"*prime
 
-    # Get names list:
-    index_names = index_name_list(root,
-                                  start=0 if index is None else index,
-                                  length=max_length)
-    prime_names = prime_name_list(hint, prime, index, min_length)
+    # Get names lists:
+    index_names: [str] = index_name_list(root,
+                                         start=0 if index is None else index,
+                                         length=max_length)
+    prime_names: [str] = prime_name_list(hint, prime, index, min_length)
 
-    letter_names = pure_letter_lists(hint, prime, index, min_length, case)
+    letter_names: [[str]] = pure_letter_lists(hint, prime, index, min_length,
+                                              case)
 
-    # We prefer pure letters rather than primes or indices:
-    if prime:
+    # In general, we prefer pure letters rather than primes or indices,
+    # except for some preferred_letter
+    lonesome_letters = 'εn'
+    if preferred_letter and preferred_letter in lonesome_letters:
+        # Primes and index first
+        if cvars.get('display.use_primes_over_indices') or prime:
+            names = [prime_names] + [index_names] + letter_names
+        else:
+            names = [index_names] + [prime_names] + letter_names
+    elif prime:  # Primes first
         names = [prime_names] + letter_names + [index_names]
-    elif index:
+    elif index:  # Index first
         names = [index_names] + letter_names + [prime_names]
     elif cvars.get('display.use_primes_over_indices'):
         names = letter_names + [prime_names, index_names]
@@ -234,7 +244,7 @@ def name_lists_from_name(hint: str,
 
 
 def potential_names(hint, length, friend_names: set, excluded_names: set,
-                    case=None):
+                    case=None, preferred_letter=''):
     """
     Provides one list of potential names, of given length, for a given hint.
     The list friend_names contains the names already given to some
@@ -260,7 +270,8 @@ def potential_names(hint, length, friend_names: set, excluded_names: set,
     # (1) Get all lists compatible with data
     lists = name_lists_from_name(hint, min_length=length,
                                  max_length=length + len(excluded_names) + 10,
-                                 case=case)
+                                 case=case,
+                                 preferred_letter=preferred_letter)
     winner = None
     given_names = excluded_names.union(friend_names)
 
