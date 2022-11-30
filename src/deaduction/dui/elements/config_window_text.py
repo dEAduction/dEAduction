@@ -78,7 +78,7 @@ PRETTY_NAMES = {
     'functionality.save_solved_exercises_for_autotest':
         _("Save exercises for autotest"),
     'logs.save_journal': _("Save journal"),
-    'display.dubious_characters': _('Replace missing characters') +
+    'display.dubious_characters': _('Replace missing symbols') +
                               ': ℕ (N), ℤ (Z), ℚ (Q), ℝ (R), 𝒫 (P), ↦ (->)',
     'display.short_buttons_line': _('Split logic buttons into two lines'),
     'functionality.drag_statements_to_context': _("Drag statements to context"),
