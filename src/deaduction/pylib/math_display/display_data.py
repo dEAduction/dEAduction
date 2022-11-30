@@ -150,7 +150,7 @@ latex_from_node = {
 latex_from_quant_node = {
     "QUANT_∀": (r"\forall", 1, r" \in_quant ", 0, ", ", 2),
     "QUANT_∃": (r"\exists", 1, r" \in_quant ", 0, r'\such_that', 2),
-    "PROP_∃": ("*PROP_∃*",),
+    # "PROP_∃": ("*PROP_∃*",),
     "QUANT_∃!": (r"\exists_unique", 1, r" \in_quant ", 0, r'\such_that', 2)
 }
 

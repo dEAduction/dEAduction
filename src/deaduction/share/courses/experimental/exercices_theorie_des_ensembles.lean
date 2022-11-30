@@ -1037,6 +1037,8 @@ PrettyName
 -/
 begin
     todo
+    -- use complement A, 
+    -- norm_num,
 end
 
 lemma exercise.difference_symetrique_6

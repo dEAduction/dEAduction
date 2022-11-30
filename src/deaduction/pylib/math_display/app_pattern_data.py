@@ -80,7 +80,7 @@ latex_from_constant_name = {
     "est_borne": (-1, r'\text_is', " borné"),
     "limit": ("lim ", -2, " = ", -1),
     "limit_plus_infinity": ("lim ", -1, " = +∞"),
-    "limit_fun": ("lim", ['_', (-2,)], (-3,), " = ", (-1,)),
+    "limit_function": ("lim", ['_', (-2,)], (-3,), " = ", (-1,)),
     "continuous": (-1, r'\text_is', _("continuous")),
     "continuous_at": (-2, r'\text_is', _("continuous at") + " ", -1),
     "abs": ('|', -1, '|'),

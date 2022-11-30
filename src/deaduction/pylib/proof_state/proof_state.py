@@ -405,7 +405,7 @@ class Goal:
 ########################
     def _recursive_bound_vars_length(self, math_obj: MathObject,
                                      include_sequences=True, 
-                                     math_type: MathObject = None):
+                                     hint: NameHint = None):
         """
         Compute the maximal length of a chain of bound vars of the given
         types. On other words, this is the maximal nb of distinct bound vars
@@ -414,27 +414,33 @@ class Goal:
         this bound var occurs in the local context of all self's children.
         This algo follows MathObject.bound_vars().
         """
-        
+
+        math_type = hint.math_type
+        preferred_letter = hint.preferred_letter
         # (1) Self's has direct bound var?
         local_length = 0
         if math_obj.has_bound_var():
             if include_sequences or \
                     not (math_obj.is_sequence(is_math_type=True)
                          or math_obj.is_set_family(is_math_type=True)):
-                if (not math_type) or math_obj.bound_var_type == math_type:
+                if (not math_type) or \
+                        (math_obj.bound_var_type == math_type and
+                         math_obj.bound_var.preferred_letter
+                         == preferred_letter):
                     local_length = 1
 
         # (2) Children's vars:
         child_length = [self._recursive_bound_vars_length(child,
                                                           include_sequences,
-                                                          math_type)
+                                                          hint)
                         for child in math_obj.children]
         return local_length + max(child_length + [0])
 
-    def max_local_length(self, math_type):
+    def max_local_length(self, hint):
         """
-        Compute the nb of distinct vars of given math_type that may occur
-        simultaneously in a local context.
+        Compute the nb of distinct vars which fits the given hint that may occur
+        simultaneously in a local context. Fitting hint means having the same
+        math_type and same preferred_letter if any.
         """
         # context_length = len(self.free_variables(math_type))
 
@@ -443,10 +449,16 @@ class Goal:
         local_context_length = [self._recursive_bound_vars_length(
                                 math_obj=prop,
                                 include_sequences=True,
-                                math_type=math_type)
+                                hint=hint)
                                 for prop in props]
 
-        return max(local_context_length + [0])
+        length = max(local_context_length + [0])
+
+        if length > 0:
+            log.debug(f"Bound vars length of {hint.math_type, hint.letter}:"
+                      f" {length}")
+
+        return length
 
     def update_name_schemes(self, supp_math_type=None,
                             supp_nb=0):
@@ -463,7 +475,7 @@ class Goal:
         hint_letters = {hint.letter for hint in self.name_hints}
         for hint in self.name_hints:
             math_type = hint.math_type
-            length = self.max_local_length(math_type)
+            length = self.max_local_length(hint)
             if math_type == supp_math_type:
                 length += supp_nb
             if length == 0:
@@ -568,10 +580,10 @@ class Goal:
             self.__recursive_name_all_bound_vars(child, include_sequences)
 
     def debug(self):
-        # print(f'Context: {self.context}')
-        # print(f'Target: {self.target.math_type}')
-        # self.print_hints()
-        pass
+        print('Context props:')
+        print([obj.math_type for obj in self.context_props])
+        print(f'Target: {self.target.math_type}')
+        self.print_hints()
 
     def smart_name_bound_vars(self):
         """
@@ -587,8 +599,6 @@ class Goal:
         self.__update_all_name_hints()
         self.update_name_schemes()
 
-        self.debug()
-
         # (2) Name bound vars in target
         self.target.math_type.set_local_context()
         self.__recursive_name_all_bound_vars(self.target.math_type)
@@ -601,6 +611,9 @@ class Goal:
         # (4) Name bound vars in context objects (e.g. sequences):
         for math_object in self.context_objects:
             self.__name_context_object_bound_var(math_object)
+
+        # (5) Debug
+        self.debug()
 
 # ###############
 # ###############

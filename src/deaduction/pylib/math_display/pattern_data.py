@@ -116,7 +116,9 @@ quant_pattern = {
     "QUANT_∀(?0, ?1, PROP_IMPLIES(PROP_BELONGS(?1, ?2), ?3))":
         (r"\forall", (2, 0), ", ", (2, 1)),
     "QUANT_∀(?0, ?1, PROP_IMPLIES(*INEQUALITY(?1, ?2), ?3))":
-        (r"\forall", (2, 0), ", ", (2, 1))
+        (r"\forall", (2, 0), ", ", (2, 1)),
+    "QUANT_∃(?0, ?1, PROP_∃(*INEQUALITY(?1, ?2), ?3))":
+        (r"\exists", (2, 0), ", ", (2, 1))
 }
 
 

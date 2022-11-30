@@ -53,11 +53,11 @@ definition bounded_sequence (u : ℕ → ℝ) : Prop :=
 
 definition even (n:ℕ) : Prop := ∃ n', n=2 * n'
 
-definition limit_fun (f : ℝ → ℝ) (a : ℝ) (l : ℝ) : Prop :=
+definition limit_function (f : ℝ → ℝ) (a : ℝ) (l : ℝ) : Prop :=
 ∀ ε > 0, ∃ δ>0, ∀ x: ℝ, ( | x-a | < δ → | f x  - l | < ε )
 
 definition continuous_at (f : ℝ → ℝ) (a : ℝ) : Prop :=
-limit_fun f a (f a)
+limit_function f a (f a)
 
 definition continuous (f: ℝ → ℝ) : Prop :=
 ∀ a, continuous_at f a
@@ -277,21 +277,39 @@ end suites
 
 namespace fonctions
 
-lemma definition.limit_fun (f : ℝ → ℝ) (a : ℝ) (l : ℝ) : 
-limit_fun f a l ↔ 
+lemma definition.limit_function (f : ℝ → ℝ) (a : ℝ) (l : ℝ) : 
+limit_function f a l ↔ 
 ( ∀ ε > 0, ∃ δ>0, ∀ x: ℝ, ( | x-a | < δ → | f x  - l | < ε ) ):=
+/- dEAduction
+PrettyName
+  Limite d'une fonction
+ImplicitUse
+  True
+-/
 begin
   refl
 end
 
 lemma definition.continuous_at (f : ℝ → ℝ) (a : ℝ) :
-(continuous_at f a) ↔ (limit_fun f a (f a)) :=
+(continuous_at f a) ↔ (limit_function f a (f a)) :=
+/- dEAduction
+PrettyName
+  Continuité en un point
+ImplicitUse
+  True
+-/
 begin
   refl
 end
 
 lemma definition.continuous (f: ℝ → ℝ) :
 (continuous f) ↔ ∀ a, continuous_at f a :=
+/- dEAduction
+PrettyName
+  Continuité
+ImplicitUse
+  True
+-/
 begin
   refl
 end

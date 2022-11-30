@@ -43,7 +43,8 @@ lower_lists = ['abcde', 'fgh', 'ijkl', 'mn', 'nk', 'npq', 'pqr', 'rst', 'uvw',
                'xyzwt']
 greek_list = ['αβγ', 'ε', 'δ', 'η', 'φψ', 'λμν', 'πρ', 'θα', 'στ']
 greek_upper_list = ['ΓΛΔ', 'ΦΨ', 'Ξ', 'Σ', 'Ω']
-upper_lists = [s.upper() for s in lower_lists]
+upper_lists = ['ABCDE', 'FGH', 'IJ', 'KL', 'MK', 'N', 'PQR', 'RST',
+               'UVW', 'XYZWT']
 lower_upper = [a + a.upper() for a in alphabet]
 
 
@@ -65,6 +66,17 @@ class Case(IntEnum):
             s_mod = s.lower() if self in (1, 2) else s.upper()
 
         return s_mod
+
+
+def inj_list(list_: list):
+    """
+    Return a list with same elements of list_ but no repetition.
+    """
+    new_list = []
+    for item in list_:
+        if item not in new_list:
+            new_list.append(item)
+    return new_list
 
 
 def analyse_hint(hint: str) -> (str, int, Optional[int]):
@@ -121,6 +133,27 @@ def prime_name_list(start_name: str, start: int, index: Optional[int],
         return [start_name + "'"*i + suffix for i in range(start, end+1)]
 
 
+def sort_lists_by_length(lists: [str]) -> [str]:
+    """
+    Return the list of strings in lists sorted by length.
+    """
+    # Change 20 if necessary...
+    list_of_lists = [None]*26  # list_of_lists[l] = list of all str of length l
+    for list_ in lists:
+        index = len(list_)
+        if list_of_lists[index] is not None:
+            list_of_lists[index].append(list_)
+        else:
+            list_of_lists[index] = [list_]
+
+    new_list = []
+    for list_ in reversed(list_of_lists):
+        if list_:
+            new_list.extend(list_)
+
+    return new_list
+
+
 def pure_letter_lists(letter: str, prime=0, index: Optional[int] = None,
                       min_length=2, case=None) -> [[str]]:
     """
@@ -133,26 +166,35 @@ def pure_letter_lists(letter: str, prime=0, index: Optional[int] = None,
     (x', 2) --> (x', y', z', w', t'), (x', X') ...
     """
 
-    direct_trials = []
-    reverse_trials = []
+    direct_trials: [str] = []
+    reverse_trials: [str] = []
 
     lists = (lower_lists + greek_list if case == Case.LOWER_ONLY
              else upper_lists + greek_upper_list if case == Case.UPPER_ONLY
-             else upper_lists + greek_upper_list + lower_lists + greek_list
-             + lower_upper if case == Case.UPPER_MOSTLY
-             else lower_lists + upper_lists + greek_list + greek_upper_list
-             + lower_upper)
+             else upper_lists + greek_upper_list + lower_upper + lower_lists
+             + greek_list if case == Case.UPPER_MOSTLY
+             else lower_lists + greek_list + lower_upper + upper_lists
+             + greek_upper_list)
 
     for s in lists:
         if letter in s:
             ind = s.find(letter)
-            direct_trials.append(s[ind:])
-            reverse_trials.append(s[:ind+1][::-1])
+            direct = s[ind:]
+            reverse = s[:ind+1][::-1]
+            if direct not in direct_trials:
+                direct_trials.append(direct)
+            if reverse not in reverse_trials:
+                reverse_trials.append(reverse)
+
+    direct_trials = sort_lists_by_length(direct_trials)
+    reverse_trials = sort_lists_by_length(reverse_trials)
 
     index = '_' + str(index) if index is not None else ""
-    letter_lists = [[letter + ("'" * prime) + index for letter in li]
-                    for li in direct_trials + reverse_trials
-                    if len(li) >= min_length]
+    letter_lists = []
+    for string in direct_trials + reverse_trials:
+        if len(string) >= min_length:
+            list_ = [letter + ("'" * prime) + index for letter in string]
+            letter_lists.append(list_)
 
     return letter_lists
 
@@ -222,9 +264,13 @@ def potential_names(hint, length, friend_names: set, excluded_names: set,
     winner = None
     given_names = excluded_names.union(friend_names)
 
-    # (2) Keep only sufficiently long lists:
+    # (2) Keep only sufficiently long lists, and if length==1 then put list
+    # of length 1 at the end:
     long_lists = [names for names in lists
-                  if len(set(names).difference(given_names)) >= length]
+                  if len(set(names).difference(given_names)) >= max(length, 2)]
+    if length == 1:
+        long_lists += [names for names in lists
+                       if len(set(names).difference(given_names)) == 1]
 
     # (3) Extract lists minimizing # of elements in excluded_names
     score = 2000

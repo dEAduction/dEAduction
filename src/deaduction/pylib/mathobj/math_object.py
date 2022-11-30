@@ -1804,6 +1804,8 @@ class BoundVar(MathObject):
 
         if letter.isalpha():
             return letter
+        else:
+            return ''
 
     def is_unnamed(self):
         # FIXME: turn to:

@@ -83,10 +83,8 @@ def string_to_pattern():
             metavars = []
             pattern = PatternMathObject.from_tree(tree, metavars)
             list_.append((pattern, latex_shape, metavars))
-            print(key)
-            print(tree.display())
-            if pattern.node == 'QUANT_∀':
-                print("Pattern QUANT_∀")
+            # print(key)
+            # print(tree.display())
 
 
 ########################################

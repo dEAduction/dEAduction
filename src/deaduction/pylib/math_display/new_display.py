@@ -145,7 +145,7 @@ def latex_shape(self: MathObject, is_type=False, text=False) -> []:
             #     print("(debug))")
             if pattern.match(self):
                 # Now metavars are matched
-                log.debug(f"Matching pattern --> {pre_shape}")
+                # log.debug(f"Matching pattern --> {pre_shape}")
                 shape = tuple(substitute_metavars(item, metavars, self)
                               for item in pre_shape)
                 break

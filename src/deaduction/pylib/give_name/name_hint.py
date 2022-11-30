@@ -47,44 +47,50 @@ letter_hints_from_type_node = {
     'SEQUENCE': (('uvw', ), Case.LOWER_MOSTLY)
 }
 
+usable_letters = alphabet + greek_alphabet
+usable_letters += usable_letters.upper()
 
-def letter_hints_from_type(math_type) -> tuple:
+
+def letter_hints_from_type(math_type) -> []:
     """
     Return lists of preferred letters for naming a math object of given math
     type, and a (compatible) case preference.
     e.g. 'TYPE' --> (('XYZW', 'EFG'), Case.UPPER_ONLY)
     """
-    letters = tuple()
+    letters = []
     # TODO: add 'SET' if display.use_set_name_as_hint_for_naming_elements
 
-    # (1) Names of elements
-    # If self is a set, try to name its terms (elements) according to
-    # its name, e.g. X -> x.
     case = Case.LOWER_MOSTLY  # Default
-    if math_type.is_type():
-        case = Case.LOWER_ONLY
-        if math_type.display_name.isalpha() and math_type.display_name[0].isupper():
-            letters = (math_type.display_name[0].lower(), )
 
-    # (2) Names of sequences
+# (1) Names of numbers
+    if math_type.is_N() or math_type.is_Z():
+        letters = ['npqk']
+        case = Case.LOWER_MOSTLY
+    elif math_type.is_R():
+        letters = ['xyztw']
+        case = Case.LOWER_MOSTLY
+
+# (2) Names of elements
+# If self is a set, try to name its terms (elements) according to
+# its name, e.g. X -> x.
+    elif math_type.is_type():
+        case = Case.LOWER_ONLY
+        potential_letter = math_type.display_name[0]
+        if potential_letter.isupper() and potential_letter in usable_letters:
+            letters = [potential_letter.lower()]
+
+# (3) Names of sequences
     elif math_type.is_sequence():
         seq_type = math_type.children[1]
         if not seq_type.is_number():
-            letters = (letter_hints_from_type(seq_type), )
+            letters = [letter_hints_from_type(seq_type)]
 
-    # (3) Standard hints
+# (4) Standard hints
     more_letters, new_case = letter_hints_from_type_node.get(math_type.node,
                                                              (tuple(), None))
 
     if new_case:
         case = new_case
-
-    if math_type.is_N() or math_type.is_Z():
-        more_letters = ('npqk', )
-        case = Case.LOWER_MOSTLY
-    elif math_type.is_R():
-        more_letters = ('xyztw', 'δεη')
-        case = Case.LOWER_MOSTLY
 
     letters += more_letters
 
@@ -196,8 +202,6 @@ class NameHint:
             - letters provided by the new_letter_from_bad() function.
         """
 
-        usable_letters = alphabet + greek_alphabet
-        usable_letters += usable_letters.upper()
         if preferred_letter and preferred_letter not in usable_letters:
             preferred_letter = ''
 
@@ -209,7 +213,8 @@ class NameHint:
         # (1) Search for math_type among existing hints
         for hint in existing_hints:
             if hint.math_type == math_type:
-                if not preferred_letter or preferred_letter in hint.names:
+                if not preferred_letter or preferred_letter in hint.names\
+                        or preferred_letter == hint.letter:
                     return hint
 
         # (2) No existing hint: create one
@@ -223,9 +228,9 @@ class NameHint:
                         if friendly_name[0] in usable_letters])
 
         # (c) Ask letter_hints_from_type
-        more_letters_tuple, case = letter_hints_from_type(math_type)
+        more_letters, case = letter_hints_from_type(math_type)
         # Merge letters lists:
-        for more_letters in more_letters_tuple:
+        for more_letters in more_letters:
             letters.extend(more_letters)
 
         # (d) Exclude other hints
@@ -266,6 +271,7 @@ class NameHint:
         if not self.check_names(length, given_names):
             self.names = potential_names(self.letter, length, friend_names,
                                          excluded_names, case=self.case)
+            pass
 
     def provide_name(self, given_names) -> (str, bool):
         """
