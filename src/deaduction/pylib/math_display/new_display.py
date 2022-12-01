@@ -27,6 +27,10 @@ def process_shape_macro(self, shape_item: str) -> Union[str, MathObject]:
             - attribute an attribute of the corresponding MathObject, e.g.
             math_type, name, value, local_constant_shape
         then item is substituted with the corresponding object.
+
+    Note that the attribute part may be empty, e.g. 'self' just display self;
+    this is useful for math_type_to_display, 'self' with be displayed with
+    the to_display() method. (Beware of infinite recursion).
     """
 
     # index = shape_item.find('.')
@@ -36,8 +40,8 @@ def process_shape_macro(self, shape_item: str) -> Union[str, MathObject]:
     # root, attribute = shape_item[:index], shape_item[index+1:]
 
     attributes = shape_item.split('.')
-    if len(attributes) == 1:
-        return shape_item
+    # if len(attributes) == 1:
+    #     return shape_item
 
     root = attributes.pop(0)
 

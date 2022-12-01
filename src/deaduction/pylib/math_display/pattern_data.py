@@ -217,7 +217,7 @@ text_from_pattern_string = {
 # TODO: handle jokers, e.g. *INEQUALITY
 
 latex_from_pattern_string_for_type = {
-    # We need this here, otherwise match "?: TYPE":
+    # We need this here, otherwise it match "?: TYPE":
     "NO_MORE_GOAL": (_("All goals reached!"),),
     "PROP": (r'\proposition',),
     "SET(?0)": (r'\type_subset', (0,)),
@@ -233,6 +233,6 @@ latex_from_pattern_string_for_type = {
     "CONSTANT/name=RealSubGroup": (r'\type_R',),
     # This is maybe too strong: any guy with undefined math_type will match!! :
     "?:TYPE": (r'\type_element', name),  # NB: TYPE is treated above
-    "?:SET": (r'\type_element', name),
+    "?:SET(?0)": (r'\type_element', 'self'),
 }
 
