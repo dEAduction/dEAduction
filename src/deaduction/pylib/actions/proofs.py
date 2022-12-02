@@ -32,6 +32,8 @@ from typing import Union
 from deaduction.pylib.text        import tooltips
 # from deaduction.pylib.config.i18n import _
 import deaduction.pylib.config.vars as cvars
+
+from deaduction.pylib.actions.utils import pre_process_lean_code
 from deaduction.pylib.actions import (InputType,
                                       MissingParametersError,
                                       WrongUserInput,
@@ -110,7 +112,7 @@ def method_cbr(proof_step,
                  output=_("Enter the property you want to discriminate on:")
                                         )
         else:
-            h0 = user_input[1]
+            h0 = pre_process_lean_code(user_input[1])
             h1 = get_new_hyp(proof_step)
             h2 = get_new_hyp(proof_step)
             code = CodeForLean.from_string(f"cases (classical.em ({h0})) "
@@ -257,7 +259,7 @@ def action_new_object(proof_step) -> CodeForLean:
                                          output=_("Name your object:"))
         elif len(user_input) == 2:
             # Check name does not already exists
-            name = user_input[1]
+            name = pre_process_lean_code(user_input[1])
             names = [obj.display_name for obj in goal.context]
             if name in names:
                 user_input.pop()
@@ -271,9 +273,9 @@ def action_new_object(proof_step) -> CodeForLean:
                                              title=_("Introduce a new object"),
                                              output=output)
         else:  # Send code
-            name = user_input[1]
+            name = pre_process_lean_code(user_input[1])
             new_hypo_name = get_new_hyp(proof_step)
-            new_object = user_input[2]
+            new_object = pre_process_lean_code(user_input[2])
             codes = CodeForLean.from_string(f"let {name} := {new_object}")
             codes = codes.and_then(f"have {new_hypo_name} : {name} = "
                                                      f"{new_object}")
@@ -293,12 +295,13 @@ def action_new_object(proof_step) -> CodeForLean:
                                          title=_("Introduce a new subgoal"),
                                          output=output)
         else:
+            sub_goal = pre_process_lean_code(user_input[1])
             new_hypo_name = get_new_hyp(proof_step)
             codes = CodeForLean.from_string(f"have {new_hypo_name}:"
-                                                     f" ({user_input[1]})")
+                                            f" ({sub_goal})")
             codes.add_success_msg(_("New target will be added to the context "
                                     "after being proved"))
-            codes.add_subgoal(user_input[1])
+            codes.add_subgoal(sub_goal)
     # Choice = new function
     elif user_input[0] == 2:
         return introduce_fun(proof_step, selected_objects)

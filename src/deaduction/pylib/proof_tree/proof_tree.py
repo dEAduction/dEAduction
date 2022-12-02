@@ -309,10 +309,10 @@ class GoalNode:
         # Now self has a brother
         iff = parent_node.goal.target.math_type
         target = self.goal.target.math_type
-        if len(target.children) != 2:
-            return False
-        # Now target has two children
         brother_target = self.brother.goal.target.math_type
+        if len(target.children) != 2 or len(brother_target.children) !=2:
+            return False
+        # Now target and its brother both have two children
         tests = [iff.is_iff(is_math_type=True),
                  target.is_implication(is_math_type=True),
                  brother_target.is_implication(is_math_type=True),
@@ -773,12 +773,12 @@ class VirtualBrotherAuxGoalNode(GoalNode):
     and is accessed via self.outcome_operator.
     """
     def __init__(self, parent: ProofStep, type_: str):
-        super().__init__(parent, goal=None, is_solved=(type_ is "operator"))
+        super().__init__(parent, goal=None, is_solved=(type_ == "operator"))
         self.type_ = type_  # 'premise' or 'operator'
 
     @property
     def outcome_operator(self):
-        if self.type_ is 'operator' and self.parent:
+        if (self.type_ == 'operator') and self.parent:
             return self.parent.outcome_operator
 
     @property
@@ -791,7 +791,7 @@ class VirtualBrotherAuxGoalNode(GoalNode):
 
     @property
     def premises(self):
-        if self.type_ is not 'operator':
+        if self.type_ != 'operator':
             return
 
         selection = self.parent.selection
@@ -808,7 +808,7 @@ class VirtualBrotherAuxGoalNode(GoalNode):
         """
         Return 'Q'.
         """
-        if self.type_ is 'operator':
+        if self.type_ == 'operator':
             return [self.parent_node.goal.target]
 
 

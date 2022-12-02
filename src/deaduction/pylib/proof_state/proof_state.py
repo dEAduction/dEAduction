@@ -613,7 +613,7 @@ class Goal:
             self.__name_context_object_bound_var(math_object)
 
         # (5) Debug
-        self.debug()
+        # self.debug()
 
 # ###############
 # ###############

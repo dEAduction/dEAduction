@@ -50,6 +50,9 @@ from typing import Union, Optional
 
 from deaduction.pylib.math_display.display_data import new_objects
 
+from deaduction.pylib.actions.utils import (add_type_indication,
+                                            pre_process_lean_code)
+
 from deaduction.pylib.actions     import (action,
                                           InputType,
                                           MissingParametersError,
@@ -1067,7 +1070,7 @@ def action_forall(proof_step) -> CodeForLean:
                                              "Enter element on which you "
                                              "want to apply:"))
         else:
-            item = user_input[0]
+            item = pre_process_lean_code(user_input[0])
             item = add_type_indication(item)  # e.g. (0:ℝ)
             if item[0] != '(':
                 item = '(' + item + ')'
@@ -1106,7 +1109,7 @@ def construct_exists(proof_step, user_input: [str]) -> CodeForLean:
         raise MissingParametersError(InputType.Text,
                                      title=_("Exist"),
                                      output=output)
-    x = user_input[0]
+    x = pre_process_lean_code(str(user_input[0]))
     code = CodeForLean.from_string(f'use {x}')  # (f'use {x}, dsimp')
     # code = code.or_else(f'use {x}')
     code.add_success_msg(_("Now prove {} suits our needs").format(x))
@@ -1459,8 +1462,13 @@ def apply_map_to_element(proof_step,
     Return Lean code to apply map_ to element.
     Element may be a MathObject (selected by user)
     or a string (as a result of a WrongUserInput exception).
+
+    other_names is a list of names that are not available, the name of the
+    new element will be added.
     """
 
+    if other_names is None:
+        other_names = []
     f = map_.info["name"]
     # if isinstance(element, MathObject):
     #     x = element.info["name"]
@@ -1570,56 +1578,3 @@ def action_map(proof_step) -> CodeForLean:
     raise WrongUserInput(error=error)
 
 
-#########
-# utils #
-#########
-
-def which_number_set(string: str):
-    """
-    Return 'ℕ', 'ℤ', 'ℚ', 'ℝ' if string represents a number, else None
-    """
-    ind = -1
-    if '.' in string or '/' in string:
-        ind = 2  # at least Q
-    string = string.replace('.', '')
-    string = string.replace('/', '')
-    if not string.isdigit():
-        return None
-    else:
-        return MathObject.NUMBER_SETS_LIST[ind]
-
-
-def add_type_indication(item: Union[str, MathObject],
-                        math_type: MathObject=None) -> Union[str, MathObject]:
-    """
-    Add type indication for Lean. e.g.
-    '0' -> (0:ℝ)
-    'x' -> (x:ℝ)
-    :param item:        either a string (provided by user in TextDialog) or
-    MathObject
-    :param math_type:   math_type indication to add. If None, largest number
-    set used in current context will be indicated
-    :return: either     string or MathObject, with type indication in name
-    """
-    if math_type:
-        number_type = math_type.which_number_set(is_math_type=True)
-    if isinstance(item, str):
-        number_set = which_number_set(item)
-        if number_set and ':' not in item:
-            if not math_type:
-                MathObject.add_numbers_set(number_set)
-                # Add type indication = largest set of numbers among used
-                number_type = MathObject.number_sets[-1]
-            item = f"({item}:{number_type})"  # e.g. (0:ℝ)
-        return item
-    elif isinstance(item, MathObject):
-        if not math_type:
-            number_type = MathObject.number_sets[-1]
-        if hasattr(item, 'info'):
-            name = item.display_name
-            # Do not put 2 type indications!!
-            if (':' not in name
-                    and hasattr(item, 'info')):
-                item.info['name'] = f"({name}:{number_type})"
-        item.math_type = math_type
-        return item
