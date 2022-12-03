@@ -66,7 +66,8 @@ from deaduction.pylib.coursedata import        (Exercise,
 
 from deaduction.pylib.mathobj import           (MathObject,
                                                 DragNDrop,
-                                                ProofStep)
+                                                ProofStep,
+                                                ContextMathObject)
 from deaduction.pylib.proof_state import       (Goal,
                                                 ProofState)
 from deaduction.pylib.proof_tree import        (ProofTree,
@@ -837,20 +838,25 @@ class Coordinator(QObject):
         auto_for_all = cvars.get("functionality.automatic_intro_of" +
                                  "_variables_and_hypotheses")
         auto_exists = cvars.get("functionality.automatic_intro_of_exists")
-        if auto_for_all:
+        if auto_exists:
+            prop: ContextMathObject
+            for prop in goal.context_props:
+                if prop.is_exists() and prop.allow_auto_action:
+                    user_action = UserAction(selection=[prop],
+                                             button_name="exists")
+                    # Turn off auto_action for this prop:
+                    prop.turn_off_auto_action()
+                    return user_action
+
+        if auto_for_all and target.allow_auto_action:
             if target.is_for_all():
                 user_action = UserAction.simple_action("forall")
+                target.turn_off_auto_action()
                 return user_action
             elif target.is_implication():
                 user_action = UserAction.simple_action("implies")
+                target.turn_off_auto_action()
                 return user_action
-
-        if auto_exists:
-            for prop in goal.context_props:
-                if prop.is_exists():
-                    user_action = UserAction(selection=[prop],
-                                             button_name="exists")
-                    return user_action
 
     def process_automatic_actions(self, goal):
         """

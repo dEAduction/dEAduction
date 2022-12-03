@@ -48,10 +48,11 @@ class ContextMathObject(MathObject):
     Attributes allow to keep track of some additional information.
     """
     list_: [Any] = []  # List of all ContextMathObject in the current context
-    is_new_: bool  # True if self was not present in previous context FIXME
-    is_modified_: bool  # True if self is modified from previous context FIXME
-    is_hidden: bool  # True if self should not be dispplayed in ui
+    is_new_: bool  # True if self was not present in previous context
+    is_modified_: bool  # True if self is modified from previous context
+    is_hidden: bool  # True if self should not be displayed in ui
     has_been_used_in_the_proof: bool
+    allow_auto_action_: bool = True
 
     def __init__(self, node, info, children, math_type):
         super().__init__(node, info, children, math_type)
@@ -137,6 +138,24 @@ class ContextMathObject(MathObject):
 
         else:
             return False
+
+    @property
+    def allow_auto_action(self):
+        """
+        False iff allow_auto_action_ is False for self or one of its
+        ancestor, else True.
+        """
+        if self.allow_auto_action_ is False:
+            return False
+        else:
+            parent: ContextMathObject = self.parent_context_math_object
+            if parent:
+                return parent.allow_auto_action
+            else:
+                return True
+
+    def turn_off_auto_action(self):
+        self.allow_auto_action_ = False
 
     #####################
     # Help msgs methods #

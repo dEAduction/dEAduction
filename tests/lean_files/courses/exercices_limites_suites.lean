@@ -1,5 +1,6 @@
 import tactic
 import data.real.basic
+-- import data.set
 /-
 - nom des variables dans la def de limite !
 - variables muettes = variables globales : bof
@@ -18,6 +19,7 @@ import structures2      -- hypo_analysis, targets_analysis
 import utils            -- no_meta_vars
 import user_notations   -- notations that can be used in deaduction UI for a new object
 import compute
+import push_neg_once    -- pushing negation just one step
 
 -- dEAduction definitions
 -- import set_definitions
@@ -376,6 +378,7 @@ PrettyName
   Un exemple de suite non convergente
 -/
 begin
+  rw suites.definition.convergente, simp only [],
   todo
 end
 
@@ -511,9 +514,9 @@ PrettyName
 -/
 
 lemma exercise.limite_somme
-(u u': ℕ → ℝ) (l l' : ℝ) (H : limit u l)
-(H' : limit u' l') :
-limit (λn, u n + u' n) (l+l')
+(u v: ℕ → ℝ) (l l' : ℝ) (H : limit u l)
+(H' : limit v l') :
+limit (λn, u n + v n) (l+l')
 :=
 /- dEAduction
 PrettyName
@@ -555,9 +558,9 @@ end
 
 
 lemma exercise.limite_inegalites
-(u u': ℕ → ℝ) (l l' : ℝ) (H : limit u l)
-(H' : limit u' l')
-(H'' : ∀n, u n ≤ u' n ) :
+(u v: ℕ → ℝ) (l l' : ℝ) (H : limit u l)
+(H' : limit v l')
+(H'' : ∀n, u n ≤ v n ) :
 l ≤ l'
 :=
 /- dEAduction
@@ -565,13 +568,14 @@ PrettyName
   Passage à la limite dans une inégalité
 -/
 begin
+  todo
   -- contrapose H'' with H1,
   -- push_neg,
   -- push_neg at H1,
   -- let e := (l-l')/2, have H2 : e = (l-l')/2, refl, no_meta_vars,
   -- rw limit at H H',
   -- have H3: (e:ℝ) > 0, rotate, have H4 := H e H3, rotate 1, rotate, rotate,
-  -- solve1 {norm_num at *, apply mul_pos, linarith, apply inv_pos.mpr, linarith},
+  -- solve1 {norm_num at *, apply mul_pos, linarith only [H1], apply inv_pos.mpr, linarith},
   -- have H5 := H' e H3,
   -- cases H4 with n H6,
   -- cases H5 with n' H7,
@@ -583,14 +587,13 @@ begin
   -- cases H10 with H14 H15,
   -- rw generalites.valeur_absolue.theorem.majoration_valeur_absolue at H12,
   -- cases H12 with H17 H18,
-  -- linarith,
-  todo
+  -- linarith only [H18, H14, H2],
 end
 
 lemma exercise.gendarmes
-(u u' v  : ℕ → ℝ) (l : ℝ) 
-(H : limit u l) (H' : limit u' l)
-(H'' : ∀n, (((u n) ≤ v n) and ((v n) ≤ u' n))) :
+(u v w  : ℕ → ℝ) (l : ℝ) 
+(H : limit u l) (H' : limit w l)
+(H'' : ∀n, (((u n) ≤ v n) and ((v n) ≤ w n))) :
 limit v l
 :=
 /- dEAduction

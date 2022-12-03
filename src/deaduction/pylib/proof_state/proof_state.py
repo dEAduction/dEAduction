@@ -219,7 +219,7 @@ class Goal:
             context via the parent/child attribute.
         """
 
-        # FIXME: tags are now useless?
+        old_goal: Goal
         new_goal = self
         new_context = new_goal.context.copy()
         old_context = old_goal.context.copy()
@@ -268,8 +268,15 @@ class Goal:
         clean_permuted_new_context = [item for item in permuted_new_context
                                       if item is not None]
 
-        # Finally, modify order and set tags
+        # (6) Finally, modify order and set tags
         self.context = clean_permuted_new_context
+
+        # (7) Compare targets:
+        old_target = old_goal.target.math_type
+        new_target = new_goal.target.math_type
+        if new_target == old_target:
+            new_goal.target.parent_context_math_object = old_goal.target
+
 
 #############################
 # Bound vars naming methods #

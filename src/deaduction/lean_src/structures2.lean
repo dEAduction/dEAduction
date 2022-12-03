@@ -41,11 +41,12 @@ def closed_bra := "¿]"
 
 /- When e is a pi or lambda expr, instanciate e returns
 a local constant a that stands for the first bound variable,
-and the body of a with the free variable replaced by a -/
+and the body of a with the free variable replaced by a.
+The name of 'a' is enriched with suffix 'BoundVar'. -/
 meta def instanciate (e : expr) : tactic (expr × expr) :=
 match e with
 | (pi pp_name binder type body) := do
-    let pp_name := mk_str_name pp_name "BoundVar", -- trial
+    let pp_name := mk_str_name pp_name "BoundVar",
 --    pp_name ← get_unused_name pp_name,      -- does not do the job
     -- trace ("Instantiation name: " ++ to_string pp_name),
     a ← mk_local' pp_name binder type,
