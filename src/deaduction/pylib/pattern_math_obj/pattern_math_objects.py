@@ -232,7 +232,7 @@ class PatternMathObject(MathObject):
                 math_type = PatternMathObject.NO_MATH_TYPE
             else:
                 # log.debug("   ->Math type:")
-                math_type   = cls.__from_math_object(math_object.math_type)
+                math_type = cls.__from_math_object(math_object.math_type)
 
             pattern_math_object = cls(node=node,
                                       info=info,
