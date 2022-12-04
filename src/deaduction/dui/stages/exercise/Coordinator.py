@@ -825,19 +825,21 @@ class Coordinator(QObject):
     def automatic_actions(goal: Goal) -> UserAction:
         """
         Return a UserAction if some automatic_intro is on and there is a
-        pertinent automatic action to perform. Automatic actions include
-        - introduction of variables and hypotheses when target is a
-        universal statement or an implication,
-        - introduction of variable when some context property if an
+        pertinent automatic action to perform. Automatic actions include:
+        (1) Intro of a variable when some context property if an
         existential statement.
+        (2) Intro of premise when an implication appears in the context.
+        This happens only if premise is not obviously in the context.
+        The user is asked if OK.
+        (3) Intro of variables and hypotheses when target is a
+        universal statement or an implication.
         """
+
         target = goal.target
 
         user_action = None
-        # Check automatic intro of variables and hypotheses
-        auto_for_all = cvars.get("functionality.automatic_intro_of" +
-                                 "_variables_and_hypotheses")
-        auto_exists = cvars.get("functionality.automatic_intro_of_exists")
+        # (1) Check automatic intro of existence hypos
+        auto_exists = cvars.get("functionality.automatic_intro_of_exists", True)
         if auto_exists:
             prop: ContextMathObject
             for prop in goal.context_props:
@@ -848,6 +850,34 @@ class Coordinator(QObject):
                     prop.turn_off_auto_action()
                     return user_action
 
+        # (2) Check automatic intro of hypos' premises
+        ask_auto_premises = cvars.get(
+            "functionality.ask_to_prove_premises_of_implications", True)
+        for prop in goal.context_props:
+            premise = prop.premise()  # None if prop is not an implication
+            if premise and prop.allow_auto_action\
+                    and premise not in [p.math_type
+                                        for p in goal.context_props]:
+                if ask_auto_premises:
+                    msg_box = QMessageBox()
+                    msg_box.setText(_('Do you want to prove "{}" as a new '
+                                      'goal?')
+                                    .format(premise.to_display(format_='utf8')))
+                    msg_box.addButton(_('Yes'), QMessageBox.YesRole)
+                    no_button = msg_box.addButton(_('No'), QMessageBox.NoRole)
+                    msg_box.exec_()
+                    if msg_box.clickedButton() == no_button:
+                        continue
+                user_action = UserAction(selection=[prop],
+                                         user_input=[1],
+                                         button_name="new_object")
+                # Turn off auto_action for this prop:
+                prop.turn_off_auto_action()
+                return user_action
+
+        # (3) Check automatic intro of variables and hypotheses
+        auto_for_all = cvars.get("functionality.automatic_intro_of" +
+                                 "_variables_and_hypotheses", False)
         if auto_for_all and target.allow_auto_action:
             if target.is_for_all():
                 user_action = UserAction.simple_action("forall")

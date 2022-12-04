@@ -888,6 +888,19 @@ class MathObject:
             math_type = self.math_type
         return math_type.node == "PROP_IMPLIES"
 
+    def premise(self, is_math_type=False) -> bool:
+        """
+        If self is an implication, return its premise.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+
+        premise = math_type.children[0] if self.is_implication(is_math_type) \
+            else None
+        return premise
+
     @allow_implicit_use
     def is_exists(self, is_math_type=False) -> bool:
         """

@@ -590,6 +590,7 @@ def action_implies(proof_step) -> CodeForLean:
             if target_selected:
                 return apply_implies(proof_step, selected_objects)
             else:
+                # TODO: premise as a new sub_goal
                 raise WrongUserInput(
                     error=_("You need to select another property in order to "
                             "apply this implication"))
@@ -1456,7 +1457,7 @@ def action_equal(proof_step) -> CodeForLean:
 
 def apply_map_to_element(proof_step,
                          map_: MathObject,
-                         x: str,
+                         var_name: str,
                          other_names=None):
     """
     Return Lean code to apply map_ to element.
@@ -1469,12 +1470,11 @@ def apply_map_to_element(proof_step,
 
     if other_names is None:
         other_names = []
-    f = map_.info["name"]
+    map_name = map_.info["name"]
     # if isinstance(element, MathObject):
     #     x = element.info["name"]
     # elif isinstance(element, str):
     image_set = map_.math_type.children[1]
-    # TODO: choose a better name by a careful examination of context
     name = proof_step.goal.provide_good_name(image_set,
                                              local_names=other_names)
     other_names.extend(name)
@@ -1484,10 +1484,14 @@ def apply_map_to_element(proof_step,
 
     new_h = get_new_hyp(proof_step)
     msg = _("New objet {} added to the context").format(name)
-    code = CodeForLean.from_string(f"set {name} := {f} {x} with {new_h}",
-                                   success_msg=msg)
-    code.operator = map_
-    return code
+    # code = CodeForLean.from_string(f"set {name} := {f} {x} with {new_h}",
+    #                                success_msg=msg)
+    codes = CodeForLean.from_string(f"let {name} := {map_name} {var_name}")
+    codes = codes.and_then(f"have {new_h} : {name} = {map_name} {var_name}")
+    codes = codes.and_then("refl")
+    codes.operator = map_
+    codes.success_msg = msg
+    return codes
 
 
 def apply_function(proof_step, map_, arguments: [MathObject]):

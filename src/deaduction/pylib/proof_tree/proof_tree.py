@@ -985,7 +985,8 @@ class ProofTree:
         """
         if self.current_goal_node.is_auxiliary_goal:
             brother = self.current_goal_node.brother
-            target = self.current_goal_node.goal.target.math_type
+            # target = self.current_goal_node.goal.target.math_type
+            target = self.current_goal_node.goal.target
             brother.set_temporary_new_context([target])
         elif self.current_goal_node.is_suffices_to:
             proof_step = self.current_goal_node.parent
@@ -1079,10 +1080,11 @@ class ProofTree:
                                            goal=other_goal)
                 children_gn = [next_goal_node, other_goal_node]
 
-            self.add_outcomes()
+            # self.add_outcomes()
 
         new_proof_step.children_goal_nodes = children_gn
         self.last_proof_step = new_proof_step
+        self.add_outcomes()
 
         # ─────── Compare with previous state and tag properties ─────── #
         previous_goal = self.current_goal_node.parent_node.goal

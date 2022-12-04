@@ -251,7 +251,7 @@ def action_new_object(proof_step) -> CodeForLean:
                                                 "function"))],
                              title=_("New object"),
                              output=_("Choose what to introduce:"))
-    # Choice = new object
+    # (1) Choice = new object
     if user_input[0] == 0:
         if len(user_input) == 1:  # Ask for name
             raise MissingParametersError(InputType.Text,
@@ -287,22 +287,35 @@ def action_new_object(proof_step) -> CodeForLean:
                 # and mistake "new object" for introduction of the relevant x.
                 codes.add_error_msg(_("You might try the ∀ button..."))
 
-    # Choice = new sub-goal
+    # (2) Choice = new sub-goal
     elif user_input[0] == 1:
-        if len(user_input) == 1:
+        sub_goal = None
+        # (A) Sub-goal from selection
+        if selected_objects:
+            premise = selected_objects[0].premise()
+            if premise:
+                # FIXME: make format_='lean' functional
+                sub_goal = premise.to_display(format_='lean')
+
+        # (B) User enter sub-goal
+        elif len(user_input) == 1:
             output = new_properties
             raise MissingParametersError(InputType.Text,
                                          title=_("Introduce a new subgoal"),
                                          output=output)
-        else:
+        elif len(user_input) == 2:
             sub_goal = pre_process_lean_code(user_input[1])
+
+        # (C) Code:
+        if sub_goal:
             new_hypo_name = get_new_hyp(proof_step)
             codes = CodeForLean.from_string(f"have {new_hypo_name}:"
                                             f" ({sub_goal})")
             codes.add_success_msg(_("New target will be added to the context "
                                     "after being proved"))
             codes.add_subgoal(sub_goal)
-    # Choice = new function
+
+    # (3) Choice = new function
     elif user_input[0] == 2:
         return introduce_fun(proof_step, selected_objects)
     return codes
