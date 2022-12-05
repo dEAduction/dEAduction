@@ -57,7 +57,7 @@ from .logic import (action_not,
                     have_new_property,
                     apply_substitute)
 
-from .proofs import action_proof_methods
+from .proofs import action_proof_methods, introduce_new_subgoal
 from .magic import action_assumption, context_obj_solving_target
 from .special_actions import drag_n_drop
 

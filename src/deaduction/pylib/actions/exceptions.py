@@ -44,6 +44,7 @@ class InputType(IntEnum):
     """
     Text = 0
     Choice = 1
+    YesNo = 2
 
 
 class MissingParametersError(Exception):

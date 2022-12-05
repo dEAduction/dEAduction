@@ -34,6 +34,7 @@ from deaduction.pylib.text        import tooltips
 import deaduction.pylib.config.vars as cvars
 
 from deaduction.pylib.actions.utils import pre_process_lean_code
+from deaduction.pylib.actions.commun_actions import introduce_new_subgoal
 from deaduction.pylib.actions import (InputType,
                                       MissingParametersError,
                                       WrongUserInput,
@@ -186,14 +187,46 @@ def method_sorry(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     return CodeForLean.from_string('sorry')
 
 
+# def introduce_new_subgoal(proof_step) -> CodeForLean:
+#     selected_objects = proof_step.selection
+#     user_input = proof_step.user_input
+#     sub_goal = None
+#     codes = CodeForLean()
+#
+#     # (A) Sub-goal from selection
+#     if selected_objects:
+#         premise = selected_objects[0].premise()
+#         if premise:
+#             # FIXME: make format_='lean' functional
+#             sub_goal = premise.to_display(format_='lean')
+#
+#     # (B) User enter sub-goal
+#     elif len(user_input) == 1:
+#         output = new_properties
+#         raise MissingParametersError(InputType.Text,
+#                                      title=_("Introduce a new subgoal"),
+#                                      output=output)
+#     elif len(user_input) == 2:
+#         sub_goal = pre_process_lean_code(user_input[1])
+#
+#     # (C) Code:
+#     if sub_goal:
+#         new_hypo_name = get_new_hyp(proof_step)
+#         codes = CodeForLean.from_string(f"have {new_hypo_name}:"
+#                                         f" ({sub_goal})")
+#         codes.add_success_msg(_("New target will be added to the context "
+#                                 "after being proved"))
+#         codes.add_subgoal(sub_goal)
+#
+#     return codes
+
+
 def introduce_fun(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     """
     If a hypothesis of form ∀ a ∈ A, ∃ b ∈ B, P(a,b) has been previously
     selected: use the axiom of choice to introduce a new function f : A → B
     and add ∀ a ∈ A, P(a, f(a)) to the properties.
     """
-
-    goal = proof_step.goal
 
     error = _('Select a property "∀ x, ∃ y, P(x,y)" to get a function')
     success = _("Function {} and property {} added to the context")
@@ -240,7 +273,7 @@ def action_new_object(proof_step) -> CodeForLean:
 
     goal = proof_step.goal
 
-    codes = []
+    codes = CodeForLean()
     # Choose between object/sub-goal/function
     if not user_input:
         raise MissingParametersError(InputType.Choice,
@@ -289,35 +322,37 @@ def action_new_object(proof_step) -> CodeForLean:
 
     # (2) Choice = new sub-goal
     elif user_input[0] == 1:
-        sub_goal = None
-        # (A) Sub-goal from selection
-        if selected_objects:
-            premise = selected_objects[0].premise()
-            if premise:
-                # FIXME: make format_='lean' functional
-                sub_goal = premise.to_display(format_='lean')
-
-        # (B) User enter sub-goal
-        elif len(user_input) == 1:
-            output = new_properties
-            raise MissingParametersError(InputType.Text,
-                                         title=_("Introduce a new subgoal"),
-                                         output=output)
-        elif len(user_input) == 2:
-            sub_goal = pre_process_lean_code(user_input[1])
-
-        # (C) Code:
-        if sub_goal:
-            new_hypo_name = get_new_hyp(proof_step)
-            codes = CodeForLean.from_string(f"have {new_hypo_name}:"
-                                            f" ({sub_goal})")
-            codes.add_success_msg(_("New target will be added to the context "
-                                    "after being proved"))
-            codes.add_subgoal(sub_goal)
-
+        codes = introduce_new_subgoal(proof_step)
+        # sub_goal = None
+        # # (A) Sub-goal from selection
+        # if selected_objects:
+        #     premise = selected_objects[0].premise()
+        #     if premise:
+        #         # FIXME: make format_='lean' functional
+        #         sub_goal = premise.to_display(format_='lean')
+        #
+        # # (B) User enter sub-goal
+        # elif len(user_input) == 1:
+        #     output = new_properties
+        #     raise MissingParametersError(InputType.Text,
+        #                                  title=_("Introduce a new subgoal"),
+        #                                  output=output)
+        # elif len(user_input) == 2:
+        #     sub_goal = pre_process_lean_code(user_input[1])
+        #
+        # # (C) Code:
+        # if sub_goal:
+        #     new_hypo_name = get_new_hyp(proof_step)
+        #     codes = CodeForLean.from_string(f"have {new_hypo_name}:"
+        #                                     f" ({sub_goal})")
+        #     codes.add_success_msg(_("New target will be added to the context "
+        #                             "after being proved"))
+        #     codes.add_subgoal(sub_goal)
+        #
     # (3) Choice = new function
     elif user_input[0] == 2:
         return introduce_fun(proof_step, selected_objects)
+
     return codes
 
 

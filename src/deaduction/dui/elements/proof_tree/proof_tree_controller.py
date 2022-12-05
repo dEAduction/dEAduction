@@ -79,11 +79,13 @@ def widget_goal_block(parent_widget: Optional[WidgetGoalBlock],
 
     if pure_context:
         premises, operator, conclusions = pure_context
+        # assert conclusions
         wgb = PureContextWGB(parent_widget, goal_node,
                              premises, operator, conclusions)
         log.debug("Pure context WGB created")
     elif context_rw:
         premises, rw_item, conclusions = context_rw
+        # assert conclusions
         wgb = SubstitutionWGB(parent_widget, goal_node,
                               premises, rw_item, conclusions)
         log.debug("Substitution Context WGB created")
@@ -121,6 +123,7 @@ def widget_goal_block(parent_widget: Optional[WidgetGoalBlock],
 
     elif goal_node.is_auxiliary_goal_brother:
         premises, operator, conclusions = None, None, new_context
+        # assert conclusions
         wgb = PureContextWGB(parent_widget, goal_node,
                              premises, operator, conclusions)
         log.debug("Pure context WGB created for auxiliary goal brother")
@@ -130,6 +133,7 @@ def widget_goal_block(parent_widget: Optional[WidgetGoalBlock],
         operator = None
         conclusions = (goal_node.goal.modified_context
                        + goal_node.goal.new_context)
+        # assert conclusions
         wgb = PureContextWGB(parent_widget, goal_node,
                              premises, operator, conclusions)
 

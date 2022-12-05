@@ -53,13 +53,13 @@ from deaduction.pylib.math_display.display_data import new_objects
 from deaduction.pylib.actions.utils import (add_type_indication,
                                             pre_process_lean_code)
 
+from deaduction.pylib.actions.commun_actions import introduce_new_subgoal
 from deaduction.pylib.actions     import (action,
                                           InputType,
                                           MissingParametersError,
                                           WrongUserInput,
                                           test_selection,
-                                          CodeForLean,
-                                          )
+                                          CodeForLean)
 
 from deaduction.pylib.mathobj     import  MathObject
 
@@ -564,14 +564,15 @@ def action_implies(proof_step) -> CodeForLean:
         If the target is of the form P ⇒ Q: introduce the hypothesis P in
         the properties and transform the target into Q.
     (2) A single selected property, of the form P ⇒ Q, and the target is
-    selected: igf the target was Q, it is replaced by P.
+    selected: if the target was Q, it is replaced by P. If the target is not
+    selected, then usr is asked to prove the premise (new sub-goal).
     (3) Exactly two selected property, on of which is an implication P ⇒ Q
     and the other is P: Add Q to the context
     """
 
     selected_objects = proof_step.selection
     target_selected = proof_step.target_selected
-    # user_input = proof_step.user_input
+    user_input = proof_step.user_input
 
     test_selection(selected_objects, target_selected)
     goal = proof_step.goal
@@ -583,17 +584,33 @@ def action_implies(proof_step) -> CodeForLean:
         else:
             return construct_implies(proof_step)
     if len(selected_objects) == 1:
+        # (1) Implication?
         if not selected_objects[0].can_be_used_for_implication(implicit=True):
             raise WrongUserInput(
                 error=_("Selected property is not an implication 'P ⇒ Q'"))
-        else:
-            if target_selected:
-                return apply_implies(proof_step, selected_objects)
-            else:
-                # TODO: premise as a new sub_goal
-                raise WrongUserInput(
-                    error=_("You need to select another property in order to "
-                            "apply this implication"))
+        # (2) 'It suffices to prove'?
+        elif target_selected:
+            return apply_implies(proof_step, selected_objects)
+        # (3) Premise in context (but not selected)?
+        elif selected_objects[0].premise() in ([p.math_type
+                                               for p in goal.context_props]
+                                               + [goal.target.math_type]):
+            raise WrongUserInput(error=_("You need to select another property"
+                                         "in order to apply this implication"))
+        # (4) Ask to add premise as a new sub_goal
+        elif not user_input:
+            premise = selected_objects[0].premise()
+            msg = _('To apply this property, you need the premise "{}".'
+                    'Do you want to introduce it as a new sub-goal?')\
+                .format(premise.to_display(format_='utf8'))
+            raise MissingParametersError(
+                InputType.YesNo,
+                choices=[],
+                title=_("Introduce new sub-goal?"),
+                output=msg)
+        # (5) Add premise as a new sub-goal
+        elif user_input[0] == 0:  # Should always be the case here
+            return introduce_new_subgoal(proof_step)
 
     elif len(selected_objects) == 2:
         if not selected_objects[1].can_be_used_for_implication(implicit=True):

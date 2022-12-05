@@ -1128,7 +1128,7 @@ class OperatorContextWidget(ContextWidget):
         self.input_layout = None
         self.operator_layout = None
 
-        assert conclusions
+        # assert conclusions
         self.output_layout = LayoutMathObjects(conclusions, align="left")
 
         # Input -> Operator -> output:

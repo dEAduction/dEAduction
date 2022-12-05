@@ -728,7 +728,7 @@ class Coordinator(QObject):
                     choice, ok = QInputDialog.getText(action_btn,
                                                       e.title,
                                                       e.output)
-                elif e.input_type == InputType.Choice:
+                elif e.input_type in (InputType.Choice, InputType.YesNo):
                     choice, ok = ButtonsDialog.get_item(e.choices,
                                                         e.title,
                                                         e.output)
@@ -855,13 +855,15 @@ class Coordinator(QObject):
             "functionality.ask_to_prove_premises_of_implications", True)
         for prop in goal.context_props:
             premise = prop.premise()  # None if prop is not an implication
-            if premise and prop.allow_auto_action\
-                    and premise not in [p.math_type
-                                        for p in goal.context_props]:
+            if premise and prop.allow_auto_action \
+                    and premise not in ([p.math_type
+                                        for p in goal.context_props]
+                                        + [target.math_type]):
                 if ask_auto_premises:
+                    prop.turn_off_auto_action()  # No more asking for this one
                     msg_box = QMessageBox()
-                    msg_box.setText(_('Do you want to prove "{}" as a new '
-                                      'goal?')
+                    msg_box.setText(_('Do you want to prove the premise "{}" '
+                                      'as a new sub-goal?')
                                     .format(premise.to_display(format_='utf8')))
                     msg_box.addButton(_('Yes'), QMessageBox.YesRole)
                     no_button = msg_box.addButton(_('No'), QMessageBox.NoRole)
@@ -872,7 +874,6 @@ class Coordinator(QObject):
                                          user_input=[1],
                                          button_name="new_object")
                 # Turn off auto_action for this prop:
-                prop.turn_off_auto_action()
                 return user_action
 
         # (3) Check automatic intro of variables and hypotheses
