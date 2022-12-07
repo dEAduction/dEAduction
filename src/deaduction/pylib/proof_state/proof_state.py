@@ -32,7 +32,7 @@ This file is part of dEAduction.
 
 from dataclasses import dataclass
 import logging
-from typing import List, Tuple
+from typing import List, Tuple, Union
 from copy import copy
 
 import deaduction.pylib.logger as logger
@@ -179,17 +179,28 @@ class Goal:
             if math_objects:
                 return math_objects[0]
 
-    def mark_used_properties(self, used_properties: [ContextMathObject]):
+    def mark_used_properties(self,
+                             used_properties: Union[ContextMathObject, str]):
         """
         Mark all properties of self that appear in used_properties as used.
         """
+
+        context_used_prop = [prop for prop in used_properties
+                             if isinstance(prop, ContextMathObject)]
+        str_used_prop = [prop for prop in used_properties
+                         if isinstance(prop, str)]
         for prop in self.context_props:
-            if prop in used_properties: # or prop.display_name in used_properties:
+            if prop in context_used_prop:
                 prop.has_been_used_in_proof = True
-                used_properties.remove(prop)
-        if used_properties:
-            log.warning(f"Used properties not found in goal: "
-                        f"{used_properties}")
+                context_used_prop.remove(prop)
+            elif prop.name in str_used_prop:
+                prop.has_been_used_in_proof = True
+                str_used_prop.remove(prop.name)
+
+        unused_prop = context_used_prop + str_used_prop
+        if unused_prop:
+            log.debug(f"Used properties not found in goal: "
+                        f"{unused_prop}")
 
 ##################
 # Compare method #

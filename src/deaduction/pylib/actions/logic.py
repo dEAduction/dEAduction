@@ -945,8 +945,10 @@ def inequality_from_pattern_matching(math_object: MathObject,
     if not math_object.is_for_all(is_math_type=False):
         # Implicit "for all"
         math_object = MathObject.last_rw_object
+    else:
+        math_object = math_object.math_type
 
-    math_type, var, body = math_object.math_type.children
+    math_type, var, body = math_object.children
     # NB: following line does not work because of coercions
     # if var.math_type == variable.math_type:
     if body.is_implication(is_math_type=True):
@@ -1013,6 +1015,7 @@ def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
                 code = code.and_then(f"have {inequality_name}: "
                                      f"{display_inequality}")
                 code = code.and_then("rotate")  # Back to main goal
+                used_inequalities.append(inequality_name)
 
     # Code II: Apply universal_property #
     new_hypo_name = get_new_hyp(proof_step)
