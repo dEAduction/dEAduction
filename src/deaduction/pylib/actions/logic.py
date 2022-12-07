@@ -939,19 +939,25 @@ def inequality_from_pattern_matching(math_object: MathObject,
     applied to variable. If so, return inequality with x replaced by variable
     """
     inequality = None
-    if math_object.is_for_all():
-        math_type, var, body = math_object.math_type.children
-        # NB: following line does not work because of coercions
-        # if var.math_type == variable.math_type:
-        if body.is_implication(is_math_type=True):
-            premise = body.children[0]  # children (2,0)
-            if (premise.is_inequality(is_math_type=True) and
-                    var == premise.children[0]):
-                children = [variable, premise.children[1]]
-                inequality = MathObject(node=premise.node,
-                                        info={},
-                                        children=children,
-                                        math_type=premise.math_type)
+    if not math_object.is_for_all(implicit=True):
+        return
+
+    if not math_object.is_for_all(is_math_type=False):
+        # Implicit "for all"
+        math_object = MathObject.last_rw_object
+
+    math_type, var, body = math_object.math_type.children
+    # NB: following line does not work because of coercions
+    # if var.math_type == variable.math_type:
+    if body.is_implication(is_math_type=True):
+        premise = body.children[0]  # children (2,0)
+        if (premise.is_inequality(is_math_type=True) and
+                var == premise.children[0]):
+            children = [variable, premise.children[1]]
+            inequality = MathObject(node=premise.node,
+                                    info={},
+                                    children=children,
+                                    math_type=premise.math_type)
     return inequality
 
 
