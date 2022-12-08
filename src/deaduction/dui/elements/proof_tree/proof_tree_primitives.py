@@ -1021,7 +1021,8 @@ class ContextWidget(QWidget):
         # match = None
         for mo1 in self.premises:
             for mo2 in other.conclusions:
-                if mo1 == mo2 or mo1.is_descendant_of(mo2):
+                if mo1 == mo2 or (isinstance(mo1, ContextMathObject)
+                                  and mo1.is_descendant_of(mo2)):
                     # match = (mo1, mo2)
                     i1 = self.premises.index(mo1)
                     i2 = other.conclusions.index(mo2)
@@ -1035,7 +1036,7 @@ class ContextWidget(QWidget):
         """
         if not self.operator_wdg:
             return
-        match = None
+        # match = None
         operator = self.operator_wdg.math_object
         if not isinstance(operator, ContextMathObject):
             return
@@ -1053,7 +1054,7 @@ class ContextWidget(QWidget):
         """
         if not self.operator_wdg:
             return
-        match = None
+        # match = None
         operator = self.operator_wdg.math_object
         if not isinstance(operator, ContextMathObject):
             return
