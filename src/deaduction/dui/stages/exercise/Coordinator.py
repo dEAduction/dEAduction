@@ -853,13 +853,26 @@ class Coordinator(QObject):
         # (2) Check automatic intro of hypos' premises
         ask_auto_premises = cvars.get(
             "functionality.ask_to_prove_premises_of_implications", True)
+        context_types = [p.math_type for p in goal.context_props]
         for prop in goal.context_props:
             premise = prop.premise()  # None if prop is not an implication
-            if premise and prop.allow_auto_action \
-                    and premise not in ([p.math_type
-                                        for p in goal.context_props]
-                                        + [target.math_type]):
-                if ask_auto_premises:
+            if premise and prop.allow_auto_action:
+                # (1) If premise is in context, do nothing unless
+                # it is an inequality,
+                # in which case add auto action without asking usr
+                if premise == target.math_type:
+                    continue
+                elif premise in context_types:
+                    if not premise.is_inequality(is_math_type=True):
+                        continue
+                    # Premise is an inequality in the context: do apply!
+                    prop.turn_off_auto_action()
+                    index = context_types.index(premise)
+                    context_premise = goal.context_props[index]
+                    user_action = UserAction(selection=[context_premise, prop],
+                                             button_name="implies")
+                    return user_action
+                elif ask_auto_premises:
                     prop.turn_off_auto_action()  # No more asking for this one
                     msg_box = QMessageBox()
                     msg_box.setText(_('Do you want to prove the premise "{}" '
@@ -868,13 +881,11 @@ class Coordinator(QObject):
                     msg_box.addButton(_('Yes'), QMessageBox.YesRole)
                     no_button = msg_box.addButton(_('No'), QMessageBox.NoRole)
                     msg_box.exec_()
-                    if msg_box.clickedButton() == no_button:
-                        continue
-                user_action = UserAction(selection=[prop],
-                                         user_input=[1],
-                                         button_name="new_object")
-                # Turn off auto_action for this prop:
-                return user_action
+                    if msg_box.clickedButton() != no_button:
+                        user_action = UserAction(selection=[prop],
+                                                 user_input=[0],
+                                                 button_name="implies")
+                    return user_action
 
         # (3) Check automatic intro of variables and hypotheses
         auto_for_all = cvars.get("functionality.automatic_intro_of" +

@@ -29,6 +29,7 @@ This file is part of dEAduction.
 """
 
 from typing import Union
+from copy import copy
 
 from deaduction.pylib.mathobj import MathObject
 
@@ -72,16 +73,20 @@ def add_type_indication(item: Union[str, MathObject],
             item = f"({item}:{number_type})"  # e.g. (0:ℝ)
         return item
     elif isinstance(item, MathObject):
+        info = copy(item.info)
         if not math_type:
             number_type = MathObject.number_sets[-1]
-        if hasattr(item, 'info'):
-            name = item.display_name
-            # Do not put 2 type indications!!
-            if (':' not in name
-                    and hasattr(item, 'info')):
-                item.info['name'] = f"({name}:{number_type})"
-        item.math_type = math_type
-        return item
+            math_type = number_type
+        name = item.display_name
+        # Do not put 2 type indications!!
+        if (':' not in name
+                and hasattr(item, 'info')):
+            info['name'] = f"({name}:{number_type})"
+        new_item = MathObject(node=item.node,
+                              info=info,
+                              children=item.children,
+                              math_type=math_type)
+        return new_item
 
 
 lean_dic = {'epsilon': "ε",

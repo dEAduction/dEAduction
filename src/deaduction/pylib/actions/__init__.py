@@ -53,7 +53,6 @@ from .logic import (action_not,
                     apply_or,
                     apply_implies,
                     apply_implies_to_hyp,
-                    apply_forall,
                     have_new_property,
                     apply_substitute)
 

@@ -1001,11 +1001,12 @@ class ContextWidget(QWidget):
         other.math_objects. If so, return a couple (i,j)
         where self.premises[i] is a descendant of other.math_objects[j].
         """
-        match = None
+        # match = None
         for mo1 in self.premises:
             for mo2 in other.math_objects:
-                if mo1 == mo2 or mo1.is_descendant_of(mo2):
-                    match = (mo1, mo2)
+                if mo1 == mo2 or (isinstance(mo1, ContextMathObject)
+                                  and mo1.is_descendant_of(mo2)):
+                    # match = (mo1, mo2)
                     i1 = self.premises.index(mo1)
                     i2 = other.math_objects.index(mo2)
                     return i1, i2
@@ -1017,11 +1018,11 @@ class ContextWidget(QWidget):
         where self.premises[i] is a descendant of other.conclusions[j].
         """
 
-        match = None
+        # match = None
         for mo1 in self.premises:
             for mo2 in other.conclusions:
                 if mo1 == mo2 or mo1.is_descendant_of(mo2):
-                    match = (mo1, mo2)
+                    # match = (mo1, mo2)
                     i1 = self.premises.index(mo1)
                     i2 = other.conclusions.index(mo2)
                     return i1, i2

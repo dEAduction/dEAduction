@@ -48,6 +48,7 @@ This file is part of dEAduction.
 import logging
 from typing import Union, Optional
 
+import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.math_display.display_data import new_objects
 
 from deaduction.pylib.actions.utils import (add_type_indication,
@@ -487,7 +488,8 @@ def apply_implies(proof_step, selected_object: [MathObject]) -> CodeForLean:
 
 def have_new_property(arrow: MathObject,
                       variable_names: [str],
-                      new_hypo_name: str) -> CodeForLean:
+                      new_hypo_name: str,
+                      success_msg=None) -> CodeForLean:
     """
     Compute Lean code to apply an implication or a universal property to a
     property or a variable.
@@ -497,6 +499,9 @@ def have_new_property(arrow: MathObject,
     :param variable_names:  a list of names of variables (or properties) to
                             which "arrow" will be applied
     :param new_hypo_name:   a fresh name for the new property
+
+    :param success_msg:     A success msg, if None then the standard one will be
+                            used.
 
     return:                 Lean Code to produce the wanted new property,
                             taking into account implicit parameters
@@ -528,8 +533,10 @@ def have_new_property(arrow: MathObject,
     possible_codes = implicit_codes + explicit_codes
 
     code = CodeForLean.or_else_from_list(possible_codes)
-    code.add_success_msg(_("Property {} added to the context").
-                         format(new_hypo_name))
+    if success_msg is None:
+        success_msg = _("Property {} added to the context").format(new_hypo_name)
+    if success_msg:
+        code.add_success_msg(success_msg)
 
     code.operator = arrow
     # code.add_used_properties(arrow)
@@ -963,100 +970,286 @@ def inequality_from_pattern_matching(math_object: MathObject,
     return inequality
 
 
-def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
+# def simple_apply_forall(proof_step, selected_objects: [MathObject]) \
+#                         -> CodeForLean:
+#     """
+#     Try to apply last selected property on the other ones.
+#     The last property should be a universal property
+#     (or equivalent to such after unfolding definitions)
+#
+#     selected_objects: list of MathObjects of length ≥ 2.
+#     """
+#     # FIXME: return error msg if user try to apply "forall x:X, P(x)"
+#     #  to some object of wrong type (e.g. implication)
+#     #  For the moment "forall x, P->Q" works with "P->Q" and button forall
+#
+#     universal_property = selected_objects[-1]  # The property to be applied
+#     new_hypo_name = get_new_hyp(proof_step)
+#     var_names = [var.info['name'] for var in selected_objects[:-1]]
+#     code = have_new_property(universal_property, var_names, new_hypo_name)
+#     code.add_success_msg(_("Property {} added to the context").
+#                          format(new_hypo_name))
+#     code.add_used_properties(selected_objects)
+#
+#     return code
+
+
+# def apply_forall_with_ineq(proof_step, selected_objects: [MathObject]) -> \
+#         CodeForLean:
+#     """
+#     Try to apply last selected property on the other ones.
+#     The last property should be a universal property
+#     (or equivalent to such after unfolding definitions)
+#
+#     selected_objects: list of MathObjects of length ≥ 2
+#     """
+#     # FIXME: return error msg if user try to apply "forall x:X, P(x)"
+#     #  to some object of wrong type (e.g. implication)
+#     #  For the moment "forall x, P->Q" works with "P->Q" and button forall
+#
+#     goal = proof_step.goal
+#     universal_property = selected_objects[-1]  # The property to be applied
+#     unsolved_inequality_counter = 0
+#     # Variable_names will contain the list of variables and proofs of
+#     # inequalities that will be passed to universal_property
+#     variable_names = []
+#     code = CodeForLean.empty_code()
+#     used_inequalities = []
+#     # for potential_var in selected_objects[:-1]:
+#     # We consider only the first variable
+#     potential_var = selected_objects[0]
+#     # TODO: replace by pattern matching
+#     # Check for "∀x>0" (and variations)
+#     inequality = inequality_from_pattern_matching(universal_property,
+#                                                   potential_var)
+#     variable_names.append(potential_var.info['name'])
+#     if inequality:
+#         math_types = [p.math_type for p in goal.context]
+#         if inequality in math_types:
+#             # Check if inequality is in context:
+#             index = math_types.index(inequality)
+#             context_inequality = goal.context[index]
+#             used_inequalities.append(context_inequality)
+#             inequality_name = context_inequality.display_name
+#             variable_names.append(inequality_name)
+#         else:
+#             # If not, assert inequality as a new goal:
+#             inequality_name = get_new_hyp(proof_step)
+#             variable_names.append(inequality_name)
+#             unsolved_inequality_counter += 1
+#             # Add type indication to the variable in inequality
+#             math_type = inequality.children[1].math_type
+#             # Variable is not used explicitly, but this affects inequality:
+#             variable = inequality.children[0]
+#             variable = add_type_indication(variable, math_type)
+#             ineq_with_type = MathObject(node=inequality.node,
+#                                         info=inequality.info,
+#                                         children=[variable,
+#                                                   inequality.children[1]],
+#                                         math_type=inequality.math_type)
+#             display_inequality = ineq_with_type.to_display(format_='lean')
+#             # Code I: state corresponding inequality #
+#             code = code.and_then(f"have {inequality_name}: "
+#                                  f"{display_inequality}")
+#             code = code.and_then("rotate")  # Back to main goal
+#             used_inequalities.append(inequality_name)
+#
+#     # Code II: Apply universal_property, with no success_msg #
+#     new_hypo_name = get_new_hyp(proof_step)
+#     code = code.and_then(have_new_property(universal_property,
+#                                            variable_names,
+#                                            new_hypo_name,
+#                                            success_msg=""))
+#     if used_inequalities:
+#         code.add_used_properties(used_inequalities)
+#
+#     # Code III: try to solve inequalities # e.g.:
+#     #   iterate 2 { solve1 {try {norm_num at *}, try {compute_n 10}} <|>
+#     #               rotate},   rotate,
+#     if unsolved_inequality_counter:
+#         assert unsolved_inequality_counter == 1
+#         # Fixme: (1) no rotate if compute fails
+#         #   (2) "Proof of intermediate subgoal" not appropriate...
+#         # Back to first inequality:
+#         more_code0 = CodeForLean.from_string(f"rotate {proof_step.nb_of_goals}")
+#         more_code1 = CodeForLean.from_string("norm_num at *")
+#         more_code1 = more_code1.try_()
+#         more_code2 = CodeForLean.from_string("compute_n 10")
+#         more_code2 = more_code2.try_()
+#         # Try to solve1 inequality by norm_num, maybe followed by compute:
+#         more_code = more_code0.and_then(
+#             (more_code1.and_then(more_code2)).solve1())
+#         more_code.add_success_msg(_("Property {} added to the context").
+#                              format(new_hypo_name))
+#         # # If it fails, rotate to next inequality
+#         # # This has been suppressed!
+#         # failing_code = CodeForLean.from_string(f"rotate "
+#         #                                        f"{proof_step.nb_of_goals}")
+#         # failing_code.add_success_msg(_("You have to check the inequality to "
+#         #                                "get the desired property"))
+#         # more_code = more_code.or_else(failing_code)
+#         code = code.and_then(more_code)
+#         # # Do this for all inequalities
+#         # #   more_code = more_code.single_combinator(f"iterate
+#         # #   {unsolved_inequality_counter}") --> replaced by explicit iteration
+#         # code_list = [more_code] * unsolved_inequality_counter
+#         # more_code = CodeForLean.and_then_from_list(code_list)
+#         # Finally come back to first inequality??
+#     if not unsolved_inequality_counter:
+#         # Success msg when there is no inequality to solve:
+#         code.add_success_msg(_("Property {} added to the context").
+#                              format(new_hypo_name))
+#     # In any case:
+#     code.add_used_properties(selected_objects)
+#
+#     return code
+
+
+def apply_forall_with_ineq(proof_step, selected_objects, inequality) \
+                                                            -> CodeForLean:
     """
     Try to apply last selected property on the other ones.
     The last property should be a universal property
     (or equivalent to such after unfolding definitions)
 
-    :param selected_objects: list of MathObjects of length ≥ 2
+    selected_objects: list of MathObjects of length ≥ 2
     """
     # FIXME: return error msg if user try to apply "forall x:X, P(x)"
     #  to some object of wrong type (e.g. implication)
     #  For the moment "forall x, P->Q" works with "P->Q" and button forall
 
-    # Fixme: the inequality matching does not work with implicit definitions
-
     goal = proof_step.goal
-    universal_property = selected_objects[-1]  # The property to be applied
+    universal_property = selected_objects[-1]
     unsolved_inequality_counter = 0
     # Variable_names will contain the list of variables and proofs of
     # inequalities that will be passed to universal_property
     variable_names = []
-    code = CodeForLean.empty_code()
     used_inequalities = []
-    for potential_var in selected_objects[:-1]:
-        # TODO: replace by pattern matching
-        # Check for "∀x>0" (and variations)
-        inequality = inequality_from_pattern_matching(universal_property,
-                                                      potential_var)
-        variable_names.append(potential_var.info['name'])
-        if inequality:
-            math_types = [p.math_type for p in goal.context]
-            if inequality in math_types:
-                # Check if inequality is in context:
-                index = math_types.index(inequality)
-                context_inequality = goal.context[index]
-                used_inequalities.append(context_inequality)
-                inequality_name = context_inequality.display_name
-                variable_names.append(inequality_name)
-            else:
-                # If not, assert inequality as a new goal:
-                inequality_name = get_new_hyp(proof_step)
-                variable_names.append(inequality_name)
-                unsolved_inequality_counter += 1
-                # Add type indication to the variable in inequality
-                math_type = inequality.children[1].math_type
-                # Variable is not used explicitly, but this affects inequality:
-                variable = inequality.children[0]
-                variable = add_type_indication(variable, math_type)
-                display_inequality = inequality.to_display(format_='lean')
-                # Code I: state corresponding inequality #
-                code = code.and_then(f"have {inequality_name}: "
-                                     f"{display_inequality}")
-                code = code.and_then("rotate")  # Back to main goal
-                used_inequalities.append(inequality_name)
+    # Check for "∀x>0" (and variations)
+    variable = inequality.children[0]
+    variable_names.append(variable.name)
+    math_types = [p.math_type for p in goal.context]
+    code = CodeForLean.empty_code()
 
-    # Code II: Apply universal_property #
+    if inequality in math_types:  # Check if inequality is in context
+        index = math_types.index(inequality)
+        context_inequality = goal.context[index]
+        used_inequalities.append(context_inequality)
+        inequality_name = context_inequality.display_name
+        variable_names.append(inequality_name)
+    else:
+        # If not, assert inequality as a new goal:
+        inequality_name = get_new_hyp(proof_step)
+        variable_names.append(inequality_name)
+        unsolved_inequality_counter += 1
+        # Add type indication to the variable in inequality
+        math_type = inequality.children[1].math_type
+        # Variable is not used explicitly, but this affects inequality:
+        variable = add_type_indication(variable, math_type)
+        ineq_with_type = MathObject(node=inequality.node,
+                                    info=inequality.info,
+                                    children=[variable,
+                                              inequality.children[1]],
+                                    math_type=inequality.math_type)
+        display_inequality = ineq_with_type.to_display(format_='lean')
+        # Code I: state corresponding inequality #
+        code = CodeForLean.from_string(f"have {inequality_name}: "
+                                       f"{display_inequality}")
+        code = code.and_then("rotate")  # Back to main goal
+        used_inequalities.append(inequality_name)
+
+    # Code II: Apply universal_property, with no success_msg #
+    # Add remaining variables:
+    variable_names.extend([var.name for var in selected_objects[1:-1]])
     new_hypo_name = get_new_hyp(proof_step)
     code = code.and_then(have_new_property(universal_property,
                                            variable_names,
-                                           new_hypo_name))
+                                           new_hypo_name,
+                                           success_msg=""))
     if used_inequalities:
         code.add_used_properties(used_inequalities)
 
     # Code III: try to solve inequalities # e.g.:
     #   iterate 2 { solve1 {try {norm_num at *}, try {compute_n 10}} <|>
     #               rotate},   rotate,
-    more_code = CodeForLean.empty_code()
     if unsolved_inequality_counter:
-        # Back to first inequality:
+        assert unsolved_inequality_counter == 1
         # Fixme: (1) no rotate if compute fails
         #   (2) "Proof of intermediate subgoal" not appropriate...
-        code = code.and_then(f"rotate {proof_step.nb_of_goals}")
+        # Back to first inequality:
+        more_code0 = CodeForLean.from_string(f"rotate {proof_step.nb_of_goals}")
         more_code1 = CodeForLean.from_string("norm_num at *")
         more_code1 = more_code1.try_()
         more_code2 = CodeForLean.from_string("compute_n 10")
         more_code2 = more_code2.try_()
         # Try to solve1 inequality by norm_num, maybe followed by compute:
-        more_code = more_code1.and_then(more_code2)
-        more_code = more_code.single_combinator("solve1")
-        # If it fails, rotate to next inequality
-        more_code = more_code.or_else("rotate")
-        # Do this for all inequalities
-        #   more_code = more_code.single_combinator(f"iterate
-        #   {unsolved_inequality_counter}") --> replaced by explicit iteration
-        code_list = [more_code] * unsolved_inequality_counter
-        more_code = CodeForLean.and_then_from_list(code_list)
-        # Finally come back to first inequality
-        # FIXME: the following rotate is odd??
-        # more_code = more_code.and_then("rotate")
-
-    code.add_success_msg(_("Property {} added to the context").
-                         format(new_hypo_name))
+        more_code = more_code0.and_then(
+            (more_code1.and_then(more_code2)).solve1())
+        more_code.add_success_msg(_("Property {} added to the context").
+                             format(new_hypo_name))
+        # # If it fails, rotate to next inequality
+        # # This has been suppressed!
+        # failing_code = CodeForLean.from_string(f"rotate "
+        #                                        f"{proof_step.nb_of_goals}")
+        # failing_code.add_success_msg(_("You have to check the inequality to "
+        #                                "get the desired property"))
+        # more_code = more_code.or_else(failing_code)
+        code = code.and_then(more_code)
+        # # Do this for all inequalities
+        # #   more_code = more_code.single_combinator(f"iterate
+        # #   {unsolved_inequality_counter}") --> replaced by explicit iteration
+        # code_list = [more_code] * unsolved_inequality_counter
+        # more_code = CodeForLean.and_then_from_list(code_list)
+        # Finally come back to first inequality??
+    if not unsolved_inequality_counter:
+        # Success msg when there is no inequality to solve:
+        code.add_success_msg(_("Property {} added to the context").
+                             format(new_hypo_name))
+    # In any case:
     code.add_used_properties(selected_objects)
 
-    return code.and_then(more_code)
+    return code
+
+
+def apply_forall(proof_step, selected_objects: [MathObject]) \
+                        -> CodeForLean:
+    """
+    Try to apply last selected property on the other ones.
+    The last property should be a universal property
+    (or equivalent to such after unfolding definitions)
+
+    selected_objects: list of MathObjects of length ≥ 2.
+    """
+    # FIXME: return error msg if user try to apply "forall x:X, P(x)"
+    #  to some object of wrong type (e.g. implication)
+    #  For the moment "forall x, P->Q" works with "P->Q" and button forall
+
+    universal_property = selected_objects[-1]  # The property to be applied
+    potential_var = selected_objects[0]
+
+    new_hypo_name = get_new_hyp(proof_step)
+    var_names = [var.info['name'] for var in selected_objects[:-1]]
+    simple_code = have_new_property(universal_property, var_names,
+                                    new_hypo_name)
+    simple_code.add_success_msg(_("Property {} added to the context").
+                         format(new_hypo_name))
+    simple_code.add_used_properties(selected_objects)
+
+    inequality = inequality_from_pattern_matching(universal_property,
+                                                  potential_var)
+
+    # (Case 1) No inequality to solve
+    if not inequality or not cvars.get(
+        "functionality.auto_solve_inequalities_in_bounded_quantification",
+            False):
+        return simple_code
+
+    # (Cas 2) Inequality: try to solve it, turn to simple code if it fails
+    else:
+        complex_code = apply_forall_with_ineq(proof_step, selected_objects,
+                                              inequality)
+        code = complex_code.or_else(simple_code)
+        return code
 
 
 @action()

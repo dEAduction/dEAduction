@@ -40,9 +40,8 @@ import logging
 from typing import Optional
 
 from PySide2.QtCore    import ( Signal,
-                                Slot,
-                                Slot,
                                 Qt,
+                                QSize,
                                 QMimeData,
                                 QModelIndex,
                                 QItemSelectionModel,
@@ -50,10 +49,8 @@ from PySide2.QtCore    import ( Signal,
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
                                 QIcon,
-                                QFont,
                                 QStandardItem,
                                 QStandardItemModel,
-                                QPixmap,
                                 QDrag,
                                 QPalette)
 from PySide2.QtWidgets import ( QHBoxLayout,
@@ -159,24 +156,18 @@ class MathObjectWidgetItem(MathItem):
         # The following will be set when inserted:
         self.math_object_wdg: Optional[MathObjectWidget] = None
         self.context_math_object = context_math_object
-        if context_math_object.is_new:
-            self.tag = '+'
-        elif context_math_object.is_modified:
-            self.tag = '≠'
-        else:
-            self.tag = '='
-
-        # lean_name = context_math_object.to_display()
-        # math_expr = context_math_object.math_type_to_display()
-        # test_expr = context_math_object.math_type_to_display(format_='utf8')
-        # separator = '' if test_expr.startswith(':') else ': '
-        # caption   = f'{lean_name} {separator}{math_expr}'
 
         caption = context_math_object.display_with_type(format_='html')
         self.setText(caption)
         self.setIcon(_TagIcon(self.tag))
-        # Uncomment to enable drag:
         self.setDragEnabled(True)
+
+    @property
+    def tag(self):
+        tag = ('+' if self.context_math_object.is_new
+               else '≠' if self.context_math_object.is_modified
+               else'=')
+        return tag
 
     @property
     def math_object(self):
@@ -645,10 +636,6 @@ class TargetLabel(MathLabel):
             text = '…'
         self.setText(text)
 
-    # Debugging
-    # def mouseReleaseEvent(self, ev) -> None:
-    #     print("Clac!!")
-
     def mouseReleaseEvent(self, event):
         """
         Emit the clicked signal only if this is not a double click.
@@ -736,8 +723,13 @@ class TargetWidget(QWidget):
         # self.unselected_style = ""
         # ───────────────────── Layouts ──────────────────── #
 
+        # self.icon = QLabel()
+        # target_lyt = QHBoxLayout()
+        # target_lyt.addWidget(self.icon)
+        # target_lyt.addWidget(self.target_label)
         central_layout = QVBoxLayout()
         central_layout.addWidget(self.caption_label)
+        # central_layout.addLayout(target_lyt)
         central_layout.addWidget(self.target_label)
         central_layout.setAlignment(self.caption_label, Qt.AlignHCenter)
         central_layout.setAlignment(self.target_label, Qt.AlignHCenter)
@@ -757,6 +749,21 @@ class TargetWidget(QWidget):
     #
     # def mouseDoubleClickEvent(self, event) -> None:
     #     print("Double click!")
+
+    # @property
+    # def tag(self):
+    #     target = self.target_label.math_object
+    #     if target:
+    #         tag = ('+' if target.is_new
+    #                else '≠' if target.is_modified
+    #                else'=')
+    #         return tag
+
+    # def set_icon(self):
+    #     # Fixme:
+    #     if self.tag:
+    #         self.icon.setPixmap(
+    #             _TagIcon(self.tag).pixmap(QSize(32, 32)))
 
     def mark_user_selected(self, yes: bool=True):
         """
@@ -791,6 +798,8 @@ class TargetWidget(QWidget):
 
     def replace_target(self, target):
         self.target_label.set_target(target)
+        # self.set_icon()
+
         # self.target = target
 
     def set_pending_goals_counter(self, pgn: int):

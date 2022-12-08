@@ -67,6 +67,7 @@ allow_implicit_use_of_definitions = false
 automatic_intro_of_variables_and_hypotheses = false
 automatic_intro_of_exists = true
 ask_to_prove_premises_of_implications = true
+auto_solve_inequalities_in_bounded_quantification = true
 save_solved_exercises_for_autotest = false
 drag_statements_to_context = false
 drag_and_drop_in_context = false

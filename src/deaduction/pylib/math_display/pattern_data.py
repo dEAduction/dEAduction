@@ -111,6 +111,9 @@ quant_pattern = {
     (r"\forall", (1,), r" \set", ", ", (2, )),
     "QUANT_∀(SEQUENCE(...), ?0, ?1)":
     (r"\forall", (1,), r" \sequence_in", (0, 1), ", ", (2, )),
+    "QUANT_∀(LOCAL_CONSTANT/name=RealSubGroup, ?0, ?1)":
+        (r"\forall", (1,), r'\in', r'\real', ", ", (2,)),
+
     # "QUANT_∀(?0, ?1, PROP_IMPLIES(...))":
     # (r"\forall", (2, 0), ", ", (2, 1)),
     "QUANT_∀(?0, ?1, PROP_IMPLIES(PROP_BELONGS(?1, ?2), ?3))":
@@ -151,7 +154,8 @@ latex_from_pattern_string = {
     "LOCAL_CONSTANT: !SEQUENCE(?3, ?4)(...)":
         ('(', name, ['_', (1,)], ')', ['_', (1,), r"\in_symbol", 3]),
     "LAMBDA: !SEQUENCE(?3, ?4)(...)":
-        ('(', (2, ), ')', ['_', (1, ), r"\in_symbol", (0, )])
+        ('(', (2, ), ')', ['_', (1, ), r"\in_symbol", (0, )]),
+    "LOCAL_CONSTANT/name=RealSubGroup": (r'\type_R',)
 }
 
 
@@ -230,7 +234,7 @@ latex_from_pattern_string_for_type = {
     "CONSTANT/name=ℤ": (r'\type_Z',),
     "CONSTANT/name=ℚ": (r'\type_Q',),
     "CONSTANT/name=ℝ": (r'\type_R',),
-    "CONSTANT/name=RealSubGroup": (r'\type_R',),
+    "LOCAL_CONSTANT/name=RealSubGroup": (r'\type_R',),
     # This is maybe too strong: any guy with undefined math_type will match!! :
     "?:TYPE": (r'\type_element', name),  # NB: TYPE is treated above
     "?:SET(?0)": (r'\type_element', 'self'),

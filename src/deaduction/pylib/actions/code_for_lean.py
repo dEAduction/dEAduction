@@ -122,7 +122,7 @@ class CodeForLean:
     instructions: [Any]   # type: [Union[CodeForLean, SingleCode]]
     combinator:   str = LeanCombinator.single_code
     error_msg:    str = ""
-    success_msg:  str = ""
+    _success_msg:  str = ""
     conjunction       = None  # type: (Union[MathObject, str])
     disjunction       = None  # type: (Union[MathObject, str])
     subgoal           = None  # type: Union[MathObject, str]
@@ -280,8 +280,14 @@ class CodeForLean:
         """
         if not self.instructions:
             return None
-        instruction = self.instructions[0]
-        return instruction.operator
+        if self.combinator is LeanCombinator.and_then:
+            # Return first operator in instructions
+            for instruction in self.instructions:
+                if instruction.operator:
+                    return instruction.operator
+        else:
+            operator = self.instructions[0].operator
+        return operator
 
     @operator.setter
     def operator(self, operator):
@@ -341,6 +347,24 @@ class CodeForLean:
         elif self.instructions:
             instruction = self.instructions[0]
             instruction.outcome_operator = outcome_operator
+
+    @property
+    def success_msg(self):
+        """
+        Return self's success_msg, or, if self is and_then, the first
+        success_msg found in self's instructions.
+        """
+        if self._success_msg:
+            return self._success_msg
+        elif self.is_and_then():
+            for instruction in self.instructions:
+                msg = instruction.success_msg
+                if msg:
+                    return msg
+
+    @success_msg.setter
+    def success_msg(self, msg: str):
+        self._success_msg = msg
 
     def or_else(self, other, success_msg=""):
         """
