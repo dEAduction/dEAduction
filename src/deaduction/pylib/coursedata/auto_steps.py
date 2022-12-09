@@ -338,10 +338,15 @@ class AutoStep(UserAction):
                     item_str = "@O" + str(emw.objects.index(math_object)+1)
                 elif math_object in emw.properties:
                     item_str = "@P" + str(emw.properties.index(math_object)+1)
+                elif math_object.info.get("user_input"):
+                    # Artificial object created from user_input:
+                    #  do not save (will be retrieved from user_input).
+                    item_str = None
                 else:
                     item_str = math_object.display_name
                     log.debug(f"Object {item_str} not found")
-                selection.append(item_str)
+                if item_str is not None:
+                    selection.append(item_str)
 
         # Button: '∧', '∨', '¬', '⇒', '⇔', '∀', '∃', 'compute', 'CQFD',
         #         'proof_methods', 'new_objects', 'apply'

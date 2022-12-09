@@ -1271,6 +1271,8 @@ def action_forall(proof_step) -> CodeForLean:
     test_selection(selected_objects, target_selected)
     goal = proof_step.goal
 
+    # selection_object_added = False
+
     if len(selected_objects) == 0:
         if not goal.target.is_for_all(implicit=True):
             error = _("Target is not a universal property '∀x, P(x)'")
@@ -1295,10 +1297,11 @@ def action_forall(proof_step) -> CodeForLean:
             if item[0] != '(':
                 item = '(' + item + ')'
             potential_var = MathObject(node="LOCAL_CONSTANT",
-                                       info={'name': item},
+                                       info={'name': item, 'user_input': True},
                                        children=[],
                                        math_type=None)
             selected_objects.insert(0, potential_var)
+            # selection_object_added = True
             # Now len(l) == 2
 
     # From now on len(l) ≥ 2
@@ -1306,11 +1309,14 @@ def action_forall(proof_step) -> CodeForLean:
     selected_objects.reverse()
     for item in selected_objects:
         if item.is_for_all(implicit=True):
-            # Put item on last position
+            # Put universal property in last position
             selected_objects.remove(item)
             selected_objects.reverse()
             selected_objects.append(item)
-            return apply_forall(proof_step, selected_objects)
+            code = apply_forall(proof_step, selected_objects)
+            # if selection_object_added:  # Remove it (for auto-test)
+            #     selected_objects.pop(0)
+            return code
     raise WrongUserInput(error=_("No universal property among selected"))
 
 

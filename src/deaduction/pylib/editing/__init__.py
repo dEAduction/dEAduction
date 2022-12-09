@@ -522,15 +522,15 @@ class LeanFile(VirtualFile):
     def delta_goals_count(self):
         return self.current_number_of_goals - self.previous_number_of_goals
 
-    def proof(self):  # Proof
-        """
-        Return the current proof outline, an instance of the Proof class.
-        """
-        # FIXME: useless?
-        proof_steps = list(map(lambda entry: entry.misc_info.get('proof_step'),
-                           self.history))
-        proof = Proof.from_proof_steps(proof_steps)
-        return proof
+    # def proof(self):  # Proof
+    #     """
+    #     Return the current proof outline, an instance of the Proof class.
+    #     """
+    #     # FIXME: useless?
+    #     proof_steps = list(map(lambda entry: entry.misc_info.get('proof_step'),
+    #                        self.history))
+    #     proof = Proof.from_proof_steps(proof_steps)
+    #     return proof
 
     def save_exercise_for_autotest(self, emw):
         """
