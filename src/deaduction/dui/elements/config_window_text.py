@@ -34,6 +34,7 @@ def _(msg):
 
 
 PRETTY_NAMES = {
+    'functionality': _("Functionalities"),
     'Display': _("Display"),
     'Logic': _("Logic"),
     'Functionalities': _("Functionalities"),
@@ -77,6 +78,10 @@ PRETTY_NAMES = {
         _("Automatic intro of existence properties"),
     'functionality.save_solved_exercises_for_autotest':
         _("Save exercises for autotest"),
+    'functionality.auto_solve_inequalities_in_bounded_quantification':
+        _("Try to silently prove ε>0 when applying '∀ε>0'"),
+    'functionality.ask_to_prove_premises_of_implications':
+        _("Ask to prove 'P' when 'P ⇒ Q' in context"),
     'logs.save_journal': _("Save journal"),
     'display.dubious_characters': _('Replace missing symbols') +
                               ': ℕ (N), ℤ (Z), ℚ (Q), ℝ (R), 𝒫 (P), ↦ (->)',
@@ -84,5 +89,8 @@ PRETTY_NAMES = {
     'functionality.drag_statements_to_context': _("Drag statements to context"),
     'functionality.drag_and_drop_in_context': _("Drag and drop in context"),
     'functionality.drag_context_to_statements': _("Drag context to statements"),
-    'None': _('None')
+    'None': _('None'),
+    'Beginner': _("Beginner"),
+    "Intermediate": _("Intermediate"),
+    "Expert": _("Expert")
 }

@@ -50,8 +50,11 @@ from PySide2.QtWidgets import ( QApplication,
                                 QCheckBox,
                                 QComboBox,
                                 QLineEdit,
+                                QRadioButton,
                                 QVBoxLayout,
+                                QHBoxLayout,
                                 QFormLayout,
+                                QFrame,
                                 QDialogButtonBox,
                                 QPushButton,
                                 QFileDialog,
@@ -68,8 +71,6 @@ log = logging.getLogger(__name__)
 global _
 
 
-
-
 ######################
 # Settings to be set #
 ######################
@@ -80,6 +81,9 @@ CONFIGS = dict()
 # (1) string = ref in cvars,
 # (2) list of predefined values (or None),
 # (3) bool: False if freeze (not implemented yet)
+PRE_DEFINED = dict()
+# Dictionary whose keys are keys of CONFIGS.
+
 CONFIGS["Display"] = {
     "display.target_display_on_top": (None, True),
     "display.target_font_size": (None, True),
@@ -112,15 +116,66 @@ CONFIGS["Logic"] = {
     "logic.use_color_for_applied_properties": (None, True)}
 
 CONFIGS['Functionalities'] = {
-    'functionality.target_selected_by_default': (None, True),
     'functionality.allow_proof_by_sorry': (None, True),  # tested
-    # ('functionality.expanded_apply_button': (None, False),
-    'functionality.automatic_intro_of_variables_and_hypotheses': (None, True),
     'functionality.automatic_intro_of_exists': (None, True),
+    'functionality.target_selected_by_default': (None, True),
     'functionality.allow_implicit_use_of_definitions': (None, True),
-    'functionality.drag_statements_to_context': (None, True),
+    'functionality.auto_solve_inequalities_in_bounded_quantification': (None,
+                                                                        False),
     'functionality.drag_and_drop_in_context': (None, True),
-    'functionality.drag_context_to_statements': (None, True)}
+    'functionality.drag_context_to_statements': (None, True),
+    'functionality.drag_statements_to_context': (None, True),
+    'functionality.ask_to_prove_premises_of_implications': (None, False),
+    'functionality.automatic_intro_of_variables_and_hypotheses': (None, True)
+    }
+
+PRE_DEFINED['Functionalities'] = {
+    'selected_level': 'functionality.default_functionality_level',
+    'Beginner': {'functionality.allow_proof_by_sorry': True,
+                 'functionality.automatic_intro_of_exists': True,
+                 'functionality.target_selected_by_default': False,
+                 'functionality.allow_implicit_use_of_definitions': False,
+                 'functionality.auto_solve_inequalities_in_bounded_quantification': False,
+                 'functionality.drag_and_drop_in_context': False,
+                 'functionality.drag_context_to_statements': False,
+                 'functionality.drag_statements_to_context': False,
+                 'functionality.ask_to_prove_premises_of_implications': True,
+                 'functionality.automatic_intro_of_variables_and_hypotheses': False
+                 },
+    'Intermediate': {'functionality.allow_proof_by_sorry': True,
+                     'functionality.automatic_intro_of_exists': True,
+                     'functionality.target_selected_by_default': True,
+                     'functionality.allow_implicit_use_of_definitions': True,
+                     'functionality.auto_solve_inequalities_in_bounded_quantification': True,
+                     'functionality.drag_and_drop_in_context': False,
+                     'functionality.drag_context_to_statements': False,
+                     'functionality.drag_statements_to_context': False,
+                     'functionality.ask_to_prove_premises_of_implications': True,
+                     'functionality.automatic_intro_of_variables_and_hypotheses': False
+                     },
+    'Advanced': {'functionality.allow_proof_by_sorry': True,
+                 'functionality.automatic_intro_of_exists': True,
+                 'functionality.target_selected_by_default': True,
+                 'functionality.allow_implicit_use_of_definitions': True,
+                 'functionality.auto_solve_inequalities_in_bounded_quantification': True,
+                 'functionality.drag_and_drop_in_context': True,
+                 'functionality.drag_context_to_statements': True,
+                 'functionality.drag_statements_to_context': True,
+                 'functionality.ask_to_prove_premises_of_implications': True,
+                 'functionality.automatic_intro_of_variables_and_hypotheses': False
+                 },
+    'Expert':   {'functionality.allow_proof_by_sorry': True,
+                 'functionality.automatic_intro_of_exists': True,
+                 'functionality.target_selected_by_default': True,
+                 'functionality.allow_implicit_use_of_definitions': True,
+                 'functionality.auto_solve_inequalities_in_bounded_quantification': True,
+                 'functionality.drag_and_drop_in_context': True,
+                 'functionality.drag_context_to_statements': True,
+                 'functionality.drag_statements_to_context': True,
+                 'functionality.ask_to_prove_premises_of_implications': False,
+                 'functionality.automatic_intro_of_variables_and_hypotheses': True
+                 }
+}
 
 CONFIGS["Language"] = {"i18n.select_language": (["en", "fr_FR"], True)}
 
@@ -267,7 +322,7 @@ class ConfigMainWindow(QDialog):
         for window in self.__windows:
             new_modified_settings = dict()
             for setting in window.modified_settings:
-                real_setting = cvars.get(setting)
+                real_setting = cvars.get(setting, False)
                 if real_setting != window.initial_settings[setting]:
                     new_modified_settings[setting] = \
                         window.initial_settings[setting]
@@ -358,11 +413,70 @@ class ConfigWindow(QDialog):
         self.modified_settings = dict()
         self.widgets = dict()  # keys = settings, value = QWidget
         self.settings = CONFIGS.get(name)
-        self.create_widgets()
-        self.set_values()
+        self.predefined_settings_dict = PRE_DEFINED.get(name, {})
+
+        self.layout = QFormLayout()
+        if self.predefined_settings_dict:
+            self.main_layout = QVBoxLayout()
+            self.create_level_widgets()
+            self.create_widgets()
+            self.main_layout.addLayout(self.layout)
+            self.setLayout(self.main_layout)
+        else:
+            self.create_widgets()
+            self.setLayout(self.layout)
+
+    @property
+    def selected_level(self):
+        """
+        Return the predefined level if any, e.g.'beginner'.
+        """
+        level_key = self.predefined_settings_dict.get('selected_level', False)
+        if level_key:
+            return cvars.get(level_key, "Free settings")
+        else:
+            return "Free settings"
+
+    def set_selected_level(self, level):
+        level_key = self.predefined_settings_dict.get('selected_level')
+        if level_key:
+            cvars.set(level_key, level)
+
+    def create_level_widgets(self):
+        """
+        Create radio buttons to select a set of predefined values corresponding
+        to some level, e.g. 'beginner'.
+        The selected level is in cvars(key) where
+            key = self.predefined_settings_dict['selected_level']
+        """
+        if not self.predefined_settings_dict:
+            return
+
+        pre_defined_lyt = QHBoxLayout()
+        free_settings_widget = QRadioButton(_("Free settings"))
+        free_settings_widget.level = "Free settings"
+        free_settings_widget.toggled.connect(self.pre_defined_changed)
+        pre_defined_lyt.addWidget(free_settings_widget)
+
+        if self.selected_level == "Free settings":
+            # Toggle Free settings
+            free_settings_widget.toggle()
+
+        for setting in self.predefined_settings_dict:
+            if setting != 'selected_level':
+                widget = QRadioButton(_(setting))
+                widget.level = setting
+                pre_defined_lyt.addWidget(widget)
+                if setting == self.selected_level:
+                    widget.toggle()
+                widget.toggled.connect(self.pre_defined_changed)
+
+        self.main_layout.addLayout(pre_defined_lyt)
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        self.main_layout.addWidget(separator)
 
     def create_widgets(self):
-        layout = QFormLayout()
 
         for setting, (setting_list, enabled) in self.settings.items():
             setting_initial_value = cvars.get(setting, default_value="none")
@@ -423,51 +537,99 @@ class ConfigWindow(QDialog):
             # print("Adding wdgt", widget)
             if widget:
                 widget.setEnabled(enabled)
-                layout.addRow(title, widget)
+                self.layout.addRow(title, widget)
                 self.widgets[setting] = widget
 
-        self.setLayout(layout)
+        # Set initial values
+        self.set_values()
+
+    def set_value(self, setting, setting_list, setting_value,
+                  predefined=False):
+        """
+        Set value corresponding to setting.
+        """
+        widget = self.widgets[setting]
+        widget.setEnabled(True)
+
+        # ───────── Case of choice into a list: combo box ─────────
+        if setting_list and setting_list != 'dir':
+            if setting_value and setting_value in setting_list:
+                index = setting_list.index(setting_value)
+            else:
+                index = 0
+            widget.setCurrentIndex(index)
+
+        # ───────── Case of bool: check box ─────────
+        elif isinstance(setting_value, bool):
+            if setting_value is not None:
+                widget.setChecked(setting_value)
+
+        # ───────── Case of str: QLineEdit ─────────
+        elif isinstance(setting_value, str):
+            if setting_value:
+                initial_string = setting_value
+                widget.setText(initial_string)
+
+        if predefined:
+            widget.setEnabled(False)
 
     def set_values(self):
         """
         Set widgets' values for display according to modified_settings
         (or to initial_settings for unmodified settings)
+        (or to predefined_settings if pertinent).
         """
+        level = self.selected_level
+        # Values are pre_defined?
+        predefined = ({} if level == "Free settings"
+                      else self.predefined_settings_dict[level])
+
         for setting, (setting_list, enabled) in self.settings.items():
-            if setting in self.modified_settings:
+            if setting in predefined:
+                setting_value = predefined[setting]
+            elif setting in self.modified_settings:
                 setting_value = self.modified_settings[setting]
             else:
                 setting_value = cvars.get(setting, default_value="none")
 
-            widget = self.widgets[setting]
             if setting_value == "none":
                 setting_value = None  # Avoid KeyError
+
             self.initial_settings[setting] = setting_value
 
-            # ───────── Case of choice into a list: combo box ─────────
-            if setting_list and setting_list != 'dir':
-                #     pretty_setting_list = [_(PRETTY_NAMES[setting])
-                #                            if setting in PRETTY_NAMES
-                #                            else setting
-                #                            for setting in setting_list]
-                #     widget.setting_list = setting_list
-                #     widget.addItems(pretty_setting_list)
-                if setting_value and setting_value in setting_list:
-                    index = setting_list.index(setting_value)
-                else:
-                    index = 0
-                widget.setCurrentIndex(index)
+            # The following is useful in case predefined setting is !=
+            #  from cvars value.
+            if setting_value != cvars.get(setting, default_value="none"):
+                self.modified_settings[setting] = setting_value
 
-            # ───────── Case of bool: check box ─────────
-            elif isinstance(setting_value, bool):
-                if setting_value:
-                    widget.setChecked(setting_value)
-
-            # ───────── Case of str: QLineEdit ─────────
-            elif isinstance(setting_value, str):
-                if setting_value:
-                    initial_string = setting_value
-                    widget.setText(initial_string)
+            self.set_value(setting, setting_list, setting_value,
+                           predefined=bool(predefined))
+            # widget = self.widgets[setting]
+            # if predefined:
+            #     widget.freeze()
+            #
+            # if setting_value == "none":
+            #     setting_value = None  # Avoid KeyError
+            # self.initial_settings[setting] = setting_value
+            #
+            # # ───────── Case of choice into a list: combo box ─────────
+            # if setting_list and setting_list != 'dir':
+            #     if setting_value and setting_value in setting_list:
+            #         index = setting_list.index(setting_value)
+            #     else:
+            #         index = 0
+            #     widget.setCurrentIndex(index)
+            #
+            # # ───────── Case of bool: check box ─────────
+            # elif isinstance(setting_value, bool):
+            #     if setting_value:
+            #         widget.setChecked(setting_value)
+            #
+            # # ───────── Case of str: QLineEdit ─────────
+            # elif isinstance(setting_value, str):
+            #     if setting_value:
+            #         initial_string = setting_value
+            #         widget.setText(initial_string)
 
     # Handle choices
     @Slot()
@@ -494,6 +656,34 @@ class ConfigWindow(QDialog):
     def line_edit_changed(self):
         line_edit = self.sender()
         self.modified_settings[line_edit.setting] = line_edit.text()
+
+    @Slot()
+    def pre_defined_changed(self):
+        """
+        Called when usr change the predefined-settings radio button.
+        """
+        level_widget = self.sender()
+        if not level_widget.isChecked():
+            return
+
+        self.set_selected_level(level_widget.level)
+        if self.selected_level == "Free settings":
+            # Unfreeze all, and that's all:
+            for setting, toto in self.settings.items():
+                self.widgets[setting].setEnabled(True)
+            return
+
+        predefined_dict = self.predefined_settings_dict[self.selected_level]
+
+        for setting, (setting_list, enabled) in self.settings.items():
+            if setting in predefined_dict:
+                setting_value = predefined_dict[setting]
+                self.set_value(setting, setting_list, setting_value,
+                               predefined=(predefined_dict is not None))
+
+                # This is automatically done by slots:
+                # if setting_value != self.initial_settings[setting]:
+                #     self.modified_settings[setting] = setting_value
 
     def check_settings(self) -> str:
         """

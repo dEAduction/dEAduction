@@ -113,9 +113,7 @@ quant_pattern = {
     (r"\forall", (1,), r" \sequence_in", (0, 1), ", ", (2, )),
     "QUANT_∀(LOCAL_CONSTANT/name=RealSubGroup, ?0, ?1)":
         (r"\forall", (1,), r'\in', r'\real', ", ", (2,)),
-
-    # "QUANT_∀(?0, ?1, PROP_IMPLIES(...))":
-    # (r"\forall", (2, 0), ", ", (2, 1)),
+    # Bounded quantification:
     "QUANT_∀(?0, ?1, PROP_IMPLIES(PROP_BELONGS(?1, ?2), ?3))":
         (r"\forall", (2, 0), ", ", (2, 1)),
     "QUANT_∀(?0, ?1, PROP_IMPLIES(*INEQUALITY(?1, ?2), ?3))":
