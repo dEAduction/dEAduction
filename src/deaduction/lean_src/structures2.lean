@@ -433,7 +433,4 @@ end tactic.interactive
 --     hypo_analysis,
 -- end
 
-example (X: Type) (P: X → Prop): ∀ x: X, P x :=
-begin
-    targets_analysis,
-end
+
