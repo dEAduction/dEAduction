@@ -287,7 +287,7 @@ class CodeForLean:
                     return instruction.operator
         else:
             operator = self.instructions[0].operator
-        return operator
+            return operator
 
     @operator.setter
     def operator(self, operator):

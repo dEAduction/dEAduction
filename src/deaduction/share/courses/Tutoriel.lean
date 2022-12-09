@@ -71,7 +71,7 @@ ImplicitUse
     True
 -/
 begin
-    exact iff.rfl
+    exact iff.rfl,
 end
 
 lemma definition.egalite_deux_ensembles {A A' : set X} :
@@ -83,7 +83,7 @@ ImplicitUse
     False
 -/
 begin
-     exact set.ext_iff
+     exact set.ext_iff,
 end
 
 
@@ -114,7 +114,7 @@ ImplicitUse
     True
 -/
 begin
-    exact iff.rfl
+    exact iff.rfl,
 end
 
 lemma definition.union_deux_ensembles  {A : set X} {B : set X} {x : X} :
@@ -126,7 +126,7 @@ ImplicitUse
     True
 -/
 begin
-    exact iff.rfl
+    exact iff.rfl,
 end
 
 end unions_intersections
@@ -170,7 +170,7 @@ Description
     Voici un deuxième exercice !
 -/
 begin
-    todo
+    todo,
 end
 
 lemma exercise.inclusion_transitive
@@ -184,7 +184,7 @@ Description
     Voici un troisième exercice !
 -/
 begin
-    todo
+    todo,
 end
 
 lemma exercise.ensemble_inclus_union
@@ -198,7 +198,7 @@ Description
     Le bouton ∨ ("ou"), permet notamment de montrer un but de la forme "P ou Q" en choisissant si on veut montrer "P" ou "Q".
 -/
 begin
-    todo
+    todo,
 end
 
 lemma exercise.ensemble_inclus_intersection
@@ -212,7 +212,7 @@ Description
     Le bouton ∨ ("ou") permet également, appliqué à une hypothèse du type "P ou Q" de faire une disjonction de cas selon si on a "P" ou "Q".
 -/
 begin
-    todo
+    todo,
 end
 
 lemma exercise.inter_distributive_union
@@ -226,7 +226,7 @@ Description
     Le bouton ↔ (équivalence), permet notamment de scinder "P ↔ Q" en deux implications "P → Q" et "Q → P".
 -/
 begin
-    todo
+    todo,
 end
 
 lemma exercise.exercice_bilan
