@@ -76,7 +76,7 @@ def string_to_pattern():
     Fill-in the patterns_from_string dict by turning the keys of
     latex_from_pattern_string into PatternMathObject.
     """
-    log.info("Pattern from strings:")
+    # log.info("Pattern from strings:")
     for dict_, list_ in dic_list_pairs:
         for key, latex_shape in dict_.items():
             tree = tree_from_str(key)

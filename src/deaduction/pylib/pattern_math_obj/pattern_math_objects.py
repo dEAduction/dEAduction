@@ -247,6 +247,24 @@ class PatternMathObject(MathObject):
         """
         return self is other
 
+    def non_matched_mvars(self):
+        """
+        Return the list of self's non matched metavars.
+        """
+        pattern = self
+        if self.is_metavar():
+            math_object = self.matched_math_object
+            if not math_object:
+                return [self]
+            elif not isinstance(math_object, PatternMathObject):
+                return []
+            else:
+                pattern = self.matched_math_object
+
+        mvars = sum([child.non_matched_mvars() for child in
+                     pattern.children], [])
+        return mvars
+
     @property
     def name(self):
         """
@@ -258,7 +276,7 @@ class PatternMathObject(MathObject):
     def is_metavar(self):
         return isinstance(self, MetaVar)
 
-    def match(self, math_object: MathObject) -> bool:
+    def match(self, math_object: MathObject, do_matching=True) -> bool:
         """
         Test if math_object match self. This is a recursive test.
         The list PatternMathObject.metavars contains the metavars that have
@@ -272,7 +290,7 @@ class PatternMathObject(MathObject):
 
         PatternMathObject.__metavars = []
         PatternMathObject.__metavar_objects = []
-        match = self.recursive_match(math_object)
+        match = self.recursive_match(math_object, do_matching)
         # log.debug(f"Matching...")
         # list_ = [(PatternMathObject.__metavars[idx].to_display(),
         #           PatternMathObject.__metavar_objects[idx].to_display())
@@ -280,7 +298,8 @@ class PatternMathObject(MathObject):
         # log.debug(f"    Metavars, objects: {list_}")
         return match
 
-    def recursive_match(self, math_object: MathObject) -> bool:
+    def recursive_match(self, math_object: MathObject, do_matching=True) \
+            -> bool:
         """
         Test if math_object match self. This is a recursive test.
         The list metavars contains the metavars that have already been
@@ -317,11 +336,15 @@ class PatternMathObject(MathObject):
             else:
                 mvar_type = self.math_type
                 math_type = math_object.math_type
-                match = mvar_type.recursive_match(math_type)
+                match = mvar_type.recursive_match(math_type) \
+                    if isinstance(mvar_type, PatternMathObject) \
+                    else math_type == math_type
+
                 if match:
                     metavars.append(self)
                     metavar_objects.append(math_object)
-                    self.matched_math_object = math_object
+                    if do_matching:
+                        self.matched_math_object = math_object
                 # match = True
             return match
 
@@ -411,13 +434,13 @@ class PatternMathObject(MathObject):
         # log.debug(f"... {match}")
         return match
 
-    def math_object_from_metavar(self):
-        if self not in PatternMathObject.__metavars:
-            return MathObject.NO_MATH_TYPE
-        else:
-            index = PatternMathObject.__metavars.index(self)
-            math_object = PatternMathObject.__metavar_objects[index]
-            return math_object
+    # def math_object_from_metavar(self):
+    #     if self not in PatternMathObject.__metavars:
+    #         return MathObject.NO_MATH_TYPE
+    #     else:
+    #         index = PatternMathObject.__metavars.index(self)
+    #         math_object = PatternMathObject.__metavar_objects[index]
+    #         return math_object
 
     def apply_matching(self):
         """
@@ -427,8 +450,12 @@ class PatternMathObject(MathObject):
         else a MathObject with some metavars.
         """
 
-        if self.is_metavar():
-            return self.math_object_from_metavar()
+        if isinstance(self, MetaVar):
+            math_object = self.math_object_from_metavar()
+            if isinstance(math_object, PatternMathObject):
+                return math_object.apply_matching()
+            else:  # math_object is a "pure" MathObject
+                return math_object
         elif self is PatternMathObject.NO_MATH_TYPE:
             return MathObject.NO_MATH_TYPE
 
@@ -474,7 +501,7 @@ class MetaVar(PatternMathObject):
     A class to store metavars that occur in PatternMathObject. The main use
     is that MVAR can be affected to a MathObject. This modifies their display.
     """
-    # TODO
+
     matched_math_object: Optional[MathObject] = None
 
     metavar_nb: int = 0  # Class attribute (counter)
@@ -511,16 +538,19 @@ class MetaVar(PatternMathObject):
         return (self.matched_math_object if self.matched_math_object
                 else MathObject.NO_MATH_TYPE)
 
-    def to_display(self: MathObject, format_="html", text=False,
+    def to_display(self, format_="html", text=False,
                    use_color=True, bf=False, is_type=False):
-        display = MathObject.to_display(self, format_="html", text=False,
-                                        use_color=True, bf=False, is_type=False)
-
-        return "?=" + display
+        math_object = self.matched_math_object
+        if math_object:
+            display = math_object.to_display(format_=format_, text=text,
+                                             use_color=use_color, bf=bf,
+                                             is_type=is_type)
+        else:
+            display = "?" + str(self.nb)
+        return display
 
 
 POMPOMPOM = PatternMathObject(node="...", info={}, children=[])
-
 
 
 #########

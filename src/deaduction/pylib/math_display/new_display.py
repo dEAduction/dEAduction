@@ -182,6 +182,11 @@ def expanded_latex_shape(math_object=None, shape=None, text=False):
     # if self.is_variable(is_math_type=True) or self.is_bound_var:
     #     return self
 
+    if hasattr(math_object, 'matched_math_object'):
+        if math_object.matched_math_object:
+            return expanded_latex_shape(math_object.matched_math_object,
+                                        shape, text)
+
     if not shape:
         shape = latex_shape(math_object, text=text)
     if shape[0] == r'\no_text':

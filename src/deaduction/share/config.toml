@@ -23,7 +23,7 @@ math_font_file = "latinmodern-math.otf"  # "" or "System fonts" for system fonts
 
 selection_color = "limegreen"
 symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃, =, ↦"
-use_symbols_for_logic_button = true
+use_symbols_for_logic_button = false
 short_buttons_line = true
 
 display_detailed_errors_on_wui = true
