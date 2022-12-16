@@ -336,7 +336,7 @@ class PatternMathObject(MathObject):
             else:
                 mvar_type = self.math_type
                 math_type = math_object.math_type
-                match = mvar_type.recursive_match(math_type) \
+                match = mvar_type.recursive_match(math_type, do_matching) \
                     if isinstance(mvar_type, PatternMathObject) \
                     else math_type == math_type
 
@@ -370,7 +370,8 @@ class PatternMathObject(MathObject):
         ##################################
         # Recursively test for math_type #
         ##################################
-        elif not self.math_type.recursive_match(math_object.math_type):
+        elif not self.math_type.recursive_match(math_object.math_type,
+                                                do_matching):
             # log.debug(f"distinct types {self.math_type}")
             # log.debug(f"math_object type     "
             #           f"{math_object.math_type.to_display()}")
@@ -423,7 +424,7 @@ class PatternMathObject(MathObject):
         # Children #
         ############
         for child0, child1 in zip(children, math_object.children):
-            if not child0.recursive_match(child1):
+            if not child0.recursive_match(child1, do_matching):
                 match = False
 
         # Unmark bound_vars

@@ -74,6 +74,14 @@ log = logging.getLogger(__name__)
 
 global _
 
+# FIXME:
+#  forall ne marche pas
+#  gestion des variables muettes ??
+# TODO
+#  nombres
+#  ButtonPattern, ButtonPatternBox/Group
+
+
 ##########################
 # Building pattern dicts #
 ##########################
@@ -90,7 +98,7 @@ building_str_patterns['logic'] = {
     'not': ('¬', "PROP_NOT: PROP()(?0: PROP)"),
     'implies': ('⇒', "PROP_IMPLIES: PROP()(?0: PROP, ?1: PROP)"),
     'iff': ('⇔', "PROP_IFF: PROP()(?0: PROP, ?1: PROP)"),
-    'for all': ('∀', "QUANT_∀: PROP()(?0, ?1: ?0, ?2: PROP)"),
+    'for all': ('∀', "QUANT_∀: PROP()(?0, LOCAL_CONSTANT: ?0, ?2: PROP)"),
     'exists': ('∃', "QUANT_∃: PROP()(?0, ?1: ?0, ?2: PROP)"),
     'equal': ('=', "PROP_EQUAL: PROP()(?0, ?1)"),
     'maps to': ('↦', "APP(?0: FUNCTION(?1, ?2), ?3: ?1)"),
@@ -607,9 +615,11 @@ if __name__ == '__main__':
     # s = m3.to_display(format_="utf8")
     # print(s)
 
+    s, t, m = building_patterns['logic']['for all']
+
     context = [X, A, x]
     app = QApplication()
-    main_window = SnippetsBuilder(context=context, initial_object=None)
+    main_window = SnippetsBuilder(context=context)
     main_window.show()
     app.exec_()
 
