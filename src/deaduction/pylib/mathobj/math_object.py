@@ -1732,6 +1732,8 @@ MathObject.PROP = MathObject(node="PROP",
 class BoundVar(MathObject):
     is_bound_var = True  # Override MathObject attribute
 
+    untouched_bound_var_names = ["RealSubGroup", "_inst_1", "_inst_2", "inst_3"]
+
     def __init__(self, node, info, children, math_type, parent):
         """
         The local context is the list of BoundVar instances that are
@@ -1784,6 +1786,14 @@ class BoundVar(MathObject):
     def name(self):
         # Fixme: make it an attribute
         return self.info['name']
+
+    @property
+    def lean_name(self):
+        return self.info.get('lean_name')
+
+    def keep_lean_name(self):
+        return (self.lean_name in self.untouched_bound_var_names
+                or self.lean_name.startswith("_inst_"))
 
     @property
     def local_context(self):

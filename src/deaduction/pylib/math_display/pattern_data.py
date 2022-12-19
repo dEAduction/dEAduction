@@ -23,8 +23,8 @@ SYNTAX FOR KEYS. Let us analyze the following example:
     "LOCAL_CONSTANT:SET_FAMILY(?3, ?4)(...)"
 
 - We first indicate the node: 'LOCAL_CONSTANT'.
-- Then we give its type: ':SET_FAMILY(?3, ?4)'. Here ?3 and ?4 are
-metavariables that can take any value; so the type must have two children
+- Then we (optionnaly) give its type: ':SET_FAMILY(?3, ?4)'. Here ?3 and ?4 are
+meta-variables that can take any value; so the type must have two children
 that can be used for displaying.
 - Then (...) indicates that we do not care about children of the local constant:
 any children, whatever their number, will match.
@@ -101,6 +101,12 @@ quant_pattern = {
     # !! Macro must be alone in their string (up to spaces) after splitting
     # We use child nbs and not metavars to indicate P(x), since this is used
     # for good parenthesing.
+    # NB: special case must appear BEFORE general cases, e.g.
+    # QUANT_∀(TYPE, LOCAL_CONSTANT/name=RealSubGroup) before QUANT_∀(TYPE, ...)
+    "QUANT_∀(TYPE, LOCAL_CONSTANT/name=RealSubGroup, ?2)": ((2,), ),
+    "QUANT_∀(APP(CONSTANT/name=decidable_linear_order, ?0), ?1, ?2)": ((2,), ),
+    "QUANT_∀(APP(CONSTANT/name=decidable_linear_ordered_comm_ring, ?0), ?1, "
+    "?2)": ((2,), ),
     "QUANT_∀(SET(...), ?0, ?1)":
     (r"\forall", (1,), r" \subset ", (0, 0), ", ", (2,)),
     "QUANT_∀(FUNCTION(...), ?0, ?1)":
@@ -111,15 +117,15 @@ quant_pattern = {
     (r"\forall", (1,), r" \set", ", ", (2, )),
     "QUANT_∀(SEQUENCE(...), ?0, ?1)":
     (r"\forall", (1,), r" \sequence_in", (0, 1), ", ", (2, )),
-    "QUANT_∀(LOCAL_CONSTANT/name=RealSubGroup, ?0, ?1)":
-        (r"\forall", (1,), r'\in', r'\real', ", ", (2,)),
+    # "QUANT_∀(LOCAL_CONSTANT/name=RealSubGroup, ?0, ?1)":
+    #     (r"\forall", (1,), r'\in', r'\real', ", ", (2,)),
     # Bounded quantification:
     "QUANT_∀(?0, ?1, PROP_IMPLIES(PROP_BELONGS(?1, ?2), ?3))":
         (r"\forall", (2, 0), ", ", (2, 1)),
     "QUANT_∀(?0, ?1, PROP_IMPLIES(*INEQUALITY(?1, ?2), ?3))":
         (r"\forall", (2, 0), ", ", (2, 1)),
     "QUANT_∃(?0, ?1, PROP_∃(*INEQUALITY(?1, ?2), ?3))":
-        (r"\exists", (2, 0), ", ", (2, 1))
+        (r"\exists", (2, 0), ", ", (2, 1)),
 }
 
 
@@ -134,9 +140,10 @@ def exists_patterns_from_forall():
         for new_node, quant_macro in [("QUANT_∃", r'\exists'),
                                       ("QUANT_∃!", r'\exists_unique')]:
             new_key = pattern.replace(forall_node, new_node)
-            new_value = ((shape[0].replace(forall_macro, quant_macro), )
-                         + shape[1:])
-            additional_quant_pattern[new_key] = new_value
+            if isinstance(shape[0], str) and shape[0].find(forall_macro):
+                new_value = ((shape[0].replace(forall_macro, quant_macro), )
+                             + shape[1:])
+                additional_quant_pattern[new_key] = new_value
     quant_pattern.update(additional_quant_pattern)
 
 
@@ -153,7 +160,7 @@ latex_from_pattern_string = {
         ('(', name, ['_', (1,)], ')', ['_', (1,), r"\in_symbol", 3]),
     "LAMBDA: !SEQUENCE(?3, ?4)(...)":
         ('(', (2, ), ')', ['_', (1, ), r"\in_symbol", (0, )]),
-    "LOCAL_CONSTANT/name=RealSubGroup": (r'\type_R',)
+    "LOCAL_CONSTANT/name=RealSubGroup": (r'\real',)
 }
 
 
@@ -216,7 +223,6 @@ text_from_pattern_string = {
 # Patterns to display math_types of ContextMathObjects #
 ########################################################
 ########################################################
-# TODO: handle jokers, e.g. *INEQUALITY
 
 latex_from_pattern_string_for_type = {
     # We need this here, otherwise it match "?: TYPE":
@@ -237,4 +243,3 @@ latex_from_pattern_string_for_type = {
     "?:TYPE": (r'\type_element', name),  # NB: TYPE is treated above
     "?:SET(?0)": (r'\type_element', 'self'),
 }
-

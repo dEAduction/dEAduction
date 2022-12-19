@@ -78,7 +78,7 @@ class Goal:
     """
 
     def __init__(self, context: [ContextMathObject], target: ContextMathObject):
-        self.context = context
+        self._context = context
         self.target = target
         self.name_hints = []
         # self.smart_name_bound_vars()
@@ -125,6 +125,20 @@ class Goal:
         if not to_prove:
             new_goal.smart_name_bound_vars()
         return new_goal
+
+    @property
+    def context(self):
+        """
+        Return only non-hidden ContextMathObjects, except if include_hidden.
+        """
+        return [obj for obj in self._context if not obj.is_hidden]
+
+    @context.setter
+    def context(self, context):
+        self._context = context
+
+    def context_included_hidden(self):
+        return self._context
 
     @property
     def context_objects(self) -> [ContextMathObject]:
@@ -287,7 +301,6 @@ class Goal:
         new_target = new_goal.target.math_type
         if new_target == old_target:
             new_goal.target.parent_context_math_object = old_goal.target
-
 
 #############################
 # Bound vars naming methods #
@@ -545,18 +558,21 @@ class Goal:
         """
         Name the given bound var according to its type and the
         name scheme found in self.name_hints.
-        isolated bool may be used to name sequences's indices without bothering
+        isolated bool may be used to name sequences' indices without bothering
         about conflicting with global vars names.
         """
-
-        if not isolated:
-            local_names = [other_var.name for other_var in var.local_context]
+        # For very special names like RealSubGroup or _inst_1:
+        if var.keep_lean_name():
+            name = var.lean_name
         else:
-            local_names = []
+            if not isolated:
+                local_names = [other_var.name for other_var in var.local_context]
+            else:
+                local_names = []
 
-        name = self.provide_good_name(var.math_type, var.preferred_letter(),
-                                      local_names=local_names,
-                                      isolated=isolated)
+            name = self.provide_good_name(var.math_type, var.preferred_letter(),
+                                          local_names=local_names,
+                                          isolated=isolated)
 
         var.name_bound_var(name)
 

@@ -155,7 +155,7 @@ Description
     Voici un premier exercice !
 -/
 begin
-    todo
+    todo,
 end
 
 

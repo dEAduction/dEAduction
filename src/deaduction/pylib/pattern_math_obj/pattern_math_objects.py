@@ -81,6 +81,8 @@ class PatternMathObject(MathObject):
                  imperative_matching=False):
         """
         Init self as a MathObject, plus metavars list.
+        imperative_matching = True means self will not match a MathObject
+        with unknown math_type.
         """
         self.metavars = []
         super().__init__(node=node,
@@ -123,6 +125,9 @@ class PatternMathObject(MathObject):
         self is furnished to which new metavars are appended. Keys are
         metavar nbs.
         """
+
+        # if tree.node == '*INEQUALITY':
+        #     pass  # debug
 
         # (1) Math_type
         math_type = (cls.from_tree(tree.type_, metavars=metavars) if tree.type_
@@ -311,7 +316,7 @@ class PatternMathObject(MathObject):
             #   iff it is equal to the corresponding item in metavar_objects
             # If not, then self matches with math_object providing their
             #   math_types match. In this case, identify metavar.
-            if self in metavars:  # Fixme: use only self.matched_math_object?
+            if self in metavars:  # TODO: use only self.matched_math_object?
                 corresponding_object = self.math_object_from_metavar()
                 match = (math_object == corresponding_object)
             else:
@@ -322,25 +327,34 @@ class PatternMathObject(MathObject):
                     metavars.append(self)
                     metavar_objects.append(math_object)
                     self.matched_math_object = math_object
-                # match = True
             return match
 
         #############
         # Test node #
         #############
         elif node != math_object.node:
-            if node not in metanodes:
+            if node not in metanodes:  # e.g. '*INEQUALITIES'
                 return False
             elif math_object.node not in metanodes[node]:
                 # Groups of nodes, e.g. '*INEQUALITIES"
                 return False
+        if node == '*INEQUALITY':
+            pass  # debug
+        if node == 'PROP_IMPLIES':
+            pass  # debug
         ###############################
         # Test bound var, name, value #
         ###############################
+        # Testing is_bound_var does not seem to be relevant, since this is
+        # determined by the node of self's parent. Furthermore, self could be
+        # a local constant with name RealSubGroup which is a bound var,
+        # but self.is_bound_var fails.
         elif any(self_item != '?' and self_item != math_object_item
                  for self_item, math_object_item in
-                 [(self.is_bound_var, math_object.is_bound_var),
-                  (self.name, math_object.name),
+                 # [(self.is_bound_var, math_object.is_bound_var),
+                 #  (self.name, math_object.name),
+                 #  (self.value, math_object.value)]):
+                 [(self.name, math_object.name),
                   (self.value, math_object.value)]):
             return False
 

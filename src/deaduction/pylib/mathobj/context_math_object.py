@@ -54,6 +54,8 @@ class ContextMathObject(MathObject):
     has_been_used_in_the_proof: bool
     allow_auto_action_: bool = True
 
+    invisible_name_list = ["RealSubGroup"]
+
     def __init__(self, node, info, children, math_type):
         super().__init__(node, info, children, math_type)
 
@@ -65,7 +67,8 @@ class ContextMathObject(MathObject):
 
         # Tags
         self.has_been_used_in_proof = False
-        self.is_hidden = False  # TODO
+        self.is_hidden = (self.name in self.invisible_name_list
+                          or self.name.startswith("_inst_"))
 
     @property
     def is_new(self):

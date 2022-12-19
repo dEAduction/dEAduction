@@ -83,8 +83,8 @@ def string_to_pattern():
             metavars = []
             pattern = PatternMathObject.from_tree(tree, metavars)
             list_.append((pattern, latex_shape, metavars))
-            # print(key)
-            # print(tree.display())
+            print(key)
+            print(tree.display())
 
 
 ########################################

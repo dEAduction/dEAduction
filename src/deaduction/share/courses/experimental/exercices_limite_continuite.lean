@@ -621,6 +621,20 @@ namespace composition
 
 open set
 
+lemma exercise.limite_positive
+(f: ℝ → ℝ)
+(H0: continuous f) (H1: f(0) = 1):
+∃ δ>(0:ℝ), ∀ x ∈ Ioo (-δ) δ, f(x) >0 :=
+/- dEAduction
+PrettyName
+  Limite positive
+Description
+  Deux limites en hypothèse, une en conclusion...
+-/
+begin
+  todo
+end
+
 lemma definition.composition {X Y Z: Type} {f: X → Y} {g:Y → Z} {x:X}:
 composition g f x = g (f x)
 :=
@@ -669,6 +683,35 @@ begin
 end
 
 end composition
+
+namespace Cauchy
+
+definition suite_de_cauchy (u: ℕ → ℝ) : Prop :=
+∀ ε>0, ∃ N: ℕ, ∀ p≥N, ∀ q≥N, |u p - u q | < ε
+
+definition uniformement_continue (f: ℝ → ℝ) : Prop :=
+∀ ε>0, ∃ δ>0, ∀ x y: ℝ, |f x - f y | < ε
+
+lemma exercise.continue_de_uniformement_continue
+(f: ℝ → ℝ) (H0: uniformement_continue f):
+continuous f :=
+begin
+  todo,
+end
+
+lemma exercise.cauchy_uniformement_continue
+(u: ℕ → ℝ) (f: ℝ → ℝ)
+(H0: suite_de_cauchy u) (H1: uniformement_continue f):
+suite_de_cauchy (λ n:ℕ, f (u n))
+:=
+begin
+  todo,
+end
+
+-- TODO: cauchy => bornée, bornée => valeur d'adh,
+-- Cauchy + va => cv
+
+end Cauchy
 
 namespace DL
 /- dEAduction
