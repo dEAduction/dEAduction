@@ -105,19 +105,8 @@ class ContextMathObject(MathObject):
     def remove_future_info(self):
         self.child_context_math_object = None
 
-    # def raw_latex_shape(self, negate=False, text_depth=0):
-    #     """
-    #     Override the raw_latex_shape method for MathObject.
-    #     """
-    #     shape = super().raw_latex_shape(negate, text_depth)
-    #     if (hasattr(self, 'has_been_used_in_proof')
-    #             and self.has_been_used_in_proof):
-    #         shape = [r'\used_property'] + shape
-    #     return shape
-
     def display_with_type(self, format_='html'):
-        used_in_proof = ((hasattr(self, 'has_been_used_in_proof')
-                         and self.has_been_used_in_proof))
+        used_in_proof = self.has_been_used_in_proof
         lean_name = self.to_display(format_=format_)
         math_expr = self.math_type_to_display(format_=format_,
                                               used_in_proof=used_in_proof)

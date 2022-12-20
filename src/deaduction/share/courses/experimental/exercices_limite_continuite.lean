@@ -670,7 +670,8 @@ end
 
 lemma definition.uniformly_continuous
 (f: ℝ → ℝ) : uniformly_continuous f ↔
-∀ ε>0, ∃ δ>0, ∀ x y: ℝ, |f x - f y | < ε
+∀ ε>0, ∃ δ>0, ∀ x y: ℝ,
+(|x - y| < δ → |f x - f y | < ε)
 :=
 /- dEAduction
 PrettyName

@@ -238,7 +238,7 @@ class MathObject:
                 bound_var_type = self.math_type.children[0]
                 bound_var = BoundVar.from_math_type(bound_var_type,
                                                     parent=self)
-                # We add 3 children for compatibility (probably useless)
+                # We add 3 children for compatibility
                 self.children = [bound_var_type, bound_var,
                                  MathObject.NO_MATH_TYPE]
 
@@ -418,7 +418,8 @@ class MathObject:
         for which the bound var is used only to display a context object
         (in propositions they are replaced by lambda expressions).
         """
-        nodes = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_INTENSION", "LAMBDA")
+        nodes = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_INTENSION", "LAMBDA",
+                 "LOCAL_CONSTANT")
 
         if self.node in nodes:
             return len(self.children) == 3 and self.children[1].is_bound_var
@@ -716,9 +717,15 @@ class MathObject:
                 bound_var_1 = self.children[1]
                 bound_var_2 = other.children[1]
                 bound_var_1.mark_identical_bound_vars(bound_var_2)
+                # log.debug(f"Comparing {self} and {other}")
+                # log.debug(f"Marking BV {bound_var_1, bound_var_2}")
 
             for child0, child1 in zip(self.children, other.children):
                 if child0 != child1:
+                    # if self.node == 'PROP_≥':
+                    #     log.debug(f"Distinct child: {child0} ")
+                    #     log.debug(f"and {child1}")
+                    #     log.debug(f" in {self}")
                     equal = False
 
             # Un-mark bound_vars
@@ -1780,11 +1787,14 @@ class BoundVar(MathObject):
         numbered by the same number. Equality test for bound var amounts to
         equality of their numbers.
         """
-        if isinstance(other, BoundVar):
+        if self is other:
+            return True
+
+        elif isinstance(other, BoundVar):
             if self.bound_var_nb() != -1:
                 return self.bound_var_nb() == other.bound_var_nb()
-            else:
-                return self is other
+            # else:
+                # return True  # This would be too easy!
         else:
             return False
 
