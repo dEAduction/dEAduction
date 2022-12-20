@@ -57,7 +57,7 @@ latex_from_app_pattern = {
     "APP(LOCAL_CONSTANT: !SET_FAMILY(?2, ?3)(...), ?1: ?2)":
         ('(0,).name', ['_', (1, )]),
     "APP(CONSTANT/name=limit_function, LAMBDA(...), ?0, ?1)":
-        ("lim", ['_', (-3, 1), r'\to', (-2,)], ' ', (-3, 2), " = ", (-1,)),
+        ("lim", ['_', (-3, 1), r'\to', (-2,)], ' ', (-3, 2), " = ", (-1,))
 }
 
 # TODO: english translation
@@ -113,6 +113,8 @@ generic_app_dict = {
     # f(x):
     "APP(CST?, ...)": ((-1,), [r'\text_is', (0,)]),
     "APP(?0: !FUNCTION(?1, ?2), ?3: ?1)": ((0,), r"\parentheses", (1,)),
+    # Replace x ↦ f(x) by f:
+    "LAMBDA(?0, ?1, APP(?3, ?1))": ((2, 0),)
 }
 
 

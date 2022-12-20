@@ -140,7 +140,8 @@ latex_from_node = {
     "CONSTANT": (name,),
     "NUMBER": (value,),
     "LOCAL_CONSTANT": ('self.local_constant_shape',),
-    "APPLICATION": (0, r'\parentheses', 1)
+    "APPLICATION": (0, r'\parentheses', 1),
+    "LAMBDA": (1, r"\mapsto", 2)
     }
 
 # --------------------------------------------------------- #
@@ -188,6 +189,7 @@ latex_to_utf8_dic = {
     r'\bigcup': '⋃',
     r'\emptyset': '∅',
     r'\to': '→',
+    r'\mapsto': '↦',
     r'\neq': '≠',
     r'\leq': '≤',
     r'\geq': '≥',
