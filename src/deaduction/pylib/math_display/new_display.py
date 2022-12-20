@@ -182,9 +182,12 @@ def expanded_latex_shape(math_object=None, shape=None, text=False):
 
     if not shape:
         shape = latex_shape(math_object, text=text)
-    if shape[0] == r'\no_text':
-        text = False
-        shape.pop(0)
+
+    # This is not pertinent : no_text will be processed in to_display()
+    #  when calling shallow_text_to_text()
+    # if shape[0] == r'\no_text':
+    #     text = False
+    #     shape.pop(0)
 
     #####################
     # Expand first item #

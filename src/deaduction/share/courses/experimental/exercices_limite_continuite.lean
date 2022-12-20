@@ -292,8 +292,6 @@ lemma definition.continuous_at (f : ℝ → ℝ) (a : ℝ) :
 /- dEAduction
 PrettyName
   Continuité en un point
-ImplicitUse
-  True
 -/
 begin
   refl
@@ -654,7 +652,8 @@ definition cauchy (u: ℕ → ℝ) : Prop :=
 ∀ ε>0, ∃ N: ℕ, ∀ p≥N, ∀ q≥N, |u p - u q | < ε
 
 definition uniformly_continuous (f: ℝ → ℝ) : Prop :=
-∀ ε>0, ∃ δ>0, ∀ x y: ℝ, |f x - f y | < ε
+∀ ε>0, ∃ δ>0, ∀ x y: ℝ,
+(|x - y| < δ → |f x - f y | < ε)
 
 lemma definition.suite_de_cauchy
 (u: ℕ → ℝ) :
@@ -663,6 +662,8 @@ cauchy u ↔ ∀ ε>0, ∃ N: ℕ, ∀ p≥N, ∀ q≥N, |u p - u q | < ε
 /- dEAduction
 PrettyName
   Suites de Cauchy
+ImplicitUse
+  True
 -/
 begin
   refl,
@@ -676,6 +677,8 @@ lemma definition.uniformly_continuous
 /- dEAduction
 PrettyName
   Continuité uniforme
+ImplicitUse
+  True
 -/
 begin
   refl,
