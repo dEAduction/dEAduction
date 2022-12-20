@@ -410,9 +410,9 @@ class PatternMathObject(MathObject):
         ############
         # Children #
         ############
-        # if self.node == 'SET_INTER+':
-        #     print(self)
-        #     print(math_object)
+        if self.node == 'LOCAL_CONSTANT' and len(children) == 3:
+            print(self)
+            print(math_object)
         for child0, child1 in zip(children, math_object.children):
             if not child0.recursive_match(child1, metavars, metavar_objects):
                 match = False

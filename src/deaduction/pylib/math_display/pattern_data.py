@@ -153,9 +153,10 @@ def exists_patterns_from_forall():
 latex_from_pattern_string = {
     "LOCAL_CONSTANT: !SET_FAMILY(?3, ?4)(?0, ?1, ?2)":
         # ("toto",),
+        # FIXME: the following crashes!!!
         # (r"\{", name, ['_', (1,)], ', ', (1,), r"\in_symbol", 3, r"\}"),
         (r"\{", name, ['_', 1], ', ', 1, r"\in_symbol", 3, r"\}"),
-    "LAMBDA: !SET_FAMILY(?0, ?2)(...)":
+    "LAMBDA: !SET_FAMILY(?0, ?3)(?0, ?1, ?2)":
         # (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}"),
         # (r"\{", 'self.body', ', ', 'self.bound_var', r"\in_symbol",
         #  'self.bound_var_type', r"\}"),
