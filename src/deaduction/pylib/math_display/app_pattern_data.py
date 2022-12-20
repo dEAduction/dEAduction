@@ -55,7 +55,9 @@ latex_from_app_pattern = {
     # APP(E, i) --> E_i
     #   Here E is the name of the local constant, which is self.children[0]
     "APP(LOCAL_CONSTANT: !SET_FAMILY(?2, ?3)(...), ?1: ?2)":
-        ('(0,).name', ['_', (1, )])
+        ('(0,).name', ['_', (1, )]),
+    "APP(CONSTANT/name=limit_function, LAMBDA(...), ?0, ?1)":
+        ("lim", ['_', (-3, 1), r'\to', (-2,)], ' ', (-3, 2), " = ", (-1,)),
 }
 
 # TODO: english translation
@@ -82,7 +84,9 @@ latex_from_constant_name = {
     "limit_plus_infinity": ("lim ", -1, " = +∞"),
     "limit_function": ("lim", ['_', (-2,)], (-3,), " = ", (-1,)),
     "continuous": (-1, r'\text_is', _("continuous")),
+    "uniformly_continuous": (-1, r'\text_is', _("uniformly continuous")),
     "continuous_at": (-2, r'\text_is', _("continuous at") + " ", -1),
+    "cauchy": (-1, r'\text_is', _("a Cauchy sequence")),
     "abs": ('|', -1, '|'),
     "max": ("Max", r'\parentheses', -2, ",", -1),
     "inv": ([r'\parentheses', (-1, )], [r'^', '-1']),

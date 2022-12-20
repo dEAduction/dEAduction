@@ -129,9 +129,11 @@ class MathObject:
     children          : list  # List of MathObjects
 
     Variables = {}  # Containing every element having an identifier,
-    # i.e. global and bound variables. This is used to avoid duplicate.
+    # i.e. global and bound variables, whose node is LOCAL_CONSTANT.
+    # This is used to avoid duplicate.
     # key = identifier,
     # value = MathObject
+    constants = {}  # WHen node='CONSTANT'. Again, used to avoid duplicates.
     NUMBER_SETS_LIST = ['ℕ', 'ℤ', 'ℚ', 'ℝ']
     number_sets = []  # Ordered list of all sets of numbers involved in some
     # MathObjects of the context, ordered sublist of ['ℕ', 'ℤ', 'ℚ', 'ℝ']
@@ -289,9 +291,21 @@ class MathObject:
         else:
             math_type = None  # NB math_type is a @property, cf above
 
-        # (1) Treatment of global variables: avoiding duplicate
+        # (1) Treatment of constants
+        if node == 'CONSTANT':
+            name = info.get('name')
+            if name and name in MathObject.constants:
+                math_object = MathObject.constants[name]
+            else:
+                math_object = cls(node=node,
+                                  info=info,
+                                  math_type=math_type,
+                                  children=children)
+                MathObject.constants[name] = math_object
+
+        # (2) Treatment of global variables: avoiding duplicate
         # This concerns only MathObjects with node=='LOCAL_CONSTANT'
-        if 'identifier' in info.keys():
+        elif 'identifier' in info.keys():
             identifier = info['identifier']
             if identifier in MathObject.Variables:
                 # (1.a) Return already existing MathObject
@@ -317,18 +331,18 @@ class MathObject:
                 MathObject.Variables[identifier] = math_object
 
         else:
-            # (2) Generic instantiation (everything but not variable)
+            # (3) Generic instantiation (everything but not variable)
             math_object = cls(node=node,
                               info=info,
                               math_type=math_type,
                               children=children)
 
-        # (3) Detect sets of numbers and insert in number_sets if needed
+        # (4) Detect sets of numbers and insert in number_sets if needed
         # at the right place so that the list stay ordered
         name = math_object.display_name
         MathObject.add_numbers_set(name)
 
-        # (4) Special treatment for sequences and set families
+        # (5) Special treatment for sequences and set families
         math_object.process_sequences_and_likes()
 
         return math_object
@@ -1755,8 +1769,13 @@ class BoundVar(MathObject):
         numbered by the same number. Equality test for bound var amounts to
         equality of their numbers.
         """
-        return (isinstance(other, BoundVar)
-                and self.bound_var_nb() == other.bound_var_nb())
+        if isinstance(other, BoundVar):
+            if self.bound_var_nb() != -1:
+                return self.bound_var_nb() == other.bound_var_nb()
+            else:
+                return self is other
+        else:
+            return False
 
     # @classmethod
     # def from_has_bound_var_parent(cls, parent):

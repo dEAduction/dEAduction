@@ -73,8 +73,8 @@ class PatternMathObject(MathObject):
     loc_csts_for_metavars   = []  # and corresponding local constants
     __tmp_metavars_csts         = None
     __tmp_loc_csts_for_metavars = None
-    __metavars        = None  # Temporary list of mvars
-    __metavar_objects = None  # Objects matching metavars (see self.match)
+    _metavars        = None  # Temporary list of mvars
+    _metavar_objects = None  # Objects matching metavars (see self.match)
 
     def __init__(self, node, info, children,
                  math_type=None,
@@ -94,28 +94,6 @@ class PatternMathObject(MathObject):
     @classmethod
     def new_metavar(cls, math_type):
         return MetaVar(math_type)
-
-    @classmethod
-    def from_string(cls, string, metavars=None):
-        """
-        Create a PMO from a structured string, such as
-        "APP(?0: SEQUENCE(?1, ?2), ?3)".
-        This is used in conjunction with display_data.
-        Node names may be metanames, like '*INEQUALITY' that stands for any
-        inequality node.
-        """
-
-        if not metavars:
-            metavars = {}
-
-        [tree] = tree_list(string)
-
-        # For debug
-        tree.display()
-
-        pmo = PatternMathObject.from_tree(tree, metavars=metavars)
-        pmo.metavars = metavars.values()
-        return pmo
 
     @classmethod
     def from_tree(cls, tree, metavars):
@@ -275,17 +253,21 @@ class PatternMathObject(MathObject):
         mvar.matched_math_object.
         """
 
-        PatternMathObject.__metavars = []
-        PatternMathObject.__metavar_objects = []
-        match = self.recursive_match(math_object)
-        # log.debug(f"Matching...")
+        metavars = []
+        metavar_objects = []
+        match = self.recursive_match(math_object, metavars, metavar_objects)
+        if match:
+            PatternMathObject._metavars = metavars
+            PatternMathObject._metavar_objects = metavar_objects
+        # log.debug(f"Matching {self.node} and {math_object.node}...")
         # list_ = [(PatternMathObject.__metavars[idx].to_display(),
         #           PatternMathObject.__metavar_objects[idx].to_display())
         #          for idx in range(len(PatternMathObject.__metavars))]
         # log.debug(f"    Metavars, objects: {list_}")
         return match
 
-    def recursive_match(self, math_object: MathObject) -> bool:
+    def recursive_match(self, math_object: MathObject,
+                        metavars, metavar_objects) -> bool:
         """
         Test if math_object match self. This is a recursive test.
         The list metavars contains the metavars that have already been
@@ -293,14 +275,17 @@ class PatternMathObject(MathObject):
         index in the metavar_objects list.
         """
 
-        metavars = PatternMathObject.__metavars
-        metavar_objects = PatternMathObject.__metavar_objects
+        # metavars = PatternMathObject._metavars
+        # metavar_objects = PatternMathObject._metavar_objects
         children = self.children
 
         node = self.node
 
         # if math_object:
         #     log.debug(f"Matching {self} and {math_object}...")
+
+        # if metavars:
+        #     pass
 
         # -----------------------------------------------
         # Case of NO_MATH_TYPE (avoid infinite recursion!)
@@ -322,7 +307,8 @@ class PatternMathObject(MathObject):
             else:
                 mvar_type = self.math_type
                 math_type = math_object.math_type
-                match = mvar_type.recursive_match(math_type)
+                match = mvar_type.recursive_match(math_type,
+                                                  metavars, metavar_objects)
                 if match:
                     metavars.append(self)
                     metavar_objects.append(math_object)
@@ -338,10 +324,13 @@ class PatternMathObject(MathObject):
             elif math_object.node not in metanodes[node]:
                 # Groups of nodes, e.g. '*INEQUALITIES"
                 return False
-        if node == '*INEQUALITY':
-            pass  # debug
-        if node == 'PROP_IMPLIES':
-            pass  # debug
+        # if node == "QUANT_∀":
+        #     print("toto")
+        # if node == '*INEQUALITY':
+        #     print("toto")
+        #     pass  # debug
+        # if node == 'PROP_IMPLIES':
+        #     pass  # debug
         ###############################
         # Test bound var, name, value #
         ###############################
@@ -361,7 +350,8 @@ class PatternMathObject(MathObject):
         ##################################
         # Recursively test for math_type #
         ##################################
-        elif not self.math_type.recursive_match(math_object.math_type):
+        elif not self.math_type.recursive_match(math_object.math_type,
+                                                metavars, metavar_objects):
             # log.debug(f"distinct types {self.math_type}")
             # log.debug(f"math_object type     "
             #           f"{math_object.math_type.to_display()}")
@@ -414,7 +404,7 @@ class PatternMathObject(MathObject):
         # Children #
         ############
         for child0, child1 in zip(children, math_object.children):
-            if not child0.recursive_match(child1):
+            if not child0.recursive_match(child1, metavars, metavar_objects):
                 match = False
 
         # Unmark bound_vars
@@ -426,11 +416,12 @@ class PatternMathObject(MathObject):
         return match
 
     def math_object_from_metavar(self):
-        if self not in PatternMathObject.__metavars:
+        # TODO: use MetaVar.matched_math_object
+        if self not in PatternMathObject._metavars:
             return MathObject.NO_MATH_TYPE
         else:
-            index = PatternMathObject.__metavars.index(self)
-            math_object = PatternMathObject.__metavar_objects[index]
+            index = PatternMathObject._metavars.index(self)
+            math_object = PatternMathObject._metavar_objects[index]
             return math_object
 
     def apply_matching(self):

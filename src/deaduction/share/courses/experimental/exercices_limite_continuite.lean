@@ -316,48 +316,6 @@ end fonctions
 
 end definitions
 
-
-namespace tests
-
-lemma exercise.test_ineq_triang
-(x y l l' ε: ℝ) (H: |x-l| < ε) (H': |y-l'| < ε):
-|(x+y) - (l + l')| < ε :=
-begin
-  todo
-end
-
--- lemma exercise.test_compute
--- :
--- 0 ≤ 1 ∧ 2+2 = 4
--- :=
--- begin
---   todo
---   -- split,
---   -- have H : 1+1=2, rotate,
---   -- compute_n 1,
---   -- compute_n 1,
---   -- todo
--- end
-
--- lemma exercise.test_compute_2
--- (a: ℝ) (H: a >0):
--- (a +1 > 1)
--- :=
--- begin
---   todo
--- end
-
--- lemma exercise.test_compute_3
--- (a: ℝ) (H: 0 ≤ a) (H': a ≠ 0):
--- (a +1 > 1)
--- :=
--- begin
---   todo
--- end
-
-end tests
-
-
 -----------------
 --  exercices  --
 -----------------
@@ -393,7 +351,7 @@ begin
 --   intros n H1,
 --   rw H,
 -- `[ solve1 {norm_num at * }, trace "EFFECTIVE CODE n°4.0"] <|> `[ `[ norm_num at *, trace "EFFECTIVE CODE n°5.0"] <|> `[ skip, trace "EFFECTIVE CODE n°5.1"], compute_n 10, trace "EFFECTIVE CODE n°4.1"],
-  todo
+  todo,
 end
 
 
@@ -410,7 +368,7 @@ Description
   il s'agit d'utiliser une hypothèse de limite.
 -/
 begin
-  todo
+  todo,
 end
 
 
@@ -473,7 +431,7 @@ begin
 -- have H10 := H9 n n',
 -- -- norm_num at H10,
 -- rw H7 at H10,
-  todo
+  todo,
   -- rw limit,
   -- intro ε, intro H1,
   -- rw limit at H H',
@@ -510,7 +468,7 @@ Description
   définitions de limites ?...
 -/
 begin
-  todo
+  todo,
   -- contrapose H'' with H1,
   -- push_neg,
   -- push_neg at H1,
@@ -543,7 +501,7 @@ PrettyName
   Limite d'un produit (cas particulier) (**)
 -/
 begin
-  todo
+  todo,
 end
 
 
@@ -591,7 +549,7 @@ PrettyName
   Théorème des gendarmes (***)
 -/
 begin
-  todo
+  todo,
 end
 
 
@@ -604,7 +562,7 @@ lemma limite_produit
 limit (λn, (u n) * (u' n)) (l*l')
 :=
 begin
-  todo
+  todo,
 end
 
 end exercices_suites
@@ -624,7 +582,7 @@ open set
 lemma exercise.limite_positive
 (f: ℝ → ℝ)
 (H0: continuous f) (H1: f(0) = 1):
-∃ δ>(0:ℝ), ∀ x ∈ Ioo (-δ) δ, f(x) >0 :=
+∃ δ>(0:ℝ), ∀ x, |x| < δ → f(x) >0 :=
 /- dEAduction
 PrettyName
   Limite positive
@@ -632,7 +590,7 @@ Description
   Deux limites en hypothèse, une en conclusion...
 -/
 begin
-  todo
+  todo,
 end
 
 lemma definition.composition {X Y Z: Type} {f: X → Y} {g:Y → Z} {x:X}:
@@ -644,8 +602,9 @@ end
 
 lemma exercise.composition_limite_fonction
 (f: ℝ → ℝ) (g: ℝ → ℝ) (a b c : ℝ)
-(H0: limit_function f a b) (H1: limit_function g b c):
-limit_function (composition g f) a c :=
+(H0: limit_function (λ x, f x) a b)
+(H1: limit_function (λ y, g y) b c):
+limit_function (λ x, g ( f ( x)) ) a c :=
 /- dEAduction
 PrettyName
   Limite et composition
@@ -653,7 +612,7 @@ Description
   Deux limites en hypothèse, une en conclusion...
 -/
 begin
-  todo
+  todo,
 end
 
 
@@ -665,7 +624,7 @@ PrettyName
   Continuité et composition
 -/
 begin 
-  todo
+  todo,
 end
 
 
@@ -679,31 +638,68 @@ Description
   Deux limites en hypothèse, une en conclusion...
 -/
 begin 
-  todo
+  todo,
 end
 
 end composition
 
-namespace Cauchy
 
-definition suite_de_cauchy (u: ℕ → ℝ) : Prop :=
+namespace suites_de_Cauchy
+/- dEAduction
+PrettyName
+  Suites de Cauchy, continuité uniforme
+-/
+
+definition cauchy (u: ℕ → ℝ) : Prop :=
 ∀ ε>0, ∃ N: ℕ, ∀ p≥N, ∀ q≥N, |u p - u q | < ε
 
-definition uniformement_continue (f: ℝ → ℝ) : Prop :=
+definition uniformly_continuous (f: ℝ → ℝ) : Prop :=
 ∀ ε>0, ∃ δ>0, ∀ x y: ℝ, |f x - f y | < ε
 
+lemma definition.suite_de_cauchy
+(u: ℕ → ℝ) :
+cauchy u ↔ ∀ ε>0, ∃ N: ℕ, ∀ p≥N, ∀ q≥N, |u p - u q | < ε
+:=
+/- dEAduction
+PrettyName
+  Suites de Cauchy
+-/
+begin
+  refl,
+end
+
+lemma definition.uniformly_continuous
+(f: ℝ → ℝ) : uniformly_continuous f ↔
+∀ ε>0, ∃ δ>0, ∀ x y: ℝ, |f x - f y | < ε
+:=
+/- dEAduction
+PrettyName
+  Continuité uniforme
+-/
+begin
+  refl,
+end
+
 lemma exercise.continue_de_uniformement_continue
-(f: ℝ → ℝ) (H0: uniformement_continue f):
+(f: ℝ → ℝ) (H0: uniformly_continuous f):
 continuous f :=
+/- dEAduction
+PrettyName
+  Uniformément continu implique continu
+-/
 begin
   todo,
 end
 
 lemma exercise.cauchy_uniformement_continue
 (u: ℕ → ℝ) (f: ℝ → ℝ)
-(H0: suite_de_cauchy u) (H1: uniformement_continue f):
-suite_de_cauchy (λ n:ℕ, f (u n))
+(H0: cauchy u) (H1: uniformly_continuous f):
+cauchy (λ n:ℕ, f (u n))
 :=
+/- dEAduction
+PrettyName
+  Image d'une suite de Cauchy
+-/
 begin
   todo,
 end
@@ -711,41 +707,41 @@ end
 -- TODO: cauchy => bornée, bornée => valeur d'adh,
 -- Cauchy + va => cv
 
-end Cauchy
+end suites_de_Cauchy
 
-namespace DL
-/- dEAduction
-PrettyName
-  Développements limités
--/
+-- namespace DL
+-- /- dEAduction
+-- PrettyName
+--   Développements limités
+-- -/
 
-definition DL_order_0 (f: ℝ → ℝ) : Prop :=
-∃ (φ : ℝ → ℝ), (limit_function φ 0 0) and 
-(∀ h, f h = f 0 + φ h)
+-- definition DL_order_0 (f: ℝ → ℝ) : Prop :=
+-- ∃ (φ : ℝ → ℝ), (limit_function φ 0 0) and 
+-- (∀ h, f h = f 0 + φ h)
 
-definition DL_order_1 (f: ℝ → ℝ) (a : ℝ) : Prop :=
-∃ (φ : ℝ → ℝ), (limit_function φ 0 0) and 
-(∀ h, f h = f 0 + a * h + (φ h) * h)
+-- definition DL_order_1 (f: ℝ → ℝ) (a : ℝ) : Prop :=
+-- ∃ (φ : ℝ → ℝ), (limit_function φ 0 0) and 
+-- (∀ h, f h = f 0 + a * h + (φ h) * h)
 
-lemma definition.DL_order_0
-(f: ℝ → ℝ) (a : ℝ):
-(DL_order_0 f) ↔ (∃ (φ : ℝ → ℝ), (limit_function φ 0 0) and 
-(∀ h, f h = f 0 + φ h))
-:=
-begin
-  todo
-end
+-- lemma definition.DL_order_0
+-- (f: ℝ → ℝ) (a : ℝ):
+-- (DL_order_0 f) ↔ (∃ (φ : ℝ → ℝ), (limit_function φ 0 0) and 
+-- (∀ h, f h = f 0 + φ h))
+-- :=
+-- begin
+--   todo
+-- end
 
-example 
-(f: ℝ → ℝ):
-(DL_order_0 f) ↔ ∃ l, (limit_function f 0 l) :=
-begin
-  todo
-end
+-- example 
+-- (f: ℝ → ℝ):
+-- (DL_order_0 f) ↔ ∃ l, (limit_function f 0 l) :=
+-- begin
+--   todo
+-- end
 
 
 
-end DL
+-- end DL
 
 end exercices_fonctions
 
