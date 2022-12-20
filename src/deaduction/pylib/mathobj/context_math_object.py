@@ -70,6 +70,9 @@ class ContextMathObject(MathObject):
         self.is_hidden = (self.name in self.invisible_name_list
                           or self.name.startswith("_inst_"))
 
+    def __repr__(self):
+        return self.debug_repr('CMO')
+
     @property
     def is_new(self):
         return self.parent_context_math_object is None

@@ -180,8 +180,19 @@ class MathObject:
         if node == 'APPLICATION' and children[0].node == 'APPLICATION':
             self.children = self.children[0].children + [self.children[1]]
 
+    def debug_repr(self, typ):
+        if self.name:
+            rep = self.name
+        elif self.value:
+            rep = self.value
+        elif self.children:
+            rep = f"{typ}(node={self.node}, children={self.children})"
+        else:
+            rep = f"{typ}(node={self.node})"
+        return rep
+
     def __repr__(self):
-        return self.to_display(format_="utf8")
+        return self.debug_repr('MO')
 
     @classmethod
     def application(cls, function, var):
@@ -1776,6 +1787,9 @@ class BoundVar(MathObject):
                 return self is other
         else:
             return False
+
+    def __repr__(self):
+        return self.debug_repr('BV')
 
     # @classmethod
     # def from_has_bound_var_parent(cls, parent):

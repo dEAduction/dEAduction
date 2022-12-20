@@ -91,6 +91,9 @@ class PatternMathObject(MathObject):
                          math_type=math_type)
         self.imperative_matching = imperative_matching
 
+    def __repr__(self):
+        return self.debug_repr('PMO')
+
     @classmethod
     def new_metavar(cls, math_type):
         return MetaVar(math_type)
@@ -499,6 +502,9 @@ class MetaVar(PatternMathObject):
         Redefine __eq__, otherwise all METAVARS are equals!?
         """
         return self is other
+
+    def __repr__(self):
+        return self.debug_repr('MV')
 
     @property
     def nb(self):
