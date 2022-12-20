@@ -84,6 +84,10 @@ class DefinitionMathObject(MathObject, Definition):
         Return True if successful.
         This is useful because exercise may start before ips is set.
         """
+        match_pattern = self.info.get("MatchPattern")
+        if match_pattern:
+            print(match_pattern)
+
         if not self.definition.initial_proof_state:
             return False
         elif self.pattern:

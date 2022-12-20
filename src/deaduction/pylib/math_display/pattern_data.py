@@ -117,6 +117,8 @@ quant_pattern = {
     (r"\forall", (1,), r" \set", ", ", (2, )),
     "QUANT_∀(SEQUENCE(...), ?0, ?1)":
     (r"\forall", (1,), r" \sequence_in", (0, 1), ", ", (2, )),
+    "QUANT_∀(SET_FAMILY(...), ?0, ?1)":
+    (r"\forall", (1,), r" \type_family_subset", (0, 1), ", ", (2, )),
     # "QUANT_∀(LOCAL_CONSTANT/name=RealSubGroup, ?0, ?1)":
     #     (r"\forall", (1,), r'\in', r'\real', ", ", (2,)),
     # Bounded quantification:
@@ -149,8 +151,10 @@ def exists_patterns_from_forall():
 
 # The '!' means type must match (NO_MATH_TYPE not allowed)
 latex_from_pattern_string = {
-    "LOCAL_CONSTANT: !SET_FAMILY(?3, ?4)(...)":
-        (r"\{", name, ['_', (1,)], ', ', (1,), r"\in_symbol", 3, r"\}"),
+    "LOCAL_CONSTANT: !SET_FAMILY(?3, ?4)(?0, ?1, ?2)":
+        # ("toto",),
+        # (r"\{", name, ['_', (1,)], ', ', (1,), r"\in_symbol", 3, r"\}"),
+        (r"\{", name, ['_', 1], ', ', 1, r"\in_symbol", 3, r"\}"),
     "LAMBDA: !SET_FAMILY(?0, ?2)(...)":
         # (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}"),
         # (r"\{", 'self.body', ', ', 'self.bound_var', r"\in_symbol",

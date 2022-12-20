@@ -233,13 +233,13 @@ class PatternMathObject(MathObject):
         """
         return self is other
 
-    @property
-    def name(self):
-        """
-        If self has no name, then return "?", meaning that self should match
-        any name. Override MathObject.name.
-        """
-        return self.info.get('name', '?')
+    # @property
+    # def name(self):
+    #     """
+    #     If self has no name, then return "?", meaning that self should match
+    #     any name. Override MathObject.name.
+    #     """
+    #     return self.info.get('name')
 
     def is_metavar(self):
         return isinstance(self, MetaVar)
@@ -341,14 +341,18 @@ class PatternMathObject(MathObject):
         # determined by the node of self's parent. Furthermore, self could be
         # a local constant with name RealSubGroup which is a bound var,
         # but self.is_bound_var fails.
-        elif any(self_item != '?' and self_item != math_object_item
-                 for self_item, math_object_item in
-                 # [(self.is_bound_var, math_object.is_bound_var),
-                 #  (self.name, math_object.name),
-                 #  (self.value, math_object.value)]):
-                 [(self.name, math_object.name),
-                  (self.value, math_object.value)]):
+        elif self.name and self.name != math_object.name:
             return False
+        elif self.value and self.value != math_object.valeu:
+            return False
+        # elif any(self_item != '?' and self_item != math_object_item
+        #          for self_item, math_object_item in
+        #          # [(self.is_bound_var, math_object.is_bound_var),
+        #          #  (self.name, math_object.name),
+        #          #  (self.value, math_object.value)]):
+        #          [(self.name, math_object.name),
+        #           (self.value, math_object.value)]):
+        #     return False
 
         ##################################
         # Recursively test for math_type #
@@ -406,6 +410,9 @@ class PatternMathObject(MathObject):
         ############
         # Children #
         ############
+        # if self.node == 'SET_INTER+':
+        #     print(self)
+        #     print(math_object)
         for child0, child1 in zip(children, math_object.children):
             if not child0.recursive_match(child1, metavars, metavar_objects):
                 match = False
@@ -504,7 +511,9 @@ class MetaVar(PatternMathObject):
         return self is other
 
     def __repr__(self):
-        return self.debug_repr('MV')
+        math_obj = self.matched_math_object
+        rep = f"MV n°{self.nb}" if not math_obj else f"MV, matched = {math_obj}"
+        return rep
 
     @property
     def nb(self):

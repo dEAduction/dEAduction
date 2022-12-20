@@ -287,7 +287,7 @@ def conc_n_trans(msgs) -> str:
     return msg
 
 
-def get_helm_msgs(key: str, target=False) -> []:
+def get_help_msgs(key: str, target=False) -> []:
     """
     Return the content of the use and prove dict after concatenation into 3
     msgs, and translations.

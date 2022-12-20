@@ -100,7 +100,7 @@ latex_from_node = {
     "SET_EXTENSION1": (r'\{', 0, r'\}'),
     "SET_EXTENSION2": (r'\{', 0, ', ', 1, r'\}'),
     "SET_EXTENSION3": (r'\{', 0, ', ', 1, ', ', 2, r'\}'),
-    "SET_FAMILY": (0,  r" \to ", r'{\mathcal P}', r'\parentheses', 1),
+    "SET_FAMILY": (0,  r" \to ", r'\set_of_subsets', r'\parentheses', 1),
     # "SET_IMAGE": (0, "(", 1, ")"),
     # "SET_INVERSE": (0, [r'^', '-1'], '(', 1, ')'),  # LEAVE the list as is!
     "SET_IMAGE": (0, r'\set_image', r'\parentheses', 1),
@@ -494,6 +494,7 @@ def latex_to_utf8(string: Union[str, list]):
             else:
                 utf8_string = list(utf8_string)
 
+    return utf8_string if utf8_string is not None else string
     return utf8_string if utf8_string is not None else string
 
 

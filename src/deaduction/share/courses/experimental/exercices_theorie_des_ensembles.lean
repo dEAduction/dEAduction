@@ -173,11 +173,16 @@ begin
     exact iff.rfl
 end
 
-lemma definition.intersection_quelconque_ensembles {I : Type} {E : I → set X}  {x : X} :
+lemma definition.intersection_quelconque_ensembles {I : index_set} {E : I → set X}  {x : X} :
 (x ∈ set.Inter E) ↔ (∀ i:I, x ∈ E i) :=
 /- dEAduction
 PrettyName
     Intersection d'une famille quelconque d'ensembles
+MatchPattern
+    IFF(
+    ∈(?0, SET_INTER+(?1) )
+    ∀(TYPE, ?2, ∈(?0, APP(?1, ?2) ) ) 
+    )
 -/
 begin
     exact set.mem_Inter
@@ -195,8 +200,8 @@ begin
     exact iff.rfl
 end
 
-lemma definition.union_quelconque_ensembles {I : Type} {E : I → set X}  {x : X} :
-(x ∈ set.Union (λ i, E i)) ↔ (∃ i:I, x ∈ E i) :=
+lemma definition.union_quelconque_ensembles {I : index_set} {E : I → set X}  {x : X} :
+(x ∈ set.Union E) ↔ (∃ i:I, x ∈ E i) :=
 /- dEAduction
 PrettyName
     Union d'une famille quelconque d'ensembles

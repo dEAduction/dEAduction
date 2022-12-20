@@ -281,8 +281,12 @@ class ContextMathObject(MathObject):
         return msg1
 
     def help_definition(self, target=False, math_obj=None) -> (str, str, str):
+        """
+        Try to match all defs on math_obj, and compute a help msg in case of
+        success.
+        """
         def get_help_msgs(key):
-            return help_msgs.get_helm_msgs(key, target)
+            return help_msgs.get_help_msgs(key, target)
         if not math_obj:
             math_obj = self.math_type
         definitions = math_obj.check_unroll_definitions(is_math_type=True)
@@ -311,7 +315,7 @@ class ContextMathObject(MathObject):
         main symbol of self after unfolding the implicit definition.
         """
         def get_help_msgs(key):
-            return help_msgs.get_helm_msgs(key, target)
+            return help_msgs.get_help_msgs(key, target)
 
         implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
         implicit_objs = (self.math_type.unfold_implicit_definition()
@@ -337,7 +341,7 @@ class ContextMathObject(MathObject):
         return main_symbol_msgs
 
     def solving_msgs(self, solving_obj, on_target=False):
-        msgs = help_msgs.get_helm_msgs('goal!', on_target)
+        msgs = help_msgs.get_help_msgs('goal!', on_target)
         return list(self.format_msg(msg, solving_obj=solving_obj,
                                     on_target=on_target) for msg in msgs)
 
@@ -345,7 +349,7 @@ class ContextMathObject(MathObject):
 
         # msgs_dic = help_msgs.prove if target else help_msgs.use
         def get_help_msgs(key):
-            return help_msgs.get_helm_msgs(key, on_target)
+            return help_msgs.get_help_msgs(key, on_target)
 
         main_symbol = self.math_type.main_symbol()
 

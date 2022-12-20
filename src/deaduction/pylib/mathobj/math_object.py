@@ -636,6 +636,8 @@ class MathObject:
             return self.children[line_of_descent]
 
         child_number, *remaining = line_of_descent
+        if child_number >= len(self.children):
+            return None
         child = self.children[child_number]
         if not remaining:
             return child
@@ -1393,6 +1395,9 @@ class MathObject:
         else:
             math_type = self.math_type
 
+        # if self.node == 'PROP_BELONGS' and self.children[1].node == \
+        #         'SET_INTER+':
+        #     print("inter")
         definitions = MathObject.definitions
         matching_defs = [defi for defi in definitions if defi.match(math_type)]
         return matching_defs
@@ -1926,7 +1931,7 @@ class BoundVar(MathObject):
 #################################
 # Methods for PatternMathObject #
 #################################
-    def recursive_match(self, other):
+    def recursive_match(self, other, metavars, metavar_objects):
         return (other.is_bound_var
                 and self.bound_var_nb() == other.bound_var_nb())
 
