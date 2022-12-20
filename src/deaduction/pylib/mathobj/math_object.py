@@ -177,6 +177,7 @@ class MathObject:
             bound_var.math_type = math_type
 
         # ---------- APP(APP(1, 2, ...), n) --> APP(1, 2, ..., n) ---------- #
+        # (i.e. uncurryfy)
         if node == 'APPLICATION' and children[0].node == 'APPLICATION':
             self.children = self.children[0].children + [self.children[1]]
 
@@ -226,7 +227,8 @@ class MathObject:
         (as the var n in (u_n)_{n in N} ), but ONLY in the context.
         (2) if self has such a local constant as a child, this local constant
         is replaced by a lambda. This adds a new bound var which will be used
-        for display, and correctly named according to local context.
+        for display, and correctly named: in particular its name may vary
+        according to local context.
         This is done only if self is not applying this local constant to an
         index, i.e. self is not a lambda or an application.
         """
@@ -246,8 +248,11 @@ class MathObject:
         if self.node not in ('APPLICATION', 'LAMBDA'):
             for index in range(len(self.children)):
                 child = self.children[index]
+                # DO NOT change BoundVar by lambdas,
+                #  e.g. in "for all sequences u..."
                 if child.is_variable(is_math_type=True) \
-                        and (child.is_sequence() or child.is_set_family()):
+                        and (child.is_sequence() or child.is_set_family())\
+                        and not child.is_bound_var:
                     # child.math_type is SEQ(index, target)
                     var_type = child.math_type.children[0]
                     var = BoundVar.from_math_type(var_type)
@@ -1787,6 +1792,8 @@ class BoundVar(MathObject):
         numbered by the same number. Equality test for bound var amounts to
         equality of their numbers.
         """
+        # The following happens when comparing portions of self
+        #  e.g. for matching MetaVars
         if self is other:
             return True
 
