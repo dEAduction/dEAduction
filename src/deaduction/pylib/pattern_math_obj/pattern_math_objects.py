@@ -341,9 +341,11 @@ class PatternMathObject(MathObject):
         # determined by the node of self's parent. Furthermore, self could be
         # a local constant with name RealSubGroup which is a bound var,
         # but self.is_bound_var fails.
-        elif self.name and self.name != math_object.name:
+        # NB: '?' is a joker (match any name, any value)
+        elif self.name and self.name != '?' and self.name != math_object.name:
             return False
-        elif self.value and self.value != math_object.valeu:
+        elif self.value and self.value != '?' \
+                and self.value != math_object.value:
             return False
         # elif any(self_item != '?' and self_item != math_object_item
         #          for self_item, math_object_item in
@@ -410,9 +412,9 @@ class PatternMathObject(MathObject):
         ############
         # Children #
         ############
-        if self.node == 'LOCAL_CONSTANT' and len(children) == 3:
-            print(self)
-            print(math_object)
+        # if self.node == 'LOCAL_CONSTANT' and len(children) == 3:
+        #     print(self)
+        #     print(math_object)
         for child0, child1 in zip(children, math_object.children):
             if not child0.recursive_match(child1, metavars, metavar_objects):
                 match = False

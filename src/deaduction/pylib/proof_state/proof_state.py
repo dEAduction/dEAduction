@@ -50,6 +50,8 @@ log = logging.getLogger(__name__)
 
 global _
 
+DEBUG = True
+
 
 ##################
 # The Goal class #
@@ -377,10 +379,9 @@ class Goal:
                 self.name_hints.remove(hint)
 
     def update_context_hints(self):
-        # for math_type in self.free_var_types():
-        #     friendly_names = self.free_var_names(math_type)
-        #     NameHint.from_math_type(math_type, self.name_hints,
-        #                             friendly_names=friendly_names)
+        """
+        Create NameHints for all math_types of context vars.
+        """
         for var in self.free_variables():
             math_type = var.math_type
             if math_type.is_number():
@@ -394,13 +395,15 @@ class Goal:
                                     self.name_hints, friendly_names)
 
     def update_bound_var_hints(self):
-        # for math_type in self.bound_var_types():
-        #     NameHint.from_math_type(math_type, self.name_hints)
+        """
+        Create NameHints for all bound vars to be named.
+        """
         for var in self.bound_variables():
-            math_type = var.math_type
-            # Add new name hint if none match:
-            NameHint.from_math_type(math_type, var.preferred_letter(),
-                                    self.name_hints)
+            if not var.keep_lean_name():  # (Var needs a name)
+                math_type = var.math_type
+                # Add new name hint if none match:
+                NameHint.from_math_type(math_type, var.preferred_letter(),
+                                        self.name_hints)
 
     def update_potential_hints(self):
         """
@@ -422,14 +425,17 @@ class Goal:
         self.update_context_hints()
         self.update_bound_var_hints()
         self.update_potential_hints()
+        if DEBUG:
+            self.print_hints()
 
     def print_hints(self):
         """For debugging."""
         print("Name hints:")
         for name_hint in self.name_hints:
-            print(f"Name hint for {name_hint.math_type}: {name_hint.letter}")
-            if name_hint.names:
-                print(f"   names: {name_hint.names}")
+            print(name_hint)
+            # print(f"Name hint for {name_hint.math_type}: {name_hint.letter}")
+            # if name_hint.names:
+            #     print(f"   names: {name_hint.names}")
 
 ########################
 # Build Naming Schemes #
@@ -447,17 +453,20 @@ class Goal:
         """
 
         math_type = hint.math_type
-        preferred_letter = hint.preferred_letter
+        # preferred_letter = hint.preferred_letter
+        preferred_letters = hint.current_preferred_letters()
         # (1) Self's has direct bound var?
         local_length = 0
         if math_obj.has_bound_var():
+            var = math_obj.bound_var
+            typ = math_obj.bound_var_type
+            letter = var.preferred_letter()
             if include_sequences or \
                     not (math_obj.is_sequence(is_math_type=True)
                          or math_obj.is_set_family(is_math_type=True)):
                 if (not math_type) or \
-                        (math_obj.bound_var_type == math_type and
-                         math_obj.bound_var.preferred_letter
-                         == preferred_letter):
+                    (typ == math_type and
+                        (not letter or letter in preferred_letters)):
                     local_length = 1
 
         # (2) Children's vars:
@@ -477,11 +486,18 @@ class Goal:
 
         props = ([prop.math_type for prop in self.context_props]
                  + [self.target.math_type])
-        local_context_length = [self._recursive_bound_vars_length(
-                                math_obj=prop,
-                                include_sequences=True,
-                                hint=hint)
-                                for prop in props]
+        local_context_length = []
+        for prop in props:
+            local_context_length.append(self._recursive_bound_vars_length(
+                                        math_obj=prop,
+                                        include_sequences=True,
+                                        hint=hint))
+
+        if DEBUG:
+            # print(f"BVs: {[p.bound_vars() for p in props]}")
+            print(f"Local context length for hint {hint.math_type}, "
+                  f"pref letter = {hint.preferred_letter}:"
+                  f" {local_context_length}")
 
         length = max(local_context_length + [0])
 
@@ -518,7 +534,15 @@ class Goal:
             excluded_names = bad_names.difference(friend_names)
 
             # Ensure that hint's naming scheme is compatible with data:
+            if DEBUG:
+                print(f"Updating name list for hint, old = {hint.names}")
+                print(f"length = {length}, friend names = {friend_names}, "
+                      f"excluded names = {excluded_names}")
+
             hint.update_names_list(length, friend_names, excluded_names)
+
+            if DEBUG:
+                print(f"   ... new = {hint.names}")
 
 ##################
 # Name variables #
@@ -542,11 +566,20 @@ class Goal:
 
         new_name, success = name_hint.provide_name(given_names=given_names)
 
+        if DEBUG:
+            print(f"Naming var, preferred_letter = {preferred_letter}, context ="
+                  f" {given_names}")
+            print(f"Names hint = {name_hint.names}, new_name = {new_name}")
+            print(f"---> new_name = {new_name}")
         if not success:
             # Update all name schemes with requiring one more name for this
             # type:
             self.update_name_schemes(supp_math_type=math_type, supp_nb=1)
-            new_name, success = name_hint.provide_name(given_names=[])
+            new_name, success = name_hint.provide_name(given_names=given_names)
+
+            print(f"Renaming var, context = {given_names}")
+            print(f"Names hint = {name_hint.names}, new_name = {new_name}")
+            print(f"---> new_name = {new_name}")
 
             if not success:
                 log.warning(f"Bad name {new_name} given to var of type "
@@ -562,7 +595,13 @@ class Goal:
         about conflicting with global vars names.
         """
         # For very special names like RealSubGroup or _inst_1:
-        if var.keep_lean_name():
+
+        # if DEBUG:
+        #     print(f"Naming var, local_context = {var.local_context}")
+
+        if not var.is_unnamed:
+            return
+        elif var.keep_lean_name():
             name = var.lean_name
         else:
             if not isolated:
@@ -633,18 +672,24 @@ class Goal:
         self.__update_all_name_hints()
         self.update_name_schemes()
 
-        # (2) Name bound vars in target
+        # (2) Name bound vars in context objects (e.g. sequences):
+        if DEBUG:
+            print(f"Naming BV in context objs...")
+        for math_object in self.context_objects:
+            self.__name_context_object_bound_var(math_object)
+
+        # (3) Name bound vars in target
+        if DEBUG:
+            print(f"Naming BV in target...")
         self.target.math_type.set_local_context()
         self.__recursive_name_all_bound_vars(self.target.math_type)
                 
-        # (3) Name bound vars in context props:
+        # (4) Name bound vars in context props:
         for p in self.context_props:
+            if DEBUG:
+                print(f"Naming BV in {p}...")
             p.math_type.set_local_context()
             self.__recursive_name_all_bound_vars(p.math_type)
-
-        # (4) Name bound vars in context objects (e.g. sequences):
-        for math_object in self.context_objects:
-            self.__name_context_object_bound_var(math_object)
 
         # (5) Debug
         # self.debug()

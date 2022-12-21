@@ -1785,11 +1785,11 @@ class BoundVar(MathObject):
         """
         MathObject.__init__(self, node, info, children, math_type)
         self.parent = parent
-        self._is_unnamed = True
+        self.is_unnamed = True
         self.set_unnamed_bound_var()
+        if self.keep_lean_name():
+            self.name_bound_var(self.lean_name)
         self._local_context = []
-        if node != 'METAVAR':
-            pass
 
     def __eq__(self, other):
         """
@@ -1805,8 +1805,8 @@ class BoundVar(MathObject):
         elif isinstance(other, BoundVar):
             if self.bound_var_nb() != -1:
                 return self.bound_var_nb() == other.bound_var_nb()
-            # else:
-                # return True  # This would be too easy!
+            else:
+                return self.name == other.name  # Is this too easy??
         else:
             return False
 
@@ -1879,6 +1879,12 @@ class BoundVar(MathObject):
                   else 'n' if self.math_type.is_N()
                   else 'x' if self.math_type.is_R()
                   else '')
+        sub = letter.find('_')
+        if sub > 0:
+            letter = letter[:sub]
+        prime = letter.find("'")
+        if prime > 0:
+            letter = letter[:prime]
 
         if letter.isalpha():
             return letter
@@ -1887,7 +1893,7 @@ class BoundVar(MathObject):
 
     def is_unnamed(self):
         # FIXME: turn to:
-        # return self._is_unnamed
+        # return self.is_unnamed
         return self.display_name == "NO NAME" \
                or self.display_name == '*no_name*'
 
@@ -1896,7 +1902,7 @@ class BoundVar(MathObject):
         FIXME: this should be the only way to name a bound var.
         """
         self.info['name'] = name
-        self._is_unnamed = False
+        self.is_unnamed = False
 
     def set_unnamed_bound_var(self):
         # FIXME: suppress:
@@ -1907,7 +1913,7 @@ class BoundVar(MathObject):
                     'lean_name': lean_name,
                     'bound_var_nb': -1}
         self.info.update(new_info)
-        self._is_unnamed = True
+        self.is_unnamed = True
 
     def bound_var_nb(self):
         return self.info.get('bound_var_nb')

@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-12-20 12:07+0100\n"
-"PO-Revision-Date: 2022-12-20 12:07+0100\n"
+"POT-Creation-Date: 2022-12-21 15:57+0100\n"
+"PO-Revision-Date: 2022-12-21 15:58+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -1293,52 +1293,56 @@ msgstr "théorème"
 msgid "exercise"
 msgstr "exercice"
 
-#: pylib/math_display/app_pattern_data.py:86
+#: pylib/math_display/app_pattern_data.py:85
+msgid " converging"
+msgstr "convergente"
+
+#: pylib/math_display/app_pattern_data.py:88
 msgid "continuous"
 msgstr "continue"
 
-#: pylib/math_display/app_pattern_data.py:87
+#: pylib/math_display/app_pattern_data.py:89
 msgid "uniformly continuous"
 msgstr "uniformément continue"
 
-#: pylib/math_display/app_pattern_data.py:88
+#: pylib/math_display/app_pattern_data.py:90
 msgid "continuous at"
 msgstr "continue au point"
 
-#: pylib/math_display/app_pattern_data.py:89
+#: pylib/math_display/app_pattern_data.py:91
 msgid "a Cauchy sequence"
 msgstr "une suite de Cauchy"
 
-#: pylib/math_display/app_pattern_data.py:95
+#: pylib/math_display/app_pattern_data.py:97
 msgid "an equivalence relation"
 msgstr "une relation d’équivalence"
 
-#: pylib/math_display/app_pattern_data.py:97
+#: pylib/math_display/app_pattern_data.py:99
 #: pylib/math_display/display_data.py:239
 msgid "and"
 msgstr "et"
 
-#: pylib/math_display/app_pattern_data.py:97
+#: pylib/math_display/app_pattern_data.py:99
 msgid "are disjoint"
 msgstr "sont disjoints"
 
-#: pylib/math_display/app_pattern_data.py:99
+#: pylib/math_display/app_pattern_data.py:101
 msgid "a partition of"
 msgstr "une partition de"
 
-#: pylib/math_display/app_pattern_data.py:100
+#: pylib/math_display/app_pattern_data.py:102
 msgid "an application"
 msgstr "une application"
 
-#: pylib/math_display/app_pattern_data.py:101
+#: pylib/math_display/app_pattern_data.py:103
 msgid "a bijective application"
 msgstr "une application bijective"
 
-#: pylib/math_display/app_pattern_data.py:102
+#: pylib/math_display/app_pattern_data.py:104
 msgid "bounded"
 msgstr "borné"
 
-#: pylib/math_display/app_pattern_data.py:104
+#: pylib/math_display/app_pattern_data.py:106
 msgid "even"
 msgstr "pair"
 
@@ -1455,17 +1459,17 @@ msgid "there exists"
 msgstr "il existe"
 
 #: pylib/math_display/display_data.py:258
-#: pylib/math_display/pattern_data.py:190
+#: pylib/math_display/pattern_data.py:195
 msgid "there exists a subset {} of {} such that {}"
 msgstr "il existe une partie {} de {} telle que {}"
 
 #: pylib/math_display/display_data.py:259
-#: pylib/math_display/pattern_data.py:193
+#: pylib/math_display/pattern_data.py:198
 msgid "there exists a function {} from {} to {} such that {}"
 msgstr "il existe une fonction {} de {} dans {} telle que {}"
 
 #: pylib/math_display/display_data.py:261
-#: pylib/math_display/pattern_data.py:196
+#: pylib/math_display/pattern_data.py:201
 msgid "there exists a proposition {} such that {}"
 msgstr "il existe une proposition {} telle que {}"
 
@@ -1478,12 +1482,12 @@ msgid "there exists a unique"
 msgstr "il existe un unique"
 
 #: pylib/math_display/display_data.py:265
-#: pylib/math_display/pattern_data.py:204
+#: pylib/math_display/pattern_data.py:209
 msgid "there exists a unique subset {} of {} such that {}"
 msgstr "il existe une unique partie {} de {} telle que {}"
 
 #: pylib/math_display/display_data.py:266
-#: pylib/math_display/pattern_data.py:208
+#: pylib/math_display/pattern_data.py:213
 msgid "there exists a unique function {} from {} to {} such that {}"
 msgstr "il existe une unique fonction {} de {} dans {} telle que {}"
 
@@ -1552,8 +1556,8 @@ msgstr "un nombre rationnel"
 msgid "a real number"
 msgstr "un nombre réel"
 
-#: pylib/math_display/display_data.py:293 pylib/proof_state/proof_state.py:1213
-#: pylib/proof_state/proof_state.py:1227
+#: pylib/math_display/display_data.py:293 pylib/proof_state/proof_state.py:1252
+#: pylib/proof_state/proof_state.py:1266
 msgid "Let {} be {}"
 msgstr "Soit {} {}"
 
@@ -1684,12 +1688,12 @@ msgstr "neuf"
 msgid "ten"
 msgstr "dix"
 
-#: pylib/math_display/display_data.py:525
-#: pylib/math_display/display_data.py:535
+#: pylib/math_display/display_data.py:530
+#: pylib/math_display/display_data.py:540
 msgid "Examples of syntax:"
 msgstr "Exemples de syntaxe :"
 
-#: pylib/math_display/display_data.py:526
+#: pylib/math_display/display_data.py:531
 msgid ""
 "\n"
 "    x ∈ A ∩ B          --> x belongs (A cap B)\n"
@@ -1703,18 +1707,18 @@ msgstr ""
 "    A = ∅               —> A = vide\n"
 "    ∀x ∈ A ∩ A’, x ∈ A   —> forall x dans (A inter A’), x dans A "
 
-#: pylib/math_display/display_data.py:532
+#: pylib/math_display/display_data.py:537
 msgid "You can use the keywords and, or, not, implies, iff, forall, exists."
 msgstr ""
 "Vous pouvez utiliser les mots-clés et, ou, non, implique, ssi, forall, "
 "exists."
 
-#: pylib/math_display/display_data.py:533
-#: pylib/math_display/display_data.py:547
+#: pylib/math_display/display_data.py:538
+#: pylib/math_display/display_data.py:552
 msgid "In case of error, try with more parentheses."
 msgstr "En cas d’erreur, essayez avec plus de parenthèses."
 
-#: pylib/math_display/display_data.py:536
+#: pylib/math_display/display_data.py:541
 msgid ""
 "\n"
 "    A ∩ B           --> A cap B\n"
@@ -1758,64 +1762,64 @@ msgstr "une famille"
 msgid "family"
 msgstr "famille"
 
-#: pylib/math_display/pattern_data.py:180
+#: pylib/math_display/pattern_data.py:185
 msgid "for every subset"
 msgstr "pour toute partie"
 
-#: pylib/math_display/pattern_data.py:180
+#: pylib/math_display/pattern_data.py:185
 msgid " of "
 msgstr " de "
 
-#: pylib/math_display/pattern_data.py:182
+#: pylib/math_display/pattern_data.py:187
 msgid "for every function"
 msgstr "pour toute fonction"
 
-#: pylib/math_display/pattern_data.py:183
+#: pylib/math_display/pattern_data.py:188
 msgid " from "
 msgstr " de "
 
-#: pylib/math_display/pattern_data.py:183
+#: pylib/math_display/pattern_data.py:188
 msgid " to "
 msgstr " dans "
 
-#: pylib/math_display/pattern_data.py:184
+#: pylib/math_display/pattern_data.py:189
 msgid "for every proposition"
-msgstr "pour toute proposition "
+msgstr "pour toute proposition"
 
-#: pylib/math_display/pattern_data.py:185
+#: pylib/math_display/pattern_data.py:190
 msgid "for every set"
 msgstr "pour tout ensemble"
 
-#: pylib/math_display/pattern_data.py:187
+#: pylib/math_display/pattern_data.py:192
 msgid "for every sequence {} of elements of {}, {}"
 msgstr "pour toute suite {} d'éléments de {}, {}"
 
-#: pylib/math_display/pattern_data.py:198
+#: pylib/math_display/pattern_data.py:203
 msgid "there exists a set"
 msgstr "il existe un ensemble"
 
-#: pylib/math_display/pattern_data.py:198
-#: pylib/math_display/pattern_data.py:214
+#: pylib/math_display/pattern_data.py:203
+#: pylib/math_display/pattern_data.py:219
 msgid " such that "
 msgstr " tel que "
 
-#: pylib/math_display/pattern_data.py:200
+#: pylib/math_display/pattern_data.py:205
 msgid "there exists a sequence {} of elements of {} such that {}"
 msgstr "il existe une suite {} d'éléments de {} telle que {}"
 
-#: pylib/math_display/pattern_data.py:211
+#: pylib/math_display/pattern_data.py:216
 msgid "there exists a unique  proposition {} such that {}"
 msgstr "il existe une unique proposition {} telle que {}"
 
-#: pylib/math_display/pattern_data.py:214
+#: pylib/math_display/pattern_data.py:219
 msgid "there exists a unique set"
 msgstr "il existe un unique ensemble"
 
-#: pylib/math_display/pattern_data.py:217
+#: pylib/math_display/pattern_data.py:222
 msgid "there exists a unique sequence {} of elements of {} such that {}"
 msgstr "il existe une unique suite {} d'éléments de {} telle que {}"
 
-#: pylib/math_display/pattern_data.py:229
+#: pylib/math_display/pattern_data.py:234
 msgid "All goals reached!"
 msgstr "Tous les buts ont été atteints !"
 
@@ -1859,8 +1863,8 @@ msgstr "Preuve du but intermédiaire : {}"
 msgid "Proof of new subgoal"
 msgstr "Preuve du but intermédiaire"
 
-#: pylib/mathobj/proof_step.py:400 pylib/proof_state/proof_state.py:1044
-#: pylib/proof_state/proof_state.py:1080
+#: pylib/mathobj/proof_step.py:400 pylib/proof_state/proof_state.py:1083
+#: pylib/proof_state/proof_state.py:1119
 msgid ": "
 msgstr " : "
 
@@ -1890,7 +1894,7 @@ msgstr "Erreur de vérification de paquet : {}"
 
 #: pylib/packager/package.py:78
 msgid "Directory should be $HOME/.deaduction folder !!!"
-msgstr "dossier invalide, doit être dans le dossier $HOME/.deaduction !!!"
+msgstr "Dossier invalide, doit être dans le dossier $HOME/.deaduction !!!"
 
 #: pylib/packager/package.py:89
 msgid "Checking package folder for {}"
@@ -1980,51 +1984,51 @@ msgstr "Théorème :"
 msgid "All proof states received"
 msgstr "Etats de preuve reçu"
 
-#: pylib/proof_state/proof_state.py:957
+#: pylib/proof_state/proof_state.py:996
 msgid "Assume that"
 msgstr "Supposons que"
 
-#: pylib/proof_state/proof_state.py:958 pylib/proof_state/proof_state.py:1003
+#: pylib/proof_state/proof_state.py:997 pylib/proof_state/proof_state.py:1042
 msgid "the negation"
 msgstr "la négation"
 
-#: pylib/proof_state/proof_state.py:959
+#: pylib/proof_state/proof_state.py:998
 msgid "Assume"
 msgstr "Supposons"
 
-#: pylib/proof_state/proof_state.py:1001 pylib/proof_state/proof_state.py:1047
+#: pylib/proof_state/proof_state.py:1040 pylib/proof_state/proof_state.py:1086
 msgid "Prove that"
 msgstr "Démontrer que"
 
-#: pylib/proof_state/proof_state.py:1004
+#: pylib/proof_state/proof_state.py:1043
 msgid "Prove"
 msgstr "Démontrer"
 
-#: pylib/proof_state/proof_state.py:1011 pylib/proof_state/proof_state.py:1049
+#: pylib/proof_state/proof_state.py:1050 pylib/proof_state/proof_state.py:1088
 msgid "Then"
 msgstr "Alors"
 
-#: pylib/proof_state/proof_state.py:1017 pylib/proof_state/proof_state.py:1034
+#: pylib/proof_state/proof_state.py:1056 pylib/proof_state/proof_state.py:1073
 msgid "True or False?"
 msgstr "Vrai ou faux ?"
 
-#: pylib/proof_state/proof_state.py:1036 pylib/proof_state/proof_state.py:1069
+#: pylib/proof_state/proof_state.py:1075 pylib/proof_state/proof_state.py:1108
 msgid "Hypothesis:"
 msgstr "Hypothèse :"
 
-#: pylib/proof_state/proof_state.py:1038 pylib/proof_state/proof_state.py:1070
+#: pylib/proof_state/proof_state.py:1077 pylib/proof_state/proof_state.py:1109
 msgid "Hypotheses:"
 msgstr "Hypothèses :"
 
-#: pylib/proof_state/proof_state.py:1067
+#: pylib/proof_state/proof_state.py:1106
 msgid "Context:"
 msgstr "Contexte :"
 
-#: pylib/proof_state/proof_state.py:1085
+#: pylib/proof_state/proof_state.py:1124
 msgid "Goal:"
 msgstr "But :"
 
-#: pylib/proof_state/proof_state.py:1087
+#: pylib/proof_state/proof_state.py:1126
 msgid "Conclusion:"
 msgstr "Conclusion :"
 

@@ -39,8 +39,8 @@ log = logging.getLogger(__name__)
 # All Greek letters: "αβγδεζηθικλμνξοπρςστυφχψω" + "ΓΔΘΛΞΠΣΦΨΩ"
 alphabet = 'abcdefghijklmnopqrstuvwxyz'
 greek_alphabet = "αβγδεζηθικλμνξοπρςστυφχψω"
-lower_lists = ['abcde', 'fgh', 'ijkl', 'mn', 'nk', 'npq', 'pqr', 'rst', 'uvw',
-               'xyzwt']
+lower_lists = ['abcde', 'fgh', 'ijk', 'l', 'mn', 'nk', 'npq', 'pqr', 'rst',
+               'uvw', 'xyzwt']
 greek_list = ['αβγ', 'ε', 'δ', 'η', 'φψ', 'λμν', 'πρ', 'θα', 'στ']
 greek_upper_list = ['ΓΛΔ', 'ΦΨ', 'Ξ', 'Σ', 'Ω']
 upper_lists = ['ABCDE', 'FGH', 'IJ', 'KL', 'MK', 'N', 'PQR', 'RST',
@@ -200,9 +200,11 @@ def pure_letter_lists(letter: str, prime=0, index: Optional[int] = None,
 
 
 def name_lists_from_name(hint: str,
-                         min_length: int, max_length: int,
+                         min_length: int, max_length: int = 10,
                          case=None,
-                         preferred_letter='') -> [str]:
+                         preferred_letter='',
+                         exclude_primes=False,
+                         exclude_indices=False) -> [str]:
     """
     Provide lists of proposed names of given length, ordered according to
     their proximity with hint.
@@ -216,8 +218,10 @@ def name_lists_from_name(hint: str,
     # Get names lists:
     index_names: [str] = index_name_list(root,
                                          start=0 if index is None else index,
-                                         length=max_length)
-    prime_names: [str] = prime_name_list(hint, prime, index, min_length)
+                                         length=max_length) \
+        if not exclude_indices else []
+    prime_names: [str] = prime_name_list(hint, prime, index, min_length) \
+        if not exclude_primes else []
 
     letter_names: [[str]] = pure_letter_lists(hint, prime, index, min_length,
                                               case)
@@ -243,8 +247,18 @@ def name_lists_from_name(hint: str,
     return names
 
 
+def are_friends(letter1, letter2):
+    """
+    True iff both letters belongs to a common list of letters.
+    """
+    name_lists = name_lists_from_name(letter1, min_length=2)
+    tests = [letter2 in names for names in name_lists]
+    return any(tests)
+
+
 def potential_names(hint, length, friend_names: set, excluded_names: set,
-                    case=None, preferred_letter=''):
+                    case=None, preferred_letter='',
+                    exclude_indices=False, exclude_primes=False) -> []:
     """
     Provides one list of potential names, of given length, for a given hint.
     The list friend_names contains the names already given to some
@@ -271,8 +285,9 @@ def potential_names(hint, length, friend_names: set, excluded_names: set,
     lists = name_lists_from_name(hint, min_length=length,
                                  max_length=length + len(excluded_names) + 10,
                                  case=case,
-                                 preferred_letter=preferred_letter)
-    winner = None
+                                 preferred_letter=preferred_letter,
+                                 exclude_indices=exclude_indices,
+                                 exclude_primes=exclude_primes)
     given_names = excluded_names.union(friend_names)
 
     # (2) Keep only sufficiently long lists, and if length==1 then put list
@@ -294,13 +309,27 @@ def potential_names(hint, length, friend_names: set, excluded_names: set,
         elif common_nb == score:  # New minimizer, add to list
             min_lists.append(names)
 
-    # (4) Find a list maximizing # of elements in friend_names
+    # (4) Find all lists maximizing # of elements in friend_names
     score = -1
+    winners = []
     for names in min_lists:
         common_nb = len(friend_names.intersection(set(names)))
         if common_nb > score:
-            winner = names
+            winners = [names]
             score = common_nb
+        elif common_nb == score:
+            winners.append(names)
+
+    # (5) Keep one of the longest list (except if indices)
+    if not exclude_indices:
+        winner = winners[0] if winners else []
+    else:
+        score = -1
+        winner = []
+        for names in winners:
+            if len(names) > score:
+                winner = names
+                score = len(names)
 
     return winner
 

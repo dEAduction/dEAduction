@@ -477,9 +477,6 @@ def latex_to_utf8(string: Union[str, list]):
     """
     utf8_string = None
 
-    if string == r'\to':  # debug
-        print("TO")
-
     if isinstance(string, list) or isinstance(string, tuple):
         return [latex_to_utf8(item) for item in string]
     elif isinstance(string, str):

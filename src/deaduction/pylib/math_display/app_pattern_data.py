@@ -82,6 +82,7 @@ latex_from_constant_name = {
     "est_minore": (-1, r'\text_is', " minoré"),
     "est_borne": (-1, r'\text_is', " borné"),
     "limit": ("lim ", -2, " = ", -1),
+    "converging_seq": (-1, r'\text_is', _(" converging")),
     "limit_plus_infinity": ("lim ", -1, " = +∞"),
     "limit_function": ("lim", ['_', (-2,)], (-3,), " = ", (-1,)),
     "continuous": (-1, r'\text_is', _("continuous")),
@@ -111,8 +112,8 @@ latex_from_constant_name = {
 #  --> "APP(CONSTANT/name=symmetric_difference, ...)": ...
 
 generic_app_dict = {
-    # f(x):
     "APP(CST?, ...)": ((-1,), [r'\text_is', (0,)]),
+    # f(x):
     "APP(?0: !FUNCTION(?1, ?2), ?3: ?1)": ((0,), r"\parentheses", (1,)),
     # Replace x ↦ f(x) by f:
     "LAMBDA(?0, ?1, APP(?3, ?1))": ((2, 0),)

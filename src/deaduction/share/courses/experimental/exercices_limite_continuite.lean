@@ -44,7 +44,7 @@ local attribute [instance] classical.prop_decidable
 definition limit (u : ℕ → ℝ) (l : ℝ) : Prop :=
 ∀ ε > 0, ∃ N, ∀ n ≥ N, | u n - l | < ε
 
-definition convergente (u : ℕ → ℝ) : Prop :=
+definition converging_seq (u : ℕ → ℝ) : Prop :=
 ∃ l, limit u l
 
 definition limit_plus_infinity (u : ℕ → ℝ) : Prop :=
@@ -59,7 +59,7 @@ definition limit_function (f : ℝ → ℝ) (a : ℝ) (l : ℝ) : Prop :=
 ∀ ε > 0, ∃ δ>0, ∀ x: ℝ, ( | x-a | < δ → | f x  - l | < ε )
 
 definition continuous_at (f : ℝ → ℝ) (a : ℝ) : Prop :=
-limit_function f a (f a)
+limit_function (λ x, f x) a (f a)
 
 definition continuous (f: ℝ → ℝ) : Prop :=
 ∀ a, continuous_at f a
@@ -158,47 +158,46 @@ variables {RealSubGroup : Type} [decidable_linear_ordered_comm_ring RealSubGroup
 -- [has_zero RealSubGroup]
 
 -- A modifier : faire une classe "nombres" ?
-lemma theorem.valeur_absolue
-(x : RealSubGroup) : 
+lemma theorem.valeur_absolue :
+∀ x : RealSubGroup,
 ((0:RealSubGroup) ≤ x) → (abs x = x) and ((x ≤ 0) → (abs x = -x)) :=
 begin
-  split, exact abs_of_nonneg, exact abs_of_nonpos,
+  intro x, split, exact abs_of_nonneg, exact abs_of_nonpos,
 end
 
-lemma theorem.majoration_valeur_absolue
-(x r : RealSubGroup) : 
---(x : ℝ) (r : ℝ) :
-(abs x < r) ↔ ((-r < x) ∧ (x < r))
+lemma theorem.majoration_valeur_absolue :
+∀ x r : RealSubGroup, (abs x < r) ↔ ((-r < x) ∧ (x < r))
 := 
 /- dEAduction
 PrettyName
   Majoration d'une valeur absolue
 -/
 begin
+  intros x r,
   exact abs_lt
 end
 
 
-lemma theorem.inegalite_triangulaire 
-(x : RealSubGroup) (y : RealSubGroup) : |x + y| ≤ |x| + |y|
+lemma theorem.inegalite_triangulaire :
+∀ x y : RealSubGroup, |x + y| ≤ |x| + |y|
 := 
 /- dEAduction
 PrettyName
   Inégalité triangulaire
 -/
 begin
-  exact abs_add x y 
+  intros x y, exact abs_add x y 
 end
 
-lemma theorem.valeur_absolue_produit
-(x : RealSubGroup) (y : RealSubGroup) : |x * y| = |x| * |y|
+lemma theorem.valeur_absolue_produit :
+∀ x y : RealSubGroup,  |x * y| = |x| * |y|
 := 
 /- dEAduction
 PrettyName
   Valeur absolue d'un produit
 -/
 begin
-  exact abs_mul x y 
+  intros x y, exact abs_mul x y 
 end
 
 end valeur_absolue
@@ -225,9 +224,9 @@ begin
   refl
 end
 
-lemma definition.convergente
+lemma definition.converging_seq
 {u : ℕ → ℝ} :
-(convergente u) ↔ 
+(converging_seq u) ↔ 
 ∃ l, limit u l
 := 
 /- dEAduction
@@ -333,7 +332,7 @@ open definitions
 
 lemma exercise.limit_constante 
 (u : ℕ → ℝ) (c : ℝ) (H : ∀ n, u n = c) :
-convergente u :=
+converging_seq u :=
 /- dEAduction
 PrettyName
   La limite d'une suite constante !
@@ -589,6 +588,16 @@ Description
 -/
 begin
   todo,
+  -- have H2 := (H0 0) 1 _,
+  -- rcases H2 with ⟨δ, H3, H4⟩,
+  -- norm_num at H4,
+  -- rw H1 at H4,
+  -- use δ, split, rotate,
+  -- intros x x_del,
+  -- have H5 := H4 _ x_del,
+  -- rw generalites.valeur_absolue.theorem.majoration_valeur_absolue at *,
+  -- cases H5 with H5a H5b,
+  -- linarith only [H5a], linarith, assumption,
 end
 
 lemma definition.composition {X Y Z: Type} {f: X → Y} {g:Y → Z} {x:X}:

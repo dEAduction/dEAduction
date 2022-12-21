@@ -34,7 +34,8 @@ from deaduction.pylib.give_name.names import (Case,
                                               alphabet,
                                               greek_alphabet,
                                               pure_letter_lists,
-                                              potential_names)
+                                              potential_names,
+                                              are_friends)
 
 
 # Typical letters used for some math types
@@ -49,6 +50,9 @@ letter_hints_from_type_node = {
 
 usable_letters = alphabet + greek_alphabet
 usable_letters += usable_letters.upper()
+
+
+DEBUG = True
 
 
 def letter_hints_from_type(math_type) -> []:
@@ -74,10 +78,12 @@ def letter_hints_from_type(math_type) -> []:
 # If self is a set, try to name its terms (elements) according to
 # its name, e.g. X -> x.
     elif math_type.is_type():
-        case = Case.LOWER_ONLY
-        potential_letter = math_type.display_name[0]
-        if potential_letter.isupper() and potential_letter in usable_letters:
-            letters = [potential_letter.lower()]
+        type_name = math_type.display_name
+        if len(type_name) <= 3:  # This excludes NONAME
+            case = Case.LOWER_ONLY
+            potential_letter = type_name[0]
+            if potential_letter.isupper() and potential_letter in usable_letters:
+                letters = [potential_letter.lower()]
 
 # (3) Names of sequences
     elif math_type.is_sequence():
@@ -99,8 +105,8 @@ def letter_hints_from_type(math_type) -> []:
 
 def new_letter_from_bad(letter: str, existing_hints, case: Case) -> str:
     """
-    Return a new letter for a NameHint, from a given letter which assumed to be
-    equal to som other existing NameHint.
+    Return a new letter for a NameHint, from a given letter which is assumed
+    to be equal to some other existing NameHint.
     The algorithm is to take as name hint the first
     available letter in the names list associated to the conflicting
     NameHint. If no letter is available, we use the pure_letter_lists()
@@ -128,13 +134,10 @@ def new_letter_from_bad(letter: str, existing_hints, case: Case) -> str:
                      if letter else []
     # e.g. [['f', 'g', 'h'],['f', 'F']]
     bad_names = list(alphabet + greek_alphabet)
-    for names in good_names + bad_names:
-        for letter in names:
-            letter = case.modify(letter, strongly=True)
-            if letter not in unavailable_letters:
-                available_letter = letter
-                break
-        if available_letter:
+    for name in good_names + bad_names:
+        name = case.modify(name, strongly=True)
+        if name not in unavailable_letters:
+            available_letter = name
             break
     if not available_letter:
         logging.warning("NO MORE LETTER AVAILABLE for naming!!")
@@ -162,7 +165,6 @@ class NameHint:
     are accepted, which one is preferred. The letter attribute must be
     compatible with this, and the names list takes it into account.
     """
-    # TODO: test if case compatibility works
 
     letter: str = 'x'  # Default letter
     case: Case = Case.LOWER_MOSTLY
@@ -179,8 +181,48 @@ class NameHint:
         if math_type.is_sequence(is_math_type=True):
             self.use_index = False
 
-    def __str__(self):
-        return self.letter
+    def __repr__(self):
+        rep = f"hint(math_type = {self.math_type}, " \
+              f"pref letter = {self.preferred_letter}" \
+              f" letter = {self.letter}, current names = {self.names}"
+        return rep
+
+    def is_suitable_for(self, math_type, preferred_letter='',
+                        force_preferred_letter=True):
+        """
+        True if self can be used for naming var of given math_type and given
+        preferred letter.
+        """
+        if preferred_letter and preferred_letter not in usable_letters:
+            preferred_letter = ''
+
+        hint = self
+
+        # (1) Test math_type
+        if hint.math_type != math_type:
+            return False
+
+        # (2) Case of no preferred letter
+        if not preferred_letter:
+            if not hint.preferred_letter or not force_preferred_letter:
+                return True
+            else:
+                return False
+
+        # (3) Test if preferred_letter is a friend of some letter associated
+        # to self
+        letters = hint.names + [hint.letter]
+        if hint.preferred_letter:
+            letters.append(hint.preferred_letter)
+
+        if preferred_letter in letters:
+            return True
+
+        for letter in letters:
+            if are_friends(letter, preferred_letter):
+                return True
+
+        return False
 
     @classmethod
     def from_math_type(cls, math_type, preferred_letter='',
@@ -210,14 +252,15 @@ class NameHint:
         if existing_hints is None:
             existing_hints = []
 
+        # if math_type.name == 'RealSubGroup':
+        #     print("real subgroup")
+
         # (1) Search for math_type among existing hints
         for hint in existing_hints:
-            if hint.math_type == math_type:
-                if not preferred_letter or preferred_letter in hint.names\
-                        or preferred_letter == hint.letter:
-                    return hint
+            if hint.is_suitable_for(math_type, preferred_letter):
+                return hint
 
-        # (2) No existing hint: create one
+        # (2) No suitable existing hint: try to create one
         # (a) Try strong_hint
         letters = []
         if preferred_letter:
@@ -241,16 +284,51 @@ class NameHint:
                 success = True
                 break
 
-        # (e) Find new letters from letters list
+        # (3) If no success, try again existing hints, even if they have
+        #   preferred_letter
+        if not success:
+            for hint in existing_hints:
+                if hint.is_suitable_for(math_type, preferred_letter,
+                                        force_preferred_letter=False):
+                    return hint
+
+        # (4) Finally, find new letters from letters list
         if not success:
             letter = letters[0] if letters else ""
             letter = new_letter_from_bad(letter, existing_hints, case)
 
         new_hint = cls(math_type, preferred_letter, letter, case)
+        new_hint.temporary_set_names(existing_hints, set(friendly_names))
         existing_hints.append(new_hint)
         return new_hint
 
-###############################
+    def current_preferred_letters(self):
+        if not self.letter or self.letter in self.names:
+            return self.names
+        else:
+            return self.names + [self.letter]
+
+    def temporary_set_names(self, existing_hints, friend_names: set, length=2):
+        """
+        Set a list of names for self, of length at least 2.
+        This is used for deciding which vars will get self as NameHint
+        (namely, if math_types coincide of course, but also
+        var.preferred_letter is in self.names).
+        """
+
+        if self.names:
+            return
+
+        hint_letters = {hint.letter for hint in existing_hints}
+        excluded_names = hint_letters.difference({self.letter})
+
+        self.names = potential_names(self.letter, length, friend_names,
+                                     excluded_names, case=self.case,
+                                     preferred_letter=self.preferred_letter,
+                                     exclude_indices=True,
+                                     exclude_primes=True)
+
+    ###############################
 # Methods for providing names #
 ###############################
     def check_names(self, needed_length, given_names: set):
@@ -272,6 +350,10 @@ class NameHint:
             self.names = potential_names(self.letter, length, friend_names,
                                          excluded_names, case=self.case,
                                          preferred_letter=self.preferred_letter)
+
+        # if "'" in self.names:
+        #     print(f"PRIME: {self.letter}, {length}, {friend_names}, "
+        #           f"{excluded_names}, {self.preferred_letter}")
 
     def provide_name(self, given_names) -> (str, bool):
         """
