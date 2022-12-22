@@ -211,9 +211,10 @@ class NameHint:
 
         # (3) Test if preferred_letter is a friend of some letter associated
         # to self
-        letters = hint.names + [hint.letter]
+        letters = set(hint.names)
+        letters.add(hint.letter)
         if hint.preferred_letter:
-            letters.append(hint.preferred_letter)
+            letters.add(hint.preferred_letter)
 
         if preferred_letter in letters:
             return True

@@ -455,8 +455,12 @@ class Goal:
         math_type = hint.math_type
         # preferred_letter = hint.preferred_letter
         preferred_letters = hint.current_preferred_letters()
-        # (1) Self's has direct bound var?
         local_length = 0
+
+        # (0) Special case: if u_n then do not count u's bound var.
+        if math_obj.is_app_of_local_constant():
+            return 0
+        # (1) Self's has direct bound var?
         if math_obj.has_bound_var():
             var = math_obj.bound_var
             typ = math_obj.bound_var_type
@@ -553,7 +557,6 @@ class Goal:
         Try its best to get a good name of given math_type with
         preferred_letter, taken into account given names.
         """
-        # TODO: take into account preferred letter (for naming numbers)
 
         # Names to be excluded:
         if not local_names:

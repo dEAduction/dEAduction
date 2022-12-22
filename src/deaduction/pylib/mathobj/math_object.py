@@ -841,6 +841,19 @@ class MathObject:
             math_type = self.math_type
         return math_type.node == "SEQUENCE"
 
+    def is_app_of_local_constant(self) -> bool:
+        """
+        Test if self is of the form APP(LOCAL_CONSTANT). This is useful to
+        know that the local constant bound var (if any) will NOT be used in
+        display.
+        """
+        if self.node == 'APPLICATION' and self.children[0].node == \
+                'LOCAL_CONSTANT':
+            return True
+        else:
+            return False
+
+
     def is_set_family(self, is_math_type=False) -> bool:
         """
         Test if (math_type of) self is "SET_FAMILY".
@@ -1890,12 +1903,6 @@ class BoundVar(MathObject):
             return letter
         else:
             return ''
-
-    def is_unnamed(self):
-        # FIXME: turn to:
-        # return self.is_unnamed
-        return self.display_name == "NO NAME" \
-               or self.display_name == '*no_name*'
 
     def name_bound_var(self, name: str):
         """

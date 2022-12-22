@@ -228,7 +228,7 @@ def name_lists_from_name(hint: str,
 
     # In general, we prefer pure letters rather than primes or indices,
     # except for some preferred_letter
-    lonesome_letters = 'εn'
+    lonesome_letters = 'ε'
     if preferred_letter and preferred_letter in lonesome_letters:
         # Primes and index first
         if cvars.get('display.use_primes_over_indices') or prime:
@@ -251,6 +251,10 @@ def are_friends(letter1, letter2):
     """
     True iff both letters belongs to a common list of letters.
     """
+    # Upper letter are not friend with lower letter (not symmetric):
+    if letter2.isupper() and letter1.islower():
+        return False
+
     name_lists = name_lists_from_name(letter1, min_length=2)
     tests = [letter2 in names for names in name_lists]
     return any(tests)
@@ -297,6 +301,9 @@ def potential_names(hint, length, friend_names: set, excluded_names: set,
     if length == 1:
         long_lists += [names for names in lists
                        if len(set(names).difference(given_names)) == 1]
+
+    # if length == 3:
+    #     print("debug")
 
     # (3) Extract lists minimizing # of elements in excluded_names
     score = 2000
