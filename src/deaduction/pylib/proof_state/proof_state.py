@@ -50,7 +50,7 @@ log = logging.getLogger(__name__)
 
 global _
 
-DEBUG = True
+DEBUG = False
 
 
 ##################
@@ -450,6 +450,9 @@ class Goal:
         The principle of the computation is that if self has bound var then
         this bound var occurs in the local context of all self's children.
         This algo follows MathObject.bound_vars().
+        This method is crucial, overestimating or underestimating the number
+        of vars to be named with a given NameHint.names() method would lead to
+        bad naming!
         """
 
         math_type = hint.math_type
@@ -461,6 +464,7 @@ class Goal:
         # display in (u_n)_{n in N}
         if math_obj.is_app_of_local_constant():
             return 0
+
         # (1) Self's has direct bound var?
         if math_obj.has_bound_var():
             var = math_obj.bound_var

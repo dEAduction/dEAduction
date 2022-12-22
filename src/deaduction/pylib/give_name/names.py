@@ -3,7 +3,8 @@
 # names.py : provide name lists as potential names for variables #
 ##################################################################
 
-This file provides utility functions for give_name, that deals with strings.
+This file provides utility functions for NameHint, which deal with strings.
+The functions mainly provide lists of potential names for variables.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -249,7 +250,8 @@ def name_lists_from_name(hint: str,
 
 def are_friends(letter1, letter2):
     """
-    True iff both letters belongs to a common list of letters.
+    True iff both letters belongs to a common list of letters. This is
+    crucial to decide whether a NameHint may be used ti name some variable.
     """
     # Upper letter are not friend with lower letter (not symmetric):
     if letter2.isupper() and letter1.islower():

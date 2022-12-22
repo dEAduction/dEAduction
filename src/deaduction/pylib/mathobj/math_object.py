@@ -174,7 +174,7 @@ class MathObject:
             math_type = self.children[0]
             bound_var = self.children[1]
             bound_var.parent = self
-            bound_var.math_type = math_type
+            bound_var.math_type = math_type  # This should be useless
 
         # ---------- APP(APP(1, 2, ...), n) --> APP(1, 2, ..., n) ---------- #
         # (i.e. uncurryfy)

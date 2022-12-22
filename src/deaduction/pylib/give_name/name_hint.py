@@ -3,7 +3,9 @@
 # name_hint.py : provide classes NameHint and NameScheme #
 ##########################################################
 
-This file provides utility functions for give_name, that deals with strings.
+This file mainly provides the NameHint class. Roughly speaking, a NameHint
+object is associated to each math_type for which there are variables which
+need to be given names, which is achieved via the nameHint.provide_name().
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -52,7 +54,7 @@ usable_letters = alphabet + greek_alphabet
 usable_letters += usable_letters.upper()
 
 
-DEBUG = True
+DEBUG = False
 
 
 def letter_hints_from_type(math_type) -> []:
@@ -191,7 +193,7 @@ class NameHint:
                         force_preferred_letter=True):
         """
         True if self can be used for naming var of given math_type and given
-        preferred letter.
+        preferred letter. This uses the are_friends() function.
         """
         if preferred_letter and preferred_letter not in usable_letters:
             preferred_letter = ''
@@ -299,7 +301,11 @@ class NameHint:
             letter = new_letter_from_bad(letter, existing_hints, case)
 
         new_hint = cls(math_type, preferred_letter, letter, case)
+
+        # (5) Add temporary names
         new_hint.temporary_set_names(existing_hints, set(friendly_names))
+
+        # (6) Append to existing hints
         existing_hints.append(new_hint)
         return new_hint
 
@@ -329,7 +335,7 @@ class NameHint:
                                      exclude_indices=True,
                                      exclude_primes=True)
 
-    ###############################
+###############################
 # Methods for providing names #
 ###############################
     def check_names(self, needed_length, given_names: set):
