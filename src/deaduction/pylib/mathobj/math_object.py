@@ -47,7 +47,7 @@ This file is part of dEAduction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import List, Any, Optional, Union
+from typing import Any, Optional
 from copy import copy
 import logging
 
