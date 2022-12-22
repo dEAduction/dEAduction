@@ -209,6 +209,7 @@ A ⊆ A ∩ B  → (A ∪ B) = B
 PrettyName
     Ensemble inclus dans l'intersection
 Description
+    Utilisez la double inclusion pour montrer une égalité entre ensembles.
     Le bouton ∨ ("ou") permet également, appliqué à une hypothèse du type "P ou Q" de faire une disjonction de cas selon si on a "P" ou "Q".
 -/
 begin
@@ -223,7 +224,7 @@ A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C)
 PrettyName
     Union avec une intersection
 Description
-    Le bouton ↔ (équivalence), permet notamment de scinder "P ↔ Q" en deux implications "P → Q" et "Q → P".
+    Utilisez l'aperçu de preuve pour ne pas vous perdre dans les différents cas.
 -/
 begin
     todo,
@@ -236,6 +237,8 @@ A ⊆ B ↔ A ∩ B = A
 /- dEAduction
 PrettyName
     Exercice bilan
+Description
+    On peut utiliser une égalité pour remplacer l'un des termes par l'autre.
 -/
 begin
     todo

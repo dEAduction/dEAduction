@@ -652,7 +652,7 @@ class ExerciseToolBar(QToolBar):
 
         self.toggle_proof_tree = QAction(
                 QIcon(str((icons_dir / 'proof_tree.png').resolve())),
-            _('Toggle proof tree'), self)
+            _('Toggle proof global view'), self)
 
         self.toggle_lean_editor_action = QAction(
                 QIcon(str((icons_dir / 'lean_editor.png').resolve())),

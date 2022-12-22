@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-12-21 15:57+0100\n"
-"PO-Revision-Date: 2022-12-21 15:58+0100\n"
+"POT-Creation-Date: 2022-12-22 17:48+0100\n"
+"PO-Revision-Date: 2022-12-22 17:55+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -461,7 +461,7 @@ msgstr "Barre d’outils"
 #: dui/stages/exercise/_exercise_main_window_widgets.py:638
 #: dui/stages/exercise/_exercise_main_window_widgets.py:683
 msgid "Jump to beginning of proof"
-msgstr "Retour au début de la preuve"
+msgstr "Aller au début de la preuve"
 
 #: dui/stages/exercise/_exercise_main_window_widgets.py:641
 #: dui/stages/exercise/_exercise_main_window_widgets.py:684
@@ -476,7 +476,9 @@ msgstr "Refaire l’action"
 #: dui/stages/exercise/_exercise_main_window_widgets.py:647
 #: dui/stages/exercise/_exercise_main_window_widgets.py:686
 msgid "Jump to end of proof"
-msgstr "Retour au début de la preuve"
+msgstr ""
+"Aller à la fin\n"
+" de la preuve"
 
 #: dui/stages/exercise/_exercise_main_window_widgets.py:651
 #: dui/stages/exercise/_exercise_main_window_widgets.py:688
@@ -484,8 +486,8 @@ msgid "Toggle proof outline"
 msgstr "Fil de preuve"
 
 #: dui/stages/exercise/_exercise_main_window_widgets.py:655
-msgid "Toggle proof tree"
-msgstr "Arbre de preuve"
+msgid "Toggle proof global view"
+msgstr "Aperçu global de preuve"
 
 #: dui/stages/exercise/_exercise_main_window_widgets.py:659
 #: dui/stages/exercise/_exercise_main_window_widgets.py:687
@@ -1556,8 +1558,8 @@ msgstr "un nombre rationnel"
 msgid "a real number"
 msgstr "un nombre réel"
 
-#: pylib/math_display/display_data.py:293 pylib/proof_state/proof_state.py:1252
-#: pylib/proof_state/proof_state.py:1266
+#: pylib/math_display/display_data.py:293 pylib/proof_state/proof_state.py:1265
+#: pylib/proof_state/proof_state.py:1279
 msgid "Let {} be {}"
 msgstr "Soit {} {}"
 
@@ -1688,12 +1690,12 @@ msgstr "neuf"
 msgid "ten"
 msgstr "dix"
 
-#: pylib/math_display/display_data.py:530
-#: pylib/math_display/display_data.py:540
+#: pylib/math_display/display_data.py:527
+#: pylib/math_display/display_data.py:537
 msgid "Examples of syntax:"
 msgstr "Exemples de syntaxe :"
 
-#: pylib/math_display/display_data.py:531
+#: pylib/math_display/display_data.py:528
 msgid ""
 "\n"
 "    x ∈ A ∩ B          --> x belongs (A cap B)\n"
@@ -1707,18 +1709,18 @@ msgstr ""
 "    A = ∅               —> A = vide\n"
 "    ∀x ∈ A ∩ A’, x ∈ A   —> forall x dans (A inter A’), x dans A "
 
-#: pylib/math_display/display_data.py:537
+#: pylib/math_display/display_data.py:534
 msgid "You can use the keywords and, or, not, implies, iff, forall, exists."
 msgstr ""
 "Vous pouvez utiliser les mots-clés et, ou, non, implique, ssi, forall, "
 "exists."
 
-#: pylib/math_display/display_data.py:538
-#: pylib/math_display/display_data.py:552
+#: pylib/math_display/display_data.py:535
+#: pylib/math_display/display_data.py:549
 msgid "In case of error, try with more parentheses."
 msgstr "En cas d’erreur, essayez avec plus de parenthèses."
 
-#: pylib/math_display/display_data.py:541
+#: pylib/math_display/display_data.py:538
 msgid ""
 "\n"
 "    A ∩ B           --> A cap B\n"
@@ -1863,8 +1865,8 @@ msgstr "Preuve du but intermédiaire : {}"
 msgid "Proof of new subgoal"
 msgstr "Preuve du but intermédiaire"
 
-#: pylib/mathobj/proof_step.py:400 pylib/proof_state/proof_state.py:1083
-#: pylib/proof_state/proof_state.py:1119
+#: pylib/mathobj/proof_step.py:400 pylib/proof_state/proof_state.py:1096
+#: pylib/proof_state/proof_state.py:1132
 msgid ": "
 msgstr " : "
 
@@ -1984,51 +1986,51 @@ msgstr "Théorème :"
 msgid "All proof states received"
 msgstr "Etats de preuve reçu"
 
-#: pylib/proof_state/proof_state.py:996
+#: pylib/proof_state/proof_state.py:1009
 msgid "Assume that"
 msgstr "Supposons que"
 
-#: pylib/proof_state/proof_state.py:997 pylib/proof_state/proof_state.py:1042
+#: pylib/proof_state/proof_state.py:1010 pylib/proof_state/proof_state.py:1055
 msgid "the negation"
 msgstr "la négation"
 
-#: pylib/proof_state/proof_state.py:998
+#: pylib/proof_state/proof_state.py:1011
 msgid "Assume"
 msgstr "Supposons"
 
-#: pylib/proof_state/proof_state.py:1040 pylib/proof_state/proof_state.py:1086
+#: pylib/proof_state/proof_state.py:1053 pylib/proof_state/proof_state.py:1099
 msgid "Prove that"
 msgstr "Démontrer que"
 
-#: pylib/proof_state/proof_state.py:1043
+#: pylib/proof_state/proof_state.py:1056
 msgid "Prove"
 msgstr "Démontrer"
 
-#: pylib/proof_state/proof_state.py:1050 pylib/proof_state/proof_state.py:1088
+#: pylib/proof_state/proof_state.py:1063 pylib/proof_state/proof_state.py:1101
 msgid "Then"
 msgstr "Alors"
 
-#: pylib/proof_state/proof_state.py:1056 pylib/proof_state/proof_state.py:1073
+#: pylib/proof_state/proof_state.py:1069 pylib/proof_state/proof_state.py:1086
 msgid "True or False?"
 msgstr "Vrai ou faux ?"
 
-#: pylib/proof_state/proof_state.py:1075 pylib/proof_state/proof_state.py:1108
+#: pylib/proof_state/proof_state.py:1088 pylib/proof_state/proof_state.py:1121
 msgid "Hypothesis:"
 msgstr "Hypothèse :"
 
-#: pylib/proof_state/proof_state.py:1077 pylib/proof_state/proof_state.py:1109
+#: pylib/proof_state/proof_state.py:1090 pylib/proof_state/proof_state.py:1122
 msgid "Hypotheses:"
 msgstr "Hypothèses :"
 
-#: pylib/proof_state/proof_state.py:1106
+#: pylib/proof_state/proof_state.py:1119
 msgid "Context:"
 msgstr "Contexte :"
 
-#: pylib/proof_state/proof_state.py:1124
+#: pylib/proof_state/proof_state.py:1137
 msgid "Goal:"
 msgstr "But :"
 
-#: pylib/proof_state/proof_state.py:1126
+#: pylib/proof_state/proof_state.py:1139
 msgid "Conclusion:"
 msgstr "Conclusion :"
 
@@ -2716,6 +2718,9 @@ msgstr "Progression : {:03d}%"
 #: pylib/utils/filesystem.py:265
 msgid "Download from {} to {}"
 msgstr "Téléchargé depuis {} vers {}"
+
+#~ msgid "Toggle proof tree"
+#~ msgstr "Arbre de preuve"
 
 #~ msgid "a sequence from"
 #~ msgstr "une suite de"

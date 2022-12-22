@@ -365,6 +365,8 @@ Description
   il s'agit d'utiliser une hypothèse de limite.
 -/
 begin
+  -- have W := exercise.limit_constante,
+  -- hypo_analysis,
   todo,
 end
 
@@ -654,15 +656,11 @@ end composition
 namespace suites_de_Cauchy
 /- dEAduction
 PrettyName
-  Suites de Cauchy, continuité uniforme
+  Suites de Cauchy
 -/
 
 definition cauchy (u: ℕ → ℝ) : Prop :=
 ∀ ε>0, ∃ N: ℕ, ∀ p≥N, ∀ q≥N, |u p - u q | < ε
-
-definition uniformly_continuous (f: ℝ → ℝ) : Prop :=
-∀ ε>0, ∃ δ>0, ∀ x y: ℝ,
-(|x - y| < δ → |f x - f y | < ε)
 
 lemma definition.suite_de_cauchy
 (u: ℕ → ℝ) :
@@ -677,6 +675,31 @@ ImplicitUse
 begin
   refl,
 end
+
+lemma exercise.convergente_implique_cauchy (u: ℕ → ℝ): 
+converging_seq u → cauchy u :=
+/- dEAduction
+PrettyName
+  Une suite convergente est de Cauchy
+-/
+begin
+  todo,
+end
+
+end suites_de_Cauchy
+
+
+
+
+namespace continuite_uniforme
+/- dEAduction
+PrettyName
+  Continuité uniforme
+-/
+
+definition uniformly_continuous (f: ℝ → ℝ) : Prop :=
+∀ ε>0, ∃ δ>0, ∀ x y: ℝ,
+(|x - y| < δ → |f x - f y | < ε)
 
 lemma definition.uniformly_continuous
 (f: ℝ → ℝ) : uniformly_continuous f ↔
@@ -704,6 +727,8 @@ begin
   todo,
 end
 
+open suites_de_Cauchy
+
 lemma exercise.cauchy_uniformement_continue
 (u: ℕ → ℝ) (f: ℝ → ℝ)
 (H0: cauchy u) (H1: uniformly_continuous f):
@@ -720,7 +745,7 @@ end
 -- TODO: cauchy => bornée, bornée => valeur d'adh,
 -- Cauchy + va => cv
 
-end suites_de_Cauchy
+end continuite_uniforme
 
 -- namespace DL
 -- /- dEAduction
