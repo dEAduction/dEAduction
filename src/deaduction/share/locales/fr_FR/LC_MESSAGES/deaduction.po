@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-12-22 17:48+0100\n"
-"PO-Revision-Date: 2022-12-22 17:55+0100\n"
+"POT-Creation-Date: 2022-12-22 21:24+0100\n"
+"PO-Revision-Date: 2022-12-22 21:25+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -1019,47 +1019,59 @@ msgstr "Impossible d’utiliser {} pour substituer dans {}"
 msgid "Choose which expression you want to replace"
 msgstr "Choisissez quelle expression remplacer"
 
-#: pylib/actions/logic.py:1633
-msgid "No property selected"
-msgstr "Pas de propriété sélectionnée"
+#: pylib/actions/logic.py:1635
+msgid "Select an equality to perform a substitution"
+msgstr "Choisissez une égalité pour effectuer une substitution"
 
-#: pylib/actions/logic.py:1636
+#: pylib/actions/logic.py:1638
+msgid ""
+"To prove an equality between sets, use the relevant definitions, not the = "
+"button"
+msgstr ""
+"Pour prouver une égalité entre ensembles, utilisez les définitions "
+"pertinentes, pas le bouton ="
+
+#: pylib/actions/logic.py:1641
+msgid "Select an equality from the context to perform a substitution"
+msgstr "Choisissez une égalité du contexte pour effectuer une substitution"
+
+#: pylib/actions/logic.py:1647
 msgid "Too many selected objects"
 msgstr "Appliquer cette propriété à un objet sélectionné"
 
-#: pylib/actions/logic.py:1668 pylib/actions/logic.py:1675
+#: pylib/actions/logic.py:1679 pylib/actions/logic.py:1686
 msgid "This cannot be used for substitution"
 msgstr "Cette propriété ne peut pas être utilisé pour la substitution"
 
-#: pylib/actions/logic.py:1711
+#: pylib/actions/logic.py:1722
 msgid "New objet {} added to the context"
 msgstr "Nouvel objet {} ajouté au contexte"
 
-#: pylib/actions/logic.py:1744
+#: pylib/actions/logic.py:1755
 msgid "Map {} applied to {}"
 msgstr "La fonction {} a été appliquée à {}"
 
-#: pylib/actions/logic.py:1755
+#: pylib/actions/logic.py:1766
 msgid "The map {} cannot be applied to this object"
 msgstr "L’application {} ne peut pas être appliquée à cet objet"
 
-#: pylib/actions/logic.py:1757
+#: pylib/actions/logic.py:1768
 msgid "The map {} cannot be applied to these objects"
 msgstr "L’application {} ne peut pas être appliquée à ces objets"
 
-#: pylib/actions/logic.py:1787
+#: pylib/actions/logic.py:1798
 msgid "Enter element on which you want to apply the map {}:"
 msgstr "Entrer l’objet sur lequel vous voulez appliquer {} :"
 
-#: pylib/actions/logic.py:1790
+#: pylib/actions/logic.py:1801
 msgid "Map"
 msgstr "Application"
 
-#: pylib/actions/logic.py:1806
+#: pylib/actions/logic.py:1817
 msgid "Select an application and an element or an equality"
 msgstr "Sélectionner une application, et un élément ou une égalité"
 
-#: pylib/actions/magic.py:472
+#: pylib/actions/magic.py:477
 msgid "I don't know how to conclude"
 msgstr "Je ne sais pas comment conclure"
 
@@ -2718,6 +2730,9 @@ msgstr "Progression : {:03d}%"
 #: pylib/utils/filesystem.py:265
 msgid "Download from {} to {}"
 msgstr "Téléchargé depuis {} vers {}"
+
+#~ msgid "No property selected"
+#~ msgstr "Pas de propriété sélectionnée"
 
 #~ msgid "Toggle proof tree"
 #~ msgstr "Arbre de preuve"

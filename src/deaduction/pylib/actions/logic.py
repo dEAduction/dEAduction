@@ -1615,7 +1615,8 @@ def action_equal(proof_step) -> CodeForLean:
     """
 
     selected_objects = proof_step.selection
-    # target_selected = proof_step.target_selected
+    target_selected = proof_step.target_selected
+    target = proof_step.goal.target
     user_input = proof_step.user_input
 
     if user_input is None:
@@ -1630,7 +1631,17 @@ def action_equal(proof_step) -> CodeForLean:
         selected_objects = [d_n_d.premise, d_n_d.operator]
         equality = d_n_d.operator.math_type
     elif not selected_objects:
-        raise WrongUserInput(error=_("No property selected"))
+        if not target_selected:
+            msg = _("Select an equality to perform a substitution")
+        else:
+            if target.is_set_equality():
+                msg = _("To prove an equality between sets, use the relevant "
+                        "definitions, not the = button")
+            else:
+                msg = _("Select an equality from the context to perform a "
+                        "substitution")
+        raise WrongUserInput(error=msg)
+
     # Now len(l) > 0
     elif len(selected_objects) > 2:
         raise WrongUserInput(error=_("Too many selected objects"))

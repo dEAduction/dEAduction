@@ -1009,11 +1009,22 @@ class MathObject:
         """
         Test if (math_type of) self is an equality.
         """
-        if is_math_type:
-            math_type = self
-        else:
-            math_type = self.math_type
+        math_type = self if is_math_type else self.math_type
         return math_type.node == "PROP_EQUAL"
+
+    def is_subset(self):
+        return self.math_type.node == "SET"
+
+    def is_set_equality(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is an equality between subsets.
+        """
+
+        if not self.is_equality(is_math_type=is_math_type):
+            return False
+
+        math_type = self if is_math_type else self.math_type
+        return math_type.children[0].is_subset()
 
     def is_non_equality(self, is_math_type=False) -> bool:
         """
