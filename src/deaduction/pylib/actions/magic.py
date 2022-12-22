@@ -29,7 +29,8 @@ This file is part of dEAduction.
 from typing import Optional
 import logging
 
-# from deaduction.pylib.utils.nice_display_tree import display_tree
+import deaduction.pylib.config.vars as cvars
+
 from deaduction.pylib.actions.actiondef import action
 from deaduction.pylib.actions import (CodeForLean,
                                       WrongUserInput)
@@ -70,6 +71,8 @@ def rec_find_target_in_props(target: MathObject,
 
     # TODO: add target conjunctions (solved by Goal!)
 
+    use_implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
+
     if not props:
         return
 
@@ -91,13 +94,14 @@ def rec_find_target_in_props(target: MathObject,
                 return conj
 
     # Implicit defs search
-    for original_prop, prop in props:
-        implicit_props = [(original_prop, pr)
-                          for pr in prop.unfold_implicit_definition()]
-        implicit = rec_find_target_in_props(target, implicit_props,
-                                            depth=min(1, depth-1))
-        if implicit:
-            return implicit
+    if use_implicit:
+        for original_prop, prop in props:
+            implicit_props = [(original_prop, pr)
+                              for pr in prop.unfold_implicit_definition()]
+            implicit = rec_find_target_in_props(target, implicit_props,
+                                                depth=min(1, depth-1))
+            if implicit:
+                return implicit
 
     # Target disjunction search
     if target.is_or(is_math_type=True):
@@ -108,13 +112,14 @@ def rec_find_target_in_props(target: MathObject,
                 return disj
 
     # Target implicit defs search
-    implicit_targets = target.unfold_implicit_definition()
-    for sub_target in implicit_targets:
-        # Here rec_find_... would be too powerful...
-        implicit = rec_find_target_in_props(sub_target, props,
-                                            depth=min(1, depth-1))
-        if implicit:
-            return implicit
+    if use_implicit:
+        implicit_targets = target.unfold_implicit_definition()
+        for sub_target in implicit_targets:
+            # Here rec_find_... would be too powerful...
+            implicit = rec_find_target_in_props(sub_target, props,
+                                                depth=min(1, depth-1))
+            if implicit:
+                return implicit
 
 
 def context_obj_solving_target(proof_step):
