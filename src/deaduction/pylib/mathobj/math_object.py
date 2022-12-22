@@ -231,10 +231,11 @@ class MathObject:
         according to local context.
         This is done only if self is not applying this local constant to an
         index, i.e. self is not a lambda or an application.
+        We also not do this if this child is itself a bound var.
         """
 
         # (1) Add child BoundVar
-        if self.is_variable(is_math_type=True) \
+        if (self.is_variable(is_math_type=True) or self.is_bound_var) \
                 and (self.is_sequence() or self.is_set_family()):
             if not self.children:
                 bound_var_type = self.math_type.children[0]
@@ -331,6 +332,8 @@ class MathObject:
                 # (i) BoundVar case
                 name = info.get('name')
                 if name and name.endswith('.BoundVar'):
+                    if name == 'u.BoundVar':
+                        print("debug")
                     # Remove suffix and create a BoundVar
                     info['name'] = info['name'][:-len('.BoundVar')]
                     math_object = BoundVar(node=node,
@@ -852,7 +855,6 @@ class MathObject:
             return True
         else:
             return False
-
 
     def is_set_family(self, is_math_type=False) -> bool:
         """

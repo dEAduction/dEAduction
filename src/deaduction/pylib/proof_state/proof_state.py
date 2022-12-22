@@ -457,7 +457,8 @@ class Goal:
         preferred_letters = hint.current_preferred_letters()
         local_length = 0
 
-        # (0) Special case: if u_n then do not count u's bound var.
+        # (0) Special case: if u_n then do not count u's bound var used for
+        # display in (u_n)_{n in N}
         if math_obj.is_app_of_local_constant():
             return 0
         # (1) Self's has direct bound var?
@@ -597,7 +598,6 @@ class Goal:
         isolated bool may be used to name sequences' indices without bothering
         about conflicting with global vars names.
         """
-        # For very special names like RealSubGroup or _inst_1:
 
         # if DEBUG:
         #     print(f"Naming var, local_context = {var.local_context}")

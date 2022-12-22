@@ -129,9 +129,8 @@ def latex_shape(self: MathObject, is_type=False, text=False) -> []:
 
     shape = None
 
-    # if self.node == "QUANT_∀":
-    #     # print("app")
-    #     pass
+    # if self.name == "v":
+    #     print("debug")
 
     # (0) Dictionaries to be used (order matters!):
     dicts = []
@@ -145,6 +144,8 @@ def latex_shape(self: MathObject, is_type=False, text=False) -> []:
     # (1) Search for patterns
     for dic in dicts:
         for pattern, pre_shape, metavars in dic:
+            # if pattern.node == 'LOCAL_CONSTANT' and len(pattern.children) == 3:
+            #     print("debug")
             if pattern.match(self):
                 # Now metavars are matched
                 # log.debug(f"Matching pattern --> {pre_shape}")
@@ -237,6 +238,9 @@ def to_display(self: MathObject, format_="html", text=False,
     Note that it cannot be put in MathObject module, due to import problem
     (namely: we need PatternMathObject to get the right shape to display).
     """
+
+    # if len(self.children) >0 and self.children[1].name == 'v':
+    #     print('debug')
 
     # (1) Compute expanded shape
     shape = latex_shape(self, is_type=is_type, text=text)

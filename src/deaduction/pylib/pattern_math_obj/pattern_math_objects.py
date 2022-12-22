@@ -369,6 +369,8 @@ class PatternMathObject(MathObject):
         #################################
         # Recursively test for children #
         #################################
+        elif len(children) >= len(math_object.children) + 2:
+            return False
         elif len(children) < len(math_object.children) + 2:
             nb_c = len(children)
             nb_c_mo = len(math_object.children)
