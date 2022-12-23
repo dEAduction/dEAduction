@@ -273,6 +273,13 @@ end suites
 
 namespace fonctions
 
+lemma definition.composition {X Y Z: Type} {f: X → Y} {g:Y → Z} {x:X}:
+set.composition g f x = g (f x)
+:=
+begin
+    todo,
+end
+
 lemma definition.limit_function (f : ℝ → ℝ) (a : ℝ) (l : ℝ) : 
 limit_function f a l ↔ 
 ( ∀ ε > 0, ∃ δ>0, ∀ x: ℝ, ( | x-a | < δ → | f x  - l | < ε ) ):=
@@ -316,10 +323,10 @@ end definitions
 -----------------
 --  exercices  --
 -----------------
-namespace exercices_suites
+namespace exercices_suites_I
 /- dEAduction
 PrettyName
-  Exercices sur les suites
+  Exercices sur les suites I
 -/
 
 open definitions
@@ -371,6 +378,52 @@ begin
 end
 
 
+lemma exercise.limite_inegalites
+(u v: ℕ → ℝ) (l l' : ℝ) (H : limit u l)
+(H' : limit v l')
+(H'' : ∀n, u n ≤ v n ) :
+l ≤ l'
+:=
+/- dEAduction
+PrettyName
+  Passage à la limite dans une inégalité (*)
+Description
+  Comment démarrer ??
+  Comment avoir un epsilon pertinent auquel appliquer nos
+  définitions de limites ?...
+-/
+begin
+  todo,
+  -- contrapose H'' with H1,
+  -- push_neg,
+  -- push_neg at H1,
+  -- let e := (l-l')/2, have H2 : e = (l-l')/2, refl, no_meta_vars,
+  -- rw limit at H H',
+  -- have H3: (e:ℝ) > 0, rotate, have H4 := H e H3, rotate 1, rotate, rotate,
+  -- solve1 {norm_num at *, apply mul_pos, linarith only [H1], apply inv_pos.mpr, linarith},
+  -- have H5 := H' e H3,
+  -- cases H4 with n H6,
+  -- cases H5 with n' H7,
+  -- let n'' := max n n', have H8 : n'' = max n n', refl, no_meta_vars,
+  -- have H9: (n'':ℕ) ≥ n, rotate, have H10 := H6 n'' H9, rotate 1, solve1 {norm_num at *, tautology }, rotate,
+  -- have H11: (n'':ℕ) ≥ n', rotate, have H12 := H7 n'' H11, rotate 1, solve1 {norm_num at *, tautology }, rotate,
+  -- use n'',
+  -- rw generalites.valeur_absolue.theorem.majoration_valeur_absolue at H10,
+  -- cases H10 with H14 H15,
+  -- rw generalites.valeur_absolue.theorem.majoration_valeur_absolue at H12,
+  -- cases H12 with H17 H18,
+  -- linarith only [H18, H14, H2],
+end
+
+end exercices_suites_I
+
+
+
+namespace exercices_suites_II
+/- dEAduction
+PrettyName
+  Exercices sur les suites II
+-/
 
 lemma exercise.couper_epsilon_en_deux
 (u : ℕ → ℝ) (l : ℝ) :
@@ -451,66 +504,13 @@ begin
   -- linarith only [Hb, Hc, Hd],
 end
 
-
-lemma exercise.limite_inegalites
-(u v: ℕ → ℝ) (l l' : ℝ) (H : limit u l)
-(H' : limit v l')
-(H'' : ∀n, u n ≤ v n ) :
-l ≤ l'
-:=
-/- dEAduction
-PrettyName
-  Passage à la limite dans une inégalité (*)
-Description
-  Comment démarrer ??
-  Comment avoir un epsilon pertinent auquel appliquer nos
-  définitions de limites ?...
--/
-begin
-  todo,
-  -- contrapose H'' with H1,
-  -- push_neg,
-  -- push_neg at H1,
-  -- let e := (l-l')/2, have H2 : e = (l-l')/2, refl, no_meta_vars,
-  -- rw limit at H H',
-  -- have H3: (e:ℝ) > 0, rotate, have H4 := H e H3, rotate 1, rotate, rotate,
-  -- solve1 {norm_num at *, apply mul_pos, linarith only [H1], apply inv_pos.mpr, linarith},
-  -- have H5 := H' e H3,
-  -- cases H4 with n H6,
-  -- cases H5 with n' H7,
-  -- let n'' := max n n', have H8 : n'' = max n n', refl, no_meta_vars,
-  -- have H9: (n'':ℕ) ≥ n, rotate, have H10 := H6 n'' H9, rotate 1, solve1 {norm_num at *, tautology }, rotate,
-  -- have H11: (n'':ℕ) ≥ n', rotate, have H12 := H7 n'' H11, rotate 1, solve1 {norm_num at *, tautology }, rotate,
-  -- use n'',
-  -- rw generalites.valeur_absolue.theorem.majoration_valeur_absolue at H10,
-  -- cases H10 with H14 H15,
-  -- rw generalites.valeur_absolue.theorem.majoration_valeur_absolue at H12,
-  -- cases H12 with H17 H18,
-  -- linarith only [H18, H14, H2],
-end
-
-
-lemma exercise.borne_fois_zero
-(u v: ℕ → ℝ) (H : limit u 0)
-(H' : bounded_sequence v) :
-limit (λn, (u n) * (v n)) 0
-:=
-/- dEAduction
-PrettyName
-  Limite d'un produit (cas particulier) (**)
--/
-begin
-  todo,
-end
-
-
 lemma exercise.limite_unique
 (u : ℕ → ℝ) (l : ℝ)(l' : ℝ) (H : limit u l) (H' : limit u l') :
 l = l' 
 :=
 /- dEAduction
 PrettyName
-  Unicité de la limite (**)
+  (*) Unicité de la limite
 -/
 begin
   -- by_contradiction,
@@ -545,7 +545,21 @@ limit v l
 :=
 /- dEAduction
 PrettyName
-  Théorème des gendarmes (***)
+  (**) Théorème des gendarmes
+-/
+begin
+  todo,
+end
+
+
+lemma exercise.borne_fois_zero
+(u v: ℕ → ℝ) (H : limit u 0)
+(H' : bounded_sequence v) :
+limit (λn, (u n) * (v n)) 0
+:=
+/- dEAduction
+PrettyName
+  (**) Limite d'un produit (cas particulier)
 -/
 begin
   todo,
@@ -564,7 +578,7 @@ begin
   todo,
 end
 
-end exercices_suites
+end exercices_suites_II
 
 namespace exercices_fonctions
 /- dEAduction
@@ -573,8 +587,6 @@ PrettyName
 -/
 
 open definitions
-
-namespace composition
 
 open set
 
@@ -600,13 +612,6 @@ begin
   -- rw generalites.valeur_absolue.theorem.majoration_valeur_absolue at *,
   -- cases H5 with H5a H5b,
   -- linarith only [H5a], linarith, assumption,
-end
-
-lemma definition.composition {X Y Z: Type} {f: X → Y} {g:Y → Z} {x:X}:
-composition g f x = g (f x)
-:=
-begin
-    todo,
 end
 
 lemma exercise.composition_limite_fonction
@@ -650,7 +655,8 @@ begin
   todo,
 end
 
-end composition
+end exercices_fonctions
+
 
 
 namespace suites_de_Cauchy
@@ -658,6 +664,8 @@ namespace suites_de_Cauchy
 PrettyName
   Suites de Cauchy
 -/
+
+open definitions
 
 definition cauchy (u: ℕ → ℝ) : Prop :=
 ∀ ε>0, ∃ N: ℕ, ∀ p≥N, ∀ q≥N, |u p - u q | < ε
@@ -676,6 +684,42 @@ begin
   refl,
 end
 
+-- definition increasing (k: ℕ → ℕ) : Prop := 
+-- ∀ n, (k n) > (k (n+1)) 
+
+-- definition limit_value (u: ℕ → ℝ) (a: ℝ) : Prop :=
+-- ∃ k: ℕ → ℕ, increasing k ∧ limit (λ n, (u (k n))) a
+
+-- lemma definition.increasing (k: ℕ → ℕ): (increasing k) ↔
+-- ∀ n, (k n) > (k (n+1)) :=
+-- begin
+--   refl,
+-- end
+
+-- lemma theorem.increasing_limit (k: ℕ → ℕ) (H: increasing k):
+-- limit_plus_infinity (coe k) :=
+-- begin
+--   todo,
+-- end
+
+-- lemma definition.limit_value (u: ℕ → ℝ) (a: ℝ) :
+-- limit_value u a ↔
+-- ∃ k: ℕ → ℕ, increasing k ∧ limit (λ n, (u (k n))) a :=
+-- begin
+--   refl,
+-- end
+
+-- lemma exercise.limit_limit_value
+--  (u: ℕ → ℝ) (a b: ℝ) (H1: limit u a) (H2: limit_value u b) :
+--  b = a :=
+-- /- dEAduction
+-- PrettyName
+--   Une suite convergence a une unique valeur d'adhérence
+-- -/
+-- begin
+--   todo,
+-- end
+
 lemma exercise.convergente_implique_cauchy (u: ℕ → ℝ): 
 converging_seq u → cauchy u :=
 /- dEAduction
@@ -686,9 +730,49 @@ begin
   todo,
 end
 
+-- lemma theorem.cauchy_bounded (u: ℕ → ℝ): 
+-- cauchy u → bounded_sequence u :=
+-- /- dEAduction
+-- PrettyName
+--   Une suite de Cauchy est bornée
+-- -/
+-- begin
+--   todo,
+-- end
+
+-- lemma theorem.bounded_limit_value (u: ℕ → ℝ): 
+-- bounded_sequence u → ∃ a, limit_value u a :=
+-- /- dEAduction
+-- PrettyName
+--   Une suite bornée a une valeur d'adhérence
+-- -/
+-- begin
+--   todo,
+-- end
+
+-- lemma exercise.limit_value_cauchy_converge (u: ℕ → ℝ)
+-- (H1: cauchy u) (H2: ∃ a, limit_value u a) :
+-- converging_seq u  :=
+-- /- dEAduction
+-- PrettyName
+--   Une suite de Cauchy ayant une valeur d'adhérence converge
+-- -/
+-- begin
+--   todo,
+-- end
+
+-- lemma exercise.cauchy_converge (u: ℕ → ℝ)
+-- (H1: cauchy u):
+-- converging_seq u  :=
+-- /- dEAduction
+-- PrettyName
+--   Toute suite de Cauchy converge
+-- -/
+-- begin
+--   todo,
+-- end
+
 end suites_de_Cauchy
-
-
 
 
 namespace continuite_uniforme
@@ -776,12 +860,7 @@ end continuite_uniforme
 -- begin
 --   todo
 -- end
-
-
-
 -- end DL
-
-end exercices_fonctions
 
 
 /- 
