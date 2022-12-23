@@ -243,7 +243,7 @@ class MathObject:
                                                     parent=self)
                 # We add 3 children for compatibility
                 self.children = [bound_var_type, bound_var,
-                                 MathObject.NO_MATH_TYPE]
+                                 MathObject.PROP]
 
         # (2) Replace child sequence by a lambda
         if self.node not in ('APPLICATION', 'LAMBDA'):
@@ -749,9 +749,18 @@ class MathObject:
         """
         Compute the number of copies of other contained in self.
         """
+
+        if self is self.NO_MATH_TYPE:  # NO_MATH_TYPE is equal to anything...
+            return 0
+
         if MathObject.__eq__(self, other):
             return 1
         else:
+            for child in self.children:
+                test = child.contains(other)
+                if test:
+                    print("debug")
+
             return sum([child.contains(other) for child in self.children])
 
     def direction_for_substitution_in(self, other) -> str:
