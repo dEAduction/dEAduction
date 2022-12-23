@@ -78,6 +78,9 @@ def rw_using_statement(goal: Goal, selected_objects, statement) -> CodeForLean:
 
     # Add try_norm_num; this removes lambda that can occur e.g. when applying
     # def of injectivity backwards
+    # Fixme: simp_only tends to suppress vars
+    #  e.g. Exists l, limit u l --> Exists limit u
+    #  lambda n, (-1)^n --> pow (-1) and then Lean error!
     codes = codes.and_try_simp_only(location=arguments)
 
     return codes

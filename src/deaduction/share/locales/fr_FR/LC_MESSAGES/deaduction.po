@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-12-22 21:24+0100\n"
-"PO-Revision-Date: 2022-12-22 21:25+0100\n"
+"POT-Creation-Date: 2022-12-23 14:27+0100\n"
+"PO-Revision-Date: 2022-12-23 14:27+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -277,6 +277,10 @@ msgstr "A démontrer"
 #: dui/elements/context_widgets_classes.py:806
 msgid "Target"
 msgstr "But"
+
+#: dui/elements/context_widgets_classes.py:808
+msgid " ({} pending)"
+msgstr " ({} en attente)"
 
 #: dui/elements/help.py:58 dui/elements/help.py:147
 #: dui/stages/exercise/_exercise_main_window_widgets.py:509
@@ -684,39 +688,39 @@ msgstr "Exercice appliqué au but"
 msgid "Exercise applied to"
 msgstr "Exercice appliqué à"
 
-#: pylib/actions/generic.py:92
+#: pylib/actions/generic.py:95
 msgid "Definition added to the context"
 msgstr "Définition ajoutée au contexte"
 
-#: pylib/actions/generic.py:94
+#: pylib/actions/generic.py:97
 msgid "Theorem added to the context"
 msgstr "Théorème ajouté au contexte"
 
-#: pylib/actions/generic.py:96
+#: pylib/actions/generic.py:99
 msgid "Exercise added to the context"
 msgstr "Exercice ajouté au contexte"
 
-#: pylib/actions/generic.py:118
+#: pylib/actions/generic.py:121
 msgid "Unable to apply definition"
 msgstr "La définition n’a pas pu être appliquée"
 
-#: pylib/actions/generic.py:152
+#: pylib/actions/generic.py:155
 msgid "Target replaced by applying theorem"
 msgstr "Le but a été remplacé en appliquant le théorème"
 
-#: pylib/actions/generic.py:164
+#: pylib/actions/generic.py:167
 msgid "Target replaced by applying theorem to "
 msgstr "Le but a été remplacé en appliquant le théorème à "
 
-#: pylib/actions/generic.py:182
+#: pylib/actions/generic.py:185
 msgid "Theorem"
 msgstr "Théorème"
 
-#: pylib/actions/generic.py:182
+#: pylib/actions/generic.py:185
 msgid "applied to"
 msgstr "appliqué à"
 
-#: pylib/actions/generic.py:190
+#: pylib/actions/generic.py:193
 msgid "Unable to apply theorem"
 msgstr "Le théorème n’a pas pu être appliqué"
 
@@ -2831,9 +2835,6 @@ msgstr "Téléchargé depuis {} vers {}"
 
 #~ msgid "No hint available."
 #~ msgstr "Aucun conseil disponible."
-
-#~ msgid "pending"
-#~ msgstr "en attente"
 
 #~ msgid "Preparing folder for launch"
 #~ msgstr "Préparation du dossier de lancement"

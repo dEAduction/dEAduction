@@ -1355,7 +1355,7 @@ def apply_exists(proof_step, selected_object: [MathObject]) -> CodeForLean:
         # implicit_definition = MathObject.last_used_implicit_definition
         selected_hypo       = MathObject.last_rw_object
 
-    hint = selected_hypo.children[1].display_name
+    # hint = selected_hypo.children[1].display_name
     math_type = selected_hypo.bound_var_type
     bound_var = selected_hypo.bound_var
     name = proof_step.goal.provide_good_name(math_type,

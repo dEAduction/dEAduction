@@ -803,6 +803,8 @@ class TargetWidget(QWidget):
         # self.target = target
 
     def set_pending_goals_counter(self, pgn: int):
-        text = _("Target") + " " + str(pgn) if pgn else _("Target")
+        text = _("Target")
+        if pgn:
+            text += _(" ({} pending)").format(pgn)
         self.caption_label.setText(text)
 
