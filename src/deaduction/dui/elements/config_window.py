@@ -58,7 +58,8 @@ from PySide2.QtWidgets import ( QApplication,
                                 QDialogButtonBox,
                                 QPushButton,
                                 QFileDialog,
-                                QMessageBox)
+                                QMessageBox,
+                                QLabel)
 
 from deaduction.pylib.config.i18n import init_i18n
 import deaduction.pylib.config.vars      as      cvars
@@ -85,17 +86,17 @@ PRE_DEFINED = dict()
 # Dictionary whose keys are keys of CONFIGS.
 
 CONFIGS["Display"] = {
-    "display.target_display_on_top": (None, True),
-    "display.target_font_size": (None, True),
-    "display.main_font_size": (None, True),
-    "display.statements_font_size": (None, True),
+    "display.target_display_on_top": (None, True, ""),
+    "display.target_font_size": (None, True, ""),
+    "display.main_font_size": (None, True, ""),
+    "display.statements_font_size": (None, True, ""),
     # "display.proof_tree_font_size": (None, True),  # FIXME: hard to modify
-    "display.tooltips_font_size": (None, True),
-    'display.use_symbols_for_logic_button': (None, True),
-    'display.font_size_for_symbol_buttons': (None, True),
-    'display.dubious_characters': (None, True),
-    'display.short_buttons_line': (None, True),
-    'display.color_for_selection': (None, True)
+    "display.tooltips_font_size": (None, True, ""),
+    'display.use_symbols_for_logic_button': (None, True, ""),
+    'display.font_size_for_symbol_buttons': (None, True, ""),
+    'display.dubious_characters': (None, True, ""),
+    'display.short_buttons_line': (None, True, ""),
+    'display.color_for_selection': (None, True, "")
     # ('display.use_system_fonts', None, True),
     # ('display.use_system_fonts_for_maths', None, True),
     # ('display.maths_fonts', ["system", "Latin Modern"], True)
@@ -110,24 +111,49 @@ CONFIGS["Display"] = {
 # CONFIGS["Display"].append((font_size_key, None, True))
 
 CONFIGS["Logic"] = {
-    "display.display_success_messages": (None, True),
-    "logic.use_color_for_variables": (None, True),
-    "logic.use_color_for_dummy_variables": (None, True),
-    "logic.use_color_for_applied_properties": (None, True)}
+    "display.display_success_messages": (None, True, ""),
+    "logic.use_color_for_variables": (None, True,
+        _("The variables of the context will be displayed in color")),
+    "logic.use_color_for_dummy_variables": (None, True,
+        _("The dummy variables (bound by a quantifier) will be displayed in "
+          "color")),
+    "logic.use_color_for_applied_properties": (None, True,
+        _("The context properties will be shaded after they have been used"))}
 
 CONFIGS['Functionalities'] = {
-    'functionality.allow_proof_by_sorry': (None, True),  # tested
-    'functionality.automatic_intro_of_exists': (None, True),
-    'functionality.target_selected_by_default': (None, True),
-    'functionality.allow_implicit_use_of_definitions': (None, True),
-    'functionality.auto_solve_inequalities_in_bounded_quantification': (None,
-                                                                        False),
-    'functionality.drag_and_drop_in_context': (None, True),
-    'functionality.drag_context_to_statements': (None, True),
-    'functionality.drag_statements_to_context': (None, True),
-    'functionality.ask_to_prove_premises_of_implications': (None, False),
-    'functionality.automatic_intro_of_variables_and_hypotheses': (None, True)
-    }
+    'functionality.allow_proof_by_sorry': (None, True,
+        _("'Admit current sub-goal!' is available with the Proof methods "
+          "button")),
+    'functionality.automatic_intro_of_exists': (None, True,
+        _("When an existence property appears in the context, "
+          "the ∃ button will be operated automatically")),
+    'functionality.target_selected_by_default': (None, True,
+        _("Buttons will act on the target if no context object is selected")),
+    'functionality.allow_implicit_use_of_definitions': (None, True,
+        _("e.g. the ∀ button will apply on properties like 'A⊂B', which is a "
+          "universal property by implicitly applying the definition of "
+          "inclusion")),
+    'functionality.auto_solve_inequalities_in_bounded_quantification':
+        (None, False, _("e.g. when applying '∀ε>0, P(ε)' to some ε, "
+                        "the computer will try to prove ε>0")),
+    'functionality.drag_and_drop_in_context': (None, True,
+        _("Objects and properties of the context may be dragged and dropped "
+          "on each other, e.g. drag and drop 'x∈A' on 'A⊂B' to get 'x∈B'")),
+    'functionality.drag_context_to_statements': (None, True,
+        _("Properties of the context may be dragged and dropped on "
+          "statements, typically a definition, e.g. drag and drop 'A⊂B' on "
+          "the definition of inclusion")),
+    'functionality.drag_statements_to_context': (None, True,
+        _("Statements may be dragged and dropped in the context properties "
+          "area, where they become a context property that may be applied "
+          "with more precision")),
+    'functionality.ask_to_prove_premises_of_implications': (None, False,
+        _("When an implication 'P ⇒ Q' appears in the context, the computer "
+          "will ask user if she wants to prove P as a sub-goal")),
+    'functionality.automatic_intro_of_variables_and_hypotheses': (None, True,
+        _("The ∀ and ⇒ buttons will be operated automatically when the "
+          "target is a universal property or an implication")),
+}
 
 PRE_DEFINED['Functionalities'] = {
     'selected_level': 'functionality.default_functionality_level',
@@ -177,13 +203,13 @@ PRE_DEFINED['Functionalities'] = {
                  }
 }
 
-CONFIGS["Language"] = {"i18n.select_language": (["en", "fr_FR"], True)}
+CONFIGS["Language"] = {"i18n.select_language": (["en", "fr_FR"], True, "")}
 
 CONFIGS["Advanced"] = {
-    'others.course_directory': ('dir', True),
-    'logs.save_journal': (None, True),  # checked, untested
-    'logs.display_level': (['debug', 'info', 'warning'], True),
-    'functionality.save_solved_exercises_for_autotest': (None, True)}
+    'others.course_directory': ('dir', True, ""),
+    'logs.save_journal': (None, True, ""),  # checked, untested
+    'logs.display_level': (['debug', 'info', 'warning'], True, ""),
+    'functionality.save_solved_exercises_for_autotest': (None, True, "")}
 
 SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          # Fonts
@@ -453,15 +479,8 @@ class ConfigWindow(QDialog):
             return
 
         pre_defined_lyt = QHBoxLayout()
-        free_settings_widget = QRadioButton(_("Free settings"))
-        free_settings_widget.level = "Free settings"
-        free_settings_widget.toggled.connect(self.pre_defined_changed)
-        pre_defined_lyt.addWidget(free_settings_widget)
 
-        if self.selected_level == "Free settings":
-            # Toggle Free settings
-            free_settings_widget.toggle()
-
+        # Pre-defined level widgets
         for setting in self.predefined_settings_dict:
             if setting != 'selected_level':
                 widget = QRadioButton(_(setting))
@@ -471,6 +490,15 @@ class ConfigWindow(QDialog):
                     widget.toggle()
                 widget.toggled.connect(self.pre_defined_changed)
 
+        # Free settings widget
+        free_settings_widget = QRadioButton(_("Free settings"))
+        free_settings_widget.level = "Free settings"
+        free_settings_widget.toggled.connect(self.pre_defined_changed)
+        pre_defined_lyt.addWidget(free_settings_widget)
+        if self.selected_level == "Free settings":
+            # Toggle Free settings
+            free_settings_widget.toggle()
+
         self.main_layout.addLayout(pre_defined_lyt)
         separator = QFrame()
         separator.setFrameShape(QFrame.HLine)
@@ -478,7 +506,12 @@ class ConfigWindow(QDialog):
 
     def create_widgets(self):
 
-        for setting, (setting_list, enabled) in self.settings.items():
+        for setting, info in self.settings.items():
+            if len(info) == 2:
+                (setting_list, enabled) = info
+                tooltip = ''
+            elif len(info) == 3:
+                (setting_list, enabled, tooltip) = info
             setting_initial_value = cvars.get(setting, default_value="none")
             if setting_initial_value == "none":
                 setting_initial_value = None  # Avoid KeyError
@@ -537,7 +570,11 @@ class ConfigWindow(QDialog):
             # print("Adding wdgt", widget)
             if widget:
                 widget.setEnabled(enabled)
-                self.layout.addRow(title, widget)
+                title_wdg = QLabel(title)
+                if tooltip:
+                    widget.setToolTip(tooltip)
+                    title_wdg.setToolTip(tooltip)
+                self.layout.addRow(title_wdg, widget)
                 self.widgets[setting] = widget
 
         # Set initial values
@@ -584,7 +621,11 @@ class ConfigWindow(QDialog):
         predefined = ({} if level == "Free settings"
                       else self.predefined_settings_dict[level])
 
-        for setting, (setting_list, enabled) in self.settings.items():
+        for setting, info in self.settings.items():
+            if len(info) == 2:
+                (setting_list, enabled) = info
+            else:
+                (setting_list, enabled, tooltip) = info
             if setting in predefined:
                 setting_value = predefined[setting]
             elif setting in self.modified_settings:
@@ -675,7 +716,7 @@ class ConfigWindow(QDialog):
 
         predefined_dict = self.predefined_settings_dict[self.selected_level]
 
-        for setting, (setting_list, enabled) in self.settings.items():
+        for setting, (setting_list, enabled, t) in self.settings.items():
             if setting in predefined_dict:
                 setting_value = predefined_dict[setting]
                 self.set_value(setting, setting_list, setting_value,

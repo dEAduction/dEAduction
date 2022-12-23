@@ -33,6 +33,9 @@ def _(msg):
     return msg
 
 
+replace_missing = _('Replace missing symbols: ℕ (N), ℤ (Z), ℚ (Q), ℝ (R), '
+                    '𝒫 (P), ↦ (->)')
+
 PRETTY_NAMES = {
     'functionality': _("Functionalities"),
     'Display': _("Display"),
@@ -83,8 +86,7 @@ PRETTY_NAMES = {
     'functionality.ask_to_prove_premises_of_implications':
         _("Ask to prove 'P' when 'P ⇒ Q' in context"),
     'logs.save_journal': _("Save journal"),
-    'display.dubious_characters': _('Replace missing symbols') +
-                              ': ℕ (N), ℤ (Z), ℚ (Q), ℝ (R), 𝒫 (P), ↦ (->)',
+    'display.dubious_characters': replace_missing,
     'display.short_buttons_line': _('Split logic buttons into two lines'),
     'functionality.drag_statements_to_context': _("Drag statements to context"),
     'functionality.drag_and_drop_in_context': _("Drag and drop in context"),

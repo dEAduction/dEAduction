@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-12-23 14:27+0100\n"
-"PO-Revision-Date: 2022-12-23 14:27+0100\n"
+"POT-Creation-Date: 2022-12-23 16:10+0100\n"
+"PO-Revision-Date: 2022-12-23 16:11+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -52,7 +52,7 @@ msgid "Button"
 msgstr "Bouton"
 
 #: dui/elements/actions_widgets_classes.py:168
-#: dui/elements/config_window.py:490
+#: dui/elements/config_window.py:523
 #: dui/elements/proof_tree/proof_tree_primitives.py:633
 #: dui/primitives/disclosure_triangle.py:82
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:131
@@ -70,203 +70,297 @@ msgstr "Enoncés"
 msgid "L∃∀N name"
 msgstr "Nom L∃∀N"
 
-#: dui/elements/config_window.py:229
+#: dui/elements/config_window.py:116
+msgid "The variables of the context will be displayed in color"
+msgstr "Les variables du contexte apparaissent en couleur"
+
+#: dui/elements/config_window.py:118
+msgid "The dummy variables (bound by a quantifier) will be displayed in color"
+msgstr ""
+"Les variables muette (liées à un quantificateur) apparaissent en couleur"
+
+#: dui/elements/config_window.py:121
+msgid "The context properties will be shaded after they have been used"
+msgstr ""
+"Les propriétés du contexte seront grisées après avoir été utilisées (on peut "
+"néanmoins les utiliser à nouveau)"
+
+#: dui/elements/config_window.py:125
+msgid "'Admit current sub-goal!' is available with the Proof methods button"
+msgstr ""
+"'Admettre le but en cours !' est possible avec le bouton 'Méthodes de preuve'"
+
+#: dui/elements/config_window.py:128
+msgid ""
+"When an existence property appears in the context, the ∃ button will be "
+"operated automatically"
+msgstr ""
+"Lorsqu'une propriété d'existence apparait dans le contexte, le bouton ∃ sera "
+"actionné automatiquement"
+
+#: dui/elements/config_window.py:131
+msgid "Buttons will act on the target if no context object is selected"
+msgstr ""
+"Les boutons agiront sur le but si aucune propriété du contexte n'a été "
+"sélectionnée"
+
+#: dui/elements/config_window.py:133
+msgid ""
+"e.g. the ∀ button will apply on properties like 'A⊂B', which is a universal "
+"property by implicitly applying the definition of inclusion"
+msgstr ""
+"Par exemple, le bouton ∀ agira sur une propriété comme 'A⊂B', qui est vue "
+"comme une propriété universelle en appliquant implicitement la définition "
+"d'inclusion"
+
+#: dui/elements/config_window.py:137
+msgid ""
+"e.g. when applying '∀ε>0, P(ε)' to some ε, the computer will try to prove ε>0"
+msgstr ""
+"SI on applique, par exemple, '∀ε>0, P(ε)' à un nombre ε, l'ordinateur "
+"essaiera de démontrer ε>0"
+
+#: dui/elements/config_window.py:140
+msgid ""
+"Objects and properties of the context may be dragged and dropped on each "
+"other, e.g. drag and drop 'x∈A' on 'A⊂B' to get 'x∈B'"
+msgstr ""
+"Les objets et propriétés du contexte peuvent être glissées et déposées les "
+"unes sur les autres, par exemple déposer 'x∈A' sur 'A⊂B' pour obtenir 'x∈B'"
+
+#: dui/elements/config_window.py:143
+msgid ""
+"Properties of the context may be dragged and dropped on statements, "
+"typically a definition, e.g. drag and drop 'A⊂B' on the definition of "
+"inclusion"
+msgstr ""
+"Les propriétés du contexte peuvent être glissées et déposées sur un énoncé, "
+"typiquement sur une définition : par exemple, déposer 'x∈A' sur 'A⊂B' pour "
+"obtenir 'x∈B'"
+
+#: dui/elements/config_window.py:147
+msgid ""
+"Statements may be dragged and dropped in the context properties area, where "
+"they become a context property that may be applied with more precision"
+msgstr ""
+"Les énoncés peuvent être glissés et déposés dans la zone des propriétés du "
+"contexte, où ils deviennent une propriété qui peut être utilisée plus "
+"finement"
+
+#: dui/elements/config_window.py:151
+msgid ""
+"When an implication 'P ⇒ Q' appears in the context, the computer will ask "
+"user if she wants to prove P as a sub-goal"
+msgstr ""
+"Lorsqu'une implication 'P ⇒ Q' apparait dans le contexte, l'ordinateur "
+"demande à l'utilisatrice si elle veut démontrer P comme un but intermédiaire"
+
+#: dui/elements/config_window.py:154
+msgid ""
+"The ∀ and ⇒ buttons will be operated automatically when the target is a "
+"universal property or an implication"
+msgstr ""
+"Les boutons ∀ et ⇒ seront automatiquement actionnés lorsque le but est une "
+"propriété universelle ou une implication"
+
+#: dui/elements/config_window.py:255
 #: dui/stages/exercise/exercise_main_window.py:241
 msgid "Preferences"
 msgstr "Préférences"
 
-#: dui/elements/config_window.py:240
+#: dui/elements/config_window.py:266
 msgid "Save preferences for next session"
 msgstr "Sauvegarder les préférences"
 
-#: dui/elements/config_window.py:253
+#: dui/elements/config_window.py:279
 msgid "Ok"
 msgstr "Ok"
 
-#: dui/elements/config_window.py:254
+#: dui/elements/config_window.py:280
 msgid "Cancel"
 msgstr "Annuler"
 
-#: dui/elements/config_window.py:255 pylib/text/tooltips.py:117
+#: dui/elements/config_window.py:281 pylib/text/tooltips.py:117
 msgid "Apply"
 msgstr "Appliquer"
 
-#: dui/elements/config_window.py:380
+#: dui/elements/config_window.py:406
 msgid "Wrong settings!"
 msgstr "Valeurs incorrectes !"
 
-#: dui/elements/config_window.py:456
+#: dui/elements/config_window.py:494
 msgid "Free settings"
 msgstr "Choix libres"
 
-#: dui/elements/config_window.py:494
+#: dui/elements/config_window.py:527
 msgid "Browse directories"
 msgstr "Choisir un dossier"
 
-#: dui/elements/config_window.py:706
+#: dui/elements/config_window.py:747
 msgid "Missing characters: Enter exactly {} strings separated by commas"
 msgstr ""
 "Caractères manquants : entrer exactement {} groupes de caractères séparés "
 "par des virgules"
 
-#: dui/elements/config_window_text.py:37 dui/elements/config_window_text.py:40
+#: dui/elements/config_window_text.py:36
+msgid "Replace missing symbols: ℕ (N), ℤ (Z), ℚ (Q), ℝ (R), 𝒫 (P), ↦ (->)"
+msgstr ""
+"Remplacer les symboles manquants : ℕ (N), ℤ (Z), ℚ (Q), ℝ (R), 𝒫 (P), ↦ (->)"
+
+#: dui/elements/config_window_text.py:40 dui/elements/config_window_text.py:43
 msgid "Functionalities"
 msgstr "Fonctionnalités"
 
-#: dui/elements/config_window_text.py:38
+#: dui/elements/config_window_text.py:41
 msgid "Display"
 msgstr "Affichage"
 
-#: dui/elements/config_window_text.py:39
+#: dui/elements/config_window_text.py:42
 msgid "Logic"
 msgstr "Logique"
 
-#: dui/elements/config_window_text.py:41
+#: dui/elements/config_window_text.py:44
 msgid "Language"
 msgstr "Langue"
 
-#: dui/elements/config_window_text.py:42
+#: dui/elements/config_window_text.py:45
 msgid "Advanced"
 msgstr "Avancé"
 
-#: dui/elements/config_window_text.py:43
+#: dui/elements/config_window_text.py:46
 msgid "Select language"
 msgstr "Sélectionner la langue"
 
-#: dui/elements/config_window_text.py:47
+#: dui/elements/config_window_text.py:50
 msgid "Target display on top"
 msgstr "Objectif en haut de la fenêtre"
 
-#: dui/elements/config_window_text.py:48
+#: dui/elements/config_window_text.py:51
 msgid "Main font size"
 msgstr "Taille de la police principale"
 
-#: dui/elements/config_window_text.py:49
+#: dui/elements/config_window_text.py:52
 msgid "Font size for statements"
 msgstr "Taille de la police pour les énoncés"
 
-#: dui/elements/config_window_text.py:50
+#: dui/elements/config_window_text.py:53
 msgid "Tooltips font size"
 msgstr "Taille de la police pour les info-bulles"
 
-#: dui/elements/config_window_text.py:51
+#: dui/elements/config_window_text.py:54
 msgid "Target font size"
 msgstr "Taille de la police pour le but"
 
-#: dui/elements/config_window_text.py:52
+#: dui/elements/config_window_text.py:55
 msgid "Font size for global proof view"
 msgstr "Taille de la police pour l'aperçu de preuve"
 
-#: dui/elements/config_window_text.py:53
+#: dui/elements/config_window_text.py:56
 msgid "Set directory for choosing courses"
 msgstr "Dossier pour le choix de cours"
 
-#: dui/elements/config_window_text.py:54
+#: dui/elements/config_window_text.py:57
 msgid "Level of logs"
 msgstr "Niveau de logs"
 
-#: dui/elements/config_window_text.py:55
+#: dui/elements/config_window_text.py:58
 msgid "Use symbol for logic buttons"
 msgstr "Symboles pour les boutons logiques"
 
-#: dui/elements/config_window_text.py:56
+#: dui/elements/config_window_text.py:59
 msgid "Font size for symbol buttons"
 msgstr "Taille des symboles pour les boutons logiques"
 
-#: dui/elements/config_window_text.py:63
+#: dui/elements/config_window_text.py:66
 msgid "Display success messages"
 msgstr "Afficher les messages de succès"
 
-#: dui/elements/config_window_text.py:64
+#: dui/elements/config_window_text.py:67
 msgid "Color for selection"
 msgstr "Couleur des éléments sélectionnés"
 
-#: dui/elements/config_window_text.py:65
+#: dui/elements/config_window_text.py:68
 msgid "Maths fonts"
 msgstr "Police pour les maths"
 
-#: dui/elements/config_window_text.py:66
+#: dui/elements/config_window_text.py:69
 msgid "Use color for variables"
 msgstr "Variables en couleur"
 
-#: dui/elements/config_window_text.py:67
+#: dui/elements/config_window_text.py:70
 msgid "Use color for dummy variables"
 msgstr "Variables muettes en couleur"
 
-#: dui/elements/config_window_text.py:68
+#: dui/elements/config_window_text.py:71
 msgid "Use color for applied properties"
 msgstr "Griser les propriétés déjà utilisées"
 
-#: dui/elements/config_window_text.py:70
+#: dui/elements/config_window_text.py:73
 msgid "Target selected by default"
 msgstr "But sélectionné par défaut"
 
-#: dui/elements/config_window_text.py:72
+#: dui/elements/config_window_text.py:75
 msgid "Allow proof by sorry"
 msgstr "Admettre le but en cours est autorisé"
 
-#: dui/elements/config_window_text.py:74
+#: dui/elements/config_window_text.py:77
 msgid "Allow implicit use of definitions"
 msgstr "Autoriser les définitions implicites"
 
-#: dui/elements/config_window_text.py:76
+#: dui/elements/config_window_text.py:79
 msgid "Automatic intro of variables and hypotheses"
 msgstr "Introduction automatique des variables et des hypothèses"
 
-#: dui/elements/config_window_text.py:78
+#: dui/elements/config_window_text.py:81
 msgid "Automatic intro of existence properties"
 msgstr "Introduction automatique des propriétés d’existence"
 
-#: dui/elements/config_window_text.py:80
+#: dui/elements/config_window_text.py:83
 msgid "Save exercises for autotest"
 msgstr "Sauvegarder pour auto-tests"
 
-#: dui/elements/config_window_text.py:82
+#: dui/elements/config_window_text.py:85
 msgid "Try to silently prove ε>0 when applying '∀ε>0'"
 msgstr "Essayer de démontrer ε>0 quand on applique '∀ε>0'"
 
-#: dui/elements/config_window_text.py:84
+#: dui/elements/config_window_text.py:87
 msgid "Ask to prove 'P' when 'P ⇒ Q' in context"
 msgstr "Proposer de prouver 'P' quand 'P ⇒ Q' dans le contexte"
 
-#: dui/elements/config_window_text.py:85
+#: dui/elements/config_window_text.py:88
 msgid "Save journal"
 msgstr "Sauvegarder le journal"
 
-#: dui/elements/config_window_text.py:86
-msgid "Replace missing symbols"
-msgstr "Remplacer les symboles manquants"
-
-#: dui/elements/config_window_text.py:88
+#: dui/elements/config_window_text.py:90
 msgid "Split logic buttons into two lines"
 msgstr "Boutons logiques sur deux lignes"
 
-#: dui/elements/config_window_text.py:89
+#: dui/elements/config_window_text.py:91
 msgid "Drag statements to context"
 msgstr "Glisser les énoncés dans le contexte"
 
-#: dui/elements/config_window_text.py:90
+#: dui/elements/config_window_text.py:92
 msgid "Drag and drop in context"
 msgstr "Glisser-déposer dans le contexte"
 
-#: dui/elements/config_window_text.py:91
+#: dui/elements/config_window_text.py:93
 msgid "Drag context to statements"
 msgstr "Glisser du contexte vers les énoncés"
 
-#: dui/elements/config_window_text.py:92
+#: dui/elements/config_window_text.py:94
 #: pylib/coursedata/course_metadata_translations.py:38
 msgid "None"
 msgstr "Aucun(e)"
 
-#: dui/elements/config_window_text.py:93
+#: dui/elements/config_window_text.py:95
 msgid "Beginner"
 msgstr "Débutant"
 
-#: dui/elements/config_window_text.py:94
+#: dui/elements/config_window_text.py:96
 msgid "Intermediate"
 msgstr "Intermédiaire"
 
-#: dui/elements/config_window_text.py:95
+#: dui/elements/config_window_text.py:97
 msgid "Expert"
 msgstr "Expert"
 
@@ -2734,6 +2828,9 @@ msgstr "Progression : {:03d}%"
 #: pylib/utils/filesystem.py:265
 msgid "Download from {} to {}"
 msgstr "Téléchargé depuis {} vers {}"
+
+#~ msgid "Replace missing symbols"
+#~ msgstr "Remplacer les symboles manquants"
 
 #~ msgid "No property selected"
 #~ msgstr "Pas de propriété sélectionnée"
