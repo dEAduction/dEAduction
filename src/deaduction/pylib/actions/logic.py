@@ -607,9 +607,9 @@ def action_implies(proof_step) -> CodeForLean:
         # (4) Ask to add premise as a new sub_goal
         elif not user_input:
             premise = selected_objects[0].premise()
-            msg = _('To apply this property, you need the premise "{}". '
-                    'Do you want to prove it?')\
-                .format(premise.to_display(format_='utf8'))
+            raw_msg = 'To apply this property, you need the premise \"{}\". '\
+                'Do you want to prove it?'
+            msg = _(raw_msg).format(premise.to_display(format_='utf8'))
             raise MissingParametersError(
                 InputType.YesNo,
                 choices=[],
