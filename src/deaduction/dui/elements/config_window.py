@@ -113,12 +113,13 @@ CONFIGS["Display"] = {
 CONFIGS["Logic"] = {
     "display.display_success_messages": (None, True, ""),
     "logic.use_color_for_variables": (None, True,
-        _("The variables of the context will be displayed in color")),
+        _("The variables of the context are displayed in color")),
     "logic.use_color_for_dummy_variables": (None, True,
-        _("The dummy variables (bound by a quantifier) will be displayed in "
+        _("The dummy variables (bound by a quantifier) are displayed in "
           "color")),
     "logic.use_color_for_applied_properties": (None, True,
-        _("The context properties will be shaded after they have been used"))}
+        _("The context properties are shaded after the first time they are "
+          "used"))}
 
 CONFIGS['Functionalities'] = {
     'functionality.allow_proof_by_sorry': (None, True,
@@ -126,16 +127,16 @@ CONFIGS['Functionalities'] = {
           "button")),
     'functionality.automatic_intro_of_exists': (None, True,
         _("When an existence property appears in the context, "
-          "the ∃ button will be operated automatically")),
+          "the ∃ button is operated automatically")),
     'functionality.target_selected_by_default': (None, True,
-        _("Buttons will act on the target if no context object is selected")),
+        _("Buttons act on the target if no context object is selected")),
     'functionality.allow_implicit_use_of_definitions': (None, True,
-        _("e.g. the ∀ button will apply on properties like 'A⊂B', which is a "
+        _("e.g. the ∀ button applies on properties like 'A⊂B', which is a "
           "universal property by implicitly applying the definition of "
           "inclusion")),
     'functionality.auto_solve_inequalities_in_bounded_quantification':
         (None, False, _("e.g. when applying '∀ε>0, P(ε)' to some ε, "
-                        "the computer will try to prove ε>0")),
+                        "the computer tries to prove ε>0")),
     'functionality.drag_and_drop_in_context': (None, True,
         _("Objects and properties of the context may be dragged and dropped "
           "on each other, e.g. drag and drop 'x∈A' on 'A⊂B' to get 'x∈B'")),
@@ -149,9 +150,9 @@ CONFIGS['Functionalities'] = {
           "with more precision")),
     'functionality.ask_to_prove_premises_of_implications': (None, False,
         _("When an implication 'P ⇒ Q' appears in the context, the computer "
-          "will ask user if she wants to prove P as a sub-goal")),
+          "asks user if she wants to prove P as a sub-goal")),
     'functionality.automatic_intro_of_variables_and_hypotheses': (None, True,
-        _("The ∀ and ⇒ buttons will be operated automatically when the "
+        _("The ∀ and ⇒ buttons are operated automatically when the "
           "target is a universal property or an implication")),
 }
 
