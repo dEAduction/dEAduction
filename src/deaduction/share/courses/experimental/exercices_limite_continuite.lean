@@ -48,10 +48,19 @@ definition converging_seq (u : ℕ → ℝ) : Prop :=
 ∃ l, limit u l
 
 definition limit_plus_infinity (u : ℕ → ℝ) : Prop :=
-∀ M, ∃ N, ∀ n ≥ N, u n > M
+∀ M:ℝ, ∃ N:ℕ, ∀ n ≥ N, u n ≥ M
+
+definition increasing_seq (u : ℕ → ℝ) : Prop :=
+∀ p q , p ≤ q → u p ≤ u q
+
+definition bounded_above (u : ℕ → ℝ) : Prop :=
+∃ M:ℝ, ∀ n, u n ≤ M
+
+definition bounded_below (u : ℕ → ℝ) : Prop :=
+∃ m:ℝ, ∀ n, u n ≥ m
 
 definition bounded_sequence (u : ℕ → ℝ) : Prop :=
-∃ M>0, ∀ n, | u n | < M
+∃ M>0, ∀ n, | u n | ≤ M
 
 definition even (n:ℕ) : Prop := ∃ n', n=2 * n'
 
@@ -240,10 +249,8 @@ begin
 end
 
 lemma definition.limit_plus_infinity
-{u : ℕ → ℝ} {l : ℝ} :
-(limit_plus_infinity u) ↔
-∀ M, ∃ N, ∀ n ≥ N, u n > M
-:= 
+{u : ℕ → ℝ} :
+(limit_plus_infinity u) ↔ ∀ M:ℝ, ∃ N:ℕ, ∀ n ≥ N, u n ≥ M := 
 /- dEAduction
 PrettyName
   Limite infinie d'une suite
@@ -254,10 +261,55 @@ begin
   refl
 end
 
+lemma definition.increasing_seq
+{u : ℕ → ℝ} :
+(increasing_seq u) ↔ 
+∀ p q, p ≤ q → u p ≤ u q
+:= 
+/- dEAduction
+PrettyName
+  Suite croissante
+ImplicitUse
+  True
+-/
+begin
+  refl
+end
+
+lemma definition.bounded_above 
+{u : ℕ → ℝ} :
+(bounded_above u) ↔ 
+∃ M:ℝ, ∀ n,  u n ≤ M
+:= 
+/- dEAduction
+PrettyName
+  Suite majorée
+ImplicitUse
+  True
+-/
+begin
+  refl
+end
+
+-- lemma definition.bounded_below 
+-- {u : ℕ → ℝ} :
+-- (bounded_below_sequence u) ↔ 
+-- ∃ M:ℝ, ∀ n,  u n ≥ M
+-- := 
+-- /- dEAduction
+-- PrettyName
+--   Suite minorée
+-- ImplicitUse
+--   True
+-- -/
+-- begin
+--   refl
+-- end
+
 lemma definition.bounded 
 {u : ℕ → ℝ} :
 (bounded_sequence u) ↔ 
-∃ M>0, ∀ n, | u n | < M
+∃ M>0, ∀ n, | u n | ≤ M
 := 
 /- dEAduction
 PrettyName
@@ -358,6 +410,20 @@ begin
   todo,
 end
 
+lemma exercise.croissante_non_majoree
+(u: ℕ → ℝ) (H1: increasing_seq u) (H2: not (bounded_above u)) :
+limit_plus_infinity u :=
+/- dEAduction
+PrettyName
+  Une suite croissante non majorée tend vers plus l'infini
+Description
+  Dans ce deuxième exercice,
+  il s'agit à nouveau de démontrer une limite, mais infinie.
+-/
+begin
+  todo,
+end
+
 
 lemma exercise.limite_positive
 (u : ℕ → ℝ) (l : ℝ) (H : limit u l)
@@ -368,7 +434,7 @@ lemma exercise.limite_positive
 PrettyName
   Suite dont la limite est strictement positive
 Description
-  Dans ce deuxième exercice,
+  Dans ce troisième exercice,
   il s'agit d'utiliser une hypothèse de limite.
 -/
 begin

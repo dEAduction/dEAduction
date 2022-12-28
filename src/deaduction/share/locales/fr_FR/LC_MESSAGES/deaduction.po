@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2022-12-27 16:25+0100\n"
-"PO-Revision-Date: 2022-12-27 17:06+0100\n"
+"POT-Creation-Date: 2022-12-28 11:59+0100\n"
+"PO-Revision-Date: 2022-12-28 11:59+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -960,13 +960,6 @@ msgstr "La propriété sélectionnée n’est pas une implication ‘P ⇒ Q’"
 msgid "You need to select another propertyin order to apply this implication"
 msgstr "Pour utiliser cette implication, sélectionner une seconde propriété"
 
-#: pylib/actions/logic.py:610
-msgid ""
-"To apply this property, you need the premise \"{}\". Do you want to prove it?"
-msgstr ""
-"Pour appliquer cette propriété, il vous faut la prémisse \"{}\". Voulez-vous "
-"la démontrer ?"
-
 #: pylib/actions/logic.py:616
 msgid "Introduce new sub-goal?"
 msgstr "Introduire un but intermédiaire ?"
@@ -1409,52 +1402,64 @@ msgstr "exercice"
 msgid " converging"
 msgstr "convergente"
 
+#: pylib/math_display/app_pattern_data.py:87
+msgid " non decreasing"
+msgstr "croissante"
+
 #: pylib/math_display/app_pattern_data.py:88
+msgid "bounded from above"
+msgstr "majorée"
+
+#: pylib/math_display/app_pattern_data.py:89
+msgid "bounded from below"
+msgstr "minorée"
+
+#: pylib/math_display/app_pattern_data.py:90
+msgid "bounded"
+msgstr "borné"
+
+#: pylib/math_display/app_pattern_data.py:92
 msgid "continuous"
 msgstr "continue"
 
-#: pylib/math_display/app_pattern_data.py:89
+#: pylib/math_display/app_pattern_data.py:93
 msgid "uniformly continuous"
 msgstr "uniformément continue"
 
-#: pylib/math_display/app_pattern_data.py:90
+#: pylib/math_display/app_pattern_data.py:94
 msgid "continuous at"
 msgstr "continue au point"
 
-#: pylib/math_display/app_pattern_data.py:91
+#: pylib/math_display/app_pattern_data.py:95
 msgid "a Cauchy sequence"
 msgstr "une suite de Cauchy"
 
-#: pylib/math_display/app_pattern_data.py:97
+#: pylib/math_display/app_pattern_data.py:101
 msgid "an equivalence relation"
 msgstr "une relation d’équivalence"
 
-#: pylib/math_display/app_pattern_data.py:99
+#: pylib/math_display/app_pattern_data.py:103
 #: pylib/math_display/display_data.py:239
 msgid "and"
 msgstr "et"
 
-#: pylib/math_display/app_pattern_data.py:99
+#: pylib/math_display/app_pattern_data.py:103
 msgid "are disjoint"
 msgstr "sont disjoints"
 
-#: pylib/math_display/app_pattern_data.py:101
+#: pylib/math_display/app_pattern_data.py:105
 msgid "a partition of"
 msgstr "une partition de"
 
-#: pylib/math_display/app_pattern_data.py:102
+#: pylib/math_display/app_pattern_data.py:106
 msgid "an application"
 msgstr "une application"
 
-#: pylib/math_display/app_pattern_data.py:103
+#: pylib/math_display/app_pattern_data.py:107
 msgid "a bijective application"
 msgstr "une application bijective"
 
-#: pylib/math_display/app_pattern_data.py:104
-msgid "bounded"
-msgstr "borné"
-
-#: pylib/math_display/app_pattern_data.py:106
+#: pylib/math_display/app_pattern_data.py:109
 msgid "even"
 msgstr "pair"
 
@@ -2828,6 +2833,13 @@ msgstr "Progression : {:03d}%"
 #: pylib/utils/filesystem.py:265
 msgid "Download from {} to {}"
 msgstr "Téléchargé depuis {} vers {}"
+
+#~ msgid ""
+#~ "To apply this property, you need the premise \"{}\". Do you want to prove "
+#~ "it?"
+#~ msgstr ""
+#~ "Pour appliquer cette propriété, il vous faut la prémisse \"{}\". Voulez-"
+#~ "vous la démontrer ?"
 
 #~ msgid "Replace missing symbols"
 #~ msgstr "Remplacer les symboles manquants"
