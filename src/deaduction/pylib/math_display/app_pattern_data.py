@@ -44,9 +44,6 @@ latex_from_app_pattern = {
     "?5: FUNCTION(?1, ?2))": (4, r'\circ', 5),
     # TODO: test Id, Id(x)
     "APP(CONSTANT/name=Identite, ?1, ?2: ?1)": ("Id", r"\parentheses", 2),
-    # Generic app for constants and their negation
-    # CST? = CONSTANT with any name
-    "NOT(APP(CST?,...))": ((0, -1), r'\text_is_not', (0, 0)),
 
     # TODO: sequences and set families
     # u_n:
@@ -84,6 +81,10 @@ latex_from_constant_name = {
     "limit": ("lim ", -2, " = ", -1),
     "converging_seq": (-1, r'\text_is', _(" converging")),
     "limit_plus_infinity": ("lim ", -1, " = +∞"),
+    "increasing_seq": (-1, r'\text_is', _(" non decreasing")),
+    "bounded_above": (-1, r'\text_is', " " + _("bounded from above")),
+    "bounded_below": (-1, r'\text_is', " " + _("bounded from below")),
+    "bounded_sequence": (-1, r'\text_is', " " + _("bounded")),
     "limit_function": ("lim", ['_', (-2,)], (-3,), " = ", (-1,)),
     "continuous": (-1, r'\text_is', _("continuous")),
     "uniformly_continuous": (-1, r'\text_is', _("uniformly continuous")),
@@ -101,7 +102,6 @@ latex_from_constant_name = {
     "partition": (-1, r'\text_is', _("a partition of") + " ", -2),
     "application": (-1, r'\text_is', _("an application") + " "),
     "application_bijective":  (-1, r'\text_is', _("a bijective application") + " "),
-    "bounded_sequence": (-1,  r'\text_is', " " + _("bounded")),
     "RealSubGroup": (r"\real", ),
     "even":  (-1,  r'\text_is', " " + _("even"))
 }
@@ -112,6 +112,9 @@ latex_from_constant_name = {
 #  --> "APP(CONSTANT/name=symmetric_difference, ...)": ...
 
 generic_app_dict = {
+    # Generic app for constants and their negation
+    # CST? = CONSTANT with any name
+    "NOT(APP(CST?,...))": ((0, -1), r'\text_is_not', (0, 0)),
     "APP(CST?, ...)": ((-1,), [r'\text_is', (0,)]),
     # f(x):
     "APP(?0: !FUNCTION(?1, ?2), ?3: ?1)": ((0,), r"\parentheses", (1,)),
@@ -121,6 +124,10 @@ generic_app_dict = {
 
 
 def app_pattern_from_constants():
+    """
+    Construct APPLICATION patterns from constant dictionary, and also their
+    negations when appropriate.
+    """
     latex_from_app_constant_patterns = {}
     for key, value in latex_from_constant_name.items():
         # Modify key:
@@ -129,6 +136,13 @@ def app_pattern_from_constants():
         new_value = tuple((item, ) if isinstance(item, int)
                           else item
                           for item in value)
+        if r'\text_is' in new_value:
+            new_not_key = f"NOT(APP(CONSTANT/name={key},...))"
+            new_not_value = tuple(r'\text_is_not' if item is r'\text_is' else
+                                  (0, item) if isinstance(item, int) else
+                                  (0, ) + item if isinstance(item, tuple)
+                                  else item for item in new_value)
+            latex_from_app_constant_patterns[new_not_key] = new_not_value
         latex_from_app_constant_patterns[new_key] = new_value
     latex_from_app_pattern.update(latex_from_app_constant_patterns)
 
