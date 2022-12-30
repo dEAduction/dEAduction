@@ -1357,7 +1357,8 @@ def apply_exists(proof_step, selected_object: [MathObject]) -> CodeForLean:
 
     # hint = selected_hypo.children[1].display_name
     math_type = selected_hypo.bound_var_type
-    bound_var = selected_hypo.bound_var
+    bound_var = selected_hypo.bound_var    # "NOT(APP(CST?,...))": ((0, -1), r'\text_is_not', (0, 0)),
+
     name = proof_step.goal.provide_good_name(math_type,
                                              bound_var.preferred_letter())
 
@@ -1365,19 +1366,20 @@ def apply_exists(proof_step, selected_object: [MathObject]) -> CodeForLean:
     #                      math_type=selected_hypo.children[0],
     #                      hints=[hint],
     #                      strong_hint=hint)
-    new_hypo_name = get_new_hyp(proof_step)
+    new_hypo_name1 = get_new_hyp(proof_step)
+    new_hypo_name2 = get_new_hyp(proof_step)
 
     if selected_hypo.children[2].node == "PROP_∃":
         code = f'rcases {hypo_name} with ' \
-                f'⟨ {name}, ⟨ {new_hypo_name}, {hypo_name} ⟩ ⟩'
+                f'⟨ {name}, ⟨ {new_hypo_name1}, {new_hypo_name2} ⟩ ⟩'
     else:
-        code = f'cases {hypo_name} with {name} {new_hypo_name}'
+        code = f'cases {hypo_name} with {name} {new_hypo_name1}'
     code = CodeForLean.from_string(code)
     if selected_hypo.node == 'QUANT_∃!':
         # We have to add the "simp" tactic to avoid appearance of lambda expr
-        code = code.and_then(f'simp at {new_hypo_name}')
+        code = code.and_then(f'simp at {new_hypo_name1}')
     code.add_success_msg(_("New object {} with property {}").
-                         format(name, new_hypo_name))
+                         format(name, new_hypo_name1))
     code.operator = selected_object[0]
     return code
 
