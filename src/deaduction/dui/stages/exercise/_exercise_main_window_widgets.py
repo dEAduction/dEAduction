@@ -281,6 +281,8 @@ class ExerciseCentralWidget(QWidget):
         if cvars.get('functionality.drag_context_to_statements', True) \
                 or cvars.get('functionality.drag_and_drop_in_context', True):
             self.props_wgt.setDragEnabled(True)
+        else:
+            self.props_wgt.setDragEnabled(False)
 
         if cvars.get('functionality.drag_and_drop_in_context', True):
             self.props_wgt.setDragDropMode(QAbstractItemView.DragDrop)
@@ -289,10 +291,20 @@ class ExerciseCentralWidget(QWidget):
         elif cvars.get('functionality.drag_context_to_statements', True) \
                 and cvars.get('functionality.drag_statements_to_context', True):
             self.props_wgt.setDragDropMode(QAbstractItemView.DragDrop)
+            self.objects_wgt.setDragEnabled(False)
+            self.objects_wgt.setDragDropMode(QAbstractItemView.NoDragDrop)
         elif cvars.get('functionality.drag_context_to_statements', True):
             self.props_wgt.setDragDropMode(QAbstractItemView.DragOnly)
+            self.objects_wgt.setDragEnabled(False)
+            self.objects_wgt.setDragDropMode(QAbstractItemView.NoDragDrop)
         elif cvars.get('functionality.drag_statements_to_context', True):
             self.props_wgt.setDragDropMode(QAbstractItemView.DropOnly)
+            self.objects_wgt.setDragEnabled(False)
+            self.objects_wgt.setDragDropMode(QAbstractItemView.NoDragDrop)
+        else:
+            self.objects_wgt.setDragEnabled(False)
+            self.objects_wgt.setDragDropMode(QAbstractItemView.NoDragDrop)
+            self.props_wgt.setDragDropMode(QAbstractItemView.NoDragDrop)
 
 ##############################
 # Methods called by __init__ #
