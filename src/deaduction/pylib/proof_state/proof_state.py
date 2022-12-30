@@ -43,7 +43,7 @@ from deaduction.pylib.mathobj.context_math_object import ContextMathObject
 from deaduction.pylib.mathobj.lean_analysis import (lean_expr_with_type_grammar,
                                                     LeanEntryVisitor)
 # from deaduction.pylib.math_display import plurals, numbers
-# from deaduction.pylib.give_name.give_name import name_bound_vars, inj_list
+from deaduction.pylib.utils import inj_list
 from deaduction.pylib.give_name.name_hint import NameHint
 
 log = logging.getLogger(__name__)
@@ -1285,15 +1285,3 @@ def introduce_several_object(objects: [MathObject], format_) -> str:
         new_sentence = " ".join(sentences)
 
     return new_sentence
-
-
-def inj_list(list_: list):
-    """
-    Return a list with same elements of list_ but no repetition.
-    """
-    new_list = []
-    for item in list_:
-        if item not in new_list:
-            new_list.append(item)
-    return new_list
-

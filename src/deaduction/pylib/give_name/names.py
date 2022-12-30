@@ -34,6 +34,7 @@ from typing import Tuple, Optional
 import logging
 
 import deaduction.pylib.config.vars as cvars
+from deaduction.pylib.utils import inj_list
 
 log = logging.getLogger(__name__)
 
@@ -69,15 +70,15 @@ class Case(IntEnum):
         return s_mod
 
 
-def inj_list(list_: list):
-    """
-    Return a list with same elements of list_ but no repetition.
-    """
-    new_list = []
-    for item in list_:
-        if item not in new_list:
-            new_list.append(item)
-    return new_list
+# def inj_list(list_: list):
+#     """
+#     Return a list with same elements of list_ but no repetition.
+#     """
+#     new_list = []
+#     for item in list_:
+#         if item not in new_list:
+#             new_list.append(item)
+#     return new_list
 
 
 def analyse_hint(hint: str) -> (str, int, Optional[int]):

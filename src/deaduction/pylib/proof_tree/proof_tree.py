@@ -416,6 +416,23 @@ class GoalNode:
             conclusions = self.goal.new_context
             operator = self.parent.operator
             premises = [obj for obj in selected_objects if obj != operator]
+            # Some "conclusions" might be premises, e.g. if we applied a univ
+            # prop of type "forall x >0, ..." and "x>0" is in new context.
+            # Then the name of "x>0" should be in used_prop.
+            # In which case we transfer the inequality from conclusions to
+            # premises.
+            ps = self.parent
+            code = ps.effective_code if ps.effective_code else ps.lean_code
+            used_props = code.used_properties()
+            for obj in conclusions:
+                idx = -1
+                if obj in used_props:
+                    idx = used_props.index(obj)
+                if obj.name in used_props:
+                    idx = used_props.index(obj.name)
+                if idx != -1:
+                    premises.append(conclusions.pop(idx))
+
             return premises, operator, conclusions
         else:
             return False

@@ -44,6 +44,8 @@ from dataclasses import dataclass
 from typing import Any, Union, List, Optional
 from logging import getLogger
 
+from deaduction.pylib.utils import injective_union, intersection_list
+
 log = getLogger(__name__)
 
 
@@ -78,7 +80,11 @@ class SingleCode:
     def __init__(self, string: str, used_properties=None,
                  operator=None, rw_item=None, outcome_operator=None):
         self.string = string
-        self.used_properties = used_properties if used_properties else []
+        if used_properties is None:
+            used_properties = []
+        if not isinstance(used_properties, list):
+            used_properties = [used_properties]
+        self.used_properties = used_properties
         self.operator = operator
         self.rw_item = rw_item
         self.outcome_operator = outcome_operator
@@ -752,27 +758,20 @@ class CodeForLean:
         all or_else alternatives. (This is probably useless if there are
         still some or_else alternative in self).
 
-        :return: [ContextMathObject]
+        :return: [Union(ContextMathObject, str)]
         """
-        up = []
+
         if self.is_single_code():
             instruction = self.instructions[0]
             assert isinstance(instruction, SingleCode)
             up = instruction.used_properties
-        elif not self.is_or_else():
-            for instruction in self.instructions:
-                up.extend(instruction.used_properties())
-        else:  # Return prop that are in all instructions
-            instructions = self.instructions
-            if len(instructions) >= 1:
-                up = instructions[0].used_properties()
-                for instruction in instructions[1:]:
-                    # Remove element in up that are not in instruction
-                    new_up = []
-                    for prop in up:
-                        if prop in instruction.used_properties():
-                            new_up.append(prop)
-                    up = new_up
+        elif not self.is_or_else():  # Return union of used_props
+            up = injective_union([ins.used_properties()
+                                  for ins in self.instructions])
+        else:  # Return intersection of used_props
+            up = intersection_list([ins.used_properties()
+                                    for ins in self.instructions])
+
         return up
 
     @classmethod
