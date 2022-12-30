@@ -252,20 +252,20 @@ class ContextMathObject(MathObject):
         drag_to_def = cvars.get('functionality.drag_context_to_statements')
         no_drag = dict()
         if not drag_to_context:
-            no_drag = {"or_drag_element_to_property": "",
-                       "or_drag_to_function": "",
-                       "or_drag_to_equality": "",
-                       "or_drag_premise": ""}
+            no_drag.update({"or_drag_element_to_property": "",
+                            "or_drag_to_function": "",
+                            "or_drag_to_equality": "",
+                            "or_drag_premise": ""})
 
         if not drag_to_def:
-            no_drag = {"or_drag_to_def": ""}
+            no_drag.update({"or_drag_to_def": ""})
 
         if on_target:  # TODO: make target draggable...
-            no_drag = {"or_drag_to_def": "",
-                       "or_drag_element_to_property": "",
-                       "or_drag_to_function": "",
-                       "or_drag_to_equality": "",
-                       "or_drag_premise": ""}
+            no_drag.update({"or_drag_to_def": "",
+                            "or_drag_element_to_property": "",
+                            "or_drag_to_function": "",
+                            "or_drag_to_equality": "",
+                            "or_drag_premise": ""})
         format_dic.update(no_drag)
 
         # Translate values

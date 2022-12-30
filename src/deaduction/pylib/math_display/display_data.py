@@ -297,6 +297,8 @@ plurals = {
     _('an element'): _("elements"),
     _('a function'): _("functions"),
     _('a sequence'): _("sequences"),
+    _('a non-negative integer'): _('non-negative integers'),
+    _('an integer'): _("integers"),
     _('a rational number'): _("rational numbers"),
     _('a real number'): _("real numbers")
 }
@@ -332,6 +334,9 @@ every = {
     _('an element'): _("every element"),
     _('a function'): _("every function"),
     _('a sequence'): _("every sequence"),
+    _('a non-negative integer'): _('every non-negative integer'),
+    _('an integer'): _("every integer"),
+    _('a rational number'): _("every rational number"),
     _('a real number'): _("every real number")
 }
 
