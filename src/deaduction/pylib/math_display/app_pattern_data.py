@@ -112,9 +112,10 @@ latex_from_constant_name = {
 #  --> "APP(CONSTANT/name=symmetric_difference, ...)": ...
 
 generic_app_dict = {
-    # Generic app for constants and their negation
+    # The following works only for some constant, do not use:
+    # "NOT(APP(CST?,...))": ((0, -1), r'\text_is_not', (0, 0)),
+    # Generic app for constants
     # CST? = CONSTANT with any name
-    "NOT(APP(CST?,...))": ((0, -1), r'\text_is_not', (0, 0)),
     "APP(CST?, ...)": ((-1,), [r'\text_is', (0,)]),
     # f(x):
     "APP(?0: !FUNCTION(?1, ?2), ?3: ?1)": ((0,), r"\parentheses", (1,)),
