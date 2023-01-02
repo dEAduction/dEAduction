@@ -37,7 +37,7 @@ use_set_name_as_hint_for_naming_elements = true
 color_for_applied_properties = "Grey"
 color_for_variables = "Blue"
 color_for_dummy_variables = "Purple"  # 33cccc #00cc99
-color_for_selection = "LimeGreen"  #LimeGreen  #ffff99
+color_for_selection = "LimeGreen"  #ffff99
 color_for_props = "Fuchsia"
 color_for_operator_props = "Red"
 color_for_highlight_in_proof_tree = "Yellow"
@@ -57,6 +57,7 @@ force_indices_for_dummy_vars = false
 use_color_for_variables = true
 use_color_for_dummy_variables = false
 use_color_for_applied_properties = true
+use_bounded_quantification_notation = true
 
 
 [functionality]

@@ -94,5 +94,7 @@ PRETTY_NAMES = {
     'None': _('None'),
     'Beginner': _("Beginner"),
     "Intermediate": _("Intermediate"),
-    "Expert": _("Expert")
+    "Expert": _("Expert"),
+    "logic.use_bounded_quantification_notation":
+        _("Denote ∀x>0, ... instead of ∀x∈ℝ, (x>0 ⇒ ...)")
 }

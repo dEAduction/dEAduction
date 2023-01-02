@@ -71,6 +71,7 @@ This file is part of d∃∀duction.
 
 import logging
 
+import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.math_display.display_data import name, value
 
 log = logging.getLogger(__name__)
@@ -121,7 +122,10 @@ quant_pattern = {
     (r"\forall", (1,), r" \type_family_subset", (0, 1), ", ", (2, )),
     # "QUANT_∀(LOCAL_CONSTANT/name=RealSubGroup, ?0, ?1)":
     #     (r"\forall", (1,), r'\in', r'\real', ", ", (2,)),
-    # Bounded quantification:
+}
+
+# Bounded quantification:
+bounded_quant_pattern = {
     "QUANT_∀(?0, ?1, PROP_IMPLIES(PROP_BELONGS(?1, ?2), ?3))":
         (r"\forall", (2, 0), ", ", (2, 1)),
     "QUANT_∀(?0, ?1, PROP_IMPLIES(*INEQUALITY(?1, ?2), ?3))":
@@ -129,6 +133,15 @@ quant_pattern = {
     "QUANT_∃(?0, ?1, PROP_∃(*INEQUALITY(?1, ?2), ?3))":
         (r"\exists", (2, 0), ", ", (2, 1)),
 }
+
+
+def set_quant_pattern():
+    if cvars.get("logic.use_bounded_quantification_notation", True):
+        quant_pattern.update(bounded_quant_pattern)
+    else:
+        for key in bounded_quant_pattern:
+            if key in quant_pattern:
+                quant_pattern.pop(key)
 
 
 def exists_patterns_from_forall():

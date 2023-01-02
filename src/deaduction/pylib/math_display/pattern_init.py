@@ -44,7 +44,8 @@ import logging
 
 from deaduction.pylib.math_display.pattern_data import \
     latex_from_pattern_string, latex_from_pattern_string_for_type, \
-    text_from_pattern_string, exists_patterns_from_forall, quant_pattern
+    text_from_pattern_string, exists_patterns_from_forall, quant_pattern, \
+    set_quant_pattern
 
 from deaduction.pylib.math_display.app_pattern_data import \
     latex_from_app_pattern, app_pattern_from_constants
@@ -83,8 +84,8 @@ def string_to_pattern():
             metavars = []
             pattern = PatternMathObject.from_tree(tree, metavars)
             list_.append((pattern, latex_shape, metavars))
-            print(key)
-            print(tree.display())
+            # print(key)
+            # print(tree.display())
 
 
 ########################################
@@ -92,6 +93,7 @@ def string_to_pattern():
 # We need some code to create the data #
 ########################################
 ########################################
+set_quant_pattern()
 exists_patterns_from_forall()
 app_pattern_from_constants()
 

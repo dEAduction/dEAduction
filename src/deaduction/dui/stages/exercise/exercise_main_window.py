@@ -42,12 +42,10 @@ from PySide2.QtWidgets import (QMainWindow,
                                QMessageBox,
                                QAction)
 
-import deaduction.pylib.config.vars      as     cvars
 from deaduction.pylib.coursedata        import  Exercise, UserAction
 from deaduction.pylib.mathobj           import (MathObject,
                                                 ProofStep)
-
-from deaduction.dui.utils import global_geometry
+from deaduction.pylib.math_display.pattern_data import set_quant_pattern
 
 from deaduction.dui.primitives          import deaduction_fonts
 
@@ -429,6 +427,8 @@ class ExerciseMainWindow(QMainWindow):
                 self.ecw.set_font()
             elif setting == 'functionality.allow_implicit_use_of_definitions':
                 self.ecw.statements_tree.update_tooltips()
+            elif setting == "logic.use_bounded_quantification_notation":
+                set_quant_pattern()
             else:  # Setting has not been handled
                 updated = False
                 break

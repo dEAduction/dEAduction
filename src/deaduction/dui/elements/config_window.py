@@ -119,7 +119,9 @@ CONFIGS["Logic"] = {
           "color")),
     "logic.use_color_for_applied_properties": (None, True,
         _("The context properties are shaded after the first time they are "
-          "used"))}
+          "used")),
+    "logic.use_bounded_quantification_notation": (None, True,
+        _("Display properties using bounded quantification"))}
 
 CONFIGS['Functionalities'] = {
     'functionality.allow_proof_by_sorry': (None, True,
@@ -235,7 +237,8 @@ SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          #  cf ecw.apply_new_settings()
                          # 'logic.use_color_for_applied_properties',
                          # 'functionality.allow_proof_by_sorry',
-                         "i18n.select_language"
+                         "i18n.select_language",
+                         "logic.use_bounded_quantification_notation"
                          ]
 
 
