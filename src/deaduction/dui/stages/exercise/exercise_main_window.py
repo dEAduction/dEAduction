@@ -456,7 +456,6 @@ class ExerciseMainWindow(QMainWindow):
             self.exercise_toolbar.update()
             self.__init_menubar()
 
-
             # self.ecw.target_wgt.target_label.mousePressEvent = \
             #     self.process_target_click
             # if hasattr(self.ecw, "action_apply_button"):
@@ -494,6 +493,7 @@ class ExerciseMainWindow(QMainWindow):
     def target_selected(self, target_selected):
         self._target_selected = target_selected
         self.ecw.target_wgt.mark_user_selected(self.target_selected)
+        # print(f"Target selected :{self._target_selected}")
 
     def pretty_current_selection(self) -> str:
         """
@@ -756,11 +756,9 @@ class ExerciseMainWindow(QMainWindow):
     @Slot()
     def process_target_click(self, event=None, on=None):
         """
-        Select or un-select target. Current context selection is emptied.
-        Note that self.target_selected's setter automatically call
-        mark_user_selected().
+        Select or un-select target. Note that self.target_selected's setter
+        automatically call mark_user_selected().
         """
-
         self.target_selected = not self.target_selected if on is None else on
 
     @Slot()

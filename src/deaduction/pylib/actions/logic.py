@@ -1105,8 +1105,8 @@ def inequality_from_pattern_matching(math_object: MathObject,
 #     return code
 
 
-def apply_forall_with_ineq(proof_step, selected_objects, inequality) \
-                                                            -> CodeForLean:
+def apply_forall_with_ineq(proof_step, selected_objects, inequality,
+                           new_hypo_name=None) -> CodeForLean:
     """
     Try to apply last selected property, assumed to be a universal prop matching
     forall x, (some inex on x) ==> ...
@@ -1117,6 +1117,9 @@ def apply_forall_with_ineq(proof_step, selected_objects, inequality) \
     - if not, we claim inequality, apply the universal property to it,
     and ask Lean to try to solve the inequality.
     """
+
+    if not new_hypo_name:
+        new_hypo_name = get_new_hyp()
 
     goal = proof_step.goal
     universal_property = selected_objects[-1]
@@ -1133,14 +1136,16 @@ def apply_forall_with_ineq(proof_step, selected_objects, inequality) \
 
     # (1) Try to prove inequality
     if inequality in math_types:  # Check if inequality is in context
+        ineq_in_ctxt = True
         index = math_types.index(inequality)
         context_inequality = goal.context[index]
         used_inequalities.append(context_inequality)
         inequality_name = context_inequality.display_name
         variable_names.append(inequality_name)
     else:
+        ineq_in_ctxt = False
         # If not, assert inequality as a new goal:
-        inequality_name = get_new_hyp(proof_step)
+        inequality_name = new_hypo_name
         variable_names.append(inequality_name)
         unsolved_inequality_counter += 1
         # Add type indication to the variable in inequality
@@ -1162,7 +1167,8 @@ def apply_forall_with_ineq(proof_step, selected_objects, inequality) \
     # (2) Apply universal_property, with no success_msg #
     # Add remaining variables:
     variable_names.extend([var.name for var in selected_objects[1:-1]])
-    new_hypo_name = get_new_hyp(proof_step)
+    if not ineq_in_ctxt:  # Hypo_name has been used
+        new_hypo_name = get_new_hyp(proof_step)
     code = code.and_then(have_new_property(universal_property,
                                            variable_names,
                                            new_hypo_name,
@@ -1248,7 +1254,7 @@ def apply_forall(proof_step, selected_objects: [MathObject]) \
     # (Cas 2) Inequality: try to solve it, turn to simple code if it fails
     else:
         complex_code = apply_forall_with_ineq(proof_step, selected_objects,
-                                              inequality)
+                                              inequality, new_hypo_name)
         code = complex_code.or_else(simple_code)
         return code
 

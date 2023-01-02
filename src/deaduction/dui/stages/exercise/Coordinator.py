@@ -567,7 +567,7 @@ class Coordinator(QObject):
                     # if hasattr(emission.args[0], 'statement'):
                     item = emission.args[0]
                     self.proof_step.statement = item.statement
-                    # Set target selected if no selection
+                    # FIXME Obsolete: Set target selected if no selection
                     if not self.current_selection and not self.target_selected:
                         self.emw.process_target_click()
                     self.__server_call_statement(item)
