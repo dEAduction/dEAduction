@@ -45,7 +45,7 @@ from PySide2.QtCore import ( QObject,
                              Signal,
                              Slot  )
 
-from PySide2.QtWidgets import QMessageBox
+from PySide2.QtWidgets import QMessageBox, QApplication
 
 import qtrio
 
@@ -59,6 +59,7 @@ import deaduction.pylib.config.vars              as     cvars
 # i18n has to be executed BEFORE translation function "_" is used.
 import deaduction.pylib.config.i18n
 
+from deaduction.dui.primitives                   import deaduction_fonts
 from deaduction.dui.stages.select_language       import select_language
 from deaduction.dui.stages.exercise              import Coordinator
 from deaduction.dui.stages.start_coex            import StartCoExStartup
@@ -72,6 +73,8 @@ from deaduction.pylib.autotest import                   select_exercise
 
 global _
 
+# For debug
+from deaduction.pylib.math_display.pattern_data import *
 
 log = logging.getLogger(__name__)
 
@@ -102,20 +105,24 @@ def set_logger():
     log_level = cvars.get("logs.display_level", 'info')
     log_to_file = cvars.get("logs.log_to_file", True)
 
-    if os.getenv("DEADUCTION_DEV_MODE", False):  # Set log domains in dev mode
+    if os.getenv("DEADUCTION_DEV_MODE", True):  # Set log domains in dev mode
         log_level = 'debug'
         # log_domains = ["deaduction", "__main__",  # 'lean',
         #                'ServerInterface', 'ServerQueue']
         log_domains = ["__main__",
                        'ServerInterface',
-                       'ServerQueue',
+                       # 'ServerQueue',
                        # 'lean',
                        'deaduction.dui',
                        # 'deaduction.pylib',
                        'logic',
                        'magic',
-                       'coursedata']
-        log_domains = [""]
+                       'coursedata',
+                       'deaduction.pylib',
+                       'patterns'
+                       # 'math_object'
+                       ]
+        # log_domains = [""]
 
     logger.configure(domains=log_domains,
                      display_level=log_level,
@@ -484,6 +491,11 @@ class WindowManager(QObject):
         self.auto_test:       bool               = False
         self.report:          [[str]]            = []
 
+        # Set fonts
+        app = QApplication.instance()
+        deaduction_fonts.set_parent(app)
+        deaduction_fonts.set_fonts()
+
     @property
     def exercise_window(self):
         if self.coordinator:
@@ -523,6 +535,14 @@ class WindowManager(QObject):
             self.chooser_window.window_closed.connect(
                                                 self.chooser_window_closed)
             self.chooser_window.quit_deaduction.connect(self.quit_deaduction)
+
+            if self.coordinator:
+                self.coordinator.frozen.connect(
+                    self.chooser_window.emw_not_ready)
+                self.coordinator.unfrozen.connect(
+                    self.chooser_window.emw_ready)
+                if self.coordinator.is_frozen:
+                    self.chooser_window.emw_not_ready()
 
             # Show window
             self.chooser_window.show()

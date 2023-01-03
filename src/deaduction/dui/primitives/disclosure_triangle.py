@@ -35,6 +35,7 @@ from deaduction.dui.utils import set_selectable
 
 global _
 
+
 class DisclosureTriangle(QTreeWidget):
     """
     A (very basic) implementation of a DisclosureTriangle, i.e. a

@@ -44,6 +44,8 @@ from dataclasses import dataclass
 from typing import Any, Union, List, Optional
 from logging import getLogger
 
+from deaduction.pylib.utils import injective_union, intersection_list
+
 log = getLogger(__name__)
 
 
@@ -78,7 +80,11 @@ class SingleCode:
     def __init__(self, string: str, used_properties=None,
                  operator=None, rw_item=None, outcome_operator=None):
         self.string = string
-        self.used_properties = used_properties if used_properties else []
+        if used_properties is None:
+            used_properties = []
+        if not isinstance(used_properties, list):
+            used_properties = [used_properties]
+        self.used_properties = used_properties
         self.operator = operator
         self.rw_item = rw_item
         self.outcome_operator = outcome_operator
@@ -122,7 +128,7 @@ class CodeForLean:
     instructions: [Any]   # type: [Union[CodeForLean, SingleCode]]
     combinator:   str = LeanCombinator.single_code
     error_msg:    str = ""
-    success_msg:  str = ""
+    _success_msg:  str = ""
     conjunction       = None  # type: (Union[MathObject, str])
     disjunction       = None  # type: (Union[MathObject, str])
     subgoal           = None  # type: Union[MathObject, str]
@@ -154,7 +160,7 @@ class CodeForLean:
             if not isinstance(instruction, SingleCode):
                 instruction = SingleCode(instruction)
         if len(args) == 2:
-            instruction = SingleCode()
+            instruction = SingleCode(args[0], used_properties=args[1])
         if args:
             self.instructions = [instruction]
         else:
@@ -196,7 +202,7 @@ class CodeForLean:
     @classmethod
     def from_string(cls,
                     string: str,
-                    used_properties=None,  # type: MathObject
+                    used_properties=None,  # type: [MathObject]
                     operator=None,
                     rw_prop_or_statement=None,
                     error_msg: str = "",
@@ -280,13 +286,20 @@ class CodeForLean:
         """
         if not self.instructions:
             return None
-        instruction = self.instructions[0]
-        return instruction.operator
+        if self.combinator is LeanCombinator.and_then:
+            # Return first operator in instructions
+            for instruction in self.instructions:
+                if instruction.operator:
+                    return instruction.operator
+        else:
+            operator = self.instructions[0].operator
+            return operator
 
     @operator.setter
     def operator(self, operator):
         """
         Set the operator attribute of the first SingleCode in self.
+        @param operator: MathObject.
         """
         if self.is_or_else():
             for instruction in self.instructions:
@@ -340,6 +353,24 @@ class CodeForLean:
         elif self.instructions:
             instruction = self.instructions[0]
             instruction.outcome_operator = outcome_operator
+
+    @property
+    def success_msg(self):
+        """
+        Return self's success_msg, or, if self is and_then, the first
+        success_msg found in self's instructions.
+        """
+        if self._success_msg:
+            return self._success_msg
+        elif self.is_and_then():
+            for instruction in self.instructions:
+                msg = instruction.success_msg
+                if msg:
+                    return msg
+
+    @success_msg.setter
+    def success_msg(self, msg: str):
+        self._success_msg = msg
 
     def or_else(self, other, success_msg=""):
         """
@@ -727,28 +758,65 @@ class CodeForLean:
         all or_else alternatives. (This is probably useless if there are
         still some or_else alternative in self).
 
-        :return: [ContextMathObject]
+        :return: [Union(ContextMathObject, str)]
         """
-        up = []
+
         if self.is_single_code():
             instruction = self.instructions[0]
             assert isinstance(instruction, SingleCode)
             up = instruction.used_properties
-        elif not self.is_or_else():
-            for instruction in self.instructions:
-                up.extend(instruction.used_properties())
-        else:  # Return prop that are in all instructions
-            instructions = self.instructions
-            if len(instructions) >= 1:
-                up = instructions[0].used_properties()
-                for instruction in instructions[1:]:
-                    # Remove element in up that are not in instruction
-                    new_up = []
-                    for prop in up:
-                        if prop in instruction.used_properties():
-                            new_up.append(prop)
-                    up = new_up
+        elif not self.is_or_else():  # Return union of used_props
+            up = injective_union([ins.used_properties()
+                                  for ins in self.instructions])
+        else:  # Return intersection of used_props
+            up = intersection_list([ins.used_properties()
+                                    for ins in self.instructions])
+
         return up
+
+    @classmethod
+    def no_meta_vars(cls):
+        return cls("no_meta_vars")
+
+    @classmethod
+    def norm_num(cls, location=None):
+        instr = f"norm_num at {location}" if location else "norm_num"
+        return cls(instr)
+
+    def and_try_norm_num(self, location=None):
+        """
+        Add try {norm_num [at <location>]} after self.
+        Beware that this is often too powerful, and normal form sometimes
+        differs from expected, e.g. not (P and Q) is normalized into (P =>
+        not Q).
+        """
+        try_norm_num = CodeForLean.norm_num(location=location).try_()
+        code = self.and_then(try_norm_num)
+        return code
+
+    @classmethod
+    def simp_only(cls, lemmas=None, location=None):
+        """
+        Instruction "simp only [lemmas] at <location>".
+        lemmas may be a list of strings or a single string.
+        """
+        location = f"at {location}" if location else ""
+        if not lemmas:
+            lemmas = ''
+        if isinstance(lemmas, list):
+            lemmas = ' '.join(lemmas)
+
+        instr = f"simp only [{lemmas}] {location}"
+        return cls(instr)
+
+    def and_try_simp_only(self, lemmas=None, location=None):
+        """
+        Add try {norm_num [at <location>]} after self.
+        """
+        simp = CodeForLean.simp_only(lemmas=lemmas, location=location)
+        code = self.and_then(simp.try_())
+        return code
+
 
 # _VAR_NB = 0
 # _FUN_NB = 0

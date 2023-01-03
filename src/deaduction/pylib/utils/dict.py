@@ -61,10 +61,11 @@ def dotset( r, k, v, if_not_exists=False ):
         return True
     else : return False
 
-def dotget( r, k, default_value=None ):
+
+def dotget(r, k, default_value=None):
     """
-    Returns an object in a dictionnary, given its name
-    hierarchy. for example, root.child.leaf
+    Returns an object in a dictionary, given its name
+    hierarchy, e.g. root.child.leaf.
     """
     
     try:
@@ -79,7 +80,8 @@ def dotget( r, k, default_value=None ):
         else: 
             raise KeyError( "%s in %s" % (str(e), k))
 
-def flatten( r ):
+
+def flatten(r):
     """
     Returns a generator that gives each last level item as kall,k,v. Can be used as some kind
     of view. Recursive style. I do like StackOverflow. Oh wait, not this one...

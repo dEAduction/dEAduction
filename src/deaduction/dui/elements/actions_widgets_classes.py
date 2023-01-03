@@ -46,17 +46,17 @@ from trio import sleep
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
                                 QIcon,
-                                QCursor,
+                                QCursor, QDrag, QPixmap,
                                 QHelpEvent)
 from PySide2.QtCore    import ( Signal,
                                 Slot,
                                 Qt,
-                                QEvent,
-                                QObject,
-                                QTimerEvent)
+                                QModelIndex, QMimeData,
+                                QTimer)
 from PySide2.QtWidgets import ( QHBoxLayout,
                                 QPushButton,
-                                QWidget)
+                                QWidget,
+                                QAbstractItemView)
 from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem,
                                 QToolTip)
@@ -130,6 +130,16 @@ class ActionButton(QPushButton):
 
         super().__init__()
 
+        # Modify button default color
+        if cvars.get('others.os') == "linux":
+            palette = self.palette()
+            background_color = cvars.get("display.color_for_selection",
+                                         "limegreen")
+            highlight_color = QColor(background_color)
+            palette.setBrush(palette.Normal, palette.Button, highlight_color)
+            palette.setBrush(palette.Inactive, palette.Button, highlight_color)
+            self.setPalette(palette)
+
         self.action = action
         self.update()  # set symbol and tool tip
         self.clicked.connect(self._emit_action)
@@ -147,8 +157,6 @@ class ActionButton(QPushButton):
         name = self.action.name
         symbol = _(button_symbol(name))
         self.setText(symbol)
-        # if len(symbol) > 1:
-        #     self.setStyleSheet('QPushButton { font-size: 12pt }')
 
         tool_tip = button_tool_tip(name)
         if isinstance(tool_tip, str):
@@ -173,7 +181,6 @@ class ActionButton(QPushButton):
         This slot is connected to ActionButton.clicked signal in
         self.__init__.
         """
-
         self.action_triggered.emit(self)
 
     @property
@@ -182,6 +189,14 @@ class ActionButton(QPushButton):
         Actual text displayed on self (may be changed by usr).
         """
         return self.action.symbol
+
+    def is_symbol(self):
+        """
+        Should be true iff self is a mth symbol, e.g. '⇒' or '='.
+        The test is only that length = 1...
+        The other option could be to provide a list.
+        """
+        return len(self.symbol) == 1
 
     @property
     def name(self):
@@ -251,7 +266,6 @@ class ActionButtonsWidget(QWidget):
 
         super().__init__()
 
-        # TODO: make self.buttons a property?
         self.buttons = []
 
         main_layout = QHBoxLayout()
@@ -326,6 +340,8 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
     from_lean_name : dict = {}  # Statement.lean_name --> item
     # ! Must be updated to avoid pointing to deleted items !
 
+    is_node = False
+
     def __init__(self, statement: Statement):
         """
         Init self with an instance of the class (or child of) Statement.
@@ -371,9 +387,6 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         if self.parent:
             return self.parent.is_exercise_list
 
-    def is_node(self):
-        return False
-
     def set_tooltip(self):
         """
         Set the math content of the statement as tooltip.
@@ -394,12 +407,13 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         This is called when redoing.
         :param duration: total duration
         """
+        color = cvars.get("display.color_for_selection", "LimeGreen")
         if expand:
             self.setExpanded(expand)
             self.treeWidget().scrollToItem(self)
         duration = duration /(3*winkle_nb)
         for n in range(winkle_nb):
-            self.setBackground(0, QBrush(QColor('blue')))
+            self.setBackground(0, QBrush(QColor(color)))
             await sleep(2*duration)
             self.setBackground(0, QBrush())
             await sleep(duration)
@@ -424,6 +438,8 @@ class StatementsTreeWidgetNode(QTreeWidgetItem):
     with title 'Finite groups'.
     """
 
+    is_node = True
+
     def __init__(self, title: str):
         """
         Init self with a title.
@@ -439,15 +455,6 @@ class StatementsTreeWidgetNode(QTreeWidgetItem):
         # Cosmetics
         self.setFlags(Qt.ItemIsEnabled)
         self.setExpanded(True)
-        # self.set_selectable(False)
-
-    # @property
-    # def is_exercise_list(self):
-    #     if self.parent():
-    #         return self.parent().is_exercise_list
-
-    def is_node(self):
-        return True
 
     def add_child(self, child: QTreeWidgetItem):
         """
@@ -501,6 +508,8 @@ class StatementsTreeWidget(QTreeWidget):
     not in the outline, they are already coded in the instances of the
     class Statement themselves with the attribute pretty_name.
     """
+
+    math_object_dropped = Signal(StatementsTreeWidgetItem)
 
     # TODO: Put this in self.__init__
     # Config
@@ -626,12 +635,34 @@ class StatementsTreeWidget(QTreeWidget):
         # IMPORTANT: re-initialize StatementsTreeWidgetItem dictionary
         StatementsTreeWidgetItem.from_lean_name = {}
         super().__init__()
+        self._potential_drop_receiver = None
+        self._current_dragging_node = None
+        self.expand_node_timer = QTimer()
+        self.expand_node_timer.timeout.connect(self.expand_current_node)
+
         self.items: [QTreeWidgetItem] = [] # List of items
         self._init_tree(statements, outline)
         self.is_exercise_list = is_exercise_list
         self.update_tooltips()
-        # Uncomment to enable drag:
-        # self.setDragEnabled(True)
+        # By default, drag and drop disabled. See _exercise_main_window_widgets.
+        self.setDragEnabled(False)
+        self.setAcceptDrops(False)
+        self.setDragDropMode(QAbstractItemView.NoDragDrop)
+
+        if cvars.get('functionality.drag_statements_to_context', True):
+            self.setDragEnabled(True)
+            self.setDragDropMode(QAbstractItemView.DragOnly)
+        else:
+            self.setDragEnabled(False)
+        # Drops in statements:
+        if cvars.get('functionality.drag_context_to_statements', True):
+            self.setAcceptDrops(True)
+            self.setDragDropMode(QAbstractItemView.DropOnly)
+        else:
+            self.setAcceptDrops(False)
+        if cvars.get('functionality.drag_context_to_statements', True) \
+                and cvars.get('functionality.drag_statements_to_context', True):
+            self.setDragDropMode(QAbstractItemView.DragDrop)
 
         # Cosmetics
         self.setWindowTitle('StatementsTreeWidget')
@@ -642,6 +673,14 @@ class StatementsTreeWidget(QTreeWidget):
         else:
             self.resizeColumnToContents(0)
             self.setHeaderLabels([_('Statements')])
+
+        # Modify color for selected objects
+        palette = self.palette()
+        background_color = cvars.get("display.color_for_selection", "limegreen")
+        highlight_color = QColor(background_color)
+        palette.setBrush(palette.Normal, palette.Highlight, highlight_color)
+        palette.setBrush(palette.Inactive, palette.Highlight, highlight_color)
+        self.setPalette(palette)
 
     def add_child(self, item):
         """
@@ -691,31 +730,123 @@ class StatementsTreeWidget(QTreeWidget):
         """
         return StatementsTreeWidgetItem.from_name.get(lean_name)
 
-        # items = []
-        #
-        # def traverse_node(item: StatementsTreeWidgetItem):
-        #     if isinstance(item, StatementsTreeWidgetItem):
-        #         if item.statement.has_name(lean_name):
-        #             items.append(item)
-        #     for i in range(0, item.childCount()):
-        #         traverse_node(item.child(i))
-        #
-        # for i in range(self.topLevelItemCount()):
-        #     item = self.topLevelItem(i)
-        #     traverse_node(item)
-        # if items:
-        #     return items[0]
-        # else:
-        #     return None
-
     def item_from_statement(self, statement):
         return self.item_from_lean_name(statement.lean_name)
+
+    def index_from_event(self, event):
+        return self.indexAt(event.pos())
+
+    def item_from_index(self, index_):
+        item = self.itemFromIndex(index_)
+        return item
+
+    def select_index(self, index, yes=True):
+        self.setItemSelected(self.item_from_index(index), yes)
 
     @Slot()
     def update_tooltips(self):
         for item in self.items:
             item.parent = self
             item.set_tooltip()
+
+    @property
+    def potential_drop_receiver(self):
+        return self._potential_drop_receiver
+
+    @potential_drop_receiver.setter
+    def potential_drop_receiver(self, receiver: QModelIndex):
+        if (self.potential_drop_receiver and
+                receiver != self.potential_drop_receiver):
+            self.select_index(self._potential_drop_receiver, False)
+            self._potential_drop_receiver = None
+        if receiver and receiver not in self.selectedIndexes():
+            self._potential_drop_receiver = receiver
+            self.select_index(receiver)
+
+    def expand_current_node(self):
+        if self._current_dragging_node:
+            self._current_dragging_node.setExpanded(True)
+            self._current_dragging_node = None
+
+    def dragEnterEvent(self, event):
+        """
+        Accept drag except if it comes from self.
+        """
+        source = event.source()
+        if not isinstance(source, StatementsTreeWidget):
+            event.acceptProposedAction()
+
+    def dragMoveEvent(self, event) -> None:
+        """
+        When a MathWidgetItem is dragged over a potential receiver, select it
+        temporarily.
+        """
+
+        self.expand_node_timer.stop()
+        index = self.index_from_event(event)
+        if index != self.potential_drop_receiver:
+            self.potential_drop_receiver = None  # Unselect automatically
+
+        # if index:
+        item = self.item_from_index(index)
+        if item:  # and item.isDropEnabled():
+            self.potential_drop_receiver = index
+
+        if item and item.is_node:
+            self._current_dragging_node = item
+            self.expand_node_timer.start(500)
+
+        event.accept()
+
+    def dragLeaveEvent(self, event) -> None:
+        self.expand_node_timer.stop()
+        self.potential_drop_receiver = None  # Unselect automatically
+        # print("dragLeave statement")
+
+    def dropEvent(self, event):
+        """
+        Process MathWidgetItem dropped on statements.
+        """
+        # Not activated.
+        source = event.source()
+        if isinstance(source, StatementsTreeWidget):  # Should not happen
+            event.accept()
+            # self.clearSelection()
+            return
+        else:
+            dragged_index = source.currentIndex()
+            index = self.index_from_event(event)
+            item = self.itemFromIndex(index)
+            if not item or item.is_node:  # Not dropped on a statement
+                return
+            # print(f"Source : {source}, dragged index: {dragged_index}")
+            # print(f"Source selected items: {len(source.selected_items())}")
+            if dragged_index not in source.selectedIndexes():
+                source.select_index(dragged_index)
+            # Emit signal
+            self.math_object_dropped.emit(item)
+
+        self.setDropIndicatorShown(False)
+        event.accept()
+
+    def mouseMoveEvent(self, event) -> None:
+        """
+        Clear selection to avoid meaningless selected items.
+        """
+        super().mouseMoveEvent(event)
+        if not self.state() == QAbstractItemView.DraggingState:
+            QTimer.singleShot(1, self.clearSelection)
+
+    # def clear_current_index(self):
+    #     self.setCurrentIndex(QModelIndex())
+    #
+    # def currentChanged(self, current, previous) -> None:
+    #     """
+    #     Prevent current index setting (which has no meaning and would be
+    #     highlighted in light blue).
+    #     """
+    #     if not self.state() == QAbstractItemView.DraggingState:
+    #         QTimer.singleShot(1, self.clear_current_index)
 
     # def event(self, event: QEvent):
     #     """

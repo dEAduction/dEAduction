@@ -42,15 +42,22 @@ from PySide2.QtCore import ( QObject,
 from PySide2.QtWidgets import (QInputDialog,
                                QMessageBox)
 
-
+# Configs, utils
 import deaduction.pylib.config.dirs as          cdirs
 import deaduction.pylib.config.vars as          cvars
 from deaduction.pylib.utils.filesystem import   check_dir
+
+# DUI
 from deaduction.dui.primitives import           ButtonsDialog
 from deaduction.dui.stages.exercise import      ExerciseMainWindow
+from deaduction.dui.elements import             ActionButton
+
+# Server
 from deaduction.pylib.server import             ServerInterface
+
 from deaduction.pylib.utils import save_object
 
+# Maths
 from deaduction.pylib.coursedata import        (Exercise,
                                                 Definition,
                                                 Theorem,
@@ -58,17 +65,28 @@ from deaduction.pylib.coursedata import        (Exercise,
                                                 AutoStep)
 
 from deaduction.pylib.mathobj import           (MathObject,
-                                                PatternMathObject,
-                                                ProofStep)
+                                                DragNDrop,
+                                                ProofStep,
+                                                ContextMathObject)
 from deaduction.pylib.proof_state import       (Goal,
                                                 ProofState)
-from deaduction.pylib.proof_tree import ProofTree
+from deaduction.pylib.proof_tree import        (ProofTree,
+                                                LeanResponse)
 
 from deaduction.pylib.actions           import (generic,
                                                 InputType,
                                                 CodeForLean,
                                                 MissingParametersError,
-                                                WrongUserInput)
+                                                WrongUserInput,
+                                                drag_n_drop,
+                                                context_obj_solving_target)
+
+# Import AFTER coursedata and mathobj, beware circular imports!
+from deaduction.pylib.pattern_math_obj import  (PatternMathObject,
+                                                DefinitionMathObject)
+
+# Just for import
+from deaduction.pylib.math_display.new_display import to_display
 
 from deaduction.pylib.memory            import Journal
 
@@ -105,6 +123,8 @@ class Coordinator(QObject):
 
     proof_step_updated = Signal()  # Listened by test_launcher (for testing)
     close_server_task  = Signal()  # Send by self.closeEvent
+    frozen             = Signal()
+    unfrozen           = Signal()
 
     def __init__(self, exercise, servint):
         super().__init__()
@@ -121,6 +141,8 @@ class Coordinator(QObject):
         self.proof_tree: Optional[ProofTree]          = None
         self.previous_proof_step: Optional[ProofStep] = None
         self.journal                                  = Journal()
+        # self.current_user_action: Optional[UserAction] = None
+        self.lean_code_sent: Optional[CodeForLean]          = None
 
         # Flags
         self.exercise_solved                = False
@@ -129,6 +151,7 @@ class Coordinator(QObject):
         self.server_task_closed             = trio.Event()
 
         # Initialization
+        self.is_frozen = False
         self.__connect_signals()
         self.__initialize_exercise()
         # log.debug(f"Selected style: {self.emw.ecw.target_wgt.selected_style}")
@@ -165,7 +188,8 @@ class Coordinator(QObject):
         proof_state = self.exercise.initial_proof_state
         if proof_state:
             goal = proof_state.goals[0]
-            self.emw.ecw.update_goal(goal, [], 1, 1)
+            # goal.name_bound_vars()
+            self.emw.ecw.update_goal(goal, [])
 
         # Set exercise. In particular, this will initialize servint.lean_file.
         self.server_queue.add_task(self.servint.set_exercise,
@@ -181,6 +205,7 @@ class Coordinator(QObject):
         # Initialize the following lists to erase lists from previous exercise
         MathObject.implicit_definitions = []
         MathObject.definition_patterns = []
+        self.set_math_object_definitions()
         self.set_definitions_for_implicit_use()
 
     def set_initial_proof_states(self):
@@ -212,6 +237,10 @@ class Coordinator(QObject):
                       if not st.initial_proof_state]
         if not statements:
             self.servint.initial_proof_state_set.disconnect()
+
+    def set_math_object_definitions(self):
+        definitions = self.exercise.definitions
+        DefinitionMathObject.set_definitions(definitions)
 
     @Slot()
     def set_definitions_for_implicit_use(self):
@@ -407,12 +436,20 @@ class Coordinator(QObject):
         return self.emw.statement_triggered
 
     @property
-    def apply_math_object_triggered(self):
-        return self.emw.apply_math_object_triggered
+    def statement_dropped(self):
+        return self.emw.statement_dropped
 
     @property
-    def double_clicked_item(self):
-        return self.emw.double_clicked_item
+    def math_object_dropped(self):
+        return self.emw.math_object_dropped
+
+    # @property
+    # def apply_math_object_triggered(self):
+    #     return self.emw.apply_math_object_triggered
+
+    # @property
+    # def double_clicked_item(self):
+    #     return self.emw.double_clicked_item
 
     @property
     def current_selection(self):
@@ -451,7 +488,6 @@ class Coordinator(QObject):
         """
 
         log.info("Starting server task")
-        add_task = self.server_queue.add_task
 
         async with qtrio.enter_emissions_channel(
                 signals=[self.lean_editor.editor_send_lean,
@@ -462,7 +498,9 @@ class Coordinator(QObject):
                          self.proof_outline_window.history_goto,
                          self.action_triggered,
                          self.statement_triggered,
-                         self.apply_math_object_triggered,
+                         self.statement_dropped,
+                         self.math_object_dropped,
+                         # self.apply_math_object_triggered,
                          self.close_server_task]) as emissions:
 
             self.server_task_started.set()
@@ -479,7 +517,7 @@ class Coordinator(QObject):
                     break
 
                 self.statusBar.erase()
-                self.emw.freeze(True)  # DO NOT forget to unfreeze at the end.
+                self.freeze()  # DO NOT forget to unfreeze at the end.
 
                 ########################
                 # History move actions #
@@ -526,18 +564,55 @@ class Coordinator(QObject):
 
                 elif emission.is_from(self.statement_triggered):
                     # emission.args[0] is StatementTreeWidgetItem
-                    if hasattr(emission.args[0], 'statement'):
-                        item = emission.args[0]
-                        self.proof_step.statement = item.statement
+                    # if hasattr(emission.args[0], 'statement'):
+                    item = emission.args[0]
+                    self.proof_step.statement = item.statement
+                    # FIXME Obsolete: Set target selected if no selection
+                    if not self.current_selection and not self.target_selected:
+                        self.emw.process_target_click()
                     self.__server_call_statement(item)
 
-                elif emission.is_from(self.apply_math_object_triggered):
-                    # Fixme: causes freeze - no more double click
-                    self.emw.double_clicked_item = emission.args[0]
-                    # Emulate click on 'apply' button:
-                    self.emw.freeze(False)
-                    if self.ecw.action_apply_button:
-                        self.ecw.action_apply_button.animateClick(msec=500)
+                elif emission.is_from(self.statement_dropped):
+                    # Statement dropped into context
+                    item = emission.args[0]
+                    # print(f"Statement dropped: {item.statement.lean_name}")
+                    self.proof_step.statement = item.statement
+
+                    # Empty selection and call statement
+                    self.emw.empty_current_selection()
+                    self.emw.target_selected = False
+                    self.__server_call_statement(item)
+
+                elif emission.is_from(self.math_object_dropped):
+                    # Determine an Action Button from selection and receiver
+                    # and call __server_call_action
+
+                    log.debug("Math object dropped!")
+                    s = [item.math_object.to_display(format_="utf8")
+                         for item in self.emw.current_selection]
+                    log.debug(f"Selection: {s}")
+                    premise_item = emission.args[0]  # MathWidgetItem
+                    op_item = emission.args[1]  # Optional[MathWidgetItem]
+                    # Operator is None if dropping did not occur on a property.
+                    # Then WrongUI exception will be raised by drag_n_drop().
+
+                    # selection = self.current_selection_as_mathobjects
+                    operator = op_item.math_object if op_item else None
+                    premise = premise_item.math_object if premise_item else None
+                    #     selection.remove(operator)
+
+                    self.proof_step.drag_n_drop = DragNDrop(premise, operator)
+                    try:
+                        name = drag_n_drop(premise, operator)
+                    except WrongUserInput as error:
+                        self.proof_step.user_input = self.emw.user_input
+                        self.process_wrong_user_input(error)
+
+                    else:
+                        self.proof_step.button_name = name
+                        action_btn = ActionButton.from_name[name]
+                        await action_btn.simulate(duration=0.5)
+                        self.__server_call_action(action_btn)
 
     ###################
     # History actions #
@@ -602,7 +677,7 @@ class Coordinator(QObject):
         # ─────── Update UI ─────── #
         log.info("** Updating UI **")
         self.unfreeze()
-        if self.proof_step.is_error():
+        if self.proof_step.is_error():  # Should not happen?!
             self.emw.update_goal(None)
         else:
             self.emw.update_goal(proof_state.goals[0])
@@ -653,7 +728,7 @@ class Coordinator(QObject):
                     choice, ok = QInputDialog.getText(action_btn,
                                                       e.title,
                                                       e.output)
-                elif e.input_type == InputType.Choice:
+                elif e.input_type in (InputType.Choice, InputType.YesNo):
                     choice, ok = ButtonsDialog.get_item(e.choices,
                                                         e.title,
                                                         e.output)
@@ -674,6 +749,7 @@ class Coordinator(QObject):
                 self.proof_step.user_input = self.emw.user_input
 
                 # Update lean_file and call Lean server
+                self.lean_code_sent = lean_code
                 self.server_queue.add_task(self.servint.code_insert,
                                            action.symbol,
                                            lean_code,
@@ -708,6 +784,7 @@ class Coordinator(QObject):
             self.proof_step.lean_code = lean_code
 
             # Update lean_file and call Lean server
+            self.lean_code_sent = lean_code
             self.server_queue.add_task(self.servint.code_insert,
                                        statement.pretty_name,
                                        lean_code,
@@ -748,33 +825,80 @@ class Coordinator(QObject):
     def automatic_actions(goal: Goal) -> UserAction:
         """
         Return a UserAction if some automatic_intro is on and there is a
-        pertinent automatic action to perform. Automatic actions include
-        - introduction of variables and hypotheses when target is a
-        universal statement or an implication,
-        - introduction of variable when some context property if an
+        pertinent automatic action to perform. Automatic actions include:
+        (1) Intro of a variable when some context property if an
         existential statement.
+        (2) Intro of premise when an implication appears in the context.
+        This happens only if premise is not obviously in the context.
+        The user is asked if OK.
+        (3) Intro of variables and hypotheses when target is a
+        universal statement or an implication.
         """
+
         target = goal.target
 
         user_action = None
-        # Check automatic intro of variables and hypotheses
+        # (1) Check automatic intro of existence hypos
+        auto_exists = cvars.get("functionality.automatic_intro_of_exists", True)
+        if auto_exists:
+            prop: ContextMathObject
+            for prop in goal.context_props:
+                if prop.is_exists() and prop.allow_auto_action:
+                    user_action = UserAction(selection=[prop],
+                                             button_name="exists")
+                    # Turn off auto_action for this prop:
+                    prop.turn_off_auto_action()
+                    return user_action
+
+        # (2) Check automatic intro of hypos' premises
+        ask_auto_premises = cvars.get(
+            "functionality.ask_to_prove_premises_of_implications", True)
+        context_types = [p.math_type for p in goal.context_props]
+        for prop in goal.context_props:
+            premise = prop.premise()  # None if prop is not an implication
+            if premise and prop.allow_auto_action:
+                # (1) If premise is in context, do nothing unless
+                # it is an inequality,
+                # in which case add auto action without asking usr
+                if premise == target.math_type:
+                    continue
+                elif premise in context_types:
+                    if not premise.is_inequality(is_math_type=True):
+                        continue
+                    # Premise is an inequality in the context: do apply!
+                    prop.turn_off_auto_action()
+                    index = context_types.index(premise)
+                    context_premise = goal.context_props[index]
+                    user_action = UserAction(selection=[context_premise, prop],
+                                             button_name="implies")
+                    return user_action
+                elif ask_auto_premises:
+                    prop.turn_off_auto_action()  # No more asking for this one
+                    msg_box = QMessageBox()
+                    msg_box.setText(_('Do you want to prove the premise "{}" '
+                                      'as a new sub-goal?')
+                                    .format(premise.to_display(format_='utf8')))
+                    msg_box.addButton(_('Yes'), QMessageBox.YesRole)
+                    no_button = msg_box.addButton(_('No'), QMessageBox.NoRole)
+                    msg_box.exec_()
+                    if msg_box.clickedButton() != no_button:
+                        user_action = UserAction(selection=[prop],
+                                                 user_input=[0],
+                                                 button_name="implies")
+                    return user_action
+
+        # (3) Check automatic intro of variables and hypotheses
         auto_for_all = cvars.get("functionality.automatic_intro_of" +
-                                 "_variables_and_hypotheses")
-        auto_exists = cvars.get("functionality.automatic_intro_of_exists")
-        if auto_for_all:
+                                 "_variables_and_hypotheses", False)
+        if auto_for_all and target.allow_auto_action:
             if target.is_for_all():
                 user_action = UserAction.simple_action("forall")
+                target.turn_off_auto_action()
                 return user_action
             elif target.is_implication():
                 user_action = UserAction.simple_action("implies")
+                target.turn_off_auto_action()
                 return user_action
-
-        if auto_exists:
-            for prop in goal.context_props:
-                if prop.is_exists():
-                    user_action = UserAction(selection=[prop],
-                                             button_name="exists")
-                    return user_action
 
     def process_automatic_actions(self, goal):
         """
@@ -788,8 +912,13 @@ class Coordinator(QObject):
             # log.debug(f"Automatic action: {action}")
             self.proof_step.is_automatic = True
             # Async call to emw.simulate_user_action:
-            self.emw.freeze(True)
+            self.freeze()
             self.nursery.start_soon(self.emw.simulate_user_action, user_action)
+
+    def freeze(self):
+        self.is_frozen = True
+        self.emw.freeze(True)
+        self.frozen.emit()
 
     def unfreeze(self):
         """
@@ -808,6 +937,8 @@ class Coordinator(QObject):
         at_end = self.servint.lean_file.history_at_end
 
         self.emw.history_button_unfreeze(at_beginning, at_end)
+        self.is_frozen = False
+        self.unfrozen.emit()
 
     @Slot(CodeForLean)
     def process_effective_code(self, effective_lean_code: CodeForLean):
@@ -817,7 +948,8 @@ class Coordinator(QObject):
 
         This is called by a signal in servint.
         """
-        log.debug(f"Replacing code by effective code {effective_lean_code}")
+        code = effective_lean_code.to_code()
+        log.debug(f"Replacing code by effective code {code}")
         self.proof_step.effective_code = effective_lean_code
         self.servint.history_replace(effective_lean_code)
 
@@ -937,22 +1069,28 @@ class Coordinator(QObject):
         self.proof_step = ProofStep.next_(self.lean_file.current_proof_step,
                                           self.lean_file.target_idx)
         self.proof_step.parent_goal_node = self.proof_tree.current_goal_node
+
+        # # Target in context?
+        # solving_objs = context_obj_solving_target(self.proof_step)
+        # self.proof_step.solving_objs = solving_objs
         self.proof_step_updated.emit()  # Received in auto_test
 
-        # TODO: replace goal counts by proof_tree API
-        # unsolved_goal_nodes = self.proof_tree.unsolved_goal_nodes()
-        # total_gn = len(unsolved_goal_nodes)
-        # index = unsolved_goal_nodes.index(self.proof_tree.current_goal_node) + 1
-        # print(f"Buts: {index}/{total_gn}")
-        # print(total_gn == self.proof_step.total_goals_counter)
+    def test_response_coherence(self, lean_response: LeanResponse):
+        # fixme
+        return True
+        # return self.lean_code_sent is lean_response.lean_code
+
+    def invalidate_events(self):
+        # self.current_user_action = None
+        self.lean_code_sent = None
 
     @Slot()
-    def process_lean_response(self,
-                              exercise,
-                              no_more_goals: bool,
-                              analysis: tuple,
-                              errors: list,
-                              error_type=0):
+    def process_lean_response(self, lean_response: LeanResponse):
+                              # exercise,
+                              # no_more_goals: bool,
+                              # analysis: tuple,
+                              # errors: list,
+                              # error_type=0):
         """
         This method processes Lean response after a request, and is a slot
         of a signal emitted by self.servint when all info have been received.
@@ -964,32 +1102,33 @@ class Coordinator(QObject):
         Every action of the user (ie click on an ActionButton, a statement
         item, or a history move) which do not rise a WrongUserInput
         exception is passed to Lean, and then goes through this method.
-
-        :param exercise: should be equal to self.exercise.
-        :param no_more_goals: True if no_more_goal: proof is complete!
-        :param analysis: (hypo_analysis, targets_analysis),
-                         = info to construct new proof_state
-        :param errors: list of errors, if non-empty then request has failed.
-        :param error_type: int
-            0 = no error, 1 = WUI (unused here),
-            2 = FRE, 3 = Timeout, 4 = UnicodeError
         """
+
+        # (1) Test Response corresponds to request
+        if not self.test_response_coherence(lean_response):
+            log.warning("Unexpected Lean response, ignoring")
+            self.abort_process()
+            return
+
+        no_more_goals = lean_response.no_more_goals
+        error_type = lean_response.error_type
+        proof_state = lean_response.new_proof_state
+
         log.info("** Processing Lean's response **")
         history_nb = self.lean_file.target_idx
         log.info(f"History nb: {history_nb}")
-        self.emw.automatic_action = False
-        proof_state = None
+        self.emw.automatic_action = False  # FIXME: move
 
         # ─────── Errors ─────── #
         if error_type != 0:
             log.info("  -> error!")
-            self.process_error(error_type, errors)
+            self.process_error(error_type, lean_response.error_list)
             self.abort_process()
             return
 
-        if exercise != self.exercise:  # Should never happen
-            log.warning("    not from current exercise, ignoring")
-            return
+        # if exercise != self.exercise:  # Should never happen
+        #     log.warning("    not from current exercise, ignoring")
+        #     return
 
         # ─────── First step ─────── #
         if not self.server_task_started.is_set():
@@ -1002,18 +1141,19 @@ class Coordinator(QObject):
             proof_state = self.set_fireworks()
 
         else:  # Generic step
-            hypo_analysis, targets_analysis = analysis
-            if hypo_analysis and targets_analysis:
-                log.info("** Creating new proof state **")
-                proof_state = ProofState.from_lean_data(hypo_analysis,
-                                                        targets_analysis,
-                                                        to_prove=True)
+            # hypo_analysis, targets_analysis = analysis
+            # if hypo_analysis and targets_analysis:
+            #     log.info("** Creating new proof state **")
+            #     proof_state = ProofState.from_lean_data(hypo_analysis,
+            #                                             targets_analysis,
+            #                                             to_prove=True)
             if proof_state:
                 self.lean_file.state_info_attach(ProofState=proof_state)
             else:
                 # No proof state!? Maybe empty analysis?
                 self.process_error(error_type=5, errors=[])
-                log.debug(f"Analysis: {hypo_analysis} /// {targets_analysis}")
+                log.debug(f"Analysis: {lean_response.analysis[0]} ///"
+                          f" {lean_response.analysis[1]}")
                 self.abort_process()
                 return
 
@@ -1045,7 +1185,7 @@ class Coordinator(QObject):
 
         # ─────── Name all bound vars ─────── #
         log.info("** Naming dummy vars **")
-        self.proof_step.goal.name_bound_vars()
+        self.proof_step.goal.smart_name_bound_vars()
 
         # ─────── Update proof_step ─────── #
         # From here, self.proof_step is replaced by a new proof_step!
@@ -1068,7 +1208,9 @@ class Coordinator(QObject):
 
         self.emw.ui_updated.emit()  # For testing
 
+        self.invalidate_events()
+
         if no_more_goals:
-            # Display QMessageBox but give deaduction time to properly update
-            # ui before.
-            QTimer.singleShot(0, self.display_fireworks_msg)
+                # Display QMessageBox but give deaduction time to properly update
+                # ui before.
+                QTimer.singleShot(0, self.display_fireworks_msg)

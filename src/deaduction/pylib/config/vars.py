@@ -32,7 +32,8 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
-
+import sys
+from sys import platform
 from gettext import gettext as _
 import logging
 from . import dirs
@@ -93,6 +94,11 @@ def get(k: str, default_value=None):
     try:
         return udict.dotget(__dict_user, k)
     except KeyError:
+        # Call the os specific version if it exists
+        if os_name:
+            if udict.dotget(__dict_factory, os_name + '.' + k,
+                                    default_value="NONE") != "NONE":
+                k = os_name + '.' + k
         try:
             return udict.dotget(__dict_factory, k, default_value=default_value)
         except KeyError as exc:
@@ -124,6 +130,18 @@ def restore(initial_cvars):
     global __dict_user
     __dict_user = initial_cvars
 
+
+# Add os name; so this can be overridden in (user's) config.toml
+# Otherwise, vars.get("others.os") --> "linux", "darwin" or "windows"
+os_name = ""  # For first time, do not remove otherwise 'get' method crashes!
+os_name = get('others.os')
+if not os_name:
+    os_name = ("linux" if platform.startswith("linux")
+               else "darwin" if platform.startswith("darwin")
+               else "windows" if (platform.startswith("cygwin") or
+                                  platform.startswith("win32"))
+               else "")
+    set('others.os', os_name)
 
 if __name__ == "__main__":
     from pprint import pprint

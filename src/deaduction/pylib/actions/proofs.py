@@ -32,6 +32,9 @@ from typing import Union
 from deaduction.pylib.text        import tooltips
 # from deaduction.pylib.config.i18n import _
 import deaduction.pylib.config.vars as cvars
+
+from deaduction.pylib.actions.utils import pre_process_lean_code
+from deaduction.pylib.actions.commun_actions import introduce_new_subgoal
 from deaduction.pylib.actions import (InputType,
                                       MissingParametersError,
                                       WrongUserInput,
@@ -39,9 +42,8 @@ from deaduction.pylib.actions import (InputType,
                                       CodeForLean,
                                       apply_or)
 
-from deaduction.pylib.mathobj import (MathObject,
-                                      get_new_hyp,
-                                      give_global_name)
+from deaduction.pylib.mathobj import  MathObject
+from deaduction.pylib.give_name import get_new_hyp
 
 from deaduction.pylib.math_display import new_objects, new_properties
 
@@ -111,7 +113,7 @@ def method_cbr(proof_step,
                  output=_("Enter the property you want to discriminate on:")
                                         )
         else:
-            h0 = user_input[1]
+            h0 = pre_process_lean_code(user_input[1])
             h1 = get_new_hyp(proof_step)
             h2 = get_new_hyp(proof_step)
             code = CodeForLean.from_string(f"cases (classical.em ({h0})) "
@@ -185,14 +187,46 @@ def method_sorry(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     return CodeForLean.from_string('sorry')
 
 
+# def introduce_new_subgoal(proof_step) -> CodeForLean:
+#     selected_objects = proof_step.selection
+#     user_input = proof_step.user_input
+#     sub_goal = None
+#     codes = CodeForLean()
+#
+#     # (A) Sub-goal from selection
+#     if selected_objects:
+#         premise = selected_objects[0].premise()
+#         if premise:
+#             # FIXME: make format_='lean' functional
+#             sub_goal = premise.to_display(format_='lean')
+#
+#     # (B) User enter sub-goal
+#     elif len(user_input) == 1:
+#         output = new_properties
+#         raise MissingParametersError(InputType.Text,
+#                                      title=_("Introduce a new subgoal"),
+#                                      output=output)
+#     elif len(user_input) == 2:
+#         sub_goal = pre_process_lean_code(user_input[1])
+#
+#     # (C) Code:
+#     if sub_goal:
+#         new_hypo_name = get_new_hyp(proof_step)
+#         codes = CodeForLean.from_string(f"have {new_hypo_name}:"
+#                                         f" ({sub_goal})")
+#         codes.add_success_msg(_("New target will be added to the context "
+#                                 "after being proved"))
+#         codes.add_subgoal(sub_goal)
+#
+#     return codes
+
+
 def introduce_fun(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     """
     If a hypothesis of form ∀ a ∈ A, ∃ b ∈ B, P(a,b) has been previously
     selected: use the axiom of choice to introduce a new function f : A → B
     and add ∀ a ∈ A, P(a, f(a)) to the properties.
     """
-
-    goal = proof_step.goal
 
     error = _('Select a property "∀ x, ∃ y, P(x,y)" to get a function')
     success = _("Function {} and property {} added to the context")
@@ -208,19 +242,20 @@ def introduce_fun(proof_step, selected_objects: [MathObject]) -> CodeForLean:
                 math_type = MathObject(node="FUNCTION",
                                        info={},
                                        children=[source_type, target_type],
-                                       bound_vars=[],
                                        math_type=MathObject.NO_MATH_TYPE)
 
                 hf = get_new_hyp(proof_step)
-                f = give_global_name(math_type=math_type,
-                                     proof_step=proof_step)
+                name = proof_step.goal.provide_good_name(math_type)
+
+                # f = give_global_name(math_type=math_type,
+                #                      proof_step=proof_step)
                 code = CodeForLean.from_string(f'cases '
                                                f'classical.axiom_of_choice '
-                                               f'{h} with {f} {hf}, '
+                                               f'{h} with {name} {hf}, '
                                                f'dsimp at {hf}, '
-                                               f'dsimp at {f}')
+                                               f'dsimp at {name}')
                 code.add_error_msg(error)
-                success = success.format(f, hf)
+                success = success.format(name, hf)
                 code.add_success_msg(success)
                 return code
     raise WrongUserInput(error)
@@ -238,7 +273,7 @@ def action_new_object(proof_step) -> CodeForLean:
 
     goal = proof_step.goal
 
-    codes = []
+    codes = CodeForLean()
     # Choose between object/sub-goal/function
     if not user_input:
         raise MissingParametersError(InputType.Choice,
@@ -249,7 +284,7 @@ def action_new_object(proof_step) -> CodeForLean:
                                                 "function"))],
                              title=_("New object"),
                              output=_("Choose what to introduce:"))
-    # Choice = new object
+    # (1) Choice = new object
     if user_input[0] == 0:
         if len(user_input) == 1:  # Ask for name
             raise MissingParametersError(InputType.Text,
@@ -257,7 +292,7 @@ def action_new_object(proof_step) -> CodeForLean:
                                          output=_("Name your object:"))
         elif len(user_input) == 2:
             # Check name does not already exists
-            name = user_input[1]
+            name = pre_process_lean_code(user_input[1])
             names = [obj.display_name for obj in goal.context]
             if name in names:
                 user_input.pop()
@@ -271,9 +306,9 @@ def action_new_object(proof_step) -> CodeForLean:
                                              title=_("Introduce a new object"),
                                              output=output)
         else:  # Send code
-            name = user_input[1]
+            name = pre_process_lean_code(user_input[1])
             new_hypo_name = get_new_hyp(proof_step)
-            new_object = user_input[2]
+            new_object = pre_process_lean_code(user_input[2])
             codes = CodeForLean.from_string(f"let {name} := {new_object}")
             codes = codes.and_then(f"have {new_hypo_name} : {name} = "
                                                      f"{new_object}")
@@ -285,23 +320,39 @@ def action_new_object(proof_step) -> CodeForLean:
                 # and mistake "new object" for introduction of the relevant x.
                 codes.add_error_msg(_("You might try the ∀ button..."))
 
-    # Choice = new sub-goal
+    # (2) Choice = new sub-goal
     elif user_input[0] == 1:
-        if len(user_input) == 1:
-            output = new_properties
-            raise MissingParametersError(InputType.Text,
-                                         title=_("Introduce a new subgoal"),
-                                         output=output)
-        else:
-            new_hypo_name = get_new_hyp(proof_step)
-            codes = CodeForLean.from_string(f"have {new_hypo_name}:"
-                                                     f" ({user_input[1]})")
-            codes.add_success_msg(_("New target will be added to the context "
-                                    "after being proved"))
-            codes.add_subgoal(user_input[1])
-    # Choice = new function
+        codes = introduce_new_subgoal(proof_step)
+        # sub_goal = None
+        # # (A) Sub-goal from selection
+        # if selected_objects:
+        #     premise = selected_objects[0].premise()
+        #     if premise:
+        #         # FIXME: make format_='lean' functional
+        #         sub_goal = premise.to_display(format_='lean')
+        #
+        # # (B) User enter sub-goal
+        # elif len(user_input) == 1:
+        #     output = new_properties
+        #     raise MissingParametersError(InputType.Text,
+        #                                  title=_("Introduce a new subgoal"),
+        #                                  output=output)
+        # elif len(user_input) == 2:
+        #     sub_goal = pre_process_lean_code(user_input[1])
+        #
+        # # (C) Code:
+        # if sub_goal:
+        #     new_hypo_name = get_new_hyp(proof_step)
+        #     codes = CodeForLean.from_string(f"have {new_hypo_name}:"
+        #                                     f" ({sub_goal})")
+        #     codes.add_success_msg(_("New target will be added to the context "
+        #                             "after being proved"))
+        #     codes.add_subgoal(sub_goal)
+        #
+    # (3) Choice = new function
     elif user_input[0] == 2:
         return introduce_fun(proof_step, selected_objects)
+
     return codes
 
 

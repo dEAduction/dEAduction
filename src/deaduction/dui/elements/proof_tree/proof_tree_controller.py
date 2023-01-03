@@ -79,11 +79,13 @@ def widget_goal_block(parent_widget: Optional[WidgetGoalBlock],
 
     if pure_context:
         premises, operator, conclusions = pure_context
+        # assert conclusions
         wgb = PureContextWGB(parent_widget, goal_node,
                              premises, operator, conclusions)
         log.debug("Pure context WGB created")
     elif context_rw:
         premises, rw_item, conclusions = context_rw
+        # assert conclusions
         wgb = SubstitutionWGB(parent_widget, goal_node,
                               premises, rw_item, conclusions)
         log.debug("Substitution Context WGB created")
@@ -121,6 +123,7 @@ def widget_goal_block(parent_widget: Optional[WidgetGoalBlock],
 
     elif goal_node.is_auxiliary_goal_brother:
         premises, operator, conclusions = None, None, new_context
+        # assert conclusions
         wgb = PureContextWGB(parent_widget, goal_node,
                              premises, operator, conclusions)
         log.debug("Pure context WGB created for auxiliary goal brother")
@@ -130,6 +133,7 @@ def widget_goal_block(parent_widget: Optional[WidgetGoalBlock],
         operator = None
         conclusions = (goal_node.goal.modified_context
                        + goal_node.goal.new_context)
+        # assert conclusions
         wgb = PureContextWGB(parent_widget, goal_node,
                              premises, operator, conclusions)
 
@@ -140,51 +144,6 @@ def widget_goal_block(parent_widget: Optional[WidgetGoalBlock],
         log.debug("Generic WGB created")
 
     return wgb
-
-
-# def update_from_node(wgb: WidgetGoalBlock, gn: GoalNode):
-#     """
-#     Recursively update the WidgetProofTree from (under) the given node,
-#     so that its structure will reflect that of the ProofTree.
-#     We have the following alternative:
-#     - either there is a new child goal_node for which we will create a
-#     child wgb;
-#     - or some child_wgb does not match the corresponding child goal_node:
-#     in this case all children_wgb should be deleted and new ones will be
-#     created.
-#     - or all children wgb match corresponding children goal_nodes.
-#
-#     Noe that this is NOT redundant with the update_display method of the
-#     proof_tree_window, which ensures that the WidgetProofTree is correctly
-#     displayed on screen, and should be called later on.
-#
-#     This function is a bit of an overkiller, since it probably re-creates many
-#     WGB unnecessarily.
-#     """
-#     pairs = list(zip(wgb.logical_children, gn.children_goal_nodes))
-#     if (len(wgb.logical_children) > len(gn.children_goal_nodes)
-#         or any([child_gn.goal_has_changed for child_gn in
-#                 gn.children_goal_nodes])
-#         or any([child_wgb.goal_node is not child_gn
-#                 for child_wgb, child_gn in pairs])):
-#         # Case 1: Some child_wgb is obsolete: reset all children
-#         wgb.logical_children = []
-#         # wgb.set_layout_without_children()  FIXME: useless??
-#         for child_gn in gn.children_goal_nodes:
-#             child_wgb = widget_goal_block(wgb, child_gn)
-#         pairs = zip(wgb.logical_children, gn.children_goal_nodes)
-#
-#     elif len(wgb.logical_children) < len(gn.children_goal_nodes):
-#         # Case 2: new children
-#         new_index = len(wgb.logical_children)
-#         new_children_gn = gn.children_goal_nodes[new_index:]
-#         for child_gn in new_children_gn:
-#             child_wgb = widget_goal_block(wgb, child_gn)
-#         pairs = zip(wgb.logical_children, gn.children_goal_nodes)
-#
-#     # In any case, recursively update children
-#     for child_wgb, child_gn in pairs:
-#         update_from_node(child_wgb, child_gn)
 
 
 def update_from_node(wgb: WidgetGoalBlock, gn: GoalNode):

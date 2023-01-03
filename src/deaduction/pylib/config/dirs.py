@@ -42,7 +42,7 @@ pkg_dir  = (Path(__file__) / "../../../").resolve()
 share          = (pkg_dir / "share").resolve()
 icons          = (share / "graphical_resources" / "icons").resolve()
 courses        = (share / "courses").resolve()
-
+fonts          = (share / "fonts").resolve()
 
 # Home paths
 home     = Path.home()

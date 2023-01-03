@@ -26,24 +26,17 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .display_data import (HAVE_BOUND_VARS,
-                           INEQUALITIES,
-                           latex_from_node,
+from .pattern_data import metanodes
+
+from .display_data import (latex_from_node,
                            latex_to_utf8,
                            latex_to_lean,
                            plurals,
+                           plural_types,
                            numbers,
-                           dic_of_first_nodes_text,
-                           couples_of_nodes_to_text,
                            new_objects,
                            new_properties
                            )
-from .display_math import (recursive_display,
-                           raw_latex_shape_from_couple_of_nodes,
-                           raw_latex_shape_from_specific_nodes,
-                           shallow_latex_to_text)
+
 from .html_display import html_display
 from .utf8_display import utf8_display
-from .display import abstract_string_to_string
-# from .utils import structured_display_to_string
-

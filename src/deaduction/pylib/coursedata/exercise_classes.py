@@ -79,7 +79,7 @@ class Statement:
     # the parent course
 
     initial_proof_state:    Any             = None
-    # this is used when pre-processing
+    # this is filled when pre-processing
 
     auto_steps: str                         = ''
     auto_test: str                          = ''
@@ -286,8 +286,10 @@ class Statement:
 
 class Definition(Statement):
     # def __init__(self, **data):
+    #     implicit_use = data.pop('implicit_use') if 'implicit_use' in data \
+    #                    else False
     #     super().__init__(self, **data)
-    #     self.implicit_use_activated = False
+    #     self.implicit_use_activated = implicit_use
 
     @property
     def implicit_use(self):
@@ -349,9 +351,14 @@ class Exercise(Theorem):
         return exercises.index(self)
 
     @property
-    def definitions_for_implicit_use(self):
+    def definitions(self):
         definitions = [st for st in self.available_statements
-                       if isinstance(st, Definition) and st.implicit_use]
+                       if isinstance(st, Definition)]
+        return definitions
+
+    @property
+    def definitions_for_implicit_use(self):
+        definitions = [defi for defi in self.definitions if defi.implicit_use]
         return definitions
 
     @classmethod

@@ -3,22 +3,26 @@ path        = "$DEADUCTION_SHARE/graphical_resources/icons"
 letter_type = "letters/trials"
 context     = "letters/blue"
 
-
 [display]
 display_success_messages = true
 text_mode_in_chooser_window = true
 target_display_on_top = false
 depth_of_unfold_statements = 1
 show_lean_name_for_statements = false
+
+# Fonts sizes:
 chooser_math_font_size = "16pt"
 main_font_size = "16pt"
 target_font_size = "20pt"
-button_font_size_for_symbols = "default"  # Does not work
+statements_font_size = "13pt"
 tooltips_font_size = "12pt"
-mathematics_font = "Times New Roman"
+proof_tree_font_size = "14pt"
+font_size_for_symbol_buttons = "12pt"
+
+math_font_file = "latinmodern-math.otf"  # "" or "System fonts" for system fonts
+
 selection_color = "limegreen"
 symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃, =, ↦"
-font_size_for_symbol_buttons = "16pt"
 use_symbols_for_logic_button = true
 short_buttons_line = true
 
@@ -26,38 +30,50 @@ display_detailed_errors_on_wui = true
 
 allow_primes_for_names = true
 allow_seconds_for_names = true
-allow_indices_for_names = true
+use_primes_over_indices = true
+exclude_free_vars_for_sequence_indices = true
+use_set_name_as_hint_for_naming_elements = true
 
 color_for_applied_properties = "Grey"
 color_for_variables = "Blue"
-color_for_dummy_variables = ""  # 33cccc #00cc99
-color_for_selection = "LimeGreen"  #LimeGreen  #ffff99
+color_for_dummy_variables = "Purple"  # 33cccc #00cc99
+color_for_selection = "LimeGreen"  #ffff99
 color_for_props = "Fuchsia"
 color_for_operator_props = "Red"
-color_for_highlighted_math_obj = "Yellow"
+color_for_highlight_in_proof_tree = "Yellow"
 
 # Any modification of the following must be echoed
 # in the replace_dubious_characters function in in math_display.utils
 dubious_characters = "ℕ, ℤ, ℚ, ℝ, 𝒫, ↦"
 
+[windows.display]
+math_font_file = ""
+
 [logic]
 do_not_name_dummy_vars_as_global_vars = true
 do_not_name_dummy_vars_as_dummy_vars = false
+do_not_name_dummy_vars_as_dummy_vars_in_one_prop = false
 force_indices_for_dummy_vars = false
 use_color_for_variables = true
-use_color_for_dummy_variables = true
+use_color_for_dummy_variables = false
 use_color_for_applied_properties = true
+use_bounded_quantification_notation = true
 
 
 [functionality]
-target_selected_by_default = false
+default_functionality_level = "Beginner"
 allow_proof_by_sorry = true
-expanded_apply_button = false
-allow_implicit_use_of_definitions = true
-automatic_intro_of_variables_and_hypotheses = false
 automatic_intro_of_exists = true
+target_selected_by_default = false
+allow_implicit_use_of_definitions = false
+auto_solve_inequalities_in_bounded_quantification = false
+drag_and_drop_in_context = false
+drag_context_to_statements = false
+drag_statements_to_context = false
+drag_several_items = false
+ask_to_prove_premises_of_implications = true
+automatic_intro_of_variables_and_hypotheses = false
 save_solved_exercises_for_autotest = false
-
 
 [i18n]
 available_languages = ["en", "fr_FR"]
@@ -73,6 +89,7 @@ log_to_file = true
 [others]
 usr_version_nb = "-1"  # Do not modify!
 version_nb = "0.31"
+os = ""  # Let this to "" except for debugging
 
 #########################
 # All Plateform packages

@@ -5,6 +5,8 @@ import tactic
 import structures2
 import user_notations
 import utils
+import push_neg_once
+
 
 -- General principles :
 -- Type should be defined as parameters, in order to be implicit everywhere
@@ -151,7 +153,7 @@ PrettyName
     Double inclusion
 -/
 begin
-    exact set.subset.antisymm_iff.mpr
+    exact set.subset.antisymm_iff.mpr  
 end
 
 lemma exercise.test_implicit_inclusion

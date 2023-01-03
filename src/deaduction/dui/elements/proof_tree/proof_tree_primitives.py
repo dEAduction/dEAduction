@@ -28,10 +28,11 @@ import logging
 from typing import Union, Optional
 from PySide2.QtWidgets import (QFrame, QLayout,
                                QHBoxLayout, QVBoxLayout, QGridLayout,
-                               QWidget, QLabel, QSizePolicy)
-from PySide2.QtCore import Qt, QRect, QPoint, QTimer, Signal
+                               QWidget, QLabel, QSizePolicy, QToolButton)
+from PySide2.QtCore import Qt, QRect, QPoint, QTimer, Slot
 from PySide2.QtGui import QColor, QPainter, QPolygon, QPen, QBrush, QPainterPath
 
+from deaduction.dui.primitives import MathLabel
 import deaduction.pylib.config.vars as cvars
 
 global _
@@ -94,6 +95,9 @@ class BlinkingLabel(QLabel):
     A QLabel that displays a msg that can be made to blink in boldface.
     This is used to show the status of targets (solved / to be completed).
     """
+
+    blinking_nb = 5  # Cursor blinks 5 times
+
     def __init__(self, text: callable, goal_nb=-1):
         super(BlinkingLabel, self).__init__(text())
         self.goal_nb = goal_nb
@@ -105,6 +109,7 @@ class BlinkingLabel(QLabel):
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self._is_activated = None
         self.disclosed = True
+        self._blinking_counter = None
 
     def start_blinking(self):
         """
@@ -118,6 +123,7 @@ class BlinkingLabel(QLabel):
         self.flag = True
         self.set_bold(True)
         self.timer.start()
+        self._blinking_counter = self.blinking_nb
         # log.debug(f"Starting blinking gn {self.goal_nb}, text = {self.text}")
 
     def stop_blinking(self):
@@ -134,8 +140,11 @@ class BlinkingLabel(QLabel):
             self.hide()
         elif self.disclosed:
             self.show()
+            self._blinking_counter -= 1
+            if self._blinking_counter == 0:
+                self.stop_blinking()
+
         self.flag = not self.flag
-        # log.debug(f"Blinking gn {self.goal_nb}, text = {self.text}")
 
     def activate(self, yes=True):
         """
@@ -510,26 +519,50 @@ class HorizontalArrow(QWidget):
         self.setFixedWidth(width)
 
 
-class DisclosureTriangle(QLabel):
+# class DisclosureTriangle(QLabel):
+#     """
+#     A dynamic QLabel that changes appearance and call a function when clicked.
+#     """
+#
+#     def __init__(self, slot: callable, hidden=False):
+#         super().__init__()
+#         self.slot = slot
+#         self.setText("▷" if hidden else "▽")
+#         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+#
+#     def toggle(self):
+#         """
+#         Modify self's appearance and call the slot function.
+#         """
+#         self.setText("▷" if self.text() == "▽" else "▽")
+#         self.slot()
+#
+#     def mousePressEvent(self, ev) -> None:
+#         self.toggle()
+
+
+class DisclosureTriangle(QToolButton):
     """
-    A dynamic QLabel that changes appearance and call a function when clicked.
+    A QToolButton that changes appearance and call a function when clicked.
     """
 
     def __init__(self, slot: callable, hidden=False):
         super().__init__()
         self.slot = slot
-        self.setText("▷" if hidden else "▽")
+        # self.setText("▷" if hidden else "▽")
+        self.hidden = hidden
+        self.setArrowType(Qt.RightArrow if hidden else Qt.DownArrow)
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.clicked.connect(self.toggle)
 
+    @Slot()
     def toggle(self):
         """
         Modify self's appearance and call the slot function.
         """
-        self.setText("▷" if self.text() == "▽" else "▽")
+        self.hidden = not self.hidden
+        self.setArrowType(Qt.RightArrow if self.hidden else Qt.DownArrow)
         self.slot()
-
-    def mousePressEvent(self, ev) -> None:
-        self.toggle()
 
 
 class VertBar(QFrame):
@@ -545,7 +578,7 @@ class VertBar(QFrame):
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.MinimumExpanding)
 
 
-class RawLabelMathObject(QLabel):
+class RawLabelMathObject(MathLabel):
     """
     Mother class for displaying a MathObject or a msg which is computed by
     the callable html_msg, which takes parameter use_color and bf.
@@ -568,6 +601,7 @@ class RawLabelMathObject(QLabel):
         then it is a callable with parameter use_color.
         """
         super().__init__()
+        self.set_font_size(cvars.get('display.proof_tree_font_size'))
         assert math_object or html_msg
         self.html_msg = html_msg
         self.math_object = math_object
@@ -613,6 +647,7 @@ class RawLabelMathObject(QLabel):
 
     def update_text(self):
         self.setText(self.txt())
+        # self.setText("""<div style="font-size: 20px;"> TOTO </div> """)  # FIXME
 
     def changeEvent(self, event) -> None:
         """
@@ -623,7 +658,8 @@ class RawLabelMathObject(QLabel):
         event.accept()
 
     def highlight(self, yes=True):
-        color = cvars.get("display.color_for_highlighted_math_obj", "green")
+        color = cvars.get(
+            "display.color_for_highlight_in_proof_tree", "green")
         self.setStyleSheet(f'background-color: {color};' if yes
                            else 'background-color:;')
 
@@ -653,7 +689,7 @@ class ProofTitleLabel(RawLabelMathObject):
     The colon is added on top of html_msg by super class RawLabelMathObject
     iff self.disclosed is True.
     """
-    def __init__(self, html_msg, toggle: Optional[callable]=None):
+    def __init__(self, html_msg: callable, toggle: Optional[callable] = None):
         super().__init__(html_msg=html_msg)
         self.disclosed = True
         self.toggle = toggle
@@ -965,11 +1001,12 @@ class ContextWidget(QWidget):
         other.math_objects. If so, return a couple (i,j)
         where self.premises[i] is a descendant of other.math_objects[j].
         """
-        match = None
+        # match = None
         for mo1 in self.premises:
             for mo2 in other.math_objects:
-                if mo1 == mo2 or mo1.is_descendant_of(mo2):
-                    match = (mo1, mo2)
+                if mo1 == mo2 or (isinstance(mo1, ContextMathObject)
+                                  and mo1.is_descendant_of(mo2)):
+                    # match = (mo1, mo2)
                     i1 = self.premises.index(mo1)
                     i2 = other.math_objects.index(mo2)
                     return i1, i2
@@ -981,11 +1018,12 @@ class ContextWidget(QWidget):
         where self.premises[i] is a descendant of other.conclusions[j].
         """
 
-        match = None
+        # match = None
         for mo1 in self.premises:
             for mo2 in other.conclusions:
-                if mo1 == mo2 or mo1.is_descendant_of(mo2):
-                    match = (mo1, mo2)
+                if mo1 == mo2 or (isinstance(mo1, ContextMathObject)
+                                  and mo1.is_descendant_of(mo2)):
+                    # match = (mo1, mo2)
                     i1 = self.premises.index(mo1)
                     i2 = other.conclusions.index(mo2)
                     return i1, i2
@@ -998,7 +1036,7 @@ class ContextWidget(QWidget):
         """
         if not self.operator_wdg:
             return
-        match = None
+        # match = None
         operator = self.operator_wdg.math_object
         if not isinstance(operator, ContextMathObject):
             return
@@ -1016,7 +1054,7 @@ class ContextWidget(QWidget):
         """
         if not self.operator_wdg:
             return
-        match = None
+        # match = None
         operator = self.operator_wdg.math_object
         if not isinstance(operator, ContextMathObject):
             return
@@ -1092,7 +1130,7 @@ class OperatorContextWidget(ContextWidget):
         self.input_layout = None
         self.operator_layout = None
 
-        assert conclusions
+        # assert conclusions
         self.output_layout = LayoutMathObjects(conclusions, align="left")
 
         # Input -> Operator -> output:

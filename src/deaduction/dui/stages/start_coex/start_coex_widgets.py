@@ -66,15 +66,15 @@ from PySide2.QtWidgets import (QApplication,
 
 import deaduction.pylib.config.vars  as     cvars
 import deaduction.pylib.config.dirs  as     cdirs
+from deaduction.dui.primitives      import (DisclosureTriangle,
+                                            ButtonsDialog,
+                                            MathTextWidget)
 from deaduction.dui.elements        import (MathObjectWidget,
                                             TargetLabel,
                                             RecentCoursesLW,
                                             RecentCoursesLWI,
                                             StatementsTreeWidget,
                                             StatementsTreeWidgetItem)
-from deaduction.dui.primitives      import (DisclosureTriangle,
-                                            ButtonsDialog,
-                                            DeaductionFonts)
 from deaduction.dui.utils           import (replace_widget_layout,
                                             HorizontalLine)
 from deaduction.pylib.config.course import  add_to_recent_courses
@@ -450,10 +450,10 @@ class ExerciseChooser(AbstractCoExChooser):
         self.__scrollbar_current_item_pos = 0
 
         # Load fonts for math widgets
-        self.deaduction_fonts = DeaductionFonts(self)
-        font_size = self.deaduction_fonts.chooser_math_font_size
-        self.math_font = self.deaduction_fonts.math_font()
-        self.math_font.setPointSize(font_size)
+        # self.deaduction_fonts = DeaductionFonts(self)
+        # font_size = self.deaduction_fonts.chooser_math_font_size
+        # self.math_fonts = self.deaduction_fonts.math_fonts
+        # self.math_fonts.setPointSize(font_size)
 
         super().__init__(browser_layout)
 
@@ -553,7 +553,7 @@ class ExerciseChooser(AbstractCoExChooser):
         exercise = self.__exercise
         proofstate = exercise.initial_proof_state
         goal = proofstate.goals[0]  # Only one goal
-        goal.name_bound_vars(to_prove=False)
+        # goal.name_bound_vars(to_prove=False)
 
         # BOF: keep standard size here.
         # main_font_size = cvars.get('display.main_font_size')
@@ -570,13 +570,15 @@ class ExerciseChooser(AbstractCoExChooser):
             # Text widget #
             ###############
             # The goal is presented in a single widget.
-            self.__text_wgt = QTextEdit()
+            self.__text_wgt = MathTextWidget()
+            # self.__text_wgt.setObjectName("math_widget")
+            # print(f"Coex Font: {self.__text_wgt.font().defaultFamily()}")
             # height = self.__text_wgt.sizeHint().height()
             # print(f"Height: {height}")
             # self.__text_wgt.setMaximumHeight(height)
 
             self.__text_wgt.setReadOnly(True)
-            self.__text_wgt.setFont(self.math_font)
+            # self.__text_wgt.setFont(self.math_fonts)
             text = goal.goal_to_text(format_="html")
             self.__text_wgt.setHtml(text)
             widget = self.__text_wgt
@@ -599,9 +601,9 @@ class ExerciseChooser(AbstractCoExChooser):
 
             # Math font
             objects_wgt.adjustSize()
-            objects_wgt.setFont(self.math_font)
+            # objects_wgt.setFont(self.math_fonts)
             properties_wgt.adjustSize()
-            properties_wgt.setFont(self.math_font)
+            # properties_wgt.setFont(self.math_fonts)
 
             objects_lyt.addWidget(QLabel(_('Objects:')))
             properties_lyt.addWidget(QLabel(_('Properties:')))
@@ -613,7 +615,7 @@ class ExerciseChooser(AbstractCoExChooser):
             # ───────────────────── Target ───────────────────── #
             # target_wgt = MathObjectWidget(target=target)
             target_wgt = TargetLabel(target)
-            target_wgt.setFont(self.math_font)
+            # target_wgt.setFont(self.math_fonts)
             # Set target_wgt height to 1 line: USELESS with QLabel
             # font_metrics = QFontMetrics(math_font)
             # text_size = font_metrics.size(0, target.math_type_to_display())
@@ -768,6 +770,8 @@ class AbstractStartCoEx(QDialog):
         self.__quit_btn.clicked.connect(self.quit_deaduction)
         self.__start_ex_btn.clicked.connect(self.__start_exercise)
 
+        self.disable_start_btn = None
+
         # ───────────────────── Layouts ──────────────────── #
 
         self.__tabwidget = QTabWidget()
@@ -844,6 +848,25 @@ class AbstractStartCoEx(QDialog):
     #########
     # Slots #
     #########
+    @Slot()
+    def emw_not_ready(self):
+        """
+        Called when emw is frozen, waiting for a new proof state. Start
+        button is disabled to avoid collision of exercises.
+        """
+
+        self.disable_start_btn = True
+        self.__start_ex_btn.setEnabled(False)
+        self.__start_ex_btn.setDefault(False)
+
+    @Slot()
+    def emw_ready(self):
+        """
+        Called when emw is unfrozen. Start button is disabled if an exercise
+        is set.
+        """
+        self.disable_start_btn = False
+        self.__enable_start_ex_btn()
 
     @Slot()
     def __enable_start_ex_btn(self):
@@ -861,9 +884,10 @@ class AbstractStartCoEx(QDialog):
         __preview_exercises once self.__exercise_chooser has been set to
         an ExerciseChooser object.
         """
-
-        self.__start_ex_btn.setEnabled(True)
-        self.__start_ex_btn.setDefault(True)
+        if self.__exercise_chooser and self.__exercise_chooser.exercise and \
+                not self.disable_start_btn:
+            self.__start_ex_btn.setEnabled(True)
+            self.__start_ex_btn.setDefault(True)
 
     @Slot()
     def __goto_exercise(self):
@@ -1038,7 +1062,7 @@ def check_negate_statement(exercise) -> bool:
         title = _("Do you want to prove this statement or its negation?")
         if exercise.initial_proof_state:
             goal = exercise.initial_proof_state.goals[0]
-            output = goal.goal_to_text(text_depth=0, to_prove=False)
+            output = goal.goal_to_text(text_mode=False, to_prove=False)
         else:
             output = exercise.lean_variables + "   " \
                      + exercise.lean_core_statement

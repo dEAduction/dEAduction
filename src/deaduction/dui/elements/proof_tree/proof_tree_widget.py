@@ -946,13 +946,15 @@ class ProofTreeWindow(QWidget):
     the different sub-widgets are set up.
     """
 
+    action = None  # To be set to the QAction of exercise_toolbar
+
     def __init__(self, context=None, target=None):
         """
         Context and target are the elements of the initial goal, if any.
         """
         super().__init__()
         log.info("Creating new ProofTreeWindow")
-        self.setWindowTitle("Proof Tree")
+        self.setWindowTitle(_("Global proof view"))
         self.current_wgb = None
         settings = QSettings("deaduction")
         if settings.value("proof_tree/geometry"):
@@ -977,8 +979,8 @@ class ProofTreeWindow(QWidget):
         # RawLabelMathObject.highlight_in_tree.connect(self.highlight)
         RawLabelMathObject.highlight_in_tree = self.highlight_from_math_wdg
 
-        if settings.value("isVisible"):
-            self.setVisible(bool(settings.value("isVisible")))
+        if bool(settings.value("proof_tree/isVisible")):
+            self.show()
 
     def set_main_block(self, block: WidgetGoalBlock):
         self.main_block = block
@@ -987,12 +989,16 @@ class ProofTreeWindow(QWidget):
         # self.main_block.set_as_current_target()
 
     def closeEvent(self, event):
+        # print(f"closing proof tree, is visible={self.isVisible()}")
         # Save window geometry
         settings = QSettings("deaduction")
         settings.setValue("proof_tree/geometry", self.saveGeometry())
-        settings.setValue("isVisible", self.isVisible())
+        settings.setValue("proof_tree/isVisible", self.isVisible())
         event.accept()
-        self.hide()
+
+        # self.hide()
+        if self.action:
+            self.action.setChecked(False)
         # TODO: save tree state
 
     def update_display(self):
@@ -1019,7 +1025,16 @@ class ProofTreeWindow(QWidget):
         """
         Toggle the window, i.e. make it visible / invisible.
         """
-        self.setVisible(not self.isVisible())
+        if self.isVisible():
+            log.debug("Hiding proof tree window")
+            self.hide()
+        else:
+            log.debug("Showing and raising proof tree window")
+            self.show()
+            self.raise_()
+
+        if self.action:  # Make sure action button is checked
+            self.action.setChecked(self.isVisible())
 
     def make_visible(self, wdg):
         """
@@ -1039,7 +1054,8 @@ class ProofTreeWindow(QWidget):
         Highlight all instances of math_widgets  in the ProofTreeWidget which
         are related to math_object.
         """
-        self.main_block.recursively_highlight(math_object, yes)
+        if self.main_block:
+            self.main_block.recursively_highlight(math_object, yes)
 
     def highlight_from_math_wdg(self, math_object, yes):
         self.highlight(math_object, yes)

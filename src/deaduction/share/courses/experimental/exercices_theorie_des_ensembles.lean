@@ -9,6 +9,7 @@ import tactic
 import structures2      -- hypo_analysis, targets_analysis
 import utils            -- no_meta_vars
 import user_notations   -- notations that can be used in deaduction UI for a new object
+import push_neg_once
 
 -- dEAduction definitions
 import set_definitions
@@ -172,11 +173,16 @@ begin
     exact iff.rfl
 end
 
-lemma definition.intersection_quelconque_ensembles {I : Type} {E : I → set X}  {x : X} :
+lemma definition.intersection_quelconque_ensembles {I : index_set} {E : I → set X}  {x : X} :
 (x ∈ set.Inter E) ↔ (∀ i:I, x ∈ E i) :=
 /- dEAduction
 PrettyName
     Intersection d'une famille quelconque d'ensembles
+MatchPattern
+    IFF(
+    ∈(?0, SET_INTER+(?1) )
+    ∀(TYPE, ?2, ∈(?0, APP(?1, ?2) ) ) 
+    )
 -/
 begin
     exact set.mem_Inter
@@ -194,8 +200,8 @@ begin
     exact iff.rfl
 end
 
-lemma definition.union_quelconque_ensembles {I : Type} {E : I → set X}  {x : X} :
-(x ∈ set.Union (λ i, E i)) ↔ (∃ i:I, x ∈ E i) :=
+lemma definition.union_quelconque_ensembles {I : index_set} {E : I → set X}  {x : X} :
+(x ∈ set.Union E) ↔ (∃ i:I, x ∈ E i) :=
 /- dEAduction
 PrettyName
     Union d'une famille quelconque d'ensembles
@@ -341,7 +347,7 @@ Description
     Le complémentaire d'une réunion quelconque égale l'intersection des complémentaires
 -/
 begin
-    -- hypo_analysis,
+    todo
 end
 
 
@@ -417,7 +423,7 @@ lemma exercise.produit_avec_intersection
 set.prod A (B ∩ C) = (set.prod A B) ∩ (set.prod A C)
 :=
 begin
-    todo
+    todo,
 end
 
 
@@ -1036,6 +1042,8 @@ PrettyName
 -/
 begin
     todo
+    -- use complement A, 
+    -- norm_num,
 end
 
 lemma exercise.difference_symetrique_6

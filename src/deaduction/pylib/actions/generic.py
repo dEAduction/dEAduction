@@ -28,16 +28,14 @@ This file is part of dEAduction.
 """
 
 from deaduction.pylib.actions import CodeForLean
-from deaduction.pylib.mathobj import (MathObject,
-                                      get_new_hyp)
+from deaduction.pylib.give_name.get_new_hyp import get_new_hyp
 
 from deaduction.pylib.proof_state import Goal
 
 global _
 
 
-def rw_using_statement(goal: Goal, selected_objects: [MathObject],
-                       statement) -> CodeForLean:
+def rw_using_statement(goal: Goal, selected_objects, statement) -> CodeForLean:
     """
     Return codes trying to use statement for rewriting. This should be
     reserved to iff or equalities. This function is called by
@@ -46,6 +44,7 @@ def rw_using_statement(goal: Goal, selected_objects: [MathObject],
     """
     codes = CodeForLean.empty_code()
     defi = statement.lean_name
+    arguments = ''
     # statement_type = statement.type.capitalize()
     if statement.is_definition():
         target_msg = _('Definition applied to target')
@@ -76,6 +75,14 @@ def rw_using_statement(goal: Goal, selected_objects: [MathObject],
         codes.add_success_msg(context_msg)
 
     codes.rw_item = statement # (statement.type_, statement.pretty_name)
+
+    # Add try_norm_num; this removes lambda that can occur e.g. when applying
+    # def of injectivity backwards
+    # Fixme: simp_only tends to suppress vars
+    #  e.g. Exists l, limit u l --> Exists limit u
+    #  lambda n, (-1)^n --> pow (-1) and then Lean error!
+    codes = codes.and_try_simp_only(location=arguments)
+
     return codes
 
 

@@ -89,32 +89,32 @@ def sub_sup_to_html(string: str) -> str:
     string = string.replace('_', r'\sub')
     string = string.replace('^', r'\super')
     if string.find(r'\sub') != -1:
-        before, _, after  = string.partition(r'\sub')
+        before, _, after = string.partition(r'\sub')
         string = before + subscript(after)
     if string.find(r'\super') != -1:
-        before, _, after  = string.partition(r'\super')
+        before, _, after = string.partition(r'\super')
         string = before + superscript(after)
 
     return string
 
 
-def color_dummy_variables():
-    return (cvars.get('display.color_for_dummy_variables', None)
-            if cvars.get('logic.use_color_for_dummy_variables', True)
-            else None)
-
-
-def color_variables():
-    return (cvars.get('display.color_for_variables', None)
-            if cvars.get('logic.use_color_for_variables', True)
-            else None)
-
-
-def color_props():
-    return (cvars.get('display.color_for_applied_properties', None)
-            if cvars.get('logic.use_color_for_applied_properties', True)
-            else None)
-
+# def color_dummy_variables():
+#     return (cvars.get('display.color_for_dummy_variables', None)
+#             if cvars.get('logic.use_color_for_dummy_variables', True)
+#             else None)
+#
+#
+# def color_variables():
+#     return (cvars.get('display.color_for_variables', None)
+#             if cvars.get('logic.use_color_for_variables', True)
+#             else None)
+#
+#
+# def color_props():
+#     return (cvars.get('display.color_for_applied_properties', None)
+#             if cvars.get('logic.use_color_for_applied_properties', True)
+#             else None)
+#
 
 def font_wrapper(s: str, bf=True):
     if not bf:
@@ -131,16 +131,16 @@ def html_class_wrapper(s: str, class_name: str):
     return html_pre + s + html_post
 
 
-def html_style_classes(color=True):
-    if color:
-        style = "<style>" \
-                f".variable  {{ color: {color_variables()} }}" \
-                f".dummy_variable  {{ color: {color_dummy_variables()} }}" \
-                f".used_prop  {{ color: {color_props()} }}" \
-                "</style>"
-    else:
-        style = ""
-    return style
+# def html_style_classes(color=True):
+#     if color:
+#         style = "<style>" \
+#                 f".variable  {{ color: {color_variables()} }}" \
+#                 f".dummy_variable  {{ color: {color_dummy_variables()} }}" \
+#                 f".used_prop  {{ color: {color_props()} }}" \
+#                 "</style>"
+#     else:
+#         style = ""
+#     return style
 
 
 def html_display_single_string(string: str) -> str:
@@ -151,7 +151,8 @@ def html_display_single_string(string: str) -> str:
     return string
 
 
-def recursive_html_display(l: Union[list, str], depth, use_color=True) -> str:
+def recursive_html_display(l: Union[list, str], depth, use_color=True,
+                           no_text=False) -> str:
     """
     Use the following tags as first child:
     - \\sub, \\super for subscript/superscript
@@ -162,6 +163,7 @@ def recursive_html_display(l: Union[list, str], depth, use_color=True) -> str:
     :param depth: depth in the abstract_string tree
     :param use_color: if True, allow the use of color. This parameter is set to
                       False when the whole text should be grey.
+    :param no_text: if True, only math fonts are used.
     """
     if isinstance(l, str):
         return html_display_single_string(l)
@@ -169,20 +171,25 @@ def recursive_html_display(l: Union[list, str], depth, use_color=True) -> str:
     assert isinstance(l, list)
     head = l[0]
     if head == r'\sub' or head == r'_':
-        return subscript(recursive_html_display(l[1:], depth, use_color))
+        return subscript(recursive_html_display(l[1:], depth,
+                                                use_color, no_text))
     elif head == r'\super' or head == r'^':
-        return superscript(recursive_html_display(l[1:], depth, use_color))
+        return superscript(recursive_html_display(l[1:], depth,
+                                                  use_color, no_text))
+    elif head == r'\text':
+        raw_string = recursive_html_display(l[1:], depth,
+                                            use_color, no_text)
+        return (raw_string if no_text
+                else html_class_wrapper(raw_string, class_name='text'))
     elif head == r'\variable':
-        # color = color_variables()
-        raw_string = recursive_html_display(l[1:], depth, use_color)
+        raw_string = recursive_html_display(l[1:], depth, use_color, no_text)
         formatted_string = variable_style(raw_string)
         if use_color:
             return html_class_wrapper(formatted_string, class_name="variable")
         else:
             return formatted_string
     elif head == r'\dummy_variable':
-        # color = color_dummy_variables()
-        raw_string = recursive_html_display(l[1:], depth, use_color)
+        raw_string = recursive_html_display(l[1:], depth, use_color, no_text)
         formatted_string = variable_style(raw_string)
         if use_color:
             return html_class_wrapper(formatted_string,
@@ -190,45 +197,48 @@ def recursive_html_display(l: Union[list, str], depth, use_color=True) -> str:
         else:
             return formatted_string
     elif head == r'\used_property':
-        # color = color_props()
         if use_color:
             # Use color and forbid other colors in the text
             return html_class_wrapper(recursive_html_display(l[1:], depth,
-                                      use_color=False),
+                                      use_color=False, no_text=no_text),
                                       class_name="used_prop")
         else:
-            return recursive_html_display(l[1:], depth, use_color)
+            return recursive_html_display(l[1:], depth, use_color, no_text)
 
     else:
         # handle "\parentheses":
         add_parentheses(l, depth)
 
         # log.debug(f"Children to html: {l}")
-        strings = [recursive_html_display(child, depth+1, use_color)
+        strings = [recursive_html_display(child, depth+1, use_color, no_text)
                    for child in l]
-        return ''.join(strings)
+        string = ''.join(strings)
+
+        # return html_class_wrapper(string, class_name='text')
+        return string
 
 
 def html_display(abstract_string: Union[str, list], depth=0,
                  use_color=True,
-                 bf=False) -> str:
+                 bf=False,
+                 no_text=False) -> str:
     """
     Return a html version of the string represented by abstract_string,
     which is a tree of string.
     """
     # FIXME: take tex_depth into account
-    # if isinstance(abstract_string, list):
-    string = recursive_html_display(abstract_string, depth, use_color=use_color)
-    # else:
-    #     # Do this BEFORE formatting:
-    #     abstract_string = reserve_special_char(abstract_string)
-    #     # Formatting subscript/superscript:
-    #     string = sub_sup_to_html(abstract_string)
+    string = recursive_html_display(abstract_string, depth,
+                                    use_color=use_color, no_text=no_text)
+
     assert isinstance(string, str)
+
     string = cut_spaces(string)
     string = replace_dubious_characters(string)
     string = font_wrapper(string, bf)  # Maybe use boldface fonts
-    style = html_style_classes(use_color)
-    return style + string
+    # style = html_style_classes(use_color)
+    # return style + string
+    string = html_class_wrapper(string, class_name='math')
+    return string
+
 
 

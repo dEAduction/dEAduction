@@ -33,14 +33,12 @@ This file is part of d∃∀duction.
 """
 from typing import Union
 
-# from deaduction.pylib.config.i18n import _
-
 # !! Latex commands should be alone in their strings,
 # except for spaces around them, so that up to strip(), they appear in
 # latex_to_utf8_dic
 
 global _
-# _ = lambda x: x  # FIXME: just for debugging:
+# _ = lambda x: x  # Just for debugging:
 
 
 # NB Some latex macro have a special treatment elsewhere, e.g.
@@ -49,6 +47,17 @@ global _
 # \text_is
 # and so on
 
+
+def name(mo):
+    return mo.info.get('name', "NO NAME")
+
+
+def value(mo):
+    return mo.info.get('value')
+
+
+def local_constant_shape(mo):
+    return mo.local_constant_shape
 
 ######################
 ######################
@@ -59,9 +68,11 @@ global _
 # (children of children). Otherwise use lists within main tuple.
 # '\no_text' indicates that text mode should not be used in the current display
 #   (e.g. within an equality)
+
+
 latex_from_node = {
-    "PROP_AND": (0, " " + _("and") + " ", 1),
-    "PROP_OR": (0, " " + _("or") + " ", 1),
+    "PROP_AND": (0, r"\and", 1),
+    "PROP_OR": (0, r"\or", 1),
     "PROP_FALSE": (r"\false", ),  # Macro to be defined by LateX
     "PROP_IFF": (0, r" \Leftrightarrow ", 1),
     # NB: negation has a special treatment in recursive_display!
@@ -70,7 +81,7 @@ latex_from_node = {
     "PROP_IMPLIES": (r'\if', 0, r" \Rightarrow ", 1),
     # "∃ (H : P), Q" is treated as "P and Q",
     # and also handled by the 'AND' button
-    "PROP_∃":  (0, " " + _("and") + " ", 1),
+    "PROP_∃":  (0, r"\and", 1),
     ###############
     # SET THEORY: #
     ###############
@@ -82,16 +93,18 @@ latex_from_node = {
     "SET_INTER+": (r"\bigcap", 0),  # !! big ⋂
     "SET_UNION+": (r"\bigcup", 0),
     "SET_DIFF": (0, r" \backslash ", 1),
+    "SET_COMPLEMENT": (0, r" \backslash ", 1),
     "SET_DIFF_SYM": (0, r" \Delta ", 1),
+    "SET_UNIVERSE": (0, ),
     "SET_EMPTY": (r"\emptyset",),
     "SET_EXTENSION1": (r'\{', 0, r'\}'),
     "SET_EXTENSION2": (r'\{', 0, ', ', 1, r'\}'),
     "SET_EXTENSION3": (r'\{', 0, ', ', 1, ', ', 2, r'\}'),
-    "SET_FAMILY": (0,  r" \to ", r'{\mathcal P}', r'\parentheses', 1),
+    "SET_FAMILY": (0,  r" \to ", r'\set_of_subsets', r'\parentheses', 1),
     # "SET_IMAGE": (0, "(", 1, ")"),
     # "SET_INVERSE": (0, [r'^', '-1'], '(', 1, ')'),  # LEAVE the list as is!
-    "SET_IMAGE": (0, r'\set_image', 1),
-    "SET_INVERSE": (0, r'\set_inverse', 1),
+    "SET_IMAGE": (0, r'\set_image', r'\parentheses', 1),
+    "SET_INVERSE": (0, r'\set_inverse', r'\parentheses', 1),
     "SET_PRODUCT": (0, r'\times', 1),
     "COUPLE": (r'\parentheses', 0, ',', 1),
     "SET_INTENSION": (r"\no_text", r'\{', 1, r' \in ', 0, ' | ', 2, r'\}'),
@@ -119,72 +132,27 @@ latex_from_node = {
     ##################
     # GENERAL TYPES: #
     ##################
-    # (r'{\mathcal P}', "(", 0, ")"),
-    # "SET": (r'\set_of_subsets', [r"\parentheses", 0]),
     "SET": (r'\set_of_subsets', [r'\symbol_parentheses', 0]),
     "PROP": (r'\proposition',),
     "TYPE": (r'\set',),
     "FUNCTION": (r'\function_from', 0, r'\to', 1),  # (0, r" \to ", 1),
-    "SEQUENCE": (r'\sequence_from', 0, r'\to', 1),  # (0, r" \to ", 1),
-    "LOCAL_CONSTANT_EXPANDED_SEQUENCE":
-        (r"(", 2, ')', ['_', 1, r"\in_symbol", 0]),
-    # NB: children[2] is the whole body, "u_n"
-    "LOCAL_CONSTANT_EXPANDED_SET_FAMILY":
-        (r"\{", 2, ', ', 1, r"\in_symbol", 0, r"\}"),
-    "LAMBDA_EXPANDED_SEQUENCE":
-        (r"(", 2, ')', ['_', 1, r"\in_symbol", 0]),
-    # NB: children[2] is the whole body, "u_n"
-    "LAMBDA_EXPANDED_SET_FAMILY":
-        (r"\{", 2, ', ', 1, r"\in_symbol", 0, r"\}")
+    "SEQUENCE": (r'\sequence_in', 1),  # (0, r" \to ", 1),
+    "CONSTANT": (name,),
+    "NUMBER": (value,),
+    "LOCAL_CONSTANT": ('self.local_constant_shape',),
+    "APPLICATION": (0, r'\parentheses', 1),
+    "LAMBDA": (1, r"\mapsto", 2)
     }
 
+# --------------------------------------------------------- #
+# The latex_from_node dict will be updated by the following #
+# --------------------------------------------------------- #
 # \in_quant --> "belonging to", or "in" in text mode (but NOT "belongs to")
 latex_from_quant_node = {
     "QUANT_∀": (r"\forall", 1, r" \in_quant ", 0, ", ", 2),
     "QUANT_∃": (r"\exists", 1, r" \in_quant ", 0, r'\such_that', 2),
-    "PROP_∃": ("*PROP_∃*",),
+    # "PROP_∃": ("*PROP_∃*",),
     "QUANT_∃!": (r"\exists_unique", 1, r" \in_quant ", 0, r'\such_that', 2)
-}
-
-# Negative value = from end of children list
-latex_from_constant_name = {
-    "STANDARD_CONSTANT": (-1, r'\text_is', 0),
-    # "STANDARD_CONSTANT_NOT": (-1, " " + _("is not") + " ", 0),  deprecated
-    # NB: STANDARD_CONSTANT prevents supplementary arguments,
-    # Do not use with a CONSTANT c s.t. APP(c, x) is a FUNCTION,
-    # or anything that can be applied (i.e. in APP(APP(c,x),...) )
-    "symmetric_difference": (-2, r'\Delta', -1),
-    "composition": (4, r'\circ', 5),  # APP(compo, X, Y, Z, g, f)
-    "prod": (1, r'\times', 2),
-    "Identite": ("Id",),
-    "ne": (2, r" \neq ", 3),  # Lean name for ≠
-    "interval": (r"\[", -2, ",", -1, r"\]"),
-    # FIXME: translate to english in Lean files
-    "majorant": (-1, r'\text_is', " majorant de ", -2),
-    "minorant": (-1, r'\text_is', " minorant de ", -2),
-    "borne_sup": ("Sup ", -2, " = ", -1),
-    "borne_inf": ("Inf ", -2, " = ", -1),
-    "est_majore": (-1, r'\text_is', " majoré"),
-    "est_minore": (-1, r'\text_is', " minoré"),
-    "est_borne": (-1, r'\text_is', " borné"),
-    "limit": ("lim ", -2, " = ", -1),
-    "limit_plus_infinity": ("lim ", -1, " = +∞"),
-    "abs": ('|', -1, '|'),
-    "max": ("Max", r'\parentheses', -2, ",", -1),
-    "inv": ([r'\parentheses', -1], [r'^', '-1']),
-    "product": (-2, ".", -1),
-    "identite": ("Id",),
-    "image": (-1, " = ", -3, "(", -2, ")"),
-    "relation_equivalence": (-1, " " + _("is an equivalence relation")),
-    "classe_equivalence": (r"\[", -1, r"\]", ["_", 1]),
-    "disjoint": (-2, " " + _("and") + " ", -1, " " + _("are disjoint")),
-    "powerset": (r'\set_of_subsets', [r"\parentheses", -1]),
-    "partition": (-1, " " + _("is a partition of") + " ", -2),
-    "application": (-1, " " + _("is an application") + " "),
-    "application_bijective":  (-1, " " + _("is a bijective application") + " "),
-    "bounded_sequence": (-1,  r'\text_is', " " + _("bounded")),
-    "RealSubGroup": (r"\real", ),
-    "even":  (-1,  r'\text_is', " " + _("even"))
 }
 
 
@@ -195,6 +163,8 @@ latex_from_constant_name = {
 ###################
 # Convert Latex command into utf8 symbols
 latex_to_utf8_dic = {
+    # r'\and': " " + _("and") + " ",
+    # r'\or': " " + _("or") + " ",
     r"\equal": "=",
     r'\backslash': '\\',
     r'\Delta': '∆',
@@ -219,6 +189,7 @@ latex_to_utf8_dic = {
     r'\bigcup': '⋃',
     r'\emptyset': '∅',
     r'\to': '→',
+    r'\mapsto': '↦',
     r'\neq': '≠',
     r'\leq': '≤',
     r'\geq': '≥',
@@ -240,8 +211,22 @@ latex_to_utf8_dic = {
     r'\text_is': " ",  # " " + _("is") + " " ? Anyway 'is' will be removed?
     r'\text_is_not': " " + _('not') + " ",  # Idem
     r'\no_text': "",
+    # r'\text': "",
     r'\symbol_parentheses': r'\parentheses',  # True parentheses for symbols
-    r'\real': "ℝ"
+    r'\real': "ℝ",
+    #########
+    # TYPES #
+    #########
+    # Used for display in math mode (not text mode)
+    r'\type_subset': _("subset of") + " ",
+    r'\type_sequence': _("sequence in") + " ",
+    r'\type_family_subset': _("family of subsets of") + " ",
+    r'\type_element': _("element of") + " ",
+    r'\type_N': _('non-negative integer'),
+    r'\type_Z': _('integer'),
+    r'\type_Q': _('rational number'),
+    r'\type_R': _('real number')
+
 }
 
 
@@ -251,6 +236,8 @@ latex_to_utf8_dic = {
 #####################
 #####################
 latex_to_text = {
+    r'\and': " " + _("and") + " ",
+    r'\or': " " + _("or") + " ",
     r'\Leftrightarrow': " " + _("if and only if") + " ",
     r'\not': _("the negation of") + _(":") + " ",
     r'\if': _("if") + " ",
@@ -259,12 +246,31 @@ latex_to_text = {
     r'\proposition': _("a proposition"),
     r'\set': _("a set"),
     r'\such_that': " " + _("such that") + " ",
+
     r'\forall': _("for every") + " ",
+    r"\forall {} \subset {}, {}": _("for every subset {} of {}, {}"),
+    r"\forall {}  \function_from {} \to {}, {}":
+        _("for every function {} from {} to {}, {}"),
+    r"\forall {} \proposition, {}": _("for every proposition {}, {}"),
+    # r"\forall {} \set{} {}": _("for every set {}{} {}"),
+
     r'\exists': _("there exists") + " ",
+    r"\exists {} \subset {}, {}": _("there exists a subset {} of {} such that {}"),
+    r"\exists {}  \function_from {} \to ""{}, {}": _("there exists a function {"
+                                                   "} from {} to {} such that {}"),
+    r"\exists {} \proposition, {}": _("there exists a proposition {} such that {}"),
+    r"\exists {} \set, {}": _("there exists a set {} such that {}"),
+
     r"\exists_unique": _("there exists a unique") + " ",
+    r"\exists_unique {} \subset {}, {}": _("there exists a unique subset {} of {} such that {}"),
+    r"\exists_unique {}  \function_from {} \to {}, {}": _("there exists a unique function {} from {} to {} such that {}"),
+    r"\exists_unique {} \proposition, {}": _("there exists a unique proposition {} such that {}"),
+    r"\exists_unique {} \set, {}": _("there exists a unique set {} such that {}"),
+
+    # TODO: add sentences with sequence
     r'\context_function_from': " " + _("a function from") + " ",
     r'\function_from': " " + _("a function from") + " ",
-    r'\sequence_from': " " + _("a sequence from") + " ",  # FIXME...
+    r'\sequence_in': " " + _("a sequence in") + " ",  # FIXME...
     r'\to': " " + _("in") + " ",  # FIXME: OK in French but not in english!
     # r'\in': " " + _("belongs to") + " ",
     r'\in_prop': " " + _("is") + " ",
@@ -273,8 +279,15 @@ latex_to_text = {
     r'\in_quant': " " + _("in") + " ",
     r'\text_is': " " + _('is') + " ",
     r'\text_is_not': " " + _('is not') + " ",
-    r'\symbol_parentheses': ""  # Parentheses but for symbols only
-    # r'\subset': " " + _("is included in") + " " Does not help
+    r'\symbol_parentheses': "",  # Parentheses but for symbols only
+    r'\type_subset': _("a subset of") + " ",
+    r'\type_sequence': _("a sequence in") + " ",
+    r'\type_family_subset': _("a family of subsets of") + " ",
+    r'\type_element': _("an element of") + " ",
+    r'\type_N': _('a non-negative integer'),
+    r'\type_Z': _('an integer'),
+    r'\type_Q': _('a rational number'),
+    r'\type_R': _('a real number')
 }
 plurals = {
     _('Let {} be {}'): _("Let {} be {} {}"),  # Translate plural!!
@@ -284,8 +297,49 @@ plurals = {
     _('an element'): _("elements"),
     _('a function'): _("functions"),
     _('a sequence'): _("sequences"),
+    _('a non-negative integer'): _('non-negative integers'),
+    _('an integer'): _("integers"),
+    _('a rational number'): _("rational numbers"),
     _('a real number'): _("real numbers")
 }
+
+
+def plural_types(type_, utf8_type=None):
+    """
+    Return type_ where the first word utf8_type of the plurals dict have been
+    replaced by its plural.
+    """
+
+    plural_type = None
+    if not utf8_type:
+        utf8_type = type_
+    # Keep only non empty words:
+    words = [word for word in utf8_type.split(" ") if word]
+    for counter in range(len(words)):
+        first_words = " ".join(words[:counter + 1])
+        if first_words in plurals:
+            plural_first_words = plurals[first_words]
+            plural_type = type_.replace(first_words, plural_first_words)
+            # new_words = [plural_first_words] + words[counter+1:]
+            # plural_type = " ".join(new_words)
+            break
+    return plural_type
+
+
+# For substitution in types, and translation
+every = {
+    _('a proposition'): _("every proposition"),
+    _('a set'): _("every set"),
+    _('a subset'): _("every subset"),
+    _('an element'): _("every element"),
+    _('a function'): _("every function"),
+    _('a sequence'): _("every sequence"),
+    _('a non-negative integer'): _('every non-negative integer'),
+    _('an integer'): _("every integer"),
+    _('a rational number'): _("every rational number"),
+    _('a real number'): _("every real number")
+}
+
 
 numbers = {
     1: _("one"),
@@ -298,99 +352,6 @@ numbers = {
     8: _("eight"),
     9: _("nine"),
     10: _("ten")
-}
-
-text_from_node = {
-    # # "PROP_AND": (0, " " + _("and") + " ", 1),
-    # # "PROP_OR": (0, " " + _("or") + " ", 1),
-    # # "PROP_FALSE": (_("Contradiction"), ),
-    # "PROP_IFF": (0, " " + _("if and only if") + " ", 1),
-    # "PROP_NOT": (_("the negation of") + " ", 0),
-    # "PROP_IMPLIES": (_("if") + " ", 0, " " + _("then") + " ", 1),
-    ###############
-    # SET THEORY: #
-    ###############
-    # "PROP_INCLUDED": (0, " " + _("is included in") + " ", 1),
-    # "PROP_BELONGS": (0, " ∈ ", 1),  # This special case is processed in
-                                    # the function display_belongs_to
-    # "SET_INTER": (_("the intersection of") + " ", 0, " " + _("and") + " ",
-    # 1),
-    # "SET_UNION": (_("the union of") + " ", 0, " " + _("and") + " ", 1),
-    # "SET_INTER+": (_("the intersection of the sets") + " ", 0),
-    # "SET_UNION+": (_("the union of the sets") + " ", 0),
-    # "SET_COMPLEMENT": (_("the complement of ") + " ", 0),
-    # "SET_EMPTY": (_("the empty set"),),
-    # "SET_FAMILY": (_("a family of subsets of") + " ", 1),
-    # "SET_IMAGE": (_("the image under") + " ", 0, " " + _("of") + " ", 1),
-    # "SET_INVERSE": (_("the inverse image under") + " ", 0, " " + _("of") +
-    # " ", 1),
-    ############
-    # NUMBERS: #
-    ############
-    # "PROP_EQUAL": (0, " " + _("equals") + " ", 1),
-    # "PROP_EQUAL_NOT": (0, " " + _("is different from") + " ", 1),
-    # "PROP_<": (0, " " + _("is less than") + " ", 1),
-    # "PROP_>": (0, " " + _("is greater than") + " ", 1),
-    # "PROP_≤": (0, " " + _("is less than or equal to") + " ", 1),
-    # "PROP_≥": (0, " " + _("is greater than or equal to") + " ", 1),
-    ##################
-    # GENERAL TYPES: #
-    ##################
-    # "SET": ("P(", 0, ")"),
-    # "PROP": (_("a proposition"),),
-    # "TYPE": (_("a set"),),
-    # "FUNCTION": (_("a function from") + " ", 0, " " + _("to") + " ", 1),
-}
-
-text_from_all_nodes = {
-    "PROP_AND": (0, " " + _("and") + " ", 1),
-    "PROP_OR": (0, " " + _("or") + " ", 1),
-    "PROP_FALSE": (_("Contradiction"), ),
-    "PROP_IFF": (0, " " + _("if and only if") + " ", 1),
-    "PROP_NOT": (_("the negation of") + " ", 0),
-    "PROP_IMPLIES": (_("if") + " ", 0, " " + _("then") + " ", 1),
-    ###############
-    # SET THEORY: #
-    ###############
-    "PROP_INCLUDED": (0, " " + _("is included in") + " ", 1),
-    "PROP_BELONGS": (0, " ∈ ", 1),  # This special case is processed in
-                                    # the function display_belongs_to
-    "SET_INTER": (_("the intersection of") + " ", 0, " " + _("and") + " ", 1),
-    "SET_UNION": (_("the union of") + " ", 0, " " + _("and") + " ", 1),
-    "SET_INTER+": (_("the intersection of the sets") + " ", 0),
-    "SET_UNION+": (_("the union of the sets") + " ", 0),
-    "SET_COMPLEMENT": (_("the complement of ") + " ", 0),
-    "SET_EMPTY": (_("the empty set"),),
-    "SET_FAMILY": (_("a family of subsets of") + " ", 1),
-    "SET_IMAGE": (_("the image under") + " ", 0, " " + _("of") + " ", 1),
-    "SET_INVERSE": (_("the inverse image under") + " ", 0, " " + _("of") + " ",
-                    1),
-    ############
-    # NUMBERS: #
-    ############
-    "PROP_EQUAL": (0, " " + _("equals") + " ", 1),
-    "PROP_EQUAL_NOT": (0, " " + _("is different from") + " ", 1),
-    "PROP_<": (0, " " + _("is less than") + " ", 1),
-    "PROP_>": (0, " " + _("is greater than") + " ", 1),
-    "PROP_≤": (0, " " + _("is less than or equal to") + " ", 1),
-    "PROP_≥": (0, " " + _("is greater than or equal to") + " ", 1),
-    ##################
-    # GENERAL TYPES: #
-    ##################
-    "SET": ("P(", 0, ")"),
-    "PROP": (_("a proposition"),),
-    "TYPE": (_("a set"),),
-    "FUNCTION": (_("a function from") + " ", 0, " " + _("to") + " ", 1),
-}
-
-text_from_quant_node = {
-    "QUANT_∀": (_("for every") + " ", 1, " " + _("in") + " ", 0,
-                ", ", 2),
-    "QUANT_∃": (_("there exists") + " ", 1, " " + _("in") + " ", 0,
-                " " + _("such that") + " ", 2),
-    "QUANT_∃!": (_("there exists a unique") + " ", 1, " " + _("in") + " ", 0,
-                 " " + _("such that") + " ", 2),
-    "PROP_∃": ("*PROP_∃*",)
 }
 
 
@@ -419,116 +380,18 @@ latex_to_lean_dic = {
     r'\set_of_subsets': "set"
 }
 
-
-####################
-# Couples of nodes #
-####################
-# In the following dic, the second node is assumed to be the first child node.
-couples_of_nodes_to_text = {
-    ("QUANT_∀", "SET"): (_("for every subset {} of {}, {}"),
-                         (1, (0, 0), 2)),
-    ("QUANT_∀", "PROP"): (_("for every proposition {}, {}"),
-                          (1, 2)),
-    ("QUANT_∀", "TYPE"): (_("for every set {}, {}"),
-                          (1, 2)),
-    ("QUANT_∀", "FUNCTION"): (_("for every function {} from {} to {}, {}"),
-                          (1, (0, 0), (0, 1), 2)),
-    ("QUANT_∀", "SEQUENCE"): (_("for every sequence {} in {}, {}"),
-                              (1, (0, 1), 2)),
-    ("QUANT_∃", "SET"): (_("there exists a subset {} of {} such that {}"),
-                         (1, (0, 0), 2)),
-    ("QUANT_∃", "PROP"): (_("there exists a proposition {} such that {}"),
-                          (1, 2)),
-    ("QUANT_∃", "TYPE"): (_("there exists a set {} such that {}"),
-                          (1, 2)),
-    ("QUANT_∃", "FUNCTION"): (_("there exists a function {} from {} to {} "
-                                "such that {}"),
-                              (1, (0, 0), (0, 1), 2)),
-    ("QUANT_∃", "SEQUENCE"): (_("there exists a sequence {} in {} such that "
-                                "{}"),
-                              (1, (0, 1), 2)),
-    ("QUANT_∃!", "SET"): (_("there exists a unique subset {} of {} such that "
-                            "{}"),
-                         (1, (0, 0), 2)),
-    ("QUANT_∃!", "PROP"): (_("there exists a unique proposition {} such that "
-                             "{}"), (1, 2)),
-    ("QUANT_∃!", "TYPE"): (_("there exists a unique set {} such that {}"),
-                           (1, 2)),
-    ("QUANT_∃!", "FUNCTION"): (_("there exists a unique function {} from {} "
-                                 "to {} such that {}"),
-                               (1, (0, 0), (0, 1), 2)),
-    ("QUANT_∃!", "SEQUENCE"): (_("there exists a unique sequence {} in {} "
-                                 "such that {}"), (1, (0, 1), 2))
-}
-
-couples_of_nodes_to_latex = {
-    ("QUANT_∀", "SET"): (r"\forall", 1, r" \subset ", (0, 0), ", ", 2),
-    ("QUANT_∀", "PROP"): (r"\forall", 1, r'\proposition', ", ", 2),
-    ("QUANT_∀", "TYPE"): (r"\forall", 1, r" \set", ", ", 2),
-    ("QUANT_∀", "FUNCTION"): (r"\forall", 1, r" \function_from", (0, 0),
-                              r'\to', (0, 1), ", ", 2),
-    ("QUANT_∀", "SEQUENCE"): (r"\forall", 1, r" \function_from", (0, 0),
-                              r'\to', (0, 1), ", ", 2),
-    ("APPLICATION", "LOCAL_CONSTANT_EXPANDED_SEQUENCE"):
-        ((0, 2, 0), ['_', 1]),
-    ("APPLICATION", "LOCAL_CONSTANT_EXPANDED_SET_FAMILY"):
-        ((0, 2, 0), ['_', 1]),
-        ("APPLICATION", "LAMBDA_EXPANDED_SEQUENCE"):
-        ((0, 2, 0), ['_', 1]),
-    ("APPLICATION", "LAMBDA_EXPANDED_SET_FAMILY"):
-        ((0, 2, 0), ['_', 1])
-}
-# Other quantifiers are treated automatically below
-# ("QUANT_∃", "SET"): (r"\exists", 1, r" \subset ", (0, 0), ", ", 2),
-# ("QUANT_∃", "PROP"): (r"\exists", 1, r'\proposition'),
-# ("QUANT_∃", "TYPE"): (r"\exists", 1, r" \set"),
-# ("QUANT_∃", "FUNCTION"): (r"\exists", 1, r" \function_from", (0, 0),
-#                           r'\to', (0, 1)),
-# ("QUANT_∃", "SEQUENCE"): (r"\exists", 1, r'\in', (0, 1)),
-
-
-first_nodes_of_couples = {node for (node, _) in couples_of_nodes_to_text}
-
-# Extend couples_of_nodes_to_latex with other quantifiers
-supplementary_couples = {}
-for quant_node, type_node in couples_of_nodes_to_latex:
-    for new_quant_node, quant_macro in [("QUANT_∃", r'\exists'),
-                                        ("QUANT_∃!", r'\exists_unique')]:
-        new_key = new_quant_node, type_node
-        old_value = couples_of_nodes_to_latex[(quant_node, type_node)]
-        new_value = (quant_macro,) + old_value[1:]
-        supplementary_couples[new_key] = new_value
-couples_of_nodes_to_latex.update(supplementary_couples)
-
-# Dic of first nodes: e.g. dic_of_first_nodes["QUANT_∀"] = ["SET", "PROP",...]}
-dic_of_first_nodes_text = {node: [] for node, _ in couples_of_nodes_to_text}
-for (first_node, second_node) in couples_of_nodes_to_text:
-    dic_of_first_nodes_text[first_node].append(second_node)
-
-dic_of_first_nodes_latex = {node: [] for node, _ in couples_of_nodes_to_latex}
-for (first_node, second_node) in couples_of_nodes_to_latex:
-    dic_of_first_nodes_latex[first_node].append(second_node)
-
 ####################
 ####################
 # Helper functions #
 ####################
 ####################
-# Nodes of math objects that need instantiation of bound variables
-HAVE_BOUND_VARS = ("QUANT_∀", "QUANT_∃", "QUANT_∃!", "SET_INTENSION",
-                   "LAMBDA", "EXTENDED_SEQUENCE", "EXTENDED_SET_FAMILY")
-
-# TO_BE_EXPANDED = ("SEQUENCE", "SET_FAMILY", "LAMBDA")
-
-INEQUALITIES = ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥", "PROP_EQUAL_NOT")
-
 NATURE_LEAVES_LIST = ("PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                       "FUNCTION", "SEQUENCE", "SET_FAMILY",
                       "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY",
                       "CONSTANT", "LOCAL_CONSTANT", "NONE")
 
 
-def needs_paren(parent, child, child_number, text_depth=0) -> bool:
+def needs_paren(parent, child, child_number) -> bool:
     """
     Decides if parentheses are needed around the child
     e.g. if math_obj.node = PROP.IFF then
@@ -570,7 +433,7 @@ def needs_paren(parent, child, child_number, text_depth=0) -> bool:
         # e.g. (f∘g)^{-1} (x)
         return True
     # Fixme: Does not work?:
-    elif p_node == "APPLICATION" and child_number == 1 and child.children:
+    elif p_node == "APPLICATION" and child_number == -1 and child.children:
         return True
     elif c_node == "APPLICATION":
         return False
@@ -593,25 +456,48 @@ def needs_paren(parent, child, child_number, text_depth=0) -> bool:
     return True
 
 
+# def latex_to_utf8(string: Union[str, list]):
+#     """
+#     Convert a string or a list of string from latex to utf8.
+#     """
+#     if isinstance(string, list) or isinstance(string, tuple):
+#         return [latex_to_utf8(item) for item in string]
+#     elif isinstance(string, str):
+#         striped_string = string.strip()  # Remove spaces
+#         if striped_string in latex_to_utf8_dic:
+#             utf8_string = latex_to_utf8_dic[striped_string]
+#             if isinstance(utf8_string, str):
+#                 utf8_string = string.replace(striped_string, utf8_string)
+#             else:
+#                 utf8_string = list(utf8_string)
+#             return utf8_string
+#         else:
+#             return string
+#     else:
+#         return string
+
 def latex_to_utf8(string: Union[str, list]):
     """
     Convert a string or a list of string from latex to utf8.
     """
+    utf8_string = None
+
     if isinstance(string, list) or isinstance(string, tuple):
         return [latex_to_utf8(item) for item in string]
     elif isinstance(string, str):
         striped_string = string.strip()  # Remove spaces
         if striped_string in latex_to_utf8_dic:
             utf8_string = latex_to_utf8_dic[striped_string]
+        elif striped_string in latex_to_text:  # Useful for and, \typeElement...
+            utf8_string = latex_to_text[striped_string]
+        if utf8_string is not None:
             if isinstance(utf8_string, str):
                 utf8_string = string.replace(striped_string, utf8_string)
             else:
                 utf8_string = list(utf8_string)
-            return utf8_string
-        else:
-            return string
-    else:
-        return string
+
+    return utf8_string if utf8_string is not None else string
+    return utf8_string if utf8_string is not None else string
 
 
 def latex_to_lean(string: Union[str, list]):
@@ -620,7 +506,8 @@ def latex_to_lean(string: Union[str, list]):
     Warning, this has not really been tested.
     (Used only in logic.py.)
     """
-    # Fixme: this should also handles lambda expression
+    # Fixme: this is FAR from being fully functional.
+    #  In particular, this should also handles lambda expression
     #  (including sequences, set families, and so on)
     if isinstance(string, list):
         return [latex_to_lean(item) for item in string]
@@ -629,7 +516,7 @@ def latex_to_lean(string: Union[str, list]):
         if striped_string in latex_to_lean_dic:
             lean_string = latex_to_lean_dic[striped_string]
             if isinstance(lean_string, str):
-                utf8_string = string.replace(striped_string, lean_string)
+                lean_string = string.replace(striped_string, lean_string)
             return lean_string
         elif striped_string in latex_to_utf8_dic:
             utf8_string = latex_to_utf8_dic[striped_string]
@@ -662,6 +549,9 @@ _("""
     f∘g (x)         --> (composition f g)(x)
     {x}             --> sing x
     {x, x'}         --> pair x x'
-    And also f(x) ; x+1/2 ; 2*n, max m n, abs x...
+    And also f(x) ; x+1/2 ; 2*n, max m n, abs x, epsilon...
 """) + "\n \n" + \
 _("In case of error, try with more parentheses.")
+
+
+

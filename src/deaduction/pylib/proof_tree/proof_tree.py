@@ -309,10 +309,10 @@ class GoalNode:
         # Now self has a brother
         iff = parent_node.goal.target.math_type
         target = self.goal.target.math_type
-        if len(target.children) != 2:
-            return False
-        # Now target has two children
         brother_target = self.brother.goal.target.math_type
+        if len(target.children) != 2 or len(brother_target.children) !=2:
+            return False
+        # Now target and its brother both have two children
         tests = [iff.is_iff(is_math_type=True),
                  target.is_implication(is_math_type=True),
                  brother_target.is_implication(is_math_type=True),
@@ -362,6 +362,9 @@ class GoalNode:
             rw_item = proof_step.rw_item
         elif proof_step.button_name == "equal" \
                 and len(proof_step.selection) == 1:
+            rw_item = proof_step.rw_item
+        elif proof_step.is_iff() and len(proof_step.selection) == 1 and \
+                proof_step.target_selected:
             rw_item = proof_step.rw_item
         elif proof_step.is_push_neg() and proof_step.is_on_target():
             rw_item = _("Pushing negation")
@@ -413,6 +416,23 @@ class GoalNode:
             conclusions = self.goal.new_context
             operator = self.parent.operator
             premises = [obj for obj in selected_objects if obj != operator]
+            # Some "conclusions" might be premises, e.g. if we applied a univ
+            # prop of type "forall x >0, ..." and "x>0" is in new context.
+            # Then the name of "x>0" should be in used_prop.
+            # In which case we transfer the inequality from conclusions to
+            # premises.
+            ps = self.parent
+            code = ps.effective_code if ps.effective_code else ps.lean_code
+            used_props = code.used_properties()
+            for obj in conclusions:
+                idx = -1
+                if obj in used_props:
+                    idx = used_props.index(obj)
+                if obj.name in used_props:
+                    idx = used_props.index(obj.name)
+                if idx != -1:
+                    premises.append(conclusions.pop(idx))
+
             return premises, operator, conclusions
         else:
             return False
@@ -564,7 +584,7 @@ class GoalNode:
         self.goal = goal
 
     def is_no_more_goals(self):
-        return self.goal.target.math_type == MathObject.NO_MORE_GOALS
+        return self.goal.target.math_type is MathObject.NO_MORE_GOALS
 
     @property
     def is_immediately_solved(self):
@@ -770,12 +790,12 @@ class VirtualBrotherAuxGoalNode(GoalNode):
     and is accessed via self.outcome_operator.
     """
     def __init__(self, parent: ProofStep, type_: str):
-        super().__init__(parent, goal=None, is_solved=(type_ is "operator"))
+        super().__init__(parent, goal=None, is_solved=(type_ == "operator"))
         self.type_ = type_  # 'premise' or 'operator'
 
     @property
     def outcome_operator(self):
-        if self.type_ is 'operator' and self.parent:
+        if (self.type_ == 'operator') and self.parent:
             return self.parent.outcome_operator
 
     @property
@@ -788,7 +808,7 @@ class VirtualBrotherAuxGoalNode(GoalNode):
 
     @property
     def premises(self):
-        if self.type_ is not 'operator':
+        if self.type_ != 'operator':
             return
 
         selection = self.parent.selection
@@ -805,7 +825,7 @@ class VirtualBrotherAuxGoalNode(GoalNode):
         """
         Return 'Q'.
         """
-        if self.type_ is 'operator':
+        if self.type_ == 'operator':
             return [self.parent_node.goal.target]
 
 
@@ -982,7 +1002,8 @@ class ProofTree:
         """
         if self.current_goal_node.is_auxiliary_goal:
             brother = self.current_goal_node.brother
-            target = self.current_goal_node.goal.target.math_type
+            # target = self.current_goal_node.goal.target.math_type
+            target = self.current_goal_node.goal.target
             brother.set_temporary_new_context([target])
         elif self.current_goal_node.is_suffices_to:
             proof_step = self.current_goal_node.parent
@@ -1071,19 +1092,21 @@ class ProofTree:
                 assert delta_goal == 1
                 # Provisionally create other goal node
                 other_goal = new_proof_state.goals[1]
-                other_goal.name_bound_vars()
+                # other_goal.name_bound_vars()
                 other_goal_node = GoalNode(parent=new_proof_step,
                                            goal=other_goal)
                 children_gn = [next_goal_node, other_goal_node]
 
-            self.add_outcomes()
+            # self.add_outcomes()
 
         new_proof_step.children_goal_nodes = children_gn
         self.last_proof_step = new_proof_step
+        self.add_outcomes()
 
         # ─────── Compare with previous state and tag properties ─────── #
         previous_goal = self.current_goal_node.parent_node.goal
         Goal.compare(new_goal, previous_goal)
+        Goal.transfer_name_hints_from(new_goal, previous_goal)
         # print("ProofTree:")
         # print(str(self))
 

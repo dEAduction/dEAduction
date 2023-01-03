@@ -48,20 +48,23 @@ This file is part of dEAduction.
 import logging
 from typing import Union, Optional
 
+import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.math_display.display_data import new_objects
 
+from deaduction.pylib.actions.utils import (add_type_indication,
+                                            pre_process_lean_code)
+
+from deaduction.pylib.actions.commun_actions import introduce_new_subgoal
 from deaduction.pylib.actions     import (action,
                                           InputType,
                                           MissingParametersError,
                                           WrongUserInput,
                                           test_selection,
-                                          CodeForLean,
-                                          )
+                                          CodeForLean)
 
-from deaduction.pylib.mathobj     import (MathObject,
-                                          give_global_name,
-                                          names_for_types,
-                                          get_new_hyp)
+from deaduction.pylib.mathobj     import  MathObject
+
+from deaduction.pylib.give_name import    get_new_hyp
 
 log = logging.getLogger("logic")
 global _
@@ -419,19 +422,28 @@ def action_not(proof_step) -> CodeForLean:
     test_selection(selected_objects, target_selected)
     goal = proof_step.goal
 
+    # (1) Push neg once on target
     if len(selected_objects) == 0:
-        if not goal.target.is_not():
-            raise WrongUserInput(error=_("Target is not a negation 'NOT P'"))
-        code = CodeForLean.from_string('push_neg')
+        if not goal.target.first_pushable_body_of_neg():
+            raise WrongUserInput(error=_("Negation cannot be pushed in target"))
+        code = CodeForLean.from_string('push_neg_once')
         code.add_success_msg(_("Negation pushed on target"))
+        # Add try_norm_num. This changes A≠B into ¬ (A=B)
+        # which makes it possible, e.g., to unfold 'double inclusion'
+        code = code.and_try_simp_only(lemmas='ne.def')
+
+    # (2) Push neg once on one hypo
     elif len(selected_objects) == 1:
-        if not selected_objects[0].is_not():
-            error = _("Selected property is not a negation 'NOT P'")
+        if not selected_objects[0].first_pushable_body_of_neg():
+            error = _("Negation cannot be pushed in selected property")
             raise WrongUserInput(error)
         selected_hypo = selected_objects[0].info["name"]
-        code = CodeForLean.from_string(f'push_neg at {selected_hypo}')
+        code = CodeForLean.from_string(f'push_neg_once at {selected_hypo}')
         code.add_success_msg(_("Negation pushed on property {}").format(
             selected_hypo))
+        code = code.and_try_simp_only(lemmas='ne.def',
+                                      location=selected_hypo)
+
     else:
         raise WrongUserInput(error=_('Only one property at a time'))
     return code
@@ -476,7 +488,8 @@ def apply_implies(proof_step, selected_object: [MathObject]) -> CodeForLean:
 
 def have_new_property(arrow: MathObject,
                       variable_names: [str],
-                      new_hypo_name: str) -> CodeForLean:
+                      new_hypo_name: str,
+                      success_msg=None) -> CodeForLean:
     """
     Compute Lean code to apply an implication or a universal property to a
     property or a variable.
@@ -486,6 +499,9 @@ def have_new_property(arrow: MathObject,
     :param variable_names:  a list of names of variables (or properties) to
                             which "arrow" will be applied
     :param new_hypo_name:   a fresh name for the new property
+
+    :param success_msg:     A success msg, if None then the standard one will be
+                            used.
 
     return:                 Lean Code to produce the wanted new property,
                             taking into account implicit parameters
@@ -517,8 +533,10 @@ def have_new_property(arrow: MathObject,
     possible_codes = implicit_codes + explicit_codes
 
     code = CodeForLean.or_else_from_list(possible_codes)
-    code.add_success_msg(_("Property {} added to the context").
-                         format(new_hypo_name))
+    if success_msg is None:
+        success_msg = _("Property {} added to the context").format(new_hypo_name)
+    if success_msg:
+        code.add_success_msg(success_msg)
 
     code.operator = arrow
     # code.add_used_properties(arrow)
@@ -553,14 +571,15 @@ def action_implies(proof_step) -> CodeForLean:
         If the target is of the form P ⇒ Q: introduce the hypothesis P in
         the properties and transform the target into Q.
     (2) A single selected property, of the form P ⇒ Q, and the target is
-    selected: igf the target was Q, it is replaced by P.
+    selected: if the target was Q, it is replaced by P. If the target is not
+    selected, then usr is asked to prove the premise (new sub-goal).
     (3) Exactly two selected property, on of which is an implication P ⇒ Q
     and the other is P: Add Q to the context
     """
 
     selected_objects = proof_step.selection
     target_selected = proof_step.target_selected
-    # user_input = proof_step.user_input
+    user_input = proof_step.user_input
 
     test_selection(selected_objects, target_selected)
     goal = proof_step.goal
@@ -572,16 +591,33 @@ def action_implies(proof_step) -> CodeForLean:
         else:
             return construct_implies(proof_step)
     if len(selected_objects) == 1:
+        # (1) Implication?
         if not selected_objects[0].can_be_used_for_implication(implicit=True):
             raise WrongUserInput(
                 error=_("Selected property is not an implication 'P ⇒ Q'"))
-        else:
-            if target_selected:
-                return apply_implies(proof_step, selected_objects)
-            else:
-                raise WrongUserInput(
-                    error=_("You need to select another property in order to "
-                            "apply this implication"))
+        # (2) 'It suffices to prove'?
+        elif target_selected:
+            return apply_implies(proof_step, selected_objects)
+        # (3) Premise in context (but not selected)?
+        elif selected_objects[0].premise() in ([p.math_type
+                                               for p in goal.context_props]
+                                               + [goal.target.math_type]):
+            raise WrongUserInput(error=_("You need to select another property"
+                                         "in order to apply this implication"))
+        # (4) Ask to add premise as a new sub_goal
+        elif not user_input:
+            premise = selected_objects[0].premise()
+            raw_msg = 'To apply this property, you need the premise \"{}\". '\
+                'Do you want to prove it?'
+            msg = _(raw_msg).format(premise.to_display(format_='utf8'))
+            raise MissingParametersError(
+                InputType.YesNo,
+                choices=[],
+                title=_("Introduce new sub-goal?"),
+                output=msg)
+        # (5) Add premise as a new sub-goal
+        elif user_input[0] == 0:  # Should always be the case here
+            return introduce_new_subgoal(proof_step)
 
     elif len(selected_objects) == 2:
         if not selected_objects[1].can_be_used_for_implication(implicit=True):
@@ -652,12 +688,10 @@ def construct_iff(proof_step, user_input: [str]) -> CodeForLean:
     impl1 = MathObject(info={},
                        node="PROP_IMPLIES",
                        children = [left, right],
-                       bound_vars=target.bound_vars,
                        math_type=MathObject.PROP)
     impl2 = MathObject(info={},
                        node="PROP_IMPLIES",
                        children = [right, left],
-                       bound_vars=target.bound_vars,
                        math_type=MathObject.PROP)
     code.add_conjunction(target, impl1, impl2)
     return code
@@ -733,6 +767,8 @@ def rw_with_iff(rw_hyp: MathObject,
     Try to use rw_hyp, assumed to be a (universal) iff,
     to rewrite either on_hyp if any, or target.
     """
+
+    # FIXME: rw target should appear on ProofTree when on_hyp is None.
     code1 = code_for_substitution(rw_hyp, old_term=None, new_term=None,
                                   on_hyp=on_hyp)
     code2 = code_for_substitution(rw_hyp, old_term=None, new_term=None,
@@ -754,8 +790,8 @@ def action_iff(proof_step) -> CodeForLean:
         If target is of the form (P → Q) ∧ (Q → P):
             replace by P ↔ Q
     (2) 1 selected property
-        - if a universal iff, try to rw target,
-        - if an iff, and rw failed, split it
+        - if an iff, and target not selected, split it
+        - elif a universal iff, try to rw target,
     (3) 2 properties:
         - if one is a universal iff, try to rw the other,
         - if none is an iff but both are implications, try to obtain P ⇔ Q.
@@ -789,15 +825,16 @@ def action_iff(proof_step) -> CodeForLean:
                 raise WrongUserInput(error=error_msg)
 
     if len(selected_objects) == 1:
-        [(test, eq)] = test_subst
-        if test:  # 1st selected object can be used for substitution
-            code = rw_with_iff(selected_objects[0])
-        elif not selected_objects[0].is_iff():
-            error = _("Selected property is not an iff property 'P ⇔ Q'")
-            raise WrongUserInput(error)
-        if selected_objects[0].is_iff():
+        if selected_objects[0].is_iff() and not target_selected:
             more_code = destruct_iff_on_hyp(proof_step, selected_objects)
             code = code.or_else(more_code)
+        else:
+            [(test, eq)] = test_subst
+            if test:  # 1st selected object can be used for substitution
+                code = rw_with_iff(selected_objects[0])
+            elif not selected_objects[0].is_iff():
+                error = _("Selected property is not an iff property 'P ⇔ Q'")
+                raise WrongUserInput(error)
         return code
 
     if len(selected_objects) == 2:
@@ -850,30 +887,38 @@ def construct_forall(proof_step) -> CodeForLean:
         math_object         = MathObject.last_rw_object
         possible_codes = rw_with_defi(implicit_definition)
 
-    math_type: MathObject = math_object.children[0]
-    variable = math_object.children[1]
-    body = math_object.children[2]
-    if not implicit or math_type.is_R():  # FIXME: experimental
-        hint = variable.display_name  # not optimal
-        hints = [hint]
-        strong_hint = hint
-    else:
-        hints = []
-        strong_hint = None
+    math_type: MathObject = math_object.bound_var_type
+    bound_var = math_object.bound_var
+    body = math_object.body
+    # hints = []
+    # strong_hint = None
+    # if not implicit:  # or math_type.is_R():  # FIXME: experimental
+    #     # hint = (variable.info.get('lean_name') if variable.is_unnamed() else
+    #     #         variable.display_name)
+    #     hint = bound_var.display_name
+    #     if hint:  # and len(hint) == 1:
+    #         hints = [hint]
+    #         strong_hint = hint
     if math_type.node == "PRODUCT":
         # [math_type_1, math_type_2] = math_type.children
-        [x, y] = names_for_types(math_type.children, proof_step)
+        # [x, y] = names_for_types(math_type.children, proof_step)
         # x = give_global_name(proof_step=proof_step, math_type=math_type_1)
         # y = give_global_name(proof_step=proof_step, math_type=math_type_2)
-        possible_codes = possible_codes.and_then(f'rintro ⟨ {x}, {y} ⟩')
-        name = f"({x},{y})"
+        # Find two DISTINCT good names!
+        name_0 = proof_step.goal.provide_good_name(math_type.children[0])
+        name_1 = proof_step.goal.provide_good_name(math_type.children[1],
+                                                   local_names=[name_0])
+        code = f'rintro ⟨ {name_0}, {name_1} ⟩'
+        possible_codes = possible_codes.and_then(code)
+        name = f"({name_0},{name_1})"
     else:
-        x = give_global_name(proof_step=proof_step,
-                             math_type=math_type,
-                             hints=hints,
-                             strong_hint=strong_hint)
-        possible_codes = possible_codes.and_then(f'intro {x}')
-        name = f"{x}"
+        name = proof_step.goal.provide_good_name(math_type,
+                                                 bound_var.preferred_letter())
+        # x = give_global_name(proof_step=proof_step,
+        #                      math_type=math_type,
+        #                      hints=hints,
+        #                      strong_hint=strong_hint)
+        possible_codes = possible_codes.and_then(f'intro {name}')
     possible_codes.add_success_msg(_("Object {} added to the context").
                                    format(name))
 
@@ -884,6 +929,7 @@ def construct_forall(proof_step) -> CodeForLean:
         # then introduce the inequality on top of x
         premise = body.children[0]  # children (2,0)
         if premise.is_inequality(is_math_type=True):
+            # FIXME: rather use automatic actions
             h = get_new_hyp(proof_step)
             # Add and_then intro h
             possible_codes = possible_codes.and_then(f'intro {h}')
@@ -900,115 +946,317 @@ def inequality_from_pattern_matching(math_object: MathObject,
     applied to variable. If so, return inequality with x replaced by variable
     """
     inequality = None
-    if math_object.is_for_all():
-        math_type, var, body = math_object.math_type.children
-        # NB: following line does not work because of coercions
-        # if var.math_type == variable.math_type:
-        if body.is_implication(is_math_type=True):
-            premise = body.children[0]  # children (2,0)
-            if (premise.is_inequality(is_math_type=True) and
-                    var == premise.children[0]):
-                children = [variable, premise.children[1]]
-                inequality = MathObject(node=premise.node,
-                                        info={},
-                                        children=children,
-                                        math_type=premise.math_type)
+    if not math_object.is_for_all(implicit=True):
+        return
+
+    if not math_object.is_for_all(is_math_type=False):
+        # Implicit "for all"
+        math_object = MathObject.last_rw_object
+    else:
+        math_object = math_object.math_type
+
+    math_type, var, body = math_object.children
+    # NB: following line does not work because of coercions
+    # if var.math_type == variable.math_type:
+    if body.is_implication(is_math_type=True):
+        premise = body.children[0]  # children (2,0)
+        if (premise.is_inequality(is_math_type=True) and
+                var == premise.children[0]):
+            children = [variable, premise.children[1]]
+            inequality = MathObject(node=premise.node,
+                                    info={},
+                                    children=children,
+                                    math_type=premise.math_type)
     return inequality
 
 
-def apply_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
-    """
-    Try to apply last selected property on the other ones.
-    The last property should be a universal property
-    (or equivalent to such after unfolding definitions)
+# def simple_apply_forall(proof_step, selected_objects: [MathObject]) \
+#                         -> CodeForLean:
+#     """
+#     Try to apply last selected property on the other ones.
+#     The last property should be a universal property
+#     (or equivalent to such after unfolding definitions)
+#
+#     selected_objects: list of MathObjects of length ≥ 2.
+#     """
+#     # FIXME: return error msg if user try to apply "forall x:X, P(x)"
+#     #  to some object of wrong type (e.g. implication)
+#     #  For the moment "forall x, P->Q" works with "P->Q" and button forall
+#
+#     universal_property = selected_objects[-1]  # The property to be applied
+#     new_hypo_name = get_new_hyp(proof_step)
+#     var_names = [var.info['name'] for var in selected_objects[:-1]]
+#     code = have_new_property(universal_property, var_names, new_hypo_name)
+#     code.add_success_msg(_("Property {} added to the context").
+#                          format(new_hypo_name))
+#     code.add_used_properties(selected_objects)
+#
+#     return code
 
-    :param selected_objects: list of MathObjects of length ≥ 2
-    """
-    # FIXME: return error msg if user try to apply "forall x:X, P(x)"
-    #  to some object of wrong type (e.g. implication)
-    #  For the moment "forall x, P->Q" works with "P->Q" and button forall
 
-    # Fixme: the inequality matching does not work with implicit definitions
+# def apply_forall_with_ineq(proof_step, selected_objects: [MathObject]) -> \
+#         CodeForLean:
+#     """
+#     Try to apply last selected property on the other ones.
+#     The last property should be a universal property
+#     (or equivalent to such after unfolding definitions)
+#
+#     selected_objects: list of MathObjects of length ≥ 2
+#     """
+#     # FIXME: return error msg if user try to apply "forall x:X, P(x)"
+#     #  to some object of wrong type (e.g. implication)
+#     #  For the moment "forall x, P->Q" works with "P->Q" and button forall
+#
+#     goal = proof_step.goal
+#     universal_property = selected_objects[-1]  # The property to be applied
+#     unsolved_inequality_counter = 0
+#     # Variable_names will contain the list of variables and proofs of
+#     # inequalities that will be passed to universal_property
+#     variable_names = []
+#     code = CodeForLean.empty_code()
+#     used_inequalities = []
+#     # for potential_var in selected_objects[:-1]:
+#     # We consider only the first variable
+#     potential_var = selected_objects[0]
+#     # TODO: replace by pattern matching
+#     # Check for "∀x>0" (and variations)
+#     inequality = inequality_from_pattern_matching(universal_property,
+#                                                   potential_var)
+#     variable_names.append(potential_var.info['name'])
+#     if inequality:
+#         math_types = [p.math_type for p in goal.context]
+#         if inequality in math_types:
+#             # Check if inequality is in context:
+#             index = math_types.index(inequality)
+#             context_inequality = goal.context[index]
+#             used_inequalities.append(context_inequality)
+#             inequality_name = context_inequality.display_name
+#             variable_names.append(inequality_name)
+#         else:
+#             # If not, assert inequality as a new goal:
+#             inequality_name = get_new_hyp(proof_step)
+#             variable_names.append(inequality_name)
+#             unsolved_inequality_counter += 1
+#             # Add type indication to the variable in inequality
+#             math_type = inequality.children[1].math_type
+#             # Variable is not used explicitly, but this affects inequality:
+#             variable = inequality.children[0]
+#             variable = add_type_indication(variable, math_type)
+#             ineq_with_type = MathObject(node=inequality.node,
+#                                         info=inequality.info,
+#                                         children=[variable,
+#                                                   inequality.children[1]],
+#                                         math_type=inequality.math_type)
+#             display_inequality = ineq_with_type.to_display(format_='lean')
+#             # Code I: state corresponding inequality #
+#             code = code.and_then(f"have {inequality_name}: "
+#                                  f"{display_inequality}")
+#             code = code.and_then("rotate")  # Back to main goal
+#             used_inequalities.append(inequality_name)
+#
+#     # Code II: Apply universal_property, with no success_msg #
+#     new_hypo_name = get_new_hyp(proof_step)
+#     code = code.and_then(have_new_property(universal_property,
+#                                            variable_names,
+#                                            new_hypo_name,
+#                                            success_msg=""))
+#     if used_inequalities:
+#         code.add_used_properties(used_inequalities)
+#
+#     # Code III: try to solve inequalities # e.g.:
+#     #   iterate 2 { solve1 {try {norm_num at *}, try {compute_n 10}} <|>
+#     #               rotate},   rotate,
+#     if unsolved_inequality_counter:
+#         assert unsolved_inequality_counter == 1
+#         # Fixme: (1) no rotate if compute fails
+#         #   (2) "Proof of intermediate subgoal" not appropriate...
+#         # Back to first inequality:
+#         more_code0 = CodeForLean.from_string(f"rotate {proof_step.nb_of_goals}")
+#         more_code1 = CodeForLean.from_string("norm_num at *")
+#         more_code1 = more_code1.try_()
+#         more_code2 = CodeForLean.from_string("compute_n 10")
+#         more_code2 = more_code2.try_()
+#         # Try to solve1 inequality by norm_num, maybe followed by compute:
+#         more_code = more_code0.and_then(
+#             (more_code1.and_then(more_code2)).solve1())
+#         more_code.add_success_msg(_("Property {} added to the context").
+#                              format(new_hypo_name))
+#         # # If it fails, rotate to next inequality
+#         # # This has been suppressed!
+#         # failing_code = CodeForLean.from_string(f"rotate "
+#         #                                        f"{proof_step.nb_of_goals}")
+#         # failing_code.add_success_msg(_("You have to check the inequality to "
+#         #                                "get the desired property"))
+#         # more_code = more_code.or_else(failing_code)
+#         code = code.and_then(more_code)
+#         # # Do this for all inequalities
+#         # #   more_code = more_code.single_combinator(f"iterate
+#         # #   {unsolved_inequality_counter}") --> replaced by explicit iteration
+#         # code_list = [more_code] * unsolved_inequality_counter
+#         # more_code = CodeForLean.and_then_from_list(code_list)
+#         # Finally come back to first inequality??
+#     if not unsolved_inequality_counter:
+#         # Success msg when there is no inequality to solve:
+#         code.add_success_msg(_("Property {} added to the context").
+#                              format(new_hypo_name))
+#     # In any case:
+#     code.add_used_properties(selected_objects)
+#
+#     return code
+
+
+def apply_forall_with_ineq(proof_step, selected_objects, inequality,
+                           new_hypo_name=None) -> CodeForLean:
+    """
+    Try to apply last selected property, assumed to be a universal prop matching
+    forall x, (some inex on x) ==> ...
+
+    The inequality on x is the MathObject inequality.
+    - If inequality belongs to the context, we apply the universal property
+    to x and inequality
+    - if not, we claim inequality, apply the universal property to it,
+    and ask Lean to try to solve the inequality.
+    """
+
+    if not new_hypo_name:
+        new_hypo_name = get_new_hyp()
 
     goal = proof_step.goal
-    universal_property = selected_objects[-1]  # The property to be applied
+    universal_property = selected_objects[-1]
     unsolved_inequality_counter = 0
     # Variable_names will contain the list of variables and proofs of
     # inequalities that will be passed to universal_property
     variable_names = []
-    code = CodeForLean.empty_code()
     used_inequalities = []
-    for potential_var in selected_objects[:-1]:
-        # TODO: replace by pattern matching
-        # Check for "∀x>0" (and variations)
-        inequality = inequality_from_pattern_matching(universal_property,
-                                                      potential_var)
-        variable_names.append(potential_var.info['name'])
-        if inequality:
-            math_types = [p.math_type for p in goal.context]
-            if inequality in math_types:
-                # Check if inequality is in context:
-                index = math_types.index(inequality)
-                context_inequality = goal.context[index]
-                used_inequalities.append(context_inequality)
-                inequality_name = context_inequality.display_name
-                variable_names.append(inequality_name)
-            else:
-                # If not, assert inequality as a new goal:
-                inequality_name = get_new_hyp(proof_step)
-                variable_names.append(inequality_name)
-                unsolved_inequality_counter += 1
-                # Add type indication to the variable in inequality
-                math_type = inequality.children[1].math_type
-                # Variable is not used explicitly, but this affects inequality:
-                variable = inequality.children[0]
-                variable = add_type_indication(variable, math_type)
-                display_inequality = inequality.to_display(format_='lean')
-                # Code I: state corresponding inequality #
-                code = code.and_then(f"have {inequality_name}: "
-                                     f"{display_inequality}")
-                code = code.and_then("rotate")  # Back to main goal
+    # Check for "∀x>0" (and variations)
+    variable = inequality.children[0]
+    variable_names.append(variable.name)
+    math_types = [p.math_type for p in goal.context]
+    code = CodeForLean.empty_code()
 
-    # Code II: Apply universal_property #
-    new_hypo_name = get_new_hyp(proof_step)
+    # (1) Try to prove inequality
+    if inequality in math_types:  # Check if inequality is in context
+        ineq_in_ctxt = True
+        index = math_types.index(inequality)
+        context_inequality = goal.context[index]
+        used_inequalities.append(context_inequality)
+        inequality_name = context_inequality.display_name
+        variable_names.append(inequality_name)
+    else:
+        ineq_in_ctxt = False
+        # If not, assert inequality as a new goal:
+        inequality_name = new_hypo_name
+        variable_names.append(inequality_name)
+        unsolved_inequality_counter += 1
+        # Add type indication to the variable in inequality
+        math_type = inequality.children[1].math_type
+        # Variable is not used explicitly, but this affects inequality:
+        variable = add_type_indication(variable, math_type)
+        ineq_with_type = MathObject(node=inequality.node,
+                                    info=inequality.info,
+                                    children=[variable,
+                                              inequality.children[1]],
+                                    math_type=inequality.math_type)
+        display_inequality = ineq_with_type.to_display(format_='lean')
+        # Code I: state corresponding inequality #
+        code = CodeForLean.from_string(f"have {inequality_name}: "
+                                       f"{display_inequality}")
+        code = code.and_then("rotate")  # Back to main goal
+        used_inequalities.append(inequality_name)
+
+    # (2) Apply universal_property, with no success_msg #
+    # Add remaining variables:
+    variable_names.extend([var.name for var in selected_objects[1:-1]])
+    if not ineq_in_ctxt:  # Hypo_name has been used
+        new_hypo_name = get_new_hyp(proof_step)
     code = code.and_then(have_new_property(universal_property,
                                            variable_names,
-                                           new_hypo_name))
+                                           new_hypo_name,
+                                           success_msg=""))
     if used_inequalities:
         code.add_used_properties(used_inequalities)
 
-    # Code III: try to solve inequalities # e.g.:
+    # (3) try to solve inequalities # e.g.:
     #   iterate 2 { solve1 {try {norm_num at *}, try {compute_n 10}} <|>
     #               rotate},   rotate,
-    more_code = CodeForLean.empty_code()
     if unsolved_inequality_counter:
-        # Back to first inequality:
+        assert unsolved_inequality_counter == 1
         # Fixme: (1) no rotate if compute fails
         #   (2) "Proof of intermediate subgoal" not appropriate...
-        code = code.and_then(f"rotate {proof_step.nb_of_goals}")
+        # Back to first inequality:
+        more_code0 = CodeForLean.from_string(f"rotate {proof_step.nb_of_goals}")
         more_code1 = CodeForLean.from_string("norm_num at *")
         more_code1 = more_code1.try_()
         more_code2 = CodeForLean.from_string("compute_n 10")
         more_code2 = more_code2.try_()
         # Try to solve1 inequality by norm_num, maybe followed by compute:
-        more_code = more_code1.and_then(more_code2)
-        more_code = more_code.single_combinator("solve1")
-        # If it fails, rotate to next inequality
-        more_code = more_code.or_else("rotate")
-        # Do this for all inequalities
-        #   more_code = more_code.single_combinator(f"iterate
-        #   {unsolved_inequality_counter}") --> replaced by explicit iteration
-        code_list = [more_code] * unsolved_inequality_counter
-        more_code = CodeForLean.and_then_from_list(code_list)
-        # Finally come back to first inequality
-        # FIXME: the following rotate is odd??
-        # more_code = more_code.and_then("rotate")
-
-    code.add_success_msg(_("Property {} added to the context").
-                         format(new_hypo_name))
+        more_code = more_code0.and_then(
+            (more_code1.and_then(more_code2)).solve1())
+        more_code.add_success_msg(_("Property {} added to the context").
+                                  format(new_hypo_name))
+        # # If it fails, rotate to next inequality
+        # # This has been suppressed!
+        # failing_code = CodeForLean.from_string(f"rotate "
+        #                                        f"{proof_step.nb_of_goals}")
+        # failing_code.add_success_msg(_("You have to check the inequality to "
+        #                                "get the desired property"))
+        # more_code = more_code.or_else(failing_code)
+        code = code.and_then(more_code)
+        # # Do this for all inequalities
+        # #   more_code = more_code.single_combinator(f"iterate
+        # #   {unsolved_inequality_counter}") --> replaced by explicit iteration
+        # code_list = [more_code] * unsolved_inequality_counter
+        # more_code = CodeForLean.and_then_from_list(code_list)
+        # Finally come back to first inequality??
+    if not unsolved_inequality_counter:
+        # Success msg when there is no inequality to solve:
+        code.add_success_msg(_("Property {} added to the context").
+                             format(new_hypo_name))
+    # In any case:
     code.add_used_properties(selected_objects)
 
-    return code.and_then(more_code)
+    return code
+
+
+def apply_forall(proof_step, selected_objects: [MathObject]) \
+                        -> CodeForLean:
+    """
+    Try to apply last selected property on the other ones.
+    The last property should be a universal property
+    (or equivalent to such after unfolding definitions)
+
+    selected_objects: list of MathObjects of length ≥ 2.
+    """
+    # FIXME: return error msg if user try to apply "forall x:X, P(x)"
+    #  to some object of wrong type (e.g. implication)
+    #  For the moment "forall x, P->Q" works with "P->Q" and button forall
+
+    universal_property = selected_objects[-1]  # The property to be applied
+    potential_var = selected_objects[0]
+
+    new_hypo_name = get_new_hyp(proof_step)
+    var_names = [var.info['name'] for var in selected_objects[:-1]]
+    simple_code = have_new_property(universal_property, var_names,
+                                    new_hypo_name)
+    simple_code.add_success_msg(_("Property {} added to the context").
+                         format(new_hypo_name))
+    simple_code.add_used_properties(selected_objects)
+
+    inequality = inequality_from_pattern_matching(universal_property,
+                                                  potential_var)
+
+    # (Case 1) No inequality to solve
+    if not inequality or not cvars.get(
+        "functionality.auto_solve_inequalities_in_bounded_quantification",
+            False):
+        return simple_code
+
+    # (Cas 2) Inequality: try to solve it, turn to simple code if it fails
+    else:
+        complex_code = apply_forall_with_ineq(proof_step, selected_objects,
+                                              inequality, new_hypo_name)
+        code = complex_code.or_else(simple_code)
+        return code
 
 
 @action()
@@ -1030,6 +1278,8 @@ def action_forall(proof_step) -> CodeForLean:
     test_selection(selected_objects, target_selected)
     goal = proof_step.goal
 
+    # selection_object_added = False
+
     if len(selected_objects) == 0:
         if not goal.target.is_for_all(implicit=True):
             error = _("Target is not a universal property '∀x, P(x)'")
@@ -1049,16 +1299,16 @@ def action_forall(proof_step) -> CodeForLean:
                                              "Enter element on which you "
                                              "want to apply:"))
         else:
-            item = user_input[0]
+            item = pre_process_lean_code(user_input[0])
             item = add_type_indication(item)  # e.g. (0:ℝ)
             if item[0] != '(':
                 item = '(' + item + ')'
             potential_var = MathObject(node="LOCAL_CONSTANT",
-                                       info={'name': item},
+                                       info={'name': item, 'user_input': True},
                                        children=[],
-                                       bound_vars=[],
                                        math_type=None)
             selected_objects.insert(0, potential_var)
+            # selection_object_added = True
             # Now len(l) == 2
 
     # From now on len(l) ≥ 2
@@ -1066,11 +1316,14 @@ def action_forall(proof_step) -> CodeForLean:
     selected_objects.reverse()
     for item in selected_objects:
         if item.is_for_all(implicit=True):
-            # Put item on last position
+            # Put universal property in last position
             selected_objects.remove(item)
             selected_objects.reverse()
             selected_objects.append(item)
-            return apply_forall(proof_step, selected_objects)
+            code = apply_forall(proof_step, selected_objects)
+            # if selection_object_added:  # Remove it (for auto-test)
+            #     selected_objects.pop(0)
+            return code
     raise WrongUserInput(error=_("No universal property among selected"))
 
 
@@ -1089,7 +1342,7 @@ def construct_exists(proof_step, user_input: [str]) -> CodeForLean:
         raise MissingParametersError(InputType.Text,
                                      title=_("Exist"),
                                      output=output)
-    x = user_input[0]
+    x = pre_process_lean_code(str(user_input[0]))
     code = CodeForLean.from_string(f'use {x}')  # (f'use {x}, dsimp')
     # code = code.or_else(f'use {x}')
     code.add_success_msg(_("Now prove {} suits our needs").format(x))
@@ -1109,24 +1362,31 @@ def apply_exists(proof_step, selected_object: [MathObject]) -> CodeForLean:
         # implicit_definition = MathObject.last_used_implicit_definition
         selected_hypo       = MathObject.last_rw_object
 
-    hint = selected_hypo.children[1].display_name
-    x = give_global_name(proof_step=proof_step,
-                         math_type=selected_hypo.children[0],
-                         hints=[hint],
-                         strong_hint=hint)
-    new_hypo_name = get_new_hyp(proof_step)
+    # hint = selected_hypo.children[1].display_name
+    math_type = selected_hypo.bound_var_type
+    bound_var = selected_hypo.bound_var    # "NOT(APP(CST?,...))": ((0, -1), r'\text_is_not', (0, 0)),
+
+    name = proof_step.goal.provide_good_name(math_type,
+                                             bound_var.preferred_letter())
+
+    # x = give_global_name(proof_step=proof_step,
+    #                      math_type=selected_hypo.children[0],
+    #                      hints=[hint],
+    #                      strong_hint=hint)
+    new_hypo_name1 = get_new_hyp(proof_step)
+    new_hypo_name2 = get_new_hyp(proof_step)
 
     if selected_hypo.children[2].node == "PROP_∃":
         code = f'rcases {hypo_name} with ' \
-                f'⟨ {x}, ⟨ {new_hypo_name}, {hypo_name} ⟩ ⟩'
+                f'⟨ {name}, ⟨ {new_hypo_name1}, {new_hypo_name2} ⟩ ⟩'
     else:
-        code = f'cases {hypo_name} with {x} {new_hypo_name}'
+        code = f'cases {hypo_name} with {name} {new_hypo_name1}'
     code = CodeForLean.from_string(code)
     if selected_hypo.node == 'QUANT_∃!':
         # We have to add the "simp" tactic to avoid appearance of lambda expr
-        code = code.and_then(f'simp at {new_hypo_name}')
+        code = code.and_then(f'simp at {new_hypo_name1}')
     code.add_success_msg(_("New object {} with property {}").
-                         format(x, new_hypo_name))
+                         format(name, new_hypo_name1))
     code.operator = selected_object[0]
     return code
 
@@ -1257,7 +1517,8 @@ def apply_substitute(proof_step,
                      selected_objects: [MathObject],
                      user_input: [int],
                      equality: MathObject,
-                     equality_nb=-1) -> CodeForLean:
+                     equality_nb=-1,
+                     direction_nb=0) -> CodeForLean:
     """
     Try to use the selected property indicated by equality_nb to rewrite the
     goal or the other selected property:
@@ -1281,8 +1542,8 @@ def apply_substitute(proof_step,
     choices = [(left_display, f'Replace by {right_display}'),
                (right_display, f'Replace by {left_display}')]
 
-    if len(selected_objects) == 1:
-        if len(user_input) > 0:
+    if len(selected_objects) == 1:  # Substitution on target
+        if len(user_input) > 0:  # Choice of direction has been made
             if user_input[0] == 0:  # Direct substitution
                 more_code = code_for_substitution(heq,
                                                   left_display, right_display)
@@ -1291,10 +1552,10 @@ def apply_substitute(proof_step,
                                                   right_display, left_display,
                                                   reverse=True)
             codes = codes.or_else(more_code)
-        else:
+        else:  # Choice of substitution direction has not been made
             if goal.target.math_type.contains(left) and \
                     goal.target.math_type.contains(right):
-
+                # Choice needed
                 raise MissingParametersError(
                     InputType.Choice,
                     choices,
@@ -1308,16 +1569,16 @@ def apply_substitute(proof_step,
                                                    reverse=True)
                 codes = more_code1.or_else(more_code2)
 
-    if len(selected_objects) == 2:
+    if len(selected_objects) == 2:  # Substitution on context
         prop_nb = 0 if equality_nb != 0 else 1
-        prop = selected_objects[prop_nb]
-        if len(user_input) > 1:
-            if user_input[1] == 0:
+        prop = selected_objects[prop_nb]  # Substitute in prop
+        if len(user_input) > direction_nb:  # Choice of direction has been made
+            if user_input[direction_nb] == 0:  # Direct substitution
                 more_code = code_for_substitution(heq,
                                                   left_display, right_display,
                                                   on_hyp=prop)
                 codes = codes.or_else(more_code)
-            elif user_input[1] == 1:
+            elif user_input[direction_nb] == 1:  # Reverse substitution
                 more_code = code_for_substitution(heq,
                                                   right_display, left_display,
                                                   on_hyp=prop,
@@ -1325,14 +1586,14 @@ def apply_substitute(proof_step,
                 codes = codes.or_else(more_code)
         else:
             if prop.math_type.contains(left) and \
-                    prop.math_type.contains(right):
+                    prop.math_type.contains(right):  # Both directions work
                 raise MissingParametersError(
                     InputType.Choice,
                     choices,
                     title=_("Precision of substitution"),
                     output=_("Choose which expression you want to replace"))
 
-            else:  # We have not found possible rw, but maybe Lean will
+            else:
                 more_code1 = code_for_substitution(heq,
                                                    left_display, right_display,
                                                    on_hyp=prop)
@@ -1363,16 +1624,33 @@ def action_equal(proof_step) -> CodeForLean:
     """
 
     selected_objects = proof_step.selection
-    # target_selected = proof_step.target_selected
+    target_selected = proof_step.target_selected
+    target = proof_step.goal.target
     user_input = proof_step.user_input
 
     if user_input is None:
         user_input = []
 
     equality_nb = -1  # Default nb of property to be used for substitution
+    direction_nb = 0  # Default user_input index for direction (no choice of eq)
 
-    if not selected_objects:
-        raise WrongUserInput(error=_("No property selected"))
+    if proof_step.drag_n_drop:
+        # Replace selected_objects so that operator is at end
+        d_n_d = proof_step.drag_n_drop
+        selected_objects = [d_n_d.premise, d_n_d.operator]
+        equality = d_n_d.operator.math_type
+    elif not selected_objects:
+        if not target_selected:
+            msg = _("Select an equality to perform a substitution")
+        else:
+            if target.is_set_equality():
+                msg = _("To prove an equality between sets, use the relevant "
+                        "definitions, not the = button")
+            else:
+                msg = _("Select an equality from the context to perform a "
+                        "substitution")
+        raise WrongUserInput(error=msg)
+
     # Now len(l) > 0
     elif len(selected_objects) > 2:
         raise WrongUserInput(error=_("Too many selected objects"))
@@ -1386,24 +1664,26 @@ def action_equal(proof_step) -> CodeForLean:
             # Two equalities: which one to use?
             if not user_input:
                 choose_substitution(equality0, equality1)
-            elif user_input[0] == 0:
-                equality = equality0
-                equality_nb = 0
             else:
-                equality = equality1
+                direction_nb = 1
+                if user_input[0] == 0:
+                    equality = equality0
+                    equality_nb = 0
+                else:
+                    equality = equality1
         elif test0:
             equality = equality0
             selected_objects.reverse()
-            if not user_input:
-                user_input.append(0)  # Make place for a potential second input
-            else:
-                user_input[0] = 0
+            # if not user_input:
+            #     user_input.append(0)  # Make place for a potential second input
+            # else:
+            #     user_input[0] = 0
         elif test1:
             equality = equality1
-            if not user_input:
-                user_input.append(1)
-            else:
-                user_input[0] = 1
+            # if not user_input:
+            #     user_input.append(1)
+            # else:
+            #     user_input[0] = 1
         else:  # No equality found
             error = _("This cannot be used for substitution")
             raise WrongUserInput(error)
@@ -1416,33 +1696,47 @@ def action_equal(proof_step) -> CodeForLean:
             raise WrongUserInput(error)
 
     codes = apply_substitute(proof_step, selected_objects, user_input,
-                             equality, equality_nb)
+                             equality, equality_nb, direction_nb)
     return codes
 
 
 def apply_map_to_element(proof_step,
                          map_: MathObject,
-                         x: str):
+                         var_name: str,
+                         other_names=None):
     """
     Return Lean code to apply map_ to element.
     Element may be a MathObject (selected by user)
     or a string (as a result of a WrongUserInput exception).
+
+    other_names is a list of names that are not available, the name of the
+    new element will be added.
     """
 
-    f = map_.info["name"]
+    if other_names is None:
+        other_names = []
+    map_name = map_.info["name"]
     # if isinstance(element, MathObject):
     #     x = element.info["name"]
     # elif isinstance(element, str):
     image_set = map_.math_type.children[1]
-    # TODO: choose a better name by a careful examination of context
-    y = give_global_name(proof_step=proof_step,
-                         math_type=image_set,
-                         hints=[image_set.info["name"]])
+    name = proof_step.goal.provide_good_name(image_set,
+                                             local_names=other_names)
+    other_names.extend(name)
+    # y = give_global_name(proof_step=proof_step,
+    #                      math_type=image_set,
+    #                      hints=[image_set.info["name"]])
+
     new_h = get_new_hyp(proof_step)
-    msg = _("New objet {} added to the context").format(y)
-    code = CodeForLean.from_string(f"set {y} := {f} {x} with {new_h}",
-                                   success_msg=msg)
-    return code
+    msg = _("New objet {} added to the context").format(name)
+    # code = CodeForLean.from_string(f"set {name} := {f} {x} with {new_h}",
+    #                                success_msg=msg)
+    codes = CodeForLean.from_string(f"let {name} := {map_name} {var_name}")
+    codes = codes.and_then(f"have {new_h} : {name} = {map_name} {var_name}")
+    codes = codes.and_then("refl")
+    codes.operator = map_
+    codes.success_msg = msg
+    return codes
 
 
 def apply_function(proof_step, map_, arguments: [MathObject]):
@@ -1458,12 +1752,14 @@ def apply_function(proof_step, map_, arguments: [MathObject]):
     codes = CodeForLean.empty_code()
     f = map_.info["name"]
 
+    other_names = []
     while arguments:
 
         if arguments[0].math_type.is_prop():
             # Function applied to a property, presumed to be an equality
             h = arguments[0].info["name"]
             new_h = get_new_hyp(proof_step)
+            other_names.extend(new_h)
             codes = codes.and_then(f'have {new_h} := congr_arg {f} {h}')
             codes.add_success_msg(_("Map {} applied to {}").format(f, h))
             codes.add_used_properties(arguments[0])
@@ -1473,10 +1769,14 @@ def apply_function(proof_step, map_, arguments: [MathObject]):
             x = arguments[0].info["name"]
             codes = codes.and_then(apply_map_to_element(proof_step,
                                                         map_,
-                                                        x))
+                                                        x,
+                                                        other_names))
         arguments = arguments[1:]
-    msg = _("The map {} cannot be applied to these objects").format(f)
+    msg = (_("The map {} cannot be applied to this object").format(f)
+           if len(arguments) == 1 else
+           _("The map {} cannot be applied to these objects").format(f))
     codes.add_error_msg(msg)
+    codes.operator = map_
     return codes
 
 
@@ -1497,7 +1797,7 @@ def action_map(proof_step) -> CodeForLean:
     user_input = proof_step.user_input
 
     # We successively try all selected objects
-    for i in  range(len(selected_objects)):
+    for i in range(len(selected_objects)):
         math_object = selected_objects[i]
         if math_object.is_function():
             if len(selected_objects) == 1:
@@ -1514,7 +1814,7 @@ def action_map(proof_step) -> CodeForLean:
                     x = user_input[0]
                     code = apply_map_to_element(proof_step,
                                                 map_=math_object,
-                                                x=x)
+                                                var_name=x)
 
                     return code
             else:
@@ -1527,55 +1827,3 @@ def action_map(proof_step) -> CodeForLean:
     raise WrongUserInput(error=error)
 
 
-#########
-# utils #
-#########
-
-def which_number_set(string: str):
-    """
-    Return 'ℕ', 'ℤ', 'ℚ', 'ℝ' if string represents a number, else None
-    """
-    ind = -1
-    if '.' in string or '/' in string:
-        ind = 2  # at least Q
-    string = string.replace('.', '')
-    string = string.replace('/', '')
-    if not string.isdigit():
-        return None
-    else:
-        return MathObject.NUMBER_SETS_LIST[ind]
-
-
-def add_type_indication(item: Union[str, MathObject],
-                        math_type: MathObject=None) -> Union[str, MathObject]:
-    """
-    Add type indication for Lean. e.g.
-    '0' -> (0:ℝ)
-    'x' -> (x:ℝ)
-    :param item:        either a string (provided by user in TextDialog) or
-    MathObject
-    :param math_type:   math_type indication to add. If None, largest number
-    set used in current context will be indicated
-    :return: either     string or MathObject, with type indication in name
-    """
-    if math_type:
-        number_type = math_type.which_number_set(is_math_type=True)
-    if isinstance(item, str):
-        number_set = which_number_set(item)
-        if number_set and ':' not in item:
-            if not math_type:
-                MathObject.add_numbers_set(number_set)
-                # Add type indication = largest set of numbers among used
-                number_type = MathObject.number_sets[-1]
-            item = f"({item}:{number_type})"  # e.g. (0:ℝ)
-        return item
-    else:
-        if not math_type:
-            number_type = MathObject.number_sets[-1]
-        if hasattr(item, 'info'):
-            name = item.display_name
-            # Do not put 2 type indications!!
-            if (':' not in name
-                    and hasattr(item, 'info')):
-                item.info['name'] = f"({name}:{number_type})"
-        return item

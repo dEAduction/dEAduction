@@ -33,6 +33,7 @@ from PySide2.QtGui import QFont
 from functools import partial
 
 import deaduction.pylib.config.vars as cvars
+global _
 
 
 class ButtonsDialog(QDialog):
@@ -81,17 +82,30 @@ class ButtonsDialog(QDialog):
         layout.addSpacing(5)
 
         # Buttons and corresponding texts, one new_layout per line
-        for caption, choice in choices:
-            new_button = QPushButton(caption)
-            self.buttons.append(new_button)
-            self.choices.append(QLabel(choice, self))
+        if not choices or choices == ['yes', 'no']:
+            self.yes = QPushButton(_("Yes"))
+            self.no = QPushButton(_("No"))
+            self.buttons = [self.yes]
+            self.no.clicked.connect(self.reject)
             new_layout = QHBoxLayout()
-
-            new_layout.addWidget(self.buttons[-1])
-            new_layout.addWidget(self.choices[-1])
+            new_layout.addStretch(1)
+            new_layout.addWidget(self.yes)
+            new_layout.addWidget(self.no)
             new_layout.addStretch(1)
             layout.addLayout(new_layout)
-            layout.addSpacing(-5)
+
+        else:
+            for caption, choice in choices:
+                new_button = QPushButton(caption)
+                self.buttons.append(new_button)
+                self.choices.append(QLabel(choice, self))
+                new_layout = QHBoxLayout()
+
+                new_layout.addWidget(self.buttons[-1])
+                new_layout.addWidget(self.choices[-1])
+                new_layout.addStretch(1)
+                layout.addLayout(new_layout)
+                layout.addSpacing(-5)
 
         # Cancel button
         if cancel_button:

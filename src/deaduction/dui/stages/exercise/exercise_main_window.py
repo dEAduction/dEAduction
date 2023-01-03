@@ -27,21 +27,27 @@ This file is part of d∃∀duction.
 """
 
 import                logging
-from typing import    Union
+from typing import    Union, Optional, Any
 
 from PySide2.QtCore    import (Signal,
                                Slot,
                                QEvent,
                                QSettings,
-                               QModelIndex)
+                               QModelIndex,
+                               QTimer)
+
+from PySide2.QtGui import QColor
+
 from PySide2.QtWidgets import (QMainWindow,
                                QMessageBox,
                                QAction)
 
-import deaduction.pylib.config.vars      as     cvars
 from deaduction.pylib.coursedata        import  Exercise, UserAction
 from deaduction.pylib.mathobj           import (MathObject,
                                                 ProofStep)
+from deaduction.pylib.math_display.pattern_data import set_quant_pattern
+
+from deaduction.dui.primitives          import deaduction_fonts
 
 from deaduction.dui.elements            import (ActionButton,
                                                 LeanEditor,
@@ -53,7 +59,8 @@ from deaduction.dui.elements            import (ActionButton,
                                                 MenuBarAction,
                                                 ConfigMainWindow,
                                                 ProofOutlineWindow,
-                                                ProofTreeController)
+                                                ProofTreeController,
+                                                HelpWindow)
 from ._exercise_main_window_widgets     import (ExerciseCentralWidget,
                                                 ExerciseStatusBar,
                                                 ExerciseToolBar,
@@ -121,14 +128,19 @@ class ExerciseMainWindow(QMainWindow):
         lean_file and may be retrieved using the logically_previous_proof_step
          property.
     """
+
     # Signals for WindowManager and testing:
     window_closed                = Signal()
     change_exercise              = Signal()
     ui_updated                   = Signal()
+
     # User action signals:
     action_triggered             = Signal(ActionButton)
-    apply_math_object_triggered  = Signal(MathObjectWidget)
+    # apply_math_object_triggered  = Signal(MathObjectWidget)
     statement_triggered          = Signal(StatementsTreeWidgetItem)
+    statement_dropped            = Signal(StatementsTreeWidgetItem)
+    math_object_dropped          = Signal(MathObjectWidgetItem,
+                                          MathObjectWidgetItem)
 
     def __init__(self, exercise: Exercise):
         """
@@ -148,10 +160,10 @@ class ExerciseMainWindow(QMainWindow):
         self.automatic_action     = False
 
         # From inside
-        self.current_selection    = []
+        # self.current_selection    = []
         self._target_selected     = False
         self.user_input           = []
-        self.double_clicked_item  = None
+        # self.double_clicked_item  = None
         self.freezed              = False
 
         # ─────────────────────── Elements ─────────────────────── #
@@ -164,18 +176,34 @@ class ExerciseMainWindow(QMainWindow):
         self.proof_tree_controller= ProofTreeController()
         self.statusBar            = ExerciseStatusBar(self)
         self.config_window        = None
+        self.help_window = HelpWindow()
+        self.close_help_window_timer = QTimer()
+        self.close_help_window_timer.setSingleShot(True)
 
         # ─────────────────────── UI ─────────────────────── #
 
         self.setCentralWidget(self.ecw)
         self.addToolBar(self.exercise_toolbar)
         self.addToolBar(self.global_toolbar)
-        self.exercise_toolbar.redo_action.setEnabled(False)  # No history at beginning
+        self.proof_tree_controller.proof_tree_window.action = \
+            self.exercise_toolbar.toggle_proof_tree
+        self.proof_outline_window.action = \
+            self.exercise_toolbar.toggle_proof_outline_action
+        self.lean_editor.action = \
+            self.exercise_toolbar.toggle_lean_editor_action
+        self.help_window.action = \
+            self.exercise_toolbar.toggle_help_action
+        if self.proof_tree_window.isVisible():
+            self.exercise_toolbar.toggle_proof_tree.setChecked(True)
+
+        self.exercise_toolbar.redo_action.setEnabled(False)  # No history at beg
         self.exercise_toolbar.undo_action.setEnabled(False)  # same
         self.exercise_toolbar.rewind.setEnabled(False)  # same
         self.exercise_toolbar.go_to_end.setEnabled(False)  # same
         self.__init_menubar()
         self.setStatusBar(self.statusBar)
+        self.__connect_signals()
+        self.__connect_toolbar_signals()
 
         # Restore geometry
         settings = QSettings("deaduction")
@@ -186,41 +214,22 @@ class ExerciseMainWindow(QMainWindow):
             self.restoreGeometry(geometry)
             # if maximised:  # FIXME: Does not work on Linux?!
             # self.showMaximized()
-        proof_tree_is_visible = settings.value("emw/ShowProofTree")
-        if proof_tree_is_visible:
-            self.proof_tree_window.setVisible(True)
+        # proof_tree_is_visible = settings.value("emw/ShowProofTree")
+        # if proof_tree_is_visible:
+        #     print("Proof tree was shown")
+        #     QTimer.singleShot(500,
+        #                       self.exercise_toolbar.toggle_proof_tree.toggle)
+            # self.exercise_toolbar.toggle_proof_tree.toggle()
+            # self.exercise_toolbar.toggle_proof_tree.setChecked(True)
         self.close_coordinator = None  # Method set up by Coordinator
 
-        self.__connect_signals()
+        # 1s to allow correct geometry(?) Does not work
+        # QTimer.singleShot(1000, self.__init_help_window)
         self.freeze()  # Wait for data before allowing user actions.
 
     #######################
     # Init /close methods #
     #######################
-
-    def __connect_signals(self):
-        """
-        Connect all signals. Called at init.
-        """
-        log.debug("EMW: connect signals")
-        # Actions area
-        for action_button in self.ecw.actions_buttons:
-            action_button.action_triggered.connect(self.action_triggered)
-        self.ecw.statements_tree.itemClicked.connect(
-                                            self.statement_triggered_filter)
-
-        # UI
-        self.exercise_toolbar.toggle_lean_editor_action.triggered.connect(
-                self.lean_editor.toggle)
-        self.exercise_toolbar.toggle_proof_outline_action.triggered.connect(
-                self.proof_outline_window.toggle)
-        self.exercise_toolbar.toggle_proof_tree.triggered.connect(
-                self.proof_tree_window.toggle)
-        self.global_toolbar.change_exercise_action.triggered.connect(
-                                                    self.change_exercise)
-        self.global_toolbar.settings_action.triggered.connect(
-                                                    self.open_config_window)
-
     def __init_menubar(self):
         """
         Create ExerciseMainWindow's menubar. Relevant classes are MenuBar,
@@ -239,6 +248,7 @@ class ExerciseMainWindow(QMainWindow):
                               self.exercise_toolbar.toggle_proof_outline_action,
                               self.exercise_toolbar.toggle_proof_tree
                               ]),
+                         self.exercise_toolbar.toggle_help_action,
                          self.exercise_toolbar.toggle_lean_editor_action,
                          self.global_toolbar.change_exercise_action])
 
@@ -246,6 +256,90 @@ class ExerciseMainWindow(QMainWindow):
         outline = [menu_deaduction, menu_exercise]
         menu_bar = MenuBar(self, outline)
         self.setMenuBar(menu_bar)
+
+    def __connect_signals(self):
+        """
+        Connect all signals. Called at init. SOme signals are connected in
+        update_goal.
+        """
+        log.debug("EMW: connect signals")
+        # Actions area
+        for action_button in self.ecw.actions_buttons:
+            action_button.action_triggered.connect(self.action_triggered)
+        self.ecw.statements_tree.itemClicked.connect(
+                                            self.statement_triggered_filter)
+
+        # Context area
+        self.ecw.props_wgt.statement_dropped.connect(self.statement_dropped)
+        self.ecw.props_wgt.math_object_dropped.connect(self.math_object_dropped)
+        self.ecw.objects_wgt.math_object_dropped.connect(
+            self.math_object_dropped)
+        self.ecw.statements_tree.math_object_dropped.connect(
+            self.statement_triggered)
+        # self.ecw.objects_wgt.clicked.connect(self.process_context_click)
+        # self.ecw.props_wgt.clicked.connect(self.process_context_click)
+
+        # # UI
+        # self.exercise_toolbar.toggle_lean_editor_action.triggered.connect(
+        #         self.lean_editor.toggle)
+        # self.exercise_toolbar.toggle_proof_outline_action.triggered.connect(
+        #         self.proof_outline_window.toggle)
+        # self.exercise_toolbar.toggle_proof_tree.triggered.connect(
+        #         self.proof_tree_window.toggle)
+        # self.exercise_toolbar.toggle_help_action.triggered.connect(
+        #     self.show_help_on_item)
+        # self.global_toolbar.change_exercise_action.triggered.connect(
+        #                                             self.change_exercise)
+        # self.global_toolbar.settings_action.triggered.connect(
+        #                                             self.open_config_window)
+        # self.ecw.target_wgt.target_label.mousePressEvent = \
+        #     self.process_target_click
+
+        # Double clicks (help)
+        self.ecw.objects_wgt.doubleClicked.connect(
+                                            self.process_context_double_click)
+        self.ecw.props_wgt.doubleClicked.connect(
+                                            self.process_context_double_click)
+
+        target_lbl = self.ecw.target_wgt.target_label
+        target_lbl.clicked.connect(self.process_target_click)
+        target_lbl.double_clicked.connect(self.process_target_double_click)
+        self.close_help_window_timer.timeout.connect(self.help_window.hide)
+
+        # All context clicks, including target_lbl --> self.contest_clicked
+        self.ecw.objects_wgt.clicked.connect(self.context_clicked)
+        self.ecw.props_wgt.clicked.connect(self.context_clicked)
+        target_lbl.clicked.connect(self.context_clicked)
+
+    # def __init_help_window(self):
+    #     gl_geo = global_geometry(self.ecw,
+    #                              self.ecw.statements_tree.geometry())
+    #     # self.help_window.set_geometry(gl_geo)
+
+    def __connect_toolbar_signals(self):
+        self.exercise_toolbar.toggle_lean_editor_action.triggered.connect(
+                self.lean_editor.toggle)
+        self.exercise_toolbar.toggle_proof_outline_action.triggered.connect(
+                self.proof_outline_window.toggle)
+        self.exercise_toolbar.toggle_proof_tree.triggered.connect(
+                self.proof_tree_window.toggle)
+        self.exercise_toolbar.toggle_help_action.triggered.connect(
+            self.show_help_on_item)
+        self.global_toolbar.change_exercise_action.triggered.connect(
+                                                    self.change_exercise)
+        self.global_toolbar.settings_action.triggered.connect(
+                                                    self.open_config_window)
+
+    def close_help_window(self):
+        if self.help_window.isVisible():
+            self.close_help_window_timer.start(200)
+
+    @Slot()
+    def context_clicked(self):
+        """
+        Almost any click should close the help window.
+        """
+        self.close_help_window()
 
     def closeEvent(self, event: QEvent):
         """
@@ -260,6 +354,7 @@ class ExerciseMainWindow(QMainWindow):
         self.lean_editor.close()
         self.proof_outline_window.close()
         self.proof_tree_window.close()
+        self.help_window.close()
 
         # Save window geometry
         # FIXME: does not work
@@ -277,7 +372,7 @@ class ExerciseMainWindow(QMainWindow):
             self.close_coordinator()
 
         self.window_closed.emit()
-        # event.accept()  # THIS create crash after the second closing!!
+        # event.accept()  # THIS creates crash after the second closing!!
         super().closeEvent(event)
         self.deleteLater()
 
@@ -296,6 +391,7 @@ class ExerciseMainWindow(QMainWindow):
             self.config_window = ConfigMainWindow(parent=self)
             self.config_window.applied.connect(self.apply_new_settings)
         self.config_window.show()
+        self.close_help_window()
 
     @Slot()
     def apply_new_settings(self, modified_settings):
@@ -304,37 +400,71 @@ class ExerciseMainWindow(QMainWindow):
         """
         log.debug("New settings: ")
         log.debug(modified_settings)
+        updated = True
+        while modified_settings:
+            setting = modified_settings.pop()
+            # (1) DnD
+            if setting in ('functionality.drag_statements_to_context',
+                           'functionality.drag_and_drop_in_context',
+                           'functionality.drag_context_to_statements'):
+                self.ecw.set_drag_and_drop_config()
+                log.info("New DnD settings")
+            # (2) Fonts
+            elif setting in ("display.target_font_size",
+                             "display.main_font_size",
+                             "display.statements_font_size",
+                             "display.tooltips_font_size",
+                             'display.math_font_file',
+                             'display.proof_tree_font_size'):
+                log.info("New fonts settings")
+                deaduction_fonts.set_fonts()
+            elif setting == "display.target_display_on_top":
+                self.ecw.organise_main_layout()
+            elif setting in (
+                    "symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP",
+                    'display.use_symbols_for_logic_button',
+                    'display.font_size_for_symbol_buttons'):
+                self.ecw.set_font()
+            elif setting == 'functionality.allow_implicit_use_of_definitions':
+                self.ecw.statements_tree.update_tooltips()
+            elif setting == "logic.use_bounded_quantification_notation":
+                set_quant_pattern()
+            else:  # Setting has not been handled
+                updated = False
+                break
+        # Case of unhandled settings:
+        if not updated:  # Last popped setting has not been handled
+            modified_settings.append(setting)
+
         if modified_settings:
-            self.current_selection = []
+            log.info("New ecw...")
+            # self.current_selection = []
+            # self.empty_current_selection()
             # TODO: only for relevant changes in preferences
             # TODO: try more subtle updating...
             ##############################
             # Redefine ecw from scratch! #
             ##############################
+            # if 'display.math_font_file' in modified_settings:
+            # deaduction_fonts.set_fonts()
+
             self.ecw = ExerciseCentralWidget(self.exercise)
             self.setCentralWidget(self.ecw)
             self.__connect_signals()
             if not self.freezed:  # If freezed then maybe goal has not been set
-                self.ecw.update_goal(
-                                 self.current_goal,
-                                 self.pending_goals,
-                                 self.displayed_proof_step.current_goal_number,
-                                 self.displayed_proof_step.total_goals_counter)
+                self.ecw.update_goal(self.current_goal, self.pending_goals)
             self.exercise_toolbar.update()
             self.__init_menubar()
-            # Reconnect Context area signals and slots
-            self.ecw.objects_wgt.clicked.connect(self.process_context_click)
-            self.ecw.props_wgt.clicked.connect(self.process_context_click)
 
-            self.ecw.target_wgt.target_label.mousePressEvent = \
-                self.process_target_click
-            if hasattr(self.ecw, "action_apply_button"):
-                self.ecw.objects_wgt.apply_math_object_triggered.connect(
-                    self.apply_math_object_triggered)
-                self.ecw.props_wgt.apply_math_object_triggered.connect(
-                    self.apply_math_object_triggered)
+            # self.ecw.target_wgt.target_label.mousePressEvent = \
+            #     self.process_target_click
+            # if hasattr(self.ecw, "action_apply_button"):
+            #     self.ecw.objects_wgt.apply_math_object_triggered.connect(
+            #         self.apply_math_object_triggered)
+            #     self.ecw.props_wgt.apply_math_object_triggered.connect(
+            #         self.apply_math_object_triggered)
 
-        self.ecw.target_wgt.mark_user_selected(self.target_selected)
+        # self.ecw.target_wgt.mark_user_selected(self.target_selected)
 
     ######################
     ######################
@@ -362,6 +492,8 @@ class ExerciseMainWindow(QMainWindow):
     @target_selected.setter
     def target_selected(self, target_selected):
         self._target_selected = target_selected
+        self.ecw.target_wgt.mark_user_selected(self.target_selected)
+        # print(f"Target selected :{self._target_selected}")
 
     def pretty_current_selection(self) -> str:
         """
@@ -426,6 +558,15 @@ class ExerciseMainWindow(QMainWindow):
         # # else:
         # #     pgs = []
         # return pgs
+
+    @property
+    def current_selection(self):
+        """
+        Note that the selection is not ordered by click time.
+        """
+        sel_objs = self.ecw.objects_wgt.selected_items()
+        sel_props = self.ecw.props_wgt.selected_items()
+        return sel_objs + sel_props
 
     @property
     def current_selection_as_mathobjects(self):
@@ -577,42 +718,104 @@ class ExerciseMainWindow(QMainWindow):
         Clear current (user) selection of math. objects and properties.
         """
 
-        for item in self.current_selection:
-            item.mark_user_selected(False)
-        self.current_selection = []
+        # for item in self.current_selection:
+        #     item.mark_user_selected(False)
+        # self.current_selection = []
+        self.ecw.props_wgt.clearSelection()
+        self.ecw.objects_wgt.clearSelection()
 
-    @Slot(MathObjectWidgetItem)
-    def process_context_click(self, item: Union[QModelIndex,
-                                                MathObjectWidgetItem]):
-        """
-        Add or remove item (item represents a math. object or property)
-        from the current selection, depending on whether it was already
-        selected or note.
+    # @Slot(MathObjectWidgetItem)
+    # def process_context_click(self, item: Union[QModelIndex,
+    #                                             MathObjectWidgetItem]):
+    #     """
+    #     Add or remove item (item represents a math. object or property)
+    #     from the current selection, depending on whether it was already
+    #     selected or note.
+    #
+    #     :item: The math. object or property user just clicked on.
+    #     """
+    #
+    #     if isinstance(item, QModelIndex):
+    #         index = item
+    #         item = self.ecw.objects_wgt.item_from_index(index)
+    #         if not item:
+    #             item = self.ecw.props_wgt.item_from_index(index)
+    #
+    #     if item not in self.current_selection:
+    #         # item.mark_user_selected(True)
+    #         self.current_selection.append(item)
+    #     else:
+    #         # elif item is not self.double_clicked_item:
+    #         # item.mark_user_selected(False)
+    #         self.current_selection.remove(item)
 
-        :item: The math. object or property user just clicked on.
-        """
-
-        if isinstance(item, QModelIndex):
-            index = item
-            item = self.ecw.objects_wgt.item_from_index(index)
-            if not item:
-                item = self.ecw.props_wgt.item_from_index(index)
-
-        if item not in self.current_selection:
-            item.mark_user_selected(True)
-            self.current_selection.append(item)
-        elif item is not self.double_clicked_item:
-            item.mark_user_selected(False)
-            self.current_selection.remove(item)
+        # Clear selection (we do not use the QListView selection mechanism):
+        # self.ecw.props_wgt.clearSelection()
+        # self.ecw.objects_wgt.clearSelection()
 
     @Slot()
-    def process_target_click(self, event=None):
+    def process_target_click(self, event=None, on=None):
         """
-        Select or un-select target. Current context selection is emptied.
+        Select or un-select target. Note that self.target_selected's setter
+        automatically call mark_user_selected().
+        """
+        self.target_selected = not self.target_selected if on is None else on
+
+    @Slot()
+    def show_help_on_item(self, item=None, on_target=False):
+        """
+        Show help on item if any, or on selected context object or target if
+        there is a single selected object
         """
 
-        self.target_selected = not self.target_selected
-        self.ecw.target_wgt.mark_user_selected(self.target_selected)
+        toggle = False
+        if not item:
+            if self.help_window.isVisible():  # Click from icon, close window
+                self.help_window.toggle(False)
+                return
+        else:
+            obj = self.displayed_proof_step.context_obj_solving
+            self.help_window.set_math_object(item, on_target=on_target,
+                                             context_solving=obj)
+
+        self.help_window.toggle(True)
+
+    @Slot(MathObjectWidgetItem)
+    def process_context_double_click(self, index):
+        """
+        Call the help window on double-clicked context item.
+        """
+
+        # Stop closing process, and unselect everything
+        self.close_help_window_timer.stop()
+        self.empty_current_selection()
+        self.process_target_click(on=False)
+
+        # Find item from index, in props_wgt or objects_wgt
+        props_wgt = self.ecw.props_wgt
+        math_item: MathObjectWidgetItem = props_wgt.item_from_index(index)
+        if not math_item:
+            obj_wgt = self.ecw.objects_wgt
+            math_item = obj_wgt.item_from_index(index)
+
+        if math_item:
+            self.show_help_on_item(item=math_item)
+            # self.help_window.set_math_object(math_item)
+            # self.help_window.toggle(True)
+
+    @Slot()
+    def process_target_double_click(self, event=None):
+
+        # Stop closing process, and unselect everything
+        self.close_help_window_timer.stop()
+        self.empty_current_selection()
+        self.process_target_click(on=False)
+
+        # target = self.ecw.target_wgt.target
+        math_item = self.ecw.target_wgt.target_label
+        self.show_help_on_item(item=math_item, on_target=True)
+        # self.help_window.set_math_object(item, target=True)
+        # self.help_window.toggle(True)
 
     def simulate_selection(self,
                            selection:
@@ -624,19 +827,16 @@ class ExerciseMainWindow(QMainWindow):
         Note that items in selection are first transformed into
         MathObjectWidgetItem if they are MathObject.
         """
+
         self.empty_current_selection()
         for item in selection:
+            # Determine math_object and MathWidgetItem
             if isinstance(item, MathObject):
-                item = MathObjectWidgetItem.from_math_object(item)
-            #     if item.math_type.is_prop():
-            #         item = self.ecw.props_wgt.item_from_logic(item)
-            #     else:
-            #         item = self.ecw.objects_wgt.item_from_logic(item)
-            self.process_context_click(item)
+                math_object = item
+                item: MathObjectWidgetItem = \
+                    MathObjectWidgetItem.from_math_object(item)
 
-        # # Select target if no selection:
-        # if not selection:
-        #     self.process_target_click(None)
+            item.select()
 
         if target_selected:
             self.process_target_click()
@@ -698,7 +898,7 @@ class ExerciseMainWindow(QMainWindow):
             if statement_widget:
                 if execute_action:  # Execute the action!
                     self.statement_triggered.emit(statement_widget)
-                await statement_widget.simulate(duration=0.4)
+                await statement_widget.simulate(duration=duration)
                 return True, msg
             else:
                 return False, f"No statement match {statement_name}"
@@ -722,21 +922,6 @@ class ExerciseMainWindow(QMainWindow):
         # print(user_action)
         success, msg = await self.simulate_user_action(user_action, duration,
                                                        execute_action=False)
-        # log.debug("  -->" + str(success) + msg)
-        # self.simulate_selection(proof_step.selection)
-        # # Check button or statement
-        # if proof_step.button_name:
-        #     button = ActionButton.from_name.get(proof_step.button_name)
-        #     if button:
-        #         self.ecw.freeze(False)
-        #         await button.simulate(duration=duration)
-        #         self.ecw.freeze(self.freezed)
-        # elif proof_step.statement_name:
-        #     name = proof_step.statement_name
-        #     item = StatementsTreeWidgetItem.from_name.get(name)
-        #     if name:
-        #         await item.simulate(duration=duration)
-
     ##################
     ##################
     # Update methods #
@@ -802,40 +987,36 @@ class ExerciseMainWindow(QMainWindow):
         :param new_goal: The new Goal to update / set the interface to.
         (or None if it has not been received yet).
         """
-        # TODO: tags will be incorporated in ContextMathObjects
+
         log.info("Updating UI")
+        if self.help_window.isVisible():
+            self.help_window.toggle(yes=False)
         self.proof_tree_controller.update()
         self.manage_msgs(self.displayed_proof_step)
         self.user_input = []
-
-        if not new_goal or new_goal is self.current_goal:  # No update needed
-            return
 
         # Reset current context selection
         # Here we do not use empty_current_selection since Widgets may have
         # been deleted, and anyway this is cosmetics since  widgets are
         # destroyed and re-created by "self.ecw.update_goal" just below
         self.target_selected = False
-        self.current_selection = []
+        # self.current_selection = []
+        self.empty_current_selection()
+
+        if not new_goal or new_goal is self.current_goal:  # No update needed
+            return
 
         # Update UI and attributes. Target stay selected if it was.
         # statements_scroll = self.ecw.statements_tree.verticalScrollBar(
         #                                                            ).value()
-        self.ecw.update_goal(new_goal,
-                             self.pending_goals,
-                             self.displayed_proof_step.current_goal_number,
-                             self.displayed_proof_step.total_goals_counter)
-        self.ecw.target_wgt.mark_user_selected(self.target_selected)
+        self.ecw.update_goal(new_goal, self.pending_goals)
+        # self.ecw.target_wgt.mark_user_selected(self.target_selected)
         self.current_goal = new_goal
-
-        # Reconnect Context area signals and slots
-        self.ecw.objects_wgt.clicked.connect(self.process_context_click)
-        self.ecw.props_wgt.clicked.connect(self.process_context_click)
 
         # NB: there seems to be a bug in Qt,
         #  self.ecw.target_wgt.mousePressEvent is not called when
         #  self.ecw.target_wgt.target_label format is set to richText (!)
         #  so we call the event of the target_label instead.
-        self.ecw.target_wgt.target_label.mousePressEvent = \
-            self.process_target_click
+        # self.ecw.target_wgt.target_label.mousePressEvent = \
+        #     self.process_target_click
 
