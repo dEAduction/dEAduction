@@ -48,14 +48,12 @@ class LeanEnvironment:
     def absolute_lean_libs(self):
         """
         Construct path information to be put in leanpkg.path file.
-        Absolute paths are used. This is obsolete due to Lean for Windows
-        which does not accept absolute paths. Use lean_libs instead.
         """
         # Respectively paths to the Lean library, the Mathlib library,
         #  the deaduction lean src.
         paths = [(self.lean_path / "lib" / "lean" / "library").resolve(),
-                (self.mathlib_path / "src").resolve(),
-                cdirs.usr_lean_rsc_dir]
+                 (self.mathlib_path / "src").resolve(),
+                 cdirs.usr_lean_src_dir]
 
         return paths
 
@@ -63,16 +61,24 @@ class LeanEnvironment:
     def lean_libs(self):
         """
         Construct path information to be put in leanpkg.path file.
-        Relative paths are used, relative to dst_path.
+        If possible, relative paths are used, relative to dst_path.
+        Note that Lean for Windows does not accept absolute paths.
         """
 
-        paths = [(self.lean_path / "lib" / "lean" / "library"),
-                (self.mathlib_path / "src"),
-                cdirs.usr_lean_rsc_dir]
-
-        rel_paths = [path.relative_to(self.leanpkg_path_dir) for path in paths]
-
-        return rel_paths
+        abs_paths = self.absolute_lean_libs
+        rel_paths = []
+        for path in abs_paths:
+            # From Python3.9 use is_relative_to()
+            try:
+                rel_paths.append(path.relative_to(self.leanpkg_path_dir))
+            except ValueError:
+                rel_paths = None
+                break
+        if not rel_paths:
+            print("Using absolute paths for Lean/Mathlib files")
+            return abs_paths
+        else:
+            return rel_paths
 
     @property
     def lean_bin(self):

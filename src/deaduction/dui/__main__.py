@@ -388,7 +388,7 @@ def copy_lean_files_to_home():
 
     # Copy Lean src:
     lean_src_dir = cdirs.lean_src_dir
-    usr_lean_src_dir = cdirs.usr_lean_rsc_dir
+    usr_lean_src_dir = cdirs.usr_lean_src_dir
     if usr_lean_src_dir.exists():
         rmtree(str(usr_lean_src_dir), ignore_errors=True)
     copytree(str(lean_src_dir),
@@ -402,7 +402,7 @@ def check_lean_src():
     not, call copy_lean_files_to_home.
     """
 
-    usr_lean_src_dir = cdirs.usr_lean_rsc_dir
+    usr_lean_src_dir = cdirs.usr_lean_src_dir
     if not usr_lean_src_dir.exists():
         copy_lean_files_to_home()
 

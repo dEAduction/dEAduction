@@ -94,6 +94,9 @@ os = ""  # Let this to "" except for debugging
 #########################
 # All Plateform packages
 #########################
+# NB: path can be modified (e.g. for network install), but
+# Under Windows Lean will not find its files if they are not relative to its cwd
+# ( which is supposed to be $DEADUCTION_HOME ).
 [package.all.mathlib]
 type="archive"
 path="$DEADUCTION_HOME/mathlib"

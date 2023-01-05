@@ -267,12 +267,13 @@ class LeanServer:
         # self.env.write_lean_path(tmp_path / "leanpkg.path")
 
         self.log.debug("Writing leanpkg.path")
-        lean_cwd = self.env.leanpkg_path_dir
-
         self.env.write_lean_path()
 
+        lean_cwd = self.env.leanpkg_path_dir
+
         # NB: Lean cwd can probably be anywhere, but the paths in the
-        # leanpkg.path MUST be relative to that path dir.
+        # leanpkg.path MUST be relative to that path dir
+        # (At least under Windows, leanpath does not accept absolute paths))
         self.process = await trio.open_process(
             [str(self.env.lean_bin), "--json", "--server"],
             stdin=PIPE,
