@@ -68,9 +68,10 @@ class LeanEnvironment:
         abs_paths = self.absolute_lean_libs
         rel_paths = []
         for path in abs_paths:
-            if path.is_relative_to(self.leanpkg_path_dir):
+            # From Python3.9 use is_relative_to()
+            try:
                 rel_paths.append(path.relative_to(self.leanpkg_path_dir))
-            else:
+            except ValueError:
                 rel_paths = None
                 break
         if not rel_paths:
