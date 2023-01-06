@@ -139,7 +139,7 @@ def app_pattern_from_constants():
                           for item in value)
         if r'\text_is' in new_value:
             new_not_key = f"NOT(APP(CONSTANT/name={key},...))"
-            new_not_value = tuple(r'\text_is_not' if item is r'\text_is' else
+            new_not_value = tuple(r'\text_is_not' if item == r'\text_is' else
                                   (0, item) if isinstance(item, int) else
                                   (0, ) + item if isinstance(item, tuple)
                                   else item for item in new_value)
