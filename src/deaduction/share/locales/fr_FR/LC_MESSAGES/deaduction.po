@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: 2022-12-30 11:17+0100\n"
-"PO-Revision-Date: 2022-12-30 11:18+0100\n"
+"PO-Revision-Date: 2023-01-06 14:50+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -934,7 +934,7 @@ msgstr "Négation « poussée » sur le but"
 
 #: pylib/actions/logic.py:438
 msgid "Negation cannot be pushed in selected property"
-msgstr "Impossible de « pousser » la négation dans  la propriété {}"
+msgstr "Impossible de « pousser » la négation dans  la propriété sélectionnée"
 
 #: pylib/actions/logic.py:442
 msgid "Negation pushed on property {}"

@@ -1013,7 +1013,7 @@ class StartCoExExerciseFinished(AbstractStartCoEx):
         congrats_wgt = QWidget()
         lyt          = QHBoxLayout()
         img          = QLabel()
-        pixmap       = QPixmap('confetti.png')
+        pixmap       = QPixmap(cdirs.icons / 'confetti.png')
         pixmap       = pixmap.scaledToHeight(100, Qt.SmoothTransformation)
         img.setPixmap(pixmap)
         lyt.addWidget(img)
