@@ -44,7 +44,7 @@ import logging
 
 from deaduction.pylib.math_display.pattern_data import \
     latex_from_pattern_string, latex_from_pattern_string_for_type, \
-    text_from_pattern_string, exists_patterns_from_forall, quant_pattern, \
+    text_from_pattern_string, quant_pattern, \
     set_quant_pattern
 
 from deaduction.pylib.math_display.app_pattern_data import \
@@ -77,7 +77,13 @@ def string_to_pattern():
     Fill-in the patterns_from_string dict by turning the keys of
     latex_from_pattern_string into PatternMathObject.
     """
+
     log.info("Pattern from strings:")
+    # (1) Clear pattern lists
+    for dict_, list_ in dic_list_pairs:
+        list_.clear()
+
+    # (2) Fill in pattern dicts
     for dict_, list_ in dic_list_pairs:
         for key, latex_shape in dict_.items():
             tree = tree_from_str(key)
@@ -88,14 +94,15 @@ def string_to_pattern():
             # print(tree.display())
 
 
+def pattern_init():
+    set_quant_pattern()
+    app_pattern_from_constants()
+    string_to_pattern()
+
+
 ########################################
 ########################################
 # We need some code to create the data #
 ########################################
 ########################################
-set_quant_pattern()
-exists_patterns_from_forall()
-app_pattern_from_constants()
-
-string_to_pattern()
-
+pattern_init()

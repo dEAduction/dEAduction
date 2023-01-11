@@ -31,6 +31,7 @@ import logging
 import deaduction.pylib.config.vars as cvars
 
 # from deaduction.pylib.text                  import use, prove
+from deaduction.pylib.math_display.display_data import single_to_every
 import deaduction.pylib.text.help_msgs as help_msgs
 from deaduction.pylib.mathobj.math_object   import MathObject
 
@@ -201,7 +202,7 @@ class ContextMathObject(MathObject):
 
         params: Dict[str, str] = dict()
         params['solving_obj'] = solving_obj
-        from deaduction.pylib.math_display import plural_types, plurals
+        from deaduction.pylib.math_display import plural_types
         if not obj:
             obj = self.math_type
         children = obj.children
@@ -226,7 +227,7 @@ class ContextMathObject(MathObject):
                 params['an_element_of_type_'] = \
                     ch1.math_type_to_display(format_=format_, text=True)
                 params['every_element_of_type_'] = \
-                    help_msgs.single_to_every(params['an_element_of_type_'])
+                    single_to_every(params['an_element_of_type_'])
 
         # Bounded quantification?
         real_type = obj.bounded_quant_real_type(is_math_type=True)
@@ -236,7 +237,7 @@ class ContextMathObject(MathObject):
                 real_type.math_type_to_display(format_=format_, text=True,
                                                is_math_type=True)
             params['every_element_of_type_'] = \
-                help_msgs.single_to_every(params['an_element_of_type_'])
+                single_to_every(params['an_element_of_type_'])
 
         # Definitions names
         if definitions:

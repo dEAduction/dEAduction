@@ -46,6 +46,9 @@ from deaduction.pylib.mathobj.lean_analysis import (lean_expr_with_type_grammar,
 from deaduction.pylib.utils import inj_list
 from deaduction.pylib.give_name.name_hint import NameHint
 
+from deaduction.pylib.math_display import (plural_types, numbers, plurals,
+                                           update_plurals)
+
 log = logging.getLogger(__name__)
 
 global _
@@ -1252,7 +1255,8 @@ def introduce_several_object(objects: [MathObject], format_) -> str:
 
     # Fixme: changing i18n does not update the following dic,
     #  even if module is reloaded (see config_window)
-    from deaduction.pylib.math_display import plural_types, numbers, plurals
+    # from deaduction.pylib.math_display import plural_types, numbers, plurals
+    update_plurals()
     new_sentence = ""
     if not objects:
         return new_sentence

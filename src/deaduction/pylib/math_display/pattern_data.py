@@ -97,51 +97,7 @@ global _
 metanodes = {'*INEQUALITY': ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥",
                              "PROP_EQUAL_NOT")}
 
-quant_pattern = {
-    # NB: QUANT nodes must have 3 children, with children[1] the bound var.
-    # !! Macro must be alone in their string (up to spaces) after splitting
-    # We use child nbs and not metavars to indicate P(x), since this is used
-    # for good parenthesing.
-    # NB: special case must appear BEFORE general cases, e.g.
-    # QUANT_∀(TYPE, LOCAL_CONSTANT/name=RealSubGroup) before QUANT_∀(TYPE, ...)
-    "QUANT_∀(TYPE, LOCAL_CONSTANT/name=RealSubGroup, ?2)": ((2,), ),
-    "QUANT_∀(APP(CONSTANT/name=decidable_linear_order, ?0), ?1, ?2)": ((2,), ),
-    "QUANT_∀(APP(CONSTANT/name=decidable_linear_ordered_comm_ring, ?0), ?1, "
-    "?2)": ((2,), ),
-    "QUANT_∀(SET(...), ?0, ?1)":
-    (r"\forall", (1,), r" \subset ", (0, 0), ", ", (2,)),
-    "QUANT_∀(FUNCTION(...), ?0, ?1)":
-    (r"\forall", (1,), r" \function_from", (0, 0), r'\to', (0, 1), ", ", (2, )),
-    "QUANT_∀(PROP, ?0, ?1)":
-    (r"\forall", (1,), r'\proposition', ", ", (2, )),
-    "QUANT_∀(TYPE(...), ?0, ?1)":
-    (r"\forall", (1,), r" \set", ", ", (2, )),
-    "QUANT_∀(SEQUENCE(...), ?0, ?1)":
-    (r"\forall", (1,), r" \sequence_in", (0, 1), ", ", (2, )),
-    "QUANT_∀(SET_FAMILY(...), ?0, ?1)":
-    (r"\forall", (1,), r" \type_family_subset", (0, 1), ", ", (2, )),
-    # "QUANT_∀(LOCAL_CONSTANT/name=RealSubGroup, ?0, ?1)":
-    #     (r"\forall", (1,), r'\in', r'\real', ", ", (2,)),
-}
-
-# Bounded quantification:
-bounded_quant_pattern = {
-    "QUANT_∀(?0, ?1, PROP_IMPLIES(PROP_BELONGS(?1, ?2), ?3))":
-        (r"\forall", (2, 0), ", ", (2, 1)),
-    "QUANT_∀(?0, ?1, PROP_IMPLIES(*INEQUALITY(?1, ?2), ?3))":
-        (r"\forall", (2, 0), ", ", (2, 1)),
-    "QUANT_∃(?0, ?1, PROP_∃(*INEQUALITY(?1, ?2), ?3))":
-        (r"\exists", (2, 0), ", ", (2, 1)),
-}
-
-
-def set_quant_pattern():
-    if cvars.get("logic.use_bounded_quantification_notation", True):
-        quant_pattern.update(bounded_quant_pattern)
-    else:
-        for key in bounded_quant_pattern:
-            if key in quant_pattern:
-                quant_pattern.pop(key)
+quant_pattern = dict()
 
 
 def exists_patterns_from_forall():
@@ -160,6 +116,67 @@ def exists_patterns_from_forall():
                              + shape[1:])
                 additional_quant_pattern[new_key] = new_value
     quant_pattern.update(additional_quant_pattern)
+
+
+def set_quant_pattern():
+    """
+    This method fills in the quant_pattern dictionary. In particular,
+    - it takes into account the bounded quantification patterns, according to
+    config.toml.
+    - it creates the existential patterns by calling
+    exists_patterns_from_forall().
+    """
+    # (1) Clear dict!
+    quant_pattern.clear()
+
+    # (2) Populate
+    quant_pattern.update({
+        # NB: QUANT nodes must have 3 children, with children[1] the bound var.
+        # !! Macro must be alone in their string (up to spaces) after splitting
+        # We use child nbs and not metavars to indicate P(x), since this is used
+        # for good parenthesing.
+        # NB: special case must appear BEFORE general cases, e.g.
+        # QUANT_∀(TYPE, LOCAL_CONSTANT/name=RealSubGroup) before QUANT_∀(TYPE, ...)
+        "QUANT_∀(TYPE, LOCAL_CONSTANT/name=RealSubGroup, ?2)": ((2,),),
+        "QUANT_∀(APP(CONSTANT/name=decidable_linear_order, ?0), ?1, ?2)": (
+        (2,),),
+        "QUANT_∀(APP(CONSTANT/name=decidable_linear_ordered_comm_ring, ?0), ?1, "
+        "?2)": ((2,),),
+        "QUANT_∀(SET(...), ?0, ?1)":
+            (r"\forall", (1,), r" \subset ", (0, 0), ", ", (2,)),
+        "QUANT_∀(FUNCTION(...), ?0, ?1)":
+            (r"\forall", (1,), r" \function_from", (0, 0), r'\to', (0, 1), ", ",
+             (2,)),
+        "QUANT_∀(PROP, ?0, ?1)":
+            (r"\forall", (1,), r'\proposition', ", ", (2,)),
+        "QUANT_∀(TYPE(...), ?0, ?1)":
+            (r"\forall", (1,), r" \set", ", ", (2,)),
+        "QUANT_∀(SEQUENCE(...), ?0, ?1)":
+            (r"\forall", (1,), r" \sequence_in", (0, 1), ", ", (2,)),
+        "QUANT_∀(SET_FAMILY(...), ?0, ?1)":
+            (r"\forall", (1,), r" \type_family_subset", (0, 1), ", ", (2,)),
+        # "QUANT_∀(LOCAL_CONSTANT/name=RealSubGroup, ?0, ?1)":
+        #     (r"\forall", (1,), r'\in', r'\real', ", ", (2,)),
+    })
+
+    # (3) Bounded quantification:
+    bounded_quant_pattern = {
+        "QUANT_∀(?0, ?1, PROP_IMPLIES(PROP_BELONGS(?1, ?2), ?3))":
+            (r"\forall", (2, 0), ", ", (2, 1)),
+        "QUANT_∀(?0, ?1, PROP_IMPLIES(*INEQUALITY(?1, ?2), ?3))":
+            (r"\forall", (2, 0), ", ", (2, 1)),
+        "QUANT_∃(?0, ?1, PROP_∃(*INEQUALITY(?1, ?2), ?3))":
+            (r"\exists", (2, 0), ", ", (2, 1)),
+    }
+    if cvars.get("logic.use_bounded_quantification_notation", True):
+        quant_pattern.update(bounded_quant_pattern)
+    else:  # Probably useless since dict is cleared first
+        for key in bounded_quant_pattern:
+            if key in quant_pattern:
+                quant_pattern.pop(key)
+
+    # (4) Exists patterns
+    exists_patterns_from_forall()
 
 
 # The '!' means type must match (NO_MATH_TYPE not allowed)

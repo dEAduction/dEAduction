@@ -289,24 +289,33 @@ latex_to_text = {
     r'\type_Q': _('a rational number'),
     r'\type_R': _('a real number')
 }
-plurals = {
-    _('Let {} be {}'): _("Let {} be {} {}"),  # Translate plural!!
-    _('a proposition'): _("propositions"),
-    _('a set'): _("sets"),
-    _('a subset'): _("subsets"),
-    _('an element'): _("elements"),
-    _('a function'): _("functions"),
-    _('a sequence'): _("sequences"),
-    _('a non-negative integer'): _('non-negative integers'),
-    _('an integer'): _("integers"),
-    _('a rational number'): _("rational numbers"),
-    _('a real number'): _("real numbers")
-}
+
+
+plurals = dict()
+
+
+def update_plurals():
+    """
+    Update the plural dictionary, useful if language changes.
+    """
+    plurals.update({
+        _('Let {} be {}'): _("Let {} be {} {}"),  # Translate plural!!
+        _('a proposition'): _("propositions"),
+        _('a set'): _("sets"),
+        _('a subset'): _("subsets"),
+        _('an element'): _("elements"),
+        _('a function'): _("functions"),
+        _('a sequence'): _("sequences"),
+        _('a non-negative integer'): _('non-negative integers'),
+        _('an integer'): _("integers"),
+        _('a rational number'): _("rational numbers"),
+        _('a real number'): _("real numbers")
+    })
 
 
 def plural_types(type_, utf8_type=None):
     """
-    Return type_ where the first word utf8_type of the plurals dict have been
+    Return type_ where the first word in utf8_type of the plurals dict have been
     replaced by its plural.
     """
 
@@ -317,6 +326,7 @@ def plural_types(type_, utf8_type=None):
     words = [word for word in utf8_type.split(" ") if word]
     for counter in range(len(words)):
         first_words = " ".join(words[:counter + 1])
+        update_plurals()
         if first_words in plurals:
             plural_first_words = plurals[first_words]
             plural_type = type_.replace(first_words, plural_first_words)
@@ -340,6 +350,16 @@ every = {
     _('a real number'): _("every real number")
 }
 
+
+def single_to_every(an_object: str) -> str:
+    """
+    Replace "an object", e.g. "an element", by "every object", e.g. "every
+    element".
+    """
+    for key, value in every.items():
+        if an_object.find(key) != -1:
+            every_object = an_object.replace(key, value)
+            return every_object
 
 numbers = {
     1: _("one"),

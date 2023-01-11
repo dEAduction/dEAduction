@@ -50,16 +50,16 @@ def _(msg):
     return msg
 
 
-def single_to_every(an_object: str) -> str:
-    """
-    Replace "an object", e.g. "an element", by "every object", e.g. "every
-    element".
-    """
-    from deaduction.pylib.math_display.display_data import every
-    for key, value in every.items():
-        if an_object.find(key) != -1:
-            every_object = an_object.replace(key, value)
-            return every_object
+# def single_to_every(an_object: str) -> str:
+#     """
+#     Replace "an object", e.g. "an element", by "every object", e.g. "every
+#     element".
+#     """
+#     from deaduction.pylib.math_display.display_data import every
+#     for key, value in every.items():
+#         if an_object.find(key) != -1:
+#             every_object = an_object.replace(key, value)
+#             return every_object
 
 
 use = dict()
@@ -194,7 +194,7 @@ use["not_non_pushable"] = (use["not"][0],
                            "")
 prove["not_non_pushable"] = use["not_non_pushable"]
 
-use[_("iff")] = (_("{this_property_is} a logical equivalence."),
+use["iff"] = (_("{this_property_is} a logical equivalence."),
                  (_('You can use the ⇔ ("IF AND ONLY IF") button <ul>'),
                   _('<li>to split it into two implications,</li>'),
                   _('<li>or to substitute {ch0} for {ch1}, or vice-versa, '
@@ -202,7 +202,7 @@ use[_("iff")] = (_("{this_property_is} a logical equivalence."),
                     '</li></ul>')),
                  "")
 
-prove[_("iff")] = (use["iff"][0],
+prove["iff"] = (use["iff"][0],
                    _('Press the ⇔ ("IF AND ONLY IF") button, to split the '
                      'proof into the proofs of the direct and reverse '
                      'implications. You may also use the ∧ (AND) button.'),

@@ -45,7 +45,7 @@ from PySide2.QtWidgets import (QMainWindow,
 from deaduction.pylib.coursedata        import  Exercise, UserAction
 from deaduction.pylib.mathobj           import (MathObject,
                                                 ProofStep)
-from deaduction.pylib.math_display.pattern_data import set_quant_pattern
+from deaduction.pylib.math_display.pattern_init import pattern_init
 
 from deaduction.dui.primitives          import deaduction_fonts
 
@@ -400,7 +400,7 @@ class ExerciseMainWindow(QMainWindow):
         """
         log.debug("New settings: ")
         log.debug(modified_settings)
-        updated = True
+        update_ecw_display = False
         while modified_settings:
             setting = modified_settings.pop()
             # (1) DnD
@@ -428,15 +428,16 @@ class ExerciseMainWindow(QMainWindow):
             elif setting == 'functionality.allow_implicit_use_of_definitions':
                 self.ecw.statements_tree.update_tooltips()
             elif setting == "logic.use_bounded_quantification_notation":
-                set_quant_pattern()
-            else:  # Setting has not been handled
-                updated = False
-                break
+                pattern_init()
+                update_ecw_display = True
+            else:  # Setting has not been handled, force update display
+                update_ecw_display = True
+                # break
         # Case of unhandled settings:
-        if not updated:  # Last popped setting has not been handled
-            modified_settings.append(setting)
+        # if not updated:  # Last popped setting has not been handled
+        #     modified_settings.append(setting)
 
-        if modified_settings:
+        if update_ecw_display:
             log.info("New ecw...")
             # self.current_selection = []
             # self.empty_current_selection()

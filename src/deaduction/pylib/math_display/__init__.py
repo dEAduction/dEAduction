@@ -27,11 +27,13 @@ This file is part of d∃∀duction.
 """
 
 from .pattern_data import metanodes
+# from .pattern_init import pattern_init  !! Circular import !!
 
 from .display_data import (latex_from_node,
                            latex_to_utf8,
                            latex_to_lean,
                            plurals,
+                           update_plurals,
                            plural_types,
                            numbers,
                            new_objects,
