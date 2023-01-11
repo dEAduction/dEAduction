@@ -228,7 +228,7 @@ begin
     todo
 end
 
-lemma theorem.image_directe :
+lemma exercise.image_directe :
 ∀ f: X→Y, ∀{A: set X}, ∀{x: X},
  (x ∈ A → f x ∈ f '' A)
 :=

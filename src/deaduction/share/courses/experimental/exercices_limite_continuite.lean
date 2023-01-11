@@ -794,6 +794,9 @@ PrettyName
 -/
 begin
   todo,
+  -- intro H,
+  -- rw converging_seq at H, cases H with x H,
+  -- have H := limit (λ n, (u n)^2)  (x^2)
 end
 
 -- lemma theorem.cauchy_bounded (u: ℕ → ℝ): 
