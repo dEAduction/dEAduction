@@ -351,10 +351,13 @@ class LeanServer:
 
         try:
             with trio.move_on_after(30):
-                await self.process.stdin.send_all(
-                    (str(jss) + "\n").encode("utf-8")
-                )
-
+                try:
+                    await self.process.stdin.send_all(
+                        (str(jss) + "\n").encode("utf-8"))
+                except trio.BrokenResourceError:
+                    self.log.error("Unable to send data to Lean")
+                    self.log.error("(Lean needs gmp. Install gmp and try "
+                                   "again.)")
                 await ev.wait()
 
                 return await self.pending_reqs.release(seq_num)
