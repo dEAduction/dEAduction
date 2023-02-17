@@ -392,6 +392,8 @@ PrettyName
   Image réciproque de l'image
 -/
 begin
+  -- intros A x H1,
+  -- have H2 := definitions.applications.exercise.image_directe,
   todo
 end
 

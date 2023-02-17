@@ -446,9 +446,8 @@ end
 
 lemma exercise.limite_inegalites
 (u v: ℕ → ℝ) (l l' : ℝ) (H : limit u l)
-(H' : limit v l')
-(H'' : ∀n, u n ≤ v n ) :
-l ≤ l'
+(H' : limit v l'):
+(∀n, u n ≤ v n ) → l ≤ l'
 :=
 /- dEAduction
 PrettyName
