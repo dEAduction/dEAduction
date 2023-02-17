@@ -1,0 +1,12 @@
+deaduction: dir-or-file-in-opt
+deaduction: package-contains-python-doctree-file
+deaduction: shared-lib-without-dependency-information
+deaduction: opentype-font-prohibits-installable-embedding
+deaduction: truetype-font-prohibits-installable-embedding
+deaduction: hardening-no-pie
+deaduction: executable-not-elf-or-script
+deaduction: embedded-javascript-library
+deaduction: duplicate-font-file
+deaduction: unstripped-binary-or-object
+deaduction: statically-linked-binary
+deaduction: embedded-library

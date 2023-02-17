@@ -1,0 +1,15 @@
+Source: deaduction
+Section: math
+Priority: optional
+Maintainer: Julien Guillod <julien.guillod@sorbonne-universite.fr>
+Build-Depends: debhelper (>=11~)
+Standards-Version: 4.1.4
+Homepage: https://github.com/dEAduction/dEAduction
+
+Package: deaduction
+Architecture: amd64
+Multi-Arch: foreign
+Depends: python3, ${misc:Depends}
+Description: Computer assisted proof for teaching using Lean.
+ Graphical software to teach how to write mathematical proofs
+ rigorously using Lean as backend.
