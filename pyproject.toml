@@ -1,8 +1,9 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools", "wheel", "setuptools-git-versioning"]
 [project]
 name = "deaduction"
 dynamic = ["dependencies", "version"]
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
-version = {file = ".git/HEAD"}
+[tool.setuptools-git-versioning]
+enabled = true
