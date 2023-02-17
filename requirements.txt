@@ -1,18 +1,10 @@
 PySide2>=5.13.2
-shiboken2>=5.13.2
 pytest>=5.4.3
-pytest-cov>=2.10.0
-qtrio==0.5.0
+qtrio>=0.5.1
 diff-match-patch>=20200713
 parsimonious>=0.8.1
 trio>=0.16.0
 dictdiffer>=0.8.1
 requests>=2.24.0
-idna<3
 toml>=0.10.1
-pep517>=0.9.1
 pickle5>=0.0.11; python_version < '3.8'
-
-pip~=21.1.2
-wheel~=0.36.2
-setuptools~=57.0.0
