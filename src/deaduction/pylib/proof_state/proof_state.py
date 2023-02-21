@@ -967,6 +967,35 @@ class Goal:
     ###################
     # Display methods #
     ###################
+    def negate(self) -> MathObject:
+        """
+        Return a math_object obtained by negating self. e.g. if self.context
+        contains objects x, y and properties P, Q, the new goal will be
+        ∀x, ∀y, (P and Q ) ==> target.
+        This is not a recursive method since we do not want to create new goals
+        (to avoid creating new ContextMathObjects).
+        """
+
+        # (1) Compute body of universal prop:
+        props = [prop.math_type for prop in self.context_props]
+        target = self.target.math_type
+        if props:
+            conjunction = MathObject.conjunction(props)
+            body = MathObject.implication(conjunction, target)
+        else:
+            body = target
+
+        # (2) Compute the "∀x, ∀y, ..." part:
+        objs = [obj for obj in self.context_objects]  # List shadow copy
+        while objs:
+            obj = objs.pop()
+            body = MathObject.forall(obj, body)
+
+        # (3) Negate!
+        new_prop = MathObject.negate(body)
+
+        return new_prop
+
     def goal_to_text(self,
                      format_="utf8",
                      to_prove=True,

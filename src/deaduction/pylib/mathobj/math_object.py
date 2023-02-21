@@ -433,6 +433,33 @@ class MathObject:
                    children=[var_type, new_var, new_body],
                    math_type=cls.PROP)
 
+    @classmethod
+    def conjunction(cls, math_objects):
+        """
+        Construct the conjunction of a list of properties.
+        """
+        if not math_objects:
+            return
+        elif len(math_objects) == 1:
+            return math_objects[0]
+        else:
+            prop = math_objects.pop()
+            trail_conjunction = cls.conjunction(math_objects)
+            return cls(node="PROP_AND",
+                       info={},
+                       children=[prop, trail_conjunction],
+                       math_type=cls.PROP)
+
+    @classmethod
+    def implication(cls, premise, conclusion):
+        """
+        Construct an implication.
+        """
+        return cls(node="PROP_IMPLIES",
+                   info={},
+                   children=[premise, conclusion],
+                   math_type=cls.PROP)
+
 ######################
 # Bound vars methods #
 ######################
