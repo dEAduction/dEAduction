@@ -408,6 +408,31 @@ class MathObject:
                            children=self.children, math_type=self.math_type)
         return other
 
+    @classmethod
+    def negate(cls, math_object):
+        """
+        Construct a new MathObject instance which stands for the negation of
+        math_object.
+        """
+        return cls(node="PROP_NOT",
+                   info={},
+                   children=math_object,
+                   math_type=cls.PROP)
+
+    @classmethod
+    def forall(cls, old_var, body):
+        """
+        Construct a new MathObject instance which stands for the a universal
+        property obtained by replacing old_var by a fresh boundvar in body.
+        """
+        var_type = old_var.math_type
+        new_var = BoundVar.from_math_type(var_type)
+        new_body = cls.substitute(old_var, new_var, body)
+        return cls(node="QUANT_∀",
+                   info={},
+                   children=[var_type, new_var, new_body],
+                   math_type=cls.PROP)
+
 ######################
 # Bound vars methods #
 ######################
@@ -762,6 +787,25 @@ class MathObject:
                     print("debug")
 
             return sum([child.contains(other) for child in self.children])
+
+    @classmethod
+    def substitute(cls, old_var, new_var, math_object):
+        """
+        Return a new MathObject instance by replacing old_var by new_var inside
+        math_object.
+        """
+        if math_object == old_var:
+            return new_var
+
+        else:
+            new_children = [cls.substitute(old_var, new_var, child)
+                            for child in math_object.children]
+
+            # Do we need to duplicate math_type here??
+            return cls(node=math_object.node,
+                       info=copy(math_object.info),
+                       children=new_children,
+                       math_type=math_object.math_type)
 
     def direction_for_substitution_in(self, other) -> str:
         """
@@ -1505,32 +1549,6 @@ class MathObject:
         vars.extend(more_vars)
         return vars
 
-    # ###############################
-    # # Collect the local variables #
-    # ###############################
-    # def extract_local_vars(self) -> list:
-    #     """
-    #     Recursively collect the list of variables used in the definition of
-    #     self (leaves of the tree). Here by definition, being a variable
-    #     means having an info["name"] which is not "NO NAME".
-    #     :return: list of MathObject instances
-    #     """
-    #     # TODO: change by testing if node == "LOCAL_CONSTANT"?
-    #     if "name" in self.info.keys() and self.info['name'] != 'NO NAME':
-    #         return [self]
-    #     local_vars = []
-    #     for child in self.children:
-    #         local_vars.extend(child.extract_local_vars())
-    #     return local_vars
-    #
-    # def extract_local_vars_names(self) -> List[str]:  # deprecated
-    #     """
-    #     Collect the list of names of variables used in the definition of self
-    #     (leaves of the tree)
-    #     """
-    #     return [math_obj.info["name"] for
-    #             math_obj in self.extract_local_vars()]
-
 ################################################
 # Display methods: implemented in math_display #
 ################################################
@@ -1548,241 +1566,6 @@ class MathObject:
         This method is actually defined in math_display/new_display.
         """
         return self
-
-    # def raw_latex_shape(self, negate=False, text_depth=0):
-    #     """
-    #     e.g. if self is a MathObject whose node is 'PROP_EQUAL', this method
-    #     will return [0, " = ", 1].
-    #     """
-    #     # (1) Case of special shape from self and its first child:
-    #     # NB: here the structure do depend on text_depth
-    #     shape = raw_latex_shape_from_couple_of_nodes(self, text_depth)
-    #     if shape:
-    #         # NEGATION:
-    #         if negate:
-    #             shape = [" " + r'\not' + " ", r'\parentheses', shape]
-    #         # log.debug(f"Shape from couples: {shape}")
-    #
-    #     # (2) Generic case, in latex_from_node
-    #     elif self.node in latex_from_node:
-    #         shape = list(latex_from_node[self.node])
-    #
-    #         # NEGATION:
-    #         if negate:
-    #             shape = [" " + r'\not' + " ", r'\parentheses', shape]
-    #     # (3) Node not found in dictionaries: try specific methods
-    #     else:
-    #         shape = raw_latex_shape_from_specific_nodes(self, negate)
-    #
-    #     # log.debug(f"    --> Raw shape: {shape}")
-    #     return shape
-    #
-    # def to_abstract_string(self, text_depth=0) -> Union[list, str]:
-    #     """
-    #     Return an abstract string representing self, as a tree of string.
-    #
-    #     (1) First compute the shape, e.g. [0, " = ", 1].
-    #     (2) Then compute an "expanded latex shape", a tree of strings with
-    #     latex macro.
-    #     (3) if text_depth >0, replace some symbols by plain text.
-    #     """
-    #
-    #     # (1) Compute shape
-    #     shape = self.raw_latex_shape(negate=False, text_depth=text_depth)
-    #
-    #     # (2) Compute tree of strings
-    #     abstract_string = recursive_display(self, text_depth=text_depth,
-    #                                         shape=shape)
-    #
-    #     # (3) Replace some symbols by plain text:
-    #     abstract_string = shallow_latex_to_text(abstract_string, text_depth)
-    #
-    #     return abstract_string
-    #
-    # def to_display(self, format_="html", text_depth=0,
-    #                use_color=True, bf=False) -> str:
-    #     """
-    #     Return a displayable string version of self. First compute an
-    #     abstract_string (i.e. a tree version) taking text_depth into account,
-    #     then concatenate according to format_.
-    #
-    #     Note that nice display of negations is obtained in raw_latex_node
-    #     and recursive_display.
-    #
-    #     :param format_:     one of 'utf8', 'html', 'latex'
-    #     :param text_depth:  if >0, will try to replace symbols by plain text
-    #     for the upper branches of the MathObject tree
-    #     :param use_color: use colors in html format
-    #     :param bf: use boldface fonts in html format.
-    #     """
-    #     # TODO: the case when text_depth is >0 but not "infinity" has not
-    #     #  been tested.
-    #     # WARNING: if you make some changes here,
-    #     #   then you probably have to do the same changes in
-    #     #   ContextMathObject.math_type_to_display.
-    #
-    #     # (1) Tree of strings
-    #     abstract_string = self.to_abstract_string(text_depth)
-    #     log.debug(f"Abstract string: {abstract_string}")
-    #
-    #     # (2) Adapt to format_ and concatenate to get a string
-    #     display = abstract_string_to_string(abstract_string, format_,
-    #                                         use_color=use_color, bf=bf,
-    #                                         no_text=(text_depth <= 0))
-    #     return display
-    #
-    # def raw_latex_shape_of_math_type(self, text_depth=0):
-    #     ########################################################
-    #     # Special math_types for which display is not the same #
-    #     ########################################################
-    #     # math_type = self.math_type
-    #     math_type = self
-    #     if math_type.node == "SET":
-    #         shape = [r'\type_subset', 0]
-    #     elif math_type.node == "SEQUENCE":
-    #         shape = [r'\type_sequence', 1]
-    #     elif math_type.node == "SET_FAMILY":
-    #         shape = [r'\type_family_subset', 1]
-    #     elif hasattr(math_type, 'math_type') \
-    #             and hasattr(math_type.math_type, 'node') \
-    #             and math_type.math_type.node in ("TYPE", "SET")\
-    #             and math_type.node != 'TYPE'\
-    #             and math_type.node != 'FUNCTION':
-    #             # and math_type.info.get('name'):
-    #         # name = math_type.info["name"]
-    #         # FIXME: bad format for html, would need format_
-    #         name = math_type.to_display(text_depth=text_depth, format_='utf8')
-    #         shape = [r'\type_element', name]
-    #         # The "an" is to be removed for short display
-    #     elif math_type.is_N():
-    #         shape = [r'\type_N']
-    #     elif math_type.is_Z():
-    #         shape = [r'\type_Z']
-    #     elif math_type.is_Q():
-    #         shape = [r'\type_Q']
-    #     elif math_type.is_R():
-    #         shape = [r'\type_R']
-    #     else:  # Generic case: usual shape from math_object
-    #         shape = math_type.raw_latex_shape(text_depth=text_depth)
-    #
-    #     # log.debug(f"Raw shape of math type: {shape}")
-    #     return shape
-    #
-    # def math_type_to_abstract_string(self, text_depth=0):
-    #     """
-    #     cf to_abstract_string, but applied to self as a math_type.
-    #     :param text_depth:
-    #     :return:
-    #     """
-    #     shape = self.raw_latex_shape_of_math_type(text_depth=text_depth)
-    #     abstract_string = recursive_display(self,
-    #                                         shape=shape,
-    #                                         text_depth=text_depth)
-    #     log.debug(f"Abstract string of type: {abstract_string}")
-    #
-    #     # Replace some symbol by plain text:
-    #     abstract_string = shallow_latex_to_text(abstract_string, text_depth)
-    #
-    #     return abstract_string
-    #
-    # def math_type_to_display(self, format_="html", text_depth=0,
-    #                          is_math_type=False,
-    #                          used_in_proof=False) -> str:
-    #     """
-    #     cf MathObject.to_display, but applied to self as a math_type (if
-    #     is_math_type) or to self.math_type (if not is_math_type).
-    #     Lean format_ is not pertinent here.
-    #     """
-    #     log.debug(f"Displaying math_type: {self.display_name}...")
-    #
-    #     if is_math_type:
-    #         math_type = self
-    #     else:
-    #         math_type = self.math_type
-    #     abstract_string = math_type.math_type_to_abstract_string(text_depth)
-    #     if used_in_proof:
-    #         abstract_string = [r'\used_property'] + abstract_string
-    #     # Adapt to format_ and concatenate to get a string
-    #     display = abstract_string_to_string(abstract_string, format_,
-    #                                         no_text=(text_depth <= 0))
-    #
-    #     return display
-
-    # def __lambda_var_n_body(self):
-    #     """
-    #     Given a MathObject that codes for
-    #         a sequence u = (u_n)_{n in N}
-    #         or a set family E = {E_i, i in I}
-    #     (but maybe a lambda expression), returns the body, that corresponds to
-    #     "u_n" or "E_i".
-    #     """
-    #     if self.is_lambda(is_math_type=True):
-    #         body = self.children[2]
-    #         bound_var = self.children[1]
-    #         name_single_bound_var(bound_var)  # FIXME
-    #     else:
-    #         # NB: math_type is "SET FAMILY ( X, set Y)"
-    #         #   or "SEQUENCE( N, Y)
-    #         # Change type to avoid infinite recursion:
-    #         raw_version = self.duplicate()
-    #         bound_var_type = self.math_type.children[0]
-    #         bound_var = BoundVar.from_has_bound_var_parent(self)
-    #         math_type = self.math_type.children[1]
-    #         body = MathObject(node="APPLICATION",
-    #                           info={},
-    #                           children=[raw_version, bound_var],
-    #                           math_type=math_type)
-    #
-    #     name_single_bound_var(bound_var)
-    #     return bound_var, body
-
-    ##################
-    # Naming methods #
-    ##################
-
-    # def potential_types(self):
-    #     """
-    #
-    #     """
-    #     # TODO: add SETS if set names are used as hints (a for elements of A).
-    #     # cvars.get('display.use_set_name_as_hint_for_naming_elements')
-    #     # if self.is_bound_var:
-    #     #     return [self.math_type]
-    #     # if self.node in ['SET', 'TYPE']:
-    #     if self.node == 'TYPE':  # self
-    #         return [self]
-    #     else:
-    #         return sum([child.potential_types() for child in self.children], [])
-
-    # def name_hint_from_type(self) -> Optional[str]:
-    #     """
-    #     Return a hint for naming a variable whose type is self.
-    #     """
-    #     hint = None
-    #     # TODO: add 'SET' if display.use_set_name_as_hint_for_naming_elements
-    #     # (1) If self is a set, try to name its terms (elements) according to
-    #     # its name, e.g. X -> x.
-    #     if self.is_type():
-    #         if self.display_name.isalpha() and self.display_name[0].isupper():
-    #             hint = self.display_name[0].lower()
-    #
-    #     # (2) Names of sequences
-    #     if self.is_sequence():
-    #         seq_type = self.children[1]
-    #         if not seq_type.is_number():
-    #             hint = seq_type.name_hint_from_type()
-    #
-    #     # Standard hints
-    #     if not hint:
-    #         hint = 'A' if self.node.startswith('SET') \
-    #             else 'X' if self.is_type(is_math_type=True) \
-    #             else 'P' if self.is_prop(is_math_type=True) \
-    #             else 'f' if self.is_function(is_math_type=True) \
-    #             else 'u' if self.is_sequence(is_math_type=True) \
-    #             else 'n' if self.is_nat(is_math_type=True) \
-    #             else None  # else 'x'  # Or None?
-    #
-    #     return hint
 
 
 MathObject.NO_MATH_TYPE = MathObject(node="not provided",
