@@ -416,7 +416,7 @@ class MathObject:
         """
         return cls(node="PROP_NOT",
                    info={},
-                   children=math_object,
+                   children=[math_object],
                    math_type=cls.PROP)
 
     @classmethod
@@ -427,11 +427,16 @@ class MathObject:
         """
         var_type = old_var.math_type
         new_var = BoundVar.from_math_type(var_type)
+        new_var.process_sequences_and_likes()
         new_body = cls.substitute(old_var, new_var, body)
-        return cls(node="QUANT_∀",
-                   info={},
-                   children=[var_type, new_var, new_body],
-                   math_type=cls.PROP)
+        forall = cls(node="QUANT_∀",
+                     info={},
+                     children=[var_type, new_var, new_body],
+                     math_type=cls.PROP)
+        new_var.parent = forall
+        new_var.name_bound_var(old_var.name)
+        # new_var.name_bound_var("Z")
+        return forall
 
     @classmethod
     def conjunction(cls, math_objects):
@@ -821,11 +826,11 @@ class MathObject:
         Return a new MathObject instance by replacing old_var by new_var inside
         math_object.
         """
-        if math_object == old_var:
+        if math_object is old_var:
             return new_var
 
-        else:
-            new_children = [cls.substitute(old_var, new_var, child)
+        elif math_object.contains(old_var):
+            new_children = [child.substitute(old_var, new_var, child)
                             for child in math_object.children]
 
             # Do we need to duplicate math_type here??
@@ -833,6 +838,8 @@ class MathObject:
                        info=copy(math_object.info),
                        children=new_children,
                        math_type=math_object.math_type)
+        else:
+            return math_object
 
     def direction_for_substitution_in(self, other) -> str:
         """
@@ -1621,7 +1628,7 @@ class BoundVar(MathObject):
 
     untouched_bound_var_names = ["RealSubGroup", "_inst_1", "_inst_2", "inst_3"]
 
-    def __init__(self, node, info, children, math_type, parent):
+    def __init__(self, node, info, children, math_type, parent=None):
         """
         The local context is the list of BoundVar instances that are
         meaningful where self is introduced. In particular, self's name

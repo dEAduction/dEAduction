@@ -974,6 +974,8 @@ class Goal:
         ∀x, ∀y, (P and Q ) ==> target.
         This is not a recursive method since we do not want to create new goals
         (to avoid creating new ContextMathObjects).
+
+        FIXME: en fait si ??
         """
 
         # (1) Compute body of universal prop:
@@ -995,6 +997,22 @@ class Goal:
         new_prop = MathObject.negate(body)
 
         return new_prop
+
+    @classmethod
+    def negated_goal(cls, old_goal):
+        """
+        Return a new goal which is the negation of old_goal.
+        """
+        new_prop = old_goal.negate()
+        new_target = ContextMathObject(node="LOCAL_CONSTANT",
+                                       info={'name': "target"},
+                                       children=[],
+                                       math_type=new_prop)
+        negated_goal = cls(context=[], target=new_target)
+        # Bound vars are named like the old context vars they stand for,
+        # but for dummy var for sequences.
+        negated_goal.smart_name_bound_vars()
+        return negated_goal
 
     def goal_to_text(self,
                      format_="utf8",

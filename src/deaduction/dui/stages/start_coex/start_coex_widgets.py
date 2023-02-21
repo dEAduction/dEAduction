@@ -442,10 +442,12 @@ class ExerciseChooser(AbstractCoExChooser):
 
         self.__exercises_tree = exercises_tree
         self.__text_mode_checkbox = None
+        self.__negate_goal_checkbox = None
         self.__main_widget_lyt    = None
         self.__goal_widget        = None
         self.__text_wgt           = None
         self.__ui_wgt             = None
+        self.__negate_statement = False
 
         self.__scrollbar_current_item_pos = 0
 
@@ -491,18 +493,22 @@ class ExerciseChooser(AbstractCoExChooser):
 
         if exercise.initial_proof_state:
 
-            # Checkbox
+            # Checkboxes
             self.__text_mode_checkbox = QCheckBox(_('Text mode'))
             self.__text_mode_checkbox.clicked.connect(self.toggle_text_mode)
+            self.__negate_goal_checkbox = QCheckBox(_('Negate goal'))
+            self.__negate_goal_checkbox.clicked.connect(self.toggle_negate_goal)
             cb_lyt = QHBoxLayout()
+            cb_lyt.addWidget(self.__negate_goal_checkbox)
             cb_lyt.addStretch()
             cb_lyt.addWidget(self.__text_mode_checkbox)
 
             main_widget_lyt.setContentsMargins(0, 0, 0, 0)
 
-            # Toggle text mode if needed
+            # Toggle text mode /negate statement if needed
             text_mode = cvars.get('display.text_mode_in_chooser_window', False)
             self.__text_mode_checkbox.setChecked(text_mode)
+            self.__negate_goal_checkbox.setChecked(self.__negate_statement)
 
             # Create goal widget, either in text mode or in deaduction mode,
             # according to self.__text_mode_checkbox.
@@ -547,12 +553,15 @@ class ExerciseChooser(AbstractCoExChooser):
         This method creates the goal widget, which will be either a
         __text_wgt, with exercise's content displayed as a text, or a __ui_wgt,
         with content displayed as it will be in the prover UI.
-        The widget is actually created only at first call.
+        FIXME: The widget is actually created only at first call.
         """
         # Logical data
         exercise = self.__exercise
         proofstate = exercise.initial_proof_state
         goal = proofstate.goals[0]  # Only one goal
+
+        if self.__negate_statement:
+            goal = goal.negated_goal(goal)
         # goal.name_bound_vars(to_prove=False)
 
         # BOF: keep standard size here.
@@ -667,6 +676,18 @@ class ExerciseChooser(AbstractCoExChooser):
                   self.__text_mode_checkbox.isChecked())
         self.set_preview(self.__exercise)
         # NB: cvars will be saved only when (and if) exercise starts
+
+    @Slot()
+    def toggle_negate_goal(self):
+        """
+        Toggle the negation of the goal.
+        FIXME: do we really want exercise.negate_statement to stay changed
+        when usr look at a different exercise?
+        """
+        # exercise = self.__exercise
+        # exercise.negate_statement = not exercise.negate_statement
+        self.__negate_statement = not self.__negate_statement
+        self.set_preview(self.__exercise)
 
     @Slot()
     def __check_proof_state_for_preview(self):
