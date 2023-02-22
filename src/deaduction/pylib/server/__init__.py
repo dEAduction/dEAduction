@@ -698,7 +698,10 @@ class ServerInterface(QObject):
             virtual_file_preamble = "\n".join(lines[:lemma_line]) \
                                     + "\n" + new_core_content \
                                     + "begin\n"
-            # print(virtual_file_preamble)
+            # Debug
+            # core = lines[lemma_line] + "\n" + new_core_content + "begin\n"
+            # print(core)
+
         else:
             # Construct virtual file
             virtual_file_preamble = "\n".join(lines[:begin_line]) + "\n"

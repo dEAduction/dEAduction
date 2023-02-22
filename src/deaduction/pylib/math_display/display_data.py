@@ -375,11 +375,24 @@ numbers = {
 }
 
 
-###################
-###################
-# LEAN dictionary #
-###################
-###################
+#####################
+#####################
+# LEAN dictionaries #
+#####################
+#####################
+# Only those shape that are distinct from the latex_from_node dict
+lean_from_node = {
+    "LOCAL_CONSTANT": (name,),
+    "QUANT_∀": (r"\forall", 1, r": ", 0, ", ", 2),
+    "QUANT_∃": (r"\exists", 1, r": ", 0, ", ", 2),
+    "QUANT_∃!": (r"\exists_unique", 1, r": ", 0, r', ', 2),
+    # Types:
+    "FUNCTION": (0, r'\to', 1),
+    "SEQUENCE": (0, r"\to", 1),
+    "SET": ('set ', 0),
+    "APPLICATION": (0, " ", 1)
+}
+
 # Only those lean symbols that are distinct from the latex_to_utf8 dict
 latex_to_lean_dic = {
     #'AND': 'and',
@@ -394,10 +407,18 @@ latex_to_lean_dic = {
     r'\false': 'False',
     r'\proposition': 'Prop',
     r'\set': 'Type',
-    "SET_FAMILY": (),  # FIXME: should be lean_name
     r'\set_image': " '' ",
     r'\set_inverse': " ⁻¹' ",
-    r'\set_of_subsets': "set"
+    r'\set_of_subsets': "set ",
+    r'\if': "",
+    r'\such_that': "",
+    r'\type_N': 'nat',
+    r'\type_Z': 'int',
+    # Fixme:
+    r'\type_Q': _('rational number'),
+    r'\type_R': 'real',
+    r'used_property': "",
+    r'\not': "not",
 }
 
 ####################

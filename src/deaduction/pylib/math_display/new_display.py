@@ -6,7 +6,8 @@ from deaduction.pylib.mathobj import MathObject, ContextMathObject
 from deaduction.pylib.pattern_math_obj import PatternMathObject
 from deaduction.pylib.math_display.display_data import (latex_from_node,
                                                         latex_from_quant_node,
-                                                        needs_paren)
+                                                        needs_paren,
+                                                        lean_from_node)
 from deaduction.pylib.math_display.pattern_init import (pattern_latex,
                                                         pattern_text,
                                                         pattern_latex_for_type)
@@ -109,7 +110,14 @@ def substitute_metavars(shape, metavars, self):
         return shape
 
 
-def latex_shape(self: MathObject, is_type=False, text=False) -> []:
+def lean_shape(self: MathObject) -> []:
+    if self.node in lean_from_node:
+        shape = list(lean_from_node[self.node])
+        return shape
+
+
+def latex_shape(self: MathObject, is_type=False, text=False,
+                lean_format=False) -> []:
     """
     Return the shape of self, e.g.
             [r'\forall', 1, r'\subset', 0, (2, )]
@@ -128,6 +136,11 @@ def latex_shape(self: MathObject, is_type=False, text=False) -> []:
     """
 
     shape = None
+
+    if lean_format:
+        shape = lean_shape(self)
+        if shape:  # Really, no more processing??
+            return shape
 
     # if self.name == "v":
     #     print("debug")
@@ -172,17 +185,15 @@ def latex_shape(self: MathObject, is_type=False, text=False) -> []:
     return shape
 
 
-def expanded_latex_shape(math_object=None, shape=None, text=False):
+def expanded_latex_shape(math_object=None, shape=None, text=False,
+                         lean_format=False):
     """
     Recursively replace each MathObject by its shape.
     tuples corresponds to children (or descendants) and are also replaced.
     """
-    # TODO: compare recursive_display
-    # if self.is_variable(is_math_type=True) or self.is_bound_var:
-    #     return self
 
     if not shape:
-        shape = latex_shape(math_object, text=text)
+        shape = latex_shape(math_object, text=text, lean_format=lean_format)
 
     # This is not pertinent : no_text will be processed in to_display()
     #  when calling shallow_text_to_text()
@@ -198,7 +209,8 @@ def expanded_latex_shape(math_object=None, shape=None, text=False):
     if isinstance(item, str):
         new_item = item
     elif isinstance(item, MathObject):
-        new_item = expanded_latex_shape(math_object=item, text=text)
+        new_item = expanded_latex_shape(math_object=item, text=text,
+                                        lean_format=lean_format)
         # TODO: add parentheses
         # # Between parentheses?
         # if needs_paren(math_object, child, item):
@@ -206,7 +218,8 @@ def expanded_latex_shape(math_object=None, shape=None, text=False):
 
     elif isinstance(item, tuple) or isinstance(item, int):
         child = math_object.descendant(item)
-        new_item = expanded_latex_shape(math_object=child, text=text)
+        new_item = expanded_latex_shape(math_object=child, text=text,
+                                        lean_format=lean_format)
         if needs_paren(math_object, child, item):
             new_item = [r'\parentheses', new_item]
     elif callable(item):
@@ -216,14 +229,16 @@ def expanded_latex_shape(math_object=None, shape=None, text=False):
         # references to math_object's children or descendant
         new_item = expanded_latex_shape(math_object=math_object,
                                         shape=item,
-                                        text=text)
+                                        text=text,
+                                        lean_format=lean_format)
 
     #################################
     # Expand the remaining of shape #
     #################################
     more_shape = (expanded_latex_shape(math_object=math_object,
                                        shape=shape[1:],
-                                       text=text)
+                                       text=text,
+                                       lean_format=lean_format)
                   if len(shape) > 1 else [])
     expanded_shape = [new_item] + more_shape
 
@@ -242,17 +257,21 @@ def to_display(self: MathObject, format_="html", text=False,
     # if len(self.children) >0 and self.children[1].name == 'v':
     #     print('debug')
 
+    lean_format = (format_ == "lean")
+
     # (1) Compute expanded shape
-    shape = latex_shape(self, is_type=is_type, text=text)
+    shape = latex_shape(self, is_type=is_type, text=text,
+                        lean_format=lean_format)
     if used_in_proof:
         shape = [r'\used_property'] + shape
     abstract_string = expanded_latex_shape(math_object=self, shape=shape,
-                                           text=text)
+                                           text=text, lean_format=lean_format)
 
     # log.debug(f"Abstract string: {abstract_string}")
     # (3) Replace some symbols by plain text, or shorten some text:
     text_depth = 100 if text else 0
-    abstract_string = shallow_latex_to_text(abstract_string, text_depth)
+    if not lean_format:
+        abstract_string = shallow_latex_to_text(abstract_string, text_depth)
 
     # (4) Format into a displayable string
     display = abstract_string_to_string(abstract_string, format_,

@@ -1046,7 +1046,8 @@ class Goal:
         target = self.target_to_lean()
         lean_statement = f"example\n {context} :\n {target}"
         # lean_proof = "begin\n\nend\n"
-
+        # debug:
+        print(lean_statement)
         return lean_statement + " :=\n"  # + lean_proof
 
     def goal_to_text(self,
