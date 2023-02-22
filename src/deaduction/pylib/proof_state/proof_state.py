@@ -1014,6 +1014,41 @@ class Goal:
         negated_goal.smart_name_bound_vars()
         return negated_goal
 
+    def context_to_lean(self):
+        """
+        Return  self's context in Lean format, e.g.
+        (x: X) (A: set X) (H1: x ∈ A)
+        """
+        lean_context = ""
+        for co in self.context:
+            lean_context += f"({co.to_lean_with_type()}) "
+
+        return lean_context
+
+    def target_to_lean(self):
+        """
+        Return  self's target in Lean format, e.g.
+        x ∈ B
+        """
+        return self.target.math_type.to_display(format_='lean')
+
+    def to_lean_example(self):
+        """
+        Return self's content as a Lean example, e.g.
+        'example
+        (x: X) (A: set X) (H1: x ∈ A) :
+        x ∈ B :=
+        begin
+
+        end'
+        """
+        context = self.context_to_lean()
+        target = self.target_to_lean()
+        lean_statement = f"example\n {context} :\n {target}"
+        # lean_proof = "begin\n\nend\n"
+
+        return lean_statement + " :=\n"  # + lean_proof
+
     def goal_to_text(self,
                      format_="utf8",
                      to_prove=True,
@@ -1210,6 +1245,10 @@ class ProofState:
     """
     goals: List[Goal]
     lean_data: Tuple[str, str] = None
+
+    @property
+    def main_goal(self):
+        return self.goals[0]
 
     @classmethod
     def from_lean_data(cls, hypo_analysis: str, targets_analysis: str,

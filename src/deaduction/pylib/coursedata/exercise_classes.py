@@ -265,14 +265,14 @@ class Statement:
     def is_exercise(self):
         return isinstance(self, Exercise)
 
-    @property
-    def type(self):
-        if self.is_definition():
-            return _('definition')
-        elif self.is_theorem():
-            return _('theorem')
-        elif self.is_exercise():
-            return _('exercise')
+    # @property
+    # def type(self):
+    #     if self.is_definition():
+    #         return _('definition')
+    #     elif self.is_theorem():
+    #         return _('theorem')
+    #     elif self.is_exercise():
+    #         return _('exercise')
 
     @property
     def type_(self):
@@ -282,6 +282,16 @@ class Statement:
             return _('theorem')
         elif self.is_exercise():
             return _('exercise')
+
+    def goal(self):
+        ips = self.initial_proof_state
+        if ips:
+            return ips.goals[0]
+
+    def negated_goal(self):
+        goal = self.goal()
+        if goal:
+            return goal.negated_goal(goal)
 
 
 class Definition(Statement):

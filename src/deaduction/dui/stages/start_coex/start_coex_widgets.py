@@ -447,7 +447,7 @@ class ExerciseChooser(AbstractCoExChooser):
         self.__goal_widget        = None
         self.__text_wgt           = None
         self.__ui_wgt             = None
-        self.__negate_statement = False
+        self.negate_statement = False
 
         self.__scrollbar_current_item_pos = 0
 
@@ -508,7 +508,7 @@ class ExerciseChooser(AbstractCoExChooser):
             # Toggle text mode /negate statement if needed
             text_mode = cvars.get('display.text_mode_in_chooser_window', False)
             self.__text_mode_checkbox.setChecked(text_mode)
-            self.__negate_goal_checkbox.setChecked(self.__negate_statement)
+            self.__negate_goal_checkbox.setChecked(self.negate_statement)
 
             # Create goal widget, either in text mode or in deaduction mode,
             # according to self.__text_mode_checkbox.
@@ -560,7 +560,7 @@ class ExerciseChooser(AbstractCoExChooser):
         proofstate = exercise.initial_proof_state
         goal = proofstate.goals[0]  # Only one goal
 
-        if self.__negate_statement:
+        if self.negate_statement:
             goal = goal.negated_goal(goal)
         # goal.name_bound_vars(to_prove=False)
 
@@ -686,7 +686,7 @@ class ExerciseChooser(AbstractCoExChooser):
         """
         # exercise = self.__exercise
         # exercise.negate_statement = not exercise.negate_statement
-        self.__negate_statement = not self.__negate_statement
+        self.negate_statement = not self.negate_statement
         self.set_preview(self.__exercise)
 
     @Slot()
@@ -962,9 +962,12 @@ class AbstractStartCoEx(QDialog):
 
         exercise = self.__exercise_chooser.exercise
 
+        if self.__exercise_chooser.negate_statement:
+            exercise.negate_statement = True
+
         # check if exercise must be negated (e.g. is an open question)
-        # TODO: this should be moved elsewhere, e.g. in __main__
-        if not check_negate_statement(exercise):
+        # TODO: adapt to negate checkbox
+        elif not check_negate_statement(exercise):
             return
 
         # Save course_path, title, and exercise number

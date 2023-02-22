@@ -687,14 +687,18 @@ class ServerInterface(QObject):
         # Replace statement by negation if required
         if (hasattr(statement, 'negate_statement')
                 and statement.negate_statement):
-            lean_core_statement = statement.lean_core_statement
-            negation = " not( " + lean_core_statement + " )"
+            # lean_core_statement = statement.lean_core_statement
+            # negation = " not( " + lean_core_statement + " )"
             lemma_line = statement.lean_line - 1
-            rough_core_content = "\n".join(lines[lemma_line:begin_line]) + "\n"
-            new_core_content = rough_core_content.replace(
-                                    lean_core_statement, negation)
+            # rough_core_content = "\n".join(lines[lemma_line:begin_line]) + "\n"
+            # new_core_content = rough_core_content.replace(
+            #                         lean_core_statement, negation)
+            negated_goal = statement.negated_goal()
+            new_core_content = negated_goal.to_lean_example()
             virtual_file_preamble = "\n".join(lines[:lemma_line]) \
-                                    + "\n" + new_core_content
+                                    + "\n" + new_core_content \
+                                    + "begin\n"
+            # print(virtual_file_preamble)
         else:
             # Construct virtual file
             virtual_file_preamble = "\n".join(lines[:begin_line]) + "\n"
