@@ -47,6 +47,16 @@ global _
 # \text_is
 # and so on
 
+def lean_application(mo):
+    """
+    Return Lean shape for APPLICATION(0, 1, 2, ...)
+    -> [0, " ", 1, " ", ...]
+    """
+    li = []
+    for i in range(len(mo.children)):
+        li.extend([i, " "])
+    return li
+
 
 def name(mo):
     return mo.info.get('name', "NO NAME")
@@ -383,6 +393,7 @@ numbers = {
 # Only those shape that are distinct from the latex_from_node dict
 lean_from_node = {
     "LOCAL_CONSTANT": (name,),
+    "CONSTANT": ("@", name),  # e.g. @composition
     "QUANT_∀": (r"\forall", 1, r": ", 0, ", ", 2),
     "QUANT_∃": (r"\exists", 1, r": ", 0, ", ", 2),
     "QUANT_∃!": (r"\exists_unique", 1, r": ", 0, r', ', 2),
@@ -390,7 +401,7 @@ lean_from_node = {
     "FUNCTION": (0, r'\to', 1),
     "SEQUENCE": (0, r"\to", 1),
     "SET": ('set ', 0),
-    "APPLICATION": (0, " ", 1)
+    "APPLICATION": (lean_application, ),
 }
 
 # Only those lean symbols that are distinct from the latex_to_utf8 dict

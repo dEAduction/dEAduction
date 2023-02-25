@@ -133,8 +133,8 @@ def recursive_utf8_display(l: list, depth) -> str:
 
 def utf8_display(abstract_string: Union[str, list], depth=0):
     """
-    Return a html version of the string represented by string, which is a
-    tree of string.
+    Return a utf8 version of the string represented by abstract_string,
+    which is a tree of string.
     """
     if isinstance(abstract_string, list):
         string = recursive_utf8_display(abstract_string, depth)

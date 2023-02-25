@@ -206,15 +206,21 @@ def expanded_latex_shape(math_object=None, shape=None, text=False,
     #####################
     new_item = "***"
     item = shape[0]
-    if isinstance(item, str):
+
+    if callable(item):
+        new_shape = item(math_object)
+        # shape may be a list, e;g. for APPLICATION in Lean format
+        new_item = (expanded_latex_shape(math_object=math_object,
+                                         shape=new_shape,
+                                         text=text, lean_format=lean_format)
+                    if isinstance(shape, list) else new_shape)
+        # new_item = shape
+    elif isinstance(item, str):
         new_item = item
+
     elif isinstance(item, MathObject):
         new_item = expanded_latex_shape(math_object=item, text=text,
                                         lean_format=lean_format)
-        # TODO: add parentheses
-        # # Between parentheses?
-        # if needs_paren(math_object, child, item):
-        #     display_item = [r'\parentheses', display_item]
 
     elif isinstance(item, tuple) or isinstance(item, int):
         child = math_object.descendant(item)
@@ -222,8 +228,7 @@ def expanded_latex_shape(math_object=None, shape=None, text=False,
                                         lean_format=lean_format)
         if needs_paren(math_object, child, item):
             new_item = [r'\parentheses', new_item]
-    elif callable(item):
-        new_item = item(math_object)
+
     elif isinstance(item, list):
         # We have to pass the math_object, in case the list contains
         # references to math_object's children or descendant
@@ -240,6 +245,9 @@ def expanded_latex_shape(math_object=None, shape=None, text=False,
                                        text=text,
                                        lean_format=lean_format)
                   if len(shape) > 1 else [])
+
+    # if not isinstance(new_item, list):
+    #     new_item = [new_item]
     expanded_shape = [new_item] + more_shape
 
     return expanded_shape

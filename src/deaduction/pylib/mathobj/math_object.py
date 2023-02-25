@@ -332,8 +332,8 @@ class MathObject:
                 # (i) BoundVar case
                 name = info.get('name')
                 if name and name.endswith('.BoundVar'):
-                    if name == 'u.BoundVar':
-                        print("debug")
+                    # if name == 'u.BoundVar':
+                    #     print("debug")
                     # Remove suffix and create a BoundVar
                     info['name'] = info['name'][:-len('.BoundVar')]
                     math_object = BoundVar(node=node,
@@ -815,8 +815,8 @@ class MathObject:
         else:
             for child in self.children:
                 test = child.contains(other)
-                if test:
-                    print("debug")
+                # if test:
+                #     print("debug")
 
             return sum([child.contains(other) for child in self.children])
 
