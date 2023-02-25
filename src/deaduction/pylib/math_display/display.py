@@ -24,7 +24,7 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Union
-from .utf8_display import utf8_display
+from .utf8_display import utf8_display, lean_display
 from .html_display import html_display
 from deaduction.pylib.math_display import latex_to_utf8, latex_to_lean
 
@@ -37,6 +37,7 @@ def abstract_string_to_string(abstract_string: Union[list, str], format_,
     Turn an abstract string into a string in various formats.
     """
     display = ""
+    # (1) Replace latex macro by utf8/lean versions
     if format_ == 'lean':
         abstract_string = latex_to_lean(abstract_string)
 
@@ -45,13 +46,13 @@ def abstract_string_to_string(abstract_string: Union[list, str], format_,
     else:
         raise ValueError("Wrong format_ type, must be one of 'lean', 'utf8', "
                          "'html'")
-    # Concatenate and format:
+    # (2) Concatenate and format
     if format_ == 'html':
         display = html_display(abstract_string, use_color=use_color, bf=bf,
                                no_text=no_text)
     elif format_ == 'utf8':
         display = utf8_display(abstract_string)
-    elif format_ == 'lean':  # FIXME: should be adapted to Lean
-        display = utf8_display(abstract_string)
+    elif format_ == 'lean':
+        display = lean_display(abstract_string)
 
     return display

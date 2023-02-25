@@ -209,11 +209,13 @@ def expanded_latex_shape(math_object=None, shape=None, text=False,
 
     if callable(item):
         new_shape = item(math_object)
+        # if new_shape == 'abs':
+        #     print('debug')
         # shape may be a list, e;g. for APPLICATION in Lean format
         new_item = (expanded_latex_shape(math_object=math_object,
                                          shape=new_shape,
                                          text=text, lean_format=lean_format)
-                    if isinstance(shape, list) else new_shape)
+                    if isinstance(new_shape, list) else new_shape)
         # new_item = shape
     elif isinstance(item, str):
         new_item = item
@@ -223,6 +225,8 @@ def expanded_latex_shape(math_object=None, shape=None, text=False,
                                         lean_format=lean_format)
 
     elif isinstance(item, tuple) or isinstance(item, int):
+        # if item == 3:
+        #     print('debug')
         child = math_object.descendant(item)
         new_item = expanded_latex_shape(math_object=child, text=text,
                                         lean_format=lean_format)

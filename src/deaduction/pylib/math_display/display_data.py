@@ -332,7 +332,7 @@ def plural_types(type_, utf8_type=None):
     plural_type = None
     if not utf8_type:
         utf8_type = type_
-    # Keep only non empty words:
+    # Keep only nonempty words:
     words = [word for word in utf8_type.split(" ") if word]
     for counter in range(len(words)):
         first_words = " ".join(words[:counter + 1])
@@ -402,6 +402,7 @@ lean_from_node = {
     "SEQUENCE": (0, r"\to", 1),
     "SET": ('set ', 0),
     "APPLICATION": (lean_application, ),
+    "PROP_NOT": ('not', 0)  # Prevent pattern NOT(APP(CONSTANT(...)) -> is not
 }
 
 # Only those lean symbols that are distinct from the latex_to_utf8 dict
@@ -423,13 +424,17 @@ latex_to_lean_dic = {
     r'\set_of_subsets': "set ",
     r'\if': "",
     r'\such_that': "",
+    'ℕ': "nat",
+    'ℤ': "int",
+    'ℚ': "rat",
+    'ℝ': "real",
     r'\type_N': 'nat',
     r'\type_Z': 'int',
-    # Fixme:
-    r'\type_Q': _('rational number'),
+    r'\type_Q': "rat",
     r'\type_R': 'real',
     r'used_property': "",
-    r'\not': "not",
+    r'\not': "not ",
+    r'\times': "*"
 }
 
 ####################
@@ -485,7 +490,7 @@ def needs_paren(parent, child, child_number) -> bool:
         # e.g. (f∘g)^{-1} (x)
         return True
     # Fixme: Does not work?:
-    elif p_node == "APPLICATION" and child_number == -1 and child.children:
+    elif p_node == "APPLICATION" and child.children:  # and child_number == -1
         return True
     elif c_node == "APPLICATION":
         return False

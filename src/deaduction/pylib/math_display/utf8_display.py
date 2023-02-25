@@ -146,3 +146,38 @@ def utf8_display(abstract_string: Union[str, list], depth=0):
     return replace_dubious_characters(cut_spaces(string))
 
 
+def recursive_lean_display(l: list, depth) -> str:
+    """
+    """
+    if not l:
+        return ""
+
+    head = l[0]
+    if head == r'\sub' or head == '_':
+        return subscript(recursive_lean_display(l[1:], depth))
+    elif head == r'\super' or head == '^':
+        return superscript(recursive_lean_display(l[1:], depth))
+    elif head in (r'\variable', r'\dummy_variable', r'\used_property',
+                  r'\text', r'\no_text'):
+        return recursive_lean_display(l[1:], depth)
+
+    else:  # Generic case
+        add_parentheses(l, depth=depth)
+        strings = [lean_display(child, depth+1) for child in l]
+        return ''.join(strings)
+
+
+def lean_display(abstract_string: Union[str, list], depth=0):
+    """
+    Return a Lean version of the string represented by abstract_string,
+    which is a tree of string.
+    """
+    if isinstance(abstract_string, list):
+        string = recursive_lean_display(abstract_string, depth)
+    else:  # FIXME
+        # string = sub_sup_to_utf8(abstract_string)
+        string = abstract_string
+    if isinstance(string, list):  # debug
+        print(f"Variable string {string} should be a string, not a list!")
+    return cut_spaces(string)
+
