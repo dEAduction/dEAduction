@@ -286,14 +286,14 @@ class ServerInterface(QObject):
         # Events
         self.lean_server_running       = trio.Event()
         self.file_invalidated          = trio.Event()
-        self.__proof_state_valid       = trio.Event()  # FIXME: useless
+        # self.__proof_state_valid       = trio.Event()  # FIXME: useless
 
         # proof_receive_done is set when enough information have been
         # received, i.e. (for exercise processing) either we have context and
         # target and all effective codes, OR an error message
         self.proof_receive_done      = trio.Event()
 
-        self.__tmp_hypo_analysis       = ""
+        self.__tmp_hypo_analysis       = []
         self.__tmp_targets_analysis    = ""
 
         # When some CodeForLean is sent to the __update method, it will be
@@ -314,6 +314,14 @@ class ServerInterface(QObject):
         # ServerQueue
         self.server_queue = ServerQueue(nursery=nursery,
                                         timeout_signal=self.lean_response)
+
+    def __expected_nb_goals(self):
+        """
+        Return the number of goals, estimated by the number of nonempty
+        lines in self.__tmp_targets_analysis, minus one (to take into account
+        the title line "targets:").
+        """
+        return len(self.__tmp_targets_analysis.splitlines())-1
 
     @property
     def lean_file_contents(self):
@@ -364,9 +372,13 @@ class ServerInterface(QObject):
         updating Proofstate.
             (for processing exercise only)
         """
-        if self.__tmp_targets_analysis \
-                and self.__tmp_hypo_analysis \
-                and not self.__tmp_effective_code.has_or_else():
+        self.log.debug("Checking receive state: ")
+        self.log.debug(f"{len(self.__tmp_hypo_analysis)}/{self.__expected_nb_goals()}")
+        if (self.__tmp_targets_analysis
+                and self.__tmp_hypo_analysis
+            # Check every goal hypo_analysis have been received:
+                and len(self.__tmp_hypo_analysis) == self.__expected_nb_goals()
+                and not self.__tmp_effective_code.has_or_else()):
             self.proof_receive_done.set()
 
     def __on_lean_message(self, msg: Message):
@@ -388,9 +400,8 @@ class ServerInterface(QObject):
 
         # Filter seq_num
         if msg.seq_num:
-            msg_seq_num = msg.seq_num
             req_seq_num = self.request_seq_num
-            # self.log.debug(f"Received msg with seq_num {msg_seq_num}")
+            # self.log.debug(f"Received msg with seq_num {msg.seq_num}")
             if msg.seq_num != req_seq_num :
                 self.log.warning(f"Request seq_num is {req_seq_num}: "
                                  f"ignoring msg form seq_num {msg.seq_num}")
@@ -401,7 +412,7 @@ class ServerInterface(QObject):
             return
 
         txt = msg.text
-        # self.log.debug("Lean message: " + txt)
+        self.log.debug("Lean message: " + txt)
         line = msg.pos_line
         severity = msg.severity
 
@@ -414,21 +425,21 @@ class ServerInterface(QObject):
                 self.log.warning(f"Lean warning at line {line}: {txt}")
 
         elif txt.startswith("context:") \
-                and line == self.lean_file.last_line_of_inner_content + 1\
-                and not self.__tmp_hypo_analysis:
+                and line == self.lean_file.last_line_of_inner_content + 2:
+                # and not self.__tmp_hypo_analysis:
             self.log.info("Got new context")
-            self.__tmp_hypo_analysis = txt
+            self.__tmp_hypo_analysis.append(txt)
 
-            self.__proof_state_valid = trio.Event()  # Invalidate proof state
+            # self.__proof_state_valid = trio.Event()  # Invalidate proof state
             self.__check_receive_state()
 
         elif txt.startswith("targets:") \
-                and line == self.lean_file.last_line_of_inner_content + 2\
+                and line == self.lean_file.last_line_of_inner_content + 1\
                 and not self.__tmp_targets_analysis:
             self.log.info("Got new targets")
             self.__tmp_targets_analysis = txt
 
-            self.__proof_state_valid = trio.Event()  # Invalidate proof state
+            # self.__proof_state_valid = trio.Event()  # Invalidate proof state
             self.__check_receive_state()
 
         elif txt.startswith("EFFECTIVE CODE") \
@@ -514,7 +525,7 @@ class ServerInterface(QObject):
                 index = self.__course_data.statements.index(st)
                 self.log.info(f"Got new context for statement {st.lean_name}, "
                               f"index = {index}")
-                self.__course_data.hypo_analysis[index] = txt
+                self.__course_data.hypo_analysis[index] = [txt]
                 self.__check_receive_course_data(index)
             else:
                 self.log.debug(f"(Context for statement line {line} "
@@ -544,7 +555,7 @@ class ServerInterface(QObject):
         """
         # Filter message text, record if not ignored message
         if msg.text.startswith(LEAN_NOGOALS_TEXT) \
-            and msg.pos_line == self.lean_file.last_line_of_inner_content + 1:
+            and msg.pos_line == self.lean_file.last_line_of_inner_content + 2:
             self.no_more_goals = True
             self.proof_receive_done.set()  # Done receiving
             # if hasattr(self.proof_no_goals, "emit"):
@@ -591,7 +602,7 @@ class ServerInterface(QObject):
         self.proof_receive_done = trio.Event()
         self.__course_data = None
         self.no_more_goals = False
-        self.__tmp_hypo_analysis = ""
+        self.__tmp_hypo_analysis = []
         self.__tmp_targets_analysis = ""
 
         resp = None
@@ -612,8 +623,8 @@ class ServerInterface(QObject):
             # Waiting for all pieces of information #
             #########################################
             await self.proof_receive_done.wait()
-            self.server_queue.cancel_scope.shield = True
             # ------ Up to here task may be cancelled by timeout ------ #
+            self.server_queue.cancel_scope.shield = True
 
             self.log.debug(_("Proof State received"))
 
@@ -706,8 +717,12 @@ class ServerInterface(QObject):
             # Construct virtual file
             virtual_file_preamble = "\n".join(lines[:begin_line]) + "\n"
 
-        virtual_file_afterword = "hypo_analysis,\n" \
-                                 "targets_analysis,\n" \
+        # virtual_file_afterword = "hypo_analysis,\n" \
+        #                          "targets_analysis,\n" \
+        #                          + end_of_file
+
+        virtual_file_afterword = "targets_analysis,\n" \
+                                 "all_goals {hypo_analysis},\n" \
                                  + end_of_file
 
         virtual_file = LeanFile(file_name=statement.lean_name,
@@ -842,7 +857,7 @@ class ServerInterface(QObject):
     # @task_for_server_queue
     async def code_set(self, label: str, code: str):
         """
-        Sets the code for the current exercise. This is suposed to be called
+        Sets the code for the current exercise. This is supposed to be called
         when user sets code using the Lean console, but this functionality
         is not activated right now because it f... up the history.
         """
@@ -855,6 +870,25 @@ class ServerInterface(QObject):
 
         self.lean_file.state_add(label, code)
         await self.__update()
+
+    def __code_from_state_and_tactic(self, goal, lean_code):
+        statement = goal.to_lean_example()
+        # Add "no meta vars" + "effective code nb"
+        # and keep track of node_counters
+        lean_code, code_string = lean_code.to_decorated_code()
+        # NB: lean_code now contains node_counters (and no_meta_vars)
+        code_string = code_string.strip()
+        if not code_string.endswith(","):
+            code_string += ","
+
+        if not code_string.endswith("\n"):
+            code_string += "\n"
+
+        proof = "begin\n" + code_string + \
+                "targets_analysis,\n" \
+                "all_goals {hypo_analysis},\n" \
+                "end\n"
+        return statement + proof
 
     #####################################################################
     # Methods for getting initial proof states of a bunch of statements #

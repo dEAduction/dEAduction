@@ -1037,10 +1037,7 @@ class Goal:
         Return self's content as a Lean example, e.g.
         'example
         (x: X) (A: set X) (H1: x ∈ A) :
-        x ∈ B :=
-        begin
-
-        end'
+        x ∈ B :='
         """
         context = self.context_to_lean()
         target = self.target_to_lean()
@@ -1267,21 +1264,26 @@ class ProofState:
         # Put back "¿¿¿" and remove '\n' :
         targets = ['¿¿¿' + item.replace('\n', '') for item in targets]
         targets.pop(0)  # Removing title line ("targets:")
-        main_goal = None
-        if targets:
-            # Create main goal:
-            main_goal = Goal.from_lean_data(hypo_analysis, targets[0],
-                                            to_prove=to_prove)
-        else:
+        if not targets:
             log.warning(f"No target, targets_analysis={targets_analysis}")
-        goals = [main_goal]
-        for other_string_goal in targets[1:]:
-            other_goal = Goal.from_lean_data(hypo_analysis="",
-                                             target_analysis=other_string_goal,
-                                             to_prove=False)
-            goals.append(other_goal)
+        elif len(hypo_analysis) != len(targets):
+            log.warning("Nb of hypo analysis does not match nb of targets")
 
-        return cls(goals, (hypo_analysis, targets_analysis))
+        else:
+            # main_goal = None
+            # # Create main goal:
+            # main_goal = Goal.from_lean_data(hypo_analysis, targets[0],
+            #                                             to_prove=to_prove)
+            # goals = [main_goal]
+            # for other_string_goal in targets[1:]:
+            #     other_goal = Goal.from_lean_data(hypo_analysis="",
+            #                                      target_analysis=other_string_goal,
+            #                                      to_prove=False)
+            #     goals.append(other_goal)
+            goals = [Goal.from_lean_data(hypo, target, to_prove=to_prove)
+                     for hypo, target in zip(hypo_analysis, targets)]
+
+            return cls(goals, (hypo_analysis, targets_analysis))
 
 
 def print_proof_state(goal: Goal):
