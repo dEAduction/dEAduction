@@ -436,6 +436,6 @@ class ContextMathObject(MathObject):
         """
         term = self.to_display(format_='lean')
         type_ = self.math_type.to_display(format_='lean')
-        s = f"({term}: {type_}"
+        s = f"{term}: {type_}"
         return s
 

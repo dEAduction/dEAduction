@@ -374,6 +374,13 @@ class Coordinator(QObject):
 
     # TODO move to EMW?
     @property
+    def code_insert(self):
+        method = self.servint.code_insert2 if cvars.get(
+            'others.use_fast_method_for_lean_server') \
+            else self.servint.code_insert
+        return method
+
+    @property
     def lean_file(self):
         return self.servint.lean_file
 
@@ -750,9 +757,11 @@ class Coordinator(QObject):
 
                 # Update lean_file and call Lean server
                 self.lean_code_sent = lean_code
-                self.server_queue.add_task(self.servint.code_insert,
+                previous_proof_state = self.proof_step.proof_state
+                self.server_queue.add_task(self.code_insert,
                                            action.symbol,
                                            lean_code,
+                                           previous_proof_state,
                                            cancel_fct=self.lean_file.undo)
                 break
 
@@ -785,9 +794,11 @@ class Coordinator(QObject):
 
             # Update lean_file and call Lean server
             self.lean_code_sent = lean_code
-            self.server_queue.add_task(self.servint.code_insert,
+            previous_proof_state = self.proof_step.proof_state
+            self.server_queue.add_task(self.code_insert,
                                        statement.pretty_name,
                                        lean_code,
+                                       previous_proof_state,
                                        cancel_fct=self.lean_file.undo)
 
     def __server_send_editor_lean(self):

@@ -40,7 +40,8 @@ class LeanResponse:
     """
     lean_code: CodeForLean = None
     effective_code: CodeForLean = None  # CodeForLean that proved effective
-    no_more_goals = False
+    # no_more_goals = False
+    previous_proof_state = None
     analysis = None
     new_proof_state = None
     # 1 = WUI, 2 = FRE, 3 = TIMEOUT, 4 = UNICODE, 5 = No proof state:
@@ -49,18 +50,22 @@ class LeanResponse:
     _error_msg: str = ''
     _success_msg: str = ''
 
-    def __init__(self, lean_code, effective_code=None, no_more_goals=False,
+    def __init__(self, lean_code, effective_code=None,  # no_more_goals=False,
+                 previous_proof_state: ProofState = None,
                  analysis: tuple = None,
                  error_type=0, error_list=None):
         self.lean_code = lean_code
         self.effective_code = effective_code
-        self.no_more_goals = no_more_goals
+        # self.no_more_goals = no_more_goals
+        self.previous_proof_state = previous_proof_state
         self.analysis = analysis
         if analysis:
             hypo_analysis, targets_analysis = analysis
             proof_state = ProofState.from_lean_data(hypo_analysis,
                                                     targets_analysis,
-                                                    to_prove=True)
+                                                    to_prove=True,
+                                                    previous_proof_state=
+                                                    previous_proof_state)
             self.new_proof_state = proof_state
         self.error_type = error_type
         self.error_list = error_list if error_list else []
@@ -74,4 +79,12 @@ class LeanResponse:
         else:
             msg = self.lean_code.success_msg
         return msg
+
+    @property
+    def goals(self):
+        return self.new_proof_state.goals
+
+    @property
+    def no_more_goals(self):
+        return not self.goals
 

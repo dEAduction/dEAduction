@@ -47,6 +47,7 @@ from deaduction.pylib.coursedata import Course
 from deaduction.pylib.proof_tree import LeanResponse
 
 
+import deaduction.pylib.config.vars as cvars
 import deaduction.pylib.config.site_installation as inst
 import deaduction.pylib.server.exceptions as exceptions
 from deaduction.pylib.server.utils import CourseData
@@ -255,9 +256,13 @@ class ServerInterface(QObject):
 
     MAX_CAPACITY = 10  # Max number of statements sent in one request
 
+    __analysis_code = "targets_analysis,\n" \
+                      "all_goals {hypo_analysis},\n" \
+
     ############################################
     # Init, and state control
     ############################################
+
     def __init__(self, nursery):
         super().__init__()
         self.log = logging.getLogger("ServerInterface")
@@ -278,6 +283,8 @@ class ServerInterface(QObject):
         # Current exercise (when processing one exercise)
         self.lean_file: Optional[LeanFile] = None
         self.__exercise_current            = None
+        self.__use_fast_method_for_lean_server = False
+        self.__previous_proof_state = None
 
         # Current course (when processing a bunch of statements for initial
         # proof state)
@@ -303,10 +310,10 @@ class ServerInterface(QObject):
         # sent by Lean.
         self.__tmp_effective_code      = CodeForLean.empty_code()
         self.proof_state               = None
-        self.no_more_goals             = False
+        # self.no_more_goals             = False
         self.is_running                = False
         self.last_content              = ""  # Content of last LeanFile sent.
-
+        self.__file_content_from_state_and_tactic = None
         # Errors memory channels
         self.error_send, self.error_recv = \
             trio.open_memory_channel(max_buffer_size=1024)
@@ -314,6 +321,26 @@ class ServerInterface(QObject):
         # ServerQueue
         self.server_queue = ServerQueue(nursery=nursery,
                                         timeout_signal=self.lean_response)
+
+    def test(self, b: bool) -> bool:
+        """
+        Method to bypass tests when the fast method is used.
+        """
+        return b or self.use_fast_method_for_lean_server
+
+    def __begin_end_code(self, code_string: str) -> str:
+        code_string = code_string.strip()
+        if not code_string.endswith(","):
+            code_string += ","
+
+        if not code_string.endswith("\n"):
+            code_string += "\n"
+
+        code = "begin\n" \
+               + code_string \
+               + self.__analysis_code\
+               + "end\n"
+        return code
 
     def __expected_nb_goals(self):
         """
@@ -324,11 +351,18 @@ class ServerInterface(QObject):
         return len(self.__tmp_targets_analysis.splitlines())-1
 
     @property
+    def use_fast_method_for_lean_server(self):
+        return self.__use_fast_method_for_lean_server
+
+    @property
     def lean_file_contents(self):
         if self.__course_data:
             return self.__course_data.file_contents
-        elif self.lean_file:
-            return self.lean_file.contents
+        elif self.use_fast_method_for_lean_server:
+            return self.__file_content_from_state_and_tactic
+        else:
+            if self.lean_file:
+                return self.lean_file.contents
 
     async def start(self):
         """
@@ -374,9 +408,12 @@ class ServerInterface(QObject):
         """
         self.log.debug("Checking receive state: ")
         self.log.debug(f"{len(self.__tmp_hypo_analysis)}/{self.__expected_nb_goals()}")
-        if (self.__tmp_targets_analysis
+        if self.__expected_nb_goals() == 0:  # No More Goals!
+            # self.no_more_goals = True
+            self.proof_receive_done.set()  # Done receiving
+        elif (self.__tmp_targets_analysis
                 and self.__tmp_hypo_analysis
-            # Check every goal hypo_analysis have been received:
+                # Check every goal hypo_analysis have been received:
                 and len(self.__tmp_hypo_analysis) == self.__expected_nb_goals()
                 and not self.__tmp_effective_code.has_or_else()):
             self.proof_receive_done.set()
@@ -397,6 +434,7 @@ class ServerInterface(QObject):
             __on_lean_message_for_course method).
         """
         self.__add_time_to_cancel_scope()
+        last_line_of_inner_content = self.lean_file.last_line_of_inner_content
 
         # Filter seq_num
         if msg.seq_num:
@@ -425,25 +463,20 @@ class ServerInterface(QObject):
                 self.log.warning(f"Lean warning at line {line}: {txt}")
 
         elif txt.startswith("context:") \
-                and line == self.lean_file.last_line_of_inner_content + 2:
-                # and not self.__tmp_hypo_analysis:
+                and self.test(line == last_line_of_inner_content + 2):
             self.log.info("Got new context")
             self.__tmp_hypo_analysis.append(txt)
-
-            # self.__proof_state_valid = trio.Event()  # Invalidate proof state
             self.__check_receive_state()
 
         elif txt.startswith("targets:") \
-                and line == self.lean_file.last_line_of_inner_content + 1\
+                and self.test(line == last_line_of_inner_content + 1)\
                 and not self.__tmp_targets_analysis:
             self.log.info("Got new targets")
             self.__tmp_targets_analysis = txt
-
-            # self.__proof_state_valid = trio.Event()  # Invalidate proof state
             self.__check_receive_state()
 
         elif txt.startswith("EFFECTIVE CODE") \
-            and line == self.lean_file.last_line_of_inner_content \
+            and self.test(line == last_line_of_inner_content) \
                 and self.__tmp_effective_code.has_or_else():
             # txt may contain several lines
             for txt_line in txt.splitlines():
@@ -554,9 +587,13 @@ class ServerInterface(QObject):
         - ignore "proof uses sorry" messages.
         """
         # Filter message text, record if not ignored message
+
+        first_line = self.lean_file.first_line_of_last_change
+        last_line = self.lean_file.last_line_of_inner_content
+        # FIXME: this is obsolete:
         if msg.text.startswith(LEAN_NOGOALS_TEXT) \
-            and msg.pos_line == self.lean_file.last_line_of_inner_content + 2:
-            self.no_more_goals = True
+                and self.test(msg.pos_line == last_line + 2):
+            # self.no_more_goals = True
             self.proof_receive_done.set()  # Done receiving
             # if hasattr(self.proof_no_goals, "emit"):
             #     self.proof_receive_done.set()  # Done receiving
@@ -565,8 +602,7 @@ class ServerInterface(QObject):
             pass
         # Ignore messages that do not concern current proof
         elif self.lean_file and \
-                (msg.pos_line < self.lean_file.first_line_of_last_change or
-                 msg.pos_line > self.lean_file.last_line_of_inner_content):
+                not self.test(first_line <= msg.pos_line <= last_line):
             pass
         else:
             self.error_send.send_nowait(msg)
@@ -580,7 +616,7 @@ class ServerInterface(QObject):
         Call Lean server to update the proof_state.
             (for processing exercise only)
         """
-        # exercise = self.__exercise_current
+
         first_line_of_change = self.lean_file.first_line_of_last_change
         self.log.debug(f"Updating, "
                        f"checking errors from line "
@@ -601,7 +637,7 @@ class ServerInterface(QObject):
         self.file_invalidated = trio.Event()
         self.proof_receive_done = trio.Event()
         self.__course_data = None
-        self.no_more_goals = False
+        # self.no_more_goals = False
         self.__tmp_hypo_analysis = []
         self.__tmp_targets_analysis = ""
 
@@ -653,18 +689,15 @@ class ServerInterface(QObject):
         analysis = (self.__tmp_hypo_analysis, self.__tmp_targets_analysis)
 
         lean_response = LeanResponse(lean_code, effective_code,
-                                     self.no_more_goals,
+                                     # self.no_more_goals,
+                                     self.__previous_proof_state,
                                      analysis,
                                      error_type,
                                      error_list)
-        # self.lean_response.emit(exercise,
-        #                         self.no_more_goals,
-        #                         (self.__tmp_hypo_analysis,
-        #                          self.__tmp_targets_analysis),
-        #                         error_list,
-        #                         error_type)
 
         self.lean_response.emit(lean_response)
+
+        self.__previous_proof_state = None
 
     ###########################
     # Exercise initialisation #
@@ -673,7 +706,7 @@ class ServerInterface(QObject):
         """
         Create a virtual file from exercise. Concretely, this consists in
         - separating the part of the file before the proof into a preamble,
-        - add the tactics instruction "hypo_analysis, targets_analysis"
+        - add the tactics "hypo_analysis, targets_analysis"
         - remove all statements after the proof.
 
         If exercise.negate_statement, then the statement is replaced by its
@@ -721,9 +754,7 @@ class ServerInterface(QObject):
         #                          "targets_analysis,\n" \
         #                          + end_of_file
 
-        virtual_file_afterword = "targets_analysis,\n" \
-                                 "all_goals {hypo_analysis},\n" \
-                                 + end_of_file
+        virtual_file_afterword = self.__analysis_code + end_of_file
 
         virtual_file = LeanFile(file_name=statement.lean_name,
                                 preamble=virtual_file_preamble,
@@ -748,7 +779,8 @@ class ServerInterface(QObject):
                       f"{exercise.lean_name} -> {exercise.pretty_name}")
         self.__exercise_current = exercise
         self.lean_file = self.__file_from_exercise(exercise)
-
+        self.__use_fast_method_for_lean_server = False
+        self.__previous_proof_state = None
         await self.__update()
         if hasattr(self, "exercise_set"):
             self.exercise_set.emit()
@@ -861,6 +893,10 @@ class ServerInterface(QObject):
         when user sets code using the Lean console, but this functionality
         is not activated right now because it f... up the history.
         """
+
+        self.__use_fast_method_for_lean_server = False
+        self.__previous_proof_state = None
+
         self.log.info("Code sent to Lean: " + code)
         if not code.endswith(","):
             code += ","
@@ -871,29 +907,50 @@ class ServerInterface(QObject):
         self.lean_file.state_add(label, code)
         await self.__update()
 
-    def __code_from_state_and_tactic(self, goal, lean_code):
-        statement = goal.to_lean_example()
+    ################################
+    # Methods for new Lean request #
+    # from proof state + code      #
+    ################################
+
+    def __lean_import_course_preamble(self) -> str:
+        file_name = self.__exercise_current.course.course_file_name
+        return f"import {file_name}\n"
+
+    def set_file_content_from_state_and_tactic(self, goal, lean_code):
+        goal_code = goal.to_lean_example()
         # Add "no meta vars" + "effective code nb"
         # and keep track of node_counters
         lean_code, code_string = lean_code.to_decorated_code()
         # NB: lean_code now contains node_counters (and no_meta_vars)
-        code_string = code_string.strip()
-        if not code_string.endswith(","):
-            code_string += ","
 
-        if not code_string.endswith("\n"):
-            code_string += "\n"
+        file_content = self.__lean_import_course_preamble() \
+            + goal_code \
+            + self.__begin_end_code(code_string)
+        self.__file_content_from_state_and_tactic = file_content
 
-        proof = "begin\n" + code_string + \
-                "targets_analysis,\n" \
-                "all_goals {hypo_analysis},\n" \
-                "end\n"
-        return statement + proof
+    async def code_insert2(self, label, lean_code, previous_proof_state):
+        self.__previous_proof_state = previous_proof_state
+        goal = previous_proof_state.goals[0]
+        self.log.info('Using fast method for Lean server')
+        self.__use_fast_method_for_lean_server = True
+        self.set_file_content_from_state_and_tactic(goal, lean_code)
+        print(self.lean_file_contents)
+        await self.code_insert(label, lean_code)
+
+    # def set_exercise2(self, exercise):
+    #     self.log.info(f"Set exercise to: "
+    #                   f"{exercise.lean_name} -> {exercise.pretty_name}")
+    #     self.__exercise_current = exercise
+    #     self.lean_file = self.__file_from_exercise(exercise)
+    #
+    #     await self.__update2()
+    #     if hasattr(self, "exercise_set"):
+    #         self.exercise_set.emit()
 
     #####################################################################
     # Methods for getting initial proof states of a bunch of statements #
     #####################################################################
-    # @task_for_server_queue
+
     async def __get_initial_proof_states(self, course_data: CourseData):
         """
         Call Lean server to get the initial proof states of statements
@@ -901,6 +958,8 @@ class ServerInterface(QObject):
         """
         # file_name = str(self.__course_data.course.relative_course_path)
         self.__course_data = course_data
+        self.__use_fast_method_for_lean_server = False
+        self.__previous_proof_state = None
 
         # Invalidate events
         self.file_invalidated           = trio.Event()
@@ -923,9 +982,6 @@ class ServerInterface(QObject):
 
             if hasattr(self.update_ended, "emit"):
                 self.update_ended.emit()
-
-        # Check for next task
-        # SERVER_QUEUE.next_task(self.nursery)
 
     def set_statements(self, course: Course, statements: [] = None,
                        on_top=False):

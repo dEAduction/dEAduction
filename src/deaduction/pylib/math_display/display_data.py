@@ -191,7 +191,7 @@ latex_to_utf8_dic = {
     r'\forall': '∀',
     r'\exists': '∃',
     r'\exists_unique': '∃!',
-    r'\subset': '⊂',
+    r'\subset': _('⊆'),  # ⊂ for French students
     r'\not\in': '∉',
     r'\cap': '∩',
     r'\cup': '∪',
@@ -412,6 +412,7 @@ latex_to_lean_dic = {
     #'NOT': 'not',
     r'\Leftrightarrow': '↔',
     r'\Rightarrow': '→',
+    r'\subset': '⊆',
     r'\cap': '∩',
     r'\cup': '∪',
     r'\bigcap': '⋂',  # probably useless

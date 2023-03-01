@@ -53,7 +53,8 @@ class LeanEnvironment:
         #  the deaduction lean src.
         paths = [(self.lean_path / "lib" / "lean" / "library").resolve(),
                  (self.mathlib_path / "src").resolve(),
-                 cdirs.usr_lean_src_dir]
+                 cdirs.usr_lean_src_dir,
+                 cdirs.usr_lean_exercises_dir]
 
         return paths
 

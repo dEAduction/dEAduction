@@ -88,6 +88,12 @@ class Course:
     #   "Unions and intersections"
 
     @property
+    def course_file_name(self):
+        if self.relative_course_path:
+            name = self.relative_course_path.stem
+            return name
+
+    @property
     def title(self) -> str:
         """
         Return title if a title exists in metadata,

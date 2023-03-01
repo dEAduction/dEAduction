@@ -1044,7 +1044,7 @@ class Goal:
         lean_statement = f"example\n {context} :\n {target}"
         # lean_proof = "begin\n\nend\n"
         # debug:
-        print(lean_statement)
+        # print(lean_statement)
         return lean_statement + " :=\n"  # + lean_proof
 
     def goal_to_text(self,
@@ -1250,11 +1250,17 @@ class ProofState:
 
     @classmethod
     def from_lean_data(cls, hypo_analysis: str, targets_analysis: str,
-                       to_prove=False):
+                       to_prove=False, previous_proof_state=None):
         """
         :param hypo_analysis:    string from the lean tactic hypo_analysis
         :param targets_analysis: string from the lean tactic targets_analysis
         (with one line per target)
+        :param to_prove: True iff the main goal is the current exercise's goal
+        (this affect bound vars naming).
+        :param previous_proof_state: previous Proof State. If not know,
+        the new proof state is used as an update to the previous proof state:
+        - the previous main goal is deleted,
+        - the new goals are inserted at index 0 in ProofState.goals
 
         :return: a ProofState
         """
@@ -1264,9 +1270,9 @@ class ProofState:
         # Put back "¿¿¿" and remove '\n' :
         targets = ['¿¿¿' + item.replace('\n', '') for item in targets]
         targets.pop(0)  # Removing title line ("targets:")
-        if not targets:
-            log.warning(f"No target, targets_analysis={targets_analysis}")
-        elif len(hypo_analysis) != len(targets):
+        # if not targets:
+        #     log.warning(f"No target, targets_analysis={targets_analysis}")
+        if len(hypo_analysis) != len(targets):
             log.warning("Nb of hypo analysis does not match nb of targets")
 
         else:
@@ -1280,10 +1286,16 @@ class ProofState:
             #                                      target_analysis=other_string_goal,
             #                                      to_prove=False)
             #     goals.append(other_goal)
-            goals = [Goal.from_lean_data(hypo, target, to_prove=to_prove)
-                     for hypo, target in zip(hypo_analysis, targets)]
+            new_goals = [Goal.from_lean_data(hypo, target, to_prove=to_prove)
+                         for hypo, target in zip(hypo_analysis, targets)]
 
-            return cls(goals, (hypo_analysis, targets_analysis))
+            if previous_proof_state:
+                goals = new_goals + previous_proof_state.goals[1:]
+            else:
+                goals = new_goals
+            new_proof_state = cls(goals, (hypo_analysis, targets_analysis))
+
+            return new_proof_state
 
 
 def print_proof_state(goal: Goal):
