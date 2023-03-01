@@ -205,6 +205,38 @@ class Statement:
         ugly_hierarchy = self.lean_name.split('.')[:-2]
         return ugly_hierarchy
 
+    def open_namespace_str(self) -> str:
+        """
+        Return a string to be used for opening all namespaces.
+        e.g.
+        'set_theory.unions_and_intersections.exercise.union_distributive_inter'
+        ->
+        namespace set_theory
+        namespace unions_and_intersections
+        """
+        namespaces = self.ugly_hierarchy()
+
+        beginning_of_file = ""
+        for namespace in namespaces:
+            beginning_of_file += "namespace " + namespace + "\n"
+        return beginning_of_file
+
+    def close_namespace_str(self) -> str:
+        """
+        Return a string to be used for closing all namespaces.
+        e.g.
+        'set_theory.unions_and_intersections.exercise.union_distributive_inter'
+        ->
+        end unions_and_intersections
+        end set_theory
+        """
+        namespaces = self.ugly_hierarchy()
+        end_of_file = ""
+        while namespaces:
+            namespace = namespaces.pop()
+            end_of_file += "end " + namespace + "\n"
+        return end_of_file
+
     def caption(self, is_exercise=False) -> str:
         """
         Return a string that shows a simplified version of the statement

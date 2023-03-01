@@ -400,6 +400,7 @@ lean_from_node = {
     # Types:
     "FUNCTION": (0, r'\to', 1),
     "SEQUENCE": (0, r"\to", 1),
+    "LAMBDA": ("λ ", '(', 1, ': ', 0, '), ', 2),
     "SET": ('set ', 0),
     "APPLICATION": (lean_application, ),
     "PROP_NOT": ('not', 0)  # Prevent pattern NOT(APP(CONSTANT(...)) -> is not

@@ -344,11 +344,14 @@ class ServerInterface(QObject):
 
     def __expected_nb_goals(self):
         """
-        Return the number of goals, estimated by the number of nonempty
-        lines in self.__tmp_targets_analysis, minus one (to take into account
-        the title line "targets:").
+        Return the number of goals, estimated by the number of ocurence of
+        '¿¿¿' in self.__tmp_targets_analysis.
+        NB: -1 indicates no information, whereas 0 indicates no more goals.
         """
-        return len(self.__tmp_targets_analysis.splitlines())-1
+        if not self.__tmp_targets_analysis:
+            return -1
+        else:
+            return self.__tmp_targets_analysis.count('¿¿¿')
 
     @property
     def use_fast_method_for_lean_server(self):
@@ -356,13 +359,12 @@ class ServerInterface(QObject):
 
     @property
     def lean_file_contents(self):
-        if self.__course_data:
-            return self.__course_data.file_contents
-        elif self.use_fast_method_for_lean_server:
+        if self.use_fast_method_for_lean_server:
             return self.__file_content_from_state_and_tactic
-        else:
-            if self.lean_file:
-                return self.lean_file.contents
+        elif self.__course_data:
+            return self.__course_data.file_contents
+        elif self.lean_file:
+            return self.lean_file.contents
 
     async def start(self):
         """
@@ -722,10 +724,11 @@ class ServerInterface(QObject):
 
         # Construct short end of file by closing all open namespaces
         end_of_file = "end\n"
-        namespaces = statement.ugly_hierarchy()
-        while namespaces:
-            namespace = namespaces.pop()
-            end_of_file += "end " + namespace + "\n"
+        end_of_file += statement.close_namespace_str()
+        # namespaces = statement.ugly_hierarchy()
+        # while namespaces:
+        #     namespace = namespaces.pop()
+        #     end_of_file += "end " + namespace + "\n"
         end_of_file += "end course"
 
         # Replace statement by negation if required
@@ -924,8 +927,12 @@ class ServerInterface(QObject):
         # NB: lean_code now contains node_counters (and no_meta_vars)
 
         file_content = self.__lean_import_course_preamble() \
+            + "section course\n" \
+            + self.__exercise_current.open_namespace_str() \
             + goal_code \
-            + self.__begin_end_code(code_string)
+            + self.__begin_end_code(code_string) \
+            + self.__exercise_current.close_namespace_str() \
+            + "end course\n"
         self.__file_content_from_state_and_tactic = file_content
 
     async def code_insert2(self, label, lean_code, previous_proof_state):

@@ -82,9 +82,10 @@ class LeanResponse:
 
     @property
     def goals(self):
-        return self.new_proof_state.goals
+        if self.new_proof_state:
+            return self.new_proof_state.goals
 
     @property
     def no_more_goals(self):
-        return not self.goals
+        return self.new_proof_state and not self.goals
 

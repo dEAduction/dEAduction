@@ -392,6 +392,8 @@ PrettyName
   Image réciproque de l'image
 -/
 begin
+  -- intros A x H1,
+  -- have H2 := definitions.applications.exercise.image_directe,
   todo
 end
 
@@ -913,6 +915,14 @@ begin
 end
 
 end injectivite_surjectivite_autres
+
+example
+  :
+ not(∀f: X→Y, ∀g: Y→Z, ∀A: set X, @composition X Y Z g f '' (A) = g '' (f '' (A)))
+:=
+begin
+  push_neg,
+end
 
 end exercices
 

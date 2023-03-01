@@ -201,6 +201,27 @@ begin
     sorry
 end
 
+lemma exercise.negation_implication :
+¬ (P → Q) ↔ (P ∧ ¬ Q)
+:=
+/- dEAduction
+PrettyName
+    Négation d'une implication
+Description
+    Blabla
+AvailableLogic
+    and or not implies iff
+AvailableProof
+    proof_methods
+AvailableMagic
+    assumption
+
+-/
+begin
+    sorry
+end
+
+
 lemma exercise.contraposition :
 (P → Q) ↔ (¬ Q → ¬ P)
 :=
@@ -211,6 +232,7 @@ Description
     Le bouton "=>" permet également d'appliquer une implication "P => Q" à la
     propriété "P" pour obtenir la propriété "Q". Attention, avant de
     l'actionner il faut sélectionner toutes les propriétés requises !
+    On pourra raisonner par l'absurde en utilisant les "Méthodes de preuves".
 AvailableLogic
     and or not implies iff
 AvailableProof

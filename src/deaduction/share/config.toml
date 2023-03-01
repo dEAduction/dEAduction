@@ -89,7 +89,7 @@ log_to_file = true
 [others]
 use_fast_method_for_lean_server = true
 usr_version_nb = "-1"  # Do not modify!
-version_nb = "0.321"
+version_nb = "0.32111"
 os = ""  # Let this to "" except for debugging
 
 #########################
