@@ -444,7 +444,6 @@ class ServerInterface(QObject):
         self.log.debug("Lean message: " + txt)
 
         self.__add_time_to_cancel_scope()
-        last_line_of_inner_content = self.lean_file.last_line_of_inner_content
 
         # Filter seq_num
         if msg.seq_num is not None:
@@ -459,10 +458,9 @@ class ServerInterface(QObject):
             self.__on_lean_message_for_course(msg)
             return
 
-        txt = msg.text
-        self.log.debug("Lean message: " + txt)
         line = msg.pos_line
         severity = msg.severity
+        last_line_of_inner_content = self.lean_file.last_line_of_inner_content
 
         if severity == Message.Severity.error:
             self.log.error(f"Lean error at line {line}: {txt}")
