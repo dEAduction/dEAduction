@@ -459,7 +459,6 @@ class ServerInterface(QObject):
         self.log.debug("Lean message: " + txt)
         line = msg.pos_line
         severity = msg.severity
-        tmp_code = self.__tmp_effective_code
 
         if severity == Message.Severity.error:
             self.log.error(f"Lean error at line {line}: {txt}")
@@ -484,7 +483,7 @@ class ServerInterface(QObject):
 
         elif txt.startswith("EFFECTIVE CODE") \
             and self.test(line == last_line_of_inner_content) \
-                and tmp_code.has_or_else():
+                and self.__tmp_effective_code.has_or_else():
             # txt may contain several lines
             for txt_line in txt.splitlines():
                 if not txt_line.startswith("EFFECTIVE CODE"):
@@ -496,17 +495,16 @@ class ServerInterface(QObject):
                 # Modify __tmp_effective_code by selecting the effective
                 #  or_else alternative according to codes
                 self.__tmp_effective_code, found = \
-                    tmp_code.select_or_else(node_nb, code_nb)
+                    self.__tmp_effective_code.select_or_else(node_nb, code_nb)
                 if found:
                     self.log.debug("(selecting effective code)")
 
             # Test if there remain some or_else combinators
-            tmp_code = self.__tmp_effective_code
-            if not tmp_code.has_or_else():
+            if not self.__tmp_effective_code.has_or_else():
                 # Done with effective codes, history_replace will be called
                 self.log.debug("No more effective code to receive")
                 if hasattr(self.effective_code_received, 'emit'):
-                    self.effective_code_received.emit(tmp_code)
+                    self.effective_code_received.emit(self.__tmp_effective_code)
                 self.__check_receive_state()
 
     def __on_lean_state_change(self, is_running: bool):
