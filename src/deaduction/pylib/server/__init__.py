@@ -309,7 +309,7 @@ class ServerInterface(QObject):
         # of or_else combinator, according to the "EFFECTIVE CODE" messages
         # sent by Lean.
         self.__tmp_effective_code      = CodeForLean.empty_code()
-        self.proof_state               = None
+        # self.proof_state               = None
         # self.no_more_goals             = False
         self.is_running                = False
         self.last_content              = ""  # Content of last LeanFile sent.
@@ -416,9 +416,13 @@ class ServerInterface(QObject):
         elif (self.__tmp_targets_analysis
                 and self.__tmp_hypo_analysis
                 # Check every goal hypo_analysis have been received:
-                and len(self.__tmp_hypo_analysis) == self.__expected_nb_goals()
-                and not self.__tmp_effective_code.has_or_else()):
-            self.proof_receive_done.set()
+                and len(self.__tmp_hypo_analysis) ==
+              self.__expected_nb_goals()):
+            if not self.__tmp_effective_code.has_or_else():
+                self.proof_receive_done.set()
+            else:  # debug
+                print("Code has or else:")
+                print(self.__tmp_effective_code.to_code())
 
     def __on_lean_message(self, msg: Message):
         """
@@ -455,6 +459,7 @@ class ServerInterface(QObject):
         self.log.debug("Lean message: " + txt)
         line = msg.pos_line
         severity = msg.severity
+        tmp_code = self.__tmp_effective_code
 
         if severity == Message.Severity.error:
             self.log.error(f"Lean error at line {line}: {txt}")
@@ -479,7 +484,7 @@ class ServerInterface(QObject):
 
         elif txt.startswith("EFFECTIVE CODE") \
             and self.test(line == last_line_of_inner_content) \
-                and self.__tmp_effective_code.has_or_else():
+                and tmp_code.has_or_else():
             # txt may contain several lines
             for txt_line in txt.splitlines():
                 if not txt_line.startswith("EFFECTIVE CODE"):
@@ -491,16 +496,17 @@ class ServerInterface(QObject):
                 # Modify __tmp_effective_code by selecting the effective
                 #  or_else alternative according to codes
                 self.__tmp_effective_code, found = \
-                    self.__tmp_effective_code.select_or_else(node_nb, code_nb)
+                    tmp_code.select_or_else(node_nb, code_nb)
                 if found:
                     self.log.debug("(selecting effective code)")
 
             # Test if there remain some or_else combinators
-            if not self.__tmp_effective_code.has_or_else():
+            tmp_code = self.__tmp_effective_code
+            if not tmp_code.has_or_else():
                 # Done with effective codes, history_replace will be called
                 self.log.debug("No more effective code to receive")
                 if hasattr(self.effective_code_received, 'emit'):
-                    self.effective_code_received.emit(self.__tmp_effective_code)
+                    self.effective_code_received.emit(tmp_code)
                 self.__check_receive_state()
 
     def __on_lean_state_change(self, is_running: bool):
@@ -644,10 +650,13 @@ class ServerInterface(QObject):
         self.__tmp_targets_analysis = ""
 
         resp = None
+
+        ###################
+        # Sending request #
+        ###################
         # Loop in case Lean's answer is None, which happens...
         while not resp:
             self.request_seq_num += 1
-            # self.request_seq_num = req.seq_num  # Always zero!
             self.log.debug(f"Request seq_num: {self.request_seq_num}")
             req = SyncRequest(file_name="deaduction_lean",
                               content=self.lean_file_contents)
@@ -666,7 +675,7 @@ class ServerInterface(QObject):
 
             self.log.debug(_("Proof State received"))
 
-            # (Timeout added by FLR) TODO: move this at the end
+            # Timeout TODO: move this at the end
             with trio.move_on_after(1):
                 await self.lean_server.running_monitor.wait_ready()
 
@@ -788,9 +797,9 @@ class ServerInterface(QObject):
         if hasattr(self, "exercise_set"):
             self.exercise_set.emit()
 
-    ############################################
-    # History
-    ############################################
+    ###########
+    # History #
+    ###########
     async def history_undo(self):
         """
         Go one step forward in history in the lean_file.
@@ -852,15 +861,38 @@ class ServerInterface(QObject):
             # Update the lean text editor:
             self.lean_file_changed.emit(self.lean_file.inner_contents)
 
-    ############################################
-    # Code management
-    ############################################
-    # @task_for_server_queue
-    async def code_insert(self, label: str, lean_code: CodeForLean):
+    ###################
+    # Code management #
+    ###################
+
+    def __lean_import_course_preamble(self) -> str:
+        file_name = self.__exercise_current.course.course_file_name
+        return f"import {file_name}\n"
+
+    def set_file_content_from_state_and_tactic(self, goal, code_string):
+        goal_code = goal.to_lean_example()
+
+        file_content = self.__lean_import_course_preamble() \
+            + "section course\n" \
+            + self.__exercise_current.open_namespace_str() \
+            + goal_code \
+            + self.__begin_end_code(code_string) \
+            + self.__exercise_current.close_namespace_str() \
+            + "end course\n"
+        self.__file_content_from_state_and_tactic = file_content
+
+    async def code_insert(self, label: str, lean_code: CodeForLean,
+                          previous_proof_state: ProofState,
+                          use_fast_method: bool = True):
         """
         Inserts code in the Lean virtual file.
         """
 
+        self.__use_fast_method_for_lean_server = use_fast_method
+        self.__previous_proof_state = (previous_proof_state if use_fast_method
+                                       else None)
+
+        # (1) Lean code processing
         # Add "no meta vars" + "effective code nb"
         # and keep track of node_counters
         lean_code, code_string = lean_code.to_decorated_code()
@@ -879,17 +911,26 @@ class ServerInterface(QObject):
         # nice_display_tree(code_string)
 
         self.log.debug("Code sent:" + code_string)
-        self.lean_file.insert(label=label, add_txt=code_string)
 
+        # (2) Set file content for fast method
+        if use_fast_method:
+            goal = previous_proof_state.goals[0]
+            self.set_file_content_from_state_and_tactic(goal, code_string)
+            # self.log.info('Using fast method for Lean server')
+            print(self.lean_file_contents)
+
+        # (3) Update LeanFile
+        self.lean_file.insert(label=label, add_txt=code_string)
         # Ensure content is not identical to last sent (void "no change")
         content = self.lean_file.inner_contents  # Without preamble
+        # TODO: add this for fast method
         if content == self.last_content:
             self.lean_file.add_seq_num(self.request_seq_num)
         self.last_content = self.lean_file.inner_contents
-        
+
+        # (4) Send Lean request
         await self.__update(lean_code)
 
-    # @task_for_server_queue
     async def code_set(self, label: str, code: str):
         """
         Sets the code for the current exercise. This is supposed to be called
@@ -909,50 +950,6 @@ class ServerInterface(QObject):
 
         self.lean_file.state_add(label, code)
         await self.__update()
-
-    ################################
-    # Methods for new Lean request #
-    # from proof state + code      #
-    ################################
-
-    def __lean_import_course_preamble(self) -> str:
-        file_name = self.__exercise_current.course.course_file_name
-        return f"import {file_name}\n"
-
-    def set_file_content_from_state_and_tactic(self, goal, lean_code):
-        goal_code = goal.to_lean_example()
-        # Add "no meta vars" + "effective code nb"
-        # and keep track of node_counters
-        lean_code, code_string = lean_code.to_decorated_code()
-        # NB: lean_code now contains node_counters (and no_meta_vars)
-
-        file_content = self.__lean_import_course_preamble() \
-            + "section course\n" \
-            + self.__exercise_current.open_namespace_str() \
-            + goal_code \
-            + self.__begin_end_code(code_string) \
-            + self.__exercise_current.close_namespace_str() \
-            + "end course\n"
-        self.__file_content_from_state_and_tactic = file_content
-
-    async def code_insert2(self, label, lean_code, previous_proof_state):
-        self.__previous_proof_state = previous_proof_state
-        goal = previous_proof_state.goals[0]
-        self.log.info('Using fast method for Lean server')
-        self.__use_fast_method_for_lean_server = True
-        self.set_file_content_from_state_and_tactic(goal, lean_code)
-        print(self.lean_file_contents)
-        await self.code_insert(label, lean_code)
-
-    # def set_exercise2(self, exercise):
-    #     self.log.info(f"Set exercise to: "
-    #                   f"{exercise.lean_name} -> {exercise.pretty_name}")
-    #     self.__exercise_current = exercise
-    #     self.lean_file = self.__file_from_exercise(exercise)
-    #
-    #     await self.__update2()
-    #     if hasattr(self, "exercise_set"):
-    #         self.exercise_set.emit()
 
     #####################################################################
     # Methods for getting initial proof states of a bunch of statements #

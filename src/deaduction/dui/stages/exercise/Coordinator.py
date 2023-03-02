@@ -375,10 +375,7 @@ class Coordinator(QObject):
     # TODO move to EMW?
     @property
     def code_insert(self):
-        method = self.servint.code_insert2 if cvars.get(
-            'others.use_fast_method_for_lean_server') \
-            else self.servint.code_insert
-        return method
+        return self.servint.code_insert
 
     @property
     def lean_file(self):
@@ -762,6 +759,7 @@ class Coordinator(QObject):
                                            action.symbol,
                                            lean_code,
                                            previous_proof_state,
+                                           True,  # Use fast method
                                            cancel_fct=self.lean_file.undo)
                 break
 
@@ -799,6 +797,7 @@ class Coordinator(QObject):
                                        statement.pretty_name,
                                        lean_code,
                                        previous_proof_state,
+                                       True,  # Use fast method
                                        cancel_fct=self.lean_file.undo)
 
     def __server_send_editor_lean(self):

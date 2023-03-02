@@ -467,7 +467,7 @@ class CodeForLean:
 
     def to_code(self, exclude_no_meta_vars=False) -> str:
         """
-        Format CodeForLean into a string which can be sent to Lean
+        Format CodeForLean into a string which can be sent to Lean.
 
         :param exclude_no_meta_vars:    if True, 'no_meta_vars' instructions
                                         are discarded
@@ -514,8 +514,8 @@ class CodeForLean:
         2) mark each "or_else" node with a node_number
         which will be used by the select_or_else method.
 
-        :return: two instances of CodeForLean, the first contains the trace
-        msgs, the second is self with marked or_else node.
+        :return: two instances of CodeForLean, the first is self with marked
+        or_else node, the second contains the trace msgs.
         """
 
         if self.is_single_code():
