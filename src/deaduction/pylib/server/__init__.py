@@ -439,11 +439,15 @@ class ServerInterface(QObject):
             processing, this method just call the
             __on_lean_message_for_course method).
         """
+
+        txt = msg.text
+        self.log.debug("Lean message: " + txt)
+
         self.__add_time_to_cancel_scope()
         last_line_of_inner_content = self.lean_file.last_line_of_inner_content
 
         # Filter seq_num
-        if msg.seq_num:
+        if msg.seq_num is not None:
             req_seq_num = self.request_seq_num
             # self.log.debug(f"Received msg with seq_num {msg.seq_num}")
             if msg.seq_num != req_seq_num :
