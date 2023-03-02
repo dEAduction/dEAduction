@@ -777,7 +777,7 @@ class ServerInterface(QObject):
         virtual_file.cursor_save()
         return virtual_file
 
-    async def set_exercise(self, exercise: Exercise, on_top=True):
+    async def set_exercise(self, exercise: Exercise):
         """
         Initialise the virtual_file from exercise.
 
@@ -958,6 +958,8 @@ class ServerInterface(QObject):
         Call Lean server to get the initial proof states of statements
         as stored in course_data.
         """
+
+        self.log.info('Getting initial proof states')
         # file_name = str(self.__course_data.course.relative_course_path)
         self.__course_data = course_data
         self.__use_fast_method_for_lean_server = False
@@ -973,13 +975,14 @@ class ServerInterface(QObject):
         req = SyncRequest(file_name="deaduction_lean",
                           content=self.lean_file_contents)
         resp = await self.lean_server.send(req)
-
+        print(f"--> {resp.message}")
         if resp.message == "file invalidated":
+            print("file invalidated)")
             self.file_invalidated.set()
 
             # ───────── Waiting for all pieces of information ──────── #
             await self.proof_receive_done.wait()
-
+            print("(proof received)")
             # self.log.debug(_("All proof states received"))
 
             if hasattr(self.update_ended, "emit"):
@@ -988,7 +991,7 @@ class ServerInterface(QObject):
     def set_statements(self, course: Course, statements: [] = None,
                        on_top=False):
         """
-        This methods takes a list of statements and split it into lists of
+        This method takes a list of statements and split it into lists of
         length ≤ self.MAX_CAPACITY before calling
         self.get_initial_proof_states. This is a recursive method.
         """
@@ -998,7 +1001,7 @@ class ServerInterface(QObject):
             statements = course.statements
 
         if len(statements) <= self.MAX_CAPACITY:
-            self.log.debug(f"Set {len(statements)} statements")
+            self.log.debug(f"Set {len(statements)} statement(s)")
             self.server_queue.add_task(self.__get_initial_proof_states,
                                        CourseData(course, statements),
                                        on_top=on_top)

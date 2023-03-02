@@ -359,8 +359,10 @@ class CourseChooser(AbstractCoExChooser):
         elif self.servint.request_seq_num == -1:
             # Ask a first request to the Lean server
             # (that speeds up a lot when exercise starts)
-            log.debug(f"Launching Lean with {course.statements[0].pretty_name}")
+            log.debug(f"Sending rqst to "
+                      f"Lean with {course.statements[0].pretty_name}")
             self.servint.set_statements(course, [course.statements[0]])
+            # print("(not sending rqst to Lean)")
 
     #########
     # Slots #
