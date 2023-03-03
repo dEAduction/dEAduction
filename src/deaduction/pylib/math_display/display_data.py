@@ -418,7 +418,7 @@ latex_to_lean_dic = {
     r'\cup': '∪',
     r'\bigcap': '⋂',  # probably useless
     r'\bigcup': '⋃',
-    r'\false': 'False',
+    r'\false': 'false',
     r'\proposition': 'Prop',
     r'\set': 'Type',
     r'\set_image': " '' ",

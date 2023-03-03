@@ -441,7 +441,7 @@ class ServerInterface(QObject):
         """
 
         txt = msg.text
-        self.log.debug("Lean message: " + txt)
+        # self.log.debug("Lean message: " + txt)
 
         self.__add_time_to_cancel_scope()
 
