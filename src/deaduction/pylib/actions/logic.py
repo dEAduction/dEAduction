@@ -1184,7 +1184,12 @@ def apply_forall_with_ineq(proof_step, selected_objects, inequality,
         # Fixme: (1) no rotate if compute fails
         #   (2) "Proof of intermediate subgoal" not appropriate...
         # Back to first inequality:
-        more_code0 = CodeForLean.from_string(f"rotate {proof_step.nb_of_goals}")
+        if cvars.get('others.use_fast_method_for_lean_server'):
+            # In this case no memory of previous goals
+            more_code0 = CodeForLean.from_string("rotate")
+        else:
+            nbg = proof_step.nb_of_goals
+            more_code0 = CodeForLean.from_string(f"rotate {nbg}")
         more_code1 = CodeForLean.from_string("norm_num at *")
         more_code1 = more_code1.try_()
         more_code2 = CodeForLean.from_string("compute_n 10")
