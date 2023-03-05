@@ -137,17 +137,37 @@ def context_obj_solving_target(proof_step):
     return rec_find_target_in_props(target, props)
 
 
+def rw_let_expr(goal) -> CodeForLean:
+    """
+    try {rw H} successively for all defining equalities H of let expr.
+    """
+    defining_eq = goal.defining_eq_of_let_exprs()
+    code = CodeForLean.empty_code()
+    for eq in defining_eq:
+        more_code = CodeForLean.from_string(f"rw {eq} at *")
+        code = code.and_then(more_code.try_())
+    return code
+
+
+def norm_num_with_let_expr(goal) -> CodeForLean:
+    code1 = rw_let_expr(goal)
+    code2 = CodeForLean.from_string("norm_num at *").try_()
+    return code1.and_then(code2)
+
+
 #############
 # Raw codes #
 #############
 
-def compute(target) -> CodeForLean:
+def compute(goal) -> CodeForLean:
     """
     Try to use tactics to solve numerical target, mainly by linear computing.
     """
-    code1 = CodeForLean.from_string("norm_num at *").solve1()
+    # code1 = CodeForLean.from_string("norm_num at *").solve1()
+    code1 = norm_num_with_let_expr(goal).solve1()
     code2a = CodeForLean.from_string("compute_n 10")
-    code2b = CodeForLean.from_string("norm_num at *").try_().and_then(code2a)
+    # code2b = CodeForLean.from_string("norm_num at *").try_().and_then(code2a)
+    code2b = norm_num_with_let_expr(goal).and_then(code2a)
     code2c = code2b.solve1()
     possible_code = code1.or_else(code2c)
     return possible_code
@@ -216,7 +236,8 @@ def raw_solve_target(target, proof_step, selected_objects) -> CodeForLean:
     elif target.concerns_numbers():
         numbers_involved = True
     if numbers_involved:
-        more_code = compute(target)
+        goal = proof_step.goal
+        more_code = compute(goal)
         code = code.or_else(more_code)
         log.debug(f"Compute: {code}")
 
