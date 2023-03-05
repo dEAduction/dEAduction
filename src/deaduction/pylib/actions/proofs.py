@@ -307,7 +307,7 @@ def action_new_object(proof_step) -> CodeForLean:
                                              output=output)
         else:  # Send code
             name = pre_process_lean_code(user_input[1])
-            new_hypo_name = get_new_hyp(proof_step)
+            new_hypo_name = get_new_hyp(proof_step, name='Def')
             new_object = pre_process_lean_code(user_input[2])
             codes = CodeForLean.from_string(f"let {name} := {new_object}")
             codes = codes.and_then(f"have {new_hypo_name} : {name} = "

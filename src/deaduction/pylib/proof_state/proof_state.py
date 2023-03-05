@@ -182,6 +182,22 @@ class Goal:
         if self.context is not None:
             return [cmo for cmo in self.context if cmo.is_modified]
 
+    def defining_equalities(self):
+        """
+        Return the list of defining equalities in self.context. A prop is a
+        defining equality iff its name starts with "Def" and it is an
+        equality whose left term is a local constant of self.context.
+        """
+        eq = []
+        for p in self.context_props:
+            if p.is_equality():
+                name = p.name
+                lc = p.math_type.children[0]
+                if name.startswith('Def') and lc in self.context_objects:
+                    eq.append(p)
+
+        return eq
+
     def remove_future_info(self):
         for obj in self.context:
             obj.remove_future_info()

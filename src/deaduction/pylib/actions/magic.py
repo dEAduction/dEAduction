@@ -141,7 +141,7 @@ def rw_let_expr(goal) -> CodeForLean:
     """
     try {rw H} successively for all defining equalities H of let expr.
     """
-    defining_eq = goal.defining_eq_of_let_exprs()
+    defining_eq = goal.defining_equalities()
     code = CodeForLean.empty_code()
     for eq in defining_eq:
         more_code = CodeForLean.from_string(f"rw {eq} at *")
@@ -161,7 +161,7 @@ def norm_num_with_let_expr(goal) -> CodeForLean:
 
 def compute(goal) -> CodeForLean:
     """
-    Try to use tactics to solve numerical target, mainly by linear computing.
+    Try to use tactics to solve 1 numerical target, mainly by linear computing.
     """
     # code1 = CodeForLean.from_string("norm_num at *").solve1()
     code1 = norm_num_with_let_expr(goal).solve1()

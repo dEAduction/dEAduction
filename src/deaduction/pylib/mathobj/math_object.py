@@ -1203,6 +1203,9 @@ class MathObject:
     def is_constant(self):
         return self.node == "CONSTANT"
 
+    def is_local_constant(self):
+        return self.node == "LOCAL_CONSTANT"
+
     def is_implicit_arg(self):
         if (self.node == "TYPE"
                 or (self.is_constant() and self.display_name in

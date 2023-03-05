@@ -40,20 +40,23 @@ import deaduction.pylib.config.vars as cvars
 log = logging.getLogger(__name__)
 
 
-def get_new_hyp(proof_step) -> str:
+def get_new_hyp(proof_step, name=None) -> str:
     """
     Call get_new_hyp_from_forbidden_names with a list of forbidden names
     that are the current goal's variables' names.
     :param proof_step: current proof_step, contains goal and property_counter
     :return: name for a new property, like 'H3'.
+    :param name: name to be used.
     """
     forbidden_names = proof_step.goal.extract_vars_names()
     return get_new_hyp_from_forbidden_names(proof_step,
-                                            forbidden_names)
+                                            forbidden_names,
+                                            name)
 
 
 def get_new_hyp_from_forbidden_names(proof_step,
-                                     forbidden_names: [str]) -> str:
+                                     forbidden_names: [str],
+                                     name=None) -> str:
     """
     Find a fresh name for a new property.
     The name is 'Hn' where n is the least integer such that Hn has never
@@ -63,9 +66,10 @@ def get_new_hyp_from_forbidden_names(proof_step,
     :param proof_step: current proof_step
     :param forbidden_names: list of names of variables in the context
     :return:                str, a fresh name
+    :param name: name to be used.
     """
     counter = proof_step.property_counter
-    potential_name = 'H' + str(counter)
+    potential_name = name + str(counter) if name else 'H' + str(counter)
     while potential_name in forbidden_names:
         counter += 1
         potential_name = 'H' + str(counter)
