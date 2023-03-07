@@ -47,6 +47,16 @@ global _
 # \text_is
 # and so on
 
+def lean_application(mo):
+    """
+    Return Lean shape for APPLICATION(0, 1, 2, ...)
+    -> [0, " ", 1, " ", ...]
+    """
+    li = []
+    for i in range(len(mo.children)):
+        li.extend([i, " "])
+    return li
+
 
 def name(mo):
     return mo.info.get('name', "NO NAME")
@@ -181,7 +191,7 @@ latex_to_utf8_dic = {
     r'\forall': '∀',
     r'\exists': '∃',
     r'\exists_unique': '∃!',
-    r'\subset': '⊂',
+    r'\subset': _('⊆'),  # ⊂ for French students
     r'\not\in': '∉',
     r'\cap': '∩',
     r'\cup': '∪',
@@ -322,7 +332,7 @@ def plural_types(type_, utf8_type=None):
     plural_type = None
     if not utf8_type:
         utf8_type = type_
-    # Keep only non empty words:
+    # Keep only nonempty words:
     words = [word for word in utf8_type.split(" ") if word]
     for counter in range(len(words)):
         first_words = " ".join(words[:counter + 1])
@@ -375,11 +385,29 @@ numbers = {
 }
 
 
-###################
-###################
-# LEAN dictionary #
-###################
-###################
+#####################
+#####################
+# LEAN dictionaries #
+#####################
+#####################
+# Only those shape that are distinct from the latex_from_node dict
+lean_from_node = {
+    "LOCAL_CONSTANT": (name,),
+    "CONSTANT": ("@", name),  # e.g. @composition
+    "QUANT_∀": (r"\forall", 1, r": ", 0, ", ", 2),
+    "QUANT_∃": (r"\exists", 1, r": ", 0, ", ", 2),
+    "QUANT_∃!": (r"\exists_unique", 1, r": ", 0, r', ', 2),
+    # Types:
+    "FUNCTION": (0, r'\to', 1),
+    "SEQUENCE": (0, r"\to", 1),
+    "LAMBDA": ("λ ", '(', 1, ': ', 0, '), ', 2),
+    "SET": ('set ', 0),
+    "APPLICATION": (lean_application, ),
+    "PROP_NOT": ('not', 0),  # Prevent pattern NOT(APP(CONSTANT(...)) -> is not
+    "SET_EXTENSION1": ('sing ', 0),
+    "SET_EXTENSION2": ('pair ', 0, 1),
+}
+
 # Only those lean symbols that are distinct from the latex_to_utf8 dict
 latex_to_lean_dic = {
     #'AND': 'and',
@@ -387,17 +415,30 @@ latex_to_lean_dic = {
     #'NOT': 'not',
     r'\Leftrightarrow': '↔',
     r'\Rightarrow': '→',
+    r'\subset': '⊆',
     r'\cap': '∩',
     r'\cup': '∪',
     r'\bigcap': '⋂',  # probably useless
     r'\bigcup': '⋃',
-    r'\false': 'False',
+    r'\false': 'false',
     r'\proposition': 'Prop',
     r'\set': 'Type',
-    "SET_FAMILY": (),  # FIXME: should be lean_name
     r'\set_image': " '' ",
     r'\set_inverse': " ⁻¹' ",
-    r'\set_of_subsets': "set"
+    r'\set_of_subsets': "set ",
+    r'\if': "",
+    r'\such_that': "",
+    'ℕ': "nat",
+    'ℤ': "int",
+    'ℚ': "rat",
+    'ℝ': "real",
+    r'\type_N': 'nat',
+    r'\type_Z': 'int',
+    r'\type_Q': "rat",
+    r'\type_R': 'real',
+    r'used_property': "",
+    r'\not': "not ",
+    r'\times': "*"
 }
 
 ####################
@@ -453,7 +494,7 @@ def needs_paren(parent, child, child_number) -> bool:
         # e.g. (f∘g)^{-1} (x)
         return True
     # Fixme: Does not work?:
-    elif p_node == "APPLICATION" and child_number == -1 and child.children:
+    elif p_node == "APPLICATION" and child.children:  # and child_number == -1
         return True
     elif c_node == "APPLICATION":
         return False
