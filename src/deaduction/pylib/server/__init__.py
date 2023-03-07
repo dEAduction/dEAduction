@@ -872,7 +872,9 @@ class ServerInterface(QObject):
     def set_file_content_from_state_and_tactic(self, goal, code_string):
         goal_code = goal.to_lean_example()
 
-        file_content = self.__lean_import_course_preamble() \
+        # Rqst seq_num prevents from unchanged file
+        file_content = f"-- Seq num {self.request_seq_num}\n" \
+            + self.__lean_import_course_preamble() \
             + "section course\n" \
             + self.__exercise_current.open_namespace_str() \
             + goal_code \
