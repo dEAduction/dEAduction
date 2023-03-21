@@ -103,7 +103,8 @@ latex_from_constant_name = {
     "application": (-1, r'\text_is', _("an application") + " "),
     "application_bijective":  (-1, r'\text_is', _("a bijective application") + " "),
     "RealSubGroup": (r"\real", ),
-    "even":  (-1,  r'\text_is', " " + _("even"))
+    "even":  (-1,  r'\text_is', " " + _("even")),
+    "divise": (-2, '|', -1)
 }
 
 # TODO: use latex_from_constant_names, éventuellement les transformer

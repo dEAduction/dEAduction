@@ -145,11 +145,14 @@ def compute(target) -> CodeForLean:
     """
     Try to use tactics to solve numerical target, mainly by linear computing.
     """
+    code0 = CodeForLean.from_string("ring").solve1()
     code1 = CodeForLean.from_string("norm_num at *").solve1()
     code2a = CodeForLean.from_string("compute_n 10")
     code2b = CodeForLean.from_string("norm_num at *").try_().and_then(code2a)
     code2c = code2b.solve1()
-    possible_code = code1.or_else(code2c)
+    # possible_code = code1.or_else(code2c)
+    possible_code = code0.or_else(code1).or_else(code2c)
+
     return possible_code
 
 
