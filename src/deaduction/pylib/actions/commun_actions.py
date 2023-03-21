@@ -43,18 +43,17 @@ log = logging.getLogger(__name__)
 global _
 
 
-def introduce_new_subgoal(proof_step) -> CodeForLean:
-    selected_objects = proof_step.selection
+def introduce_new_subgoal(proof_step, premise=None) -> CodeForLean:
+    # selected_objects = proof_step.selection
     user_input = proof_step.user_input
     sub_goal = None
     codes = CodeForLean()
 
     # (A) Sub-goal from selection
-    if selected_objects:
-        premise = selected_objects[0].premise()
-        if premise:
-            # FIXME: make format_='lean' functional
-            sub_goal = premise.to_display(format_='lean')
+    # if selected_objects:
+    #     premise = selected_objects[0].premise()
+    if premise:
+        sub_goal = premise.to_display(format_='lean')
 
     # (B) User enter sub-goal
     elif len(user_input) == 1:

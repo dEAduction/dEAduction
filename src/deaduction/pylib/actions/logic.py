@@ -467,21 +467,20 @@ def construct_implies(proof_step) -> CodeForLean:
         return code
 
 
-def apply_implies(proof_step, selected_object: [MathObject]) -> CodeForLean:
+def apply_implies(implication: [MathObject]) -> CodeForLean:
     """
     Here selected_object contains a single property which is an implication
     P ⇒ Q; if the target is Q then it will be replaced by P.
     """
 
-    selected_hypo = selected_object[0]
-    selected_name = selected_hypo.info["name"]
+    selected_name = implication.info["name"]
     code = CodeForLean.from_string(f'apply_with {selected_name} '
                                    '{md:=reducible}')
     code.add_success_msg(_("Target modified using implication {}").
                          format(selected_name))
 
-    code.add_used_properties(selected_hypo)
-    code.outcome_operator = selected_hypo
+    code.add_used_properties(implication)
+    code.outcome_operator = implication
 
     return code
 
@@ -563,6 +562,61 @@ def apply_implies_to_hyp(proof_step,
     return code
 
 
+def implies_hyp(proof_step):
+    """
+    This method is called when user press implies with exactly one selected
+    hypothesis, which is an implication or a universal implication.
+    """
+
+    implication = proof_step.selection[0]
+    # (0) Determine is implication is a universal implication, or a True
+    #     implication (maybe implicit)
+    universal_implication = False
+    if not implication.is_implication(is_math_type=False, implicit=True):
+        universal_implication = True
+    else:
+        # Implicit definition ?
+        if not implication.is_implication(is_math_type=False):
+            # Implicit implication
+            implication = MathObject.last_rw_object
+
+    target_selected = proof_step.target_selected
+    user_input = proof_step.user_input
+    goal = proof_step.goal
+
+    # (1) 'It suffices to prove'?
+    if target_selected:
+        return apply_implies(implication)
+
+    premise = implication.premise()
+    # (2) Premise in context (but not selected)?
+    #  or inaccessible premise (e.g. universal implication)
+    if universal_implication \
+            or not isinstance(premise, MathObject) \
+            or premise in ([p.math_type for p in goal.context_props]
+                           + [goal.target.math_type]):
+        raise WrongUserInput(error=_("You need to select another property"
+                                     "in order to apply this implication"))
+    # (3) Ask to add premise as a new sub_goal
+    elif not user_input:
+        assert isinstance(premise, MathObject)
+        raw_msg = _('To apply this property, you need the premise \"{}\". '
+                    'Do you want to prove it?')
+        msg = _(raw_msg).format(premise.to_display(format_='utf8'))
+        raise MissingParametersError(
+            InputType.YesNo,
+            choices=[],
+            title=_("Introduce new sub-goal?"),
+            output=msg)
+    # (4) Add premise as a new sub-goal
+    elif user_input[0] == 0:  # Should always be the case here
+        if premise and isinstance(premise, MathObject):
+            return introduce_new_subgoal(proof_step, premise)
+        else:
+            error_msg = _("I do not know what to do")
+            raise WrongUserInput(error_msg)
+
+
 @action()
 def action_implies(proof_step) -> CodeForLean:
     """
@@ -585,41 +639,22 @@ def action_implies(proof_step) -> CodeForLean:
     goal = proof_step.goal
 
     if len(selected_objects) == 0:
+        # Try to prove an implication
         if not goal.target.is_implication(implicit=True):
             raise WrongUserInput(
                 error=_("Target is not an implication 'P ⇒ Q'"))
         else:
             return construct_implies(proof_step)
-    if len(selected_objects) == 1:
-        # (1) Implication?
+    elif len(selected_objects) == 1:
+        # Try to apply an implication, but no other prop selected
         if not selected_objects[0].can_be_used_for_implication(implicit=True):
             raise WrongUserInput(
                 error=_("Selected property is not an implication 'P ⇒ Q'"))
-        # (2) 'It suffices to prove'?
-        elif target_selected:
-            return apply_implies(proof_step, selected_objects)
-        # (3) Premise in context (but not selected)?
-        elif selected_objects[0].premise() in ([p.math_type
-                                               for p in goal.context_props]
-                                               + [goal.target.math_type]):
-            raise WrongUserInput(error=_("You need to select another property"
-                                         "in order to apply this implication"))
-        # (4) Ask to add premise as a new sub_goal
-        elif not user_input:
-            premise = selected_objects[0].premise()
-            raw_msg = 'To apply this property, you need the premise \"{}\". '\
-                'Do you want to prove it?'
-            msg = _(raw_msg).format(premise.to_display(format_='utf8'))
-            raise MissingParametersError(
-                InputType.YesNo,
-                choices=[],
-                title=_("Introduce new sub-goal?"),
-                output=msg)
-        # (5) Add premise as a new sub-goal
-        elif user_input[0] == 0:  # Should always be the case here
-            return introduce_new_subgoal(proof_step)
+        else:
+            return implies_hyp(proof_step)
 
     elif len(selected_objects) == 2:
+        # Try to apply P ⇒ Q on P
         if not selected_objects[1].can_be_used_for_implication(implicit=True):
             if not selected_objects[0].can_be_used_for_implication(
                                                                implicit=True):
@@ -631,7 +666,9 @@ def action_implies(proof_step) -> CodeForLean:
         return apply_implies_to_hyp(proof_step, selected_objects)
     # TODO: treat the case of more properties, including the possibility of
     #  P, Q and 'P and Q ⇒ R'
-    raise WrongUserInput(error=_("Does not apply to more than two properties"))
+    else:
+        raise WrongUserInput(error=_("Does not apply to more than two "
+                                     "properties"))
 
 
 #######
