@@ -619,14 +619,14 @@ class Coordinator(QObject):
     ###################
     def history_undo(self):
         """
-        Go one step forward in history in the lean_file.
+        Go one step backward in history in the lean_file.
         """
         self.lean_file.undo()
         self.process_history_move()
 
     def history_redo(self):
         """
-        Go one step backward in history in the lean_file.
+        Go one step forward in history in the lean_file.
         """
         self.lean_file.redo()
         self.process_history_move()
