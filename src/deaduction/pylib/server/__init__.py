@@ -870,16 +870,26 @@ class ServerInterface(QObject):
         return f"import {file_name}\n"
 
     def set_file_content_from_state_and_tactic(self, goal, code_string):
-        goal_code = goal.to_lean_example()
-
+        """
+        Set the file content from goal and code. e.g.
+        import ...
+        namespace ...
+        open ...
+        example (X: Type) : true :=
+        begin
+            <some code>
+        end
+        """
+        exercise = self.__exercise_current
         # Rqst seq_num prevents from unchanged file
         file_content = f"-- Seq num {self.request_seq_num}\n" \
             + self.__lean_import_course_preamble() \
             + "section course\n" \
-            + self.__exercise_current.open_namespace_str() \
-            + goal_code \
+            + exercise.open_namespace_str() \
+            + exercise.open_read_only_namespace_str() \
+            + goal.to_lean_example() \
             + self.__begin_end_code(code_string) \
-            + self.__exercise_current.close_namespace_str() \
+            + exercise.close_namespace_str() \
             + "end course\n"
         self.__file_content_from_state_and_tactic = file_content
 

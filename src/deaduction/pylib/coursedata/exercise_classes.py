@@ -237,6 +237,20 @@ class Statement:
             end_of_file += "end " + namespace + "\n"
         return end_of_file
 
+    def open_read_only_namespace_str(self) -> str:
+        """
+        Return a string to be used for opening all read-only namespaces that
+        occurs prior to self in the course file.
+        e.g.
+        open set
+        open definitions
+        """
+        lines_dic = self.course.opened_namespace_lines
+        namespaces_lines = ["open " + key for key, value in lines_dic.items()
+                            if value < self.lean_begin_line_number]
+        open_namespaces = "\n".join(namespaces_lines)
+        return open_namespaces + '\n'
+
     def caption(self, is_exercise=False) -> str:
         """
         Return a string that shows a simplified version of the statement

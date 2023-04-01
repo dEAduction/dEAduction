@@ -80,10 +80,19 @@ class Goal:
     - splitting goals into objects and properties,
     - "smartly" naming variables, in particular all bound variables,
     - printing goals.
+
+    unmodified_context reflects the order the context is recorded by Lean.
+    This order may be modified in self._context, typically when a
+    substitution occurs within a property H, the new property H' is put at
+    the place where H was, thus resulting in a property where a term x
+    occurs before it is declared. In summary,
+        _context is used in the gui,
+        unmodified_context is used for Lean communication.
     """
 
     def __init__(self, context: [ContextMathObject], target: ContextMathObject):
         self._context = context
+        self.unmodified_context = context
         self.target = target
         self.name_hints = []
         # self.smart_name_bound_vars()
@@ -1036,7 +1045,7 @@ class Goal:
         (x: X) (A: set X) (H1: x ∈ A)
         """
         lean_context = ""
-        for co in self.context:
+        for co in self.unmodified_context:
             lean_context += f"({co.to_lean_with_type()}) "
 
         return lean_context
