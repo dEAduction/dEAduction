@@ -77,6 +77,7 @@ class Course:
     file_content:           str
     metadata:               Dict[str, str]
     outline:                OrderedDict
+    opened_namespace_lines: Dict
     statements:             List[Statement]
     relative_course_path:   Path = None
     # Relative_course_path is added after instantiation.
@@ -249,7 +250,8 @@ class Course:
         """
 
         statements = []
-        outline = {}
+        outline = OrderedDict()
+        opened_namespace_lines = {}
         begin_counter = 0
         begin_found = True
         ########################
@@ -285,6 +287,11 @@ class Course:
                 else:
                     pass
                     # log.debug(f"(just closing section(?) {name})")
+
+            elif event_name == "open_open":
+                name = event_content['name']
+                if name not in opened_namespace_lines:
+                    opened_namespace_lines[name] = line_counter
 
             ##############
             # statements #
@@ -342,6 +349,7 @@ class Course:
         course = cls(file_content=file_content,
                      metadata=course_metadata,
                      outline=outline,
+                     opened_namespace_lines=opened_namespace_lines,
                      statements=statements)
 
         # Add reference to course in statements, and test data for coherence
