@@ -27,6 +27,7 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from typing import Optional, List
 from deaduction.pylib.coursedata        import Course
 
 
@@ -40,7 +41,8 @@ class CourseData:
     (as a ServerInterface attribute).
     """
 
-    def __init__(self, course: Course, statements: [] = None):
+    def __init__(self, course: Course, statements: [] = None,
+                 request_seq_num=-1):
         self.course = course
         if not statements:
             self.statements = course.statements
@@ -58,6 +60,7 @@ class CourseData:
 
         self.pf_counter = 0
         self.file_contents = self.set_file_contents()
+        self.request_seq_num = request_seq_num
 
     def set_file_contents(self):
         """
@@ -65,11 +68,13 @@ class CourseData:
         statement to be processed.
         """
         lines        = self.course.file_content.splitlines()
-        hypo_tactic    = "    hypo_analysis,"
-        targets_tactic = "    targets_analysis,"
+        hypo_tactic    = "    hypo_analysis #{},"
+        targets_tactic = "    targets_analysis #{},"
 
         shift = 0  # Shift due to line insertion/deletion
+        counter = -1
         for statement in self.statements:
+            counter += 1
             # self.log.debug(f"Statement n° {self.statements.index(
             # statement)}")
             begin_line   = statement.lean_begin_line_number + shift
@@ -81,8 +86,10 @@ class CourseData:
             proof_lines.reverse()
             for index in proof_lines:
                 lines.pop(index)
-            lines.insert(begin_line, hypo_tactic)
-            lines.insert(begin_line+1, targets_tactic)
+            # Insert seq_num and statement nb
+            tag = str(self.request_seq_num) + '.' + str(counter)
+            lines.insert(begin_line, hypo_tactic.format(tag))
+            lines.insert(begin_line+1, targets_tactic.format(tag))
             self.statement_from_hypo_line[begin_line+1] = statement
             self.statement_from_targets_line[begin_line+2] = statement
             # No shift if end_line = begin_line + 3
@@ -93,4 +100,72 @@ class CourseData:
         file_contents = "\n".join(lines)
         # print(file_contents)
         return file_contents
+
+
+################################
+# HighLevelServerRequest class #
+################################
+class HighLevelServerRequest:
+    """
+    A class to store high level info for a Lean request, and gradually
+    complete the response.
+    """
+
+    def __init__(self,
+                 proof_step=None,
+                 course_data: CourseData = None,
+                 exercise=None):
+        assert proof_step or course_data or exercise
+        self.proof_step = proof_step
+        self.course_data = course_data
+        self.exercise = exercise
+        self.analysis = [None, None]  # Hypo_analysis, targets_analysis
+
+        # TODO: handle effective_code
+
+    @property
+    def hypo_analysis_list(self) -> Optional[List[str]]:
+        return self.analysis[0]
+
+    @property
+    def targets_analysis(self) -> Optional[str]:
+        return self.analysis[1]
+
+    def lean_file_content(self):
+        # TODO
+        pass
+
+    def add_hypo_analysis(self, analysis, ips_number=None):
+        if self.proof_step:
+            self.analysis[0] = analysis
+        else:
+            self.course_data.hypo_analysis[ips_number] = analysis
+
+    def add_targets_analysis(self, analysis, ips_number=None):
+        if self.proof_step:
+            self.analysis[1] = analysis
+        else:
+            self.course_data.targets_analysis[ips_number] = analysis
+
+    def expected_nb_hypos(self):
+        """
+        Return the number of targets, estimated by the number of occurence of
+        '¿¿¿' in self.__tmp_targets_analysis.
+        NB:     -1 indicates no information,
+                0 indicates no more goals.
+        """
+        targets = self.targets_analysis
+        nb = -1 if not targets else targets.count('¿¿¿')
+        return nb
+
+    def is_info_complete(self) -> bool:
+        """
+        Check if all requested info has been retrieved:
+        - targets and hypo analysis (coherent number)
+        - effective_code.
+        """
+        # TODO: copy from server/__init__
+        pass
+
+
 

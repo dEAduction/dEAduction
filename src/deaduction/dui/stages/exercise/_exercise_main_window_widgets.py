@@ -706,6 +706,12 @@ class GlobalToolbar(QToolBar):
         super().__init__(_('Toolbar'))
         icons_base_dir = cvars.get("icons.path")
         icons_dir = fs.path_helper(icons_base_dir)
+        self.cancel_server = QAction(
+                QIcon(str((icons_dir / 'icons8-stop-sign-48').resolve())),
+                _('Stop computations'), self)
+        self.cancel_server.setShortcut(QKeySequence(
+                                                QKeySequence.Cancel))
+
         self.settings_action = QAction(
                 QIcon(str((icons_dir / 'settings').resolve())),
                 _('Settings'), self)
@@ -715,6 +721,7 @@ class GlobalToolbar(QToolBar):
                 QIcon(str((icons_dir / 'change_exercise.png').resolve())),
                 _('Change exercise'), self)
 
+        self.addAction(self.cancel_server)
         self.addAction(self.settings_action)
         self.addAction(self.change_exercise_action)
         self.setLayoutDirection(Qt.RightToLeft)
@@ -725,5 +732,6 @@ class GlobalToolbar(QToolBar):
     def update(self):
         self.change_exercise_action.setText(_('Change exercise'))
         self.settings_action.setText(_("Settings"))
+        self.cancel_server.setText(_("Stop computations"))
 
 

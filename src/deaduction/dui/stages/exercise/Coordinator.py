@@ -169,6 +169,7 @@ class Coordinator(QObject):
         self.servint.effective_code_received.connect(
                                                 self.process_effective_code)
         self.servint.lean_response.connect(self.process_lean_response)
+        self.emw.cancel_server.connect(self.cancel_server)
 
     def __initialize_exercise(self):
         """
@@ -473,6 +474,15 @@ class Coordinator(QObject):
     ######################################################
     ######################################################
 
+    @Slot()
+    def cancel_server(self):
+        """
+        Cancel the current task, is the interface is frozen.
+        This should be called by pressing the 'Stop' button in the ui.
+        """
+        if self.servint:
+            self.servint.server_queue.cancel_current_task()
+
     def start_server_task(self):
         """
         A front end for starting the async server_task method,
@@ -755,6 +765,7 @@ class Coordinator(QObject):
                 # Update lean_file and call Lean server
                 self.lean_code_sent = lean_code
                 previous_proof_state = self.proof_step.proof_state
+                # TODO: send proof_step
                 self.server_queue.add_task(self.code_insert,
                                            action.symbol,
                                            lean_code,
@@ -793,6 +804,7 @@ class Coordinator(QObject):
             # Update lean_file and call Lean server
             self.lean_code_sent = lean_code
             previous_proof_state = self.proof_step.proof_state
+            # TODO: send proof_step in place of lean_code and previous_ps
             self.server_queue.add_task(self.code_insert,
                                        statement.pretty_name,
                                        lean_code,
@@ -989,10 +1001,10 @@ class Coordinator(QObject):
         elif error_type == 4:  # UnicodeDecodeError
             self.proof_step.error_msg = _("Unicode error, try again...")
             log.debug("Unicode Error")
-        elif error_type == 3:  # Timeout
-            self.proof_step.error_msg = _("Error, no proof state, "
-                                          "try again...")
-            log.debug("Proof state is None!")
+        # elif error_type == 3:  # Timeout
+        #     self.proof_step.error_msg = _("Error, no proof state, "
+        #                                   "try again...")
+        #     log.debug("Proof state is None!")
 
     def abort_process(self):
         log.debug("Aborting process")

@@ -32,7 +32,7 @@ This file is part of d∃∀duction.
 import trio
 import logging
 from copy import deepcopy
-from typing import Optional
+from typing import Optional, Dict
 
 # from deaduction.pylib.utils.nice_display_tree import nice_display_tree
 from deaduction.pylib.coursedata.exercise_classes import Exercise, Statement
@@ -50,7 +50,7 @@ from deaduction.pylib.proof_tree import LeanResponse
 import deaduction.pylib.config.vars as cvars
 import deaduction.pylib.config.site_installation as inst
 import deaduction.pylib.server.exceptions as exceptions
-from deaduction.pylib.server.utils import CourseData
+from deaduction.pylib.server.utils import CourseData, HighLevelServerRequest
 
 from PySide2.QtCore import Signal, QObject
 
@@ -209,6 +209,10 @@ class ServerQueue(list):
         # Launch next task when done!
         self.next_task()
 
+    def cancel_current_task(self):
+        if self.cancel_scope:
+            self.cancel_scope.cancel()
+
 
 #########################
 # ServerInterface class #
@@ -241,9 +245,7 @@ class ServerInterface(QObject):
     failed_request_errors       = Signal()  # FIXME: suppress?
 
     # Signal sending info from Lean
-    # lean_response = Signal(Statement, bool, tuple, list, int)
     lean_response = Signal(LeanResponse)
-    # timeout_signal = Signal()
 
     # For functionality using ipf (tooltips, implicit definitions):
     initial_proof_state_set     = Signal()
@@ -255,9 +257,6 @@ class ServerInterface(QObject):
     exercise_set                = Signal()
 
     MAX_CAPACITY = 10  # Max number of statements sent in one request
-
-    __analysis_code = "targets_analysis,\n" \
-                      "all_goals {hypo_analysis},\n" \
 
     ############################################
     # Init, and state control
@@ -274,6 +273,7 @@ class ServerInterface(QObject):
         self.lean_server: LeanServer   = LeanServer(nursery, self.lean_env)
         self.nursery: trio.Nursery     = nursery
         self.request_seq_num           = -1
+        self.pending_requests: Dict[int, HighLevelServerRequest] = {}
 
         # Set server callbacks
         self.lean_server.on_message_callback = self.__on_lean_message
@@ -288,7 +288,7 @@ class ServerInterface(QObject):
 
         # Current course (when processing a bunch of statements for initial
         # proof state)
-        self.__course_data             = None
+        self.__course_data             = None  # FIXME: obsolete
 
         # Events
         self.lean_server_running       = trio.Event()
@@ -300,6 +300,7 @@ class ServerInterface(QObject):
         # target and all effective codes, OR an error message
         self.proof_receive_done      = trio.Event()
 
+        # FIXME: obsolete (cf HighLevelServerRequest)
         self.__tmp_hypo_analysis       = []
         self.__tmp_targets_analysis    = ""
 
@@ -309,8 +310,6 @@ class ServerInterface(QObject):
         # of or_else combinator, according to the "EFFECTIVE CODE" messages
         # sent by Lean.
         self.__tmp_effective_code      = CodeForLean.empty_code()
-        # self.proof_state               = None
-        # self.no_more_goals             = False
         self.is_running                = False
         self.last_content              = ""  # Content of last LeanFile sent.
         self.__file_content_from_state_and_tactic = None
@@ -328,6 +327,12 @@ class ServerInterface(QObject):
         """
         return b or self.use_fast_method_for_lean_server
 
+    def __analysis_code(self) -> str:
+        nb = self.request_seq_num + 1
+        code = f"targets_analysis {nb},\n" \
+               f"all_goals {{hypo_analysis {nb}}},\n"
+        return  code
+
     def __begin_end_code(self, code_string: str) -> str:
         code_string = code_string.strip()
         if not code_string.endswith(","):
@@ -338,7 +343,7 @@ class ServerInterface(QObject):
 
         code = "begin\n" \
                + code_string \
-               + self.__analysis_code\
+               + self.__analysis_code()\
                + "end\n"
         return code
 
@@ -347,6 +352,7 @@ class ServerInterface(QObject):
         Return the number of goals, estimated by the number of ocurence of
         '¿¿¿' in self.__tmp_targets_analysis.
         NB: -1 indicates no information, whereas 0 indicates no more goals.
+        FIXME: obsolete
         """
         if not self.__tmp_targets_analysis:
             return -1
@@ -383,6 +389,10 @@ class ServerInterface(QObject):
         self.server_queue.started = False
         self.lean_server_running = trio.Event()
         self.lean_server.stop()
+
+    def add_high_level_request(self, request: HighLevelServerRequest):
+        self.request_seq_num += 1
+        self.pending_requests[self.request_seq_num] = request
 
     def __add_time_to_cancel_scope(self):
         """
@@ -445,6 +455,7 @@ class ServerInterface(QObject):
 
         self.__add_time_to_cancel_scope()
 
+        # TODO: find request in pending_request
         # Filter seq_num
         if msg.seq_num is not None:
             req_seq_num = self.request_seq_num
@@ -470,13 +481,13 @@ class ServerInterface(QObject):
             if not txt.endswith(LEAN_USES_SORRY):
                 self.log.warning(f"Lean warning at line {line}: {txt}")
 
-        elif txt.startswith("context:") \
+        elif txt.startswith("context #:") \
                 and self.test(line == last_line_of_inner_content + 2):
             self.log.info("Got new context")
             self.__tmp_hypo_analysis.append(txt)
             self.__check_receive_state()
 
-        elif txt.startswith("targets:") \
+        elif txt.startswith("targets #:") \
                 and self.test(line == last_line_of_inner_content + 1)\
                 and not self.__tmp_targets_analysis:
             self.log.info("Got new targets")
@@ -560,7 +571,7 @@ class ServerInterface(QObject):
             if not txt.endswith(LEAN_USES_SORRY):
                 self.log.warning(f"Lean warning at line {msg.pos_line}: {txt}")
 
-        elif txt.startswith("context:"):
+        elif txt.startswith("context #"):
             if line in self.__course_data.statement_from_hypo_line:
                 st = self.__course_data.statement_from_hypo_line[line]
                 index = self.__course_data.statements.index(st)
@@ -571,7 +582,7 @@ class ServerInterface(QObject):
             else:
                 self.log.debug(f"(Context for statement line {line} "
                                f"received but not expected)")
-        elif txt.startswith("targets:"):
+        elif txt.startswith("targets #:"):
             if line in self.__course_data.statement_from_targets_line:
                 st = self.__course_data.statement_from_targets_line[line]
                 index = self.__course_data.statements.index(st)
@@ -686,6 +697,7 @@ class ServerInterface(QObject):
 
         else:
             self.log.warning(f"Unexpected Lean response: {resp.message}")
+
         # Emit exceptions ?
         error_list = []
         try:
@@ -766,7 +778,7 @@ class ServerInterface(QObject):
         #                          "targets_analysis,\n" \
         #                          + end_of_file
 
-        virtual_file_afterword = self.__analysis_code + end_of_file
+        virtual_file_afterword = self.__analysis_code() + end_of_file
 
         virtual_file = LeanFile(file_name=statement.lean_name,
                                 preamble=virtual_file_preamble,
@@ -790,9 +802,13 @@ class ServerInterface(QObject):
         self.log.info(f"Set exercise to: "
                       f"{exercise.lean_name} -> {exercise.pretty_name}")
         self.__exercise_current = exercise
+
+        # FIXME: obsolete:
         self.lean_file = self.__file_from_exercise(exercise)
         self.__use_fast_method_for_lean_server = False
         self.__previous_proof_state = None
+
+        request = HighLevelServerRequest(exercise=exercise)
         await self.__update()
         if hasattr(self, "exercise_set"):
             self.exercise_set.emit()
@@ -800,41 +816,42 @@ class ServerInterface(QObject):
     ###########
     # History #
     ###########
-    async def history_undo(self):
-        """
-        Go one step forward in history in the lean_file.
-        """
-        self.lean_file.undo()
-        await self.__update()
-
-    async def history_redo(self):
-        """
-        Go one step backward in history in the lean_file.
-        """
-        self.lean_file.redo()
-        await self.__update()
-
-    async def history_rewind(self):
-        """
-        Go to beginning of history in the lean_file.
-        """
-        self.lean_file.rewind()
-        await self.__update()
-
-    async def history_goto(self, history_nb):
-        """
-        Move to a psecific place in the history of the Lean file.
-        """
-        self.lean_file.goto(history_nb)
-        await self.__update()
-
-    async def history_delete(self):
-        """
-        Delete last step of history in the lean_file. Called when FailedRequest
-        Error.
-        """
-        self.lean_file.delete()
-        await self.__update()
+    # FIXME: obsolete?
+    # async def history_undo(self):
+    #     """
+    #     Go one step forward in history in the lean_file.
+    #     """
+    #     self.lean_file.undo()
+    #     await self.__update()
+    #
+    # async def history_redo(self):
+    #     """
+    #     Go one step backward in history in the lean_file.
+    #     """
+    #     self.lean_file.redo()
+    #     await self.__update()
+    #
+    # async def history_rewind(self):
+    #     """
+    #     Go to beginning of history in the lean_file.
+    #     """
+    #     self.lean_file.rewind()
+    #     await self.__update()
+    #
+    # async def history_goto(self, history_nb):
+    #     """
+    #     Move to a psecific place in the history of the Lean file.
+    #     """
+    #     self.lean_file.goto(history_nb)
+    #     await self.__update()
+    #
+    # async def history_delete(self):
+    #     """
+    #     Delete last step of history in the lean_file. Called when FailedRequest
+    #     Error.
+    #     """
+    #     self.lean_file.delete()
+    #     await self.__update()
 
     def history_replace(self, code: CodeForLean):
         """
@@ -899,6 +916,7 @@ class ServerInterface(QObject):
         """
         Inserts code in the Lean virtual file.
         """
+        # TODO: add proof_step as a parameter. Create a HighRequest.
 
         self.__use_fast_method_for_lean_server = use_fast_method
         self.__previous_proof_state = (previous_proof_state if use_fast_method
@@ -975,16 +993,21 @@ class ServerInterface(QObject):
 
         self.log.info('Getting initial proof states')
         # file_name = str(self.__course_data.course.relative_course_path)
-        self.__course_data = course_data
+        self.__course_data = course_data  # FIXME
         self.__use_fast_method_for_lean_server = False
         self.__previous_proof_state = None
+
+        # Add request
+        # self.request_seq_num += 1
+        request = HighLevelServerRequest(course_data=course_data)
+        # self.pending_requests[self.request_seq_num] = request
+        self.add_high_level_request(request)
 
         # Invalidate events
         self.file_invalidated           = trio.Event()
         self.proof_receive_done       = trio.Event()
 
         # Ask Lean server and wait for answer
-        self.request_seq_num += 1
         self.log.debug(f"Request seq_num: {self.request_seq_num}")
         req = SyncRequest(file_name="deaduction_lean",
                           content=self.lean_file_contents)
@@ -1010,14 +1033,15 @@ class ServerInterface(QObject):
         self.get_initial_proof_states. This is a recursive method.
         """
 
-        statements = list(statements)  # Just in case statements is enumerator
+        statements = list(statements)  # Just in case statements is an iterator
         if statements is None:
             statements = course.statements
 
         if len(statements) <= self.MAX_CAPACITY:
             self.log.debug(f"Set {len(statements)} statement(s)")
             self.server_queue.add_task(self.__get_initial_proof_states,
-                                       CourseData(course, statements),
+                                       CourseData(course, statements,
+                                                  self.request_seq_num),
                                        on_top=on_top)
         else:
             self.log.debug(f"{len(statements)} statements to process...")
