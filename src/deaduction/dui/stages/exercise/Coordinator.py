@@ -194,6 +194,7 @@ class Coordinator(QObject):
 
         # Set exercise. In particular, this will initialize servint.lean_file.
         self.server_queue.add_task(self.servint.set_exercise,
+                                   self.proof_step,
                                    self.exercise,
                                    on_top=True)
 
@@ -768,8 +769,9 @@ class Coordinator(QObject):
                 # TODO: send proof_step
                 self.server_queue.add_task(self.code_insert,
                                            action.symbol,
-                                           lean_code,
-                                           previous_proof_state,
+                                           self.proof_step,
+                                           # lean_code,
+                                           # previous_proof_state,
                                            True,  # Use fast method
                                            cancel_fct=self.lean_file.undo)
                 break
@@ -807,8 +809,9 @@ class Coordinator(QObject):
             # TODO: send proof_step in place of lean_code and previous_ps
             self.server_queue.add_task(self.code_insert,
                                        statement.pretty_name,
-                                       lean_code,
-                                       previous_proof_state,
+                                       self.proof_step,
+                                       # lean_code,
+                                       # previous_proof_state,
                                        True,  # Use fast method
                                        cancel_fct=self.lean_file.undo)
 
