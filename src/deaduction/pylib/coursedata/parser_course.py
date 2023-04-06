@@ -131,10 +131,10 @@ class StatementVisitor(NodeVisitor):
         visited_children = list(filter(my_filter, visited_children))
         return visited_children
 
-    def visit_variables(selfself, node, visited_children):
+    def visit_variables(self, node, visited_children):
         return node.text
 
-    def visit_core_statement(selfself, node, visited_children):
+    def visit_core_statement(self, node, visited_children):
         return node.text
 
     def generic_visit(self, node, visited_children):
