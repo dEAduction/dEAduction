@@ -94,9 +94,9 @@ def string_to_pattern():
             # print(tree.display())
 
 
-def pattern_init():
+def pattern_init(additional_constants=None):
     set_quant_pattern()
-    app_pattern_from_constants()
+    app_pattern_from_constants(additional_data=additional_constants)
     string_to_pattern()
 
 

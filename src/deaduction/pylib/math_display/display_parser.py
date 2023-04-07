@@ -6,7 +6,12 @@
 This parser is used to parse some metadata of the lean files, e.g.
 Display
     divise --> (-2, " divise ", -1)
+    pair --> (-1, " est pair")
 
+Note that end of lines are changed to spaces by the course parser.
+This parser creates a dictionary that will be used to update
+latex_from_constant_name from app_pattern_data. This update will be called
+when user selects the course (in start_coex).
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -34,9 +39,13 @@ This file is part of d∃∀duction.
 from typing import Union, Tuple
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
+from parsimonious import ParseError
 
 
 display = """
+rules = rule more_rules
+more_rules = (more_rule)*
+more_rule = rule
 rule = constant_name space+ "-->" space+ pattern space*
 constant_name = any_char_but_space+
 pattern = "(" (space)* item (space)* more_items ")"
@@ -67,11 +76,25 @@ class Item:
 
 class DisplayPatternVisitor(NodeVisitor):
 
+    def visit_rules(self, node, visited_children):
+        rule, more_rules = visited_children
+        more_rules.update(rule)
+        return more_rules
+
     def visit_rule(self, node, visited_children):
         key = visited_children[0]
-        pattern = visited_children[4]
+        pattern = tuple(visited_children[4])
         rule = {key: pattern}
         return rule
+
+    def visit_more_rules(self, node, visited_children):
+        more_rules = {}
+        for rule in visited_children:
+            more_rules.update(rule)
+        return more_rules
+
+    def visit_more_rule(self, node, visited_children):
+        return visited_children[1]
 
     def visit_constant_name(self, node, visited_children):
         return node.text
@@ -109,12 +132,15 @@ class DisplayPatternVisitor(NodeVisitor):
         return None
 
 
+display_grammar = Grammar(display_rules)
+
+
 if __name__ == "__main__":
     essai = """divise --> (-2, " divise ", -1)"""
     essai2 = """divise  --> ( -2 ,  " divise " ,   -1  )  """
     essai3 = r"""majorant --> (-1, `\text_is`, " majorant de ", -2)"""
-    grammar = Grammar(display_rules)
-    tree = grammar.parse(essai3)
+    essai4 = """pair --> (-1, "est paire")"""
+    tree = display_grammar.parse(essai + " " + essai3 + " " + essai4)
     dic = DisplayPatternVisitor().visit(tree)
     print(dic)
 

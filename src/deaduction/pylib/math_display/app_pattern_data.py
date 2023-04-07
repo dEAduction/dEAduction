@@ -28,6 +28,7 @@ This file is part of d∃∀duction.
 
 import logging
 
+from .display_parser import display_grammar, DisplayPatternVisitor, ParseError
 from deaduction.pylib.math_display.display_data import name, value
 
 log = logging.getLogger(__name__)
@@ -125,14 +126,32 @@ generic_app_dict = {
 }
 
 
-def app_pattern_from_constants():
+def additional_data_from_pattern(patterns: [str]) -> dict:
+    dic = dict()
+    for pattern in patterns:
+        try:
+            tree = display_grammar.parse(pattern)
+            more_entry = DisplayPatternVisitor().visit(tree)
+            dic.update(more_entry)
+        except ParseError:
+            pass
+    # TODO
+
+
+def app_pattern_from_constants(additional_data=None):
     """
     Construct APPLICATION patterns from constant dictionary, and also their
     negations when appropriate.
     """
     latex_from_app_constant_patterns = {}
+    if additional_data:
+        tree = display_grammar.parse(additional_data)
+        additional_dic = DisplayPatternVisitor().visit(tree)
+        latex_from_constant_name.update(additional_dic)
     for key, value in latex_from_constant_name.items():
         # Modify key:
+        # if key in ('divise', 'pair'):
+        #     pass
         new_key = f'APP(CONSTANT/name={key}, ...)'
         # Change int into tuples in value:
         new_value = tuple((item, ) if isinstance(item, int)

@@ -80,6 +80,7 @@ from deaduction.dui.utils           import (replace_widget_layout,
 from deaduction.pylib.config.course import  add_to_recent_courses
 from deaduction.pylib.coursedata    import (Course,
                                             Exercise)
+from deaduction.pylib.math_display.pattern_init import pattern_init
 from deaduction.pylib.server import ServerInterface
 
 log = logging.getLogger(__name__)
@@ -323,6 +324,10 @@ class CourseChooser(AbstractCoExChooser):
 
         if not details:  # Set details to None if empty
             details = None
+
+        display_constant = course.metadata.get('display')
+        if display_constant:
+            pattern_init(display_constant)
 
         super().set_preview(main_widget=None, title=title, subtitle=subtitle,
                             details=details, description=description,
