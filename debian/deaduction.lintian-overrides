@@ -10,3 +10,4 @@ deaduction: duplicate-font-file
 deaduction: unstripped-binary-or-object
 deaduction: statically-linked-binary
 deaduction: embedded-library
+deaduction: no-copyright-file
