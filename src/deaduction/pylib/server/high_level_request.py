@@ -1,5 +1,5 @@
 """
-utils.py : utilities for the ServerInterface class
+high_level_request.py : utilities for the ServerInterface class
     
     Contains the CourseData class, which pre-processes some data for the
     ServerInterface class to process a list of statements of a given course.
@@ -27,13 +27,16 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from typing import Optional, List
+# from typing import Optional, List
 import logging
 
 from copy import deepcopy
 
+from deaduction.pylib.editing import LeanFile
 from deaduction.pylib.coursedata import Course
+from deaduction.pylib.proof_state.proof_state import ProofState
 from deaduction.pylib.actions import CodeForLean, get_effective_code_numbers
+# from deaduction.pylib.proof_tree import LeanResponse
 
 
 ################################
@@ -52,35 +55,69 @@ class HighLevelServerRequest:
     exercise types. The course_data, resp. exercise parameters are provided 
     only for the corresponding types.
     """
-    
-    def __init__(self, seq_num):
-        self.seq_num = seq_num
-        self.log = logging.getLogger("HighLevelServerRequest")
-        self.lean_code = None  # Set by subclasses
-        self.request_type = None
+    seq_num = -1
+    log = logging.getLogger("HighLevelServerRequest")
+    lean_code = None  # Set by subclasses
+    request_type = None
+    proof_received_event = None
+    targets_received = False
+    effective_code_received = False
 
-    def file_content(self):
+    def __init__(self):
+        pass
+        # self.seq_num = -1
+        # self.log = logging.getLogger("HighLevelServerRequest")
+        # self.lean_code = None  # Set by subclasses
+        # self.request_type = None
+        # self.proof_received_event = None
+        # self.targets_received = False
+        # self.effective_code_received = False
+
+    def file_contents(self):
         """
         To be defined in each subclass.
         """
         pass
 
-    def add_hypo_analysis(self, analysis, line):
+    def store_hypo_analysis(self, analysis, line):
         pass
 
-    def add_targets_analysis(self, analysis, line):
+    def store_targets_analysis(self, analysis, line):
         pass
 
     def is_complete(self) -> bool:
         return False
+
+    def init_proof_received_event(self, event):
+        self.proof_received_event = event
+
+    def set_proof_received(self):
+        if self.proof_received_event:
+            self.proof_received_event.set()
+
+    def set_seq_num(self, seq_num):
+        self.seq_num = seq_num
+
+    def targets_from_targets_analysis(self, targets_analysis: str) -> [str]:
+        """
+        Turn the string targets_analysis into a list of strings, one for each
+        target.        
+        """
+        if targets_analysis:
+            self.targets_received = True
+        targets = targets_analysis.split("¿¿¿")
+        # Put back "¿¿¿" and remove '\n' :
+        targets = ['¿¿¿' + item.replace('\n', '') for item in targets]
+        targets.pop(0)  # Removing title line ("targets:")
+        return targets
 
 
 class InitialProofStateRequest(HighLevelServerRequest):
     """
     
     """
-    def __init__(self, seq_num, course: Course, statements: [] = None):
-        super().__init__(seq_num)
+    def __init__(self, course: Course, statements: [] = None):
+        super().__init__()
         self.course = course
         self.statements = statements if statements else course.statements
 
@@ -141,17 +178,20 @@ class InitialProofStateRequest(HighLevelServerRequest):
     ####################
     # response methods #
     ####################
-    def add_hypo_analysis(self, analysis, line=None):
+    def store_hypo_analysis(self, analysis, line=None):
         if line in self.statement_from_hypo_line.keys():
             self.analysis_from_hypo_line[line] = analysis
         else:
             self.log.warning("Bad line in hypo_analysis")
+        self.get_ips_for_hypo_line(line)
 
-    def add_targets_analysis(self, analysis, line=None):
+    def store_targets_analysis(self, analysis, line=None):
         if line in self.statement_from_targets_line.keys():
-            self.analysis_from_targets_line[line] = analysis
+            target = self.targets_from_targets_analysis(analysis)
+            self.analysis_from_targets_line[line] = target
         else:
             self.log.warning("Bad line in targets_analysis")
+        self.get_ips_for_hypo_line(line-1)
 
     def is_complete(self) -> bool:
         nb = self.expected_analyses_nb
@@ -180,22 +220,91 @@ class ProofStepRequest(HighLevelServerRequest):
     
     """
 
-    def __init__(self, seq_num, proof_step=None):
-        super().__init__(seq_num)
+    def __init__(self, proof_step=None, exercise=None):
+        super().__init__()
         self.proof_step = proof_step
+        self.exercise = exercise
         self.hypo_analyses: [str] = []
-        self.targets_analysis = ""
-
-        if self.lean_code:
-            self.effective_code = deepcopy(self.lean_code)
-
+        self.targets_analyses: [str] = []
+        self.use_fast_method = True  # FIXME: rename, handle False case
+        self.code_string = ""
+        self.effective_code = (deepcopy(self.lean_code)
+                               if self.lean_code else None)
+        self.effective_code_received = False
         self.request_type = 'ProofStep'
-        # TODO: handle effective_code
+
+    def __lean_import_course_preamble(self) -> str:
+        file_name = self.exercise.course.course_file_name
+        return f"import {file_name}\n"
+
+    def __analysis_code(self) -> str:
+        nb = self.seq_num
+        code = f"targets_analysis {nb},\n" \
+               f"all_goals {{hypo_analysis {nb}}},\n"
+        return  code
+
+    def __begin_end_code(self, code_string: str) -> str:
+        code_string = code_string.strip()
+        if not code_string.endswith(","):
+            code_string += ","
+
+        if not code_string.endswith("\n"):
+            code_string += "\n"
+
+        code = "begin\n" \
+               + code_string \
+               + self.__analysis_code()\
+               + "end\n"
+        return code
+
+    def file_content_from_state_and_tactic(self, goal, code_string):
+        """
+        Set the file content from goal and code. e.g.
+        import ...
+        namespace ...
+        open ...
+        example (X: Type) : true :=
+        begin
+            <some code>
+        end
+        """
+        exercise = self.exercise
+        file_content = f"-- Seq num {self.seq_num}\n" \
+            + self.__lean_import_course_preamble() \
+            + "section course\n" \
+            + exercise.open_namespace_str() \
+            + exercise.open_read_only_namespace_str() \
+            + goal.to_lean_example() \
+            + self.__begin_end_code(code_string) \
+            + exercise.close_namespace_str() \
+            + "end course\n"
+        return file_content
 
     def file_contents(self):
-        # TODO
+        # TODO:
         #  Choose fast method if some computation has been done
-        pass
+        lean_code = self.proof_step.lean_code
+        previous_proof_state = self.proof_step.proof_state
+        lean_code, code_string = lean_code.to_decorated_code()
+        code_string = code_string.strip()
+        if not code_string.endswith(","):
+            code_string += ","
+
+        if not code_string.endswith("\n"):
+            code_string += "\n"
+
+        self.code_string = code_string
+        self.log.info("CodeForLean: " + lean_code.to_code())
+        self.log.info(lean_code)
+        self.log.debug("Code sent:" + code_string)
+        if self.use_fast_method:
+            goal = previous_proof_state.goals[0]
+            content = self.file_content_from_state_and_tactic(goal, code_string)
+            # self.log.info('Using fast method for Lean server')
+            # print(self.lean_file_contents)
+            return content
+
+        # TODO: ancient method
 
     @property
     def lean_code(self):
@@ -204,11 +313,12 @@ class ProofStepRequest(HighLevelServerRequest):
     ####################
     # response methods #
     ####################
-    def add_hypo_analysis(self, analysis, line=None):
+    def store_hypo_analysis(self, analysis, line=None):
         self.hypo_analyses.append(analysis)
 
-    def add_targets_analysis(self, analysis, line=None):
-        self.targets_analysis = analysis
+    def store_targets_analysis(self, analysis, line=None):
+        targets = self.targets_from_targets_analysis(analysis)
+        self.targets_analyses = targets
 
     def process_effective_code(self, msg):
         for txt_line in msg.splitlines():
@@ -224,16 +334,7 @@ class ProofStepRequest(HighLevelServerRequest):
                 self.effective_code.select_or_else(node_nb, code_nb)
             if found:
                 self.log.debug("(selecting effective code)")
-
-    @property
-    def expected_nb_hypos(self):
-        """
-        Return the number of targets, estimated by the number of occurence of
-        '¿¿¿' in self.__tmp_targets_analysis.
-        NB:     -1 indicates no information,
-                0 indicates no more goals.
-        """
-        return self.targets_analysis.count('¿¿¿')
+                self.effective_code_received = True
 
     def is_complete(self) -> bool:
         """
@@ -241,8 +342,9 @@ class ProofStepRequest(HighLevelServerRequest):
         - targets and hypo analysis (coherent number)
         - effective_code.
         """
-        # TODO: add effective code emit
-        analysis_complete = len(self.hypo_analyses) == self.expected_nb_hypos
+        analysis_complete = (self.targets_received and
+                             len(self.hypo_analyses) ==
+                             len(self.targets_analyses))
         effective_code_complete = not self.effective_code.has_or_else()
         return analysis_complete and effective_code_complete
 
@@ -253,13 +355,19 @@ class ExerciseRequest(ProofStepRequest):
     """
     expected_nb_hypos = 1
 
-    def __init__(self, seq_num, proof_step, exercise=None):
-        super().__init__(seq_num, proof_step)
-        self.exercise = exercise
+    def __init__(self, proof_step, exercise=None):
+        super().__init__(proof_step, exercise)
         self.virtual_file = None
         self.request_type = 'Exercise'
 
         self.compute_virtual_file()
+
+    def set_seq_num(self, seq_num):
+        self.seq_num = seq_num
+        if self.virtual_file:
+            self.virtual_file.add_seq_num(self.seq_num)
+            self.virtual_file.cursor_move_to(0)
+            self.virtual_file.cursor_save()
 
     def compute_virtual_file(self):
         """
@@ -273,7 +381,7 @@ class ExerciseRequest(ProofStepRequest):
 
         Then a virtual file is instantiated.
         """
-        # FIXME: should be str, not LeanFile
+
         statement = self.exercise
         file_content = statement.course.file_content
         lines        = file_content.splitlines()
@@ -282,21 +390,12 @@ class ExerciseRequest(ProofStepRequest):
         # Construct short end of file by closing all open namespaces
         end_of_file = "end\n"
         end_of_file += statement.close_namespace_str()
-        # namespaces = statement.ugly_hierarchy()
-        # while namespaces:
-        #     namespace = namespaces.pop()
-        #     end_of_file += "end " + namespace + "\n"
         end_of_file += "end course"
 
         # Replace statement by negation if required
         if (hasattr(statement, 'negate_statement')
                 and statement.negate_statement):
-            # lean_core_statement = statement.lean_core_statement
-            # negation = " not( " + lean_core_statement + " )"
             lemma_line = statement.lean_line - 1
-            # rough_core_content = "\n".join(lines[lemma_line:begin_line]) + "\n"
-            # new_core_content = rough_core_content.replace(
-            #                         lean_core_statement, negation)
             negated_goal = statement.negated_goal()
             new_core_content = negated_goal.to_lean_example()
             virtual_file_preamble = "\n".join(lines[:lemma_line]) \
@@ -310,10 +409,6 @@ class ExerciseRequest(ProofStepRequest):
             # Construct virtual file
             virtual_file_preamble = "\n".join(lines[:begin_line]) + "\n"
 
-        # virtual_file_afterword = "hypo_analysis,\n" \
-        #                          "targets_analysis,\n" \
-        #                          + end_of_file
-
         virtual_file_afterword = self.__analysis_code() + end_of_file
 
         virtual_file = LeanFile(file_name=statement.lean_name,
@@ -321,8 +416,8 @@ class ExerciseRequest(ProofStepRequest):
                                 afterword=virtual_file_afterword)
         # Ensure file is different at each new request:
         # (avoid "file unchanged" response)
-        virtual_file.add_seq_num(self.request_seq_num)
-
+        # virtual_file.add_seq_num(self.seq_num)
+        #
         virtual_file.cursor_move_to(0)
         virtual_file.cursor_save()
 
@@ -330,69 +425,5 @@ class ExerciseRequest(ProofStepRequest):
 
     def file_contents(self):
         return self.virtual_file.contents
-        # """
-        # Create a virtual file from exercise. Concretely, this consists in
-        # - separating the part of the file before the proof into a preamble,
-        # - add the tactics "hypo_analysis, targets_analysis"
-        # - remove all statements after the proof.
-        #
-        # If exercise.negate_statement, then the statement is replaced by its
-        # negation.
-        #
-        # Then a virtual file is instantiated.
-        # """
-        # # FIXME: should be str, not LeanFile
-        # statement = self.exercise
-        # file_content = statement.course.file_content
-        # lines        = file_content.splitlines()
-        # begin_line   = statement.lean_begin_line_number
-        #
-        # # Construct short end of file by closing all open namespaces
-        # end_of_file = "end\n"
-        # end_of_file += statement.close_namespace_str()
-        # # namespaces = statement.ugly_hierarchy()
-        # # while namespaces:
-        # #     namespace = namespaces.pop()
-        # #     end_of_file += "end " + namespace + "\n"
-        # end_of_file += "end course"
-        #
-        # # Replace statement by negation if required
-        # if (hasattr(statement, 'negate_statement')
-        #         and statement.negate_statement):
-        #     # lean_core_statement = statement.lean_core_statement
-        #     # negation = " not( " + lean_core_statement + " )"
-        #     lemma_line = statement.lean_line - 1
-        #     # rough_core_content = "\n".join(lines[lemma_line:begin_line]) + "\n"
-        #     # new_core_content = rough_core_content.replace(
-        #     #                         lean_core_statement, negation)
-        #     negated_goal = statement.negated_goal()
-        #     new_core_content = negated_goal.to_lean_example()
-        #     virtual_file_preamble = "\n".join(lines[:lemma_line]) \
-        #                             + "\n" + new_core_content \
-        #                             + "begin\n"
-        #     # Debug
-        #     # core = lines[lemma_line] + "\n" + new_core_content + "begin\n"
-        #     # print(core)
-        #
-        # else:
-        #     # Construct virtual file
-        #     virtual_file_preamble = "\n".join(lines[:begin_line]) + "\n"
-        #
-        # # virtual_file_afterword = "hypo_analysis,\n" \
-        # #                          "targets_analysis,\n" \
-        # #                          + end_of_file
-        #
-        # virtual_file_afterword = self.__analysis_code() + end_of_file
-        #
-        # virtual_file = LeanFile(file_name=statement.lean_name,
-        #                         preamble=virtual_file_preamble,
-        #                         afterword=virtual_file_afterword)
-        # # Ensure file is different at each new request:
-        # # (avoid "file unchanged" response)
-        # virtual_file.add_seq_num(self.request_seq_num)
-        #
-        # virtual_file.cursor_move_to(0)
-        # virtual_file.cursor_save()
-        # return virtual_file
 
 

@@ -1100,9 +1100,13 @@ class Coordinator(QObject):
         # self.proof_step.solving_objs = solving_objs
         self.proof_step_updated.emit()  # Received in auto_test
 
-    def test_response_coherence(self, lean_response: LeanResponse):
-        # fixme
-        return True
+    def check_response_coherence(self, lean_response: LeanResponse):
+        """
+        Check if lean_response concerns current proof step.
+        """
+        test = (lean_response.proof_step is self.proof_step or
+                not lean_response.proof_step)
+        return test
         # return self.lean_code_sent is lean_response.lean_code
 
     def invalidate_events(self):
@@ -1233,9 +1237,10 @@ class Coordinator(QObject):
 
         self.emw.ui_updated.emit()  # For testing
 
+        # FIXME: unused??
         self.invalidate_events()
 
         if no_more_goals:
-                # Display QMessageBox but give deaduction time to properly update
-                # ui before.
-                QTimer.singleShot(0, self.display_fireworks_msg)
+            # Display QMessageBox but give deaduction time to properly update
+            # ui before.
+            QTimer.singleShot(0, self.display_fireworks_msg)

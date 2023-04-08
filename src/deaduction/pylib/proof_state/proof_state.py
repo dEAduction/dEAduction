@@ -1274,12 +1274,13 @@ class ProofState:
         return self.goals[0]
 
     @classmethod
-    def from_lean_data(cls, hypo_analysis: str, targets_analysis: str,
+    def from_lean_data(cls, hypo_analysis: [str], targets_analysis: [str],
                        to_prove=False, previous_proof_state=None):
         """
-        :param hypo_analysis:    string from the lean tactic hypo_analysis
-        :param targets_analysis: string from the lean tactic targets_analysis
-        (with one line per target)
+        :param hypo_analysis:    list of strings from the lean tactic
+        hypo_analysis, one string for each goal
+        :param targets_analysis: list of string from the lean tactic
+        targets_analysis
         :param to_prove: True iff the main goal is the current exercise's goal
         (this affect bound vars naming).
         :param previous_proof_state: previous Proof State. If not know,
@@ -1291,10 +1292,11 @@ class ProofState:
         """
 
         log.info("Creating new ProofState from lean strings")
-        targets = targets_analysis.split("¿¿¿")
-        # Put back "¿¿¿" and remove '\n' :
-        targets = ['¿¿¿' + item.replace('\n', '') for item in targets]
-        targets.pop(0)  # Removing title line ("targets:")
+        # targets = targets_analysis.split("¿¿¿")
+        # # Put back "¿¿¿" and remove '\n' :
+        # targets = ['¿¿¿' + item.replace('\n', '') for item in targets]
+        # targets.pop(0)  # Removing title line ("targets:")
+        targets = targets_analysis
         # if not targets:
         #     log.warning(f"No target, targets_analysis={targets_analysis}")
         if len(hypo_analysis) != len(targets):
