@@ -1134,7 +1134,7 @@ class Coordinator(QObject):
         """
 
         # (1) Test Response corresponds to request
-        if not self.test_response_coherence(lean_response):
+        if not self.check_response_coherence(lean_response):
             log.warning("Unexpected Lean response, ignoring")
             self.abort_process()
             return

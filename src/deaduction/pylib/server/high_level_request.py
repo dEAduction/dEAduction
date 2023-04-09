@@ -237,10 +237,10 @@ class ProofStepRequest(HighLevelServerRequest):
         file_name = self.exercise.course.course_file_name
         return f"import {file_name}\n"
 
-    def __analysis_code(self) -> str:
+    def analysis_code2(self) -> str:
         nb = self.seq_num
-        code = f"targets_analysis {nb},\n" \
-               f"all_goals {{hypo_analysis {nb}}},\n"
+        code = f"targets_analysis2 {nb},\n" \
+               f"all_goals {{hypos_analysis2 {nb}}},\n"
         return  code
 
     def __begin_end_code(self, code_string: str) -> str:
@@ -253,7 +253,7 @@ class ProofStepRequest(HighLevelServerRequest):
 
         code = "begin\n" \
                + code_string \
-               + self.__analysis_code()\
+               + self.analysis_code2()\
                + "end\n"
         return code
 
@@ -409,7 +409,7 @@ class ExerciseRequest(ProofStepRequest):
             # Construct virtual file
             virtual_file_preamble = "\n".join(lines[:begin_line]) + "\n"
 
-        virtual_file_afterword = self.__analysis_code() + end_of_file
+        virtual_file_afterword = self.analysis_code2() + end_of_file
 
         virtual_file = LeanFile(file_name=statement.lean_name,
                                 preamble=virtual_file_preamble,

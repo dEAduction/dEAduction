@@ -185,6 +185,7 @@ match e with
 ------------ ARITHMETIC ------------
 | `(↑%%a)      := return ("COE", [a])
 | `(%%a + %%b) := return ("SUM", [a, b])
+| `(nat.succ %%n) := return ("SUM", [n, `(1:ℕ)])
 | `(%%a - %%b) := return ("DIFFERENCE", [a, b])
 | `(has_mul.mul %%a %%b) := return ("MULT", [a, b]) -- TODO: distinguish types/numbers
 | `(%%a × %%b) := return ("PRODUCT", [a, b]) -- TODO: distinguish types/numbers
@@ -336,6 +337,19 @@ do list_expr ← get_goals,
     list_expr.mmap (λ h, analysis_expr_with_types h >>= trace),
     return ()
 
+/- print a list of strings reflecting objects in the context  -/
+meta def hypos_analysis2 (n: nat) : tactic unit :=
+do list_expr ← local_context,
+    trace ("context #" ++ to_string n ++ ":"),
+    list_expr.mmap (λ h, analysis_expr_with_types h >>= trace),
+    return ()
+
+/- print the list of all targets -/
+meta def targets_analysis2 (n: nat) : tactic unit :=
+do list_expr ← get_goals,
+    trace ("targets #" ++ to_string n ++ ":"),
+    list_expr.mmap (λ h, analysis_expr_with_types h >>= trace),
+    return ()
 
 
 /---------------------------------------------------
@@ -395,7 +409,7 @@ private meta def analyse_expr_brut : expr →  tactic string
             return(S3)
         else  do let S0 := "OBJET : ",
             let S1 :=  to_string e,
-            S2 ← analyse_rec_brut expr_t,
+            S2 ← analyse_rec_brut e,
             let S3 := S0 ++ S1 ++ " : "++ S2,
             return(S3)
 

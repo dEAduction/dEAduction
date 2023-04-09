@@ -31,7 +31,6 @@ This file is part of d∃∀duction.
 
 import trio
 import logging
-from copy import deepcopy
 from typing import Optional, Dict
 
 # from deaduction.pylib.utils.nice_display_tree import nice_display_tree
@@ -364,14 +363,14 @@ class ServerInterface(QObject):
     def use_fast_method_for_lean_server(self):
         return self.__use_fast_method_for_lean_server
 
-    @property
-    def lean_file_contents(self):
-        if self.use_fast_method_for_lean_server:
-            return self.__file_content_from_state_and_tactic
-        elif self.__course_data:
-            return self.__course_data.file_contents
-        elif self.lean_file:
-            return self.lean_file.contents
+    # @property
+    # def lean_file_contents(self):
+    #     if self.use_fast_method_for_lean_server:
+    #         return self.__file_content_from_state_and_tactic
+    #     elif self.__course_data:
+    #         return self.__course_data.file_contents
+    #     elif self.lean_file:
+    #         return self.lean_file.contents
 
     async def start(self):
         """
@@ -723,11 +722,13 @@ class ServerInterface(QObject):
         ###################
         # Loop in case Lean's answer is None, which happens...
         while not resp:
-            self.request_seq_num += 1  # FIXME ???
+            # self.request_seq_num += 1
             request.set_seq_num(self.request_seq_num)
             self.log.debug(f"Request seq_num: {self.request_seq_num}")
+            print(request.file_contents())
             req = SyncRequest(file_name="deaduction_lean",
                               content=request.file_contents())
+            self.log.debug(f"req seq_num: {req.seq_num}")
             resp = await self.lean_server.send(req)
 
         if resp.message == "file_unchanged":
@@ -1099,7 +1100,7 @@ class ServerInterface(QObject):
             self.file_invalidated.set()
 
             # ───────── Waiting for all pieces of information ──────── #
-            await self.proof_receive_done.wait()
+            await request.proof_received_event.wait()
             print("(proof received)")
             # self.log.debug(_("All proof states received"))
             self.initial_proof_state_set.emit()
