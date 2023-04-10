@@ -432,10 +432,15 @@ class ServerInterface(QObject):
     #             print(self.__tmp_effective_code.to_code())
 
     def __check_request_complete(self, request_seq_num):
+        self.log.debug(f"Checking request {request_seq_num}")
         request = self.pending_requests.get(request_seq_num)
-        if request and request.is_complete():
-            request.set_proof_received()
-            self.pending_requests.pop(request_seq_num)
+        print(request)
+        if request:
+            if request.is_complete():
+                self.log.debug("--> complete")
+                request.set_proof_received()
+        else:
+            self.log.debug("--> not complete")
 
     def __on_lean_message(self, msg: Message):
         """
@@ -458,7 +463,7 @@ class ServerInterface(QObject):
         #  Check info is complete, send signals if this is so
 
         txt = msg.text
-        # self.log.debug("Lean message: " + txt)
+        self.log.debug("Lean message: " + txt)
 
         self.__add_time_to_cancel_scope()
 
@@ -486,7 +491,7 @@ class ServerInterface(QObject):
 
         line = msg.pos_line
         severity = msg.severity
-        last_line_of_inner_content = self.lean_file.last_line_of_inner_content
+        # last_line_of_inner_content = self.lean_file.last_line_of_inner_content
 
         if severity == Message.Severity.error:
             self.log.error(f"Lean error at line {line}: {txt}")
@@ -497,10 +502,13 @@ class ServerInterface(QObject):
             if not txt.endswith(LEAN_USES_SORRY):
                 self.log.warning(f"Lean warning at line {line}: {txt}")
 
-        elif txt.startswith("context #:"):
+        elif txt.startswith("context #"):
+            # FIXME: check seq_num in txt
+            self.log.debug("Storing context")
             request.store_hypo_analysis(txt, line)
 
-        elif txt.startswith("targets #:"):
+        elif txt.startswith("targets #"):
+            self.log.debug("Storing targets")
             request.store_targets_analysis(txt, line)
 
         # elif txt.startswith("context #:") \
@@ -516,7 +524,6 @@ class ServerInterface(QObject):
         #     self.__tmp_targets_analysis = txt
         #     self.__check_receive_state()
 
-        # FIXME:
         elif txt.startswith("EFFECTIVE CODE"):
             if isinstance(request, ProofStepRequest):
                 request.process_effective_code(msg)
@@ -672,7 +679,7 @@ class ServerInterface(QObject):
     # Update proof state of current exercise #
     ##########################################
     def __add_pending_request(self, request: HighLevelServerRequest):
-        self.request_seq_num += 1
+        # self.request_seq_num += 1
         request.set_seq_num(self.request_seq_num)
         request.init_proof_received_event(trio.Event())
         self.pending_requests[self.request_seq_num] = request
@@ -722,14 +729,17 @@ class ServerInterface(QObject):
         ###################
         # Loop in case Lean's answer is None, which happens...
         while not resp:
-            # self.request_seq_num += 1
+            # print(request.file_contents())
+            self.request_seq_num += 1
             request.set_seq_num(self.request_seq_num)
+            self.__add_pending_request(request)
             self.log.debug(f"Request seq_num: {self.request_seq_num}")
-            print(request.file_contents())
             req = SyncRequest(file_name="deaduction_lean",
                               content=request.file_contents())
-            self.log.debug(f"req seq_num: {req.seq_num}")
+            # self.log.debug(f"req seq_num: {req.seq_num}")
             resp = await self.lean_server.send(req)
+            if not resp:
+                self.pending_requests.pop(self.request_seq_num)
 
         if resp.message == "file_unchanged":
             self.log.warning("File unchanged!")
@@ -744,6 +754,7 @@ class ServerInterface(QObject):
             #########################################
             await request.proof_received_event.wait()
             # ------ Up to here task may be cancelled by timeout ------ #
+            self.pending_requests.pop(self.request_seq_num)
             self.server_queue.cancel_scope.shield = True
 
             self.log.debug(_("Proof State received"))
@@ -874,7 +885,7 @@ class ServerInterface(QObject):
 
         request = ExerciseRequest(proof_step=proof_step,
                                   exercise=exercise)
-        self.__add_pending_request(request)
+        # self.__add_pending_request(request)
         self.lean_file = request.virtual_file
 
         await self.__get_response_from_request(request=request)
@@ -991,7 +1002,7 @@ class ServerInterface(QObject):
         # previous_proof_state = proof_step.proof_state
         request = ProofStepRequest(proof_step=proof_step,
                                    exercise=self.__exercise_current)
-        self.__add_pending_request(request)
+        # self.__add_pending_request(request)
 
         # self.__use_fast_method_for_lean_server = use_fast_method
         # self.__previous_proof_state = (previous_proof_state if use_fast_method
@@ -1077,7 +1088,7 @@ class ServerInterface(QObject):
         # self.__previous_proof_state = None
 
         # Add request
-        # self.request_seq_num += 1
+        self.request_seq_num += 1
         request = InitialProofStateRequest(course=course,
                                            statements=statements)
         self.__add_pending_request(request)
@@ -1089,8 +1100,8 @@ class ServerInterface(QObject):
 
         # Ask Lean server and wait for answer
         self.log.debug(f"Request seq_num: {self.request_seq_num}")
-        self.request_seq_num += 1
-        request.set_seq_num(self.request_seq_num)
+        # self.request_seq_num += 1
+        # request.set_seq_num(self.request_seq_num)
         req = SyncRequest(file_name="deaduction_lean",
                           content=request.file_contents())
         resp = await self.lean_server.send(req)
@@ -1101,6 +1112,8 @@ class ServerInterface(QObject):
 
             # ───────── Waiting for all pieces of information ──────── #
             await request.proof_received_event.wait()
+            self.pending_requests.pop(self.request_seq_num)
+
             print("(proof received)")
             # self.log.debug(_("All proof states received"))
             self.initial_proof_state_set.emit()

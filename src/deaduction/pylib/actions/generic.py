@@ -138,6 +138,7 @@ def action_theorem(proof_step) -> CodeForLean:
 
     goal = proof_step.goal
     codes = CodeForLean()
+    # FIXME: case of no ips:
     theorem_goal: Goal = theorem.initial_proof_state.goals[0]
 
     if not target_selected and not selected_objects:

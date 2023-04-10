@@ -239,8 +239,8 @@ class ProofStepRequest(HighLevelServerRequest):
 
     def analysis_code2(self) -> str:
         nb = self.seq_num
-        code = f"targets_analysis2 {nb},\n" \
-               f"all_goals {{hypos_analysis2 {nb}}},\n"
+        code = f"    targets_analysis2 {nb},\n" \
+               f"    all_goals {{hypos_analysis2 {nb}}},\n"
         return  code
 
     def __begin_end_code(self, code_string: str) -> str:
@@ -345,7 +345,8 @@ class ProofStepRequest(HighLevelServerRequest):
         analysis_complete = (self.targets_received and
                              len(self.hypo_analyses) ==
                              len(self.targets_analyses))
-        effective_code_complete = not self.effective_code.has_or_else()
+        effective_code_complete = (not self.effective_code or not
+                                   self.effective_code.has_or_else())
         return analysis_complete and effective_code_complete
 
 
@@ -362,10 +363,27 @@ class ExerciseRequest(ProofStepRequest):
 
         self.compute_virtual_file()
 
+    def virtual_file_afterword(self) -> str:
+        # Construct short end of file by closing all open namespaces
+        statement = self.exercise
+        end_of_file = "end\n"
+        end_of_file += statement.close_namespace_str()
+        end_of_file += "end course"
+        virtual_file_afterword = self.analysis_code2() + end_of_file
+        return virtual_file_afterword
+
+    def set_virtual_file_afterword(self):
+        """
+        Set the virtual file afterword, with the right seq_num.
+        """
+        if self.virtual_file:
+            self.virtual_file.afterword = self.virtual_file_afterword()
+
     def set_seq_num(self, seq_num):
         self.seq_num = seq_num
         if self.virtual_file:
             self.virtual_file.add_seq_num(self.seq_num)
+            self.set_virtual_file_afterword()
             self.virtual_file.cursor_move_to(0)
             self.virtual_file.cursor_save()
 
@@ -387,11 +405,6 @@ class ExerciseRequest(ProofStepRequest):
         lines        = file_content.splitlines()
         begin_line   = statement.lean_begin_line_number
 
-        # Construct short end of file by closing all open namespaces
-        end_of_file = "end\n"
-        end_of_file += statement.close_namespace_str()
-        end_of_file += "end course"
-
         # Replace statement by negation if required
         if (hasattr(statement, 'negate_statement')
                 and statement.negate_statement):
@@ -409,11 +422,10 @@ class ExerciseRequest(ProofStepRequest):
             # Construct virtual file
             virtual_file_preamble = "\n".join(lines[:begin_line]) + "\n"
 
-        virtual_file_afterword = self.analysis_code2() + end_of_file
-
+        afterword = self.virtual_file_afterword()
         virtual_file = LeanFile(file_name=statement.lean_name,
                                 preamble=virtual_file_preamble,
-                                afterword=virtual_file_afterword)
+                                afterword=afterword)
         # Ensure file is different at each new request:
         # (avoid "file unchanged" response)
         # virtual_file.add_seq_num(self.seq_num)
@@ -425,5 +437,4 @@ class ExerciseRequest(ProofStepRequest):
 
     def file_contents(self):
         return self.virtual_file.contents
-
 
