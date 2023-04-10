@@ -372,7 +372,13 @@ class Coordinator(QObject):
     # Properties #
     ##############
 
-    # TODO move to EMW?
+    @property
+    def action_button_names(self) -> [str]:
+        # buttons = self.emw.ecw.actions_buttons
+        # return [button.name for button in buttons]
+        buttons = ActionButton.from_name.keys()
+        return buttons
+
     @property
     def lean_file(self):
         return self.servint.lean_file
@@ -603,16 +609,21 @@ class Coordinator(QObject):
 
                     self.proof_step.drag_n_drop = DragNDrop(premise, operator)
                     try:
-                        name = drag_n_drop(premise, operator)
+                        names = drag_n_drop(premise, operator,
+                                            self.action_button_names)
                     except WrongUserInput as error:
                         self.proof_step.user_input = self.emw.user_input
                         self.process_wrong_user_input(error)
 
                     else:
-                        self.proof_step.button_name = name
-                        action_btn = ActionButton.from_name[name]
-                        await action_btn.simulate(duration=0.5)
-                        self.__server_call_action(action_btn)
+                        # Only first name is tried
+                        for name in names:
+                            action_btn = ActionButton.from_name.get(name)
+                            if action_btn:
+                                self.proof_step.button_name = name
+                                await action_btn.simulate(duration=0.5)
+                                self.__server_call_action(action_btn)
+                        # No button found: this should not happen
 
     ###################
     # History actions #

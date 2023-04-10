@@ -162,7 +162,7 @@ class ExerciseCentralWidget(QWidget):
         self.__context_gb = QGroupBox(context_title)
 
         # ──────────────── Init Actions area ─────────────── #
-        ActionButton.from_symbol = dict()
+        ActionButton.from_name = dict()
         self.action_btns_wdgs = []
 
         statements           = exercise.available_statements

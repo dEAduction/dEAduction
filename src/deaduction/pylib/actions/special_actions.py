@@ -42,7 +42,8 @@ log = logging.getLogger("logic")
 global _
 
 
-def drag_n_drop(premise: ContextMathObject, operator: ContextMathObject) -> str:
+def drag_n_drop(premise: ContextMathObject, operator: ContextMathObject,
+                button_names: [str] = None) -> str:
     """
     Compute an action to be triggered from a drag and drop operation.
     @param premise: the dragged property or object.
@@ -67,10 +68,10 @@ def drag_n_drop(premise: ContextMathObject, operator: ContextMathObject) -> str:
     #     if math_obj.is_prop():
     #         premise = math_obj
     # log.debug(f"Premise: {premise}")
-    name = operator.action_from_premise_and_operator(premise)
-    log.debug(f"Name: {name}")
+    names = operator.action_from_premise_and_operator(premise, button_names)
+    log.debug(f"Name: {names}")
 
-    if not name:
+    if not names:
         raise WrongUserInput(_("I don't know what to do!"))
 
-    return name
+    return names

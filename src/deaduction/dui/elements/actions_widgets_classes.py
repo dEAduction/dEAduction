@@ -265,7 +265,6 @@ class ActionButtonsWidget(QWidget):
         """
 
         super().__init__()
-
         self.buttons = []
 
         main_layout = QHBoxLayout()
@@ -288,6 +287,8 @@ class ActionButtonsWidget(QWidget):
         for button in self.buttons:
             button.update()
 
+    def names(self):
+        return [button.name for button in self.buttons]
 
 ##############################
 # Statements widgets classes #

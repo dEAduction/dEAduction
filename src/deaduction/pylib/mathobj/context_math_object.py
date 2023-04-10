@@ -156,7 +156,8 @@ class ContextMathObject(MathObject):
     #####################
     # Help msgs methods #
     #####################
-    def action_from_premise_and_operator(self, other: MathObject):
+    def action_from_premise_and_operator(self, other: MathObject,
+                                         button_names: [str] = None) -> [str]:
         """
         Return possible actions for premise = self and operator = other. This is
         used e.g. to determine which action could be triggered by a drag&drop
@@ -164,24 +165,24 @@ class ContextMathObject(MathObject):
         """
         operator = self
         premise = other
-        action = None
+        actions = []
 
         implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
         if operator.is_function():
-            action = "map"
+            actions.append("map")
 
         if premise.math_type.is_prop():
             if operator.can_be_used_for_implication(implicit=implicit):
-                action = "implies"
-            else:
-                yes, subs = operator.can_be_used_for_substitution()
-                if yes:
-                    action = "equal"
-        else:
-            if operator.is_for_all(implicit=implicit):
-                action = "forall"
+                actions.append("implies")
+            yes, subs = operator.can_be_used_for_substitution()
+            if yes:
+                actions.append("equal")
+        if operator.is_for_all(implicit=implicit):
+            actions.append("forall")
 
-        return action
+        if button_names:
+            actions = [action for action in actions if action in button_names]
+        return actions
 
     def format_msg(self, raw_msg: str,
                    obj: Optional[MathObject] = None,
