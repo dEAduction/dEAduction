@@ -620,6 +620,7 @@ def implies_hyp(proof_step):
         raise WrongUserInput(error=_("You need to select another property"
                                      "in order to apply this implication"))
     # (3) Ask to add premise as a new sub_goal
+    # TODO: add case of an iff: ask for direction, then proceed as for =>
     elif not user_input:
         assert isinstance(premise, MathObject)
         raw_msg = _('To apply this property, you need the premise \"{}\". '
@@ -669,6 +670,7 @@ def action_implies(proof_step) -> CodeForLean:
             return construct_implies(proof_step)
 
     # From now on, at least 1 selected object.
+    # TODO: add iff case for one selected object
     if len(selected_objects) == 1:
         # Try to apply an implication, but no other prop selected
         if not selected_objects[0].can_be_used_for_implication(implicit=True,
@@ -678,7 +680,6 @@ def action_implies(proof_step) -> CodeForLean:
         else:
             return implies_hyp(proof_step)
 
-    # TODO: add iff, and case of 2 implications (try both!) --> test!!
     elif len(selected_objects) == 2:
         # Try to apply P ⇒ Q on P
         code0 = CodeForLean.empty_code()
