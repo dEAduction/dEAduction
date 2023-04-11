@@ -50,6 +50,7 @@ This file is part of dEAduction.
 from typing import Any, Optional
 from copy import copy
 import logging
+from functools import partial
 
 import deaduction.pylib.config.vars as cvars
 
@@ -60,7 +61,7 @@ global _
 CONSTANT_IMPLICIT_ARGS = ("real.decidable_linear_order",)
 
 
-def allow_implicit_use(test: callable) -> callable:
+def allow_implicit_use(test_: callable) -> callable:
     """
     Modify the function test to allow implicit use of the definitions
     whose patterns are in MathObject.definition_patterns.
@@ -69,7 +70,8 @@ def allow_implicit_use(test: callable) -> callable:
 
     def test_implicit(math_object,
                       is_math_type=False,
-                      implicit=False) -> bool:
+                      implicit=False,
+                      include_iff=False) -> bool:
         """
         Apply test to math_object.
 
@@ -77,6 +79,8 @@ def allow_implicit_use(test: callable) -> callable:
         """
         implicit = implicit and cvars.get(
             "functionality.allow_implicit_use_of_definitions")
+        test = (partial(test_, include_iff=include_iff) if include_iff
+                else test_)
         if not implicit:
             return test(math_object, is_math_type)
         elif test(math_object, is_math_type):
@@ -1260,7 +1264,8 @@ class MathObject:
             return False, None
 
     @allow_implicit_use
-    def can_be_used_for_implication(self, is_math_type=False) -> bool:
+    def can_be_used_for_implication(self, is_math_type=False,
+                                    include_iff=False) -> bool:
         """
         Determines if a proposition can be used as a basis for implication,
         i.e. is of the form
@@ -1268,18 +1273,24 @@ class MathObject:
          with zero or more universal quantifiers at the beginning.
 
         This is a recursive function.
+
+        If include_iff is True, then iff are included. Nevertheless,
+        this will not work for implicit definitions, only true implication
+        will be detected.
         """
         if is_math_type:
             math_type = self
         else:
             math_type = self.math_type
-        if math_type.is_implication(is_math_type=True):
+        if (math_type.is_implication(is_math_type=True)
+                or (include_iff and math_type.is_iff(is_math_type=True))):
             return True
         elif math_type.is_for_all(is_math_type=True):
             # NB : ∀ var : type, body
             body = math_type.children[2]
             # Recursive call
-            return body.can_be_used_for_implication(is_math_type=True)
+            return body.can_be_used_for_implication(is_math_type=True,
+                                                    include_iff=include_iff)
         else:
             return False
 

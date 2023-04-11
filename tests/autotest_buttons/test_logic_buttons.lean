@@ -399,6 +399,21 @@ begin
   todo
 end
 
+lemma exercise.test_apply_implies_to_hyp3
+(P Q : Prop) 
+(H1: (P → Q) ↔ (¬ P ∨ Q))
+(H2: P → Q) :
+(¬ P ∨ Q) :=
+/- dEAduction
+AutoTest
+    H1 H2 →,
+    CQFD
+-/
+begin
+  todo
+end
+
+
 lemma exercise.test_apply_implies_to_hyp_2
 (X: Type) (P Q: X × X → Prop) (x y: X)
 (H1: P(x,y)) (H2: ∀ x y:X, P(x,y) → Q(x,y)) :
@@ -411,6 +426,59 @@ AutoTest
 begin
   todo
 end
+
+
+
+lemma exercise.test_apply_iff_mp_to_hyp
+(P Q : Prop) (H1: P) (H2: P ↔ Q) :
+Q :=
+/- dEAduction
+AutoTest
+    H1 H2 →,
+    CQFD
+-/
+begin
+  todo
+end
+
+lemma exercise.test_apply_iff_mpr_to_hyp
+(P Q : Prop) (H1: P) (H2: Q ↔ P) :
+Q :=
+/- dEAduction
+AutoTest
+    H2 H1 →,
+    CQFD
+-/
+begin
+  todo
+end
+
+lemma exercise.test_apply_iff_mp_to_hyp_2
+(X: Type) (P Q: X × X → Prop) (x y: X)
+(H1: P(x,y)) (H2: ∀ x y:X, P(x,y) ↔ Q(x,y)) :
+Q(x,y) :=
+/- dEAduction
+AutoTest
+    H2 H1 →,
+    CQFD
+-/
+begin
+  todo
+end
+
+lemma exercise.test_apply_iff_mpr_to_hyp_2
+(X: Type) (P Q: X × X → Prop) (x y: X)
+(H1: P(x,y)) (H2: ∀ x y:X, Q(x,y) ↔ P(x,y)) :
+Q(x,y) :=
+/- dEAduction
+AutoTest
+    H1 H2 →,
+    CQFD
+-/
+begin
+  todo
+end
+
 end test_implicate
 
 -----------

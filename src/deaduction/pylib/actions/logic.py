@@ -488,7 +488,8 @@ def apply_implies(implication: [MathObject]) -> CodeForLean:
 def have_new_property(arrow: MathObject,
                       variable_names: [str],
                       new_hypo_name: str,
-                      success_msg=None) -> CodeForLean:
+                      success_msg=None,
+                      iff_direction='') -> CodeForLean:
     """
     Compute Lean code to apply an implication or a universal property to a
     property or a variable.
@@ -502,6 +503,9 @@ def have_new_property(arrow: MathObject,
     :param success_msg:     A success msg, if None then the standard one will be
                             used.
 
+    :param iff_direction:   = 'mp' if arrow is an iff that we want to use as an
+                            implication, 'mpr' for reverse direction,
+                            '' if arrow is an implication.
     return:                 Lean Code to produce the wanted new property,
                             taking into account implicit parameters
     """
@@ -509,37 +513,47 @@ def have_new_property(arrow: MathObject,
     # TODO: add smart guess for placeholders, by matching math types
     #  May even try to guess parameters from the context
     #  (e.g. if we need a function and there is only one in the context)
-    selected_hypo = arrow.info["name"]
-
-    command = f'have {new_hypo_name} := {selected_hypo}'
-    command_explicit = f'have {new_hypo_name} := @{selected_hypo}'
-
-    arguments = ' '.join(variable_names)
 
     # try with up to 4 implicit parameters
-    implicit_codes = [command + ' ' + arguments,
-                      command + ' _ ' + arguments,
-                      command + ' _ _ ' + arguments,
-                      command + ' _ _ _ ' + arguments,
-                      command + ' _ _ _ _ ' + arguments]
+    # implicit_codes = [command + ' ' + arguments,
+    #                   command + ' _ ' + arguments,
+    #                   command + ' _ _ ' + arguments,
+    #                   command + ' _ _ _ ' + arguments,
+    #                   command + ' _ _ _ _ ' + arguments]
+    #
+    # explicit_codes = [command_explicit + ' ' + arguments,
+    #                   command_explicit + ' _ ' + arguments,
+    #                   command_explicit + ' _ _ ' + arguments,
+    #                   command_explicit + ' _ _ _ ' + arguments,
+    #                   command_explicit + ' _ _ _ _ ' + arguments]
 
-    explicit_codes = [command_explicit + ' ' + arguments,
-                      command_explicit + ' _ ' + arguments,
-                      command_explicit + ' _ _ ' + arguments,
-                      command_explicit + ' _ _ _ ' + arguments,
-                      command_explicit + ' _ _ _ _ ' + arguments]
+    # Try several codes, e.g. "have H10 := (@H1 _ _ ).mp H2"
+    # (new_hypo_name = "H10", arrow = "H1", arguments = ["H2"], iff_direction
+    # = "mp")
+    selected_hypo = arrow.info["name"]
+    have = f'have {new_hypo_name} := '
+    arguments = ' '.join(variable_names)
+    implicit_codes = []
+    explicit_codes = []
+    for nb in range(6):
+        imp_code = f'{selected_hypo} ' + '_ '*nb
+        exp_code = f'@{selected_hypo} ' + '_ '*nb
+        if iff_direction:
+            if nb > 0:
+                imp_code = '(' + imp_code + ')'
+                exp_code = '(' + exp_code + ')'
+            imp_code = imp_code + '.' + iff_direction + ' '
+            exp_code = exp_code + '.' + iff_direction + ' '
+        implicit_codes.append(have + imp_code + arguments)
+        explicit_codes.append(have + exp_code + arguments)
 
-    possible_codes = implicit_codes + explicit_codes
-
-    code = CodeForLean.or_else_from_list(possible_codes)
+    code = CodeForLean.or_else_from_list(implicit_codes + explicit_codes)
     if success_msg is None:
         success_msg = _("Property {} added to the context").format(new_hypo_name)
     if success_msg:
         code.add_success_msg(success_msg)
 
     code.operator = arrow
-    # code.add_used_properties(arrow)
-
     return code
 
 
@@ -547,18 +561,26 @@ def apply_implies_to_hyp(proof_step,
                          selected_objects: [MathObject]) -> CodeForLean:
     """
     Try to apply last selected property on the other ones.
-    The last property should be an implication
-    (or equivalent to such after unfolding definitions)
+    The last property should be an implication or a universal implication,
+    or equivalent to such after unfolding definitions,
+    or an iff or a universal iff.
     """
 
     implication = selected_objects[-1]
     new_hypo_name = get_new_hyp(proof_step)
     variable_names = [variable.info['name'] for variable in
                       selected_objects[:-1]]
+    if implication.can_be_used_for_implication(implicit=True,
+                                               include_iff=False):
+        code = have_new_property(implication, variable_names, new_hypo_name)
+    else:  # implication is an iff or a universal iff
+        code1 = have_new_property(implication, variable_names, new_hypo_name,
+                                  iff_direction='mp')
+        code2 = have_new_property(implication, variable_names, new_hypo_name,
+                                  iff_direction='mpr')
+        code = code1.or_else(code2)
 
-    code = have_new_property(implication, variable_names, new_hypo_name)
     code.add_used_properties(selected_objects)
-
     return code
 
 
@@ -645,25 +667,38 @@ def action_implies(proof_step) -> CodeForLean:
                 error=_("Target is not an implication 'P ⇒ Q'"))
         else:
             return construct_implies(proof_step)
-    elif len(selected_objects) == 1:
+
+    # From now on, at least 1 selected object.
+    if len(selected_objects) == 1:
         # Try to apply an implication, but no other prop selected
-        if not selected_objects[0].can_be_used_for_implication(implicit=True):
+        if not selected_objects[0].can_be_used_for_implication(implicit=True,
+           include_iff=False):
             raise WrongUserInput(
                 error=_("Selected property is not an implication 'P ⇒ Q'"))
         else:
             return implies_hyp(proof_step)
 
+    # TODO: add iff, and case of 2 implications (try both!) --> test!!
     elif len(selected_objects) == 2:
         # Try to apply P ⇒ Q on P
-        if not selected_objects[1].can_be_used_for_implication(implicit=True):
-            if not selected_objects[0].can_be_used_for_implication(
-                                                               implicit=True):
-                raise WrongUserInput(error=_(
-                    "Selected properties are not implications 'P ⇒ Q'"
-                                            ))
-            else:  # l[0] is an implication but not l[1]: permute
-                selected_objects.reverse()
-        return apply_implies_to_hyp(proof_step, selected_objects)
+        code0 = CodeForLean.empty_code()
+        code1 = CodeForLean.empty_code()
+        is_implication = [obj.can_be_used_for_implication(implicit=True,
+                                                          include_iff=True)
+                          for obj in selected_objects]
+        if not is_implication[0] and not is_implication[1]:
+            raise WrongUserInput(error=_("Selected properties are not "
+                                         "implications 'P ⇒ Q'"))
+        if is_implication[1]:
+            code1 = apply_implies_to_hyp(proof_step, selected_objects)
+        if is_implication[0]:
+            selected_objects.reverse()
+            code0 = apply_implies_to_hyp(proof_step, selected_objects)
+        code = (code1.or_else(code0) if (is_implication[0] and
+                                         is_implication[1])
+                else code0 if is_implication[0] else code1)
+
+        return code
     # TODO: treat the case of more properties, including the possibility of
     #  P, Q and 'P and Q ⇒ R'
     else:
