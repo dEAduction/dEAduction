@@ -500,9 +500,10 @@ class ServerInterface(QObject):
             if isinstance(request, ProofStepRequest):
                 self.log.debug("Processing effective code")
                 request.process_effective_code(txt)
-            if request.effective_code_received:
-                self.effective_code_received.emit(request.effective_code)
-                request.effective_code_received = False
+            # if request.effective_code_received:
+            #     self.history_replace(request.effective_code)
+            #     # self.effective_code_received.emit(request.effective_code)
+            #     request.effective_code_received = False
 
         self.__check_request_complete(msg.seq_num)
 
@@ -739,6 +740,7 @@ class ServerInterface(QObject):
         analyses = (request.hypo_analyses, request.targets_analyses)
 
         if isinstance(request, ProofStepRequest):
+            self.history_replace(request.effective_code)
             lean_response = LeanResponse(proof_step=request.proof_step,
                                          analyses=analyses,
                                          error_type=error_type,
@@ -815,7 +817,8 @@ class ServerInterface(QObject):
         """
         if code:
             # Formatting. We do NOT want the "no_meta_vars" tactic!
-            code_string = code.to_code(exclude_no_meta_vars=True)
+            code_string = code.to_code(exclude_no_meta_vars=True,
+                                       exclude_skip=True)
             code_string = code_string.strip()
             if not code_string.endswith(","):
                 code_string += ","

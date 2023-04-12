@@ -27,6 +27,11 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+# FIXME:
+#  - exclude_skip
+#  lean error ne termine pas le process
+#  rw surjective marche pas tj ??
+
 # from typing import Optional, List
 import logging
 
@@ -230,20 +235,17 @@ class ProofStepRequest(HighLevelServerRequest):
         self.hypo_analyses: [str] = []
         self.targets_analyses: [str] = []
         self.from_state_method = False  # FIXME: rename, handle False case
-        self.effective_code = (deepcopy(self.lean_code)
-                               if self.lean_code else None)
         self.effective_code_received = False
 
         self.code_string = ""
-        self.__compute_code_string()
+        self.decorated_code = None  # will be decorated_code
+        self.compute_code_string()
+        self.effective_code = (deepcopy(self.decorated_code)
+                               if self.decorated_code else None)
 
-    @property
-    def lean_code(self):
-        return self.proof_step.lean_code
-
-    def __compute_code_string(self):
-        lean_code = self.lean_code
-        lean_code, code_string = lean_code.to_decorated_code()
+    def compute_code_string(self):
+        lean_code = self.proof_step.lean_code
+        self.decorated_code, code_string = lean_code.to_decorated_code()
         code_string = code_string.strip()
 
         if not code_string.endswith(","):
@@ -261,7 +263,7 @@ class ProofStepRequest(HighLevelServerRequest):
         file_name = self.exercise.course.course_file_name
         return f"import {file_name}\n"
 
-    def __analysis_code2(self) -> str:
+    def analysis_code2(self) -> str:
         nb = self.seq_num
         code = f"    targets_analysis2 {nb},\n" \
                f"    all_goals {{hypos_analysis2 {nb}}},\n"
@@ -277,7 +279,7 @@ class ProofStepRequest(HighLevelServerRequest):
 
         code = "begin\n" \
                + code_string \
-               + self.__analysis_code2() \
+               + self.analysis_code2() \
                + "end\n"
         return code
 
@@ -341,6 +343,7 @@ class ProofStepRequest(HighLevelServerRequest):
                 self.log.debug("Selecting effective code -->")
                 self.log.debug(self.effective_code)
                 self.effective_code_received = True
+                self.proof_step.effective_code = self.effective_code
 
     def is_complete(self) -> bool:
         """
@@ -376,7 +379,7 @@ class ExerciseRequest(ProofStepRequest):
         end_of_file = "end\n"
         end_of_file += statement.close_namespace_str()
         end_of_file += "end course"
-        lean_file_afterword = self.__analysis_code2() + end_of_file
+        lean_file_afterword = self.analysis_code2() + end_of_file
         return lean_file_afterword
 
     def __set_lean_file_afterword(self):

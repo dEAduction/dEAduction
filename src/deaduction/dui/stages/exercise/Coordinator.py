@@ -166,8 +166,8 @@ class Coordinator(QObject):
         Connect all signals. Called at init.
         """
         self.servint.lean_file_changed.connect(self.emw.update_lean_editor)
-        self.servint.effective_code_received.connect(
-                                                self.process_effective_code)
+        # self.servint.effective_code_received.connect(
+        #                                         self.process_effective_code)
         self.servint.lean_response.connect(self.process_lean_response)
         self.emw.cancel_server.connect(self.cancel_server)
 
@@ -965,18 +965,18 @@ class Coordinator(QObject):
         self.is_frozen = False
         self.unfrozen.emit()
 
-    @Slot(CodeForLean)
-    def process_effective_code(self, effective_lean_code: CodeForLean):
-        """
-        Replace the (maybe complicated) Lean code in the Lean file by the
-        portion of the code that was effective.
-
-        This is called by a signal in servint.
-        """
-        code = effective_lean_code.to_code()
-        log.debug(f"Replacing code by effective code {code}")
-        self.proof_step.effective_code = effective_lean_code
-        self.servint.history_replace(effective_lean_code)
+    # @Slot(CodeForLean)
+    # def process_effective_code(self, effective_lean_code: CodeForLean):
+    #     """
+    #     Replace the (maybe complicated) Lean code in the Lean file by the
+    #     portion of the code that was effective.
+    #
+    #     This is called by a signal in servint.
+    #     """
+    #     code = effective_lean_code.to_code()
+    #     log.debug(f"Replacing code by effective code {code}")
+    #     self.proof_step.effective_code = effective_lean_code
+    #     self.servint.history_replace(effective_lean_code)
 
     def process_failed_request_error(self, errors):
         lean_code = self.proof_step.lean_code
