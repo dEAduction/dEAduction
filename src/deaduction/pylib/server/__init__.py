@@ -434,13 +434,12 @@ class ServerInterface(QObject):
     def __check_request_complete(self, request_seq_num):
         self.log.debug(f"Checking request {request_seq_num}")
         request = self.pending_requests.get(request_seq_num)
-        print(request)
         if request:
             if request.is_complete():
                 self.log.debug("--> complete")
                 request.set_proof_received()
-        else:
-            self.log.debug("--> not complete")
+            else:
+                self.log.debug("--> not complete")
 
     def __on_lean_message(self, msg: Message):
         """
@@ -463,7 +462,9 @@ class ServerInterface(QObject):
         #  Check info is complete, send signals if this is so
 
         txt = msg.text
-        self.log.debug("Lean message: " + txt)
+        line = msg.pos_line
+        self.log.debug(f"Lean msg for seq num {msg.seq_num} at line {line}:")
+        self.log.debug(txt)
 
         self.__add_time_to_cancel_scope()
 
@@ -473,34 +474,18 @@ class ServerInterface(QObject):
             self.log.warning(f"Pending requests seq_num are {self.pending_requests.key()}: "
                              f"ignoring msg form seq_num {msg.seq_num}")
             return
-        # TODO: adapt with request
-        # TODO: handle error msgs
 
-        # # Filter seq_num
-        # if msg.seq_num is not None:
-        #     req_seq_num = self.request_seq_num
-        #     # self.log.debug(f"Received msg with seq_num {msg.seq_num}")
-        #     if msg.seq_num != req_seq_num :
-        #         self.log.warning(f"Request seq_num is {req_seq_num}: "
-        #                          f"ignoring msg form seq_num {msg.seq_num}")
-        #         return
-
-        # if self.__course_data:
-        #     self.__on_lean_message_for_course(msg)
-        #     return
-
-        line = msg.pos_line
         severity = msg.severity
         # last_line_of_inner_content = self.lean_file.last_line_of_inner_content
 
         if severity == Message.Severity.error:
-            self.log.error(f"Lean error at line {line}: {txt}")
-            # FIXME: treat errors according to request
+            # self.log.error(f"Lean error at line {line}")
             self.__filter_error(msg, request)  # Record error ?
 
         elif severity == Message.Severity.warning:
-            if not txt.endswith(LEAN_USES_SORRY):
-                self.log.warning(f"Lean warning at line {line}: {txt}")
+            pass
+            # if not txt.endswith(LEAN_USES_SORRY):
+                # self.log.warning(f"Lean warning at line {line}")
 
         elif txt.startswith("context #"):
             # FIXME: check seq_num in txt
@@ -511,46 +496,13 @@ class ServerInterface(QObject):
             self.log.debug("Storing targets")
             request.store_targets_analysis(txt, line)
 
-        # elif txt.startswith("context #:") \
-        #         and self.test(line == last_line_of_inner_content + 2):
-        #     self.log.info("Got new context")
-        #     self.__tmp_hypo_analysis.append(txt)
-        #     self.__check_receive_state()
-        #
-        # elif txt.startswith("targets #:") \
-        #         and self.test(line == last_line_of_inner_content + 1)\
-        #         and not self.__tmp_targets_analysis:
-        #     self.log.info("Got new targets")
-        #     self.__tmp_targets_analysis = txt
-        #     self.__check_receive_state()
-
         elif txt.startswith("EFFECTIVE CODE"):
             if isinstance(request, ProofStepRequest):
-                request.process_effective_code(msg)
-            # and self.test(line == last_line_of_inner_content) \
-            #     and self.__tmp_effective_code.has_or_else():
-            # # txt may contain several lines
-            # for txt_line in txt.splitlines():
-            #     if not txt_line.startswith("EFFECTIVE CODE"):
-            #         # Message could be "EFFECTIVE LEAN CODE"
-            #         # TODO: treat these messages
-            #         continue
-            #     self.log.info(f"Got {txt_line}")
-            #     node_nb, code_nb = get_effective_code_numbers(txt_line)
-            #     # Modify __tmp_effective_code by selecting the effective
-            #     #  or_else alternative according to codes
-            #     self.__tmp_effective_code, found = \
-            #         self.__tmp_effective_code.select_or_else(node_nb, code_nb)
-            #     if found:
-            #         self.log.debug("(selecting effective code)")
-            #
-            # # Test if there remain some or_else combinators
-            # if not self.__tmp_effective_code.has_or_else():
-            #     # Done with effective codes, history_replace will be called
-            #     self.log.debug("No more effective code to receive")
-            #     if hasattr(self.effective_code_received, 'emit'):
-            #         self.effective_code_received.emit(self.__tmp_effective_code)
-            #     self.__check_receive_state()
+                self.log.debug("Processing effective code")
+                request.process_effective_code(txt)
+            if request.effective_code_received:
+                self.effective_code_received.emit(request.effective_code)
+                request.effective_code_received = False
 
         self.__check_request_complete(msg.seq_num)
 
@@ -787,150 +739,70 @@ class ServerInterface(QObject):
         analyses = (request.hypo_analyses, request.targets_analyses)
 
         if isinstance(request, ProofStepRequest):
-            if request.effective_code_received:
-                self.effective_code_received.emit(request.effective_code)
             lean_response = LeanResponse(proof_step=request.proof_step,
                                          analyses=analyses,
                                          error_type=error_type,
                                          error_list=error_list)
             self.lean_response.emit(lean_response)
 
-        # self.__previous_proof_state = None
-
-    ###########################
-    # Exercise initialisation #
-    ###########################
-    # def __file_from_exercise(self, statement):
-    #     """
-    #     Create a virtual file from exercise. Concretely, this consists in
-    #     - separating the part of the file before the proof into a preamble,
-    #     - add the tactics "hypo_analysis, targets_analysis"
-    #     - remove all statements after the proof.
-    #
-    #     If exercise.negate_statement, then the statement is replaced by its
-    #     negation.
-    #
-    #     Then a virtual file is instantiated.
-    #
-    #     :param statement: Statement (most of the time an Exercise)
-    #     """
-    #     file_content = statement.course.file_content
-    #     lines        = file_content.splitlines()
-    #     begin_line   = statement.lean_begin_line_number
-    #
-    #     # Construct short end of file by closing all open namespaces
-    #     end_of_file = "end\n"
-    #     end_of_file += statement.close_namespace_str()
-    #     # namespaces = statement.ugly_hierarchy()
-    #     # while namespaces:
-    #     #     namespace = namespaces.pop()
-    #     #     end_of_file += "end " + namespace + "\n"
-    #     end_of_file += "end course"
-    #
-    #     # Replace statement by negation if required
-    #     if (hasattr(statement, 'negate_statement')
-    #             and statement.negate_statement):
-    #         # lean_core_statement = statement.lean_core_statement
-    #         # negation = " not( " + lean_core_statement + " )"
-    #         lemma_line = statement.lean_line - 1
-    #         # rough_core_content = "\n".join(lines[lemma_line:begin_line]) + "\n"
-    #         # new_core_content = rough_core_content.replace(
-    #         #                         lean_core_statement, negation)
-    #         negated_goal = statement.negated_goal()
-    #         new_core_content = negated_goal.to_lean_example()
-    #         virtual_file_preamble = "\n".join(lines[:lemma_line]) \
-    #                                 + "\n" + new_core_content \
-    #                                 + "begin\n"
-    #         # Debug
-    #         # core = lines[lemma_line] + "\n" + new_core_content + "begin\n"
-    #         # print(core)
-    #
-    #     else:
-    #         # Construct virtual file
-    #         virtual_file_preamble = "\n".join(lines[:begin_line]) + "\n"
-    #
-    #     # virtual_file_afterword = "hypo_analysis,\n" \
-    #     #                          "targets_analysis,\n" \
-    #     #                          + end_of_file
-    #
-    #     virtual_file_afterword = self.__analysis_code() + end_of_file
-    #
-    #     virtual_file = LeanFile(file_name=statement.lean_name,
-    #                             preamble=virtual_file_preamble,
-    #                             afterword=virtual_file_afterword)
-    #     # Ensure file is different at each new request:
-    #     # (avoid "file unchanged" response)
-    #     virtual_file.add_seq_num(self.request_seq_num)
-    #
-    #     virtual_file.cursor_move_to(0)
-    #     virtual_file.cursor_save()
-    #     return virtual_file
-
     async def set_exercise(self, proof_step, exercise: Exercise):
         """
-        Initialise the virtual_file from exercise.
+        Initialise the lean_file from exercise, and call Lean.
 
+        :param proof_step:      The current proof_step
         :param exercise:        The exercise to be set
-        :return:                virtual_file
         """
 
         self.log.info(f"Set exercise to: "
                       f"{exercise.lean_name} -> {exercise.pretty_name}")
         self.__exercise_current = exercise
 
-        # self.lean_file = self.__file_from_exercise(exercise)
-        # self.__use_fast_method_for_lean_server = False
-        # # FIXME: obsolete:
-        # self.__previous_proof_state = None
-
         request = ExerciseRequest(proof_step=proof_step,
                                   exercise=exercise)
-        # self.__add_pending_request(request)
-        self.lean_file = request.virtual_file
+        self.lean_file = request.lean_file
 
         await self.__get_response_from_request(request=request)
-        # if hasattr(self, "exercise_set"):
         self.exercise_set.emit()
 
-    ###########
-    # History #
-    ###########
-    # FIXME: obsolete?
-    # async def history_undo(self):
-    #     """
-    #     Go one step forward in history in the lean_file.
-    #     """
-    #     self.lean_file.undo()
-    #     await self.__update()
-    #
-    # async def history_redo(self):
-    #     """
-    #     Go one step backward in history in the lean_file.
-    #     """
-    #     self.lean_file.redo()
-    #     await self.__update()
-    #
-    # async def history_rewind(self):
-    #     """
-    #     Go to beginning of history in the lean_file.
-    #     """
-    #     self.lean_file.rewind()
-    #     await self.__update()
-    #
-    # async def history_goto(self, history_nb):
-    #     """
-    #     Move to a psecific place in the history of the Lean file.
-    #     """
-    #     self.lean_file.goto(history_nb)
-    #     await self.__update()
-    #
-    # async def history_delete(self):
-    #     """
-    #     Delete last step of history in the lean_file. Called when FailedRequest
-    #     Error.
-    #     """
-    #     self.lean_file.delete()
-    #     await self.__update()
+    async def code_insert(self, label: str,
+                          proof_step,
+                          # lean_code: CodeForLean,
+                          # previous_proof_state: ProofState,
+                          use_fast_method: bool = True):
+        """
+        Inserts code in the Lean virtual file.
+        """
+
+        request = ProofStepRequest(proof_step=proof_step,
+                                   exercise=self.__exercise_current,
+                                   lean_file=self.lean_file)
+
+        self.lean_file.insert(label=label, add_txt=request.code_string)
+
+        await self.__get_response_from_request(request=request)
+
+    async def code_set(self, label: str, code: str):
+        """
+        Sets the code for the current exercise. This is supposed to be called
+        when user sets code using the Lean console, but this functionality
+        is not activated right now because it f... up the history.
+        """
+        # FIXME: adapt HighLevelLeanRequest to this case
+
+        self.__use_fast_method_for_lean_server = False
+        self.__previous_proof_state = None
+
+        self.log.info("Code sent to Lean: " + code)
+        if not code.endswith(","):
+            code += ","
+
+        if not code.endswith("\n"):
+            code += "\n"
+
+        self.lean_file.state_add(label, code)
+
+        # request = ...
+        await self.__get_response_from_request()
 
     def history_replace(self, code: CodeForLean):
         """
@@ -956,119 +828,6 @@ class ServerInterface(QObject):
             self.lean_file.insert(label=label, add_txt=code_string)
             # Update the lean text editor:
             self.lean_file_changed.emit(self.lean_file.inner_contents)
-
-    ###################
-    # Code management #
-    ###################
-
-    # def __lean_import_course_preamble(self) -> str:
-    #     file_name = self.__exercise_current.course.course_file_name
-    #     return f"import {file_name}\n"
-
-    # def set_file_content_from_state_and_tactic(self, goal, code_string):
-    #     """
-    #     Set the file content from goal and code. e.g.
-    #     import ...
-    #     namespace ...
-    #     open ...
-    #     example (X: Type) : true :=
-    #     begin
-    #         <some code>
-    #     end
-    #     """
-    #     exercise = self.__exercise_current
-    #     # Rqst seq_num prevents from unchanged file
-    #     file_content = f"-- Seq num {self.request_seq_num}\n" \
-    #         + self.__lean_import_course_preamble() \
-    #         + "section course\n" \
-    #         + exercise.open_namespace_str() \
-    #         + exercise.open_read_only_namespace_str() \
-    #         + goal.to_lean_example() \
-    #         + self.__begin_end_code(code_string) \
-    #         + exercise.close_namespace_str() \
-    #         + "end course\n"
-    #     self.__file_content_from_state_and_tactic = file_content
-
-    async def code_insert(self, label: str,
-                          proof_step,
-                          # lean_code: CodeForLean,
-                          # previous_proof_state: ProofState,
-                          use_fast_method: bool = True):
-        """
-        Inserts code in the Lean virtual file.
-        """
-
-        # lean_code = proof_step.lean_code
-        # previous_proof_state = proof_step.proof_state
-        request = ProofStepRequest(proof_step=proof_step,
-                                   exercise=self.__exercise_current)
-        # self.__add_pending_request(request)
-
-        # self.__use_fast_method_for_lean_server = use_fast_method
-        # self.__previous_proof_state = (previous_proof_state if use_fast_method
-        #                                else None)
-
-        # (1) Lean code processing
-        # Add "no meta vars" + "effective code nb"
-        # and keep track of node_counters
-        # lean_code, code_string = lean_code.to_decorated_code()
-        # NB: lean_code now contains node_counters (and no_meta_vars)
-        # code_string = code_string.strip()
-        # if not code_string.endswith(","):
-        #     code_string += ","
-        #
-        # if not code_string.endswith("\n"):
-        #     code_string += "\n"
-        #
-        # self.log.info("CodeForLean: " + lean_code.to_code())
-        # self.log.info(lean_code)
-        # self.log.info("Code sent to Lean: " + code_string)
-        # print("Code sent to Lean:")
-        # nice_display_tree(code_string)
-
-        # self.log.debug("Code sent:" + code_string)
-
-        # (2) Set file content for fast method
-        # if use_fast_method:
-        #     goal = previous_proof_state.goals[0]
-        #     self.set_file_content_from_state_and_tactic(goal, code_string)
-        #     # self.log.info('Using fast method for Lean server')
-        #     print(self.lean_file_contents)
-
-        # (3) Update LeanFile
-        self.lean_file.insert(label=label, add_txt=request.code_string)
-        # Ensure content is not identical to last sent (void "no change")
-        # content = self.lean_file.inner_contents  # Without preamble
-        # FIXME: obsolete (now seq_num is always somewhere in the file)
-        # if content == self.last_content:
-        #     self.lean_file.add_seq_num(self.request_seq_num)
-        # self.last_content = self.lean_file.inner_contents
-
-        # (4) Send Lean request
-        await self.__get_response_from_request(request=request)
-
-    async def code_set(self, label: str, code: str):
-        """
-        Sets the code for the current exercise. This is supposed to be called
-        when user sets code using the Lean console, but this functionality
-        is not activated right now because it f... up the history.
-        """
-        # FIXME: adapt HighLevelLeanRequest to this case
-
-        self.__use_fast_method_for_lean_server = False
-        self.__previous_proof_state = None
-
-        self.log.info("Code sent to Lean: " + code)
-        if not code.endswith(","):
-            code += ","
-
-        if not code.endswith("\n"):
-            code += "\n"
-
-        self.lean_file.state_add(label, code)
-
-        # request = ...
-        await self.__get_response_from_request()
 
     #####################################################################
     # Methods for getting initial proof states of a bunch of statements #
@@ -1134,9 +893,10 @@ class ServerInterface(QObject):
 
         if len(statements) <= self.MAX_CAPACITY:
             self.log.debug(f"Set {len(statements)} statement(s)")
-            self.server_queue.add_task(self.__get_initial_proof_states,
-                                       course, statements,
-                                       on_top=on_top)
+            # FIXME: provisionally remove THIS
+            # self.server_queue.add_task(self.__get_initial_proof_states,
+            #                            course, statements,
+            #                            on_top=on_top)
         else:
             self.log.debug(f"{len(statements)} statements to process...")
             # Split statements

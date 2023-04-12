@@ -169,7 +169,7 @@ class InitialProofStateRequest(HighLevelServerRequest):
             # No shift if end_line = begin_line + 3
             shift += 3 - (end_line - begin_line)
             # self.log.debug(f"Shift: {shift}")
-            # Construct virtual file
+            # Construct lean file
 
         file_contents = "\n".join(lines)
         # print(file_contents)
@@ -178,28 +178,8 @@ class InitialProofStateRequest(HighLevelServerRequest):
     ####################
     # response methods #
     ####################
-    def store_hypo_analysis(self, analysis, line=None):
-        if line in self.statement_from_hypo_line.keys():
-            self.analysis_from_hypo_line[line] = analysis
-        else:
-            self.log.warning("Bad line in hypo_analysis")
-        self.get_ips_for_hypo_line(line)
 
-    def store_targets_analysis(self, analysis, line=None):
-        if line in self.statement_from_targets_line.keys():
-            target = self.targets_from_targets_analysis(analysis)
-            self.analysis_from_targets_line[line] = target
-        else:
-            self.log.warning("Bad line in targets_analysis")
-        self.get_ips_for_hypo_line(line-1)
-
-    def is_complete(self) -> bool:
-        nb = self.expected_analyses_nb
-        hypo_test = len(self.analysis_from_hypo_line) == nb
-        targets_test = len(self.analysis_from_targets_line) == nb
-        return hypo_test and targets_test
-
-    def get_ips_for_hypo_line(self, hypo_line) -> bool:
+    def __get_ips_for_hypo_line(self, hypo_line) -> bool:
         """
         Warning: target line is supposed to be hypo_line +1.
         """
@@ -214,30 +194,74 @@ class InitialProofStateRequest(HighLevelServerRequest):
                 return True
         return False
 
+    def store_hypo_analysis(self, analysis, line=None):
+        if line in self.statement_from_hypo_line.keys():
+            self.analysis_from_hypo_line[line] = analysis
+        else:
+            self.log.warning("Bad line in hypo_analysis")
+        self.__get_ips_for_hypo_line(line)
+
+    def store_targets_analysis(self, analysis, line=None):
+        if line in self.statement_from_targets_line.keys():
+            target = self.targets_from_targets_analysis(analysis)
+            self.analysis_from_targets_line[line] = target
+        else:
+            self.log.warning("Bad line in targets_analysis")
+        self.__get_ips_for_hypo_line(line - 1)
+
+    def is_complete(self) -> bool:
+        nb = self.expected_analyses_nb
+        hypo_test = len(self.analysis_from_hypo_line) == nb
+        targets_test = len(self.analysis_from_targets_line) == nb
+        return hypo_test and targets_test
+
 
 class ProofStepRequest(HighLevelServerRequest):
     """
     
     """
 
-    def __init__(self, proof_step=None, exercise=None):
+    def __init__(self, proof_step=None, exercise=None, lean_file=None):
         super().__init__()
+        self.request_type = 'ProofStep'
         self.proof_step = proof_step
         self.exercise = exercise
+        self.lean_file = lean_file
         self.hypo_analyses: [str] = []
         self.targets_analyses: [str] = []
-        self.use_fast_method = True  # FIXME: rename, handle False case
-        self.code_string = ""
+        self.from_state_method = False  # FIXME: rename, handle False case
         self.effective_code = (deepcopy(self.lean_code)
                                if self.lean_code else None)
         self.effective_code_received = False
-        self.request_type = 'ProofStep'
 
+        self.code_string = ""
+        self.__compute_code_string()
+
+    @property
+    def lean_code(self):
+        return self.proof_step.lean_code
+
+    def __compute_code_string(self):
+        lean_code = self.lean_code
+        lean_code, code_string = lean_code.to_decorated_code()
+        code_string = code_string.strip()
+
+        if not code_string.endswith(","):
+            code_string += ","
+        if not code_string.endswith("\n"):
+            code_string += "\n"
+
+        self.code_string = code_string
+        self.log.debug("Code sent:" + code_string)
+
+    ##########################################
+    # Compute contents for from state method #
+    ##########################################
     def __lean_import_course_preamble(self) -> str:
         file_name = self.exercise.course.course_file_name
         return f"import {file_name}\n"
 
-    def analysis_code2(self) -> str:
+    def __analysis_code2(self) -> str:
         nb = self.seq_num
         code = f"    targets_analysis2 {nb},\n" \
                f"    all_goals {{hypos_analysis2 {nb}}},\n"
@@ -253,11 +277,11 @@ class ProofStepRequest(HighLevelServerRequest):
 
         code = "begin\n" \
                + code_string \
-               + self.analysis_code2()\
+               + self.__analysis_code2() \
                + "end\n"
         return code
 
-    def file_content_from_state_and_tactic(self, goal, code_string):
+    def __file_contents_from_state_and_tactic(self, goal, code_string):
         """
         Set the file content from goal and code. e.g.
         import ...
@@ -281,34 +305,15 @@ class ProofStepRequest(HighLevelServerRequest):
         return file_content
 
     def file_contents(self):
-        # TODO:
-        #  Choose fast method if some computation has been done
-        lean_code = self.proof_step.lean_code
-        previous_proof_state = self.proof_step.proof_state
-        lean_code, code_string = lean_code.to_decorated_code()
-        code_string = code_string.strip()
-        if not code_string.endswith(","):
-            code_string += ","
-
-        if not code_string.endswith("\n"):
-            code_string += "\n"
-
-        self.code_string = code_string
-        self.log.info("CodeForLean: " + lean_code.to_code())
-        self.log.info(lean_code)
-        self.log.debug("Code sent:" + code_string)
-        if self.use_fast_method:
-            goal = previous_proof_state.goals[0]
-            content = self.file_content_from_state_and_tactic(goal, code_string)
-            # self.log.info('Using fast method for Lean server')
-            # print(self.lean_file_contents)
-            return content
-
-        # TODO: ancient method
-
-    @property
-    def lean_code(self):
-        return self.proof_step.lean_code
+        if self.from_state_method:
+            goal = self.proof_step.proof_state.goals[0]
+            contents = self.__file_contents_from_state_and_tactic(goal,
+                                                                  self.code_string)
+            self.log.info('Using from state method for Lean server')
+            print(contents)
+            return contents
+        else:
+            return self.lean_file.contents
 
     ####################
     # response methods #
@@ -320,8 +325,8 @@ class ProofStepRequest(HighLevelServerRequest):
         targets = self.targets_from_targets_analysis(analysis)
         self.targets_analyses = targets
 
-    def process_effective_code(self, msg):
-        for txt_line in msg.splitlines():
+    def process_effective_code(self, txt):
+        for txt_line in txt.splitlines():
             if not txt_line.startswith("EFFECTIVE CODE"):
                 # Message could be "EFFECTIVE LEAN CODE"
                 # TODO: treat these messages
@@ -333,7 +338,8 @@ class ProofStepRequest(HighLevelServerRequest):
             self.effective_code, found = \
                 self.effective_code.select_or_else(node_nb, code_nb)
             if found:
-                self.log.debug("(selecting effective code)")
+                self.log.debug("Selecting effective code -->")
+                self.log.debug(self.effective_code)
                 self.effective_code_received = True
 
     def is_complete(self) -> bool:
@@ -358,38 +364,31 @@ class ExerciseRequest(ProofStepRequest):
 
     def __init__(self, proof_step, exercise=None):
         super().__init__(proof_step, exercise)
-        self.virtual_file = None
         self.request_type = 'Exercise'
+        self.__compute_lean_file()
 
-        self.compute_virtual_file()
+    def compute_code_string(self):
+        pass
 
-    def virtual_file_afterword(self) -> str:
+    def __lean_file_afterword(self) -> str:
         # Construct short end of file by closing all open namespaces
         statement = self.exercise
         end_of_file = "end\n"
         end_of_file += statement.close_namespace_str()
         end_of_file += "end course"
-        virtual_file_afterword = self.analysis_code2() + end_of_file
-        return virtual_file_afterword
+        lean_file_afterword = self.__analysis_code2() + end_of_file
+        return lean_file_afterword
 
-    def set_virtual_file_afterword(self):
+    def __set_lean_file_afterword(self):
         """
-        Set the virtual file afterword, with the right seq_num.
+        Set the lean file afterword, with the right seq_num.
         """
-        if self.virtual_file:
-            self.virtual_file.afterword = self.virtual_file_afterword()
+        if self.lean_file:
+            self.lean_file.afterword = self.__lean_file_afterword()
 
-    def set_seq_num(self, seq_num):
-        self.seq_num = seq_num
-        if self.virtual_file:
-            self.virtual_file.add_seq_num(self.seq_num)
-            self.set_virtual_file_afterword()
-            self.virtual_file.cursor_move_to(0)
-            self.virtual_file.cursor_save()
-
-    def compute_virtual_file(self):
+    def __compute_lean_file(self):
         """
-        Create a virtual file from exercise. Concretely, this consists in
+        Create a lean file from exercise. Concretely, this consists in
         - separating the part of the file before the proof into a preamble,
         - add the tactics "hypo_analysis, targets_analysis"
         - remove all statements after the proof.
@@ -397,7 +396,7 @@ class ExerciseRequest(ProofStepRequest):
         If exercise.negate_statement, then the statement is replaced by its
         negation.
 
-        Then a virtual file is instantiated.
+        Then a lean file is instantiated.
         """
 
         statement = self.exercise
@@ -411,7 +410,7 @@ class ExerciseRequest(ProofStepRequest):
             lemma_line = statement.lean_line - 1
             negated_goal = statement.negated_goal()
             new_core_content = negated_goal.to_lean_example()
-            virtual_file_preamble = "\n".join(lines[:lemma_line]) \
+            lean_file_preamble = "\n".join(lines[:lemma_line]) \
                                     + "\n" + new_core_content \
                                     + "begin\n"
             # Debug
@@ -419,22 +418,30 @@ class ExerciseRequest(ProofStepRequest):
             # print(core)
 
         else:
-            # Construct virtual file
-            virtual_file_preamble = "\n".join(lines[:begin_line]) + "\n"
+            # Construct lean file
+            lean_file_preamble = "\n".join(lines[:begin_line]) + "\n"
 
-        afterword = self.virtual_file_afterword()
-        virtual_file = LeanFile(file_name=statement.lean_name,
-                                preamble=virtual_file_preamble,
+        afterword = self.__lean_file_afterword()
+        lean_file = LeanFile(file_name=statement.lean_name,
+                                preamble=lean_file_preamble,
                                 afterword=afterword)
         # Ensure file is different at each new request:
         # (avoid "file unchanged" response)
-        # virtual_file.add_seq_num(self.seq_num)
+        # lean_file.add_seq_num(self.seq_num)
         #
-        virtual_file.cursor_move_to(0)
-        virtual_file.cursor_save()
+        lean_file.cursor_move_to(0)
+        lean_file.cursor_save()
 
-        self.virtual_file = virtual_file
+        self.lean_file = lean_file
+
+    def set_seq_num(self, seq_num):
+        self.seq_num = seq_num
+        if self.lean_file:
+            self.lean_file.add_seq_num(self.seq_num)
+            self.__set_lean_file_afterword()
+            self.lean_file.cursor_move_to(0)
+            self.lean_file.cursor_save()
 
     def file_contents(self):
-        return self.virtual_file.contents
+        return self.lean_file.contents
 
