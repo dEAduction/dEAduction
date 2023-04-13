@@ -28,11 +28,19 @@ This file is part of d∃∀duction.
 """
 
 # FIXME:
-#  - exclude_skip
-#  lean error ne termine pas le process
-#  rw surjective marche pas tj ??
+#  hypo_analyses = trier par nb
+#  Bouton Stop -> en un seul coup
+#  A quoi sert await self.lean_server.running_monitor.wait_ready()
+#  Négation d'une implication : C++ object already deleted ????
+#  Remettre les tests de lignes pour les erreurs !!
+#  mais aussi erreur dans test_forall_ineq ??
+#  Tester from_state_method !!!
 
-# from typing import Optional, List
+# TODO:
+#  Adapter le prooftree: on a maintenant tous les goals, avec contexte.
+#  Focus sur la fenetre de choix dans startcoex ??
+
+from typing import Dict, List
 import logging
 
 from copy import deepcopy
@@ -40,8 +48,7 @@ from copy import deepcopy
 from deaduction.pylib.editing import LeanFile
 from deaduction.pylib.coursedata import Course
 from deaduction.pylib.proof_state.proof_state import ProofState
-from deaduction.pylib.actions import CodeForLean, get_effective_code_numbers
-# from deaduction.pylib.proof_tree import LeanResponse
+from deaduction.pylib.actions import get_effective_code_numbers
 
 
 ################################
@@ -70,13 +77,6 @@ class HighLevelServerRequest:
 
     def __init__(self):
         pass
-        # self.seq_num = -1
-        # self.log = logging.getLogger("HighLevelServerRequest")
-        # self.lean_code = None  # Set by subclasses
-        # self.request_type = None
-        # self.proof_received_event = None
-        # self.targets_received = False
-        # self.effective_code_received = False
 
     def file_contents(self):
         """
@@ -116,6 +116,56 @@ class HighLevelServerRequest:
         targets.pop(0)  # Removing title line ("targets:")
         return targets
 
+    def check_seq_num(self, analysis: str) -> bool:
+        """
+        given analysis = "context #xxx:", check that xxx is equal to
+        self.seq_num. Also works for targets.
+        """
+        sharp = analysis.find('#')
+        colon = analysis.find(':')
+        if sharp != -1 and colon > sharp:
+            nb = analysis[sharp+1:colon].strip()
+            # try:
+            #     nb_ = int(nb)
+            # except ValueError:
+            #     pass
+            # else:
+            #     return nb_ == self.seq_num
+            nb_ = int(nb)
+            test = (nb_ == self.seq_num)
+            if not test:
+                self.log.warning(f"Bad analysis seq num {nb}")
+            return test
+
+    def decorator_check_seq_num(func):
+        """
+        given analysis = "context #xxx:", check that xxx is equal to
+        self.seq_num. Also works for targets.
+        """
+        def func_with_check(self, analysis, line=None):
+            sharp = analysis.find('#')
+            colon = analysis.find(':')
+            if sharp == -1 or colon <= sharp:
+                self.log.warning(f"Bad analysis string {analysis}")
+                return
+
+            nb = analysis[sharp+1:colon].strip()
+            # try:
+            #     nb_ = int(nb)
+            # except ValueError:
+            #     pass
+            # else:
+            #     return nb_ == self.seq_num
+            nb_ = int(nb)
+            test = (nb_ == self.seq_num)
+            if not test:
+                self.log.warning(f"Bad analysis seq num {nb}")
+                return
+
+            func(self, analysis, line)
+
+        return func_with_check
+
 
 class InitialProofStateRequest(HighLevelServerRequest):
     """
@@ -131,8 +181,8 @@ class InitialProofStateRequest(HighLevelServerRequest):
         self.statement_from_hypo_line = dict()
         self.statement_from_targets_line = dict()
         # Analyses will be stored here:
-        self.analysis_from_hypo_line = dict()
-        self.analysis_from_targets_line = dict()
+        self.analysis_from_hypo_line: Dict[int, List[str]] = dict()
+        self.analysis_from_targets_line: Dict[int, List[str]] = dict()
 
         self.request_type = 'IPS'
 
@@ -147,8 +197,8 @@ class InitialProofStateRequest(HighLevelServerRequest):
         statement to be processed.
         """
         lines        = self.course.file_content.splitlines()
-        hypo_tactic    = "    hypo_analysis #{},"
-        targets_tactic = "    targets_analysis #{},"
+        hypo_tactic    = "    hypo_analysis2 {},"
+        targets_tactic = "    targets_analysis2 {},"
 
         shift = 0  # Shift due to line insertion/deletion
         counter = -1
@@ -166,7 +216,8 @@ class InitialProofStateRequest(HighLevelServerRequest):
             for index in proof_lines:
                 lines.pop(index)
             # Insert seq_num and statement nb
-            tag = str(self.seq_num) + '.' + str(counter)
+            # tag = str(self.seq_num) + '.' + str(counter)
+            tag = str(self.seq_num)
             lines.insert(begin_line, hypo_tactic.format(tag))
             lines.insert(begin_line+1, targets_tactic.format(tag))
             self.statement_from_hypo_line[begin_line+1] = statement
@@ -188,24 +239,32 @@ class InitialProofStateRequest(HighLevelServerRequest):
         """
         Warning: target line is supposed to be hypo_line +1.
         """
-        hypo = self.analysis_from_hypo_line[hypo_line]
-        target = self.analysis_from_targets_line[hypo_line+1]
+        hypo = self.analysis_from_hypo_line.get(hypo_line)
+        target = self.analysis_from_targets_line.get(hypo_line+1)
         if hypo and target:
-            statement = self.statement_from_hypo_line[hypo_line]
-            if not statement.initial_proof_state:
+            statement = self.statement_from_hypo_line.get(hypo_line)
+            if not statement:
+                self.log.warning(f"No statement at line {hypo_line}!!")
+            elif not statement.initial_proof_state:
+                self.log.debug("Getting proof state...")
                 ps = ProofState.from_lean_data(hypo, target, to_prove=False)
+                self.log.debug(" --> done")
                 statement.initial_proof_state = ps
-                # Emit signal in case an exercise is waiting for its ips
+                # print(statement.statement_to_text)
                 return True
         return False
 
+    @HighLevelServerRequest.decorator_check_seq_num
     def store_hypo_analysis(self, analysis, line=None):
         if line in self.statement_from_hypo_line.keys():
-            self.analysis_from_hypo_line[line] = analysis
+            self.log.debug(f"Line {line} found")
+            self.analysis_from_hypo_line[line] = [analysis]
+            self.log.debug(f"Analysis stored")
         else:
             self.log.warning("Bad line in hypo_analysis")
         self.__get_ips_for_hypo_line(line)
 
+    @HighLevelServerRequest.decorator_check_seq_num
     def store_targets_analysis(self, analysis, line=None):
         if line in self.statement_from_targets_line.keys():
             target = self.targets_from_targets_analysis(analysis)
@@ -234,7 +293,8 @@ class ProofStepRequest(HighLevelServerRequest):
         self.lean_file = lean_file
         self.hypo_analyses: [str] = []
         self.targets_analyses: [str] = []
-        self.from_state_method = False  # FIXME: rename, handle False case
+        self.from_previous_state_method = False  # FIXME: smart True/False
+        # case
         self.effective_code_received = False
 
         self.code_string = ""
@@ -264,9 +324,12 @@ class ProofStepRequest(HighLevelServerRequest):
         return f"import {file_name}\n"
 
     def analysis_code2(self) -> str:
+        """
+        NB: self.seq_num must be up to date!
+        """
         nb = self.seq_num
         code = f"    targets_analysis2 {nb},\n" \
-               f"    all_goals {{hypos_analysis2 {nb}}},\n"
+               f"    all_goals {{hypo_analysis2 {nb}}},\n"
         return  code
 
     def __begin_end_code(self, code_string: str) -> str:
@@ -283,7 +346,7 @@ class ProofStepRequest(HighLevelServerRequest):
                + "end\n"
         return code
 
-    def __file_contents_from_state_and_tactic(self, goal, code_string):
+    def __file_contents_from_previous_state(self, goal, code_string):
         """
         Set the file content from goal and code. e.g.
         import ...
@@ -306,11 +369,36 @@ class ProofStepRequest(HighLevelServerRequest):
             + "end course\n"
         return file_content
 
+    # Compute content for Lean file #
+    def set_seq_num(self, seq_num):
+        self.seq_num = seq_num
+        if self.lean_file:
+            self.lean_file.add_seq_num(self.seq_num)
+            self.set_lean_file_afterword()
+            self.lean_file.cursor_move_to(0)
+            self.lean_file.cursor_save()
+
+    def lean_file_afterword(self) -> str:
+        # Construct short end of file by closing all open namespaces
+        statement = self.exercise
+        end_of_file = "end\n"
+        end_of_file += statement.close_namespace_str()
+        end_of_file += "end course"
+        lean_file_afterword = self.analysis_code2() + end_of_file
+        return lean_file_afterword
+
+    def set_lean_file_afterword(self):
+        """
+        Set the lean file afterword, with the right seq_num.
+        """
+        if self.lean_file:
+            self.lean_file.afterword = self.lean_file_afterword()
+
     def file_contents(self):
-        if self.from_state_method:
+        if self.from_previous_state_method:
             goal = self.proof_step.proof_state.goals[0]
-            contents = self.__file_contents_from_state_and_tactic(goal,
-                                                                  self.code_string)
+            contents = self.__file_contents_from_previous_state(goal,
+                                                                self.code_string)
             self.log.info('Using from state method for Lean server')
             print(contents)
             return contents
@@ -320,9 +408,11 @@ class ProofStepRequest(HighLevelServerRequest):
     ####################
     # response methods #
     ####################
+    @HighLevelServerRequest.decorator_check_seq_num
     def store_hypo_analysis(self, analysis, line=None):
         self.hypo_analyses.append(analysis)
 
+    @HighLevelServerRequest.decorator_check_seq_num
     def store_targets_analysis(self, analysis, line=None):
         targets = self.targets_from_targets_analysis(analysis)
         self.targets_analyses = targets
@@ -356,6 +446,10 @@ class ProofStepRequest(HighLevelServerRequest):
                              len(self.targets_analyses))
         effective_code_complete = (not self.effective_code or not
                                    self.effective_code.has_or_else())
+        # Debug
+        if analysis_complete:
+            print(f"# targets = {len(self.targets_analyses)}")
+
         return analysis_complete and effective_code_complete
 
 
@@ -372,22 +466,6 @@ class ExerciseRequest(ProofStepRequest):
 
     def compute_code_string(self):
         pass
-
-    def __lean_file_afterword(self) -> str:
-        # Construct short end of file by closing all open namespaces
-        statement = self.exercise
-        end_of_file = "end\n"
-        end_of_file += statement.close_namespace_str()
-        end_of_file += "end course"
-        lean_file_afterword = self.analysis_code2() + end_of_file
-        return lean_file_afterword
-
-    def __set_lean_file_afterword(self):
-        """
-        Set the lean file afterword, with the right seq_num.
-        """
-        if self.lean_file:
-            self.lean_file.afterword = self.__lean_file_afterword()
 
     def __compute_lean_file(self):
         """
@@ -424,7 +502,7 @@ class ExerciseRequest(ProofStepRequest):
             # Construct lean file
             lean_file_preamble = "\n".join(lines[:begin_line]) + "\n"
 
-        afterword = self.__lean_file_afterword()
+        afterword = self.lean_file_afterword()
         lean_file = LeanFile(file_name=statement.lean_name,
                                 preamble=lean_file_preamble,
                                 afterword=afterword)
@@ -436,14 +514,6 @@ class ExerciseRequest(ProofStepRequest):
         lean_file.cursor_save()
 
         self.lean_file = lean_file
-
-    def set_seq_num(self, seq_num):
-        self.seq_num = seq_num
-        if self.lean_file:
-            self.lean_file.add_seq_num(self.seq_num)
-            self.__set_lean_file_afterword()
-            self.lean_file.cursor_move_to(0)
-            self.lean_file.cursor_save()
 
     def file_contents(self):
         return self.lean_file.contents

@@ -338,7 +338,7 @@ do list_expr ← get_goals,
     return ()
 
 /- print a list of strings reflecting objects in the context  -/
-meta def hypos_analysis2 (n: nat) : tactic unit :=
+meta def hypo_analysis2 (n: nat) : tactic unit :=
 do list_expr ← local_context,
     trace ("context #" ++ to_string n ++ ":"),
     list_expr.mmap (λ h, analysis_expr_with_types h >>= trace),

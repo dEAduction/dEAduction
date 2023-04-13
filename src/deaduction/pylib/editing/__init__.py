@@ -570,8 +570,8 @@ class LeanFile(VirtualFile):
         seq_num_str = f"-- Seq num {seq_num}\n"
         if self.preamble:
             old_seq_num_str, _, raw_preamble = self.preamble.partition("\n")
-        if old_seq_num_str.startswith('-- Seq num'):
-            self.preamble = seq_num_str + raw_preamble
-        else:
-            self.preamble = seq_num_str + self.preamble
+            if old_seq_num_str.startswith('-- Seq num'):
+                self.preamble = seq_num_str + raw_preamble
+            else:
+                self.preamble = seq_num_str + self.preamble
 

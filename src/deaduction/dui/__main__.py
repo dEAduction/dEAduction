@@ -123,7 +123,8 @@ def set_logger():
                        'patterns'
                        # 'math_object'
                        ]
-        # log_domains = [""]
+        log_domains = ["ServerInterface", "HighLevelServerRequest",
+                       "deaduction.dui.stages.start_coex"]
 
     logger.configure(domains=log_domains,
                      display_level=log_level,

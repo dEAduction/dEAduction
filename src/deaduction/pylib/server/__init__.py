@@ -285,23 +285,9 @@ class ServerInterface(QObject):
         self.__use_fast_method_for_lean_server = False
         self.__previous_proof_state = None
 
-        # Current course (when processing a bunch of statements for initial
-        # proof state)
-        # self.__course_data             = None  # FIXME: obsolete
-
         # Events
         self.lean_server_running       = trio.Event()
         self.file_invalidated          = trio.Event()
-        # self.__proof_state_valid       = trio.Event()  # FIXME: useless
-
-        # proof_receive_done is set when enough information have been
-        # received, i.e. (for exercise processing) either we have context and
-        # target and all effective codes, OR an error message
-        # self.proof_receive_done      = trio.Event()
-
-        # FIXME: obsolete (cf HighLevelServerRequest)
-        # self.__tmp_hypo_analysis       = []
-        # self.__tmp_targets_analysis    = ""
 
         # When some CodeForLean is sent to the __update method, it will be
         # duplicated and stored in __tmp_effective_code. This attribute will
@@ -320,44 +306,6 @@ class ServerInterface(QObject):
         # ServerQueue
         self.server_queue = ServerQueue(nursery=nursery,
                                         timeout_signal=self.lean_response)
-
-    def test(self, b: bool) -> bool:
-        """
-        Method to bypass tests when the fast method is used.
-        """
-        return b or self.use_fast_method_for_lean_server
-
-    # def __analysis_code(self) -> str:
-    #     nb = self.request_seq_num + 1
-    #     code = f"targets_analysis {nb},\n" \
-    #            f"all_goals {{hypo_analysis {nb}}},\n"
-    #     return  code
-
-    # def __begin_end_code(self, code_string: str) -> str:
-    #     code_string = code_string.strip()
-    #     if not code_string.endswith(","):
-    #         code_string += ","
-    #
-    #     if not code_string.endswith("\n"):
-    #         code_string += "\n"
-    #
-    #     code = "begin\n" \
-    #            + code_string \
-    #            + self.__analysis_code()\
-    #            + "end\n"
-    #     return code
-
-    def __expected_nb_goals(self):
-        """
-        Return the number of goals, estimated by the number of ocurence of
-        '¿¿¿' in self.__tmp_targets_analysis.
-        NB: -1 indicates no information, whereas 0 indicates no more goals.
-        FIXME: obsolete
-        """
-        if not self.__tmp_targets_analysis:
-            return -1
-        else:
-            return self.__tmp_targets_analysis.count('¿¿¿')
 
     @property
     def use_fast_method_for_lean_server(self):
@@ -398,38 +346,13 @@ class ServerInterface(QObject):
             time = self.server_queue.actual_timeout
             self.server_queue.cancel_scope.deadline = (trio.current_time()
                                                        + time)
-            # deadline = (self.server_queue.cancel_scope.deadline
-            #             - trio.current_time())
-            # self.log.debug(f"Cancel scope deadline: {deadline}")
 
-    ############################################
-    # Callbacks from lean server
-    ############################################
-    # def __check_receive_state(self):
-    #     """
-    #     Check if every awaited piece of information has been received:
-    #     i.e. target and hypo analysis, and all effective codes to replace
-    #     the or_else instructions. After the signal proof_receive_done is
-    #     set, the __update method will stop listening to Lean, and start
-    #     updating Proofstate.
-    #         (for processing exercise only)
-    #     """
-    #     # FIXME: obsolete
-    #     self.log.debug("Checking receive state: ")
-    #     self.log.debug(f"{len(self.__tmp_hypo_analysis)}/{self.__expected_nb_goals()}")
-    #     if self.__expected_nb_goals() == 0:  # No More Goals!
-    #         # self.no_more_goals = True
-    #         self.proof_receive_done.set()  # Done receiving
-    #     elif (self.__tmp_targets_analysis
-    #             and self.__tmp_hypo_analysis
-    #             # Check every goal hypo_analysis have been received:
-    #             and len(self.__tmp_hypo_analysis) ==
-    #           self.__expected_nb_goals()):
-    #         if not self.__tmp_effective_code.has_or_else():
-    #             self.proof_receive_done.set()
-    #         else:  # debug
-    #             print("Code has or else:")
-    #             print(self.__tmp_effective_code.to_code())
+    def __on_lean_state_change(self, is_running: bool):
+        self.__add_time_to_cancel_scope()
+
+        if is_running != self.is_running:
+            self.log.info(f"New lean state: {is_running}")
+            self.is_running = is_running
 
     def __check_request_complete(self, request_seq_num):
         self.log.debug(f"Checking request {request_seq_num}")
@@ -457,9 +380,7 @@ class ServerInterface(QObject):
             __on_lean_message_for_course method).
         """
 
-        # TODO:
-        #  treat effective code in Request class
-        #  Check info is complete, send signals if this is so
+        check_complete = False
 
         txt = msg.text
         line = msg.pos_line
@@ -483,16 +404,18 @@ class ServerInterface(QObject):
             self.__filter_error(msg, request)  # Record error ?
 
         elif severity == Message.Severity.warning:
-            pass
-            # if not txt.endswith(LEAN_USES_SORRY):
-                # self.log.warning(f"Lean warning at line {line}")
+            # pass
+            if not txt.endswith(LEAN_USES_SORRY):
+                self.log.warning(f"Lean warning at line {line}")
 
         elif txt.startswith("context #"):
+            check_complete = True
             # FIXME: check seq_num in txt
             self.log.debug("Storing context")
             request.store_hypo_analysis(txt, line)
 
         elif txt.startswith("targets #"):
+            check_complete = True
             self.log.debug("Storing targets")
             request.store_targets_analysis(txt, line)
 
@@ -500,87 +423,13 @@ class ServerInterface(QObject):
             if isinstance(request, ProofStepRequest):
                 self.log.debug("Processing effective code")
                 request.process_effective_code(txt)
+                check_complete = True
             # if request.effective_code_received:
             #     self.history_replace(request.effective_code)
             #     # self.effective_code_received.emit(request.effective_code)
             #     request.effective_code_received = False
-
-        self.__check_request_complete(msg.seq_num)
-
-    def __on_lean_state_change(self, is_running: bool):
-        self.__add_time_to_cancel_scope()
-
-        if is_running != self.is_running:
-            self.log.info(f"New lean state: {is_running}")
-            self.is_running = is_running
-
-    # def __check_receive_course_data(self, index):
-    #     """
-    #     Check if context and target has been received
-    #     for the statement corresponding to index.
-    #     If so,
-    #         - set initial proof state for statement,
-    #         - emi signal initial_proof_state_set,
-    #         - check if all statements have been processed, and if so,
-    #         emit signal proof_receive_done
-    #     """
-    #     hypo = self.__course_data.hypo_analysis[index]
-    #     target = self.__course_data.targets_analysis[index]
-    #     if hypo and target:
-    #         statements = self.__course_data.statements
-    #         st = statements[index]
-    #         if not st.initial_proof_state:
-    #             ps = ProofState.from_lean_data(hypo, target, to_prove=False)
-    #             st.initial_proof_state = ps
-    #             # Emit signal in case an exercise is waiting for its ips
-    #             self.initial_proof_state_set.emit()
-    #
-    #         if None not in [st.initial_proof_state for st in
-    #                         self.__course_data.statements]:
-    #             self.log.debug("All proof states received")
-    #             self.proof_receive_done.set()
-
-    # def __on_lean_message_for_course(self, msg: Message):
-    #     """
-    #     Treatment of relevant Lean messages.
-    #     """
-    #
-    #     txt = msg.text
-    #     # self.log.debug("Lean message: " + txt)
-    #     line = msg.pos_line
-    #     severity = msg.severity
-    #
-    #     if severity == Message.Severity.error:
-    #         self.log.error(f"Lean error at line {msg.pos_line}: {txt}")
-    #         self.__filter_error(msg)  # Record error ?
-    #
-    #     elif severity == Message.Severity.warning:
-    #         if not txt.endswith(LEAN_USES_SORRY):
-    #             self.log.warning(f"Lean warning at line {msg.pos_line}: {txt}")
-    #
-    #     elif txt.startswith("context #"):
-    #         if line in self.__course_data.statement_from_hypo_line:
-    #             st = self.__course_data.statement_from_hypo_line[line]
-    #             index = self.__course_data.statements.index(st)
-    #             self.log.info(f"Got new context for statement {st.lean_name}, "
-    #                           f"index = {index}")
-    #             self.__course_data.hypo_analysis[index] = [txt]
-    #             self.__check_receive_course_data(index)
-    #         else:
-    #             self.log.debug(f"(Context for statement line {line} "
-    #                            f"received but not expected)")
-    #     elif txt.startswith("targets #:"):
-    #         if line in self.__course_data.statement_from_targets_line:
-    #             st = self.__course_data.statement_from_targets_line[line]
-    #             index = self.__course_data.statements.index(st)
-    #             self.log.info(f"Got new targets for statement {st.lean_name}, "
-    #                           f"index = {index}")
-    #             self.__course_data.targets_analysis[index] = txt
-    #             self.__check_receive_course_data(index)
-    #
-    #         else:
-    #             self.log.debug(f"(Target for statement line {line} received "
-    #                            f"but not expected)")
+        if check_complete:
+            self.__check_request_complete(msg.seq_num)
 
     ############################################
     # Message filtering
@@ -595,6 +444,7 @@ class ServerInterface(QObject):
         """
         # FIXME: supprimer le canal d'erreur ??
 
+        # FIXME: two first cases obsolete?
         if request.request_type == 'ProofStep':
             if msg.text.startswith(LEAN_NOGOALS_TEXT):
                 # todo: request complete
@@ -604,35 +454,13 @@ class ServerInterface(QObject):
             else:
                 # TODO: request complete, handle error
                 self.error_send.send_nowait(msg)
-                self.proof_receive_done.set()  # Done receiving
-
-        # # Filter message text, record if not ignored message
-        #
-        # first_line = self.lean_file.first_line_of_last_change
-        # last_line = self.lean_file.last_line_of_inner_content
-        # # FIXME: this is obsolete:
-        # if msg.text.startswith(LEAN_NOGOALS_TEXT) \
-        #         and self.test(msg.pos_line == last_line + 2):
-        #     # self.no_more_goals = True
-        #     self.proof_receive_done.set()  # Done receiving
-        #     # if hasattr(self.proof_no_goals, "emit"):
-        #     #     self.proof_receive_done.set()  # Done receiving
-        #     #     self.proof_no_goals.emit()
-        # elif msg.text.startswith(LEAN_UNRESOLVED_TEXT):
-        #     pass
-        # # Ignore messages that do not concern current proof
-        # elif self.lean_file and \
-        #         not self.test(first_line <= msg.pos_line <= last_line):
-        #     pass
-        # else:
-        #     self.error_send.send_nowait(msg)
-        #     self.proof_receive_done.set()  # Done receiving
+                request.proof_received_event.set()  # Done receiving
 
     ##########################################
     # Update proof state of current exercise #
     ##########################################
     def __add_pending_request(self, request: HighLevelServerRequest):
-        # self.request_seq_num += 1
+        self.request_seq_num += 1
         request.set_seq_num(self.request_seq_num)
         request.init_proof_received_event(trio.Event())
         self.pending_requests[self.request_seq_num] = request
@@ -647,58 +475,41 @@ class ServerInterface(QObject):
             (for processing exercise only)
         """
 
-        # lean_code = request.lean_code
-
-        # first_line_of_change = self.lean_file.first_line_of_last_change
-        # self.log.debug(f"Updating, "
-        #                f"checking errors from line "
-        #                f"{first_line_of_change}, and context at "
-        #                f"line {self.lean_file.last_line_of_inner_content + 1}")
-
-        # if lean_code:
-        #     self.__tmp_effective_code = deepcopy(lean_code)
-        # else:
-        #     self.__tmp_effective_code = CodeForLean.empty_code()
-        # Update the lean text editor:
-        # TODO: move to request definition?
-        self.lean_file_changed.emit(self.lean_file.inner_contents)
+        # (1) Preliminaries
+        if isinstance(request, ProofStepRequest):
+            # Update the lean text editor:
+            self.lean_file_changed.emit(self.lean_file.inner_contents)
 
         if hasattr(self.update_started, "emit"):
             self.update_started.emit()
 
         # Invalidate events
         self.file_invalidated = trio.Event()
-        # self.proof_receive_done = trio.Event()  # FIXME: one by request
-        # self.__course_data = None
-        # self.no_more_goals = False
-        # FIXME: obsolete:
-        # self.__tmp_hypo_analysis = []
-        # self.__tmp_targets_analysis = ""
 
         resp = None
+        error_type = 0
 
-        ###################
-        # Sending request #
-        ###################
+        # (2) Let's send request to Lean
         # Loop in case Lean's answer is None, which happens...
         while not resp:
             # print(request.file_contents())
-            self.request_seq_num += 1
-            request.set_seq_num(self.request_seq_num)
+            # self.request_seq_num += 1
+
+            # FIXME: replace wait_ready at the end by the following,
+            #   with a waiting of the running state going to False.
+            if self.is_running:
+                pass
+
             self.__add_pending_request(request)
             self.log.debug(f"Request seq_num: {self.request_seq_num}")
             req = SyncRequest(file_name="deaduction_lean",
                               content=request.file_contents())
-            # self.log.debug(f"req seq_num: {req.seq_num}")
             resp = await self.lean_server.send(req)
             if not resp:
                 self.pending_requests.pop(self.request_seq_num)
 
-        if resp.message == "file_unchanged":
-            self.log.warning("File unchanged!")
-
-        if resp.message in ("file invalidated", "file_unchanged"):
-            # TODO: handle file_unchanged?? Should never happen!
+        # (3) Several types of response: normal/unchanged/other
+        if resp.message == "file invalidated":
             self.log.debug("Response seq_num: "+str(resp.seq_num))
             self.file_invalidated.set()
 
@@ -706,46 +517,57 @@ class ServerInterface(QObject):
             # Waiting for all pieces of information #
             #########################################
             await request.proof_received_event.wait()
-            # ------ Up to here task may be cancelled by timeout ------ #
-            self.pending_requests.pop(self.request_seq_num)
-            self.server_queue.cancel_scope.shield = True
-
             self.log.debug(_("Proof State received"))
 
-            # Timeout TODO: move this at the end
-            # FIXME: useful??
-            with trio.move_on_after(1):
-                await self.lean_server.running_monitor.wait_ready()
-
-            self.log.debug(_("After request"))
-
-            if hasattr(self.update_ended, "emit"):
-                self.update_ended.emit()
+        elif resp.message == "file_unchanged":
+            # (This should never happen, but just in case)
+            self.log.warning("File unchanged!")
+            error_type = 6
 
         else:
             self.log.warning(f"Unexpected Lean response: {resp.message}")
+            error_type = 10
 
-        # Emit exceptions ?
+        # ------ Up to here task may be cancelled by timeout ------ #
+        self.server_queue.cancel_scope.shield = True
+        self.pending_requests.pop(self.request_seq_num)
+
+        # Timeout TODO: move this at the end
+        # FIXME: useful??
+        with trio.move_on_after(1):
+            await self.lean_server.running_monitor.wait_ready()
+
+        self.log.debug(_("After request"))
+
+        if hasattr(self.update_ended, "emit"):
+            self.update_ended.emit()
+
+        # (3) Lean errors?
         error_list = []
         try:
             while True:
                 error_list.append(self.error_recv.receive_nowait())
         except trio.WouldBlock:
             pass
+        if error_list:
+            error_type = 1
 
-        error_type = 1 if error_list else 0
-        # effective_code = (None if self.__tmp_effective_code.is_empty()
-        #                   else self.__tmp_effective_code)
-        # analysis = (self.__tmp_hypo_analysis, self.__tmp_targets_analysis)
-        analyses = (request.hypo_analyses, request.targets_analyses)
+        # (4) Send information
+        if isinstance(request, InitialProofStateRequest):
+            self.initial_proof_state_set.emit()
+            self.log.debug("Initial proof states request ended")
 
         if isinstance(request, ProofStepRequest):
+            analyses = (request.hypo_analyses, request.targets_analyses)
             self.history_replace(request.effective_code)
             lean_response = LeanResponse(proof_step=request.proof_step,
                                          analyses=analyses,
                                          error_type=error_type,
-                                         error_list=error_list)
+                                         error_list=error_list,
+                                         from_previous_state=request.from_previous_state_method)
             self.lean_response.emit(lean_response)
+
+        self.log.debug(f"End of request #{str(resp.seq_num)}")
 
     async def set_exercise(self, proof_step, exercise: Exercise):
         """
@@ -842,45 +664,40 @@ class ServerInterface(QObject):
         as stored in course_data.
         """
 
-        # FIXME: use self.get_response...
         self.log.info('Getting initial proof states')
-        # file_name = str(self.__course_data.course.relative_course_path)
-        # self.__course_data = course_data  # FIXME
-        # self.__use_fast_method_for_lean_server = False
-        # self.__previous_proof_state = None
-
-        # Add request
-        self.request_seq_num += 1
+        # Define request
         request = InitialProofStateRequest(course=course,
                                            statements=statements)
-        self.__add_pending_request(request)
 
-        # TODO: try to merge this with __get_response_from_request()
-        # Invalidate events
-        self.file_invalidated           = trio.Event()
-        # self.proof_receive_done       = trio.Event()
+        await self.__get_response_from_request(request)
 
-        # Ask Lean server and wait for answer
-        self.log.debug(f"Request seq_num: {self.request_seq_num}")
+        # # TODO: try to merge this with __get_response_from_request()
+        # # Invalidate events
+        # self.file_invalidated           = trio.Event()
+        #
+        # # Sending request
         # self.request_seq_num += 1
         # request.set_seq_num(self.request_seq_num)
-        req = SyncRequest(file_name="deaduction_lean",
-                          content=request.file_contents())
-        resp = await self.lean_server.send(req)
-        print(f"--> {resp.message}")
-        if resp.message == "file invalidated":
-            print("file invalidated)")
-            self.file_invalidated.set()
-
-            # ───────── Waiting for all pieces of information ──────── #
-            await request.proof_received_event.wait()
-            self.pending_requests.pop(self.request_seq_num)
-
-            print("(proof received)")
-            # self.log.debug(_("All proof states received"))
-            self.initial_proof_state_set.emit()
-            if hasattr(self.update_ended, "emit"):
-                self.update_ended.emit()
+        # self.__add_pending_request(request)
+        # self.log.debug(f"Request seq_num: {self.request_seq_num}")
+        #
+        # # Ask Lean server and wait for answer
+        # req = SyncRequest(file_name="deaduction_lean",
+        #                   content=request.file_contents())
+        # resp = await self.lean_server.send(req)
+        # print(f"--> {resp.message}")
+        # if resp.message == "file invalidated":
+        #     self.file_invalidated.set()
+        #
+        #     # ───────── Waiting for all pieces of information ──────── #
+        #     await request.proof_received_event.wait()
+        #     self.pending_requests.pop(self.request_seq_num)
+        #
+        #     print("(proof received)")
+        #     # self.log.debug(_("All proof states received"))
+        #     self.initial_proof_state_set.emit()
+        #     if hasattr(self.update_ended, "emit"):
+        #         self.update_ended.emit()
 
     def set_statements(self, course: Course, statements: [] = None,
                        on_top=False):
@@ -894,12 +711,13 @@ class ServerInterface(QObject):
         if statements is None:
             statements = course.statements
 
-        if len(statements) <= self.MAX_CAPACITY:
+        if not statements:
+            pass
+        elif len(statements) <= self.MAX_CAPACITY:
             self.log.debug(f"Set {len(statements)} statement(s)")
-            # FIXME: provisionally remove THIS
-            # self.server_queue.add_task(self.__get_initial_proof_states,
-            #                            course, statements,
-            #                            on_top=on_top)
+            self.server_queue.add_task(self.__get_initial_proof_states,
+                                       course, statements,
+                                       on_top=on_top)
         else:
             self.log.debug(f"{len(statements)} statements to process...")
             # Split statements

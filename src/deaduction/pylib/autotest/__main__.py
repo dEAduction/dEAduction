@@ -105,7 +105,10 @@ from deaduction.pylib.autotest import ( select_course,
 #                'deaduction.pylib.autotest',
 #                'LeanServer']
 
-log_domains = ['deaduction.pylib.autotest', 'deaduction.dui']
+# log_domains = ['deaduction.pylib.autotest', 'deaduction.dui']
+log_domains = ['deaduction.pylib.autotest', 'deaduction.dui',
+               'ServerInterface', 'HighLevelServerRequest']
+
 logger.configure(domains=log_domains, display_level="debug")
 log = logging.getLogger(__name__)
 

@@ -229,11 +229,11 @@ class Coordinator(QObject):
         set, if the signal initial_proof_state_set is connected.
         The method tries to use the new ips to set implicit definitions and
         to set tooltips.
-        Then it checks if there ips are still missing, and if not,
+        Then it checks if there are ips still missing, and if not,
         disconnect signal.
         """
         self.set_definitions_for_implicit_use()
-        self.emw.ecw.statements_tree.update_tooltips()
+        # self.emw.ecw.statements_tree.update_tooltips()
 
         statements = [st for st in self.exercise.available_statements
                       if not st.initial_proof_state]
@@ -289,7 +289,11 @@ class Coordinator(QObject):
         #                 idx].math_type.to_display())
         #            for idx in range(len(loc_csts))])
 
-        self.emw.ecw.statements_tree.update_tooltips()
+        # Just in case of deletion:
+        try:
+            self.emw.ecw.statements_tree.update_tooltips()
+        except RuntimeError:
+            log.warning(f"Runtime error (StatementsTreeWidgetItem deleted?)")
 
     def save_exercise_for_autotest(self):
         """
@@ -1008,6 +1012,13 @@ class Coordinator(QObject):
         #     self.proof_step.error_msg = _("Error, no proof state, "
         #                                   "try again...")
         #     log.debug("Proof state is None!")
+        elif error_type == 5:
+            self.proof_step.error_msg = _("Unable to get new proof_state")
+
+        elif error_type == 6:
+            self.proof_step.error_msg = _("(File unchanged)")
+        else:
+            self.proof_step.error_msg = _("Undocumented error")
 
     def abort_process(self):
         log.debug("Aborting process")
@@ -1028,22 +1039,6 @@ class Coordinator(QObject):
         Replace the target by a message "No more goal", and return the
         resulting ProofState
         """
-        # Display msg_box unless redoing /moving or test mode
-        # TODO: add click to MessageBox in test_mode
-        # if not self.proof_step.is_redo() \
-        #         and not self.proof_step.is_goto()\
-        #         and not self.test_mode:
-        #     title = _('Target solved')
-        #     text = _('The proof is complete!')
-        #     msg_box = QMessageBox(parent=self.emw)
-        #     msg_box.setText(text)
-        #     msg_box.setWindowTitle(title)
-        #     button_ok = msg_box.addButton(_('Back to exercise'),
-        #                                   QMessageBox.YesRole)
-        #     button_change = msg_box.addButton(_('Change exercise'),
-        #                                       QMessageBox.YesRole)
-        #     button_change.clicked.connect(self.emw.change_exercise)
-        #     msg_box.exec_()
 
         self.proof_step.no_more_goal = True
         self.proof_step.success_msg = _("Proof complete")
@@ -1104,8 +1099,8 @@ class Coordinator(QObject):
         """
         Check if lean_response concerns current proof step.
         """
-        test = (lean_response.proof_step is self.proof_step or
-                not lean_response.proof_step)
+        test = (not lean_response.proof_step or
+                lean_response.proof_step is self.proof_step)
         return test
         # return self.lean_code_sent is lean_response.lean_code
 
@@ -1135,8 +1130,8 @@ class Coordinator(QObject):
 
         # (1) Test Response corresponds to request
         if not self.check_response_coherence(lean_response):
-            log.warning("Unexpected Lean response, ignoring")
-            self.abort_process()
+            log.warning("Lean response with incoherent proof step, ignoring")
+            # self.abort_process()
             return
 
         no_more_goals = lean_response.no_more_goals

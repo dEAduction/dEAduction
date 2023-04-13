@@ -48,10 +48,14 @@ class LeanResponse:
     _success_msg: str = ''
 
     def __init__(self, proof_step=None, analyses: tuple = None,
-                 error_type=0, error_list=None):
+                 error_type=0, error_list=None,
+                 from_previous_state=False):
         self.proof_step = proof_step
-        # self.no_more_goals = no_more_goals
         self.analyses = analyses
+        self.from_previous_state = from_previous_state
+        self.error_type = error_type
+        self.error_list = error_list if error_list else []
+
         if analyses:
             hypo_analyses, targets_analyses = analyses
             proof_state = ProofState.from_lean_data(hypo_analyses,
@@ -60,8 +64,14 @@ class LeanResponse:
                                                     previous_proof_state=
                                                     self.previous_proof_state)
             self.new_proof_state = proof_state
-        self.error_type = error_type
-        self.error_list = error_list if error_list else []
+
+        # self.debug()
+
+    def debug(self):
+        nb = len(self.new_proof_state.goals)
+        print(f"Lean response: {nb} goals")
+        for g in self.new_proof_state.goals:
+            print("   " + g.target.math_type_to_display(format_='utf8'))
 
     @property
     def lean_code(self):
@@ -77,7 +87,13 @@ class LeanResponse:
 
     @property
     def previous_proof_state(self):
-        if self.proof_step:
+        """
+        Return previous_proof_state if info is available, but only when using
+        the method from previous state, since otherwise the pertinent
+        previous proof states are included in the new proof state
+        (see ProofState.from_lean_data() ).
+        """
+        if self.proof_step and self.from_previous_state:
             return self.proof_step.proof_state
 
     @property

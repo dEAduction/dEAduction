@@ -491,8 +491,8 @@ def action_assumption(proof_step) -> CodeForLean:
 
     # (3) Turn code_tree into CodeForLean
     code = code_from_tree(modulated_tree, selected_objects, proof_step)
-    print("Code :")
-    print(code)
+    # print("Code :")
+    # print(code)
 
     # (4) Add global msg
     code.add_error_msg(_("I don't know how to conclude"))

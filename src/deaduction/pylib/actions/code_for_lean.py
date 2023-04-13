@@ -739,7 +739,8 @@ class CodeForLean:
                 self.to_code() == NO_META_VARS.to_code())
 
     def is_skip(self):
-        return self is SKIP
+        return (self.is_single_code() and
+                self.to_code() == SKIP.to_code())
 
     def add_used_properties(self, used_properties):
         """
