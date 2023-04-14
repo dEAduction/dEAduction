@@ -290,10 +290,11 @@ class Coordinator(QObject):
         #            for idx in range(len(loc_csts))])
 
         # Just in case of deletion:
-        try:
-            self.emw.ecw.statements_tree.update_tooltips()
-        except RuntimeError:
-            log.warning(f"Runtime error (StatementsTreeWidgetItem deleted?)")
+        self.emw.ecw.statements_tree.update_tooltips()
+        # try:
+        #     self.emw.ecw.statements_tree.update_tooltips()
+        # except RuntimeError:
+        #     log.warning(f"Runtime error (StatementsTreeWidgetItem deleted?)")
 
     def save_exercise_for_autotest(self):
         """
@@ -331,15 +332,27 @@ class Coordinator(QObject):
 
     def disconnect_signals(self):
         """
-        This method is called at closing. It my be important: without it,
+        This method is called at closing. It may be important: without it,
         servint signals will still be connected to methods concerning
-        the previous exercise (?)
+        the previous exercise.
         """
         if self.servint:
-            self.servint.effective_code_received.disconnect()
-            self.servint.lean_response.disconnect()
+            # It seems that sometimes signals are already deleted
+            # try:
+            #     self.servint.effective_code_received.disconnect()
+            # except RuntimeError:
+            #     log.debug("(Impossible to disconnect signal effective code "
+            #               "received)")
+            try:
+                self.servint.lean_response.disconnect()
+            except RuntimeError:
+                log.debug("(Impossible to disconnect signal lean response)")
             if self.emw:  # This signal is connected to some emw method
-                self.servint.lean_file_changed.disconnect()
+                try:
+                    self.servint.lean_file_changed.disconnect()
+                except RuntimeError:
+                    log.debug("(Impossible to disconnect signal lean file "
+                              "changed)")
 
     def closeEvent(self):
         """
@@ -348,11 +361,13 @@ class Coordinator(QObject):
         log.info("Closing Coordinator")
         # continue_ = input("Closing Coordinator?")  # FIXME: debugging
 
-        try:
-            self.disconnect_signals()
-        except RuntimeError:
-            # It seems that sometimes signals are already deleted
-            pass
+        # try:
+        #     self.disconnect_signals()
+        # except RuntimeError:
+        #     # It seems that sometimes signals are already deleted
+        #     log.debug("(Impossible to disconnect signals)")
+
+        self.disconnect_signals()
 
         ref = 'functionality.save_solved_exercises_for_autotest'
         save_for_test = cvars.get(ref, False)
@@ -1099,10 +1114,18 @@ class Coordinator(QObject):
         """
         Check if lean_response concerns current proof step.
         """
+        if not lean_response.proof_step:
+            log.debug("No proof_step?!")
+        elif lean_response.proof_step is not self.proof_step:
+            gn1 = lean_response.proof_step.parent_goal_node
+            gn2 = self.proof_step.parent_goal_node
+            nb1 = gn1.goal_nb if gn1 else "?"
+            nb2 = gn2.goal_nb if gn2 else "?"
+            log.debug(f"Received proof step goal node #{nb1}, expecting #{nb2}")
+
         test = (not lean_response.proof_step or
                 lean_response.proof_step is self.proof_step)
         return test
-        # return self.lean_code_sent is lean_response.lean_code
 
     def invalidate_events(self):
         # self.current_user_action = None
@@ -1110,11 +1133,6 @@ class Coordinator(QObject):
 
     @Slot()
     def process_lean_response(self, lean_response: LeanResponse):
-                              # exercise,
-                              # no_more_goals: bool,
-                              # analysis: tuple,
-                              # errors: list,
-                              # error_type=0):
         """
         This method processes Lean response after a request, and is a slot
         of a signal emitted by self.servint when all info have been received.
@@ -1127,6 +1145,8 @@ class Coordinator(QObject):
         item, or a history move) which do not rise a WrongUserInput
         exception is passed to Lean, and then goes through this method.
         """
+
+        log.debug("Lean response received")
 
         # (1) Test Response corresponds to request
         if not self.check_response_coherence(lean_response):

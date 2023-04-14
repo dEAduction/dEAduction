@@ -32,7 +32,7 @@ This file is part of d∃∀duction.
 #  Bouton Stop -> en un seul coup
 #  A quoi sert await self.lean_server.running_monitor.wait_ready()
 #  Négation d'une implication : C++ object already deleted ????
-#  Remettre les tests de lignes pour les erreurs !!
+#  Remettre les tests de lignes pour les erreurs : OK ---> tester !
 #  mais aussi erreur dans test_forall_ineq ??
 #  Tester from_state_method !!!
 

@@ -442,19 +442,25 @@ class ServerInterface(QObject):
          to the new part of the virtual file),
         - ignore "proof uses sorry" messages.
         """
-        # FIXME: supprimer le canal d'erreur ??
 
         # FIXME: two first cases obsolete?
-        if request.request_type == 'ProofStep':
-            if msg.text.startswith(LEAN_NOGOALS_TEXT):
-                # todo: request complete
-                pass
-            elif msg.text.startswith(LEAN_UNRESOLVED_TEXT):
-                pass
-            else:
-                # TODO: request complete, handle error
-                self.error_send.send_nowait(msg)
-                request.proof_received_event.set()  # Done receiving
+        if not isinstance(request, ProofStepRequest):
+            return
+
+        elif msg.text.startswith(LEAN_NOGOALS_TEXT):
+            # todo: request complete
+            return
+        elif msg.text.startswith(LEAN_UNRESOLVED_TEXT):
+            return
+        elif request.from_previous_state_method and self.lean_file:
+            first_line = self.lean_file.first_line_of_last_change
+            last_line = self.lean_file.last_line_of_inner_content
+            if not first_line <= msg.pos_line <= last_line:
+                self.log.debug("(error msg does not concern this proofstate)")
+                return
+
+        self.error_send.send_nowait(msg)
+        request.proof_received_event.set()  # Done receiving
 
     ##########################################
     # Update proof state of current exercise #

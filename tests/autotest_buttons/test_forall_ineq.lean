@@ -49,7 +49,7 @@ end
 
 end definitions
 
-section tests
+section course 
 
 lemma exercise.test_for_all_ineq
 (u : ℕ → ℝ) (l : ℝ) :
@@ -94,5 +94,4 @@ end
 
 
 
-
-end tests
+end course

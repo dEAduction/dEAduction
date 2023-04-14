@@ -412,7 +412,7 @@ AutoTest
 begin
   todo
 end
-
+ 
 
 lemma exercise.test_apply_implies_to_hyp_2
 (X: Type) (P Q: X × X → Prop) (x y: X)
@@ -426,7 +426,7 @@ AutoTest
 begin
   todo
 end
-
+ 
 
 
 lemma exercise.test_apply_iff_mp_to_hyp
