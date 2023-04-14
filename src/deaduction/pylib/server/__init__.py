@@ -439,7 +439,9 @@ class ServerInterface(QObject):
         """
         Filter error messages from Lean,
         - according to position (i.e. ignore messages that do not correspond
-         to the new part of the virtual file),
+         to the new part of the virtual file). This is not relevant if the
+         request mode is from previous state method, since all errors are
+         relevant.
         - ignore "proof uses sorry" messages.
         """
 
@@ -452,7 +454,7 @@ class ServerInterface(QObject):
             return
         elif msg.text.startswith(LEAN_UNRESOLVED_TEXT):
             return
-        elif request.from_previous_state_method and self.lean_file:
+        elif not request.from_previous_state_method and self.lean_file:
             first_line = self.lean_file.first_line_of_last_change
             last_line = self.lean_file.last_line_of_inner_content
             if not first_line <= msg.pos_line <= last_line:

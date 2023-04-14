@@ -28,13 +28,16 @@ This file is part of d∃∀duction.
 """
 
 # FIXME:
+#  ips : énoncés demandés plusieurs fois ? cf 37+19
 #  hypo_analyses = trier par nb
 #  Bouton Stop -> en un seul coup
 #  A quoi sert await self.lean_server.running_monitor.wait_ready()
-#  Négation d'une implication : C++ object already deleted ????
 #  Remettre les tests de lignes pour les erreurs : OK ---> tester !
-#  mais aussi erreur dans test_forall_ineq ??
 #  Tester from_state_method !!!
+#   startcoex :  --> Copier fichier dans usr_lean_exercises_dir
+
+# (OK?)  Négation d'une implication : C++ object already deleted ????
+# (OK?) Remettre les tests de lignes pour les erreurs : OK ---> tester !
 
 # TODO:
 #  Adapter le prooftree: on a maintenant tous les goals, avec contexte.
@@ -293,8 +296,7 @@ class ProofStepRequest(HighLevelServerRequest):
         self.lean_file = lean_file
         self.hypo_analyses: [str] = []
         self.targets_analyses: [str] = []
-        self.from_previous_state_method = False  # FIXME: smart True/False
-        # case
+        self.from_previous_state_method = True  # FIXME: smart True/False
         self.effective_code_received = False
 
         self.code_string = ""
