@@ -66,6 +66,30 @@ LEAN_USES_SORRY      = " uses sorry"
 global _
 
 
+##############
+# Task class #
+##############
+class Task:
+    """
+    A class to record a task for the server.
+    Status is one of "", "in_queue", "launched", "answered", "cancelled",
+    "done".
+    """
+
+    def __init__(self, fct: callable, kwargs: dict):
+        self.fct = fct
+        self.kwargs = kwargs
+        self.status = ""
+
+    @property
+    def cancel_fct(self):
+        return self.kwargs.get('cancel_fct')
+
+    @property
+    def on_top(self):
+        return self.kwargs.get('on_top')
+
+
 #####################
 # ServerQueue class #
 #####################
@@ -95,7 +119,10 @@ class ServerQueue(list):
         self.started = False
         self.is_busy = False
 
+        # self.current_task = None
+
         # Cancel scope
+        self.current_task = None
         self.cancel_scope: Optional[trio.CancelScope] = None
         self.actual_timeout = self.TIMEOUT
 
@@ -103,19 +130,21 @@ class ServerQueue(list):
         # and set when it ends.
         self.queue_ended            = None
 
-    def add_task(self, fct, *args, cancel_fct=None, on_top=False):
+    def add_task(self, task: Task):
+        # fct, *args, cancel_fct=None, on_top=False):
         """
         Add a task to the queue. The task may be added at the end of the
         queue (default), or on top. If queue is not busy, that is, no task
         is currently running, then call next_task so that the added task
         starts immediately.
         """
-        if on_top:
-            self.append((fct, cancel_fct, args))
+        task.status = "in_queue"
+        if task.on_top:
+            self.append(task)
             self.log.debug(f"Adding task on top")
         else:
             self.log.debug(f"Adding task")
-            self.insert(0, (fct, cancel_fct, args))
+            self.insert(0, task)
         if not self.is_busy:  # Execute task immediately
             self.is_busy = True
             self.queue_ended = trio.Event()
@@ -127,32 +156,35 @@ class ServerQueue(list):
         """
         if len(self) > 0:
             # Launch first task
-            fct, cancel_fct, args = self.pop()
+            task = self.pop()
             self.log.debug(f"Launching task")  # : {args}")
             # continue_ = input("Launching task?")  # FIXME: debugging
-            self.nursery.start_soon(self.task_with_timeout, fct, cancel_fct,
-                                    args)
+            self.nursery.start_soon(self.task_with_timeout, task)
+            self.current_task = task
+            task.status = 'launched'
         else:
             self.is_busy = False
+            self.current_task = None
             self.queue_ended.set()
             self.log.debug(f"No more tasks")
 
-    async def process_task(self, fct: callable, *args, timeout=True):
-        """
-        Wait for the queue to end, and then process fct.
-        This allows to await for the end of the task, which is not possible
-        if the task is put into the queue.
-        This method is deprecated, all tasks should go through add_task().
-        """
+    # async def process_task(self, fct: callable, *args, timeout=True):
+    #     """
+    #     Wait for the queue to end, and then process fct.
+    #     This allows to await for the end of the task, which is not possible
+    #     if the task is put into the queue.
+    #     This method is deprecated, all tasks should go through add_task().
+    #     """
+    #
+    #     if self.queue_ended is not None:
+    #         await self.queue_ended.wait()
+    #     if timeout:
+    #         await self.task_with_timeout(fct, args)
+    #     else:
+    #         await fct(*args)
 
-        if self.queue_ended is not None:
-            await self.queue_ended.wait()
-        if timeout:
-            await self.task_with_timeout(fct, args)
-        else:
-            await fct(*args)
-
-    async def task_with_timeout(self, fct: callable, cancel_fct, args: tuple):
+    async def task_with_timeout(self, task: Task):
+                                # fct: callable, cancel_fct: callable, args: tuple):
         """
         Execute function fct with timeout TIMEOUT, and number of trials
         NB_TRIALS.
@@ -177,9 +209,10 @@ class ServerQueue(list):
                         as self.cancel_scope:
                     ################
                     # Process task #
-                    await fct(*args)
+                    await task.fct(**task.kwargs)
                     ################
                 if self.cancel_scope.cancelled_caught:
+                    self.current_task = None
                     self.log.warning(f"No answer within "
                                      f"{self.actual_timeout}s (trial {nb})")
                     self.actual_timeout = 2 * self.actual_timeout
@@ -188,8 +221,9 @@ class ServerQueue(list):
                         lean_response = LeanResponse(error_type=3)
                         self.timeout_signal.emit(lean_response)
                     else:  # Task will be tried again
-                        if cancel_fct:
-                            cancel_fct()
+                        if task.cancel_fct:
+                            task.status = 'cancelled'
+                            task.cancel_fct()
                 else:
                     break
             except TypeError as e:
@@ -202,14 +236,17 @@ class ServerQueue(list):
                     lean_response = LeanResponse(error_type=3)
                     self.timeout_signal.emit(lean_response)
                 else:  # Task will be tried again
-                    if cancel_fct:
-                        cancel_fct()
+                    if task.cancel_fct:
+                        task.status = 'cancelled'
+                        task.cancel_fct()
 
         # Launch next task when done!
+        task.status = 'done'
         self.next_task()
 
-    def cancel_current_task(self):
-        if self.cancel_scope:
+    def cancel_task(self, task):
+        if self.current_task is task and self.cancel_scope:
+            self.log.debug("Cancelling current task")
             self.cancel_scope.cancel()
 
 
@@ -337,6 +374,12 @@ class ServerInterface(QObject):
         self.server_queue.started = False
         self.lean_server_running = trio.Event()
         self.lean_server.stop()
+
+    def add_task(self, task: Task):
+        self.server_queue.add_task(task)
+
+    def cancel_task(self, task):
+        self.server_queue.cancel_task(task)
 
     def __add_time_to_cancel_scope(self):
         """
@@ -596,11 +639,7 @@ class ServerInterface(QObject):
         await self.__get_response_from_request(request=request)
         self.exercise_set.emit()
 
-    async def code_insert(self, label: str,
-                          proof_step,
-                          # lean_code: CodeForLean,
-                          # previous_proof_state: ProofState,
-                          use_fast_method: bool = True):
+    async def code_insert(self, label: str, proof_step):
         """
         Inserts code in the Lean virtual file.
         """

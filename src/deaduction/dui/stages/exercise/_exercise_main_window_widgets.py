@@ -706,11 +706,10 @@ class GlobalToolbar(QToolBar):
         super().__init__(_('Toolbar'))
         icons_base_dir = cvars.get("icons.path")
         icons_dir = fs.path_helper(icons_base_dir)
-        self.cancel_server = QAction(
+        self.stop = QAction(
                 QIcon(str((icons_dir / 'icons8-stop-sign-48').resolve())),
-                _('Stop computations'), self)
-        self.cancel_server.setShortcut(QKeySequence(
-                                                QKeySequence.Cancel))
+                _('Stop me from thinking!'), self)
+        self.stop.setShortcut(QKeySequence(QKeySequence.Cancel))
 
         self.settings_action = QAction(
                 QIcon(str((icons_dir / 'settings').resolve())),

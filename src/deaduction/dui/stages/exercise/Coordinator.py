@@ -53,7 +53,7 @@ from deaduction.dui.stages.exercise import      ExerciseMainWindow
 from deaduction.dui.elements import             ActionButton
 
 # Server
-from deaduction.pylib.server import             ServerInterface
+from deaduction.pylib.server import             ServerInterface, Task
 
 from deaduction.pylib.utils import save_object
 
@@ -130,6 +130,7 @@ class Coordinator(QObject):
         super().__init__()
         self.exercise: Exercise       = exercise
         self.servint: ServerInterface = servint
+        self.pending_servint_task = None
 
         # Exercise main window
         self.emw = ExerciseMainWindow(exercise)
@@ -169,7 +170,7 @@ class Coordinator(QObject):
         # self.servint.effective_code_received.connect(
         #                                         self.process_effective_code)
         self.servint.lean_response.connect(self.process_lean_response)
-        self.emw.cancel_server.connect(self.cancel_server)
+        # self.emw.cancel_server.connect(self.cancel_server)
 
     def __initialize_exercise(self):
         """
@@ -193,10 +194,11 @@ class Coordinator(QObject):
             self.emw.ecw.update_goal(goal, [])
 
         # Set exercise. In particular, this will initialize servint.lean_file.
-        self.server_queue.add_task(self.servint.set_exercise,
-                                   self.proof_step,
-                                   self.exercise,
-                                   on_top=True)
+        task = Task(fct=self.servint.set_exercise,
+                    kwargs={'proof_step': self.proof_step,
+                            'exercise': self.exercise,
+                            'on_top': True})
+        self.send_task_to_server(task)
 
         # Set initial proof states for all statements
         # (Already done if start_coex was launched, but useful otherwise:)
@@ -406,9 +408,9 @@ class Coordinator(QObject):
     def history_nb(self):
         return self.lean_file.target_idx
 
-    @property
-    def server_queue(self):
-        return self.servint.server_queue
+    # @property
+    # def server_queue(self):
+    #     return self.servint.server_queue
 
     @property
     def nursery(self):
@@ -494,14 +496,35 @@ class Coordinator(QObject):
     ######################################################
     ######################################################
 
-    @Slot()
-    def cancel_server(self):
+    async def restart_server(self):
+        log.debug("Stopping Lean server...")
+        with trio.move_on_after(10):
+            await self.servint.file_invalidated.wait()
+        self.servint.stop()
+        log.info("...stopped!")
+        await self.server.start()
+        log.info("Lean server started")
+
+    async def stop(self):
         """
-        Cancel the current task, is the interface is frozen.
-        This should be called by pressing the 'Stop' button in the ui.
+        This method is called when usr push the 'stop' button.
         """
         if self.servint:
-            self.servint.server_queue.cancel_current_task()
+            log.info("Trying to cancel current task")
+            self.servint.cancel_task(self.pending_servint_task)
+
+    # @Slot()
+    # def cancel_server(self):
+    #     """
+    #     Cancel the current task, if the interface is frozen.
+    #     This should be called by pressing the 'Stop' button in the ui.
+    #     """
+    #     if self.servint:
+    #         self.servint.server_queue.cancel_current_task()
+
+    def send_task_to_server(self, task: Task):
+        self.pending_servint_task = task
+        self.servint.add_task(task)
 
     def start_server_task(self):
         """
@@ -534,6 +557,7 @@ class Coordinator(QObject):
                          self.statement_triggered,
                          self.statement_dropped,
                          self.math_object_dropped,
+                         self.emw.cancel_server,
                          # self.apply_math_object_triggered,
                          self.close_server_task]) as emissions:
 
@@ -584,6 +608,11 @@ class Coordinator(QObject):
                         self.history_goto(history_nb)
                     else:
                         self.unfreeze()
+                ######################
+                # Stop action/server #
+                ######################
+                elif emission.is_from(self.emw.stop):
+                    await self.stop()
 
                 ########################
                 # Code to Lean actions #
@@ -784,15 +813,12 @@ class Coordinator(QObject):
 
                 # Update lean_file and call Lean server
                 self.lean_code_sent = lean_code
-                previous_proof_state = self.proof_step.proof_state
-                # TODO: send proof_step
-                self.server_queue.add_task(self.code_insert,
-                                           action.symbol,
-                                           self.proof_step,
-                                           # lean_code,
-                                           # previous_proof_state,
-                                           True,  # Use fast method
-                                           cancel_fct=self.lean_file.undo)
+                # previous_proof_state = self.proof_step.proof_state
+                task = Task(fct=self.servint.code_insert,
+                            kwargs={'proof_step': self.proof_step,
+                                    'label': action.symbol,
+                                    'cancel_fct':self.lean_file.undo})
+                self.send_task_to_server(task)
                 break
 
     def __server_call_statement(self, item):
@@ -824,24 +850,25 @@ class Coordinator(QObject):
 
             # Update lean_file and call Lean server
             self.lean_code_sent = lean_code
-            previous_proof_state = self.proof_step.proof_state
-            # TODO: send proof_step in place of lean_code and previous_ps
-            self.server_queue.add_task(self.code_insert,
-                                       statement.pretty_name,
-                                       self.proof_step,
-                                       # lean_code,
-                                       # previous_proof_state,
-                                       True,  # Use fast method
-                                       cancel_fct=self.lean_file.undo)
+            # previous_proof_state = self.proof_step.proof_state
+            task = Task(fct=self.servint.code_insert,
+                        kwargs={'proof_step': self.proof_step,
+                                'label': statement.pretty_name,
+                                'cancel_fct': self.lean_file.undo})
+            self.send_task_to_server(task)
 
     def __server_send_editor_lean(self):
         """
         Send the L∃∀N code written in the L∃∀N editor widget to the
         server interface.
         """
-        self.server_queue.add_task(self.servint.code_set, None,
-                                   _('Code from editor'),
-                                   self.lean_editor.code_get())
+        task = Task(fct=self.servint.code_set,
+                    kwargs={'proof_step': self.proof_step,
+                            'label': "code_set",
+                            'cancel_fct': self.lean_file.undo,
+                            'code': self.lean_editor.code_get()})
+        self.send_task_to_server(task)
+
 
     #########################
     #########################
@@ -1039,7 +1066,6 @@ class Coordinator(QObject):
         log.debug("Aborting process")
         if not self.servint.lean_file.history_at_beginning:
             # Abort and go back to last goal
-            # self.server_queue.add_task(self.servint.history_delete)
             self.lean_file.delete()
             self.unfreeze()
             self.update_proof_step()

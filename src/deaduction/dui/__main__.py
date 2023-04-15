@@ -124,8 +124,10 @@ def set_logger():
                        # 'math_object'
                        ]
         log_domains = ["ServerInterface", "HighLevelServerRequest",
+                       "ServerQueue",
                        "deaduction.dui.stages.start_coex",
-                       "deaduction.dui.stages.exercise"]
+                       "deaduction.dui.stages.exercise",
+                       ]
 
     logger.configure(domains=log_domains,
                      display_level=log_level,
@@ -648,7 +650,7 @@ def exercise_from_argv() -> Exercise:
 ##################################################################
 async def main():
     """
-    This is the main loop. It opens a trio.nursery, instantiate a Container
+    This is the main loop. It opens a trio.nursery, instantiates a Container
     for signals and slots, and call the Container.choose_exercise method.
     Then it listens to signals emitted when windows are closed, and decides
     to quit when all windows are closed. Quitting implies stopping the lean
