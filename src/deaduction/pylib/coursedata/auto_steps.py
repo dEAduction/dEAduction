@@ -218,7 +218,10 @@ class AutoStep(UserAction):
                  2: 'FailedRequestError',
                  3: 'Timeout',
                  4: 'UnicodeDecodeError',
-                 5: 'No proof state'}
+                 5: 'No proof state',
+                 6: 'File unchanged',
+                 7: 'Action cancelled',
+                 10: 'unknown error'}
 
     def __init__(self, selection, button_name, statement, user_input,
                  target_selected,

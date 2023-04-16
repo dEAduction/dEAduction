@@ -203,6 +203,8 @@ class ServerQueue(list):
             self.actual_timeout = self.TIMEOUT
         while nb < self.NB_TRIALS:
             nb += 1
+            # The following try block is here because of some error occurring
+            # sometimes when cancelling trio.
             try:
                 with trio.move_on_after(self.actual_timeout) \
                         as self.cancel_scope:
@@ -212,17 +214,20 @@ class ServerQueue(list):
                     ################
                 if self.cancel_scope.cancelled_caught:
                     self.log.debug("Cancelling current task")
-                    self.current_task = None
-                    if task.status != "cancellation_required":
+                    error_type = 0
+                    if task.status == "cancellation_required":
+                        error_type = 7
+                    else:
                         self.log.warning(f"No answer within "
                                          f"{self.actual_timeout}s (trial {nb})")
-                    self.actual_timeout = 2 * self.actual_timeout
+                        error_type = 3
+                        self.actual_timeout = 2 * self.actual_timeout
                     no_more_trials = (nb == self.NB_TRIALS
                                       or task.status == "cancellation_required")
                     if no_more_trials:
                         # Task definitively  cancelled!
                         # Emit lean_response signal with timeout error
-                        lean_response = LeanResponse(error_type=3)
+                        lean_response = LeanResponse(error_type=error_type)
                         self.timeout_signal.emit(lean_response)
                         break
                     else:  # Task will be tried again
@@ -234,13 +239,20 @@ class ServerQueue(list):
             except TypeError as e:
                 self.log.debug("TypeError while cancelling trio")
                 self.log.debug(e)
-                self.actual_timeout = 2 * self.actual_timeout
+                error_type = 0
+                if task.status == "cancellation_required":
+                    error_type = 7
+                else:
+                    self.log.warning(f"No answer within "
+                                     f"{self.actual_timeout}s (trial {nb})")
+                    error_type = 3
+                    self.actual_timeout = 2 * self.actual_timeout
                 no_more_trials = (nb == self.NB_TRIALS
                                   or task.status == "cancellation_required")
                 if no_more_trials:
                     # Task definitively  cancelled!
                     # Emit lean_response signal with timeout error
-                    lean_response = LeanResponse(error_type=3)
+                    lean_response = LeanResponse(error_type=error_type)
                     self.timeout_signal.emit(lean_response)
                     break
                 else:  # Task will be tried again
@@ -363,6 +375,7 @@ class ServerInterface(QObject):
         """
         Asynchronously start the Lean server.
         """
+        self.request_seq_num           = -1
         await self.lean_server.start()
         self.file_invalidated.set()  # No file at starting
         self.lean_server_running.set()
@@ -452,9 +465,7 @@ class ServerInterface(QObject):
         if msg.seq_num in self.pending_requests:
             request = self.pending_requests[msg.seq_num]
         else:
-            self.log.warning(f"Pending requests seq_num are "
-                             f"{self.pending_requests.keys()}: "
-                             f"ignoring msg form seq_num {msg.seq_num}")
+            self.log.debug(f"ignoring msg form seq_num {msg.seq_num}")
             return
 
         severity = msg.severity

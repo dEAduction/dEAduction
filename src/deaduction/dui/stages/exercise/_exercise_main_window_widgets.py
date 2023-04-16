@@ -530,6 +530,10 @@ class ExerciseStatusBar(QStatusBar):
         self.hide_icon()
 
     @property
+    def txt(self):
+        return self.messageWidget.text()
+
+    @property
     def display_success_msgs(self):
         return cvars.get('display.display_success_messages', True)
 
@@ -560,10 +564,6 @@ class ExerciseStatusBar(QStatusBar):
         This method is called by the timer, when there is a new_goal msg to
         display on top of the usual success/error msgs.
         """
-        # if self.pending_msgs:
-        #     msg = self.pending_msgs.pop(0)
-        #     if msg:
-        #         self.show_normal_msg(msg)
 
         proof_msg = self.proof_msg()
         if proof_msg:
@@ -634,6 +634,10 @@ class ExerciseStatusBar(QStatusBar):
             self.timer.singleShot(3000, self.show_pending_msgs)
         else:  # Show immediately
             self.show_pending_msgs()
+
+    def show_tmp_msg(self, msg: str):
+        self.set_message(msg)
+        self.timer.singleShot(3000, self.show_pending_msgs)
 
 
 class ExerciseToolBar(QToolBar):

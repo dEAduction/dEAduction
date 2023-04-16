@@ -41,7 +41,8 @@ class LeanResponse:
     # no_more_goals = False
     analysis = None
     new_proof_state = None
-    # 1 = WUI, 2 = FRE, 3 = TIMEOUT, 4 = UNICODE, 5 = No proof state:
+    # 1 = WUI, 2 = FRE, 3 = TIMEOUT, 4 = UNICODE, 5 = No proof state,
+    # 6 = file unchanged, 7 = cancelled, 10 = unknown:
     error_type: int = 0
     error_list: Optional[List]
     _error_msg: str = ''

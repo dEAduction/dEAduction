@@ -495,13 +495,13 @@ class Coordinator(QObject):
     ######################################################
     ######################################################
 
-    async def restart_server(self):
+    async def restart_lean_server(self):
         log.debug("Stopping Lean server...")
         with trio.move_on_after(10):
             await self.servint.file_invalidated.wait()
         self.servint.stop()
         log.info("...stopped!")
-        await self.server.start()
+        await self.servint.start()
         log.info("Lean server started")
 
     async def stop(self):
@@ -514,15 +514,19 @@ class Coordinator(QObject):
                 log.info(f"Trying to cancel last task (status {task.status})")
                 self.servint.cancel_task(task)
                 log.debug(f"(new status: {task.status})")
+            else:
+                msg = _("No action to be cancelled, press again to restart "
+                        "server")
+                bar_msg = self.statusBar.messageWidget.text()
+                # FIXME: bar_msg always empty?? REMOVE FOLLOWING LINE:
+                # await self.restart_lean_server()
 
-    # @Slot()
-    # def cancel_server(self):
-    #     """
-    #     Cancel the current task, if the interface is frozen.
-    #     This should be called by pressing the 'Stop' button in the ui.
-    #     """
-    #     if self.servint:
-    #         self.servint.server_queue.cancel_current_task()
+                if bar_msg != msg:
+                    self.statusBar.show_tmp_msg(msg)
+                else:
+                    await self.restart_lean_server()
+                    msg = _("Server restarted")
+                    self.statusBar.show_tmp_msg(msg)
 
     def send_task_to_server(self, task: Task):
         self.last_servint_task = task
@@ -1060,6 +1064,8 @@ class Coordinator(QObject):
 
         elif error_type == 6:
             self.proof_step.error_msg = _("(File unchanged)")
+        elif error_type == 7:
+            self.proof_step.error_msg = _("Action cancelled")
         else:
             self.proof_step.error_msg = _("Undocumented error")
 
