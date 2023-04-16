@@ -81,11 +81,7 @@ parameters X Y Z: Type
 ------------------
 -- COURSE TITLE --
 ------------------
-namespace theorie_des_ensembles
-/- dEAduction
-PrettyName
-    Théorie des ensembles
--/
+namespace test_magic_buttons
 
 namespace generalites
 /- dEAduction
@@ -480,6 +476,6 @@ end
 
 end tests_magic_buttons
 
+end test_magic_buttons
 
-end theorie_des_ensembles
 end course

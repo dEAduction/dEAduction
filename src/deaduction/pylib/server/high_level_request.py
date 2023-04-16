@@ -76,6 +76,9 @@ class HighLevelServerRequest:
     The proof_step parameter is provided only for the proof step or 
     exercise types. The course_data, resp. exercise parameters are provided 
     only for the corresponding types.
+
+    The task parameter contains the task from which the request comes from.
+    It allows to cancel the request reception when the task is cancelled.
     """
     seq_num = -1
     log = logging.getLogger("HighLevelServerRequest")
@@ -85,8 +88,8 @@ class HighLevelServerRequest:
     targets_received = False
     effective_code_received = False
 
-    def __init__(self):
-        pass
+    def __init__(self, task=None):
+        self.task = task
 
     def file_contents(self):
         """
@@ -169,10 +172,11 @@ class HighLevelServerRequest:
 
 class InitialProofStateRequest(HighLevelServerRequest):
     """
-    
+    A request to get initial proof states for a course's statements.
+    Note that this request is not cancellable.
     """
-    def __init__(self, course: Course, statements: [] = None):
-        super().__init__()
+    def __init__(self, task, course: Course, statements: [] = None):
+        super().__init__(task=task)
         self.course = course
         self.statements = statements if statements else course.statements
 
@@ -286,8 +290,9 @@ class ProofStepRequest(HighLevelServerRequest):
     """
     from_previous_state_method = True  # FIXME: smart True/False
 
-    def __init__(self, proof_step=None, exercise=None, lean_file=None):
-        super().__init__()
+    def __init__(self, task, proof_step=None, exercise=None, lean_file=None):
+        super().__init__(task=task)
+        self.task = task
         self.request_type = 'ProofStep'
         self.proof_step = proof_step
         self.exercise = exercise
@@ -458,8 +463,8 @@ class ExerciseRequest(ProofStepRequest):
     """
     expected_nb_hypos = 1
 
-    def __init__(self, proof_step, exercise=None):
-        super().__init__(proof_step, exercise)
+    def __init__(self, task, proof_step, exercise=None):
+        super().__init__(task, proof_step, exercise)
         self.request_type = 'Exercise'
         self.__compute_lean_file()
 

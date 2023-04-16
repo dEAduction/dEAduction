@@ -208,7 +208,7 @@ class ServerQueue(list):
                         as self.cancel_scope:
                     ################
                     # Process task #
-                    await task.fct(**task.kwargs)
+                    await task.fct(task, **task.kwargs)
                     ################
                 if self.cancel_scope.cancelled_caught:
                     self.log.debug("Cancelling current task")
@@ -378,9 +378,20 @@ class ServerInterface(QObject):
     def add_task(self, task: Task):
         self.server_queue.add_task(task)
 
+    def cancel_pending_request(self, task):
+        """
+        Cancel the (presumably single) request corresponding to given task.
+        """
+        for seq_num, rqst in self.pending_requests.items():
+            if rqst.task is task:
+                self.log.debug(f"Cancelling request #{seq_num}")
+                self.pending_requests.pop(seq_num)
+                break
+
     def cancel_task(self, task):
         task.status = "cancellation_required"
         self.server_queue.cancel_task(task)
+        self.cancel_pending_request(task)
         # Fixme: remove pending task
         #  add decorator to fcts called by ServerQueue to add the task as
         #  request.task in all requests, in order to know which request to
@@ -441,7 +452,8 @@ class ServerInterface(QObject):
         if msg.seq_num in self.pending_requests:
             request = self.pending_requests[msg.seq_num]
         else:
-            self.log.warning(f"Pending requests seq_num are {self.pending_requests.key()}: "
+            self.log.warning(f"Pending requests seq_num are "
+                             f"{self.pending_requests.keys()}: "
                              f"ignoring msg form seq_num {msg.seq_num}")
             return
 
@@ -626,7 +638,7 @@ class ServerInterface(QObject):
 
         self.log.debug(f"End of request #{str(resp.seq_num)}")
 
-    async def set_exercise(self, proof_step, exercise: Exercise):
+    async def set_exercise(self, task, proof_step, exercise: Exercise):
         """
         Initialise the lean_file from exercise, and call Lean.
 
@@ -638,19 +650,21 @@ class ServerInterface(QObject):
                       f"{exercise.lean_name} -> {exercise.pretty_name}")
         self.__exercise_current = exercise
 
-        request = ExerciseRequest(proof_step=proof_step,
+        request = ExerciseRequest(task=task,
+                                  proof_step=proof_step,
                                   exercise=exercise)
         self.lean_file = request.lean_file
 
         await self.__get_response_from_request(request=request)
         self.exercise_set.emit()
 
-    async def code_insert(self, label: str, proof_step):
+    async def code_insert(self, task, label: str, proof_step):
         """
         Inserts code in the Lean virtual file.
         """
 
-        request = ProofStepRequest(proof_step=proof_step,
+        request = ProofStepRequest(task=task,
+                                   proof_step=proof_step,
                                    exercise=self.__exercise_current,
                                    lean_file=self.lean_file)
 
@@ -658,7 +672,7 @@ class ServerInterface(QObject):
 
         await self.__get_response_from_request(request=request)
 
-    async def code_set(self, label: str, code: str):
+    async def code_set(self, task, label: str, code: str):
         """
         Sets the code for the current exercise. This is supposed to be called
         when user sets code using the Lean console, but this functionality
@@ -711,14 +725,15 @@ class ServerInterface(QObject):
     # Methods for getting initial proof states of a bunch of statements #
     #####################################################################
 
-    async def __get_initial_proof_states(self, course, statements):
+    async def __get_initial_proof_states(self, task, course, statements):
         """
         Call Lean server to get the initial proof states of statements
         as stored in course_data.
         """
 
         self.log.info('Getting initial proof states')
-        request = InitialProofStateRequest(course=course,
+        request = InitialProofStateRequest(task=task,
+                                           course=course,
                                            statements=statements)
         await self.__get_response_from_request(request)
 
