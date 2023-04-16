@@ -72,8 +72,8 @@ global _
 class Task:
     """
     A class to record a task for the server.
-    Status is one of "", "in_queue", "launched", "answered", "cancelled",
-    "done".
+    Status is one of "", "in_queue", "launched", "answered",
+    "cancellation_required", "cancelled", "done".
     """
 
     def __init__(self, fct: callable, kwargs: dict):
@@ -81,13 +81,13 @@ class Task:
         self.kwargs = kwargs
         self.status = ""
 
-    @property
-    def cancel_fct(self):
-        return self.kwargs.get('cancel_fct')
+        self.cancel_fct = self.kwargs.get('cancel_fct')
+        if self.cancel_fct:
+            self.kwargs.pop('cancel_fct')
 
-    @property
-    def on_top(self):
-        return self.kwargs.get('on_top')
+        self.on_top = self.kwargs.get('on_top')
+        if self.on_top is not None:
+            self.kwargs.pop('on_top')
 
 
 #####################
@@ -184,7 +184,6 @@ class ServerQueue(list):
     #         await fct(*args)
 
     async def task_with_timeout(self, task: Task):
-                                # fct: callable, cancel_fct: callable, args: tuple):
         """
         Execute function fct with timeout TIMEOUT, and number of trials
         NB_TRIALS.
@@ -212,33 +211,46 @@ class ServerQueue(list):
                     await task.fct(**task.kwargs)
                     ################
                 if self.cancel_scope.cancelled_caught:
+                    self.log.debug("Cancelling current task")
                     self.current_task = None
-                    self.log.warning(f"No answer within "
-                                     f"{self.actual_timeout}s (trial {nb})")
+                    if task.status != "cancellation_required":
+                        self.log.warning(f"No answer within "
+                                         f"{self.actual_timeout}s (trial {nb})")
                     self.actual_timeout = 2 * self.actual_timeout
-                    if nb == self.NB_TRIALS:  # Task definitively  cancelled!
+                    no_more_trials = (nb == self.NB_TRIALS
+                                      or task.status == "cancellation_required")
+                    if no_more_trials:
+                        # Task definitively  cancelled!
                         # Emit lean_response signal with timeout error
                         lean_response = LeanResponse(error_type=3)
                         self.timeout_signal.emit(lean_response)
+                        break
                     else:  # Task will be tried again
                         if task.cancel_fct:
-                            task.status = 'cancelled'
                             task.cancel_fct()
+                            task.status = 'cancelled'
                 else:
                     break
             except TypeError as e:
                 self.log.debug("TypeError while cancelling trio")
                 self.log.debug(e)
                 self.actual_timeout = 2 * self.actual_timeout
-                if nb == self.NB_TRIALS:  # Task definitively  cancelled!
+                no_more_trials = (nb == self.NB_TRIALS
+                                  or task.status == "cancellation_required")
+                if no_more_trials:
+                    # Task definitively  cancelled!
                     # Emit lean_response signal with timeout error
-                    # FIXME:
                     lean_response = LeanResponse(error_type=3)
                     self.timeout_signal.emit(lean_response)
+                    break
                 else:  # Task will be tried again
                     if task.cancel_fct:
-                        task.status = 'cancelled'
                         task.cancel_fct()
+                        task.status = 'cancelled'
+
+            except Exception as e:
+                self.log.debug(e)
+                raise
 
         # Launch next task when done!
         task.status = 'done'
@@ -246,7 +258,6 @@ class ServerQueue(list):
 
     def cancel_task(self, task):
         if self.current_task is task and self.cancel_scope:
-            self.log.debug("Cancelling current task")
             self.cancel_scope.cancel()
 
 
@@ -348,15 +359,6 @@ class ServerInterface(QObject):
     def use_fast_method_for_lean_server(self):
         return self.__use_fast_method_for_lean_server
 
-    # @property
-    # def lean_file_contents(self):
-    #     if self.use_fast_method_for_lean_server:
-    #         return self.__file_content_from_state_and_tactic
-    #     elif self.__course_data:
-    #         return self.__course_data.file_contents
-    #     elif self.lean_file:
-    #         return self.lean_file.contents
-
     async def start(self):
         """
         Asynchronously start the Lean server.
@@ -369,8 +371,6 @@ class ServerInterface(QObject):
         """
         Stop the Lean server.
         """
-        # global SERVER_QUEUE
-        # SERVER_QUEUE.started = False
         self.server_queue.started = False
         self.lean_server_running = trio.Event()
         self.lean_server.stop()
@@ -379,7 +379,12 @@ class ServerInterface(QObject):
         self.server_queue.add_task(task)
 
     def cancel_task(self, task):
+        task.status = "cancellation_required"
         self.server_queue.cancel_task(task)
+        # Fixme: remove pending task
+        #  add decorator to fcts called by ServerQueue to add the task as
+        #  request.task in all requests, in order to know which request to
+        #  cancel.
 
     def __add_time_to_cancel_scope(self):
         """
@@ -427,8 +432,9 @@ class ServerInterface(QObject):
 
         txt = msg.text
         line = msg.pos_line
-        self.log.debug(f"Lean msg for seq num {msg.seq_num} at line {line}:")
-        self.log.debug(txt)
+        if txt.find("uses sorry") == -1:
+            self.log.debug(f"Lean msg for seq num {msg.seq_num} at line {line}:")
+            self.log.debug(txt)
 
         self.__add_time_to_cancel_scope()
 
@@ -712,39 +718,9 @@ class ServerInterface(QObject):
         """
 
         self.log.info('Getting initial proof states')
-        # Define request
         request = InitialProofStateRequest(course=course,
                                            statements=statements)
-
         await self.__get_response_from_request(request)
-
-        # # TODO: try to merge this with __get_response_from_request()
-        # # Invalidate events
-        # self.file_invalidated           = trio.Event()
-        #
-        # # Sending request
-        # self.request_seq_num += 1
-        # request.set_seq_num(self.request_seq_num)
-        # self.__add_pending_request(request)
-        # self.log.debug(f"Request seq_num: {self.request_seq_num}")
-        #
-        # # Ask Lean server and wait for answer
-        # req = SyncRequest(file_name="deaduction_lean",
-        #                   content=request.file_contents())
-        # resp = await self.lean_server.send(req)
-        # print(f"--> {resp.message}")
-        # if resp.message == "file invalidated":
-        #     self.file_invalidated.set()
-        #
-        #     # ───────── Waiting for all pieces of information ──────── #
-        #     await request.proof_received_event.wait()
-        #     self.pending_requests.pop(self.request_seq_num)
-        #
-        #     print("(proof received)")
-        #     # self.log.debug(_("All proof states received"))
-        #     self.initial_proof_state_set.emit()
-        #     if hasattr(self.update_ended, "emit"):
-        #         self.update_ended.emit()
 
     def set_statements(self, course: Course, statements: [] = None,
                        on_top=False):
@@ -760,12 +736,18 @@ class ServerInterface(QObject):
 
         if not statements:
             pass
+
         elif len(statements) <= self.MAX_CAPACITY:
+
             self.log.debug(f"Set {len(statements)} statement(s)")
-            self.server_queue.add_task(self.__get_initial_proof_states,
-                                       course, statements,
-                                       on_top=on_top)
+            task = Task(fct=self.__get_initial_proof_states,
+                        kwargs={'course': course,
+                                'statements': statements,
+                                'on_top': on_top})
+            self.server_queue.add_task(task)
+
         else:
+
             self.log.debug(f"{len(statements)} statements to process...")
             # Split statements
             self.set_statements(course, statements[:self.MAX_CAPACITY],

@@ -429,8 +429,49 @@ begin
 end
 
 
+lemma exercise.test_compute1
+(x y z: ℝ)
+(H0: x > 0) (H1: y > 0) (H2: z >0)
+(H: x + y + z < 1):
+x +  2*y + 3*z < 100
+:=
+/- dEAduction
+AutoTest
+    CQFD
+-/
+begin
+  sorry
+end
 
+lemma exercise.test_compute2
+(x y z: ℝ)
+(H0: x > 0) (H1: y > 0) (H2: z >0)
+(H: x + y + z < 1):
+x +  2*y + 3*z < 1
+:=
+/- dEAduction
+AutoTest
+    CQFD error=
+-/
+begin
+  sorry
+end
 
+lemma exercise.test_compute3
+(x y z a b: ℝ)
+(H0b: x ≠ 0)
+(H0: x >= 0) (H1: y > 0) (H2: z >0)
+(Ha: a=2*x) (Hb: b=5*y)
+(H: x + y + z < 1):
+x +  2*a + 3*b < 1
+:=
+/- dEAduction
+AutoTest
+    CQFD error=
+-/
+begin
+  sorry
+end
 
 
 

@@ -720,7 +720,7 @@ class GlobalToolbar(QToolBar):
                 QIcon(str((icons_dir / 'change_exercise.png').resolve())),
                 _('Change exercise'), self)
 
-        self.addAction(self.cancel_server)
+        self.addAction(self.stop)
         self.addAction(self.settings_action)
         self.addAction(self.change_exercise_action)
         self.setLayoutDirection(Qt.RightToLeft)

@@ -130,7 +130,7 @@ class Coordinator(QObject):
         super().__init__()
         self.exercise: Exercise       = exercise
         self.servint: ServerInterface = servint
-        self.pending_servint_task = None
+        self.last_servint_task = None
 
         # Exercise main window
         self.emw = ExerciseMainWindow(exercise)
@@ -142,7 +142,6 @@ class Coordinator(QObject):
         self.proof_tree: Optional[ProofTree]          = None
         self.previous_proof_step: Optional[ProofStep] = None
         self.journal                                  = Journal()
-        # self.current_user_action: Optional[UserAction] = None
         self.lean_code_sent: Optional[CodeForLean]          = None
 
         # Flags
@@ -510,8 +509,11 @@ class Coordinator(QObject):
         This method is called when usr push the 'stop' button.
         """
         if self.servint:
-            log.info("Trying to cancel current task")
-            self.servint.cancel_task(self.pending_servint_task)
+            task = self.last_servint_task
+            if task.status != "done":
+                log.info(f"Trying to cancel last task (status {task.status})")
+                self.servint.cancel_task(task)
+                log.debug(f"(new status: {task.status})")
 
     # @Slot()
     # def cancel_server(self):
@@ -523,7 +525,7 @@ class Coordinator(QObject):
     #         self.servint.server_queue.cancel_current_task()
 
     def send_task_to_server(self, task: Task):
-        self.pending_servint_task = task
+        self.last_servint_task = task
         self.servint.add_task(task)
 
     def start_server_task(self):
@@ -557,7 +559,7 @@ class Coordinator(QObject):
                          self.statement_triggered,
                          self.statement_dropped,
                          self.math_object_dropped,
-                         self.emw.cancel_server,
+                         self.emw.stop,
                          # self.apply_math_object_triggered,
                          self.close_server_task]) as emissions:
 
@@ -613,6 +615,7 @@ class Coordinator(QObject):
                 ######################
                 elif emission.is_from(self.emw.stop):
                     await self.stop()
+                    self.unfreeze()
 
                 ########################
                 # Code to Lean actions #
@@ -817,7 +820,7 @@ class Coordinator(QObject):
                 task = Task(fct=self.servint.code_insert,
                             kwargs={'proof_step': self.proof_step,
                                     'label': action.symbol,
-                                    'cancel_fct':self.lean_file.undo})
+                                    'cancel_fct': self.lean_file.undo})
                 self.send_task_to_server(task)
                 break
 
@@ -850,7 +853,6 @@ class Coordinator(QObject):
 
             # Update lean_file and call Lean server
             self.lean_code_sent = lean_code
-            # previous_proof_state = self.proof_step.proof_state
             task = Task(fct=self.servint.code_insert,
                         kwargs={'proof_step': self.proof_step,
                                 'label': statement.pretty_name,
@@ -868,7 +870,6 @@ class Coordinator(QObject):
                             'cancel_fct': self.lean_file.undo,
                             'code': self.lean_editor.code_get()})
         self.send_task_to_server(task)
-
 
     #########################
     #########################

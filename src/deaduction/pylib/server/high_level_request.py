@@ -135,18 +135,13 @@ class HighLevelServerRequest:
         colon = analysis.find(':')
         if sharp != -1 and colon > sharp:
             nb = analysis[sharp+1:colon].strip()
-            # try:
-            #     nb_ = int(nb)
-            # except ValueError:
-            #     pass
-            # else:
-            #     return nb_ == self.seq_num
             nb_ = int(nb)
             test = (nb_ == self.seq_num)
             if not test:
                 self.log.warning(f"Bad analysis seq num {nb}")
             return test
 
+    @staticmethod
     def decorator_check_seq_num(func):
         """
         given analysis = "context #xxx:", check that xxx is equal to
@@ -160,18 +155,13 @@ class HighLevelServerRequest:
                 return
 
             nb = analysis[sharp+1:colon].strip()
-            # try:
-            #     nb_ = int(nb)
-            # except ValueError:
-            #     pass
-            # else:
-            #     return nb_ == self.seq_num
             nb_ = int(nb)
             test = (nb_ == self.seq_num)
             if not test:
                 self.log.warning(f"Bad analysis seq num {nb}")
                 return
 
+            # Test succeeded: execute function
             func(self, analysis, line)
 
         return func_with_check

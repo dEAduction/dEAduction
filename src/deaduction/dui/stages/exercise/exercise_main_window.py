@@ -133,7 +133,7 @@ class ExerciseMainWindow(QMainWindow):
     window_closed                = Signal()
     change_exercise              = Signal()
     ui_updated                   = Signal()
-    cancel_server                = Signal()
+    stop                         = Signal()
 
     # User action signals:
     action_triggered             = Signal(ActionButton)
