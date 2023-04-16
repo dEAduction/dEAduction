@@ -588,6 +588,7 @@ class ExerciseStatusBar(QStatusBar):
     def set_message(self, msg: str):
         self.stop_thinking()
         self.messageWidget.setText(msg)
+        return
 
     def erase(self):
         self.set_message("")

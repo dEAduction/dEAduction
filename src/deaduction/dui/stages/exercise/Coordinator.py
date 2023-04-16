@@ -517,6 +517,7 @@ class Coordinator(QObject):
             else:
                 msg = _("No action to be cancelled, press again to restart "
                         "server")
+                msg = _("No action to be cancelled")
                 bar_msg = self.statusBar.messageWidget.text()
                 # FIXME: bar_msg always empty?? REMOVE FOLLOWING LINE:
                 # await self.restart_lean_server()
@@ -1292,3 +1293,4 @@ class Coordinator(QObject):
             # Display QMessageBox but give deaduction time to properly update
             # ui before.
             QTimer.singleShot(0, self.display_fireworks_msg)
+            self.restart_lean_server()

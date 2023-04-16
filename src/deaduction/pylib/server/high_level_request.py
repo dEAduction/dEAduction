@@ -55,6 +55,7 @@ import logging
 
 from copy import deepcopy
 
+import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.editing import LeanFile
 from deaduction.pylib.coursedata import Course
 from deaduction.pylib.proof_state.proof_state import ProofState
@@ -286,9 +287,10 @@ class InitialProofStateRequest(HighLevelServerRequest):
 
 class ProofStepRequest(HighLevelServerRequest):
     """
-    
+    A request to get the new proof state from an action, as encode in a
+    ProofStep instance.
     """
-    from_previous_state_method = True  # FIXME: smart True/False
+    from_previous_state_method = False  # FIXME: smart True/False
 
     def __init__(self, task, proof_step=None, exercise=None, lean_file=None):
         super().__init__(task=task)
@@ -306,6 +308,22 @@ class ProofStepRequest(HighLevelServerRequest):
         self.compute_code_string()
         self.effective_code = (deepcopy(self.decorated_code)
                                if self.decorated_code else None)
+
+        self.__from_previous_state_method = None
+
+    @property
+    def from_previous_state_method(self):
+        fpps = cvars.get('others.Lean_request_method', 'automatic')
+        if fpps == 'normal':
+            return False
+        elif fpps == 'from_previous_proof_state':
+            return True
+        else:
+            return self.__from_previous_state_method
+
+    @from_previous_state_method.setter
+    def from_previous_state_method(self, yes=True):
+        self.__from_previous_state_method = yes
 
     def compute_code_string(self):
         lean_code = self.proof_step.lean_code

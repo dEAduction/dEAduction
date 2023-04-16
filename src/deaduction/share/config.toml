@@ -87,7 +87,8 @@ domains = [""]
 log_to_file = true
 
 [others]
-use_fast_method_for_lean_server = true
+# 'automatic', 'normal', 'from_previous_proof_state':
+Lean_request_method = "automatic"
 usr_version_nb = "-1"  # Do not modify!
 version_nb = "0.3211111"
 os = ""  # Let this to "" except for debugging

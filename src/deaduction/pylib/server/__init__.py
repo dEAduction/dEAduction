@@ -31,6 +31,7 @@ This file is part of d∃∀duction.
 
 import trio
 import logging
+from time import time
 from typing import Optional, Dict
 
 # from deaduction.pylib.utils.nice_display_tree import nice_display_tree
@@ -74,6 +75,11 @@ class Task:
     A class to record a task for the server.
     Status is one of "", "in_queue", "launched", "answered",
     "cancellation_required", "cancelled", "done".
+    duration should measure the whole duration of the task, as seen from the
+    ServerQueue. That begins with the computation of the HighLevelRequest and
+    ends with the reception of all pieces of data from the Lean server
+    (end of ServerInterface.__get_response_for_request), including the case
+    of an error, or until cancellation.
     """
 
     def __init__(self, fct: callable, kwargs: dict):
@@ -88,6 +94,18 @@ class Task:
         self.on_top = self.kwargs.get('on_top')
         if self.on_top is not None:
             self.kwargs.pop('on_top')
+
+        self.pertinent_duration = self.kwargs.get('pertinent_duration', True)
+
+        self.start_time = None
+        self.end_time = None
+
+    @property
+    def duration(self):
+        start = self.start_time
+        end = self.end_time
+        duration = end-start if end and start else None
+        return duration
 
 
 #####################
@@ -125,6 +143,7 @@ class ServerQueue(list):
         self.current_task = None
         self.cancel_scope: Optional[trio.CancelScope] = None
         self.actual_timeout = self.TIMEOUT
+        self.task_durations: [int] = []
 
         # Trio Event, initialized when a new queue starts,
         # and set when it ends.
@@ -210,11 +229,16 @@ class ServerQueue(list):
                         as self.cancel_scope:
                     ################
                     # Process task #
+                    task.start_time = time()
                     await task.fct(task, **task.kwargs)
+                    task.end_time = time()
+                    print(f"task duration: {task.duration}")
+                    if task.pertinent_duration:
+                        self.task_durations.append(task.duration)
+                        print(f"task durations: {self.task_durations}")
                     ################
                 if self.cancel_scope.cancelled_caught:
                     self.log.debug("Cancelling current task")
-                    error_type = 0
                     if task.status == "cancellation_required":
                         error_type = 7
                     else:
@@ -300,9 +324,6 @@ class ServerInterface(QObject):
     update_started              = Signal()  # Unused
     update_ended                = Signal()  # Unused
 
-    proof_no_goals              = Signal()  # FIXME: suppress
-    failed_request_errors       = Signal()  # FIXME: suppress?
-
     # Signal sending info from Lean
     lean_response = Signal(LeanResponse)
 
@@ -387,6 +408,8 @@ class ServerInterface(QObject):
         self.server_queue.started = False
         self.lean_server_running = trio.Event()
         self.lean_server.stop()
+        # Reset task durations
+        self.server_queue.task_durations = []
 
     def add_task(self, task: Task):
         self.server_queue.add_task(task)
@@ -520,9 +543,7 @@ class ServerInterface(QObject):
         # FIXME: two first cases obsolete?
         if not isinstance(request, ProofStepRequest):
             return
-
         elif msg.text.startswith(LEAN_NOGOALS_TEXT):
-            # todo: request complete
             return
         elif msg.text.startswith(LEAN_UNRESOLVED_TEXT):
             return
@@ -549,7 +570,7 @@ class ServerInterface(QObject):
         if nb > 1:
             self.log.warning(f"{nb} requests pending")
 
-    async def __get_response_from_request(self, request=None):
+    async def __get_response_for_request(self, request=None):
         """
         Call Lean server to update the proof_state.
             (for processing exercise only)
@@ -577,8 +598,8 @@ class ServerInterface(QObject):
 
             # FIXME: replace wait_ready at the end by the following,
             #   with a waiting of the running state going to False.
-            if self.is_running:
-                pass
+            # if self.is_running:
+            #     pass
 
             self.__add_pending_request(request)
             self.log.debug(f"Request seq_num: {self.request_seq_num}")
@@ -612,11 +633,6 @@ class ServerInterface(QObject):
         self.server_queue.cancel_scope.shield = True
         self.pending_requests.pop(self.request_seq_num)
 
-        # Timeout TODO: move this at the end
-        # FIXME: useful??
-        with trio.move_on_after(1):
-            await self.lean_server.running_monitor.wait_ready()
-
         self.log.debug(_("After request"))
 
         if hasattr(self.update_ended, "emit"):
@@ -648,6 +664,10 @@ class ServerInterface(QObject):
             self.lean_response.emit(lean_response)
 
         self.log.debug(f"End of request #{str(resp.seq_num)}")
+        # Timeout TODO: move this at the end
+        # FIXME: useful??
+        with trio.move_on_after(1):
+            await self.lean_server.running_monitor.wait_ready()
 
     async def set_exercise(self, task, proof_step, exercise: Exercise):
         """
@@ -666,7 +686,7 @@ class ServerInterface(QObject):
                                   exercise=exercise)
         self.lean_file = request.lean_file
 
-        await self.__get_response_from_request(request=request)
+        await self.__get_response_for_request(request=request)
         self.exercise_set.emit()
 
     async def code_insert(self, task, label: str, proof_step):
@@ -681,7 +701,7 @@ class ServerInterface(QObject):
 
         self.lean_file.insert(label=label, add_txt=request.code_string)
 
-        await self.__get_response_from_request(request=request)
+        await self.__get_response_for_request(request=request)
 
     async def code_set(self, task, label: str, code: str):
         """
@@ -704,7 +724,7 @@ class ServerInterface(QObject):
         self.lean_file.state_add(label, code)
 
         # request = ...
-        await self.__get_response_from_request()
+        await self.__get_response_for_request()
 
     def history_replace(self, code: CodeForLean):
         """
@@ -746,7 +766,7 @@ class ServerInterface(QObject):
         request = InitialProofStateRequest(task=task,
                                            course=course,
                                            statements=statements)
-        await self.__get_response_from_request(request)
+        await self.__get_response_for_request(request)
 
     def set_statements(self, course: Course, statements: [] = None,
                        on_top=False):
@@ -769,7 +789,8 @@ class ServerInterface(QObject):
             task = Task(fct=self.__get_initial_proof_states,
                         kwargs={'course': course,
                                 'statements': statements,
-                                'on_top': on_top})
+                                'on_top': on_top,
+                                'pertinent_duration': False})
             self.server_queue.add_task(task)
 
         else:
