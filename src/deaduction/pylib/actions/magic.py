@@ -162,6 +162,8 @@ def norm_num_with_let_expr(goal) -> CodeForLean:
 def compute(goal) -> CodeForLean:
     """
     Try to use tactics to solve 1 numerical target, mainly by linear computing.
+    This is the expensive code. If this is modified, consider adapting the
+    SererInterface.__desirable_lean_rqst_fpps_method() method.
     """
     # code1 = CodeForLean.from_string("norm_num at *").solve1()
     code1 = norm_num_with_let_expr(goal).solve1()

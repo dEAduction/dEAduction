@@ -47,6 +47,7 @@ from deaduction.pylib.coursedata import Course
 from deaduction.pylib.proof_tree import LeanResponse
 
 import deaduction.pylib.config.site_installation as inst
+import deaduction.pylib.config.vars as cvars
 import deaduction.pylib.server.exceptions as exceptions
 from deaduction.pylib.server.high_level_request import (HighLevelServerRequest,
                                                         InitialProofStateRequest,
@@ -356,6 +357,7 @@ class ServerInterface(QObject):
         self.nursery: trio.Nursery     = nursery
         self.request_seq_num           = -1
         self.pending_requests: Dict[int, HighLevelServerRequest] = {}
+        # self.__desirable_lean_rqst_fpps_method(force_normal=True)
 
         # Set server callbacks
         self.lean_server.on_message_callback = self.__on_lean_message
@@ -379,9 +381,8 @@ class ServerInterface(QObject):
         # self.__tmp_effective_code      = CodeForLean.empty_code()
         self.is_running                = False
         # self.last_content              = ""  # Content of last LeanFile sent.
-        # self.__file_content_from_state_and_tactic = None
+
         # Errors memory channels
-        # FIXME: obsolete?
         self.error_send, self.error_recv = \
             trio.open_memory_channel(max_buffer_size=1024)
 
@@ -426,17 +427,29 @@ class ServerInterface(QObject):
         self.server_queue.cancel_task(task)
         self.cancel_pending_request(task)
 
-    # def __decide_lean_request_method(self):
-    #     """
-    #     This method decides which Lean request method will be used for next
-    #     request (in the current exercise). It updates the cvars
-    #     corresponding entry, so that the action module knows about it when
-    #     it computes the next CodeForLean.
-    #     """
-    #     # TODO: smarter decision...
-    #     fpps = True
-    #     ProofStepRequest.
-    #     cvars.set('currently_using_from_previous_proof_state_method', fpps)
+    def __desirable_lean_rqst_fpps_method(self, force_normal=False):
+        """
+        This method decides which Lean request method will be used for next
+        request (in the current exercise). It updates the cvars
+        corresponding entry, so that the action module knows about it when
+        it computes the next CodeForLean.
+        """
+        # TODO: smarter decision...
+        fpps = False
+        if not force_normal:
+            costly_instructions = ["compute_n"]
+            nb = 0
+            for s in costly_instructions:
+                if self.lean_file.inner_contents.find(s) != -1:
+                    self.log.debug("compute_n found")
+                    nb += 1
+            if nb > 0:
+                fpps = True
+                if not cvars.get('others.desirable_lean_rqst_fpps_method'):
+                    self.log.info("Switching to from previous proof state "
+                                  "method.")
+
+        cvars.set('others.desirable_lean_rqst_fpps_method', fpps)
 
     def __add_time_to_cancel_scope(self):
         """
@@ -692,6 +705,9 @@ class ServerInterface(QObject):
         self.lean_file = request.lean_file
 
         await self.__get_response_for_request(request=request)
+
+        # Method for next request = normal
+        self.__desirable_lean_rqst_fpps_method(force_normal=True)
         self.exercise_set.emit()
 
     async def code_insert(self, task, label: str, proof_step):
@@ -700,6 +716,7 @@ class ServerInterface(QObject):
         """
 
         method = from_previous_state_method()
+        self.log.debug(f"FPPS Method: {method}")
         request = ProofStepRequest(task=task,
                                    proof_step=proof_step,
                                    exercise=self.__exercise_current,
@@ -708,6 +725,7 @@ class ServerInterface(QObject):
         self.lean_file.insert(label=label, add_txt=request.code_string)
 
         await self.__get_response_for_request(request=request)
+        self.__desirable_lean_rqst_fpps_method()
 
     async def code_set(self, task, label: str, code: str):
         """

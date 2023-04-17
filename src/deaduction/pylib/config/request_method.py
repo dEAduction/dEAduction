@@ -37,6 +37,6 @@ def from_previous_state_method():
     elif fpps == 'from_previous_proof_state':
         return True
 
-    return cvars.get('others.currently_using_from_previous_proof_state_method')
+    return cvars.get('others.desirable_lean_rqst_fpps_method')
 
 

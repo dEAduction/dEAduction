@@ -902,7 +902,9 @@ if __name__ == '__main__':
     print(code_2.to_code())
 
     code_1 = CodeForLean.from_string("norm_num at *").solve1()
+
     code_2 = CodeForLean.from_string("compute_n 10")
+
     code_3 = (CodeForLean.from_string("norm_num at *").try_()).and_then(code_2)
     possible_code = code_1.or_else(code_3)
 
