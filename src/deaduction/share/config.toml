@@ -91,7 +91,7 @@ log_to_file = true
 Lean_request_method = "from_previous_proof_state"
 currently_using_from_previous_proof_state_method = false  # For internal use
 usr_version_nb = "-1"  # Do not modify!
-version_nb = "0.3211111"
+version_nb = "0.3211111111"
 os = ""  # Let this to "" except for debugging
 
 #########################

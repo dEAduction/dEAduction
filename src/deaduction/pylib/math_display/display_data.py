@@ -133,7 +133,7 @@ latex_from_node = {
     "PROP_≥": (0, r" \geq ", 1),
     "DIFFERENCE": (0, " - ", 1),
     "SUM": (0, " + ", 1),
-    "MULT": (0, r" \times ", 1),
+    "MULT": (0, r" \mul ", 1),
     "PRODUCT": (0, r" \times ", 1),
     "DIV": (0, r"/", 1),
     "MINUS": ("-", 0),
@@ -410,6 +410,8 @@ lean_from_node = {
 
 # Only those lean symbols that are distinct from the latex_to_utf8 dict
 latex_to_lean_dic = {
+    r'\and': " " + "and" + " ",
+    r'\or': " " + "or" + " ",
     r'\Leftrightarrow': '↔',
     r'\Rightarrow': '→',
     r'\subset': '⊆',
@@ -435,7 +437,8 @@ latex_to_lean_dic = {
     r'\type_R': 'real',
     r'used_property': "",
     r'\not': "not ",
-    r'\times': "*"
+    r'\times': "×",
+    r'\mul': "*"
 }
 
 ####################

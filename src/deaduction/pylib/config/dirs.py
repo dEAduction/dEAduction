@@ -50,6 +50,8 @@ if os.getenv("DEADUCTION_DEV_MODE", '0') == '1':
     local = (home / ".deaduction-dev").resolve()
 else:
     local = (home / ".deaduction").resolve()
+
+# Other paths
 journal        = (local / "deaduction_journal").resolve()
 test_exercises = (local / "test_exercises").resolve()
 all_courses_ipf_dir = (local / "initial_proof_states").resolve()

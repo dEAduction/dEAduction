@@ -1293,4 +1293,4 @@ class Coordinator(QObject):
             # Display QMessageBox but give deaduction time to properly update
             # ui before.
             QTimer.singleShot(0, self.display_fireworks_msg)
-            self.restart_lean_server()
+            # self.restart_lean_server()

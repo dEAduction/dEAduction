@@ -74,7 +74,7 @@ def rw_using_statement(goal: Goal, selected_objects, statement) -> CodeForLean:
         codes = codes.or_else(f'simp_rw <- {defi} at {arguments}')
         codes.add_success_msg(context_msg)
 
-    codes.rw_item = statement # (statement.type_, statement.pretty_name)
+    codes.rw_item = statement  # (statement.type_, statement.pretty_name)
 
     # Add try_norm_num; this removes lambda that can occur e.g. when applying
     # def of injectivity backwards
@@ -138,14 +138,16 @@ def action_theorem(proof_step) -> CodeForLean:
 
     goal = proof_step.goal
     codes = CodeForLean()
-    # FIXME: case of no ips:
-    theorem_goal: Goal = theorem.initial_proof_state.goals[0]
 
     if not target_selected and not selected_objects:
         codes = add_statement_to_context(proof_step, theorem)
         return codes
 
-    substitution, equality = theorem_goal.target.can_be_used_for_substitution()
+    ips = theorem.initial_proof_state
+    theorem_goal: Goal = ips.goals[0] if ips else None
+    substitution, equality = (theorem_goal.target.can_be_used_for_substitution()
+                              if theorem_goal else True, None)
+    # If no ips available, then try anyway!
     if substitution:
         codes = rw_using_statement(goal, selected_objects, theorem)
 
