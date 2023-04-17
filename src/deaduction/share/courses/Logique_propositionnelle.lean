@@ -256,7 +256,7 @@ Description
 AvailableLogic
     and or not implies iff
 AvailableProof
-    use_proof_methods
+    proof_methods
 AvailableMagic
     assumption
 -/
@@ -278,7 +278,7 @@ Description
 AvailableLogic
     and or not implies iff
 AvailableProof
-    use_proof_methods new_object
+    proof_methods new_object
 AvailableMagic
     assumption
 -/
