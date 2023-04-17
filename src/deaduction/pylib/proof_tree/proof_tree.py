@@ -912,7 +912,8 @@ class ProofTree:
         fork node. This is the pertinent goal_node for the proof msg to be
         displayed in the status bar.
         """
-        return self.current_goal_node.last_child_fork_node
+        if self.current_goal_node:
+            return self.current_goal_node.last_child_fork_node
 
     def current_proof_msg(self) -> Optional[str]:
         """

@@ -96,6 +96,8 @@ class Task:
             self.kwargs.pop('on_top')
 
         self.pertinent_duration = self.kwargs.get('pertinent_duration', True)
+        if 'pertinent_duration' in self.kwargs:
+            self.kwargs.pop('pertinent_duration')
 
         self.start_time = None
         self.end_time = None

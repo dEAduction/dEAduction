@@ -569,11 +569,6 @@ class ExerciseStatusBar(QStatusBar):
         if proof_msg:
             self.show_normal_msg(proof_msg)
 
-    # def cancel_pending_msgs(self):
-    #     if self.pending_msgs:
-    #         log.debug("(Cancelling first pending msg)")
-    #         self.pending_msgs = [""] * len(self.pending_msgs)
-
     def show_error_icon(self):
         self.iconWidget.setPixmap(self.error_pixmap)
         self.iconWidget.show()
