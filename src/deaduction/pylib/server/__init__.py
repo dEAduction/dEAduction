@@ -35,19 +35,17 @@ from time import time
 from typing import Optional, Dict
 
 # from deaduction.pylib.utils.nice_display_tree import nice_display_tree
-from deaduction.pylib.coursedata.exercise_classes import Exercise, Statement
+from deaduction.pylib.coursedata.exercise_classes import Exercise
 from deaduction.pylib.proof_state.proof_state import ProofState
 from deaduction.pylib.lean.response import Message
 from deaduction.pylib.editing import LeanFile
 from deaduction.pylib.lean.request import SyncRequest
 from deaduction.pylib.lean.server import LeanServer
 from deaduction.pylib.lean.installation import LeanEnvironment
-from deaduction.pylib.actions import CodeForLean, get_effective_code_numbers
+from deaduction.pylib.actions import CodeForLean
 from deaduction.pylib.coursedata import Course
 from deaduction.pylib.proof_tree import LeanResponse
 
-
-import deaduction.pylib.config.vars as cvars
 import deaduction.pylib.config.site_installation as inst
 import deaduction.pylib.server.exceptions as exceptions
 from deaduction.pylib.server.high_level_request import (HighLevelServerRequest,
@@ -55,7 +53,7 @@ from deaduction.pylib.server.high_level_request import (HighLevelServerRequest,
                                                         ProofStepRequest,
                                                         ExerciseRequest)
 
-from request_method import from_previous_state_method
+from deaduction.pylib.config.request_method import from_previous_state_method
 
 from PySide2.QtCore import Signal, QObject
 

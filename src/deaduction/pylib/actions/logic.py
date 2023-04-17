@@ -66,7 +66,7 @@ from deaduction.pylib.actions     import (action,
 from deaduction.pylib.mathobj     import  MathObject
 
 from deaduction.pylib.give_name import    get_new_hyp
-from deaduction.pylib.server.request_method import from_previous_state_method
+from deaduction.pylib.config.request_method import from_previous_state_method
 
 log = logging.getLogger("logic")
 global _
