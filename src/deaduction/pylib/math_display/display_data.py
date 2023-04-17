@@ -403,14 +403,13 @@ lean_from_node = {
     "LAMBDA": ("λ ", '(', 1, ': ', 0, '), ', 2),
     "SET": ('set ', 0),
     "APPLICATION": (lean_application, ),
-    "PROP_NOT": ('not', 0)  # Prevent pattern NOT(APP(CONSTANT(...)) -> is not
+    # Prevent pattern NOT(APP(CONSTANT(...)) -> is not:
+    "PROP_NOT": (r'\not', 0),
+    "SET_EMPTY": ('(', r'\emptyset', ': ', 'self.math_type', ')')
 }
 
 # Only those lean symbols that are distinct from the latex_to_utf8 dict
 latex_to_lean_dic = {
-    #'AND': 'and',
-    #'OR': 'or',
-    #'NOT': 'not',
     r'\Leftrightarrow': '↔',
     r'\Rightarrow': '→',
     r'\subset': '⊆',

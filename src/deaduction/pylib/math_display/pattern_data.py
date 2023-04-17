@@ -23,7 +23,7 @@ SYNTAX FOR KEYS. Let us analyze the following example:
     "LOCAL_CONSTANT:SET_FAMILY(?3, ?4)(...)"
 
 - We first indicate the node: 'LOCAL_CONSTANT'.
-- Then we (optionnaly) give its type: ':SET_FAMILY(?3, ?4)'. Here ?3 and ?4 are
+- Then we (optionally) give its type: ':SET_FAMILY(?3, ?4)'. Here ?3 and ?4 are
 meta-variables that can take any value; so the type must have two children
 that can be used for displaying.
 - Then (...) indicates that we do not care about children of the local constant:
@@ -278,3 +278,12 @@ latex_from_pattern_string_for_type = {
     "?:TYPE": (r'\type_element', name),  # NB: TYPE is treated above
     "?:SET(?0)": (r'\type_element', 'self'),
 }
+
+
+lean_from_pattern_string = {
+#       SET_EMPTY is handled in lean_from_node
+#     "SET_EMPTY": (r'\emptyset', ': ', 'self.math_type')
+#     # "SET_EMPTY: SET(?0)": (r'\emptyset', ': ', 0)
+}
+
+

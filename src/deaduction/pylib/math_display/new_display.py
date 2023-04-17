@@ -10,7 +10,8 @@ from deaduction.pylib.math_display.display_data import (latex_from_node,
                                                         lean_from_node)
 from deaduction.pylib.math_display.pattern_init import (pattern_latex,
                                                         pattern_text,
-                                                        pattern_latex_for_type)
+                                                        pattern_latex_for_type,
+                                                        pattern_lean)
 from deaduction.pylib.math_display.display import abstract_string_to_string
 from deaduction.pylib.math_display.display_math import (shallow_latex_to_text,
                                                         latex_to_text_func)
@@ -111,8 +112,14 @@ def substitute_metavars(shape, metavars, self):
 
 
 def lean_shape(self: MathObject) -> []:
+    # TODO: add pattern search in pattern_lean (empty dict for the moment)
+    #  cf latex_shape()
     if self.node in lean_from_node:
         shape = list(lean_from_node[self.node])
+
+        shape = [process_shape_macro(self, item) if isinstance(item, str)
+                 else item for item in shape]
+
         return shape
 
 

@@ -45,7 +45,7 @@ import logging
 from deaduction.pylib.math_display.pattern_data import \
     latex_from_pattern_string, latex_from_pattern_string_for_type, \
     text_from_pattern_string, quant_pattern, \
-    set_quant_pattern
+    set_quant_pattern, lean_from_pattern_string
 
 from deaduction.pylib.math_display.app_pattern_data import \
     latex_from_app_pattern, app_pattern_from_constants
@@ -59,13 +59,15 @@ log = logging.getLogger(__name__)
 # This are the useful lists #
 #############################
 pattern_latex = []
+pattern_lean = []
 pattern_text = []
 pattern_latex_for_type = []
 
 # This list indicates how to populate pattern lists from dictionaries:
 # Careful, order matters.
 dic_list_pairs = \
-    [(latex_from_app_pattern, pattern_latex),
+    [(lean_from_pattern_string, pattern_lean),
+     (latex_from_app_pattern, pattern_latex),
      (quant_pattern, pattern_latex),
      (latex_from_pattern_string, pattern_latex),
      (latex_from_pattern_string_for_type, pattern_latex_for_type),
