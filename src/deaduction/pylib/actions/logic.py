@@ -66,6 +66,7 @@ from deaduction.pylib.actions     import (action,
 from deaduction.pylib.mathobj     import  MathObject
 
 from deaduction.pylib.give_name import    get_new_hyp
+from deaduction.pylib.server.request_method import from_previous_state_method
 
 log = logging.getLogger("logic")
 global _
@@ -1183,7 +1184,7 @@ def apply_forall_with_ineq(proof_step, selected_objects, inequality,
     if unsolved_inequality_counter:
         assert unsolved_inequality_counter == 1
         # Back to first inequality:
-        if cvars.get('others.use_fast_method_for_lean_server'):
+        if from_previous_state_method():
             # In this case no memory of previous goals
             more_code0 = CodeForLean.from_string("rotate")
         else:

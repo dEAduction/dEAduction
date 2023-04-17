@@ -55,6 +55,8 @@ from deaduction.pylib.server.high_level_request import (HighLevelServerRequest,
                                                         ProofStepRequest,
                                                         ExerciseRequest)
 
+from request_method import from_previous_state_method
+
 from PySide2.QtCore import Signal, QObject
 
 ############################################
@@ -365,7 +367,6 @@ class ServerInterface(QObject):
         # Current exercise (when processing one exercise)
         self.lean_file: Optional[LeanFile] = None
         self.__exercise_current            = None
-        self.__use_fast_method_for_lean_server = False
         self.__previous_proof_state = None
 
         # Events
@@ -389,10 +390,6 @@ class ServerInterface(QObject):
         # ServerQueue
         self.server_queue = ServerQueue(nursery=nursery,
                                         timeout_signal=self.lean_response)
-
-    @property
-    def use_fast_method_for_lean_server(self):
-        return self.__use_fast_method_for_lean_server
 
     async def start(self):
         """
@@ -430,10 +427,18 @@ class ServerInterface(QObject):
         task.status = "cancellation_required"
         self.server_queue.cancel_task(task)
         self.cancel_pending_request(task)
-        # Fixme: remove pending task
-        #  add decorator to fcts called by ServerQueue to add the task as
-        #  request.task in all requests, in order to know which request to
-        #  cancel.
+
+    # def __decide_lean_request_method(self):
+    #     """
+    #     This method decides which Lean request method will be used for next
+    #     request (in the current exercise). It updates the cvars
+    #     corresponding entry, so that the action module knows about it when
+    #     it computes the next CodeForLean.
+    #     """
+    #     # TODO: smarter decision...
+    #     fpps = True
+    #     ProofStepRequest.
+    #     cvars.set('currently_using_from_previous_proof_state_method', fpps)
 
     def __add_time_to_cancel_scope(self):
         """
@@ -696,11 +701,12 @@ class ServerInterface(QObject):
         Inserts code in the Lean virtual file.
         """
 
+        method = from_previous_state_method()
         request = ProofStepRequest(task=task,
                                    proof_step=proof_step,
                                    exercise=self.__exercise_current,
-                                   lean_file=self.lean_file)
-
+                                   lean_file=self.lean_file,
+                                   from_previous_proof_state_method=method)
         self.lean_file.insert(label=label, add_txt=request.code_string)
 
         await self.__get_response_for_request(request=request)
@@ -711,9 +717,9 @@ class ServerInterface(QObject):
         when user sets code using the Lean console, but this functionality
         is not activated right now because it f... up the history.
         """
-        # FIXME: adapt HighLevelLeanRequest to this case
+        # FIXME: This is not functional. Adapt HighLevelLeanRequest to this
+        #  case
 
-        self.__use_fast_method_for_lean_server = False
         self.__previous_proof_state = None
 
         self.log.info("Code sent to Lean: " + code)

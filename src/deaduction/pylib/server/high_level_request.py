@@ -32,15 +32,11 @@ This file is part of d∃∀duction.
 #           - Calcul du temp de requete
 #           - excessive memory consumption detected at 'expression replacer' (potential solution: increase memory consumption threshold)
 #           - timeout atteint
-#   Bouton Stop -> en un seul coup??
 #   startcoex :  --> Copier fichier dans usr_lean_exercises_dir
 
 # FIXME:
-#  ips : énoncés demandés plusieurs fois ? cf 37+19
-#  2 pending rqsts ???
 #  (bof) hypo_analyses = trier par nb
 #  A quoi sert await self.lean_server.running_monitor.wait_ready()
-#  Remettre les tests de lignes pour les erreurs : OK ---> tester !
 #  Tester from_state_method !!!
 
 # (OK?)  Négation d'une implication : C++ object already deleted ????
@@ -52,10 +48,8 @@ This file is part of d∃∀duction.
 
 from typing import Dict, List
 import logging
-
 from copy import deepcopy
 
-import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.editing import LeanFile
 from deaduction.pylib.coursedata import Course
 from deaduction.pylib.proof_state.proof_state import ProofState
@@ -290,9 +284,9 @@ class ProofStepRequest(HighLevelServerRequest):
     A request to get the new proof state from an action, as encode in a
     ProofStep instance.
     """
-    from_previous_state_method = False  # FIXME: smart True/False
 
-    def __init__(self, task, proof_step=None, exercise=None, lean_file=None):
+    def __init__(self, task, proof_step=None, exercise=None, lean_file=None,
+                 from_previous_proof_state_method=False):
         super().__init__(task=task)
         self.task = task
         self.request_type = 'ProofStep'
@@ -308,18 +302,11 @@ class ProofStepRequest(HighLevelServerRequest):
         self.compute_code_string()
         self.effective_code = (deepcopy(self.decorated_code)
                                if self.decorated_code else None)
-
-        self.__from_previous_state_method = None
+        self.__from_previous_state_method = from_previous_proof_state_method
 
     @property
     def from_previous_state_method(self):
-        fpps = cvars.get('others.Lean_request_method', 'automatic')
-        if fpps == 'normal':
-            return False
-        elif fpps == 'from_previous_proof_state':
-            return True
-        else:
-            return self.__from_previous_state_method
+        return self.__from_previous_state_method
 
     @from_previous_state_method.setter
     def from_previous_state_method(self, yes=True):
@@ -344,6 +331,10 @@ class ProofStepRequest(HighLevelServerRequest):
     def __lean_import_course_preamble(self) -> str:
         file_name = self.exercise.course.course_file_name
         return f"import {file_name}\n"
+
+    @staticmethod
+    def __lean_classical_logic() -> str:
+        return "local attribute[instance] classical.prop_decidable\n"
 
     def analysis_code2(self) -> str:
         """
@@ -382,6 +373,7 @@ class ProofStepRequest(HighLevelServerRequest):
         exercise = self.exercise
         file_content = f"-- Seq num {self.seq_num}\n" \
             + self.__lean_import_course_preamble() \
+            + self.__lean_classical_logic() \
             + "section course\n" \
             + exercise.open_namespace_str() \
             + exercise.open_read_only_namespace_str() \
