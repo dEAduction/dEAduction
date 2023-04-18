@@ -325,7 +325,10 @@ class CourseChooser(AbstractCoExChooser):
         if not details:  # Set details to None if empty
             details = None
 
+        log.info(course.metadata)
+        # print(course.metadata)
         display_constant = course.metadata.get('display')
+        # print(display_constant)
         if display_constant:
             pattern_init(display_constant)
 

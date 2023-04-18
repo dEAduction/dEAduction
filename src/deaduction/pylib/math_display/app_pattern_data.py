@@ -148,6 +148,8 @@ def app_pattern_from_constants(additional_data=None):
         tree = display_grammar.parse(additional_data)
         additional_dic = DisplayPatternVisitor().visit(tree)
         latex_from_constant_name.update(additional_dic)
+        log.info("Adding display data from metadata of the lean file:")
+        log.info(additional_dic)
     for key, value in latex_from_constant_name.items():
         # Modify key:
         # if key in ('divise', 'pair'):
@@ -165,6 +167,10 @@ def app_pattern_from_constants(additional_data=None):
                                   else item for item in new_value)
             latex_from_app_constant_patterns[new_not_key] = new_not_value
         latex_from_app_constant_patterns[new_key] = new_value
+        # Debug
+        # if key in ('divise', 'delta'):
+        #     log.debug(f"{key} added in dic")
+        #     print(latex_from_app_constant_patterns)
     latex_from_app_pattern.update(latex_from_app_constant_patterns)
 
-    latex_from_app_pattern.update(generic_app_dict)
+    # latex_from_app_pattern.update(generic_app_dict)

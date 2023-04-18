@@ -157,6 +157,14 @@ def latex_shape(self: MathObject, is_type=False, text=False,
     # (1) Search for patterns
     for dic in dicts:
         for pattern, pre_shape, metavars in dic:
+            # if pattern.node == 'APPLICATION' and self.node == 'APPLICATION':
+            #     child0 = pattern.children[0]
+            #     child0b =  self.children[0]
+            #     if child0.node == 'CONSTANT' and child0b.node == 'CONSTANT':
+            #         log.debug(child0.info.get('name'))
+            #         name = child0.info.get('name')
+            #         if name == 'divise':
+            #             print('debug')
             # if pattern.node == 'LOCAL_CONSTANT' and len(pattern.children) == 3:
             #     print("debug")
             if pattern.match(self):

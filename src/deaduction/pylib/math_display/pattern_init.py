@@ -48,7 +48,7 @@ from deaduction.pylib.math_display.pattern_data import \
     set_quant_pattern
 
 from deaduction.pylib.math_display.app_pattern_data import \
-    latex_from_app_pattern, app_pattern_from_constants
+    latex_from_app_pattern, app_pattern_from_constants, generic_app_dict
 
 from deaduction.pylib.math_display.pattern_parser import tree_from_str
 from deaduction.pylib.pattern_math_obj import PatternMathObject
@@ -66,6 +66,8 @@ pattern_latex_for_type = []
 # Careful, order matters.
 dic_list_pairs = \
     [(latex_from_app_pattern, pattern_latex),
+     # The order matters! The generic patterns must come at the end.
+     (generic_app_dict, pattern_latex),
      (quant_pattern, pattern_latex),
      (latex_from_pattern_string, pattern_latex),
      (latex_from_pattern_string_for_type, pattern_latex_for_type),
@@ -86,6 +88,8 @@ def string_to_pattern():
     # (2) Fill in pattern dicts
     for dict_, list_ in dic_list_pairs:
         for key, latex_shape in dict_.items():
+            # if key.find('divise') != -1:
+            #     print('debug')
             tree = tree_from_str(key)
             metavars = []
             pattern = PatternMathObject.from_tree(tree, metavars)
