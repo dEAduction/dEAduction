@@ -416,7 +416,7 @@ class LeanCourseVisitor(NodeVisitor):
         :return: course_history and data.
         """
         course_history, data = get_info(visited_children)
-        data["metadata_field_name"] = node.text
+        data["metadata_field_name"] = node.text.strip()
         return course_history, data
 
     def visit_metadata_field_content(self, node, visited_children):
