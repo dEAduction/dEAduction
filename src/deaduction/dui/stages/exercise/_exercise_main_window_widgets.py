@@ -631,9 +631,10 @@ class ExerciseStatusBar(QStatusBar):
         else:  # Show immediately
             self.show_pending_msgs()
 
-    def show_tmp_msg(self, msg: str):
+    def show_tmp_msg(self, msg: str, duration=3000):
         self.set_message(msg)
-        self.timer.singleShot(3000, self.show_pending_msgs)
+        self.timer.singleShot(3000, self.erase)
+        self.show_pending_msgs()
 
 
 class ExerciseToolBar(QToolBar):

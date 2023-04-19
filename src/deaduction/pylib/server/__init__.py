@@ -151,6 +151,7 @@ class ServerQueue(list):
         # Trio Event, initialized when a new queue starts,
         # and set when it ends.
         self.queue_ended            = None
+        self.lean_server_running    = None  # Set by ServerInterface
 
     def add_task(self, task: Task):
         # fct, *args, cancel_fct=None, on_top=False):
@@ -179,8 +180,8 @@ class ServerQueue(list):
         if len(self) > 0:
             # Launch first task
             task = self.pop()
-            self.log.debug(f"Launching task")  # : {args}")
-            # continue_ = input("Launching task?")  # FIXME: debugging
+            self.log.debug(f"Launching task")
+            # continue_ = input("Launching task?")
             self.nursery.start_soon(self.task_with_timeout, task)
             self.current_task = task
             task.status = 'launched'
@@ -190,21 +191,6 @@ class ServerQueue(list):
             self.queue_ended.set()
             self.log.debug(f"No more tasks")
 
-    # async def process_task(self, fct: callable, *args, timeout=True):
-    #     """
-    #     Wait for the queue to end, and then process fct.
-    #     This allows to await for the end of the task, which is not possible
-    #     if the task is put into the queue.
-    #     This method is deprecated, all tasks should go through add_task().
-    #     """
-    #
-    #     if self.queue_ended is not None:
-    #         await self.queue_ended.wait()
-    #     if timeout:
-    #         await self.task_with_timeout(fct, args)
-    #     else:
-    #         await fct(*args)
-
     async def task_with_timeout(self, task: Task):
         """
         Execute function fct with timeout TIMEOUT, and number of trials
@@ -212,7 +198,8 @@ class ServerQueue(list):
 
         The tuple args will be unpacked and used as arguments for fct.
 
-        When execution is complete, the next task in ServerQueue is launched.
+        When execution is complete, the next task in ServerQueue is launched
+        by calling the next_task() method.
 
         If task is canceled, cancel_fct is called.
         """
@@ -230,6 +217,9 @@ class ServerQueue(list):
             try:
                 with trio.move_on_after(self.actual_timeout) \
                         as self.cancel_scope:
+                    # Await Lean Server starts!
+                    if not self.lean_server_running.is_set():
+                        await self.lean_server_running.wait()
                     ################
                     # Process task #
                     task.start_time = time()
@@ -389,6 +379,7 @@ class ServerInterface(QObject):
         # ServerQueue
         self.server_queue = ServerQueue(nursery=nursery,
                                         timeout_signal=self.lean_response)
+        self.server_queue.lean_server_running = self.lean_server_running
 
     async def start(self):
         """
@@ -399,12 +390,23 @@ class ServerInterface(QObject):
         self.file_invalidated.set()  # No file at starting
         self.lean_server_running.set()
 
+    async def secured_stop(self):
+        """
+        Stop the Lean server, but only after all pending tasks of the
+        ServerQueue have been completed.
+        """
+        # Wait for ServerQueue to end all tasks
+        if not self.server_queue.queue_ended.is_set():
+            await self.server_queue.queue_ended.wait()
+        self.stop()
+
     def stop(self):
         """
         Stop the Lean server.
         """
         self.server_queue.started = False
         self.lean_server_running = trio.Event()
+        self.server_queue.lean_server_running = self.lean_server_running
         self.lean_server.stop()
         # Reset task durations
         self.server_queue.task_durations = []
@@ -649,6 +651,12 @@ class ServerInterface(QObject):
 
         # ------ Up to here task may be cancelled by timeout ------ #
         self.server_queue.cancel_scope.shield = True
+        if not self.pending_requests.get(self.request_seq_num):
+            # Request has been cancelled
+            self.log.info(f"Ignoring server's response for request "
+                          f"{self.request_seq_num} (task has been cancelled)")
+            return
+
         self.pending_requests.pop(self.request_seq_num)
 
         self.log.debug(_("After request"))

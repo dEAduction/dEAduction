@@ -149,6 +149,7 @@ class Coordinator(QObject):
         self.test_mode                      = False
         self.server_task_started            = trio.Event()
         self.server_task_closed             = trio.Event()
+        self.stop_button_will_stop_server   = False
 
         # Initialization
         self.is_frozen = False
@@ -497,12 +498,15 @@ class Coordinator(QObject):
 
     async def restart_lean_server(self):
         log.debug("Stopping Lean server...")
-        with trio.move_on_after(10):
-            await self.servint.file_invalidated.wait()
-        self.servint.stop()
+        # with trio.move_on_after(10):
+        #     await self.servint.file_invalidated.wait()
+        await self.servint.secured_stop()
         log.info("...stopped!")
         await self.servint.start()
         log.info("Lean server started")
+
+    def stop_button_will_cancel_task(self):
+        self.stop_button_will_stop_server = False
 
     async def stop(self):
         """
@@ -514,20 +518,21 @@ class Coordinator(QObject):
                 log.info(f"Trying to cancel last task (status {task.status})")
                 self.servint.cancel_task(task)
                 log.debug(f"(new status: {task.status})")
+            elif self.stop_button_will_stop_server:
+                await self.restart_lean_server()
+                msg = _("Server restarted")
+                self.statusBar.show_tmp_msg(msg)
+
             else:
                 msg = _("No action to be cancelled, press again to restart "
                         "server")
-                msg = _("No action to be cancelled")
-                bar_msg = self.statusBar.messageWidget.text()
+                # msg = _("No action to be cancelled")
+                # bar_msg = self.statusBar.messageWidget.text()
                 # FIXME: bar_msg always empty?? REMOVE FOLLOWING LINE:
                 # await self.restart_lean_server()
-
-                if bar_msg != msg:
-                    self.statusBar.show_tmp_msg(msg)
-                else:
-                    await self.restart_lean_server()
-                    msg = _("Server restarted")
-                    self.statusBar.show_tmp_msg(msg)
+                self.stop_button_will_stop_server = True
+                QTimer.singleShot(3000, self.stop_button_will_cancel_task)
+                self.statusBar.show_tmp_msg(msg, duration=3000)
 
     def send_task_to_server(self, task: Task):
         self.last_servint_task = task
