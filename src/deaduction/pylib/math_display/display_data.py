@@ -180,6 +180,7 @@ latex_to_utf8_dic = {
     r'\Delta': '∆',
     r'\circ': '∘',
     r'\times': '×',
+    r'\mul': '×',
     r'\in': '∈',  # '∊'
     r'\in_quant': '∈',
     r"\in_symbol": '∈',

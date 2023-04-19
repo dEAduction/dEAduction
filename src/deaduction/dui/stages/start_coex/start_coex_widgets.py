@@ -80,6 +80,7 @@ from deaduction.dui.utils           import (replace_widget_layout,
 from deaduction.pylib.config.course import  add_to_recent_courses
 from deaduction.pylib.coursedata    import (Course,
                                             Exercise)
+from deaduction.pylib.math_display.pattern_init import pattern_init
 from deaduction.pylib.server import ServerInterface
 
 log = logging.getLogger(__name__)
@@ -324,6 +325,13 @@ class CourseChooser(AbstractCoExChooser):
         if not details:  # Set details to None if empty
             details = None
 
+        log.info(course.metadata)
+        # print(course.metadata)
+        display_constant = course.metadata.get('display')
+        # print(display_constant)
+        if display_constant:
+            pattern_init(display_constant)
+
         super().set_preview(main_widget=None, title=title, subtitle=subtitle,
                             details=details, description=description,
                             expand_details=False)
@@ -359,10 +367,8 @@ class CourseChooser(AbstractCoExChooser):
         elif self.servint.request_seq_num == -1:
             # Ask a first request to the Lean server
             # (that speeds up a lot when exercise starts)
-            log.debug(f"Sending rqst to "
-                      f"Lean with {course.statements[0].pretty_name}")
+            log.debug(f"Launching Lean with {course.statements[0].pretty_name}")
             self.servint.set_statements(course, [course.statements[0]])
-            # print("(not sending rqst to Lean)")
 
     #########
     # Slots #
@@ -444,12 +450,10 @@ class ExerciseChooser(AbstractCoExChooser):
 
         self.__exercises_tree = exercises_tree
         self.__text_mode_checkbox = None
-        self.__negate_goal_checkbox = None
         self.__main_widget_lyt    = None
         self.__goal_widget        = None
         self.__text_wgt           = None
         self.__ui_wgt             = None
-        self.negate_statement = False
 
         self.__scrollbar_current_item_pos = 0
 
@@ -495,22 +499,18 @@ class ExerciseChooser(AbstractCoExChooser):
 
         if exercise.initial_proof_state:
 
-            # Checkboxes
+            # Checkbox
             self.__text_mode_checkbox = QCheckBox(_('Text mode'))
             self.__text_mode_checkbox.clicked.connect(self.toggle_text_mode)
-            self.__negate_goal_checkbox = QCheckBox(_('Negate goal'))
-            self.__negate_goal_checkbox.clicked.connect(self.toggle_negate_goal)
             cb_lyt = QHBoxLayout()
-            cb_lyt.addWidget(self.__negate_goal_checkbox)
             cb_lyt.addStretch()
             cb_lyt.addWidget(self.__text_mode_checkbox)
 
             main_widget_lyt.setContentsMargins(0, 0, 0, 0)
 
-            # Toggle text mode /negate statement if needed
+            # Toggle text mode if needed
             text_mode = cvars.get('display.text_mode_in_chooser_window', False)
             self.__text_mode_checkbox.setChecked(text_mode)
-            self.__negate_goal_checkbox.setChecked(self.negate_statement)
 
             # Create goal widget, either in text mode or in deaduction mode,
             # according to self.__text_mode_checkbox.
@@ -555,15 +555,12 @@ class ExerciseChooser(AbstractCoExChooser):
         This method creates the goal widget, which will be either a
         __text_wgt, with exercise's content displayed as a text, or a __ui_wgt,
         with content displayed as it will be in the prover UI.
-        FIXME: The widget is actually created only at first call.
+        The widget is actually created only at first call.
         """
         # Logical data
         exercise = self.__exercise
         proofstate = exercise.initial_proof_state
         goal = proofstate.goals[0]  # Only one goal
-
-        if self.negate_statement:
-            goal = goal.negated_goal(goal)
         # goal.name_bound_vars(to_prove=False)
 
         # BOF: keep standard size here.
@@ -678,18 +675,6 @@ class ExerciseChooser(AbstractCoExChooser):
                   self.__text_mode_checkbox.isChecked())
         self.set_preview(self.__exercise)
         # NB: cvars will be saved only when (and if) exercise starts
-
-    @Slot()
-    def toggle_negate_goal(self):
-        """
-        Toggle the negation of the goal.
-        FIXME: do we really want exercise.negate_statement to stay changed
-        when usr look at a different exercise?
-        """
-        # exercise = self.__exercise
-        # exercise.negate_statement = not exercise.negate_statement
-        self.negate_statement = not self.negate_statement
-        self.set_preview(self.__exercise)
 
     @Slot()
     def __check_proof_state_for_preview(self):
@@ -964,12 +949,9 @@ class AbstractStartCoEx(QDialog):
 
         exercise = self.__exercise_chooser.exercise
 
-        if self.__exercise_chooser.negate_statement:
-            exercise.negate_statement = True
-
         # check if exercise must be negated (e.g. is an open question)
-        # TODO: adapt to negate checkbox
-        elif not check_negate_statement(exercise):
+        # TODO: this should be moved elsewhere, e.g. in __main__
+        if not check_negate_statement(exercise):
             return
 
         # Save course_path, title, and exercise number
