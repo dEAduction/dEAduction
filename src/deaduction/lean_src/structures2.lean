@@ -119,7 +119,7 @@ match e with
                 return ("SET_INTENSION",[X, var_, inst_body])
     | _ := return ("SET_INTENSION", [X, P])
     end
-| `(index_set) := return ("TYPE", [])
+| `(index_set) := return ("SET_INDEX", [])
 | `(set_family %%I %%X) := return ("SET_FAMILY", [I, X])
 -- | `(seq %%X) := return ("SEQUENCE", [X])
 | (pi name binder type body) := do

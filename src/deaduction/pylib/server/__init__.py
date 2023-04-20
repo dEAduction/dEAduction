@@ -431,10 +431,14 @@ class ServerInterface(QObject):
 
     def __desirable_lean_rqst_fpps_method(self, force_normal=False):
         """
-        This method decides which Lean request method will be used for next
+        This method suggests which Lean request method will be used for next
         request (in the current exercise). It updates the cvars
         corresponding entry, so that the action module knows about it when
         it computes the next CodeForLean.
+        The suggestion is only followed if cvars parameter
+        Lean_request_method = "automatic".
+        If not, the cvars.Lean_request_method prevails. The method
+        from_previous_state_method() provides the actual method used.
         """
         # TODO: smarter decision...
         fpps = False

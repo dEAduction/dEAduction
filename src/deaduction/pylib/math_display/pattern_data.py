@@ -268,6 +268,7 @@ latex_from_pattern_string_for_type = {
     "SEQUENCE(...)": (r'\type_sequence', (1, )),
     # TYPE... TODO (r'\type_element', name)
     "TYPE": (r'\set',),
+    "SET_INDEX": (r'\set',),
     "FUNCTION(...)": (r'\function_from', (0, ), r'\to', (1, )),
     "CONSTANT/name=ℕ": (r'\type_N', ),  # TODO: test!!
     "CONSTANT/name=ℤ": (r'\type_Z',),

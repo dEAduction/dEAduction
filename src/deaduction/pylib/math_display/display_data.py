@@ -145,6 +145,7 @@ latex_from_node = {
     "SET": (r'\set_of_subsets', [r'\symbol_parentheses', 0]),
     "PROP": (r'\proposition',),
     "TYPE": (r'\set',),
+    "SET_INDEX": (r'\set',),
     "FUNCTION": (r'\function_from', 0, r'\to', 1),  # (0, r" \to ", 1),
     "SEQUENCE": (r'\sequence_in', 1),  # (0, r" \to ", 1),
     "CONSTANT": (name,),
@@ -403,10 +404,14 @@ lean_from_node = {
     "SEQUENCE": (0, r"\to", 1),
     "LAMBDA": ("λ ", '(', 1, ': ', 0, '), ', 2),
     "SET": ('set ', 0),
+    "SET_INDEX": ('index_set', ),
     "APPLICATION": (lean_application, ),
     # Prevent pattern NOT(APP(CONSTANT(...)) -> is not:
     "PROP_NOT": (r'\not', 0),
-    "SET_EMPTY": ('(', r'\emptyset', ': ', 'self.math_type', ')')
+    "SET_EMPTY": ('(', r'\emptyset', ': ', 'self.math_type', ')'),
+    "SET_UNION+": ("set.Union", "(", 0, ")"),
+    "SET_INTER+": ("set.Inter", "(", 0, ")"),
+    "SET_COMPLEMENT": ('set.compl', ' ', '(', 1, ')')
 }
 
 # Only those lean symbols that are distinct from the latex_to_utf8 dict

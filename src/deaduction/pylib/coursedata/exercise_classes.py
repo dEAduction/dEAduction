@@ -245,6 +245,8 @@ class Statement:
         open set
         open definitions
         """
+        if not hasattr(self.course, "opened_namespace_lines"):
+            return ""
         lines_dic = self.course.opened_namespace_lines
         namespaces_lines = ["open " + key for key, value in lines_dic.items()
                             if value < self.lean_begin_line_number]

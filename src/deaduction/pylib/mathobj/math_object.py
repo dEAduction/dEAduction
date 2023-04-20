@@ -891,7 +891,7 @@ class MathObject:
             math_type = self.math_type
         return math_type.node == "PROP"
 
-    def is_type(self, is_math_type=False) -> bool:
+    def is_type(self, is_math_type=False, include_index_set=True) -> bool:
         """
         Test if (math_type of) self is a "universe".
         """
@@ -899,7 +899,8 @@ class MathObject:
             math_type = self
         else:
             math_type = self.math_type
-        return math_type.node == "TYPE"
+        return (math_type.node == "TYPE" or
+                (include_index_set and math_type.node == "SET_INDEX"))
 
     def is_variable(self, is_math_type=False) -> bool:
         """
