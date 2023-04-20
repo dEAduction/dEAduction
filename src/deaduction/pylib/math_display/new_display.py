@@ -112,15 +112,34 @@ def substitute_metavars(shape, metavars, self):
 
 
 def lean_shape(self: MathObject) -> []:
-    # TODO: add pattern search in pattern_lean (empty dict for the moment)
-    #  cf latex_shape()
-    if self.node in lean_from_node:
-        shape = list(lean_from_node[self.node])
+    """
+    Shape for lean format. See the shape() method doc.
+    """
+    shape = None
+    for pattern, pre_shape, metavars in pattern_lean:
+        # if pattern.node == 'LOCAL_CONSTANT' and len(pattern.children) == 3:
+        #     print("debug")
+        if pattern.match(self):
+            # Now metavars are matched
+            # log.debug(f"Matching pattern --> {pre_shape}")
+            shape = tuple(substitute_metavars(item, metavars, self)
+                          for item in pre_shape)
+            break
+    if not shape:
+        if self.node in lean_from_node:
+            shape = list(lean_from_node[self.node])
+
+            shape = [process_shape_macro(self, item) if isinstance(item, str)
+                     else item for item in shape]
+    if shape:
+        # (3) Process macros
+        if shape[0] == "global":
+            shape = global_pre_shape_to_pre_shape(shape[1:], text=text)
 
         shape = [process_shape_macro(self, item) if isinstance(item, str)
                  else item for item in shape]
 
-        return shape
+    return shape
 
 
 def latex_shape(self: MathObject, is_type=False, text=False,

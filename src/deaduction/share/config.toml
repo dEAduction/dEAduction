@@ -91,7 +91,7 @@ log_to_file = true
 Lean_request_method = "automatic"
 desirable_lean_rqst_fpps_method = false  # For internal use
 usr_version_nb = "-1"  # Do not modify!
-version_nb = "0.321111111111111"
+version_nb = "0.32111111111111111"
 os = ""  # Let this to "" except for debugging
 
 #########################

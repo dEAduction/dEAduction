@@ -613,6 +613,7 @@ def change_name(name: str) -> str:
         name = name[1:]
     return name
 
+
 #########
 # Tests #
 #########

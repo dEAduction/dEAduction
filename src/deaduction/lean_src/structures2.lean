@@ -39,6 +39,26 @@ def closed_bra := "¿]"
 
 -- set_option trace.eqn_compiler.elim_match true
 
+/-
+is_inst tells is a binder is of type implicit instance of class.
+inst_suffix is used to mark bound var that are implicit
+instance of class.
+-/
+-- def is_inst (b: binder_info) : bool := match b with 
+-- | binder_info.inst_implicit := tt
+-- | _ := ff
+-- end
+
+-- def inst_suffix (b: binder_info) : string :=
+-- if is_inst b then "implicit_type_class_instance" else ""
+
+def binder_info_to_string (b: binder_info) :  string  :=
+binder_info.rec_on b "default" "implicit" "strict_implicit"
+"inst_implicit" "aux_decl"
+
+instance binder_info_has_to_string : has_to_string binder_info  :=
+⟨binder_info_to_string⟩ 
+
 /- When e is a pi or lambda expr, instanciate e returns
 a local constant a that stands for the first bound variable,
 and the body of a with the free variable replaced by a.
@@ -207,8 +227,11 @@ match e with
 | (sort level.zero) := return ("PROP", [])
 | (sort level) := return ("TYPE", [])
 | (local_const name pretty_name bi type) :=
-            return ("LOCAL_CONSTANT" ++ open_bra ++ "name: " ++ to_string pretty_name
-            ++ separator_slash ++ "identifier: " ++ to_string name ++ closed_bra, [])
+            return ("LOCAL_CONSTANT" ++ open_bra 
+            ++ "name: " ++ to_string pretty_name
+            ++ separator_slash ++ "identifier: " ++ to_string name 
+            ++ separator_slash ++ "binder_info: " ++ to_string bi 
+            ++ closed_bra, [])
 ---------------- Other structures -------------
 | (var nat)       :=
             return ("VAR" ++ open_bra ++ to_string nat ++ closed_bra, [])
@@ -363,7 +386,7 @@ do list_expr ← get_goals,
 private meta def analyse_expr_step_brut  (e : expr) : tactic (string × (list expr)) :=
 match e with
 -- autres
-| (pi name binder type body ) := return ("pi (nom : " ++ to_string name ++ ")",[type,body])
+| (pi name binder type body ) := return ("pi (nom : " ++ to_string name ++ ", binder :" ++ to_string binder ++")",[type,body])
 | (app fonction argument)   := return ("application", [fonction,argument])
 | (const name list_level)   := return ("constante :" ++ to_string name, []) -- name → list level → expr
 | (var nat)       := return ("var_"++ to_string nat, []) --  nat → expr

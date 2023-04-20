@@ -347,6 +347,9 @@ class PatternMathObject(MathObject):
         elif self.value and self.value != '?' \
                 and self.value != math_object.value:
             return False
+        elif self.binder_info and self.binder_info != '?' \
+                and self.binder_info != math_object.binder_info:
+            return False
         # elif any(self_item != '?' and self_item != math_object_item
         #          for self_item, math_object_item in
         #          # [(self.is_bound_var, math_object.is_bound_var),

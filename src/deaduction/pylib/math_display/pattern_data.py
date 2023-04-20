@@ -39,7 +39,7 @@ Integers refers to metavariables, tuples to children and descendants.
 We use '_' or '^' to indicate subscripts or superscrits.
 We can use attributes like name, value, math_type, local_constant_display,
 body, bound_var, and so on.
-        e.g.    '(0, 0).name', '0.math_type'
+        e.g.    '(0, 0).name', '0.math_type', 'self.math_type'
 or any callable which will be applied to self, e.g. name and value.
 
 ---------------------
@@ -138,10 +138,12 @@ def set_quant_pattern():
         # NB: special case must appear BEFORE general cases, e.g.
         # QUANT_∀(TYPE, LOCAL_CONSTANT/name=RealSubGroup) before QUANT_∀(TYPE, ...)
         "QUANT_∀(TYPE, LOCAL_CONSTANT/name=RealSubGroup, ?2)": ((2,),),
-        "QUANT_∀(APP(CONSTANT/name=decidable_linear_order, ?0), ?1, ?2)": (
-        (2,),),
-        "QUANT_∀(APP(CONSTANT/name=decidable_linear_ordered_comm_ring, ?0), ?1, "
-        "?2)": ((2,),),
+        # "QUANT_∀(APP(CONSTANT/name=decidable_linear_order, ?0), ?1, ?2)": (
+        # (2,),),
+        # "QUANT_∀(APP(CONSTANT/name=decidable_linear_ordered_comm_ring, ?0), ?1, "
+        # "?2)": ((2,),),
+        "QUANT_∀(?0, LOCAL_CONSTANT/binder_info=inst_implicit, ?2)":
+            ((2,),),
         "QUANT_∀(SET(...), ?0, ?1)":
             (r"\forall", (1,), r" \subset ", (0, 0), ", ", (2,)),
         "QUANT_∀(FUNCTION(...), ?0, ?1)":
@@ -197,7 +199,6 @@ latex_from_pattern_string = {
         ('(', (2, ), ')', ['_', (1, ), r"\in_symbol", (0, )]),
     "LOCAL_CONSTANT/name=RealSubGroup": (r'\real',)
 }
-
 
 #########################################
 #########################################
@@ -280,11 +281,17 @@ latex_from_pattern_string_for_type = {
     "?:SET(?0)": (r'\type_element', 'self'),
 }
 
+#################
+#################
+# Lean patterns #
+#################
+#################
 
 lean_from_pattern_string = {
-#       SET_EMPTY is handled in lean_from_node
-#     "SET_EMPTY": (r'\emptyset', ': ', 'self.math_type')
-#     # "SET_EMPTY: SET(?0)": (r'\emptyset', ': ', 0)
+    # Universal quant with type class instance between brackets:
+    "QUANT_∀(?0, LOCAL_CONSTANT/binder_info=inst_implicit, ?2)":
+        (r"\forall", '[', (1, ), ": ", (0, ), ']', ", ", (2, ))
 }
+
 
 

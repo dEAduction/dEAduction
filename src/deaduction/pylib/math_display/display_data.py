@@ -66,6 +66,10 @@ def value(mo):
     return mo.info.get('value')
 
 
+# def lean_inst_name(mo):
+#     return '[' + name(mo) + ']'
+
+
 def local_constant_shape(mo):
     return mo.local_constant_shape
 
@@ -396,8 +400,8 @@ numbers = {
 lean_from_node = {
     "LOCAL_CONSTANT": (name,),
     "CONSTANT": ("@", name),  # e.g. @composition
-    "QUANT_∀": (r"\forall", 1, r": ", 0, ", ", 2),
-    "QUANT_∃": (r"\exists", 1, r": ", 0, ", ", 2),
+    "QUANT_∀": (r"\forall", 1, ": ", 0, ", ", 2),
+    "QUANT_∃": (r"\exists", 1, ": ", 0, ", ", 2),
     "QUANT_∃!": (r"\exists_unique", 1, r": ", 0, r', ', 2),
     # Types:
     "FUNCTION": (0, r'\to', 1),

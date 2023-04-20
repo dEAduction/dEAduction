@@ -604,6 +604,10 @@ class MathObject:
         return self.info.get('value')
 
     @property
+    def binder_info(self):
+        return self.info.get('binder_info')
+
+    @property
     def display_name(self) -> str:
         """
         This is the name used to display in deaduction.
