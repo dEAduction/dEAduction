@@ -133,6 +133,8 @@ if [[ "$OS" == "Linux" ]]; then
     UBUNTU_DEBIAN=1
     echo "(Ubuntu or Debian detected, the envconfig_user_ubuntu file will be
      used)"
+  else
+    UBUNTU_DEBIAN=0
   fi
 
 elif [[ "$OS" = "Darwin" ]]; then
@@ -149,7 +151,6 @@ if [[ "$CPU" == "arm64" ]]; then
   echo "see e.g. https://www.wisdomgeek.com/development/installing-intel-based-packages-using-homebrew-on-the-m1-mac/"
   echo "and specifically https://leanprover-community.github.io/archive/stream/113489-new-members/topic/M1.20macs.html"
 fi
-
 
 
 ##########
