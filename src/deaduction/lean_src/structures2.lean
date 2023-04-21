@@ -52,6 +52,12 @@ instance of class.
 -- def inst_suffix (b: binder_info) : string :=
 -- if is_inst b then "implicit_type_class_instance" else ""
 
+/-
+Binder info to string.
+implicit = {x : α}
+strict_implicit = ⦃x:α⦄
+inst_implicit = [x : α]
+-/
 def binder_info_to_string (b: binder_info) :  string  :=
 binder_info.rec_on b "default" "implicit" "strict_implicit"
 "inst_implicit" "aux_decl"

@@ -288,10 +288,14 @@ latex_from_pattern_string_for_type = {
 #################
 
 lean_from_pattern_string = {
-    # Universal quant with type class instance between brackets:
+    # Universal quant with adequate binders
+    # This is useful so that the Lean code that works for
+    # from_previous_state_method also works for normal method:
+    "QUANT_∀(?0, LOCAL_CONSTANT/binder_info=implicit, ?2)":
+        (r"\forall", '{', (1,), ": ", (0,), '}', ", ", (2,)),
+    "QUANT_∀(?0, LOCAL_CONSTANT/binder_info=strict_implicit, ?2)":
+        (r"\forall", '⦃', (1,), ": ", (0,), '⦄', ", ", (2,)),
+    # type class instance between brackets:
     "QUANT_∀(?0, LOCAL_CONSTANT/binder_info=inst_implicit, ?2)":
-        (r"\forall", '[', (1, ), ": ", (0, ), ']', ", ", (2, ))
+        (r"\forall", '', (1, ), ": ", (0, ), ']', ", ", (2, ))
 }
-
-
-
