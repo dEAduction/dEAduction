@@ -39,6 +39,32 @@ def closed_bra := "¿]"
 
 -- set_option trace.eqn_compiler.elim_match true
 
+/-
+is_inst tells is a binder is of type implicit instance of class.
+inst_suffix is used to mark bound var that are implicit
+instance of class.
+-/
+-- def is_inst (b: binder_info) : bool := match b with 
+-- | binder_info.inst_implicit := tt
+-- | _ := ff
+-- end
+
+-- def inst_suffix (b: binder_info) : string :=
+-- if is_inst b then "implicit_type_class_instance" else ""
+
+/-
+Binder info to string.
+implicit = {x : α}
+strict_implicit = ⦃x:α⦄
+inst_implicit = [x : α]
+-/
+def binder_info_to_string (b: binder_info) :  string  :=
+binder_info.rec_on b "default" "implicit" "strict_implicit"
+"inst_implicit" "aux_decl"
+
+instance binder_info_has_to_string : has_to_string binder_info  :=
+⟨binder_info_to_string⟩ 
+
 /- When e is a pi or lambda expr, instanciate e returns
 a local constant a that stands for the first bound variable,
 and the body of a with the free variable replaced by a.
@@ -110,7 +136,7 @@ match e with
 | `(pair %%x %%x') := return ("SET_EXTENSION2", [x, x'])
 | `(sing %%x) := return ("SET_EXTENSION1", [x])
 | `(_root_.set %%X) := return ("SET", [X])
-| `(set.prod %%A %%B) := return ("SET_PRODUCT", [A, B])
+| `(prod %%A %%B) := return ("SET_PRODUCT", [A, B])
 | `(prod.mk %%x %%y) := return ("COUPLE", [x, y])
 -- set in extension, e.g. A = {x | P x} or A = {x:X | P x} :
 | `(@set_of %%X %%P) := match P with
@@ -119,7 +145,7 @@ match e with
                 return ("SET_INTENSION",[X, var_, inst_body])
     | _ := return ("SET_INTENSION", [X, P])
     end
-| `(index_set) := return ("TYPE", [])
+| `(index_set) := return ("SET_INDEX", [])
 | `(set_family %%I %%X) := return ("SET_FAMILY", [I, X])
 -- | `(seq %%X) := return ("SEQUENCE", [X])
 | (pi name binder type body) := do
@@ -185,9 +211,10 @@ match e with
 ------------ ARITHMETIC ------------
 | `(↑%%a)      := return ("COE", [a])
 | `(%%a + %%b) := return ("SUM", [a, b])
+| `(nat.succ %%n) := return ("SUM", [n, `(1:ℕ)])
 | `(%%a - %%b) := return ("DIFFERENCE", [a, b])
 | `(has_mul.mul %%a %%b) := return ("MULT", [a, b]) -- TODO: distinguish types/numbers
-| `(%%a × %%b) := return ("PRODUCT", [a, b]) -- TODO: distinguish types/numbers
+-- | `(%%a × %%b) := return ("PRODUCT", [a, b]) -- TODO: distinguish types/numbers
 | `(%%a / %%b) := return ("DIV", [a, b])
 | `(%%a ^ %%b) := return ("POWER", [a, b])
 | `(real.sqrt %%a) := return ("SQRT", [a])
@@ -206,8 +233,11 @@ match e with
 | (sort level.zero) := return ("PROP", [])
 | (sort level) := return ("TYPE", [])
 | (local_const name pretty_name bi type) :=
-            return ("LOCAL_CONSTANT" ++ open_bra ++ "name: " ++ to_string pretty_name
-            ++ separator_slash ++ "identifier: " ++ to_string name ++ closed_bra, [])
+            return ("LOCAL_CONSTANT" ++ open_bra 
+            ++ "name: " ++ to_string pretty_name
+            ++ separator_slash ++ "identifier: " ++ to_string name 
+            ++ separator_slash ++ "binder_info: " ++ to_string bi 
+            ++ closed_bra, [])
 ---------------- Other structures -------------
 | (var nat)       :=
             return ("VAR" ++ open_bra ++ to_string nat ++ closed_bra, [])
@@ -336,6 +366,19 @@ do list_expr ← get_goals,
     list_expr.mmap (λ h, analysis_expr_with_types h >>= trace),
     return ()
 
+/- print a list of strings reflecting objects in the context  -/
+meta def hypo_analysis2 (n: nat) : tactic unit :=
+do list_expr ← local_context,
+    trace ("context #" ++ to_string n ++ ":"),
+    list_expr.mmap (λ h, analysis_expr_with_types h >>= trace),
+    return ()
+
+/- print the list of all targets -/
+meta def targets_analysis2 (n: nat) : tactic unit :=
+do list_expr ← get_goals,
+    trace ("targets #" ++ to_string n ++ ":"),
+    list_expr.mmap (λ h, analysis_expr_with_types h >>= trace),
+    return ()
 
 
 /---------------------------------------------------
@@ -349,7 +392,7 @@ do list_expr ← get_goals,
 private meta def analyse_expr_step_brut  (e : expr) : tactic (string × (list expr)) :=
 match e with
 -- autres
-| (pi name binder type body ) := return ("pi (nom : " ++ to_string name ++ ")",[type,body])
+| (pi name binder type body ) := return ("pi (nom : " ++ to_string name ++ ", binder :" ++ to_string binder ++")",[type,body])
 | (app fonction argument)   := return ("application", [fonction,argument])
 | (const name list_level)   := return ("constante :" ++ to_string name, []) -- name → list level → expr
 | (var nat)       := return ("var_"++ to_string nat, []) --  nat → expr
@@ -395,7 +438,7 @@ private meta def analyse_expr_brut : expr →  tactic string
             return(S3)
         else  do let S0 := "OBJET : ",
             let S1 :=  to_string e,
-            S2 ← analyse_rec_brut expr_t,
+            S2 ← analyse_rec_brut e,
             let S3 := S0 ++ S1 ++ " : "++ S2,
             return(S3)
 

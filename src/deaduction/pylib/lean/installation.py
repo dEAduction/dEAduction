@@ -51,9 +51,12 @@ class LeanEnvironment:
         """
         # Respectively paths to the Lean library, the Mathlib library,
         #  the deaduction lean src.
+        usr_dir = cdirs.usr_lean_exercises_dir
+        usr_subdirs = [x for x in usr_dir.iterdir() if x.is_dir()]
         paths = [(self.lean_path / "lib" / "lean" / "library").resolve(),
                  (self.mathlib_path / "src").resolve(),
-                 cdirs.usr_lean_src_dir]
+                 cdirs.usr_lean_src_dir,
+                 usr_dir] + usr_subdirs
 
         return paths
 

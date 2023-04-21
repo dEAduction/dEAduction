@@ -1,6 +1,6 @@
 """
 ############################################################
-# utils.py : utilitarian functions used in files in        #
+# high_level_request.py : utilitarian functions used in files in        #
 # the actions directory                                    #
 ############################################################
 This file mainly provides the CodeForLean class, which is an abstract
@@ -454,8 +454,7 @@ class CodeForLean:
         """
         # if isinstance(self, str):
         #     self_ = CodeForLean.from_string(self)
-        skip = CodeForLean.from_string("skip")
-        return CodeForLean(instructions=[self, skip],
+        return CodeForLean(instructions=[self, SKIP],
                            combinator=LeanCombinator.or_else,
                            success_msg=success_msg)
 
@@ -465,12 +464,14 @@ class CodeForLean:
                            success_msg=success_msg)
         return code
 
-    def to_code(self, exclude_no_meta_vars=False) -> str:
+    def to_code(self, exclude_no_meta_vars=False,
+                exclude_skip=False) -> str:
         """
-        Format CodeForLean into a string which can be sent to Lean
+        Format CodeForLean into a string which can be sent to Lean.
 
         :param exclude_no_meta_vars:    if True, 'no_meta_vars' instructions
                                         are discarded
+        :param exclude_skip:
         :return: a string understandable by the Lean parser
         """
 
@@ -478,6 +479,8 @@ class CodeForLean:
         if self.is_empty():
             return ""
         elif exclude_no_meta_vars and self.is_no_meta_vars():
+            return ""
+        elif exclude_skip and self.is_skip():
             return ""
         elif self.is_single_code():
             code = self.instructions[0].to_code()
@@ -489,12 +492,13 @@ class CodeForLean:
         elif self.is_and_then():
             strings = []
             for instruction in self.instructions:
-                string = instruction.to_code(exclude_no_meta_vars)
+                string = instruction.to_code(exclude_no_meta_vars,
+                                             exclude_skip)
                 if string:
                     strings.append(string)
             return ', '.join(strings)
         elif self.is_or_else():
-            strings = [child.to_code(exclude_no_meta_vars)
+            strings = [child.to_code(exclude_no_meta_vars, exclude_skip)
                        for child in self.instructions]
             strings = ['`[ ' + string + ']'
                        for string in strings if string != ""]
@@ -502,7 +506,8 @@ class CodeForLean:
         else:
             return self.combinator \
                 + " {" \
-                + self.instructions[0].to_code(exclude_no_meta_vars) \
+                + self.instructions[0].to_code(exclude_no_meta_vars,
+                                               exclude_skip) \
                 + " }"
 
     def add_trace_effective_code(self):
@@ -514,8 +519,8 @@ class CodeForLean:
         2) mark each "or_else" node with a node_number
         which will be used by the select_or_else method.
 
-        :return: two instances of CodeForLean, the first contains the trace
-        msgs, the second is self with marked or_else node.
+        :return: two instances of CodeForLean, the first is self with marked
+        or_else node, the second contains the trace msgs.
         """
 
         if self.is_single_code():
@@ -733,6 +738,10 @@ class CodeForLean:
         return (self.is_single_code() and
                 self.to_code() == NO_META_VARS.to_code())
 
+    def is_skip(self):
+        return (self.is_single_code() and
+                self.to_code() == SKIP.to_code())
+
     def add_used_properties(self, used_properties):
         """
         Add used properties to every single code instruction in self.
@@ -847,6 +856,7 @@ class CodeForLean:
 
 
 NO_META_VARS = CodeForLean("no_meta_vars")
+SKIP = CodeForLean.from_string("skip")
 
 
 def get_effective_code_numbers(trace_effective_code: str) -> (int, int):
@@ -892,7 +902,9 @@ if __name__ == '__main__':
     print(code_2.to_code())
 
     code_1 = CodeForLean.from_string("norm_num at *").solve1()
+
     code_2 = CodeForLean.from_string("compute_n 10")
+
     code_3 = (CodeForLean.from_string("norm_num at *").try_()).and_then(code_2)
     possible_code = code_1.or_else(code_3)
 

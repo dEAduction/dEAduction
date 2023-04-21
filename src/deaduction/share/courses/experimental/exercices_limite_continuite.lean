@@ -73,6 +73,13 @@ limit_function (λ x, f x) a (f a)
 definition continuous (f: ℝ → ℝ) : Prop :=
 ∀ a, continuous_at f a
 
+definition cauchy (u: ℕ → ℝ) : Prop :=
+∀ ε>0, ∃ N: ℕ, ∀ p≥N, ∀ q≥N, |u p - u q | < ε
+
+definition uniformly_continuous (f: ℝ → ℝ) : Prop :=
+∀ ε>0, ∃ δ>0, ∀ x y: ℝ,
+(|x - y| < δ → |f x - f y | < ε)
+
 section course
 open tactic.interactive
 -- notation `|` x `|` := abs x
@@ -381,7 +388,7 @@ PrettyName
   Exercices sur les suites I
 -/
 
-open definitions
+-- open definitions
 
 -- --------------------------------------------------
 -- namespace exemples
@@ -730,10 +737,7 @@ PrettyName
   Suites de Cauchy
 -/
 
-open definitions
-
-definition cauchy (u: ℕ → ℝ) : Prop :=
-∀ ε>0, ∃ N: ℕ, ∀ p≥N, ∀ q≥N, |u p - u q | < ε
+-- open definitions
 
 lemma definition.suite_de_cauchy
 (u: ℕ → ℝ) :
@@ -849,10 +853,6 @@ PrettyName
   Continuité uniforme
 -/
 
-definition uniformly_continuous (f: ℝ → ℝ) : Prop :=
-∀ ε>0, ∃ δ>0, ∀ x y: ℝ,
-(|x - y| < δ → |f x - f y | < ε)
-
 lemma definition.uniformly_continuous
 (f: ℝ → ℝ) : uniformly_continuous f ↔
 ∀ ε>0, ∃ δ>0, ∀ x y: ℝ,
@@ -878,8 +878,6 @@ PrettyName
 begin
   todo,
 end
-
-open suites_de_Cauchy
 
 lemma exercise.cauchy_uniformement_continue
 (u: ℕ → ℝ) (f: ℝ → ℝ)

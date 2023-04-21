@@ -55,6 +55,7 @@ from deaduction.pylib.actions.utils import (add_type_indication,
                                             pre_process_lean_code)
 
 from deaduction.pylib.actions.commun_actions import introduce_new_subgoal
+from deaduction.pylib.actions.magic import compute
 from deaduction.pylib.actions     import (action,
                                           InputType,
                                           MissingParametersError,
@@ -65,6 +66,7 @@ from deaduction.pylib.actions     import (action,
 from deaduction.pylib.mathobj     import  MathObject
 
 from deaduction.pylib.give_name import    get_new_hyp
+from deaduction.pylib.config.request_method import from_previous_state_method
 
 log = logging.getLogger("logic")
 global _
@@ -1254,17 +1256,21 @@ def apply_forall_with_ineq(proof_step, selected_objects, inequality,
     #               rotate},   rotate,
     if unsolved_inequality_counter:
         assert unsolved_inequality_counter == 1
-        # Fixme: (1) no rotate if compute fails
-        #   (2) "Proof of intermediate subgoal" not appropriate...
         # Back to first inequality:
-        more_code0 = CodeForLean.from_string(f"rotate {proof_step.nb_of_goals}")
-        more_code1 = CodeForLean.from_string("norm_num at *")
-        more_code1 = more_code1.try_()
-        more_code2 = CodeForLean.from_string("compute_n 10")
-        more_code2 = more_code2.try_()
+        if from_previous_state_method():
+            # In this case no memory of previous goals
+            more_code0 = CodeForLean.from_string("rotate")
+        else:
+            nbg = proof_step.nb_of_goals
+            more_code0 = CodeForLean.from_string(f"rotate {nbg}")
+        # more_code1 = CodeForLean.from_string("norm_num at *")
+        # more_code1 = more_code1.try_()
+        # more_code2 = CodeForLean.from_string("compute_n 10")
+        # more_code2 = more_code2.try_()
         # Try to solve1 inequality by norm_num, maybe followed by compute:
-        more_code = more_code0.and_then(
-            (more_code1.and_then(more_code2)).solve1())
+        more_code1 = compute(goal)
+        more_code = more_code0.and_then(more_code1).try_()
+        # (more_code1.and_then(more_code2)).solve1())
         more_code.add_success_msg(_("Property {} added to the context").
                                   format(new_hypo_name))
         # # If it fails, rotate to next inequality

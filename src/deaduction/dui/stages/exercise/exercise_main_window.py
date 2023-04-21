@@ -133,6 +133,7 @@ class ExerciseMainWindow(QMainWindow):
     window_closed                = Signal()
     change_exercise              = Signal()
     ui_updated                   = Signal()
+    stop                         = Signal()
 
     # User action signals:
     action_triggered             = Signal(ActionButton)
@@ -329,6 +330,7 @@ class ExerciseMainWindow(QMainWindow):
                                                     self.change_exercise)
         self.global_toolbar.settings_action.triggered.connect(
                                                     self.open_config_window)
+        self.global_toolbar.stop.triggered.connect(self.stop)
 
     def close_help_window(self):
         if self.help_window.isVisible():

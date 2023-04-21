@@ -37,6 +37,8 @@ global _
 
 # NB: the
 
+# Here int stands for metavars ('?1' in pattern --> 1 in display),
+# to display children use tuples, e.g. '(1, )' means second child.
 latex_from_app_pattern = {
     # For functions, two patterns: (f circ g)(x) and (f circ g).
     "APP(CONSTANT/name=composition, ?1, ?2, ?3, ?4: FUNCTION(?2, ?3), "
@@ -61,7 +63,7 @@ latex_from_app_pattern = {
 
 # TODO: english translation
 # Negative value = from end of children list
-# Here int stands for children (not metavars), but only if they are not nested
+# Here int stands for children (not metavars), but ONLY IF they are not nested
 # inside lists
 latex_from_constant_name = {
     "symmetric_difference": (-2, r'\Delta', -1),

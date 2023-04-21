@@ -38,32 +38,73 @@ class LeanResponse:
     """
     A class encoding Lean's response to the usr action.
     """
-    lean_code: CodeForLean = None
-    effective_code: CodeForLean = None  # CodeForLean that proved effective
-    no_more_goals = False
+    # no_more_goals = False
     analysis = None
     new_proof_state = None
-    # 1 = WUI, 2 = FRE, 3 = TIMEOUT, 4 = UNICODE, 5 = No proof state:
+    # 1 = WUI, 2 = FRE, 3 = TIMEOUT, 4 = UNICODE, 5 = No proof state,
+    # 6 = file unchanged, 7 = cancelled, 10 = unknown:
     error_type: int = 0
     error_list: Optional[List]
     _error_msg: str = ''
     _success_msg: str = ''
 
-    def __init__(self, lean_code, effective_code=None, no_more_goals=False,
-                 analysis: tuple = None,
-                 error_type=0, error_list=None):
-        self.lean_code = lean_code
-        self.effective_code = effective_code
-        self.no_more_goals = no_more_goals
-        self.analysis = analysis
-        if analysis:
-            hypo_analysis, targets_analysis = analysis
-            proof_state = ProofState.from_lean_data(hypo_analysis,
-                                                    targets_analysis,
-                                                    to_prove=True)
-            self.new_proof_state = proof_state
+    def __init__(self, proof_step=None, analyses: tuple = None,
+                 error_type=0, error_list=None,
+                 from_previous_state=False):
+        self.proof_step = proof_step
+        self.analyses = analyses
+        self.from_previous_state = from_previous_state
         self.error_type = error_type
         self.error_list = error_list if error_list else []
+
+        if analyses:
+            hypo_analyses, targets_analyses = analyses
+            proof_state = ProofState.from_lean_data(hypo_analyses,
+                                                    targets_analyses,
+                                                    to_prove=True,
+                                                    previous_proof_state=
+                                                    self.previous_proof_state)
+            self.new_proof_state = proof_state
+
+        # self.debug()
+
+    def debug(self):
+        nb = len(self.new_proof_state.goals)
+        print(f"Lean response: {nb} goals")
+        for g in self.new_proof_state.goals:
+            print("   " + g.target.math_type_to_display(format_='utf8'))
+
+    @property
+    def lean_code(self):
+        if self.proof_step:
+            return self.proof_step.lean_code
+        else:
+            return CodeForLean.empty_code()
+
+    @property
+    def effective_code(self):
+        if self.proof_step:
+            return self.proof_step.effective_code
+
+    @property
+    def previous_proof_state(self):
+        """
+        Return previous_proof_state if info is available, but only when using
+        the method from previous state, since otherwise the pertinent
+        previous proof states are included in the new proof state
+        (see ProofState.from_lean_data() ).
+        """
+        if self.proof_step and self.from_previous_state:
+            return self.proof_step.proof_state
+
+    @property
+    def goals(self):
+        if self.new_proof_state:
+            return self.new_proof_state.goals
+
+    @property
+    def no_more_goals(self):
+        return self.new_proof_state and not self.goals
 
     @property
     def success_msg(self):
@@ -71,7 +112,10 @@ class LeanResponse:
             msg = _("Proof complete")
         elif self.effective_code:
             msg = self.effective_code.success_msg
-        else:
+        elif self.lean_code:
             msg = self.lean_code.success_msg
+        else:
+            msg = ""
         return msg
+
 

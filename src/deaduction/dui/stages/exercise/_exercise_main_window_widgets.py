@@ -530,6 +530,10 @@ class ExerciseStatusBar(QStatusBar):
         self.hide_icon()
 
     @property
+    def txt(self):
+        return self.messageWidget.text()
+
+    @property
     def display_success_msgs(self):
         return cvars.get('display.display_success_messages', True)
 
@@ -560,19 +564,10 @@ class ExerciseStatusBar(QStatusBar):
         This method is called by the timer, when there is a new_goal msg to
         display on top of the usual success/error msgs.
         """
-        # if self.pending_msgs:
-        #     msg = self.pending_msgs.pop(0)
-        #     if msg:
-        #         self.show_normal_msg(msg)
 
         proof_msg = self.proof_msg()
         if proof_msg:
             self.show_normal_msg(proof_msg)
-
-    # def cancel_pending_msgs(self):
-    #     if self.pending_msgs:
-    #         log.debug("(Cancelling first pending msg)")
-    #         self.pending_msgs = [""] * len(self.pending_msgs)
 
     def show_error_icon(self):
         self.iconWidget.setPixmap(self.error_pixmap)
@@ -588,6 +583,7 @@ class ExerciseStatusBar(QStatusBar):
     def set_message(self, msg: str):
         self.stop_thinking()
         self.messageWidget.setText(msg)
+        return
 
     def erase(self):
         self.set_message("")
@@ -634,6 +630,11 @@ class ExerciseStatusBar(QStatusBar):
             self.timer.singleShot(3000, self.show_pending_msgs)
         else:  # Show immediately
             self.show_pending_msgs()
+
+    def show_tmp_msg(self, msg: str, duration=3000):
+        self.set_message(msg)
+        self.timer.singleShot(3000, self.erase)
+        self.show_pending_msgs()
 
 
 class ExerciseToolBar(QToolBar):
@@ -706,6 +707,11 @@ class GlobalToolbar(QToolBar):
         super().__init__(_('Toolbar'))
         icons_base_dir = cvars.get("icons.path")
         icons_dir = fs.path_helper(icons_base_dir)
+        self.stop = QAction(
+                QIcon(str((icons_dir / 'icons8-stop-sign-48').resolve())),
+                _('Stop me from thinking!'), self)
+        self.stop.setShortcut(QKeySequence(QKeySequence.Cancel))
+
         self.settings_action = QAction(
                 QIcon(str((icons_dir / 'settings').resolve())),
                 _('Settings'), self)
@@ -715,6 +721,7 @@ class GlobalToolbar(QToolBar):
                 QIcon(str((icons_dir / 'change_exercise.png').resolve())),
                 _('Change exercise'), self)
 
+        self.addAction(self.stop)
         self.addAction(self.settings_action)
         self.addAction(self.change_exercise_action)
         self.setLayoutDirection(Qt.RightToLeft)
@@ -725,5 +732,6 @@ class GlobalToolbar(QToolBar):
     def update(self):
         self.change_exercise_action.setText(_('Change exercise'))
         self.settings_action.setText(_("Settings"))
+        self.cancel_server.setText(_("Stop computations"))
 
 

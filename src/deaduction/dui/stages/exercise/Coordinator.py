@@ -53,7 +53,7 @@ from deaduction.dui.stages.exercise import      ExerciseMainWindow
 from deaduction.dui.elements import             ActionButton
 
 # Server
-from deaduction.pylib.server import             ServerInterface
+from deaduction.pylib.server import             ServerInterface, Task
 
 from deaduction.pylib.utils import save_object
 
@@ -130,6 +130,7 @@ class Coordinator(QObject):
         super().__init__()
         self.exercise: Exercise       = exercise
         self.servint: ServerInterface = servint
+        self.last_servint_task = None
 
         # Exercise main window
         self.emw = ExerciseMainWindow(exercise)
@@ -141,7 +142,6 @@ class Coordinator(QObject):
         self.proof_tree: Optional[ProofTree]          = None
         self.previous_proof_step: Optional[ProofStep] = None
         self.journal                                  = Journal()
-        # self.current_user_action: Optional[UserAction] = None
         self.lean_code_sent: Optional[CodeForLean]          = None
 
         # Flags
@@ -149,6 +149,7 @@ class Coordinator(QObject):
         self.test_mode                      = False
         self.server_task_started            = trio.Event()
         self.server_task_closed             = trio.Event()
+        self.stop_button_will_stop_server   = False
 
         # Initialization
         self.is_frozen = False
@@ -166,9 +167,10 @@ class Coordinator(QObject):
         Connect all signals. Called at init.
         """
         self.servint.lean_file_changed.connect(self.emw.update_lean_editor)
-        self.servint.effective_code_received.connect(
-                                                self.process_effective_code)
+        # self.servint.effective_code_received.connect(
+        #                                         self.process_effective_code)
         self.servint.lean_response.connect(self.process_lean_response)
+        # self.emw.cancel_server.connect(self.cancel_server)
 
     def __initialize_exercise(self):
         """
@@ -192,9 +194,11 @@ class Coordinator(QObject):
             self.emw.ecw.update_goal(goal, [])
 
         # Set exercise. In particular, this will initialize servint.lean_file.
-        self.server_queue.add_task(self.servint.set_exercise,
-                                   self.exercise,
-                                   on_top=True)
+        task = Task(fct=self.servint.set_exercise,
+                    kwargs={'proof_step': self.proof_step,
+                            'exercise': self.exercise,
+                            'on_top': True})
+        self.send_task_to_server(task)
 
         # Set initial proof states for all statements
         # (Already done if start_coex was launched, but useful otherwise:)
@@ -227,11 +231,11 @@ class Coordinator(QObject):
         set, if the signal initial_proof_state_set is connected.
         The method tries to use the new ips to set implicit definitions and
         to set tooltips.
-        Then it checks if there ips are still missing, and if not,
+        Then it checks if there are ips still missing, and if not,
         disconnect signal.
         """
         self.set_definitions_for_implicit_use()
-        self.emw.ecw.statements_tree.update_tooltips()
+        # self.emw.ecw.statements_tree.update_tooltips()
 
         statements = [st for st in self.exercise.available_statements
                       if not st.initial_proof_state]
@@ -287,7 +291,12 @@ class Coordinator(QObject):
         #                 idx].math_type.to_display())
         #            for idx in range(len(loc_csts))])
 
+        # Just in case of deletion:
         self.emw.ecw.statements_tree.update_tooltips()
+        # try:
+        #     self.emw.ecw.statements_tree.update_tooltips()
+        # except RuntimeError:
+        #     log.warning(f"Runtime error (StatementsTreeWidgetItem deleted?)")
 
     def save_exercise_for_autotest(self):
         """
@@ -325,15 +334,27 @@ class Coordinator(QObject):
 
     def disconnect_signals(self):
         """
-        This method is called at closing. It my be important: without it,
+        This method is called at closing. It may be important: without it,
         servint signals will still be connected to methods concerning
-        the previous exercise (?)
+        the previous exercise.
         """
         if self.servint:
-            self.servint.effective_code_received.disconnect()
-            self.servint.lean_response.disconnect()
+            # It seems that sometimes signals are already deleted
+            # try:
+            #     self.servint.effective_code_received.disconnect()
+            # except RuntimeError:
+            #     log.debug("(Impossible to disconnect signal effective code "
+            #               "received)")
+            try:
+                self.servint.lean_response.disconnect()
+            except RuntimeError:
+                log.debug("(Impossible to disconnect signal lean response)")
             if self.emw:  # This signal is connected to some emw method
-                self.servint.lean_file_changed.disconnect()
+                try:
+                    self.servint.lean_file_changed.disconnect()
+                except RuntimeError:
+                    log.debug("(Impossible to disconnect signal lean file "
+                              "changed)")
 
     def closeEvent(self):
         """
@@ -342,11 +363,13 @@ class Coordinator(QObject):
         log.info("Closing Coordinator")
         # continue_ = input("Closing Coordinator?")  # FIXME: debugging
 
-        try:
-            self.disconnect_signals()
-        except RuntimeError:
-            # It seems that sometimes signals are already deleted
-            pass
+        # try:
+        #     self.disconnect_signals()
+        # except RuntimeError:
+        #     # It seems that sometimes signals are already deleted
+        #     log.debug("(Impossible to disconnect signals)")
+
+        self.disconnect_signals()
 
         ref = 'functionality.save_solved_exercises_for_autotest'
         save_for_test = cvars.get(ref, False)
@@ -380,6 +403,10 @@ class Coordinator(QObject):
         return buttons
 
     @property
+    def code_insert(self):
+        return self.servint.code_insert
+
+    @property
     def lean_file(self):
         return self.servint.lean_file
 
@@ -387,9 +414,9 @@ class Coordinator(QObject):
     def history_nb(self):
         return self.lean_file.target_idx
 
-    @property
-    def server_queue(self):
-        return self.servint.server_queue
+    # @property
+    # def server_queue(self):
+    #     return self.servint.server_queue
 
     @property
     def nursery(self):
@@ -475,6 +502,48 @@ class Coordinator(QObject):
     ######################################################
     ######################################################
 
+    async def restart_lean_server(self):
+        log.debug("Stopping Lean server...")
+        # with trio.move_on_after(10):
+        #     await self.servint.file_invalidated.wait()
+        await self.servint.secured_stop()
+        log.info("...stopped!")
+        await self.servint.start()
+        log.info("Lean server started")
+
+    def stop_button_will_cancel_task(self):
+        self.stop_button_will_stop_server = False
+
+    async def stop(self):
+        """
+        This method is called when usr push the 'stop' button.
+        """
+        if self.servint:
+            task = self.last_servint_task
+            if task.status != "done":
+                log.info(f"Trying to cancel last task (status {task.status})")
+                self.servint.cancel_task(task)
+                log.debug(f"(new status: {task.status})")
+            elif self.stop_button_will_stop_server:
+                await self.restart_lean_server()
+                msg = _("Server restarted")
+                self.statusBar.show_tmp_msg(msg)
+
+            else:
+                msg = _("No action to be cancelled, press again to restart "
+                        "server")
+                # msg = _("No action to be cancelled")
+                # bar_msg = self.statusBar.messageWidget.text()
+                # FIXME: bar_msg always empty?? REMOVE FOLLOWING LINE:
+                # await self.restart_lean_server()
+                self.stop_button_will_stop_server = True
+                QTimer.singleShot(3000, self.stop_button_will_cancel_task)
+                self.statusBar.show_tmp_msg(msg, duration=3000)
+
+    def send_task_to_server(self, task: Task):
+        self.last_servint_task = task
+        self.servint.add_task(task)
+
     def start_server_task(self):
         """
         A front end for starting the async server_task method,
@@ -506,6 +575,7 @@ class Coordinator(QObject):
                          self.statement_triggered,
                          self.statement_dropped,
                          self.math_object_dropped,
+                         self.emw.stop,
                          # self.apply_math_object_triggered,
                          self.close_server_task]) as emissions:
 
@@ -556,6 +626,12 @@ class Coordinator(QObject):
                         self.history_goto(history_nb)
                     else:
                         self.unfreeze()
+                ######################
+                # Stop action/server #
+                ######################
+                elif emission.is_from(self.emw.stop):
+                    await self.stop()
+                    self.unfreeze()
 
                 ########################
                 # Code to Lean actions #
@@ -761,10 +837,12 @@ class Coordinator(QObject):
 
                 # Update lean_file and call Lean server
                 self.lean_code_sent = lean_code
-                self.server_queue.add_task(self.servint.code_insert,
-                                           action.symbol,
-                                           lean_code,
-                                           cancel_fct=self.lean_file.undo)
+                # previous_proof_state = self.proof_step.proof_state
+                task = Task(fct=self.servint.code_insert,
+                            kwargs={'proof_step': self.proof_step,
+                                    'label': action.symbol,
+                                    'cancel_fct': self.lean_file.undo})
+                self.send_task_to_server(task)
                 break
 
     def __server_call_statement(self, item):
@@ -796,19 +874,23 @@ class Coordinator(QObject):
 
             # Update lean_file and call Lean server
             self.lean_code_sent = lean_code
-            self.server_queue.add_task(self.servint.code_insert,
-                                       statement.pretty_name,
-                                       lean_code,
-                                       cancel_fct=self.lean_file.undo)
+            task = Task(fct=self.servint.code_insert,
+                        kwargs={'proof_step': self.proof_step,
+                                'label': statement.pretty_name,
+                                'cancel_fct': self.lean_file.undo})
+            self.send_task_to_server(task)
 
     def __server_send_editor_lean(self):
         """
         Send the L∃∀N code written in the L∃∀N editor widget to the
         server interface.
         """
-        self.server_queue.add_task(self.servint.code_set, None,
-                                   _('Code from editor'),
-                                   self.lean_editor.code_get())
+        task = Task(fct=self.servint.code_set,
+                    kwargs={'proof_step': self.proof_step,
+                            'label': "code_set",
+                            'cancel_fct': self.lean_file.undo,
+                            'code': self.lean_editor.code_get()})
+        self.send_task_to_server(task)
 
     #########################
     #########################
@@ -951,18 +1033,18 @@ class Coordinator(QObject):
         self.is_frozen = False
         self.unfrozen.emit()
 
-    @Slot(CodeForLean)
-    def process_effective_code(self, effective_lean_code: CodeForLean):
-        """
-        Replace the (maybe complicated) Lean code in the Lean file by the
-        portion of the code that was effective.
-
-        This is called by a signal in servint.
-        """
-        code = effective_lean_code.to_code()
-        log.debug(f"Replacing code by effective code {code}")
-        self.proof_step.effective_code = effective_lean_code
-        self.servint.history_replace(effective_lean_code)
+    # @Slot(CodeForLean)
+    # def process_effective_code(self, effective_lean_code: CodeForLean):
+    #     """
+    #     Replace the (maybe complicated) Lean code in the Lean file by the
+    #     portion of the code that was effective.
+    #
+    #     This is called by a signal in servint.
+    #     """
+    #     code = effective_lean_code.to_code()
+    #     log.debug(f"Replacing code by effective code {code}")
+    #     self.proof_step.effective_code = effective_lean_code
+    #     self.servint.history_replace(effective_lean_code)
 
     def process_failed_request_error(self, errors):
         lean_code = self.proof_step.lean_code
@@ -990,16 +1072,24 @@ class Coordinator(QObject):
         elif error_type == 4:  # UnicodeDecodeError
             self.proof_step.error_msg = _("Unicode error, try again...")
             log.debug("Unicode Error")
-        elif error_type == 3:  # Timeout
-            self.proof_step.error_msg = _("Error, no proof state, "
-                                          "try again...")
-            log.debug("Proof state is None!")
+        # elif error_type == 3:  # Timeout
+        #     self.proof_step.error_msg = _("Error, no proof state, "
+        #                                   "try again...")
+        #     log.debug("Proof state is None!")
+        elif error_type == 5:
+            self.proof_step.error_msg = _("Unable to get new proof_state")
+
+        elif error_type == 6:
+            self.proof_step.error_msg = _("(File unchanged)")
+        elif error_type == 7:
+            self.proof_step.error_msg = _("Action cancelled")
+        else:
+            self.proof_step.error_msg = _("Undocumented error")
 
     def abort_process(self):
         log.debug("Aborting process")
         if not self.servint.lean_file.history_at_beginning:
             # Abort and go back to last goal
-            # self.server_queue.add_task(self.servint.history_delete)
             self.lean_file.delete()
             self.unfreeze()
             self.update_proof_step()
@@ -1014,22 +1104,6 @@ class Coordinator(QObject):
         Replace the target by a message "No more goal", and return the
         resulting ProofState
         """
-        # Display msg_box unless redoing /moving or test mode
-        # TODO: add click to MessageBox in test_mode
-        # if not self.proof_step.is_redo() \
-        #         and not self.proof_step.is_goto()\
-        #         and not self.test_mode:
-        #     title = _('Target solved')
-        #     text = _('The proof is complete!')
-        #     msg_box = QMessageBox(parent=self.emw)
-        #     msg_box.setText(text)
-        #     msg_box.setWindowTitle(title)
-        #     button_ok = msg_box.addButton(_('Back to exercise'),
-        #                                   QMessageBox.YesRole)
-        #     button_change = msg_box.addButton(_('Change exercise'),
-        #                                       QMessageBox.YesRole)
-        #     button_change.clicked.connect(self.emw.change_exercise)
-        #     msg_box.exec_()
 
         self.proof_step.no_more_goal = True
         self.proof_step.success_msg = _("Proof complete")
@@ -1086,10 +1160,22 @@ class Coordinator(QObject):
         # self.proof_step.solving_objs = solving_objs
         self.proof_step_updated.emit()  # Received in auto_test
 
-    def test_response_coherence(self, lean_response: LeanResponse):
-        # fixme
-        return True
-        # return self.lean_code_sent is lean_response.lean_code
+    def check_response_coherence(self, lean_response: LeanResponse):
+        """
+        Check if lean_response concerns current proof step.
+        """
+        if not lean_response.proof_step:
+            log.debug("No proof_step?!")
+        elif lean_response.proof_step is not self.proof_step:
+            gn1 = lean_response.proof_step.parent_goal_node
+            gn2 = self.proof_step.parent_goal_node
+            nb1 = gn1.goal_nb if gn1 else "?"
+            nb2 = gn2.goal_nb if gn2 else "?"
+            log.debug(f"Received proof step goal node #{nb1}, expecting #{nb2}")
+
+        test = (not lean_response.proof_step or
+                lean_response.proof_step is self.proof_step)
+        return test
 
     def invalidate_events(self):
         # self.current_user_action = None
@@ -1097,11 +1183,6 @@ class Coordinator(QObject):
 
     @Slot()
     def process_lean_response(self, lean_response: LeanResponse):
-                              # exercise,
-                              # no_more_goals: bool,
-                              # analysis: tuple,
-                              # errors: list,
-                              # error_type=0):
         """
         This method processes Lean response after a request, and is a slot
         of a signal emitted by self.servint when all info have been received.
@@ -1115,10 +1196,12 @@ class Coordinator(QObject):
         exception is passed to Lean, and then goes through this method.
         """
 
+        log.debug("Lean response received")
+
         # (1) Test Response corresponds to request
-        if not self.test_response_coherence(lean_response):
-            log.warning("Unexpected Lean response, ignoring")
-            self.abort_process()
+        if not self.check_response_coherence(lean_response):
+            log.warning("Lean response with incoherent proof step, ignoring")
+            # self.abort_process()
             return
 
         no_more_goals = lean_response.no_more_goals
@@ -1219,9 +1302,12 @@ class Coordinator(QObject):
 
         self.emw.ui_updated.emit()  # For testing
 
+        # FIXME: unused??
         self.invalidate_events()
 
         if no_more_goals:
-                # Display QMessageBox but give deaduction time to properly update
-                # ui before.
-                QTimer.singleShot(0, self.display_fireworks_msg)
+            # Display QMessageBox but give deaduction time to properly update
+            # ui before.
+            QTimer.singleShot(0, self.display_fireworks_msg)
+            # self.servint.nursery.start_soon(self.restart_lean_server,
+            #                                 name="Restart Lean Server")

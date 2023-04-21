@@ -912,7 +912,8 @@ class ProofTree:
         fork node. This is the pertinent goal_node for the proof msg to be
         displayed in the status bar.
         """
-        return self.current_goal_node.last_child_fork_node
+        if self.current_goal_node:
+            return self.current_goal_node.last_child_fork_node
 
     def current_proof_msg(self) -> Optional[str]:
         """
@@ -1092,12 +1093,9 @@ class ProofTree:
                 assert delta_goal == 1
                 # Provisionally create other goal node
                 other_goal = new_proof_state.goals[1]
-                # other_goal.name_bound_vars()
                 other_goal_node = GoalNode(parent=new_proof_step,
                                            goal=other_goal)
                 children_gn = [next_goal_node, other_goal_node]
-
-            # self.add_outcomes()
 
         new_proof_step.children_goal_nodes = children_gn
         self.last_proof_step = new_proof_step

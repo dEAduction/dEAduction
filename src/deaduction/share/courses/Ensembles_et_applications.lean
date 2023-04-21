@@ -108,7 +108,7 @@ begin
 end
 
 -- Unfortunately split cannot work
-lemma definition.double_inclusion (A A' : set X) :
+lemma definition.double_inclusion {A A' : set X} :
 A = A' ↔ (A ⊆ A' ∧ A' ⊆ A) :=
 /- dEAduction
 PrettyName
@@ -129,7 +129,7 @@ begin
 end
 
 lemma definition.ensemble_non_vide
-(A: set X) :
+{A: set X} :
 (A ≠ ∅) ↔ ∃ x : X, x ∈ A
 :=
 /- dEAduction
@@ -199,7 +199,7 @@ namespace applications
 variables  {A A': set X}
 variables {f: X → Y} {B B': set Y}
 
-lemma definition.egalite_fonctions (f' : X → Y) :
+lemma definition.egalite_fonctions {f' : X → Y} :
 f = f' ↔ ∀ x, f x = f' x :=
 /- dEAduction
 PrettyName
@@ -210,7 +210,7 @@ begin
 end
 
 
-lemma definition.identite (f₀: X → X) :
+lemma definition.identite {f₀: X → X} :
 f₀ = Identite ↔ ∀ x, f₀ x = x :=
 /- dEAduction
 PrettyName
@@ -221,7 +221,7 @@ begin
 end
 
 
-lemma definition.image_directe (y : Y) :
+lemma definition.image_directe {y : Y} :
 y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y
 :=
 begin
@@ -236,7 +236,7 @@ begin
     todo
 end
 
-lemma definition.image_reciproque (x:X) :
+lemma definition.image_reciproque {x:X} :
 x ∈ f  ⁻¹' B ↔ f(x) ∈ B
 :=
 begin
@@ -253,7 +253,7 @@ begin
 end
 
 lemma definition.injectivite :
-injective f ↔ ∀ x x' : X, (f x = f x' → x = x')
+injective f ↔ ∀ {x x' : X}, (f x = f x' → x = x')
 :=
 /- dEAduction
 PrettyName
@@ -352,7 +352,7 @@ ANCIEN SCHEMA :
 namespace composition_et_images
 
 lemma exercise.composition_image_directe
-(A: set X) : 
+{A: set X} : 
 (composition g f) '' A = g '' (f '' A)
 :=
 /- dEAduction
@@ -365,7 +365,7 @@ end
 
 
 lemma exercise.composition_image_reciproque
-(C: set Z) : 
+{C: set Z} : 
 (composition g f) ⁻¹' C = f ⁻¹' (g ⁻¹' C)
 :=
 /- dEAduction
@@ -915,6 +915,15 @@ begin
 end
 
 end injectivite_surjectivite_autres
+
+example
+  :
+ not(∀f: X→Y, ∀g: Y→Z, ∀A: set X, @composition X Y Z g f '' (A) = g '' (f '' (A)))
+:=
+begin
+  push_neg,
+  todo
+end
 
 end exercices
 

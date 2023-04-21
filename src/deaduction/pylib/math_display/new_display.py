@@ -6,8 +6,7 @@ from deaduction.pylib.mathobj import MathObject, ContextMathObject
 from deaduction.pylib.pattern_math_obj import PatternMathObject
 from deaduction.pylib.math_display.display_data import (latex_from_node,
                                                         latex_from_quant_node,
-                                                        needs_paren,
-                                                        lean_from_node)
+                                                        needs_paren)
 from deaduction.pylib.math_display.pattern_init import (pattern_latex,
                                                         pattern_text,
                                                         pattern_latex_for_type)
@@ -111,9 +110,34 @@ def substitute_metavars(shape, metavars, self):
 
 
 def lean_shape(self: MathObject) -> []:
-    if self.node in lean_from_node:
-        shape = list(lean_from_node[self.node])
-        return shape
+    """
+    Shape for lean format. See the shape() method doc.
+    """
+    shape = None
+    for pattern, pre_shape, metavars in pattern_lean:
+        # if pattern.node == 'LOCAL_CONSTANT' and len(pattern.children) == 3:
+        #     print("debug")
+        if pattern.match(self):
+            # Now metavars are matched
+            # log.debug(f"Matching pattern --> {pre_shape}")
+            shape = tuple(substitute_metavars(item, metavars, self)
+                          for item in pre_shape)
+            break
+    if not shape:
+        if self.node in lean_from_node:
+            shape = list(lean_from_node[self.node])
+
+            shape = [process_shape_macro(self, item) if isinstance(item, str)
+                     else item for item in shape]
+    if shape:
+        # (3) Process macros
+        if shape[0] == "global":
+            shape = global_pre_shape_to_pre_shape(shape[1:], text=text)
+
+        shape = [process_shape_macro(self, item) if isinstance(item, str)
+                 else item for item in shape]
+
+    return shape
 
 
 def latex_shape(self: MathObject, is_type=False, text=False,

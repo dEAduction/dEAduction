@@ -573,7 +573,7 @@ class MathObjectWidget(QListView):
                 self.select_index(index, False)
                 return
 
-            print(f"Source : {source}, dragged index: {dragged_index}")
+            # print(f"Source : {source}, dragged index: {dragged_index}")
             # # print(f"Source selected items: {len(source.selected_items())}")
             # if dragged_index not in source.selectedIndexes():
             #     source.select_index(dragged_index)

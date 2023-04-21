@@ -1,10 +1,11 @@
+
+
 -- import data.set
 import tactic
 
 -- dEAduction imports
 import structures2
 import user_notations
-import compute
 import utils
 import push_neg_once
 
@@ -81,7 +82,11 @@ parameters X Y Z: Type
 ------------------
 -- COURSE TITLE --
 ------------------
-namespace test_magic_buttons
+namespace theorie_des_ensembles
+/- dEAduction
+PrettyName
+    Théorie des ensembles
+-/
 
 namespace generalites
 /- dEAduction
@@ -146,30 +151,21 @@ begin
     exact set.subset.antisymm_iff.mpr
 end
 
-lemma definition.intersection_deux_ensembles {A B : set X} {x : X} :
-x ∈ A ∩ B ↔ ( x ∈ A ∧ x ∈ B) :=
-/- dEAduction
-PrettyName
-    Intersection de deux ensembles
-ImplicitUse
-    True
--/
+variables (A: set X) (f: X → Y) (B: set Y)
+lemma definition.image_directe (y: Y) : y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y :=
 begin
-    exact iff.rfl
+    todo
 end
 
-lemma definition.union_deux_ensembles  {A : set X} {B : set X} {x : X} :
-x ∈ A ∪ B ↔ ( x ∈ A ∨ x ∈ B) :=
-/- dEAduction
-PrettyName
-    Union de deux ensembles
-ImplicitUse
-    True
--/
+lemma theorem.image_directe (x: X) : x ∈ A → f(x) ∈ f '' A :=
 begin
-    exact iff.rfl
+    todo
 end
 
+lemma definition.image_reciproque (x: X) : x ∈ f ⁻¹' B ↔ f x ∈ B :=
+begin
+    todo
+end
 lemma exercise.inclusion_transitive
 (A B C : set X) :
 (A ⊆ B ∧ B ⊆ C) → A ⊆ C
@@ -177,305 +173,109 @@ lemma exercise.inclusion_transitive
 /- dEAduction
 PrettyName
     Transitivité de l'inclusion
+AutoTest
+    →, definition.inclusion, ∀, →,
+    @P1 ∧,
+    @P2 @P3 definition.inclusion,
+    @P1 @P2 →,
+    @P4 @P3 →,
+    CQFD
 -/
 begin
-  sorry
+    intro H1,
+    rw definition.inclusion,
+    intros x H2,
+    cases H1 with H3 H4,
+    rw definition.inclusion at H3 H4,
+    have H5 := H3 H2,
+    have H6 := H4 H5,
+    assumption,
+end
+
+example (x y:X) (H : x ≠ y) : y ≠ x :=  
+begin
+    apply ne.symm, assumption,
 end
  
 end generalites
 
 
----------------------------
---- TESTS MAGIC BUTTONS ---
----------------------------
-namespace tests_magic_buttons
+namespace tests_statements
 
-lemma exercise.test_assumption
-(P: Prop) (H: P):
-P:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
 
-lemma exercise.test_assumption_contradiction
-(P Q: Prop) (H: P) (H': ¬P): Q
+lemma exercise.test_definition
+(A B : set X)  (H1: A ⊆ B) :
+A ⊆ B 
 :=
 /- dEAduction
 AutoTest
+    H1 definition.inclusion success=H1,
+    definition.inclusion success=appliquée_au_but,
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
-lemma exercise.test_assumption_rfl
-(P: Prop):
-P = P
+lemma exercise.test_theorem_target_1
+(A A' : set X) (H1: (A ⊆ A' ∧ A' ⊆ A)): 
+A = A' 
 :=
 /- dEAduction
 AutoTest
+    target theorem.double_inclusion success=but_a_été_remplacé,
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
-lemma exercise.test_assumption_eq_symm
-(x y: X) (H: x=y):
-y=x
+
+lemma exercise.test_theorem_hypo
+(A A' : set X) (H1: (A ⊆ A' ∧ A' ⊆ A)): 
+A = A' 
 :=
 /- dEAduction
 AutoTest
+    H1 theorem.double_inclusion success=Théorème_appliqué,
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
-lemma exercise.test_assumption_cc
-(x y z: X) (f: X → Y) (H: x=y) (H': y=z):
-f(x) = f(z)
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_cc2
-(x y z: X) (B: set Y) (f: X → Y) (H: x=y) (H': y=z) (H'': f(z) ∈ B):
-f(x) ∈ B
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_inequality
-(x y: ℝ) (H: x < y):
-y > x
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_or_left
-(P Q: Prop) (H: P):
-P or Q
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_or_right
-(P Q: Prop) (H: Q):
-P or Q
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_or_rec1
-(P Q R: Prop) (H: P):
-((P or Q) or R)
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_or_rec2
-(P Q R: Prop) (H: Q):
-((P or Q) or R)
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_or_rec3
-(P Q R: Prop) (H: R):
-((P or Q) or R)
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
--- AND --
-
-lemma exercise.test_assumption_split_and
-(P Q R: Prop) (H: P ∧ Q) (H': R):
-P ∧ R
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_rec_split_and
-(P Q R: Prop) (H: P) (H': Q) (H'': R):
-(P ∧ Q) ∧ R
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_split_context
-(P Q R: Prop) (H: P ∧ R) (H': Q):
-(P ∧ Q) ∧ R
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_implicit_or
-(X: Type) (x : X) (A B C : set X)
-(H: x ∈ B ) :
-x ∈ A ∪ (B ∪ C)
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_implicit_and
-(X: Type) (x : X) (A B C : set X)
-(H: x ∈ A ∩ B ) (H': x ∈ C ):
-x ∈ A ∩ (B ∩ C)
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-
-
-lemma exercise.test_assumption_norm_num
-:
-1 + 1 = 2
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_empty_set
-(P: Prop)
-(x:X)
-(H: x ∈ (∅:set X) ):
-P
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-
-lemma exercise.test_compute1
-(x y z: ℝ)
-(H0a: x ≠ 0)
-(H0b: x ≥ 0) (H1: y > 0) (H2: z >0)
-(H: x + y + z < 1):
-x +  2*y + 3*z < 100
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
--- lemma exercise.compute2
--- (x y z: ℝ)
--- (H0: x > 0) (H1: y > 0) (H2: z >0)
--- (H: x + y + z < 1):
--- x +  2*y + 3*z < 1
+-- Here we test that deaduction is not too powerfull, i.e. theorem.image_directe should NOT solve the goal
+-- (as the Lean `apply` tactic does, by unfolding the semi-reducible definition of inverse image)
+-- deaduction does not send the code `apply`, but `apply_with ... {md:=reducible}`)
+-- PB = il faut maintenant sélectionner le but
+-- lemma exercise.test_theorem_target_2
+-- (x: X) (A: set X) (f: X → Y) (H: x ∈ A): 
+-- x ∈ f ⁻¹' (f '' A)
 -- :=
 -- /- dEAduction
 -- AutoTest
---     CQFD error=
+--     theorem.image_directe success=Théorème_ajouté_au_contexte,
 -- -/
 -- begin
---   sorry
+--   todo
 -- end
-
--- lemma exercise.compute3
--- (x y z a b: ℝ)
--- (H0b: x ≠ 0)
--- (H0: x >= 0) (H1: y > 0) (H2: z >0)
--- (Ha: a=2*x) (Hb: b=5*y)
--- (H: x + y + z < 1):
--- x +  2*a + 3*b < 1
+ 
+-- lemma exercise.test_theorem_target_3
+-- (x: X) (A: set X) (f: X → Y) (H: x ∈ A): 
+-- x ∈ f ⁻¹' (f '' A)
 -- :=
 -- /- dEAduction
 -- AutoTest
---     CQFD error=
+--     definition.image_reciproque,
+--     theorem.image_directe success=Théorème_appliqué,
+--     CQFD
 -- -/
 -- begin
---   sorry
+--   todo
 -- end
 
 
-
-
-
-end tests_magic_buttons
-
-end test_magic_buttons
-
+end tests_statements
+end theorie_des_ensembles
 end course
+

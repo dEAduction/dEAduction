@@ -137,18 +137,41 @@ def context_obj_solving_target(proof_step):
     return rec_find_target_in_props(target, props)
 
 
+def rw_let_expr(goal) -> CodeForLean:
+    """
+    try {rw H} successively for all defining equalities H of let expr.
+    """
+    defining_eq = goal.defining_equalities()
+    code = CodeForLean.empty_code()
+    for eq in defining_eq:
+        more_code = CodeForLean.from_string(f"rw {eq} at *")
+        code = code.and_then(more_code.try_())
+    return code
+
+
+def norm_num_with_let_expr(goal) -> CodeForLean:
+    code1 = rw_let_expr(goal)
+    code2 = CodeForLean.from_string("norm_num at *").try_()
+    return code1.and_then(code2)
+
+
 #############
 # Raw codes #
 #############
 
-def compute(target) -> CodeForLean:
+def compute(goal) -> CodeForLean:
     """
-    Try to use tactics to solve numerical target, mainly by linear computing.
+    Try to use tactics to solve 1 numerical target, mainly by linear computing.
+    This is the expensive code. If this is modified, consider adapting the
+    SererInterface.__desirable_lean_rqst_fpps_method() method.
     """
+
     code0 = CodeForLean.from_string("ring").solve1()
-    code1 = CodeForLean.from_string("norm_num at *").solve1()
+    # code1 = CodeForLean.from_string("norm_num at *").solve1()
+    code1 = norm_num_with_let_expr(goal).solve1()
     code2a = CodeForLean.from_string("compute_n 10")
-    code2b = CodeForLean.from_string("norm_num at *").try_().and_then(code2a)
+    # code2b = CodeForLean.from_string("norm_num at *").try_().and_then(code2a)
+    code2b = norm_num_with_let_expr(goal).and_then(code2a)
     code2c = code2b.solve1()
     # possible_code = code1.or_else(code2c)
     possible_code = code0.or_else(code1).or_else(code2c)
@@ -219,7 +242,8 @@ def raw_solve_target(target, proof_step, selected_objects) -> CodeForLean:
     elif target.concerns_numbers():
         numbers_involved = True
     if numbers_involved:
-        more_code = compute(target)
+        goal = proof_step.goal
+        more_code = compute(goal)
         code = code.or_else(more_code)
         log.debug(f"Compute: {code}")
 
@@ -473,8 +497,8 @@ def action_assumption(proof_step) -> CodeForLean:
 
     # (3) Turn code_tree into CodeForLean
     code = code_from_tree(modulated_tree, selected_objects, proof_step)
-    print("Code :")
-    print(code)
+    # print("Code :")
+    # print(code)
 
     # (4) Add global msg
     code.add_error_msg(_("I don't know how to conclude"))

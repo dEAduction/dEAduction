@@ -170,14 +170,14 @@ def extract_core_statement(statement: str) -> Tuple[str, str]:
 course_rules = """course = 
             (something_else metadata)?
             (something_else? 
-             space_or_eol*   (namespace_open_or_close / statement))+
+             space_or_eol*   (open_open / namespace_open_or_close / statement))+
             (something_else space_or_eol*)?
 """
 
 something_else_rules = """
 something_else = (line_comment / 
 ((non_coding any_char_but_eol)* end_of_line)  )*
-non_coding = !namespace_open_or_close !statement !metadata
+non_coding = !namespace_open_or_close !statement !metadata !open_open
 """
 
 namespace_rules = """
@@ -187,6 +187,10 @@ open_namespace = "namespace" space+ namespace_identifier
                 (interlude metadata)?
 
 close_namespace = "end" space+ namespace_identifier
+"""
+
+open_rules = """
+open_open = "open" space+ namespace_identifier
 """
 
 statement_rules = """
@@ -264,7 +268,7 @@ end_of_line = "\\n"
 """
 
 rules = course_rules + something_else_rules \
-        + namespace_rules \
+        + namespace_rules + open_rules \
         + statement_rules + proof_rules + interlude_rules \
         + metadata_rules \
         + line_comment_rules \
@@ -455,6 +459,21 @@ class LeanCourseVisitor(NodeVisitor):
     ##############
     # Namespaces #
     ##############
+    def visit_open_open(self, node, visited_children):
+        """
+        visit a line in the Lean file opening a read-only namespace, e.g.
+            "open set"
+        collect name of the namespace,
+        and create an event in course_history.
+        """
+
+        course_history, data = get_info(visited_children)
+        name = data.pop("namespace_identifier")
+        pretty_name = ""
+        event = "open_open", {"name": name}
+        course_history.insert(0, event)
+        return course_history, data
+
     def visit_open_namespace(self, node, visited_children):
         """
         visit a line in the Lean file opening a namespace, e.g.
@@ -593,6 +612,7 @@ def change_name(name: str) -> str:
     if name.startswith('_'):
         name = name[1:]
     return name
+
 
 #########
 # Tests #

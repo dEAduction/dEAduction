@@ -80,10 +80,19 @@ class Goal:
     - splitting goals into objects and properties,
     - "smartly" naming variables, in particular all bound variables,
     - printing goals.
+
+    unmodified_context reflects the order the context is recorded by Lean.
+    This order may be modified in self._context, typically when a
+    substitution occurs within a property H, the new property H' is put at
+    the place where H was, thus resulting in a property where a term x
+    occurs before it is declared. In summary,
+        _context is used in the gui,
+        unmodified_context is used for Lean communication.
     """
 
     def __init__(self, context: [ContextMathObject], target: ContextMathObject):
         self._context = context
+        self.unmodified_context = context
         self.target = target
         self.name_hints = []
         # self.smart_name_bound_vars()
@@ -181,6 +190,22 @@ class Goal:
         """
         if self.context is not None:
             return [cmo for cmo in self.context if cmo.is_modified]
+
+    def defining_equalities(self):
+        """
+        Return the list of defining equalities in self.context. A prop is a
+        defining equality iff its name starts with "Def" and it is an
+        equality whose left term is a local constant of self.context.
+        """
+        eq = []
+        for p in self.context_props:
+            if p.is_equality():
+                name = p.name
+                lc = p.math_type.children[0]
+                if name.startswith('Def') and lc in self.context_objects:
+                    eq.append(p)
+
+        return eq
 
     def remove_future_info(self):
         for obj in self.context:
@@ -967,6 +992,86 @@ class Goal:
     ###################
     # Display methods #
     ###################
+    def negate(self) -> MathObject:
+        """
+        Return a math_object obtained by negating self. e.g. if self.context
+        contains objects x, y and properties P, Q, the new goal will be
+        ∀x, ∀y, (P and Q ) ==> target.
+        This is not a recursive method since we do not want to create new goals
+        (to avoid creating new ContextMathObjects).
+
+        FIXME: en fait si ??
+        """
+
+        # (1) Compute body of universal prop:
+        props = [prop.math_type for prop in self.context_props]
+        target = self.target.math_type
+        if props:
+            conjunction = MathObject.conjunction(props)
+            body = MathObject.implication(conjunction, target)
+        else:
+            body = target
+
+        # (2) Compute the "∀x, ∀y, ..." part:
+        objs = [obj for obj in self.context_objects]  # List shadow copy
+        while objs:
+            obj = objs.pop()
+            body = MathObject.forall(obj, body)
+
+        # (3) Negate!
+        new_prop = MathObject.negate(body)
+
+        return new_prop
+
+    @classmethod
+    def negated_goal(cls, old_goal):
+        """
+        Return a new goal which is the negation of old_goal.
+        """
+        new_prop = old_goal.negate()
+        new_target = ContextMathObject(node="LOCAL_CONSTANT",
+                                       info={'name': "target"},
+                                       children=[],
+                                       math_type=new_prop)
+        negated_goal = cls(context=[], target=new_target)
+        # Bound vars are named like the old context vars they stand for,
+        # but for dummy var for sequences.
+        negated_goal.smart_name_bound_vars()
+        return negated_goal
+
+    def context_to_lean(self):
+        """
+        Return  self's context in Lean format, e.g.
+        (x: X) (A: set X) (H1: x ∈ A)
+        """
+        lean_context = ""
+        for co in self.unmodified_context:
+            lean_context += f"({co.to_lean_with_type()}) "
+
+        return lean_context
+
+    def target_to_lean(self):
+        """
+        Return  self's target in Lean format, e.g.
+        x ∈ B
+        """
+        return self.target.math_type.to_display(format_='lean')
+
+    def to_lean_example(self):
+        """
+        Return self's content as a Lean example, e.g.
+        'example
+        (x: X) (A: set X) (H1: x ∈ A) :
+        x ∈ B :='
+        """
+        context = self.context_to_lean()
+        target = self.target_to_lean()
+        lean_statement = f"example\n {context} :\n {target}"
+        # lean_proof = "begin\n\nend\n"
+        # debug:
+        # print(lean_statement)
+        return lean_statement + " :=\n"  # + lean_proof
+
     def goal_to_text(self,
                      format_="utf8",
                      to_prove=True,
@@ -1164,37 +1269,60 @@ class ProofState:
     goals: List[Goal]
     lean_data: Tuple[str, str] = None
 
+    @property
+    def main_goal(self):
+        return self.goals[0]
+
     @classmethod
-    def from_lean_data(cls, hypo_analysis: str, targets_analysis: str,
-                       to_prove=False):
+    def from_lean_data(cls, hypo_analysis: [str], targets_analysis: [str],
+                       to_prove=False, previous_proof_state=None):
         """
-        :param hypo_analysis:    string from the lean tactic hypo_analysis
-        :param targets_analysis: string from the lean tactic targets_analysis
-        (with one line per target)
+        :param hypo_analysis:    list of strings from the lean tactic
+        hypo_analysis, one string for each goal
+        :param targets_analysis: list of string from the lean tactic
+        targets_analysis
+        :param to_prove: True iff the main goal is the current exercise's goal
+        (this affect bound vars naming).
+        :param previous_proof_state: previous Proof State. If not know,
+        the new proof state is used as an update to the previous proof state:
+        - the previous main goal is deleted,
+        - the new goals are inserted at index 0 in ProofState.goals
 
         :return: a ProofState
         """
 
         log.info("Creating new ProofState from lean strings")
-        targets = targets_analysis.split("¿¿¿")
-        # Put back "¿¿¿" and remove '\n' :
-        targets = ['¿¿¿' + item.replace('\n', '') for item in targets]
-        targets.pop(0)  # Removing title line ("targets:")
-        main_goal = None
-        if targets:
-            # Create main goal:
-            main_goal = Goal.from_lean_data(hypo_analysis, targets[0],
-                                            to_prove=to_prove)
-        else:
-            log.warning(f"No target, targets_analysis={targets_analysis}")
-        goals = [main_goal]
-        for other_string_goal in targets[1:]:
-            other_goal = Goal.from_lean_data(hypo_analysis="",
-                                             target_analysis=other_string_goal,
-                                             to_prove=False)
-            goals.append(other_goal)
+        # targets = targets_analysis.split("¿¿¿")
+        # # Put back "¿¿¿" and remove '\n' :
+        # targets = ['¿¿¿' + item.replace('\n', '') for item in targets]
+        # targets.pop(0)  # Removing title line ("targets:")
+        targets = targets_analysis
+        # if not targets:
+        #     log.warning(f"No target, targets_analysis={targets_analysis}")
+        if len(hypo_analysis) != len(targets):
+            log.warning("Nb of hypo analysis does not match nb of targets")
 
-        return cls(goals, (hypo_analysis, targets_analysis))
+        else:
+            # main_goal = None
+            # # Create main goal:
+            # main_goal = Goal.from_lean_data(hypo_analysis, targets[0],
+            #                                             to_prove=to_prove)
+            # goals = [main_goal]
+            # for other_string_goal in targets[1:]:
+            #     other_goal = Goal.from_lean_data(hypo_analysis="",
+            #                                      target_analysis=other_string_goal,
+            #                                      to_prove=False)
+            #     goals.append(other_goal)
+            new_goals = [Goal.from_lean_data(hypo, target, to_prove=to_prove)
+                         for hypo, target in zip(hypo_analysis, targets)]
+
+            if previous_proof_state:
+                goals = new_goals + previous_proof_state.goals[1:]
+            else:
+                goals = new_goals
+            new_proof_state = cls(goals, (hypo_analysis, targets_analysis))
+
+            return new_proof_state
 
 
 def print_proof_state(goal: Goal):

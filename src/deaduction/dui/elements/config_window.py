@@ -210,6 +210,8 @@ CONFIGS["Language"] = {"i18n.select_language": (["en", "fr_FR"], True, "")}
 
 CONFIGS["Advanced"] = {
     'others.course_directory': ('dir', True, ""),
+    'others.Lean_request_method': (['automatic', 'normal',
+                                    'from_previous_proof_state'], True, ''),
     'logs.save_journal': (None, True, ""),  # checked, untested
     'logs.display_level': (['debug', 'info', 'warning'], True, ""),
     'functionality.save_solved_exercises_for_autotest': (None, True, "")}

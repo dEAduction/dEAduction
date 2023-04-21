@@ -4,9 +4,9 @@ import tactic
 -- dEAduction imports
 import structures2
 import user_notations
-import compute
 import utils
 import push_neg_once
+
 
 -- General principles :
 -- Type should be defined as parameters, in order to be implicit everywhere
@@ -65,6 +65,8 @@ notation [parsing_only]  P ` ssi ` Q := P ↔ Q
 notation [parsing_only]  x ` dans ` A := x ∈ A
 notation [parsing_only]  x ` appartient ` A := x ∈ A
 notation [parsing_only]  A ` inter ` B := A ∩ B
+
+
 notation [parsing_only]  A ` intersection ` B := A ∩ B
 notation [parsing_only]  A ` union ` B := A ∪ B
 notation [parsing_only]  A ` inclus ` B := A ⊆ B
@@ -81,7 +83,11 @@ parameters X Y Z: Type
 ------------------
 -- COURSE TITLE --
 ------------------
-namespace test_magic_buttons
+namespace theorie_des_ensembles
+/- dEAduction
+PrettyName
+    Théorie des ensembles
+-/
 
 namespace generalites
 /- dEAduction
@@ -93,6 +99,10 @@ PrettyName
 -- COURSE DEFINITIONS --
 ------------------------
 lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, x ∈ A → x ∈ B :=
+/- dEAduction
+ImplicitUse
+    True
+-/
 begin
     exact iff.rfl
 end
@@ -143,339 +153,152 @@ PrettyName
     Double inclusion
 -/
 begin
-    exact set.subset.antisymm_iff.mpr
+    exact set.subset.antisymm_iff.mpr  
 end
 
-lemma definition.intersection_deux_ensembles {A B : set X} {x : X} :
-x ∈ A ∩ B ↔ ( x ∈ A ∧ x ∈ B) :=
-/- dEAduction
-PrettyName
-    Intersection de deux ensembles
-ImplicitUse
-    True
--/
-begin
-    exact iff.rfl
-end
-
-lemma definition.union_deux_ensembles  {A : set X} {B : set X} {x : X} :
-x ∈ A ∪ B ↔ ( x ∈ A ∨ x ∈ B) :=
-/- dEAduction
-PrettyName
-    Union de deux ensembles
-ImplicitUse
-    True
--/
-begin
-    exact iff.rfl
-end
-
-lemma exercise.inclusion_transitive
+lemma exercise.test_implicit_inclusion
 (A B C : set X) :
 (A ⊆ B ∧ B ⊆ C) → A ⊆ C
 :=
 /- dEAduction
 PrettyName
     Transitivité de l'inclusion
+AutoTest
+    →, @P1 ∧, ∀, →,
+    @P3 @P1 →, @P4 @P2 →,
+    CQFD 
 -/
 begin
-  sorry
+    todo
+end
+
+example (x y:X) (H : x ≠ y) : y ≠ x :=  
+begin
+    apply ne.symm,
+    assumption,
 end
  
 end generalites
 
 
+
 ---------------------------
---- TESTS MAGIC BUTTONS ---
+--- TESTS PROOF BUTTONS ---
 ---------------------------
-namespace tests_magic_buttons
+namespace tests_proof_buttons
 
-lemma exercise.test_assumption
-(P: Prop) (H: P):
-P:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
+-------------------
+-- Proof methods --
+-------------------
 
-lemma exercise.test_assumption_contradiction
-(P Q: Prop) (H: P) (H': ¬P): Q
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_rfl
+-- Case base reasoning --
+lemma exercise.test_case_base_reasoning
 (P: Prop):
-P = P
-:=
+P ∨ ¬ P :=
 /- dEAduction
 AutoTest
+    proof_methods 0 P,
+    ∨ 0, CQFD,
+    ∨ 1, CQFD
+-/
+begin
+    todo
+end
+
+lemma exercise.test_case_base_reasoning_2
+(P Q : Prop) (H1: P ∨ Q):
+P ∨ Q :=
+/- dEAduction
+AutoTest
+    H1 proof_methods 0,
+    ∨ 0,
+    CQFD,
+    ∨ 1,
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
-lemma exercise.test_assumption_eq_symm
-(x y: X) (H: x=y):
-y=x
-:=
+lemma exercise.test_contrapose
+(P Q : Prop) (H1: ¬ Q → ¬ P):
+P → Q :=
 /- dEAduction
 AutoTest
+    proof_methods 1,
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
-lemma exercise.test_assumption_cc
-(x y z: X) (f: X → Y) (H: x=y) (H': y=z):
-f(x) = f(z)
-:=
+lemma exercise.test_absurdum
+(P: Prop) (H1: P):
+P :=
 /- dEAduction
 AutoTest
+    proof_methods 2,
     CQFD
 -/
 begin
-  sorry
+  todo
 end
 
-lemma exercise.test_assumption_cc2
-(x y z: X) (B: set Y) (f: X → Y) (H: x=y) (H': y=z) (H'': f(z) ∈ B):
-f(x) ∈ B
+lemma exercise.test_sorry
+(P: Prop):
+P :=
+/- dEAduction
+AutoTest
+    proof_methods 3
+-/
+begin
+  todo
+end
+
+-----------------
+-- Now objects --
+-----------------
+
+lemma exercise.test_introduce_new_object
+(x: X):
+∃ y: X, y=x
 :=
 /- dEAduction
 AutoTest
-    CQFD
+    new_object 0 z x,
+    ∃ z
 -/
 begin
-  sorry
+  todo
 end
 
-lemma exercise.test_assumption_inequality
-(x y: ℝ) (H: x < y):
-y > x
+-- Don't know how to test this one!!
+lemma exercise.test_introduce_new_subgoal
+(P Q R: Prop) (H1: Q) :
+(P ∨ Q) ∨ R
 :=
 /- dEAduction
 AutoTest
-    CQFD
+    new_object 1 P∨Q,
+    ∨ 1, CQFD, CQFD
 -/
 begin
-  sorry
+  todo
 end
 
-lemma exercise.test_assumption_or_left
-(P Q: Prop) (H: P):
-P or Q
-:=
+lemma exercise.test_introduce_new_function
+(P: X × Y → Prop) (H: ∀ x:X, ∃ y:Y, P(x,y)):
+∃ g: (X → Y), ∀ x:X, P(x,g(x)) :=
 /- dEAduction
 AutoTest
+    H new_object 2,
+    @O4 ∃,
     CQFD
 -/
 begin
-  sorry
+  todo
 end
-
-lemma exercise.test_assumption_or_right
-(P Q: Prop) (H: Q):
-P or Q
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_or_rec1
-(P Q R: Prop) (H: P):
-((P or Q) or R)
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_or_rec2
-(P Q R: Prop) (H: Q):
-((P or Q) or R)
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_or_rec3
-(P Q R: Prop) (H: R):
-((P or Q) or R)
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
--- AND --
-
-lemma exercise.test_assumption_split_and
-(P Q R: Prop) (H: P ∧ Q) (H': R):
-P ∧ R
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_rec_split_and
-(P Q R: Prop) (H: P) (H': Q) (H'': R):
-(P ∧ Q) ∧ R
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_split_context
-(P Q R: Prop) (H: P ∧ R) (H': Q):
-(P ∧ Q) ∧ R
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_implicit_or
-(X: Type) (x : X) (A B C : set X)
-(H: x ∈ B ) :
-x ∈ A ∪ (B ∪ C)
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_implicit_and
-(X: Type) (x : X) (A B C : set X)
-(H: x ∈ A ∩ B ) (H': x ∈ C ):
-x ∈ A ∩ (B ∩ C)
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-
-
-lemma exercise.test_assumption_norm_num
-:
-1 + 1 = 2
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-lemma exercise.test_assumption_empty_set
-(P: Prop)
-(x:X)
-(H: x ∈ (∅:set X) ):
-P
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
-
-lemma exercise.test_compute1
-(x y z: ℝ)
-(H0a: x ≠ 0)
-(H0b: x ≥ 0) (H1: y > 0) (H2: z >0)
-(H: x + y + z < 1):
-x +  2*y + 3*z < 100
-:=
-/- dEAduction
-AutoTest
-    CQFD
--/
-begin
-  sorry
-end
-
--- lemma exercise.compute2
--- (x y z: ℝ)
--- (H0: x > 0) (H1: y > 0) (H2: z >0)
--- (H: x + y + z < 1):
--- x +  2*y + 3*z < 1
--- :=
--- /- dEAduction
--- AutoTest
---     CQFD error=
--- -/
--- begin
---   sorry
--- end
-
--- lemma exercise.compute3
--- (x y z a b: ℝ)
--- (H0b: x ≠ 0)
--- (H0: x >= 0) (H1: y > 0) (H2: z >0)
--- (Ha: a=2*x) (Hb: b=5*y)
--- (H: x + y + z < 1):
--- x +  2*a + 3*b < 1
--- :=
--- /- dEAduction
--- AutoTest
---     CQFD error=
--- -/
--- begin
---   sorry
--- end
-
-
-
-
-
-end tests_magic_buttons
-
-end test_magic_buttons
-
+end tests_proof_buttons
+end theorie_des_ensembles
 end course
+

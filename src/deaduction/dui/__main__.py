@@ -111,6 +111,7 @@ def set_logger():
         #                'ServerInterface', 'ServerQueue']
         log_domains = ["__main__",
                        'ServerInterface',
+                       'HighLevelServerRequest',
                        # 'ServerQueue',
                        # 'lean',
                        'deaduction.dui',
@@ -122,7 +123,11 @@ def set_logger():
                        'patterns'
                        # 'math_object'
                        ]
-        # log_domains = [""]
+        # log_domains = ["ServerInterface", "HighLevelServerRequest",
+        #                "ServerQueue",
+        #                "deaduction.dui.stages.start_coex",
+        #                "deaduction.dui.stages.exercise",
+        #                ]
 
     logger.configure(domains=log_domains,
                      display_level=log_level,

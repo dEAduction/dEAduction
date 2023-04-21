@@ -23,7 +23,7 @@ SYNTAX FOR KEYS. Let us analyze the following example:
     "LOCAL_CONSTANT:SET_FAMILY(?3, ?4)(...)"
 
 - We first indicate the node: 'LOCAL_CONSTANT'.
-- Then we (optionnaly) give its type: ':SET_FAMILY(?3, ?4)'. Here ?3 and ?4 are
+- Then we (optionally) give its type: ':SET_FAMILY(?3, ?4)'. Here ?3 and ?4 are
 meta-variables that can take any value; so the type must have two children
 that can be used for displaying.
 - Then (...) indicates that we do not care about children of the local constant:
@@ -39,7 +39,7 @@ Integers refers to metavariables, tuples to children and descendants.
 We use '_' or '^' to indicate subscripts or superscrits.
 We can use attributes like name, value, math_type, local_constant_display,
 body, bound_var, and so on.
-        e.g.    '(0, 0).name', '0.math_type'
+        e.g.    '(0, 0).name', '0.math_type', 'self.math_type'
 or any callable which will be applied to self, e.g. name and value.
 
 ---------------------
@@ -138,10 +138,12 @@ def set_quant_pattern():
         # NB: special case must appear BEFORE general cases, e.g.
         # QUANT_∀(TYPE, LOCAL_CONSTANT/name=RealSubGroup) before QUANT_∀(TYPE, ...)
         "QUANT_∀(TYPE, LOCAL_CONSTANT/name=RealSubGroup, ?2)": ((2,),),
-        "QUANT_∀(APP(CONSTANT/name=decidable_linear_order, ?0), ?1, ?2)": (
-        (2,),),
-        "QUANT_∀(APP(CONSTANT/name=decidable_linear_ordered_comm_ring, ?0), ?1, "
-        "?2)": ((2,),),
+        # "QUANT_∀(APP(CONSTANT/name=decidable_linear_order, ?0), ?1, ?2)": (
+        # (2,),),
+        # "QUANT_∀(APP(CONSTANT/name=decidable_linear_ordered_comm_ring, ?0), ?1, "
+        # "?2)": ((2,),),
+        "QUANT_∀(?0, LOCAL_CONSTANT/binder_info=inst_implicit, ?2)":
+            ((2,),),
         "QUANT_∀(SET(...), ?0, ?1)":
             (r"\forall", (1,), r" \subset ", (0, 0), ", ", (2,)),
         "QUANT_∀(FUNCTION(...), ?0, ?1)":
@@ -197,7 +199,6 @@ latex_from_pattern_string = {
         ('(', (2, ), ')', ['_', (1, ), r"\in_symbol", (0, )]),
     "LOCAL_CONSTANT/name=RealSubGroup": (r'\real',)
 }
-
 
 #########################################
 #########################################
@@ -268,6 +269,7 @@ latex_from_pattern_string_for_type = {
     "SEQUENCE(...)": (r'\type_sequence', (1, )),
     # TYPE... TODO (r'\type_element', name)
     "TYPE": (r'\set',),
+    "SET_INDEX": (r'\set',),
     "FUNCTION(...)": (r'\function_from', (0, ), r'\to', (1, )),
     "CONSTANT/name=ℕ": (r'\type_N', ),  # TODO: test!!
     "CONSTANT/name=ℤ": (r'\type_Z',),
@@ -277,4 +279,23 @@ latex_from_pattern_string_for_type = {
     # This is maybe too strong: any guy with undefined math_type will match!! :
     "?:TYPE": (r'\type_element', name),  # NB: TYPE is treated above
     "?:SET(?0)": (r'\type_element', 'self'),
+}
+
+#################
+#################
+# Lean patterns #
+#################
+#################
+
+lean_from_pattern_string = {
+    # Universal quant with adequate binders
+    # This is useful so that the Lean code that works for
+    # from_previous_state_method also works for normal method:
+    "QUANT_∀(?0, LOCAL_CONSTANT/binder_info=implicit, ?2)":
+        (r"\forall", '{', (1,), ": ", (0,), '}', ", ", (2,)),
+    "QUANT_∀(?0, LOCAL_CONSTANT/binder_info=strict_implicit, ?2)":
+        (r"\forall", '⦃', (1,), ": ", (0,), '⦄', ", ", (2,)),
+    # type class instance between brackets:
+    "QUANT_∀(?0, LOCAL_CONSTANT/binder_info=inst_implicit, ?2)":
+        (r"\forall", '', (1, ), ": ", (0, ), ']', ", ", (2, ))
 }

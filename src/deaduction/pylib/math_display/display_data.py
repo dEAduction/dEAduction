@@ -66,6 +66,10 @@ def value(mo):
     return mo.info.get('value')
 
 
+# def lean_inst_name(mo):
+#     return '[' + name(mo) + ']'
+
+
 def local_constant_shape(mo):
     return mo.local_constant_shape
 
@@ -133,7 +137,7 @@ latex_from_node = {
     "PROP_≥": (0, r" \geq ", 1),
     "DIFFERENCE": (0, " - ", 1),
     "SUM": (0, " + ", 1),
-    "MULT": (0, r" \times ", 1),
+    "MULT": (0, r" \mul ", 1),
     "PRODUCT": (0, r" \times ", 1),
     "DIV": (0, r"/", 1),
     "MINUS": ("-", 0),
@@ -145,6 +149,7 @@ latex_from_node = {
     "SET": (r'\set_of_subsets', [r'\symbol_parentheses', 0]),
     "PROP": (r'\proposition',),
     "TYPE": (r'\set',),
+    "SET_INDEX": (r'\set',),
     "FUNCTION": (r'\function_from', 0, r'\to', 1),  # (0, r" \to ", 1),
     "SEQUENCE": (r'\sequence_in', 1),  # (0, r" \to ", 1),
     "CONSTANT": (name,),
@@ -180,6 +185,7 @@ latex_to_utf8_dic = {
     r'\Delta': '∆',
     r'\circ': '∘',
     r'\times': '×',
+    r'\mul': '×',
     r'\in': '∈',  # '∊'
     r'\in_quant': '∈',
     r"\in_symbol": '∈',
@@ -394,25 +400,28 @@ numbers = {
 lean_from_node = {
     "LOCAL_CONSTANT": (name,),
     "CONSTANT": ("@", name),  # e.g. @composition
-    "QUANT_∀": (r"\forall", 1, r": ", 0, ", ", 2),
-    "QUANT_∃": (r"\exists", 1, r": ", 0, ", ", 2),
+    "QUANT_∀": (r"\forall", 1, ": ", 0, ", ", 2),
+    "QUANT_∃": (r"\exists", 1, ": ", 0, ", ", 2),
     "QUANT_∃!": (r"\exists_unique", 1, r": ", 0, r', ', 2),
     # Types:
     "FUNCTION": (0, r'\to', 1),
     "SEQUENCE": (0, r"\to", 1),
     "LAMBDA": ("λ ", '(', 1, ': ', 0, '), ', 2),
     "SET": ('set ', 0),
+    "SET_INDEX": ('index_set', ),
     "APPLICATION": (lean_application, ),
-    "PROP_NOT": ('not', 0),  # Prevent pattern NOT(APP(CONSTANT(...)) -> is not
-    "SET_EXTENSION1": ('sing ', 0),
-    "SET_EXTENSION2": ('pair ', 0, 1),
+    # Prevent pattern NOT(APP(CONSTANT(...)) -> is not:
+    "PROP_NOT": (r'\not', 0),
+    "SET_EMPTY": ('(', r'\emptyset', ': ', 'self.math_type', ')'),
+    "SET_UNION+": ("set.Union", "(", 0, ")"),
+    "SET_INTER+": ("set.Inter", "(", 0, ")"),
+    "SET_COMPLEMENT": ('set.compl', ' ', '(', 1, ')')
 }
 
 # Only those lean symbols that are distinct from the latex_to_utf8 dict
 latex_to_lean_dic = {
-    #'AND': 'and',
-    #'OR': 'or',
-    #'NOT': 'not',
+    r'\and': " " + "and" + " ",
+    r'\or': " " + "or" + " ",
     r'\Leftrightarrow': '↔',
     r'\Rightarrow': '→',
     r'\subset': '⊆',
@@ -438,7 +447,8 @@ latex_to_lean_dic = {
     r'\type_R': 'real',
     r'used_property': "",
     r'\not': "not ",
-    r'\times': "*"
+    r'\times': "×",
+    r'\mul': "*"
 }
 
 ####################
