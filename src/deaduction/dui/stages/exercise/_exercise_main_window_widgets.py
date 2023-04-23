@@ -233,6 +233,14 @@ class ExerciseCentralWidget(QWidget):
     def init_action_layout(self):
         exercise = self.exercise
 
+        # Mode selector
+        mode = cvars.get('logic.button_use_demo_mode')
+        if mode == 'radio_button':
+            # Create radio_button
+            pass
+        elif mode == 'both':
+            pass
+
         # ───────────── Action buttons ───────────── #
         short = cvars.get("display.short_buttons_line", True)
         if short:
@@ -634,7 +642,7 @@ class ExerciseStatusBar(QStatusBar):
     def show_tmp_msg(self, msg: str, duration=3000):
         self.set_message(msg)
         self.timer.singleShot(3000, self.erase)
-        self.show_pending_msgs()
+        self.timer.singleShot(3000, self.show_pending_msgs)
 
 
 class ExerciseToolBar(QToolBar):
