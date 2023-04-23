@@ -6,8 +6,10 @@ from deaduction.pylib.mathobj import MathObject, ContextMathObject
 from deaduction.pylib.pattern_math_obj import PatternMathObject
 from deaduction.pylib.math_display.display_data import (latex_from_node,
                                                         latex_from_quant_node,
+                                                        lean_from_node,
                                                         needs_paren)
 from deaduction.pylib.math_display.pattern_init import (pattern_latex,
+                                                        pattern_lean,
                                                         pattern_text,
                                                         pattern_latex_for_type)
 from deaduction.pylib.math_display.display import abstract_string_to_string
@@ -132,7 +134,7 @@ def lean_shape(self: MathObject) -> []:
     if shape:
         # (3) Process macros
         if shape[0] == "global":
-            shape = global_pre_shape_to_pre_shape(shape[1:], text=text)
+            shape = global_pre_shape_to_pre_shape(shape[1:])
 
         shape = [process_shape_macro(self, item) if isinstance(item, str)
                  else item for item in shape]
