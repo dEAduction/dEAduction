@@ -143,6 +143,8 @@ def first_descendant(l):
 
 
 def replace_dubious_characters(s: str) -> str:
+    if not s:
+        return ""
     dubious_characters = "ℕ, ℤ, ℚ, ℝ, 𝒫, ↦"
     replacement_characters: str = cvars.get("display.dubious_characters")
     if replacement_characters == dubious_characters:

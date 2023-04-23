@@ -1,5 +1,5 @@
 """
-# __init__.py : #ShortDescription #
+# __init__.py #
     
     https://en.meming.world/images/en/8/8e/All_Right_Then%2C_Keep_Your_Secrets.jpg
 
@@ -32,7 +32,8 @@ from .actiondef import (    Action,
 from .exceptions import (   InputType,
                             MissingParametersError,
                             WrongUserInput,
-                            test_selection)
+                            test_selection,
+                            test_demo_use)
 
 from .code_for_lean import (LeanCombinator,
                             CodeForLean,
